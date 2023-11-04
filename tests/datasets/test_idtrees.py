@@ -140,6 +140,7 @@ class TestIDTReeS:
 
     def test_plot_las(self, dataset: IDTReeS) -> None:
         pyvista = pytest.importorskip("pyvista", minversion="0.34.2")
+        pyvista.OFF_SCREEN = True
 
         # Test point cloud without colors
         point_cloud = dataset.plot_las(index=0)

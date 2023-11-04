@@ -42,7 +42,7 @@ class AugmentationSequential(Module):
 
         keys: list[str] = []
         for key in data_keys:
-            if key == "image":
+            if key.startswith("image"):
                 keys.append("input")
             elif key == "boxes":
                 keys.append("bbox")

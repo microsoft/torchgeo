@@ -148,7 +148,7 @@ class L8Biome(RasterDataset):
         # Check if the user requested to download the dataset
         if not self.download:
             raise RuntimeError(
-                f"Dataset not found in `root={self.paths}` and `download=False`, "
+                f"Dataset not found in `paths={self.paths!r}` and `download=False`, "
                 "either specify a different `root` directory or use `download=True` "
                 "to automatically download the dataset."
             )
