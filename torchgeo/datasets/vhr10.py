@@ -15,7 +15,12 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive, download_url
+from .utils import (
+    DatasetNotFoundError,
+    check_integrity,
+    download_and_extract_archive,
+    download_url,
+)
 
 
 def convert_coco_poly_to_mask(
@@ -200,8 +205,7 @@ class VHR10(NonGeoDataset):
         Raises:
             AssertionError: if ``split`` argument is invalid
             ImportError: if ``split="positive"`` and pycocotools is not installed
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in ["positive", "negative"]
 
@@ -214,10 +218,7 @@ class VHR10(NonGeoDataset):
             self._download()
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         if split == "positive":
             # Must be installed to parse annotations file

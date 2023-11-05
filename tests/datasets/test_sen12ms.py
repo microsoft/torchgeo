@@ -12,7 +12,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import SEN12MS
+from torchgeo.datasets import SEN12MS, DatasetNotFoundError
 
 
 class TestSEN12MS:
@@ -65,11 +65,8 @@ class TestSEN12MS:
             SEN12MS(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            SEN12MS(str(tmp_path), checksum=True)
-
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
-            SEN12MS(str(tmp_path), checksum=False)
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+            SEN12MS(str(tmp_path))
 
     def test_check_integrity_light(self) -> None:
         root = os.path.join("tests", "data", "sen12ms")

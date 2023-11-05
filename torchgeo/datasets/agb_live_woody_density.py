@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import download_url
+from .utils import DatasetNotFoundError, download_url
 
 
 class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
@@ -77,7 +77,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``paths``
+            DatasetNotFoundError: If dataset is not found and *download* is False.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -90,22 +90,14 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if dataset is missing
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         if self.files:
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `paths={self.paths!r}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()

@@ -12,7 +12,7 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import ReforesTree
+from torchgeo.datasets import DatasetNotFoundError, ReforesTree
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -66,7 +66,7 @@ class TestReforesTree:
             ReforesTree(root=str(tmp_path), checksum=True)
 
     def test_not_found(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             ReforesTree(str(tmp_path))
 
     def test_plot(self, dataset: ReforesTree) -> None:
