@@ -4,7 +4,8 @@
 """Base classes for all :mod:`torchgeo` trainers."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Sequence, Union
+from collections.abc import Sequence
+from typing import Any, Optional, Union
 
 import lightning
 from lightning.pytorch import LightningModule
