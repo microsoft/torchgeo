@@ -322,7 +322,7 @@ class BYOLTask(BaseTask):
            *backbone*, *learning_rate*, and *learning_rate_schedule_patience* were
            renamed to *model*, *lr*, and *patience*.
         """
-        super().__init__()
+        super().__init__(ignore="weights")
 
     def configure_models(self) -> None:
         """Initialize the model."""

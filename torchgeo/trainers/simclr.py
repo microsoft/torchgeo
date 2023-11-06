@@ -134,7 +134,7 @@ class SimCLRTask(BaseTask):
             if memory_bank_size == 0:
                 warnings.warn("SimCLR v2 uses a memory bank")
 
-        super().__init__()
+        super().__init__(ignore=["weights", "augmentations"])
 
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
         self.augmentations = augmentations or simclr_augmentations(

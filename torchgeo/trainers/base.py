@@ -4,7 +4,7 @@
 """Base classes for all :mod:`torchgeo` trainers."""
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Sequence, Union
 
 import lightning
 from lightning.pytorch import LightningModule
@@ -28,10 +28,14 @@ class BaseTask(LightningModule, ABC):
     #: Whether the goal is to minimize or maximize the performance metric to monitor.
     mode = "min"
 
-    def __init__(self) -> None:
-        """Initialize a new BaseTask instance."""
+    def __init__(self, ignore: Optional[Union[Seqeuence[str], str]] = None) -> None:
+        """Initialize a new BaseTask instance.
+
+        Args:
+            ignore: Arguments to skip when saving hyperparameters.
+        """
         super().__init__()
-        self.save_hyperparameters(ignore=['augmentation1','augmentation2'])
+        self.save_hyperparameters(ignore=ignore)
         self.configure_losses()
         self.configure_metrics()
         self.configure_models()

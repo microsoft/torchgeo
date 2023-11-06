@@ -218,7 +218,7 @@ class MoCoTask(BaseTask):
             if memory_bank_size > 0:
                 warnings.warn("MoCo v3 does not use a memory bank")
 
-        super().__init__()
+        super().__init__(ignore=["weights", "augmentation1", "augmentation2"])
 
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
         aug1, aug2 = moco_augmentations(version, size, grayscale_weights)

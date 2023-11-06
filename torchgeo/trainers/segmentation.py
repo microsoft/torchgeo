@@ -93,7 +93,7 @@ class SemanticSegmentationTask(BaseTask):
                 UserWarning,
             )
 
-        super().__init__()
+        super().__init__(ignore="weights")
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion.
