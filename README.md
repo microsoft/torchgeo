@@ -122,9 +122,9 @@ for batch in dataloader:
 
 All TorchGeo datasets are compatible with PyTorch data loaders, making them easy to integrate into existing training workflows. The only difference between a benchmark dataset in TorchGeo and a similar dataset in torchvision is that each dataset returns a dictionary with keys for each PyTorch `Tensor`.
 
-### Pretrained Weights
+### Pre-trained Weights
 
-Pretrained Weights have proven to be tremendously beneficial for transfer learning tasks in the Computer Vision World. In the vast majority of cases, practicioners utilize a model pretrained on the famous IMAGENET dataset, which is RGB data. However, geospatial datasets often go beyond RGB with additional multispectral channels that can vary across sensors. To this end, models pretrained specifically on different sensors have proven useful. Torchgeo supports a variety of pretrained models for different sensors by adopting torchvision's [Multi-Weight API](https://pytorch.org/blog/introducing-torchvision-new-multi-weight-support-api/). A summary of currently available weights can be seen in the [docs](https://torchgeo.readthedocs.io/en/stable/api/models.html#pretrained-weights). To create a [timm](https://github.com/huggingface/pytorch-image-models) Resnet-18 model with weights that have been pretrained on Sentinel-2 imagery, you can do the following:
+Pre-trained weights have proven to be tremendously beneficial for transfer learning tasks in computer vision. Practitioners usually utilize models pre-trained on the ImageNet dataset, containing RGB images. However, remote sensing data often goes beyond RGB with additional multispectral channels that can vary across sensors. TorchGeo is the first library to support models pre-trained on different multispectral sensors, and adopts torchvision's [multi-Weight API](https://pytorch.org/blog/introducing-torchvision-new-multi-weight-support-api/). A summary of currently available weights can be seen in the [docs](https://torchgeo.readthedocs.io/en/stable/api/models.html#pretrained-weights). To create a [timm](https://github.com/huggingface/pytorch-image-models) Resnet-18 model with weights that have been pretrained on Sentinel-2 imagery, you can do the following:
 
 ```python
 import timm
@@ -135,7 +135,7 @@ model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"], num_cla
 model = model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
 ```
 
-These weights can also directly be used in Torchgeo Lightning modules that are shown in the next section via the `weights` argument. For a notebook example, see this [tutorial](https://torchgeo.readthedocs.io/en/stable/tutorials/pretrained_weights.html).
+These weights can also directly be used in TorchGeo Lightning modules that are shown in the following section via the `weights` argument. For a notebook example, see this [tutorial](https://torchgeo.readthedocs.io/en/stable/tutorials/pretrained_weights.html).
 
 ### Reproducibility with Lightning
 
