@@ -78,10 +78,10 @@ class AugmentationSequential(Module):
             batch["boxes"] = Boxes.from_tensor(batch["boxes"]).data
 
         # Kornia requires masks to have a channel dimension
-        if "mask" in batch and len(batch["mask"].shape) == 3:
+        if "mask" in batch and batch["mask"].ndim == 3:
             batch["mask"] = rearrange(batch["mask"], "b h w -> b () h w")
 
-        if "masks" in batch and len(batch["masks"].shape) == 3:
+        if "masks" in batch and batch["masks"].ndim == 3:
             batch["masks"] = rearrange(batch["masks"], "c h w -> () c h w")
 
         inputs = [batch[k] for k in self.data_keys]
@@ -107,7 +107,7 @@ class AugmentationSequential(Module):
         # Torchmetrics does not support masks with a channel dimension
         if "mask" in batch and batch["mask"].shape[1] == 1:
             batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
-        if "masks" in batch and len(batch["masks"].shape) == 4:
+        if "masks" in batch and batch["masks"].ndim == 4:
             batch["masks"] = rearrange(batch["masks"], "() c h w -> c h w")
 
         return batch
