@@ -423,7 +423,7 @@ class OpenBuildings(VectorDataset):
 
         raise RuntimeError(
             f"Dataset not found in `paths={self.paths!r}` "
-            "either specify a different `root` directory or make sure you "
+            "either specify a different `paths` or make sure you "
             "have manually downloaded the dataset as suggested in the documentation."
         )
 
