@@ -72,7 +72,7 @@ class TestOpenBuildings:
         with open(os.path.join(tmp_path, "tiles.geojson"), "w") as f:
             json.dump(content, f)
 
-        with pytest.raises(FileNotFoundError, match="data was found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             OpenBuildings(dataset.paths)
 
     def test_getitem(self, dataset: OpenBuildings) -> None:

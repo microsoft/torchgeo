@@ -54,7 +54,7 @@ class DatasetNotFoundError(FileNotFoundError):
     .. versionadded:: 0.6
     """
 
-    def __init__(self, dataset: Dataset) -> None:
+    def __init__(self, dataset: Dataset[object]) -> None:
         """Intstantiate a new DatasetNotFoundError instance.
 
         Args:
@@ -78,7 +78,7 @@ class DatasetNotFoundError(FileNotFoundError):
         else:
             msg += "cannot be automatically downloaded"
 
-        msg += ", either specify a different `{var}` or "
+        msg += f", either specify a different `{var}` or "
 
         if hasattr(dataset, "download") and not dataset.download:
             msg += "use `download=True` to automatically"
