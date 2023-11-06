@@ -134,6 +134,7 @@ class SimCLRTask(BaseTask):
             if memory_bank_size == 0:
                 warnings.warn("SimCLR v2 uses a memory bank")
 
+        self.weights = weights
         super().__init__(ignore=["weights", "augmentations"])
 
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
@@ -151,7 +152,7 @@ class SimCLRTask(BaseTask):
 
     def configure_models(self) -> None:
         """Initialize the model."""
-        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        weights = self.weights
         hidden_dim: int = self.hparams["hidden_dim"]
         output_dim: int = self.hparams["output_dim"]
 
