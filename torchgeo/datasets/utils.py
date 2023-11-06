@@ -70,6 +70,7 @@ class DatasetNotFoundError(FileNotFoundError):
             val = dataset.paths
         else:
             super().__init__(f"{msg}.")
+            return
 
         msg += f" in `{var}={val!r}` and "
 

@@ -66,7 +66,10 @@ class TestSEN12MS:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
-            SEN12MS(str(tmp_path))
+            SEN12MS(str(tmp_path), checksum=True)
+
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+            SEN12MS(str(tmp_path), checksum=False)
 
     def test_check_integrity_light(self) -> None:
         root = os.path.join("tests", "data", "sen12ms")

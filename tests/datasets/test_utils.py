@@ -18,11 +18,13 @@ import pytest
 import torch
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
+from torch.utils.data import Dataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets.utils import (
     BoundingBox,
     concat_samples,
+    DatasetNotFoundError,
     disambiguate_timestamp,
     download_and_extract_archive,
     download_radiant_mlhub_collection,
@@ -34,6 +36,52 @@ from torchgeo.datasets.utils import (
     unbind_samples,
     working_dir,
 )
+
+
+class TestDatasetNotFoundError:
+    def test_none(self) -> None:
+        ds = Dataset()
+        match = "Dataset not found."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+    def test_root(self) -> None:
+        ds = Dataset()
+        ds.root = "foo"
+        match = "Dataset not found in `root='foo'` and cannot be automatically "
+        match += "downloaded, either specify a different `root` or manually "
+        match += "download the dataset."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+    def test_paths(self) -> None:
+        ds = Dataset()
+        ds.paths = "foo"
+        match = "Dataset not found in `paths='foo'` and cannot be automatically "
+        match += "downloaded, either specify a different `paths` or manually "
+        match += "download the dataset."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+    def test_root_download(self) -> None:
+        ds = Dataset()
+        ds.root = "foo"
+        ds.download = False
+        match = "Dataset not found in `root='foo'` and `download=False`, either "
+        match += "specify a different `root` or use `download=True` to automatically "
+        match += "download the dataset."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+    def test_paths_download(self) -> None:
+        ds = Dataset()
+        ds.paths = "foo"
+        ds.download = False
+        match = "Dataset not found in `paths='foo'` and `download=False`, either "
+        match += "specify a different `paths` or use `download=True` to automatically "
+        match += "download the dataset."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
 
 
 @pytest.fixture
