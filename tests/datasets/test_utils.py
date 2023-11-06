@@ -23,8 +23,8 @@ from torch.utils.data import Dataset
 import torchgeo.datasets.utils
 from torchgeo.datasets.utils import (
     BoundingBox,
-    concat_samples,
     DatasetNotFoundError,
+    concat_samples,
     disambiguate_timestamp,
     download_and_extract_archive,
     download_radiant_mlhub_collection,
