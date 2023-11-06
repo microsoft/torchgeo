@@ -131,8 +131,7 @@ import timm
 from torchgeo.models import ResNet18_Weights
 
 weights = ResNet18_Weights.SENTINEL2_ALL_MOCO
-in_chans = weights.meta["in_chans"]
-model = timm.create_model("resnet18", in_chans=in_chans, num_classes=10)
+model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"], num_classes=10)
 model = model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
 ```
 
