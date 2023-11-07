@@ -12,7 +12,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import DatasetNotFoundError, check_integrity, download_url, extract_archive
 
 
 class UCMerced(NonGeoClassificationDataset):
@@ -100,8 +100,7 @@ class UCMerced(NonGeoClassificationDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
         self.root = root
@@ -147,11 +146,7 @@ class UCMerced(NonGeoClassificationDataset):
         return integrity
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         filepath = os.path.join(self.root, self.base_dir)
         if os.path.exists(filepath):
@@ -164,11 +159,7 @@ class UCMerced(NonGeoClassificationDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         self._download()

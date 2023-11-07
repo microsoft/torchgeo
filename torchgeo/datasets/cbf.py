@@ -12,7 +12,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import VectorDataset
-from .utils import check_integrity, download_and_extract_archive
+from .utils import DatasetNotFoundError, check_integrity, download_and_extract_archive
 
 
 class CanadianBuildingFootprints(VectorDataset):
@@ -81,9 +81,7 @@ class CanadianBuildingFootprints(VectorDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if ``download=False`` and data is not found, or
-                ``checksum=True`` and checksums don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -95,10 +93,7 @@ class CanadianBuildingFootprints(VectorDataset):
             self._download()
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         super().__init__(paths, crs, res, transforms)
 
