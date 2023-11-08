@@ -356,6 +356,11 @@ SSL4EO
 .. autoclass:: SSL4EOL
 .. autoclass:: SSL4EOS12
 
+SSL4EOLBenchmark
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: SSL4EOLBenchmark
+
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
 
