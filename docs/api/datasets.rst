@@ -178,7 +178,7 @@ BioMassters
 ^^^^^^^^^^^
 
 .. autoclass:: BioMassters
-   
+
 Cloud Cover Detection
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -464,3 +464,8 @@ Splitting Functions
 .. autofunction:: random_grid_cell_assignment
 .. autofunction:: roi_split
 .. autofunction:: time_series_split
+
+Errors
+------
+
+.. autoclass:: DatasetNotFoundError

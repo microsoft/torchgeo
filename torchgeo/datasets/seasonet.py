@@ -20,7 +20,12 @@ from rasterio.enums import Resampling
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    download_url,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class SeasoNet(NonGeoDataset):
@@ -233,6 +238,9 @@ class SeasoNet(NonGeoDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
         assert set(seasons) <= self.all_seasons
@@ -354,11 +362,7 @@ class SeasoNet(NonGeoDataset):
         return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if all files already exist
         if all(
             os.path.exists(os.path.join(self.root, file_info["name"]))
@@ -378,12 +382,7 @@ class SeasoNet(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if missing and not self.download:
-            raise RuntimeError(
-                f"{', '.join([m['name'] for m in missing])} not found in"
-                " `root={self.root}` and `download=False`, either specify a"
-                " different `root` directory or use `download=True`"
-                " to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download missing files
         for file_info in missing:

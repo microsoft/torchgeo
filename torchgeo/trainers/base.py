@@ -8,7 +8,6 @@ from typing import Any
 
 import lightning
 from lightning.pytorch import LightningModule
-from lightning.pytorch.callbacks import Callback, EarlyStopping, ModelCheckpoint
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
@@ -35,17 +34,6 @@ class BaseTask(LightningModule, ABC):
         self.configure_losses()
         self.configure_metrics()
         self.configure_models()
-
-    def configure_callbacks(self) -> list[Callback]:
-        """Initialize model-specific callbacks.
-
-        Returns:
-            List of callbacks to apply.
-        """
-        return [
-            ModelCheckpoint(monitor=self.monitor, mode=self.mode),
-            EarlyStopping(monitor=self.monitor, mode=self.mode),
-        ]
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""

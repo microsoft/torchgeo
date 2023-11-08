@@ -13,7 +13,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import So2Sat
+from torchgeo.datasets import DatasetNotFoundError, So2Sat
 
 pytest.importorskip("h5py", minversion="3")
 
@@ -70,7 +70,7 @@ class TestSo2Sat:
             So2Sat(bands=("OK", "BK"))
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             So2Sat(str(tmp_path))
 
     def test_plot(self, dataset: So2Sat) -> None:

@@ -17,7 +17,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import DatasetNotFoundError, check_integrity, download_url, extract_archive
 
 
 def parse_pascal_voc(path: str) -> dict[str, Any]:
@@ -244,8 +244,7 @@ class FAIR1M(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found.
 
         .. versionchanged:: 0.5
            Added *split* and *download* parameters.
@@ -329,11 +328,7 @@ class FAIR1M(NonGeoDataset):
         return boxes, labels_tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if checksum fails or the dataset is not found
-        """
+        """Verify the integrity of the dataset."""
         # Check if the directories already exist
         exists = []
         for directory in self.directories[self.split]:
@@ -362,18 +357,10 @@ class FAIR1M(NonGeoDataset):
             self._download()
             return
 
-        raise RuntimeError(
-            f"Dataset not found in `root={self.root}` and `download=False`, "
-            "either specify a different `root` directory or use `download=True` "
-            "to automatically download the dataset."
-        )
+        raise DatasetNotFoundError(self)
 
     def _download(self) -> None:
-        """Download the dataset and extract it.
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
-        """
+        """Download the dataset and extract it."""
         paths = self.paths[self.split]
         urls = self.urls[self.split]
         md5s = self.md5s[self.split]

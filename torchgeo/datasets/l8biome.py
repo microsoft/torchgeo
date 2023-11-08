@@ -14,7 +14,7 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
 
 
 class L8Biome(RasterDataset):
@@ -115,8 +115,7 @@ class L8Biome(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.paths = paths
         self.download = download
@@ -129,11 +128,7 @@ class L8Biome(RasterDataset):
         )
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         if self.files:
             return
@@ -147,11 +142,7 @@ class L8Biome(RasterDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.paths}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
