@@ -17,7 +17,7 @@ from torch import Tensor
 from .cdl import CDL
 from .geo import NonGeoDataset
 from .nlcd import NLCD
-from .utils import download_url, extract_archive
+from .utils import DatasetNotFoundError, download_url, extract_archive
 
 
 class SSL4EOLBenchmark(NonGeoDataset):
@@ -131,7 +131,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
         Raises:
             AssertionError: if any arguments are invalid
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert (
             sensor in self.valid_sensors
@@ -190,11 +190,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         img_pathname = os.path.join(self.root, self.img_dir_name, "**", "all_bands.tif")
         exists = []
@@ -223,11 +219,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()

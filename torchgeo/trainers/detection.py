@@ -259,6 +259,7 @@ class ObjectDetectionTask(BaseTask):
         if (
             batch_idx < 10
             and hasattr(self.trainer, "datamodule")
+            and hasattr(self.trainer.datamodule, "plot")
             and self.logger
             and hasattr(self.logger, "experiment")
             and hasattr(self.logger.experiment, "add_figure")

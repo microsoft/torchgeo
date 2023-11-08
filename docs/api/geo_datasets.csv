@@ -20,3 +20,4 @@ Dataset,Type,Source,Size (px),Resolution (m)
 `NLCD`_,Masks,Landsat,-,30
 `Open Buildings`_,Geometries,"Maxar, CNES/Airbus",-,-
 `Sentinel`_,Imagery,Sentinel,"10,000x10,000",10
+`South America Soybean`_,Masks,Sentinel-2,-,10 

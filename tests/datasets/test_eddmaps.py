@@ -6,7 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from torchgeo.datasets import BoundingBox, EDDMapS, IntersectionDataset, UnionDataset
+from torchgeo.datasets import (
+    BoundingBox,
+    DatasetNotFoundError,
+    EDDMapS,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 class TestEDDMapS:
@@ -31,7 +37,7 @@ class TestEDDMapS:
         assert isinstance(ds, UnionDataset)
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             EDDMapS(str(tmp_path))
 
     def test_invalid_query(self, dataset: EDDMapS) -> None:
