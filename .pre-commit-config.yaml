@@ -1,6 +1,6 @@
 repos:
     -   repo: https://github.com/asottile/pyupgrade
-        rev: v3.3.1
+        rev: v3.15.0
         hooks:
         -   id: pyupgrade
             args: [--py39-plus]
@@ -12,13 +12,13 @@ repos:
              additional_dependencies: ['.[colors]']
 
     -   repo: https://github.com/psf/black
-        rev: 23.1.0
+        rev: 23.10.1
         hooks:
         -   id: black
             args: [--skip-magic-trailing-comma]
 
     -   repo: https://github.com/pycqa/flake8.git
-        rev: 6.0.0
+        rev: 6.1.0
         hooks:
         -   id: flake8
 
@@ -30,7 +30,7 @@ repos:
             additional_dependencies: ['.[toml]']
 
     -   repo: https://github.com/pre-commit/mirrors-mypy
-        rev: v1.0.1
+        rev: v1.6.1
         hooks:
         -   id: mypy
             args: [--strict, --ignore-missing-imports, --show-error-codes]
