@@ -22,8 +22,6 @@ from .utils import (
     download_url,
 )
 
-plt.rcParams["figure.constrained_layout.use"] = True
-
 
 def convert_coco_poly_to_mask(
     segmentations: list[int], height: int, width: int
@@ -436,7 +434,9 @@ class VHR10(NonGeoDataset):
             ncols += 1
 
         # Display image
-        fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 10, 10))
+        fig, axs = plt.subplots(
+            ncols=ncols, squeeze=False, layout="constrained", figsize=(ncols * 10, 10)
+        )
         axs[0, 0].imshow(image)
         axs[0, 0].axis("off")
 
@@ -470,7 +470,7 @@ class VHR10(NonGeoDataset):
             # Add masks
             if show_feats in {"masks", "both"} and "masks" in sample:
                 mask = masks[i]
-                contours = find_contours(mask, 0.5)
+                contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
                 for verts in contours:
                     verts = np.fliplr(verts)
                     p = patches.Polygon(
@@ -522,7 +522,7 @@ class VHR10(NonGeoDataset):
                 # Add masks
                 if show_pred_masks:
                     mask = prediction_masks[i]
-                    contours = find_contours(mask, 0.5)
+                    contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
                     for verts in contours:
                         verts = np.fliplr(verts)
                         p = patches.Polygon(
