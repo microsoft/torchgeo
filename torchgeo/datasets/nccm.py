@@ -36,8 +36,7 @@ class NCCM(RasterDataset):
     0. paddy rice
     1. maize
     2. soybean
-    3. other crops
-    15. other lands
+    3. others
 
     Dataset format:
 
@@ -51,7 +50,6 @@ class NCCM(RasterDataset):
 
     filename_regex = r"CDL(?P<year>\d{4})_clip"
     filename_glob = "CDL*.tif"
-    # there is only a single zipfolder, none for the files
     zipfile_glob = "13090442.zip"
 
     date_format = "%Y"
@@ -60,13 +58,12 @@ class NCCM(RasterDataset):
     md5s = {"main": "eae952f1b346d7e649d027e8139a76f5"}
 
     years = [2017, 2018, 2019]
-    # add for other class 15
+
     cmap = {
-        0: (0, 255, 0, 1),
-        1: (255, 0, 0, 1),
-        2: (255, 255, 0, 1),
-        3: (255, 192, 203, 1),
-        15: (128, 128, 128, 1),
+        0: (0, 255, 0, 255),
+        1: (255, 0, 0, 255),
+        2: (255, 255, 0, 255),
+        3: (128, 128, 128, 255),
     }
 
     def __init__(
@@ -110,8 +107,6 @@ class NCCM(RasterDataset):
         assert (
             set(classes) <= self.cmap.keys()
         ), f"Only the following classes are valid: {list(self.cmap.keys())}."
-
-        assert 0 in classes, "Classes must include the background class: 0"
 
         self.paths = paths
         self.years = years
