@@ -14,7 +14,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import RwandaFieldBoundary
+from torchgeo.datasets import DatasetNotFoundError, RwandaFieldBoundary
 
 
 class Collection:
@@ -87,7 +87,7 @@ class TestRwandaFieldBoundary:
         RwandaFieldBoundary(root=dataset.root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             RwandaFieldBoundary(str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:

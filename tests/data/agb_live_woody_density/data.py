@@ -23,7 +23,7 @@ base_file = {
             "type": "Feature",
             "properties": {
                 "tile_id": "00N_000E",
-                "download": os.path.join(
+                "Mg_px_1_download": os.path.join(
                     "tests", "data", "agb_live_woody_density", "00N_000E.tif"
                 ),
                 "ObjectId": 1,
@@ -74,5 +74,5 @@ if __name__ == "__main__":
         json.dump(base_file, f)
 
     for i in base_file["features"]:
-        filepath = os.path.basename(i["properties"]["download"])
+        filepath = os.path.basename(i["properties"]["Mg_px_1_download"])
         create_file(path=filepath, dtype="int32", num_channels=1)

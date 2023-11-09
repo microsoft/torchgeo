@@ -18,7 +18,12 @@ from rasterio.enums import Resampling
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    check_integrity,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class DFC2022(NonGeoDataset):
@@ -153,6 +158,7 @@ class DFC2022(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` is invalid
+            DatasetNotFoundError: If dataset is not found.
         """
         assert split in self.metadata
         self.root = root
@@ -258,11 +264,7 @@ class DFC2022(NonGeoDataset):
             return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if checksum fails or the dataset is not downloaded
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         exists = []
         for split_info in self.metadata.values():
@@ -288,11 +290,7 @@ class DFC2022(NonGeoDataset):
         if all(exists):
             return
 
-        # Check if the user requested to download the dataset
-        raise RuntimeError(
-            "Dataset not found in `root` directory, either specify a different"
-            + " `root` directory or manually download the dataset to this directory."
-        )
+        raise DatasetNotFoundError(self)
 
     def plot(
         self,

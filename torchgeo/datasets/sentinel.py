@@ -162,7 +162,7 @@ class Sentinel1(Sentinel):
 
         Raises:
             AssertionError: if ``bands`` is invalid
-            FileNotFoundError: if no files are found in ``paths``
+            DatasetNotFoundError: If dataset is not found.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -317,7 +317,7 @@ class Sentinel2(Sentinel):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``paths``
+            DatasetNotFoundError: If dataset is not found.
 
         .. versionchanged:: 0.5
             *root* was renamed to *paths*

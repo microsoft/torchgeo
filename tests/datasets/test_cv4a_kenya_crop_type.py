@@ -13,7 +13,7 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import CV4AKenyaCropType
+from torchgeo.datasets import CV4AKenyaCropType, DatasetNotFoundError
 
 
 class Collection:
@@ -84,7 +84,7 @@ class TestCV4AKenyaCropType:
         CV4AKenyaCropType(root=dataset.root, download=True, api_key="")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             CV4AKenyaCropType(str(tmp_path))
 
     def test_invalid_tile(self, dataset: CV4AKenyaCropType) -> None:
