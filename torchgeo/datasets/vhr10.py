@@ -22,6 +22,8 @@ from .utils import (
     download_url,
 )
 
+plt.rcParams["figure.constrained_layout.use"] = True
+
 
 def convert_coco_poly_to_mask(
     segmentations: list[int], height: int, width: int
@@ -86,8 +88,7 @@ class ConvertCocoAnnotations:
         categories = [obj["category_id"] for obj in anno]
         classes = torch.tensor(categories, dtype=torch.int64)
 
-        if "segmentation" in anno[0]:
-            segmentations = [obj["segmentation"] for obj in anno]
+        segmentations = [obj["segmentation"] for obj in anno]
 
         masks = convert_coco_poly_to_mask(segmentations, h, w)
 
@@ -435,9 +436,7 @@ class VHR10(NonGeoDataset):
             ncols += 1
 
         # Display image
-        fig, axs = plt.subplots(
-            ncols=ncols, squeeze=False, layout="constrained", figsize=(ncols * 10, 10)
-        )
+        fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 10, 10))
         axs[0, 0].imshow(image)
         axs[0, 0].axis("off")
 
@@ -471,7 +470,7 @@ class VHR10(NonGeoDataset):
             # Add masks
             if show_feats in {"masks", "both"} and "masks" in sample:
                 mask = masks[i]
-                contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
+                contours = find_contours(mask, 0.5)
                 for verts in contours:
                     verts = np.fliplr(verts)
                     p = patches.Polygon(
@@ -523,7 +522,7 @@ class VHR10(NonGeoDataset):
                 # Add masks
                 if show_pred_masks:
                     mask = prediction_masks[i]
-                    contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
+                    contours = find_contours(mask, 0.5)
                     for verts in contours:
                         verts = np.fliplr(verts)
                         p = patches.Polygon(
