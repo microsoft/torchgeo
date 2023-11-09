@@ -435,7 +435,9 @@ class VHR10(NonGeoDataset):
             ncols += 1
 
         # Display image
-        fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 10, 10))
+        fig, axs = plt.subplots(
+            ncols=ncols, squeeze=False, layout="constrained", figsize=(ncols * 10, 10)
+        )
         axs[0, 0].imshow(image)
         axs[0, 0].axis("off")
 
@@ -531,8 +533,6 @@ class VHR10(NonGeoDataset):
 
             if show_titles:
                 axs[0, 1].set_title("Prediction")
-
-        plt.tight_layout()
 
         if suptitle is not None:
             plt.suptitle(suptitle)

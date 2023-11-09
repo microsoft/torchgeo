@@ -16,5 +16,3 @@ data:
   dict_kwargs:
     root: "tests/data/vhr10"
     download: true
-
-
