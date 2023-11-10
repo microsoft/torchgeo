@@ -49,7 +49,7 @@ class NCCM(RasterDataset):
     """
 
     filename_regex = r"CDL(?P<year>\d{4})_clip"
-    filename_glob = "CDL*.tif"
+    filename_glob = "CDL*.*"
     zipfile_glob = "13090442.zip"
 
     date_format = "%Y"
