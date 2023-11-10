@@ -6,16 +6,15 @@
 from typing import Any, Callable, Union
 
 import kornia.augmentation as K
-import torch
 from einops import rearrange
-from torch import Generator, Tensor
+from torch import Tensor
 from torch.nn import Module
-from torch.utils.data import random_split
 
 from ..datasets import VHR10
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
+from .utils import dataset_split
 
 
 class _AugPipe(Module):
@@ -143,9 +142,6 @@ class VHR10DataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         self.dataset = VHR10(**self.kwargs)
-        train_split_pct = 1.0 - (self.val_split_pct + self.test_split_pct)
-        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
-            self.dataset,
-            [train_split_pct, self.val_split_pct, self.test_split_pct],
-            Generator().manual_seed(torch.initial_seed()),
+        self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
+            self.dataset, self.val_split_pct, self.test_split_pct
         )
