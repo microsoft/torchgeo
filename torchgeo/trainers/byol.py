@@ -322,11 +322,12 @@ class BYOLTask(BaseTask):
            *backbone*, *learning_rate*, and *learning_rate_schedule_patience* were
            renamed to *model*, *lr*, and *patience*.
         """
-        super().__init__()
+        self.weights = weights
+        super().__init__(ignore="weights")
 
     def configure_models(self) -> None:
         """Initialize the model."""
-        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        weights = self.weights
         in_channels: int = self.hparams["in_channels"]
 
         # Create backbone
