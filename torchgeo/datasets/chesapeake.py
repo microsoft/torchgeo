@@ -157,7 +157,7 @@ class Chesapeake(RasterDataset, abc.ABC):
         if not self.download:
             raise RuntimeError(
                 f"Dataset not found in `paths={self.paths!r}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
+                "either specify a different `paths` or use `download=True` "
                 "to automatically download the dataset."
             )
 
