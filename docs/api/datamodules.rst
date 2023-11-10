@@ -131,8 +131,8 @@ SSL4EO
 .. autoclass:: SSL4EOLDataModule
 .. autoclass:: SSL4EOS12DataModule
 
-SSL4EOLBenchmarkDataModule
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+SSL4EO-L Benchmark
+^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SSL4EOLBenchmarkDataModule
 
