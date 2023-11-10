@@ -46,18 +46,19 @@ class NCCM(RasterDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1038/s41597-021-00827-9
+    .. versionadded:: 0.6
     """
 
     filename_regex = r"CDL(?P<year>\d{4})_clip"
-    filename_glob = "CDL*.tif"
+    filename_glob = "CDL*.*"
     zipfile_glob = "13090442.zip"
 
     date_format = "%Y"
     is_image = False
     url = "https://figshare.com/ndownloader/articles/13090442/versions/1"
-    md5s = {"main": "eae952f1b346d7e649d027e8139a76f5"}
+    md5 = "eae952f1b346d7e649d027e8139a76f5"
 
-    years = [2017, 2018, 2019]
+    # years = [2017, 2018, 2019]
 
     cmap = {
         0: (0, 255, 0, 255),
@@ -71,7 +72,7 @@ class NCCM(RasterDataset):
         paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        years: list[int] = [2017, 2018, 2019],
+        # years: list[int] = [2017, 2018, 2019],
         classes: list[int] = list(cmap.keys()),
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
@@ -86,7 +87,6 @@ class NCCM(RasterDataset):
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
-            years: list of years for which to use dataset
             classes: list of classes to include, the rest will be mapped to 0
                 (defaults to all classes)
             transforms: a function/transform that takes an input sample
@@ -100,16 +100,16 @@ class NCCM(RasterDataset):
             FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        assert all(
-            year in self.years for year in years
-        ), f"NCCM data product only exists for the following years: {self.years}"
+        # assert all(
+        #     year in self.years for year in years
+        # ), f"NCCM data product only exists for the following years: {self.years}"
 
         assert (
             set(classes) <= self.cmap.keys()
         ), f"Only the following classes are valid: {list(self.cmap.keys())}."
 
         self.paths = paths
-        self.years = years
+        # self.years = years
         self.classes = classes
         self.download = download
         self.checksum = checksum
@@ -186,10 +186,7 @@ class NCCM(RasterDataset):
         download_root = "data"
         filename = "13090442.zip"
         download_url(
-            self.url,
-            download_root,
-            filename,
-            md5=self.md5s["main"] if self.checksum else None,
+            self.url, download_root, filename, md5=self.md5 if self.checksum else None
         )
 
     def _extract(self) -> None:

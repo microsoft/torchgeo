@@ -28,12 +28,7 @@ class TestNCCM:
         transforms = nn.Identity()
         monkeypatch.setattr(NCCM, "url", url)
 
-        return NCCM(
-            transforms=transforms,
-            download=True,
-            checksum=True,
-            years=[2017, 2018, 2019],
-        )
+        return NCCM(transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: NCCM) -> None:
         x = dataset[dataset.bounds]
@@ -44,7 +39,7 @@ class TestNCCM:
     def test_classes(self) -> None:
         root = os.path.join("tests", "data", "nccm")
         classes = list(NCCM.cmap.keys())[0:2]
-        ds = NCCM(root, years=[2019], classes=classes)
+        ds = NCCM(root, classes=classes)
         sample = ds[ds.bounds]
         mask = sample["mask"]
         assert mask.max() < len(classes)
@@ -58,21 +53,20 @@ class TestNCCM:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: NCCM) -> None:
-        NCCM(dataset.paths, download=True, years=[2019])
+        NCCM(dataset.paths, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests", "data", "nccm", "13090442.zip")
         root = str(tmp_path)
-
         shutil.copy(pathname, root)
-        NCCM(root, years=[2019])
+        NCCM(root)
 
-    def test_invalid_year(self, tmp_path: Path) -> None:
-        with pytest.raises(
-            AssertionError,
-            match="NCCM data product only exists for the following years:",
-        ):
-            NCCM(str(tmp_path), years=[1996])
+    # def test_invalid_year(self, tmp_path: Path) -> None:
+    #     with pytest.raises(
+    #         AssertionError,
+    #         match="NCCM data product only exists for the following years:",
+    #     ):
+    #         NCCM(str(tmp_path))
 
     def test_invalid_classes(self) -> None:
         with pytest.raises(AssertionError):
