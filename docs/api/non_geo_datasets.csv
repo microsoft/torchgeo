@@ -37,6 +37,8 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `SpaceNet`_,I,WorldView-2/3 Planet Lab Dove,"1,889--28,728",2,102--900,0.5--4,MSI
 `SSL4EO`_-L,T,Landsat,1M,-,264x264,30,MSI
 `SSL4EO`_-S12,T,Sentinel-1/2,1M,-,264x264,10,"SAR, MSI"
+`SSL4EOLBenchmark`_-TM-TOA & CDL, S, Lansat, 25k,18,264x264,30,MSI
+`SSL4EOLBenchmark`_-TM-TOA & NLCD, S, Lansat, 25k,14,264x264,30,MSI
 `SustainBench Crop Yield`_,R,MODIS,11k,-,32x32,-,MSI
 `Tropical Cyclone`_,R,GOES 8--16,"108,110",-,256x256,4K--8K,MSI
 `UC Merced`_,C,USGS National Map,"2,100",21,256x256,0.3,RGB
