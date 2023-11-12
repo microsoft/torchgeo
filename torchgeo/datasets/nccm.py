@@ -117,18 +117,6 @@ class NCCM(RasterDataset):
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
         self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
 
-        curr_path = os.getcwd()
-        curr_path += "/data"
-        if not os.path.exists(curr_path):
-            os.mkdir(curr_path)
-        else:
-            contents = os.listdir(curr_path)
-            for item in contents:
-                item_path = os.path.join(curr_path, item)
-                if os.path.isfile(item_path):
-                    os.remove(item_path)
-                elif os.path.isdir(item_path):
-                    shutil.rmtree(item_path)
 
         self._verify()
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
