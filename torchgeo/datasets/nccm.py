@@ -172,7 +172,6 @@ class NCCM(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        download_root = "data"
         filename = "13090442.zip"
         download_url(
             self.url, self.paths, filename, md5=self.md5 if self.checksum else None
