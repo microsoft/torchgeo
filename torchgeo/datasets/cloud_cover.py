@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
-    DatasetNotFoundError,
+    Path,
     check_integrity,
     download_radiant_mlhub_collection,
     extract_archive,
@@ -107,7 +107,7 @@ class CloudCoverDetection(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         bands: Sequence[str] = band_names,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -128,9 +128,9 @@ class CloudCoverDetection(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
@@ -142,7 +142,10 @@ class CloudCoverDetection(NonGeoDataset):
             self._download(api_key)
 
         if not self._check_integrity():
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                "Dataset not found or corrupted. "
+                + "You can use download=True to download it"
+            )
 
         self.chip_paths = self._load_collections()
 
@@ -333,6 +336,9 @@ class CloudCoverDetection(NonGeoDataset):
 
         Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+
+        Raises:
+            RuntimeError: if download doesn't work correctly or checksums don't match
         """
         if self._check_integrity():
             print("Files already downloaded and verified")

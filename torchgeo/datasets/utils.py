@@ -17,19 +17,18 @@ import tarfile
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast, overload
+from typing import Any, Union, cast, overload
 
 import numpy as np
 import rasterio
 import torch
 from torch import Tensor
-from torch.utils.data import Dataset
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
+from typing_extensions import TypeAlias
 
 __all__ = (
     "check_integrity",
-    "DatasetNotFoundError",
     "download_url",
     "download_and_extract_archive",
     "extract_archive",
@@ -47,48 +46,7 @@ __all__ = (
     "percentile_normalization",
 )
 
-
-class DatasetNotFoundError(FileNotFoundError):
-    """Raised when a dataset is requested but doesn't exist.
-
-    .. versionadded:: 0.6
-    """
-
-    def __init__(self, dataset: Dataset[object]) -> None:
-        """Intstantiate a new DatasetNotFoundError instance.
-
-        Args:
-            dataset: The dataset that was requested.
-        """
-        msg = "Dataset not found"
-
-        if hasattr(dataset, "root"):
-            var = "root"
-            val = dataset.root
-        elif hasattr(dataset, "paths"):
-            var = "paths"
-            val = dataset.paths
-        else:
-            super().__init__(f"{msg}.")
-            return
-
-        msg += f" in `{var}={val!r}` and "
-
-        if hasattr(dataset, "download") and not dataset.download:
-            msg += "`download=False`"
-        else:
-            msg += "cannot be automatically downloaded"
-
-        msg += f", either specify a different `{var}` or "
-
-        if hasattr(dataset, "download") and not dataset.download:
-            msg += "use `download=True` to automatically"
-        else:
-            msg += "manually"
-
-        msg += " download the dataset."
-
-        super().__init__(msg)
+Path: TypeAlias = Union[str, bytes, os.PathLike[bytes], os.PathLike[str]]
 
 
 class _rarfile:
@@ -203,7 +161,7 @@ def download_and_extract_archive(
     download_url(url, download_root, filename, md5)
 
     archive = os.path.join(download_root, filename)
-    print(f"Extracting {archive} to {extract_root}")
+    print(f"Extracting {archive} to {extract_root!r}")
     extract_archive(archive, extract_root)
 
 
@@ -784,25 +742,23 @@ def percentile_normalization(
     return img_normalized
 
 
-def path_is_vsi(path: str) -> bool:
-    """Checks if the given path is pointing to a Virtual File System.
-
-    .. note::
-       Does not check if the path exists, or if it is a dir or file.
-
-    VSI can for instance be Cloud Storage Blobs or zip-archives.
-    They will start with a prefix indicating this.
-    For examples of these, see references for the two accepted syntaxes.
-
-    * https://gdal.org/user/virtual_file_systems.html
-    * https://rasterio.readthedocs.io/en/latest/topics/datasets.html
+def check_instance_type(paths: Path | Iterable[Path]) -> bool:
+    """Checks if the paths are of valid type and are collections of Path object or not.
 
     Args:
-        path: string representing a directory or file
+        paths: The path object to check for.
 
     Returns:
-        True if path is on a virtual file system, else False
+        Result of the check for given path object.
 
     .. versionadded:: 0.6
     """
-    return "://" in path or path.startswith("/vsi")
+    itr_paths: Iterable[Path]
+    path_types = (str, bytes, os.PathLike)
+    is_not_iterable = False
+    if hasattr(paths, "encode") or hasattr(paths, "decode") or hasattr(paths, "exists"):
+        itr_paths = [paths]  # type: ignore[list-item]
+        is_not_iterable = True
+    else:
+        itr_paths = paths  # type: ignore[assignment]
+    return all([isinstance(path, path_types) for path in itr_paths]) and is_not_iterable

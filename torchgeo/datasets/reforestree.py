@@ -17,12 +17,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    check_integrity,
-    download_and_extract_archive,
-    extract_archive,
-)
+from .utils import Path, check_integrity, download_and_extract_archive, extract_archive
 
 
 class ReforesTree(NonGeoDataset):
@@ -68,7 +63,7 @@ class ReforesTree(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -83,9 +78,10 @@ class ReforesTree(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.checksum = checksum
         self.download = download
@@ -94,7 +90,9 @@ class ReforesTree(NonGeoDataset):
 
         self.files = self._load_files(self.root)
 
-        self.annot_df = pd.read_csv(os.path.join(root, "mapping", "final_dataset.csv"))
+        self.annot_df = pd.read_csv(
+            os.path.join(self.root, "mapping", "final_dataset.csv")
+        )
 
         self.class2idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
@@ -177,7 +175,11 @@ class ReforesTree(NonGeoDataset):
         return boxes, labels, agb
 
     def _verify(self) -> None:
-        """Checks the integrity of the dataset structure."""
+        """Checks the integrity of the dataset structure.
+
+        Raises:
+            RuntimeError: if dataset is not found in root or is corrupted
+        """
         filepaths = [os.path.join(self.root, dir) for dir in ["tiles", "mapping"]]
         if all([os.path.exists(filepath) for filepath in filepaths]):
             return
@@ -191,13 +193,21 @@ class ReforesTree(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # else download the dataset
         self._download()
 
     def _download(self) -> None:
-        """Download the dataset and extract it."""
+        """Download the dataset and extract it.
+
+        Raises:
+            AssertionError: if the checksum does not match
+        """
         download_and_extract_archive(
             self.url,
             self.root,

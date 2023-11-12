@@ -20,13 +20,7 @@ from torch import Tensor
 from torch.utils.data import Dataset
 
 from .geo import NonGeoDataset, RasterDataset
-from .utils import (
-    BoundingBox,
-    DatasetNotFoundError,
-    download_url,
-    extract_archive,
-    working_dir,
-)
+from .utils import BoundingBox, Path, download_url, extract_archive, working_dir
 
 
 class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
@@ -77,7 +71,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
     }
 
     def __init__(
-        self, root: str = "data", download: bool = False, checksum: bool = False
+        self, root: Path = "data", download: bool = False, checksum: bool = False
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
 
@@ -90,9 +84,10 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
-        self.root = root
+        self.root = str(root)
         self.download = download
         self.checksum = checksum
 
@@ -104,7 +99,11 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
         self._verify()
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         if self._verify_data():
             return
 
@@ -116,7 +115,11 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download the dataset
         self._download()
@@ -208,7 +211,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -231,7 +234,8 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
         LandCoverAIBase.__init__(self, root, download, checksum)
         RasterDataset.__init__(self, root, crs, res, transforms=transforms, cache=cache)
@@ -297,7 +301,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -315,7 +319,8 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
         assert split in ["train", "val", "test"]
 

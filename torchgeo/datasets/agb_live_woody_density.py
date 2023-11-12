@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import DatasetNotFoundError, download_url
+from .utils import Path, check_instance_type, download_url
 
 
 class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
@@ -44,7 +44,10 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     is_image = False
 
-    url = "https://opendata.arcgis.com/api/v3/datasets/e4bdbe8d6d8d4e32ace7d36a4aec7b93_0/downloads/data?format=geojson&spatialRefId=4326"  # noqa: E501
+    url = (
+        "https://opendata.arcgis.com/api/v3/datasets/3e8736c8866b458687"
+        "e00d40c9f00bce_0/downloads/data?format=geojson&spatialRefId=4326"
+    )
 
     base_filename = "Aboveground_Live_Woody_Biomass_Density.geojson"
 
@@ -56,7 +59,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -77,7 +80,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            FileNotFoundError: if no files are found in ``paths``
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -90,20 +93,31 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if dataset is missing
+        """
         # Check if the extracted files already exist
         if self.files:
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.paths!r}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download the dataset
         self._download()
 
     def _download(self) -> None:
         """Download the dataset."""
+        if check_instance_type(self.paths):
+            self.paths = str(self.paths)
+
         assert isinstance(self.paths, str)
         download_url(self.url, self.paths, self.base_filename)
 
@@ -112,7 +126,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
         for item in content["features"]:
             download_url(
-                item["properties"]["Mg_px_1_download"],
+                item["properties"]["download"],
                 self.paths,
                 item["properties"]["tile_id"] + ".tif",
             )

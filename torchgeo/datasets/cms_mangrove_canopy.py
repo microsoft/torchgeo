@@ -4,6 +4,7 @@
 """CMS Global Mangrove Canopy dataset."""
 
 import os
+from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
@@ -11,7 +12,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import DatasetNotFoundError, check_integrity, extract_archive
+from .utils import Path, check_instance_type, check_integrity, extract_archive
 
 
 class CMSGlobalMangroveCanopy(RasterDataset):
@@ -167,7 +168,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         measurement: str = "agb",
@@ -192,8 +193,9 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
+            FileNotFoundError: if no files are found in ``paths``
+            RuntimeError: if dataset is missing or checksum fails
             AssertionError: if country or measurement arg are not str or invalid
-            DatasetNotFoundError: If dataset is not found.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -224,26 +226,34 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if dataset is missing or checksum fails
+        """
         # Check if the extracted files already exist
         if self.files:
             return
 
         # Check if the zip file has already been downloaded
-        assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, self.zipfile)
+        assert check_instance_type(self.paths)
+        pathname = os.path.join(str(self.paths), self.zipfile)
         if os.path.exists(pathname):
             if self.checksum and not check_integrity(pathname, self.md5):
                 raise RuntimeError("Dataset found, but corrupted.")
             self._extract()
             return
 
-        raise DatasetNotFoundError(self)
+        raise RuntimeError(
+            f"Dataset not found in `root={self.paths!r}` "
+            "either specify a different `root` directory or make sure you "
+            "have manually downloaded the dataset as instructed in the documentation."
+        )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, self.zipfile)
+        assert check_instance_type(self.paths)
+        pathname = os.path.join(str(self.paths), self.zipfile)
         extract_archive(pathname)
 
     def plot(

@@ -15,7 +15,7 @@ from torch import Tensor
 
 from torchgeo.datasets import NonGeoDataset
 
-from .utils import DatasetNotFoundError, check_integrity, extract_archive
+from .utils import Path, check_integrity, extract_archive
 
 
 class MillionAID(NonGeoDataset):
@@ -188,7 +188,7 @@ class MillionAID(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         task: str = "multi-class",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -205,9 +205,9 @@ class MillionAID(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found.
+            RuntimeError: if dataset is not found
         """
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.checksum = checksum
         assert task in self.tasks
@@ -326,7 +326,11 @@ class MillionAID(NonGeoDataset):
             extract_archive(filepath)
             return
 
-        raise DatasetNotFoundError(self)
+        raise RuntimeError(
+            f"Dataset not found in `root={self.root}` directory, either "
+            "specify a different `root` directory or manually download "
+            "the dataset to this directory."
+        )
 
     def plot(
         self,

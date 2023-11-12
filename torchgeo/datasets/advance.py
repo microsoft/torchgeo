@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class ADVANCE(NonGeoDataset):
@@ -86,7 +86,7 @@ class ADVANCE(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -101,9 +101,10 @@ class ADVANCE(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.checksum = checksum
 
@@ -111,7 +112,10 @@ class ADVANCE(NonGeoDataset):
             self._download()
 
         if not self._check_integrity():
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                "Dataset not found or corrupted. "
+                + "You can use download=True to download it"
+            )
 
         self.files = self._load_files(self.root)
         self.classes = sorted({f["cls"] for f in self.files})
@@ -164,7 +168,7 @@ class ADVANCE(NonGeoDataset):
         ]
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -214,7 +218,11 @@ class ADVANCE(NonGeoDataset):
         return True
 
     def _download(self) -> None:
-        """Download the dataset and extract it."""
+        """Download the dataset and extract it.
+
+        Raises:
+            AssertionError: if the checksum of split.py does not match
+        """
         if self._check_integrity():
             print("Files already downloaded and verified")
             return

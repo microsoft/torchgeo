@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
-    DatasetNotFoundError,
+    Path,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -90,7 +90,7 @@ class DeepGlobeLandCover(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
@@ -103,12 +103,9 @@ class DeepGlobeLandCover(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found.
         """
         assert split in self.splits
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
@@ -122,15 +119,19 @@ class DeepGlobeLandCover(NonGeoDataset):
         self.image_fns = []
         self.mask_fns = []
         for image in sorted(
-            os.listdir(os.path.join(root, self.data_root, split_folder, "images"))
+            os.listdir(os.path.join(self.root, self.data_root, split_folder, "images"))
         ):
             if image.endswith(".jpg"):
                 id = image[:-8]
                 image_path = os.path.join(
-                    root, self.data_root, split_folder, "images", image
+                    self.root, self.data_root, split_folder, "images", image
                 )
                 mask_path = os.path.join(
-                    root, self.data_root, split_folder, "masks", str(id) + "_mask.png"
+                    self.root,
+                    self.data_root,
+                    split_folder,
+                    "masks",
+                    str(id) + "_mask.png",
                 )
 
                 self.image_fns.append(image_path)
@@ -199,7 +200,11 @@ class DeepGlobeLandCover(NonGeoDataset):
         return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if checksum fails or the dataset is not downloaded
+        """
         # Check if the files already exist
         if os.path.exists(os.path.join(self.root, self.data_root)):
             return
@@ -213,7 +218,11 @@ class DeepGlobeLandCover(NonGeoDataset):
             extract_archive(filepath)
             return
 
-        raise DatasetNotFoundError(self)
+        # Check if the user requested to download the dataset
+        raise RuntimeError(
+            "Dataset not found in `root`, either specify a different"
+            + " `root` directory or manually download the dataset to this directory."
+        )
 
     def plot(
         self,

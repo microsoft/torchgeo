@@ -9,7 +9,6 @@ import glob
 import os
 import re
 import sys
-import warnings
 from collections.abc import Iterable, Sequence
 from typing import Any, Callable, Optional, Union, cast
 
@@ -32,11 +31,11 @@ from torchvision.datasets.folder import default_loader as pil_loader
 
 from .utils import (
     BoundingBox,
-    DatasetNotFoundError,
+    Path,
+    check_instance_type,
     concat_samples,
     disambiguate_timestamp,
     merge_samples,
-    path_is_vsi,
 )
 
 
@@ -80,7 +79,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    paths: Union[str, Iterable[str]]
+    paths: Union[Path, Iterable[Path]]
     _crs = CRS.from_epsg(4326)
     _res = 0.0
 
@@ -286,7 +285,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self._res = new_res
 
     @property
-    def files(self) -> set[str]:
+    def files(self) -> set[Path]:
         """A list of all files in the dataset.
 
         Returns:
@@ -295,25 +294,20 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, str):
-            paths: Iterable[str] = [self.paths]
+        paths: Iterable[Path]
+        if check_instance_type(self.paths):
+            paths = [self.paths]  # type: ignore[list-item]
         else:
-            paths = self.paths
+            paths = self.paths  # type: ignore[assignment]
 
         # Using set to remove any duplicates if directories are overlapping
-        files: set[str] = set()
+        files: set[Path] = set()
         for path in paths:
             if os.path.isdir(path):
-                pathname = os.path.join(path, "**", self.filename_glob)
+                pathname = os.path.join(str(path), "**", self.filename_glob)
                 files |= set(glob.iglob(pathname, recursive=True))
-            elif os.path.isfile(path) or path_is_vsi(path):
-                files.add(path)
             else:
-                warnings.warn(
-                    f"Could not find any relevant files for provided path '{path}'. "
-                    f"Path was ignored.",
-                    UserWarning,
-                )
+                files.add(path)
 
         return files
 
@@ -370,7 +364,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -391,7 +385,7 @@ class RasterDataset(GeoDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            DatasetNotFoundError: If dataset is not found.
+            FileNotFoundError: if no files are found in ``paths``
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -406,7 +400,7 @@ class RasterDataset(GeoDataset):
         i = 0
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         for filepath in self.files:
-            match = re.match(filename_regex, os.path.basename(filepath))
+            match = re.match(filename_regex, os.path.basename(str(filepath)))
             if match is not None:
                 try:
                     with rasterio.open(filepath) as src:
@@ -439,8 +433,13 @@ class RasterDataset(GeoDataset):
                     i += 1
 
         if i == 0:
-            raise DatasetNotFoundError(self)
-
+            msg = (
+                f"No {self.__class__.__name__} data was found "
+                f"in `paths={self.paths!r}'`"
+            )
+            if self.bands:
+                msg += f" with `bands={self.bands}`"
+            raise FileNotFoundError(msg)
         if not self.separate_files:
             self.band_indexes = None
             if self.bands:
@@ -582,7 +581,7 @@ class VectorDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -601,7 +600,7 @@ class VectorDataset(GeoDataset):
                 rasterized into the mask
 
         Raises:
-            DatasetNotFoundError: If dataset is not found.
+            FileNotFoundError: if no files are found in ``root``
 
         .. versionadded:: 0.4
             The *label_name* parameter.
@@ -637,7 +636,9 @@ class VectorDataset(GeoDataset):
                 i += 1
 
         if i == 0:
-            raise DatasetNotFoundError(self)
+            str_path = str(paths)
+            msg = f"No {self.__class__.__name__} data was found in `root='{str_path}'`"
+            raise FileNotFoundError(msg)
 
         self._crs = crs
         self._res = res
@@ -755,7 +756,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         loader: Optional[Callable[[str], Any]] = pil_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,
@@ -774,7 +775,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         # When transform & target_transform are None, ImageFolder.__getitem__(index)
         # returns a PIL.Image and int for image and label, respectively
         super().__init__(
-            root=root,
+            root=str(root),
             transform=None,
             target_transform=None,
             loader=loader,

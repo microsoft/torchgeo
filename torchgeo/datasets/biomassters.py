@@ -16,7 +16,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, percentile_normalization
+from .utils import Path, percentile_normalization
 
 
 class BioMassters(NonGeoDataset):
@@ -57,7 +57,7 @@ class BioMassters(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         sensors: Sequence[str] = ["S1", "S2"],
         as_time_series: bool = False,
@@ -75,11 +75,10 @@ class BioMassters(NonGeoDataset):
             as_time_series: whether or not to return all available
                 time-steps or just a single one for a given target location
 
-        Raises:
+        RuntimeError:
             AssertionError: if ``split`` or ``sensors`` is invalid
-            DatasetNotFoundError: If dataset is not found.
         """
-        self.root = root
+        self.root = str(root)
 
         assert (
             split in self.valid_splits
@@ -213,7 +212,7 @@ class BioMassters(NonGeoDataset):
         if all(exists):
             return
 
-        raise DatasetNotFoundError(self)
+        raise RuntimeError(f"Dataset not found in `root={self.root}`.")
 
     def plot(
         self,

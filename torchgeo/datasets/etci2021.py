@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class ETCI2021(NonGeoDataset):
@@ -80,7 +80,7 @@ class ETCI2021(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -98,11 +98,12 @@ class ETCI2021(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
         assert split in self.metadata.keys()
 
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
@@ -111,7 +112,10 @@ class ETCI2021(NonGeoDataset):
             self._download()
 
         if not self._check_integrity():
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                "Dataset not found or corrupted. "
+                + "You can use download=True to download it"
+            )
 
         self.files = self._load_files(self.root, self.split)
 
@@ -239,7 +243,11 @@ class ETCI2021(NonGeoDataset):
         return True
 
     def _download(self) -> None:
-        """Download the dataset and extract it."""
+        """Download the dataset and extract it.
+
+        Raises:
+            AssertionError: if the checksum of split.py does not match
+        """
         if self._check_integrity():
             print("Files already downloaded and verified")
             return

@@ -14,13 +14,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import (
-    DatasetNotFoundError,
-    check_integrity,
-    download_url,
-    extract_archive,
-    rasterio_loader,
-)
+from .utils import Path, check_integrity, download_url, extract_archive, rasterio_loader
 
 
 class EuroSAT(NonGeoClassificationDataset):
@@ -102,7 +96,7 @@ class EuroSAT(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -122,12 +116,13 @@ class EuroSAT(NonGeoClassificationDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
 
         .. versionadded:: 0.3
            The *bands* parameter.
         """
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -149,7 +144,7 @@ class EuroSAT(NonGeoClassificationDataset):
         is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
 
         super().__init__(
-            root=os.path.join(root, self.base_dir),
+            root=os.path.join(self.root, self.base_dir),
             transforms=transforms,
             loader=rasterio_loader,
             is_valid_file=is_in_split,
@@ -185,7 +180,11 @@ class EuroSAT(NonGeoClassificationDataset):
         return integrity
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the files already exist
         filepath = os.path.join(self.root, self.base_dir)
         if os.path.exists(filepath):
@@ -198,7 +197,11 @@ class EuroSAT(NonGeoClassificationDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                "Dataset not found in `root` directory and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download and extract the dataset
         self._download()

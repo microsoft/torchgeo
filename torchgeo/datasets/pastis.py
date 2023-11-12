@@ -16,7 +16,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, check_integrity, download_url, extract_archive
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
 class PASTIS(NonGeoDataset):
@@ -128,7 +128,7 @@ class PASTIS(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         folds: Sequence[int] = (0, 1, 2, 3, 4),
         bands: str = "s2",
         mode: str = "semantic",
@@ -149,14 +149,11 @@ class PASTIS(NonGeoDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert set(folds) <= set(range(6))
         assert bands in ["s1a", "s1d", "s2"]
         assert mode in ["semantic", "instance"]
-        self.root = root
+        self.root = str(root)
         self.folds = folds
         self.bands = bands
         self.mode = mode
@@ -311,7 +308,11 @@ class PASTIS(NonGeoDataset):
         return files
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the directory already exists
         path = os.path.join(self.root, self.directory)
         if os.path.exists(path):
@@ -327,7 +328,11 @@ class PASTIS(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download and extract the dataset
         self._download()

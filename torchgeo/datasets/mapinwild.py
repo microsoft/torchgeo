@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
-    DatasetNotFoundError,
+    Path,
     check_integrity,
     download_url,
     extract_archive,
@@ -108,7 +108,7 @@ class MapInWild(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         modality: list[str] = ["mask", "esa_wc", "viirs", "s2_summer"],
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -129,12 +129,11 @@ class MapInWild(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in ["train", "validation", "test"]
 
         self.checksum = checksum
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.modality = modality
         self.download = download
@@ -229,6 +228,9 @@ class MapInWild(NonGeoDataset):
         Args:
             url: url to the file
             md5: md5 of the file to be verified
+
+        Raises:
+            RuntimeError: if dataset is not found
         """
         modality_folder_name = url.split("/")[-1]
         mod_fold_no_ext = modality_folder_name.split(".")[0]
@@ -251,7 +253,11 @@ class MapInWild(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` directory and `download=False`, "  # noqa: E501
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download the dataset
         self._download(url, md5)

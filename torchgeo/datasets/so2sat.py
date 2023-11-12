@@ -14,7 +14,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, check_integrity, percentile_normalization
+from .utils import Path, check_integrity, percentile_normalization
 
 
 class So2Sat(NonGeoDataset):
@@ -187,7 +187,7 @@ class So2Sat(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         version: str = "2",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
@@ -208,7 +208,7 @@ class So2Sat(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            DatasetNotFoundError: If dataset is not found.
+            RuntimeError: if data is not found in ``root``, or checksums don't match
 
         .. versionadded:: 0.3
            The *bands* parameter.
@@ -248,7 +248,7 @@ class So2Sat(NonGeoDataset):
 
         self.bands = bands
 
-        self.root = root
+        self.root = str(root)
         self.version = version
         self.split = split
         self.transforms = transforms
@@ -257,7 +257,7 @@ class So2Sat(NonGeoDataset):
         self.fn = os.path.join(self.root, self.filenames_by_version[version][split])
 
         if not self._check_integrity():
-            raise DatasetNotFoundError(self)
+            raise RuntimeError("Dataset not found or corrupted.")
 
         with h5py.File(self.fn, "r") as f:
             self.size: int = f["label"].shape[0]

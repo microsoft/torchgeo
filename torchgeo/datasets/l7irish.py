@@ -14,7 +14,7 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import RasterDataset
-from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
+from .utils import BoundingBox, Path, check_instance_type, download_url, extract_archive
 
 
 class L7Irish(RasterDataset):
@@ -91,7 +91,7 @@ class L7Irish(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = CRS.from_epsg(3857),
         res: Optional[float] = None,
         bands: Sequence[str] = all_bands,
@@ -116,7 +116,8 @@ class L7Irish(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
         self.paths = paths
         self.download = download
@@ -129,21 +130,29 @@ class L7Irish(RasterDataset):
         )
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the extracted files already exist
         if self.files:
             return
 
         # Check if the tar.gz files have already been downloaded
-        assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, "*.tar.gz")
+        assert check_instance_type(self.paths)
+        pathname = os.path.join(str(self.paths), "*.tar.gz")
         if glob.glob(pathname):
             self._extract()
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.paths!r}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download the dataset
         self._download()
@@ -153,13 +162,15 @@ class L7Irish(RasterDataset):
         """Download the dataset."""
         for biome, md5 in self.md5s.items():
             download_url(
-                self.url.format(biome), self.paths, md5=md5 if self.checksum else None
+                self.url.format(biome),
+                str(self.paths),
+                md5=md5 if self.checksum else None,
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, "*.tar.gz")
+        assert check_instance_type(self.paths)
+        pathname = os.path.join(str(self.paths), "*.tar.gz")
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
 

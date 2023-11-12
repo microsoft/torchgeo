@@ -3,6 +3,7 @@
 
 """Aster Global Digital Elevation Model dataset."""
 
+from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
@@ -10,7 +11,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import DatasetNotFoundError
+from .utils import Path
 
 
 class AsterGDEM(RasterDataset):
@@ -46,7 +47,7 @@ class AsterGDEM(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -66,7 +67,8 @@ class AsterGDEM(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            DatasetNotFoundError: If dataset is not found.
+            FileNotFoundError: if no files are found in ``paths``
+            RuntimeError: if dataset is missing
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -78,12 +80,20 @@ class AsterGDEM(RasterDataset):
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if dataset is missing
+        """
         # Check if the extracted files already exists
         if self.files:
             return
 
-        raise DatasetNotFoundError(self)
+        raise RuntimeError(
+            f"Dataset not found in `root={self.paths!r}` "
+            "either specify a different `root` directory or make sure you "
+            "have manually downloaded dataset tiles as suggested in the documentation."
+        )
 
     def plot(
         self,

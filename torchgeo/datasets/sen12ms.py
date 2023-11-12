@@ -15,7 +15,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, check_integrity, percentile_normalization
+from .utils import Path, check_integrity, percentile_normalization
 
 
 class SEN12MS(NonGeoDataset):
@@ -165,7 +165,7 @@ class SEN12MS(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -189,7 +189,7 @@ class SEN12MS(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            DatasetNotFoundError: If dataset is not found.
+            RuntimeError: if data is not found in ``root``, or checksums don't match
         """
         assert split in ["train", "test"]
 
@@ -199,15 +199,17 @@ class SEN12MS(NonGeoDataset):
         ).long()
         self.bands = bands
 
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
 
-        if (
-            checksum and not self._check_integrity()
-        ) or not self._check_integrity_light():
-            raise DatasetNotFoundError(self)
+        if checksum:
+            if not self._check_integrity():
+                raise RuntimeError("Dataset not found or corrupted.")
+        else:
+            if not self._check_integrity_light():
+                raise RuntimeError("Dataset not found or corrupted.")
 
         with open(os.path.join(self.root, split + "_list.txt")) as f:
             self.ids = [line.rstrip() for line in f.readlines()]

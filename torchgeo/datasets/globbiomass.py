@@ -14,7 +14,13 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import BoundingBox, DatasetNotFoundError, check_integrity, extract_archive
+from .utils import (
+    BoundingBox,
+    Path,
+    check_instance_type,
+    check_integrity,
+    extract_archive,
+)
 
 
 class GlobBiomass(RasterDataset):
@@ -119,7 +125,7 @@ class GlobBiomass(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         measurement: str = "agb",
@@ -142,8 +148,9 @@ class GlobBiomass(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
+            FileNotFoundError: if no files are found in ``paths``
+            RuntimeError: if dataset is missing or checksum fails
             AssertionError: if measurement argument is invalid, or not a str
-            DatasetNotFoundError: If dataset is not found.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -203,14 +210,18 @@ class GlobBiomass(RasterDataset):
         return sample
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if dataset is missing or checksum fails
+        """
         # Check if the extracted file already exists
         if self.files:
             return
 
         # Check if the zip files have already been downloaded
-        assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, self.zipfile_glob)
+        assert check_instance_type(self.paths)
+        pathname = os.path.join(str(self.paths), self.zipfile_glob)
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):
                 filename = os.path.basename(zipfile)
@@ -219,7 +230,11 @@ class GlobBiomass(RasterDataset):
                 extract_archive(zipfile)
             return
 
-        raise DatasetNotFoundError(self)
+        raise RuntimeError(
+            f"Dataset not found in `root={self.paths!r}` "
+            "either specify a different `root` directory or make sure you "
+            "have manually downloaded the dataset as suggested in the documentation."
+        )
 
     def plot(
         self,

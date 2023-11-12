@@ -14,7 +14,7 @@ import pandas as pd
 from rasterio.crs import CRS
 
 from .geo import GeoDataset
-from .utils import BoundingBox, DatasetNotFoundError
+from .utils import BoundingBox, Path
 
 
 def _disambiguate_timestamps(
@@ -79,22 +79,22 @@ class GBIF(GeoDataset):
     res = 0
     _crs = CRS.from_epsg(4326)  # Lat/Lon
 
-    def __init__(self, root: str = "data") -> None:
+    def __init__(self, root: Path = "data") -> None:
         """Initialize a new Dataset instance.
 
         Args:
             root: root directory where dataset can be found
 
         Raises:
-            DatasetNotFoundError: If dataset is not found.
+            FileNotFoundError: if no files are found in ``root``
         """
         super().__init__()
 
-        self.root = root
+        self.root = str(root)
 
-        files = glob.glob(os.path.join(root, "**.csv"))
+        files = glob.glob(os.path.join(self.root, "**.csv"))
         if not files:
-            raise DatasetNotFoundError(self)
+            raise FileNotFoundError(f"Dataset not found in `root={self.root}`")
 
         # Read tab-delimited CSV file
         data = pd.read_table(

@@ -20,12 +20,7 @@ from rasterio.enums import Resampling
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    download_url,
-    extract_archive,
-    percentile_normalization,
-)
+from .utils import Path, download_url, extract_archive, percentile_normalization
 
 
 class SeasoNet(NonGeoDataset):
@@ -212,7 +207,7 @@ class SeasoNet(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         seasons: Collection[str] = all_seasons,
         bands: Iterable[str] = all_bands,
@@ -238,9 +233,6 @@ class SeasoNet(NonGeoDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
         assert set(seasons) <= self.all_seasons
@@ -248,7 +240,7 @@ class SeasoNet(NonGeoDataset):
         assert set(grids) <= {1, 2}
         assert concat_seasons in range(1, len(seasons) + 1)
 
-        self.root = root
+        self.root = str(root)
         self.bands = bands
         self.concat_seasons = concat_seasons
         self.transforms = transforms
@@ -362,7 +354,11 @@ class SeasoNet(NonGeoDataset):
         return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if all files already exist
         if all(
             os.path.exists(os.path.join(self.root, file_info["name"]))
@@ -382,7 +378,12 @@ class SeasoNet(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if missing and not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"{', '.join([m['name'] for m in missing])} not found in"
+                " `root={self.root}` and `download=False`, either specify a"
+                " different `root` directory or use `download=True`"
+                " to automatically download the dataset."
+            )
 
         # Download missing files
         for file_info in missing:

@@ -17,7 +17,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, check_integrity, download_url, extract_archive
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
 def parse_pascal_voc(path: str) -> dict[str, Any]:
@@ -228,7 +228,7 @@ class FAIR1M(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -244,13 +244,14 @@ class FAIR1M(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            DatasetNotFoundError: If dataset is not found.
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
 
         .. versionchanged:: 0.5
            Added *split* and *download* parameters.
         """
         assert split in self.directories
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.download = download
@@ -328,7 +329,11 @@ class FAIR1M(NonGeoDataset):
         return boxes, labels_tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if checksum fails or the dataset is not found
+        """
         # Check if the directories already exist
         exists = []
         for directory in self.directories[self.split]:
@@ -357,10 +362,18 @@ class FAIR1M(NonGeoDataset):
             self._download()
             return
 
-        raise DatasetNotFoundError(self)
+        raise RuntimeError(
+            f"Dataset not found in `root={self.root}` and `download=False`, "
+            "either specify a different `root` directory or use `download=True` "
+            "to automatically download the dataset."
+        )
 
     def _download(self) -> None:
-        """Download the dataset and extract it."""
+        """Download the dataset and extract it.
+
+        Raises:
+            RuntimeError: if download doesn't work correctly or checksums don't match
+        """
         paths = self.paths[self.split]
         urls = self.urls[self.split]
         md5s = self.md5s[self.split]

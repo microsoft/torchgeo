@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class SustainBenchCropYield(NonGeoDataset):
@@ -57,7 +57,7 @@ class SustainBenchCropYield(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         countries: list[str] = ["usa"],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -78,7 +78,7 @@ class SustainBenchCropYield(NonGeoDataset):
         Raises:
             AssertionError: if ``countries`` contains invalid countries or if ``split``
                 is invalid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         assert set(countries).issubset(
             self.valid_countries
@@ -90,7 +90,7 @@ class SustainBenchCropYield(NonGeoDataset):
         ), f"Pleas choose one of these valid data splits {self.valid_splits}."
         self.split = split
 
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -186,7 +186,11 @@ class SustainBenchCropYield(NonGeoDataset):
         return collection
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, self.dir)
         if os.path.exists(pathname):
@@ -200,14 +204,22 @@ class SustainBenchCropYield(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download the dataset
         self._download()
         self._extract()
 
     def _download(self) -> None:
-        """Download the dataset and extract it."""
+        """Download the dataset and extract it.
+
+        Raises:
+            RuntimeError: if download doesn't work correctly or checksums don't match
+        """
         download_url(
             self.url,
             self.root,

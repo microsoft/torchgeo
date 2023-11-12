@@ -12,6 +12,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
+from .utils import Path
 
 
 class Landsat(RasterDataset, abc.ABC):
@@ -58,7 +59,7 @@ class Landsat(RasterDataset, abc.ABC):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -79,7 +80,7 @@ class Landsat(RasterDataset, abc.ABC):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            FileNotFoundError: if no files are found in ``paths``
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.

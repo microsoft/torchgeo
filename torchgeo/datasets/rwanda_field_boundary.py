@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
-    DatasetNotFoundError,
+    Path,
     check_integrity,
     download_radiant_mlhub_collection,
     extract_archive,
@@ -87,7 +87,7 @@ class RwandaFieldBoundary(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         bands: Sequence[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -108,13 +108,14 @@ class RwandaFieldBoundary(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+                or if ``download=True`` and ``api_key=None``
         """
         self._validate_bands(bands)
         assert split in self.splits
         if download and api_key is None:
             raise RuntimeError("Must provide an API key to download the dataset")
-        self.root = os.path.expanduser(root)
+        self.root = str(os.path.expanduser(root))
         self.bands = bands
         self.transforms = transforms
         self.split = split
@@ -204,7 +205,11 @@ class RwandaFieldBoundary(NonGeoDataset):
                 raise ValueError(f"'{band}' is an invalid band name.")
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the subdirectories already exist and have the correct number of files
         checks = []
         for split, num_patches in self.number_of_patches_per_split.items():
@@ -236,13 +241,21 @@ class RwandaFieldBoundary(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download and extract the dataset
         self._download()
 
     def _download(self) -> None:
-        """Download the dataset and extract it."""
+        """Download the dataset and extract it.
+
+        Raises:
+            RuntimeError: if download doesn't work correctly or checksums don't match
+        """
         for collection_id in self.collection_ids:
             download_radiant_mlhub_collection(collection_id, self.root, self.api_key)
 

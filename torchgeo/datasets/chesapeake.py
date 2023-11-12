@@ -24,7 +24,7 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import GeoDataset, RasterDataset
-from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
+from .utils import BoundingBox, Path, check_instance_type, download_url, extract_archive
 
 
 class Chesapeake(RasterDataset, abc.ABC):
@@ -89,7 +89,7 @@ class Chesapeake(RasterDataset, abc.ABC):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -112,7 +112,8 @@ class Chesapeake(RasterDataset, abc.ABC):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            FileNotFoundError: if no files are found in ``paths``
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -137,20 +138,28 @@ class Chesapeake(RasterDataset, abc.ABC):
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the extracted file already exists
         if self.files:
             return
 
         # Check if the zip file has already been downloaded
-        assert isinstance(self.paths, str)
-        if os.path.exists(os.path.join(self.paths, self.zipfile)):
+        assert check_instance_type(self.paths)
+        if os.path.exists(os.path.join(str(self.paths), self.zipfile)):
             self._extract()
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.paths!r}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download the dataset
         self._download()
@@ -158,12 +167,12 @@ class Chesapeake(RasterDataset, abc.ABC):
 
     def _download(self) -> None:
         """Download the dataset."""
-        download_url(self.url, self.paths, filename=self.zipfile, md5=self.md5)
+        download_url(self.url, str(self.paths), filename=self.zipfile, md5=self.md5)
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
-        extract_archive(os.path.join(self.paths, self.zipfile))
+        assert check_instance_type(self.paths)
+        extract_archive(os.path.join(str(self.paths), self.zipfile))
 
     def plot(
         self,
@@ -528,7 +537,7 @@ class ChesapeakeCVPR(GeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         splits: Sequence[str] = ["de-train"],
         layers: Sequence[str] = ["naip-new", "lc"],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -553,13 +562,14 @@ class ChesapeakeCVPR(GeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
+            FileNotFoundError: if no files are found in ``root``
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             AssertionError: if ``splits`` or ``layers`` are not valid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         for split in splits:
             assert split in self.splits
         assert all([layer in self.valid_layers for layer in layers])
-        self.root = root
+        self.root = str(root)
         self.layers = layers
         self.cache = cache
         self.download = download
@@ -582,7 +592,7 @@ class ChesapeakeCVPR(GeoDataset):
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint: float = 0
         maxt: float = sys.maxsize
-        with fiona.open(os.path.join(root, "spatial_index.geojson"), "r") as f:
+        with fiona.open(os.path.join(self.root, "spatial_index.geojson"), "r") as f:
             for i, row in enumerate(f):
                 if row["properties"]["split"] in splits:
                     box = shapely.geometry.shape(row["geometry"])
@@ -684,7 +694,11 @@ class ChesapeakeCVPR(GeoDataset):
         return sample
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
 
         def exists(filename: str) -> bool:
             return os.path.exists(os.path.join(self.root, filename))
@@ -705,7 +719,11 @@ class ChesapeakeCVPR(GeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download the dataset
         self._download()

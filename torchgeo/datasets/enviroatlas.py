@@ -22,7 +22,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import GeoDataset
-from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
+from .utils import BoundingBox, Path, download_url, extract_archive
 
 
 class EnviroAtlas(GeoDataset):
@@ -252,7 +252,7 @@ class EnviroAtlas(GeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         splits: Sequence[str] = ["pittsburgh_pa-2010_1m-train"],
         layers: Sequence[str] = ["naip", "prior"],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -278,13 +278,14 @@ class EnviroAtlas(GeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
+            FileNotFoundError: if no files are found in ``root``
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             AssertionError: if ``splits`` or ``layers`` are not valid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         for split in splits:
             assert split in self.splits
         assert all([layer in self.valid_layers for layer in layers])
-        self.root = root
+        self.root = str(root)
         self.layers = layers
         self.cache = cache
         self.download = download
@@ -299,7 +300,7 @@ class EnviroAtlas(GeoDataset):
         mint: float = 0
         maxt: float = sys.maxsize
         with fiona.open(
-            os.path.join(root, "enviroatlas_lotp", "spatial_index.geojson"), "r"
+            os.path.join(self.root, "enviroatlas_lotp", "spatial_index.geojson"), "r"
         ) as f:
             for i, row in enumerate(f):
                 if row["properties"]["split"] in splits:
@@ -411,7 +412,11 @@ class EnviroAtlas(GeoDataset):
         return sample
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
 
         def exists(filename: str) -> bool:
             return os.path.exists(os.path.join(self.root, "enviroatlas_lotp", filename))
@@ -427,7 +432,11 @@ class EnviroAtlas(GeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download the dataset
         self._download()

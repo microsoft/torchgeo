@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class LoveDA(NonGeoDataset):
@@ -90,7 +90,7 @@ class LoveDA(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         scene: list[str] = ["urban", "rural"],
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -109,8 +109,10 @@ class LoveDA(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``split`` or ``scene`` arguments are invalid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            AssertionError: if ``split`` argument is invalid
+            AssertionError: if ``scene`` argument is invalid
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
         assert split in self.splits
         assert set(scene).intersection(
@@ -118,7 +120,7 @@ class LoveDA(NonGeoDataset):
         ), "The possible scenes are 'rural' and/or 'urban'"
         assert len(scene) <= 2, "There are no other scenes than 'rural' or 'urban'"
 
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.scene = scene
         self.transforms = transforms
@@ -137,7 +139,10 @@ class LoveDA(NonGeoDataset):
             self._download()
 
         if not self._check_integrity():
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                "Dataset not found at root directory or corrupted. "
+                + "You can use download=True to download it"
+            )
 
         self.files = self._load_files(self.scene_paths, self.split)
 
@@ -244,7 +249,11 @@ class LoveDA(NonGeoDataset):
         return True
 
     def _download(self) -> None:
-        """Download the dataset and extract it."""
+        """Download the dataset and extract it.
+
+        Raises:
+            AssertionError: if the checksum of split.py does not match
+        """
         if self._check_integrity():
             print("Files already downloaded and verified")
             return

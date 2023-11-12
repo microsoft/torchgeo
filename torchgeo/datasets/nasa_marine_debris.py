@@ -16,7 +16,7 @@ from torchvision.utils import draw_bounding_boxes
 
 from .geo import NonGeoDataset
 from .utils import (
-    DatasetNotFoundError,
+    Path,
     check_integrity,
     download_radiant_mlhub_collection,
     extract_archive,
@@ -65,7 +65,7 @@ class NASAMarineDebris(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
@@ -82,11 +82,8 @@ class NASAMarineDebris(NonGeoDataset):
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
             checksum: if True, check the MD5 of the downloaded files (may be slow)
             verbose: if True, print messages when new tiles are loaded
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.download = download
         self.api_key = api_key
@@ -183,7 +180,11 @@ class NASAMarineDebris(NonGeoDataset):
         return files
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the files already exist
         exists = [
             os.path.exists(os.path.join(self.root, directory))
@@ -209,7 +210,11 @@ class NASAMarineDebris(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                "Dataset not found in `root` directory and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download and extract the dataset
         for collection_id in self.collection_ids:

@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class PatternNet(NonGeoClassificationDataset):
@@ -83,7 +83,7 @@ class PatternNet(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -96,18 +96,21 @@ class PatternNet(NonGeoClassificationDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        self.root = root
+        self.root = str(root)
         self.download = download
         self.checksum = checksum
         self._verify()
-        super().__init__(root=os.path.join(root, self.directory), transforms=transforms)
+        super().__init__(
+            root=os.path.join(self.root, self.directory), transforms=transforms
+        )
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the files already exist
         filepath = os.path.join(self.root, self.directory)
         if os.path.exists(filepath):
@@ -121,7 +124,11 @@ class PatternNet(NonGeoClassificationDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                "Dataset not found in `root` directory and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download and extract the dataset
         self._download()

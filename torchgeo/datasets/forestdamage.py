@@ -17,12 +17,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    check_integrity,
-    download_and_extract_archive,
-    extract_archive,
-)
+from .utils import Path, check_integrity, download_and_extract_archive, extract_archive
 
 
 def parse_pascal_voc(path: str) -> dict[str, Any]:
@@ -109,7 +104,7 @@ class ForestDamage(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -124,9 +119,10 @@ class ForestDamage(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.checksum = checksum
         self.download = download
@@ -241,13 +237,21 @@ class ForestDamage(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                "Dataset not found in `root` directory, either specify a different"
+                + " `root` directory or manually download "
+                + "the dataset to this directory."
+            )
 
         # else download the dataset
         self._download()
 
     def _download(self) -> None:
-        """Download the dataset and extract it."""
+        """Download the dataset and extract it.
+
+        Raises:
+            AssertionError: if the checksum does not match
+        """
         download_and_extract_archive(
             self.url,
             self.root,

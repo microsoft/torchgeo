@@ -16,12 +16,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    download_url,
-    extract_archive,
-    percentile_normalization,
-)
+from .utils import Path, download_url, extract_archive, percentile_normalization
 
 
 class SeasonalContrastS2(NonGeoDataset):
@@ -74,7 +69,7 @@ class SeasonalContrastS2(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         version: str = "100k",
         seasons: int = 1,
         bands: list[str] = rgb_bands,
@@ -99,14 +94,15 @@ class SeasonalContrastS2(NonGeoDataset):
 
         Raises:
             AssertionError: if ``version`` argument is invalid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
         assert version in self.metadata.keys()
         assert seasons in range(5)
         for band in bands:
             assert band in self.all_bands
 
-        self.root = root
+        self.root = str(root)
         self.version = version
         self.seasons = seasons
         self.bands = bands
@@ -187,7 +183,11 @@ class SeasonalContrastS2(NonGeoDataset):
         return image
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the extracted files already exist
         directory_path = os.path.join(
             self.root, self.metadata[self.version]["directory"]
@@ -203,7 +203,11 @@ class SeasonalContrastS2(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download the dataset
         self._download()

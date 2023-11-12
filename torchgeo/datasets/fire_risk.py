@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class FireRisk(NonGeoClassificationDataset):
@@ -66,7 +66,7 @@ class FireRisk(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -84,21 +84,26 @@ class FireRisk(NonGeoClassificationDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         assert split in self.splits
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.download = download
         self.checksum = checksum
         self._verify()
 
         super().__init__(
-            root=os.path.join(root, self.directory, self.split), transforms=transforms
+            root=os.path.join(self.root, self.directory, self.split),
+            transforms=transforms,
         )
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the files already exist
         path = os.path.join(self.root, self.directory)
         if os.path.exists(path):
@@ -112,7 +117,11 @@ class FireRisk(NonGeoClassificationDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download and extract the dataset
         self._download()

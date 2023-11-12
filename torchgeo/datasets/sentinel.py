@@ -12,6 +12,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
+from .utils import Path
 
 
 class Sentinel(RasterDataset):
@@ -140,7 +141,7 @@ class Sentinel1(Sentinel):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: float = 10,
         bands: Sequence[str] = ["VV", "VH"],
@@ -162,7 +163,7 @@ class Sentinel1(Sentinel):
 
         Raises:
             AssertionError: if ``bands`` is invalid
-            DatasetNotFoundError: If dataset is not found.
+            FileNotFoundError: if no files are found in ``paths``
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -296,7 +297,7 @@ class Sentinel2(Sentinel):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: float = 10,
         bands: Optional[Sequence[str]] = None,
@@ -317,7 +318,7 @@ class Sentinel2(Sentinel):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            DatasetNotFoundError: If dataset is not found.
+            FileNotFoundError: if no files are found in ``paths``
 
         .. versionchanged:: 0.5
             *root* was renamed to *paths*

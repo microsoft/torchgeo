@@ -17,7 +17,7 @@ from torch import Tensor
 from .cdl import CDL
 from .geo import NonGeoDataset
 from .nlcd import NLCD
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class SSL4EOLBenchmark(NonGeoDataset):
@@ -106,7 +106,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         sensor: str = "oli_sr",
         product: str = "cdl",
         split: str = "train",
@@ -131,7 +131,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
         Raises:
             AssertionError: if any arguments are invalid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         assert (
             sensor in self.valid_sensors
@@ -155,7 +155,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         ), f"Only the following classes are valid: {list(self.cmap.keys())}."
         assert 0 in classes, "Classes must include the background class: 0"
 
-        self.root = root
+        self.root = str(root)
         self.classes = classes
         self.transforms = transforms
         self.download = download
@@ -190,7 +190,11 @@ class SSL4EOLBenchmark(NonGeoDataset):
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the extracted files already exist
         img_pathname = os.path.join(self.root, self.img_dir_name, "**", "all_bands.tif")
         exists = []
@@ -219,7 +223,11 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download the dataset
         self._download()

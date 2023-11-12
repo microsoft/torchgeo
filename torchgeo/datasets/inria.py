@@ -16,12 +16,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    check_integrity,
-    extract_archive,
-    percentile_normalization,
-)
+from .utils import Path, check_integrity, extract_archive, percentile_normalization
 
 
 class InriaAerialImageLabeling(NonGeoDataset):
@@ -62,7 +57,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         checksum: bool = False,
@@ -78,16 +73,16 @@ class InriaAerialImageLabeling(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` is invalid
-            DatasetNotFoundError: If dataset is not found.
+            RuntimeError: if dataset is missing
         """
-        self.root = root
+        self.root = str(root)
         assert split in {"train", "val", "test"}
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
 
         self._verify()
-        self.files = self._load_files(root)
+        self.files = self._load_files(self.root)
 
     def _load_files(self, root: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
@@ -190,7 +185,11 @@ class InriaAerialImageLabeling(NonGeoDataset):
         archive_path = os.path.join(self.root, self.filename)
         md5_hash = self.md5 if self.checksum else None
         if not os.path.isfile(archive_path):
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` "
+                "either specify a different `root` directory "
+                "or download the dataset to this directory"
+            )
         if not check_integrity(archive_path, md5_hash):
             raise RuntimeError("Dataset corrupted")
         print("Extracting...")

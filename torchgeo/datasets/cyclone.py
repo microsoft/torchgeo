@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
-    DatasetNotFoundError,
+    Path,
     check_integrity,
     download_radiant_mlhub_collection,
     extract_archive,
@@ -71,7 +71,7 @@ class TropicalCyclone(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
@@ -91,11 +91,11 @@ class TropicalCyclone(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         assert split in self.md5s
 
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
@@ -104,10 +104,13 @@ class TropicalCyclone(NonGeoDataset):
             self._download(api_key)
 
         if not self._check_integrity():
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                "Dataset not found or corrupted. "
+                + "You can use download=True to download it"
+            )
 
         output_dir = "_".join([self.collection_id, split, "source"])
-        filename = os.path.join(root, output_dir, "collection.json")
+        filename = os.path.join(self.root, output_dir, "collection.json")
         with open(filename) as f:
             self.collection = json.load(f)["links"]
 
@@ -208,6 +211,9 @@ class TropicalCyclone(NonGeoDataset):
 
         Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+
+        Raises:
+            RuntimeError: if download doesn't work correctly or checksums don't match
         """
         if self._check_integrity():
             print("Files already downloaded and verified")

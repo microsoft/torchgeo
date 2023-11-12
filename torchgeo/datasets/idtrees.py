@@ -20,7 +20,7 @@ from torchvision.ops import clip_boxes_to_image, remove_small_boxes
 from torchvision.utils import draw_bounding_boxes
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class IDTReeS(NonGeoDataset):
@@ -145,7 +145,7 @@ class IDTReeS(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         task: str = "task1",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -166,11 +166,10 @@ class IDTReeS(NonGeoDataset):
 
         Raises:
             ImportError: if laspy is not installed
-            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in ["train", "test"]
         assert task in ["task1", "task2"]
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.task = task
         self.transforms = transforms
@@ -188,7 +187,7 @@ class IDTReeS(NonGeoDataset):
                 "laspy is not installed and is required to use this dataset"
             )
 
-        self.images, self.geometries, self.labels = self._load(root)
+        self.images, self.geometries, self.labels = self._load(self.root)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -444,7 +443,11 @@ class IDTReeS(NonGeoDataset):
         return boxes, labels
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         url = self.metadata[self.split]["url"]
         md5 = self.metadata[self.split]["md5"]
         filename = self.metadata[self.split]["filename"]
@@ -466,7 +469,11 @@ class IDTReeS(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                "Dataset not found in `root` directory and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download and extract the dataset
         download_url(

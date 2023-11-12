@@ -17,7 +17,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class USAVars(NonGeoDataset):
@@ -86,7 +86,7 @@ class USAVars(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         labels: Sequence[str] = ALL_LABELS,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -106,9 +106,10 @@ class USAVars(NonGeoDataset):
 
         Raises:
             AssertionError: if invalid labels are provided
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
-        self.root = root
+        self.root = str(root)
 
         assert split in self.split_metadata
         self.split = split
@@ -185,7 +186,11 @@ class USAVars(NonGeoDataset):
             return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, "uar")
         csv_pathname = os.path.join(self.root, "*.csv")
@@ -203,7 +208,11 @@ class USAVars(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         self._download()
         self._extract()

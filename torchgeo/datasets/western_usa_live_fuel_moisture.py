@@ -13,11 +13,7 @@ import torch
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    download_radiant_mlhub_collection,
-    extract_archive,
-)
+from .utils import Path, download_radiant_mlhub_collection, extract_archive
 
 
 class WesternUSALiveFuelMoisture(NonGeoDataset):
@@ -202,7 +198,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         input_features: list[str] = all_variable_names,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
@@ -222,11 +218,11 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         Raises:
             AssertionError: if ``input_features`` contains invalid variable names
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         super().__init__()
 
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.checksum = checksum
         self.download = download
@@ -304,7 +300,11 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         return df
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, self.collection_id)
         if os.path.exists(pathname):
@@ -318,7 +318,11 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                f"Dataset not found in `root={self.root}` and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download the dataset
         self._download()
@@ -334,6 +338,9 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
+
+        Raises:
+            RuntimeError: if download doesn't work correctly or checksums don't match
         """
         download_radiant_mlhub_collection(self.collection_id, self.root, api_key)
         filename = os.path.join(self.root, self.collection_id) + ".tar.gz"

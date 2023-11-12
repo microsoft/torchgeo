@@ -12,7 +12,12 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import VectorDataset
-from .utils import DatasetNotFoundError, check_integrity, download_and_extract_archive
+from .utils import (
+    Path,
+    check_instance_type,
+    check_integrity,
+    download_and_extract_archive,
+)
 
 
 class CanadianBuildingFootprints(VectorDataset):
@@ -61,7 +66,7 @@ class CanadianBuildingFootprints(VectorDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: float = 0.00001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -81,7 +86,9 @@ class CanadianBuildingFootprints(VectorDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            FileNotFoundError: if no files are found in ``root``
+            RuntimeError: if ``download=False`` and data is not found, or
+                ``checksum=True`` and checksums don't match
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -93,7 +100,10 @@ class CanadianBuildingFootprints(VectorDataset):
             self._download()
 
         if not self._check_integrity():
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                "Dataset not found or corrupted. "
+                + "You can use download=True to download it"
+            )
 
         super().__init__(paths, crs, res, transforms)
 
@@ -103,9 +113,9 @@ class CanadianBuildingFootprints(VectorDataset):
         Returns:
             True if dataset files are found and/or MD5s match, else False
         """
-        assert isinstance(self.paths, str)
+        assert check_instance_type(self.paths)
         for prov_terr, md5 in zip(self.provinces_territories, self.md5s):
-            filepath = os.path.join(self.paths, prov_terr + ".zip")
+            filepath = os.path.join(str(self.paths), prov_terr + ".zip")
             if not check_integrity(filepath, md5 if self.checksum else None):
                 return False
         return True
@@ -115,11 +125,11 @@ class CanadianBuildingFootprints(VectorDataset):
         if self._check_integrity():
             print("Files already downloaded and verified")
             return
-        assert isinstance(self.paths, str)
+        assert check_instance_type(self.paths)
         for prov_terr, md5 in zip(self.provinces_territories, self.md5s):
             download_and_extract_archive(
                 self.url + prov_terr + ".zip",
-                self.paths,
+                str(self.paths),
                 md5=md5 if self.checksum else None,
             )
 

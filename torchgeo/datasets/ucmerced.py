@@ -12,7 +12,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import DatasetNotFoundError, check_integrity, download_url, extract_archive
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
 class UCMerced(NonGeoClassificationDataset):
@@ -83,7 +83,7 @@ class UCMerced(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -100,10 +100,11 @@ class UCMerced(NonGeoClassificationDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            RuntimeError: if ``download=False`` and data is not found, or checksums
+                don't match
         """
         assert split in self.splits
-        self.root = root
+        self.root = str(root)
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -116,7 +117,7 @@ class UCMerced(NonGeoClassificationDataset):
         is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
 
         super().__init__(
-            root=os.path.join(root, self.base_dir),
+            root=os.path.join(self.root, self.base_dir),
             transforms=transforms,
             is_valid_file=is_in_split,
         )
@@ -146,7 +147,11 @@ class UCMerced(NonGeoClassificationDataset):
         return integrity
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+        """
         # Check if the files already exist
         filepath = os.path.join(self.root, self.base_dir)
         if os.path.exists(filepath):
@@ -159,7 +164,11 @@ class UCMerced(NonGeoClassificationDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise DatasetNotFoundError(self)
+            raise RuntimeError(
+                "Dataset not found in `root` directory and `download=False`, "
+                "either specify a different `root` directory or use `download=True` "
+                "to automatically download the dataset."
+            )
 
         # Download and extract the dataset
         self._download()
@@ -205,11 +214,6 @@ class UCMerced(NonGeoClassificationDataset):
         .. versionadded:: 0.2
         """
         image = np.rollaxis(sample["image"].numpy(), 0, 3)
-
-        # Normalize the image if the max value is greater than 1
-        if image.max() > 1:
-            image = image.astype(np.float32) / 255.0  # Scale to [0, 1]
-
         label = cast(int, sample["label"].item())
         label_class = self.classes[label]
 

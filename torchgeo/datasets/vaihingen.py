@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
-    DatasetNotFoundError,
+    Path,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -120,7 +120,7 @@ class Vaihingen2D(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
@@ -133,13 +133,9 @@ class Vaihingen2D(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            AssertionError: If *split* is invalid.
-            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
-        self.root = root
+        self.root = str(root)
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
@@ -148,8 +144,8 @@ class Vaihingen2D(NonGeoDataset):
 
         self.files = []
         for name in self.splits[split]:
-            image = os.path.join(root, self.image_root, name)
-            mask = os.path.join(root, name)
+            image = os.path.join(self.root, self.image_root, name)
+            mask = os.path.join(self.root, name)
             if os.path.exists(image) and os.path.exists(mask):
                 self.files.append(dict(image=image, mask=mask))
 
@@ -215,7 +211,11 @@ class Vaihingen2D(NonGeoDataset):
         return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if checksum fails or the dataset is not downloaded
+        """
         # Check if the files already exist
         if os.path.exists(os.path.join(self.root, self.image_root)):
             return
@@ -235,7 +235,11 @@ class Vaihingen2D(NonGeoDataset):
         if all(exists):
             return
 
-        raise DatasetNotFoundError(self)
+        # Check if the user requested to download the dataset
+        raise RuntimeError(
+            "Dataset not found in `root` directory, either specify a different"
+            + " `root` directory or manually download the dataset to this directory."
+        )
 
     def plot(
         self,

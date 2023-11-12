@@ -23,7 +23,7 @@ from rasterio.crs import CRS
 from rtree.index import Index, Property
 
 from .geo import VectorDataset
-from .utils import BoundingBox, DatasetNotFoundError, check_integrity
+from .utils import BoundingBox, Path, check_instance_type, check_integrity
 
 
 class OpenBuildings(VectorDataset):
@@ -206,7 +206,7 @@ class OpenBuildings(VectorDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[Path, Iterable[Path]] = "data",
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -224,7 +224,7 @@ class OpenBuildings(VectorDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found.
+            FileNotFoundError: if no files are found in ``root``
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -240,8 +240,8 @@ class OpenBuildings(VectorDataset):
         # Create an R-tree to index the dataset using the polygon centroid as bounds
         self.index = Index(interleaved=False, properties=Property(dimension=3))
 
-        assert isinstance(self.paths, str)
-        with open(os.path.join(self.paths, "tiles.geojson")) as f:
+        assert check_instance_type(self.paths)
+        with open(os.path.join(str(self.paths), "tiles.geojson")) as f:
             data = json.load(f)
 
         features = data["features"]
@@ -249,7 +249,7 @@ class OpenBuildings(VectorDataset):
             feature["properties"]["tile_url"].split("/")[-1] for feature in features
         ]  # get csv filename
 
-        polygon_files = glob.glob(os.path.join(self.paths, self.zipfile_glob))
+        polygon_files = glob.glob(os.path.join(str(self.paths), self.zipfile_glob))
         polygon_filenames = [f.split(os.sep)[-1] for f in polygon_files]
 
         matched_features = [
@@ -278,13 +278,15 @@ class OpenBuildings(VectorDataset):
             coords = (minx, maxx, miny, maxy, mint, maxt)
 
             filepath = os.path.join(
-                self.paths, feature["properties"]["tile_url"].split("/")[-1]
+                str(self.paths), feature["properties"]["tile_url"].split("/")[-1]
             )
             self.index.insert(i, coords, filepath)
             i += 1
 
         if i == 0:
-            raise DatasetNotFoundError(self)
+            raise FileNotFoundError(
+                f"No {self.__class__.__name__} data was found in '{self.paths!r}'"
+            )
 
         self._crs = crs
         self._source_crs = source_crs
@@ -393,10 +395,15 @@ class OpenBuildings(VectorDataset):
         return transformed
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset."""
+        """Verify the integrity of the dataset.
+
+        Raises:
+            RuntimeError: if dataset is missing or checksum fails
+            FileNotFoundError: if metadata file is not found in root
+        """
         # Check if the zip files have already been downloaded and checksum
-        assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, self.zipfile_glob)
+        assert check_instance_type(self.paths)
+        pathname = os.path.join(str(self.paths), self.zipfile_glob)
         i = 0
         for zipfile in glob.iglob(pathname):
             filename = os.path.basename(zipfile)
@@ -407,7 +414,18 @@ class OpenBuildings(VectorDataset):
         if i != 0:
             return
 
-        raise DatasetNotFoundError(self)
+        # check if the metadata file has been downloaded
+        if not os.path.exists(os.path.join(str(self.paths), self.meta_data_filename)):
+            raise FileNotFoundError(
+                f"Meta data file {self.meta_data_filename} "
+                f"not found in in `root={self.paths!r}`."
+            )
+
+        raise RuntimeError(
+            f"Dataset not found in `root={self.paths!r}` "
+            "either specify a different `root` directory or make sure you "
+            "have manually downloaded the dataset as suggested in the documentation."
+        )
 
     def plot(
         self,
