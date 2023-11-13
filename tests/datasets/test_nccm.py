@@ -14,6 +14,7 @@ from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import NCCM, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets.utils import DatasetNotFoundError
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -27,22 +28,14 @@ class TestNCCM:
         url = os.path.join("tests", "data", "nccm", "13090442.zip")
         transforms = nn.Identity()
         monkeypatch.setattr(NCCM, "url", url)
-
-        return NCCM(transforms=transforms, download=True, checksum=True)
+        root = str(tmp_path)
+        return NCCM(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: NCCM) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
-
-    def test_classes(self) -> None:
-        root = os.path.join("tests", "data", "nccm")
-        classes = list(NCCM.cmap.keys())[0:2]
-        ds = NCCM(root, classes=classes)
-        sample = ds[ds.bounds]
-        mask = sample["mask"]
-        assert mask.max() < len(classes)
 
     def test_and(self, dataset: NCCM) -> None:
         ds = dataset & dataset
@@ -61,20 +54,6 @@ class TestNCCM:
         shutil.copy(pathname, root)
         NCCM(root)
 
-    # def test_invalid_year(self, tmp_path: Path) -> None:
-    #     with pytest.raises(
-    #         AssertionError,
-    #         match="NCCM data product only exists for the following years:",
-    #     ):
-    #         NCCM(str(tmp_path))
-
-    def test_invalid_classes(self) -> None:
-        with pytest.raises(AssertionError):
-            NCCM(classes=[-1])
-
-        with pytest.raises(AssertionError):
-            NCCM(classes=[11])
-
     def test_plot(self, dataset: NCCM) -> None:
         query = dataset.bounds
         x = dataset[query]
@@ -89,7 +68,7 @@ class TestNCCM:
         plt.close()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             NCCM(str(tmp_path))
 
     def test_invalid_query(self, dataset: NCCM) -> None:

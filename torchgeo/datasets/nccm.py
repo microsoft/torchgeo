@@ -2,7 +2,6 @@
 
 import glob
 import os
-import shutil
 from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
@@ -12,7 +11,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
 
 
 class NCCM(RasterDataset):
@@ -31,7 +30,7 @@ class NCCM(RasterDataset):
     based on ground truth data. The dataset contains information
     specific to three years: 2017, 2018, 2019.
 
-    The dataset contains 4 classes:
+    The dataset contains 5 classes:
 
     0. paddy rice
     1. maize
@@ -60,8 +59,6 @@ class NCCM(RasterDataset):
     url = "https://figshare.com/ndownloader/articles/13090442/versions/1"
     md5 = "eae952f1b346d7e649d027e8139a76f5"
 
-    # years = [2017, 2018, 2019]
-
     cmap = {
         0: (0, 255, 0, 255),
         1: (255, 0, 0, 255),
@@ -75,8 +72,6 @@ class NCCM(RasterDataset):
         paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        # years: list[int] = [2017, 2018, 2019],
-        classes: list[int] = list(cmap.keys()),
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
@@ -90,8 +85,6 @@ class NCCM(RasterDataset):
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
-            classes: list of classes to include, the rest will be mapped to 0
-                (defaults to all classes)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
@@ -99,31 +92,19 @@ class NCCM(RasterDataset):
             checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
-            AssertionError: if ``years`` or ``classes`` are invalid
             FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
-        # assert all(
-        #     year in self.years for year in years
-        # ), f"NCCM data product only exists for the following years: {self.years}"
-
-        assert (
-            set(classes) <= self.cmap.keys()
-        ), f"Only the following classes are valid: {list(self.cmap.keys())}."
-
         self.paths = paths
-        # self.years = years
-        self.classes = classes
         self.download = download
         self.checksum = checksum
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
-        self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
-
+        self.ordinal_cmap = torch.zeros((5, 4), dtype=torch.uint8)
 
         self._verify()
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
-        for v, k in enumerate(self.classes):
+        for v, k in enumerate(list(self.cmap.keys())):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
@@ -147,7 +128,7 @@ class NCCM(RasterDataset):
         """Verify the integrity of the dataset.
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         # Check if the extracted files already exist
         if self.files:
@@ -162,11 +143,7 @@ class NCCM(RasterDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `paths={self.paths!r}` and `download=False`, "
-                "either specify different `paths` or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
