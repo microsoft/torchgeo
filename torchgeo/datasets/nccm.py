@@ -45,7 +45,8 @@ class NCCM(RasterDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    https://doi.org/10.1038/s41597-021-00827-9
+    * https://doi.org/10.1038/s41597-021-00827-9
+
     .. versionadded:: 0.6
     """
 
