@@ -31,6 +31,7 @@ from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
+from .digital_typhoon import DigitalTyphoonAnalysis
 from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
 from .esri2020 import Esri2020
@@ -184,6 +185,7 @@ __all__ = (
     "CV4AKenyaCropType",
     "DeepGlobeLandCover",
     "DFC2022",
+    "DigitalTyphoonAnalysis",
     "EnviroAtlas",
     "ETCI2021",
     "EuroSAT",
