@@ -32,16 +32,16 @@ class NCCM(RasterDataset):
 
     The dataset contains 5 classes:
 
-    0. paddy rice
-    1. maize
-    2. soybean
-    3. others crops and lands
-    15. no-data
+    * 0. paddy rice
+    * 1. maize
+    * 2. soybean
+    * 3. others crops and lands
+    * 15. no-data
 
     Dataset format:
 
-    1. Three .TIF files containing the labels
-    2. JavaScript code to download images from the dataset.
+    * Three .TIF files containing the labels
+    * JavaScript code to download images from the dataset.
 
     If you use this dataset in your research, please cite the following paper:
 
