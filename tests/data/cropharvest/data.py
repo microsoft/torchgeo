@@ -21,31 +21,33 @@ PATHS = [
         "arrays",
         "0_TestDataset1.h5"
         ),
-     os.path.join(
+    os.path.join(
         "CropHarvest",
         "features",
         "arrays",
         "1_TestDataset1.h5"
         ),
-     os.path.join(
+    os.path.join(
         "CropHarvest",
         "features",
         "arrays",
         "2_TestDataset1.h5"
         ),
-     os.path.join(
+    os.path.join(
         "CropHarvest",
         "features",
         "arrays",
         "0_TestDataset2.h5"
         ),
-     os.path.join(
+    os.path.join(
         "CropHarvest",
         "features",
         "arrays",
         "1_TestDataset2.h5"
         )
 ]
+
+
 def create_geojson():
     geojson = {
         "type": "FeatureCollection",
@@ -56,8 +58,8 @@ def create_geojson():
                 "properties": {
                     "dataset": "TestDataset1",
                     "index": 0,
-                    "is_crop":1,
-                    "label":"soy"
+                    "is_crop": 1,
+                    "label": "soy"
                 },
                 "geometry": {
                     "type": "Polygon",
@@ -71,8 +73,8 @@ def create_geojson():
                 "properties": {
                     "dataset": "TestDataset1",
                     "index": 0,
-                    "is_crop":1,
-                    "label":"beans"
+                    "is_crop": 1,
+                    "label": "beans"
                 },
                 "geometry": {
                     "type": "Polygon",
@@ -86,8 +88,8 @@ def create_geojson():
                 "properties": {
                     "dataset": "TestDataset1",
                     "index": 1,
-                    "is_crop":1,
-                    "label":None
+                    "is_crop": 1,
+                    "label": None
                 },
                 "geometry": {
                     "type": "Polygon",
@@ -101,8 +103,8 @@ def create_geojson():
                 "properties": {
                     "dataset": "TestDataset2",
                     "index": 2,
-                    "is_crop":1,
-                    "label":"maize"
+                    "is_crop": 1,
+                    "label": "maize"
                 },
                 "geometry": {
                     "type": "Polygon",
@@ -116,8 +118,8 @@ def create_geojson():
                 "properties": {
                     "dataset": "TestDataset2",
                     "index": 1,
-                    "is_crop":0,
-                    "label":None
+                    "is_crop": 0,
+                    "label": None
                 },
                 "geometry": {
                     "type": "Polygon",
@@ -130,6 +132,7 @@ def create_geojson():
     }
     return geojson
 
+
 def create_file(path: str) -> None:
     Z = np.random.randint(4000, size=(12, 18), dtype=np.int64)
     with h5py.File(path, 'w') as f:
@@ -137,12 +140,12 @@ def create_file(path: str) -> None:
 
 
 if __name__ == "__main__":
-    directory = "CropHarvest"    
+    directory = "CropHarvest"
 
     # remove old data
     if os.path.isdir(directory):
         shutil.rmtree(directory)
-    
+
     label_path = os.path.join(directory, "labels.geojson")
     geojson = create_geojson()
     os.makedirs(os.path.dirname(label_path), exist_ok=True)
@@ -154,15 +157,15 @@ if __name__ == "__main__":
         os.makedirs(os.path.dirname(path), exist_ok=True)
         create_file(path)
 
-
     # compress data
-    shutil.make_archive(os.path.join(directory, "features"), "gztar", directory, "features")
+    source_dir = os.path.join(directory, "features")
+    shutil.make_archive(source_dir, "gztar", directory, "features")
 
     # compute checksum
     with open(label_path, "rb") as f:
         md5 = hashlib.md5(f.read()).hexdigest()
         print(f"{label_path}: {md5}")
-    
+
     with open(os.path.join(directory, "features.tar.gz"), "rb") as f:
         md5 = hashlib.md5(f.read()).hexdigest()
         print(f"zipped features: {md5}")
