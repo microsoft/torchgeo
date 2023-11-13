@@ -13,7 +13,13 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import NLCD, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets import (
+    NLCD,
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -69,7 +75,7 @@ class TestNLCD:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: NLCD) -> None:
-        NLCD(root=dataset.root, download=True, years=[2019])
+        NLCD(dataset.paths, download=True, years=[2019])
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(
@@ -107,7 +113,7 @@ class TestNLCD:
         plt.close()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             NLCD(str(tmp_path))
 
     def test_invalid_query(self, dataset: NLCD) -> None:

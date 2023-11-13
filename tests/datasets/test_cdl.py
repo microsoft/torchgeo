@@ -15,7 +15,13 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import CDL, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets import (
+    CDL,
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -74,7 +80,7 @@ class TestCDL:
         next(dataset.index.intersection(tuple(query)))
 
     def test_already_extracted(self, dataset: CDL) -> None:
-        CDL(root=dataset.root, years=[2020, 2021])
+        CDL(dataset.paths, years=[2020, 2021])
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests", "data", "cdl", "*_30m_cdls.zip")
@@ -111,7 +117,7 @@ class TestCDL:
         plt.close()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             CDL(str(tmp_path))
 
     def test_invalid_query(self, dataset: CDL) -> None:

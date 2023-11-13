@@ -47,7 +47,9 @@ class TestResNet18:
 
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta["in_chans"]
-        sample = {"image": torch.arange(c * 4 * 4, dtype=torch.float).view(c, 4, 4)}
+        sample = {
+            "image": torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
+        }
         mocked_weights.transforms(sample)
 
     @pytest.mark.slow
@@ -82,7 +84,9 @@ class TestResNet50:
 
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta["in_chans"]
-        sample = {"image": torch.arange(c * 4 * 4, dtype=torch.float).view(c, 4, 4)}
+        sample = {
+            "image": torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
+        }
         mocked_weights.transforms(sample)
 
     @pytest.mark.slow

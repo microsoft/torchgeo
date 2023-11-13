@@ -13,6 +13,7 @@ from rasterio.crs import CRS
 
 from torchgeo.datasets import (
     BoundingBox,
+    DatasetNotFoundError,
     IntersectionDataset,
     Sentinel1,
     Sentinel2,
@@ -64,7 +65,7 @@ class TestSentinel1:
         plt.close()
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No Sentinel1 data was found in "):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             Sentinel1(str(tmp_path))
 
     def test_empty_bands(self) -> None:
@@ -123,7 +124,7 @@ class TestSentinel2:
         assert isinstance(ds, UnionDataset)
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No Sentinel2 data was found in "):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             Sentinel2(str(tmp_path))
 
     def test_plot(self, dataset: Sentinel2) -> None:
@@ -133,7 +134,7 @@ class TestSentinel2:
 
     def test_plot_wrong_bands(self, dataset: Sentinel2) -> None:
         bands = ["B02"]
-        ds = Sentinel2(root=dataset.root, res=dataset.res, bands=bands)
+        ds = Sentinel2(dataset.paths, res=dataset.res, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
             ValueError, match="Dataset doesn't contain some of the RGB bands"

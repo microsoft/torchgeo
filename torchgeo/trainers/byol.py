@@ -1,23 +1,22 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""BYOL tasks."""
+"""BYOL trainer for self-supervised learning (SSL)."""
 
 import os
-from typing import Any, Optional, cast
+from typing import Any, Optional, Union
 
 import timm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from kornia import augmentation as K
-from lightning.pytorch import LightningModule
-from torch import Tensor, optim
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch import Tensor
 from torchvision.models._api import WeightsEnum
 
 from ..models import get_weight
 from . import utils
+from .base import BaseTask
 
 
 def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
@@ -75,7 +74,8 @@ class SimCLRAugmentation(nn.Module):
         Returns:
             an augmented batch of imagery
         """
-        return cast(Tensor, self.augmentation(x))
+        z: Tensor = self.augmentation(x)
+        return z
 
 
 class MLP(nn.Module):
@@ -108,7 +108,8 @@ class MLP(nn.Module):
         Returns:
             embedded version of the input
         """
-        return cast(Tensor, self.mlp(x))
+        z: Tensor = self.mlp(x)
+        return z
 
 
 class BackboneWrapper(nn.Module):
@@ -122,7 +123,7 @@ class BackboneWrapper(nn.Module):
     * The forward call returns the output of the projection head
 
     .. versionchanged 0.4: Name changed from *EncoderWrapper* to
-        *BackboneWrapper*.
+       *BackboneWrapper*.
     """
 
     def __init__(
@@ -270,7 +271,8 @@ class BYOL(nn.Module):
         Returns:
             output from the model
         """
-        return cast(Tensor, self.predictor(self.backbone(x)))
+        z: Tensor = self.predictor(self.backbone(x))
+        return z
 
     def update_target(self) -> None:
         """Method to update the "target" model weights."""
@@ -278,29 +280,59 @@ class BYOL(nn.Module):
             pt.data = self.beta * pt.data + (1 - self.beta) * p.data
 
 
-class BYOLTask(LightningModule):
-    """Class for pre-training any PyTorch model using BYOL.
+class BYOLTask(BaseTask):
+    """BYOL: Bootstrap Your Own Latent.
 
-    Supports any available `Timm model
-    <https://huggingface.co/docs/timm/index>`_
-    as an architecture choice. To see a list of available pretrained
-    models, you can do:
+    Reference implementation:
 
-    .. code-block:: python
+    * https://github.com/deepmind/deepmind-research/tree/master/byol
 
-        import timm
-        print(timm.list_models())
+    If you use this trainer in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2006.07733
     """
 
-    def config_task(self) -> None:
-        """Configures the task based on kwargs parameters passed to the constructor."""
-        # Create model
-        in_channels = self.hyperparams["in_channels"]
-        weights = self.hyperparams["weights"]
+    monitor = "train_loss"
+
+    def __init__(
+        self,
+        model: str = "resnet50",
+        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        in_channels: int = 3,
+        lr: float = 1e-3,
+        patience: int = 10,
+    ) -> None:
+        """Initialize a new BYOLTask instance.
+
+        Args:
+            model: Name of the `timm
+                <https://huggingface.co/docs/timm/reference/models>`__ model to use.
+            weights: Initial model weights. Either a weight enum, the string
+                representation of a weight enum, True for ImageNet weights, False
+                or None for random weights, or the path to a saved model state dict.
+            in_channels: Number of input channels to model.
+            lr: Learning rate for optimizer.
+            patience: Patience for learning rate scheduler.
+
+        .. versionchanged:: 0.4
+           *backbone_name* was renamed to *backbone*. Changed backbone support from
+           torchvision.models to timm.
+
+        .. versionchanged:: 0.5
+           *backbone*, *learning_rate*, and *learning_rate_schedule_patience* were
+           renamed to *model*, *lr*, and *patience*.
+        """
+        self.weights = weights
+        super().__init__(ignore="weights")
+
+    def configure_models(self) -> None:
+        """Initialize the model."""
+        weights = self.weights
+        in_channels: int = self.hparams["in_channels"]
+
+        # Create backbone
         backbone = timm.create_model(
-            self.hyperparams["backbone"],
-            in_chans=in_channels,
-            pretrained=weights is True,
+            self.hparams["model"], in_chans=in_channels, pretrained=weights is True
         )
 
         # Load weights
@@ -315,79 +347,25 @@ class BYOLTask(LightningModule):
 
         self.model = BYOL(backbone, in_channels=in_channels, image_size=(224, 224))
 
-    def __init__(self, **kwargs: Any) -> None:
-        """Initialize a LightningModule for pre-training a model with BYOL.
+    def training_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the training loss and additional metrics.
 
-        Keyword Args:
-            in_channels: Number of input channels to model
-            backbone: Name of the timm model to use
-            weights: Either a weight enum, the string representation of a weight enum,
-                True for ImageNet weights, False or None for random weights,
-                or the path to a saved model state dict.
-            learning_rate: Learning rate for optimizer
-            learning_rate_schedule_patience: Patience for learning rate scheduler
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+
+        Returns:
+            The loss tensor.
 
         Raises:
-            ValueError: if kwargs arguments are invalid
-
-        .. versionchanged:: 0.4
-           The *backbone_name* parameter was renamed to *backbone*. Change backbone
-           support from torchvision.models to timm.
+            AssertionError: If channel dimensions are incorrect.
         """
-        super().__init__()
-
-        # Creates `self.hparams` from kwargs
-        self.save_hyperparameters()
-        self.hyperparams = cast(dict[str, Any], self.hparams)
-
-        self.config_task()
-
-    def forward(self, *args: Any, **kwargs: Any) -> Any:
-        """Forward pass of the model.
-
-        Args:
-            x: tensor of data to run through the model
-
-        Returns:
-            output from the model
-        """
-        return self.model(*args, **kwargs)
-
-    def configure_optimizers(self) -> dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler.
-
-        Returns:
-            learning rate dictionary.
-        """
-        optimizer_class = getattr(optim, self.hyperparams.get("optimizer", "Adam"))
-        lr = self.hyperparams.get("learning_rate", 1e-4)
-        weight_decay = self.hyperparams.get("weight_decay", 1e-6)
-        optimizer = optimizer_class(self.parameters(), lr=lr, weight_decay=weight_decay)
-
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    patience=self.hyperparams["learning_rate_schedule_patience"],
-                ),
-                "monitor": "train_loss",
-            },
-        }
-
-    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Compute and return the training loss.
-
-        Args:
-            batch: the output of your DataLoader
-
-        Returns:
-            training loss
-        """
-        batch = args[0]
         x = batch["image"]
 
-        in_channels = self.hyperparams["in_channels"]
+        in_channels = self.hparams["in_channels"]
         assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
 
         if x.size(1) == in_channels:
@@ -409,16 +387,18 @@ class BYOLTask(LightningModule):
 
         loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
 
-        self.log("train_loss", loss, on_step=True, on_epoch=False)
+        self.log("train_loss", loss)
         self.model.update_target()
 
         return loss
 
-    def validation_step(self, *args: Any, **kwargs: Any) -> None:
+    def validation_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
         """No-op, does nothing."""
 
-    def test_step(self, *args: Any, **kwargs: Any) -> None:
+    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
-    def predict_step(self, *args: Any, **kwargs: Any) -> None:
+    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""

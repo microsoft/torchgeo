@@ -16,6 +16,7 @@ from rasterio.crs import CRS
 import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
+    DatasetNotFoundError,
     EnviroAtlas,
     IntersectionDataset,
     UnionDataset,
@@ -47,7 +48,7 @@ class TestEnviroAtlas:
         )
         monkeypatch.setattr(
             EnviroAtlas,
-            "files",
+            "_files",
             ["pittsburgh_pa-2010_1m-train_tiles-debuffered", "spatial_index.geojson"],
         )
         root = str(tmp_path)
@@ -88,7 +89,7 @@ class TestEnviroAtlas:
         EnviroAtlas(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             EnviroAtlas(str(tmp_path), checksum=True)
 
     def test_out_of_bounds_query(self, dataset: EnviroAtlas) -> None:

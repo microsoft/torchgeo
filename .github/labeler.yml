@@ -16,13 +16,13 @@ transforms:
 
 # Other
 dependencies:
-- "environment.yml"
-- "setup.cfg"
+- "pyproject.toml"
 - "requirements/**"
 documentation:
 - "docs/**"
 scripts:
-- "*.py"
+- "torchgeo/__main__.py"
+- "torchgeo/main.py"
 - "experiments/**"
 testing:
 - "tests/**"

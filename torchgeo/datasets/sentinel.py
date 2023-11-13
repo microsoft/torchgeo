@@ -3,11 +3,12 @@
 
 """Sentinel datasets."""
 
-from collections.abc import Sequence
-from typing import Any, Callable, Optional
+from collections.abc import Iterable, Sequence
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import torch
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
@@ -139,7 +140,7 @@ class Sentinel1(Sentinel):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, list[str]] = "data",
         crs: Optional[CRS] = None,
         res: float = 10,
         bands: Sequence[str] = ["VV", "VH"],
@@ -149,7 +150,7 @@ class Sentinel1(Sentinel):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -161,7 +162,10 @@ class Sentinel1(Sentinel):
 
         Raises:
             AssertionError: if ``bands`` is invalid
-            FileNotFoundError: if no files are found in ``root``
+            DatasetNotFoundError: If dataset is not found.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
         assert len(bands) > 0, "'bands' cannot be an empty list"
         assert len(bands) == len(set(bands)), "'bands' contains duplicate bands"
@@ -183,14 +187,14 @@ To create a dataset containing both, use:
 
         self.filename_glob = self.filename_glob.format(bands[0])
 
-        super().__init__(root, crs, res, bands, transforms, cache)
+        super().__init__(paths, crs, res, bands, transforms, cache)
 
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -292,7 +296,7 @@ class Sentinel2(Sentinel):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: float = 10,
         bands: Optional[Sequence[str]] = None,
@@ -302,7 +306,7 @@ class Sentinel2(Sentinel):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -313,20 +317,23 @@ class Sentinel2(Sentinel):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            DatasetNotFoundError: If dataset is not found.
+
+        .. versionchanged:: 0.5
+            *root* was renamed to *paths*
         """
         bands = bands or self.all_bands
         self.filename_glob = self.filename_glob.format(bands[0])
         self.filename_regex = self.filename_regex.format(res)
 
-        super().__init__(root, crs, res, bands, transforms, cache)
+        super().__init__(paths, crs, res, bands, transforms, cache)
 
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

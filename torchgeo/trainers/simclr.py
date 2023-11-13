@@ -5,18 +5,18 @@
 
 import os
 import warnings
-from typing import Any, Optional, Union, cast
+from typing import Any, Optional, Union
 
 import kornia.augmentation as K
+import lightning
 import timm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from lightly.loss import NTXentLoss
 from lightly.models.modules import SimCLRProjectionHead
-from lightning import LightningModule
 from torch import Tensor
-from torch.optim import Adam, Optimizer
+from torch.optim import Adam
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torchvision.models._api import WeightsEnum
 
@@ -24,11 +24,7 @@ import torchgeo.transforms as T
 
 from ..models import get_weight
 from . import utils
-
-try:
-    from torch.optim.lr_scheduler import LRScheduler
-except ImportError:
-    from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
+from .base import BaseTask
 
 
 def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
@@ -57,7 +53,7 @@ def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
     )
 
 
-class SimCLRTask(LightningModule):
+class SimCLRTask(BaseTask):
     """SimCLR: a simple framework for contrastive learning of visual representations.
 
     Reference implementation:
@@ -71,6 +67,8 @@ class SimCLRTask(LightningModule):
 
     .. versionadded:: 0.5
     """
+
+    monitor = "train_loss"
 
     def __init__(
         self,
@@ -93,7 +91,8 @@ class SimCLRTask(LightningModule):
         """Initialize a new SimCLRTask instance.
 
         Args:
-            model: Name of the timm model to use.
+            model: Name of the `timm
+                <https://huggingface.co/docs/timm/reference/models>`__ model to use.
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False
                 or None for random weights, or the path to a saved model state dict.
@@ -122,8 +121,6 @@ class SimCLRTask(LightningModule):
         Warns:
             UserWarning: If hyperparameters do not match SimCLR version requested.
         """
-        super().__init__()
-
         # Validate hyperparameters
         assert version in range(1, 3)
         if version == 1:
@@ -137,16 +134,34 @@ class SimCLRTask(LightningModule):
             if memory_bank_size == 0:
                 warnings.warn("SimCLR v2 uses a memory bank")
 
-        self.save_hyperparameters(ignore=["augmentations"])
+        self.weights = weights
+        super().__init__(ignore=["weights", "augmentations"])
 
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
         self.augmentations = augmentations or simclr_augmentations(
             size, grayscale_weights
         )
 
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion."""
+        self.criterion = NTXentLoss(
+            self.hparams["temperature"],
+            self.hparams["memory_bank_size"],
+            self.hparams["gather_distributed"],
+        )
+
+    def configure_models(self) -> None:
+        """Initialize the model."""
+        weights = self.weights
+        hidden_dim: int = self.hparams["hidden_dim"]
+        output_dim: int = self.hparams["output_dim"]
+
         # Create backbone
         self.backbone = timm.create_model(
-            model, in_chans=in_channels, num_classes=0, pretrained=weights is True
+            self.hparams["model"],
+            in_chans=self.hparams["in_channels"],
+            num_classes=0,
+            pretrained=weights is True,
         )
 
         # Load weights
@@ -167,11 +182,8 @@ class SimCLRTask(LightningModule):
             output_dim = input_dim
 
         self.projection_head = SimCLRProjectionHead(
-            input_dim, hidden_dim, output_dim, layers
+            input_dim, hidden_dim, output_dim, self.hparams["layers"]
         )
-
-        # Define loss function
-        self.criterion = NTXentLoss(temperature, memory_bank_size, gather_distributed)
 
         # Initialize moving average of output
         self.avg_output_std = 0.0
@@ -187,11 +199,11 @@ class SimCLRTask(LightningModule):
             x: Mini-batch of images.
 
         Returns:
-            Output from the model and backbone.
+            Output of the model and backbone.
         """
-        h = self.backbone(x)  # shape of batch_size x num_features
+        h: Tensor = self.backbone(x)  # shape of batch_size x num_features
         z = self.projection_head(h)
-        return cast(Tensor, z), cast(Tensor, h)
+        return z, h
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -205,10 +217,13 @@ class SimCLRTask(LightningModule):
 
         Returns:
             The loss tensor.
+
+        Raises:
+            AssertionError: If channel dimensions are incorrect.
         """
         x = batch["image"]
 
-        in_channels = self.hparams["in_channels"]
+        in_channels: int = self.hparams["in_channels"]
         assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
 
         if x.size(1) == in_channels:
@@ -225,7 +240,7 @@ class SimCLRTask(LightningModule):
         z1, h1 = self(x1)
         z2, h2 = self(x2)
 
-        loss = self.criterion(z1, z2)
+        loss: Tensor = self.criterion(z1, z2)
 
         # Calculate the mean normalized standard deviation over features dimensions.
         # If this is << 1 / sqrt(h1.shape[1]), then the model is not learning anything.
@@ -238,7 +253,7 @@ class SimCLRTask(LightningModule):
         self.log("train_ssl_std", self.avg_output_std)
         self.log("train_loss", loss)
 
-        return cast(Tensor, loss)
+        return loss
 
     def validation_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -253,7 +268,9 @@ class SimCLRTask(LightningModule):
     def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
-    def configure_optimizers(self) -> tuple[list[Optimizer], list[LRScheduler]]:
+    def configure_optimizers(
+        self,
+    ) -> "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig":
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
@@ -272,7 +289,7 @@ class SimCLRTask(LightningModule):
             warmup_epochs = 10
         else:
             warmup_epochs = int(max_epochs * 0.05)
-        lr_scheduler = SequentialLR(
+        scheduler = SequentialLR(
             optimizer,
             schedulers=[
                 LinearLR(optimizer, total_iters=warmup_epochs),
@@ -280,4 +297,7 @@ class SimCLRTask(LightningModule):
             ],
             milestones=[warmup_epochs],
         )
-        return [optimizer], [lr_scheduler]
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},
+        }

@@ -52,6 +52,13 @@ _gassl_transforms = AugmentationSequential(
     data_keys=["image"],
 )
 
+# https://github.com/microsoft/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43  # noqa: E501
+_ssl4eo_l_transforms = AugmentationSequential(
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
+    K.CenterCrop((224, 224)),
+    data_keys=["image"],
+)
+
 # https://github.com/pytorch/vision/pull/6883
 # https://github.com/pytorch/vision/pull/7107
 # Can be removed once torchvision>=0.15 is required
@@ -66,6 +73,136 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
 
     .. versionadded:: 0.4
     """
+
+    LANDSAT_TM_TOA_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet18_landsat_tm_toa_moco-1c691b4f.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_TM_TOA_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet18_landsat_tm_toa_simclr-d2d38ace.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
+    LANDSAT_ETM_TOA_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet18_landsat_etm_toa_moco-bb88689c.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 9,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_ETM_TOA_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet18_landsat_etm_toa_simclr-4d813f79.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 9,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
+    LANDSAT_ETM_SR_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet18_landsat_etm_sr_moco-4f078acd.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 6,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_ETM_SR_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet18_landsat_etm_sr_simclr-8e8543b4.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 6,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
+    LANDSAT_OLI_TIRS_TOA_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet18_landsat_oli_tirs_toa_moco-a3002f51.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 11,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_OLI_TIRS_TOA_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet18_landsat_oli_tirs_toa_simclr-b0635cc6.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 11,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
+    LANDSAT_OLI_SR_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet18_landsat_oli_sr_moco-660e82ed.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_OLI_SR_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet18_landsat_oli_sr_simclr-7bced5be.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
 
     SENTINEL2_ALL_MOCO = Weights(
         url="https://huggingface.co/torchgeo/resnet18_sentinel2_all_moco/resolve/main/resnet18_sentinel2_all_moco-59bfdff9.pth",  # noqa: E501
@@ -94,7 +231,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_SECO = Weights(
-        url="https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_seco/resolve/main/resnet18_sentinel2_rgb_seco-9976a9cb.pth",  # noqa: E501
+        url="https://huggingface.co/torchgeo/resnet18_sentinel2_rgb_seco/resolve/main/resnet18_sentinel2_rgb_seco-cefca942.pth",  # noqa: E501
         transforms=_seco_transforms,
         meta={
             "dataset": "SeCo Dataset",
@@ -126,6 +263,136 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             "publication": "https://arxiv.org/abs/2011.09980",
             "repo": "https://github.com/sustainlab-group/geography-aware-ssl",
             "ssl_method": "gassl",
+        },
+    )
+
+    LANDSAT_TM_TOA_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet50_landsat_tm_toa_moco-ba1ce753.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_TM_TOA_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet50_landsat_tm_toa_simclr-a1c93432.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
+    LANDSAT_ETM_TOA_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet50_landsat_etm_toa_moco-e9a84d5a.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 9,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_ETM_TOA_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet50_landsat_etm_toa_simclr-70b5575f.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 9,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
+    LANDSAT_ETM_SR_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet50_landsat_etm_sr_moco-1266cde3.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 6,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_ETM_SR_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet50_landsat_etm_sr_simclr-e5d185d7.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 6,
+            "model": "resnet18",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
+    LANDSAT_OLI_TIRS_TOA_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet50_landsat_oli_tirs_toa_moco-de7f5e0f.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 11,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_OLI_TIRS_TOA_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet50_landsat_oli_tirs_toa_simclr-030cebfe.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 11,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
+    LANDSAT_OLI_SR_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet50_landsat_oli_sr_moco-ff580dad.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_OLI_SR_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/resnet50_landsat_oli_sr_simclr-94f78913.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
         },
     )
 
@@ -182,7 +449,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_SECO = Weights(
-        url="https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_seco/resolve/main/resnet50_sentinel2_rgb_seco-584035db.pth",  # noqa: E501
+        url="https://huggingface.co/torchgeo/resnet50_sentinel2_rgb_seco/resolve/main/resnet50_sentinel2_rgb_seco-018bf397.pth",  # noqa: E501
         transforms=_seco_transforms,
         meta={
             "dataset": "SeCo Dataset",
@@ -220,7 +487,11 @@ def resnet18(
     model: ResNet = timm.create_model("resnet18", *args, **kwargs)
 
     if weights:
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+        missing_keys, unexpected_keys = model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        assert set(missing_keys) <= {"fc.weight", "fc.bias"}
+        assert not unexpected_keys
 
     return model
 
@@ -251,6 +522,10 @@ def resnet50(
     model: ResNet = timm.create_model("resnet50", *args, **kwargs)
 
     if weights:
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+        missing_keys, unexpected_keys = model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        assert set(missing_keys) <= {"fc.weight", "fc.bias"}
+        assert not unexpected_keys
 
     return model

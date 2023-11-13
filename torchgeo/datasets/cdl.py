@@ -3,16 +3,17 @@
 
 """CDL dataset."""
 
-import glob
 import os
-from typing import Any, Callable, Optional
+from collections.abc import Iterable
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import torch
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
 
 
 class CDL(RasterDataset):
@@ -204,7 +205,7 @@ class CDL(RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         years: list[int] = [2022],
@@ -217,7 +218,7 @@ class CDL(RasterDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -233,11 +234,13 @@ class CDL(RasterDataset):
 
         Raises:
             AssertionError: if ``years`` or ``classes`` are invalid
-            FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
 
         .. versionadded:: 0.5
            The *years* and *classes* parameters.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
         assert set(years) <= self.md5s.keys(), (
             "CDL data product only exists for the following years: "
@@ -248,7 +251,7 @@ class CDL(RasterDataset):
         ), f"Only the following classes are valid: {list(self.cmap.keys())}."
         assert 0 in classes, "Classes must include the background class: 0"
 
-        self.root = root
+        self.paths = paths
         self.years = years
         self.classes = classes
         self.download = download
@@ -258,7 +261,7 @@ class CDL(RasterDataset):
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms=transforms, cache=cache)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
         for v, k in enumerate(self.classes):
@@ -282,28 +285,17 @@ class CDL(RasterDataset):
         return sample
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        exists = []
-        for year in self.years:
-            filename_year = self.filename_glob.replace("*", str(year))
-            pathname = os.path.join(self.root, "**", filename_year)
-            for fname in glob.iglob(pathname, recursive=True):
-                if not fname.endswith(".zip"):
-                    exists.append(True)
-
-        if len(exists) == len(self.years):
+        if self.files:
             return
 
         # Check if the zip files have already been downloaded
         exists = []
+        assert isinstance(self.paths, str)
         for year in self.years:
             pathname = os.path.join(
-                self.root, self.zipfile_glob.replace("*", str(year))
+                self.paths, self.zipfile_glob.replace("*", str(year))
             )
             if os.path.exists(pathname):
                 exists.append(True)
@@ -316,11 +308,7 @@ class CDL(RasterDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -331,23 +319,24 @@ class CDL(RasterDataset):
         for year in self.years:
             download_url(
                 self.url.format(year),
-                self.root,
+                self.paths,
                 md5=self.md5s[year] if self.checksum else None,
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
+        assert isinstance(self.paths, str)
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace("*", str(year))
-            pathname = os.path.join(self.root, zipfile_name)
-            extract_archive(pathname, self.root)
+            pathname = os.path.join(self.paths, zipfile_name)
+            extract_archive(pathname, self.paths)
 
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

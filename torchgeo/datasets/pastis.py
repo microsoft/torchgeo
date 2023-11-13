@@ -12,10 +12,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib.colors import ListedColormap
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import DatasetNotFoundError, check_integrity, download_url, extract_archive
 
 
 class PASTIS(NonGeoDataset):
@@ -148,6 +149,9 @@ class PASTIS(NonGeoDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert set(folds) <= set(range(6))
         assert bands in ["s1a", "s1d", "s2"]
@@ -307,11 +311,7 @@ class PASTIS(NonGeoDataset):
         return files
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the directory already exists
         path = os.path.join(self.root, self.directory)
         if os.path.exists(path):
@@ -327,11 +327,7 @@ class PASTIS(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         self._download()
@@ -351,7 +347,7 @@ class PASTIS(NonGeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

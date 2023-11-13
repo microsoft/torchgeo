@@ -89,10 +89,10 @@ This will create patches of NLCD and CDL data with the same locations and dimens
 Using either the newly created datasets or after downloading the datasets from Hugging Face, you can run each experiment using:
 
 ```console
-$ python3 ../../../train.py config_file=...
+$ torchgeo fit --config *.yaml
 ```
 
-The config files to be passed can be found in the `../../../conf/` directory. Feel free to tweak any hyperparameters you see in these files. The default values are the optimal hyperparameters we found.
+The config files to be passed can be found in the `conf/` directory. Feel free to tweak any hyperparameters you see in these files. The default values are the optimal hyperparameters we found.
 
 ## Plotting
 

@@ -1,18 +1,19 @@
-module:
-  _target_: torchgeo.trainers.SimCLRTask
-  model: "resnet18"
-  in_channels: 12
-  version: 2
-  layers: 3
-  hidden_dim: 8
-  output_dim: 8
-  weight_decay: 1e-4
-  memory_bank_size: 10
-
-datamodule:
-  _target_: torchgeo.datamodules.SSL4EOS12DataModule
-  root: "tests/data/ssl4eo/s12"
-  split: "s2a"
-  seasons: 2
-  batch_size: 2
-  num_workers: 0
+model:
+  class_path: SimCLRTask
+  init_args:
+    model: "resnet18"
+    in_channels: 12
+    version: 2
+    layers: 3
+    hidden_dim: 8
+    output_dim: 8
+    weight_decay: 1e-4
+    memory_bank_size: 10
+data:
+  class_path: SSL4EOS12DataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: "tests/data/ssl4eo/s12"
+    split: "s2a"
+    seasons: 2

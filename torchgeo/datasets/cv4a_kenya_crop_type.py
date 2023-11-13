@@ -11,11 +11,17 @@ from typing import Callable, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 # TODO: read geospatial information from stac.json files
@@ -140,7 +146,7 @@ class CV4AKenyaCropType(NonGeoDataset):
             verbose: if True, print messages when new tiles are loaded
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self._validate_bands(bands)
 
@@ -156,10 +162,7 @@ class CV4AKenyaCropType(NonGeoDataset):
             self._download(api_key)
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         # Calculate the indices that we will use over all tiles
         self.chips_metadata = []
@@ -389,9 +392,6 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
         """
         if self._check_integrity():
             print("Files already downloaded and verified")
@@ -411,7 +411,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         show_titles: bool = True,
         time_step: int = 0,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

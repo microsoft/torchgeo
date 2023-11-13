@@ -1,16 +1,15 @@
 # datasets
-h5py==3.9.0
+h5py==3.10.0
 laspy==2.5.1
-opencv-python==4.8.0.76
-pandas==2.1.0
+opencv-python==4.8.1.78
 pycocotools==2.0.7
-pyvista==0.42.1
+pyvista==0.42.3
 radiant-mlhub==0.4.1
-rarfile==4.0
-scikit-image==0.21.0
+rarfile==4.1
+scikit-image==0.22.0
 xarray==2023.7.0
 rioxarray==0.14.1
 xarray
 netCDF4
-scipy==1.11.2
+scipy==1.11.3
 zipfile-deflate64==0.2.0

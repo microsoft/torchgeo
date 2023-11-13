@@ -10,10 +10,11 @@ from typing import Callable, Optional, cast
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, percentile_normalization
+from .utils import DatasetNotFoundError, check_integrity, percentile_normalization
 
 
 class So2Sat(NonGeoDataset):
@@ -207,7 +208,7 @@ class So2Sat(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if data is not found in ``root``, or checksums don't match
+            DatasetNotFoundError: If dataset is not found.
 
         .. versionadded:: 0.3
            The *bands* parameter.
@@ -256,7 +257,7 @@ class So2Sat(NonGeoDataset):
         self.fn = os.path.join(self.root, self.filenames_by_version[version][split])
 
         if not self._check_integrity():
-            raise RuntimeError("Dataset not found or corrupted.")
+            raise DatasetNotFoundError(self)
 
         with h5py.File(self.fn, "r") as f:
             self.size: int = f["label"].shape[0]
@@ -335,7 +336,7 @@ class So2Sat(NonGeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
