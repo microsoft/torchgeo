@@ -85,6 +85,7 @@ from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
+from .rioxr import RioXarrayDataset
 from .rwanda_field_boundary import RwandaFieldBoundary
 from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
@@ -240,6 +241,7 @@ __all__ = (
     "NonGeoClassificationDataset",
     "NonGeoDataset",
     "RasterDataset",
+    "RioXarrayDataset",
     "UnionDataset",
     "VectorDataset",
     # Utilities
