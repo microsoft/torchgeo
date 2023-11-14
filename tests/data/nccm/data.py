@@ -39,7 +39,7 @@ def create_file(path: str, dtype: str):
         "predictor": 2,
     }
 
-    allowed_values = [0, 1, 2, 3]
+    allowed_values = [0, 1, 2, 3, 15]
 
     Z = np.random.choice(allowed_values, size=(SIZE, SIZE))
 
