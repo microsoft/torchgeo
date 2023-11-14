@@ -207,7 +207,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         """
         self._validate_bands(bands)
 
-        self.root = os.path.expanduser(root)
+        self.root = root
         self.chip_size = chip_size
         self.stride = stride
         self.bands = bands
