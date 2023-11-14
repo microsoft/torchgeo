@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 """Northeastern China Crop Map Dataset."""
 
 import glob
@@ -94,6 +97,7 @@ class NCCM(RasterDataset):
         Raises:
             FileNotFoundError: if no files are found in ``paths``
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.paths = paths
         self.download = download
@@ -125,11 +129,7 @@ class NCCM(RasterDataset):
         return sample
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         if self.files:
             return
