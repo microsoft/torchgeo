@@ -2,7 +2,7 @@
 
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
+#os.environ['PROJ_LIB'] = r'E:\Programs\anaconda3\envs\gis\Library\share\proj'
 import hashlib
 import os
 import shutil
@@ -13,6 +13,28 @@ from rasterio.crs import CRS
 from rasterio.transform import Affine
 
 SIZE = 32
+wkt = """
+PROJCS["Albers Conical Equal Area",
+    GEOGCS["WGS 84",
+        DATUM["WGS_1984",
+            SPHEROID["WGS 84",6378137,298.257223563,
+                AUTHORITY["EPSG","7030"]],
+            AUTHORITY["EPSG","6326"]],
+        PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],
+        UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],
+        AUTHORITY["EPSG","4326"]],
+    PROJECTION["Albers_Conic_Equal_Area"],
+    PARAMETER["latitude_of_center",23],
+    PARAMETER["longitude_of_center",-96],
+    PARAMETER["standard_parallel_1",29.5],
+    PARAMETER["standard_parallel_2",45.5],
+    PARAMETER["false_easting",0],
+    PARAMETER["false_northing",0],
+    UNIT["meters",1],
+    AXIS["Easting",EAST],
+    AXIS["Northing",NORTH]]
+"""
+
 
 np.random.seed(0)
 files = ["South_America_Soybean_2002.tif", "South_America_Soybean_2021.tif"]
@@ -23,7 +45,7 @@ def create_file(path: str, dtype: str):
         "driver": "GTiff",
         "dtype": dtype,
         "count": 1,
-        "crs": CRS.from_epsg(4326),
+        #"crs": CRS.from_wkt(wkt),
         "transform": Affine(
             0.0002499999999999943131,
             0.0,
@@ -47,7 +69,7 @@ def create_file(path: str, dtype: str):
 
 if __name__ == "__main__":
     dir = os.path.join(os.getcwd(), "SouthAmericaSoybean")
-
+    print(dir)
     if os.path.exists(dir) and os.path.isdir(dir):
         shutil.rmtree(dir)
 
