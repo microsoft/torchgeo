@@ -32,11 +32,11 @@ class NCCM(RasterDataset):
 
     The dataset contains 5 classes:
 
-    * 0. paddy rice
-    * 1. maize
-    * 2. soybean
-    * 3. others crops and lands
-    * 15. no-data
+    0. paddy rice
+    1. maize
+    2. soybean
+    3. others crops and lands
+    4. nodata
 
     Dataset format:
 
