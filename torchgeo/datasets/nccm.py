@@ -108,9 +108,9 @@ class NCCM(RasterDataset):
         self._verify()
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
-        for v, k in enumerate(list(self.cmap.keys())):
-            self.ordinal_map[k] = v
-            self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
+        for i, (k, v) in enumerate(self.cmap.items()):
+            self.ordinal_map[k] = i
+            self.ordinal_cmap[i] = torch.tensor(v)
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve mask and metadata indexed by query.
