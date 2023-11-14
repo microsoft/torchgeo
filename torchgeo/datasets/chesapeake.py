@@ -121,7 +121,6 @@ class Chesapeake(RasterDataset, abc.ABC):
         self.paths = paths
         self.download = download
         self.checksum = checksum
-
         self._verify()
 
         colors = []
@@ -579,15 +578,10 @@ class ChesapeakeCVPR(GeoDataset):
 
         super().__init__(transforms)
 
-        nlcd_colors = np.zeros((max(self.nlcd_cmap.keys()) + 1, 4))
-        nlcd_colors[list(self.nlcd_cmap.keys())] = list(self.lc_cmap.values())
-        nlcd_colors = nlcd_colors[:, :3] / 255
-        self._nlcd_cmap = ListedColormap(nlcd_colors)
-
-        nlcd_colors = np.zeros((max(self.nlcd_cmap.keys()) + 1, 4))
-        nlcd_colors[list(self.nlcd_cmap.keys())] = list(self.nlcd_cmap.values())
-        nlcd_colors = nlcd_colors[:, :3] / 255
-        self._nlcd_cmap = ListedColormap(nlcd_colors)
+        lc_colors = np.zeros((max(self.lc_cmap.keys()) + 1, 4))
+        lc_colors[list(self.lc_cmap.keys())] = list(self.lc_cmap.values())
+        lc_colors = lc_colors[:, :3] / 255
+        self._lc_cmap = ListedColormap(lc_colors)
 
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint: float = 0
@@ -618,9 +612,7 @@ class ChesapeakeCVPR(GeoDataset):
                             "prior_from_cooccurrences_101_31_no_osm_no_buildings": prior_fn,  # noqa: E501
                         },
                     )
-    @property
-    def _nlcd_cmap(self):
-        return self.cmap
+
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
@@ -795,7 +787,7 @@ class ChesapeakeCVPR(GeoDataset):
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
                 axs[i].imshow(
-                    img, vmin=0, vmax=95, cmap=self._nlcd_cmap, interpolation="none"
+                    img, vmin=0, vmax=95, cmap=self.cmap, interpolation="none"
                 )
                 axs[i].axis("off")
             elif layer == "lc":
