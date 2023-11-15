@@ -22,10 +22,9 @@ from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
-from .nlcd import NLCD
 from .geo import GeoDataset, RasterDataset
 from .utils import BoundingBox, download_url, extract_archive
-
+from .nlcd import NLCD
 
 class Chesapeake(RasterDataset, abc.ABC):
     """Abstract base class for all Chesapeake datasets.
@@ -573,7 +572,6 @@ class ChesapeakeCVPR(GeoDataset):
         self.cache = cache
         self.download = download
         self.checksum = checksum
-        self.cmap = NLCD.cmap
         self._verify()
 
         super().__init__(transforms)
@@ -582,6 +580,11 @@ class ChesapeakeCVPR(GeoDataset):
         lc_colors[list(self.lc_cmap.keys())] = list(self.lc_cmap.values())
         lc_colors = lc_colors[:, :3] / 255
         self._lc_cmap = ListedColormap(lc_colors)
+
+        nlcd_colors = np.zeros((max(NLCD.cmap.keys()) + 1, 4))
+        nlcd_colors[list(NLCD.cmap.keys())] = list(NLCD.cmap.values())
+        nlcd_colors = nlcd_colors[:, :3] / 255
+        self._nlcd_cmap = ListedColormap(nlcd_colors)
 
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint: float = 0
