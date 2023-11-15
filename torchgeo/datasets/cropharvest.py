@@ -8,7 +8,6 @@ import json
 import os
 from typing import Callable, Optional
 
-import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -48,6 +47,10 @@ class CropHarvest(NonGeoDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://openreview.net/forum?id=JtjzUXPEaCu
+
+    This dataset requires the following additional library to be installed:
+
+       * `h5py <https://pypi.org/project/h5py/>`_ to load the dataset
     """
 
     # *https://github.com/nasaharvest/cropharvest/blob/main/cropharvest/bands.py
@@ -213,7 +216,14 @@ class CropHarvest(NonGeoDataset):
 
         Returns:
             the image
+            ImportError if h5py is not installed
         """
+        try:
+            import h5py  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "h5py is not installed and is required to use this dataset"
+            )
         filename = os.path.join(path)
         with h5py.File(filename, "r") as f:
             array = f.get("array")[()]

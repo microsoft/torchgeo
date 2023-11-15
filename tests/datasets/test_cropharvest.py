@@ -93,3 +93,10 @@ class TestCropHarvest:
         x = dataset[0].copy()
         dataset.plot(x, subtitle="Test")
         plt.close()
+
+    def test_mock_missing_module(self, dataset: CropHarvest, tmp_path: Path) -> None:
+        with pytest.raises(
+            ImportError,
+            match="h5py is not installed and is required to use this dataset",
+        ):
+            CropHarvest(root=str(tmp_path), download=True)[0]
