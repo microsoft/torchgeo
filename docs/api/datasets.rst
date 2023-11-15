@@ -191,6 +191,11 @@ COWC
 .. autoclass:: COWCCounting
 .. autoclass:: COWCDetection
 
+CropHarvest
+^^^^
+
+.. autoclass:: CropHarvest
+
 Kenya Crop Type
 ^^^^^^^^^^^^^^^
 
