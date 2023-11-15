@@ -13,7 +13,11 @@ import torch
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 class WesternUSALiveFuelMoisture(NonGeoDataset):
@@ -218,7 +222,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         Raises:
             AssertionError: if ``input_features`` contains invalid variable names
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         super().__init__()
 
@@ -300,11 +304,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         return df
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, self.collection_id)
         if os.path.exists(pathname):
@@ -318,11 +318,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -338,9 +334,6 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
         """
         download_radiant_mlhub_collection(self.collection_id, self.root, api_key)
         filename = os.path.join(self.root, self.collection_id) + ".tar.gz"

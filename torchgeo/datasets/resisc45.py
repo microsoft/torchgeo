@@ -12,7 +12,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import download_url, extract_archive
+from .utils import DatasetNotFoundError, download_url, extract_archive
 
 
 class RESISC45(NonGeoClassificationDataset):
@@ -89,7 +89,6 @@ class RESISC45(NonGeoClassificationDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/jproc.2017.2675998
-
     """
 
     url = "https://drive.google.com/file/d/1DnPSU5nVSN7xv95bpZ3XQ0JhKXZOKgIv"
@@ -126,6 +125,9 @@ class RESISC45(NonGeoClassificationDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
         self.root = root
@@ -146,11 +148,7 @@ class RESISC45(NonGeoClassificationDataset):
         )
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         filepath = os.path.join(self.root, self.directory)
         if os.path.exists(filepath):
@@ -164,11 +162,7 @@ class RESISC45(NonGeoClassificationDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         self._download()
