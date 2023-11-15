@@ -23,7 +23,6 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 from .geo import GeoDataset, RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
 from .nlcd import NLCD
 from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
 
