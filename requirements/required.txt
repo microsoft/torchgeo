@@ -17,6 +17,6 @@ rtree==1.1.0
 segmentation-models-pytorch==0.3.3
 shapely==2.0.2
 timm==0.9.2
-torch==2.1.0
+torch==2.1.1
 torchmetrics==1.2.0
 torchvision==0.16.1
