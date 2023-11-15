@@ -192,7 +192,7 @@ COWC
 .. autoclass:: COWCDetection
 
 CropHarvest
-^^^^
+^^^^^^^^^^^
 
 .. autoclass:: CropHarvest
 
