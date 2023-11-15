@@ -15,7 +15,7 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import SeasonalContrastS2
+from torchgeo.datasets import DatasetNotFoundError, SeasonalContrastS2
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -98,7 +98,7 @@ class TestSeasonalContrastS2:
             SeasonalContrastS2(bands=["A1steaksauce"])
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SeasonalContrastS2(str(tmp_path))
 
     def test_plot(self, dataset: SeasonalContrastS2) -> None:

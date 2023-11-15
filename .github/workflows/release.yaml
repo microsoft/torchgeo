@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.1.0
+      uses: actions/checkout@v4.1.1
     - name: Set up python
       uses: actions/setup-python@v4.7.1
       with:
@@ -22,7 +22,7 @@ jobs:
       id: cache
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-datasets
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.1.0
+      uses: actions/checkout@v4.1.1
     - name: Set up python
       uses: actions/setup-python@v4.7.1
       with:
@@ -50,7 +50,7 @@ jobs:
       id: cache
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-integration
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.1.0
+      uses: actions/checkout@v4.1.1
     - name: Set up python
       uses: actions/setup-python@v4.7.1
       with:
@@ -78,7 +78,7 @@ jobs:
       id: cache
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-tutorials
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |

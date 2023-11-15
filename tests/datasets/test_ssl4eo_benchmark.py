@@ -16,7 +16,13 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import CDL, NLCD, RasterDataset, SSL4EOLBenchmark
+from torchgeo.datasets import (
+    CDL,
+    NLCD,
+    DatasetNotFoundError,
+    RasterDataset,
+    SSL4EOLBenchmark,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -137,7 +143,7 @@ class TestSSL4EOLBenchmark:
         SSL4EOLBenchmark(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SSL4EOLBenchmark(str(tmp_path))
 
     def test_plot(self, dataset: SSL4EOLBenchmark) -> None:
