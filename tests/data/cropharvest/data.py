@@ -4,47 +4,23 @@
 # Licensed under the MIT License.
 
 import hashlib
+import json
 import os
 import shutil
-import json
-import numpy as np
+
 import h5py
+import numpy as np
 
 SIZE = 32
 
 np.random.seed(0)
 
 PATHS = [
-    os.path.join(
-        "CropHarvest",
-        "features",
-        "arrays",
-        "0_TestDataset1.h5"
-        ),
-    os.path.join(
-        "CropHarvest",
-        "features",
-        "arrays",
-        "1_TestDataset1.h5"
-        ),
-    os.path.join(
-        "CropHarvest",
-        "features",
-        "arrays",
-        "2_TestDataset1.h5"
-        ),
-    os.path.join(
-        "CropHarvest",
-        "features",
-        "arrays",
-        "0_TestDataset2.h5"
-        ),
-    os.path.join(
-        "CropHarvest",
-        "features",
-        "arrays",
-        "1_TestDataset2.h5"
-        )
+    os.path.join("CropHarvest", "features", "arrays", "0_TestDataset1.h5"),
+    os.path.join("CropHarvest", "features", "arrays", "1_TestDataset1.h5"),
+    os.path.join("CropHarvest", "features", "arrays", "2_TestDataset1.h5"),
+    os.path.join("CropHarvest", "features", "arrays", "0_TestDataset2.h5"),
+    os.path.join("CropHarvest", "features", "arrays", "1_TestDataset2.h5"),
 ]
 
 
@@ -59,7 +35,7 @@ def create_geojson():
                     "dataset": "TestDataset1",
                     "index": 0,
                     "is_crop": 1,
-                    "label": "soy"
+                    "label": "soy",
                 },
                 "geometry": {
                     "type": "Polygon",
@@ -74,7 +50,7 @@ def create_geojson():
                     "dataset": "TestDataset1",
                     "index": 0,
                     "is_crop": 1,
-                    "label": "beans"
+                    "label": "beans",
                 },
                 "geometry": {
                     "type": "Polygon",
@@ -89,7 +65,7 @@ def create_geojson():
                     "dataset": "TestDataset1",
                     "index": 1,
                     "is_crop": 1,
-                    "label": None
+                    "label": None,
                 },
                 "geometry": {
                     "type": "Polygon",
@@ -104,7 +80,7 @@ def create_geojson():
                     "dataset": "TestDataset2",
                     "index": 2,
                     "is_crop": 1,
-                    "label": "maize"
+                    "label": "maize",
                 },
                 "geometry": {
                     "type": "Polygon",
@@ -119,7 +95,7 @@ def create_geojson():
                     "dataset": "TestDataset2",
                     "index": 1,
                     "is_crop": 0,
-                    "label": None
+                    "label": None,
                 },
                 "geometry": {
                     "type": "Polygon",
@@ -127,7 +103,7 @@ def create_geojson():
                         [[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]]
                     ],
                 },
-            }
+            },
         ],
     }
     return geojson
@@ -135,8 +111,8 @@ def create_geojson():
 
 def create_file(path: str) -> None:
     Z = np.random.randint(4000, size=(12, 18), dtype=np.int64)
-    with h5py.File(path, 'w') as f:
-        f.create_dataset('array', data=Z)
+    with h5py.File(path, "w") as f:
+        f.create_dataset("array", data=Z)
 
 
 if __name__ == "__main__":
