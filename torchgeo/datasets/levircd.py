@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import DatasetNotFoundError, download_and_extract_archive
 
 
 class LEVIRCDPlus(NonGeoDataset):
@@ -72,8 +72,7 @@ class LEVIRCDPlus(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
 
@@ -86,10 +85,7 @@ class LEVIRCDPlus(NonGeoDataset):
             self._download()
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         self.files = self._load_files(self.root, self.directory, self.split)
 
@@ -106,9 +102,7 @@ class LEVIRCDPlus(NonGeoDataset):
         image1 = self._load_image(files["image1"])
         image2 = self._load_image(files["image2"])
         mask = self._load_target(files["mask"])
-
-        image = torch.stack(tensors=[image1, image2], dim=0)
-        sample = {"image": image, "mask": mask}
+        sample = {"image1": image1, "image2": image2, "mask": mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -158,7 +152,7 @@ class LEVIRCDPlus(NonGeoDataset):
         filename = os.path.join(path)
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -193,11 +187,7 @@ class LEVIRCDPlus(NonGeoDataset):
         return True
 
     def _download(self) -> None:
-        """Download the dataset and extract it.
-
-        Raises:
-            AssertionError: if the checksum of split.py does not match
-        """
+        """Download the dataset and extract it."""
         if self._check_integrity():
             print("Files already downloaded and verified")
             return
@@ -227,8 +217,22 @@ class LEVIRCDPlus(NonGeoDataset):
 
         .. versionadded:: 0.2
         """
-        image1, image2, mask = (sample["image"][0], sample["image"][1], sample["mask"])
         ncols = 3
+
+        def get_rgb(img: Tensor) -> "np.typing.NDArray[np.uint8]":
+            rgb_img = img.permute(1, 2, 0).float().numpy()
+            per02 = np.percentile(rgb_img, 2)
+            per98 = np.percentile(rgb_img, 98)
+            delta = per98 - per02
+            epsilon = 1e-7
+            norm_img: "np.typing.NDArray[np.uint8]" = (
+                np.clip((rgb_img - per02) / (delta + epsilon), 0, 1) * 255
+            ).astype(np.uint8)
+            return norm_img
+
+        image1 = get_rgb(sample["image1"])
+        image2 = get_rgb(sample["image2"])
+        mask = sample["mask"].numpy()
 
         if "prediction" in sample:
             prediction = sample["prediction"]
@@ -236,11 +240,11 @@ class LEVIRCDPlus(NonGeoDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
 
-        axs[0].imshow(image1.permute(1, 2, 0))
+        axs[0].imshow(image1)
         axs[0].axis("off")
-        axs[1].imshow(image2.permute(1, 2, 0))
+        axs[1].imshow(image2)
         axs[1].axis("off")
-        axs[2].imshow(mask)
+        axs[2].imshow(mask, cmap="gray")
         axs[2].axis("off")
 
         if "prediction" in sample:

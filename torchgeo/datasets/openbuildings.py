@@ -23,7 +23,7 @@ from rasterio.crs import CRS
 from rtree.index import Index, Property
 
 from .geo import VectorDataset
-from .utils import BoundingBox, check_integrity
+from .utils import BoundingBox, DatasetNotFoundError, check_integrity
 
 
 class OpenBuildings(VectorDataset):
@@ -224,7 +224,7 @@ class OpenBuildings(VectorDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            DatasetNotFoundError: If dataset is not found.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -284,9 +284,7 @@ class OpenBuildings(VectorDataset):
             i += 1
 
         if i == 0:
-            raise FileNotFoundError(
-                f"No {self.__class__.__name__} data was found in '{self.paths}'"
-            )
+            raise DatasetNotFoundError(self)
 
         self._crs = crs
         self._source_crs = source_crs
@@ -395,12 +393,7 @@ class OpenBuildings(VectorDataset):
         return transformed
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if dataset is missing or checksum fails
-            FileNotFoundError: if metadata file is not found in root
-        """
+        """Verify the integrity of the dataset."""
         # Check if the zip files have already been downloaded and checksum
         assert isinstance(self.paths, str)
         pathname = os.path.join(self.paths, self.zipfile_glob)
@@ -414,18 +407,7 @@ class OpenBuildings(VectorDataset):
         if i != 0:
             return
 
-        # check if the metadata file has been downloaded
-        if not os.path.exists(os.path.join(self.paths, self.meta_data_filename)):
-            raise FileNotFoundError(
-                f"Meta data file {self.meta_data_filename} "
-                f"not found in in `root={self.paths}`."
-            )
-
-        raise RuntimeError(
-            f"Dataset not found in `root={self.paths}` "
-            "either specify a different `root` directory or make sure you "
-            "have manually downloaded the dataset as suggested in the documentation."
-        )
+        raise DatasetNotFoundError(self)
 
     def plot(
         self,

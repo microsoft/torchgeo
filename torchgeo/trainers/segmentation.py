@@ -93,7 +93,8 @@ class SemanticSegmentationTask(BaseTask):
                 UserWarning,
             )
 
-        super().__init__()
+        self.weights = weights
+        super().__init__(ignore="weights")
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion.
@@ -151,7 +152,7 @@ class SemanticSegmentationTask(BaseTask):
         """
         model: str = self.hparams["model"]
         backbone: str = self.hparams["backbone"]
-        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        weights = self.weights
         in_channels: int = self.hparams["in_channels"]
         num_classes: int = self.hparams["num_classes"]
         num_filters: int = self.hparams["num_filters"]
@@ -245,6 +246,7 @@ class SemanticSegmentationTask(BaseTask):
         if (
             batch_idx < 10
             and hasattr(self.trainer, "datamodule")
+            and hasattr(self.trainer.datamodule, "plot")
             and self.logger
             and hasattr(self.logger, "experiment")
             and hasattr(self.logger.experiment, "add_figure")

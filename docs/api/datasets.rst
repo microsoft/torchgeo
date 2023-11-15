@@ -178,7 +178,7 @@ BioMassters
 ^^^^^^^^^^^
 
 .. autoclass:: BioMassters
-   
+
 Cloud Cover Detection
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -356,6 +356,11 @@ SSL4EO
 .. autoclass:: SSL4EOL
 .. autoclass:: SSL4EOS12
 
+SSL4EO-L Benchmark
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SSL4EOLBenchmark
+
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -464,3 +469,8 @@ Splitting Functions
 .. autofunction:: random_grid_cell_assignment
 .. autofunction:: roi_split
 .. autofunction:: time_series_split
+
+Errors
+------
+
+.. autoclass:: DatasetNotFoundError
