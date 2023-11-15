@@ -6,7 +6,7 @@
 import glob
 import json
 import os
-from typing import Callable, Optional, Union
+from typing import Callable, Optional
 
 import h5py
 import matplotlib.pyplot as plt
@@ -233,8 +233,8 @@ class CropHarvest(NonGeoDataset):
         """
         index = int(idx)
         row = self.labels[
-            (self.labels["properties.index"] == index) &
-            (self.labels["properties.dataset"] == dataset)
+            (self.labels["properties.index"] == index)
+            & (self.labels["properties.dataset"] == dataset)
         ]
         row = row.to_dict(orient="records")[0]
         label = "None"
