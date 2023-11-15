@@ -5,12 +5,14 @@
 
 from typing import Any
 
+import kornia.augmentation as K
 import torch
 from torch import Tensor
 
 from ..datasets import NASAMarineDebris
+from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
-from .utils import dataset_split
+from .utils import AugPipe, dataset_split
 
 
 def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
@@ -23,8 +25,8 @@ def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
         batch dict output
     """
     output: dict[str, Any] = {}
-    output["image"] = torch.stack([sample["image"] for sample in batch])
-    output["boxes"] = [sample["boxes"] for sample in batch]
+    output["image"] = [sample["image"] for sample in batch]
+    output["boxes"] = [sample["boxes"].float() for sample in batch]
     output["labels"] = [torch.tensor([1] * len(sample["boxes"])) for sample in batch]
     return output
 
@@ -57,6 +59,13 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
 
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
+
+        self.aug = AugPipe(
+            AugmentationSequential(
+                K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "boxes"]
+            ),
+            batch_size,
+        )
 
         self.collate_fn = collate_fn
 

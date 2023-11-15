@@ -3,65 +3,62 @@
 
 """NWPU VHR-10 datamodule."""
 
-from typing import Any, Callable, Union
+from typing import Any, Union
 
 import kornia.augmentation as K
-from einops import rearrange
 from torch import Tensor
-from torch.nn import Module
 
 from ..datasets import VHR10
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
-from .utils import dataset_split
+from .utils import AugPipe, dataset_split
 
+# class _AugPipe(Module):
+#     """Pipeline for applying augmentations sequentially on select data keys."""
 
-class _AugPipe(Module):
-    """Pipeline for applying augmentations sequentially on select data keys."""
+#     def __init__(
+#         self, augs: Callable[[dict[str, Any]], dict[str, Any]], batch_size: int
+#     ) -> None:
+#         """Initialize a new _AugPipe instance.
 
-    def __init__(
-        self, augs: Callable[[dict[str, Any]], dict[str, Any]], batch_size: int
-    ) -> None:
-        """Initialize a new _AugPipe instance.
+#         Args:
+#             augs: Augmentations to apply.
+#             batch_size: Batch size
+#         """
+#         super().__init__()
+#         self.augs = augs
+#         self.batch_size = batch_size
 
-        Args:
-            augs: Augmentations to apply.
-            batch_size: Batch size
-        """
-        super().__init__()
-        self.augs = augs
-        self.batch_size = batch_size
+#     def forward(self, batch: dict[str, Tensor]) -> dict[str, Tensor]:
+#         """Apply the augmentation.
 
-    def forward(self, batch: dict[str, Tensor]) -> dict[str, Tensor]:
-        """Apply the augmentation.
+#         Args:
+#             batch: Input batch.
 
-        Args:
-            batch: Input batch.
+#         Returns:
+#             Augmented batch.
+#         """
+#         batch_len = len(batch["image"])
+#         for bs in range(batch_len):
+#             batch_dict = {
+#                 "image": batch["image"][bs],
+#                 "masks": batch["masks"][bs],
+#                 "labels": batch["labels"][bs],
+#                 "boxes": batch["boxes"][bs],
+#             }
 
-        Returns:
-            Augmented batch.
-        """
-        batch_len = len(batch["image"])
-        for bs in range(batch_len):
-            batch_dict = {
-                "image": batch["image"][bs],
-                "masks": batch["masks"][bs],
-                "labels": batch["labels"][bs],
-                "boxes": batch["boxes"][bs],
-            }
+#             batch_dict = self.augs(batch_dict)
 
-            batch_dict = self.augs(batch_dict)
+#             batch["image"][bs] = batch_dict["image"]
+#             batch["masks"][bs] = batch_dict["masks"]
+#             batch["labels"][bs] = batch_dict["labels"]
+#             batch["boxes"][bs] = batch_dict["boxes"]
 
-            batch["image"][bs] = batch_dict["image"]
-            batch["masks"][bs] = batch_dict["masks"]
-            batch["labels"][bs] = batch_dict["labels"]
-            batch["boxes"][bs] = batch_dict["boxes"]
+#         # Stack images
+#         batch["image"] = rearrange(batch["image"], "b () c h w -> b c h w")
 
-        # Stack images
-        batch["image"] = rearrange(batch["image"], "b () c h w -> b c h w")
-
-        return batch
+#         return batch
 
 
 def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
@@ -84,7 +81,7 @@ def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
 class VHR10DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the VHR10 dataset.
 
-    .. versionadded:: 0.5
+    .. versionadded:: 0.6
     """
 
     def __init__(
@@ -115,7 +112,7 @@ class VHR10DataModule(NonGeoDataModule):
 
         self.collate_fn = collate_fn
 
-        self.train_aug = _AugPipe(
+        self.train_aug = AugPipe(
             AugmentationSequential(
                 K.Normalize(mean=self.mean, std=self.std),
                 K.Resize(self.patch_size),
@@ -126,7 +123,7 @@ class VHR10DataModule(NonGeoDataModule):
             ),
             batch_size,
         )
-        self.aug = _AugPipe(
+        self.aug = AugPipe(
             AugmentationSequential(
                 K.Normalize(mean=self.mean, std=self.std),
                 K.Resize(self.patch_size),

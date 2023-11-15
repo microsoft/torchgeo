@@ -5,10 +5,12 @@
 
 import math
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 import numpy as np
-from torch import Generator
+from einops import rearrange
+from torch import Generator, Tensor
+from torch.nn import Module
 from torch.utils.data import Subset, TensorDataset, random_split
 
 from ..datasets import NonGeoDataset
@@ -17,6 +19,57 @@ from ..datasets import NonGeoDataset
 # Based on lightning_lite.utilities.exceptions
 class MisconfigurationException(Exception):
     """Exception used to inform users of misuse with Lightning."""
+
+
+class AugPipe(Module):
+    """Pipeline for applying augmentations sequentially on select data keys."""
+
+    def __init__(
+        self, augs: Callable[[dict[str, Any]], dict[str, Any]], batch_size: int
+    ) -> None:
+        """Initialize a new AugPipe instance.
+
+        Args:
+            augs: Augmentations to apply.
+            batch_size: Batch size
+        """
+        super().__init__()
+        self.augs = augs
+        self.batch_size = batch_size
+
+    def forward(self, batch: dict[str, Tensor]) -> dict[str, Tensor]:
+        """Apply the augmentation.
+
+        Args:
+            batch: Input batch.
+
+        Returns:
+            Augmented batch.
+        """
+        batch_len = len(batch["image"])
+        for bs in range(batch_len):
+            batch_dict = {
+                "image": batch["image"][bs],
+                "labels": batch["labels"][bs],
+                "boxes": batch["boxes"][bs],
+            }
+
+            if "masks" in batch:
+                batch_dict["masks"] = batch["masks"][bs]
+
+            batch_dict = self.augs(batch_dict)
+
+            batch["image"][bs] = batch_dict["image"]
+            batch["labels"][bs] = batch_dict["labels"]
+            batch["boxes"][bs] = batch_dict["boxes"]
+
+            if "masks" in batch:
+                batch["masks"][bs] = batch_dict["masks"]
+
+        # Stack images
+        batch["image"] = rearrange(batch["image"], "b () c h w -> b c h w")
+
+        return batch
 
 
 def dataset_split(
