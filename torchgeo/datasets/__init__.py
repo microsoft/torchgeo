@@ -77,6 +77,7 @@ from .mapinwild import MapInWild
 from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
+from .nccm import NCCM
 from .nlcd import NLCD
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
@@ -168,6 +169,7 @@ __all__ = (
     "Landsat8",
     "Landsat9",
     "NAIP",
+    "NCCM",
     "NLCD",
     "OpenBuildings",
     "Sentinel",
