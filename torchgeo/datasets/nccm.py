@@ -95,8 +95,6 @@ class NCCM(RasterDataset):
             checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``paths``
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.paths = paths
@@ -126,6 +124,7 @@ class NCCM(RasterDataset):
         """
         sample = super().__getitem__(query)
         sample["mask"] = self.ordinal_map[sample["mask"]]
+        print(max(sample["mask"]))
         return sample
 
     def _verify(self) -> None:
