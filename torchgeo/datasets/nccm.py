@@ -124,7 +124,6 @@ class NCCM(RasterDataset):
         """
         sample = super().__getitem__(query)
         sample["mask"] = self.ordinal_map[sample["mask"]]
-        print(max(sample["mask"]))
         return sample
 
     def _verify(self) -> None:
