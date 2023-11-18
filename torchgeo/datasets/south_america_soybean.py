@@ -123,7 +123,6 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
             IndexError: if query is not found in the index
         """
         sample = super().__getitem__(query)
-        sample["mask"] = self.ordinal_map[sample["mask"]]
         return sample
 
     def _verify(self) -> None:
