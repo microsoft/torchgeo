@@ -19,7 +19,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestSouthAmericaSoybean:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> south_america_soybean:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> SouthAmericaSoybean:
         monkeypatch.setattr(torchgeo.datasets.southamerica_soybean, "download_url", download_url)
         transforms = nn.Identity()
         md5s = {
