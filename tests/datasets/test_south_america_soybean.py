@@ -74,7 +74,7 @@ class TestSouthAmericaSoybean:
     def test_invalid_year(self, tmp_path: Path) -> None:
         with pytest.raises(
             AssertionError,
-            match="south_america_soybean data product only exists for the following years:",
+            match="SouthAmericaSoybean data product only exists for the following years:",
         ):
             south_america_soybean(str(tmp_path), years=[1996])
 
