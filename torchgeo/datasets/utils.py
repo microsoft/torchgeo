@@ -192,7 +192,9 @@ def download_radiant_mlhub_dataset(
 
 
 def download_radiant_mlhub_collection(
-    collection_id: str, download_root: Path, api_key: str | None = None
+    collection_id: str,
+    download_root: Union[pathlib.Path, str],
+    api_key: str | None = None,
 ) -> None:
     """Download a collection from Radiant Earth.
 
