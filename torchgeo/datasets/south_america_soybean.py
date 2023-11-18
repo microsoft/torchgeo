@@ -17,7 +17,7 @@ class SouthAmericaSoybean(RasterDataset):
 
     Link: https://www.nature.com/articles/s41893-021-00729-z
 
-    Dataset contains 1 classes:
+    Dataset contains 2 classes:
     0: nodata
     1: soybean
 
