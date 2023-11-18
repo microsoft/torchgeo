@@ -102,7 +102,7 @@ class TestSouthAmericaSoybean:
         with pytest.raises(RuntimeError, match="Dataset not found"):
             SouthAmericaSoybean(str(tmp_path))
 
-    def test_invalid_query(self, dataset: south_america_soybean) -> None:
+    def test_invalid_query(self, dataset: SouthAmericaSoybean) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
             IndexError, match="query: .* not found in index with bounds:"
