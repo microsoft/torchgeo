@@ -38,7 +38,6 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
     filename_glob = "SouthAmerica_Soybean_*.tif"
     filename_regex = (r"SouthAmerica_Soybean_(?P<year>\d{4})\.tif")
 
-    zipfile_glob = ""
 
     date_format = "%Y"
     is_image = False
