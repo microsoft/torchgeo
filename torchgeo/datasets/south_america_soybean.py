@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import BoundingBox, download_url
+from .utils import BoundingBox, DatasetNotFoundError, download_url
 
 
 class SouthAmericaSoybean(RasterDataset):
