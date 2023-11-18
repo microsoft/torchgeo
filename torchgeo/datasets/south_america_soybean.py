@@ -24,7 +24,9 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
     1: soybean
 
     Dataset Format:
-    1) 21 .tif files 
+
+    * 21 .tif files 
+     
 
     If you use this dataset in your research, please use the corresponding citation:
 
