@@ -69,11 +69,6 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
 
     }
 
-    
-    cmap = { 
-        0: (0,0,0,0),
-        1: (255,0,255,255) 
-    }
 
     def __init__(
         self,
