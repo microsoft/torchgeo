@@ -212,7 +212,7 @@ class SouthAmericaSoybean(RasterDataset):
             axs[0, 0].set_title("Mask")
 
         if showing_predictions:
-            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation="none")
+            axs[0, 1].imshow(pred, interpolation="none")
             axs[0, 1].axis("off")
             if show_titles:
                 axs[0, 1].set_title("Prediction")
