@@ -39,7 +39,7 @@ class TestSouthAmericaSoybean:
             years=[2002, 2021],
         )
 
-    def test_getitem(self, dataset: south_america_soybean) -> None:
+    def test_getitem(self, dataset: SouthAmericaSoybean) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
