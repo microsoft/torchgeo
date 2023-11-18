@@ -133,7 +133,13 @@ SpaceNet
 SSL4EO
 ^^^^^^
 
+.. autoclass:: SSL4EOLDataModule
 .. autoclass:: SSL4EOS12DataModule
+
+SSL4EO-L Benchmark
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SSL4EOLBenchmarkDataModule
 
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^

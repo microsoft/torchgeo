@@ -4,10 +4,11 @@
 """Landsat datasets."""
 
 import abc
-from collections.abc import Sequence
-from typing import Any, Callable, Optional
+from collections.abc import Iterable, Sequence
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
@@ -57,7 +58,7 @@ class Landsat(RasterDataset, abc.ABC):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -67,7 +68,7 @@ class Landsat(RasterDataset, abc.ABC):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -78,19 +79,22 @@ class Landsat(RasterDataset, abc.ABC):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
         bands = bands or self.default_bands
         self.filename_glob = self.filename_glob.format(bands[0])
 
-        super().__init__(root, crs, res, bands, transforms, cache)
+        super().__init__(paths, crs, res, bands, transforms, cache)
 
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

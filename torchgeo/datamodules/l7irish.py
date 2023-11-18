@@ -5,10 +5,14 @@
 
 from typing import Any, Optional, Union
 
+import kornia.augmentation as K
 import torch
+from kornia.constants import DataKey, Resample
 
 from ..datasets import L7Irish, random_bbox_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
+from ..samplers.utils import _to_tuple
+from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
 
 
@@ -18,13 +22,10 @@ class L7IrishDataModule(GeoDataModule):
     .. versionadded:: 0.5
     """
 
-    mean = torch.tensor(0)
-    std = torch.tensor(10000)
-
     def __init__(
         self,
         batch_size: int = 1,
-        patch_size: Union[int, tuple[int, int]] = 32,
+        patch_size: Union[int, tuple[int, int]] = 224,
         length: Optional[int] = None,
         num_workers: int = 0,
         **kwargs: Any,
@@ -46,6 +47,17 @@ class L7IrishDataModule(GeoDataModule):
             length=length,
             num_workers=num_workers,
             **kwargs,
+        )
+
+        self.train_aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
+            K.RandomVerticalFlip(p=0.5),
+            K.RandomHorizontalFlip(p=0.5),
+            data_keys=["image", "mask"],
+            extra_args={
+                DataKey.MASK: {"resample": Resample.NEAREST, "align_corners": None}
+            },
         )
 
     def setup(self, stage: str) -> None:

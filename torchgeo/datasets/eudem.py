@@ -5,13 +5,15 @@
 
 import glob
 import os
-from typing import Any, Callable, Optional
+from collections.abc import Iterable
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import check_integrity, extract_archive
+from .utils import DatasetNotFoundError, check_integrity, extract_archive
 
 
 class EUDEM(RasterDataset):
@@ -81,7 +83,7 @@ class EUDEM(RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -91,8 +93,8 @@ class EUDEM(RasterDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found, here the collection of
-                individual zip files for each tile should be found
+            paths: one or more root directories to search or files to load, here
+                the collection of individual zip files for each tile should be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -103,28 +105,27 @@ class EUDEM(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            DatasetNotFoundError: If dataset is not found.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
-        self.root = root
+        self.paths = paths
         self.checksum = checksum
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms=transforms, cache=cache)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted file already exists
-        pathname = os.path.join(self.root, self.filename_glob)
-        if glob.glob(pathname):
+        if self.files:
             return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.zipfile_glob)
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, self.zipfile_glob)
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):
                 filename = os.path.basename(zipfile)
@@ -133,18 +134,14 @@ class EUDEM(RasterDataset):
                 extract_archive(zipfile)
             return
 
-        raise RuntimeError(
-            f"Dataset not found in `root={self.root}` "
-            "either specify a different `root` directory or make sure you "
-            "have manually downloaded the dataset as suggested in the documentation."
-        )
+        raise DatasetNotFoundError(self)
 
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

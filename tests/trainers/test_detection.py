@@ -8,15 +8,17 @@ import pytest
 import torch
 import torch.nn as nn
 import torchvision.models.detection
-from _pytest.monkeypatch import MonkeyPatch
-from hydra.utils import instantiate
 from lightning.pytorch import Trainer
-from omegaconf import OmegaConf
+from pytest import MonkeyPatch
 from torch.nn.modules import Module
 
 from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
 from torchgeo.datasets import NASAMarineDebris
+from torchgeo.main import main
 from torchgeo.trainers import ObjectDetectionTask
+
+# MAP metric requires pycocotools to be installed
+pytest.importorskip("pycocotools")
 
 
 class PredictObjectDetectionDataModule(NASAMarineDebrisDataModule):
@@ -63,12 +65,8 @@ class TestObjectDetectionTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, model_name: str, fast_dev_run: bool
     ) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", f"{name}.yaml"))
+        config = os.path.join("tests", "conf", name + ".yaml")
 
-        # Instantiate datamodule
-        datamodule = instantiate(conf.datamodule)
-
-        # Instantiate model
         monkeypatch.setattr(
             torchvision.models.detection, "FasterRCNN", ObjectDetectionTestModel
         )
@@ -78,54 +76,49 @@ class TestObjectDetectionTask:
         monkeypatch.setattr(
             torchvision.models.detection, "RetinaNet", ObjectDetectionTestModel
         )
-        conf.module.model = model_name
-        model = instantiate(conf.module)
 
-        # Instantiate trainer
-        trainer = Trainer(
-            accelerator="cpu",
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.fit(model=model, datamodule=datamodule)
+        args = [
+            "--config",
+            config,
+            "--trainer.accelerator",
+            "cpu",
+            "--trainer.fast_dev_run",
+            str(fast_dev_run),
+            "--trainer.max_epochs",
+            "1",
+            "--trainer.log_every_n_steps",
+            "1",
+        ]
+
+        main(["fit"] + args)
         try:
-            trainer.test(model=model, datamodule=datamodule)
+            main(["test"] + args)
         except MisconfigurationException:
             pass
         try:
-            trainer.predict(model=model, datamodule=datamodule)
+            main(["predict"] + args)
         except MisconfigurationException:
             pass
 
-    @pytest.fixture
-    def model_kwargs(self) -> dict[Any, Any]:
-        return {"model": "faster-rcnn", "backbone": "resnet18", "num_classes": 2}
-
-    def test_invalid_model(self, model_kwargs: dict[Any, Any]) -> None:
-        model_kwargs["model"] = "invalid_model"
+    def test_invalid_model(self) -> None:
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):
-            ObjectDetectionTask(**model_kwargs)
+            ObjectDetectionTask(model="invalid_model")
 
-    def test_invalid_backbone(self, model_kwargs: dict[Any, Any]) -> None:
-        model_kwargs["backbone"] = "invalid_backbone"
+    def test_invalid_backbone(self) -> None:
         match = "Backbone type 'invalid_backbone' is not valid."
         with pytest.raises(ValueError, match=match):
-            ObjectDetectionTask(**model_kwargs)
+            ObjectDetectionTask(backbone="invalid_backbone")
 
-    def test_non_pretrained_backbone(self, model_kwargs: dict[Any, Any]) -> None:
-        model_kwargs["pretrained"] = False
-        ObjectDetectionTask(**model_kwargs)
+    def test_pretrained_backbone(self) -> None:
+        ObjectDetectionTask(backbone="resnet18", weights=True)
 
-    def test_no_rgb(
-        self, monkeypatch: MonkeyPatch, model_kwargs: dict[Any, Any], fast_dev_run: bool
-    ) -> None:
+    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(NASAMarineDebrisDataModule, "plot", plot)
         datamodule = NASAMarineDebrisDataModule(
             root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
         )
-        model = ObjectDetectionTask(**model_kwargs)
+        model = ObjectDetectionTask(backbone="resnet18", num_classes=2)
         trainer = Trainer(
             accelerator="cpu",
             fast_dev_run=fast_dev_run,
@@ -134,11 +127,11 @@ class TestObjectDetectionTask:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, model_kwargs: dict[Any, Any], fast_dev_run: bool) -> None:
+    def test_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictObjectDetectionDataModule(
             root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
         )
-        model = ObjectDetectionTask(**model_kwargs)
+        model = ObjectDetectionTask(backbone="resnet18", num_classes=2)
         trainer = Trainer(
             accelerator="cpu",
             fast_dev_run=fast_dev_run,
@@ -148,10 +141,8 @@ class TestObjectDetectionTask:
         trainer.predict(model=model, datamodule=datamodule)
 
     @pytest.mark.parametrize("model_name", ["faster-rcnn", "fcos", "retinanet"])
-    def test_freeze_backbone(
-        self, model_name: str, model_kwargs: dict[Any, Any]
-    ) -> None:
-        model_kwargs["freeze_backbone"] = True
-        model_kwargs["model"] = model_name
-        model = ObjectDetectionTask(**model_kwargs)
+    def test_freeze_backbone(self, model_name: str) -> None:
+        model = ObjectDetectionTask(
+            model=model_name, backbone="resnet18", freeze_backbone=True
+        )
         assert not all([param.requires_grad for param in model.model.parameters()])

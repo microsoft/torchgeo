@@ -19,6 +19,7 @@ from .inria import InriaAerialImageLabelingDataModule
 from .l7irish import L7IrishDataModule
 from .l8biome import L8BiomeDataModule
 from .landcoverai import LandCoverAIDataModule
+from .levircd import LEVIRCDPlusDataModule
 from .loveda import LoveDADataModule
 from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
@@ -30,7 +31,8 @@ from .sen12ms import SEN12MSDataModule
 from .skippd import SKIPPDDataModule
 from .so2sat import So2SatDataModule
 from .spacenet import SpaceNet1DataModule
-from .ssl4eo import SSL4EOS12DataModule
+from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
+from .ssl4eo_benchmark import SSL4EOLBenchmarkDataModule
 from .sustainbench_crop_yield import SustainBenchCropYieldDataModule
 from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
@@ -57,6 +59,7 @@ __all__ = (
     "GID15DataModule",
     "InriaAerialImageLabelingDataModule",
     "LandCoverAIDataModule",
+    "LEVIRCDPlusDataModule",
     "LoveDADataModule",
     "NASAMarineDebrisDataModule",
     "OSCDDataModule",
@@ -67,6 +70,8 @@ __all__ = (
     "SKIPPDDataModule",
     "So2SatDataModule",
     "SpaceNet1DataModule",
+    "SSL4EOLBenchmarkDataModule",
+    "SSL4EOLDataModule",
     "SSL4EOS12DataModule",
     "SustainBenchCropYieldDataModule",
     "TropicalCycloneDataModule",

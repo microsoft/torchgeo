@@ -10,10 +10,10 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import LEVIRCDPlus
+from torchgeo.datasets import DatasetNotFoundError, LEVIRCDPlus
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -38,9 +38,11 @@ class TestLEVIRCDPlus:
     def test_getitem(self, dataset: LEVIRCDPlus) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
+        assert isinstance(x["image1"], torch.Tensor)
+        assert isinstance(x["image2"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
-        assert x["image"].shape[0] == 2
+        assert x["image1"].shape[0] == 3
+        assert x["image2"].shape[0] == 3
 
     def test_len(self, dataset: LEVIRCDPlus) -> None:
         assert len(dataset) == 2
@@ -53,7 +55,7 @@ class TestLEVIRCDPlus:
             LEVIRCDPlus(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             LEVIRCDPlus(str(tmp_path))
 
     def test_plot(self, dataset: LEVIRCDPlus) -> None:

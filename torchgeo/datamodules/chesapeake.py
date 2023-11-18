@@ -93,7 +93,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         """
         # This is a rough estimate of how large of a patch we will need to sample in
         # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
-        self.original_patch_size = patch_size * 2
+        self.original_patch_size = patch_size * 3
         kwargs["transforms"] = _Transform(K.CenterCrop(patch_size))
 
         super().__init__(
