@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Any, Callable, Optional, cast
+import pathlib
+from typing import Any, Callable, Optional, Union, cast
 from xml.etree.ElementTree import Element, parse
 
 import matplotlib.patches as patches
@@ -228,7 +229,7 @@ class FAIR1M(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,

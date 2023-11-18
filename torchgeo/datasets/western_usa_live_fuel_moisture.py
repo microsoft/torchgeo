@@ -6,7 +6,8 @@
 import glob
 import json
 import os
-from typing import Any, Callable, Optional
+import pathlib
+from typing import Any, Callable, Optional, Union
 
 import pandas as pd
 import torch
@@ -202,7 +203,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         input_features: list[str] = all_variable_names,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,

@@ -4,7 +4,8 @@
 """SustainBench Crop Yield dataset."""
 
 import os
-from typing import Any, Callable, Optional
+import pathlib
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -57,7 +58,7 @@ class SustainBenchCropYield(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         countries: list[str] = ["usa"],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,

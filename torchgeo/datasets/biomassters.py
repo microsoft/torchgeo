@@ -4,8 +4,9 @@
 """BioMassters Dataset."""
 
 import os
+import pathlib
 from collections.abc import Sequence
-from typing import Optional
+from typing import Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -57,7 +58,7 @@ class BioMassters(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         sensors: Sequence[str] = ["S1", "S2"],
         as_time_series: bool = False,

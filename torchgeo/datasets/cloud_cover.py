@@ -5,8 +5,9 @@
 
 import json
 import os
+import pathlib
 from collections.abc import Sequence
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -107,7 +108,7 @@ class CloudCoverDetection(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         bands: Sequence[str] = band_names,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,

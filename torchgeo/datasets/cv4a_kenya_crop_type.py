@@ -5,8 +5,9 @@
 
 import csv
 import os
+import pathlib
 from functools import lru_cache
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -120,7 +121,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         chip_size: int = 256,
         stride: int = 128,
         bands: tuple[str, ...] = band_names,

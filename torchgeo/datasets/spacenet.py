@@ -8,8 +8,9 @@ import copy
 import glob
 import math
 import os
+import pathlib
 import re
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 import fiona
 import matplotlib.pyplot as plt
@@ -78,7 +79,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
     def __init__(
         self,
-        root: str,
+        root: Union[pathlib.Path, str],
         image: str,
         collections: list[str] = [],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -123,7 +124,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         self.files = self._load_files(root)
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Union[pathlib.Path, str]) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -915,7 +916,7 @@ class SpaceNet4(SpaceNet):
             root, image, collections, transforms, download, api_key, checksum
         )
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Union[pathlib.Path, str]) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -1323,7 +1324,7 @@ class SpaceNet7(SpaceNet):
 
         self.files = self._load_files(root)
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Union[pathlib.Path, str]) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:

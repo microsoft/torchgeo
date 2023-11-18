@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Callable, Optional
+import pathlib
+from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -106,7 +107,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         sensor: str = "oli_sr",
         product: str = "cdl",
         split: str = "train",

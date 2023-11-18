@@ -4,9 +4,10 @@
 """MapInWild dataset."""
 
 import os
+import pathlib
 import shutil
 from collections import defaultdict
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -108,7 +109,7 @@ class MapInWild(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         modality: list[str] = ["mask", "esa_wc", "viirs", "s2_summer"],
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,

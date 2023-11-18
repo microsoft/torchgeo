@@ -12,12 +12,13 @@ import contextlib
 import gzip
 import lzma
 import os
+import pathlib
 import sys
 import tarfile
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast, overload
+from typing import Any, Union, cast, overload
 
 import numpy as np
 import rasterio
@@ -134,7 +135,9 @@ class _zipfile:
             pass
 
 
-def extract_archive(src: str, dst: str | None = None) -> None:
+def extract_archive(
+    src: str | pathlib.Path, dst: str | pathlib.Path | None = None
+) -> None:
     """Extract an archive.
 
     Args:
@@ -144,8 +147,11 @@ def extract_archive(src: str, dst: str | None = None) -> None:
     Raises:
         RuntimeError: if src file has unknown archival/compression scheme
     """
+    src = str(src)
     if dst is None:
         dst = os.path.dirname(src)
+    else:
+        dst = str(dst)
 
     suffix_and_extractor: list[tuple[str | tuple[str, ...], Any]] = [
         (".rar", _rarfile.RarFile),
@@ -180,7 +186,7 @@ def extract_archive(src: str, dst: str | None = None) -> None:
 
 def download_and_extract_archive(
     url: str,
-    download_root: str,
+    download_root: Union[pathlib.Path, str],
     extract_root: str | None = None,
     filename: str | None = None,
     md5: str | None = None,
@@ -194,7 +200,7 @@ def download_and_extract_archive(
         filename: download filename (defaults to basename of ``url``)
         md5: checksum for download verification
     """
-    download_root = os.path.expanduser(download_root)
+    download_root = str(download_root)
     if extract_root is None:
         extract_root = download_root
     if not filename:
@@ -208,7 +214,7 @@ def download_and_extract_archive(
 
 
 def download_radiant_mlhub_dataset(
-    dataset_id: str, download_root: str, api_key: str | None = None
+    dataset_id: str, download_root: Union[pathlib.Path, str], api_key: str | None = None
 ) -> None:
     """Download a dataset from Radiant Earth.
 
@@ -231,7 +237,9 @@ def download_radiant_mlhub_dataset(
 
 
 def download_radiant_mlhub_collection(
-    collection_id: str, download_root: str, api_key: str | None = None
+    collection_id: str,
+    download_root: Union[pathlib.Path, str],
+    api_key: str | None = None,
 ) -> None:
     """Download a collection from Radiant Earth.
 
@@ -528,7 +536,9 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
 
 
 @contextlib.contextmanager
-def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
+def working_dir(
+    dirname: Union[pathlib.Path, str], create: bool = False
+) -> Iterator[None]:
     """Context manager for changing directories.
 
     Args:

@@ -5,6 +5,7 @@
 
 import glob
 import os
+import pathlib
 from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
@@ -83,7 +84,9 @@ class EUDEM(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[
+            Union[pathlib.Path, str], Iterable[Union[pathlib.Path, str]]
+        ] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -124,7 +127,7 @@ class EUDEM(RasterDataset):
             return
 
         # Check if the zip files have already been downloaded
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, (pathlib.Path, str))
         pathname = os.path.join(self.paths, self.zipfile_glob)
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):

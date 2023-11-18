@@ -4,7 +4,8 @@
 """PatternNet dataset."""
 
 import os
-from typing import Callable, Optional, cast
+import pathlib
+from typing import Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -83,7 +84,7 @@ class PatternNet(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,

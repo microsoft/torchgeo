@@ -5,8 +5,9 @@
 
 import glob
 import os
+import pathlib
 import re
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -62,7 +63,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         checksum: bool = False,
@@ -89,7 +90,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         self._verify()
         self.files = self._load_files(root)
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Union[pathlib.Path, str]) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:

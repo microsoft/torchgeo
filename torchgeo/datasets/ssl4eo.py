@@ -5,8 +5,9 @@
 
 import glob
 import os
+import pathlib
 import random
-from typing import Callable, Optional, TypedDict
+from typing import Callable, Optional, TypedDict, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -160,7 +161,7 @@ class SSL4EOL(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "oli_sr",
         seasons: int = 1,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -402,7 +403,7 @@ class SSL4EOS12(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "s2c",
         seasons: int = 1,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,

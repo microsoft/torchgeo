@@ -3,7 +3,8 @@
 
 """UC Merced dataset."""
 import os
-from typing import Callable, Optional, cast
+import pathlib
+from typing import Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -83,7 +84,7 @@ class UCMerced(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,

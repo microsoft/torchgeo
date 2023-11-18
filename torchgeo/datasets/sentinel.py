@@ -3,6 +3,7 @@
 
 """Sentinel datasets."""
 
+import pathlib
 from collections.abc import Iterable, Sequence
 from typing import Any, Callable, Optional, Union
 
@@ -140,7 +141,7 @@ class Sentinel1(Sentinel):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
+        paths: Union[pathlib.Path, str, Iterable[Union[pathlib.Path, str]]] = "data",
         crs: Optional[CRS] = None,
         res: float = 10,
         bands: Sequence[str] = ["VV", "VH"],
@@ -296,7 +297,7 @@ class Sentinel2(Sentinel):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[pathlib.Path, str, Iterable[Union[pathlib.Path, str]]] = "data",
         crs: Optional[CRS] = None,
         res: float = 10,
         bands: Optional[Sequence[str]] = None,

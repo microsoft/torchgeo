@@ -6,8 +6,9 @@ import abc
 import glob
 import hashlib
 import os
+import pathlib
 from functools import lru_cache
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -77,7 +78,10 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
     }
 
     def __init__(
-        self, root: str = "data", download: bool = False, checksum: bool = False
+        self,
+        root: Union[pathlib.Path, str] = "data",
+        download: bool = False,
+        checksum: bool = False,
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
 
@@ -208,7 +212,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -297,7 +301,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
