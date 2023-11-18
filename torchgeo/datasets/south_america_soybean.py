@@ -152,15 +152,6 @@ class SouthAmericaSoybean(RasterDataset):
 
         assert isinstance(self.paths, str)
 
-        #todo
-        pathname = os.path.join(self.paths, "**", self.zipfile_glob)
-        if glob.glob(pathname, recursive=True):
-            exists = True
-            self._extract()
-
-        if exists == True:
-            return
-
         # Check if the user requested to download the dataset
         if not self.download:
             raise DatasetNotFoundError(self)
