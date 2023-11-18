@@ -53,7 +53,7 @@ class TestSouthAmericaSoybean:
         mask = sample["mask"]
         assert mask.max() < len(classes)
 
-    def test_and(self, dataset: south_america_soybean) -> None:
+    def test_and(self, dataset: SouthAmericaSoybean) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
 
