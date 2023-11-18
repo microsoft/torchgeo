@@ -25,7 +25,10 @@ class SouthAmericaSoybean(RasterDataset):
     1) 21 .tif files 
 
     If you use this dataset in your research, please use the corresponding citation:
-    Song, XP., Hansen, M.C., Potapov, P. et al. Massive soybean expansion in South America since 2000 and implications for conservation. Nat Sustain 4, 784–792 (2021). https://doi.org/10.1038/s41893-021-00729-z 
+
+* https://doi.org/10.1038/s41893-021-00729-z 
+
+.. versionadded:: 0.6
 
     """
     filename_glob = "SouthAmerica_Soybean_*.tif"
