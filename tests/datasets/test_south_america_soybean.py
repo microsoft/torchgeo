@@ -91,7 +91,7 @@ class TestSouthAmericaSoybean:
         dataset.plot(x, suptitle="Test")
         plt.close()
 
-    def test_plot_prediction(self, dataset: south_america_soybean) -> None:
+    def test_plot_prediction(self, dataset: SouthAmericaSoybean) -> None:
         query = dataset.bounds
         x = dataset[query]
         x["prediction"] = x["mask"].clone()
