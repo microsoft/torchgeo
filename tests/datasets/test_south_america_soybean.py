@@ -47,8 +47,8 @@ class TestSouthAmericaSoybean:
 
     def test_classes(self) -> None:
         root = os.path.join("tests", "data", "south_america_soybean")
-        classes = list(south_america_soybean.cmap.keys())[0:2]
-        ds = south_america_soybean(root, years=[2021], classes=classes)
+        classes = list(SouthAmericaSoybean.cmap.keys())[0:2]
+        ds = SouthAmericaSoybean(root, years=[2021], classes=classes)
         sample = ds[ds.bounds]
         mask = sample["mask"]
         assert mask.max() < len(classes)
