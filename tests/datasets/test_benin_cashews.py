@@ -10,10 +10,10 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import BeninSmallHolderCashews
+from torchgeo.datasets import BeninSmallHolderCashews, DatasetNotFoundError
 
 
 class Collection:
@@ -73,7 +73,7 @@ class TestBeninSmallHolderCashews:
         BeninSmallHolderCashews(root=dataset.root, download=True, api_key="")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             BeninSmallHolderCashews(str(tmp_path))
 
     def test_invalid_bands(self) -> None:

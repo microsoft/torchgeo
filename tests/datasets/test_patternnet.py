@@ -9,10 +9,10 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import PatternNet
+from torchgeo.datasets import DatasetNotFoundError, PatternNet
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -52,10 +52,7 @@ class TestPatternNet:
         PatternNet(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
-        "either specify a different `root` directory or use `download=True` "
-        "to automatically download the dataset."
-        with pytest.raises(RuntimeError, match=err):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             PatternNet(str(tmp_path))
 
     def test_plot(self, dataset: PatternNet) -> None:

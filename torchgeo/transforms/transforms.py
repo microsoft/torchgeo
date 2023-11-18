@@ -25,26 +25,31 @@ class AugmentationSequential(Module):
         self,
         *args: Union[K.base._AugmentationBase, K.ImageSequential],
         data_keys: list[str],
+        **kwargs: Any,
     ) -> None:
         """Initialize a new augmentation sequential instance.
 
         Args:
             *args: Sequence of kornia augmentations
             data_keys: List of inputs to augment (e.g., ["image", "mask", "boxes"])
+            **kwargs: Keyword arguments passed to ``K.AugmentationSequential``
+
+        .. versionadded:: 0.5
+           The ``**kwargs`` parameter.
         """
         super().__init__()
         self.data_keys = data_keys
 
         keys: list[str] = []
         for key in data_keys:
-            if key == "image":
+            if key.startswith("image"):
                 keys.append("input")
             elif key == "boxes":
                 keys.append("bbox")
             else:
                 keys.append(key)
 
-        self.augs = K.AugmentationSequential(*args, data_keys=keys)
+        self.augs = K.AugmentationSequential(*args, data_keys=keys, **kwargs)
 
     def forward(self, batch: dict[str, Tensor]) -> dict[str, Tensor]:
         """Perform augmentations and update data dict.

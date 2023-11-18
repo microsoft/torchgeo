@@ -1,0 +1,23 @@
+model:
+  class_path: SimCLRTask
+  init_args:
+    model: "resnet18"
+    in_channels: 3
+    version: 1
+    layers: 2
+    hidden_dim: 8
+    output_dim: 8
+    weight_decay: 1e-6
+    memory_bank_size: 0
+data:
+  class_path: SeasonalContrastS2DataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: "tests/data/seco"
+    seasons: 1
+    # https://github.com/Lightning-AI/lightning/issues/18616
+    bands:
+    - "B4"
+    - "B3"
+    - "B2"

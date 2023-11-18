@@ -183,7 +183,9 @@ class So2SatDataModule(NonGeoDataModule):
         .. versionadded:: 0.5
            The *val_split_pct* parameter, and the 'rgb' argument to *band_set*.
         """
-        version = kwargs.get("version", "2")
+        # https://github.com/Lightning-AI/lightning/issues/18616
+        kwargs["version"] = str(kwargs.get("version", "2"))
+        version = kwargs["version"]
         kwargs["bands"] = So2Sat.BAND_SETS[band_set]
         self.val_split_pct = val_split_pct
 

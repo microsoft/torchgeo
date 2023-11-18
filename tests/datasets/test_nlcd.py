@@ -9,11 +9,17 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import NLCD, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets import (
+    NLCD,
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -52,6 +58,14 @@ class TestNLCD:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
+    def test_classes(self) -> None:
+        root = os.path.join("tests", "data", "nlcd")
+        classes = list(NLCD.cmap.keys())[:5]
+        ds = NLCD(root, years=[2019], classes=classes)
+        sample = ds[ds.bounds]
+        mask = sample["mask"]
+        assert mask.max() < len(classes)
+
     def test_and(self, dataset: NLCD) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
@@ -61,7 +75,7 @@ class TestNLCD:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: NLCD) -> None:
-        NLCD(root=dataset.root, download=True, years=[2019])
+        NLCD(dataset.paths, download=True, years=[2019])
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(
@@ -78,6 +92,13 @@ class TestNLCD:
         ):
             NLCD(str(tmp_path), years=[1996])
 
+    def test_invalid_classes(self) -> None:
+        with pytest.raises(AssertionError):
+            NLCD(classes=[-1])
+
+        with pytest.raises(AssertionError):
+            NLCD(classes=[11])
+
     def test_plot(self, dataset: NLCD) -> None:
         query = dataset.bounds
         x = dataset[query]
@@ -92,7 +113,7 @@ class TestNLCD:
         plt.close()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             NLCD(str(tmp_path))
 
     def test_invalid_query(self, dataset: NLCD) -> None:

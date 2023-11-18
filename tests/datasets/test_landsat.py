@@ -9,10 +9,16 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-from torchgeo.datasets import BoundingBox, IntersectionDataset, Landsat8, UnionDataset
+from torchgeo.datasets import (
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    Landsat8,
+    UnionDataset,
+)
 
 
 class TestLandsat8:
@@ -52,7 +58,7 @@ class TestLandsat8:
 
     def test_plot_wrong_bands(self, dataset: Landsat8) -> None:
         bands = ("SR_B1",)
-        ds = Landsat8(root=dataset.root, bands=bands)
+        ds = Landsat8(dataset.paths, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
             ValueError, match="Dataset doesn't contain some of the RGB bands"
@@ -60,7 +66,7 @@ class TestLandsat8:
             ds.plot(x)
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No Landsat8 data was found in "):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             Landsat8(str(tmp_path))
 
     def test_invalid_query(self, dataset: Landsat8) -> None:

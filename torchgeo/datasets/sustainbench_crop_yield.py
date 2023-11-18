@@ -9,10 +9,11 @@ from typing import Any, Callable, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import DatasetNotFoundError, download_url, extract_archive
 
 
 class SustainBenchCropYield(NonGeoDataset):
@@ -77,7 +78,7 @@ class SustainBenchCropYield(NonGeoDataset):
         Raises:
             AssertionError: if ``countries`` contains invalid countries or if ``split``
                 is invalid
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert set(countries).issubset(
             self.valid_countries
@@ -185,11 +186,7 @@ class SustainBenchCropYield(NonGeoDataset):
         return collection
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, self.dir)
         if os.path.exists(pathname):
@@ -203,22 +200,14 @@ class SustainBenchCropYield(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
         self._extract()
 
     def _download(self) -> None:
-        """Download the dataset and extract it.
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
-        """
+        """Download the dataset and extract it."""
         download_url(
             self.url,
             self.root,
@@ -238,7 +227,7 @@ class SustainBenchCropYield(NonGeoDataset):
         band_idx: int = 0,
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

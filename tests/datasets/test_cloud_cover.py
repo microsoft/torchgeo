@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
-from torchgeo.datasets import CloudCoverDetection
+from torchgeo.datasets import CloudCoverDetection, DatasetNotFoundError
 
 
 class Collection:
@@ -83,7 +83,7 @@ class TestCloudCoverDetection:
         CloudCoverDetection(root=dataset.root, split="test", download=True, api_key="")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             CloudCoverDetection(str(tmp_path))
 
     def test_plot(self, dataset: CloudCoverDetection) -> None:

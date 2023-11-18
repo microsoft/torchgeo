@@ -9,10 +9,10 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import ForestDamage
+from torchgeo.datasets import DatasetNotFoundError, ForestDamage
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -66,7 +66,7 @@ class TestForestDamage:
             ForestDamage(root=str(tmp_path), checksum=True)
 
     def test_not_found(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             ForestDamage(str(tmp_path))
 
     def test_plot(self, dataset: ForestDamage) -> None:

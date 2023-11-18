@@ -10,11 +10,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib import patches
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive, download_url
+from .utils import (
+    DatasetNotFoundError,
+    check_integrity,
+    download_and_extract_archive,
+    download_url,
+)
 
 
 def convert_coco_poly_to_mask(
@@ -199,8 +205,7 @@ class VHR10(NonGeoDataset):
         Raises:
             AssertionError: if ``split`` argument is invalid
             ImportError: if ``split="positive"`` and pycocotools is not installed
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in ["positive", "negative"]
 
@@ -213,10 +218,7 @@ class VHR10(NonGeoDataset):
             self._download()
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         if split == "positive":
             # Must be installed to parse annotations file
@@ -371,7 +373,7 @@ class VHR10(NonGeoDataset):
         show_feats: Optional[str] = "both",
         box_alpha: float = 0.7,
         mask_alpha: float = 0.7,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -394,13 +396,13 @@ class VHR10(NonGeoDataset):
         assert show_feats in {"boxes", "masks", "both"}
 
         if self.split == "negative":
-            plt.imshow(sample["image"].permute(1, 2, 0))
-            axs = plt.gca()
-            axs.axis("off")
+            fig, axs = plt.subplots(squeeze=False)
+            axs[0, 0].imshow(sample["image"].permute(1, 2, 0))
+            axs[0, 0].axis("off")
 
             if suptitle is not None:
                 plt.suptitle(suptitle)
-            return plt.gcf()
+            return fig
 
         if show_feats != "boxes":
             try:
@@ -437,11 +439,9 @@ class VHR10(NonGeoDataset):
             ncols += 1
 
         # Display image
-        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
-        if not isinstance(axs, np.ndarray):
-            axs = [axs]
-        axs[0].imshow(image)
-        axs[0].axis("off")
+        fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 10, 10))
+        axs[0, 0].imshow(image)
+        axs[0, 0].axis("off")
 
         cm = plt.get_cmap("gist_rainbow")
         for i in range(n_gt):
@@ -451,7 +451,7 @@ class VHR10(NonGeoDataset):
             # Add bounding boxes
             x1, y1, x2, y2 = boxes[i]
             if show_feats in {"boxes", "both"}:
-                p = patches.Rectangle(
+                r = patches.Rectangle(
                     (x1, y1),
                     x2 - x1,
                     y2 - y1,
@@ -461,32 +461,32 @@ class VHR10(NonGeoDataset):
                     edgecolor=color,
                     facecolor="none",
                 )
-                axs[0].add_patch(p)
+                axs[0, 0].add_patch(r)
 
             # Add labels
             label = self.categories[class_num]
             caption = label
-            axs[0].text(
+            axs[0, 0].text(
                 x1, y1 - 8, caption, color="white", size=11, backgroundcolor="none"
             )
 
             # Add masks
             if show_feats in {"masks", "both"} and "masks" in sample:
                 mask = masks[i]
-                contours = find_contours(mask, 0.5)
+                contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
                 for verts in contours:
                     verts = np.fliplr(verts)
                     p = patches.Polygon(
                         verts, facecolor=color, alpha=mask_alpha, edgecolor="white"
                     )
-                    axs[0].add_patch(p)
+                    axs[0, 0].add_patch(p)
 
             if show_titles:
-                axs[0].set_title("Ground Truth")
+                axs[0, 0].set_title("Ground Truth")
 
         if show_predictions:
-            axs[1].imshow(image)
-            axs[1].axis("off")
+            axs[0, 1].imshow(image)
+            axs[0, 1].axis("off")
             for i in range(n_pred):
                 score = prediction_scores[i]
                 if score < 0.5:
@@ -498,7 +498,7 @@ class VHR10(NonGeoDataset):
                 if show_pred_boxes:
                     # Add bounding boxes
                     x1, y1, x2, y2 = prediction_boxes[i]
-                    p = patches.Rectangle(
+                    r = patches.Rectangle(
                         (x1, y1),
                         x2 - x1,
                         y2 - y1,
@@ -508,12 +508,12 @@ class VHR10(NonGeoDataset):
                         edgecolor=color,
                         facecolor="none",
                     )
-                    axs[1].add_patch(p)
+                    axs[0, 1].add_patch(r)
 
                     # Add labels
                     label = self.categories[class_num]
                     caption = f"{label} {score:.3f}"
-                    axs[1].text(
+                    axs[0, 1].text(
                         x1,
                         y1 - 8,
                         caption,
@@ -525,16 +525,16 @@ class VHR10(NonGeoDataset):
                 # Add masks
                 if show_pred_masks:
                     mask = prediction_masks[i]
-                    contours = find_contours(mask, 0.5)
+                    contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
                     for verts in contours:
                         verts = np.fliplr(verts)
                         p = patches.Polygon(
                             verts, facecolor=color, alpha=mask_alpha, edgecolor="white"
                         )
-                        axs[1].add_patch(p)
+                        axs[0, 1].add_patch(p)
 
             if show_titles:
-                axs[1].set_title("Prediction")
+                axs[0, 1].set_title("Prediction")
 
         plt.tight_layout()
 

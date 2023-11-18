@@ -1,8 +1,0 @@
-config_file: null  # This lets the user pass a config filename to load other arguments from
-
-program:  # These are the arguments that define how the train.py script works
-  seed: 0
-  output_dir: output
-  data_dir: data
-  log_dir: logs
-  overwrite: False

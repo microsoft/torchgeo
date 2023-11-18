@@ -11,11 +11,11 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import EuroSAT, EuroSAT100
+from torchgeo.datasets import DatasetNotFoundError, EuroSAT, EuroSAT100
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -92,10 +92,7 @@ class TestEuroSAT:
         EuroSAT(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
-        "either specify a different `root` directory or use `download=True` "
-        "to automatically download the dataset."
-        with pytest.raises(RuntimeError, match=err):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             EuroSAT(str(tmp_path))
 
     def test_plot(self, dataset: EuroSAT) -> None:

@@ -8,6 +8,7 @@ from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
+from .biomassters import BioMassters
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chesapeake import (
@@ -72,17 +73,22 @@ from .landsat import (
 )
 from .levircd import LEVIRCDPlus
 from .loveda import LoveDA
+from .mapinwild import MapInWild
 from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
+from .nccm import NCCM
 from .nlcd import NLCD
 from .nlcd_tree_canopy_cover import NLCDTreeCanopyCover
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
+from .pastis import PASTIS
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
+from .rwanda_field_boundary import RwandaFieldBoundary
+from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
@@ -105,12 +111,14 @@ from .splits import (
     roi_split,
     time_series_split,
 )
-from .ssl4eo import SSL4EOS12
+from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
+from .ssl4eo_benchmark import SSL4EOLBenchmark
 from .sustainbench_crop_yield import SustainBenchCropYield
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
     BoundingBox,
+    DatasetNotFoundError,
     concat_samples,
     merge_samples,
     stack_samples,
@@ -162,6 +170,7 @@ __all__ = (
     "Landsat8",
     "Landsat9",
     "NAIP",
+    "NCCM",
     "NLCD",
     "OpenBuildings",
     "Sentinel",
@@ -171,6 +180,7 @@ __all__ = (
     "ADVANCE",
     "BeninSmallHolderCashews",
     "BigEarthNet",
+    "BioMassters",
     "CloudCoverDetection",
     "COWC",
     "COWCCounting",
@@ -191,15 +201,19 @@ __all__ = (
     "LandCoverAI",
     "LEVIRCDPlus",
     "LoveDA",
+    "MapInWild",
     "MillionAID",
     "NASAMarineDebris",
     "NLCDTreeCanopyCover",
     "OSCD",
+    "PASTIS",
     "PatternNet",
     "Potsdam2D",
     "RESISC45",
     "ReforesTree",
+    "RwandaFieldBoundary",
     "SeasonalContrastS2",
+    "SeasoNet",
     "SEN12MS",
     "SKIPPD",
     "So2Sat",
@@ -211,6 +225,9 @@ __all__ = (
     "SpaceNet5",
     "SpaceNet6",
     "SpaceNet7",
+    "SSL4EO",
+    "SSL4EOLBenchmark",
+    "SSL4EOL",
     "SSL4EOS12",
     "SustainBenchCropYield",
     "TropicalCyclone",
@@ -241,4 +258,6 @@ __all__ = (
     "random_grid_cell_assignment",
     "roi_split",
     "time_series_split",
+    # Errors
+    "DatasetNotFoundError",
 )

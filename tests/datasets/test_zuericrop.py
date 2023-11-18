@@ -11,10 +11,10 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import ZueriCrop
+from torchgeo.datasets import DatasetNotFoundError, ZueriCrop
 
 pytest.importorskip("h5py", minversion="3")
 
@@ -79,10 +79,7 @@ class TestZueriCrop:
         ZueriCrop(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
-        "either specify a different `root` directory or use `download=True` "
-        "to automatically download the dataset."
-        with pytest.raises(RuntimeError, match=err):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             ZueriCrop(str(tmp_path))
 
     def test_mock_missing_module(

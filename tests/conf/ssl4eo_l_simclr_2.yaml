@@ -1,0 +1,19 @@
+model:
+  class_path: SimCLRTask
+  init_args:
+    model: "resnet18"
+    in_channels: 7
+    version: 2
+    layers: 3
+    hidden_dim: 8
+    output_dim: 8
+    weight_decay: 1e-4
+    memory_bank_size: 10
+data:
+  class_path: SSL4EOLDataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: "tests/data/ssl4eo/l"
+    split: "tm_toa"
+    seasons: 2
