@@ -133,10 +133,6 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
         # Check if the extracted files already exist
         if self.files:
             return
-
-        # Check if the zip files have already been downloaded
-        exists = False
-
         assert isinstance(self.paths, str)
 
         # Check if the user requested to download the dataset
