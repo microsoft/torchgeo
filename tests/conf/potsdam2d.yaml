@@ -1,21 +1,18 @@
-module:
-  _target_: torchgeo.trainers.SemanticSegmentationTask
-  loss: "ce"
-  model: "unet"
-  backbone: "resnet18"
-  weights: null
-  learning_rate: 1e-3
-  learning_rate_schedule_patience: 6
-  verbose: false
-  in_channels: 4
-  num_classes: 6
-  num_filters: 1
-  ignore_index: null
-
-datamodule:
-  _target_: torchgeo.datamodules.Potsdam2DDataModule
-  root: "tests/data/potsdam"
-  batch_size: 1
-  patch_size: 2
-  val_split_pct: 0.5
-  num_workers: 0
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: "ce"
+    model: "unet"
+    backbone: "resnet18"
+    in_channels: 4
+    num_classes: 6
+    num_filters: 1
+    ignore_index: null
+data:
+  class_path: Potsdam2DDataModule
+  init_args:
+    batch_size: 1
+    patch_size: 2
+    val_split_pct: 0.5
+  dict_kwargs:
+    root: "tests/data/potsdam"

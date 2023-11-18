@@ -6,9 +6,10 @@
 import os
 import warnings
 from collections.abc import Sequence
-from typing import Optional, Union, cast
+from typing import Any, Optional, Union
 
 import kornia.augmentation as K
+import lightning
 import timm
 import torch
 import torch.nn as nn
@@ -17,7 +18,6 @@ from lightly.loss import NTXentLoss
 from lightly.models.modules import MoCoProjectionHead
 from lightly.models.utils import deactivate_requires_grad, update_momentum
 from lightly.utils.scheduler import cosine_schedule
-from lightning import LightningModule
 from torch import Tensor
 from torch.optim import SGD, AdamW, Optimizer
 from torch.optim.lr_scheduler import (
@@ -32,6 +32,7 @@ import torchgeo.transforms as T
 
 from ..models import get_weight
 from . import utils
+from .base import BaseTask
 
 try:
     from torch.optim.lr_scheduler import LRScheduler
@@ -62,6 +63,8 @@ def moco_augmentations(
             T.RandomGrayscale(weights=weights, p=0.2),
             # Not appropriate for multispectral imagery, seasonal contrast used instead
             # K.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.4, p=1)
+            K.RandomBrightness(brightness=(0.6, 1.4), p=1.0),
+            K.RandomContrast(contrast=(0.6, 1.4), p=1.0),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),  # added
             data_keys=["input"],
@@ -74,6 +77,8 @@ def moco_augmentations(
             # K.ColorJitter(
             #     brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1, p=0.8
             # )
+            K.RandomBrightness(brightness=(0.6, 1.4), p=0.8),
+            K.RandomContrast(contrast=(0.6, 1.4), p=0.8),
             T.RandomGrayscale(weights=weights, p=0.2),
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=0.5),
             K.RandomHorizontalFlip(),
@@ -88,6 +93,8 @@ def moco_augmentations(
             # K.ColorJitter(
             #     brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
             # )
+            K.RandomBrightness(brightness=(0.6, 1.4), p=0.8),
+            K.RandomContrast(contrast=(0.6, 1.4), p=0.8),
             T.RandomGrayscale(weights=weights, p=0.2),
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=1),
             K.RandomHorizontalFlip(),
@@ -100,6 +107,8 @@ def moco_augmentations(
             # K.ColorJitter(
             #     brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
             # )
+            K.RandomBrightness(brightness=(0.6, 1.4), p=0.8),
+            K.RandomContrast(contrast=(0.6, 1.4), p=0.8),
             T.RandomGrayscale(weights=weights, p=0.2),
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=0.1),
             K.RandomSolarize(p=0.2),
@@ -110,7 +119,7 @@ def moco_augmentations(
     return aug1, aug2
 
 
-class MoCoTask(LightningModule):  # type: ignore[misc]
+class MoCoTask(BaseTask):
     """MoCo: Momentum Contrast.
 
     Reference implementations:
@@ -126,6 +135,8 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
 
     .. versionadded:: 0.5
     """
+
+    monitor = "train_loss"
 
     def __init__(
         self,
@@ -152,7 +163,8 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
         """Initialize a new MoCoTask instance.
 
         Args:
-            model: Name of the timm model to use.
+            model: Name of the `timm
+                <https://huggingface.co/docs/timm/reference/models>`__ model to use.
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False
                 or None for random weights, or the path to a saved model state dict.
@@ -164,7 +176,8 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
                 (not used in v1, 2048 for v2, 4096 for v3).
             output_dim: Number of output dimensions in projection head
                 (not used in v1, 128 for v2, 256 for v3).
-            lr: Learning rate (0.6 x batch_size / 256 is recommended).
+            lr: Learning rate
+                (0.03 x batch_size / 256 for v1/2, 0.6 x batch_size / 256 for v3).
             weight_decay: Weight decay coefficient (1e-4 for v1/2, 1e-6 for v3).
             momentum: Momentum of SGD solver (v1/2 only).
             schedule: Epochs at which to drop lr by 10x (v1/2 only).
@@ -189,8 +202,6 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
         Warns:
             UserWarning: If hyperparameters do not match MoCo version requested.
         """
-        super().__init__()
-
         # Validate hyperparameters
         assert version in range(1, 4)
         if version == 1:
@@ -207,12 +218,31 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
             if memory_bank_size > 0:
                 warnings.warn("MoCo v3 does not use a memory bank")
 
-        self.save_hyperparameters(ignore=["augmentation1", "augmentation2"])
+        self.weights = weights
+        super().__init__(ignore=["weights", "augmentation1", "augmentation2"])
 
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
         aug1, aug2 = moco_augmentations(version, size, grayscale_weights)
         self.augmentation1 = augmentation1 or aug1
         self.augmentation2 = augmentation2 or aug2
+
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion."""
+        self.criterion = NTXentLoss(
+            self.hparams["temperature"],
+            self.hparams["memory_bank_size"],
+            self.hparams["gather_distributed"],
+        )
+
+    def configure_models(self) -> None:
+        """Initialize the model."""
+        model: str = self.hparams["model"]
+        weights = self.weights
+        in_channels: int = self.hparams["in_channels"]
+        version: int = self.hparams["version"]
+        layers: int = self.hparams["layers"]
+        hidden_dim: int = self.hparams["hidden_dim"]
+        output_dim: int = self.hparams["output_dim"]
 
         # Create backbone
         self.backbone = timm.create_model(
@@ -249,11 +279,53 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
                 output_dim, hidden_dim, output_dim, num_layers=2, batch_norm=batch_norm
             )
 
-        # Define loss function
-        self.criterion = NTXentLoss(temperature, memory_bank_size, gather_distributed)
-
         # Initialize moving average of output
         self.avg_output_std = 0.0
+
+    def configure_optimizers(
+        self,
+    ) -> "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig":
+        """Initialize the optimizer and learning rate scheduler.
+
+        Returns:
+            Optimizer and learning rate scheduler.
+        """
+        if self.hparams["version"] == 3:
+            optimizer: Optimizer = AdamW(
+                params=self.parameters(),
+                lr=self.hparams["lr"],
+                weight_decay=self.hparams["weight_decay"],
+            )
+            warmup_epochs = 40
+            max_epochs = 200
+            if self.trainer and self.trainer.max_epochs:
+                max_epochs = self.trainer.max_epochs
+            scheduler: LRScheduler = SequentialLR(
+                optimizer,
+                schedulers=[
+                    LinearLR(
+                        optimizer,
+                        start_factor=1 / warmup_epochs,
+                        total_iters=warmup_epochs,
+                    ),
+                    CosineAnnealingLR(optimizer, T_max=max_epochs),
+                ],
+                milestones=[warmup_epochs],
+            )
+        else:
+            optimizer = SGD(
+                params=self.parameters(),
+                lr=self.hparams["lr"],
+                momentum=self.hparams["momentum"],
+                weight_decay=self.hparams["weight_decay"],
+            )
+            scheduler = MultiStepLR(
+                optimizer=optimizer, milestones=self.hparams["schedule"]
+            )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},
+        }
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
         """Forward pass of the model.
@@ -262,15 +334,15 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
             x: Mini-batch of images.
 
         Returns:
-            Output from the model and backbone
+            Output of the model and backbone
         """
-        h = self.backbone(x)
+        h: Tensor = self.backbone(x)
         q = h
         if self.hparams["version"] > 1:
             q = self.projection_head(q)
         if self.hparams["version"] == 3:
             q = self.prediction_head(q)
-        return cast(Tensor, q), cast(Tensor, h)
+        return q, h
 
     def forward_momentum(self, x: Tensor) -> Tensor:
         """Forward pass of the momentum model.
@@ -281,17 +353,20 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
         Returns:
             Output from the momentum model.
         """
-        k = self.backbone_momentum(x)
+        k: Tensor = self.backbone_momentum(x)
         if self.hparams["version"] > 1:
             k = self.projection_head_momentum(k)
-        return cast(Tensor, k)
+        return k
 
-    def training_step(self, batch: dict[str, Tensor], batch_idx: int) -> Tensor:
+    def training_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
         """Compute the training loss and additional metrics.
 
         Args:
             batch: The output of your DataLoader.
             batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
 
         Returns:
             The loss tensor.
@@ -318,7 +393,7 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 k = self.forward_momentum(x2)
-            loss = self.criterion(q, k)
+            loss: Tensor = self.criterion(q, k)
         elif self.hparams["version"] == 2:
             q, h1 = self.forward(x1)
             with torch.no_grad():
@@ -348,50 +423,15 @@ class MoCoTask(LightningModule):  # type: ignore[misc]
         self.log("train_ssl_std", self.avg_output_std)
         self.log("train_loss", loss)
 
-        return cast(Tensor, loss)
+        return loss
 
-    def validation_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
+    def validation_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
         """No-op, does nothing."""
 
-    def test_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
+    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
 
-    def predict_step(self, batch: dict[str, Tensor], batch_idx: int) -> None:
+    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
-
-    def configure_optimizers(self) -> tuple[list[Optimizer], list[LRScheduler]]:
-        """Initialize the optimizer and learning rate scheduler.
-
-        Returns:
-            Optimizer and learning rate scheduler.
-        """
-        if self.hparams["version"] == 3:
-            optimizer: Optimizer = AdamW(
-                params=self.parameters(),
-                lr=self.hparams["lr"],
-                weight_decay=self.hparams["weight_decay"],
-            )
-            warmup_epochs = 40
-            lr_scheduler: LRScheduler = SequentialLR(
-                optimizer,
-                schedulers=[
-                    LinearLR(
-                        optimizer,
-                        start_factor=1 / warmup_epochs,
-                        total_iters=warmup_epochs,
-                    ),
-                    CosineAnnealingLR(optimizer, T_max=self.trainer.max_epochs),
-                ],
-                milestones=[warmup_epochs],
-            )
-        else:
-            optimizer = SGD(
-                params=self.parameters(),
-                lr=self.hparams["lr"],
-                momentum=self.hparams["momentum"],
-                weight_decay=self.hparams["weight_decay"],
-            )
-            lr_scheduler = MultiStepLR(
-                optimizer=optimizer, milestones=self.hparams["schedule"]
-            )
-        return [optimizer], [lr_scheduler]

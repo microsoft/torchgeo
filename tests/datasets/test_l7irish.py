@@ -14,7 +14,13 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import BoundingBox, IntersectionDataset, L7Irish, UnionDataset
+from torchgeo.datasets import (
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    L7Irish,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -26,8 +32,8 @@ class TestL7Irish:
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L7Irish:
         monkeypatch.setattr(torchgeo.datasets.l7irish, "download_url", download_url)
         md5s = {
-            "austral": "c06147330141517f7eee55ea931c4787",
-            "boreal": "4b598e55f0d6d33da3672190ebf96268",
+            "austral": "0485d6045f6b508068ef8daf9e5a5326",
+            "boreal": "5798f32545d7166564c4c4429357b840",
         }
 
         url = os.path.join("tests", "data", "l7irish", "{}.tar.gz")
@@ -58,7 +64,7 @@ class TestL7Irish:
         plt.close()
 
     def test_already_extracted(self, dataset: L7Irish) -> None:
-        L7Irish(root=dataset.root, download=True)
+        L7Irish(dataset.paths, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests", "data", "l7irish", "*.tar.gz")
@@ -68,7 +74,7 @@ class TestL7Irish:
         L7Irish(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             L7Irish(str(tmp_path))
 
     def test_plot_prediction(self, dataset: L7Irish) -> None:
@@ -88,7 +94,7 @@ class TestL7Irish:
         with pytest.raises(
             ValueError, match="Dataset doesn't contain some of the RGB bands"
         ):
-            ds = L7Irish(root=dataset.root, bands=["B1", "B2", "B5"])
+            ds = L7Irish(dataset.paths, bands=["B10", "B20", "B50"])
             x = ds[ds.bounds]
             ds.plot(x, suptitle="Test")
             plt.close()

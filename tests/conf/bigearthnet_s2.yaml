@@ -1,18 +1,16 @@
-module:
-  _target_: torchgeo.trainers.MultiLabelClassificationTask
-  loss: "bce"
-  model: "resnet18"
-  learning_rate: 1e-3
-  learning_rate_schedule_patience: 6
-  weights: null
-  in_channels: 12
-  num_classes: 19
-
-datamodule:
-  _target_: torchgeo.datamodules.BigEarthNetDataModule
-  root: "tests/data/bigearthnet"
-  bands: "s2"
-  num_classes: ${module.num_classes}
-  download: true
-  batch_size: 1
-  num_workers: 0
+model:
+  class_path: MultiLabelClassificationTask
+  init_args:
+    loss: "bce"
+    model: "resnet18"
+    in_channels: 12
+    num_classes: 19
+data:
+  class_path: BigEarthNetDataModule
+  init_args:
+    batch_size: 1
+  dict_kwargs:
+    root: "tests/data/bigearthnet"
+    bands: "s2"
+    num_classes: 19
+    download: true

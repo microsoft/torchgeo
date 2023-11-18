@@ -12,7 +12,13 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-from torchgeo.datasets import EUDEM, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets import (
+    EUDEM,
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 class TestEUDEM:
@@ -33,21 +39,22 @@ class TestEUDEM:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_extracted_already(self, dataset: EUDEM) -> None:
-        zipfile = os.path.join(dataset.root, "eu_dem_v11_E30N10.zip")
-        shutil.unpack_archive(zipfile, dataset.root, "zip")
-        EUDEM(dataset.root)
+        assert isinstance(dataset.paths, str)
+        zipfile = os.path.join(dataset.paths, "eu_dem_v11_E30N10.zip")
+        shutil.unpack_archive(zipfile, dataset.paths, "zip")
+        EUDEM(dataset.paths)
 
     def test_no_dataset(self, tmp_path: Path) -> None:
         shutil.rmtree(tmp_path)
         os.makedirs(tmp_path)
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
-            EUDEM(root=str(tmp_path))
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+            EUDEM(str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, "eu_dem_v11_E30N10.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            EUDEM(root=str(tmp_path), checksum=True)
+            EUDEM(str(tmp_path), checksum=True)
 
     def test_and(self, dataset: EUDEM) -> None:
         ds = dataset & dataset

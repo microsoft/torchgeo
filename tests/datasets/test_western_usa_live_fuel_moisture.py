@@ -1,19 +1,16 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
 import os
 import shutil
 from pathlib import Path
-from typing import Any
 
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import WesternUSALiveFuelMoisture
+from torchgeo.datasets import DatasetNotFoundError, WesternUSALiveFuelMoisture
 
 
 class Collection:
@@ -68,33 +65,9 @@ class TestWesternUSALiveFuelMoisture:
         WesternUSALiveFuelMoisture(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             WesternUSALiveFuelMoisture(str(tmp_path))
 
     def test_invalid_features(self, dataset: WesternUSALiveFuelMoisture) -> None:
         with pytest.raises(AssertionError, match="Invalid input variable name."):
             WesternUSALiveFuelMoisture(dataset.root, input_features=["foo"])
-
-    @pytest.fixture(params=["pandas"])
-    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
-        import_orig = builtins.__import__
-        package = str(request.param)
-
-        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == package:
-                raise ImportError()
-            return import_orig(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, "__import__", mocked_import)
-        return package
-
-    def test_mock_missing_module(
-        self, dataset: WesternUSALiveFuelMoisture, mock_missing_module: str
-    ) -> None:
-        package = mock_missing_module
-        if package == "pandas":
-            with pytest.raises(
-                ImportError,
-                match=f"{package} is not installed and is required to use this dataset",
-            ):
-                WesternUSALiveFuelMoisture(dataset.root)

@@ -8,11 +8,16 @@ import json
 import os
 from typing import Any, Callable, Optional
 
+import pandas as pd
 import torch
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 class WesternUSALiveFuelMoisture(NonGeoDataset):
@@ -217,8 +222,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         Raises:
             AssertionError: if ``input_features`` contains invalid variable names
-            ImportError: if pandas is not installed
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         super().__init__()
 
@@ -229,13 +233,6 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         self.api_key = api_key
 
         self._verify()
-
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
 
         assert all(
             input in self.all_variable_names for input in input_features
@@ -276,7 +273,9 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         data = self.dataframe.iloc[index, :]
 
         sample: dict[str, Tensor] = {
-            "input": torch.tensor(data.drop([self.label_name]), dtype=torch.float32),
+            "input": torch.tensor(
+                data.drop([self.label_name]).values, dtype=torch.float32
+            ),
             "label": torch.tensor(data[self.label_name], dtype=torch.float32),
         }
 
@@ -285,14 +284,12 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         return sample
 
-    def _load_data(self) -> "pd.DataFrame":  # type: ignore[name-defined] # noqa: F821
+    def _load_data(self) -> pd.DataFrame:
         """Load data from individual files into pandas dataframe.
 
         Returns:
             the features and label
         """
-        import pandas as pd
-
         data_rows = []
         for path in self.collection:
             with open(path) as f:
@@ -307,11 +304,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         return df
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, self.collection_id)
         if os.path.exists(pathname):
@@ -325,11 +318,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -345,9 +334,6 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
         """
         download_radiant_mlhub_collection(self.collection_id, self.root, api_key)
         filename = os.path.join(self.root, self.collection_id) + ".tar.gz"

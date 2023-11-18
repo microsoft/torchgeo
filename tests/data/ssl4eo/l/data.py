@@ -14,13 +14,28 @@ from rasterio import Affine
 from rasterio.crs import CRS
 
 SIZE = 36
+CHUNK_SIZE = 2**12
 
 np.random.seed(0)
 
 FILENAME_HIERARCHY = Union[dict[str, "FILENAME_HIERARCHY"], list[str]]
 
 filenames: FILENAME_HIERARCHY = {
-    "tm_toa": {
+    "ssl4eo_l_tm_toa": {
+        "0000002": {
+            "LT05_172034_20010526": ["all_bands.tif"],
+            "LT05_172034_20020310": ["all_bands.tif"],
+            "LT05_172034_20020902": ["all_bands.tif"],
+            "LT05_172034_20021121": ["all_bands.tif"],
+        },
+        "0000005": {
+            "LT05_223084_20010413": ["all_bands.tif"],
+            "LT05_223084_20011225": ["all_bands.tif"],
+            "LT05_223084_20020619": ["all_bands.tif"],
+            "LT5_223084_20020923": ["all_bands.tif"],
+        },
+    },
+    "ssl4eo_l_etm_toa": {
         "0000002": {
             "LE07_172034_20010526": ["all_bands.tif"],
             "LE07_172034_20020310": ["all_bands.tif"],
@@ -34,7 +49,7 @@ filenames: FILENAME_HIERARCHY = {
             "LE07_223084_20020923": ["all_bands.tif"],
         },
     },
-    "tm_sr": {
+    "ssl4eo_l_etm_sr": {
         "0000002": {
             "LE07_172034_20010526": ["all_bands.tif"],
             "LE07_172034_20020310": ["all_bands.tif"],
@@ -48,21 +63,7 @@ filenames: FILENAME_HIERARCHY = {
             "LE07_223084_20020923": ["all_bands.tif"],
         },
     },
-    "etm_toa": {
-        "0000002": {
-            "LE07_172034_20010526": ["all_bands.tif"],
-            "LE07_172034_20020310": ["all_bands.tif"],
-            "LE07_172034_20020902": ["all_bands.tif"],
-            "LE07_172034_20021121": ["all_bands.tif"],
-        },
-        "0000005": {
-            "LE07_223084_20010413": ["all_bands.tif"],
-            "LE07_223084_20011225": ["all_bands.tif"],
-            "LE07_223084_20020619": ["all_bands.tif"],
-            "LE07_223084_20020923": ["all_bands.tif"],
-        },
-    },
-    "oli_tirs_toa": {
+    "ssl4eo_l_oli_tirs_toa": {
         "0000002": {
             "LC08_172034_20210306": ["all_bands.tif"],
             "LC08_172034_20210829": ["all_bands.tif"],
@@ -76,7 +77,7 @@ filenames: FILENAME_HIERARCHY = {
             "LC08_223084_20221211": ["all_bands.tif"],
         },
     },
-    "oli_sr": {
+    "ssl4eo_l_oli_sr": {
         "0000002": {
             "LC08_172034_20210306": ["all_bands.tif"],
             "LC08_172034_20210829": ["all_bands.tif"],
@@ -92,7 +93,13 @@ filenames: FILENAME_HIERARCHY = {
     },
 }
 
-num_bands = {"tm_toa": 7, "tm_sr": 6, "etm_toa": 9, "oli_tirs_toa": 11, "oli_sr": 7}
+num_bands = {
+    "ssl4eo_l_tm_toa": 7,
+    "ssl4eo_l_etm_toa": 9,
+    "ssl4eo_l_etm_sr": 6,
+    "ssl4eo_l_oli_tirs_toa": 11,
+    "ssl4eo_l_oli_sr": 7,
+}
 
 
 def create_file(path: str) -> None:
@@ -141,10 +148,25 @@ if __name__ == "__main__":
 
     directories = filenames.keys()
     for directory in directories:
-        # Create tarballs
+        # Create tarball
         shutil.make_archive(directory, "gztar", ".", directory)
 
+        # Split tarball
+        path = f"{directory}.tar.gz"
+        paths = []
+        with open(path, "rb") as f:
+            suffix = "a"
+            while chunk := f.read(CHUNK_SIZE):
+                split = f"{path}a{suffix}"
+                with open(split, "wb") as g:
+                    g.write(chunk)
+                suffix = chr(ord(suffix) + 1)
+                paths.append(split)
+
+        os.remove(path)
+
         # Compute checksums
-        with open(f"{directory}.tar.gz", "rb") as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(directory, md5)
+        for path in paths:
+            with open(path, "rb") as f:
+                md5 = hashlib.md5(f.read()).hexdigest()
+                print(path, md5)

@@ -6,8 +6,8 @@
 import abc
 import os
 import sys
-from collections.abc import Sequence
-from typing import Any, Callable, Optional, cast
+from collections.abc import Iterable, Sequence
+from typing import Any, Callable, Optional, Union, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -19,11 +19,12 @@ import shapely.geometry
 import shapely.ops
 import torch
 from matplotlib.colors import ListedColormap
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import GeoDataset, RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
 
 
 class Chesapeake(RasterDataset, abc.ABC):
@@ -88,7 +89,7 @@ class Chesapeake(RasterDataset, abc.ABC):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -99,7 +100,7 @@ class Chesapeake(RasterDataset, abc.ABC):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -111,10 +112,12 @@ class Chesapeake(RasterDataset, abc.ABC):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
-        self.root = root
+        self.paths = paths
         self.download = download
         self.checksum = checksum
 
@@ -131,30 +134,23 @@ class Chesapeake(RasterDataset, abc.ABC):
             )
         self._cmap = ListedColormap(colors)
 
-        super().__init__(root, crs, res, transforms=transforms, cache=cache)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted file already exists
-        if os.path.exists(os.path.join(self.root, self.filename)):
+        if self.files:
             return
 
         # Check if the zip file has already been downloaded
-        if os.path.exists(os.path.join(self.root, self.zipfile)):
+        assert isinstance(self.paths, str)
+        if os.path.exists(os.path.join(self.paths, self.zipfile)):
             self._extract()
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -162,18 +158,19 @@ class Chesapeake(RasterDataset, abc.ABC):
 
     def _download(self) -> None:
         """Download the dataset."""
-        download_url(self.url, self.root, filename=self.zipfile, md5=self.md5)
+        download_url(self.url, self.paths, filename=self.zipfile, md5=self.md5)
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        extract_archive(os.path.join(self.root, self.zipfile))
+        assert isinstance(self.paths, str)
+        extract_archive(os.path.join(self.paths, self.zipfile))
 
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -489,7 +486,7 @@ class ChesapeakeCVPR(GeoDataset):
     )
 
     # these are used to check the integrity of the dataset
-    files = [
+    _files = [
         "de_1m_2013_extended-debuffered-test_tiles",
         "de_1m_2013_extended-debuffered-train_tiles",
         "de_1m_2013_extended-debuffered-val_tiles",
@@ -556,9 +553,8 @@ class ChesapeakeCVPR(GeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             AssertionError: if ``splits`` or ``layers`` are not valid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         for split in splits:
             assert split in self.splits
@@ -688,17 +684,13 @@ class ChesapeakeCVPR(GeoDataset):
         return sample
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
 
         def exists(filename: str) -> bool:
             return os.path.exists(os.path.join(self.root, filename))
 
         # Check if the extracted files already exist
-        if all(map(exists, self.files)):
+        if all(map(exists, self._files)):
             return
 
         # Check if the zip files have already been downloaded
@@ -713,11 +705,7 @@ class ChesapeakeCVPR(GeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -743,7 +731,7 @@ class ChesapeakeCVPR(GeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
