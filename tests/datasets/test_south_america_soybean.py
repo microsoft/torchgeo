@@ -62,7 +62,7 @@ class TestSouthAmericaSoybean:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: SouthAmericaSoybean) -> None:
-        south_america_soybean(dataset.paths, download=True, years=[2021])
+        SouthAmericaSoybean(dataset.paths, download=True, years=[2021])
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests", "data", "south_america_soybean", "SouthAmerica_Soybean_2021.tif")
