@@ -112,11 +112,6 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
         self._verify()
 
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
-
-        for v, k in enumerate(self.classes):
-            self.ordinal_map[k] = v
-            self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
-
             
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve mask and metadata indexed by query.
