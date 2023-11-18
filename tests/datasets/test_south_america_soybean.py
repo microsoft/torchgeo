@@ -100,7 +100,7 @@ class TestSouthAmericaSoybean:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(RuntimeError, match="Dataset not found"):
-            south_america_soybean(str(tmp_path))
+            SouthAmericaSoybean(str(tmp_path))
 
     def test_invalid_query(self, dataset: south_america_soybean) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
