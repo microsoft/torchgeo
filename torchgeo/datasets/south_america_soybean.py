@@ -12,7 +12,7 @@ from .geo import RasterDataset
 from .utils import BoundingBox, download_url
 
 
-class south_america_soybean(RasterDataset):
+class SouthAmericaSoybean(RasterDataset):
     """South America Soybean Dataset
 
     Link: https://www.nature.com/articles/s41893-021-00729-z
