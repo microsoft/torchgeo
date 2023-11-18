@@ -42,7 +42,7 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
     date_format = "%Y"
     is_image = False
 
-    url = "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2001.tif"
+    url = "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_"
 
     md5s = {
         2001: "2914b0af7590a0ca4dfa9ccefc99020f", 
