@@ -46,7 +46,7 @@ class TestSouthAmericaSoybean:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_classes(self) -> None:
-        root = os.path.join("tests", "data", "southamerica_soybean")
+        root = os.path.join("tests", "data", "south_america_soybean")
         classes = list(south_america_soybean.cmap.keys())[0:2]
         ds = south_america_soybean(root, years=[2021], classes=classes)
         sample = ds[ds.bounds]
