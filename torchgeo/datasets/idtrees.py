@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Any, Callable, Optional, cast, overload
+import pathlib
+from typing import Any, Callable, Optional, Union, cast, overload
 
 import fiona
 import matplotlib.pyplot as plt
@@ -145,7 +146,7 @@ class IDTReeS(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         task: str = "task1",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -331,7 +332,7 @@ class IDTReeS(NonGeoDataset):
         return tensor
 
     def _load(
-        self, root: str
+        self, root: Union[pathlib.Path, str]
     ) -> tuple[list[str], Optional[dict[int, dict[str, Any]]], Any]:
         """Load files, geometries, and labels.
 

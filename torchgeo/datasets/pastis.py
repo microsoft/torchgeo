@@ -4,8 +4,9 @@
 """PASTIS dataset."""
 
 import os
+import pathlib
 from collections.abc import Sequence
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import fiona
 import matplotlib.pyplot as plt
@@ -128,7 +129,7 @@ class PASTIS(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         folds: Sequence[int] = (0, 1, 2, 3, 4),
         bands: str = "s2",
         mode: str = "semantic",

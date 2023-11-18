@@ -5,8 +5,9 @@
 
 import glob
 import os
+import pathlib
 from collections.abc import Sequence
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -86,7 +87,7 @@ class USAVars(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         labels: Sequence[str] = ALL_LABELS,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,

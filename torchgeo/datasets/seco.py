@@ -4,8 +4,9 @@
 """Sentinel 2 imagery from the Seasonal Contrast paper."""
 
 import os
+import pathlib
 import random
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -69,7 +70,7 @@ class SeasonalContrastS2(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         version: str = "100k",
         seasons: int = 1,
         bands: list[str] = rgb_bands,

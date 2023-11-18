@@ -5,8 +5,9 @@
 
 import json
 import os
+import pathlib
 from functools import lru_cache
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -172,7 +173,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         chip_size: int = 256,
         stride: int = 128,
         bands: tuple[str, ...] = all_bands,
@@ -202,7 +203,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         """
         self._validate_bands(bands)
 
-        self.root = os.path.expanduser(root)
+        self.root = root
         self.chip_size = chip_size
         self.stride = stride
         self.bands = bands
@@ -424,7 +425,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         image_archive_path = os.path.join(self.root, self.image_meta["filename"])
         target_archive_path = os.path.join(self.root, self.target_meta["filename"])
         for fn in [image_archive_path, target_archive_path]:
-            extract_archive(fn, self.root)
+            extract_archive(fn, str(self.root))
 
     def plot(
         self,

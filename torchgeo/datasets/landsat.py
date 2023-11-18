@@ -4,6 +4,7 @@
 """Landsat datasets."""
 
 import abc
+import pathlib
 from collections.abc import Iterable, Sequence
 from typing import Any, Callable, Optional, Union
 
@@ -58,7 +59,7 @@ class Landsat(RasterDataset, abc.ABC):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[pathlib.Path, str, Iterable[Union[pathlib.Path, str]]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,

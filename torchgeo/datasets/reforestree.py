@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Callable, Optional
+import pathlib
+from typing import Callable, Optional, Union
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
@@ -63,7 +64,7 @@ class ReforesTree(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -124,7 +125,7 @@ class ReforesTree(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str) -> list[str]:
+    def _load_files(self, root: Union[pathlib.Path, str]) -> list[str]:
         """Return the paths of the files in the dataset.
 
         Args:

@@ -4,9 +4,10 @@
 """SeasoNet dataset."""
 
 import os
+import pathlib
 import random
 from collections.abc import Callable, Collection, Iterable
-from typing import Optional
+from typing import Optional, Union
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -207,7 +208,7 @@ class SeasoNet(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         seasons: Collection[str] = all_seasons,
         bands: Iterable[str] = all_bands,

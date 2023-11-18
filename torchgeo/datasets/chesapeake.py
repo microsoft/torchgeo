@@ -5,6 +5,7 @@
 
 import abc
 import os
+import pathlib
 import sys
 from collections.abc import Iterable, Sequence
 from typing import Any, Callable, Optional, Union, cast
@@ -89,7 +90,7 @@ class Chesapeake(RasterDataset, abc.ABC):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[pathlib.Path, str, Iterable[Union[pathlib.Path, str]]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -148,7 +149,7 @@ class Chesapeake(RasterDataset, abc.ABC):
             return
 
         # Check if the zip file has already been downloaded
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, (pathlib.Path, str))
         if os.path.exists(os.path.join(self.paths, self.zipfile)):
             self._extract()
             return
@@ -537,7 +538,7 @@ class ChesapeakeCVPR(GeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         splits: Sequence[str] = ["de-train"],
         layers: Sequence[str] = ["naip-new", "lc"],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,

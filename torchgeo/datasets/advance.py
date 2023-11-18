@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Callable, Optional, cast
+import pathlib
+from typing import Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -86,7 +87,7 @@ class ADVANCE(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -150,7 +151,7 @@ class ADVANCE(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Union[pathlib.Path, str]) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -168,7 +169,7 @@ class ADVANCE(NonGeoDataset):
         ]
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Union[pathlib.Path, str]) -> Tensor:
         """Load a single image.
 
         Args:

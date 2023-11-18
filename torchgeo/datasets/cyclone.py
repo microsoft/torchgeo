@@ -5,8 +5,9 @@
 
 import json
 import os
+import pathlib
 from functools import lru_cache
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -66,7 +67,7 @@ class TropicalCyclone(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,

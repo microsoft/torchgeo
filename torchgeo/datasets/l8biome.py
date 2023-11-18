@@ -5,6 +5,7 @@
 
 import glob
 import os
+import pathlib
 from collections.abc import Iterable, Sequence
 from typing import Any, Callable, Optional, Union, cast
 
@@ -90,7 +91,7 @@ class L8Biome(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]],
+        paths: Union[pathlib.Path, str, Iterable[Union[pathlib.Path, str]]],
         crs: Optional[CRS] = CRS.from_epsg(3857),
         res: Optional[float] = None,
         bands: Sequence[str] = all_bands,
@@ -139,7 +140,7 @@ class L8Biome(RasterDataset):
             return
 
         # Check if the tar.gz files have already been downloaded
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, (pathlib.Path, str))
         pathname = os.path.join(self.paths, "*.tar.gz")
         if glob.glob(pathname):
             self._extract()
@@ -166,7 +167,7 @@ class L8Biome(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, (pathlib.Path, str))
         pathname = os.path.join(self.paths, "*.tar.gz")
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)

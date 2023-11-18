@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Callable, Optional
+import pathlib
+from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -54,7 +55,7 @@ class LEVIRCDPlus(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
@@ -122,7 +123,7 @@ class LEVIRCDPlus(NonGeoDataset):
         return len(self.files)
 
     def _load_files(
-        self, root: str, directory: str, split: str
+        self, root: Union[pathlib.Path, str], directory: str, split: str
     ) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 

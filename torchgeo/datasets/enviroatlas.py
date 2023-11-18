@@ -4,9 +4,10 @@
 """EnviroAtlas High-Resolution Land Cover datasets."""
 
 import os
+import pathlib
 import sys
 from collections.abc import Sequence
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Optional, Union, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -252,7 +253,7 @@ class EnviroAtlas(GeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         splits: Sequence[str] = ["pittsburgh_pa-2010_1m-train"],
         layers: Sequence[str] = ["naip", "prior"],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,

@@ -4,8 +4,9 @@
 """ZueriCrop dataset."""
 
 import os
+import pathlib
 from collections.abc import Sequence
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import torch
@@ -64,7 +65,7 @@ class ZueriCrop(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         bands: Sequence[str] = band_names,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,

@@ -4,7 +4,8 @@
 """Million-AID dataset."""
 import glob
 import os
-from typing import Any, Callable, Optional, cast
+import pathlib
+from typing import Any, Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -188,7 +189,7 @@ class MillionAID(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         task: str = "multi-class",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -250,7 +251,7 @@ class MillionAID(NonGeoDataset):
 
         return sample
 
-    def _load_files(self, root: str) -> list[dict[str, Any]]:
+    def _load_files(self, root: Union[pathlib.Path, str]) -> list[dict[str, Any]]:
         """Return the paths of the files in the dataset.
 
         Args:

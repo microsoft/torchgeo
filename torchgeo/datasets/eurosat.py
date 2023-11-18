@@ -4,8 +4,9 @@
 """EuroSAT dataset."""
 
 import os
+import pathlib
 from collections.abc import Sequence
-from typing import Callable, Optional, cast
+from typing import Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -96,7 +97,7 @@ class EuroSAT(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,

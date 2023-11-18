@@ -5,6 +5,7 @@
 
 import glob
 import os
+import pathlib
 from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
@@ -107,7 +108,7 @@ class NLCD(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[pathlib.Path, str, Iterable[Union[pathlib.Path, str]]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         years: list[int] = [2019],
@@ -195,7 +196,7 @@ class NLCD(RasterDataset):
         exists = []
         for year in self.years:
             zipfile_year = self.zipfile_glob.replace("*", str(year), 1)
-            assert isinstance(self.paths, str)
+            assert isinstance(self.paths, (pathlib.Path, str))
             pathname = os.path.join(self.paths, "**", zipfile_year)
             if glob.glob(pathname, recursive=True):
                 exists.append(True)
@@ -231,7 +232,7 @@ class NLCD(RasterDataset):
         """Extract the dataset."""
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace("*", str(year), 1)
-            assert isinstance(self.paths, str)
+            assert isinstance(self.paths, (pathlib.Path, str))
             pathname = os.path.join(self.paths, "**", zipfile_name)
             extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
 

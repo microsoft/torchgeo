@@ -5,8 +5,9 @@
 
 import glob
 import os
+import pathlib
 import sys
-from typing import Any
+from typing import Any, Union
 
 import pandas as pd
 from rasterio.crs import CRS
@@ -33,7 +34,7 @@ class INaturalist(GeoDataset):
     res = 0
     _crs = CRS.from_epsg(4326)  # Lat/Lon
 
-    def __init__(self, root: str = "data") -> None:
+    def __init__(self, root: Union[pathlib.Path, str] = "data") -> None:
         """Initialize a new Dataset instance.
 
         Args:

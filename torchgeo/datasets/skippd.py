@@ -4,6 +4,7 @@
 """SKy Images and Photovoltaic Power Dataset (SKIPP'D)."""
 
 import os
+import pathlib
 from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
@@ -71,7 +72,7 @@ class SKIPPD(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "trainval",
         task: str = "nowcast",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,

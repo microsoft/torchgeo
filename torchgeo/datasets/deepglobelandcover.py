@@ -4,7 +4,8 @@
 """DeepGlobe Land Cover Classification Challenge dataset."""
 
 import os
-from typing import Callable, Optional
+import pathlib
+from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -89,7 +90,7 @@ class DeepGlobeLandCover(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,

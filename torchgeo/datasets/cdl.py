@@ -4,6 +4,7 @@
 """CDL dataset."""
 
 import os
+import pathlib
 from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
@@ -205,7 +206,7 @@ class CDL(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[pathlib.Path, str, Iterable[Union[pathlib.Path, str]]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         years: list[int] = [2022],
@@ -297,7 +298,7 @@ class CDL(RasterDataset):
 
         # Check if the zip files have already been downloaded
         exists = []
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, (pathlib.Path, str))
         for year in self.years:
             pathname = os.path.join(
                 self.paths, self.zipfile_glob.replace("*", str(year))
@@ -334,7 +335,7 @@ class CDL(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, (pathlib.Path, str))
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace("*", str(year))
             pathname = os.path.join(self.paths, zipfile_name)

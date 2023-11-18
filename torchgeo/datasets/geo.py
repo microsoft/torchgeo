@@ -7,6 +7,7 @@ import abc
 import functools
 import glob
 import os
+import pathlib
 import re
 import sys
 import warnings
@@ -79,7 +80,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    paths: Union[str, Iterable[str]]
+    paths: Union[pathlib.Path, str, Iterable[Union[pathlib.Path, str]]]
     _crs = CRS.from_epsg(4326)
     _res = 0.0
 
@@ -285,7 +286,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self._res = new_res
 
     @property
-    def files(self) -> set[str]:
+    def files(self) -> set[Union[pathlib.Path, str]]:
         """A list of all files in the dataset.
 
         Returns:
@@ -294,18 +295,18 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, str):
-            paths: Iterable[str] = [self.paths]
+        if isinstance(self.paths, (pathlib.Path, str)):
+            paths: Iterable[Union[pathlib.Path, str]] = [self.paths]
         else:
             paths = self.paths
 
         # Using set to remove any duplicates if directories are overlapping
-        files: set[str] = set()
+        files: set[Union[pathlib.Path, str]] = set()
         for path in paths:
             if os.path.isdir(path):
                 pathname = os.path.join(path, "**", self.filename_glob)
                 files |= set(glob.iglob(pathname, recursive=True))
-            elif os.path.isfile(path) or path_is_vsi(path):
+            elif os.path.isfile(path) or path_is_vsi(str(path)):
                 files.add(path)
             else:
                 warnings.warn(
@@ -369,7 +370,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[pathlib.Path, str, Iterable[Union[pathlib.Path, str]]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -587,7 +588,7 @@ class VectorDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: Union[pathlib.Path, str, Iterable[Union[pathlib.Path, str]]] = "data",
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -761,7 +762,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         loader: Optional[Callable[[str], Any]] = pil_loader,
         is_valid_file: Optional[Callable[[str], bool]] = None,
@@ -780,7 +781,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         # When transform & target_transform are None, ImageFolder.__getitem__(index)
         # returns a PIL.Image and int for image and label, respectively
         super().__init__(
-            root=root,
+            root=str(root),
             transform=None,
             target_transform=None,
             loader=loader,

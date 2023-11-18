@@ -6,7 +6,8 @@
 import glob
 import json
 import os
-from typing import Callable, Optional
+import pathlib
+from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -266,7 +267,7 @@ class BigEarthNet(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         bands: str = "all",
         num_classes: int = 19,
