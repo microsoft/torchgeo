@@ -403,7 +403,7 @@ class SpaceNet1(SpaceNet):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         image: str = "rgb",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
@@ -518,7 +518,7 @@ class SpaceNet2(SpaceNet):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         image: str = "PS-RGB",
         collections: list[str] = [],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -638,7 +638,7 @@ class SpaceNet3(SpaceNet):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         image: str = "PS-RGB",
         speed_mask: Optional[bool] = False,
         collections: list[str] = [],
@@ -888,7 +888,7 @@ class SpaceNet4(SpaceNet):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         image: str = "PS-RGBNIR",
         angles: list[str] = [],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -1188,7 +1188,7 @@ class SpaceNet6(SpaceNet):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         image: str = "PS-RGB",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
@@ -1289,7 +1289,7 @@ class SpaceNet7(SpaceNet):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Union[pathlib.Path, str] = "data",
         split: str = "train",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,

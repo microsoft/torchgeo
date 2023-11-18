@@ -77,6 +77,7 @@ from .mapinwild import MapInWild
 from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
+from .nccm import NCCM
 from .nlcd import NLCD
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
@@ -116,6 +117,7 @@ from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
     BoundingBox,
+    DatasetNotFoundError,
     concat_samples,
     merge_samples,
     stack_samples,
@@ -167,6 +169,7 @@ __all__ = (
     "Landsat8",
     "Landsat9",
     "NAIP",
+    "NCCM",
     "NLCD",
     "OpenBuildings",
     "Sentinel",
@@ -253,4 +256,6 @@ __all__ = (
     "random_grid_cell_assignment",
     "roi_split",
     "time_series_split",
+    # Errors
+    "DatasetNotFoundError",
 )
