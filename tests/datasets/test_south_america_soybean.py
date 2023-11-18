@@ -85,7 +85,7 @@ class TestSouthAmericaSoybean:
         with pytest.raises(AssertionError):
             SouthAmericaSoybean(classes=[11])
 
-    def test_plot(self, dataset: south_america_soybean) -> None:
+    def test_plot(self, dataset: SouthAmericaSoybean) -> None:
         query = dataset.bounds
         x = dataset[query]
         dataset.plot(x, suptitle="Test")
