@@ -10,7 +10,7 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import south_america_soybean, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets import SouthAmericaSoybean, BoundingBox, IntersectionDataset, UnionDataset
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
