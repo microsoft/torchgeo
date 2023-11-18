@@ -205,7 +205,7 @@ class SouthAmericaSoybean(RasterDataset):
             nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
         )
 
-        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation="none")
+        axs[0, 0].imshow(mask, interpolation="none")
         axs[0, 0].axis("off")
 
         if show_titles:
