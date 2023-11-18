@@ -76,7 +76,6 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         years: list[int] = [2021],
-        classes: list[int] = list(cmap.keys()),
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
