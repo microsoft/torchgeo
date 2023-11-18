@@ -69,7 +69,7 @@ class TestSouthAmericaSoybean:
         root = str(tmp_path)
 
         shutil.copy(pathname, root)
-        south_america_soybean(root, years=[2021])
+        SouthAmericaSoybean(root, years=[2021])
 
     def test_invalid_year(self, tmp_path: Path) -> None:
         with pytest.raises(
