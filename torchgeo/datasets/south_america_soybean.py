@@ -171,7 +171,6 @@ class SouthAmericaSoybean(RasterDataset):
 
         # Download the dataset
         self._download()
-        self._extract()
     def _download(self) -> None:
         """Download the dataset."""
         for i in range(21): 
