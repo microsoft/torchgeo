@@ -32,7 +32,7 @@ class TestSouthAmericaSoybean:
         monkeypatch.setattr(south_america_soybean, "url", url)
         
 
-        return south_america_soybean(
+        return SouthAmericaSoybean(
             transforms=transforms,
             download=True,
             checksum=True,
