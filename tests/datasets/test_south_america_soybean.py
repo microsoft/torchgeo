@@ -80,7 +80,7 @@ class TestSouthAmericaSoybean:
 
     def test_invalid_classes(self) -> None:
         with pytest.raises(AssertionError):
-            south_america_soybean(classes=[-1])
+            SouthAmericaSoybean(classes=[-1])
 
         with pytest.raises(AssertionError):
             south_america_soybean(classes=[11])
