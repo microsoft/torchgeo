@@ -15,6 +15,8 @@ from .utils import BoundingBox, download_url
 class SouthAmericaSoybean(RasterDataset):
     """South America Soybean Dataset
 
+This dataset produced annual 30-m soybean maps of South America from 2001 to 2021.
+
     Link: https://www.nature.com/articles/s41893-021-00729-z
 
     Dataset contains 2 classes:
