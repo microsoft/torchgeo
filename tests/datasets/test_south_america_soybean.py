@@ -57,7 +57,7 @@ class TestSouthAmericaSoybean:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
 
-    def test_or(self, dataset: south_america_soybean) -> None:
+    def test_or(self, dataset: SouthAmericaSoybean) -> None:
         ds = dataset | dataset
         assert isinstance(ds, UnionDataset)
 
