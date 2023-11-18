@@ -16,6 +16,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     CanadianBuildingFootprints,
+    DatasetNotFoundError,
     IntersectionDataset,
     UnionDataset,
 )
@@ -75,7 +76,7 @@ class TestCanadianBuildingFootprints:
         dataset.plot(x, suptitle="Prediction")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             CanadianBuildingFootprints(str(tmp_path))
 
     def test_invalid_query(self, dataset: CanadianBuildingFootprints) -> None:

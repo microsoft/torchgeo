@@ -13,7 +13,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import SustainBenchCropYield
+from torchgeo.datasets import DatasetNotFoundError, SustainBenchCropYield
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -71,7 +71,7 @@ class TestSustainBenchCropYield:
             SustainBenchCropYield(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SustainBenchCropYield(str(tmp_path))
 
     def test_plot(self, dataset: SustainBenchCropYield) -> None:

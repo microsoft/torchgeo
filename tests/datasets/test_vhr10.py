@@ -16,7 +16,7 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import VHR10
+from torchgeo.datasets import VHR10, DatasetNotFoundError
 
 pytest.importorskip("pycocotools")
 
@@ -90,7 +90,7 @@ class TestVHR10:
             VHR10(split="train")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             VHR10(str(tmp_path))
 
     def test_mock_missing_module(

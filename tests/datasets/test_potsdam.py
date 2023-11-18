@@ -12,7 +12,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import Potsdam2D
+from torchgeo.datasets import DatasetNotFoundError, Potsdam2D
 
 
 class TestPotsdam2D:
@@ -60,7 +60,7 @@ class TestPotsdam2D:
             Potsdam2D(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in `root` directory"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             Potsdam2D(str(tmp_path))
 
     def test_plot(self, dataset: Potsdam2D) -> None:

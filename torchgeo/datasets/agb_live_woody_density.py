@@ -121,7 +121,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         assert isinstance(self.paths, (pathlib.Path, str))
         download_url(self.url, self.paths, self.base_filename)
 
-        with open(os.path.join(self.paths, self.base_filename)) as f:  # type: ignore[arg-type]
+        with open(os.path.join(self.paths, self.base_filename)) as f: 
             content = json.load(f)
 
         for item in content["features"]:

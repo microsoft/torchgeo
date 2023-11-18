@@ -14,7 +14,13 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import BoundingBox, IntersectionDataset, L7Irish, UnionDataset
+from torchgeo.datasets import (
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    L7Irish,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -68,7 +74,7 @@ class TestL7Irish:
         L7Irish(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             L7Irish(str(tmp_path))
 
     def test_plot_prediction(self, dataset: L7Irish) -> None:

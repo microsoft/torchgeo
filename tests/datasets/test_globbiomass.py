@@ -14,6 +14,7 @@ from rasterio.crs import CRS
 
 from torchgeo.datasets import (
     BoundingBox,
+    DatasetNotFoundError,
     GlobBiomass,
     IntersectionDataset,
     UnionDataset,
@@ -50,7 +51,7 @@ class TestGlobBiomass:
         GlobBiomass(dataset.paths)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             GlobBiomass(str(tmp_path), checksum=True)
 
     def test_corrupted(self, tmp_path: Path) -> None:

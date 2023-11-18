@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
 
-from torchgeo.datasets import MillionAID
+from torchgeo.datasets import DatasetNotFoundError, MillionAID
 
 
 class TestMillionAID:
@@ -38,7 +38,7 @@ class TestMillionAID:
         assert len(dataset) == 2
 
     def test_not_found(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             MillionAID(str(tmp_path))
 
     def test_not_extracted(self, tmp_path: Path) -> None:

@@ -16,7 +16,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import SKIPPD
+from torchgeo.datasets import SKIPPD, DatasetNotFoundError
 
 pytest.importorskip("h5py", minversion="3")
 
@@ -105,7 +105,7 @@ class TestSKIPPD:
             SKIPPD(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SKIPPD(str(tmp_path))
 
     def test_plot(self, dataset: SKIPPD) -> None:

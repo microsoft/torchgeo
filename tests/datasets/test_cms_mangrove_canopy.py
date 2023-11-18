@@ -12,7 +12,12 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-from torchgeo.datasets import CMSGlobalMangroveCanopy, IntersectionDataset, UnionDataset
+from torchgeo.datasets import (
+    CMSGlobalMangroveCanopy,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -45,7 +50,7 @@ class TestCMSGlobalMangroveCanopy:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_no_dataset(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             CMSGlobalMangroveCanopy(str(tmp_path))
 
     def test_already_downloaded(self, tmp_path: Path) -> None:

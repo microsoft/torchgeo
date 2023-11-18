@@ -15,7 +15,7 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import OSCD
+from torchgeo.datasets import OSCD, DatasetNotFoundError
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -107,7 +107,7 @@ class TestOSCD:
         OSCD(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             OSCD(str(tmp_path))
 
     def test_plot(self, dataset: OSCD) -> None:

@@ -14,7 +14,12 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import BoundingBox, LandCoverAI, LandCoverAIGeo
+from torchgeo.datasets import (
+    BoundingBox,
+    DatasetNotFoundError,
+    LandCoverAI,
+    LandCoverAIGeo,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -49,7 +54,7 @@ class TestLandCoverAIGeo:
         LandCoverAIGeo(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             LandCoverAIGeo(str(tmp_path))
 
     def test_out_of_bounds_query(self, dataset: LandCoverAIGeo) -> None:
@@ -115,7 +120,7 @@ class TestLandCoverAI:
         LandCoverAI(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             LandCoverAI(str(tmp_path))
 
     def test_invalid_split(self) -> None:

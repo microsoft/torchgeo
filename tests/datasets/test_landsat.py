@@ -12,7 +12,13 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-from torchgeo.datasets import BoundingBox, IntersectionDataset, Landsat8, UnionDataset
+from torchgeo.datasets import (
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    Landsat8,
+    UnionDataset,
+)
 
 
 class TestLandsat8:
@@ -60,7 +66,7 @@ class TestLandsat8:
             ds.plot(x)
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No Landsat8 data was found in "):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             Landsat8(str(tmp_path))
 
     def test_invalid_query(self, dataset: Landsat8) -> None:

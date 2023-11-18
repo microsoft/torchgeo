@@ -8,6 +8,7 @@ import pytest
 
 from torchgeo.datasets import (
     BoundingBox,
+    DatasetNotFoundError,
     INaturalist,
     IntersectionDataset,
     UnionDataset,
@@ -36,7 +37,7 @@ class TestINaturalist:
         assert isinstance(ds, UnionDataset)
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             INaturalist(str(tmp_path))
 
     def test_invalid_query(self, dataset: INaturalist) -> None:
