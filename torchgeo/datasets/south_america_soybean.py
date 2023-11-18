@@ -108,8 +108,6 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
         self.paths = paths
         self.download = download
         self.checksum = checksum
-        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
-        self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
     
         self._verify()
 
