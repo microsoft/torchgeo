@@ -1,15 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Pre-trained Vision Transformer models."""
+"""Pre-trained Swin v2 Transformer models."""
 
 from typing import Any, Optional
 
 import kornia.augmentation as K
 import torch
 import torchvision
-from torchvision.models import SwinTransformer
 from torchvision.models._api import Weights, WeightsEnum
+from torchvision.models.swin_transformer import SwinTransformer
 
 from ..transforms import AugmentationSequential
 
@@ -36,7 +36,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     For `torchvision <https://github.com/pytorch/vision>`_
     *swin_v2_b* implementation.
 
-    .. versionadded:: 0.5
+    .. versionadded:: 0.6
     """
 
     NAIP_RGB_SATLAS = Weights(
@@ -73,14 +73,14 @@ def swin_v2_b(
 
     * https://arxiv.org/abs/2111.09883
 
-    .. versionadded:: 0.5
+    .. versionadded:: 0.6
 
     Args:
         weights: Pre-trained model weights to use.
         *args: Additional arguments to
-            pass to :func:`torchvision.models.swin_transformer.SwinTransformer`.
+            pass to :class:`torchvision.models.swin_transformer.SwinTransformer`.
         **kwargs: Additional keywork arguments to
-            pass to :func:`torchvision.models.swin_transformer.SwinTransformer`.
+            pass to :class:`torchvision.models.swin_transformer.SwinTransformer`.
 
     Returns:
         A Swin Transformer Base model.
