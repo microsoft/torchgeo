@@ -61,7 +61,7 @@ Landsat
 -------
 
 .. csv-table::
-   :widths: 65 10 10 10 10 5 10 10 10 10
+   :widths: 65 10 10 10 10 10 10 10 10 10
    :header-rows: 1
    :align: center
    :file: landsat_pretrained_weights.csv
