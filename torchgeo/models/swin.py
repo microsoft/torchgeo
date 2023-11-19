@@ -78,9 +78,9 @@ def swin_v2_b(
     Args:
         weights: Pre-trained model weights to use.
         *args: Additional arguments to
-            pass to :func:`torchvision.models.SwinTransformer`.
+            pass to :func:`torchvision.models.swin_transformer.SwinTransformer`.
         **kwargs: Additional keywork arguments to
-            pass to :func:`torchvision.models.SwinTransformer`.
+            pass to :func:`torchvision.models.swin_transformer.SwinTransformer`.
 
     Returns:
         A Swin Transformer Base model.
