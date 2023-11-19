@@ -17,7 +17,7 @@ class ChaBuDDataModule(NonGeoDataModule):
 
     Uses the train/val splits from the dataset
 
-    .. versionadded:: 0.5
+    .. versionadded:: 0.6
     """
 
     # min/max values computed on train set using 2/98 percentiles

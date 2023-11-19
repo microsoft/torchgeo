@@ -49,7 +49,7 @@ class ChaBuD(NonGeoDataset):
 
        * `h5py <https://pypi.org/project/h5py/>`_ to load the dataset
 
-    .. versionadded:: 0.5
+    .. versionadded:: 0.6
     """
 
     all_bands = [
