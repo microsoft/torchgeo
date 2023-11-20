@@ -8,8 +8,8 @@ from typing import Any, Optional
 import kornia.augmentation as K
 import torch
 import torchvision
+from torchvision.models import SwinTransformer
 from torchvision.models._api import Weights, WeightsEnum
-from torchvision.models.swin_transformer import SwinTransformer
 
 from ..transforms import AugmentationSequential
 
@@ -17,7 +17,7 @@ __all__ = ["Swin_V2_B_Weights"]
 
 
 # https://github.com/allenai/satlas/blob/bcaa968da5395f675d067613e02613a344e81415/satlas/cmd/model/train.py#L42 # noqa: E501
-# All Satlas imagery is uint8 and normalized to the range (0, 1) by dividing by 255 # noqa: E501
+# All Satlas imagery is uint8 and normalized to the range (0, 1) by dividing by 255
 _satlas_transforms = AugmentationSequential(
     K.CenterCrop(256),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
