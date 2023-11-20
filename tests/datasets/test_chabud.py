@@ -82,7 +82,7 @@ class TestChaBuD:
         ChaBuD(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in "):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             ChaBuD(str(tmp_path))
 
     def test_mock_missing_module(
@@ -109,5 +109,5 @@ class TestChaBuD:
 
     def test_plot_rgb(self, dataset: ChaBuD) -> None:
         dataset = ChaBuD(root=dataset.root, bands=["B2"])
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+        with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
             dataset.plot(dataset[0], suptitle="Single Band")
