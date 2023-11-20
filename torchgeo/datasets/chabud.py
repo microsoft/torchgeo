@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, percentile_normalization
+from .utils import DatasetNotFoundError, download_url, percentile_normalization
 
 
 class ChaBuD(NonGeoDataset):
@@ -94,8 +94,7 @@ class ChaBuD(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` or ``bands`` argument are invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.folds
         for band in bands:
@@ -211,22 +210,14 @@ class ChaBuD(NonGeoDataset):
         return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         if os.path.exists(self.filepath):
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
