@@ -20,6 +20,8 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
     .. versionadded:: 0.2
     """
 
+    std = torch.tensor(255)
+
     def __init__(
         self,
         batch_size: int = 64,
@@ -39,8 +41,6 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.NASAMarineDebris`.
         """
         super().__init__(NASAMarineDebris, batch_size, num_workers, **kwargs)
-
-        self.std = torch.tensor(255)
 
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct

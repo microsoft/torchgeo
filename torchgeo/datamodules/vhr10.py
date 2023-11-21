@@ -21,6 +21,8 @@ class VHR10DataModule(NonGeoDataModule):
     .. versionadded:: 0.6
     """
 
+    std = torch.tensor(255)
+
     def __init__(
         self,
         batch_size: int = 64,
@@ -42,8 +44,6 @@ class VHR10DataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.VHR10`.
         """
         super().__init__(VHR10, batch_size, num_workers, **kwargs)
-
-        self.std = torch.tensor(255)
 
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
