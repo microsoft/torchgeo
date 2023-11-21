@@ -7,28 +7,11 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch
-from torch import Tensor
 
 from ..datasets import NASAMarineDebris
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
-from .utils import AugPipe, dataset_split
-
-
-def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
-    """Custom object detection collate fn to handle variable boxes.
-
-    Args:
-        batch: list of sample dicts return by dataset
-
-    Returns:
-        batch dict output
-    """
-    output: dict[str, Any] = {}
-    output["image"] = [sample["image"] for sample in batch]
-    output["boxes"] = [sample["boxes"].float() for sample in batch]
-    output["labels"] = [torch.tensor([1] * len(sample["boxes"])) for sample in batch]
-    return output
+from .utils import AugPipe, collate_fn_detection, dataset_split
 
 
 class NASAMarineDebrisDataModule(NonGeoDataModule):
@@ -57,6 +40,8 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
         """
         super().__init__(NASAMarineDebris, batch_size, num_workers, **kwargs)
 
+        self.std = torch.tensor(255)
+
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
 
@@ -67,7 +52,7 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
             batch_size,
         )
 
-        self.collate_fn = collate_fn
+        self.collate_fn = collate_fn_detection
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

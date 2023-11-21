@@ -289,10 +289,9 @@ class VHR10(NonGeoDataset):
         )
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
-            tensor = tensor.float() / tensor.max()
             return tensor
 
     def _load_target(self, id_: int) -> dict[str, Any]:

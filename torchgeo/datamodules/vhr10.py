@@ -6,30 +6,13 @@
 from typing import Any, Union
 
 import kornia.augmentation as K
-from torch import Tensor
+import torch
 
 from ..datasets import VHR10
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
-from .utils import AugPipe, dataset_split
-
-
-def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
-    """Custom object detection collate fn to handle variable boxes.
-
-    Args:
-        batch: list of sample dicts return by dataset
-
-    Returns:
-        batch dict output
-    """
-    output: dict[str, Any] = {}
-    output["image"] = [sample["image"] for sample in batch]
-    output["boxes"] = [sample["boxes"] for sample in batch]
-    output["labels"] = [sample["labels"] for sample in batch]
-    output["masks"] = [sample["masks"] for sample in batch]
-    return output
+from .utils import AugPipe, collate_fn_detection, dataset_split
 
 
 class VHR10DataModule(NonGeoDataModule):
@@ -60,11 +43,13 @@ class VHR10DataModule(NonGeoDataModule):
         """
         super().__init__(VHR10, batch_size, num_workers, **kwargs)
 
+        self.std = torch.tensor(255)
+
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
         self.patch_size = _to_tuple(patch_size)
 
-        self.collate_fn = collate_fn
+        self.collate_fn = collate_fn_detection
 
         self.train_aug = AugPipe(
             AugmentationSequential(

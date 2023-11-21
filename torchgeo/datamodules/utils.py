@@ -8,6 +8,7 @@ from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
 import numpy as np
+import torch
 from einops import rearrange
 from torch import Generator, Tensor
 from torch.nn import Module
@@ -70,6 +71,30 @@ class AugPipe(Module):
         batch["image"] = rearrange(batch["image"], "b () c h w -> b c h w")
 
         return batch
+
+
+def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
+    """Custom collate fn for object detection & instance segmentation.
+
+    Args:
+        batch: list of sample dicts return by dataset
+
+    Returns:
+        batch dict output
+    """
+    output: dict[str, Any] = {}
+    output["image"] = [sample["image"] for sample in batch]
+    output["boxes"] = [sample["boxes"].float() for sample in batch]
+    if "labels" in batch[0]:
+        output["labels"] = [sample["labels"] for sample in batch]
+    else:
+        output["labels"] = [
+            torch.tensor([1] * len(sample["boxes"])) for sample in batch
+        ]
+
+    if "masks" in batch[0]:
+        output["masks"] = [sample["masks"] for sample in batch]
+    return output
 
 
 def dataset_split(
