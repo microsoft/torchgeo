@@ -18,6 +18,7 @@ from torch import Tensor
 from .geo import NonGeoDataset
 from .utils import (
     DatasetNotFoundError,
+    RGBBandsMissingError,
     download_url,
     extract_archive,
     percentile_normalization,
@@ -241,8 +242,8 @@ class SeasonalContrastS2(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if the RGB bands are included in ``self.bands`` or the sample
-                contains a "prediction" key
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+            ValueError: if sample contains a "prediction" key
 
         .. versionadded:: 0.2
         """
@@ -254,7 +255,7 @@ class SeasonalContrastS2(NonGeoDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         fig, axes = plt.subplots(ncols=self.seasons, figsize=(20, 4))
         if self.seasons == 1:
