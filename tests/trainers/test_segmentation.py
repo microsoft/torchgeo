@@ -44,7 +44,7 @@ def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
 
 
 def plot(*args: Any, **kwargs: Any) -> None:
-    raise ValueError
+    return None
 
 
 class TestSemanticSegmentationTask:
@@ -179,7 +179,7 @@ class TestSemanticSegmentationTask:
         with pytest.warns(UserWarning, match=match):
             SemanticSegmentationTask(loss="jaccard", ignore_index=0)
 
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, "plot", plot)
         datamodule = SEN12MSDataModule(
             root="tests/data/sen12ms", batch_size=1, num_workers=0

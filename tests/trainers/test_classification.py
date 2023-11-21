@@ -62,7 +62,7 @@ def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
 
 
 def plot(*args: Any, **kwargs: Any) -> None:
-    raise ValueError
+    return None
 
 
 class TestClassificationTask:
@@ -180,7 +180,7 @@ class TestClassificationTask:
         with pytest.raises(ValueError, match=match):
             ClassificationTask(model="resnet18", loss="invalid_loss")
 
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(EuroSATDataModule, "plot", plot)
         datamodule = EuroSATDataModule(
             root="tests/data/eurosat", batch_size=1, num_workers=0

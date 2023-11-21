@@ -52,7 +52,7 @@ def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
 
 
 def plot(*args: Any, **kwargs: Any) -> None:
-    raise ValueError
+    return None
 
 
 class TestRegressionTask:
@@ -152,7 +152,7 @@ class TestRegressionTask:
             in_channels=weights.meta["in_chans"],
         )
 
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(TropicalCycloneDataModule, "plot", plot)
         datamodule = TropicalCycloneDataModule(
             root="tests/data/cyclone", batch_size=1, num_workers=0

@@ -45,9 +45,12 @@ class ObjectDetectionTestModel(Module):
         else:  # eval mode
             output = []
             for i in range(batch_size):
+                boxes = torch.zeros(10, 4, dtype=torch.float)
+                # Create xmax, ymax larger than 0.0
+                boxes[:, 2:4] = torch.FloatTensor(10, 2).uniform_(0.1, 0.9)
                 output.append(
                     {
-                        "boxes": torch.rand(10, 4),
+                        "boxes": boxes,
                         "labels": torch.randint(0, 2, (10,)),
                         "scores": torch.rand(10),
                     }
@@ -56,7 +59,7 @@ class ObjectDetectionTestModel(Module):
 
 
 def plot(*args: Any, **kwargs: Any) -> None:
-    raise ValueError
+    return None
 
 
 class TestObjectDetectionTask:
@@ -113,7 +116,7 @@ class TestObjectDetectionTask:
     def test_pretrained_backbone(self) -> None:
         ObjectDetectionTask(backbone="resnet18", weights=True)
 
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(NASAMarineDebrisDataModule, "plot", plot)
         datamodule = NASAMarineDebrisDataModule(
             root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
