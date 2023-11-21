@@ -6,7 +6,6 @@ model:
     num_classes: 11
     lr: 2.5e-5
     patience: 10
-
 data:
   class_path: VHR10DataModule
   init_args:
