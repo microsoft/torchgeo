@@ -10,6 +10,7 @@ from typing import Any, Optional, Union
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import torch.nn as nn
+from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
@@ -257,7 +258,7 @@ class SemanticSegmentationTask(BaseTask):
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
 
-            fig: Optional[plt.Figure] = None
+            fig: Optional[Figure] = None
             try:
                 fig = datamodule.plot(sample)
             except RGBBandsMissingError:

@@ -11,6 +11,7 @@ import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
+from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision.models._api import WeightsEnum
@@ -200,7 +201,7 @@ class RegressionTask(BaseTask):
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
 
-            fig: Optional[plt.Figure] = None
+            fig: Optional[Figure] = None
             try:
                 fig = datamodule.plot(sample)
             except RGBBandsMissingError:

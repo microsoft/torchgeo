@@ -9,6 +9,7 @@ from typing import Any, Optional
 import matplotlib.pyplot as plt
 import torch
 import torchvision.models.detection
+from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
@@ -275,7 +276,7 @@ class ObjectDetectionTask(BaseTask):
                 sample["image"] *= 255
                 sample["image"] = sample["image"].to(torch.uint8)
 
-            fig: Optional[plt.Figure] = None
+            fig: Optional[Figure] = None
             try:
                 fig = datamodule.plot(sample)
             except RGBBandsMissingError:

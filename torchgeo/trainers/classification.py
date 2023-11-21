@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import timm
 import torch
 import torch.nn as nn
+from matplotlib.figure import Figure
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torchmetrics import MetricCollection
@@ -202,7 +203,7 @@ class ClassificationTask(BaseTask):
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
 
-            fig: Optional[plt.Figure] = None
+            fig: Optional[Figure] = None
             try:
                 fig = datamodule.plot(sample)
             except RGBBandsMissingError:
@@ -329,7 +330,7 @@ class MultiLabelClassificationTask(ClassificationTask):
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
 
-            fig: Optional[plt.Figure] = None
+            fig: Optional[Figure] = None
             try:
                 fig = datamodule.plot(sample)
             except RGBBandsMissingError:
