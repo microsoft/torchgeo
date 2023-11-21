@@ -479,3 +479,4 @@ Errors
 ------
 
 .. autoclass:: DatasetNotFoundError
+.. autoclass:: RGBBandsMissingError
