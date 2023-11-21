@@ -30,6 +30,7 @@ from torchvision.utils import draw_segmentation_masks
 __all__ = (
     "check_integrity",
     "DatasetNotFoundError",
+    "RGBBandsMissingError",
     "download_url",
     "download_and_extract_archive",
     "extract_archive",
@@ -88,6 +89,13 @@ class DatasetNotFoundError(FileNotFoundError):
 
         msg += " download the dataset."
 
+        super().__init__(msg)
+
+
+class RGBBandsMissingError(ValueError):
+    def __init__(self) -> None:
+        """Instantiate a RGBBandsMissingError instance."""
+        msg = "Dataset doesn't contain some of the RGB bands"
         super().__init__(msg)
 
 
