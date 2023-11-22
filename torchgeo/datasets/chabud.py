@@ -19,8 +19,8 @@ from .utils import DatasetNotFoundError, download_url, percentile_normalization
 class ChaBuD(NonGeoDataset):
     """ChaBuD dataset.
 
-    The `ChaBuD <https://huggingface.co/spaces/competitions/ChaBuD-ECML-PKDD2023>`__
-    dataset is a dataset for Change detection for Burned area Delineation and is used
+    `ChaBuD <https://huggingface.co/spaces/competitions/ChaBuD-ECML-PKDD2023>`__
+    is a dataset for Change detection for Burned area Delineation and is used
     for the ChaBuD ECML-PKDD 2023 Discovery Challenge.
 
     Dataset features:
@@ -53,20 +53,20 @@ class ChaBuD(NonGeoDataset):
     """
 
     all_bands = [
-        "B1",
-        "B2",
-        "B3",
-        "B4",
-        "B5",
-        "B6",
-        "B7",
-        "B8",
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08",
         "B8A",
-        "B9",
+        "B09",
         "B11",
         "B12",
     ]
-    rgb_bands = ["B4", "B3", "B2"]
+    rgb_bands = ["B04", "B03", "B02"]
     folds = {"train": [1, 2, 3, 4], "val": [0]}
     url = "https://huggingface.co/datasets/chabud-team/chabud-ecml-pkdd2023/resolve/main/train_eval.hdf5"  # noqa: E501
     filename = "train_eval.hdf5"
@@ -76,7 +76,7 @@ class ChaBuD(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        bands: list[str] = rgb_bands,
+        bands: list[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -93,12 +93,11 @@ class ChaBuD(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``split`` or ``bands`` argument are invalid
+            AssertionError: If ``split`` or ``bands`` arguments are invalid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.folds
-        for band in bands:
-            assert band in self.all_bands
+        assert set(bands) <= set(self.all_bands)
 
         self.root = root
         self.split = split
@@ -181,8 +180,8 @@ class ChaBuD(NonGeoDataset):
             post_array = f[uuid]["post_fire"][:]
 
         # index specified bands and concatenate
-        pre_array = np.take(pre_array, indices=self.band_indices, axis=-1)
-        post_array = np.take(post_array, indices=self.band_indices, axis=-1)
+        pre_array = pre_array[..., self.band_indices]
+        post_array = post_array[..., self.band_indices]
         array = np.concatenate([pre_array, post_array], axis=-1).astype(np.float32)
 
         tensor = torch.from_numpy(array)

@@ -12,7 +12,7 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import ChaBuD, DatasetNotFoundError
@@ -108,6 +108,6 @@ class TestChaBuD:
         plt.close()
 
     def test_plot_rgb(self, dataset: ChaBuD) -> None:
-        dataset = ChaBuD(root=dataset.root, bands=["B2"])
+        dataset = ChaBuD(root=dataset.root, bands=["B02"])
         with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
             dataset.plot(dataset[0], suptitle="Single Band")

@@ -63,8 +63,8 @@ class ChaBuDDataModule(NonGeoDataModule):
         mins = repeat(mins, "c -> (t c)", t=2)
         maxs = repeat(maxs, "c -> (t c)", t=2)
 
-        self.min = mins
-        self.max = maxs - mins
+        self.mean = mins
+        self.std = maxs - mins
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
