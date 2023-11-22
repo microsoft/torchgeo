@@ -117,7 +117,7 @@ class TestOSCD:
     def test_failed_plot(self, dataset: OSCD) -> None:
         single_band_dataset = OSCD(root=dataset.root, bands=("B01",))
         with pytest.raises(
-            RGBBandsMissingError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             x = single_band_dataset[0].copy()
             single_band_dataset.plot(x, suptitle="Test")

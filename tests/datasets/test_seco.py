@@ -118,7 +118,7 @@ class TestSeasonalContrastS2:
 
     def test_no_rgb_plot(self) -> None:
         with pytest.raises(
-            RGBBandsMissingError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             root = os.path.join("tests", "data", "seco")
             dataset = SeasonalContrastS2(root, bands=["B1"])

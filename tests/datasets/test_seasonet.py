@@ -188,7 +188,7 @@ class TestSeasoNet:
 
     def test_plot_no_rgb(self) -> None:
         with pytest.raises(
-            RGBBandsMissingError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             root = os.path.join("tests", "data", "seasonet")
             dataset = SeasoNet(root, bands=["10m_IR"])

@@ -99,6 +99,6 @@ class TestSEN12MS:
     def test_plot_rgb(self, dataset: SEN12MS) -> None:
         dataset = SEN12MS(root=dataset.root, bands=("B03",))
         with pytest.raises(
-            RGBBandsMissingError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             dataset.plot(dataset[0], suptitle="Single Band")

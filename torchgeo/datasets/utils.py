@@ -100,7 +100,7 @@ class RGBBandsMissingError(ValueError):
 
     def __init__(self) -> None:
         """Instantiate a RGBBandsMissingError instance."""
-        msg = "Dataset doesn't contain some of the RGB bands"
+        msg = "Dataset does not contain some of the RGB bands"
         super().__init__(msg)
 
 

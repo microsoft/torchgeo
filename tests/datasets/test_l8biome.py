@@ -93,7 +93,7 @@ class TestL8Biome:
 
     def test_rgb_bands_absent_plot(self, dataset: L8Biome) -> None:
         with pytest.raises(
-            RGBBandsMissingError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             ds = L8Biome(dataset.paths, bands=["B1", "B2", "B5"])
             x = ds[ds.bounds]

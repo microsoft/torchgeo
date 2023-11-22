@@ -138,7 +138,7 @@ class TestSentinel2:
         ds = Sentinel2(dataset.paths, res=dataset.res, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
-            RGBBandsMissingError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             ds.plot(x)
 

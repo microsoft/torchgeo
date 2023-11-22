@@ -120,6 +120,6 @@ class TestCV4AKenyaCropType:
     def test_plot_rgb(self, dataset: CV4AKenyaCropType) -> None:
         dataset = CV4AKenyaCropType(root=dataset.root, bands=tuple(["B01"]))
         with pytest.raises(
-            RGBBandsMissingError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             dataset.plot(dataset[0], time_step=0, suptitle="Single Band")

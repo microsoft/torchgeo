@@ -140,7 +140,7 @@ class TestRwandaFieldBoundary:
     def test_failed_plot(self, dataset: RwandaFieldBoundary) -> None:
         single_band_dataset = RwandaFieldBoundary(root=dataset.root, bands=("B01",))
         with pytest.raises(
-            RGBBandsMissingError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             x = single_band_dataset[0].copy()
             single_band_dataset.plot(x, suptitle="Test")

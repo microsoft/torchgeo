@@ -62,7 +62,7 @@ class TestLandsat8:
         ds = Landsat8(dataset.paths, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
-            RGBBandsMissingError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             ds.plot(x)
 
