@@ -276,7 +276,23 @@ class TestMultiLabelClassificationTask:
             MultiLabelClassificationTask(model="resnet18", loss="invalid_loss")
 
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(BigEarthNetDataModule, "plot", plot)
+        monkeypatch.setattr(BigEarthNetDataModule, "plot", plot_no_rgb)
+        datamodule = BigEarthNetDataModule(
+            root="tests/data/bigearthnet", batch_size=1, num_workers=0
+        )
+        model = MultiLabelClassificationTask(
+            model="resnet18", in_channels=14, num_classes=19, loss="bce"
+        )
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.validate(model=model, datamodule=datamodule)
+
+    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(BigEarthNetDataModule, "plot", no_plot_method)
         datamodule = BigEarthNetDataModule(
             root="tests/data/bigearthnet", batch_size=1, num_workers=0
         )
