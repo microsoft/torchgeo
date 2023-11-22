@@ -84,6 +84,7 @@ from .oscd import OSCD
 from .pastis import PASTIS
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
+from .planet import PlanetscopeAnalyticSR
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
@@ -172,6 +173,7 @@ __all__ = (
     "NCCM",
     "NLCD",
     "OpenBuildings",
+    "PlanetscopeAnalyticSR",
     "Sentinel",
     "Sentinel1",
     "Sentinel2",
