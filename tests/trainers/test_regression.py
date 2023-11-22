@@ -51,8 +51,12 @@ def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
     return state_dict
 
 
-def plot(*args: Any, **kwargs: Any) -> None:
+def plot_no_rgb(*args: Any, **kwargs: Any) -> None:
     raise ValueError
+
+
+def no_plot_method(*args: Any, **kwargs: Any) -> None:
+    return None
 
 
 class TestRegressionTask:
@@ -153,7 +157,21 @@ class TestRegressionTask:
         )
 
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(TropicalCycloneDataModule, "plot", plot)
+        monkeypatch.setattr(TropicalCycloneDataModule, "plot", plot_no_rgb)
+        datamodule = TropicalCycloneDataModule(
+            root="tests/data/cyclone", batch_size=1, num_workers=0
+        )
+        model = RegressionTask(model="resnet18")
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.validate(model=model, datamodule=datamodule)
+
+    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(TropicalCycloneDataModule, "plot", no_plot_method)
         datamodule = TropicalCycloneDataModule(
             root="tests/data/cyclone", batch_size=1, num_workers=0
         )

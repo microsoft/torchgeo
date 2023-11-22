@@ -61,8 +61,12 @@ def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
     return state_dict
 
 
-def plot(*args: Any, **kwargs: Any) -> None:
+def plot_no_rgb(*args: Any, **kwargs: Any) -> None:
     raise ValueError
+
+
+def no_plot_method(*args: Any, **kwargs: Any) -> None:
+    return None
 
 
 class TestClassificationTask:
@@ -181,7 +185,21 @@ class TestClassificationTask:
             ClassificationTask(model="resnet18", loss="invalid_loss")
 
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(EuroSATDataModule, "plot", plot)
+        monkeypatch.setattr(EuroSATDataModule, "plot", plot_no_rgb)
+        datamodule = EuroSATDataModule(
+            root="tests/data/eurosat", batch_size=1, num_workers=0
+        )
+        model = ClassificationTask(model="resnet18", in_channels=13, num_classes=10)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.validate(model=model, datamodule=datamodule)
+
+    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(EuroSATDataModule, "plot", no_plot_method)
         datamodule = EuroSATDataModule(
             root="tests/data/eurosat", batch_size=1, num_workers=0
         )

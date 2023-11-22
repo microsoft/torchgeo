@@ -45,9 +45,12 @@ class ObjectDetectionTestModel(Module):
         else:  # eval mode
             output = []
             for i in range(batch_size):
+                boxes = torch.zeros(10, 4, dtype=torch.float)
+                # Create xmax, ymax larger than 0.0
+                boxes[:, 2:4] = torch.FloatTensor(10, 2).uniform_(0.1, 0.9)
                 output.append(
                     {
-                        "boxes": torch.rand(10, 4),
+                        "boxes": boxes,
                         "labels": torch.randint(0, 2, (10,)),
                         "scores": torch.rand(10),
                     }
@@ -55,8 +58,12 @@ class ObjectDetectionTestModel(Module):
             return output
 
 
-def plot(*args: Any, **kwargs: Any) -> None:
+def plot_no_rgb(*args: Any, **kwargs: Any) -> None:
     raise ValueError
+
+
+def no_plot_method(*args: Any, **kwargs: Any) -> None:
+    return None
 
 
 class TestObjectDetectionTask:
@@ -114,7 +121,21 @@ class TestObjectDetectionTask:
         ObjectDetectionTask(backbone="resnet18", weights=True)
 
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(NASAMarineDebrisDataModule, "plot", plot)
+        monkeypatch.setattr(NASAMarineDebrisDataModule, "plot", plot_no_rgb)
+        datamodule = NASAMarineDebrisDataModule(
+            root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
+        )
+        model = ObjectDetectionTask(backbone="resnet18", num_classes=2)
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.validate(model=model, datamodule=datamodule)
+
+    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(NASAMarineDebrisDataModule, "plot", no_plot_method)
         datamodule = NASAMarineDebrisDataModule(
             root="tests/data/nasa_marine_debris", batch_size=1, num_workers=0
         )
