@@ -1,0 +1,10 @@
+Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Models,CLI,Reprojection,STAC,Time-Series
+`TorchGeo`_,PyTorch,"GDAL, pandas, pillow, OpenCV, scipy, h5py, laspy",R-tree,Kornia,68,41,✅,✅,❌,✅
+`eo-learn`_,scikit-learn,"GDAL, pandas, OpenCV",geopandas,numpy,0,0,❌,✅,❌,✅
+`Raster Vision`_,"PyTorch, TensorFlow*","GDAL, pandas, OpenCV, xarray, scipy",STAC,Albumentations,0,6,✅,✅,✅,✅
+`PaddleRS`_,PaddlePaddle,"OpenCV, pandas, scipy",shapely,numpy,0,0,❌,✅,❌,❌
+`DeepForest`_,PyTorch,"GDAL, pillow, pandas, OpenCV, scipy",R-tree,Albumentations,0,2,❌,❌,❌,❌
+`SITS`_,R Torch,GDAL,terra,dplyr,0,0,❌,✅,✅,✅
+`segment-geospatial`_,PyTorch,"GDAL, pandas, OpenCV",geopandas,numpy,0,0,❌,✅,❌,❌
+`GeoTorchAI`_,PyTorch,"GDAL, pandas, xarray",Sedona,numpy,14,0,❌,❌,❌,✅
+`Moonshine`_,PyTorch,-,-,numpy,0,3,❌,❌,❌,❌

@@ -1,0 +1,10 @@
+Library,Contributors,Forks,Watchers,Stars,Issues,PRs,Releases,Commits,Core SLOCs,Test SLOCs,Test Coverage,License
+`TorchGeo`_,55,236,43,1948,358,1270,10,1684,"28,199","14,823",100%,MIT
+`eo-learn`_,40,287,44,1052,159,619,40,2439,8135,5915,92%,MIT
+`Raster Vision`_,29,372,75,1941,682,1204,19,3406,20965,8339,86%,Apache-2.0
+`PaddleRS`_,22,81,13,299,65,112,1,642,21859,2149,20%,Apache-2.0
+`DeepForest`_,13,153,15,402,351,187,40,650,2337,1103,86%,MIT
+`SITS`_,13,74,29,406,550,488,39,5677,22512,6162,95%,GPL-2.0
+`segment-geospatial`_,11,234,51,2374,95,80,22,155,5355,92,22%,MIT
+`GeoTorchAI`_,4,30,13,428,22,20,1,207,6153,550,38%,AGPL-3.0
+`Moonshine`_,1,1,4,118,2,5,1,48,245,56,69%,MIT

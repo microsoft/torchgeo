@@ -10,6 +10,7 @@ torchgeo
    user/installation
    user/contributing
    user/glossary
+   user/alternatives
 
 .. toctree::
    :maxdepth: 2
