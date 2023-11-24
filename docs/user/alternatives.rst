@@ -96,6 +96,8 @@ These are download metrics for the project. Note that these numbers can be artif
 
    Software is a living, breathing organism and is constantly undergoing change. If any of the above information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
 
+   *Last updated: 20 November 2023*
+
 .. _TorchGeo: https://github.com/microsoft/torchgeo
 .. _eo-learn: https://github.com/sentinel-hub/eo-learn
 .. _Raster Vision: https://github.com/azavea/raster-vision
@@ -105,5 +107,3 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _segment-geospatial: https://github.com/opengeos/segment-geospatial
 .. _GeoTorchAI: https://github.com/wherobots/GeoTorchAI
 .. _Moonshine: https://github.com/moonshinelabs-ai/moonshine
-
-   *Last updated: 20 November 2023*
