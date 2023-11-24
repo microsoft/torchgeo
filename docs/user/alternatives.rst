@@ -20,13 +20,13 @@ Features
 
 \*Support for TensorFlow was dropped in Raster Vision 0.12.
 
-**ML backend**: The machine learning libraries used by the project. For example, if you are a scikit-learn user, eo-learn may be perfect for you, but if you need more advanced deep learning support, you may want to choose a different library.
+**ML Backend**: The machine learning libraries used by the project. For example, if you are a scikit-learn user, eo-learn may be perfect for you, but if you need more advanced deep learning support, you may want to choose a different library.
 
-**I/O backend**: The I/O libraries used by the project to read data. This gives you a rough idea of which file formats are supported. For example, if you need to work with lidar data, a project that uses laspy may be important to you.
+**I/O Backend**: The I/O libraries used by the project to read data. This gives you a rough idea of which file formats are supported. For example, if you need to work with lidar data, a project that uses laspy may be important to you.
 
-**Spatial backend**: The spatial library used to maintain and track geospatial metadata. This may be important to you if you intend to scale up your simulations.
+**Spatial Backend**: The spatial library used to maintain and track geospatial metadata. This may be important to you if you intend to scale up your simulations.
 
-**Transform backend**: The transform library used to perform data augmentation. For example, Kornia performs all augmentations on PyTorch Tensors, allowing you to run your transforms on the GPU for an entire mini-batch at a time.
+**Transform Backend**: The transform library used to perform data augmentation. For example, Kornia performs all augmentations on PyTorch Tensors, allowing you to run your transforms on the GPU for an entire mini-batch at a time.
 
 **Datasets**: The number of geospatial datasets built into the library. Note that most projects have something similar to TorchGeo's ``RasterDataset`` and ``VectorDataset``, allowing you to work with generic raster and vector files. Collections of datasets are only counted a single time, so data loaders for Landsats 1--9 are a single dataset, and data loaders for SpaceNets 1--8 are also a single dataset.
 
