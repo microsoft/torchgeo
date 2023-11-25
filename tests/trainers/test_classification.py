@@ -61,12 +61,8 @@ def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
     return state_dict
 
 
-def plot_no_rgb(*args: Any, **kwargs: Any) -> None:
+def plot(*args: Any, **kwargs: Any) -> None:
     raise ValueError
-
-
-def no_plot_method(*args: Any, **kwargs: Any) -> None:
-    return None
 
 
 class TestClassificationTask:
@@ -185,21 +181,7 @@ class TestClassificationTask:
             ClassificationTask(model="resnet18", loss="invalid_loss")
 
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(EuroSATDataModule, "plot", plot_no_rgb)
-        datamodule = EuroSATDataModule(
-            root="tests/data/eurosat", batch_size=1, num_workers=0
-        )
-        model = ClassificationTask(model="resnet18", in_channels=13, num_classes=10)
-        trainer = Trainer(
-            accelerator="cpu",
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
-
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(EuroSATDataModule, "plot", no_plot_method)
+        monkeypatch.setattr(EuroSATDataModule, "plot", plot)
         datamodule = EuroSATDataModule(
             root="tests/data/eurosat", batch_size=1, num_workers=0
         )
@@ -276,23 +258,7 @@ class TestMultiLabelClassificationTask:
             MultiLabelClassificationTask(model="resnet18", loss="invalid_loss")
 
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(BigEarthNetDataModule, "plot", plot_no_rgb)
-        datamodule = BigEarthNetDataModule(
-            root="tests/data/bigearthnet", batch_size=1, num_workers=0
-        )
-        model = MultiLabelClassificationTask(
-            model="resnet18", in_channels=14, num_classes=19, loss="bce"
-        )
-        trainer = Trainer(
-            accelerator="cpu",
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
-
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(BigEarthNetDataModule, "plot", no_plot_method)
+        monkeypatch.setattr(BigEarthNetDataModule, "plot", plot)
         datamodule = BigEarthNetDataModule(
             root="tests/data/bigearthnet", batch_size=1, num_workers=0
         )

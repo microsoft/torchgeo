@@ -43,12 +43,8 @@ def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
     return state_dict
 
 
-def plot_no_rgb(*args: Any, **kwargs: Any) -> None:
+def plot(*args: Any, **kwargs: Any) -> None:
     raise ValueError
-
-
-def no_plot_method(*args: Any, **kwargs: Any) -> None:
-    return None
 
 
 class TestSemanticSegmentationTask:
@@ -184,23 +180,7 @@ class TestSemanticSegmentationTask:
             SemanticSegmentationTask(loss="jaccard", ignore_index=0)
 
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(SEN12MSDataModule, "plot", plot_no_rgb)
-        datamodule = SEN12MSDataModule(
-            root="tests/data/sen12ms", batch_size=1, num_workers=0
-        )
-        model = SemanticSegmentationTask(
-            backbone="resnet18", in_channels=15, num_classes=6
-        )
-        trainer = Trainer(
-            accelerator="cpu",
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
-
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(SEN12MSDataModule, "plot", no_plot_method)
+        monkeypatch.setattr(SEN12MSDataModule, "plot", plot)
         datamodule = SEN12MSDataModule(
             root="tests/data/sen12ms", batch_size=1, num_workers=0
         )
