@@ -3,14 +3,16 @@ Alternatives
 
 TorchGeo is not the only **geospatial machine learning library** out there, there are a number of alternatives that you can consider using. The goal of this page is to provide an up-to-date listing of these libraries and the features they support in order to help you decide which library is right for you. Criteria for inclusion on this list include:
 
-* **geospatial**: Must be primarily intended for working with geospatial, remote sensing, or satellite imagery data. This rules out libraries like `torchvision <https://github.com/pytorch/vision>`_, which provides little to no support for multispectral data or geospatial transforms.
-* **machine learning**: Must provide basic machine learning functionality. This rules out libraries like `GDAL <https://github.com/OSGeo/gdal>`_, which is useful for data loading but offers no support for machine learning.
-* **library**: Must be an actively developed software library with testing and releases on repositories like PyPI or CRAN. This rules out libraries like `TorchSat <https://github.com/sshuair/torchsat>`_, `RoboSat <https://github.com/mapbox/robosat>`_, and `Solaris <https://github.com/CosmiQ/solaris>`_, which have been abandoned and are no longer maintained.
+* **geospatial**: Must be primarily intended for working with geospatial, remote sensing, or satellite imagery data. This rules out libraries like `torchvision`_, which provides little to no support for multispectral data or geospatial transforms.
+* **machine learning**: Must provide basic machine learning functionality. This rules out libraries like `GDAL`_, which is useful for data loading but offers no support for machine learning.
+* **library**: Must be an actively developed software library with testing and releases on repositories like PyPI or CRAN. This rules out libraries like `TorchSat`_, `RoboSat`_, and `Solaris`_, which have been abandoned and are no longer maintained.
 
 When deciding which library is most useful to you, it is worth considering the features they support, how actively the library is being developed, and how popular the library is, roughly in that order.
 
 Features
 --------
+
+**Key**: ✅ full support, 🚧 partial support, ❌ no support
 
 .. csv-table::
    :align: center
@@ -24,7 +26,7 @@ Features
 
 **I/O Backend**: The I/O libraries used by the project to read data. This gives you a rough idea of which file formats are supported. For example, if you need to work with lidar data, a project that uses laspy may be important to you.
 
-**Spatial Backend**: The spatial library used to maintain and track geospatial metadata. This may be important to you if you intend to scale up your simulations.
+**Spatial Backend**: The spatial library used to perform spatial joins and compute intersections based on geospatial metadata. This may be important to you if you intend to scale up your simulations.
 
 **Transform Backend**: The transform library used to perform data augmentation. For example, Kornia performs all augmentations on PyTorch Tensors, allowing you to run your transforms on the GPU for an entire mini-batch at a time.
 
@@ -97,6 +99,12 @@ These are download metrics for the project. Note that these numbers can be artif
    Software is a living, breathing organism and is constantly undergoing change. If any of the above information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
 
    *Last updated: 20 November 2023*
+
+.. _torchvision: https://github.com/pytorch/vision
+.. _GDAL: https://github.com/OSGeo/gdal
+.. _TorchSat: https://github.com/sshuair/torchsat
+.. _RoboSat: https://github.com/mapbox/robosat
+.. _Solaris: https://github.com/CosmiQ/solaris
 
 .. _TorchGeo: https://github.com/microsoft/torchgeo
 .. _eo-learn: https://github.com/sentinel-hub/eo-learn
