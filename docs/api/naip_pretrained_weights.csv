@@ -1,3 +1,2 @@
 Weight,Channels,Source,Citation
-ResNet50_Weights.FMOW_RGB_GASSL, 3,`link <https://github.com/sustainlab-group/geography-aware-ssl>`__,`link <https://arxiv.org/abs/2011.09980>`__
 Swin_V2_B_Weights.NAIP_RGB_SATLAS,3,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__
