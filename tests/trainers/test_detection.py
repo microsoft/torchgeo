@@ -45,9 +45,12 @@ class ObjectDetectionTestModel(Module):
         else:  # eval mode
             output = []
             for i in range(batch_size):
+                boxes = torch.rand(10, 4)
+                # xmax, ymax must be larger than xmin, ymin
+                boxes[:, 2:] += 1
                 output.append(
                     {
-                        "boxes": torch.rand(10, 4),
+                        "boxes": boxes,
                         "labels": torch.randint(0, 2, (10,)),
                         "scores": torch.rand(10),
                     }
