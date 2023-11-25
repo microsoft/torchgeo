@@ -45,9 +45,9 @@ class ObjectDetectionTestModel(Module):
         else:  # eval mode
             output = []
             for i in range(batch_size):
-                boxes = torch.zeros(10, 4, dtype=torch.float)
-                # Create xmax, ymax larger than 0.0
-                boxes[:, 2:4] = torch.FloatTensor(10, 2).uniform_(0.1, 0.9)
+                boxes = torch.rand(10, 4)
+                # xmax, ymax must be larger than xmin, ymin
+                boxes[:, 2:] += 1
                 output.append(
                     {
                         "boxes": boxes,
