@@ -52,10 +52,8 @@ class ChaBuDDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.ChaBuD`.
         """
-        super().__init__(ChaBuD, batch_size, num_workers, **kwargs)
-
-        self.bands = kwargs.get("bands", ChaBuD.rgb_bands)
-        band_indices = [ChaBuD.all_bands.index(b) for b in self.bands]
+        bands = kwargs.get("bands", ChaBuD.all_bands)
+        band_indices = [ChaBuD.all_bands.index(b) for b in bands]
         mins = self.min[band_indices]
         maxs = self.max[band_indices]
 
@@ -65,6 +63,8 @@ class ChaBuDDataModule(NonGeoDataModule):
 
         self.mean = mins
         self.std = maxs - mins
+
+        super().__init__(ChaBuD, batch_size, num_workers, **kwargs)
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

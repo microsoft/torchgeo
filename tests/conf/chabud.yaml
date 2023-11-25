@@ -14,5 +14,4 @@ data:
     batch_size: 2
   dict_kwargs:
     root: "tests/data/chabud"
-    bands: ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B8A", "B09", "B11", "B12"]
     download: true
