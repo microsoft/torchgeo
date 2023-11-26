@@ -144,6 +144,11 @@ Open Buildings
 
 .. autoclass:: OpenBuildings
 
+PRISMA
+^^^^^^
+
+.. autoclass:: PRISMA
+
 Sentinel
 ^^^^^^^^
 

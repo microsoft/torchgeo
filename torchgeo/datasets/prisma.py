@@ -14,7 +14,7 @@ class PRISMA(RasterDataset):
     """PRISMA dataset.
 
     Hyperspectral Precursor and Application Mission
-    `PRISMA <https://www.eoportal.org/satellite-missions/prisma-hyperspectral>`_
+    `PRISMA <https://www.eoportal.org/satellite-missions/prisma-hyperspectral>`__
     (PRecursore IperSpettrale della Missione Applicativa) is a medium-resolution
     hyperspectral imaging satellite, developed, owned, and operated by the
     Italian Space Agency `ASI <https://www.asi.it/en/earth-science/prisma/>`_

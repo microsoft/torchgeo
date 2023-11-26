@@ -85,6 +85,7 @@ from .oscd import OSCD
 from .pastis import PASTIS
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
+from .prisma import PRISMA
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
@@ -174,6 +175,7 @@ __all__ = (
     "NCCM",
     "NLCD",
     "OpenBuildings",
+    "PRISMA",
     "Sentinel",
     "Sentinel1",
     "Sentinel2",
