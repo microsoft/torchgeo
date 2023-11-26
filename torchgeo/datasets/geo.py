@@ -11,6 +11,7 @@ import re
 import sys
 import warnings
 from collections.abc import Iterable, Sequence
+from datetime import datetime
 from typing import Any, Callable, Optional, Union, cast
 
 import fiona
@@ -327,6 +328,8 @@ class RasterDataset(GeoDataset):
     #: groups. The following groups are specifically searched for by the base class:
     #:
     #: * ``date``: used to calculate ``mint`` and ``maxt`` for ``index`` insertion
+    #: * ``start``: used to calculate ``mint`` for ``index`` insertion
+    #: * ``stop``: used to calculate ``maxt`` for ``index`` insertion
     #:
     #: When :attr:`~RasterDataset.separate_files` is True, the following additional
     #: groups are searched for to find other files:
@@ -336,7 +339,8 @@ class RasterDataset(GeoDataset):
 
     #: Date format string used to parse date from filename.
     #:
-    #: Not used if :attr:`filename_regex` does not contain a ``date`` group.
+    #: Not used if :attr:`filename_regex` does not contain a ``date`` group or
+    #: ``start`` and ``stop`` groups.
     date_format = "%Y%m%d"
 
     #: True if dataset contains imagery, False if dataset contains mask
@@ -433,6 +437,11 @@ class RasterDataset(GeoDataset):
                     if "date" in match.groupdict():
                         date = match.group("date")
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
+                    elif "start" in match.groupdict() and "stop" in match.groupdict():
+                        start = match.group("start")
+                        stop = match.group("stop")
+                        mint = datetime.strptime(start, self.date_format).timestamp()
+                        maxt = datetime.strptime(stop, self.date_format).timestamp()
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
                     self.index.insert(i, coords, filepath)
