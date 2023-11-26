@@ -5,9 +5,11 @@
 
 from typing import Any, Optional
 
+import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
 from .geo import RasterDataset
+from .utils import percentile_normalization
 
 
 class PRISMA(RasterDataset):
@@ -59,7 +61,7 @@ class PRISMA(RasterDataset):
         ^PRS
         _(?P<level>[A-Z\d]+)
         _(?P<product>[A-Z]+)
-        _(?P<order>[A-Z]+)?
+        (_(?P<order>[A-Z]+))?
         _(?P<start>\d{14})
         _(?P<stop>\d{14})
         _(?P<version>\d{4})
@@ -83,4 +85,19 @@ class PRISMA(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        pass
+        # RGB band indices based on https://doi.org/10.3390/rs14164080
+        rgb_indices = [34, 23, 11]
+        image = sample["image"][rgb_indices].permute(1, 2, 0).float()
+        image = percentile_normalization(image, axis=(0, 1))
+
+        fig, ax = plt.subplots(1, 1, figsize=(4, 4))
+        ax.imshow(image)
+        ax.axis("off")
+
+        if show_titles:
+            ax.set_title("Image")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
