@@ -11,10 +11,10 @@ import torch.nn as nn
 from rasterio.crs import CRS
 
 from torchgeo.datasets import (
+    PRISMA,
     BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
-    PRISMA,
     UnionDataset,
 )
 
