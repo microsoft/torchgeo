@@ -39,6 +39,12 @@ ResNet
 .. autoclass:: ResNet18_Weights
 .. autoclass:: ResNet50_Weights
 
+Swin Transformer
+^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: swin_v2_b
+.. autoclass:: Swin_V2_B_Weights
+
 Vision Transformer
 ^^^^^^^^^^^^^^^^^^
 
@@ -56,6 +62,16 @@ Utility Functions
 
 Pretrained Weights
 ^^^^^^^^^^^^^^^^^^
+
+NAIP
+----
+
+.. csv-table::
+   :widths: 45 10 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: naip_pretrained_weights.csv
+
 
 Landsat
 -------
