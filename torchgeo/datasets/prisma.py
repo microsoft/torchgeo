@@ -61,10 +61,11 @@ class PRISMA(RasterDataset):
         ^PRS
         _(?P<level>[A-Z\d]+)
         _(?P<product>[A-Z]+)
-        (_(?P<order>[A-Z]+))?
+        (_(?P<order>[A-Z_]+))?
         _(?P<start>\d{14})
         _(?P<stop>\d{14})
         _(?P<version>\d{4})
+        (_(?P<valid>\d))?
         \.
     """
     date_format = "%Y%m%d%H%M%S"
