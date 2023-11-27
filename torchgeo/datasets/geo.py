@@ -11,7 +11,6 @@ import re
 import sys
 import warnings
 from collections.abc import Iterable, Sequence
-from datetime import datetime
 from typing import Any, Callable, Optional, Union, cast
 
 import fiona
@@ -440,8 +439,8 @@ class RasterDataset(GeoDataset):
                     elif "start" in match.groupdict() and "stop" in match.groupdict():
                         start = match.group("start")
                         stop = match.group("stop")
-                        mint = datetime.strptime(start, self.date_format).timestamp()
-                        maxt = datetime.strptime(stop, self.date_format).timestamp()
+                        mint, _ = disambiguate_timestamp(start, self.date_format)
+                        _, maxt = disambiguate_timestamp(stop, self.date_format)
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
                     self.index.insert(i, coords, filepath)
