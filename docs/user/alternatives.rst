@@ -32,7 +32,7 @@ Features
 
 **Datasets**: The number of geospatial datasets built into the library. Note that most projects have something similar to TorchGeo's ``RasterDataset`` and ``VectorDataset``, allowing you to work with generic raster and vector files. Collections of datasets are only counted a single time, so data loaders for Landsats 1--9 are a single dataset, and data loaders for SpaceNets 1--8 are also a single dataset.
 
-**Models**: The number of models pre-trained on geospatial data that are offered by the library. Note that most projects support hundreds of models via a library like PyTorch Image Models, and can use models pre-trained on ImageNet. There are far fewer libraries that provide foundation models for multispectral satellite imagery.
+**Weights**: The number of model weights pre-trained on geospatial data that are offered by the library. Note that most projects support hundreds of model architectures via a library like PyTorch Image Models, and can use models pre-trained on ImageNet. There are far fewer libraries that provide foundation model weights pre-trained on multispectral satellite imagery.
 
 **CLI**: Whether or not the library has a command-line interface. This low-code or no-code solution is convenient for users with limited programming experience, and can offer nice features for reproducing research and fast experimentation.
 
