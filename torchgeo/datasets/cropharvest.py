@@ -22,12 +22,12 @@ from .utils import download_and_extract_archive, download_url
 class CropHarvest(NonGeoDataset):
     """CropHarvest dataset.
 
-    The CropHarvest <https://github.com/nasaharvest/cropharvest> datataset is a
-    classification dataset.
+    The `CropHarvest <https://github.com/nasaharvest/cropharvest>`_ datataset is a
+    classification dataset for crop classification.
 
     Dataset features:
 
-    * _ pixel single timeseries with croptype labels
+    * single pixel timeseries with croptype labels
     * 18 bands per image over 12 months
 
     Dataset format:
@@ -38,11 +38,9 @@ class CropHarvest(NonGeoDataset):
 
     1. is_crop - whether or not a single pixel contains cropland
     2. classification_label - optional field identifying a specific croptype
-    3. dataset - source datset for the imagery
+    3. dataset - source dataset for the imagery
     4. lat
     5. lon
-
-
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -51,6 +49,8 @@ class CropHarvest(NonGeoDataset):
     This dataset requires the following additional library to be installed:
 
        * `h5py <https://pypi.org/project/h5py/>`_ to load the dataset
+
+    .. versionadded:: 0.6
     """
 
     # *https://github.com/nasaharvest/cropharvest/blob/main/cropharvest/bands.py
@@ -74,7 +74,7 @@ class CropHarvest(NonGeoDataset):
         "slope",
         "NDVI",
     ]
-    rgb_bands = ["B11", "B8", "B2"]
+    rgb_bands = ["B4", "B3", "B2"]
 
     features_url = "https://zenodo.org/records/7257688/files/features.tar.gz?download=1"
     labels_url = "https://zenodo.org/records/7257688/files/labels.geojson?download=1"
@@ -93,8 +93,6 @@ class CropHarvest(NonGeoDataset):
         },
     }
 
-    directory = "CropHarvest"
-
     def __init__(
         self,
         root: str = "data",
@@ -106,7 +104,6 @@ class CropHarvest(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: one of "train" or "val"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -128,8 +125,8 @@ class CropHarvest(NonGeoDataset):
                 + "You can use download=True to download it"
             )
 
-        self.files = self._load_features(self.root, self.directory)
-        self.labels = self._load_labels(self.root, self.directory)
+        self.files = self._load_features(self.root)
+        self.labels = self._load_labels(self.root)
 
     def __getitem__(self, index: int) -> dict[str, object]:
         """Return an index within the dataset.
@@ -159,12 +156,11 @@ class CropHarvest(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_features(self, root: str, directory: str) -> list[dict[str, str]]:
+    def _load_features(self, root: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
             root: root dir of dataset
-            directory: sub directory CropHarvest
 
         Returns:
             list of dicts containing path for each of hd5 single pixel time series and
@@ -174,7 +170,6 @@ class CropHarvest(NonGeoDataset):
         chips = glob.glob(
             os.path.join(
                 root,
-                directory,
                 self.file_dict["features"]["extracted_filename"],
                 "*.h5",
             )
@@ -182,25 +177,24 @@ class CropHarvest(NonGeoDataset):
         chips = sorted(os.path.basename(chip) for chip in chips)
         for chip in chips:
             chip_path = os.path.join(
-                root, directory, self.file_dict["features"]["extracted_filename"], chip
+                root, self.file_dict["features"]["extracted_filename"], chip
             )
             index = chip.split("_")[0]
             dataset = chip.split("_")[1][:-3]
             files.append(dict(chip=chip_path, index=index, dataset=dataset))
         return files
 
-    def _load_labels(self, root: str, directory: str) -> pd.DataFrame:
+    def _load_labels(self, root: str) -> pd.DataFrame:
         """Return the paths of the files in the dataset.
 
         Args:
             root: root dir of dataset
-            directory: sub directory CropHarvest
 
         Returns:
             pandas dataframe containing label data for each feature
         """
         filename = self.file_dict["labels"]["extracted_filename"]
-        with open(os.path.join(root, directory, filename), encoding="utf8") as f:
+        with open(os.path.join(root, filename), encoding="utf8") as f:
             data = json.load(f)
 
             pd.json_normalize(data["features"])
@@ -263,22 +257,19 @@ class CropHarvest(NonGeoDataset):
         """
         for fileinfo in self.file_dict.values():
             filename = fileinfo["extracted_filename"]
-            filepath = os.path.join(self.root, self.directory, filename)
+            filepath = os.path.join(self.root, filename)
             if not os.path.exists(filepath):
                 return False
         return True
 
     def _download(self) -> None:
         """Download the dataset and extract it.
-
-        Raises:
-            AssertionError: if the checksum of split.py does not match
         """
         if self._check_integrity():
             print("Files already downloaded and verified")
             return
         features_path = os.path.join(
-            self.directory, self.file_dict["features"]["filename"]
+            self.file_dict["features"]["filename"]
         )
         download_and_extract_archive(
             self.file_dict["features"]["url"],
@@ -290,7 +281,7 @@ class CropHarvest(NonGeoDataset):
         download_url(
             self.file_dict["labels"]["url"],
             self.root,
-            filename=os.path.join(self.directory, self.file_dict["labels"]["filename"]),
+            filename=os.path.join(self.file_dict["labels"]["filename"]),
             md5=self.file_dict["labels"]["md5"] if self.checksum else None,
         )
 

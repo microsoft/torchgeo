@@ -27,7 +27,7 @@ def download_url(url: str, root: str, filename: str, md5: str) -> None:
 def download_and_extract_archive(url: str, root: str, filename: str, md5: str) -> None:
     download_url(url, root, filename, md5)
     shutil.unpack_archive(
-        os.path.join(root, filename), os.path.join(root, "CropHarvest")
+        os.path.join(root, filename), os.path.join(root)
     )
 
 
