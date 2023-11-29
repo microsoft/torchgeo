@@ -168,11 +168,7 @@ class CropHarvest(NonGeoDataset):
         """
         files = []
         chips = glob.glob(
-            os.path.join(
-                root,
-                self.file_dict["features"]["extracted_filename"],
-                "*.h5",
-            )
+            os.path.join(root, self.file_dict["features"]["extracted_filename"], "*.h5")
         )
         chips = sorted(os.path.basename(chip) for chip in chips)
         for chip in chips:
@@ -263,14 +259,11 @@ class CropHarvest(NonGeoDataset):
         return True
 
     def _download(self) -> None:
-        """Download the dataset and extract it.
-        """
+        """Download the dataset and extract it."""
         if self._check_integrity():
             print("Files already downloaded and verified")
             return
-        features_path = os.path.join(
-            self.file_dict["features"]["filename"]
-        )
+        features_path = os.path.join(self.file_dict["features"]["filename"])
         download_and_extract_archive(
             self.file_dict["features"]["url"],
             self.root,
