@@ -62,7 +62,7 @@ class TestSemanticSegmentationTask:
             "landcoverai",
             "loveda",
             "naipchesapeake",
-            "potsdam2d",
+            "nccmsentinel2" "potsdam2d",
             "sen12ms_all",
             "sen12ms_s1",
             "sen12ms_s2_all",

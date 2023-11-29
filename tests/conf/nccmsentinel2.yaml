@@ -1,0 +1,19 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: "ce"
+    model: "deeplabv3+"
+    backbone: "resnet34"
+    in_channels: 4
+    num_classes: 14
+    num_filters: 1
+    ignore_index: null
+data:
+  class_path: NCCMSentinel2DataModule
+  init_args:
+    batch_size: 2
+    patch_size: 32
+  dict_kwargs:
+    nccm_paths: "tests/data/nccm"
+    sentinel2_paths: "tests/data/sentinel2"
+    sentinel2_download: true

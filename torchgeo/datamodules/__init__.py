@@ -22,6 +22,7 @@ from .levircd import LEVIRCDPlusDataModule
 from .loveda import LoveDADataModule
 from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
+from .nccm import NCCMSentinel2DataModule
 from .oscd import OSCDDataModule
 from .potsdam import Potsdam2DDataModule
 from .resisc45 import RESISC45DataModule
@@ -45,6 +46,7 @@ __all__ = (
     "L7IrishDataModule",
     "L8BiomeDataModule",
     "NAIPChesapeakeDataModule",
+    "NCCMSentinel2DataModule",
     # NonGeoDataset
     "BigEarthNetDataModule",
     "COWCCountingDataModule",
