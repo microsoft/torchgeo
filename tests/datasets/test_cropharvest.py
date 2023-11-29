@@ -15,7 +15,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import CropHarvest
+from torchgeo.datasets import CropHarvest, DatasetNotFoundError
 
 pytest.importorskip("h5py", minversion="3")
 
@@ -82,11 +82,11 @@ class TestCropHarvest:
     def test_getitem(self, dataset: CropHarvest) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x["data"], torch.Tensor)
-        assert isinstance(x["label"], str)
-        assert x["data"].shape == (12, 18)
+        assert isinstance(x["array"], torch.Tensor)
+        assert isinstance(x["label"], torch.Tensor)
+        assert x["array"].shape == (12, 18)
         y = dataset[2]
-        assert y["label"] == "Some"
+        assert y["label"] == 1
 
     def test_len(self, dataset: CropHarvest) -> None:
         assert len(dataset) == 5
@@ -96,9 +96,8 @@ class TestCropHarvest:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(
-            RuntimeError,
-            match="Dataset not found or corrupted. "
-            + "You can use download=True to download it",
+            DatasetNotFoundError,
+            match="Dataset not found",
         ):
             CropHarvest(str(tmp_path))
 

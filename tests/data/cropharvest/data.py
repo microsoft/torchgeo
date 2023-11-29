@@ -35,7 +35,7 @@ def create_geojson():
                     "dataset": "TestDataset1",
                     "index": 0,
                     "is_crop": 1,
-                    "label": "soy",
+                    "label": "soybean",
                 },
                 "geometry": {
                     "type": "Polygon",
@@ -50,7 +50,7 @@ def create_geojson():
                     "dataset": "TestDataset1",
                     "index": 0,
                     "is_crop": 1,
-                    "label": "beans",
+                    "label": "alfalfa",
                 },
                 "geometry": {
                     "type": "Polygon",
