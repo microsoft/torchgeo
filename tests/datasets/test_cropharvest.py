@@ -95,10 +95,7 @@ class TestCropHarvest:
         CropHarvest(root=str(tmp_path), download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(
-            DatasetNotFoundError,
-            match="Dataset not found",
-        ):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             CropHarvest(str(tmp_path))
 
     def test_plot(self, dataset: CropHarvest) -> None:
