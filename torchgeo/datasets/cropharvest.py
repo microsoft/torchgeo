@@ -576,9 +576,7 @@ class CropHarvest(NonGeoDataset):
             idx: sample index in labels.geojson
             dataset: dataset name to query labels.geojson
         Returns:
-            the croptype label ,
-            "Other" if no croptype is defined but is_crop is true,
-            or "None" if there are no crops
+            the crop type label
         """
         index = int(idx)
         row = self.labels[
