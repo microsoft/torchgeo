@@ -129,6 +129,11 @@ NAIP
 
 .. autoclass:: NAIP
 
+NCCM
+^^^^
+
+.. autoclass:: NCCM
+
 NLCD
 ^^^^
 
@@ -178,6 +183,11 @@ BioMassters
 ^^^^^^^^^^^
 
 .. autoclass:: BioMassters
+
+ChaBuD
+^^^^^^
+
+.. autoclass:: ChaBuD
 
 Cloud Cover Detection
 ^^^^^^^^^^^^^^^^^^^^^

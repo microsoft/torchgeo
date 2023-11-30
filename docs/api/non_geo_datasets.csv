@@ -3,6 +3,7 @@ Dataset,Task,Source,# Samples,# Classes,Size (px),Resolution (m),Bands
 `Benin Cashew Plantations`_,S,Airbus Pléiades,70,6,"1,122x1,186",10,MSI
 `BigEarthNet`_,C,Sentinel-1/2,"590,326",19--43,120x120,10,"SAR, MSI"
 `BioMassters`_,R,Sentinel-1/2 and Lidar,,,256x256, 10, "SAR, MSI"
+`ChaBuD`_,CD,Sentinel-2,356,2,512x512,10,MSI
 `Cloud Cover Detection`_,S,Sentinel-2,"22,728",2,512x512,10,MSI
 `COWC`_,"C, R","CSUAV AFRL, ISPRS, LINZ, AGRC","388,435",2,256x256,0.15,RGB
 `CropHarvest`_,"C","Sentinel-1/2, SRTM, ERA5","70,213",349,1x1,10,"SAR, MSI, SRTM"

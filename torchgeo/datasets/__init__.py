@@ -11,6 +11,7 @@ from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
+from .chabud import ChaBuD
 from .chesapeake import (
     Chesapeake,
     Chesapeake7,
@@ -78,6 +79,7 @@ from .mapinwild import MapInWild
 from .millionaid import MillionAID
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
+from .nccm import NCCM
 from .nlcd import NLCD
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
@@ -170,6 +172,7 @@ __all__ = (
     "Landsat8",
     "Landsat9",
     "NAIP",
+    "NCCM",
     "NLCD",
     "OpenBuildings",
     "Sentinel",
@@ -180,6 +183,7 @@ __all__ = (
     "BeninSmallHolderCashews",
     "BigEarthNet",
     "BioMassters",
+    "ChaBuD",
     "CloudCoverDetection",
     "COWC",
     "COWCCounting",
