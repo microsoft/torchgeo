@@ -85,9 +85,9 @@ class TestCropHarvest:
         CropHarvest(root=str(tmp_path), download=False)
 
     def test_downloaded_zipped(self, dataset: CropHarvest, tmp_path: Path) -> None:
-        shutil.move(os.path.join(tmp_path, "features"), os.path.join(tmp_path, "temp"))
+        feature_path = os.path.join(tmp_path, "features")
+        shutil.rmtree(feature_path)
         CropHarvest(root=str(tmp_path), download=True)
-        shutil.move(os.path.join(tmp_path, "temp"), os.path.join(tmp_path, "features"))
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
