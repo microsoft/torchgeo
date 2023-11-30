@@ -21,12 +21,12 @@ from .utils import check_integrity, download_url, extract_archive
 class DigitalTyphoonAnalysis(NonGeoDataset):
     """Digital Tyhphoon Dataset for Analysis Task.
 
-
     .. versionadded:: 0.6
     """
 
     valid_tasks = ["classification", "regression"]
     aux_file_name = "aux_data.csv"
+    valid_splits = ["train", "test"]
 
     valid_features = [
         "year",
@@ -54,6 +54,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         task: str = "regression",
         features: Sequence[str] = ["wind"],
         sequence_length: int = 3,
+        split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -82,6 +83,8 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
         assert task in self.valid_tasks, f"Please choose one of {self.valid_tasks}"
         self.task = task
+
+        assert split in self.valid_splits, f"Please choose one of {self.valid_splits}"
 
         assert set(features).issubset(set(self.valid_features))
         self.features = features
@@ -172,7 +175,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         return sample
 
     def __len__(self) -> int:
-        """REturn the number of data points in the dataset.
+        """Return the number of data points in the dataset.
 
         Returns:
             length of the dataset

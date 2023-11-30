@@ -9,6 +9,7 @@ from .chesapeake import ChesapeakeCVPRDataModule
 from .cowc import COWCCountingDataModule
 from .cyclone import TropicalCycloneDataModule
 from .deepglobelandcover import DeepGlobeLandCoverDataModule
+from .digital_typhoon import DigitalTyphoonAnalysisDataModule
 from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSAT100DataModule, EuroSATDataModule
 from .fair1m import FAIR1MDataModule
@@ -51,6 +52,7 @@ __all__ = (
     "ChaBuDDataModule",
     "COWCCountingDataModule",
     "DeepGlobeLandCoverDataModule",
+    "DigitalTyphoonAnalysisDataModule",
     "ETCI2021DataModule",
     "EuroSATDataModule",
     "EuroSAT100DataModule",
