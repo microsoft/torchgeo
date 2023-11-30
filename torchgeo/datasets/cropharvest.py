@@ -664,7 +664,7 @@ class CropHarvest(NonGeoDataset):
         rgb = np.array(sample["array"])[:, bands]
         normalized = rgb / np.max(rgb, axis=1, keepdims=True)
         axs.imshow(normalized[None, ...])
-        axs.set_title(f'Croptype: {self.classes[sample["label"]]}')
+        axs.set_title(f'Crop type: {self.classes[sample["label"]]}')
 
         if subtitle is not None:
             plt.suptitle(subtitle)
