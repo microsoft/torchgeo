@@ -16,4 +16,3 @@ data:
   dict_kwargs:
     nccm_paths: "tests/data/nccm"
     sentinel2_paths: "tests/data/sentinel2"
-    
