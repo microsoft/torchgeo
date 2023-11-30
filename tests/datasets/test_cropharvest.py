@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
@@ -25,25 +24,6 @@ def download_url(url: str, root: str, filename: str, md5: str) -> None:
 
 
 class TestCropHarvest:
-    file_dict = {
-        "features": {
-            "url": os.path.join(
-                "tests", "data", "cropharvest", "CropHarvest", "features.tar.gz"
-            ),
-            "filename": "features.tar.gz",
-            "extracted_filename": os.path.join("features", "arrays"),
-            "md5": "cad4df655c75caac805a80435e46ee3e",
-        },
-        "labels": {
-            "url": os.path.join(
-                "tests", "data", "cropharvest", "CropHarvest", "labels.geojson"
-            ),
-            "filename": "labels.geojson",
-            "extracted_filename": "labels.geojson",
-            "md5": "bf7bae6812fc7213481aff6a2e34517d",
-        },
-    }
-
     @pytest.fixture
     def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
         import_orig = builtins.__import__
@@ -56,17 +36,29 @@ class TestCropHarvest:
         monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
-    ) -> CropHarvest:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CropHarvest:
         monkeypatch.setattr(torchgeo.datasets.cropharvest, "download_url", download_url)
-        monkeypatch.setattr(CropHarvest, "file_dict", self.file_dict)
+        monkeypatch.setitem(
+            CropHarvest.file_dict["features"], "md5", "ef6f4f00c0b3b50ed8380b0044928572"
+        )
+        monkeypatch.setitem(
+            CropHarvest.file_dict["labels"], "md5", "1d93b6bfcec7b6797b75acbd9d284b92"
+        )
+        monkeypatch.setitem(
+            CropHarvest.file_dict["features"],
+            "url",
+            os.path.join("tests", "data", "cropharvest", "features.tar.gz"),
+        )
+        monkeypatch.setitem(
+            CropHarvest.file_dict["labels"],
+            "url",
+            os.path.join("tests", "data", "cropharvest", "labels.geojson"),
+        )
 
         root = str(tmp_path)
         transforms = nn.Identity()
-        os.makedirs(os.path.join(root, "CropHarvest"))
+
         dataset = CropHarvest(root, transforms, download=True, checksum=True)
-        print(dataset.files)
         return dataset
 
     def test_getitem(self, dataset: CropHarvest) -> None:

@@ -16,21 +16,11 @@ SIZE = 32
 np.random.seed(0)
 
 PATHS = [
-    os.path.join(
-        "cropharvest", "CropHarvest", "features", "arrays", "0_TestDataset1.h5"
-    ),
-    os.path.join(
-        "cropharvest", "CropHarvest", "features", "arrays", "1_TestDataset1.h5"
-    ),
-    os.path.join(
-        "cropharvest", "CropHarvest", "features", "arrays", "2_TestDataset1.h5"
-    ),
-    os.path.join(
-        "cropharvest", "CropHarvest", "features", "arrays", "0_TestDataset2.h5"
-    ),
-    os.path.join(
-        "cropharvest", "CropHarvest", "features", "arrays", "1_TestDataset2.h5"
-    ),
+    os.path.join("cropharvest", "features", "arrays", "0_TestDataset1.h5"),
+    os.path.join("cropharvest", "features", "arrays", "1_TestDataset1.h5"),
+    os.path.join("cropharvest", "features", "arrays", "2_TestDataset1.h5"),
+    os.path.join("cropharvest", "features", "arrays", "0_TestDataset2.h5"),
+    os.path.join("cropharvest", "features", "arrays", "1_TestDataset2.h5"),
 ]
 
 
@@ -126,11 +116,17 @@ def create_file(path: str) -> None:
 
 
 if __name__ == "__main__":
-    directory = "cropharvest/CropHarvest"
+    directory = "cropharvest"
 
     # remove old data
-    if os.path.isdir(directory):
-        shutil.rmtree(directory)
+    to_remove = [
+        os.path.join(directory, "features"),
+        os.path.join(directory, "features.tar.gz"),
+        os.path.join(directory, "labels.geojson"),
+    ]
+    for path in to_remove:
+        if os.path.isdir(path):
+            shutil.rmtree(path)
 
     label_path = os.path.join(directory, "labels.geojson")
     geojson = create_geojson()
