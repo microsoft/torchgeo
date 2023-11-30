@@ -7,7 +7,7 @@ model:
     in_channels: 4
     num_classes: 14
     num_filters: 1
-    ignore_index: null
+    ignore_index: 4
 data:
   class_path: NCCMSentinel2DataModule
   init_args:
