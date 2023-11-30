@@ -24,11 +24,6 @@ def download_url(url: str, root: str, filename: str, md5: str) -> None:
     shutil.copy(url, os.path.join(root, filename))
 
 
-def download_and_extract_archive(url: str, root: str, filename: str, md5: str) -> None:
-    download_url(url, root, filename, md5)
-    shutil.unpack_archive(os.path.join(root, filename), os.path.join(root))
-
-
 class TestCropHarvest:
     file_dict = {
         "features": {
@@ -64,11 +59,6 @@ class TestCropHarvest:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> CropHarvest:
-        monkeypatch.setattr(
-            torchgeo.datasets.cropharvest,
-            "download_and_extract_archive",
-            download_and_extract_archive,
-        )
         monkeypatch.setattr(torchgeo.datasets.cropharvest, "download_url", download_url)
         monkeypatch.setattr(CropHarvest, "file_dict", self.file_dict)
 

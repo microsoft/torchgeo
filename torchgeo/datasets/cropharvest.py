@@ -16,7 +16,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_and_extract_archive, download_url
+from .utils import DatasetNotFoundError, download_url, extract_archive
 
 
 class CropHarvest(NonGeoDataset):
@@ -120,7 +120,7 @@ class CropHarvest(NonGeoDataset):
         "blé tendre d\x92hiver",
         "maïs",
         "jachère de 6 ans ou plus déclarée comme surface d\x92intérêt écologique",
-        "prairie permanente - herbe prédominante (ressources fourragères ligneuses absentes ou peu présentes)",
+        "prairie permanente - herbe prédominante (ressources fourragères ligneuses absentes ou peu présentes)",  # noqa: E501
         "orge de printemps",
         "jachère de 6 ans ou plus",
         "orge d'hiver",
@@ -133,7 +133,7 @@ class CropHarvest(NonGeoDataset):
         "betterave non fourragère / bette",
         "autre luzerne",
         "lin fibres",
-        "mélange de légumineuses prépondérantes au semis et de graminées fourragères de 5 ans ou moins",
+        "mélange de légumineuses prépondérantes au semis et de graminées fourragères de 5 ans ou moins",  # noqa: E501
         "\x8cillette",
         "pois de printemps semé avant le 31/05",
         "triticale d\x92hiver",
@@ -154,21 +154,21 @@ class CropHarvest(NonGeoDataset):
         "sorgho",
         "tournesol",
         "sarrasin",
-        "mélange de légumineuses fourragères prépondérantes et de céréales et/ou d\x92oléagineux",
+        "mélange de légumineuses fourragères prépondérantes et de céréales et/ou d\x92oléagineux",  # noqa: E501
         "maïs ensilage",
         "coriandre",
         "mélange de céréales",
         "blé dur d\x92hiver",
         "autre légume ou fruit annuel",
         "épeautre",
-        "mélange de protéagineux (pois et/ou lupin et/ou féverole) prépondérants semés avant le 31/05 et de céréales",
+        "mélange de protéagineux (pois et/ou lupin et/ou féverole) prépondérants semés avant le 31/05 et de céréales",  # noqa: E501
         "carotte",
         "autre légume ou fruit pérenne",
         "petit fruit rouge",
         "pois chiche",
         "ray-grass de 5 ans ou moins",
         "petits pois",
-        "surface pastorale - herbe prédominante et ressources fourragères ligneuses présentes",
+        "surface pastorale - herbe prédominante et ressources fourragères ligneuses présentes",  # noqa: E501
         "seigle d\x92hiver",
         "autre pois fourrager de printemps",
         "autre vesce",
@@ -215,7 +215,7 @@ class CropHarvest(NonGeoDataset):
         "autre plante fourragère sarclée d\x92un autre genre",
         "ciboulette",
         "basilic",
-        "fourrage composé de céréales et/ou de protéagineux (en proportion <\xa050%) et/ou de légumineuses fourragères (en proportion < 50%)",
+        "fourrage composé de céréales et/ou de protéagineux (en proportion <\xa050%) et/ou de légumineuses fourragères (en proportion < 50%)",  # noqa: E501
         "maïs doux",
         "lotier",
         "fenouil",
@@ -470,12 +470,9 @@ class CropHarvest(NonGeoDataset):
         self.root = root
         self.transforms = transforms
         self.checksum = checksum
+        self.download = download
 
-        if download:
-            self._download()
-
-        if not self._check_integrity():
-            raise DatasetNotFoundError(self)
+        self._verify()
 
         self.files = self._load_features(self.root)
         self.labels = self._load_labels(self.root)
@@ -597,26 +594,43 @@ class CropHarvest(NonGeoDataset):
 
         return torch.tensor(self.classes.index(label))
 
-    def _check_integrity(self) -> bool:
-        """Checks the integrity of the dataset structure.
-
-        Returns:
-            True if the dataset directories are found, else False
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset.
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        for fileinfo in self.file_dict.values():
-            filename = fileinfo["extracted_filename"]
-            filepath = os.path.join(self.root, filename)
-            if not os.path.exists(filepath):
-                return False
-        return True
+        # Check if feature files already exist
+        feature_path = os.path.join(
+            self.root, self.file_dict["features"]["extracted_filename"]
+        )
+        feature_path_zip = os.path.join(
+            self.root, self.file_dict["features"]["filename"]
+        )
+        label_path = os.path.join(
+            self.root, self.file_dict["labels"]["extracted_filename"]
+        )
+        # Check if labels exist
+        if os.path.exists(label_path):
+            # Check if features exist
+            if os.path.exists(feature_path):
+                return
+            # Check if features are downloaded in zip format
+            if os.path.exists(feature_path_zip):
+                self._extract()
+                return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise DatasetNotFoundError(self)
+
+        # Download and extract the dataset
+        self._download()
+        self._extract()
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
-        if self._check_integrity():
-            print("Files already downloaded and verified")
-            return
         features_path = os.path.join(self.file_dict["features"]["filename"])
-        download_and_extract_archive(
+        download_url(
             self.file_dict["features"]["url"],
             self.root,
             filename=features_path,
@@ -629,6 +643,11 @@ class CropHarvest(NonGeoDataset):
             filename=os.path.join(self.file_dict["labels"]["filename"]),
             md5=self.file_dict["labels"]["md5"] if self.checksum else None,
         )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        features_path = os.path.join(self.root, self.file_dict["features"]["filename"])
+        extract_archive(features_path)
 
     def plot(self, sample: dict[str, Tensor], subtitle: Optional[str] = None) -> Figure:
         """Plot a sample from the dataset using bands for Agriculture RGB composite.
