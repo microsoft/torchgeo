@@ -22,8 +22,8 @@ from .utils import DatasetNotFoundError, download_url, extract_archive
 class CropHarvest(NonGeoDataset):
     """CropHarvest dataset.
 
-    The `CropHarvest <https://github.com/nasaharvest/cropharvest>`_ datataset is a
-    classification dataset for crop classification.
+    `CropHarvest <https://github.com/nasaharvest/cropharvest>`_ is a
+    crop classification dataset.
 
     Dataset features:
 
