@@ -575,6 +575,7 @@ class CropHarvest(NonGeoDataset):
         Args:
             idx: sample index in labels.geojson
             dataset: dataset name to query labels.geojson
+
         Returns:
             the crop type label
         """
