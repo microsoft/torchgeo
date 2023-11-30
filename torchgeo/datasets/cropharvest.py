@@ -596,6 +596,7 @@ class CropHarvest(NonGeoDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
+
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
