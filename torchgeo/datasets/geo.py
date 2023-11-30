@@ -32,6 +32,7 @@ from torchvision.datasets.folder import default_loader as pil_loader
 
 from .utils import (
     BoundingBox,
+    DatasetNotFoundError,
     concat_samples,
     disambiguate_timestamp,
     merge_samples,
@@ -390,7 +391,7 @@ class RasterDataset(GeoDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``paths``
+            DatasetNotFoundError: If dataset is not found.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -438,13 +439,7 @@ class RasterDataset(GeoDataset):
                     i += 1
 
         if i == 0:
-            msg = (
-                f"No {self.__class__.__name__} data was found "
-                f"in `paths={self.paths!r}'`"
-            )
-            if self.bands:
-                msg += f" with `bands={self.bands}`"
-            raise FileNotFoundError(msg)
+            raise DatasetNotFoundError(self)
 
         if not self.separate_files:
             self.band_indexes = None
@@ -606,7 +601,7 @@ class VectorDataset(GeoDataset):
                 rasterized into the mask
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            DatasetNotFoundError: If dataset is not found.
 
         .. versionadded:: 0.4
             The *label_name* parameter.
@@ -642,8 +637,7 @@ class VectorDataset(GeoDataset):
                 i += 1
 
         if i == 0:
-            msg = f"No {self.__class__.__name__} data was found in `root='{paths}'`"
-            raise FileNotFoundError(msg)
+            raise DatasetNotFoundError(self)
 
         self._crs = crs
         self._res = res

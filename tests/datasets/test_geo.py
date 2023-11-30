@@ -16,6 +16,7 @@ from torch.utils.data import ConcatDataset
 from torchgeo.datasets import (
     NAIP,
     BoundingBox,
+    DatasetNotFoundError,
     GeoDataset,
     IntersectionDataset,
     NonGeoClassificationDataset,
@@ -262,7 +263,7 @@ class TestRasterDataset:
             sentinel[query]
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No RasterDataset data was found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             RasterDataset(str(tmp_path))
 
     def test_no_all_bands(self) -> None:
@@ -327,7 +328,7 @@ class TestVectorDataset:
             dataset[query]
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No VectorDataset data was found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             VectorDataset(str(tmp_path))
 
 
