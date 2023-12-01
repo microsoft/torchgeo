@@ -24,7 +24,7 @@ def create_file(path: str, dtype: str):
         "driver": "GTiff",
         "dtype": dtype,
         "count": 1,
-        "crs": CRS.from_epsg(4326),
+        "crs": CRS.from_epsg(32616),
         "transform": Affine(10, 0.0, 399960.0, 0.0, -10, 4500000.0),
         "height": SIZE,
         "width": SIZE,
