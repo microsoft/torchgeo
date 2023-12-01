@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Sequence
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Dict, Optional
 
 import h5py
 import matplotlib.pyplot as plt
@@ -26,7 +26,6 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
     valid_tasks = ["classification", "regression"]
     aux_file_name = "aux_data.csv"
-    valid_splits = ["train", "test"]
 
     valid_features = [
         "year",
@@ -54,7 +53,8 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         task: str = "regression",
         features: Sequence[str] = ["wind"],
         sequence_length: int = 3,
-        split: str = "train",
+        min_feature_value: Optional[dict[str, float]] = None,
+        max_feature_value: Optional[dict[str, float]] = None,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -65,6 +65,9 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             root: root directory where dataset can be found
             task: whether to load "regression" or "classification" labels
             features: which auxiliary features to return
+            sequence_length: length of the sequence to return
+            min_feature_value: minimum value for each feature
+            max_feature_value: maximum value for each feature
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -81,10 +84,11 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         self.checksum = checksum
         self.sequence_length = sequence_length
 
+        self.min_feature_value = min_feature_value
+        self.max_feature_value = max_feature_value
+
         assert task in self.valid_tasks, f"Please choose one of {self.valid_tasks}"
         self.task = task
-
-        assert split in self.valid_splits, f"Please choose one of {self.valid_splits}"
 
         assert set(features).issubset(set(self.valid_features))
         self.features = features
@@ -112,6 +116,16 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         self.aux_df = self.aux_df.groupby("id").filter(
             lambda x: len(x) >= self.sequence_length
         )
+
+        # Filter aux_df according to min_target_value
+        if self.min_feature_value is not None:
+            for feature, min_value in self.min_feature_value.items():
+                self.aux_df = self.aux_df[self.aux_df[feature] >= min_value]
+
+        # Filter aux_df according to max_target_value
+        if self.max_feature_value is not None:
+            for feature, max_value in self.max_feature_value.items():
+                self.aux_df = self.aux_df[self.aux_df[feature] <= max_value]
 
         def get_subsequences(df: pd.DataFrame, k: int) -> list[dict[str, list[int]]]:
             """Generate all possible subsequences of length k for a given group.
