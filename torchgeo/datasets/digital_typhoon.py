@@ -3,6 +3,7 @@
 
 """Digital Typhoon dataset."""
 
+import glob
 import os
 from collections.abc import Sequence
 from typing import Any, Callable, Dict, Optional
@@ -14,7 +15,7 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from .geo import NonGeoDataset
+from .geo import DatasetNotFoundError, NonGeoDataset
 from .utils import (
     check_integrity,
     download_url,
@@ -51,6 +52,13 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         "landfall",
         "intp",
     ]
+
+    url = "https://huggingface.co/datasets/torchgeo/digital_typhoon/resolve/main/WP.tar.gz{0}"  # noqa: E501
+
+    md5sums = {
+        "aa": "3af98052aed17e0ddb1e94caca2582e2",
+        "ab": "2c5d25455ac8aef1de33fe6456ab2c8d",
+    }
 
     def __init__(
         self,
@@ -101,6 +109,8 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
         assert set(target).issubset(set(self.valid_features))
         self.target = target
+
+        self._verify()
 
         self.aux_df = pd.read_csv(os.path.join(root, self.aux_file_name))
         self.aux_df["datetime"] = pd.to_datetime(
@@ -251,6 +261,61 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             name: torch.tensor(feature_df[name].item()) for name in self.features
         }
         return feature_dict
+
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset."""
+        # Check if the extracted files already exist
+        exists = []
+        path = os.path.join(self.root, "image", "*", "*.h5")
+        if glob.glob(path):
+            exists.append(True)
+        else:
+            exists.append(False)
+
+        # check if aux.csv file exists
+        exists.append(os.path.exists(os.path.join(self.root, self.aux_file_name)))
+
+        if all(exists):
+            return
+
+        # Check if the tar.gz files have already been downloaded
+        exists = []
+        for suffix in self.md5sums.keys():
+            path = self.root + f"WP.tar.gz{suffix}"
+            exists.append(os.path.exists(path))
+
+        if all(exists):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise DatasetNotFoundError(self)
+
+        # Download the dataset
+        self._download()
+        self._extract()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        for suffix, md5 in self.md5sums.items():
+            download_url(
+                self.url.format(suffix), self.root, md5=md5 if self.checksum else None
+            )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        # Concatenate all tarballs together
+        chunk_size = 2**15  # same as torchvision
+        path = self.root + ".tar.gz"
+        with open(path, "wb") as f:
+            for suffix in self.md5sums.keys():
+                with open(path + suffix, "rb") as g:
+                    while chunk := g.read(chunk_size):
+                        f.write(chunk)
+
+        # Extract the concatenated tarball
+        extract_archive(path)
 
     def plot(
         self,
