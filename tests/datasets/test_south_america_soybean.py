@@ -26,10 +26,10 @@ class TestSouthAmericaSoybean:
             2002: "8a4a9dcea54b3ec7de07657b9f2c0893",
             2021: "edff3ada13a1a9910d1fe844d28ae4f",
         }
-        monkeypatch.setattr(south_america_soybean, "md5s", md5s)
+        monkeypatch.setattr(SouthAmericaSoybean, "md5s", md5s)
 
         url = os.path.join("tests", "data", "south_america_soybean", "SouthAmerica_Soybean_{}.tif")
-        monkeypatch.setattr(south_america_soybean, "url", url)
+        monkeypatch.setattr(SouthAmericaSoybean, "url", url)
         
 
         return SouthAmericaSoybean(
@@ -76,7 +76,7 @@ class TestSouthAmericaSoybean:
             AssertionError,
             match="SouthAmericaSoybean data product only exists for the following years:",
         ):
-            south_america_soybean(str(tmp_path), years=[1996])
+            SouthAmericaSoybean(str(tmp_path), years=[1996])
 
     def test_invalid_classes(self) -> None:
         with pytest.raises(AssertionError):
