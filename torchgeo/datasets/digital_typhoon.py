@@ -15,7 +15,12 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import (
+    check_integrity,
+    download_url,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class DigitalTyphoonAnalysis(NonGeoDataset):
@@ -52,6 +57,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         root: str = "data",
         task: str = "regression",
         features: Sequence[str] = ["wind"],
+        target: str = ["wind"],
         sequence_length: int = 3,
         min_feature_value: Optional[dict[str, float]] = None,
         max_feature_value: Optional[dict[str, float]] = None,
@@ -92,6 +98,9 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
         assert set(features).issubset(set(self.valid_features))
         self.features = features
+
+        assert set(target).issubset(set(self.valid_features))
+        self.target = target
 
         self.aux_df = pd.read_csv(os.path.join(root, self.aux_file_name))
         self.aux_df["datetime"] = pd.to_datetime(
@@ -183,6 +192,9 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             )
         )
 
+        # torchgeo expects a single label
+        sample["label"] = torch.Tensor([sample[target] for target in self.target])
+
         if self.transforms is not None:
             sample = self.transforms(sample)
 
@@ -239,3 +251,51 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             name: torch.tensor(feature_df[name].item()) for name in self.features
         }
         return feature_dict
+
+    def plot(
+        self,
+        sample: dict[str, Any],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample return by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for figure
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        image, label = sample["image"], sample["label"]
+
+        image = percentile_normalization(image)
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = sample["prediction"].item()
+
+        fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+
+        ax.imshow(image.permute(1, 2, 0))
+        ax.axis("off")
+
+        if show_titles:
+            title_dict = {
+                label_name: label[idx].item()
+                for idx, label_name in enumerate(self.target)
+            }
+            title = f"Label: {title_dict}"
+            if showing_predictions:
+                title_dict = {
+                    label_name: prediction[idx].item()
+                    for idx, label_name in enumerate(self.target)
+                }
+                title += f"\nPrediction: {title_dict}"
+            ax.set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
