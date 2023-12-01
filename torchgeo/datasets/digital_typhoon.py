@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Sequence
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 import h5py
 import matplotlib.pyplot as plt
@@ -16,12 +16,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import DatasetNotFoundError, NonGeoDataset
-from .utils import (
-    check_integrity,
-    download_url,
-    extract_archive,
-    percentile_normalization,
-)
+from .utils import download_url, extract_archive, percentile_normalization
 
 
 class DigitalTyphoonAnalysis(NonGeoDataset):
@@ -129,7 +124,8 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             / 3600
         )
 
-        # 0 hour difference is for the last time step of each typhoon sequence and want to keep only images that have max 1 hour difference
+        # 0 hour difference is for the last time step of each typhoon sequence and want
+        # to keep only images that have max 1 hour difference
         self.aux_df = self.aux_df[self.aux_df["hour_diff"] <= 1]
         # Filter out all ids that only have less than sequence_length entries
         self.aux_df = self.aux_df.groupby("id").filter(
@@ -167,7 +163,6 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
                 if set(subseq["seq_id"]).issubset(df["seq_id"])
             ]
 
-        # self.sample_sequences = self.aux_df.groupby('id').apply(get_subsequences, k=self.sequence_length).tolist()
         self.sample_sequences: list[dict[str, list[int]]] = [
             item
             for sublist in self.aux_df.groupby("id")
