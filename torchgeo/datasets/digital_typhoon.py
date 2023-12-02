@@ -5,6 +5,7 @@
 
 import glob
 import os
+import tarfile
 from collections.abc import Sequence
 from typing import Any, Callable, Optional
 
@@ -16,11 +17,39 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import DatasetNotFoundError, NonGeoDataset
-from .utils import download_url, extract_archive, percentile_normalization
+from .utils import download_url, percentile_normalization
 
 
 class DigitalTyphoonAnalysis(NonGeoDataset):
     """Digital Tyhphoon Dataset for Analysis Task.
+
+    This dataset contains typhoon-centered images, derived from hourly infrared channel
+    images captured by meteorological satellites. It incorporates data from multiple
+    generations of the Himawari weather satellite, dating back to 1978. These images
+    have been transformed into brightness temperatures and adjusted for varying
+    satellite sensor readings, yielding a consistent spatio-temporal dataset that
+    covers over four decades.
+
+    See `the Digital Typhoon website
+    <http://agora.ex.nii.ac.jp/digital-typhoon/dataset/>`_
+    for more information about the dataset.
+
+    Dataset features:
+
+    * infrared channel images from the Himawari weather satellite (512x512 px)
+      at 5km spatial resolution
+    * auxiliary features such as wind speed, pressure, and more that can be used
+      for regression or classification tasks
+    * 1,099 typhoons and 189,364 image
+
+    Dataset format:
+
+    * hdf5 files containing the infrared channel images
+    * .csv files containing the metadata for each image
+
+    If you use this dataset in your research, please cite the following papers:
+
+    * https://doi.org/10.20783/DIAS.664
 
     .. versionadded:: 0.6
     """
@@ -55,12 +84,14 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         "ab": "2c5d25455ac8aef1de33fe6456ab2c8d",
     }
 
+    data_root = "WP"
+
     def __init__(
         self,
         root: str = "data",
         task: str = "regression",
         features: Sequence[str] = ["wind"],
-        target: str = ["wind"],
+        target: list[str] = ["wind"],
         sequence_length: int = 3,
         min_feature_value: Optional[dict[str, float]] = None,
         max_feature_value: Optional[dict[str, float]] = None,
@@ -74,6 +105,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             root: root directory where dataset can be found
             task: whether to load "regression" or "classification" labels
             features: which auxiliary features to return
+            target: which auxiliary features to use as targets
             sequence_length: length of the sequence to return
             min_feature_value: minimum value for each feature
             max_feature_value: maximum value for each feature
@@ -107,7 +139,9 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
         self._verify()
 
-        self.aux_df = pd.read_csv(os.path.join(root, self.aux_file_name))
+        self.aux_df = pd.read_csv(
+            os.path.join(root, self.data_root, self.aux_file_name)
+        )
         self.aux_df["datetime"] = pd.to_datetime(
             self.aux_df[["year", "month", "day", "hour"]]
         )
@@ -116,12 +150,26 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         self.aux_df["seq_id"] = self.aux_df.groupby(["id"]).cumcount()
 
         # Compute the hour difference between consecutive images per typhoon id
-        self.aux_df["hour_diff"] = (
+        self.aux_df["hour_diff_consecutive"] = (
             self.aux_df.sort_values(["id", "datetime"])
             .groupby("id")["datetime"]
             .diff()
             .dt.total_seconds()
             / 3600
+        )
+
+        # Compute the hour difference between the first and second entry
+        self.aux_df["hour_diff_to_next"] = (
+            self.aux_df.sort_values(["id", "datetime"])
+            .groupby("id", group_keys=False)["datetime"]
+            .apply(lambda x: (x - x.shift(-1)).abs().dt.total_seconds() / 3600)
+        )
+
+        self.aux_df["hour_diff"] = self.aux_df["hour_diff_consecutive"].combine_first(
+            self.aux_df["hour_diff_to_next"]
+        )
+        self.aux_df.drop(
+            ["hour_diff_consecutive", "hour_diff_to_next"], axis=1, inplace=True
         )
 
         # 0 hour difference is for the last time step of each typhoon sequence and want
@@ -191,7 +239,10 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         sample.update(
             self._load_features(
                 os.path.join(
-                    self.root, "metadata", str(sample_df.iloc[-1]["id"]) + ".csv"
+                    self.root,
+                    self.data_root,
+                    "metadata",
+                    str(sample_df.iloc[-1]["id"]) + ".csv",
                 ),
                 sample_df.iloc[-1]["image_path"],
             )
@@ -225,7 +276,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         """
 
         def load_image_tensor(id: str, filepath: str) -> Tensor:
-            full_path = os.path.join(self.root, "image", id, filepath)
+            full_path = os.path.join(self.root, self.data_root, "image", id, filepath)
             with h5py.File(full_path, "r") as h5f:
                 # tensor with added channel dimension
                 tensor = torch.from_numpy(h5f["Infrared"][:]).unsqueeze(0)
@@ -261,22 +312,23 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         exists = []
-        path = os.path.join(self.root, "image", "*", "*.h5")
+        path = os.path.join(self.root, self.data_root, "image", "*", "*.h5")
         if glob.glob(path):
             exists.append(True)
         else:
             exists.append(False)
 
         # check if aux.csv file exists
-        exists.append(os.path.exists(os.path.join(self.root, self.aux_file_name)))
-
+        exists.append(
+            os.path.exists(os.path.join(self.root, self.data_root, self.aux_file_name))
+        )
         if all(exists):
             return
 
         # Check if the tar.gz files have already been downloaded
         exists = []
         for suffix in self.md5sums.keys():
-            path = self.root + f"WP.tar.gz{suffix}"
+            path = os.path.join(self.root, f"{self.data_root}.tar.gz{suffix}")
             exists.append(os.path.exists(path))
 
         if all(exists):
@@ -287,7 +339,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         if not self.download:
             raise DatasetNotFoundError(self)
 
-        # Download the dataset
+        # Download amd extract the dataset
         self._download()
         self._extract()
 
@@ -300,17 +352,12 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        # Concatenate all tarballs together
-        chunk_size = 2**15  # same as torchvision
-        path = self.root + ".tar.gz"
-        with open(path, "wb") as f:
-            for suffix in self.md5sums.keys():
-                with open(path + suffix, "rb") as g:
-                    while chunk := g.read(chunk_size):
-                        f.write(chunk)
-
-        # Extract the concatenated tarball
-        extract_archive(path)
+        # Extract tarball
+        for suffix in self.md5sums.keys():
+            with tarfile.open(
+                os.path.join(self.root, f"{self.data_root}.tar.gz{suffix}")
+            ) as tar:
+                tar.extractall(path=self.root)
 
     def plot(
         self,
@@ -334,7 +381,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
-            prediction = sample["prediction"].item()
+            prediction = sample["prediction"]
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
