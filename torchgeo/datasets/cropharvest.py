@@ -39,8 +39,8 @@ class CropHarvest(NonGeoDataset):
     1. is_crop - whether or not a single pixel contains cropland
     2. classification_label - optional field identifying a specific croptype
     3. dataset - source dataset for the imagery
-    4. lat
-    5. lon
+    4. lat - latitude
+    5. lon - longitude
 
     If you use this dataset in your research, please cite the following paper:
 
