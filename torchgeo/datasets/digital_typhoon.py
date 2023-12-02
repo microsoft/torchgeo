@@ -288,7 +288,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
                 load_image_tensor(str(id), filepath)
                 for id, filepath in zip(sample_df["id"], sample_df["image_path"])
             ]
-        )
+        ).float()
         return tensor
 
     def _load_features(self, filepath: str, image_path: str) -> dict[str, Any]:
@@ -304,7 +304,8 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         feature_df = pd.read_csv(filepath)
         feature_df = feature_df[feature_df["file_1"] == image_path]
         feature_dict = {
-            name: torch.tensor(feature_df[name].item()) for name in self.features
+            name: torch.tensor(feature_df[name].item()).float()
+            for name in self.features
         }
         return feature_dict
 
