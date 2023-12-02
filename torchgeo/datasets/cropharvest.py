@@ -32,7 +32,7 @@ class CropHarvest(NonGeoDataset):
 
     Dataset format:
 
-    * images are 12x18 ndarrays with 18 bands over 12 months
+    * arrays are 12x18 with 18 bands over 12 months
 
     Dataset properties:
 
