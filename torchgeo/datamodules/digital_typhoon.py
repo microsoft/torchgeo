@@ -77,37 +77,6 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
         train_sequences = [seq[1] for seq in train_sequences]
         val_sequences = [seq[1] for seq in val_sequences]
 
-        if self.split_by == "time":
-
-            def find_max_time_per_id(
-                split_sequences: list[dict[str, Union[int, list[int]]]]
-            ) -> dict[int, int]:
-                # Find the maximum value of each id in train_sequences
-                max_values = {}
-                for seq in split_sequences:
-                    id: int = seq["id"]
-                    value: int = max(seq["seq_id"])
-                    if id not in max_values or value > max_values[id]:
-                        max_values[id] = value
-                return max_values
-
-            train_max_values = find_max_time_per_id(train_sequences)
-            val_max_values = find_max_time_per_id(val_sequences)
-            # Assert that each max value in train_max_values is lower
-            # than in val_max_values for each key id
-            for id, max_value in train_max_values.items():
-                assert (
-                    id not in val_max_values or max_value < val_max_values[id]
-                ), f"Max value for id {id} in train is not lower than in validation."
-        else:
-            train_ids = {seq["id"] for seq in train_sequences}
-            val_ids = {seq["id"] for seq in val_sequences}
-
-            # Assert that the intersection between train_ids and val_ids is empty
-            assert (
-                len(train_ids & val_ids) == 0
-            ), "Train and validation datasets have overlapping ids."
-
         return train_sequences, val_sequences
 
     def setup(self, stage: str) -> None:
