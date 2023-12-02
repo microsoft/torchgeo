@@ -200,10 +200,13 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             Returns:
                 list of all possible subsequences of length k for a given typhoon id
             """
-            # generate possible subsquences of length k for each group
+            min_seq_id = df["seq_id"].min()
+            max_seq_id = df["seq_id"].max()
+
+            # generate possible subsquences of length k for group
             subsequences = [
                 {"id": df["id"].iloc[0], "seq_id": list(range(i, i + k))}
-                for i in range(len(df) - k + 1)
+                for i in range(min_seq_id, max_seq_id - k + 2)
             ]
             return [
                 subseq
