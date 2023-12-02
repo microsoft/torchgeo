@@ -3,9 +3,9 @@
 
 """Digital Typhoon Data Module."""
 
-from typing import Any
+from typing import Any, Union
 
-from torch.utils.data import Dataset, Subset
+from torch.utils.data import Dataset
 
 from ..datasets import DigitalTyphoonAnalysis
 from .geo import NonGeoDataModule
@@ -27,7 +27,8 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
         """Initialize a new DigitalTyphoonAnalysisDataModule instance.
 
         Args:
-            split_by: Either 'time' or 'typhoon_id', which decides how to split the dataset for train, val, test
+            split_by: Either 'time' or 'typhoon_id', which decides how to split
+                the dataset for train, val, test
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
@@ -41,7 +42,9 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
         ), f"Please choose from {self.valid_split_types}"
         self.split_by = split_by
 
-    def split_dataset(self, dataset: Dataset) -> tuple[Subset]:
+    def split_dataset(
+        self, dataset: Dataset
+    ) -> tuple[list[dict[str, Union[str, list]]]]:
         """Split dataset into two parts.
 
         Args:
@@ -76,19 +79,22 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
 
         if self.split_by == "time":
 
-            def find_max_time_per_id(split_sequences):
+            def find_max_time_per_id(
+                split_sequences: list[dict[str, Union[int, list[int]]]]
+            ) -> dict[int, int]:
                 # Find the maximum value of each id in train_sequences
                 max_values = {}
                 for seq in split_sequences:
-                    id = seq["id"]
-                    value = max(seq["seq_id"])
+                    id: int = seq["id"]
+                    value: int = max(seq["seq_id"])
                     if id not in max_values or value > max_values[id]:
                         max_values[id] = value
                 return max_values
 
             train_max_values = find_max_time_per_id(train_sequences)
             val_max_values = find_max_time_per_id(val_sequences)
-            # Assert that each max value in train_max_values is lower than in val_max_values for each key id
+            # Assert that each max value in train_max_values is lower
+            # than in val_max_values for each key id
             for id, max_value in train_max_values.items():
                 assert (
                     id not in val_max_values or max_value < val_max_values[id]

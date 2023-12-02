@@ -16,8 +16,8 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from .geo import DatasetNotFoundError, NonGeoDataset
-from .utils import download_url, percentile_normalization
+from .geo import NonGeoDataset
+from .utils import DatasetNotFoundError, download_url, percentile_normalization
 
 
 class DigitalTyphoonAnalysis(NonGeoDataset):
