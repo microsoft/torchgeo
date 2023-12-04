@@ -223,7 +223,7 @@ class SustainBenchCropYield(NonGeoDataset):
         download_url(
             self.url,
             self.root,
-            filename=self.dir,
+            filename=self.dir + ".zip",
             md5=self.md5 if self.checksum else None,
         )
         self._extract()
