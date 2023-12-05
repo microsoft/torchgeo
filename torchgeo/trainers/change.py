@@ -13,12 +13,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from torchmetrics import MetricCollection
-from torchmetrics.classification import (
-    BinaryAccuracy,
-    BinaryJaccardIndex,
-    MulticlassAccuracy,
-    MulticlassJaccardIndex,
-)
+from torchmetrics.classification import BinaryAccuracy, BinaryJaccardIndex
 from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import unbind_samples
