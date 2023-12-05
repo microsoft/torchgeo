@@ -22,7 +22,7 @@ jobs:
       id: cache
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-datasets
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
@@ -50,7 +50,7 @@ jobs:
       id: cache
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-integration
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
@@ -78,7 +78,7 @@ jobs:
       id: cache
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-tutorials
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |

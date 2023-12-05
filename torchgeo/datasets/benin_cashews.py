@@ -18,7 +18,12 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 # TODO: read geospatial information from stac.json files
@@ -198,11 +203,11 @@ class BeninSmallHolderCashews(NonGeoDataset):
             verbose: if True, print messages when new tiles are loaded
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self._validate_bands(bands)
 
-        self.root = os.path.expanduser(root)
+        self.root = root
         self.chip_size = chip_size
         self.stride = stride
         self.bands = bands
@@ -214,10 +219,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             self._download(api_key)
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         # Calculate the indices that we will use over all tiles
         self.chips_metadata = []
