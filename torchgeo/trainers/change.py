@@ -13,11 +13,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from torchmetrics import MetricCollection
-from torchmetrics.classification import (
-    BinaryAccuracy,
-    BinaryF1Score,
-    BinaryJaccardIndex,
-)
+from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
 from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import unbind_samples
@@ -26,7 +22,7 @@ from . import utils
 from .base import BaseTask
 
 
-class BinaryChangeDetectionTask(BaseTask):
+class ChangeDetectionTask(BaseTask):
     """Change Detection (Binary)."""
 
     def __init__(
@@ -35,6 +31,7 @@ class BinaryChangeDetectionTask(BaseTask):
         backbone: str = "resnet50",
         weights: Optional[Union[WeightsEnum, str, bool]] = None,
         in_channels: int = 3,
+        num_classes: int = 2,
         class_weights: Optional[Tensor] = None,
         ignore_index: Optional[int] = None,
         lr: float = 1e-3,
@@ -42,7 +39,7 @@ class BinaryChangeDetectionTask(BaseTask):
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
     ) -> None:
-        """Inititalize a new BinaryChangeDetectionTask instance.
+        """Inititalize a new ChangeDetectionTask instance.
 
         Args:
             model: Name of the model to use.
@@ -55,6 +52,7 @@ class BinaryChangeDetectionTask(BaseTask):
                 model does not support pretrained weights. Pretrained ViT weight enums
                 are not supported yet.
             in_channels: Number of input channels to model.
+            num_classes: Number of prediction classes.
             class_weights: Optional rescaling weight given to each
                 class and used with 'ce' loss.
             ignore_index: Optional integer class index to ignore in the loss and
@@ -78,13 +76,25 @@ class BinaryChangeDetectionTask(BaseTask):
             ValueError: If *loss* is invalid.
         """
         ignore_index = self.hparams["ignore_index"]
-        self.criterion = nn.BCEWithLogitsLoss(weight=self.hparams["class_weights"])
+        self.criterion = nn.CrossEntropyLoss(
+            ignore_index=ignore_value, weight=self.hparams["class_weights"]
+        )
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
         ignore_index: Optional[int] = self.hparams["ignore_index"]
         metrics = MetricCollection(
-            [BinaryAccuracy(), BinaryJaccardIndex(), BinaryF1Score()]
+            [
+                MulticlassAccuracy(
+                    num_classes=num_classes,
+                    ignore_index=ignore_index,
+                    multidim_average="global",
+                    average="micro",
+                ),
+                MulticlassJaccardIndex(
+                    num_classes=num_classes, ignore_index=ignore_index, average="micro"
+                ),
+            ]
         )
         self.train_metrics = metrics.clone(prefix="train_")
         self.val_metrics = metrics.clone(prefix="val_")
@@ -100,24 +110,25 @@ class BinaryChangeDetectionTask(BaseTask):
         backbone: str = self.hparams["backbone"]
         weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
         in_channels: int = self.hparams["in_channels"]
+        num_classes: int = self.hparams["num_classes"]
 
         if model == "unet":
             self.model = smp.Unet(
                 encoder_name=backbone,
                 encoder_weights="imagenet" if weights is True else None,
                 in_channels=in_channels * 2,  # images are concatenated
-                classes=1,
+                classes=num_classes,
             )
         elif model == "fcsiamdiff":
             self.model = FCSiamDiff(
                 in_channels=in_channels,
-                classes=1,
+                classes=num_classes,
                 encoder_weights="imagenet" if weights is True else None,
             )
         elif model == "fcsiamconc":
             self.model = FCSiamConc(
                 in_channels=in_channels,
-                classes=1,
+                classes=num_classes,
                 encoder_weights="imagenet" if weights is True else None,
             )
         else:
@@ -196,11 +207,15 @@ class BinaryChangeDetectionTask(BaseTask):
         image2 = batch["image2"]
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
-            y_hat: Tensor = self(x)
+            y_hat: Tensor = self(x).softmax(
+                dim=1
+            )
             return y_hat
         elif model in ["fcsiamdiff", "fcsiamconc"]:
             x = torch.stack((image1, image2), dim=1)
-            y_hat: Tensor = self(x)
+            y_hat: Tensor = self(x).softmax(
+                dim=1
+            )
             return y_hat
         else:
             raise ValueError(f"Model type '{model}' is not valid.")
