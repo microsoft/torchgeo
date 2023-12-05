@@ -56,7 +56,6 @@ class BinaryChangeDetectionTask(BaseTask):
                 model does not support pretrained weights. Pretrained ViT weight enums
                 are not supported yet.
             in_channels: Number of input channels to model.
-            num_classes: Number of prediction classes.
             class_weights: Optional rescaling weight given to each
                 class and used with 'ce' loss.
             ignore_index: Optional integer class index to ignore in the loss and
@@ -111,13 +110,13 @@ class BinaryChangeDetectionTask(BaseTask):
         elif model == "fcsiamdiff":
             self.model = FCSiamDiff(
                 in_channels=in_channels,
-                classes=2,
+                classes=1,
                 encoder_weights="imagenet" if weights is True else None,
             )
         elif model == "fcsiamconc":
             self.model = FCSiamConc(
                 in_channels=in_channels,
-                classes=2,
+                classes=1,
                 encoder_weights="imagenet" if weights is True else None,
             )
         else:
@@ -164,7 +163,7 @@ class BinaryChangeDetectionTask(BaseTask):
         metrics = getattr(self, f"{stage}_metrics", None)
         if metrics:
             metrics(y_hat, y)
-            self.log_dict({f"{stage}_{k}": v for k, v in metrics.compute().items()})
+            self.log_dict({f"{k}": v for k, v in metrics.compute().items()})
 
         return loss
 
