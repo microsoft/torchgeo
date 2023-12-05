@@ -23,9 +23,6 @@ from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import unbind_samples
 from ..models import (
-    ChangeMixin,
-    ChangeStar,
-    ChangeStarFarSeg,
     FCSiamConc,
     FCSiamDiff,
     get_weight,
