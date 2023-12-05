@@ -13,7 +13,11 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from torchmetrics import MetricCollection
-from torchmetrics.classification import BinaryAccuracy, BinaryJaccardIndex
+from torchmetrics.classification import (
+    BinaryAccuracy,
+    BinaryF1Score,
+    BinaryJaccardIndex,
+)
 from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import unbind_samples
@@ -79,7 +83,9 @@ class BinaryChangeDetectionTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
         ignore_index: Optional[int] = self.hparams["ignore_index"]
-        metrics = MetricCollection([BinaryAccuracy(), BinaryJaccardIndex()])
+        metrics = MetricCollection(
+            [BinaryAccuracy(), BinaryJaccardIndex(), BinaryF1Score()]
+        )
         self.train_metrics = metrics.clone(prefix="train_")
         self.val_metrics = metrics.clone(prefix="val_")
         self.test_metrics = metrics.clone(prefix="test_")
