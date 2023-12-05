@@ -196,9 +196,7 @@ class BinaryChangeDetectionTask(BaseTask):
         image2 = batch["image2"]
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
-            y_hat: Tensor = self(x).softmax(
-                dim=1
-            )  # TODO: only apply if model output isn't already probabilities
+            y_hat: Tensor = self(x)
             return y_hat
         elif model in ["fcsiamdiff", "fcsiamconc"]:
             x = torch.stack((image1, image2), dim=1)
