@@ -22,17 +22,13 @@ from torchmetrics.classification import (
 from torchvision.models._api import WeightsEnum
 
 from ..datasets.utils import unbind_samples
-from ..models import (
-    FCSiamConc,
-    FCSiamDiff,
-    get_weight,
-)
+from ..models import FCSiamConc, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
 
 
-class ChangeDetectionTask(BaseTask):
-    """Change Detection."""
+class BinaryChangeDetectionTask(BaseTask):
+    """Change Detection (Binary)."""
 
     def __init__(
         self,
@@ -40,8 +36,6 @@ class ChangeDetectionTask(BaseTask):
         backbone: str = "resnet50",
         weights: Optional[Union[WeightsEnum, str, bool]] = None,
         in_channels: int = 3,
-        num_classes: int = 1,
-        loss: str = "ce",
         class_weights: Optional[Tensor] = None,
         ignore_index: Optional[int] = None,
         lr: float = 1e-3,
@@ -49,7 +43,7 @@ class ChangeDetectionTask(BaseTask):
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
     ) -> None:
-        """Inititalize a new ChangeDetectionTask instance.
+        """Inititalize a new BinaryChangeDetectionTask instance.
 
         Args:
             model: Name of the model to use.
@@ -63,8 +57,6 @@ class ChangeDetectionTask(BaseTask):
                 are not supported yet.
             in_channels: Number of input channels to model.
             num_classes: Number of prediction classes.
-            loss: Name of the loss function, currently supports
-                'ce', 'jaccard' or 'focal' loss.
             class_weights: Optional rescaling weight given to each
                 class and used with 'ce' loss.
             ignore_index: Optional integer class index to ignore in the loss and
@@ -76,16 +68,8 @@ class ChangeDetectionTask(BaseTask):
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
 
-        Warns:
-            UserWarning: When loss='jaccard' and ignore_index is specified.
-
         .. versionadded: 0.6
         """
-        if ignore_index is not None and loss == "jaccard":
-            warnings.warn(
-                "ignore_index has no effect on training when loss='jaccard'",
-                UserWarning,
-            )
 
         super().__init__()
 
@@ -95,54 +79,13 @@ class ChangeDetectionTask(BaseTask):
         Raises:
             ValueError: If *loss* is invalid.
         """
-        loss: str = self.hparams["loss"]
-        num_classes: int = self.hparams["num_classes"]
         ignore_index = self.hparams["ignore_index"]
-        if loss == "ce":
-            if num_classes == 1:
-                self.criterion = nn.BCEWithLogitsLoss(
-                    weight=self.hparams["class_weights"]
-                )
-            else:
-                ignore_value = -1000 if ignore_index is None else ignore_index
-                self.criterion = nn.CrossEntropyLoss(
-                    ignore_index=ignore_value, weight=self.hparams["class_weights"]
-                )
-        elif loss == "jaccard":
-            self.criterion = smp.losses.JaccardLoss(
-                mode="multiclass", classes=self.hparams["num_classes"]
-            )
-        elif loss == "focal":
-            self.criterion = smp.losses.FocalLoss(
-                "multiclass", ignore_index=ignore_index, normalized=True
-            )
-        else:
-            raise ValueError(
-                f"Loss type '{loss}' is not valid. "
-                "Currently, supports 'ce', 'jaccard' or 'focal' loss."
-            )
+        self.criterion = nn.BCEWithLogitsLoss(weight=self.hparams["class_weights"])
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
-        num_classes: int = self.hparams["num_classes"]
         ignore_index: Optional[int] = self.hparams["ignore_index"]
-        metrics = MetricCollection(
-            [
-                BinaryAccuracy()
-                if num_classes == 1
-                else MulticlassAccuracy(
-                    num_classes=num_classes,
-                    ignore_index=ignore_index,
-                    multidim_average="global",
-                    average="micro",
-                ),
-                BinaryJaccardIndex()
-                if num_classes == 1
-                else MulticlassJaccardIndex(
-                    num_classes=num_classes, ignore_index=ignore_index, average="micro"
-                ),
-            ]
-        )
+        metrics = MetricCollection([BinaryAccuracy(), BinaryJaccardIndex()])
         self.train_metrics = metrics.clone(prefix="train_")
         self.val_metrics = metrics.clone(prefix="val_")
         self.test_metrics = metrics.clone(prefix="test_")
@@ -157,25 +100,24 @@ class ChangeDetectionTask(BaseTask):
         backbone: str = self.hparams["backbone"]
         weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
         in_channels: int = self.hparams["in_channels"]
-        num_classes: int = self.hparams["num_classes"]
 
         if model == "unet":
             self.model = smp.Unet(
                 encoder_name=backbone,
                 encoder_weights="imagenet" if weights is True else None,
                 in_channels=in_channels * 2,  # images are concatenated
-                classes=num_classes,
+                classes=1,
             )
         elif model == "fcsiamdiff":
             self.model = FCSiamDiff(
                 in_channels=in_channels,
-                classes=num_classes,
+                classes=2,
                 encoder_weights="imagenet" if weights is True else None,
             )
         elif model == "fcsiamconc":
             self.model = FCSiamConc(
                 in_channels=in_channels,
-                classes=num_classes,
+                classes=2,
                 encoder_weights="imagenet" if weights is True else None,
             )
         else:
