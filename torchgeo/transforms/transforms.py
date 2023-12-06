@@ -74,7 +74,6 @@ class AugmentationSequential(Module):
         if "boxes" in batch and (
             isinstance(batch["boxes"], list) or batch["boxes"].ndim == 2
         ):
-            # batch["boxes"] = batch["boxes"].unsqueeze(0)
             batch["boxes"] = Boxes.from_tensor(batch["boxes"]).data
 
         # Kornia requires masks to have a channel dimension
