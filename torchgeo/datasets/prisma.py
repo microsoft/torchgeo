@@ -46,6 +46,13 @@ class PRISMA(RasterDataset):
 
     * https://doi.org/10.1109/IGARSS.2018.8517785
 
+    .. note::
+       PRISMA imagery is distributed as HDF5 files. However, TorchGeo does not yet have
+       support for reprojecting and windowed reading of HDF5 files. This data loader
+       requires you to first convert all files from HDF5 to GeoTIFF using something like
+       `this script
+       <https://gist.github.com/adamjstewart/7f5324a6a339c20e778f39536402fb4a>`__.
+
     .. versionadded:: 0.6
     """
 
