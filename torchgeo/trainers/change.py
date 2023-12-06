@@ -191,9 +191,8 @@ class ChangeDetectionTask(BaseTask):
             else torch.stack((image1, image2), dim=1)
         )
         y_hat = self(x)
+        y = y.long()
 
-        if y_hat.ndim != y.ndim:
-            y = y.unsqueeze(dim=1)
         loss: Tensor = self.criterion(y_hat, y)
         self.log(f"{stage}_loss", loss)
 
