@@ -3,17 +3,23 @@ datamodules:
 - changed-files:
   - any-glob-to-any-file: "torchgeo/datamodules/**"
 datasets:
-  - changed-files: ["torchgeo/datasets/**"]
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/datasets/**"
 losses:
-  - changed-files: "torchgeo/losses/**"
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/losses/**"
 models:
-  - changed-files: "torchgeo/models/**"
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/models/**"
 samplers:
-  - changed-files: "torchgeo/samplers/**"
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/samplers/**"
 trainers:
-  - changed-files: "torchgeo/trainers/**"
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/trainers/**"
 transforms:
-  - changed-files: "torchgeo/transforms/**"
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/transforms/**"
 
 # Other
 dependencies:
