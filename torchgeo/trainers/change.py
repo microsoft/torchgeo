@@ -185,11 +185,10 @@ class ChangeDetectionTask(BaseTask):
     def _shared_step(self, batch: Any, batch_idx: int, stage: str) -> Tensor:
         model: str = self.hparams["model"]
         image1, image2, y = batch["image1"], batch["image2"], batch["mask"].float()
-        x = (
-            torch.cat([image1, image2], dim=1)
-            if model == "unet"
-            else torch.stack((image1, image2), dim=1)
-        )
+        if model == "unet":
+            x = torch.cat([image1, image2], dim=1)
+        elif model in ["fcsiamdiff", "fcsiamconc"]:
+            x = torch.stack((image1, image2), dim=1)
         y_hat = self(x)
         y = y.long()
 
@@ -232,11 +231,7 @@ class ChangeDetectionTask(BaseTask):
         image2 = batch["image2"]
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
-            y_hat: Tensor = self(x).softmax(dim=1)
-            return y_hat
         elif model in ["fcsiamdiff", "fcsiamconc"]:
             x = torch.stack((image1, image2), dim=1)
-            y_hat: Tensor = self(x).softmax(dim=1)
-            return y_hat
-        else:
-            raise ValueError(f"Model type '{model}' is not valid.")
+        y_hat: Tensor = self(x).softmax(dim=1)
+        return y_hat
