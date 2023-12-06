@@ -1,6 +1,7 @@
 # TorchGeo modules
 datamodules:
-  - changed-files: ["torchgeo/datamodules/**"]
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/datamodules/**"
 datasets:
   - changed-files: ["torchgeo/datasets/**"]
 losses:
