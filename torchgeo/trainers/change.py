@@ -23,7 +23,7 @@ from .base import BaseTask
 
 
 class ChangeDetectionTask(BaseTask):
-    """Change Detection (Binary)."""
+    """Change Detection."""
 
     def __init__(
         self,
