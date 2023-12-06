@@ -28,7 +28,7 @@ class ChangeDetectionTask(BaseTask):
     def __init__(
         self,
         model: str = "unet",
-        backbone: str = "resnet18",
+        backbone: str = "resnet50",
         weights: Optional[Union[WeightsEnum, str, bool]] = None,
         in_channels: int = 3,
         num_classes: int = 2,
