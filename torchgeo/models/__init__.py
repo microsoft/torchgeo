@@ -10,6 +10,7 @@ from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
 from .rcf import RCF
 from .resnet import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50
+from .swin import Swin_V2_B_Weights, swin_v2_b
 from .vit import ViTSmall16_Weights, vit_small_patch16_224
 
 __all__ = (
@@ -24,10 +25,12 @@ __all__ = (
     "RCF",
     "resnet18",
     "resnet50",
+    "swin_v2_b",
     "vit_small_patch16_224",
     # weights
     "ResNet50_Weights",
     "ResNet18_Weights",
+    "Swin_V2_B_Weights",
     "ViTSmall16_Weights",
     # utilities
     "get_model",

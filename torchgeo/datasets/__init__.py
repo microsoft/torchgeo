@@ -11,6 +11,7 @@ from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
+from .chabud import ChaBuD
 from .chesapeake import (
     Chesapeake,
     Chesapeake7,
@@ -181,6 +182,7 @@ __all__ = (
     "BeninSmallHolderCashews",
     "BigEarthNet",
     "BioMassters",
+    "ChaBuD",
     "CloudCoverDetection",
     "COWC",
     "COWCCounting",

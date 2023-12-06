@@ -184,6 +184,11 @@ BioMassters
 
 .. autoclass:: BioMassters
 
+ChaBuD
+^^^^^^
+
+.. autoclass:: ChaBuD
+
 Cloud Cover Detection
 ^^^^^^^^^^^^^^^^^^^^^
 
