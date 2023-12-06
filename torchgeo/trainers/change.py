@@ -7,7 +7,6 @@ import os
 import warnings
 from typing import Any, Optional, Union
 
-import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
@@ -16,7 +15,6 @@ from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
 from torchvision.models._api import WeightsEnum
 
-from ..datasets.utils import unbind_samples
 from ..models import FCSiamConc, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
