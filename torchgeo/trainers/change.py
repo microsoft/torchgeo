@@ -33,6 +33,7 @@ class ChangeDetectionTask(BaseTask):
         in_channels: int = 3,
         num_classes: int = 2,
         class_weights: Optional[Tensor] = None,
+        loss: str = "ce",
         ignore_index: Optional[int] = None,
         lr: float = 1e-3,
         patience: int = 10,
@@ -55,6 +56,8 @@ class ChangeDetectionTask(BaseTask):
             num_classes: Number of prediction classes.
             class_weights: Optional rescaling weight given to each
                 class and used with 'ce' loss.
+            loss: Name of the loss function, currently supports
+                'ce', 'jaccard' or 'focal' loss.
             ignore_index: Optional integer class index to ignore in the loss and
                 metrics.
             lr: Learning rate for optimizer.
@@ -66,8 +69,14 @@ class ChangeDetectionTask(BaseTask):
 
         .. versionadded: 0.6
         """
+        if ignore_index is not None and loss == "jaccard":
+            warnings.warn(
+                "ignore_index has no effect on training when loss='jaccard'",
+                UserWarning,
+            )
 
-        super().__init__()
+        self.weights = weights
+        super().__init__(ignore="weights")
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion.
@@ -75,13 +84,30 @@ class ChangeDetectionTask(BaseTask):
         Raises:
             ValueError: If *loss* is invalid.
         """
+        loss: str = self.hparams["loss"]
         ignore_index = self.hparams["ignore_index"]
-        self.criterion = nn.CrossEntropyLoss(
-            ignore_index=ignore_value, weight=self.hparams["class_weights"]
-        )
+        if loss == "ce":
+            ignore_value = -1000 if ignore_index is None else ignore_index
+            self.criterion = nn.CrossEntropyLoss(
+                ignore_index=ignore_value, weight=self.hparams["class_weights"]
+            )
+        elif loss == "jaccard":
+            self.criterion = smp.losses.JaccardLoss(
+                mode="multiclass", classes=self.hparams["num_classes"]
+            )
+        elif loss == "focal":
+            self.criterion = smp.losses.FocalLoss(
+                "multiclass", ignore_index=ignore_index, normalized=True
+            )
+        else:
+            raise ValueError(
+                f"Loss type '{loss}' is not valid. "
+                "Currently, supports 'ce', 'jaccard' or 'focal' loss."
+            )
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
+        num_classes: int = self.hparams["num_classes"]
         ignore_index: Optional[int] = self.hparams["ignore_index"]
         metrics = MetricCollection(
             [
@@ -207,15 +233,11 @@ class ChangeDetectionTask(BaseTask):
         image2 = batch["image2"]
         if model == "unet":
             x = torch.cat([image1, image2], dim=1)
-            y_hat: Tensor = self(x).softmax(
-                dim=1
-            )
+            y_hat: Tensor = self(x).softmax(dim=1)
             return y_hat
         elif model in ["fcsiamdiff", "fcsiamconc"]:
             x = torch.stack((image1, image2), dim=1)
-            y_hat: Tensor = self(x).softmax(
-                dim=1
-            )
+            y_hat: Tensor = self(x).softmax(dim=1)
             return y_hat
         else:
             raise ValueError(f"Model type '{model}' is not valid.")
