@@ -28,7 +28,7 @@ class ChangeDetectionTask(BaseTask):
     def __init__(
         self,
         model: str = "unet",
-        backbone: str = "resnet50",
+        backbone: str = "resnet18",
         weights: Optional[Union[WeightsEnum, str, bool]] = None,
         in_channels: int = 3,
         num_classes: int = 2,
@@ -216,7 +216,7 @@ class ChangeDetectionTask(BaseTask):
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
-        """Compute the predicted class probabilities.
+        """Compute the predicted class.
 
         Args:
             batch: The output of your DataLoader.
@@ -224,7 +224,7 @@ class ChangeDetectionTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
 
         Returns:
-            Output predicted probabilities.
+            Output predicted class.
         """
         model: str = self.hparams["model"]
         image1 = batch["image1"]
@@ -233,5 +233,6 @@ class ChangeDetectionTask(BaseTask):
             x = torch.cat([image1, image2], dim=1)
         elif model in ["fcsiamdiff", "fcsiamconc"]:
             x = torch.stack((image1, image2), dim=1)
-        y_hat: Tensor = self(x).softmax(dim=1)
-        return y_hat
+        y_hat: Tensor = self(x)
+        y_hat_hard = y_hat.argmax(dim=1)
+        return y_hat_hard
