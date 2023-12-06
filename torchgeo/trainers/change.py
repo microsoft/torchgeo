@@ -5,14 +5,19 @@
 
 import os
 import warnings
-from typing import Any, Optional, Union
+from typing import Any, List, Optional, Union
 
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 from torch import Tensor
 from torchmetrics import MetricCollection
-from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
+from torchmetrics.classification import (
+    MulticlassAccuracy,
+    MulticlassF1Score,
+    MulticlassJaccardIndex,
+)
+from torchmetrics.wrappers import ClasswiseWrapper
 from torchvision.models._api import WeightsEnum
 
 from ..models import FCSiamConc, FCSiamDiff, get_weight
@@ -31,6 +36,7 @@ class ChangeDetectionTask(BaseTask):
         in_channels: int = 3,
         num_classes: int = 2,
         class_weights: Optional[Tensor] = None,
+        labels: Optional[List[str]] = None,
         loss: str = "ce",
         ignore_index: Optional[int] = None,
         lr: float = 1e-3,
@@ -54,6 +60,8 @@ class ChangeDetectionTask(BaseTask):
             num_classes: Number of prediction classes.
             class_weights: Optional rescaling weight given to each
                 class and used with 'ce' loss.
+            labels: Optional labels to use for classes in metrics
+                e.g. ["background", "change"]
             loss: Name of the loss function, currently supports
                 'ce', 'jaccard' or 'focal' loss.
             ignore_index: Optional integer class index to ignore in the loss and
@@ -107,18 +115,28 @@ class ChangeDetectionTask(BaseTask):
         """Initialize the performance metrics."""
         num_classes: int = self.hparams["num_classes"]
         ignore_index: Optional[int] = self.hparams["ignore_index"]
+        labels: Optional[List[str]] = self.hparams["labels"]
         metrics = MetricCollection(
-            [
-                MulticlassAccuracy(
-                    num_classes=num_classes,
-                    ignore_index=ignore_index,
-                    multidim_average="global",
-                    average="micro",
+            {
+                "accuracy": ClasswiseWrapper(
+                    MulticlassAccuracy(
+                        num_classes=num_classes, ignore_index=ignore_index, average=None
+                    ),
+                    labels,
                 ),
-                MulticlassJaccardIndex(
-                    num_classes=num_classes, ignore_index=ignore_index, average="micro"
+                "jaccard": ClasswiseWrapper(
+                    MulticlassJaccardIndex(
+                        num_classes=num_classes, ignore_index=ignore_index, average=None
+                    ),
+                    labels,
                 ),
-            ]
+                "f1": ClasswiseWrapper(
+                    MulticlassF1Score(
+                        num_classes=num_classes, ignore_index=ignore_index, average=None
+                    ),
+                    labels,
+                ),
+            }
         )
         self.train_metrics = metrics.clone(prefix="train_")
         self.val_metrics = metrics.clone(prefix="val_")
