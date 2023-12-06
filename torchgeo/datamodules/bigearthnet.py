@@ -17,6 +17,8 @@ class BigEarthNetDataModule(NonGeoDataModule):
     Uses the train/val/test splits from the dataset.
     """
 
+    # TEST TEST TEST
+
     # (VV, VH, B01, B02, B03, B04, B05, B06, B07, B08, B8A, B09, B11, B12)
     # min/max band statistics computed on 100k random samples
     mins_raw = torch.tensor(
