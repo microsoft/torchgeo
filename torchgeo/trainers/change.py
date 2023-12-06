@@ -134,7 +134,7 @@ class ChangeDetectionTask(BaseTask):
         """
         model: str = self.hparams["model"]
         backbone: str = self.hparams["backbone"]
-        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        weights = self.weights
         in_channels: int = self.hparams["in_channels"]
         num_classes: int = self.hparams["num_classes"]
 
