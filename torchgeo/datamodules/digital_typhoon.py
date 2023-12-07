@@ -5,8 +5,6 @@
 
 from typing import Any, Union
 
-from torch.utils.data import Dataset
-
 from ..datasets import DigitalTyphoonAnalysis
 from .geo import NonGeoDataModule
 from .utils import group_shuffle_split
@@ -43,8 +41,8 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
         self.split_by = split_by
 
     def split_dataset(
-        self, dataset: Dataset
-    ) -> tuple[list[dict[str, Union[str, list]]]]:
+        self, dataset: DigitalTyphoonAnalysis
+    ) -> tuple[list[int, dict[str, Union[str, list[int]]]]]:
         """Split dataset into two parts.
 
         Args:

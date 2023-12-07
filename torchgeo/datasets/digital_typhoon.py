@@ -279,6 +279,15 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         """
 
         def load_image_tensor(id: str, filepath: str) -> Tensor:
+            """Load a single image tensor from a h5 file.
+
+            Args:
+                id: typhoon id
+                filepath: path to the h5 file
+
+            Returns:
+                image tensor
+            """
             full_path = os.path.join(self.root, self.data_root, "image", id, filepath)
             with h5py.File(full_path, "r") as h5f:
                 # tensor with added channel dimension
