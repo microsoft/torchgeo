@@ -9,7 +9,6 @@ import tarfile
 from collections.abc import Sequence
 from typing import Any, Callable, Optional
 
-import h5py
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch
@@ -119,6 +118,12 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             RuntimeError: if ``download=False`` and data is not found, or checksums
                 don't match
         """
+        try:
+            import h5py  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "h5py is not installed and is required to use this dataset"
+            )
         self.root = root
         self.transforms = transforms
         self.download = download
@@ -288,6 +293,8 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             Returns:
                 image tensor
             """
+            import h5py
+
             full_path = os.path.join(self.root, self.data_root, "image", id, filepath)
             with h5py.File(full_path, "r") as h5f:
                 # tensor with added channel dimension
