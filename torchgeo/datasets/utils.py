@@ -95,7 +95,7 @@ class DatasetNotFoundError(FileNotFoundError):
 class RGBBandsMissingError(ValueError):
     """Raised when a dataset is missing RGB bands for plotting.
 
-    .. versionadded:: 0.6.0
+    .. versionadded:: 0.6
     """
 
     def __init__(self) -> None:
