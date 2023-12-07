@@ -22,6 +22,7 @@ from torch import Tensor
 from .geo import NonGeoDataset
 from .utils import (
     DatasetNotFoundError,
+    RGBBandsMissingError,
     download_url,
     extract_archive,
     percentile_normalization,
@@ -419,10 +420,10 @@ class SeasoNet(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: If *bands* does not contain all RGB bands.
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         if "10m_RGB" not in self.bands:
-            raise ValueError("Dataset does not contain RGB bands")
+            raise RGBBandsMissingError()
 
         ncols = self.concat_seasons + 1
 

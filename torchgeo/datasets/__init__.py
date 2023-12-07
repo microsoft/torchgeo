@@ -119,6 +119,7 @@ from .usavars import USAVars
 from .utils import (
     BoundingBox,
     DatasetNotFoundError,
+    RGBBandsMissingError,
     concat_samples,
     merge_samples,
     stack_samples,
@@ -260,4 +261,5 @@ __all__ = (
     "time_series_split",
     # Errors
     "DatasetNotFoundError",
+    "RGBBandsMissingError",
 )

@@ -13,7 +13,11 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import BeninSmallHolderCashews, DatasetNotFoundError
+from torchgeo.datasets import (
+    BeninSmallHolderCashews,
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+)
 
 
 class Collection:
@@ -95,6 +99,8 @@ class TestBeninSmallHolderCashews:
 
     def test_failed_plot(self, dataset: BeninSmallHolderCashews) -> None:
         single_band_dataset = BeninSmallHolderCashews(root=dataset.root, bands=("B01",))
-        with pytest.raises(ValueError, match="Dataset doesn't contain"):
+        with pytest.raises(
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
+        ):
             x = single_band_dataset[0].copy()
             single_band_dataset.plot(x, suptitle="Test")

@@ -11,11 +11,12 @@ import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
+from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision.models._api import WeightsEnum
 
-from ..datasets import unbind_samples
+from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import FCN, get_weight
 from . import utils
 from .base import BaseTask
@@ -191,24 +192,27 @@ class RegressionTask(BaseTask):
             and hasattr(self.logger, "experiment")
             and hasattr(self.logger.experiment, "add_figure")
         ):
+            datamodule = self.trainer.datamodule
+            if self.target_key == "mask":
+                y = y.squeeze(dim=1)
+                y_hat = y_hat.squeeze(dim=1)
+            batch["prediction"] = y_hat
+            for key in ["image", self.target_key, "prediction"]:
+                batch[key] = batch[key].cpu()
+            sample = unbind_samples(batch)[0]
+
+            fig: Optional[Figure] = None
             try:
-                datamodule = self.trainer.datamodule
-                if self.target_key == "mask":
-                    y = y.squeeze(dim=1)
-                    y_hat = y_hat.squeeze(dim=1)
-                batch["prediction"] = y_hat
-                for key in ["image", self.target_key, "prediction"]:
-                    batch[key] = batch[key].cpu()
-                sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
-                if fig:
-                    summary_writer = self.logger.experiment
-                    summary_writer.add_figure(
-                        f"image/{batch_idx}", fig, global_step=self.global_step
-                    )
-                    plt.close()
-            except ValueError:
+            except RGBBandsMissingError:
                 pass
+
+            if fig:
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=self.global_step
+                )
+                plt.close()
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.

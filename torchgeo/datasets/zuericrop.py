@@ -13,7 +13,12 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_url, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    download_url,
+    percentile_normalization,
+)
 
 
 class ZueriCrop(NonGeoDataset):
@@ -272,6 +277,9 @@ class ZueriCrop(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
 
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+
         .. versionadded:: 0.2
         """
         rgb_indices = []
@@ -279,7 +287,7 @@ class ZueriCrop(NonGeoDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         ncols = 2
         image, mask = sample["image"][time_step, rgb_indices], sample["mask"]
