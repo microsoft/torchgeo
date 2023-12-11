@@ -67,7 +67,7 @@ NAIP
 ----
 
 .. csv-table::
-   :widths: 45 10 10 10
+   :widths: 45 10 10 10 10
    :header-rows: 1
    :align: center
    :file: naip_pretrained_weights.csv
@@ -77,7 +77,7 @@ Landsat
 -------
 
 .. csv-table::
-   :widths: 65 10 10 10 10 10 10 10 10
+   :widths: 65 10 10 10 10 10 10 10 10 10
    :header-rows: 1
    :align: center
    :file: landsat_pretrained_weights.csv
@@ -87,7 +87,7 @@ Sentinel-1
 ----------
 
 .. csv-table::
-   :widths: 45 10 10 10
+   :widths: 45 10 10 10 10
    :header-rows: 1
    :align: center
    :file: sentinel1_pretrained_weights.csv
@@ -97,7 +97,7 @@ Sentinel-2
 ----------
 
 .. csv-table::
-   :widths: 45 10 10 10 15 10 10 10
+   :widths: 45 10 10 10 10 15 10 10 10
    :header-rows: 1
    :align: center
    :file: sentinel2_pretrained_weights.csv
@@ -106,7 +106,7 @@ Other Data Sources
 ------------------
 
 .. csv-table::
-   :widths: 45 10 10 10
+   :widths: 45 10 10 10 1
    :header-rows: 1
    :align: center
    :file: misc_pretrained_weights.csv

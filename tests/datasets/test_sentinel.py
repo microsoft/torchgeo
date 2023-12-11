@@ -15,6 +15,7 @@ from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
+    RGBBandsMissingError,
     Sentinel1,
     Sentinel2,
     UnionDataset,
@@ -137,7 +138,7 @@ class TestSentinel2:
         ds = Sentinel2(dataset.paths, res=dataset.res, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
-            ValueError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             ds.plot(x)
 

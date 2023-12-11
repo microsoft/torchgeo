@@ -17,6 +17,7 @@ from torchgeo.datasets import (
     DatasetNotFoundError,
     IntersectionDataset,
     Landsat8,
+    RGBBandsMissingError,
     UnionDataset,
 )
 
@@ -61,7 +62,7 @@ class TestLandsat8:
         ds = Landsat8(dataset.paths, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
-            ValueError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             ds.plot(x)
 
