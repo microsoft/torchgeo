@@ -223,10 +223,10 @@ class LEVIRCDPlus(NonGeoDataset):
         """
         ncols = 3
 
-        image1 = sample["image1"].permute(1, 2, 0)
+        image1 = sample["image1"].permute(1, 2, 0).numpy()
         image1 = percentile_normalization(image1, axis=(0, 1))
 
-        image2 = sample["image2"].permute(1, 2, 0)
+        image2 = sample["image2"].permute(1, 2, 0).numpy()
         image2 = percentile_normalization(image2, axis=(0, 1))
 
         if "prediction" in sample:
