@@ -25,6 +25,16 @@ from . import utils
 from .base import BaseTask
 
 
+class FocalJaccardLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.ce_loss = smp.losses.FocalLoss(mode="multiclass", normalized=True)
+        self.jaccard_loss = smp.losses.JaccardLoss(mode="multiclass")
+
+    def forward(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+        return self.ce_loss(preds, targets) + self.jaccard_loss(preds, targets)
+
+
 class ChangeDetectionTask(BaseTask):
     """Change Detection."""
 
@@ -37,7 +47,7 @@ class ChangeDetectionTask(BaseTask):
         num_classes: int = 2,
         class_weights: Optional[Tensor] = None,
         labels: Optional[List[str]] = None,
-        loss: str = "ce",
+        loss: str = "focal-jaccard",
         ignore_index: Optional[int] = None,
         lr: float = 1e-3,
         patience: int = 10,
@@ -63,7 +73,7 @@ class ChangeDetectionTask(BaseTask):
             labels: Optional labels to use for classes in metrics
                 e.g. ["background", "change"]
             loss: Name of the loss function, currently supports
-                'ce', 'jaccard' or 'focal' loss.
+                'ce', 'jaccard', 'focal' or 'focal-jaccard' loss.
             ignore_index: Optional integer class index to ignore in the loss and
                 metrics.
             lr: Learning rate for optimizer.
@@ -105,6 +115,8 @@ class ChangeDetectionTask(BaseTask):
             self.criterion = smp.losses.FocalLoss(
                 "multiclass", ignore_index=ignore_index, normalized=True
             )
+        elif loss == "focal-jaccard":
+            self.criterion = FocalJaccardLoss()
         else:
             raise ValueError(
                 f"Loss type '{loss}' is not valid. "
