@@ -28,7 +28,17 @@ from .base import BaseTask
 class FocalJaccardLoss(nn.Module):
     def __init__(self):
         super().__init__()
-        self.ce_loss = smp.losses.FocalLoss(mode="multiclass", normalized=True)
+        self.focal_loss = smp.losses.FocalLoss(mode="multiclass", normalized=True)
+        self.jaccard_loss = smp.losses.JaccardLoss(mode="multiclass")
+
+    def forward(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+        return self.focal_loss(preds, targets) + self.jaccard_loss(preds, targets)
+
+
+class XEntJaccardLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.ce_loss = nn.CrossEntropyLoss()
         self.jaccard_loss = smp.losses.JaccardLoss(mode="multiclass")
 
     def forward(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
@@ -47,7 +57,7 @@ class ChangeDetectionTask(BaseTask):
         num_classes: int = 2,
         class_weights: Optional[Tensor] = None,
         labels: Optional[List[str]] = None,
-        loss: str = "focal-jaccard",
+        loss: str = "ce-jaccard",
         ignore_index: Optional[int] = None,
         lr: float = 1e-3,
         patience: int = 10,
@@ -117,6 +127,8 @@ class ChangeDetectionTask(BaseTask):
             )
         elif loss == "focal-jaccard":
             self.criterion = FocalJaccardLoss()
+        elif loss == "ce-jaccard":
+            self.criterion = XEntJaccardLoss()
         else:
             raise ValueError(
                 f"Loss type '{loss}' is not valid. "
