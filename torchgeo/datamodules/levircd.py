@@ -49,9 +49,17 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
-        self.aug = AugmentationSequential(
+        self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
+            data_keys=["image1", "image2", "mask"],
+        )
+        self.val_aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            data_keys=["image1", "image2", "mask"],
+        )
+        self.test_aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=["image1", "image2", "mask"],
         )
 
