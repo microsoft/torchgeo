@@ -15,7 +15,11 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_and_extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    download_and_extract_archive,
+    percentile_normalization,
+)
 
 
 class LEVIRCDPlus(NonGeoDataset):
@@ -219,23 +223,13 @@ class LEVIRCDPlus(NonGeoDataset):
         """
         ncols = 3
 
-        def get_rgb(img: Tensor) -> "np.typing.NDArray[np.uint8]":
-            rgb_img = img.permute(1, 2, 0).float().numpy()
-            per02 = np.percentile(rgb_img, 2)
-            per98 = np.percentile(rgb_img, 98)
-            delta = per98 - per02
-            epsilon = 1e-7
-            norm_img: "np.typing.NDArray[np.uint8]" = (
-                np.clip((rgb_img - per02) / (delta + epsilon), 0, 1) * 255
-            ).astype(np.uint8)
-            return norm_img
+        image1 = sample["image1"].permute(1, 2, 0)
+        image1 = percentile_normalization(image1, axis=(0, 1))
 
-        image1 = get_rgb(sample["image1"])
-        image2 = get_rgb(sample["image2"])
-        mask = sample["mask"].numpy()
+        image2 = sample["image2"].permute(1, 2, 0)
+        image2 = percentile_normalization(image2, axis=(0, 1))
 
         if "prediction" in sample:
-            prediction = sample["prediction"]
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
@@ -244,11 +238,11 @@ class LEVIRCDPlus(NonGeoDataset):
         axs[0].axis("off")
         axs[1].imshow(image2)
         axs[1].axis("off")
-        axs[2].imshow(mask, cmap="gray")
+        axs[2].imshow(sample["mask"], cmap="gray", interpolation="none")
         axs[2].axis("off")
 
         if "prediction" in sample:
-            axs[3].imshow(prediction)
+            axs[3].imshow(sample["prediction"], cmap="gray", interpolation="none")
             axs[3].axis("off")
             if show_titles:
                 axs[3].set_title("Prediction")
