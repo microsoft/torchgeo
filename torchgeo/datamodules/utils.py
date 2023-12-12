@@ -23,7 +23,10 @@ class MisconfigurationException(Exception):
 
 
 class AugPipe(Module):
-    """Pipeline for applying augmentations sequentially on select data keys."""
+    """Pipeline for applying augmentations sequentially on select data keys.
+
+    .. versionadded:: 0.6
+    """
 
     def __init__(
         self, augs: Callable[[dict[str, Any]], dict[str, Any]], batch_size: int
@@ -74,13 +77,15 @@ class AugPipe(Module):
 
 
 def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
-    """Custom collate fn for object detection & instance segmentation.
+    """Custom collate fn for object detection and instance segmentation.
 
     Args:
         batch: list of sample dicts return by dataset
 
     Returns:
         batch dict output
+
+    .. versionadded:: 0.6
     """
     output: dict[str, Any] = {}
     output["image"] = [sample["image"] for sample in batch]
