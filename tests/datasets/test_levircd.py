@@ -89,7 +89,7 @@ class TestLEVIRCDPlus:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LEVIRCDPlus:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
-        md5 = "1adf156f628aa32fb2e8fe6cada16c04"
+        md5 = "0ccca34310bfe7096dadfbf05b0d180f"
         monkeypatch.setattr(LEVIRCDPlus, "md5", md5)
         url = os.path.join("tests", "data", "levircd", "levircdplus", "LEVIR-CD+.zip")
         monkeypatch.setattr(LEVIRCDPlus, "url", url)
