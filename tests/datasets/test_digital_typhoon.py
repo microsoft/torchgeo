@@ -41,8 +41,8 @@ class TestTropicalCyclone:
         monkeypatch.setattr(DigitalTyphoonAnalysis, "url", url)
 
         md5sums = {
-            "aa": "5b248c7a412152fc7831d0c9b9377eba",
-            "ab": "5b248c7a412152fc7831d0c9b9377eba",
+            "aa": "5b2fed45d9719e77a482ccd4ae1b02e5",
+            "ab": "5b2fed45d9719e77a482ccd4ae1b02e5",
         }
         monkeypatch.setattr(DigitalTyphoonAnalysis, "md5sums", md5sums)
         root = str(tmp_path)

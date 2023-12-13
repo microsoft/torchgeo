@@ -74,7 +74,7 @@ for typhoon_id in range(NUM_TYHOON_IDS):
             "short30": np.random.randint(0, 100, NUM_IMAGES_PER_ID),
             "landfall": np.random.randint(0, 2, NUM_IMAGES_PER_ID),
             "intp": np.random.randint(0, 2, NUM_IMAGES_PER_ID),
-            "file_1": [f"{idx}.hf" for idx in range(1, NUM_IMAGES_PER_ID + 1)],
+            "file_1": [f"{idx}.h5" for idx in range(1, NUM_IMAGES_PER_ID + 1)],
             "mask_1": [
                 "mask_" + str(i) for i in np.random.randint(1, 100, NUM_IMAGES_PER_ID)
             ],
