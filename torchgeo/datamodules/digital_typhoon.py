@@ -42,7 +42,7 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
 
     def split_dataset(
         self, dataset: DigitalTyphoonAnalysis
-    ) -> tuple[list[int, dict[str, Union[str, list[int]]]]]:
+    ) -> tuple[list[dict[str, Union[str, list[int]]]], ...]:
         """Split dataset into two parts.
 
         Args:
@@ -67,13 +67,9 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
                 [x[1]["id"] for x in sequences], train_size=0.8, random_state=0
             )
 
-        # select train and val sequences
-        train_sequences = [sequences[i] for i in train_indices]
-        val_sequences = [sequences[i] for i in val_indices]
-
-        # remove the enumeration
-        train_sequences = [seq[1] for seq in train_sequences]
-        val_sequences = [seq[1] for seq in val_sequences]
+        # select train and val sequences and remove enumeration
+        train_sequences = [sequences[i][1] for i in train_indices]
+        val_sequences = [sequences[i][1] for i in val_indices]
 
         return train_sequences, val_sequences
 

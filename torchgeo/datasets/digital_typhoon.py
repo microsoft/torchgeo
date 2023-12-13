@@ -7,7 +7,7 @@ import glob
 import os
 import tarfile
 from collections.abc import Sequence
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -219,7 +219,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
                 if set(subseq["seq_id"]).issubset(df["seq_id"])
             ]
 
-        self.sample_sequences: list[dict[str, list[int]]] = [
+        self.sample_sequences: list[dict[str, Union[str, list[int]]]] = [
             item
             for sublist in self.aux_df.groupby("id")
             .apply(get_subsequences, k=self.sequence_length)
