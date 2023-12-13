@@ -39,7 +39,7 @@ for typhoon_id in range(NUM_TYHOON_IDS):
     # Create dummy .hf files
     image_paths_per_typhoon = []
     for image_id in range(NUM_IMAGES_PER_ID):
-        image_file_name = f"{image_id}.hf"
+        image_file_name = f"{image_id}.h5"
         with h5py.File(
             os.path.join(root, "image", str(typhoon_id), image_file_name), "w"
         ) as hf:

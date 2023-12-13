@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import builtins
 import os
 import shutil
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -39,8 +41,8 @@ class TestTropicalCyclone:
         monkeypatch.setattr(DigitalTyphoonAnalysis, "url", url)
 
         md5sums = {
-            "aa": "1eca3894266c3eb1264a6ef00039a194",
-            "ab": "1eca3894266c3eb1264a6ef00039a194",
+            "aa": "5b248c7a412152fc7831d0c9b9377eba",
+            "ab": "5b248c7a412152fc7831d0c9b9377eba",
         }
         monkeypatch.setattr(DigitalTyphoonAnalysis, "md5sums", md5sums)
         root = str(tmp_path)
@@ -55,6 +57,17 @@ class TestTropicalCyclone:
             download=True,
             checksum=True,
         )
+
+    @pytest.fixture
+    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
+        import_orig = builtins.__import__
+
+        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
+            if name == "h5py":
+                raise ImportError()
+            return import_orig(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", mocked_import)
 
     def test_len(self, dataset: DigitalTyphoonAnalysis) -> None:
         assert len(dataset) == 10
@@ -90,3 +103,12 @@ class TestTropicalCyclone:
         sample["prediction"] = sample["label"]
         dataset.plot(sample)
         plt.close()
+
+    def test_mock_missing_module(
+        self, dataset: DigitalTyphoonAnalysis, mock_missing_module: None
+    ) -> None:
+        with pytest.raises(
+            ImportError,
+            match="h5py is not installed and is required to use this dataset",
+        ):
+            DigitalTyphoonAnalysis(dataset.root)
