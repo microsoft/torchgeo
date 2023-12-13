@@ -289,12 +289,13 @@ class LEVIRCD(LEVIRCDBase):
             print("Files already downloaded and verified")
             return
 
-        download_and_extract_archive(
-            self.splits[self.split]["url"],
-            self.root,
-            filename=self.splits[self.split]["filename"],
-            md5=self.splits[self.split]["md5"] if self.checksum else None,
-        )
+        for split in self.splits:
+            download_and_extract_archive(
+                self.splits[split]["url"],
+                self.root,
+                filename=self.splits[split]["filename"],
+                md5=self.splits[split]["md5"] if self.checksum else None,
+            )
 
 
 class LEVIRCDPlus(LEVIRCDBase):
