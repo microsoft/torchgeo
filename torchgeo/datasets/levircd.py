@@ -6,7 +6,7 @@
 import abc
 import glob
 import os
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,6 +28,9 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
 
     .. versionadded:: 0.6
     """
+
+    splits: Union[list[str], dict[str, dict[str, str]]]
+    directories = ["A", "B", "label"]
 
     def __init__(
         self,
@@ -182,6 +185,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
 
         return fig
 
+    @abc.abstractmethod
     def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
@@ -193,6 +197,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
             list of dicts containing paths for each pair of image1, image2, mask
         """
 
+    @abc.abstractmethod
     def _check_integrity(self) -> bool:
         """Checks the integrity of the dataset structure.
 
@@ -200,6 +205,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
             True if the dataset directories and split files are found, else False
         """
 
+    @abc.abstractmethod
     def _download(self) -> None:
         """Download the dataset and extract it."""
 
@@ -234,7 +240,6 @@ class LEVIRCD(LEVIRCDBase):
     .. versionadded:: 0.6
     """
 
-    directories = ["A", "B", "label"]
     splits = {
         "train": {
             "url": "https://drive.google.com/file/d/18GuoCuBn48oZKAlEo-LrNwABrFhVALU-",
