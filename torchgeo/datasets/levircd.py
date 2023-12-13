@@ -230,6 +230,8 @@ class LEVIRCD(LEVIRCDBase):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.3390/rs12101662
+
+    .. versionadded:: 0.6
     """
 
     directories = ["A", "B", "label"]
