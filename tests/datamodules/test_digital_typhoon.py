@@ -3,12 +3,11 @@
 
 
 import os
-from typing import Union, cast
 
 import pytest
 
 from torchgeo.datamodules import DigitalTyphoonAnalysisDataModule
-from torchgeo.datasets import DigitalTyphoonAnalysis
+from torchgeo.datasets.digital_typhoon import DigitalTyphoonAnalysis, SampleSequenceDict
 
 
 class TestDigitalTyphoonAnalysisDataModule:
@@ -37,14 +36,13 @@ class TestDigitalTyphoonAnalysisDataModule:
         if split_by == "time":
 
             def find_max_time_per_id(
-                split_sequences: list[dict[str, Union[str, list[int]]]]
+                split_sequences: list[SampleSequenceDict],
             ) -> dict[str, int]:
                 # Find the maximum value of each id in train_sequences
                 max_values: dict[str, int] = {}
                 for seq in split_sequences:
                     id: str = str(seq["id"])
-                    seq_id_list = cast(list[int], seq["seq_id"])
-                    value: int = max(seq_id_list)
+                    value: int = max(seq["seq_id"])
                     if id not in max_values or value > max_values[id]:
                         max_values[id] = value
                 return max_values

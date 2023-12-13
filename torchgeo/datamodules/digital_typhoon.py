@@ -3,9 +3,10 @@
 
 """Digital Typhoon Data Module."""
 
-from typing import Any, Union
+from typing import Any
 
 from ..datasets import DigitalTyphoonAnalysis
+from ..datasets.digital_typhoon import SampleSequenceDict
 from .geo import NonGeoDataModule
 from .utils import group_shuffle_split
 
@@ -42,7 +43,7 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
 
     def split_dataset(
         self, dataset: DigitalTyphoonAnalysis
-    ) -> tuple[list[dict[str, Union[str, list[int]]]], ...]:
+    ) -> tuple[list[SampleSequenceDict], ...]:
         """Split dataset into two parts.
 
         Args:

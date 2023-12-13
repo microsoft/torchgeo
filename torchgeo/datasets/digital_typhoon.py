@@ -7,7 +7,7 @@ import glob
 import os
 import tarfile
 from collections.abc import Sequence
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional, TypedDict
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -17,6 +17,13 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import DatasetNotFoundError, download_url, percentile_normalization
+
+
+class SampleSequenceDict(TypedDict):
+    """Sample sequence dictionary."""
+
+    id: str
+    seq_id: list[int]
 
 
 class DigitalTyphoonAnalysis(NonGeoDataset):
@@ -219,7 +226,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
                 if set(subseq["seq_id"]).issubset(df["seq_id"])
             ]
 
-        self.sample_sequences: list[dict[str, Union[str, list[int]]]] = [
+        self.sample_sequences: list[SampleSequenceDict] = [
             item
             for sublist in self.aux_df.groupby("id")
             .apply(get_subsequences, k=self.sequence_length)
