@@ -188,7 +188,7 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
     def __init__(
         self,
         window_size: Union[int, tuple[int, int]],
-        stride: Optional[Union[int, tuple[int, int]]] = 1,
+        stride: Optional[Union[int, tuple[int, int]]] = None,
         padding: Optional[Union[int, tuple[int, int]]] = 0,
         keepdim: bool = True,
     ) -> None:
@@ -196,15 +196,15 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
 
         Args:
             window_size: desired output size (out_h, out_w) of the crop
-            stride: stride of window to extract patches
-                (nonoverlapping windows occur when stride=window_size)
+            stride: stride of window to extract patches. Defaults to non-overlapping
+                patches (stride=window_size)
             padding: zero padding added to the height and width dimensions
             keepdim: Combine the patch dimension into the batch dimension
         """
         super().__init__()
         self.flags = {
             "window_size": window_size,
-            "stride": stride,
+            "stride": stride if stride is not None else window_size,
             "padding": padding,
             "keepdim": keepdim,
         }
