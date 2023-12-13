@@ -86,8 +86,6 @@ class TestLEVIRCDPlusDataModule:
         batch = next(iter(datamodule.val_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
         if datamodule.val_split_pct > 0.0:
-            for k, v in batch.items():
-                print(k, v.shape, v.dtype)
             assert (
                 batch["image1"].shape[-2:] == batch["mask"].shape[-2:] == (1024, 1024)
             )
