@@ -57,7 +57,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
       (e.g. Landsat and CDL)
     * Combine datasets for multiple image sources for multimodal learning or data fusion
       (e.g. Landsat and Sentinel)
-    * Combine image and digital a digital surface (e.g., elevation, temperature,
+    * Combine image and digital surface (e.g., elevation, temperature,
       pressure) and sample from both simultaneously (e.g. Sentinel-2 and an Aster
       Global DEM tile)
 
