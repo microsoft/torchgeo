@@ -201,7 +201,7 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
             padding: zero padding added to the height and width dimensions
             keepdim: Combine the patch dimension into the batch dimension
         """
-        super().__init__()
+        super().__init__(p=1)
         self.flags = {
             "window_size": window_size,
             "stride": stride if stride is not None else window_size,
