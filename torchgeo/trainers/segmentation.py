@@ -251,7 +251,7 @@ class SemanticSegmentationTask(BaseTask):
             and hasattr(self.logger.experiment, "add_figure")
         ):
             datamodule = self.trainer.datamodule
-            batch["prediction"] = y_hat.softmax(dim=1)
+            batch["prediction"] = y_hat.argmax(dim=1)
             for key in ["image", "mask", "prediction"]:
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
