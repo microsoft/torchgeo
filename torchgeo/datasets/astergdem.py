@@ -6,6 +6,7 @@
 from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
+import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
@@ -36,7 +37,8 @@ class AsterGDEM(RasterDataset):
     .. versionadded:: 0.3
     """
 
-    is_image = False
+    is_image = True
+    all_bands = ["elevation"]
     filename_glob = "ASTGTMV003_*_dem*"
     filename_regex = r"""
         (?P<name>[ASTGTMV003]{10})
@@ -74,8 +76,11 @@ class AsterGDEM(RasterDataset):
         self.paths = paths
 
         self._verify()
+        bands = self.all_bands
 
-        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        super().__init__(
+            paths, crs, res, bands=bands, transforms=transforms, cache=cache
+        )
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -101,29 +106,17 @@ class AsterGDEM(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze()
-        ncols = 1
+        image = sample["image"][0]
 
-        showing_predictions = "prediction" in sample
-        if showing_predictions:
-            prediction = sample["prediction"].squeeze()
-            ncols = 2
+        image = torch.clamp(image, min=0, max=1)
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4 * ncols, 4))
+        fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 
-        if showing_predictions:
-            axs[0].imshow(mask)
-            axs[0].axis("off")
-            axs[1].imshow(prediction)
-            axs[1].axis("off")
-            if show_titles:
-                axs[0].set_title("Mask")
-                axs[1].set_title("Prediction")
-        else:
-            axs.imshow(mask)
-            axs.axis("off")
-            if show_titles:
-                axs.set_title("Mask")
+        ax.imshow(image)
+        ax.axis("off")
+
+        if show_titles:
+            ax.set_title("Elevation")
 
         if suptitle is not None:
             plt.suptitle(suptitle)

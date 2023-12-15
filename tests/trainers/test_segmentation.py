@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from typing import Any, cast
 
+import numpy as np
 import pytest
 import segmentation_models_pytorch as smp
 import timm
@@ -248,3 +249,23 @@ class TestSemanticSegmentationTask:
                 for param in model.model.segmentation_head.parameters()
             ]
         )
+
+    @pytest.mark.parametrize(
+        "class_weights", [torch.tensor([1, 2, 3]), np.array([1, 2, 3]), [1, 2, 3]]
+    )
+    def test_classweights_valid(
+        self, class_weights: Any, model_kwargs: dict[Any, Any]
+    ) -> None:
+        model_kwargs["class_weights"] = class_weights
+        sst = SemanticSegmentationTask(**model_kwargs)
+        assert isinstance(sst.loss.weight, torch.Tensor)
+        assert torch.equal(sst.loss.weight, torch.tensor([1.0, 2.0, 3.0]))
+        assert sst.loss.weight.dtype == torch.float32
+
+    @pytest.mark.parametrize("class_weights", [[], None])
+    def test_classweights_empty(
+        self, class_weights: Any, model_kwargs: dict[Any, Any]
+    ) -> None:
+        model_kwargs["class_weights"] = class_weights
+        sst = SemanticSegmentationTask(**model_kwargs)
+        assert sst.loss.weight is None

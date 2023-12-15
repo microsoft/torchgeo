@@ -57,6 +57,10 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
       (e.g. Landsat and CDL)
     * Combine datasets for multiple image sources for multimodal learning or data fusion
       (e.g. Landsat and Sentinel)
+    * Combine image and digital a digital surface (e.g., elevation, temperature,
+      pressure) and sample from both simultaneously (e.g. Sentinel-2 and an Aster
+      Global DEM tile)
+
 
     These combinations require that all queries are present in *both* datasets,
     and can be combined using an :class:`IntersectionDataset`:
@@ -342,7 +346,8 @@ class RasterDataset(GeoDataset):
     #: ``start`` and ``stop`` groups.
     date_format = "%Y%m%d"
 
-    #: True if dataset contains imagery, False if dataset contains mask
+    #: True if dataset contains imagery or a digital surface, False if dataset contains
+    #: a mask, that is classified or categorical data
     is_image = True
 
     #: True if data is stored in a separate file for each band, else False.

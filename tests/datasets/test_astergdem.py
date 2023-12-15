@@ -39,7 +39,7 @@ class TestAsterGDEM:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
-        assert isinstance(x["mask"], torch.Tensor)
+        assert isinstance(x["image"], torch.Tensor)
 
     def test_and(self, dataset: AsterGDEM) -> None:
         ds = dataset & dataset
@@ -53,13 +53,6 @@ class TestAsterGDEM:
         query = dataset.bounds
         x = dataset[query]
         dataset.plot(x, suptitle="Test")
-        plt.close()
-
-    def test_plot_prediction(self, dataset: AsterGDEM) -> None:
-        query = dataset.bounds
-        x = dataset[query]
-        x["prediction"] = x["mask"].clone()
-        dataset.plot(x, suptitle="Prediction")
         plt.close()
 
     def test_invalid_query(self, dataset: AsterGDEM) -> None:
