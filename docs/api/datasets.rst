@@ -268,7 +268,7 @@ LandCover.ai
 .. autoclass:: LandCoverAI
 
 LEVIR-CD
-^^^^^^^^^
+^^^^^^^^
 
 .. autoclass:: LEVIRCDBase
 .. autoclass:: LEVIRCD
