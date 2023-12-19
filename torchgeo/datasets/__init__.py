@@ -72,7 +72,7 @@ from .landsat import (
     Landsat8,
     Landsat9,
 )
-from .levircd import LEVIRCDPlus
+from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
 from .mapinwild import MapInWild
 from .millionaid import MillionAID
@@ -85,6 +85,7 @@ from .oscd import OSCD
 from .pastis import PASTIS
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
+from .prisma import PRISMA
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
@@ -119,6 +120,7 @@ from .usavars import USAVars
 from .utils import (
     BoundingBox,
     DatasetNotFoundError,
+    RGBBandsMissingError,
     concat_samples,
     merge_samples,
     stack_samples,
@@ -173,6 +175,7 @@ __all__ = (
     "NCCM",
     "NLCD",
     "OpenBuildings",
+    "PRISMA",
     "Sentinel",
     "Sentinel1",
     "Sentinel2",
@@ -200,6 +203,8 @@ __all__ = (
     "IDTReeS",
     "InriaAerialImageLabeling",
     "LandCoverAI",
+    "LEVIRCD",
+    "LEVIRCDBase",
     "LEVIRCDPlus",
     "LoveDA",
     "MapInWild",
@@ -260,4 +265,5 @@ __all__ = (
     "time_series_split",
     # Errors
     "DatasetNotFoundError",
+    "RGBBandsMissingError",
 )

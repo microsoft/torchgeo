@@ -1,11 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""LEVIR-CD+ dataset."""
+"""LEVIR-CD and LEVIR-CD+ datasets."""
 
+import abc
 import glob
 import os
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,42 +16,21 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_and_extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    download_and_extract_archive,
+    percentile_normalization,
+)
 
 
-class LEVIRCDPlus(NonGeoDataset):
-    """LEVIR-CD+ dataset.
+class LEVIRCDBase(NonGeoDataset, abc.ABC):
+    """Abstract base class for the LEVIRCD datasets.
 
-    The `LEVIR-CD+ <https://github.com/S2Looking/Dataset>`__
-    dataset is a dataset for building change detection.
-
-    Dataset features:
-
-    * image pairs of 20 different urban regions across Texas between 2002-2020
-    * binary change masks representing building change
-    * three spectral bands - RGB
-    * 985 image pairs with 50 cm per pixel resolution (~1024x1024 px)
-
-    Dataset format:
-
-    * images are three-channel pngs
-    * masks are single-channel pngs where no change = 0, change = 255
-
-    Dataset classes:
-
-    1. no change
-    2. change
-
-    If you use this dataset in your research, please cite the following paper:
-
-    * https://arxiv.org/abs/2107.09244
+    .. versionadded:: 0.6
     """
 
-    url = "https://drive.google.com/file/d/1JamSsxiytXdzAIk6VDVWfc-OsX-81U81"
-    md5 = "1adf156f628aa32fb2e8fe6cada16c04"
-    filename = "LEVIR-CD+.zip"
-    directory = "LEVIR-CD+"
-    splits = ["train", "test"]
+    splits: Union[list[str], dict[str, dict[str, str]]]
+    directories = ["A", "B", "label"]
 
     def __init__(
         self,
@@ -60,7 +40,7 @@ class LEVIRCDPlus(NonGeoDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new LEVIR-CD+ dataset instance.
+        """Initialize a new LEVIR-CD base dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -87,7 +67,7 @@ class LEVIRCDPlus(NonGeoDataset):
         if not self._check_integrity():
             raise DatasetNotFoundError(self)
 
-        self.files = self._load_files(self.root, self.directory, self.split)
+        self.files = self._load_files(self.root, self.split)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -116,29 +96,6 @@ class LEVIRCDPlus(NonGeoDataset):
             length of the dataset
         """
         return len(self.files)
-
-    def _load_files(
-        self, root: str, directory: str, split: str
-    ) -> list[dict[str, str]]:
-        """Return the paths of the files in the dataset.
-
-        Args:
-            root: root dir of dataset
-            directory: sub directory LEVIR-CD+
-            split: subset of dataset, one of [train, test]
-
-        Returns:
-            list of dicts containing paths for each pair of image1, image2, mask
-        """
-        files = []
-        images = glob.glob(os.path.join(root, directory, split, "A", "*.png"))
-        images = sorted(os.path.basename(image) for image in images)
-        for image in images:
-            image1 = os.path.join(root, directory, split, "A", image)
-            image2 = os.path.join(root, directory, split, "B", image)
-            mask = os.path.join(root, directory, split, "label", image)
-            files.append(dict(image1=image1, image2=image2, mask=mask))
-        return files
 
     def _load_image(self, path: str) -> Tensor:
         """Load a single image.
@@ -174,6 +131,236 @@ class LEVIRCDPlus(NonGeoDataset):
             tensor = tensor.to(torch.long)
             return tensor
 
+    def plot(
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for figure
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.2
+        """
+        ncols = 3
+
+        image1 = sample["image1"].permute(1, 2, 0).numpy()
+        image1 = percentile_normalization(image1, axis=(0, 1))
+
+        image2 = sample["image2"].permute(1, 2, 0).numpy()
+        image2 = percentile_normalization(image2, axis=(0, 1))
+
+        if "prediction" in sample:
+            ncols += 1
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
+
+        axs[0].imshow(image1)
+        axs[0].axis("off")
+        axs[1].imshow(image2)
+        axs[1].axis("off")
+        axs[2].imshow(sample["mask"], cmap="gray", interpolation="none")
+        axs[2].axis("off")
+
+        if "prediction" in sample:
+            axs[3].imshow(sample["prediction"], cmap="gray", interpolation="none")
+            axs[3].axis("off")
+            if show_titles:
+                axs[3].set_title("Prediction")
+
+        if show_titles:
+            axs[0].set_title("Image 1")
+            axs[1].set_title("Image 2")
+            axs[2].set_title("Mask")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
+
+    @abc.abstractmethod
+    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+        """Return the paths of the files in the dataset.
+
+        Args:
+            root: root dir of dataset
+            split: subset of dataset, one of [train, test]
+
+        Returns:
+            list of dicts containing paths for each pair of image1, image2, mask
+        """
+
+    @abc.abstractmethod
+    def _check_integrity(self) -> bool:
+        """Checks the integrity of the dataset structure.
+
+        Returns:
+            True if the dataset directories and split files are found, else False
+        """
+
+    @abc.abstractmethod
+    def _download(self) -> None:
+        """Download the dataset and extract it."""
+
+
+class LEVIRCD(LEVIRCDBase):
+    """LEVIR-CD dataset.
+
+    The `LEVIR-CD <https://github.com/justchenhao/STANet>`__
+    dataset is a dataset for building change detection.
+
+    Dataset features:
+
+    * image pairs of 20 different urban regions across Texas between 2002-2018
+    * binary change masks representing building change
+    * three spectral bands - RGB
+    * 637 image pairs with 50 cm per pixel resolution (~1024x1024 px)
+
+    Dataset format:
+
+    * images are three-channel pngs
+    * masks are single-channel pngs where no change = 0, change = 255
+
+    Dataset classes:
+
+    1. no change
+    2. change
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://doi.org/10.3390/rs12101662
+
+    .. versionadded:: 0.6
+    """
+
+    splits = {
+        "train": {
+            "url": "https://drive.google.com/file/d/18GuoCuBn48oZKAlEo-LrNwABrFhVALU-",
+            "filename": "train.zip",
+            "md5": "a638e71f480628652dea78d8544307e4",
+        },
+        "val": {
+            "url": "https://drive.google.com/file/d/1BqSt4ueO7XAyQ_84mUjswUSJt13ZBuzG",
+            "filename": "val.zip",
+            "md5": "f7b857978524f9aa8c3bf7f94e3047a4",
+        },
+        "test": {
+            "url": "https://drive.google.com/file/d/1jj3qJD_grJlgIhUWO09zibRGJe0R4Tn0",
+            "filename": "test.zip",
+            "md5": "07d5dd89e46f5c1359e2eca746989ed9",
+        },
+    }
+
+    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+        """Return the paths of the files in the dataset.
+
+        Args:
+            root: root dir of dataset
+            split: subset of dataset, one of [train, test]
+
+        Returns:
+            list of dicts containing paths for each pair of image1, image2, mask
+        """
+        images1 = sorted(glob.glob(os.path.join(root, "A", f"{split}*.png")))
+        images2 = sorted(glob.glob(os.path.join(root, "B", f"{split}*.png")))
+        masks = sorted(glob.glob(os.path.join(root, "label", f"{split}*.png")))
+
+        files = []
+        for image1, image2, mask in zip(images1, images2, masks):
+            files.append(dict(image1=image1, image2=image2, mask=mask))
+        return files
+
+    def _check_integrity(self) -> bool:
+        """Checks the integrity of the dataset structure.
+
+        Returns:
+            True if the dataset directories and split files are found, else False
+        """
+        return all(
+            [
+                os.path.exists(os.path.join(self.root, directory))
+                for directory in self.directories
+            ]
+        )
+
+    def _download(self) -> None:
+        """Download the dataset and extract it."""
+        if self._check_integrity():
+            print("Files already downloaded and verified")
+            return
+
+        for split in self.splits:
+            download_and_extract_archive(
+                self.splits[split]["url"],
+                self.root,
+                filename=self.splits[split]["filename"],
+                md5=self.splits[split]["md5"] if self.checksum else None,
+            )
+
+
+class LEVIRCDPlus(LEVIRCDBase):
+    """LEVIR-CD+ dataset.
+
+    The `LEVIR-CD+ <https://github.com/S2Looking/Dataset>`__
+    dataset is a dataset for building change detection.
+
+    Dataset features:
+
+    * image pairs of 20 different urban regions across Texas between 2002-2020
+    * binary change masks representing building change
+    * three spectral bands - RGB
+    * 985 image pairs with 50 cm per pixel resolution (~1024x1024 px)
+
+    Dataset format:
+
+    * images are three-channel pngs
+    * masks are single-channel pngs where no change = 0, change = 255
+
+    Dataset classes:
+
+    1. no change
+    2. change
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2107.09244
+
+    .. versionchanged:: 0.6
+    """
+
+    url = "https://drive.google.com/file/d/1JamSsxiytXdzAIk6VDVWfc-OsX-81U81"
+    md5 = "1adf156f628aa32fb2e8fe6cada16c04"
+    filename = "LEVIR-CD+.zip"
+    directory = "LEVIR-CD+"
+    splits = ["train", "test"]
+
+    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+        """Return the paths of the files in the dataset.
+
+        Args:
+            root: root dir of dataset
+            split: subset of dataset, one of [train, test]
+
+        Returns:
+            list of dicts containing paths for each pair of image1, image2, mask
+        """
+        files = []
+        images = glob.glob(os.path.join(root, self.directory, split, "A", "*.png"))
+        images = sorted(os.path.basename(image) for image in images)
+        for image in images:
+            image1 = os.path.join(root, self.directory, split, "A", image)
+            image2 = os.path.join(root, self.directory, split, "B", image)
+            mask = os.path.join(root, self.directory, split, "label", image)
+            files.append(dict(image1=image1, image2=image2, mask=mask))
+        return files
+
     def _check_integrity(self) -> bool:
         """Checks the integrity of the dataset structure.
 
@@ -198,67 +385,3 @@ class LEVIRCDPlus(NonGeoDataset):
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
-
-    def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> Figure:
-        """Plot a sample from the dataset.
-
-        Args:
-            sample: a sample returned by :meth:`__getitem__`
-            show_titles: flag indicating whether to show titles above each panel
-            suptitle: optional suptitle to use for figure
-
-        Returns:
-            a matplotlib Figure with the rendered sample
-
-        .. versionadded:: 0.2
-        """
-        ncols = 3
-
-        def get_rgb(img: Tensor) -> "np.typing.NDArray[np.uint8]":
-            rgb_img = img.permute(1, 2, 0).float().numpy()
-            per02 = np.percentile(rgb_img, 2)
-            per98 = np.percentile(rgb_img, 98)
-            delta = per98 - per02
-            epsilon = 1e-7
-            norm_img: "np.typing.NDArray[np.uint8]" = (
-                np.clip((rgb_img - per02) / (delta + epsilon), 0, 1) * 255
-            ).astype(np.uint8)
-            return norm_img
-
-        image1 = get_rgb(sample["image1"])
-        image2 = get_rgb(sample["image2"])
-        mask = sample["mask"].numpy()
-
-        if "prediction" in sample:
-            prediction = sample["prediction"]
-            ncols += 1
-
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
-
-        axs[0].imshow(image1)
-        axs[0].axis("off")
-        axs[1].imshow(image2)
-        axs[1].axis("off")
-        axs[2].imshow(mask, cmap="gray")
-        axs[2].axis("off")
-
-        if "prediction" in sample:
-            axs[3].imshow(prediction)
-            axs[3].axis("off")
-            if show_titles:
-                axs[3].set_title("Prediction")
-
-        if show_titles:
-            axs[0].set_title("Image 1")
-            axs[1].set_title("Image 2")
-            axs[2].set_title("Mask")
-
-        if suptitle is not None:
-            plt.suptitle(suptitle)
-
-        return fig

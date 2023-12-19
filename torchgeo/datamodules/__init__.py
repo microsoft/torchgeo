@@ -19,7 +19,7 @@ from .inria import InriaAerialImageLabelingDataModule
 from .l7irish import L7IrishDataModule
 from .l8biome import L8BiomeDataModule
 from .landcoverai import LandCoverAIDataModule
-from .levircd import LEVIRCDPlusDataModule
+from .levircd import LEVIRCDDataModule, LEVIRCDPlusDataModule
 from .loveda import LoveDADataModule
 from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
@@ -59,6 +59,7 @@ __all__ = (
     "GID15DataModule",
     "InriaAerialImageLabelingDataModule",
     "LandCoverAIDataModule",
+    "LEVIRCDDataModule",
     "LEVIRCDPlusDataModule",
     "LoveDADataModule",
     "NASAMarineDebrisDataModule",

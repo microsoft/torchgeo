@@ -15,7 +15,12 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, check_integrity, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    check_integrity,
+    percentile_normalization,
+)
 
 
 class SEN12MS(NonGeoDataset):
@@ -327,6 +332,9 @@ class SEN12MS(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
 
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+
         .. versionadded:: 0.2
         """
         rgb_indices = []
@@ -334,7 +342,7 @@ class SEN12MS(NonGeoDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         image, mask = sample["image"][rgb_indices].numpy(), sample["mask"]
         image = percentile_normalization(image)

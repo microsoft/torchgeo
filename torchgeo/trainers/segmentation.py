@@ -10,12 +10,13 @@ from typing import Any, Optional, Union
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import torch.nn as nn
+from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
 from torchvision.models._api import WeightsEnum
 
-from ..datasets.utils import unbind_samples
+from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import FCN, get_weight
 from . import utils
 from .base import BaseTask
@@ -217,10 +218,9 @@ class SemanticSegmentationTask(BaseTask):
         x = batch["image"]
         y = batch["mask"]
         y_hat = self(x)
-        y_hat_hard = y_hat.argmax(dim=1)
         loss: Tensor = self.criterion(y_hat, y)
         self.log("train_loss", loss)
-        self.train_metrics(y_hat_hard, y)
+        self.train_metrics(y_hat, y)
         self.log_dict(self.train_metrics)
         return loss
 
@@ -237,10 +237,9 @@ class SemanticSegmentationTask(BaseTask):
         x = batch["image"]
         y = batch["mask"]
         y_hat = self(x)
-        y_hat_hard = y_hat.argmax(dim=1)
         loss = self.criterion(y_hat, y)
         self.log("val_loss", loss)
-        self.val_metrics(y_hat_hard, y)
+        self.val_metrics(y_hat, y)
         self.log_dict(self.val_metrics)
 
         if (
@@ -251,21 +250,24 @@ class SemanticSegmentationTask(BaseTask):
             and hasattr(self.logger, "experiment")
             and hasattr(self.logger.experiment, "add_figure")
         ):
+            datamodule = self.trainer.datamodule
+            batch["prediction"] = y_hat.argmax(dim=1)
+            for key in ["image", "mask", "prediction"]:
+                batch[key] = batch[key].cpu()
+            sample = unbind_samples(batch)[0]
+
+            fig: Optional[Figure] = None
             try:
-                datamodule = self.trainer.datamodule
-                batch["prediction"] = y_hat_hard
-                for key in ["image", "mask", "prediction"]:
-                    batch[key] = batch[key].cpu()
-                sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
-                if fig:
-                    summary_writer = self.logger.experiment
-                    summary_writer.add_figure(
-                        f"image/{batch_idx}", fig, global_step=self.global_step
-                    )
-                    plt.close()
-            except ValueError:
+            except RGBBandsMissingError:
                 pass
+
+            if fig:
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=self.global_step
+                )
+                plt.close()
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
@@ -278,10 +280,9 @@ class SemanticSegmentationTask(BaseTask):
         x = batch["image"]
         y = batch["mask"]
         y_hat = self(x)
-        y_hat_hard = y_hat.argmax(dim=1)
         loss = self.criterion(y_hat, y)
         self.log("test_loss", loss)
-        self.test_metrics(y_hat_hard, y)
+        self.test_metrics(y_hat, y)
         self.log_dict(self.test_metrics)
 
     def predict_step(
