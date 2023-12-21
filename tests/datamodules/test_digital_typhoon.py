@@ -7,7 +7,10 @@ import os
 import pytest
 
 from torchgeo.datamodules import DigitalTyphoonAnalysisDataModule
-from torchgeo.datasets.digital_typhoon import DigitalTyphoonAnalysis, _SampleSequenceDict
+from torchgeo.datasets.digital_typhoon import (
+    DigitalTyphoonAnalysis,
+    _SampleSequenceDict,
+)
 
 
 class TestDigitalTyphoonAnalysisDataModule:
