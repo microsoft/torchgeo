@@ -7,7 +7,7 @@ import os
 import pytest
 
 from torchgeo.datamodules import DigitalTyphoonAnalysisDataModule
-from torchgeo.datasets.digital_typhoon import DigitalTyphoonAnalysis, SampleSequenceDict
+from torchgeo.datasets.digital_typhoon import DigitalTyphoonAnalysis, _SampleSequenceDict
 
 
 class TestDigitalTyphoonAnalysisDataModule:
@@ -31,12 +31,12 @@ class TestDigitalTyphoonAnalysisDataModule:
         dataset = DigitalTyphoonAnalysis(
             root=os.path.join("tests", "data", "digital_typhoon")
         )
-        train_sequences, val_sequences = dm.split_dataset(dataset)
+        train_sequences, val_sequences = dm._split_dataset(dataset)
 
         if split_by == "time":
 
             def find_max_time_per_id(
-                split_sequences: list[SampleSequenceDict],
+                split_sequences: list[_SampleSequenceDict],
             ) -> dict[str, int]:
                 # Find the maximum value of each id in train_sequences
                 max_values: dict[str, int] = {}
