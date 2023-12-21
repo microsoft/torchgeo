@@ -19,7 +19,7 @@ from .geo import NonGeoDataset
 from .utils import DatasetNotFoundError, download_url, percentile_normalization
 
 
-class SampleSequenceDict(TypedDict):
+class _SampleSequenceDict(TypedDict):
     """Sample sequence dictionary."""
 
     id: str
@@ -226,7 +226,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
                 if set(subseq["seq_id"]).issubset(df["seq_id"])
             ]
 
-        self.sample_sequences: list[SampleSequenceDict] = [
+        self.sample_sequences: list[_SampleSequenceDict] = [
             item
             for sublist in self.aux_df.groupby("id")
             .apply(get_subsequences, k=self.sequence_length)
