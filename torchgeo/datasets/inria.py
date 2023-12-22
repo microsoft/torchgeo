@@ -135,7 +135,8 @@ class InriaAerialImageLabeling(NonGeoDataset):
         """
         with rio.open(path) as img:
             array = img.read().astype(np.int32)
-            tensor = torch.from_numpy(array).float()
+            tensor = torch.from_numpy(array)
+            tensor = tensor.float()
             return tensor
 
     def _load_target(self, path: str) -> Tensor:
@@ -150,7 +151,8 @@ class InriaAerialImageLabeling(NonGeoDataset):
         with rio.open(path) as img:
             array = img.read().astype(np.int32)
             array = np.clip(array, 0, 1)
-            mask = torch.from_numpy(array[0]).long()
+            mask = torch.from_numpy(array[0])
+            mask = mask.long()
             return mask
 
     def __len__(self) -> int:
