@@ -5,6 +5,7 @@
 
 import torch
 import torch.nn.functional as F
+from torch import Tensor
 from torch.nn.modules import Module
 
 
@@ -28,12 +29,16 @@ class QRLoss(Module):
             qr loss
         """
         q = probs
-        q_bar = q.mean(dim=(0, 2, 3))
-        qbar_log_S = (q_bar * torch.log(q_bar)).sum()
+        # https://github.com/pytorch/pytorch/issues/116327
+        q_bar: Tensor = q.mean(dim=(0, 2, 3))
+        log_q_bar = torch.log(q_bar)
+        qbar_log_S: Tensor = q_bar * log_q_bar
+        qbar_log_S = qbar_log_S.sum()
 
-        q_log_p = torch.einsum("bcxy,bcxy->bxy", q, torch.log(target)).mean()
+        q_log_p = torch.einsum("bcxy,bcxy->bxy", q, torch.log(target))
+        q_log_p = q_log_p.mean()
 
-        loss = qbar_log_S - q_log_p
+        loss: Tensor = qbar_log_S - q_log_p
         return loss
 
 
@@ -62,6 +67,7 @@ class RQLoss(Module):
         z = q / q.norm(p=1, dim=(0, 2, 3), keepdim=True).clamp_min(1e-12).expand_as(q)
         r = F.normalize(z * target, p=1, dim=1)
 
-        loss = torch.einsum("bcxy,bcxy->bxy", r, torch.log(r) - torch.log(q)).mean()
+        loss = torch.einsum("bcxy,bcxy->bxy", r, torch.log(r) - torch.log(q))
+        loss = loss.mean()
 
         return loss

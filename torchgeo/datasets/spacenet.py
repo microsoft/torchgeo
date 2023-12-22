@@ -203,7 +203,8 @@ class SpaceNet(NonGeoDataset, abc.ABC):
                 dtype=np.uint8,
             )
 
-        mask = torch.from_numpy(mask_data).long()
+        mask = torch.from_numpy(mask_data)
+        mask = mask.long()
 
         return mask
 
@@ -732,7 +733,8 @@ class SpaceNet3(SpaceNet):
                 dtype=np.uint8,
             )
 
-        mask = torch.from_numpy(mask_data).long()
+        mask = torch.from_numpy(mask_data)
+        mask = mask.long()
         return mask
 
     def plot(

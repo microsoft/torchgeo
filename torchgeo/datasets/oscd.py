@@ -204,7 +204,8 @@ class OSCD(NonGeoDataset):
             with Image.open(path) as img:
                 images.append(np.array(img))
         array: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0).astype(np.int_)
-        tensor = torch.from_numpy(array).float()
+        tensor = torch.from_numpy(array)
+        tensor = tensor.float()
         return tensor
 
     def _load_target(self, path: str) -> Tensor:

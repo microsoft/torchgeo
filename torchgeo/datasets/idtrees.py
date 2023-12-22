@@ -501,7 +501,9 @@ class IDTReeS(NonGeoDataset):
         assert len(hsi_indices) == 3
 
         def normalize(x: Tensor) -> Tensor:
-            return (x - x.min()) / (x.max() - x.min())
+            # https://github.com/pytorch/pytorch/issues/116327
+            out: Tensor = (x - x.min()) / (x.max() - x.min())
+            return out
 
         ncols = 3
 

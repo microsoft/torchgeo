@@ -50,7 +50,8 @@ class SeasonalContrastS2DataModule(NonGeoDataModule):
             _std = repeat(_std, "c -> (t c)", t=seasons)
 
             self.aug = AugmentationSequential(
-                K.Normalize(mean=_min, std=_max - _min),
+                # https://github.com/arogozhnikov/einops/issues/299
+                K.Normalize(mean=_min, std=_max - _min),  # type: ignore[operator]
                 K.Normalize(mean=torch.tensor(0), std=1 / torch.tensor(255)),
                 K.Normalize(mean=_mean, std=_std),
                 data_keys=["image"],
