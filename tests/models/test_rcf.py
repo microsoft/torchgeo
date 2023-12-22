@@ -5,7 +5,6 @@ import os
 
 import pytest
 import torch
-from torch import Tensor
 
 from torchgeo.datasets import EuroSAT
 from torchgeo.models import RCF
