@@ -73,7 +73,7 @@ class RandomGrayscale(IntensityAugmentationBase2D):
         weights = flags["weights"]
         weights = weights[..., :, None, None]
         weights = weights.to(input.device)
-        out = input * weights
+        out: Tensor = input * weights
         out = out.sum(dim=-3)
         out = out.unsqueeze(-3)
         out = out.expand(input.shape)

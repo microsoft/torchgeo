@@ -37,7 +37,7 @@ class TestRCF:
 
     def test_biases(self) -> None:
         model = RCF(features=24, bias=10, mode="gaussian")
-        assert torch.all(model.biases == 10)
+        assert torch.all(torch.tensor(model.biases == 10))
 
     def test_seed(self) -> None:
         weights1 = RCF(seed=1, mode="gaussian").weights
