@@ -9,6 +9,12 @@ TorchGeo is not the only **geospatial machine learning library** out there, ther
 
 When deciding which library is most useful to you, it is worth considering the features they support, how actively the library is being developed, and how popular the library is, roughly in that order.
 
+.. note::
+
+   Software is a living, breathing organism and is constantly undergoing change. If any of the above information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
+
+   *Last updated: 25 December 2023*
+
 Features
 --------
 
@@ -93,12 +99,6 @@ These are download metrics for the project. Note that these numbers can be artif
 **CRAN Downloads**: The number of downloads from the Comprehensive R Archive Network. CRAN download metrics are computed by `Meta CRAN <https://cranlogs.r-pkg.org/>`_.
 
 **Conda Downloads**: The number of downloads from Conda Forge. Conda download metrics are computed by `Conda Forge <https://anaconda.org/conda-forge/>`_.
-
-.. note::
-
-   Software is a living, breathing organism and is constantly undergoing change. If any of the above information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
-
-   *Last updated: 20 November 2023*
 
 .. _torchvision: https://github.com/pytorch/vision
 .. _GDAL: https://github.com/OSGeo/gdal
