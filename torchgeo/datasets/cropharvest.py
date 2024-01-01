@@ -16,7 +16,12 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    download_url,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class CropHarvest(NonGeoDataset):
@@ -123,6 +128,7 @@ class CropHarvest(NonGeoDataset):
         self.files = self._load_features(self.root)
         self.labels = self._load_labels(self.root)
         self.classes = self.labels["properties.label"].unique()
+        self.classes = np.insert(self.classes, 0, ["None", "Other"])
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -235,7 +241,7 @@ class CropHarvest(NonGeoDataset):
         elif row["properties.is_crop"] == 1:
             label = "Other"
 
-        return torch.tensor(self.classes.index(label))
+        return torch.tensor(np.where(self.classes == label)[0][0])
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
@@ -306,10 +312,12 @@ class CropHarvest(NonGeoDataset):
         fig, axs = plt.subplots()
         bands = [self.all_bands.index(band) for band in self.rgb_bands]
         rgb = np.array(sample["array"])[:, bands]
-        normalized = rgb / np.max(rgb, axis=1, keepdims=True)
+        normalized = percentile_normalization(rgb)
         axs.imshow(normalized[None, ...])
         axs.set_title(f'Crop type: {self.classes[sample["label"]]}')
-
+        axs.set_xticks(np.arange(12))
+        axs.set_xticklabels(np.arange(12) + 1)
+        axs.set_yticks([])
         if subtitle is not None:
             plt.suptitle(subtitle)
 
