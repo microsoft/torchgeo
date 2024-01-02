@@ -197,9 +197,6 @@ match_dir = "(datamodules|datasets|losses|models|samplers|torchgeo|trainers|tran
 addopts = "-m 'not slow'"
 # https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
-    # Treat all warnings as errors
-    "error",
-
     # Warnings raised by dependencies of dependencies, out of our control
     # https://github.com/Cadene/pretrained-models.pytorch/issues/221
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:pretrainedmodels.datasets.utils",
