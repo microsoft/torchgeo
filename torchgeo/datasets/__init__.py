@@ -176,7 +176,7 @@ __all__ = (
     "Sentinel",
     "Sentinel1",
     "Sentinel2",
-    "SouthAmericaSoybean"
+    "SouthAmericaSoybean",
     # NonGeoDataset
     "ADVANCE",
     "BeninSmallHolderCashews",
