@@ -116,7 +116,15 @@ class CropHarvest(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            ImportError: If h5py is not installed
         """
+        try:
+            import h5py  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "h5py is not installed and is required to use this dataset"
+            )
+
         self.root = root
         self.transforms = transforms
         self.checksum = checksum
@@ -204,14 +212,9 @@ class CropHarvest(NonGeoDataset):
 
         Returns:
             the image
-            ImportError if h5py is not installed
         """
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "h5py is not installed and is required to use this dataset"
-            )
+        import h5py
+
         filename = os.path.join(path)
         with h5py.File(filename, "r") as f:
             array = f.get("array")[()]
@@ -243,8 +246,7 @@ class CropHarvest(NonGeoDataset):
         return torch.tensor(np.where(self.classes == label)[0][0])
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-        """
+        """Verify the integrity of the dataset."""
         # Check if feature files already exist
         feature_path = os.path.join(
             self.root, self.file_dict["features"]["extracted_filename"]
@@ -314,7 +316,7 @@ class CropHarvest(NonGeoDataset):
         axs.set_xticks(np.arange(12))
         axs.set_xticklabels(np.arange(12) + 1)
         axs.set_yticks([])
-        axs.set_ylabel("Month")
+        axs.set_xlabel("Month")
         if subtitle is not None:
             plt.suptitle(subtitle)
 
