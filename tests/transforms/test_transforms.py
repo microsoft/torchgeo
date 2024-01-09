@@ -7,6 +7,7 @@ import torch
 from torch import Tensor
 
 from torchgeo.transforms import indices, transforms
+from torchgeo.transforms.transforms import _ExtractPatches
 
 # Kornia is very particular about its boxes:
 #
@@ -201,3 +202,56 @@ def test_sequential_transforms_augmentations(
     )
     output = train_transforms(batch_multispectral)
     assert_matching(output, expected)
+
+
+def test_extract_patches() -> None:
+    b, c, h, w = 2, 3, 64, 64
+    p = 32
+    s = p
+    num_patches = ((h - p + s) // s) * ((w - p + s) // s)
+
+    # test default settings (when stride is not defined, s=p)
+    batch = {
+        "image": torch.randn(size=(b, c, h, w)),
+        "mask": torch.randint(low=0, high=2, size=(b, h, w)),
+    }
+    train_transforms = transforms.AugmentationSequential(
+        _ExtractPatches(window_size=p), same_on_batch=True, data_keys=["image", "mask"]
+    )
+    output = train_transforms(batch)
+    assert batch["image"].shape == (b * num_patches, c, p, p)
+    assert batch["mask"].shape == (b * num_patches, p, p)
+
+    # Test different stride
+    s = 16
+    num_patches = ((h - p + s) // s) * ((w - p + s) // s)
+    batch = {
+        "image": torch.randn(size=(b, c, h, w)),
+        "mask": torch.randint(low=0, high=2, size=(b, h, w)),
+    }
+    train_transforms = transforms.AugmentationSequential(
+        _ExtractPatches(window_size=p, stride=s),
+        same_on_batch=True,
+        data_keys=["image", "mask"],
+    )
+    output = train_transforms(batch)
+    assert batch["image"].shape == (b * num_patches, c, p, p)
+    assert batch["mask"].shape == (b * num_patches, p, p)
+
+    # Test keepdim=False
+    s = p
+    num_patches = ((h - p + s) // s) * ((w - p + s) // s)
+    batch = {
+        "image": torch.randn(size=(b, c, h, w)),
+        "mask": torch.randint(low=0, high=2, size=(b, h, w)),
+    }
+    train_transforms = transforms.AugmentationSequential(
+        _ExtractPatches(window_size=p, stride=s, keepdim=False),
+        same_on_batch=True,
+        data_keys=["image", "mask"],
+    )
+    output = train_transforms(batch)
+    for k, v in output.items():
+        print(k, v.shape, v.dtype)
+    assert batch["image"].shape == (b, num_patches, c, p, p)
+    assert batch["mask"].shape == (b, num_patches, 1, p, p)

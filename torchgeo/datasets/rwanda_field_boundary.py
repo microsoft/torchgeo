@@ -18,6 +18,7 @@ from torch import Tensor
 from .geo import NonGeoDataset
 from .utils import (
     DatasetNotFoundError,
+    RGBBandsMissingError,
     check_integrity,
     download_radiant_mlhub_collection,
     extract_archive,
@@ -271,14 +272,14 @@ class RwandaFieldBoundary(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if the RGB bands are not included in ``self.bands``
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         rgb_indices = []
         for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         num_time_points = sample["image"].shape[0]
         assert time_step < num_time_points

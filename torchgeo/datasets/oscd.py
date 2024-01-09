@@ -18,6 +18,7 @@ from torch import Tensor
 from .geo import NonGeoDataset
 from .utils import (
     DatasetNotFoundError,
+    RGBBandsMissingError,
     download_url,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -221,7 +222,8 @@ class OSCD(NonGeoDataset):
             with Image.open(path) as img:
                 images.append(np.array(img))
         array: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0).astype(np.int_)
-        tensor = torch.from_numpy(array).float()
+        tensor = torch.from_numpy(array)
+        tensor = tensor.float()
         return tensor
 
     def _load_target(self, path: str) -> Tensor:
@@ -298,16 +300,14 @@ class OSCD(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: If *bands* does not include all RGB bands.
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         ncols = 2
 
         try:
             rgb_indices = [self.bands.index(band) for band in self.rgb_bands]
         except ValueError as e:
-            raise ValueError(
-                "RGB bands must be present to use `plot` with S2 imagery."
-            ) from e
+            raise RGBBandsMissingError() from e
 
         def get_masked(img: Tensor) -> "np.typing.NDArray[np.uint8]":
             rgb_img = img[rgb_indices].float().numpy()

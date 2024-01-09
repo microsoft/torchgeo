@@ -34,5 +34,5 @@ repos:
         hooks:
         -   id: mypy
             args: [--strict, --ignore-missing-imports, --show-error-codes]
-            additional_dependencies: [kornia>=0.6.5, lightning>=2.0.9, matplotlib>=3.8.1, numpy>=1.22, pytest>=6.1.2, pyvista>=0.34.2, torch>=2, torchmetrics>=0.10]
+            additional_dependencies: [kornia>=0.6.9, lightning>=2.0.9, matplotlib>=3.8.1, numpy>=1.22, pytest>=6.1.2, pyvista>=0.34.2, scikit-image>=0.18.0, torch>=2, torchmetrics>=0.10]
             exclude: (build|data|dist|logo|logs|output)/
