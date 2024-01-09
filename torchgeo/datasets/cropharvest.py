@@ -218,7 +218,7 @@ class CropHarvest(NonGeoDataset):
         filename = os.path.join(path)
         with h5py.File(filename, "r") as f:
             array = f.get("array")[()]
-            tensor = torch.from_numpy(array).float()
+            tensor = torch.from_numpy(array)
             return tensor
 
     def _load_label(self, idx: str, dataset: str) -> Tensor:
