@@ -115,8 +115,7 @@ class CropHarvest(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: if ``download=False`` but
-                dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.transforms = transforms
@@ -245,9 +244,6 @@ class CropHarvest(NonGeoDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset.
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         # Check if feature files already exist
         feature_path = os.path.join(
@@ -318,6 +314,7 @@ class CropHarvest(NonGeoDataset):
         axs.set_xticks(np.arange(12))
         axs.set_xticklabels(np.arange(12) + 1)
         axs.set_yticks([])
+        axs.set_ylabel("Month")
         if subtitle is not None:
             plt.suptitle(subtitle)
 
