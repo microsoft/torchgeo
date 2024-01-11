@@ -23,6 +23,11 @@ Aboveground Woody Biomass
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
 
+Airphen
+^^^^^^^
+
+.. autoclass:: Airphen
+
 Aster Global DEM
 ^^^^^^^^^^^^^^^^
 
