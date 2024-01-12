@@ -38,6 +38,10 @@ class Airphen(RasterDataset):
     * Full control and configuration
     * Powerful analysis with a specific Agisoft module
 
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://doi.org/10.34133/2021/9892647
+
     .. versionadded:: 0.6
     """
 
