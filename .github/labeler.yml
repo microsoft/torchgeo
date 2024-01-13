@@ -29,7 +29,10 @@ dependencies:
     - "requirements/**"
 documentation:
 - changed-files:
-  - any-glob-to-any-file: "docs/**"
+  - any-glob-to-any-file:
+    - "docs/**"
+    - "*.md"
+    - ".github/*.md"
 scripts:
 - changed-files:
   - any-glob-to-any-file:
