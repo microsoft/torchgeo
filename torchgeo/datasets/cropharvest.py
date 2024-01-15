@@ -222,7 +222,7 @@ class CropHarvest(NonGeoDataset):
             return tensor
 
     def _load_label(self, idx: str, dataset: str) -> Tensor:
-        """Load the croptype label for a single pixel timeseries.
+        """Load the crop-type label for a single pixel time series.
 
         Args:
             idx: sample index in labels.geojson
