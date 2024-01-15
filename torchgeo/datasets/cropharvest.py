@@ -42,7 +42,7 @@ class CropHarvest(NonGeoDataset):
     Dataset properties:
 
     1. is_crop - whether or not a single pixel contains cropland
-    2. classification_label - optional field identifying a specific croptype
+    2. classification_label - optional field identifying a specific crop type
     3. dataset - source dataset for the imagery
     4. lat - latitude
     5. lon - longitude
