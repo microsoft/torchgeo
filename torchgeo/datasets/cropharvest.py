@@ -229,7 +229,7 @@ class CropHarvest(NonGeoDataset):
             dataset: dataset name to query labels.geojson
 
         Returns:
-            the crop type label
+            the crop-type label
         """
         index = int(idx)
         row = self.labels[
