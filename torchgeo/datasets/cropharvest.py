@@ -27,7 +27,7 @@ from .utils import (
 class CropHarvest(NonGeoDataset):
     """CropHarvest dataset.
 
-    `CropHarvest <https://github.com/nasaharvest/cropharvest>`_ is a
+    `CropHarvest <https://github.com/nasaharvest/cropharvest>`__ is a
     crop classification dataset.
 
     Dataset features:
