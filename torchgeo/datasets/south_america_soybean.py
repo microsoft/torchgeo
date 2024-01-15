@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import BoundingBox, DatasetNotFoundError, download_url
+from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
 
 
 class SouthAmericaSoybean(RasterDataset):
@@ -35,8 +35,9 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
 .. versionadded:: 0.6
 
     """
-    filename_glob = "SouthAmerica_Soybean_*.tif"
-    filename_regex = (r"SouthAmerica_Soybean_(?P<year>\d{4})\.tif")
+    filename_glob = "SouthAmerica_Soybean_*.*"
+    filename_regex = (r"SouthAmerica_Soybean_(?P<year>\d{4})\)")
+    zipfile_glob = "SouthAmericaSoybean.zip"
 
 
     date_format = "%Y"
@@ -108,7 +109,7 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
         self.paths = paths
         self.download = download
         self.checksum = checksum
-    
+        print("paths:" , paths)
         self._verify()
 
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
@@ -135,19 +136,36 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
             return
         assert isinstance(self.paths, str)
 
+        pathname = os.path.join(self.paths, "**", self.zipfile_glob)
+        if glob.glob(pathname, recursive=True):
+            self._extract()
+            return
+
+
         # Check if the user requested to download the dataset
         if not self.download:
             raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
+        self._extract()
     def _download(self) -> None:
         """Download the dataset."""
-        for i in range(21): 
-            ext = ".tif"
-            downloadUrl = self.url + str(i+2001) + ext
-            download_url(downloadUrl,self.paths,md5 = self.md5s if self.checksum else None)
-    
+        # for i in range(21): 
+        #     ext = ".tif"
+        #     downloadUrl = self.url + str(i+2001) + ext
+        #     download_url(downloadUrl,self.paths,md5 = self.md5s if self.checksum else None)
+
+        filename = "SouthAmericaSoybean.zip"
+        download_url(
+            self.url, self.paths, filename, md5s=self.md5s if self.checksum else None
+        )
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, "**", self.zipfile_glob)
+        extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
+
 
     def plot(
         self,

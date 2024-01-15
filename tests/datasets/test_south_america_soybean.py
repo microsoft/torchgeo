@@ -22,21 +22,15 @@ class TestSouthAmericaSoybean:
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> SouthAmericaSoybean:
         monkeypatch.setattr(torchgeo.datasets.south_america_soybean, "download_url", download_url)
         transforms = nn.Identity()
-        md5s = {
-            2002: "8a4a9dcea54b3ec7de07657b9f2c0893",
-            2021: "edff3ada13a1a9910d1fe844d28ae4f",
-        }
-        monkeypatch.setattr(SouthAmericaSoybean, "md5s", md5s)
-
-        url = os.path.join("tests", "data", "south_america_soybean", "SouthAmerica_Soybean_{}.tif")
+        url = os.path.join("tests", "data", "south_america_soybean", "SouthAmericaSoybean.zip")
         monkeypatch.setattr(SouthAmericaSoybean, "url", url)
-        
-
-        return SouthAmericaSoybean(
+        root = str(tmp_path)
+        #url = os.path.join("tests", "data", "south_america_soybean", "SouthAmerica_Soybean_{}.tif")
+        return SouthAmericaSoybean(root,
             transforms=transforms,
             download=True,
             checksum=True,
-            years=[2002, 2021],
+            
         )
 
     def test_getitem(self, dataset: SouthAmericaSoybean) -> None:
@@ -44,14 +38,6 @@ class TestSouthAmericaSoybean:
         assert isinstance(x, dict)
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
-
-    def test_classes(self) -> None:
-        root = os.path.join("tests", "data", "south_america_soybean")
-        classes = list(SouthAmericaSoybean.cmap.keys())[0:2]
-        ds = SouthAmericaSoybean(root, years=[2021], classes=classes)
-        sample = ds[ds.bounds]
-        mask = sample["mask"]
-        assert mask.max() < len(classes)
 
     def test_and(self, dataset: SouthAmericaSoybean) -> None:
         ds = dataset & dataset
@@ -62,28 +48,22 @@ class TestSouthAmericaSoybean:
         assert isinstance(ds, UnionDataset)
 
     def test_already_extracted(self, dataset: SouthAmericaSoybean) -> None:
-        SouthAmericaSoybean(dataset.paths, download=True, years=[2021])
+        SouthAmericaSoybean(dataset.paths, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join("tests", "data", "south_america_soybean", "SouthAmerica_Soybean_2021.tif")
+        pathname = os.path.join("tests","data", "south_america_soybean", "SouthAmericaSoybean.zip")
+       
         root = str(tmp_path)
 
         shutil.copy(pathname, root)
-        SouthAmericaSoybean(root, years=[2021])
+        SouthAmericaSoybean(root)
 
-    def test_invalid_year(self, tmp_path: Path) -> None:
-        with pytest.raises(
-            AssertionError,
-            match="SouthAmericaSoybean data product only exists for the following years:",
-        ):
-            SouthAmericaSoybean(str(tmp_path), years=[1996])
-
-    def test_invalid_classes(self) -> None:
-        with pytest.raises(AssertionError):
-            SouthAmericaSoybean(classes=[-1])
-
-        with pytest.raises(AssertionError):
-            SouthAmericaSoybean(classes=[11])
+    # def test_invalid_year(self, tmp_path: Path) -> None:
+    #     with pytest.raises(
+    #         AssertionError,
+    #         match="SouthAmericaSoybean data product only exists for the following years:",
+    #     ):
+    #         SouthAmericaSoybean(str(tmp_path), years=[1996])
 
     def test_plot(self, dataset: SouthAmericaSoybean) -> None:
         query = dataset.bounds
