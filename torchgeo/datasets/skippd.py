@@ -56,8 +56,8 @@ class SKIPPD(NonGeoDataset):
 
     url = "https://huggingface.co/datasets/torchgeo/skippd/resolve/main/{}"
     md5 = {
-        "forecast": "f4f3509ddcc83a55c433be9db2e51077",
-        "nowcast": "0000761d403e45bb5f86c21d3c69aa80",
+        "forecast": "72ff4e0db55a4888694f8745fcbbb61c",
+        "nowcast": "722517a957807c4854f2b871b6476c40",
     }
 
     data_file_name = "2017_2019_images_pv_processed_{}.hdf5"
@@ -200,6 +200,11 @@ class SKIPPD(NonGeoDataset):
             "label": torch.tensor(label, dtype=torch.float32),
             "date": datestring,
         }
+
+        if self.split == "test":
+            path = os.path.join(self.root, f"cloudy_test_{self.task}.npy")
+            features["cloudy"] = np.load(path, allow_pickle=True)[index]
+
         return features
 
     def _verify(self) -> None:

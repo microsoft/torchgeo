@@ -60,6 +60,10 @@ if __name__ == "__main__":
             )
             np.save(f"times_{split}_{task}.npy", time_stamps)
 
+        if split == "test":
+            cloudy = np.random.choice(a=[False, True], size=(NUM_SAMPLES))
+            np.save(f"cloudy_test_{task}.npy", cloudy)
+
         # Compress data
         with zipfile.ZipFile(
             data_file.format(task).replace(".hdf5", ".zip"), "w"
@@ -68,6 +72,7 @@ if __name__ == "__main__":
                 data_file.format(task),
                 f"times_trainval_{task}.npy",
                 f"times_test_{task}.npy",
+                f"cloudy_test_{task}.npy",
             ]:
                 zip.write(file, arcname=file)
 
