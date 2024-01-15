@@ -144,7 +144,7 @@ class CropHarvest(NonGeoDataset):
             index: index to return
 
         Returns:
-            single pixel timeseries array and label at that index
+            single pixel time-series array and label at that index
         """
         files = self.files[index]
         data = self._load_array(files["chip"])
