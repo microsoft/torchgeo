@@ -205,7 +205,7 @@ class CropHarvest(NonGeoDataset):
             return df
 
     def _load_array(self, path: str) -> Tensor:
-        """Load an individual single pixel timeseries.
+        """Load an individual single pixel time series.
 
         Args:
             path: path to the image
