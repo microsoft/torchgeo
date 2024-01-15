@@ -32,7 +32,7 @@ class CropHarvest(NonGeoDataset):
 
     Dataset features:
 
-    * single pixel timeseries with croptype labels
+    * single pixel time series with crop-type labels
     * 18 bands per image over 12 months
 
     Dataset format:
