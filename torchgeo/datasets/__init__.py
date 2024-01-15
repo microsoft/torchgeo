@@ -72,7 +72,7 @@ from .landsat import (
     Landsat8,
     Landsat9,
 )
-from .levircd import LEVIRCDPlus
+from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
 from .mapinwild import MapInWild
 from .millionaid import MillionAID
@@ -203,6 +203,8 @@ __all__ = (
     "IDTReeS",
     "InriaAerialImageLabeling",
     "LandCoverAI",
+    "LEVIRCD",
+    "LEVIRCDBase",
     "LEVIRCDPlus",
     "LoveDA",
     "MapInWild",
