@@ -58,7 +58,7 @@ class CropHarvest(NonGeoDataset):
     .. versionadded:: 0.6
     """
 
-    # *https://github.com/nasaharvest/cropharvest/blob/main/cropharvest/bands.py
+    # https://github.com/nasaharvest/cropharvest/blob/main/cropharvest/bands.py
     all_bands = [
         "VV",
         "VH",
