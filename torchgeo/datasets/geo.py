@@ -350,11 +350,11 @@ class RasterDataset(GeoDataset):
     #: Elevation Model, or another source of source data. False if the dataset
     #: contains a mask,that is the target data, normally categorical data like land
     #: cover classification.
-    #: 
+    #:
     #: The value of ``is_image`` controls two things.
-    #: 
+    #:
     #: The first is ``dtype``. See below for the impacts.
-    #: 
+    #:
     #: The second is the name of the key used in the sample returned by
     #: __getitem__. ``True`` uses "image"; ``False`` uses "mask". For consistency
     #: purposes the same names as Kornia are used. When multiple datasets with different
@@ -378,14 +378,14 @@ class RasterDataset(GeoDataset):
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
-        
+
         Defaults to float32 for is_image = True and long for is_image = False. This is
-        what we usually want for 99% of datasets but can be overridden for integer 
+        what we usually want for 99% of datasets but can be overridden for integer
         images (like some imagery or Digital Elevation Models) or pixel-wise regression
         masks (where it should be float32). Uint16 and uint32 are automatically cast to
         int32 and int64, respectively, because numpy supports the former but torch does
         not.
-        
+
         Returns:
             the dtype of the dataset
 
