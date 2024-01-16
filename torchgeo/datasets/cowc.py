@@ -16,7 +16,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive
+from .utils import DatasetNotFoundError, check_integrity, download_and_extract_archive
 
 
 class COWC(NonGeoDataset, abc.ABC):
@@ -81,8 +81,7 @@ class COWC(NonGeoDataset, abc.ABC):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in ["train", "test"]
 
@@ -95,10 +94,7 @@ class COWC(NonGeoDataset, abc.ABC):
             self._download()
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         self.images = []
         self.targets = []

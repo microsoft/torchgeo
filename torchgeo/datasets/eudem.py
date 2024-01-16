@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import check_integrity, extract_archive
+from .utils import DatasetNotFoundError, check_integrity, extract_archive
 
 
 class EUDEM(RasterDataset):
@@ -105,7 +105,7 @@ class EUDEM(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``paths``
+            DatasetNotFoundError: If dataset is not found.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -118,11 +118,7 @@ class EUDEM(RasterDataset):
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted file already exists
         if self.files:
             return
@@ -138,11 +134,7 @@ class EUDEM(RasterDataset):
                 extract_archive(zipfile)
             return
 
-        raise RuntimeError(
-            f"Dataset not found in `root={self.paths}` "
-            "either specify a different `root` directory or make sure you "
-            "have manually downloaded the dataset as suggested in the documentation."
-        )
+        raise DatasetNotFoundError(self)
 
     def plot(
         self,

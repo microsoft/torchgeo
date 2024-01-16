@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import DatasetNotFoundError, download_and_extract_archive
 
 
 class LoveDA(NonGeoDataset):
@@ -109,10 +109,8 @@ class LoveDA(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``split`` argument is invalid
-            AssertionError: if ``scene`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            AssertionError: if ``split`` or ``scene`` arguments are invalid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
         assert set(scene).intersection(
@@ -139,10 +137,7 @@ class LoveDA(NonGeoDataset):
             self._download()
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found at root directory or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         self.files = self._load_files(self.scene_paths, self.split)
 
@@ -249,11 +244,7 @@ class LoveDA(NonGeoDataset):
         return True
 
     def _download(self) -> None:
-        """Download the dataset and extract it.
-
-        Raises:
-            AssertionError: if the checksum of split.py does not match
-        """
+        """Download the dataset and extract it."""
         if self._check_integrity():
             print("Files already downloaded and verified")
             return

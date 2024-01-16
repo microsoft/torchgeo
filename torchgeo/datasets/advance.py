@@ -15,7 +15,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import DatasetNotFoundError, download_and_extract_archive
 
 
 class ADVANCE(NonGeoDataset):
@@ -101,8 +101,7 @@ class ADVANCE(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.transforms = transforms
@@ -112,10 +111,7 @@ class ADVANCE(NonGeoDataset):
             self._download()
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         self.files = self._load_files(self.root)
         self.classes = sorted({f["cls"] for f in self.files})
@@ -218,11 +214,7 @@ class ADVANCE(NonGeoDataset):
         return True
 
     def _download(self) -> None:
-        """Download the dataset and extract it.
-
-        Raises:
-            AssertionError: if the checksum of split.py does not match
-        """
+        """Download the dataset and extract it."""
         if self._check_integrity():
             print("Files already downloaded and verified")
             return

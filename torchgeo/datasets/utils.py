@@ -23,11 +23,13 @@ import numpy as np
 import rasterio
 import torch
 from torch import Tensor
+from torch.utils.data import Dataset
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 
 __all__ = (
     "check_integrity",
+    "DatasetNotFoundError",
     "download_url",
     "download_and_extract_archive",
     "extract_archive",
@@ -44,6 +46,49 @@ __all__ = (
     "rgb_to_mask",
     "percentile_normalization",
 )
+
+
+class DatasetNotFoundError(FileNotFoundError):
+    """Raised when a dataset is requested but doesn't exist.
+
+    .. versionadded:: 0.6
+    """
+
+    def __init__(self, dataset: Dataset[object]) -> None:
+        """Intstantiate a new DatasetNotFoundError instance.
+
+        Args:
+            dataset: The dataset that was requested.
+        """
+        msg = "Dataset not found"
+
+        if hasattr(dataset, "root"):
+            var = "root"
+            val = dataset.root
+        elif hasattr(dataset, "paths"):
+            var = "paths"
+            val = dataset.paths
+        else:
+            super().__init__(f"{msg}.")
+            return
+
+        msg += f" in `{var}={val!r}` and "
+
+        if hasattr(dataset, "download") and not dataset.download:
+            msg += "`download=False`"
+        else:
+            msg += "cannot be automatically downloaded"
+
+        msg += f", either specify a different `{var}` or "
+
+        if hasattr(dataset, "download") and not dataset.download:
+            msg += "use `download=True` to automatically"
+        else:
+            msg += "manually"
+
+        msg += " download the dataset."
+
+        super().__init__(msg)
 
 
 class _rarfile:
@@ -737,3 +782,27 @@ def percentile_normalization(
         (img - lower_percentile) / (upper_percentile - lower_percentile + 1e-5), 0, 1
     )
     return img_normalized
+
+
+def path_is_vsi(path: str) -> bool:
+    """Checks if the given path is pointing to a Virtual File System.
+
+    .. note::
+       Does not check if the path exists, or if it is a dir or file.
+
+    VSI can for instance be Cloud Storage Blobs or zip-archives.
+    They will start with a prefix indicating this.
+    For examples of these, see references for the two accepted syntaxes.
+
+    * https://gdal.org/user/virtual_file_systems.html
+    * https://rasterio.readthedocs.io/en/latest/topics/datasets.html
+
+    Args:
+        path: string representing a directory or file
+
+    Returns:
+        True if path is on a virtual file system, else False
+
+    .. versionadded:: 0.6
+    """
+    return "://" in path or path.startswith("/vsi")

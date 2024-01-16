@@ -75,7 +75,8 @@ class RegressionTask(BaseTask):
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
         """
-        super().__init__()
+        self.weights = weights
+        super().__init__(ignore="weights")
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion.
@@ -110,7 +111,7 @@ class RegressionTask(BaseTask):
     def configure_models(self) -> None:
         """Initialize the model."""
         # Create model
-        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        weights = self.weights
         self.model = timm.create_model(
             self.hparams["model"],
             num_classes=self.hparams["num_outputs"],
@@ -185,6 +186,7 @@ class RegressionTask(BaseTask):
         if (
             batch_idx < 10
             and hasattr(self.trainer, "datamodule")
+            and hasattr(self.trainer.datamodule, "plot")
             and self.logger
             and hasattr(self.logger, "experiment")
             and hasattr(self.logger.experiment, "add_figure")
@@ -255,7 +257,7 @@ class PixelwiseRegressionTask(RegressionTask):
 
     def configure_models(self) -> None:
         """Initialize the model."""
-        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        weights = self.weights
 
         if self.hparams["model"] == "unet":
             self.model = smp.Unet(

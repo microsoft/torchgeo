@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import download_url
+from .utils import DatasetNotFoundError, download_url
 
 
 class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
@@ -44,10 +44,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     is_image = False
 
-    url = (
-        "https://opendata.arcgis.com/api/v3/datasets/3e8736c8866b458687"
-        "e00d40c9f00bce_0/downloads/data?format=geojson&spatialRefId=4326"
-    )
+    url = "https://opendata.arcgis.com/api/v3/datasets/e4bdbe8d6d8d4e32ace7d36a4aec7b93_0/downloads/data?format=geojson&spatialRefId=4326"  # noqa: E501
 
     base_filename = "Aboveground_Live_Woody_Biomass_Density.geojson"
 
@@ -80,7 +77,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``paths``
+            DatasetNotFoundError: If dataset is not found and *download* is False.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -93,22 +90,14 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if dataset is missing
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         if self.files:
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.paths}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -123,7 +112,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
         for item in content["features"]:
             download_url(
-                item["properties"]["download"],
+                item["properties"]["Mg_px_1_download"],
                 self.paths,
                 item["properties"]["tile_id"] + ".tif",
             )

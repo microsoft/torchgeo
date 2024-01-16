@@ -16,6 +16,7 @@ from rasterio.crs import CRS
 
 from torchgeo.datasets import (
     BoundingBox,
+    DatasetNotFoundError,
     IntersectionDataset,
     OpenBuildings,
     UnionDataset,
@@ -52,28 +53,15 @@ class TestOpenBuildings:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
-    def test_no_building_data_found(self, tmp_path: Path) -> None:
-        false_root = os.path.join(tmp_path, "empty")
-        os.makedirs(false_root)
-        shutil.copy(
-            os.path.join("tests", "data", "openbuildings", "tiles.geojson"), false_root
-        )
-        with pytest.raises(
-            RuntimeError, match="have manually downloaded the dataset as suggested "
-        ):
-            OpenBuildings(false_root)
+    def test_not_download(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+            OpenBuildings(str(tmp_path))
 
     def test_corrupted(self, dataset: OpenBuildings, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, "000_buildings.csv.gz"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
             OpenBuildings(dataset.paths, checksum=True)
-
-    def test_no_meta_data_found(self, tmp_path: Path) -> None:
-        false_root = os.path.join(tmp_path, "empty")
-        os.makedirs(false_root)
-        with pytest.raises(FileNotFoundError, match="Meta data file"):
-            OpenBuildings(false_root)
 
     def test_nothing_in_index(self, dataset: OpenBuildings, tmp_path: Path) -> None:
         # change meta data to another 'title_url' so that there is no match found
@@ -84,7 +72,7 @@ class TestOpenBuildings:
         with open(os.path.join(tmp_path, "tiles.geojson"), "w") as f:
             json.dump(content, f)
 
-        with pytest.raises(FileNotFoundError, match="data was found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             OpenBuildings(dataset.paths)
 
     def test_getitem(self, dataset: OpenBuildings) -> None:

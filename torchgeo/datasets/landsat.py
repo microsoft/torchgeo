@@ -79,7 +79,7 @@ class Landsat(RasterDataset, abc.ABC):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``paths``
+            DatasetNotFoundError: If dataset is not found and *download* is False.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
