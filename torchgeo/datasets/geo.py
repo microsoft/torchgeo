@@ -346,21 +346,11 @@ class RasterDataset(GeoDataset):
     #: ``start`` and ``stop`` groups.
     date_format = "%Y%m%d"
 
-    #: True if the dataset contains imagery or a digital surface, such as a Digital
-    #: Elevation Model, or another source of source data. False if the dataset
-    #: contains a mask,that is the target data, normally categorical data like land
-    #: cover classification.
-    #:
-    #: The value of ``is_image`` controls two things.
-    #:
-    #: The first is ``dtype``. See below for the impacts.
-    #:
-    #: The second is the name of the key used in the sample returned by
-    #: __getitem__. ``True`` uses "image"; ``False`` uses "mask". For consistency
-    #: purposes the same names as Kornia are used. When multiple datasets with different
-    #: keys are combined and the same key is used for multiple datasets, for example 2
-    #: "image" and 1 "mask", the channels will be stacked so that there's still a single
-    #: value for that key.
+    #: True if the dataset contains source data, such as imagery. False if the dataset
+    #: contains target data, such as a mask. This is the same as Kornia. When multiple
+    #: datasets with different keys are combined and the same key is used for multiple
+    #: datasets, for example 2 "image" and 1 "mask", the channels will be stacked so
+    #: that there's still a single value for that key.
     is_image = True
 
     #: True if data is stored in a separate file for each band, else False.
