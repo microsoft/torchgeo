@@ -22,9 +22,10 @@ from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
+
 from .geo import GeoDataset, RasterDataset
 from .utils import BoundingBox, download_url, extract_archive
-from .nlcd import NLCD
+
 
 class Chesapeake(RasterDataset, abc.ABC):
     """Abstract base class for all Chesapeake datasets.
@@ -120,6 +121,7 @@ class Chesapeake(RasterDataset, abc.ABC):
         self.paths = paths
         self.download = download
         self.checksum = checksum
+
         self._verify()
 
         colors = []
@@ -790,7 +792,7 @@ class ChesapeakeCVPR(GeoDataset):
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
                 axs[i].imshow(
-                    img, vmin=0, vmax=95, cmap=self.cmap, interpolation="none"
+                    img, vmin=0, vmax=95, cmap=self._nlcd_cmap, interpolation="none"
                 )
                 axs[i].axis("off")
             elif layer == "lc":
