@@ -24,9 +24,9 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestPASTIS:
     @pytest.fixture(
         params=[
-            {"folds": (0, 1), "bands": "s2", "mode": "semantic"},
-            {"folds": (0, 1), "bands": "s1a", "mode": "semantic"},
-            {"folds": (0, 1), "bands": "s1d", "mode": "instance"},
+            {"folds": (1, 2), "bands": "s2", "mode": "semantic"},
+            {"folds": (1, 2), "bands": "s1a", "mode": "semantic"},
+            {"folds": (1, 2), "bands": "s1d", "mode": "instance"},
         ]
     )
     def dataset(
@@ -91,7 +91,7 @@ class TestPASTIS:
 
     def test_invalid_fold(self) -> None:
         with pytest.raises(AssertionError):
-            PASTIS(folds=(6,))
+            PASTIS(folds=(0,))
 
     def test_invalid_mode(self) -> None:
         with pytest.raises(AssertionError):
