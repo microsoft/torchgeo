@@ -47,7 +47,7 @@ class EUDEM(RasterDataset):
     .. versionadded:: 0.3
     """
 
-    is_image = True
+    is_image = False
     all_bands = ["elevation"]
     filename_glob = "eu_dem_v11_*.TIF"
     zipfile_glob = "eu_dem_v11_*[A-Z0-9].zip"

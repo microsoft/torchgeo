@@ -37,7 +37,7 @@ class AsterGDEM(RasterDataset):
     .. versionadded:: 0.3
     """
 
-    is_image = True
+    is_image = False
     all_bands = ["elevation"]
     filename_glob = "ASTGTMV003_*_dem*"
     filename_regex = r"""
