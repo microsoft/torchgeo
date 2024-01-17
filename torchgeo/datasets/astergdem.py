@@ -90,17 +90,6 @@ class AsterGDEM(RasterDataset):
 
         raise DatasetNotFoundError(self)
 
-    @property
-    def dtype(self) -> torch.dtype:
-        """The dtype of the dataset.
-        
-        Overrides the dtype property of RasterDataset to return `torch.long`.
-
-        Returns:
-            the dtype of the dataset cast to a torch dtype
-        """
-        return torch.long
-
     def plot(
         self,
         sample: dict[str, Any],
