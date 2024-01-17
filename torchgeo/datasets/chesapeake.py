@@ -24,6 +24,7 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import GeoDataset, RasterDataset
+from .nlcd import NLCD
 from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
 
 
@@ -564,6 +565,7 @@ class ChesapeakeCVPR(GeoDataset):
         self.cache = cache
         self.download = download
         self.checksum = checksum
+
         self._verify()
 
         super().__init__(transforms)
@@ -573,8 +575,8 @@ class ChesapeakeCVPR(GeoDataset):
         lc_colors = lc_colors[:, :3] / 255
         self._lc_cmap = ListedColormap(lc_colors)
 
-        nlcd_colors = np.zeros((max(self.nlcd_cmap.keys()) + 1, 4))
-        nlcd_colors[list(self.nlcd_cmap.keys())] = list(self.nlcd_cmap.values())
+        nlcd_colors = np.zeros((max(NLCD.cmap.keys()) + 1, 4))
+        nlcd_colors[list(NLCD.cmap.keys())] = list(NLCD.cmap.values())
         nlcd_colors = nlcd_colors[:, :3] / 255
         self._nlcd_cmap = ListedColormap(nlcd_colors)
 
