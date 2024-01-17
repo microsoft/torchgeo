@@ -370,11 +370,10 @@ class RasterDataset(GeoDataset):
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
 
         Defaults to float32 for is_image = True and long for is_image = False. This is
-        what we usually want for 99% of datasets but can be overridden for integer
-        images (like some imagery or Digital Elevation Models) or pixel-wise regression
-        masks (where it should be float32). Uint16 and uint32 are automatically cast to
-        int32 and int64, respectively, because numpy supports the former but torch does
-        not.
+        what we usually want for 99% of datasets but can be overridden for pixel-wise 
+        regression masks (where it should be float32). Uint16 and uint32 are
+        automatically cast to int32 and int64, respectively, because numpy supports
+        the former but torch does not.
 
         Returns:
             the dtype of the dataset
