@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-from itertools import product
 import shutil
 from pathlib import Path
 
