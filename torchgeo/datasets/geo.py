@@ -347,10 +347,13 @@ class RasterDataset(GeoDataset):
     date_format = "%Y%m%d"
 
     #: True if the dataset contains source data, such as imagery. False if the dataset
-    #: contains target data, such as a mask. This is the same as Kornia. When multiple
-    #: datasets with different keys are combined and the same key is used for multiple
-    #: datasets, for example 2 "image" and 1 "mask", the channels will be stacked so
-    #: that there's still a single value for that key.
+    #: contains target data, such as a mask. In order to maintain consistency with Kornia,
+    #: if ``is_image`` is set to ``True``, ``__getitem__`` uses ``image`` as the key
+    #: for the data; otherwise, ``__getitem__`` uses ``mask`` as the key. The default
+    #: behavior when multiple datasets with different keys are combined and the same
+    #: key is used for multiple datasets, for example 2 "image" and 1 "mask", is that
+    #: the channels will be stacked so that there's still a single value for that key.
+    #: However, this behavior can be changed by specifying adifferent ``collate_fn``.
     is_image = True
 
     #: True if data is stored in a separate file for each band, else False.
@@ -370,10 +373,8 @@ class RasterDataset(GeoDataset):
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
 
         Defaults to float32 for is_image = True and long for is_image = False. This is
-        what we usually want for 99% of datasets but can be overridden for pixel-wise 
-        regression masks (where it should be float32). Uint16 and uint32 are
-        automatically cast to int32 and int64, respectively, because numpy supports
-        the former but torch does not.
+        what we usually want for 99% of datasets but can be overridden for pixel-wise
+        regression masks (where it should be float32).
 
         Returns:
             the dtype of the dataset
