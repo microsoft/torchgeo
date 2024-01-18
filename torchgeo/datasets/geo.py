@@ -594,7 +594,7 @@ class VectorDataset(GeoDataset):
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
-        label_name: Optional[str] = None,
+        label_fn: Optional[Callable[[fiona.Feature], int]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -605,8 +605,8 @@ class VectorDataset(GeoDataset):
             res: resolution of the dataset in units of CRS
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
-            label_name: name of the dataset property that has the label to be
-                rasterized into the mask
+            label_fn: function to extract the label to be rasterized into the mask from
+                the dataset Feature.
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
@@ -620,7 +620,7 @@ class VectorDataset(GeoDataset):
         super().__init__(transforms)
 
         self.paths = paths
-        self.label_name = label_name
+        self.label_fn = label_fn
 
         # Populate the dataset index
         i = 0
@@ -687,8 +687,8 @@ class VectorDataset(GeoDataset):
                     shape = fiona.transform.transform_geom(
                         src.crs, self.crs.to_dict(), feature["geometry"]
                     )
-                    if self.label_name:
-                        shape = (shape, feature["properties"][self.label_name])
+                    if self.label_fn:
+                        shape = (shape, self.label_fn(feature))
                     shapes.append(shape)
 
         # Rasterize geometries
@@ -706,7 +706,16 @@ class VectorDataset(GeoDataset):
             # with the default fill value and dtype used by rasterize
             masks = np.zeros((round(height), round(width)), dtype=np.uint8)
 
-        sample = {"mask": torch.tensor(masks), "crs": self.crs, "bbox": query}
+        # Convert masks from numpy to torch.
+        # rasterize may produce uint8, uint16, or uint32 outputs depending on the label range.
+        # uint16/uint32 aren't supported in torch so we update accordingly.
+        if masks.dtype == np.uint16:
+            masks = masks.astype(np.int32)
+        elif masks.dtype == np.uint32:
+            masks = masks.astype(np.int64)
+        masks = torch.tensor(masks)
+
+        sample = {"mask": masks, "crs": self.crs, "bbox": query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
