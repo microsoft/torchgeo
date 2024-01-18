@@ -9,9 +9,9 @@ from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
+import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
-import torch
 
 from .geo import VectorDataset
 from .utils import (
@@ -22,9 +22,10 @@ from .utils import (
 )
 
 
-def split_hcat_code(hcat_code: str, hcat_level: int):
-    """
-    Splits the specified HCAT code into its prefix and suffix at the given hcat_level.
+def split_hcat_code(hcat_code: str, hcat_level: int) -> tuple[str, str]:
+    """Splits the specified HCAT code into its prefix and suffix.
+
+    The code is split at the given hcat_level.
     For example, a code 3301010100 at Level 4 has prefix "330101" and suffix "0100".
 
     Args:
@@ -183,7 +184,6 @@ class EuroCrops(VectorDataset):
 
         filepath = os.path.join(self.paths, self.hcat_fname)
         if not check_integrity(filepath, self.hcat_md5 if self.checksum else None):
-            print(filepath, self.hcat_md5)
             return False
 
         for fname, year, md5 in self.zenodo_files:
@@ -209,12 +209,13 @@ class EuroCrops(VectorDataset):
             )
 
     def _load_classes(self) -> None:
-        """
-        Load classes from the CSV file corresponding to the level specified by the user.
+        """Load classes from the HCAT CSV file.
+
+        The classes are loaded corresponding to the hcat_level specified by the user.
         """
         assert isinstance(self.paths, str)
         filepath = os.path.join(self.paths, self.hcat_fname)
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             reader = csv.DictReader(f)
             # Create classes dict assigning each class to its row index in the CSV.
             # Only retain classes up to the specified HCAT level.

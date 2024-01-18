@@ -15,8 +15,8 @@ from rasterio.crs import CRS
 import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
-    EuroCrops,
     DatasetNotFoundError,
+    EuroCrops,
     IntersectionDataset,
     UnionDataset,
 )

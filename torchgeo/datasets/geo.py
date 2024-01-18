@@ -594,7 +594,7 @@ class VectorDataset(GeoDataset):
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
-        label_fn: Optional[Callable[[fiona.Feature], int]] = None,
+        label_fn: Optional[Callable[[fiona.model.Feature], int]] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
