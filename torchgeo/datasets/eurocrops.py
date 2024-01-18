@@ -199,13 +199,13 @@ class EuroCrops(VectorDataset):
             return
         assert isinstance(self.paths, str)
         download_url(
-            self.base_url + fname, self.paths, md5=md5 if self.checksum else None
+            self.base_url + self.hcat_fname,
+            self.paths,
+            md5=self.hcat_md5 if self.checksum else None,
         )
         for fname, year, md5 in self.zenodo_files:
             download_and_extract_archive(
-                self.base_url + fname,
-                self.paths,
-                md5=md5 if self.checksum else None,
+                self.base_url + fname, self.paths, md5=md5 if self.checksum else None
             )
 
     def _load_classes(self) -> None:

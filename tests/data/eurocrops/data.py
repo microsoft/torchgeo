@@ -24,7 +24,7 @@ def create_data_file(zipfilename):
                     ],
                 },
                 "properties": {"EC_hcat_c": "1000000010"},
-            },
+            }
         ],
         "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::31287"}},
     }
