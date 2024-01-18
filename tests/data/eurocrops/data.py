@@ -19,39 +19,24 @@ def create_data_file(zipfilename):
                 "type": "Feature",
                 "geometry": {
                     "type": "Polygon",
-                    "coordinates": [[
-                        [0.0, 0.0],
-                        [0.0, SIZE],
-                        [SIZE, SIZE],
-                        [SIZE, 0.0],
-                        [0.0, 0.0],
-                    ]],
+                    "coordinates": [
+                        [[0.0, 0.0], [0.0, SIZE], [SIZE, SIZE], [SIZE, 0.0], [0.0, 0.0]]
+                    ],
                 },
-                "properties": {
-                    "EC_hcat_c": "1000000010",
-                },
+                "properties": {"EC_hcat_c": "1000000010"},
             },
         ],
-        "crs": {
-            "type": "name",
-            "properties": {
-                "name": "urn:ogc:def:crs:EPSG::31287",
-            },
-        },
+        "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::31287"}},
     }
     return meta_data
 
 
 def create_csv(fname):
-    with open(fname, 'w') as f:
+    with open(fname, "w") as f:
         writer = csv.DictWriter(f, fieldnames=["HCAT2_code"])
         writer.writeheader()
-        writer.writerow({
-            "HCAT2_code": "1000000000",
-        })
-        writer.writerow({
-            "HCAT2_code": "1000000010",
-        })
+        writer.writerow({"HCAT2_code": "1000000000"})
+        writer.writerow({"HCAT2_code": "1000000010"})
 
 
 if __name__ == "__main__":
@@ -65,7 +50,7 @@ if __name__ == "__main__":
         json.dump(geojson_data, fp)
 
     # archive the geojson to zip
-    with zipfile.ZipFile(zipfilename, 'w') as zipf:
+    with zipfile.ZipFile(zipfilename, "w") as zipf:
         zipf.write(dataname)
 
     # create csv metadata file

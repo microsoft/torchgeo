@@ -28,9 +28,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestEuroCrops:
     @pytest.fixture
-    def dataset(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> EuroCrops:
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> EuroCrops:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         monkeypatch.setattr(torchgeo.datasets.eurocrops, "download_url", download_url)
         monkeypatch.setattr(

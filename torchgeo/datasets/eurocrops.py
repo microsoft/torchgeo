@@ -18,7 +18,7 @@ from .utils import (
     DatasetNotFoundError,
     check_integrity,
     download_and_extract_archive,
-    download_url
+    download_url,
 )
 
 
@@ -160,7 +160,7 @@ class EuroCrops(VectorDataset):
             raise DatasetNotFoundError(self)
 
         self._load_classes()
-        self.cmap = torch.zeros((len(self.classes)+1, 4), dtype=torch.uint8)
+        self.cmap = torch.zeros((len(self.classes) + 1, 4), dtype=torch.uint8)
         for class_index in self.classes.values():
             color = self.colors[class_index % len(self.colors)]
             self.cmap[class_index, :] = torch.tensor(color)
@@ -199,9 +199,7 @@ class EuroCrops(VectorDataset):
             return
         assert isinstance(self.paths, str)
         download_url(
-            self.base_url + self.hcat_fname,
-            self.paths,
-            md5=self.hcat_md5 if self.checksum else None,
+            self.base_url + fname, self.paths, md5=md5 if self.checksum else None
         )
         for fname, year, md5 in self.zenodo_files:
             download_and_extract_archive(
@@ -216,7 +214,7 @@ class EuroCrops(VectorDataset):
         """
         assert isinstance(self.paths, str)
         filepath = os.path.join(self.paths, self.hcat_fname)
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             reader = csv.DictReader(f)
             # Create classes dict assigning each class to its row index in the CSV.
             # Only retain classes up to the specified HCAT level.
@@ -227,7 +225,7 @@ class EuroCrops(VectorDataset):
                 # Only keep classes where code_suffix is all 0s.
                 if code_suffix != "" and int(code_suffix) != 0:
                     continue
-                self.classes[code_prefix] = len(self.classes)+1
+                self.classes[code_prefix] = len(self.classes) + 1
 
     def _get_class_index(self, feat) -> int:
         """Get class index from a dataset feature."""
