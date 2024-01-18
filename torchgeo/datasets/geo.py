@@ -707,7 +707,8 @@ class VectorDataset(GeoDataset):
             masks = np.zeros((round(height), round(width)), dtype=np.uint8)
 
         # Convert masks from numpy to torch.
-        # rasterize may produce uint8, uint16, or uint32 outputs depending on the label range.
+        # rasterize may produce uint8, uint16, or uint32 outputs depending on the
+        # label range.
         # uint16/uint32 aren't supported in torch so we update accordingly.
         if masks.dtype == np.uint16:
             masks = masks.astype(np.int32)

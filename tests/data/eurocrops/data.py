@@ -6,8 +6,6 @@
 import csv
 import hashlib
 import json
-import os
-import shutil
 import zipfile
 
 SIZE = 100
@@ -21,9 +19,13 @@ def create_data_file(zipfilename):
                 "type": "Feature",
                 "geometry": {
                     "type": "Polygon",
-                    "coordinates": [
-                        [[0.0, 0.0], [0.0, SIZE], [SIZE, SIZE], [SIZE, 0.0], [0.0, 0.0]],
-                    ],
+                    "coordinates": [[
+                        [0.0, 0.0],
+                        [0.0, SIZE],
+                        [SIZE, SIZE],
+                        [SIZE, 0.0],
+                        [0.0, 0.0],
+                    ]],
                 },
                 "properties": {
                     "EC_hcat_c": "1000000010",

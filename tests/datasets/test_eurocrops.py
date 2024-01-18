@@ -34,7 +34,9 @@ class TestEuroCrops:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         monkeypatch.setattr(torchgeo.datasets.eurocrops, "download_url", download_url)
         monkeypatch.setattr(
-            EuroCrops, "zenodo_files", [("AA.zip", 2020, "14e2c617ed1621bb930b37faab162202")],
+            EuroCrops,
+            "zenodo_files",
+            [("AA.zip", 2020, "14e2c617ed1621bb930b37faab162202")],
         )
         monkeypatch.setattr(EuroCrops, "hcat_md5", "22d61cf3b316c8babfd209ae81419d8f")
         base_url = os.path.join("tests", "data", "eurocrops") + os.sep

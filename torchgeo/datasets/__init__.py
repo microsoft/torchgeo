@@ -153,6 +153,7 @@ __all__ = (
     "CMSGlobalMangroveCanopy",
     "EDDMapS",
     "Esri2020",
+    "EuroCrops",
     "EUDEM",
     "GBIF",
     "GlobBiomass",

@@ -14,7 +14,12 @@ from rasterio.crs import CRS
 import torch
 
 from .geo import VectorDataset
-from .utils import DatasetNotFoundError, check_integrity, download_and_extract_archive, download_url
+from .utils import (
+    DatasetNotFoundError,
+    check_integrity,
+    download_and_extract_archive,
+    download_url
+)
 
 
 def split_hcat_code(hcat_code: str, hcat_level: int):
@@ -27,9 +32,9 @@ def split_hcat_code(hcat_code: str, hcat_level: int):
         hcat_level: the HCAT level (3, 4, 5, or 6).
 
     Returns:
-        A tuple containing, respectively, the HCAT prefix and suffix. At Level 3, the prefix
-        is the first 4 digits and suffix is the second 6 digits, while at Level 6, the prefix
-        is the full code and the suffix is empty.
+        A tuple containing, respectively, the HCAT prefix and suffix. At Level 3, the
+        prefix is the first 4 digits and suffix is the second 6 digits, while at Level
+        6, the prefix is the full code and the suffix is empty.
     """
     assert len(hcat_code) == 10
     if hcat_level == 3:
@@ -88,7 +93,7 @@ class EuroCrops(VectorDataset):
         ("SI_2021.zip", 2021, "6b2dde6ba9d09c3ef8145ea520576228"),
         ("SK_2021.zip", 2021, "c7762b4073869673edc08502e7b22f01"),
         # Year is unknown for Romania portion (ny = no year).
-        #("RO_ny", ??),
+        # ("RO_ny", ??),
     ]
 
     # Color palette to choose from.
@@ -133,7 +138,8 @@ class EuroCrops(VectorDataset):
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
-            hcat_level: use labels at this level of the `HCATv2 hierarchy <https://www.eurocrops.tum.de/taxonomy.html>`__.
+            hcat_level: use labels at this level of the
+                `HCATv2 hierarchy <https://www.eurocrops.tum.de/taxonomy.html>`__.
                 Valid levels are 3, 4, 5, and 6.
 
         Raises:
@@ -155,8 +161,9 @@ class EuroCrops(VectorDataset):
 
         self._load_classes()
         self.cmap = torch.zeros((len(self.classes)+1, 4), dtype=torch.uint8)
-        for code, class_index in self.classes.items():
-            self.cmap[class_index, :] = torch.tensor(self.colors[class_index % len(self.colors)])
+        for class_index in self.classes.values():
+            color = self.colors[class_index % len(self.colors)]
+            self.cmap[class_index, :] = torch.tensor(color)
 
         super().__init__(
             paths=paths,
@@ -204,7 +211,9 @@ class EuroCrops(VectorDataset):
             )
 
     def _load_classes(self) -> None:
-        """"Load classes from the CSV file corresponding to the level specified by the user."""
+        """
+        Load classes from the CSV file corresponding to the level specified by the user.
+        """
         assert isinstance(self.paths, str)
         filepath = os.path.join(self.paths, self.hcat_fname)
         with open(filepath, 'r') as f:
