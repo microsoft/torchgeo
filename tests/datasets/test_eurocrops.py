@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from itertools import product
 import shutil
 from pathlib import Path
 
@@ -10,8 +11,10 @@ import pytest
 import torch
 import torch.nn as nn
 from pytest import MonkeyPatch
+from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
 
+from torchgeo.datasets.eurocrops import split_hcat_code
 import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
@@ -27,8 +30,11 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestEuroCrops:
-    @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> EuroCrops:
+    @pytest.fixture(params=[3, 4, 5, 6])
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+    ) -> EuroCrops:
+        hcat_level = request.param
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         monkeypatch.setattr(torchgeo.datasets.eurocrops, "download_url", download_url)
         monkeypatch.setattr(
@@ -43,7 +49,12 @@ class TestEuroCrops:
         root = str(tmp_path)
         transforms = nn.Identity()
         return EuroCrops(
-            root, res=10, transforms=transforms, download=True, checksum=True
+            root,
+            res=10,
+            transforms=transforms,
+            download=True,
+            checksum=True,
+            hcat_level=hcat_level,
         )
 
     def test_getitem(self, dataset: EuroCrops) -> None:
@@ -84,3 +95,9 @@ class TestEuroCrops:
             IndexError, match="query: .* not found in index with bounds:"
         ):
             dataset[query]
+
+    def test_invalid_hcat_level(self) -> None:
+        with pytest.raises(AssertionError):
+            EuroCrops(hcat_level=2)
+        with pytest.raises(ValueError):
+            split_hcat_code("0000000000", 7)

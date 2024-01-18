@@ -219,7 +219,7 @@ class EuroCrops(VectorDataset):
             reader = csv.DictReader(f)
             # Create classes dict assigning each class to its row index in the CSV.
             # Only retain classes up to the specified HCAT level.
-            self.classes = {}
+            self.classes: dict[str, int] = {}
             for row in reader:
                 hcat_code = row[self.hcat_code_column]
                 code_prefix, code_suffix = split_hcat_code(hcat_code, self.hcat_level)
@@ -228,7 +228,7 @@ class EuroCrops(VectorDataset):
                     continue
                 self.classes[code_prefix] = len(self.classes) + 1
 
-    def _get_class_index(self, feat) -> int:
+    def _get_class_index(self, feat: Any) -> int:
         """Get class index from a dataset feature."""
         # Convert the HCAT code of this feature to its index in self.classes.
         hcat_code = feat["properties"][self.label_name]
