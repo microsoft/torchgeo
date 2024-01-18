@@ -9,11 +9,10 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from pytest import MonkeyPatch
 from _pytest.fixtures import SubRequest
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-from torchgeo.datasets.eurocrops import split_hcat_code
 import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
@@ -22,6 +21,7 @@ from torchgeo.datasets import (
     IntersectionDataset,
     UnionDataset,
 )
+from torchgeo.datasets.eurocrops import split_hcat_code
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
