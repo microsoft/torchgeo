@@ -56,5 +56,5 @@ geojson = {
     ],
 }
 
-with open("vector.geojson", "w") as f:
+with open("vector_2024.geojson", "w") as f:
     json.dump(geojson, f)
