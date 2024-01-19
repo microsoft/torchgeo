@@ -113,7 +113,7 @@ class EuroCrops(VectorDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new Dataset instance.
+        """Initialize a new EuroCrops instance.
 
         Args:
             paths: one or more root directories to search for files to load
