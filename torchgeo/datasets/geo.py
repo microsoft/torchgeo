@@ -654,8 +654,8 @@ class VectorDataset(GeoDataset):
                     # Skip files that fiona is unable to read
                     continue
                 else:
-                    mint = 0
-                    maxt = sys.maxsize
+                    mint: float = 0
+                    maxt: float = sys.maxsize
                     if "date" in match.groupdict():
                         date = match.group("date")
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
