@@ -52,9 +52,9 @@ class CustomGeoDataset(GeoDataset):
 
 class CustomVectorDataset(VectorDataset):
     filename_glob = "*.geojson"
-    date_format = "%Y%m%dT%H%M%S"
+    date_format = "%Y"
     filename_regex = r"""
-        ^vector_(?P<date>\d{8}T\d{6})\.geojson
+        ^vector_(?P<date>\d{4})\.geojson
     """
 
 
