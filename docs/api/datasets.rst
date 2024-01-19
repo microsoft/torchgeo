@@ -78,6 +78,11 @@ EU-DEM
 
 .. autoclass:: EUDEM
 
+EuroCrops
+^^^^^^^^^
+
+.. autoclass:: EuroCrops
+
 GBIF
 ^^^^
 
