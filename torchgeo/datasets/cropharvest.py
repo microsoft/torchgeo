@@ -20,7 +20,6 @@ from .utils import (
     DatasetNotFoundError,
     download_url,
     extract_archive,
-    percentile_normalization,
 )
 
 
@@ -310,9 +309,8 @@ class CropHarvest(NonGeoDataset):
         """
         fig, axs = plt.subplots()
         bands = [self.all_bands.index(band) for band in self.rgb_bands]
-        rgb = np.array(sample["array"])[:, bands]
-        normalized = percentile_normalization(rgb)
-        axs.imshow(normalized[None, ...])
+        rgb = np.array(sample["array"])[:, bands] / 3000
+        axs.imshow(rgb[None, ...])
         axs.set_title(f'Crop type: {self.classes[sample["label"]]}')
         axs.set_xticks(np.arange(12))
         axs.set_xticklabels(np.arange(12) + 1)
