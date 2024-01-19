@@ -56,7 +56,7 @@ class EuroCrops(VectorDataset):
     publicly available self-declared crop reporting datasets from countries of the
     European Union" into a unified format. The dataset is released under CC BY 4.0 Deed.
 
-    The dataset consists of shapefiles containing a total of X polygons. Each polygon
+    The dataset consists of shapefiles containing a total of 22M polygons. Each polygon
     is tagged with a "EC_hcat_n" attribute indicating the harmonized crop name grown
     within the polygon in the year associated with the shapefile.
 
