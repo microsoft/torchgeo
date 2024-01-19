@@ -46,6 +46,19 @@ class EuroCrops(VectorDataset):
 
     label_name = "EC_hcat_c"
 
+    filename_glob = "*_EC*.shp"
+
+    # Override variables to automatically extract timestamp.
+    filename_regex = r"""
+        ^(?P<prefix>[a-zA-Z]+(?:_[a-zA-Z]+)?)
+        _
+        (?P<date>\d{4})
+        _
+        (?P<suffix>EC(?:21)?)
+        \.shp$
+    """
+    date_format = "%Y"
+
     # Filename and md5 of files in this dataset on zenodo.
     zenodo_files = [
         ("AT_2021.zip", "490241df2e3d62812e572049fc0c36c5"),
@@ -64,7 +77,9 @@ class EuroCrops(VectorDataset):
         ("SE_2021.zip", "cab164c1c400fce56f7f1873bc966858"),
         ("SI_2021.zip", "6b2dde6ba9d09c3ef8145ea520576228"),
         ("SK_2021.zip", "c7762b4073869673edc08502e7b22f01"),
-        ("RO_ny.zip", "648e1504097765b4b7f825decc838882"),
+        # Year is unknown for Romania portion (ny = no year).
+        # We skip since it is inconsistent with the rest of the data.
+        # ("RO_ny.zip", "648e1504097765b4b7f825decc838882"),
     ]
 
     # Color palette to choose from.
@@ -220,7 +235,7 @@ class EuroCrops(VectorDataset):
                     continue
                 hcat_code_list[i] = "0"
                 break
-            hcat_code = ''.join(hcat_code_list)
+            hcat_code = "".join(hcat_code_list)
         return 0
 
     def plot(
@@ -238,10 +253,6 @@ class EuroCrops(VectorDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
-
-        .. versionchanged:: 0.3
-            Method now takes a sample dict, not a Tensor. Additionally, it is possible
-            to show subplot titles and/or use a custom suptitle.
         """
         mask = sample["mask"].squeeze()
         ncols = 1
