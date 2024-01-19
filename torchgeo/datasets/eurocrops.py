@@ -266,15 +266,15 @@ class EuroCrops(VectorDataset):
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4, 4))
 
         if showing_prediction:
-            axs[0].imshow(self.cmap[mask.int()], interpolation="none")
+            axs[0].imshow(self.cmap[mask.long()], interpolation="none")
             axs[0].axis("off")
-            axs[1].imshow(self.cmap[pred.int()], interpolation="none")
+            axs[1].imshow(self.cmap[pred.long()], interpolation="none")
             axs[1].axis("off")
             if show_titles:
                 axs[0].set_title("Mask")
                 axs[1].set_title("Prediction")
         else:
-            axs.imshow(self.cmap[mask.int()], interpolation="none")
+            axs.imshow(self.cmap[mask.long()], interpolation="none")
             axs.axis("off")
             if show_titles:
                 axs.set_title("Mask")
