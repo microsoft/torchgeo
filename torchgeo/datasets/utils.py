@@ -819,3 +819,38 @@ def path_is_vsi(path: str) -> bool:
     .. versionadded:: 0.6
     """
     return "://" in path or path.startswith("/vsi")
+
+
+def int_array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:
+    """Converts an integer :class:`numpy.ndarray` to :class:`torch.Tensor`.
+
+    :func:`torch.from_tensor` rejects numpy types like uint16 that are not supported
+    in pytorch. This function instead casts to an appropriate pytorch type without loss
+    of precision.
+
+    For example, a uint32 array becomes an int64 tensor. uint64 is not supported since
+    there is no suitable torch dtype.
+
+    The returned tensor is a copy.
+
+    Args:
+        array: a :class:`numpy.ndarray` with dtype uint8, uint16, uint32, int8, int16,
+            int32, or int64.
+
+    Returns:
+        A :class:`torch.Tensor` with dtype uint8, int8, int16, int32, or int64.
+    """
+    assert array.dtype in [
+        np.uint8,
+        np.uint16,
+        np.uint32,
+        np.int8,
+        np.int16,
+        np.int32,
+        np.int64,
+    ]
+    if array.dtype == np.uint16:
+        array = array.astype(np.int32)
+    elif array.dtype == np.uint32:
+        array = array.astype(np.int64)
+    return torch.tensor(array)

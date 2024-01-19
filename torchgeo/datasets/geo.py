@@ -35,6 +35,7 @@ from .utils import (
     DatasetNotFoundError,
     concat_samples,
     disambiguate_timestamp,
+    int_array_to_tensor,
     merge_samples,
     path_is_vsi,
 )
@@ -543,14 +544,8 @@ class RasterDataset(GeoDataset):
 
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
         dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res, indexes=band_indexes)
-
-        # fix numpy dtypes which are not supported by pytorch tensors
-        if dest.dtype == np.uint16:
-            dest = dest.astype(np.int32)
-        elif dest.dtype == np.uint32:
-            dest = dest.astype(np.int64)
-
-        tensor = torch.tensor(dest)
+        # Use int_array_to_tensor since merge may return uint16/uint32 arrays.
+        tensor = int_array_to_tensor(dest)
         return tensor
 
     @functools.lru_cache(maxsize=128)
@@ -706,15 +701,8 @@ class VectorDataset(GeoDataset):
             # with the default fill value and dtype used by rasterize
             masks = np.zeros((round(height), round(width)), dtype=np.uint8)
 
-        # Convert masks from numpy to torch.
-        # rasterize may produce uint8, uint16, or uint32 outputs depending on the
-        # label range.
-        # uint16/uint32 aren't supported in torch so we update accordingly.
-        if masks.dtype == np.uint16:
-            masks = masks.astype(np.int32)
-        elif masks.dtype == np.uint32:
-            masks = masks.astype(np.int64)
-        masks = torch.tensor(masks)
+        # Use int_array_to_tensor since rasterize may return uint16/uint32 arrays.
+        masks = int_array_to_tensor(masks)
 
         sample = {"mask": masks, "crs": self.crs, "bbox": query}
 

@@ -30,6 +30,7 @@ from torchgeo.datasets.utils import (
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
     extract_archive,
+    int_array_to_tensor,
     merge_samples,
     percentile_normalization,
     stack_samples,
@@ -657,3 +658,18 @@ def test_percentile_normalization() -> None:
     img = percentile_normalization(img, 2, 98)
     assert img.min() == 0
     assert img.max() == 1
+
+
+@pytest.mark.parametrize(
+    "array_dtype",
+    [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
+)
+def test_int_array_to_tensor(array_dtype) -> None:
+    array: "np.typing.NDArray[Any]" = np.zeros((2,), dtype=array_dtype)
+    array[0] = np.iinfo(array.dtype).min
+    array[1] = np.iinfo(array.dtype).max
+    tensor = int_array_to_tensor(array)
+    # We need to use large integer type here since otherwise casting will make the
+    # values equal even if they differ.
+    assert array[0].item() == tensor[0].item()
+    assert array[1].item() == tensor[1].item()
