@@ -35,9 +35,9 @@ from .utils import (
     DatasetNotFoundError,
     concat_samples,
     disambiguate_timestamp,
-    int_array_to_tensor,
     merge_samples,
     path_is_vsi,
+    int_array_to_tensor,
 )
 
 

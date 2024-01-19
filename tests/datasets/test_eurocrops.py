@@ -21,7 +21,6 @@ from torchgeo.datasets import (
     IntersectionDataset,
     UnionDataset,
 )
-from torchgeo.datasets.eurocrops import split_hcat_code
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -29,17 +28,15 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestEuroCrops:
-    @pytest.fixture(params=[3, 4, 5, 6])
+    @pytest.fixture(params=[None, ["1000000010"]])
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroCrops:
-        hcat_level = request.param
+        classes = request.param
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         monkeypatch.setattr(torchgeo.datasets.eurocrops, "download_url", download_url)
         monkeypatch.setattr(
-            EuroCrops,
-            "zenodo_files",
-            [("AA.zip", 2020, "14e2c617ed1621bb930b37faab162202")],
+            EuroCrops, "zenodo_files", [("AA.zip", "14e2c617ed1621bb930b37faab162202")]
         )
         monkeypatch.setattr(EuroCrops, "hcat_md5", "22d61cf3b316c8babfd209ae81419d8f")
         base_url = os.path.join("tests", "data", "eurocrops") + os.sep
@@ -49,11 +46,10 @@ class TestEuroCrops:
         transforms = nn.Identity()
         return EuroCrops(
             root,
-            res=10,
+            classes=classes,
             transforms=transforms,
             download=True,
             checksum=True,
-            hcat_level=hcat_level,
         )
 
     def test_getitem(self, dataset: EuroCrops) -> None:
@@ -94,9 +90,3 @@ class TestEuroCrops:
             IndexError, match="query: .* not found in index with bounds:"
         ):
             dataset[query]
-
-    def test_invalid_hcat_level(self) -> None:
-        with pytest.raises(AssertionError):
-            EuroCrops(hcat_level=2)
-        with pytest.raises(ValueError):
-            split_hcat_code("0000000000", 7)
