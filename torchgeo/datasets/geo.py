@@ -639,28 +639,29 @@ class VectorDataset(GeoDataset):
         i = 0
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         for filepath in self.files:
-            try:
-                with fiona.open(filepath) as src:
-                    if crs is None:
-                        crs = CRS.from_dict(src.crs)
+            match = re.match(filename_regex, os.path.basename(filepath))
+            if match is not None:
+                try:
+                    with fiona.open(filepath) as src:
+                        if crs is None:
+                            crs = CRS.from_dict(src.crs)
 
-                    minx, miny, maxx, maxy = src.bounds
-                    (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                        src.crs, crs.to_dict(), [minx, maxx], [miny, maxy]
-                    )
-            except fiona.errors.FionaValueError:
-                # Skip files that fiona is unable to read
-                continue
-            else:
-                mint = 0
-                maxt = sys.maxsize
-                match = re.match(filename_regex, os.path.basename(filepath))
-                if "date" in match.groupdict():
-                    date = match.group("date")
-                    mint, maxt = disambiguate_timestamp(date, self.date_format)
-                coords = (minx, maxx, miny, maxy, mint, maxt)
-                self.index.insert(i, coords, filepath)
-                i += 1
+                        minx, miny, maxx, maxy = src.bounds
+                        (minx, maxx), (miny, maxy) = fiona.transform.transform(
+                            src.crs, crs.to_dict(), [minx, maxx], [miny, maxy]
+                        )
+                except fiona.errors.FionaValueError:
+                    # Skip files that fiona is unable to read
+                    continue
+                else:
+                    mint = 0
+                    maxt = sys.maxsize
+                    if "date" in match.groupdict():
+                        date = match.group("date")
+                        mint, maxt = disambiguate_timestamp(date, self.date_format)
+                    coords = (minx, maxx, miny, maxy, mint, maxt)
+                    self.index.insert(i, coords, filepath)
+                    i += 1
 
         if i == 0:
             raise DatasetNotFoundError(self)
