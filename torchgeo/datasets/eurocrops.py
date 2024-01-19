@@ -122,7 +122,7 @@ class EuroCrops(VectorDataset):
         self,
         paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
-        res: float = 0.00001,
+        res: float = 0.0001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
