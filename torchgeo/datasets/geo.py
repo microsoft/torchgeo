@@ -33,9 +33,9 @@ from torchvision.datasets.folder import default_loader as pil_loader
 from .utils import (
     BoundingBox,
     DatasetNotFoundError,
+    array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
-    int_array_to_tensor,
     merge_samples,
     path_is_vsi,
 )
@@ -544,8 +544,8 @@ class RasterDataset(GeoDataset):
 
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
         dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res, indexes=band_indexes)
-        # Use int_array_to_tensor since merge may return uint16/uint32 arrays.
-        tensor = int_array_to_tensor(dest)
+        # Use array_to_tensor since merge may return uint16/uint32 arrays.
+        tensor = array_to_tensor(dest)
         return tensor
 
     @functools.lru_cache(maxsize=128)
@@ -720,8 +720,8 @@ class VectorDataset(GeoDataset):
             # with the default fill value and dtype used by rasterize
             masks = np.zeros((round(height), round(width)), dtype=np.uint8)
 
-        # Use int_array_to_tensor since rasterize may return uint16/uint32 arrays.
-        masks = int_array_to_tensor(masks)
+        # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
+        masks = array_to_tensor(masks)
 
         sample = {"mask": masks, "crs": self.crs, "bbox": query}
 

@@ -24,13 +24,13 @@ import torchgeo.datasets.utils
 from torchgeo.datasets.utils import (
     BoundingBox,
     DatasetNotFoundError,
+    array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
     download_and_extract_archive,
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
     extract_archive,
-    int_array_to_tensor,
     merge_samples,
     percentile_normalization,
     stack_samples,
@@ -664,11 +664,11 @@ def test_percentile_normalization() -> None:
     "array_dtype",
     [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
 )
-def test_int_array_to_tensor(array_dtype) -> None:
+def test_array_to_tensor(array_dtype: np.dtype) -> None:
     array: "np.typing.NDArray[Any]" = np.zeros((2,), dtype=array_dtype)
     array[0] = np.iinfo(array.dtype).min
     array[1] = np.iinfo(array.dtype).max
-    tensor = int_array_to_tensor(array)
+    tensor = array_to_tensor(array)
     # We need to use large integer type here since otherwise casting will make the
     # values equal even if they differ.
     assert array[0].item() == tensor[0].item()
