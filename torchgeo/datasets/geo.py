@@ -624,6 +624,7 @@ class VectorDataset(GeoDataset):
 
         # Populate the dataset index
         i = 0
+        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         for filepath in self.files:
             try:
                 with fiona.open(filepath) as src:
@@ -640,6 +641,10 @@ class VectorDataset(GeoDataset):
             else:
                 mint = 0
                 maxt = sys.maxsize
+                match = re.match(filename_regex, os.path.basename(filepath))
+                if "date" in match.groupdict():
+                    date = match.group("date")
+                    mint, maxt = disambiguate_timestamp(date, self.date_format)
                 coords = (minx, maxx, miny, maxy, mint, maxt)
                 self.index.insert(i, coords, filepath)
                 i += 1
