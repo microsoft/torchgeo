@@ -588,6 +588,19 @@ class RasterDataset(GeoDataset):
 class VectorDataset(GeoDataset):
     """Abstract base class for :class:`GeoDataset` stored as vector files."""
 
+    #: Regular expression used to extract date from filename.
+    #:
+    #: The expression should use named groups. The expression may contain any number of
+    #: groups. The following groups are specifically searched for by the base class:
+    #:
+    #: * ``date``: used to calculate ``mint`` and ``maxt`` for ``index`` insertion
+    filename_regex = ".*"
+
+    #: Date format string used to parse date from filename.
+    #:
+    #: Not used if :attr:`filename_regex` does not contain a ``date`` group.
+    date_format = "%Y%m%d"
+
     def __init__(
         self,
         paths: Union[str, Iterable[str]] = "data",
