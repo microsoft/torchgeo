@@ -239,12 +239,11 @@ class EuroCrops(VectorDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4, 4))
 
-        def apply_cmap(arr: np.typing.NDArray[Any]) -> np.typing.NDArray[np.float_]:
+        def apply_cmap(arr: "np.typing.NDArray[Any]") -> "np.typing.NDArray[np.float_]":
             # Color 0 as black, while applying default color map for the class indices.
             cmap = plt.colormaps.get_cmap("viridis")
-            im: np.typing.NDArray[np.float_] = cmap(arr)
+            im: "np.typing.NDArray[np.float_]" = cmap(arr / len(self.class_map))
             im[arr == 0] = 0
-            print(arr, im)
             return im
 
         if showing_prediction:
