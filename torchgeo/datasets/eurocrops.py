@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
-import torch
+import numpy as np
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
@@ -82,27 +82,6 @@ class EuroCrops(VectorDataset):
         # ("RO_ny.zip", "648e1504097765b4b7f825decc838882"),
     ]
 
-    # Color palette to choose from.
-    # There are hundreds of classes so we pick color via modulo of class index.
-    colors = [
-        (70, 107, 159, 255),
-        (209, 222, 248, 255),
-        (222, 197, 197, 255),
-        (217, 146, 130, 255),
-        (235, 0, 0, 255),
-        (171, 0, 0, 255),
-        (179, 172, 159, 255),
-        (104, 171, 95, 255),
-        (28, 95, 44, 255),
-        (181, 197, 143, 255),
-        (204, 184, 121, 255),
-        (223, 223, 194, 255),
-        (220, 217, 57, 255),
-        (171, 108, 40, 255),
-        (184, 217, 235, 255),
-        (108, 159, 184, 255),
-    ]
-
     def __init__(
         self,
         paths: Union[str, Iterable[str]] = "data",
@@ -140,10 +119,6 @@ class EuroCrops(VectorDataset):
             raise DatasetNotFoundError(self)
 
         self._load_class_map(classes)
-        self.cmap = torch.zeros((len(self.class_map) + 1, 4), dtype=torch.uint8)
-        for class_index in self.class_map.values():
-            color = self.colors[class_index % len(self.colors)]
-            self.cmap[class_index, :] = torch.tensor(color)
 
         super().__init__(
             paths=paths,
@@ -264,16 +239,24 @@ class EuroCrops(VectorDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4, 4))
 
+        def apply_cmap(arr: np.typing.NDArray[Any]) -> np.typing.NDArray[np.float_]:
+            # Color 0 as black, while applying default color map for the class indices.
+            cmap = plt.colormaps.get_cmap("viridis")
+            im: np.typing.NDArray[np.float_] = cmap(arr)
+            im[arr == 0] = 0
+            print(arr, im)
+            return im
+
         if showing_prediction:
-            axs[0].imshow(self.cmap[mask.long()], interpolation="none")
+            axs[0].imshow(apply_cmap(mask), interpolation="none")
             axs[0].axis("off")
-            axs[1].imshow(self.cmap[pred.long()], interpolation="none")
+            axs[1].imshow(apply_cmap(pred), interpolation="none")
             axs[1].axis("off")
             if show_titles:
                 axs[0].set_title("Mask")
                 axs[1].set_title("Prediction")
         else:
-            axs.imshow(self.cmap[mask.long()], interpolation="none")
+            axs.imshow(apply_cmap(mask), interpolation="none")
             axs.axis("off")
             if show_titles:
                 axs.set_title("Mask")
