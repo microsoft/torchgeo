@@ -18,8 +18,7 @@ class Airphen(RasterDataset):
     `Airphen <https://ideol.sakura.ne.jp/img/20170123_HiphenAirphenKeyfeatures.pdf>`__
     is a multispectral scientific camera developed by agronomists and photonics
     engineers at `Hiphen <https://www.hiphen-plant.com/>`_ to match plant measurements
-    needs and constraints. Its high flexibility, ease of use and radiometric quality
-    give you a wide range of opportunities to develop your customized applications.
+    needs and constraints.
 
     Main characteristics:
 
@@ -30,13 +29,6 @@ class Airphen(RasterDataset):
     * Metadata information: Exif and XMP
     * Internal or external GPS
     * Synchronization with different sensors (TIR, RGB, others)
-
-    Key features:
-
-    * Customized sensing configurations
-    * Easy integration
-    * Full control and configuration
-    * Powerful analysis with a specific Agisoft module
 
     If you use this dataset in your research, please cite the following paper:
 
