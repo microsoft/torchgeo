@@ -37,8 +37,8 @@ For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation 
 
 You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://arxiv.org/abs/2111.08872), [podcast episode](https://www.youtube.com/watch?v=ET8Hb_HqNJQ), [tutorial](https://www.youtube.com/watch?v=R_FhY8aq708), and [blog post](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/).
 
-[![podcast episode](https://img.youtube.com/vi/ET8Hb_HqNJQ/0.jpg)](https://www.youtube.com/watch?v=ET8Hb_HqNJQ =45%x)
-[![tutorial](https://img.youtube.com/vi/R_FhY8aq708/0.jpg)](https://www.youtube.com/watch?v=R_FhY8aq708 =45%x)
+[![podcast episode](https://img.youtube.com/vi/ET8Hb_HqNJQ/0.jpg)](https://www.youtube.com/watch?v=ET8Hb_HqNJQ "podcast episode" =45%x)
+[![tutorial](https://img.youtube.com/vi/R_FhY8aq708/0.jpg)](https://www.youtube.com/watch?v=R_FhY8aq708 "tutorial" =45%x)
 
 ## Example Usage
 
