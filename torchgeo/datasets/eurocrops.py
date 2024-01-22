@@ -150,7 +150,7 @@ class EuroCrops(VectorDataset):
             crs=crs,
             res=res,
             transforms=transforms,
-            label_fn=self._get_class_index,
+            label_name=self.label_name,
         )
 
     def _check_integrity(self) -> bool:
@@ -211,19 +211,19 @@ class EuroCrops(VectorDataset):
         for idx, hcat_code in enumerate(classes):
             self.class_map[hcat_code] = idx + 1
 
-    def _get_class_index(self, feat: Any) -> int:
-        """Get class index from a dataset feature.
+    def _get_label(self, feature: Any) -> int:
+        """Get label value to use for rendering a feature.
 
         Args:
-            feat: fiona.Feature to get class index of.
+            feature: the :class:`fiona.Feature` from which to extract the label.
 
         Returns:
-            The integer class index, or 0 if there is no match.
+            the integer label, or 0 if the feature should not be rendered.
         """
         # Convert the HCAT code of this feature to its index per self.class_map.
         # We go up the class hierarchy until there is a match.
         # (Parent code is computed by replacing rightmost non-0 character with 0.)
-        hcat_code = feat["properties"][self.label_name]
+        hcat_code = feature["properties"][self.label_name]
         while True:
             if hcat_code in self.class_map:
                 return self.class_map[hcat_code]

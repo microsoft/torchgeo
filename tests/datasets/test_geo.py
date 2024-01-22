@@ -297,10 +297,7 @@ class TestVectorDataset:
         root = os.path.join("tests", "data", "vector")
         transforms = nn.Identity()
         return CustomVectorDataset(
-            root,
-            res=0.1,
-            transforms=transforms,
-            label_fn=lambda feat: feat["properties"]["label_id"],
+            root, res=0.1, transforms=transforms, label_name="label_id"
         )
 
     def test_getitem(self, dataset: CustomVectorDataset) -> None:

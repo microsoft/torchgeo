@@ -602,7 +602,7 @@ class VectorDataset(GeoDataset):
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
-        label_fn: Optional[Callable[[Any], int]] = None,
+        label_name: Optional[str] = None,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -613,8 +613,8 @@ class VectorDataset(GeoDataset):
             res: resolution of the dataset in units of CRS
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
-            label_fn: function to extract the label to be rasterized into the mask from
-                the dataset Feature.
+            label_name: name of the dataset property that has the label to be
+                rasterized into the mask
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
@@ -628,7 +628,7 @@ class VectorDataset(GeoDataset):
         super().__init__(transforms)
 
         self.paths = paths
-        self.label_fn = label_fn
+        self.label_name = label_name
 
         # Populate the dataset index
         i = 0
@@ -701,9 +701,8 @@ class VectorDataset(GeoDataset):
                     shape = fiona.transform.transform_geom(
                         src.crs, self.crs.to_dict(), feature["geometry"]
                     )
-                    if self.label_fn:
-                        shape = (shape, self.label_fn(feature))
-                    shapes.append(shape)
+                    label = self._get_label(feature)
+                    shapes.append((shape, label))
 
         # Rasterize geometries
         width = (query.maxx - query.minx) / self.res
@@ -729,6 +728,19 @@ class VectorDataset(GeoDataset):
             sample = self.transforms(sample)
 
         return sample
+
+    def _get_label(self, feature: Any) -> int:
+        """Get label value to use for rendering a feature.
+
+        Args:
+            feature: the :class:`fiona.Feature` from which to extract the label.
+
+        Returns:
+            the integer label, or 0 if the feature should not be rendered.
+        """
+        if self.label_name:
+            return int(feature["properties"][self.label_name])
+        return 1
 
 
 class NonGeoDataset(Dataset[dict[str, Any]], abc.ABC):
