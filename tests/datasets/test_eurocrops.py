@@ -28,7 +28,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestEuroCrops:
-    @pytest.fixture(params=[None, ["1000000010"]])
+    @pytest.fixture(params=[None, ["1000000010"], ["1000000000"], ["2000000000"]])
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroCrops:
