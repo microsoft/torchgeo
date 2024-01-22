@@ -35,8 +35,8 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
 .. versionadded:: 0.6
 
     """
-    filename_glob = "SouthAmerica_Soybean_*.*"
-    filename_regex = (r"SouthAmerica_Soybean_(?P<year>\d{4})\)")
+    filename_glob = "South_America_Soybean_*.*"
+    filename_regex = r"South_America_Soybean_(?P<year>\d{4})"
     zipfile_glob = "SouthAmericaSoybean.zip"
 
 
@@ -45,6 +45,7 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
 
     url = "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_"
 
+    md5 = "7f1d06a57cc6c4ae6be3b3fb9464ddeb"
     md5s = {
         2001: "2914b0af7590a0ca4dfa9ccefc99020f", 
         2002: "8a4a9dcea54b3ec7de07657b9f2c0893",
@@ -76,7 +77,6 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
         paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        years: list[int] = [2021],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
@@ -100,16 +100,9 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
             RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             AssertionError: if ``year`` is invalid
         """
-        assert set(years) <= self.md5s.keys(), (
-            "South America Soybean data only exists for the following years: "
-            f"{list(self.md5s.keys())}."
-        )
-
-        self.years = years
         self.paths = paths
         self.download = download
         self.checksum = checksum
-        print("paths:" , paths)
         self._verify()
 
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
@@ -124,6 +117,7 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
             IndexError: if query is not found in the index
         """
         sample = super().__getitem__(query)
+        
         return sample
 
     def _verify(self) -> None:
@@ -135,7 +129,6 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
         if self.files:
             return
         assert isinstance(self.paths, str)
-
         pathname = os.path.join(self.paths, "**", self.zipfile_glob)
         if glob.glob(pathname, recursive=True):
             self._extract()
@@ -151,19 +144,17 @@ This dataset produced annual 30-m soybean maps of South America from 2001 to 202
         self._extract()
     def _download(self) -> None:
         """Download the dataset."""
-        # for i in range(21): 
-        #     ext = ".tif"
-        #     downloadUrl = self.url + str(i+2001) + ext
-        #     download_url(downloadUrl,self.paths,md5 = self.md5s if self.checksum else None)
-
         filename = "SouthAmericaSoybean.zip"
+        
         download_url(
-            self.url, self.paths, filename, md5s=self.md5s if self.checksum else None
+            self.url, self.paths, filename, md5=self.md5 if self.checksum else None
         )
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str)
+        
         pathname = os.path.join(self.paths, "**", self.zipfile_glob)
+    
         extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
 
 

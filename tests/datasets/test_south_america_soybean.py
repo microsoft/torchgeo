@@ -10,12 +10,11 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import SouthAmericaSoybean, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets import SouthAmericaSoybean, BoundingBox, IntersectionDataset, UnionDataset, DatasetNotFoundError
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
-
 
 class TestSouthAmericaSoybean:
     @pytest.fixture
@@ -25,12 +24,10 @@ class TestSouthAmericaSoybean:
         url = os.path.join("tests", "data", "south_america_soybean", "SouthAmericaSoybean.zip")
         monkeypatch.setattr(SouthAmericaSoybean, "url", url)
         root = str(tmp_path)
-        #url = os.path.join("tests", "data", "south_america_soybean", "SouthAmerica_Soybean_{}.tif")
-        return SouthAmericaSoybean(root,
+        return SouthAmericaSoybean(paths=root,
             transforms=transforms,
             download=True,
-            checksum=True,
-            
+            checksum=True,    
         )
 
     def test_getitem(self, dataset: SouthAmericaSoybean) -> None:
@@ -52,19 +49,10 @@ class TestSouthAmericaSoybean:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests","data", "south_america_soybean", "SouthAmericaSoybean.zip")
-       
         root = str(tmp_path)
-
         shutil.copy(pathname, root)
         SouthAmericaSoybean(root)
-
-    # def test_invalid_year(self, tmp_path: Path) -> None:
-    #     with pytest.raises(
-    #         AssertionError,
-    #         match="SouthAmericaSoybean data product only exists for the following years:",
-    #     ):
-    #         SouthAmericaSoybean(str(tmp_path), years=[1996])
-
+    
     def test_plot(self, dataset: SouthAmericaSoybean) -> None:
         query = dataset.bounds
         x = dataset[query]
@@ -79,7 +67,7 @@ class TestSouthAmericaSoybean:
         plt.close()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SouthAmericaSoybean(str(tmp_path))
 
     def test_invalid_query(self, dataset: SouthAmericaSoybean) -> None:
