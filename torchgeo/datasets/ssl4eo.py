@@ -339,11 +339,11 @@ class SSL4EOS12(NonGeoDataset):
 
        .. code-block:: console
 
-          $ export RSYNC_PASSWORD=m1660427.001
-          $ rsync -av rsync://m1660427.001@dataserv.ub.tum.de/m1660427.001/ .
+          $ export RSYNC_PASSWORD=m1702379
+          $ rsync -av rsync://m1702379@dataserv.ub.tum.de/m1702379/ .
 
-       The dataset is about 1.5 TB when compressed and 3.7 TB when uncompressed, and
-       takes roughly 36 hrs to download, 1 hr to checksum, and 12 hrs to extract.
+       The dataset is about 150 GB when compressed and 370 GB when uncompressed, and
+       takes roughly 3.5 hrs to download, 5 min to checksum, and 1 hr to extract.
 
     .. versionadded:: 0.5
     """
@@ -357,13 +357,13 @@ class SSL4EOS12(NonGeoDataset):
 
     metadata: dict[str, _Metadata] = {
         "s1": {
-            "filename": "s1.tar.gz",
-            "md5": "51ee23b33eb0a2f920bda25225072f3a",
+            "filename": "s1_uint8.tar.gz",
+            "md5": "",
             "bands": ["VV", "VH"],
         },
         "s2c": {
-            "filename": "s2_l1c.tar.gz",
-            "md5": "b4f8b03c365e4a85780ded600b7497ab",
+            "filename": "s2c_uint8.tar.gz",
+            "md5": "",
             "bands": [
                 "B1",
                 "B2",
@@ -381,8 +381,8 @@ class SSL4EOS12(NonGeoDataset):
             ],
         },
         "s2a": {
-            "filename": "s2_l2a.tar.gz",
-            "md5": "85496cd9d6742aee03b6a1c99cee0ac1",
+            "filename": "s2a_uint8.tar.gz",
+            "md5": "",
             "bands": [
                 "B1",
                 "B2",
@@ -398,6 +398,11 @@ class SSL4EOS12(NonGeoDataset):
                 "B12",
             ],
         },
+        "rgb": {
+            "filename": "rgb_uint8.tar.gz",
+            "md5": "",
+            "bands": ["B4", "B3", "B2"],
+        },
     }
 
     def __init__(
@@ -412,9 +417,11 @@ class SSL4EOS12(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: one of "s1" (Sentinel-1 dual-pol SAR), "s2c" (Sentinel-2 Level-1C
-                top-of-atmosphere reflectance), and "s2a" (Sentinel-2 Level-2a surface
-                reflectance)
+            split: one of
+                "s1" (Sentinel-1 dual-pol SAR),
+                "s2c" (Sentinel-2 Level-1C top-of-atmosphere reflectance),
+                "s2a" (Sentinel-2 Level-2A surface reflectance), and
+                "rgb" (Sentinel-2 RGB subset)
             seasons: number of seasonal patches to sample per location, 1--4
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
