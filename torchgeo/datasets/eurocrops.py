@@ -50,7 +50,8 @@ class EuroCrops(VectorDataset):
 
     # Override variables to automatically extract timestamp.
     filename_regex = r"""
-        ^(?P<prefix>[a-zA-Z]+(?:_[a-zA-Z]+)?)
+        ^(?P<country>[A-Z]+)
+        (_(?P<region>[A-Z]+))?
         _
         (?P<date>\d{4})
         _
@@ -186,7 +187,7 @@ class EuroCrops(VectorDataset):
         for idx, hcat_code in enumerate(classes):
             self.class_map[hcat_code] = idx + 1
 
-    def _get_label(self, feature: Any) -> int:
+    def get_label(self, feature: Any) -> int:
         """Get label value to use for rendering a feature.
 
         Args:

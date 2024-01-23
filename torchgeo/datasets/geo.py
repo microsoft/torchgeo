@@ -701,7 +701,7 @@ class VectorDataset(GeoDataset):
                     shape = fiona.transform.transform_geom(
                         src.crs, self.crs.to_dict(), feature["geometry"]
                     )
-                    label = self._get_label(feature)
+                    label = self.get_label(feature)
                     shapes.append((shape, label))
 
         # Rasterize geometries
@@ -729,7 +729,7 @@ class VectorDataset(GeoDataset):
 
         return sample
 
-    def _get_label(self, feature: Any) -> int:
+    def get_label(self, feature: Any) -> int:
         """Get label value to use for rendering a feature.
 
         Args:
