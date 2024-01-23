@@ -50,7 +50,7 @@ class EuroCrops(VectorDataset):
 
     # Override variables to automatically extract timestamp.
     filename_regex = r"""
-        ^(?P<country>[A-Z]+)
+        ^(?P<country>[A-Z]{2})
         (_(?P<region>[A-Z]+))?
         _
         (?P<date>\d{4})
