@@ -475,6 +475,9 @@ if __name__ == "__main__":
     def worker(idx: int) -> None:
         if idx in ext_coords.keys():
             return
+        # Skip when not in pre-sampled coords like sampled_locations.csv
+        if idx not in match_coords.keys():
+            return
 
         worker_start = time.time()
         patches, center_coord = get_random_patches_match(
