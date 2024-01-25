@@ -45,10 +45,7 @@ def convert_coco_poly_to_mask(
         mask = torch.as_tensor(mask, dtype=torch.uint8)
         mask = mask.any(dim=2)
         masks.append(mask)
-    if masks:
-        masks_tensor = torch.stack(masks, dim=0)
-    else:
-        masks_tensor = torch.zeros((0, height, width), dtype=torch.uint8)
+    masks_tensor = torch.stack(masks, dim=0)
     return masks_tensor
 
 
@@ -89,10 +86,8 @@ class ConvertCocoAnnotations:
         categories = [obj["category_id"] for obj in anno]
         classes = torch.tensor(categories, dtype=torch.int64)
 
-        if "segmentation" in anno[0]:
-            segmentations = [obj["segmentation"] for obj in anno]
-        else:
-            segmentations = []
+        segmentations = [obj["segmentation"] for obj in anno]
+
         masks = convert_coco_poly_to_mask(segmentations, h, w)
 
         keep = (boxes[:, 3] > boxes[:, 1]) & (boxes[:, 2] > boxes[:, 0])
@@ -258,8 +253,7 @@ class VHR10(NonGeoDataset):
             sample = self.coco_convert(sample)
             sample["labels"] = sample["label"]["labels"]
             sample["boxes"] = sample["label"]["boxes"]
-            if "masks" in sample["label"]:
-                sample["masks"] = sample["label"]["masks"]
+            sample["masks"] = sample["label"]["masks"]
             del sample["label"]
 
         if self.transforms is not None:
@@ -296,6 +290,7 @@ class VHR10(NonGeoDataset):
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
             tensor = torch.from_numpy(array)
+            tensor = tensor.float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -439,7 +434,7 @@ class VHR10(NonGeoDataset):
             ncols += 1
 
         # Display image
-        fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 10, 10))
+        fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 10, 13))
         axs[0, 0].imshow(image)
         axs[0, 0].axis("off")
 
@@ -536,9 +531,9 @@ class VHR10(NonGeoDataset):
             if show_titles:
                 axs[0, 1].set_title("Prediction")
 
-        plt.tight_layout()
-
         if suptitle is not None:
             plt.suptitle(suptitle)
+
+        plt.tight_layout()
 
         return fig

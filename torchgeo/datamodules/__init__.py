@@ -38,6 +38,7 @@ from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
 from .utils import MisconfigurationException
 from .vaihingen import Vaihingen2DDataModule
+from .vhr10 import VHR10DataModule
 from .xview import XView2DataModule
 
 __all__ = (
@@ -79,6 +80,7 @@ __all__ = (
     "UCMercedDataModule",
     "USAVarsDataModule",
     "Vaihingen2DDataModule",
+    "VHR10DataModule",
     "XView2DataModule",
     # Base classes
     "BaseDataModule",
