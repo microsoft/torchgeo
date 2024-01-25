@@ -46,7 +46,7 @@ if __name__ == "__main__":
         # remove old data
         if os.path.exists(path):
             os.remove(path)
-        # Create mask file
+        # Create image file
         create_file(path, dtype="int32", num_channels=1)
         files_to_zip.append(path)
 

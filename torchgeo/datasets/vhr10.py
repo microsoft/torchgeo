@@ -468,7 +468,7 @@ class VHR10(NonGeoDataset):
             # Add masks
             if show_feats in {"masks", "both"} and "masks" in sample:
                 mask = masks[i]
-                contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
+                contours = find_contours(mask, 0.5)  # _ type: ignore[no-untyped-call]
                 for verts in contours:
                     verts = np.fliplr(verts)
                     p = patches.Polygon(
@@ -520,7 +520,9 @@ class VHR10(NonGeoDataset):
                 # Add masks
                 if show_pred_masks:
                     mask = prediction_masks[i]
-                    contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
+                    contours = find_contours(
+                        mask, 0.5
+                    )  # _ type: ignore[no-untyped-call]
                     for verts in contours:
                         verts = np.fliplr(verts)
                         p = patches.Polygon(

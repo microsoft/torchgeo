@@ -57,6 +57,10 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
       (e.g. Landsat and CDL)
     * Combine datasets for multiple image sources for multimodal learning or data fusion
       (e.g. Landsat and Sentinel)
+    * Combine image and digital surface (e.g., elevation, temperature,
+      pressure) and sample from both simultaneously (e.g. Sentinel-2 and an Aster
+      Global DEM tile)
+
 
     These combinations require that all queries are present in *both* datasets,
     and can be combined using an :class:`IntersectionDataset`:
@@ -342,7 +346,11 @@ class RasterDataset(GeoDataset):
     #: ``start`` and ``stop`` groups.
     date_format = "%Y%m%d"
 
-    #: True if dataset contains imagery, False if dataset contains mask
+    #: True if the dataset contains source data, such as imagery. False if the dataset
+    #: contains target data, such as a mask. This is the same as Kornia. When multiple
+    #: datasets with different keys are combined and the same key is used for multiple
+    #: datasets, for example 2 "image" and 1 "mask", the channels will be stacked so
+    #: that there's still a single value for that key.
     is_image = True
 
     #: True if data is stored in a separate file for each band, else False.
@@ -360,6 +368,12 @@ class RasterDataset(GeoDataset):
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
+
+        Defaults to float32 for is_image = True and long for is_image = False. This is
+        what we usually want for 99% of datasets but can be overridden for pixel-wise 
+        regression masks (where it should be float32). Uint16 and uint32 are
+        automatically cast to int32 and int64, respectively, because numpy supports
+        the former but torch does not.
 
         Returns:
             the dtype of the dataset
