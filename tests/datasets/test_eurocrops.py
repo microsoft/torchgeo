@@ -86,3 +86,7 @@ class TestEuroCrops:
             IndexError, match="query: .* not found in index with bounds:"
         ):
             dataset[query]
+
+    def test_integrity_error(self, dataset: EuroCrops) -> None:
+        dataset.zenodo_files = [("AA.zip", "invalid")]
+        assert not dataset._check_integrity()
