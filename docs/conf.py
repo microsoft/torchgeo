@@ -67,6 +67,8 @@ nitpick_ignore = [
     ("py:class", "torchvision.models._api.WeightsEnum"),
     ("py:class", "torchvision.models.resnet.ResNet"),
     ("py:class", "torchvision.models.swin_transformer.SwinTransformer"),
+    ("py:class", "fiona.Feature"),
+    ("py:class", "fiona.model.Feature"),
 ]
 
 

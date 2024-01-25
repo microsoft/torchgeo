@@ -8,6 +8,7 @@ import os
 from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
+import fiona
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
@@ -35,6 +36,8 @@ class EuroCrops(VectorDataset):
 
     If you use this dataset in your research, please follow the citation guidelines at
     https://github.com/maja601/EuroCrops#reference.
+
+    .. versionadded:: 0.6
     """
 
     base_url = "https://zenodo.org/records/8229128/files/"
@@ -187,7 +190,7 @@ class EuroCrops(VectorDataset):
         for idx, hcat_code in enumerate(classes):
             self.class_map[hcat_code] = idx + 1
 
-    def get_label(self, feature: Any) -> int:
+    def get_label(self, feature: "fiona.Feature") -> int:
         """Get label value to use for rendering a feature.
 
         Args:

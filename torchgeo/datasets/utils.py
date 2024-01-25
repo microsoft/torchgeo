@@ -839,6 +839,8 @@ def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:
     Returns:
         A :class:`torch.Tensor` with the same dtype as array unless array is uint16 or
         uint32, in which case an int32 or int64 Tensor is returned, respectively.
+
+    .. versionadded:: 0.6
     """
     if array.dtype == np.uint16:
         array = array.astype(np.int32)

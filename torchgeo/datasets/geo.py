@@ -729,7 +729,7 @@ class VectorDataset(GeoDataset):
 
         return sample
 
-    def get_label(self, feature: Any) -> int:
+    def get_label(self, feature: "fiona.Feature") -> int:
         """Get label value to use for rendering a feature.
 
         Args:
@@ -737,6 +737,8 @@ class VectorDataset(GeoDataset):
 
         Returns:
             the integer label, or 0 if the feature should not be rendered.
+
+        .. versionadded:: 0.6
         """
         if self.label_name:
             return int(feature["properties"][self.label_name])
