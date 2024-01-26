@@ -153,7 +153,7 @@ Sentinel
    
 
 South America Soybean
-^^^^
+^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SouthAmericaSoybean
 
