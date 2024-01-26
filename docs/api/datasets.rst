@@ -151,7 +151,7 @@ Sentinel
 .. autoclass:: Sentinel1
 .. autoclass:: Sentinel2
 
-South America Soybean
+SouthAmericaSoybean
 ^^^^
 
 .. autoclass:: SouthAmericaSoybean
