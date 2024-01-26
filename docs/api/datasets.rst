@@ -151,6 +151,12 @@ Sentinel
 .. autoclass:: Sentinel1
 .. autoclass:: Sentinel2
 
+South America Soybean
+^^^^
+
+.. autoclass:: SouthAmericaSoybean
+
+
 .. _Non-geospatial Datasets:
 
 Non-geospatial Datasets
