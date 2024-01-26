@@ -39,6 +39,7 @@ from .enviroatlas import EnviroAtlas
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eudem import EUDEM
+from .eurocrops import EuroCrops
 from .eurosat import EuroSAT, EuroSAT100
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
@@ -156,6 +157,7 @@ __all__ = (
     "CropHarvest",
     "EDDMapS",
     "Esri2020",
+    "EuroCrops",
     "EUDEM",
     "GBIF",
     "GlobBiomass",

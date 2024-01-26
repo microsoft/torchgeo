@@ -33,6 +33,7 @@ from torchvision.datasets.folder import default_loader as pil_loader
 from .utils import (
     BoundingBox,
     DatasetNotFoundError,
+    array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
     merge_samples,
@@ -543,14 +544,8 @@ class RasterDataset(GeoDataset):
 
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
         dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res, indexes=band_indexes)
-
-        # fix numpy dtypes which are not supported by pytorch tensors
-        if dest.dtype == np.uint16:
-            dest = dest.astype(np.int32)
-        elif dest.dtype == np.uint32:
-            dest = dest.astype(np.int64)
-
-        tensor = torch.tensor(dest)
+        # Use array_to_tensor since merge may return uint16/uint32 arrays.
+        tensor = array_to_tensor(dest)
         return tensor
 
     @functools.lru_cache(maxsize=128)
@@ -706,9 +701,8 @@ class VectorDataset(GeoDataset):
                     shape = fiona.transform.transform_geom(
                         src.crs, self.crs.to_dict(), feature["geometry"]
                     )
-                    if self.label_name:
-                        shape = (shape, feature["properties"][self.label_name])
-                    shapes.append(shape)
+                    label = self.get_label(feature)
+                    shapes.append((shape, label))
 
         # Rasterize geometries
         width = (query.maxx - query.minx) / self.res
@@ -725,12 +719,30 @@ class VectorDataset(GeoDataset):
             # with the default fill value and dtype used by rasterize
             masks = np.zeros((round(height), round(width)), dtype=np.uint8)
 
-        sample = {"mask": torch.tensor(masks), "crs": self.crs, "bbox": query}
+        # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
+        masks = array_to_tensor(masks)
+
+        sample = {"mask": masks, "crs": self.crs, "bbox": query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
+
+    def get_label(self, feature: "fiona.model.Feature") -> int:
+        """Get label value to use for rendering a feature.
+
+        Args:
+            feature: the :class:`fiona.model.Feature` from which to extract the label.
+
+        Returns:
+            the integer label, or 0 if the feature should not be rendered.
+
+        .. versionadded:: 0.6
+        """
+        if self.label_name:
+            return int(feature["properties"][self.label_name])
+        return 1
 
 
 class NonGeoDataset(Dataset[dict[str, Any]], abc.ABC):
