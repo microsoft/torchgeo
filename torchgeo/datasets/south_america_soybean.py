@@ -1,14 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""South America Soybean Dataset"""
+"""South America Soybean Dataset."""
 
 import glob
 import os
 from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
-import torch
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
@@ -18,7 +17,7 @@ from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_arch
 
 
 class SouthAmericaSoybean(RasterDataset):
-    """South America Soybean Dataset
+    """South America Soybean Dataset.
 
     This dataset produced annual 30-m soybean maps of South America from 2001 to 2021.
 
@@ -30,15 +29,16 @@ class SouthAmericaSoybean(RasterDataset):
 
     Dataset Format:
 
-    * 21 .tif files 
-     
+    * 21 .tif files
+
 
     If you use this dataset in your research, please use the corresponding citation:
 
-    * https://doi.org/10.1038/s41893-021-00729-z 
+    * https://doi.org/10.1038/s41893-021-00729-z
 
     .. versionadded:: 0.6
     """
+
     filename_glob = "South_America_Soybean_*.*"
     filename_regex = r"South_America_Soybean_(?P<year>\d{4})"
     zipfile_glob = "SouthAmericaSoybean.zip"
@@ -59,6 +59,7 @@ class SouthAmericaSoybean(RasterDataset):
         checksum: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
+
         Args:
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
@@ -80,9 +81,10 @@ class SouthAmericaSoybean(RasterDataset):
         self._verify()
 
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
-            
+
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve mask and metadata indexed by query.
+
         Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
         Returns:
@@ -91,7 +93,7 @@ class SouthAmericaSoybean(RasterDataset):
             IndexError: if query is not found in the index
         """
         sample = super().__getitem__(query)
-        
+
         return sample
 
     def _verify(self) -> None:
@@ -116,7 +118,7 @@ class SouthAmericaSoybean(RasterDataset):
     def _download(self) -> None:
         """Download the dataset."""
         filename = "SouthAmericaSoybean.zip"
-        
+
         download_url(
             self.url, self.paths, filename, md5=self.md5 if self.checksum else None
         )
@@ -124,9 +126,9 @@ class SouthAmericaSoybean(RasterDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str)
-        
+
         pathname = os.path.join(self.paths, "**", self.zipfile_glob)
-    
+
         extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
 
     def plot(
@@ -136,6 +138,7 @@ class SouthAmericaSoybean(RasterDataset):
         suptitle: Optional[str] = None,
     ) -> Figure:
         """Plot a sample from the dataset.
+        
         Args:
             sample: a sample returned by :meth:`RasterDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
@@ -171,4 +174,3 @@ class SouthAmericaSoybean(RasterDataset):
             plt.suptitle(suptitle)
 
         return fig
-    

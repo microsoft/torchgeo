@@ -12,24 +12,33 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import SouthAmericaSoybean, BoundingBox, IntersectionDataset, UnionDataset, DatasetNotFoundError
+from torchgeo.datasets import (
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    SouthAmericaSoybean,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
+
 class TestSouthAmericaSoybean:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> SouthAmericaSoybean:
-        monkeypatch.setattr(torchgeo.datasets.south_america_soybean, "download_url", download_url)
+        monkeypatch.setattr(
+            torchgeo.datasets.south_america_soybean, "download_url", download_url
+        )
         transforms = nn.Identity()
-        url = os.path.join("tests", "data", "south_america_soybean", "SouthAmericaSoybean.zip")
+        url = os.path.join(
+            "tests", "data", "south_america_soybean", "SouthAmericaSoybean.zip"
+        )
         monkeypatch.setattr(SouthAmericaSoybean, "url", url)
         root = str(tmp_path)
-        return SouthAmericaSoybean(paths=root,
-            transforms=transforms,
-            download=True,
-            checksum=True,    
+        return SouthAmericaSoybean(
+            paths=root, transforms=transforms, download=True, checksum=True
         )
 
     def test_getitem(self, dataset: SouthAmericaSoybean) -> None:
@@ -50,11 +59,13 @@ class TestSouthAmericaSoybean:
         SouthAmericaSoybean(dataset.paths, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join("tests","data", "south_america_soybean", "SouthAmericaSoybean.zip")
+        pathname = os.path.join(
+            "tests", "data", "south_america_soybean", "SouthAmericaSoybean.zip"
+        )
         root = str(tmp_path)
         shutil.copy(pathname, root)
         SouthAmericaSoybean(root)
-    
+
     def test_plot(self, dataset: SouthAmericaSoybean) -> None:
         query = dataset.bounds
         x = dataset[query]

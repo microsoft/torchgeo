@@ -17,6 +17,7 @@ SIZE = 32
 np.random.seed(0)
 files = ["South_America_Soybean_2002.tif", "South_America_Soybean_2021.tif"]
 
+
 def create_file(path: str, dtype: str):
     """Create the testing file."""
     profile = {
@@ -44,6 +45,7 @@ def create_file(path: str, dtype: str):
 
     with rasterio.open(path, "w", **profile) as src:
         src.write(Z, 1)
+
 
 if __name__ == "__main__":
     dir = os.path.join(os.getcwd(), "SouthAmericaSoybean")
