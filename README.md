@@ -224,7 +224,7 @@ See the [Lightning documentation](https://lightning.ai/docs/pytorch/stable/cli/l
 ## Citation
 
 If you use this software in your work, please cite our [paper](https://dl.acm.org/doi/10.1145/3557915.3560953):
-```bib
+```bibtex
 @inproceedings{Stewart_TorchGeo_Deep_Learning_2022,
     address = {Seattle, Washington},
     author = {Stewart, Adam J. and Robinson, Caleb and Corley, Isaac A. and Ortiz, Anthony and Lavista Ferres, Juan M. and Banerjee, Arindam},
