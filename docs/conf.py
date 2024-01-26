@@ -57,6 +57,7 @@ needs_sphinx = "4.0"
 nitpicky = True
 nitpick_ignore = [
     # Undocumented classes
+    ("py:class", "fiona.model.Feature"),
     ("py:class", "kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D"),
     ("py:class", "kornia.augmentation.base._AugmentationBase"),
     ("py:class", "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig"),
@@ -67,8 +68,6 @@ nitpick_ignore = [
     ("py:class", "torchvision.models._api.WeightsEnum"),
     ("py:class", "torchvision.models.resnet.ResNet"),
     ("py:class", "torchvision.models.swin_transformer.SwinTransformer"),
-    ("py:class", "fiona.Feature"),
-    ("py:class", "fiona.model.Feature"),
 ]
 
 

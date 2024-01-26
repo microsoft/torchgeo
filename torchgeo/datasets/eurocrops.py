@@ -190,11 +190,11 @@ class EuroCrops(VectorDataset):
         for idx, hcat_code in enumerate(classes):
             self.class_map[hcat_code] = idx + 1
 
-    def get_label(self, feature: "fiona.Feature") -> int:
+    def get_label(self, feature: "fiona.model.Feature") -> int:
         """Get label value to use for rendering a feature.
 
         Args:
-            feature: the :class:`fiona.Feature` from which to extract the label.
+            feature: the :class:`fiona.model.Feature` from which to extract the label.
 
         Returns:
             the integer label, or 0 if the feature should not be rendered.
