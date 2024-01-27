@@ -24,7 +24,6 @@ class SouthAmericaSoybean(RasterDataset):
     Link: https://www.nature.com/articles/s41893-021-00729-z
 
     Dataset contains 2 classes:
-    
     0: nodata
     1: soybean
 
@@ -139,7 +138,6 @@ class SouthAmericaSoybean(RasterDataset):
         suptitle: Optional[str] = None,
     ) -> Figure:
         """Plot a sample from the dataset.
-        
         Args:
             sample: a sample returned by :meth:`RasterDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
