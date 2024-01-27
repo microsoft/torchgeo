@@ -128,7 +128,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         # torch.multinomial requires float probabilities > 0
         self.areas = torch.tensor(areas, dtype=torch.float)
         if torch.sum(self.areas) == 0:
-            self.areas += 1
+            self.areas += torch.tensor(1)
 
     def __iter__(self) -> Iterator[list[BoundingBox]]:
         """Return the indices of a dataset.

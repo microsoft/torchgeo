@@ -13,10 +13,9 @@ build:
 # Configuration of the Python environment to be used
 python:
    install:
+   - requirements: requirements/required.txt
    - requirements: requirements/docs.txt
    - requirements: docs/requirements.txt
-   - method: pip
-     path: .
 
 # Configuration for Sphinx documentation
 sphinx:

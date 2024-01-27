@@ -20,6 +20,7 @@ from torch import Tensor
 from .geo import NonGeoDataset
 from .utils import (
     DatasetNotFoundError,
+    RGBBandsMissingError,
     check_integrity,
     download_radiant_mlhub_collection,
     extract_archive,
@@ -386,7 +387,8 @@ class BeninSmallHolderCashews(NonGeoDataset):
             dtype=np.uint8,
         )
 
-        mask = torch.from_numpy(mask_data).long()
+        mask = torch.from_numpy(mask_data)
+        mask = mask.long()
         return mask
 
     def _check_integrity(self) -> bool:
@@ -447,7 +449,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if the RGB bands are not included in ``self.bands``
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
 
         .. versionadded:: 0.2
         """
@@ -456,7 +458,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         num_time_points = sample["image"].shape[0]
         assert time_step < num_time_points

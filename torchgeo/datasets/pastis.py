@@ -129,7 +129,7 @@ class PASTIS(NonGeoDataset):
     def __init__(
         self,
         root: str = "data",
-        folds: Sequence[int] = (0, 1, 2, 3, 4),
+        folds: Sequence[int] = (1, 2, 3, 4, 5),
         bands: str = "s2",
         mode: str = "semantic",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -153,7 +153,8 @@ class PASTIS(NonGeoDataset):
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert set(folds) <= set(range(6))
+        for fold in folds:
+            assert 1 <= fold <= 5
         assert bands in ["s1a", "s1d", "s2"]
         assert mode in ["semantic", "instance"]
         self.root = root
@@ -234,7 +235,8 @@ class PASTIS(NonGeoDataset):
         # See https://github.com/VSainteuf/pastis-benchmark/blob/main/code/dataloader.py#L201 # noqa: E501
         # even though the mask file is 3 bands, we just select the first band
         array = np.load(self.files[index]["semantic"])[0].astype(np.uint8)
-        tensor = torch.from_numpy(array).long()
+        tensor = torch.from_numpy(array)
+        tensor = tensor.long()
         return tensor
 
     def _load_instance_targets(self, index: int) -> tuple[Tensor, Tensor, Tensor]:

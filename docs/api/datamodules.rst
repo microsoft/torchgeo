@@ -34,6 +34,11 @@ BigEarthNet
 
 .. autoclass:: BigEarthNetDataModule
 
+ChaBuD
+^^^^^^
+
+.. autoclass:: ChaBuDDataModule
+
 COWC
 ^^^^
 
@@ -79,6 +84,16 @@ LandCover.ai
 ^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAIDataModule
+
+LEVIR-CD
+^^^^^^^^
+
+.. autoclass:: LEVIRCDDataModule
+
+LEVIR-CD+
+^^^^^^^^^
+
+.. autoclass:: LEVIRCDPlusDataModule
 
 LoveDA
 ^^^^^^

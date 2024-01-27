@@ -1,8 +1,10 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import json
 import os
 import shutil
 import subprocess
-from copy import deepcopy
 
 import numpy as np
 from PIL import Image
@@ -44,7 +46,7 @@ def generate_test_data(root: str, n_imgs: int = 3) -> str:
         )
 
     ann = 0
-    for i, img in enumerate(ANNOTATION_FILE["images"]):
+    for _, img in enumerate(ANNOTATION_FILE["images"]):
         annot = {
             "id": ann,
             "image_id": img["id"],
@@ -54,12 +56,7 @@ def generate_test_data(root: str, n_imgs: int = 3) -> str:
             "segmentation": [[1, 1, 2, 2, 3, 3, 4, 5, 5]],
             "iscrowd": 0,
         }
-        if i != 0:
-            ANNOTATION_FILE["annotations"].append(annot)
-        else:
-            noseg_annot = deepcopy(annot)
-            del noseg_annot["segmentation"]
-            ANNOTATION_FILE["annotations"].append(noseg_annot)
+        ANNOTATION_FILE["annotations"].append(annot)
         ann += 1
 
     with open(ann_file, "w") as j:

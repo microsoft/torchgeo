@@ -16,11 +16,11 @@ jobs:
     - name: Clone repo
       uses: actions/checkout@v4.1.1
     - name: Set up python
-      uses: actions/setup-python@v4.7.1
+      uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -41,11 +41,11 @@ jobs:
     - name: Clone repo
       uses: actions/checkout@v4.1.1
     - name: Set up python
-      uses: actions/setup-python@v4.7.1
+      uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -66,11 +66,11 @@ jobs:
     - name: Clone repo
       uses: actions/checkout@v4.1.1
     - name: Set up python
-      uses: actions/setup-python@v4.7.1
+      uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -91,11 +91,11 @@ jobs:
     - name: Clone repo
       uses: actions/checkout@v4.1.1
     - name: Set up python
-      uses: actions/setup-python@v4.7.1
+      uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -116,11 +116,11 @@ jobs:
     - name: Clone repo
       uses: actions/checkout@v4.1.1
     - name: Set up python
-      uses: actions/setup-python@v4.7.1
+      uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}

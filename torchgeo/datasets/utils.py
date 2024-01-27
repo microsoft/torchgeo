@@ -30,6 +30,7 @@ from torchvision.utils import draw_segmentation_masks
 __all__ = (
     "check_integrity",
     "DatasetNotFoundError",
+    "RGBBandsMissingError",
     "download_url",
     "download_and_extract_archive",
     "extract_archive",
@@ -88,6 +89,18 @@ class DatasetNotFoundError(FileNotFoundError):
 
         msg += " download the dataset."
 
+        super().__init__(msg)
+
+
+class RGBBandsMissingError(ValueError):
+    """Raised when a dataset is missing RGB bands for plotting.
+
+    .. versionadded:: 0.6
+    """
+
+    def __init__(self) -> None:
+        """Instantiate a new RGBBandsMissingError instance."""
+        msg = "Dataset does not contain some of the RGB bands"
         super().__init__(msg)
 
 
@@ -806,3 +819,31 @@ def path_is_vsi(path: str) -> bool:
     .. versionadded:: 0.6
     """
     return "://" in path or path.startswith("/vsi")
+
+
+def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:
+    """Converts a :class:`numpy.ndarray` to :class:`torch.Tensor`.
+
+    :func:`torch.from_tensor` rejects numpy types like uint16 that are not supported
+    in pytorch. This function instead casts uint16 and uint32 numpy arrays to an
+    appropriate pytorch type without loss of precision.
+
+    For example, a uint32 array becomes an int64 tensor. uint64 arrays will continue
+    to raise errors since there is no suitable torch dtype.
+
+    The returned tensor is a copy.
+
+    Args:
+        array: a :class:`numpy.ndarray`.
+
+    Returns:
+        A :class:`torch.Tensor` with the same dtype as array unless array is uint16 or
+        uint32, in which case an int32 or int64 Tensor is returned, respectively.
+
+    .. versionadded:: 0.6
+    """
+    if array.dtype == np.uint16:
+        array = array.astype(np.int32)
+    elif array.dtype == np.uint32:
+        array = array.astype(np.int64)
+    return torch.tensor(array)
