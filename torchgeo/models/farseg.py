@@ -219,9 +219,11 @@ class _LightWeightDecoder(Module):
                             ),
                             BatchNorm2d(out_channels),
                             ReLU(inplace=True),
-                            UpsamplingBilinear2d(scale_factor=2)
-                            if num_upsample != 0
-                            else Identity(),
+                            (
+                                UpsamplingBilinear2d(scale_factor=2)
+                                if num_upsample != 0
+                                else Identity()
+                            ),
                         )
                         for idx in range(num_layers)
                     ]
