@@ -65,9 +65,10 @@ if __name__ == "__main__":
         layer_name = "cdl"
 
     for img_path in tqdm(paths):
-        with rasterio.open(img_path) as img_src, rasterio.open(
-            args.mask_path
-        ) as mask_src:
+        with (
+            rasterio.open(img_path) as img_src,
+            rasterio.open(args.mask_path) as mask_src,
+        ):
             if mask_src.crs != img_src.crs:
                 mask_src = WarpedVRT(mask_src, crs=img_src.crs)
 
