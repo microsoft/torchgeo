@@ -12,13 +12,11 @@ from ..datasets import BoundingBox
 
 
 @overload
-def _to_tuple(value: Union[tuple[int, int], int]) -> tuple[int, int]:
-    ...
+def _to_tuple(value: Union[tuple[int, int], int]) -> tuple[int, int]: ...
 
 
 @overload
-def _to_tuple(value: Union[tuple[float, float], float]) -> tuple[float, float]:
-    ...
+def _to_tuple(value: Union[tuple[float, float], float]) -> tuple[float, float]: ...
 
 
 def _to_tuple(value: Union[tuple[float, float], float]) -> tuple[float, float]:
