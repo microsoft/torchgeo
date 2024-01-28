@@ -12,7 +12,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import SEN12MS, DatasetNotFoundError
+from torchgeo.datasets import SEN12MS, DatasetNotFoundError, RGBBandsMissingError
 
 
 class TestSEN12MS:
@@ -98,5 +98,7 @@ class TestSEN12MS:
 
     def test_plot_rgb(self, dataset: SEN12MS) -> None:
         dataset = SEN12MS(root=dataset.root, bands=("B03",))
-        with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
+        with pytest.raises(
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
+        ):
             dataset.plot(dataset[0], suptitle="Single Band")

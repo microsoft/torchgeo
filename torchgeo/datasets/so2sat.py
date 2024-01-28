@@ -14,7 +14,12 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, check_integrity, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    check_integrity,
+    percentile_normalization,
+)
 
 
 class So2Sat(NonGeoDataset):
@@ -348,7 +353,7 @@ class So2Sat(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if RGB bands are not found in dataset
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
 
         .. versionadded:: 0.2
         """
@@ -358,7 +363,7 @@ class So2Sat(NonGeoDataset):
                 idx = self.s2_band_names.index(band) + len(self.s1_band_names)
                 rgb_indices.append(idx)
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         image = np.take(sample["image"].numpy(), indices=rgb_indices, axis=0)
         image = np.rollaxis(image, 0, 3)

@@ -15,7 +15,7 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import OSCD, DatasetNotFoundError
+from torchgeo.datasets import OSCD, DatasetNotFoundError, RGBBandsMissingError
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -116,6 +116,8 @@ class TestOSCD:
 
     def test_failed_plot(self, dataset: OSCD) -> None:
         single_band_dataset = OSCD(root=dataset.root, bands=("B01",))
-        with pytest.raises(ValueError, match="RGB bands must be present"):
+        with pytest.raises(
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
+        ):
             x = single_band_dataset[0].copy()
             single_band_dataset.plot(x, suptitle="Test")

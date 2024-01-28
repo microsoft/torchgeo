@@ -9,6 +9,7 @@ from typing import Any, Optional
 import matplotlib.pyplot as plt
 import torch
 import torchvision.models.detection
+from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
@@ -18,7 +19,7 @@ from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
-from ..datasets.utils import unbind_samples
+from ..datasets.utils import RGBBandsMissingError, unbind_samples
 from .base import BaseTask
 
 BACKBONE_LAT_DIM_MAP = {
@@ -264,26 +265,29 @@ class ObjectDetectionTask(BaseTask):
             and hasattr(self.logger, "experiment")
             and hasattr(self.logger.experiment, "add_figure")
         ):
+            datamodule = self.trainer.datamodule
+            batch["prediction_boxes"] = [b["boxes"].cpu() for b in y_hat]
+            batch["prediction_labels"] = [b["labels"].cpu() for b in y_hat]
+            batch["prediction_scores"] = [b["scores"].cpu() for b in y_hat]
+            batch["image"] = batch["image"].cpu()
+            sample = unbind_samples(batch)[0]
+            # Convert image to uint8 for plotting
+            if torch.is_floating_point(sample["image"]):
+                sample["image"] *= 255
+                sample["image"] = sample["image"].to(torch.uint8)
+
+            fig: Optional[Figure] = None
             try:
-                datamodule = self.trainer.datamodule
-                batch["prediction_boxes"] = [b["boxes"].cpu() for b in y_hat]
-                batch["prediction_labels"] = [b["labels"].cpu() for b in y_hat]
-                batch["prediction_scores"] = [b["scores"].cpu() for b in y_hat]
-                batch["image"] = batch["image"].cpu()
-                sample = unbind_samples(batch)[0]
-                # Convert image to uint8 for plotting
-                if torch.is_floating_point(sample["image"]):
-                    sample["image"] *= 255
-                    sample["image"] = sample["image"].to(torch.uint8)
                 fig = datamodule.plot(sample)
-                if fig:
-                    summary_writer = self.logger.experiment
-                    summary_writer.add_figure(
-                        f"image/{batch_idx}", fig, global_step=self.global_step
-                    )
-                    plt.close()
-            except ValueError:
+            except RGBBandsMissingError:
                 pass
+
+            if fig:
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=self.global_step
+                )
+                plt.close()
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test metrics.

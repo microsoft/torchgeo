@@ -5,12 +5,14 @@
 
 from .advance import ADVANCE
 from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
+from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
+from .chabud import ChaBuD
 from .chesapeake import (
     Chesapeake,
     Chesapeake7,
@@ -27,6 +29,7 @@ from .chesapeake import (
 from .cloud_cover import CloudCoverDetection
 from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .cowc import COWC, COWCCounting, COWCDetection
+from .cropharvest import CropHarvest
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
@@ -36,6 +39,7 @@ from .enviroatlas import EnviroAtlas
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eudem import EUDEM
+from .eurocrops import EuroCrops
 from .eurosat import EuroSAT, EuroSAT100
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
@@ -71,7 +75,7 @@ from .landsat import (
     Landsat8,
     Landsat9,
 )
-from .levircd import LEVIRCDPlus
+from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
 from .mapinwild import MapInWild
 from .millionaid import MillionAID
@@ -84,6 +88,7 @@ from .oscd import OSCD
 from .pastis import PASTIS
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
+from .prisma import PRISMA
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
@@ -119,6 +124,7 @@ from .usavars import USAVars
 from .utils import (
     BoundingBox,
     DatasetNotFoundError,
+    RGBBandsMissingError,
     concat_samples,
     merge_samples,
     stack_samples,
@@ -133,6 +139,7 @@ from .zuericrop import ZueriCrop
 __all__ = (
     # GeoDataset
     "AbovegroundLiveWoodyBiomassDensity",
+    "Airphen",
     "AsterGDEM",
     "CanadianBuildingFootprints",
     "CDL",
@@ -148,8 +155,10 @@ __all__ = (
     "ChesapeakeWV",
     "ChesapeakeCVPR",
     "CMSGlobalMangroveCanopy",
+    "CropHarvest",
     "EDDMapS",
     "Esri2020",
+    "EuroCrops",
     "EUDEM",
     "GBIF",
     "GlobBiomass",
@@ -173,6 +182,7 @@ __all__ = (
     "NCCM",
     "NLCD",
     "OpenBuildings",
+    "PRISMA",
     "Sentinel",
     "Sentinel1",
     "Sentinel2",
@@ -182,6 +192,7 @@ __all__ = (
     "BeninSmallHolderCashews",
     "BigEarthNet",
     "BioMassters",
+    "ChaBuD",
     "CloudCoverDetection",
     "COWC",
     "COWCCounting",
@@ -200,6 +211,8 @@ __all__ = (
     "IDTReeS",
     "InriaAerialImageLabeling",
     "LandCoverAI",
+    "LEVIRCD",
+    "LEVIRCDBase",
     "LEVIRCDPlus",
     "LoveDA",
     "MapInWild",
@@ -260,4 +273,5 @@ __all__ = (
     "time_series_split",
     # Errors
     "DatasetNotFoundError",
+    "RGBBandsMissingError",
 )
