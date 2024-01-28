@@ -6,7 +6,7 @@
 from typing import Any, Optional, Union
 
 import kornia.augmentation as K
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
 from ..datasets import NAIP, BoundingBox, Chesapeake13
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
@@ -95,7 +95,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
                 self.dataset, self.patch_size, self.patch_size, test_roi
             )
 
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+    def plot(self, *args: Any, **kwargs: Any) -> Figure:
         """Run NAIP plot method.
 
         Args:

@@ -14,13 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.3
+      uses: actions/checkout@v4.1.1
     - name: Set up python
-      uses: actions/setup-python@v4.7.0
+      uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -29,7 +29,9 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/style.txt
-        pip list
+        pip cache purge
+    - name: List pip dependencies
+      run: pip list
     - name: Run black checks
       run: black . --check --diff
   flake8:
@@ -37,13 +39,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.3
+      uses: actions/checkout@v4.1.1
     - name: Set up python
-      uses: actions/setup-python@v4.7.0
+      uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -52,7 +54,9 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/style.txt
-        pip list
+        pip cache purge
+    - name: List pip dependencies
+      run: pip list
     - name: Run flake8 checks
       run: flake8
   isort:
@@ -60,13 +64,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.3
+      uses: actions/checkout@v4.1.1
     - name: Set up python
-      uses: actions/setup-python@v4.7.0
+      uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -75,7 +79,9 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/style.txt
-        pip list
+        pip cache purge
+    - name: List pip dependencies
+      run: pip list
     - name: Run isort checks
       run: isort . --check --diff
   pydocstyle:
@@ -83,13 +89,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.3
+      uses: actions/checkout@v4.1.1
     - name: Set up python
-      uses: actions/setup-python@v4.7.0
+      uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -98,7 +104,9 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/style.txt
-        pip list
+        pip cache purge
+    - name: List pip dependencies
+      run: pip list
     - name: Run pydocstyle checks
       run: pydocstyle
   pyupgrade:
@@ -106,13 +114,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v3.5.3
+      uses: actions/checkout@v4.1.1
     - name: Set up python
-      uses: actions/setup-python@v4.7.0
+      uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.1
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -121,7 +129,9 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         pip install -r requirements/style.txt
-        pip list
+        pip cache purge
+    - name: List pip dependencies
+      run: pip list
     - name: Run pyupgrade checks
       run: pyupgrade --py39-plus $(find . -path ./docs/src -prune -o -name "*.py" -print)
 concurrency:

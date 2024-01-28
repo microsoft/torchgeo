@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
 import os
 import pickle
+import sys
+from collections.abc import Iterable
 from pathlib import Path
+from typing import Optional, Union
 
 import pytest
 import torch
@@ -15,6 +17,7 @@ from torch.utils.data import ConcatDataset
 from torchgeo.datasets import (
     NAIP,
     BoundingBox,
+    DatasetNotFoundError,
     GeoDataset,
     IntersectionDataset,
     NonGeoClassificationDataset,
@@ -32,11 +35,13 @@ class CustomGeoDataset(GeoDataset):
         bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
         crs: CRS = CRS.from_epsg(4087),
         res: float = 1,
+        paths: Optional[Union[str, Iterable[str]]] = None,
     ) -> None:
         super().__init__()
         self.index.insert(0, tuple(bounds))
         self._crs = crs
         self.res = res
+        self.paths = paths or []
 
     def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
         hits = self.index.intersection(tuple(query), objects=True)
@@ -47,6 +52,10 @@ class CustomGeoDataset(GeoDataset):
 
 class CustomVectorDataset(VectorDataset):
     filename_glob = "*.geojson"
+    date_format = "%Y"
+    filename_regex = r"""
+        ^vector_(?P<date>\d{4})\.geojson
+    """
 
 
 class CustomSentinelDataset(Sentinel2):
@@ -151,6 +160,23 @@ class TestGeoDataset:
         ):
             dataset & ds2  # type: ignore[operator]
 
+    def test_files_property_for_non_existing_file_or_dir(self, tmp_path: Path) -> None:
+        paths = [str(tmp_path), str(tmp_path / "non_existing_file.tif")]
+        with pytest.warns(UserWarning, match="Path was ignored."):
+            assert len(CustomGeoDataset(paths=paths).files) == 0
+
+    def test_files_property_for_virtual_files(self) -> None:
+        # Tests only a subset of schemes and combinations.
+        paths = [
+            "file://directory/file.tif",
+            "zip://archive.zip!folder/file.tif",
+            "az://azure_bucket/prefix/file.tif",
+            "/vsiaz/azure_bucket/prefix/file.tif",
+            "zip+az://azure_bucket/prefix/archive.zip!folder_in_archive/file.tif",
+            "/vsizip//vsiaz/azure_bucket/prefix/archive.zip/folder_in_archive/file.tif",
+        ]
+        assert len(CustomGeoDataset(paths=paths).files) == len(paths)
+
 
 class TestRasterDataset:
     @pytest.fixture(params=zip([["R", "G", "B"], None], [True, False]))
@@ -177,6 +203,39 @@ class TestRasterDataset:
         transforms = nn.Identity()
         cache = request.param[1]
         return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
+
+    @pytest.mark.parametrize(
+        "paths",
+        [
+            # Single directory
+            os.path.join("tests", "data", "naip"),
+            # Multiple directories
+            [
+                os.path.join("tests", "data", "naip"),
+                os.path.join("tests", "data", "naip"),
+            ],
+            # Single file
+            os.path.join("tests", "data", "naip", "m_3807511_ne_18_060_20181104.tif"),
+            # Multiple files
+            (
+                os.path.join(
+                    "tests", "data", "naip", "m_3807511_ne_18_060_20181104.tif"
+                ),
+                os.path.join(
+                    "tests", "data", "naip", "m_3807511_ne_18_060_20190605.tif"
+                ),
+            ),
+            # Combination
+            {
+                os.path.join("tests", "data", "naip"),
+                os.path.join(
+                    "tests", "data", "naip", "m_3807511_ne_18_060_20181104.tif"
+                ),
+            },
+        ],
+    )
+    def test_files(self, paths: Union[str, Iterable[str]]) -> None:
+        assert 1 <= len(NAIP(paths).files) <= 2
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]
@@ -209,7 +268,7 @@ class TestRasterDataset:
             sentinel[query]
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No RasterDataset data was found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             RasterDataset(str(tmp_path))
 
     def test_no_all_bands(self) -> None:
@@ -251,6 +310,10 @@ class TestVectorDataset:
             torch.tensor([0, 1], dtype=torch.uint8),
         )
 
+    def test_time_index(self, dataset: CustomVectorDataset) -> None:
+        assert dataset.index.bounds[4] > 0
+        assert dataset.index.bounds[5] < sys.maxsize
+
     def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
         x = multilabel[multilabel.bounds]
         assert isinstance(x, dict)
@@ -262,7 +325,7 @@ class TestVectorDataset:
         )
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
-        query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, 0)
+        query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, sys.maxsize)
         x = dataset[query]
         assert torch.equal(x["mask"], torch.zeros(8, 8, dtype=torch.uint8))
 
@@ -274,7 +337,7 @@ class TestVectorDataset:
             dataset[query]
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No VectorDataset data was found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             VectorDataset(str(tmp_path))
 
 

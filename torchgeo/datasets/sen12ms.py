@@ -11,10 +11,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    check_integrity,
+    percentile_normalization,
+)
 
 
 class SEN12MS(NonGeoDataset):
@@ -188,7 +194,7 @@ class SEN12MS(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if data is not found in ``root``, or checksums don't match
+            DatasetNotFoundError: If dataset is not found.
         """
         assert split in ["train", "test"]
 
@@ -203,12 +209,10 @@ class SEN12MS(NonGeoDataset):
         self.transforms = transforms
         self.checksum = checksum
 
-        if checksum:
-            if not self._check_integrity():
-                raise RuntimeError("Dataset not found or corrupted.")
-        else:
-            if not self._check_integrity_light():
-                raise RuntimeError("Dataset not found or corrupted.")
+        if (
+            checksum and not self._check_integrity()
+        ) or not self._check_integrity_light():
+            raise DatasetNotFoundError(self)
 
         with open(os.path.join(self.root, split + "_list.txt")) as f:
             self.ids = [line.rstrip() for line in f.readlines()]
@@ -317,7 +321,7 @@ class SEN12MS(NonGeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -328,6 +332,9 @@ class SEN12MS(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
 
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+
         .. versionadded:: 0.2
         """
         rgb_indices = []
@@ -335,7 +342,7 @@ class SEN12MS(NonGeoDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         image, mask = sample["image"][rgb_indices].numpy(), sample["mask"]
         image = percentile_normalization(image)

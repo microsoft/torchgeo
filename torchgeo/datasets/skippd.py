@@ -9,10 +9,12 @@ from typing import Any, Callable, Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from einops import rearrange
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import DatasetNotFoundError, download_url, extract_archive
 
 
 class SKIPPD(NonGeoDataset):
@@ -32,8 +34,18 @@ class SKIPPD(NonGeoDataset):
     * fish-eye RGB images (64x64px)
     * power output measurements from 30-kW rooftop PV array
     * 1-min interval across 3 years (2017-2019)
+
+    Nowcast task:
+
     * 349,372 images under the split key *trainval*
     * 14,003 images under the split key *test*
+
+    Forecast task:
+
+    * 130,412 images under the split key *trainval*
+    * 2,462 images under the split key *test*
+    * consists of a concatenated RGB time-series of 16
+      time-steps
 
     If you use this dataset in your research, please cite:
 
@@ -42,14 +54,18 @@ class SKIPPD(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    url = "https://stacks.stanford.edu/object/dj417rh1007"
-    md5 = "b38d0f322aaeb254445e2edd8bc5d012"
+    url = "https://huggingface.co/datasets/torchgeo/skippd/resolve/main/{}"
+    md5 = {
+        "forecast": "f4f3509ddcc83a55c433be9db2e51077",
+        "nowcast": "0000761d403e45bb5f86c21d3c69aa80",
+    }
 
-    img_file_name = "2017_2019_images_pv_processed.hdf5"
-
-    data_dir = "dj417rh1007"
+    data_file_name = "2017_2019_images_pv_processed_{}.hdf5"
+    zipfile_name = "2017_2019_images_pv_processed_{}.zip"
 
     valid_splits = ["trainval", "test"]
+
+    valid_tasks = ["nowcast", "forecast"]
 
     dateformat = "%m/%d/%Y, %H:%M:%S"
 
@@ -57,6 +73,7 @@ class SKIPPD(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "trainval",
+        task: str = "nowcast",
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -66,20 +83,26 @@ class SKIPPD(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             split: one of "trainval", or "test"
+            task: one fo "nowcast", or "forecast"
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
-            AssertionError: if ``countries`` contains invalid countries
+            AssertionError: if ``task`` or ``split`` is invalid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
             ImportError: if h5py is not installed
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         assert (
             split in self.valid_splits
-        ), f"Pleas choose one of these valid data splits {self.valid_splits}."
+        ), f"Please choose one of these valid data splits {self.valid_splits}."
         self.split = split
+
+        assert (
+            task in self.valid_tasks
+        ), f"Please choose one of these valid tasks {self.valid_tasks}."
+        self.task = task
 
         self.root = root
         self.transforms = transforms
@@ -104,7 +127,7 @@ class SKIPPD(NonGeoDataset):
         import h5py
 
         with h5py.File(
-            os.path.join(self.root, self.data_dir, self.img_file_name), "r"
+            os.path.join(self.root, self.data_file_name.format(self.task)), "r"
         ) as f:
             num_datapoints: int = f[self.split]["pv_log"].shape[0]
 
@@ -139,12 +162,19 @@ class SKIPPD(NonGeoDataset):
         import h5py
 
         with h5py.File(
-            os.path.join(self.root, self.data_dir, self.img_file_name), "r"
+            os.path.join(self.root, self.data_file_name.format(self.task)), "r"
         ) as f:
-            arr = f[self.split]["images_log"][index, :, :, :]
+            arr = f[self.split]["images_log"][index]
 
-        # put channel first
-        tensor = torch.from_numpy(arr).permute(2, 0, 1).to(torch.float32)
+        # forecast has dimension [16, 64, 64, 3] but reshape to [48, 64, 64]
+        # https://github.com/yuhao-nie/Stanford-solar-forecasting-dataset/blob/main/models/SUNSET_forecast.ipynb
+        if self.task == "forecast":
+            arr = rearrange(arr, "t h w c-> (t c) h w")
+        else:
+            arr = rearrange(arr, "h w c -> c h w")
+
+        tensor = torch.from_numpy(arr)
+        tensor = tensor.to(torch.float32)
         return tensor
 
     def _load_features(self, index: int) -> dict[str, Union[str, Tensor]]:
@@ -159,14 +189,13 @@ class SKIPPD(NonGeoDataset):
         import h5py
 
         with h5py.File(
-            os.path.join(self.root, self.data_dir, self.img_file_name), "r"
+            os.path.join(self.root, self.data_file_name.format(self.task)), "r"
         ) as f:
             label = f[self.split]["pv_log"][index]
 
-        path = os.path.join(self.root, self.data_dir, f"times_{self.split}.npy")
+        path = os.path.join(self.root, f"times_{self.split}_{self.task}.npy")
         datestring = np.load(path, allow_pickle=True)[index].strftime(self.dateformat)
 
-        # put channel first
         features: dict[str, Union[str, Tensor]] = {
             "label": torch.tensor(label, dtype=torch.float32),
             "date": datestring,
@@ -174,51 +203,39 @@ class SKIPPD(NonGeoDataset):
         return features
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        pathname = os.path.join(self.root, self.data_dir)
+        pathname = os.path.join(self.root, self.data_file_name.format(self.task))
         if os.path.exists(pathname):
             return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.data_dir) + ".zip"
+        pathname = os.path.join(self.root, self.zipfile_name.format(self.task))
         if os.path.exists(pathname):
             self._extract()
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
         self._extract()
 
     def _download(self) -> None:
-        """Download the dataset and extract it.
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
-        """
+        """Download the dataset and extract it."""
         download_url(
-            self.url,
+            self.url.format(self.zipfile_name.format(self.task)),
             self.root,
-            filename=self.data_dir,
-            md5=self.md5 if self.checksum else None,
+            filename=self.zipfile_name.format(self.task),
+            md5=self.md5[self.task] if self.checksum else None,
         )
         self._extract()
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        zipfile_path = os.path.join(self.root, self.data_dir) + ".zip"
+        zipfile_path = os.path.join(self.root, self.zipfile_name.format(self.task))
         extract_archive(zipfile_path, self.root)
 
     def plot(
@@ -226,8 +243,10 @@ class SKIPPD(NonGeoDataset):
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
+
+        In the ``forecast`` task the latest image is plotted.
 
         Args:
             sample: a sample return by :meth:`__getitem__`
@@ -237,7 +256,13 @@ class SKIPPD(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image, label = sample["image"], sample["label"].item()
+        if self.task == "nowcast":
+            image, label = sample["image"].permute(1, 2, 0), sample["label"].item()
+        else:
+            image, label = (
+                sample["image"].permute(1, 2, 0).reshape(64, 64, 3, 16)[:, :, :, -1],
+                sample["label"][-1].item(),
+            )
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
@@ -245,7 +270,7 @@ class SKIPPD(NonGeoDataset):
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
-        ax.imshow(image.permute(1, 2, 0) / 255)
+        ax.imshow(image / 255)
         ax.axis("off")
 
         if show_titles:

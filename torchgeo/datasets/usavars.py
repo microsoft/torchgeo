@@ -10,13 +10,14 @@ from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import DatasetNotFoundError, download_url, extract_archive
 
 
 class USAVars(NonGeoDataset):
@@ -105,9 +106,7 @@ class USAVars(NonGeoDataset):
 
         Raises:
             AssertionError: if invalid labels are provided
-            ImportError: if pandas is not installed
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
 
@@ -123,13 +122,6 @@ class USAVars(NonGeoDataset):
         self.checksum = checksum
 
         self._verify()
-
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
 
         self.files = self._load_files()
 
@@ -189,15 +181,12 @@ class USAVars(NonGeoDataset):
         """
         with rasterio.open(path) as f:
             array: "np.typing.NDArray[np.int_]" = f.read()
-            tensor = torch.from_numpy(array).float()
+            tensor = torch.from_numpy(array)
+            tensor = tensor.float()
             return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, "uar")
         csv_pathname = os.path.join(self.root, "*.csv")
@@ -215,11 +204,7 @@ class USAVars(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         self._download()
         self._extract()

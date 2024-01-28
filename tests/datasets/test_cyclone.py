@@ -14,7 +14,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import TropicalCyclone
+from torchgeo.datasets import DatasetNotFoundError, TropicalCyclone
 
 
 class Collection:
@@ -80,7 +80,7 @@ class TestTropicalCyclone:
             TropicalCyclone(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             TropicalCyclone(str(tmp_path))
 
     def test_plot(self, dataset: TropicalCyclone) -> None:

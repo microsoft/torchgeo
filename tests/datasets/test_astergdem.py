@@ -11,7 +11,13 @@ import torch
 import torch.nn as nn
 from rasterio.crs import CRS
 
-from torchgeo.datasets import AsterGDEM, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets import (
+    AsterGDEM,
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 class TestAsterGDEM:
@@ -26,8 +32,8 @@ class TestAsterGDEM:
     def test_datasetmissing(self, tmp_path: Path) -> None:
         shutil.rmtree(tmp_path)
         os.makedirs(tmp_path)
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
-            AsterGDEM(root=str(tmp_path))
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+            AsterGDEM(str(tmp_path))
 
     def test_getitem(self, dataset: AsterGDEM) -> None:
         x = dataset[dataset.bounds]

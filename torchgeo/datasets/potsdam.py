@@ -16,6 +16,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
+    DatasetNotFoundError,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -133,6 +134,10 @@ class Potsdam2D(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            AssertionError: If *split* is invalid.
+            DatasetNotFoundError: If dataset is not found.
         """
         assert split in self.splits
         self.root = root
@@ -187,7 +192,8 @@ class Potsdam2D(NonGeoDataset):
         path = self.files[index]["image"]
         with rasterio.open(path) as f:
             array = f.read()
-            tensor = torch.from_numpy(array).float()
+            tensor = torch.from_numpy(array)
+            tensor = tensor.float()
             return tensor
 
     def _load_target(self, index: int) -> Tensor:
@@ -209,11 +215,7 @@ class Potsdam2D(NonGeoDataset):
         return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if checksum fails or the dataset is not downloaded
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         if os.path.exists(os.path.join(self.root, self.image_root)):
             return
@@ -233,11 +235,7 @@ class Potsdam2D(NonGeoDataset):
         if all(exists):
             return
 
-        # Check if the user requested to download the dataset
-        raise RuntimeError(
-            "Dataset not found in `root` directory, either specify a different"
-            + " `root` directory or manually download the dataset to this directory."
-        )
+        raise DatasetNotFoundError(self)
 
     def plot(
         self,

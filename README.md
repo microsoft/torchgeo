@@ -7,16 +7,19 @@ The goal of this library is to make it simple:
 1. for machine learning experts to work with geospatial data, and
 2. for remote sensing experts to explore machine learning solutions.
 
+Community:
+[![slack](https://img.shields.io/badge/slack-join-purple?logo=slack)](https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw)
+
+Packaging:
+[![pypi](https://badge.fury.io/py/torchgeo.svg)](https://pypi.org/project/torchgeo/)
+[![conda](https://anaconda.org/conda-forge/torchgeo/badges/version.svg)](https://anaconda.org/conda-forge/torchgeo)
+[![spack](https://img.shields.io/spack/v/py-torchgeo)](https://packages.spack.io/package.html?name=py-torchgeo)
+
 Testing:
 [![docs](https://readthedocs.org/projects/torchgeo/badge/?version=latest)](https://torchgeo.readthedocs.io/en/stable/)
 [![style](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml)
 [![tests](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml)
 [![codecov](https://codecov.io/gh/microsoft/torchgeo/branch/main/graph/badge.svg?token=oa3Z3PMVOg)](https://codecov.io/gh/microsoft/torchgeo)
-
-Packaging:
-[![pypi](https://badge.fury.io/py/torchgeo.svg)](https://pypi.org/project/torchgeo/)
-[![conda](https://anaconda.org/conda-forge/torchgeo/badges/version.svg)](https://anaconda.org/conda-forge/torchgeo)
-[![spack](https://img.shields.io/spack/v/py-torchgeo)](https://spack.readthedocs.io/en/latest/package_list.html#py-torchgeo)
 
 ## Installation
 
@@ -119,6 +122,21 @@ for batch in dataloader:
 
 All TorchGeo datasets are compatible with PyTorch data loaders, making them easy to integrate into existing training workflows. The only difference between a benchmark dataset in TorchGeo and a similar dataset in torchvision is that each dataset returns a dictionary with keys for each PyTorch `Tensor`.
 
+### Pre-trained Weights
+
+Pre-trained weights have proven to be tremendously beneficial for transfer learning tasks in computer vision. Practitioners usually utilize models pre-trained on the ImageNet dataset, containing RGB images. However, remote sensing data often goes beyond RGB with additional multispectral channels that can vary across sensors. TorchGeo is the first library to support models pre-trained on different multispectral sensors, and adopts torchvision's [multi-weight API](https://pytorch.org/blog/introducing-torchvision-new-multi-weight-support-api/). A summary of currently available weights can be seen in the [docs](https://torchgeo.readthedocs.io/en/stable/api/models.html#pretrained-weights). To create a [timm](https://github.com/huggingface/pytorch-image-models) Resnet-18 model with weights that have been pretrained on Sentinel-2 imagery, you can do the following:
+
+```python
+import timm
+from torchgeo.models import ResNet18_Weights
+
+weights = ResNet18_Weights.SENTINEL2_ALL_MOCO
+model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"], num_classes=10)
+model = model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+```
+
+These weights can also directly be used in TorchGeo Lightning modules that are shown in the following section via the `weights` argument. For a notebook example, see this [tutorial](https://torchgeo.readthedocs.io/en/stable/tutorials/pretrained_weights.html).
+
 ### Reproducibility with Lightning
 
 In order to facilitate direct comparisons between results published in the literature and further reduce the boilerplate code needed to run experiments with datasets in TorchGeo, we have created Lightning [*datamodules*](https://torchgeo.readthedocs.io/en/stable/api/datamodules.html) with well-defined train-val-test splits and [*trainers*](https://torchgeo.readthedocs.io/en/stable/api/trainers.html) for various tasks like classification, regression, and semantic segmentation. These datamodules show how to incorporate augmentations from the kornia library, include preprocessing transforms (with pre-calculated channel statistics), and let users easily experiment with hyperparameters related to the data itself (as opposed to the modeling process). Training a semantic segmentation model on the [Inria Aerial Image Labeling](https://project.inria.fr/aerialimagelabeling/) dataset is as easy as a few imports and four lines of code.
@@ -133,8 +151,8 @@ task = SemanticSegmentationTask(
     num_classes=2,
     loss="ce",
     ignore_index=None,
-    learning_rate=0.1,
-    learning_rate_schedule_patience=6,
+    lr=0.1,
+    patience=6,
 )
 trainer = Trainer(default_root_dir="...")
 
@@ -143,11 +161,65 @@ trainer.fit(model=task, datamodule=datamodule)
 
 <img src="https://raw.githubusercontent.com/microsoft/torchgeo/main/images/inria.png" alt="Building segmentations produced by a U-Net model trained on the Inria Aerial Image Labeling dataset"/>
 
-In our GitHub repo, we provide `train.py` and `evaluate.py` scripts to train and evaluate the performance of models using these datamodules and trainers. These scripts are configurable via the command line and/or via YAML configuration files. See the [conf](https://github.com/microsoft/torchgeo/blob/main/conf) directory for example configuration files that can be customized for different training runs.
+TorchGeo also supports command-line interface training using [LightningCLI](https://lightning.ai/docs/pytorch/stable/cli/lightning_cli.html). It can be invoked in two ways:
 
 ```console
-$ python train.py config_file=conf/landcoverai.yaml
+# If torchgeo has been installed
+torchgeo
+# If torchgeo has been installed, or if it has been cloned to the current directory
+python3 -m torchgeo
 ```
+
+It supports command-line configuration or YAML/JSON config files. Valid options can be found from the help messages:
+
+```console
+# See valid stages
+torchgeo --help
+# See valid trainer options
+torchgeo fit --help
+# See valid model options
+torchgeo fit --model.help ClassificationTask
+# See valid data options
+torchgeo fit --data.help EuroSAT100DataModule
+```
+
+Using the following config file:
+```yaml
+trainer:
+  max_epochs: 20
+model:
+  class_path: ClassificationTask
+  init_args:
+    model: "resnet18"
+    in_channels: 13
+    num_classes: 10
+data:
+  class_path: EuroSAT100DataModule
+  init_args:
+    batch_size: 8
+  dict_kwargs:
+    download: true
+```
+
+we can see the script in action:
+```console
+# Train and validate a model
+torchgeo fit --config config.yaml
+# Validate-only
+torchgeo validate --config config.yaml
+# Calculate and report test accuracy
+torchgeo test --config config.yaml --trainer.ckpt_path=...
+```
+
+It can also be imported and used in a Python script if you need to extend it to add new features:
+
+```python
+from torchgeo.main import main
+
+main(["fit", "--config", "config.yaml"])
+```
+
+See the [Lightning documentation](https://lightning.ai/docs/pytorch/stable/cli/lightning_cli.html) for more details.
 
 ## Citation
 
@@ -158,7 +230,7 @@ If you use this software in your work, please cite our [paper](https://dl.acm.or
     author = {Stewart, Adam J. and Robinson, Caleb and Corley, Isaac A. and Ortiz, Anthony and Lavista Ferres, Juan M. and Banerjee, Arindam},
     booktitle = {Proceedings of the 30th International Conference on Advances in Geographic Information Systems},
     doi = {10.1145/3557915.3560953},
-    month = {11},
+    month = nov,
     pages = {1--12},
     publisher = {Association for Computing Machinery},
     series = {SIGSPATIAL '22},

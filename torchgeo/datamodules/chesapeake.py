@@ -6,6 +6,7 @@
 from typing import Any, Optional
 
 import kornia.augmentation as K
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
@@ -93,7 +94,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         """
         # This is a rough estimate of how large of a patch we will need to sample in
         # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
-        self.original_patch_size = patch_size * 2
+        self.original_patch_size = patch_size * 3
         kwargs["transforms"] = _Transform(K.CenterCrop(patch_size))
 
         super().__init__(
@@ -112,7 +113,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         self.test_splits = test_splits
         self.class_set = class_set
         self.use_prior_labels = use_prior_labels
-        self.prior_smoothing_constant = prior_smoothing_constant
+        self.prior_smoothing_constant = torch.tensor(prior_smoothing_constant)
 
         if self.use_prior_labels:
             self.layers = [

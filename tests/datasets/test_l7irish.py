@@ -14,7 +14,14 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import BoundingBox, IntersectionDataset, L7Irish, UnionDataset
+from torchgeo.datasets import (
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    L7Irish,
+    RGBBandsMissingError,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -58,7 +65,7 @@ class TestL7Irish:
         plt.close()
 
     def test_already_extracted(self, dataset: L7Irish) -> None:
-        L7Irish(root=dataset.root, download=True)
+        L7Irish(dataset.paths, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests", "data", "l7irish", "*.tar.gz")
@@ -68,7 +75,7 @@ class TestL7Irish:
         L7Irish(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             L7Irish(str(tmp_path))
 
     def test_plot_prediction(self, dataset: L7Irish) -> None:
@@ -86,9 +93,9 @@ class TestL7Irish:
 
     def test_rgb_bands_absent_plot(self, dataset: L7Irish) -> None:
         with pytest.raises(
-            ValueError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
-            ds = L7Irish(root=dataset.root, bands=["B10", "B20", "B50"])
+            ds = L7Irish(dataset.paths, bands=["B10", "B20", "B50"])
             x = ds[ds.bounds]
             ds.plot(x, suptitle="Test")
             plt.close()

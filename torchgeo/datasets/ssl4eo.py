@@ -12,10 +12,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import DatasetNotFoundError, check_integrity, download_url, extract_archive
 
 
 class SSL4EO(NonGeoDataset):
@@ -179,7 +180,7 @@ class SSL4EOL(NonGeoDataset):
 
         Raises:
             AssertionError: if any arguments are invalid
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.metadata
         assert seasons in range(1, 5)
@@ -233,11 +234,7 @@ class SSL4EOL(NonGeoDataset):
         return len(self.scenes)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         path = os.path.join(self.subdir, "00000*", "*", "all_bands.tif")
         if glob.glob(path):
@@ -255,11 +252,7 @@ class SSL4EOL(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -293,7 +286,7 @@ class SSL4EOL(NonGeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -429,7 +422,7 @@ class SSL4EOS12(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found.
         """
         assert split in self.metadata
         assert seasons in range(1, 5)
@@ -482,11 +475,7 @@ class SSL4EOS12(NonGeoDataset):
         return 251079
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         directory_path = os.path.join(self.root, self.split)
         if os.path.exists(directory_path):
@@ -500,7 +489,7 @@ class SSL4EOS12(NonGeoDataset):
         if integrity:
             self._extract()
         else:
-            raise RuntimeError(f"Dataset not found in `root={self.root}`")
+            raise DatasetNotFoundError(self)
 
     def _extract(self) -> None:
         """Extract the dataset."""
@@ -512,7 +501,7 @@ class SSL4EOS12(NonGeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

@@ -5,6 +5,7 @@
 
 import glob
 import os
+import re
 from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
@@ -15,7 +16,12 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    check_integrity,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class InriaAerialImageLabeling(NonGeoDataset):
@@ -45,6 +51,9 @@ class InriaAerialImageLabeling(NonGeoDataset):
     * https://doi.org/10.1109/IGARSS.2017.8127684
 
     .. versionadded:: 0.3
+
+    .. versionchanged:: 0.5
+       Added support for a *val* split.
     """
 
     directory = "AerialImageDataset"
@@ -62,17 +71,17 @@ class InriaAerialImageLabeling(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: train/test split
+            split: train/val/test split
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``split`` is invalid
-            RuntimeError: if dataset is missing
+            DatasetNotFoundError: If dataset is not found.
         """
         self.root = root
-        assert split in {"train", "test"}
+        assert split in {"train", "val", "test"}
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
@@ -90,15 +99,25 @@ class InriaAerialImageLabeling(NonGeoDataset):
             list of dicts containing paths for each pair of image and label
         """
         files = []
-        root_dir = os.path.join(root, self.directory, self.split)
+        split = "train" if self.split in ["train", "val"] else "test"
+        root_dir = os.path.join(root, self.directory, split)
+        pattern = re.compile(r"([A-Za-z]+)(\d+)")
+
         images = glob.glob(os.path.join(root_dir, "images", "*.tif"))
         images = sorted(images)
-        if self.split == "train":
+
+        if split == "train":
             labels = glob.glob(os.path.join(root_dir, "gt", "*.tif"))
             labels = sorted(labels)
 
             for img, lbl in zip(images, labels):
-                files.append({"image": img, "label": lbl})
+                if match := pattern.search(img):
+                    idx = int(match.group(2))
+                    # For validation, use the first 5 images of every location
+                    if self.split == "train" and idx > 5:
+                        files.append({"image": img, "label": lbl})
+                    elif self.split == "val" and idx < 6:
+                        files.append({"image": img, "label": lbl})
         else:
             for img in images:
                 files.append({"image": img})
@@ -116,7 +135,8 @@ class InriaAerialImageLabeling(NonGeoDataset):
         """
         with rio.open(path) as img:
             array = img.read().astype(np.int32)
-            tensor = torch.from_numpy(array).float()
+            tensor = torch.from_numpy(array)
+            tensor = tensor.float()
             return tensor
 
     def _load_target(self, path: str) -> Tensor:
@@ -131,7 +151,8 @@ class InriaAerialImageLabeling(NonGeoDataset):
         with rio.open(path) as img:
             array = img.read().astype(np.int32)
             array = np.clip(array, 0, 1)
-            mask = torch.from_numpy(array[0]).long()
+            mask = torch.from_numpy(array[0])
+            mask = mask.long()
             return mask
 
     def __len__(self) -> int:
@@ -171,11 +192,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         archive_path = os.path.join(self.root, self.filename)
         md5_hash = self.md5 if self.checksum else None
         if not os.path.isfile(archive_path):
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` "
-                "either specify a different `root` directory "
-                "or download the dataset to this directory"
-            )
+            raise DatasetNotFoundError(self)
         if not check_integrity(archive_path, md5_hash):
             raise RuntimeError("Dataset corrupted")
         print("Extracting...")

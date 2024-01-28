@@ -15,7 +15,11 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import SeasonalContrastS2
+from torchgeo.datasets import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    SeasonalContrastS2,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -98,7 +102,7 @@ class TestSeasonalContrastS2:
             SeasonalContrastS2(bands=["A1steaksauce"])
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SeasonalContrastS2(str(tmp_path))
 
     def test_plot(self, dataset: SeasonalContrastS2) -> None:
@@ -113,7 +117,9 @@ class TestSeasonalContrastS2:
             dataset.plot(x)
 
     def test_no_rgb_plot(self) -> None:
-        with pytest.raises(ValueError, match="Dataset doesn't contain"):
+        with pytest.raises(
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
+        ):
             root = os.path.join("tests", "data", "seco")
             dataset = SeasonalContrastS2(root, bands=["B1"])
             x = dataset[0]

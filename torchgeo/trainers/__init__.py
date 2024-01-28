@@ -3,6 +3,7 @@
 
 """TorchGeo trainers."""
 
+from .base import BaseTask
 from .byol import BYOLTask
 from .classification import ClassificationTask, MultiLabelClassificationTask
 from .detection import ObjectDetectionTask
@@ -12,13 +13,17 @@ from .segmentation import SemanticSegmentationTask
 from .simclr import SimCLRTask
 
 __all__ = (
-    "BYOLTask",
+    # Supervised
     "ClassificationTask",
-    "MoCoTask",
     "MultiLabelClassificationTask",
     "ObjectDetectionTask",
     "PixelwiseRegressionTask",
     "RegressionTask",
     "SemanticSegmentationTask",
+    # Self-supervised
+    "BYOLTask",
+    "MoCoTask",
     "SimCLRTask",
+    # Base classes
+    "BaseTask",
 )

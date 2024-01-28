@@ -15,7 +15,12 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import EuroSAT, EuroSAT100
+from torchgeo.datasets import (
+    DatasetNotFoundError,
+    EuroSAT,
+    EuroSAT100,
+    RGBBandsMissingError,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -92,10 +97,7 @@ class TestEuroSAT:
         EuroSAT(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
-        "either specify a different `root` directory or use `download=True` "
-        "to automatically download the dataset."
-        with pytest.raises(RuntimeError, match=err):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             EuroSAT(str(tmp_path))
 
     def test_plot(self, dataset: EuroSAT) -> None:
@@ -110,5 +112,7 @@ class TestEuroSAT:
 
     def test_plot_rgb(self, dataset: EuroSAT, tmp_path: Path) -> None:
         dataset = EuroSAT(root=str(tmp_path), bands=("B03",))
-        with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
+        with pytest.raises(
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
+        ):
             dataset.plot(dataset[0], suptitle="Single Band")

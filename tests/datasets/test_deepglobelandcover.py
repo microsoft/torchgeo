@@ -12,7 +12,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import DeepGlobeLandCover
+from torchgeo.datasets import DatasetNotFoundError, DeepGlobeLandCover
 
 
 class TestDeepGlobeLandCover:
@@ -55,12 +55,7 @@ class TestDeepGlobeLandCover:
             DeepGlobeLandCover(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(
-            RuntimeError,
-            match="Dataset not found in `root`, either"
-            + " specify a different `root` directory or manually download"
-            + " the dataset to this directory.",
-        ):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             DeepGlobeLandCover(str(tmp_path))
 
     def test_plot(self, dataset: DeepGlobeLandCover) -> None:

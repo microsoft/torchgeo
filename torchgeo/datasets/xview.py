@@ -10,11 +10,17 @@ from typing import Callable, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, draw_semantic_segmentation_masks, extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    check_integrity,
+    draw_semantic_segmentation_masks,
+    extract_archive,
+)
 
 
 class XView2(NonGeoDataset):
@@ -77,6 +83,10 @@ class XView2(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            AssertionError: If *split* is invalid.
+            DatasetNotFoundError: If dataset is not found.
         """
         assert split in self.metadata
         self.root = root
@@ -180,11 +190,7 @@ class XView2(NonGeoDataset):
             return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if checksum fails or the dataset is not downloaded
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         exists = []
         for split_info in self.metadata.values():
@@ -213,11 +219,7 @@ class XView2(NonGeoDataset):
         if all(exists):
             return
 
-        # Check if the user requested to download the dataset
-        raise RuntimeError(
-            "Dataset not found in `root` directory, either specify a different"
-            + " `root` directory or manually download the dataset to this directory."
-        )
+        raise DatasetNotFoundError(self)
 
     def plot(
         self,
@@ -225,7 +227,7 @@ class XView2(NonGeoDataset):
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         alpha: float = 0.5,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

@@ -10,6 +10,7 @@ torchgeo
    user/installation
    user/contributing
    user/glossary
+   user/alternatives
 
 .. toctree::
    :maxdepth: 2
@@ -32,7 +33,6 @@ torchgeo
    tutorials/transforms
    tutorials/indices
    tutorials/trainers
-   tutorials/benchmarking
    tutorials/pretrained_weights
 
 .. toctree::

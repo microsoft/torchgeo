@@ -15,6 +15,8 @@ class SKIPPDDataModule(NonGeoDataModule):
 
     Implements 80/20 train/val splits on train_val set.
     See :func:`setup` for more details.
+
+    .. versionadded:: 0.5
     """
 
     def __init__(

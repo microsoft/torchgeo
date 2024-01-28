@@ -11,6 +11,7 @@ from torchvision.models._api import WeightsEnum
 from torchgeo.models import (
     ResNet18_Weights,
     ResNet50_Weights,
+    Swin_V2_B_Weights,
     ViTSmall16_Weights,
     get_model,
     get_model_weights,
@@ -18,11 +19,12 @@ from torchgeo.models import (
     list_models,
     resnet18,
     resnet50,
+    swin_v2_b,
     vit_small_patch16_224,
 )
 
-builders = [resnet18, resnet50, vit_small_patch16_224]
-enums = [ResNet18_Weights, ResNet50_Weights, ViTSmall16_Weights]
+builders = [resnet18, resnet50, vit_small_patch16_224, swin_v2_b]
+enums = [ResNet18_Weights, ResNet50_Weights, ViTSmall16_Weights, Swin_V2_B_Weights]
 
 
 @pytest.mark.parametrize("builder", builders)

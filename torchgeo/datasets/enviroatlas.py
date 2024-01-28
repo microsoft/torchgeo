@@ -18,10 +18,11 @@ import shapely.geometry
 import shapely.ops
 import torch
 from matplotlib.colors import ListedColormap
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import GeoDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
 
 
 class EnviroAtlas(GeoDataset):
@@ -79,7 +80,7 @@ class EnviroAtlas(GeoDataset):
     )
 
     # these are used to check the integrity of the dataset
-    files = [
+    _files = [
         "austin_tx-2012_1m-test_tiles-debuffered",
         "austin_tx-2012_1m-val5_tiles-debuffered",
         "durham_nc-2012_1m-test_tiles-debuffered",
@@ -277,9 +278,8 @@ class EnviroAtlas(GeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             AssertionError: if ``splits`` or ``layers`` are not valid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         for split in splits:
             assert split in self.splits
@@ -411,17 +411,13 @@ class EnviroAtlas(GeoDataset):
         return sample
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
 
         def exists(filename: str) -> bool:
             return os.path.exists(os.path.join(self.root, "enviroatlas_lotp", filename))
 
         # Check if the extracted files already exist
-        if all(map(exists, self.files)):
+        if all(map(exists, self._files)):
             return
 
         # Check if the zip files have already been downloaded
@@ -431,11 +427,7 @@ class EnviroAtlas(GeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -454,7 +446,7 @@ class EnviroAtlas(GeoDataset):
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Note: only plots the "naip" and "lc" layers.

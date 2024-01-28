@@ -1,17 +1,23 @@
-module:
-  _target_: torchgeo.trainers.SimCLRTask
-  model: "resnet18"
-  in_channels: 3
-  version: 2
-  layers: 4
-  hidden_dim: 8
-  output_dim: 8
-  weight_decay: 1e-4
-  memory_bank_size: 10
-
-datamodule:
-  _target_: torchgeo.datamodules.SeasonalContrastS2DataModule
-  root: "tests/data/seco"
-  seasons: 2
-  batch_size: 2
-  num_workers: 0
+model:
+  class_path: SimCLRTask
+  init_args:
+    model: "resnet18"
+    in_channels: 3
+    version: 2
+    layers: 4
+    hidden_dim: 8
+    output_dim: 8
+    weight_decay: 1e-4
+    memory_bank_size: 10
+data:
+  class_path: SeasonalContrastS2DataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: "tests/data/seco"
+    seasons: 2
+    # https://github.com/Lightning-AI/lightning/issues/18616
+    bands:
+    - "B4"
+    - "B3"
+    - "B2"

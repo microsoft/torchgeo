@@ -5,22 +5,20 @@ import os
 from pathlib import Path
 from typing import Any, cast
 
-import numpy as np
 import pytest
 import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
 import torchvision
-from hydra.utils import instantiate
 from lightning.pytorch import Trainer
-from omegaconf import OmegaConf
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
-from torchgeo.datasets import LandCoverAI
+from torchgeo.datasets import LandCoverAI, RGBBandsMissingError
+from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import SemanticSegmentationTask
 
@@ -46,13 +44,18 @@ def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
 
 
 def plot(*args: Any, **kwargs: Any) -> None:
-    raise ValueError
+    return None
+
+
+def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
+    raise RGBBandsMissingError()
 
 
 class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         "name",
         [
+            "chabud",
             "chesapeake_cvpr_5",
             "chesapeake_cvpr_7",
             "deepglobelandcover",
@@ -85,44 +88,33 @@ class TestSemanticSegmentationTask:
             sha256 = "ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b"
             monkeypatch.setattr(LandCoverAI, "sha256", sha256)
 
-        conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
+        config = os.path.join("tests", "conf", name + ".yaml")
 
-        # Instantiate datamodule
-        datamodule = instantiate(conf.datamodule)
-
-        # Instantiate model
         monkeypatch.setattr(smp, "Unet", create_model)
         monkeypatch.setattr(smp, "DeepLabV3Plus", create_model)
-        model = instantiate(conf.module)
 
-        # Instantiate trainer
-        trainer = Trainer(
-            accelerator="cpu",
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.fit(model=model, datamodule=datamodule)
+        args = [
+            "--config",
+            config,
+            "--trainer.accelerator",
+            "cpu",
+            "--trainer.fast_dev_run",
+            str(fast_dev_run),
+            "--trainer.max_epochs",
+            "1",
+            "--trainer.log_every_n_steps",
+            "1",
+        ]
+
+        main(["fit"] + args)
         try:
-            trainer.test(model=model, datamodule=datamodule)
+            main(["test"] + args)
         except MisconfigurationException:
             pass
         try:
-            trainer.predict(model=model, datamodule=datamodule)
+            main(["predict"] + args)
         except MisconfigurationException:
             pass
-
-    @pytest.fixture
-    def model_kwargs(self) -> dict[Any, Any]:
-        return {
-            "model": "unet",
-            "backbone": "resnet18",
-            "weights": None,
-            "in_channels": 3,
-            "num_classes": 6,
-            "loss": "ce",
-            "ignore_index": 0,
-        }
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:
@@ -144,78 +136,62 @@ class TestSemanticSegmentationTask:
         monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
         return weights
 
-    def test_weight_file(self, model_kwargs: dict[str, Any], checkpoint: str) -> None:
-        model_kwargs["weights"] = checkpoint
-        SemanticSegmentationTask(**model_kwargs)
+    def test_weight_file(self, checkpoint: str) -> None:
+        SemanticSegmentationTask(backbone="resnet18", weights=checkpoint, num_classes=6)
 
-    def test_weight_enum(
-        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
-    ) -> None:
-        model_kwargs["backbone"] = mocked_weights.meta["model"]
-        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
-        model_kwargs["weights"] = mocked_weights
-        SemanticSegmentationTask(**model_kwargs)
+    def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
+        SemanticSegmentationTask(
+            backbone=mocked_weights.meta["model"],
+            weights=mocked_weights,
+            in_channels=mocked_weights.meta["in_chans"],
+        )
 
-    def test_weight_str(
-        self, model_kwargs: dict[str, Any], mocked_weights: WeightsEnum
-    ) -> None:
-        model_kwargs["backbone"] = mocked_weights.meta["model"]
-        model_kwargs["in_channels"] = mocked_weights.meta["in_chans"]
-        model_kwargs["weights"] = str(mocked_weights)
-        SemanticSegmentationTask(**model_kwargs)
+    def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
+        SemanticSegmentationTask(
+            backbone=mocked_weights.meta["model"],
+            weights=str(mocked_weights),
+            in_channels=mocked_weights.meta["in_chans"],
+        )
 
     @pytest.mark.slow
-    def test_weight_enum_download(
-        self, model_kwargs: dict[str, Any], weights: WeightsEnum
-    ) -> None:
-        model_kwargs["backbone"] = weights.meta["model"]
-        model_kwargs["in_channels"] = weights.meta["in_chans"]
-        model_kwargs["weights"] = weights
-        SemanticSegmentationTask(**model_kwargs)
+    def test_weight_enum_download(self, weights: WeightsEnum) -> None:
+        SemanticSegmentationTask(
+            backbone=weights.meta["model"],
+            weights=weights,
+            in_channels=weights.meta["in_chans"],
+        )
 
     @pytest.mark.slow
-    def test_weight_str_download(
-        self, model_kwargs: dict[str, Any], weights: WeightsEnum
-    ) -> None:
-        model_kwargs["backbone"] = weights.meta["model"]
-        model_kwargs["in_channels"] = weights.meta["in_chans"]
-        model_kwargs["weights"] = str(weights)
-        SemanticSegmentationTask(**model_kwargs)
+    def test_weight_str_download(self, weights: WeightsEnum) -> None:
+        SemanticSegmentationTask(
+            backbone=weights.meta["model"],
+            weights=str(weights),
+            in_channels=weights.meta["in_chans"],
+        )
 
-    def test_invalid_model(self, model_kwargs: dict[Any, Any]) -> None:
-        model_kwargs["model"] = "invalid_model"
+    def test_invalid_model(self) -> None:
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):
-            SemanticSegmentationTask(**model_kwargs)
+            SemanticSegmentationTask(model="invalid_model")
 
-    def test_invalid_loss(self, model_kwargs: dict[Any, Any]) -> None:
-        model_kwargs["loss"] = "invalid_loss"
+    def test_invalid_loss(self) -> None:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
-            SemanticSegmentationTask(**model_kwargs)
+            SemanticSegmentationTask(loss="invalid_loss")
 
-    def test_invalid_ignoreindex(self, model_kwargs: dict[Any, Any]) -> None:
-        model_kwargs["ignore_index"] = "0"
-        match = "ignore_index must be an int or None"
-        with pytest.raises(ValueError, match=match):
-            SemanticSegmentationTask(**model_kwargs)
-
-    def test_ignoreindex_with_jaccard(self, model_kwargs: dict[Any, Any]) -> None:
-        model_kwargs["loss"] = "jaccard"
-        model_kwargs["ignore_index"] = 0
+    def test_ignoreindex_with_jaccard(self) -> None:
         match = "ignore_index has no effect on training when loss='jaccard'"
         with pytest.warns(UserWarning, match=match):
-            SemanticSegmentationTask(**model_kwargs)
+            SemanticSegmentationTask(loss="jaccard", ignore_index=0)
 
-    def test_no_rgb(
-        self, monkeypatch: MonkeyPatch, model_kwargs: dict[Any, Any], fast_dev_run: bool
-    ) -> None:
-        model_kwargs["in_channels"] = 15
+    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, "plot", plot)
         datamodule = SEN12MSDataModule(
             root="tests/data/sen12ms", batch_size=1, num_workers=0
         )
-        model = SemanticSegmentationTask(**model_kwargs)
+        model = SemanticSegmentationTask(
+            backbone="resnet18", in_channels=15, num_classes=6
+        )
         trainer = Trainer(
             accelerator="cpu",
             fast_dev_run=fast_dev_run,
@@ -224,17 +200,30 @@ class TestSemanticSegmentationTask:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
+    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(SEN12MSDataModule, "plot", plot_missing_bands)
+        datamodule = SEN12MSDataModule(
+            root="tests/data/sen12ms", batch_size=1, num_workers=0
+        )
+        model = SemanticSegmentationTask(
+            backbone="resnet18", in_channels=15, num_classes=6
+        )
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.validate(model=model, datamodule=datamodule)
+
+    @pytest.mark.parametrize("model_name", ["unet", "deeplabv3+"])
     @pytest.mark.parametrize(
         "backbone", ["resnet18", "mobilenet_v2", "efficientnet-b0"]
     )
-    @pytest.mark.parametrize("model_name", ["unet", "deeplabv3+"])
-    def test_freeze_backbone(
-        self, backbone: str, model_name: str, model_kwargs: dict[Any, Any]
-    ) -> None:
-        model_kwargs["freeze_backbone"] = True
-        model_kwargs["model"] = model_name
-        model_kwargs["backbone"] = backbone
-        model = SemanticSegmentationTask(**model_kwargs)
+    def test_freeze_backbone(self, model_name: str, backbone: str) -> None:
+        model = SemanticSegmentationTask(
+            model=model_name, backbone=backbone, freeze_backbone=True
+        )
         assert all(
             [param.requires_grad is False for param in model.model.encoder.parameters()]
         )
@@ -247,12 +236,8 @@ class TestSemanticSegmentationTask:
         )
 
     @pytest.mark.parametrize("model_name", ["unet", "deeplabv3+"])
-    def test_freeze_decoder(
-        self, model_name: str, model_kwargs: dict[Any, Any]
-    ) -> None:
-        model_kwargs["freeze_decoder"] = True
-        model_kwargs["model"] = model_name
-        model = SemanticSegmentationTask(**model_kwargs)
+    def test_freeze_decoder(self, model_name: str) -> None:
+        model = SemanticSegmentationTask(model=model_name, freeze_decoder=True)
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]
         )
@@ -263,23 +248,3 @@ class TestSemanticSegmentationTask:
                 for param in model.model.segmentation_head.parameters()
             ]
         )
-
-    @pytest.mark.parametrize(
-        "class_weights", [torch.tensor([1, 2, 3]), np.array([1, 2, 3]), [1, 2, 3]]
-    )
-    def test_classweights_valid(
-        self, class_weights: Any, model_kwargs: dict[Any, Any]
-    ) -> None:
-        model_kwargs["class_weights"] = class_weights
-        sst = SemanticSegmentationTask(**model_kwargs)
-        assert isinstance(sst.loss.weight, torch.Tensor)
-        assert torch.equal(sst.loss.weight, torch.tensor([1.0, 2.0, 3.0]))
-        assert sst.loss.weight.dtype == torch.float32
-
-    @pytest.mark.parametrize("class_weights", [[], None])
-    def test_classweights_empty(
-        self, class_weights: Any, model_kwargs: dict[Any, Any]
-    ) -> None:
-        model_kwargs["class_weights"] = class_weights
-        sst = SemanticSegmentationTask(**model_kwargs)
-        assert sst.loss.weight is None

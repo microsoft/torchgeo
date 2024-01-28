@@ -10,15 +10,17 @@ from typing import Any, Callable, Optional, cast, overload
 import fiona
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
+from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
 from torchvision.ops import clip_boxes_to_image, remove_small_boxes
 from torchvision.utils import draw_bounding_boxes
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import DatasetNotFoundError, download_url, extract_archive
 
 
 class IDTReeS(NonGeoDataset):
@@ -163,7 +165,8 @@ class IDTReeS(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            ImportError: if laspy or pandas are are not installed
+            ImportError: if laspy is not installed
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in ["train", "test"]
         assert task in ["task1", "task2"]
@@ -178,12 +181,6 @@ class IDTReeS(NonGeoDataset):
         self.num_classes = len(self.classes)
         self._verify()
 
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
         try:
             import laspy  # noqa: F401
         except ImportError:
@@ -345,8 +342,6 @@ class IDTReeS(NonGeoDataset):
         Returns:
             the image path, geometries, and labels
         """
-        import pandas as pd
-
         if self.split == "train":
             directory = os.path.join(root, self.directories[self.split][0])
             labels: pd.DataFrame = self._load_labels(directory)
@@ -373,8 +368,6 @@ class IDTReeS(NonGeoDataset):
         Returns:
             a pandas DataFrame containing the labels for each image
         """
-        import pandas as pd
-
         path_mapping = os.path.join(directory, "Field", "itc_rsFile.csv")
         path_labels = os.path.join(directory, "Field", "train_data.csv")
         df_mapping = pd.read_csv(path_mapping)
@@ -414,14 +407,12 @@ class IDTReeS(NonGeoDataset):
     @overload
     def _filter_boxes(
         self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: Tensor
-    ) -> tuple[Tensor, Tensor]:
-        ...
+    ) -> tuple[Tensor, Tensor]: ...
 
     @overload
     def _filter_boxes(
         self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: None
-    ) -> tuple[Tensor, None]:
-        ...
+    ) -> tuple[Tensor, None]: ...
 
     def _filter_boxes(
         self,
@@ -451,11 +442,7 @@ class IDTReeS(NonGeoDataset):
         return boxes, labels
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         url = self.metadata[self.split]["url"]
         md5 = self.metadata[self.split]["md5"]
         filename = self.metadata[self.split]["filename"]
@@ -477,11 +464,7 @@ class IDTReeS(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         download_url(
@@ -496,7 +479,7 @@ class IDTReeS(NonGeoDataset):
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         hsi_indices: tuple[int, int, int] = (0, 1, 2),
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -511,7 +494,9 @@ class IDTReeS(NonGeoDataset):
         assert len(hsi_indices) == 3
 
         def normalize(x: Tensor) -> Tensor:
-            return (x - x.min()) / (x.max() - x.min())
+            # https://github.com/pytorch/pytorch/issues/116327
+            out: Tensor = (x - x.min()) / (x.max() - x.min())
+            return out
 
         ncols = 3
 

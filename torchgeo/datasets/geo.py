@@ -9,8 +9,9 @@ import glob
 import os
 import re
 import sys
-from collections.abc import Sequence
-from typing import Any, Callable, Optional, cast
+import warnings
+from collections.abc import Iterable, Sequence
+from typing import Any, Callable, Optional, Union, cast
 
 import fiona
 import fiona.transform
@@ -29,7 +30,15 @@ from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
-from .utils import BoundingBox, concat_samples, disambiguate_timestamp, merge_samples
+from .utils import (
+    BoundingBox,
+    DatasetNotFoundError,
+    array_to_tensor,
+    concat_samples,
+    disambiguate_timestamp,
+    merge_samples,
+    path_is_vsi,
+)
 
 
 class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
@@ -72,8 +81,16 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
+    paths: Union[str, Iterable[str]]
     _crs = CRS.from_epsg(4326)
     _res = 0.0
+
+    #: Glob expression used to search for files.
+    #:
+    #: This expression should be specific enough that it will not pick up files from
+    #: other datasets. It should not include a file extension, as the dataset may be in
+    #: a different file format than what it was originally downloaded as.
+    filename_glob = "*"
 
     # NOTE: according to the Python docs:
     #
@@ -269,16 +286,41 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         print(f"Converting {self.__class__.__name__} res from {self.res} to {new_res}")
         self._res = new_res
 
+    @property
+    def files(self) -> set[str]:
+        """A list of all files in the dataset.
+
+        Returns:
+            All files in the dataset.
+
+        .. versionadded:: 0.5
+        """
+        # Make iterable
+        if isinstance(self.paths, str):
+            paths: Iterable[str] = [self.paths]
+        else:
+            paths = self.paths
+
+        # Using set to remove any duplicates if directories are overlapping
+        files: set[str] = set()
+        for path in paths:
+            if os.path.isdir(path):
+                pathname = os.path.join(path, "**", self.filename_glob)
+                files |= set(glob.iglob(pathname, recursive=True))
+            elif os.path.isfile(path) or path_is_vsi(path):
+                files.add(path)
+            else:
+                warnings.warn(
+                    f"Could not find any relevant files for provided path '{path}'. "
+                    f"Path was ignored.",
+                    UserWarning,
+                )
+
+        return files
+
 
 class RasterDataset(GeoDataset):
     """Abstract base class for :class:`GeoDataset` stored as raster files."""
-
-    #: Glob expression used to search for files.
-    #:
-    #: This expression should be specific enough that it will not pick up files from
-    #: other datasets. It should not include a file extension, as the dataset may be in
-    #: a different file format than what it was originally downloaded as.
-    filename_glob = "*"
 
     #: Regular expression used to extract date from filename.
     #:
@@ -286,6 +328,8 @@ class RasterDataset(GeoDataset):
     #: groups. The following groups are specifically searched for by the base class:
     #:
     #: * ``date``: used to calculate ``mint`` and ``maxt`` for ``index`` insertion
+    #: * ``start``: used to calculate ``mint`` for ``index`` insertion
+    #: * ``stop``: used to calculate ``maxt`` for ``index`` insertion
     #:
     #: When :attr:`~RasterDataset.separate_files` is True, the following additional
     #: groups are searched for to find other files:
@@ -295,7 +339,8 @@ class RasterDataset(GeoDataset):
 
     #: Date format string used to parse date from filename.
     #:
-    #: Not used if :attr:`filename_regex` does not contain a ``date`` group.
+    #: Not used if :attr:`filename_regex` does not contain a ``date`` group or
+    #: ``start`` and ``stop`` groups.
     date_format = "%Y%m%d"
 
     #: True if dataset contains imagery, False if dataset contains mask
@@ -329,7 +374,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = None,
@@ -339,7 +384,7 @@ class RasterDataset(GeoDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -350,19 +395,21 @@ class RasterDataset(GeoDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            DatasetNotFoundError: If dataset is not found.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
         super().__init__(transforms)
 
-        self.root = root
+        self.paths = paths
         self.bands = bands or self.all_bands
         self.cache = cache
 
         # Populate the dataset index
         i = 0
-        pathname = os.path.join(root, "**", self.filename_glob)
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-        for filepath in glob.iglob(pathname, recursive=True):
+        for filepath in self.files:
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
                 try:
@@ -390,16 +437,18 @@ class RasterDataset(GeoDataset):
                     if "date" in match.groupdict():
                         date = match.group("date")
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
+                    elif "start" in match.groupdict() and "stop" in match.groupdict():
+                        start = match.group("start")
+                        stop = match.group("stop")
+                        mint, _ = disambiguate_timestamp(start, self.date_format)
+                        _, maxt = disambiguate_timestamp(stop, self.date_format)
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
                     self.index.insert(i, coords, filepath)
                     i += 1
 
         if i == 0:
-            msg = f"No {self.__class__.__name__} data was found in `root='{self.root}'`"
-            if self.bands:
-                msg += f" with `bands={self.bands}`"
-            raise FileNotFoundError(msg)
+            raise DatasetNotFoundError(self)
 
         if not self.separate_files:
             self.band_indexes = None
@@ -495,14 +544,8 @@ class RasterDataset(GeoDataset):
 
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
         dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res, indexes=band_indexes)
-
-        # fix numpy dtypes which are not supported by pytorch tensors
-        if dest.dtype == np.uint16:
-            dest = dest.astype(np.int32)
-        elif dest.dtype == np.uint32:
-            dest = dest.astype(np.int64)
-
-        tensor = torch.tensor(dest)
+        # Use array_to_tensor since merge may return uint16/uint32 arrays.
+        tensor = array_to_tensor(dest)
         return tensor
 
     @functools.lru_cache(maxsize=128)
@@ -540,16 +583,22 @@ class RasterDataset(GeoDataset):
 class VectorDataset(GeoDataset):
     """Abstract base class for :class:`GeoDataset` stored as vector files."""
 
-    #: Glob expression used to search for files.
+    #: Regular expression used to extract date from filename.
     #:
-    #: This expression should be specific enough that it will not pick up files from
-    #: other datasets. It should not include a file extension, as the dataset may be in
-    #: a different file format than what it was originally downloaded as.
-    filename_glob = "*"
+    #: The expression should use named groups. The expression may contain any number of
+    #: groups. The following groups are specifically searched for by the base class:
+    #:
+    #: * ``date``: used to calculate ``mint`` and ``maxt`` for ``index`` insertion
+    filename_regex = ".*"
+
+    #: Date format string used to parse date from filename.
+    #:
+    #: Not used if :attr:`filename_regex` does not contain a ``date`` group.
+    date_format = "%Y%m%d"
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: float = 0.0001,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -558,7 +607,7 @@ class VectorDataset(GeoDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -568,42 +617,49 @@ class VectorDataset(GeoDataset):
                 rasterized into the mask
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            DatasetNotFoundError: If dataset is not found.
 
         .. versionadded:: 0.4
             The *label_name* parameter.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
         super().__init__(transforms)
 
-        self.root = root
+        self.paths = paths
         self.label_name = label_name
 
         # Populate the dataset index
         i = 0
-        pathname = os.path.join(root, "**", self.filename_glob)
-        for filepath in glob.iglob(pathname, recursive=True):
-            try:
-                with fiona.open(filepath) as src:
-                    if crs is None:
-                        crs = CRS.from_dict(src.crs)
+        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+        for filepath in self.files:
+            match = re.match(filename_regex, os.path.basename(filepath))
+            if match is not None:
+                try:
+                    with fiona.open(filepath) as src:
+                        if crs is None:
+                            crs = CRS.from_dict(src.crs)
 
-                    minx, miny, maxx, maxy = src.bounds
-                    (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                        src.crs, crs.to_dict(), [minx, maxx], [miny, maxy]
-                    )
-            except fiona.errors.FionaValueError:
-                # Skip files that fiona is unable to read
-                continue
-            else:
-                mint = 0
-                maxt = sys.maxsize
-                coords = (minx, maxx, miny, maxy, mint, maxt)
-                self.index.insert(i, coords, filepath)
-                i += 1
+                        minx, miny, maxx, maxy = src.bounds
+                        (minx, maxx), (miny, maxy) = fiona.transform.transform(
+                            src.crs, crs.to_dict(), [minx, maxx], [miny, maxy]
+                        )
+                except fiona.errors.FionaValueError:
+                    # Skip files that fiona is unable to read
+                    continue
+                else:
+                    mint: float = 0
+                    maxt: float = sys.maxsize
+                    if "date" in match.groupdict():
+                        date = match.group("date")
+                        mint, maxt = disambiguate_timestamp(date, self.date_format)
+                    coords = (minx, maxx, miny, maxy, mint, maxt)
+                    self.index.insert(i, coords, filepath)
+                    i += 1
 
         if i == 0:
-            msg = f"No {self.__class__.__name__} data was found in `root='{root}'`"
-            raise FileNotFoundError(msg)
+            raise DatasetNotFoundError(self)
 
         self._crs = crs
         self._res = res
@@ -645,9 +701,8 @@ class VectorDataset(GeoDataset):
                     shape = fiona.transform.transform_geom(
                         src.crs, self.crs.to_dict(), feature["geometry"]
                     )
-                    if self.label_name:
-                        shape = (shape, feature["properties"][self.label_name])
-                    shapes.append(shape)
+                    label = self.get_label(feature)
+                    shapes.append((shape, label))
 
         # Rasterize geometries
         width = (query.maxx - query.minx) / self.res
@@ -664,12 +719,30 @@ class VectorDataset(GeoDataset):
             # with the default fill value and dtype used by rasterize
             masks = np.zeros((round(height), round(width)), dtype=np.uint8)
 
-        sample = {"mask": torch.tensor(masks), "crs": self.crs, "bbox": query}
+        # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
+        masks = array_to_tensor(masks)
+
+        sample = {"mask": masks, "crs": self.crs, "bbox": query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
+
+    def get_label(self, feature: "fiona.model.Feature") -> int:
+        """Get label value to use for rendering a feature.
+
+        Args:
+            feature: the :class:`fiona.model.Feature` from which to extract the label.
+
+        Returns:
+            the integer label, or 0 if the feature should not be rendered.
+
+        .. versionadded:: 0.6
+        """
+        if self.label_name:
+            return int(feature["properties"][self.label_name])
+        return 1
 
 
 class NonGeoDataset(Dataset[dict[str, Any]], abc.ABC):

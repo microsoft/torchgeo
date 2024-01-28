@@ -13,7 +13,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import FireRisk
+from torchgeo.datasets import DatasetNotFoundError, FireRisk
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -56,7 +56,7 @@ class TestFireRisk:
         FireRisk(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             FireRisk(str(tmp_path))
 
     def test_plot(self, dataset: FireRisk) -> None:

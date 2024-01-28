@@ -26,6 +26,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
+    DatasetNotFoundError,
     check_integrity,
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
@@ -98,7 +99,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.image = image  # For testing
@@ -116,11 +117,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         if to_be_downloaded:
             if not download:
-                raise RuntimeError(
-                    f"Dataset not found in `root={self.root}` and `download=False`, "
-                    "either specify a different `root` directory or use "
-                    "`download=True` to automatically download the dataset."
-                )
+                raise DatasetNotFoundError(self)
             else:
                 self._download(to_be_downloaded, api_key)
 
@@ -203,7 +200,8 @@ class SpaceNet(NonGeoDataset, abc.ABC):
                 dtype=np.uint8,
             )
 
-        mask = torch.from_numpy(mask_data).long()
+        mask = torch.from_numpy(mask_data)
+        mask = mask.long()
 
         return mask
 
@@ -283,9 +281,6 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         Args:
             collections: Collections to be downloaded
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
         """
         for collection in collections:
             download_radiant_mlhub_collection(collection, self.root, api_key)
@@ -421,7 +416,7 @@ class SpaceNet1(SpaceNet):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         collections = ["sn1_AOI_1_RIO"]
         assert image in {"rgb", "8band"}
@@ -541,7 +536,7 @@ class SpaceNet2(SpaceNet):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert image in {"MS", "PAN", "PS-MS", "PS-RGB"}
         super().__init__(
@@ -664,7 +659,7 @@ class SpaceNet3(SpaceNet):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert image in {"MS", "PAN", "PS-MS", "PS-RGB"}
         self.speed_mask = speed_mask
@@ -732,7 +727,8 @@ class SpaceNet3(SpaceNet):
                 dtype=np.uint8,
             )
 
-        mask = torch.from_numpy(mask_data).long()
+        mask = torch.from_numpy(mask_data)
+        mask = mask.long()
         return mask
 
     def plot(
@@ -909,7 +905,7 @@ class SpaceNet4(SpaceNet):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         collections = ["sn4_AOI_6_Atlanta"]
         assert image in {"MS", "PAN", "PS-RGBNIR"}
@@ -1081,7 +1077,7 @@ class SpaceNet5(SpaceNet3):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         super().__init__(
             root,
@@ -1205,7 +1201,7 @@ class SpaceNet6(SpaceNet):
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.image = image  # For testing
@@ -1223,9 +1219,6 @@ class SpaceNet6(SpaceNet):
 
         Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
         """
         if os.path.exists(
             os.path.join(
@@ -1307,7 +1300,7 @@ class SpaceNet7(SpaceNet):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.split = split
@@ -1326,11 +1319,7 @@ class SpaceNet7(SpaceNet):
 
         if to_be_downloaded:
             if not download:
-                raise RuntimeError(
-                    f"Dataset not found in `root={self.root}` and `download=False`, "
-                    "either specify a different `root` directory or use "
-                    "`download=True` to automatically download the dataset."
-                )
+                raise DatasetNotFoundError(self)
             else:
                 self._download(to_be_downloaded, api_key)
 

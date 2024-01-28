@@ -78,7 +78,7 @@ if __name__ == "__main__":
                         "coordinates": [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
                     },
                     "id": str(i),
-                    "properties": {"Fold": i % 5, "ID_PATCH": i},
+                    "properties": {"Fold": (i % 5) + 1, "ID_PATCH": i},
                 }
             )
 

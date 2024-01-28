@@ -6,6 +6,7 @@
 from typing import Any, Optional
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
 from .geo import RasterDataset
 
@@ -52,7 +53,7 @@ class NAIP(RasterDataset):
         sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

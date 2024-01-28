@@ -17,6 +17,8 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
     download_url,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -78,11 +80,29 @@ class OSCD(NonGeoDataset):
 
     colormap = ["blue"]
 
+    all_bands = (
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08",
+        "B8A",
+        "B09",
+        "B10",
+        "B11",
+        "B12",
+    )
+
+    rgb_bands = ("B04", "B03", "B02")
+
     def __init__(
         self,
         root: str = "data",
         split: str = "train",
-        bands: str = "all",
+        bands: Sequence[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
@@ -99,15 +119,15 @@ class OSCD(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
-        assert bands in ["rgb", "all"]
+        assert set(bands) <= set(self.all_bands)
+        self.bands = bands
+        self.all_band_indices = [self.all_bands.index(b) for b in self.bands]
 
         self.root = root
         self.split = split
-        self.bands = bands
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -129,9 +149,7 @@ class OSCD(NonGeoDataset):
         image1 = self._load_image(files["images1"])
         image2 = self._load_image(files["images2"])
         mask = self._load_target(str(files["mask"]))
-
-        image = torch.cat([image1, image2])
-        sample = {"image": image, "mask": mask}
+        sample = {"image1": image1, "image2": image2, "mask": mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -170,8 +188,8 @@ class OSCD(NonGeoDataset):
                 )
 
             images1, images2 = get_image_paths(1), get_image_paths(2)
-            if self.bands == "rgb":
-                images1, images2 = images1[1:4][::-1], images2[1:4][::-1]
+            images1 = [images1[i] for i in self.all_band_indices]
+            images2 = [images2[i] for i in self.all_band_indices]
 
             with open(os.path.join(images_root, region, "dates.txt")) as f:
                 dates = tuple(
@@ -205,6 +223,7 @@ class OSCD(NonGeoDataset):
                 images.append(np.array(img))
         array: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0).astype(np.int_)
         tensor = torch.from_numpy(array)
+        tensor = tensor.float()
         return tensor
 
     def _load_target(self, path: str) -> Tensor:
@@ -225,11 +244,7 @@ class OSCD(NonGeoDataset):
             return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, "**", self.filename_glob)
         for fname in glob.iglob(pathname, recursive=True):
@@ -244,11 +259,7 @@ class OSCD(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -287,13 +298,19 @@ class OSCD(NonGeoDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         ncols = 2
 
-        rgb_inds = [3, 2, 1] if self.bands == "all" else [0, 1, 2]
+        try:
+            rgb_indices = [self.bands.index(band) for band in self.rgb_bands]
+        except ValueError as e:
+            raise RGBBandsMissingError() from e
 
         def get_masked(img: Tensor) -> "np.typing.NDArray[np.uint8]":
-            rgb_img = img[rgb_inds].float().numpy()
+            rgb_img = img[rgb_indices].float().numpy()
             per02 = np.percentile(rgb_img, 2)
             per98 = np.percentile(rgb_img, 98)
             rgb_img = (np.clip((rgb_img - per02) / (per98 - per02), 0, 1) * 255).astype(
@@ -307,9 +324,8 @@ class OSCD(NonGeoDataset):
             )
             return array
 
-        idx = sample["image"].shape[0] // 2
-        image1 = get_masked(sample["image"][:idx])
-        image2 = get_masked(sample["image"][idx:])
+        image1 = get_masked(sample["image1"])
+        image2 = get_masked(sample["image2"])
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image1)
         axs[0].axis("off")

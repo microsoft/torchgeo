@@ -46,7 +46,9 @@ df = pd.read_csv("band_data.csv", skip_blank_lines=True)
 df = df.iloc[::-1]
 
 fig, ax = plt.subplots(figsize=(5.5, args.fig_height))
-ax1, ax2 = fig.subplots(nrows=1, ncols=2, gridspec_kw={"width_ratios": [3, 1]})
+ax1, ax2 = fig.subplots(
+    nrows=1, ncols=2, gridspec_kw={"width_ratios": [3, 1]}
+)  # type: ignore[misc]
 
 sensor_names: list[str] = []
 sensor_ylocs: list[float] = []

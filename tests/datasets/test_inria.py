@@ -11,16 +11,16 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import InriaAerialImageLabeling
+from torchgeo.datasets import DatasetNotFoundError, InriaAerialImageLabeling
 
 
 class TestInriaAerialImageLabeling:
-    @pytest.fixture(params=["train", "test"])
+    @pytest.fixture(params=["train", "val", "test"])
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch
     ) -> InriaAerialImageLabeling:
         root = os.path.join("tests", "data", "inria")
-        test_md5 = "478688944e4797c097d9387fd0b3f038"
+        test_md5 = "3ecbe95eb84aea064e455c4321546be1"
         monkeypatch.setattr(InriaAerialImageLabeling, "md5", test_md5)
         transforms = nn.Identity()
         return InriaAerialImageLabeling(
@@ -38,13 +38,18 @@ class TestInriaAerialImageLabeling:
         assert x["image"].ndim == 3
 
     def test_len(self, dataset: InriaAerialImageLabeling) -> None:
-        assert len(dataset) == 5
+        if dataset.split == "train":
+            assert len(dataset) == 2
+        elif dataset.split == "val":
+            assert len(dataset) == 5
+        elif dataset.split == "test":
+            assert len(dataset) == 7
 
     def test_already_downloaded(self, dataset: InriaAerialImageLabeling) -> None:
         InriaAerialImageLabeling(root=dataset.root)
 
     def test_not_downloaded(self, tmp_path: str) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             InriaAerialImageLabeling(str(tmp_path))
 
     def test_dataset_checksum(self, dataset: InriaAerialImageLabeling) -> None:

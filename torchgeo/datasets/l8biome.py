@@ -5,15 +5,22 @@
 
 import glob
 import os
-from collections.abc import Sequence
-from typing import Any, Callable, Optional, cast
+from collections.abc import Iterable, Sequence
+from typing import Any, Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import (
+    BoundingBox,
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    download_url,
+    extract_archive,
+)
 
 
 class L8Biome(RasterDataset):
@@ -89,8 +96,8 @@ class L8Biome(RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
-        crs: Optional[CRS] = None,
+        paths: Union[str, Iterable[str]],
+        crs: Optional[CRS] = CRS.from_epsg(3857),
         res: Optional[float] = None,
         bands: Sequence[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -101,9 +108,9 @@ class L8Biome(RasterDataset):
         """Initialize a new L8Biome instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
-                (defaults to the CRS of the first file found)
+                (defaults to EPSG:3857)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
             bands: bands to return (defaults to all bands)
@@ -114,43 +121,34 @@ class L8Biome(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        self.root = root
+        self.paths = paths
         self.download = download
         self.checksum = checksum
 
         self._verify()
 
         super().__init__(
-            root, crs=crs, res=res, bands=bands, transforms=transforms, cache=cache
+            paths, crs=crs, res=res, bands=bands, transforms=transforms, cache=cache
         )
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        pathname = os.path.join(self.root, "**", self.filename_glob)
-        for fname in glob.iglob(pathname, recursive=True):
+        if self.files:
             return
 
         # Check if the tar.gz files have already been downloaded
-        pathname = os.path.join(self.root, "*.tar.gz")
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, "*.tar.gz")
         if glob.glob(pathname):
             self._extract()
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -160,12 +158,13 @@ class L8Biome(RasterDataset):
         """Download the dataset."""
         for biome, md5 in self.md5s.items():
             download_url(
-                self.url.format(biome), self.root, md5=md5 if self.checksum else None
+                self.url.format(biome), self.paths, md5=md5 if self.checksum else None
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        pathname = os.path.join(self.root, "*.tar.gz")
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, "*.tar.gz")
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
 
@@ -219,7 +218,7 @@ class L8Biome(RasterDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -229,13 +228,16 @@ class L8Biome(RasterDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         rgb_indices = []
         for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         image = sample["image"][rgb_indices].permute(1, 2, 0)
 

@@ -49,7 +49,7 @@ for i, (label, df) in enumerate(other):
 
 ax.set_xscale("log")
 ax.set_xticks([16, 32, 64, 128, 256])
-ax.set_xticklabels([16, 32, 64, 128, 256])
+ax.set_xticklabels(["16", "32", "64", "128", "256"])
 ax.set_xlabel("batch size")
 ax.set_ylabel("% sampling rate (patches/sec)")
 ax.legend()

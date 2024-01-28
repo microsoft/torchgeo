@@ -13,7 +13,7 @@ Geospatial Datasets
 :class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`IntersectionDataset` and :class:`UnionDataset`.
 
 .. csv-table::
-   :widths: 30 15 20 20 15
+   :widths: 30 15 20 36 20 15
    :header-rows: 1
    :align: center
    :file: geo_datasets.csv
@@ -22,6 +22,11 @@ Aboveground Woody Biomass
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
+
+Airphen
+^^^^^^^
+
+.. autoclass:: Airphen
 
 Aster Global DEM
 ^^^^^^^^^^^^^^^^
@@ -78,6 +83,11 @@ EU-DEM
 
 .. autoclass:: EUDEM
 
+EuroCrops
+^^^^^^^^^
+
+.. autoclass:: EuroCrops
+
 GBIF
 ^^^^
 
@@ -129,6 +139,11 @@ NAIP
 
 .. autoclass:: NAIP
 
+NCCM
+^^^^
+
+.. autoclass:: NCCM
+
 NLCD
 ^^^^
 
@@ -138,6 +153,11 @@ Open Buildings
 ^^^^^^^^^^^^^^
 
 .. autoclass:: OpenBuildings
+
+PRISMA
+^^^^^^
+
+.. autoclass:: PRISMA
 
 Sentinel
 ^^^^^^^^
@@ -154,7 +174,7 @@ Non-geospatial Datasets
 :class:`NonGeoDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
 
 .. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection
-   :widths: 15 7 15 12 11 12 15 13
+   :widths: 15 7 15 20 12 11 12 15 13
    :header-rows: 1
    :align: center
    :file: non_geo_datasets.csv
@@ -174,6 +194,16 @@ BigEarthNet
 
 .. autoclass:: BigEarthNet
 
+BioMassters
+^^^^^^^^^^^
+
+.. autoclass:: BioMassters
+
+ChaBuD
+^^^^^^
+
+.. autoclass:: ChaBuD
+
 Cloud Cover Detection
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -185,6 +215,11 @@ COWC
 .. autoclass:: COWC
 .. autoclass:: COWCCounting
 .. autoclass:: COWCDetection
+
+CropHarvest
+^^^^^^^^^^^
+
+.. autoclass:: CropHarvest
 
 Kenya Crop Type
 ^^^^^^^^^^^^^^^
@@ -247,6 +282,12 @@ LandCover.ai
 
 .. autoclass:: LandCoverAI
 
+LEVIR-CD
+^^^^^^^^
+
+.. autoclass:: LEVIRCDBase
+.. autoclass:: LEVIRCD
+
 LEVIR-CD+
 ^^^^^^^^^
 
@@ -256,6 +297,11 @@ LoveDA
 ^^^^^^
 
 .. autoclass:: LoveDA
+
+MapInWild
+^^^^^^^^^
+
+.. autoclass:: MapInWild
 
 Million-AID
 ^^^^^^^^^^^
@@ -297,10 +343,20 @@ RESISC45
 
 .. autoclass:: RESISC45
 
+Rwanda Field Boundary
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: RwandaFieldBoundary
+
 Seasonal Contrast
 ^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SeasonalContrastS2
+
+SeasoNet
+^^^^^^^^
+
+.. autoclass:: SeasoNet
 
 SEN12MS
 ^^^^^^^
@@ -335,6 +391,11 @@ SSL4EO
 .. autoclass:: SSL4EO
 .. autoclass:: SSL4EOL
 .. autoclass:: SSL4EOS12
+
+SSL4EO-L Benchmark
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SSL4EOLBenchmark
 
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -444,3 +505,9 @@ Splitting Functions
 .. autofunction:: random_grid_cell_assignment
 .. autofunction:: roi_split
 .. autofunction:: time_series_split
+
+Errors
+------
+
+.. autoclass:: DatasetNotFoundError
+.. autoclass:: RGBBandsMissingError
