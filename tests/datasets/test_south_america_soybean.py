@@ -32,10 +32,23 @@ class TestSouthAmericaSoybean:
             torchgeo.datasets.south_america_soybean, "download_url", download_url
         )
         transforms = nn.Identity()
-        url = os.path.join(
-            "tests", "data", "south_america_soybean", "SouthAmericaSoybean.zip"
-        )
-        monkeypatch.setattr(SouthAmericaSoybean, "url", url)
+        urls = [
+            os.path.join(
+                "tests",
+                "data",
+                "south_america_soybean",
+                "SouthAmericaSoybean",
+                "South_America_Soybean_2002.tif",
+            ),
+            os.path.join(
+                "tests",
+                "data",
+                "south_america_soybean",
+                "SouthAmericaSoybean",
+                "South_America_Soybean_2021.tif",
+            ),
+        ]
+        monkeypatch.setattr(SouthAmericaSoybean, "urls", urls)
         root = str(tmp_path)
         return SouthAmericaSoybean(
             paths=root, transforms=transforms, download=True, checksum=True
@@ -60,7 +73,11 @@ class TestSouthAmericaSoybean:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(
-            "tests", "data", "south_america_soybean", "SouthAmericaSoybean.zip"
+            "tests",
+            "data",
+            "south_america_soybean",
+            "SouthAmericaSoybean",
+            "South_America_Soybean_2002.tif",
         )
         root = str(tmp_path)
         shutil.copy(pathname, root)
