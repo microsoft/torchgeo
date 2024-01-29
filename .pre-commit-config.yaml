@@ -12,7 +12,7 @@ repos:
              additional_dependencies: ['.[colors]']
 
     -   repo: https://github.com/psf/black
-        rev: 23.12.1
+        rev: 24.1.0
         hooks:
         -   id: black
             args: [--skip-magic-trailing-comma]

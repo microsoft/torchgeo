@@ -23,7 +23,7 @@ def batch_gray() -> dict[str, Tensor]:
     return {
         "image": torch.tensor([[[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]], dtype=torch.float),
         "mask": torch.tensor([[[0, 0, 1], [0, 1, 1], [1, 1, 1]]], dtype=torch.long),
-        "boxes": torch.tensor([[[0, 1], [1, 1], [1, 0], [0, 0]]], dtype=torch.float),
+        "boxes": torch.tensor([[0.0, 0.0, 2.0, 2.0]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
 
@@ -42,7 +42,7 @@ def batch_rgb() -> dict[str, Tensor]:
             dtype=torch.float,
         ),
         "mask": torch.tensor([[[0, 0, 1], [0, 1, 1], [1, 1, 1]]], dtype=torch.long),
-        "boxes": torch.tensor([[[0, 1], [1, 1], [1, 0], [0, 0]]], dtype=torch.float),
+        "boxes": torch.tensor([[0.0, 0.0, 2.0, 2.0]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
 
@@ -63,7 +63,7 @@ def batch_multispectral() -> dict[str, Tensor]:
             dtype=torch.float,
         ),
         "mask": torch.tensor([[[0, 0, 1], [0, 1, 1], [1, 1, 1]]], dtype=torch.long),
-        "boxes": torch.tensor([[[0, 1], [1, 1], [1, 0], [0, 0]]], dtype=torch.float),
+        "boxes": torch.tensor([[0.0, 0.0, 2.0, 2.0]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
 
@@ -79,7 +79,7 @@ def test_augmentation_sequential_gray(batch_gray: dict[str, Tensor]) -> None:
     expected = {
         "image": torch.tensor([[[[3, 2, 1], [6, 5, 4], [9, 8, 7]]]], dtype=torch.float),
         "mask": torch.tensor([[[1, 0, 0], [1, 1, 0], [1, 1, 1]]], dtype=torch.long),
-        "boxes": torch.tensor([[[1, 0], [2, 0], [2, 1], [1, 1]]], dtype=torch.float),
+        "boxes": torch.tensor([[1.0, 0.0, 3.0, 2.0]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
     augs = transforms.AugmentationSequential(
@@ -102,7 +102,7 @@ def test_augmentation_sequential_rgb(batch_rgb: dict[str, Tensor]) -> None:
             dtype=torch.float,
         ),
         "mask": torch.tensor([[[1, 0, 0], [1, 1, 0], [1, 1, 1]]], dtype=torch.long),
-        "boxes": torch.tensor([[[1, 0], [2, 0], [2, 1], [1, 1]]], dtype=torch.float),
+        "boxes": torch.tensor([[1.0, 0.0, 3.0, 2.0]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
     augs = transforms.AugmentationSequential(
@@ -129,7 +129,7 @@ def test_augmentation_sequential_multispectral(
             dtype=torch.float,
         ),
         "mask": torch.tensor([[[1, 0, 0], [1, 1, 0], [1, 1, 1]]], dtype=torch.long),
-        "boxes": torch.tensor([[[1, 0], [2, 0], [2, 1], [1, 1]]], dtype=torch.float),
+        "boxes": torch.tensor([[1.0, 0.0, 3.0, 2.0]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
     augs = transforms.AugmentationSequential(
@@ -156,7 +156,7 @@ def test_augmentation_sequential_image_only(
             dtype=torch.float,
         ),
         "mask": torch.tensor([[[0, 0, 1], [0, 1, 1], [1, 1, 1]]], dtype=torch.long),
-        "boxes": torch.tensor([[[0, 1], [1, 1], [1, 0], [0, 0]]], dtype=torch.float),
+        "boxes": torch.tensor([[0.0, 0.0, 2.0, 2.0]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
     augs = transforms.AugmentationSequential(
@@ -188,7 +188,7 @@ def test_sequential_transforms_augmentations(
             dtype=torch.float,
         ),
         "mask": torch.tensor([[[1, 0, 0], [1, 1, 0], [1, 1, 1]]], dtype=torch.long),
-        "boxes": torch.tensor([[[1, 0], [2, 0], [2, 1], [1, 1]]], dtype=torch.float),
+        "boxes": torch.tensor([[1.0, 0.0, 3.0, 2.0]], dtype=torch.float),
         "labels": torch.tensor([[0, 1]]),
     }
     train_transforms = transforms.AugmentationSequential(

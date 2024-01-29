@@ -23,6 +23,11 @@ Aboveground Woody Biomass
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
 
+Airphen
+^^^^^^^
+
+.. autoclass:: Airphen
+
 Aster Global DEM
 ^^^^^^^^^^^^^^^^
 
@@ -77,6 +82,11 @@ EU-DEM
 ^^^^^^
 
 .. autoclass:: EUDEM
+
+EuroCrops
+^^^^^^^^^
+
+.. autoclass:: EuroCrops
 
 GBIF
 ^^^^
@@ -205,6 +215,11 @@ COWC
 .. autoclass:: COWC
 .. autoclass:: COWCCounting
 .. autoclass:: COWCDetection
+
+CropHarvest
+^^^^^^^^^^^
+
+.. autoclass:: CropHarvest
 
 Kenya Crop Type
 ^^^^^^^^^^^^^^^

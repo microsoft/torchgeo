@@ -13,7 +13,7 @@ Community:
 Packaging:
 [![pypi](https://badge.fury.io/py/torchgeo.svg)](https://pypi.org/project/torchgeo/)
 [![conda](https://anaconda.org/conda-forge/torchgeo/badges/version.svg)](https://anaconda.org/conda-forge/torchgeo)
-[![spack](https://img.shields.io/spack/v/py-torchgeo)](https://spack.readthedocs.io/en/latest/package_list.html#py-torchgeo)
+[![spack](https://img.shields.io/spack/v/py-torchgeo)](https://packages.spack.io/package.html?name=py-torchgeo)
 
 Testing:
 [![docs](https://readthedocs.org/projects/torchgeo/badge/?version=latest)](https://torchgeo.readthedocs.io/en/stable/)
