@@ -178,6 +178,7 @@ class SouthAmericaSoybean(RasterDataset):
             sample: a sample returned by :meth:`RasterDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
+
         Returns:
             a matplotlib Figure with the rendered sample
         """
