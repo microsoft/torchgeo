@@ -115,7 +115,7 @@ class SouthAmericaSoybean(RasterDataset):
             checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.paths = paths
         self.download = download
