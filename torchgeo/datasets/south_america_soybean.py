@@ -31,7 +31,7 @@ class SouthAmericaSoybean(RasterDataset):
     * 21 .tif files
 
 
-    If you use this dataset in your research, please use the corresponding citation:
+    If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1038/s41893-021-00729-z
 
