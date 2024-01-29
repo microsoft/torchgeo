@@ -19,6 +19,7 @@ from torchgeo.datasets import (
     DatasetNotFoundError,
     IntersectionDataset,
     L7Irish,
+    RGBBandsMissingError,
     UnionDataset,
 )
 
@@ -92,7 +93,7 @@ class TestL7Irish:
 
     def test_rgb_bands_absent_plot(self, dataset: L7Irish) -> None:
         with pytest.raises(
-            ValueError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             ds = L7Irish(dataset.paths, bands=["B10", "B20", "B50"])
             x = ds[ds.bounds]

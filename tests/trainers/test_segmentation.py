@@ -17,7 +17,7 @@ from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
-from torchgeo.datasets import LandCoverAI
+from torchgeo.datasets import LandCoverAI, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import SemanticSegmentationTask
@@ -44,13 +44,18 @@ def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
 
 
 def plot(*args: Any, **kwargs: Any) -> None:
-    raise ValueError
+    return None
+
+
+def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
+    raise RGBBandsMissingError()
 
 
 class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         "name",
         [
+            "chabud",
             "chesapeake_cvpr_5",
             "chesapeake_cvpr_7",
             "deepglobelandcover",
@@ -180,8 +185,24 @@ class TestSemanticSegmentationTask:
         with pytest.warns(UserWarning, match=match):
             SemanticSegmentationTask(loss="jaccard", ignore_index=0)
 
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, "plot", plot)
+        datamodule = SEN12MSDataModule(
+            root="tests/data/sen12ms", batch_size=1, num_workers=0
+        )
+        model = SemanticSegmentationTask(
+            backbone="resnet18", in_channels=15, num_classes=6
+        )
+        trainer = Trainer(
+            accelerator="cpu",
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.validate(model=model, datamodule=datamodule)
+
+    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(SEN12MSDataModule, "plot", plot_missing_bands)
         datamodule = SEN12MSDataModule(
             root="tests/data/sen12ms", batch_size=1, num_workers=0
         )

@@ -18,6 +18,7 @@ from torch import Tensor
 from .geo import NonGeoDataset
 from .utils import (
     DatasetNotFoundError,
+    RGBBandsMissingError,
     check_integrity,
     download_radiant_mlhub_collection,
     extract_archive,
@@ -423,6 +424,9 @@ class CV4AKenyaCropType(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
 
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+
         .. versionadded:: 0.2
         """
         rgb_indices = []
@@ -430,7 +434,7 @@ class CV4AKenyaCropType(NonGeoDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         if "prediction" in sample:
             prediction = sample["prediction"]

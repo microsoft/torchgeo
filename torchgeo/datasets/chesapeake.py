@@ -24,6 +24,7 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import GeoDataset, RasterDataset
+from .nlcd import NLCD
 from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
 
 
@@ -439,26 +440,6 @@ class ChesapeakeCVPR(GeoDataset):
         15: (0, 0, 0, 0),
     }
 
-    nlcd_cmap = {
-        0: (0, 0, 0, 0),
-        11: (70, 107, 159, 255),
-        12: (209, 222, 248, 255),
-        21: (222, 197, 197, 255),
-        22: (217, 146, 130, 255),
-        23: (235, 0, 0, 255),
-        24: (171, 0, 0, 255),
-        31: (179, 172, 159, 255),
-        41: (104, 171, 95, 255),
-        42: (28, 95, 44, 255),
-        43: (181, 197, 143, 255),
-        52: (204, 184, 121, 255),
-        71: (223, 223, 194, 255),
-        81: (220, 217, 57, 255),
-        82: (171, 108, 40, 255),
-        90: (184, 217, 235, 255),
-        95: (108, 159, 184, 255),
-    }
-
     prior_color_matrix = np.array(
         [
             [0.0, 0.77254902, 1.0, 1.0],
@@ -574,8 +555,8 @@ class ChesapeakeCVPR(GeoDataset):
         lc_colors = lc_colors[:, :3] / 255
         self._lc_cmap = ListedColormap(lc_colors)
 
-        nlcd_colors = np.zeros((max(self.nlcd_cmap.keys()) + 1, 4))
-        nlcd_colors[list(self.nlcd_cmap.keys())] = list(self.nlcd_cmap.values())
+        nlcd_colors = np.zeros((max(NLCD.cmap.keys()) + 1, 4))
+        nlcd_colors[list(NLCD.cmap.keys())] = list(NLCD.cmap.values())
         nlcd_colors = nlcd_colors[:, :3] / 255
         self._nlcd_cmap = ListedColormap(nlcd_colors)
 

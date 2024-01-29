@@ -14,7 +14,13 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import RasterDataset
-from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
+from .utils import (
+    BoundingBox,
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    download_url,
+    extract_archive,
+)
 
 
 class L7Irish(RasterDataset):
@@ -226,13 +232,16 @@ class L7Irish(RasterDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         rgb_indices = []
         for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         image = sample["image"][rgb_indices].permute(1, 2, 0)
 

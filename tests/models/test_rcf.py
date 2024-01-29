@@ -37,7 +37,8 @@ class TestRCF:
 
     def test_biases(self) -> None:
         model = RCF(features=24, bias=10, mode="gaussian")
-        assert torch.all(model.biases == 10)
+        # https://github.com/pytorch/pytorch/issues/116328
+        assert torch.all(model.biases == 10)  # type: ignore[call-overload]
 
     def test_seed(self) -> None:
         weights1 = RCF(seed=1, mode="gaussian").weights

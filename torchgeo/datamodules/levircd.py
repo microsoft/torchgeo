@@ -10,10 +10,52 @@ import kornia.augmentation as K
 from torchgeo.datamodules.utils import dataset_split
 from torchgeo.samplers.utils import _to_tuple
 
-from ..datasets import LEVIRCDPlus
+from ..datasets import LEVIRCD, LEVIRCDPlus
 from ..transforms import AugmentationSequential
 from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
+
+
+class LEVIRCDDataModule(NonGeoDataModule):
+    """LightningDataModule implementation for the LEVIR-CD dataset.
+
+    .. versionadded:: 0.6
+    """
+
+    def __init__(
+        self,
+        batch_size: int = 8,
+        patch_size: Union[tuple[int, int], int] = 256,
+        num_workers: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a new LEVIRCDDataModule instance.
+
+        Args:
+            batch_size: Size of each mini-batch.
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
+                Should be a multiple of 32 for most segmentation architectures.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.LEVIRCD`.
+        """
+        super().__init__(LEVIRCD, 1, num_workers, **kwargs)
+
+        self.patch_size = _to_tuple(patch_size)
+
+        self.train_aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            _RandomNCrop(self.patch_size, batch_size),
+            data_keys=["image1", "image2", "mask"],
+        )
+        self.val_aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            data_keys=["image1", "image2", "mask"],
+        )
+        self.test_aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            data_keys=["image1", "image2", "mask"],
+        )
 
 
 class LEVIRCDPlusDataModule(NonGeoDataModule):
@@ -49,9 +91,17 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
-        self.aug = AugmentationSequential(
+        self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
+            data_keys=["image1", "image2", "mask"],
+        )
+        self.val_aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            data_keys=["image1", "image2", "mask"],
+        )
+        self.test_aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
             data_keys=["image1", "image2", "mask"],
         )
 
