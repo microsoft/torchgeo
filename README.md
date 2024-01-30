@@ -13,7 +13,7 @@ Community:
 Packaging:
 [![pypi](https://badge.fury.io/py/torchgeo.svg)](https://pypi.org/project/torchgeo/)
 [![conda](https://anaconda.org/conda-forge/torchgeo/badges/version.svg)](https://anaconda.org/conda-forge/torchgeo)
-[![spack](https://img.shields.io/spack/v/py-torchgeo)](https://spack.readthedocs.io/en/latest/package_list.html#py-torchgeo)
+[![spack](https://img.shields.io/spack/v/py-torchgeo)](https://packages.spack.io/package.html?name=py-torchgeo)
 
 Testing:
 [![docs](https://readthedocs.org/projects/torchgeo/badge/?version=latest)](https://torchgeo.readthedocs.io/en/stable/)
@@ -224,7 +224,7 @@ See the [Lightning documentation](https://lightning.ai/docs/pytorch/stable/cli/l
 ## Citation
 
 If you use this software in your work, please cite our [paper](https://dl.acm.org/doi/10.1145/3557915.3560953):
-```
+```bibtex
 @inproceedings{Stewart_TorchGeo_Deep_Learning_2022,
     address = {Seattle, Washington},
     author = {Stewart, Adam J. and Robinson, Caleb and Corley, Isaac A. and Ortiz, Anthony and Lavista Ferres, Juan M. and Banerjee, Arindam},
