@@ -5,7 +5,7 @@
 
 import warnings
 from collections import OrderedDict
-from typing import Optional, Union, cast
+from typing import Optional, Union, Tuple, cast
 
 import torch
 import torch.nn as nn
@@ -116,7 +116,7 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
         )
 
     model.load_state_dict(state_dict, strict=False)
-    return model
+    return Tuple[List[str], List[str]]
 
 
 def reinit_initial_conv_layer(
