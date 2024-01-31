@@ -185,7 +185,7 @@ def group_shuffle_split(
     if train_size <= 0 or train_size >= 1 or test_size <= 0 or test_size >= 1:
         raise ValueError("`train_size` and `test_size` must be in the range (0,1).")
 
-    group_vals = set(groups)
+    group_vals = sorted(list(groups))
     n_groups = len(group_vals)
     n_test_groups = round(n_groups * test_size)
     n_train_groups = n_groups - n_test_groups
@@ -197,9 +197,8 @@ def group_shuffle_split(
         )
 
     generator = np.random.default_rng(seed=random_state)
-    ordered_list = sorted(list(group_vals))
     train_group_vals = set(
-        generator.choice(ordered_list, size=n_train_groups, replace=False)
+        generator.choice(group_vals, size=n_train_groups, replace=False)
     )
 
     train_idxs = []
