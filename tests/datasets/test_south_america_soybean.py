@@ -32,26 +32,22 @@ class TestSouthAmericaSoybean:
             torchgeo.datasets.south_america_soybean, "download_url", download_url
         )
         transforms = nn.Identity()
-        urls = [
-            os.path.join(
-                "tests",
-                "data",
-                "south_america_soybean",
-                "SouthAmericaSoybean",
-                "South_America_Soybean_2002.tif",
-            ),
-            os.path.join(
-                "tests",
-                "data",
-                "south_america_soybean",
-                "SouthAmericaSoybean",
-                "South_America_Soybean_2021.tif",
-            ),
-        ]
-        monkeypatch.setattr(SouthAmericaSoybean, "urls", urls)
+        url = os.path.join(
+            "tests",
+            "data",
+            "south_america_soybean",
+            "SouthAmericaSoybean",
+            "South_America_Soybean_{}.tif",
+        )
+
+        monkeypatch.setattr(SouthAmericaSoybean, "url", url)
         root = str(tmp_path)
         return SouthAmericaSoybean(
-            paths=root, transforms=transforms, download=True, checksum=True
+            paths=root,
+            years=[2002, 2021],
+            transforms=transforms,
+            download=True,
+            checksum=True,
         )
 
     def test_getitem(self, dataset: SouthAmericaSoybean) -> None:

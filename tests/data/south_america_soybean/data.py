@@ -49,7 +49,6 @@ def create_file(path: str, dtype: str):
 
 if __name__ == "__main__":
     dir = os.path.join(os.getcwd(), "SouthAmericaSoybean")
-    print(dir)
     if os.path.exists(dir) and os.path.isdir(dir):
         shutil.rmtree(dir)
 

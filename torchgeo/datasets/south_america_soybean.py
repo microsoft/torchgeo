@@ -3,7 +3,6 @@
 
 """South America Soybean Dataset."""
 
-import re
 from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
@@ -12,7 +11,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import BoundingBox, DatasetNotFoundError, download_url
+from .utils import DatasetNotFoundError, download_url
 
 
 class SouthAmericaSoybean(RasterDataset):
@@ -43,28 +42,29 @@ class SouthAmericaSoybean(RasterDataset):
 
     date_format = "%Y"
     is_image = False
-    urls = [
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2001.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2002.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2003.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2004.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2005.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2006.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2007.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2008.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2009.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2010.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2011.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2012.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2013.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2014.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2015.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2016.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2017.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2018.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2019.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2020.tif",
-        "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_2021.tif",
+    url = "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_{}.tif"
+    years = [
+        2001,
+        2002,
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
     ]
     md5s = {
         2001: "2914b0af7590a0ca4dfa9ccefc99020f",
@@ -93,6 +93,7 @@ class SouthAmericaSoybean(RasterDataset):
     def __init__(
         self,
         paths: Union[str, Iterable[str]] = "data",
+        years: list[int] = years,
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
@@ -120,23 +121,10 @@ class SouthAmericaSoybean(RasterDataset):
         self.paths = paths
         self.download = download
         self.checksum = checksum
+        self.years = years
         self._verify()
 
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
-
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve mask and metadata indexed by query.
-
-        Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-        Returns:
-            sample of mask and metadata at that index
-        Raises:
-            IndexError: if query is not found in the index
-        """
-        sample = super().__getitem__(query)
-
-        return sample
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -154,15 +142,10 @@ class SouthAmericaSoybean(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        file = "SouthAmerica_Soybean_"
-        num = r"\d+"
-        for i in range(len(self.urls)):
-            year = int(re.findall(num, self.urls[i])[0])
-            filename = (file + "%d.tif") % year
+        for year in self.years:
             download_url(
-                self.urls[i],
+                self.url.format(year),
                 self.paths,
-                filename,
                 md5=self.md5s[year] if self.checksum else None,
             )
 
