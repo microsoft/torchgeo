@@ -197,8 +197,9 @@ def group_shuffle_split(
         )
 
     generator = np.random.default_rng(seed=random_state)
+    ordered_list = sorted(list(group_vals))
     train_group_vals = set(
-        generator.choice(list(group_vals), size=n_train_groups, replace=False)
+        generator.choice(ordered_list, size=n_train_groups, replace=False)
     )
 
     train_idxs = []
