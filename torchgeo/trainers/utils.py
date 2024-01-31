@@ -5,7 +5,7 @@
 
 import warnings
 from collections import OrderedDict
-from typing import Optional, Union, Tuple, cast
+from typing import Optional, Union, cast
 
 import torch
 import torch.nn as nn
@@ -71,7 +71,7 @@ def _get_input_layer_name_and_module(model: Module) -> tuple[str, Module]:
     return key, module
 
 
-def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Tuple[List[str], List[str]]:
+def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> tuple[list[str], list[str]]:
     """Load pretrained resnet weights to a model.
 
     Args:
