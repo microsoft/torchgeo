@@ -6,7 +6,6 @@
 from typing import Any, Optional
 
 import kornia.augmentation as K
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
