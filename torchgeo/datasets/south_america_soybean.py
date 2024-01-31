@@ -30,7 +30,7 @@ class SouthAmericaSoybean(RasterDataset):
     * 21 .tif files
 
 
-    If you use this dataset in your research, please use the corresponding citation:
+    If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1038/s41893-021-00729-z
 
@@ -116,7 +116,7 @@ class SouthAmericaSoybean(RasterDataset):
             checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.paths = paths
         self.download = download
@@ -161,6 +161,7 @@ class SouthAmericaSoybean(RasterDataset):
             sample: a sample returned by :meth:`RasterDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
+
         Returns:
             a matplotlib Figure with the rendered sample
         """
