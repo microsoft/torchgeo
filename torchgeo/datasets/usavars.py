@@ -181,8 +181,7 @@ class USAVars(NonGeoDataset):
         """
         with rasterio.open(path) as f:
             array: "np.typing.NDArray[np.int_]" = f.read()
-            tensor = torch.from_numpy(array)
-            tensor = tensor.float()
+            tensor = torch.from_numpy(array).float()
             return tensor
 
     def _verify(self) -> None:
