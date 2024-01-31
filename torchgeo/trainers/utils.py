@@ -117,7 +117,10 @@ def load_state_dict(
             state_dict[output_module_key + ".bias"],
         )
 
-    return model.load_state_dict(state_dict, strict=False)
+    missing_keys: list[str]
+    unexpected_keys: list[str]
+    missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
+    return missing_keys, unexpected_keys
 
 
 def reinit_initial_conv_layer(
