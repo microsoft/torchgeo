@@ -71,7 +71,7 @@ def _get_input_layer_name_and_module(model: Module) -> tuple[str, Module]:
     return key, module
 
 
-def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Module:
+def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Tuple[List[str], List[str]]:
     """Load pretrained resnet weights to a model.
 
     Args:
@@ -79,7 +79,7 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
         state_dict: dict containing tensor parameters
 
     Returns:
-        the model with pretrained weights
+        The missing and unexpected keys
 
     Warns:
         If input channels in model != pretrained model input channels
@@ -115,8 +115,7 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
             state_dict[output_module_key + ".bias"],
         )
 
-    model.load_state_dict(state_dict, strict=False)
-    return Tuple[List[str], List[str]]
+    return model.load_state_dict(state_dict, strict=False)
 
 
 def reinit_initial_conv_layer(
