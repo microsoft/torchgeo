@@ -67,12 +67,10 @@ class SouthAfricaCropType(RasterDataset):
 
     url = "https://beta.source.coop/repositories/radiantearth/south-africa-crops-competition/download/"
 
+    #1_2017_04_01_B01_10m.tif
     filename_regex = r"""
-        imagery/s2/
-        (?P<date>[a-z0-9])
-        _(?P<band>[0-9A-Z])+_10m
-        \.tif$
-    """
+        ^(?P<field_id>[0-9]*)_(?P<date>[0-9_]*)_(?P<band>[0-9A-Z]*)+_10m\.tif"""
+    date_format = "%Y_%m_%d"
     separate_files = True
 
     rgb_bands = ["B04", "B03", "B02"]
@@ -107,7 +105,7 @@ class SouthAfricaCropType(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        root: str = "data",
         crs: CRS = CRS.from_epsg(4326),
         classes: list[int] = list(cmap.keys()),
         bands: tuple[str, ...] = all_bands,
@@ -117,7 +115,7 @@ class SouthAfricaCropType(RasterDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new AgriFieldNet dataset instance.
+        """Initialize a new South Africa dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -125,28 +123,30 @@ class SouthAfricaCropType(RasterDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             split: portion of dataset to load
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert (
             set(classes) <= self.cmap.keys()
         ), f"Only the following classes are valid: {list(self.cmap.keys())}."
         assert 0 in classes, "Classes must include the background class: 0"
 
-        self.paths = paths
+        self.root = root
         self.classes = classes
         self.checksum = checksum
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
         self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
 
         # not downloading for now
-        if download:
-            self._download()
+        # if download:
+        #     self._download()
 
         # not checking integrity for now
         # if not self._check_integrity():
         #     raise DatasetNotFoundError(self)
 
         super().__init__(
-            paths=paths,
+            paths=root,
             crs=crs,
             bands=bands,
             transforms=transforms,
@@ -157,3 +157,24 @@ class SouthAfricaCropType(RasterDataset):
         for v, k in enumerate(self.classes):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
+
+
+# download and checksum verification not implemented yet
+# def _download(self) -> None:
+#     """Download the dataset and extract it.
+
+#     Raises:
+#         RuntimeError: if download doesn't work correctly or checksums don't match
+#     """
+#     # not checking the integrity because no compressed files in the dataset
+#     if self._check_integrity():
+#         print("Files already downloaded and verified")
+#         return
+#     # make the data not auto-downloadable until azure-storage-blob is integrated
+
+# def _check_integrity(self) -> bool:
+#     """Check integrity of dataset.
+
+#     Returns:
+#         True if dataset files are found and/or MD5s match, else False
+#     """
