@@ -37,9 +37,6 @@ def extract_backbone(path: str) -> tuple[str, "OrderedDict[str, Tensor]"]:
         state_dict = OrderedDict(
             {k.replace("model.", ""): v for k, v in state_dict.items()}
         )
-    elif "vits16" in checkpoint["hyper_parameters"]["backbone"]:
-        name = "vits16"
-        state_dict = checkpoint["state_dict"]
     elif "backbone" in checkpoint["hyper_parameters"]:
         name = checkpoint["hyper_parameters"]["backbone"]
         state_dict = checkpoint["state_dict"]

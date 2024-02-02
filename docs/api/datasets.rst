@@ -23,6 +23,11 @@ Aboveground Woody Biomass
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
 
+AgriFieldNet
+^^^^^^^^^^^^
+
+.. autoclass:: AgriFieldNet
+
 Airphen
 ^^^^^^^
 
