@@ -1,6 +1,6 @@
 Dataset,Type,Source,License,Size (px),Resolution (m)
 `Aboveground Woody Biomass`_,Masks,"Landsat, LiDAR","CC-BY-4.0","40,000x40,000",30
-'AgriFieldNet'`_,"Imagery, Masks",Sentinel-2,"CC-BY-4.0","256x256",10
+`AgriFieldNet`_,"Imagery, Masks",Sentinel-2,"CC-BY-4.0","256x256",10
 `Airphen`_,Imagery,Airphen,-,"1,280x960",0.047--0.09
 `Aster Global DEM`_,Masks,Aster,"public domain","3,601x3,601",30
 `Canadian Building Footprints`_,Geometries,Bing Imagery,"ODbL-1.0",-,-
