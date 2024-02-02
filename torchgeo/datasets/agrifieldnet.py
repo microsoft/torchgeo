@@ -5,23 +5,19 @@
 
 import os
 import re
-import glob
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import Any, Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
-import rasterio
-from rasterio.crs import CRS
 import torch
 from matplotlib.figure import Figure
+from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import RasterDataset
-from .utils import (
+from .utils import (  # DatasetNotFoundError,; check_integrity,
     BoundingBox,
-    DatasetNotFoundError,
     RGBBandsMissingError,
-    check_integrity,
     download_url,
 )
 
@@ -80,7 +76,7 @@ class AgriFieldNet(RasterDataset):
     .. versionadded:: 0.6
     """
 
-    url = "https://radiantearth.blob.core.windows.net/mlhub/ref_agrifieldnet_competition_v1"
+    url = "https://radiantearth.blob.core.windows.net/mlhub/ref_agrifieldnet_competition_v1"  # noqa: E501
 
     filename_regex = r"""
         ^ref_agrifieldnet_competition_v1_source_
@@ -91,7 +87,7 @@ class AgriFieldNet(RasterDataset):
     separate_files = True
 
     rgb_bands = ["B04", "B03", "B02"]
-    all_bands = (
+    all_bands = [
         "B01",
         "B02",
         "B03",
@@ -104,7 +100,7 @@ class AgriFieldNet(RasterDataset):
         "B09",
         "B11",
         "B12",
-    )
+    ]
 
     cmap = {
         0: (0, 0, 0, 255),
@@ -123,13 +119,12 @@ class AgriFieldNet(RasterDataset):
         36: (137, 96, 83, 255),
     }
 
-
     def __init__(
         self,
         paths: Union[str, Iterable[str]] = "data",
         crs: CRS = CRS.from_epsg(32644),
         classes: list[int] = list(cmap.keys()),
-        bands: tuple[str, ...] = all_bands,
+        bands: Sequence[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         cache: bool = True,
         download: bool = False,
@@ -168,11 +163,7 @@ class AgriFieldNet(RasterDataset):
         #     raise DatasetNotFoundError(self)
 
         super().__init__(
-            paths = paths,
-            crs = crs,
-            bands = bands,
-            transforms = transforms,
-            cache = cache
+            paths=paths, crs=crs, bands=bands, transforms=transforms, cache=cache
         )
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
@@ -194,6 +185,8 @@ class AgriFieldNet(RasterDataset):
         Returns:
             data, label, and field ids at that index
         """
+        assert isinstance(self.paths, str)
+
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = cast(list[str], [hit.object for hit in hits])
 
@@ -223,8 +216,13 @@ class AgriFieldNet(RasterDataset):
         else:
             image = self._merge_files(filepaths, query, self.band_indexes)
 
-        all_mask_filepaths = glob.glob(os.path.join(self.paths, "train_labels", "*.tif"))
-        mask_filepaths =[file for file in all_mask_filepaths if not file.endswith('_field_ids.tif')]
+        mask_filepaths = []
+        for root, dirs, files in os.walk(os.path.join(self.paths, "train_labels")):
+            for file in files:
+                if not file.endswith("_field_ids.tif"):
+                    file_path = os.path.join(root, file)
+                    mask_filepaths.append(file_path)
+
         mask = self._merge_files(mask_filepaths, query)
         mask = self.ordinal_map[mask.squeeze().long()]
 

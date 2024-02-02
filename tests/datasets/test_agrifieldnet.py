@@ -1,13 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import glob
 import os
 import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pytest
 import torch
 import torch.nn as nn
@@ -17,11 +15,11 @@ from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
 from torchgeo.datasets import (
+    AgriFieldNet,
     BoundingBox,
     DatasetNotFoundError,
-    AgriFieldNet,
-    RGBBandsMissingError,
     IntersectionDataset,
+    RGBBandsMissingError,
     UnionDataset,
 )
 
@@ -37,17 +35,14 @@ class TestAgriFieldNet:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> AgriFieldNet:
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
-        monkeypatch.setattr(torchgeo.datasets.agrifieldnet, "download_url", download_url)
+        monkeypatch.setattr(
+            torchgeo.datasets.agrifieldnet, "download_url", download_url
+        )
         url = os.path.join("tests", "data", "agrifieldnet")
         monkeypatch.setattr(AgriFieldNet, "url", url)
         root = str(tmp_path)
         transforms = nn.Identity()
-        return AgriFieldNet(
-            root,
-            transforms=transforms,
-            download=True,
-            checksum=False,
-        )
+        return AgriFieldNet(root, transforms=transforms, download=True, checksum=False)
 
     def test_getitem(self, dataset: AgriFieldNet) -> None:
         x = dataset[dataset.bounds]

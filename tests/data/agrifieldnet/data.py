@@ -4,13 +4,11 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 
 import numpy as np
 import rasterio
 from rasterio.crs import CRS
 from rasterio.transform import Affine
-from torchvision.datasets.utils import calculate_md5
 
 
 def generate_test_data(paths: str) -> str:
@@ -45,17 +43,6 @@ def generate_test_data(paths: str) -> str:
         "B12",
     )
 
-    cmap = {
-        0: (0, 0, 0, 255),
-        1: (255, 211, 0, 255),
-        2: (255, 37, 37, 255),
-        3: (0, 168, 226, 255),
-        4: (255, 158, 9, 255),
-        5: (37, 111, 0, 255),
-        6: (255, 255, 0, 255),
-    }
-    classes = list(cmap.keys())
-
     profile = {
         "dtype": dtype,
         "width": SIZE,
@@ -85,26 +72,37 @@ def generate_test_data(paths: str) -> str:
 
         for band in bands:
             train_arr = np.random.randint(dtype_max, size=(SIZE, SIZE), dtype=dtype)
-            path = os.path.join(directory, f"ref_agrifieldnet_competition_v1_source_{id}_{band}_10m.tif")
+            path = os.path.join(
+                directory, f"ref_agrifieldnet_competition_v1_source_{id}_{band}_10m.tif"
+            )
             with rasterio.open(path, "w", **profile) as src:
                 src.write(train_arr, 1)
 
     for id in train_folder_ids:
         train_mask_arr = np.random.randint(size=(SIZE, SIZE), low=0, high=6)
-        path = os.path.join(train_mask_dir, f"ref_agrifieldnet_competition_v1_labels_train_{id}.tif")
+        path = os.path.join(
+            train_mask_dir, f"ref_agrifieldnet_competition_v1_labels_train_{id}.tif"
+        )
         with rasterio.open(path, "w", **profile) as src:
             src.write(train_mask_arr, 1)
 
         train_field_arr = np.random.randint(20, size=(SIZE, SIZE), dtype=np.uint16)
-        path = os.path.join(train_mask_dir, f"ref_agrifieldnet_competition_v1_labels_train_{id}_field_ids.tif")
+        path = os.path.join(
+            train_mask_dir,
+            f"ref_agrifieldnet_competition_v1_labels_train_{id}_field_ids.tif",
+        )
         with rasterio.open(path, "w", **profile) as src:
             src.write(train_field_arr, 1)
 
     for id in test_folder_ids:
         test_field_arr = np.random.randint(10, 30, size=(SIZE, SIZE), dtype=np.uint16)
-        path = os.path.join(test_field_dir, f"ref_agrifieldnet_competition_v1_labels_test_{id}_field_ids.tif")
+        path = os.path.join(
+            test_field_dir,
+            f"ref_agrifieldnet_competition_v1_labels_test_{id}_field_ids.tif",
+        )
         with rasterio.open(path, "w", **profile) as src:
             src.write(test_field_arr, 1)
+
 
 if __name__ == "__main__":
     generate_test_data(os.getcwd())
