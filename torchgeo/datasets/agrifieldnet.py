@@ -3,24 +3,30 @@
 
 """AgriFieldNet India Challenge dataset."""
 
-import glob
-import json
 import os
-from typing import Callable, Optional
+import re
+import glob
+from collections.abc import Iterable
+from typing import Any, Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 import rasterio
+from rasterio.crs import CRS
 import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .geo import RasterDataset
+from .utils import (
+    BoundingBox,
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    check_integrity,
+    download_url,
+)
 
 
-class AgriFieldNet(NonGeoDataset):
+class AgriFieldNet(RasterDataset):
     """AgriFieldNet India Challenge dataset.
 
     The `AgriFieldNet India Challenge
@@ -42,8 +48,8 @@ class AgriFieldNet(NonGeoDataset):
     crops being over represented. The test set was drawn randomly from an area
     weighted field list that ensured that fields with less common crop types
     were better represented in the test set. The original dataset can be
-    downloaded from `Radiant MLHub <https://mlhub.earth/data/
-    ref_agrifieldnet_competition_v1>`__.
+    downloaded from `Source Cooperative <https://beta.source.coop/
+    radiantearth/agrifieldnet-competition/>`__.
 
     Dataset format:
 
@@ -52,6 +58,7 @@ class AgriFieldNet(NonGeoDataset):
 
     Dataset classes:
 
+    0 - No-Data
     1 - Wheat
     2 - Mustard
     3 - Lentil
@@ -67,31 +74,21 @@ class AgriFieldNet(NonGeoDataset):
     36 - Rice
 
     If you use this dataset in your research, please cite the following dataset:
-        * https://doi.org/10.34911/rdnt.wu92p1
+    Radiant Earth Foundation & IDinsight (2022) AgriFieldNet Competition Dataset,
+    Version 1.0, Radiant MLHub. https://doi.org/10.34911/rdnt.wu92p1
 
-    .. versionadded:: 0.5
+    .. versionadded:: 0.6
     """
 
-    splits = ["train", "predict"]
+    url = "https://radiantearth.blob.core.windows.net/mlhub/ref_agrifieldnet_competition_v1"
 
-    collections = [
-        "source",
-        "train_labels",
-        "test_labels",
-    ]
-
-    # source_meta = {
-    #     "filename": "ref_agrifieldnet_competition_v1_source.tar.gz",
-    #     "md5": "62ec758cc5c4d58f73c47be07f3d9d73",
-    # }
-    # image_meta = {
-    #     "filename": "ref_agrifieldnet_competition_v1_labels_train.tar.gz",
-    #     "md5": "d5c8d7fa8e1e28ecec211c3b3633fb17",
-    # }
-    # target_meta = {
-    #     "filename": "ref_agrifieldnet_competition_v1_labels_test.tar.gz",
-    #     "md5": "8aa638cdbd7cd38da37c3e9fd77c3d4c",
-    # }
+    filename_regex = r"""
+        ^ref_agrifieldnet_competition_v1_source_
+        (?P<unique_folder_id>[a-z0-9]{5})
+        _(?P<band>B[0-9A-Z]{2})+_10m
+        \.tif$
+    """
+    separate_files = True
 
     rgb_bands = ["B04", "B03", "B02"]
     all_bands = (
@@ -109,31 +106,33 @@ class AgriFieldNet(NonGeoDataset):
         "B12",
     )
 
-    label_mapper = {
-        1: 0,
-        2: 1,
-        3: 2,
-        4: 3,
-        5: 4,
-        6: 5,
-        8: 6,
-        9: 7,
-        13: 8,
-        14: 9,
-        15: 10,
-        16: 11,
-        36: 12,
-        0: -999,
+    cmap = {
+        0: (0, 0, 0, 255),
+        1: (255, 211, 0, 255),
+        2: (255, 37, 37, 255),
+        3: (0, 168, 226, 255),
+        4: (255, 158, 9, 255),
+        5: (37, 111, 0, 255),
+        6: (255, 255, 0, 255),
+        8: (111, 166, 0, 255),
+        9: (0, 175, 73, 255),
+        13: (222, 166, 9, 255),
+        14: (222, 166, 9, 255),
+        15: (124, 211, 255, 255),
+        16: (226, 0, 124, 255),
+        36: (137, 96, 83, 255),
     }
+
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]] = "data",
+        crs: CRS = CRS.from_epsg(32644),
+        classes: list[int] = list(cmap.keys()),
         bands: tuple[str, ...] = all_bands,
-        split: str = "train",
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        cache: bool = True,
         download: bool = False,
-        api_key: Optional[str] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new AgriFieldNet dataset instance.
@@ -141,61 +140,52 @@ class AgriFieldNet(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             bands: the subset of bands to load
-            split: split selection which must be in ["train", "predict"]
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        # assert split in self.splits
-        self._validate_bands(bands)
+        assert (
+            set(classes) <= self.cmap.keys()
+        ), f"Only the following classes are valid: {list(self.cmap.keys())}."
+        assert 0 in classes, "Classes must include the background class: 0"
 
-        self.root = root
-        self.bands = bands
-        self.split = split
-        self.transforms = transforms
-        self.download = download
+        self.paths = paths
+        self.classes = classes
         self.checksum = checksum
+        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
+        self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
 
+        # not downloading for now
         if download:
-            self._download(api_key)
+            self._download()
 
-        if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+        # not checking integrity for now
+        # if not self._check_integrity():
+        #     raise DatasetNotFoundError(self)
 
-        self.train_tiles: list[str]
-        self.test_tiles: list[str]
+        super().__init__(
+            paths = paths,
+            crs = crs,
+            bands = bands,
+            transforms = transforms,
+            cache = cache
+        )
 
-        self.train_tiles, self.test_tiles = self.get_tiles()
+        # Map chosen classes to ordinal numbers, all others mapped to background class
+        for v, k in enumerate(self.classes):
+            self.ordinal_map[k] = v
+            self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-        self.train_label_fns = [
-            os.path.join(
-                root,
-                "train_labels",
-                "ref_agrifieldnet_competition_v1_labels_train_" + tile,
-            )
-            for tile in self.train_tiles
-        ]
-        self.test_image_fns = [
-            os.path.join(
-                root,
-                "test_labels",
-                "ref_agrifieldnet_competition_v1_labels_test_" + tile,
-            )
-            for tile in self.test_tiles
-        ]
+    def _download(self) -> None:
+        """Download the dataset."""
+        assert isinstance(self.paths, str)
+        download_url(self.url, self.paths)
 
-        if self.split == "test":
-            print("getting test splits...")
-            self.test_field_ids = self.get_splits()
-
-        # self.train_field_ids, self.test_field_ids = self.get_splits()
-
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Return an index within the dataset.
 
         Args:
@@ -204,238 +194,51 @@ class AgriFieldNet(NonGeoDataset):
         Returns:
             data, label, and field ids at that index
         """
-        if self.split == "train":
-            tile_name = self.train_tiles[index]
-            image = self._load_image_tile(tile_name)
-            labels, field_ids = self._load_label_tile(tile_name)
-            sample = {"image": image, "mask": labels, "field_ids": field_ids}
+        hits = self.index.intersection(tuple(query), objects=True)
+        filepaths = cast(list[str], [hit.object for hit in hits])
 
-        if self.split == "test":
-            tile_name = self.test_tiles[index]
-            image = self._load_image_tile(tile_name)
-            field_ids = self._load_label_tile(tile_name)
-            sample = {"image": image, "field_ids": field_ids}
+        if not filepaths:
+            raise IndexError(
+                f"query: {query} not found in index with bounds: {self.bounds}"
+            )
+
+        if self.separate_files:
+            data_list: list[Tensor] = []
+            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+            for band in self.bands:
+                band_filepaths = []
+                for filepath in filepaths:
+                    filename = os.path.basename(filepath)
+                    directory = os.path.dirname(filepath)
+                    match = re.match(filename_regex, filename)
+                    if match:
+                        if "band" in match.groupdict():
+                            start = match.start("band")
+                            end = match.end("band")
+                            filename = filename[:start] + band + filename[end:]
+                    filepath = os.path.join(directory, filename)
+                    band_filepaths.append(filepath)
+                data_list.append(self._merge_files(band_filepaths, query))
+            image = torch.cat(data_list)
+        else:
+            image = self._merge_files(filepaths, query, self.band_indexes)
+
+        all_mask_filepaths = glob.glob(os.path.join(self.paths, "train_labels", "*.tif"))
+        mask_filepaths =[file for file in all_mask_filepaths if not file.endswith('_field_ids.tif')]
+        mask = self._merge_files(mask_filepaths, query)
+        mask = self.ordinal_map[mask.squeeze().long()]
+
+        sample = {
+            "crs": self.crs,
+            "bbox": query,
+            "image": image.float(),
+            "mask": mask.long(),
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
-
-    def get_tiles(self) -> tuple[list[str], list[str]]:
-        """Get the tile names from the dataset directory.
-
-        Returns:
-            list of source, training, and testing tile names
-        """
-
-        train_tiles = os.listdir("train_labels")
-        train_tiles = [x for x in train_tiles if "_field_ids.tif" not in x]
-        train_tiles = [x.split("_")[-1].split(".")[0] for x in train_tiles]
-
-        test_tiles = os.listdir("test_labels")
-        test_tiles = [x.split("_")[-3].split("_")[0] for x in test_tiles]
-
-        return (train_tiles, test_tiles)
-
-    def get_splits(self) -> list[int]:  # tuple[list[int], list[int]]:
-        """Get the field_ids for the train/test splits from the dataset directory.
-
-        Returns:
-            list of training field_ids and list of testing field_ids
-        """
-        # train_field_ids = np.empty((0, 1))
-        test_field_ids = np.empty((0, 1))
-
-        # for tile_name in self.train_tiles:
-        #    directory = os.path.join(
-        #        self.root,
-        #        "ref_agrifieldnet_competition_v1_labels_train",
-        #        "ref_agrifieldnet_competition_v1_labels_train_" + tile_name,
-        #    )
-
-        #    field_array = rasterio.open(os.path.join(
-        #        directory,
-        #        "field_ids.tif")).read(1)
-        #    train_field_ids = np.append(train_field_ids, field_array.flatten())
-        # train_field_ids = np.unique(train_field_ids[train_field_ids != 0])
-
-        for tile_name in self.test_tiles:
-            directory = os.path.join(
-                self.root,
-                "ref_agrifieldnet_competition_v1_labels_test",
-                "ref_agrifieldnet_competition_v1_labels_test_" + tile_name,
-            )
-            field_array = rasterio.open(os.path.join(directory, "field_ids.tif")).read(
-                1
-            )
-            test_field_ids = np.append(test_field_ids, field_array.flatten())
-        test_field_ids = np.unique(test_field_ids[test_field_ids != 0])
-
-        # return train_field_ids, test_field_ids
-        return test_field_ids
-
-    def _download(self, api_key: Optional[str] = None) -> None:
-        """Download the dataset and extract it.
-
-        Args:
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
-        """
-        # url: azcopy sync https://radiantearth.blob.core.windows.net/mlhub/ref_agrifieldnet_competition_v1 ./data --recursive=true
-
-        # if self._check_integrity():
-        #     print("Files already downloaded and verified")
-        #     return
-
-        for collection in self.collections:
-            download_radiant_mlhub_collection(collection, self.root, api_key)
-
-        # pathname = os.path.join(self.root, "*.tar.gz")
-        # for tarfile in glob.iglob(pathname):
-        #     extract_archive(tarfile)
-
-    # def _check_integrity(self) -> bool:
-    #     """Check integrity of dataset.
-
-    #     Returns:
-    #         True if dataset files are found and/or MD5s match, else False
-    #     """
-    #     sources: bool = check_integrity(
-    #         os.path.join(self.root, self.source_meta["filename"]),
-    #         self.source_meta["md5"] if self.checksum else None,
-    #     )
-
-    #     images: bool = check_integrity(
-    #         os.path.join(self.root, self.image_meta["filename"]),
-    #         self.image_meta["md5"] if self.checksum else None,
-    #     )
-
-    #     targets: bool = check_integrity(
-    #         os.path.join(self.root, self.target_meta["filename"]),
-    #         self.target_meta["md5"] if self.checksum else None,
-    #     )
-
-    #     return sources and images and targets
-
-    def __len__(self) -> int:
-        """Return the number of data points in the dataset.
-
-        Returns:
-            length of the dataset
-        """
-        if self.split == "train":
-            return len(self.train_label_fns)
-        if self.split == "test":
-            return len(self.test_image_fns)
-
-    def _validate_bands(self, bands: tuple[str, ...]) -> None:
-        """Validate list of bands.
-
-        Args:
-            bands: user-provided tuple of bands to load
-
-        Raises:
-            AssertionError: if ``bands`` is not a tuple
-            ValueError: if an invalid band name is provided
-        """
-        assert isinstance(bands, tuple), "The list of bands must be a tuple"
-        for band in bands:
-            if band not in self.all_bands:
-                raise ValueError(f"'{band}' is an invalid band name.")
-
-    def _load_image_tile(
-        self, tile_name: str, bands: tuple[str, ...] = all_bands
-    ) -> Tensor:
-        """Load a single image.
-
-        Args:
-            index: index to return
-
-        Returns:
-            the image
-        """
-        # assert tile_name in self.source_tiles
-
-        path = os.path.join(
-            self.root,
-            "source",
-            "ref_agrifieldnet_competition_v1_source_" + tile_name,
-        )
-
-        bands_src = [
-            rasterio.open(os.path.join(path, f"ref_agrifieldnet_competition_v1_source_{tile_name}_{band}_10m.tif")).read(1)
-            for band in self.all_bands
-        ]
-        img_tile = np.stack(bands_src)
-        tensor = torch.from_numpy(img_tile.astype(np.float32))
-
-        return tensor
-
-    def _load_label_tile(self, tile_name: str) -> tuple[Tensor, Tensor]:
-        """Load a single _tile_ of labels and field_ids.
-
-        Args:
-            tile_name: name of tile to load
-
-        Returns:
-            tuple of labels and field ids
-
-        Raises:
-            AssertionError: if ``tile_name`` is invalid
-        """
-        if self.split == "train":
-            assert tile_name in self.train_tiles
-
-            train_tile_name = os.path.join(self.root, "train_labels", f"ref_agrifieldnet_competition_v1_labels_train_{tile_name}")
-            array = rasterio.open(train_tile_name + ".tif").read(1)
-            array = np.vectorize(lambda x: self.label_mapper[x])(array)
-            labels = torch.tensor(array, dtype=torch.long)
-
-            array = rasterio.open(train_tile_name + "_field_ids.tif").read(1)
-            field_ids = torch.tensor(array.astype(np.int32), dtype=torch.long)
-
-            return (labels, field_ids)
-
-        if self.split == "test":
-            assert tile_name in self.test_tiles
-
-            test_tile_name = os.path.join(self.root, "test_labels", f"ref_agrifieldnet_competition_v1_labels_test_{tile_name}")
-            array = rasterio.open(test_tile_name + "field_ids.tif").read(1)
-            field_ids = torch.tensor(array.astype(np.int32), dtype=torch.long)
-
-            return field_ids
-
-    def create_submission(self, predictions: list[float]) -> None:
-        """Create a submission file for the competition.
-
-        Args:
-            predictions: list of predictions for the test set
-        """
-        test_fields, test_predictions = self.compute_prediction()
-
-        crop_labels = [
-            "Wheat",
-            "Mustard",
-            "Lentil",
-            "No Crop",
-            "Green pea",
-            "Sugarcane",
-            "Garlic",
-            "Maize",
-            "Gram",
-            "Coriander",
-            "Potato",
-            "Bersem",
-            "Rice",
-        ]
-
-        results = pd.DataFrame(test_fields, columns=["field_id"])
-        results[crop_labels] = test_predictions
-        results = results.groupby("field_id").mean().reset_index()
-
-        results.to_csv(os.path.join(self.root, "pixelwise-unet.csv"), index=False)
 
     def plot(
         self,
@@ -452,45 +255,82 @@ class AgriFieldNet(NonGeoDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         rgb_indices = []
         for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset does not contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         image = sample["image"][rgb_indices].permute(1, 2, 0)
-
-        # Stretch to the full range
         image = (image - image.min()) / (image.max() - image.min())
 
-        mask = sample["mask"]
+        mask = sample["mask"].squeeze()
+        ncols = 2
 
-        num_panels = 2
+        showing_prediction = "prediction" in sample
+        if showing_prediction:
+            pred = sample["prediction"].squeeze()
+            ncols += 1
 
-        if "prediction" in sample:
-            predictions = sample["prediction"]
-            num_panels += 1
-
-        fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 10, 10))
-
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
         axs[0].imshow(image)
         axs[0].axis("off")
-        axs[1].imshow(mask)
+        axs[1].imshow(self.ordinal_cmap[mask], interpolation="none")
         axs[1].axis("off")
-
-        if "prediction" in sample:
-            axs[2].imshow(predictions)
-            axs[2].axis("off")
-            if show_titles:
-                axs[2].set_title("Prediction")
-
         if show_titles:
             axs[0].set_title("Image")
             axs[1].set_title("Mask")
+
+        if showing_prediction:
+            axs[2].imshow(pred)
+            axs[2].axis("off")
+            if show_titles:
+                axs[2].set_title("Prediction")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
 
         return fig
+
+    # download and checksum verification not implemented yet
+    # def _download(self) -> None:
+    #     """Download the dataset and extract it.
+
+    #     Raises:
+    #         RuntimeError: if download doesn't work correctly or checksums don't match
+    #     """
+    #     # not checking the integrity because no compressed files in the dataset
+    #     if self._check_integrity():
+    #         print("Files already downloaded and verified")
+    #         return
+    #     # make the data not auto-downloadable until azure-storage-blob is integrated
+
+    # def _check_integrity(self) -> bool:
+    #     """Check integrity of dataset.
+
+    #     Returns:
+    #         True if dataset files are found and/or MD5s match, else False
+    #     """
+    #     assert isinstance(self.paths, str)
+
+    #     sources: bool = check_integrity(
+    #         os.path.join(self.paths, self.source_meta["filename"]),
+    #         self.source_meta["md5"] if self.checksum else None,
+    #     )
+
+    #     images: bool = check_integrity(
+    #         os.path.join(self.root, self.image_meta["filename"]),
+    #         self.image_meta["md5"] if self.checksum else None,
+    #     )
+
+    #     targets: bool = check_integrity(
+    #         os.path.join(self.root, self.target_meta["filename"]),
+    #         self.target_meta["md5"] if self.checksum else None,
+    #     )
+
+    #     return sources and images and targets
