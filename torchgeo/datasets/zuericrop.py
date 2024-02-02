@@ -13,7 +13,12 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    download_url,
+    percentile_normalization,
+)
 
 
 class ZueriCrop(NonGeoDataset):
@@ -81,8 +86,7 @@ class ZueriCrop(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self._validate_bands(bands)
         self.band_indices = torch.tensor(
@@ -209,11 +213,7 @@ class ZueriCrop(NonGeoDataset):
         return masks, boxes, labels
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         exists = []
         for filename in self.filenames:
@@ -225,11 +225,7 @@ class ZueriCrop(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -251,6 +247,7 @@ class ZueriCrop(NonGeoDataset):
 
         Args:
             bands: user-provided sequence of bands to load
+
         Raises:
             AssertionError: if ``bands`` is not a sequence
             ValueError: if an invalid band name is provided
@@ -280,6 +277,9 @@ class ZueriCrop(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
 
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+
         .. versionadded:: 0.2
         """
         rgb_indices = []
@@ -287,7 +287,7 @@ class ZueriCrop(NonGeoDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         ncols = 2
         image, mask = sample["image"][time_step, rgb_indices], sample["mask"]

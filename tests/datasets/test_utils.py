@@ -18,10 +18,13 @@ import pytest
 import torch
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
+from torch.utils.data import Dataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets.utils import (
     BoundingBox,
+    DatasetNotFoundError,
+    array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
     download_and_extract_archive,
@@ -36,6 +39,52 @@ from torchgeo.datasets.utils import (
 )
 
 
+class TestDatasetNotFoundError:
+    def test_none(self) -> None:
+        ds: Dataset[Any] = Dataset()
+        match = "Dataset not found."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+    def test_root(self) -> None:
+        ds: Dataset[Any] = Dataset()
+        ds.root = "foo"  # type: ignore[attr-defined]
+        match = "Dataset not found in `root='foo'` and cannot be automatically "
+        match += "downloaded, either specify a different `root` or manually "
+        match += "download the dataset."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+    def test_paths(self) -> None:
+        ds: Dataset[Any] = Dataset()
+        ds.paths = "foo"  # type: ignore[attr-defined]
+        match = "Dataset not found in `paths='foo'` and cannot be automatically "
+        match += "downloaded, either specify a different `paths` or manually "
+        match += "download the dataset."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+    def test_root_download(self) -> None:
+        ds: Dataset[Any] = Dataset()
+        ds.root = "foo"  # type: ignore[attr-defined]
+        ds.download = False  # type: ignore[attr-defined]
+        match = "Dataset not found in `root='foo'` and `download=False`, either "
+        match += "specify a different `root` or use `download=True` to automatically "
+        match += "download the dataset."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+    def test_paths_download(self) -> None:
+        ds: Dataset[Any] = Dataset()
+        ds.paths = "foo"  # type: ignore[attr-defined]
+        ds.download = False  # type: ignore[attr-defined]
+        match = "Dataset not found in `paths='foo'` and `download=False`, either "
+        match += "specify a different `paths` or use `download=True` to automatically "
+        match += "download the dataset."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+
 @pytest.fixture
 def mock_missing_module(monkeypatch: MonkeyPatch) -> None:
     import_orig = builtins.__import__
@@ -48,7 +97,7 @@ def mock_missing_module(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(builtins, "__import__", mocked_import)
 
 
-class Dataset:
+class MLHubDataset:
     def download(self, output_dir: str, **kwargs: str) -> None:
         glob_path = os.path.join(
             "tests", "data", "ref_african_crops_kenya_02", "*.tar.gz"
@@ -66,8 +115,8 @@ class Collection:
             shutil.copy(tarball, output_dir)
 
 
-def fetch_dataset(dataset_id: str, **kwargs: str) -> Dataset:
-    return Dataset()
+def fetch_dataset(dataset_id: str, **kwargs: str) -> MLHubDataset:
+    return MLHubDataset()
 
 
 def fetch_collection(collection_id: str, **kwargs: str) -> Collection:
@@ -609,3 +658,18 @@ def test_percentile_normalization() -> None:
     img = percentile_normalization(img, 2, 98)
     assert img.min() == 0
     assert img.max() == 1
+
+
+@pytest.mark.parametrize(
+    "array_dtype",
+    [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
+)
+def test_array_to_tensor(array_dtype: "np.typing.DTypeLike") -> None:
+    array: "np.typing.NDArray[Any]" = np.zeros((2,), dtype=array_dtype)
+    array[0] = np.iinfo(array.dtype).min
+    array[1] = np.iinfo(array.dtype).max
+    tensor = array_to_tensor(array)
+    # We need to use large integer type here since otherwise casting will make the
+    # values equal even if they differ.
+    assert array[0].item() == tensor[0].item()
+    assert array[1].item() == tensor[1].item()

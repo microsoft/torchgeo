@@ -14,7 +14,14 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import check_integrity, download_url, extract_archive, rasterio_loader
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    check_integrity,
+    download_url,
+    extract_archive,
+    rasterio_loader,
+)
 
 
 class EuroSAT(NonGeoClassificationDataset):
@@ -31,16 +38,16 @@ class EuroSAT(NonGeoClassificationDataset):
 
     Dataset classes:
 
-    * Industrial Buildings
-    * Residential Buildings
     * Annual Crop
-    * Permanent Crop
-    * River
-    * Sea and Lake
+    * Forest
     * Herbaceous Vegetation
     * Highway
+    * Industrial Buildings
     * Pasture
-    * Forest
+    * Permanent Crop
+    * Residential Buildings
+    * River
+    * SeaLake
 
     This dataset uses the train/val/test splits defined in the "In-domain representation
     learning for remote sensing" paper:
@@ -73,18 +80,6 @@ class EuroSAT(NonGeoClassificationDataset):
         "val": "95de90f2aa998f70a3b2416bfe0687b4",
         "test": "7ae5ab94471417b6e315763121e67c5f",
     }
-    classes = [
-        "Industrial Buildings",
-        "Residential Buildings",
-        "Annual Crop",
-        "Permanent Crop",
-        "River",
-        "Sea and Lake",
-        "Herbaceous Vegetation",
-        "Highway",
-        "Pasture",
-        "Forest",
-    ]
 
     all_band_names = (
         "B01",
@@ -95,7 +90,7 @@ class EuroSAT(NonGeoClassificationDataset):
         "B06",
         "B07",
         "B08",
-        "B08A",
+        "B8A",
         "B09",
         "B10",
         "B11",
@@ -128,8 +123,7 @@ class EuroSAT(NonGeoClassificationDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
 
         .. versionadded:: 0.3
            The *bands* parameter.
@@ -192,11 +186,7 @@ class EuroSAT(NonGeoClassificationDataset):
         return integrity
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         filepath = os.path.join(self.root, self.base_dir)
         if os.path.exists(filepath):
@@ -209,11 +199,7 @@ class EuroSAT(NonGeoClassificationDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         self._download()
@@ -274,7 +260,7 @@ class EuroSAT(NonGeoClassificationDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if RGB bands are not found in dataset
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
 
         .. versionadded:: 0.2
         """
@@ -283,7 +269,7 @@ class EuroSAT(NonGeoClassificationDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         image = np.take(sample["image"].numpy(), indices=rgb_indices, axis=0)
         image = np.rollaxis(image, 0, 3)

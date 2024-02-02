@@ -12,7 +12,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import download_url, extract_archive
+from .utils import DatasetNotFoundError, download_url, extract_archive
 
 
 class RESISC45(NonGeoClassificationDataset):
@@ -89,7 +89,6 @@ class RESISC45(NonGeoClassificationDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/jproc.2017.2675998
-
     """
 
     url = "https://drive.google.com/file/d/1DnPSU5nVSN7xv95bpZ3XQ0JhKXZOKgIv"
@@ -108,53 +107,6 @@ class RESISC45(NonGeoClassificationDataset):
         "val": "a0770cee4c5ca20b8c32bbd61e114805",
         "test": "3dda9e4988b47eb1de9f07993653eb08",
     }
-    classes = [
-        "airplane",
-        "airport",
-        "baseball_diamond",
-        "basketball_court",
-        "beach",
-        "bridge",
-        "chaparral",
-        "church",
-        "circular_farmland",
-        "cloud",
-        "commercial_area",
-        "dense_residential",
-        "desert",
-        "forest",
-        "freeway",
-        "golf_course",
-        "ground_track_field",
-        "harbor",
-        "industrial_area",
-        "intersection",
-        "island",
-        "lake",
-        "meadow",
-        "medium_residential",
-        "mobile_home_park",
-        "mountain",
-        "overpass",
-        "palace",
-        "parking_lot",
-        "railway",
-        "railway_station",
-        "rectangular_farmland",
-        "river",
-        "roundabout",
-        "runway",
-        "sea_ice",
-        "ship",
-        "snowberg",
-        "sparse_residential",
-        "stadium",
-        "storage_tank",
-        "tennis_court",
-        "terrace",
-        "thermal_power_station",
-        "wetland",
-    ]
 
     def __init__(
         self,
@@ -173,6 +125,9 @@ class RESISC45(NonGeoClassificationDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
         self.root = root
@@ -193,11 +148,7 @@ class RESISC45(NonGeoClassificationDataset):
         )
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         filepath = os.path.join(self.root, self.directory)
         if os.path.exists(filepath):
@@ -211,11 +162,7 @@ class RESISC45(NonGeoClassificationDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         self._download()

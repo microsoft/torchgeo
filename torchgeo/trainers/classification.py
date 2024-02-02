@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import timm
 import torch
 import torch.nn as nn
+from matplotlib.figure import Figure
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torchmetrics import MetricCollection
@@ -22,7 +23,7 @@ from torchmetrics.classification import (
 )
 from torchvision.models._api import WeightsEnum
 
-from ..datasets import unbind_samples
+from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import get_weight
 from . import utils
 from .base import BaseTask
@@ -71,7 +72,8 @@ class ClassificationTask(BaseTask):
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
         """
-        super().__init__()
+        self.weights = weights
+        super().__init__(ignore="weights")
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion.
@@ -117,7 +119,7 @@ class ClassificationTask(BaseTask):
 
     def configure_models(self) -> None:
         """Initialize the model."""
-        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        weights = self.weights
 
         # Create model
         self.model = timm.create_model(
@@ -160,11 +162,10 @@ class ClassificationTask(BaseTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self(x)
-        y_hat_hard = y_hat.argmax(dim=1)
         loss: Tensor = self.criterion(y_hat, y)
         self.log("train_loss", loss)
-        self.train_metrics(y_hat_hard, y)
-        self.log_dict(self.train_metrics)  # type: ignore[arg-type]
+        self.train_metrics(y_hat, y)
+        self.log_dict(self.train_metrics)
 
         return loss
 
@@ -181,34 +182,37 @@ class ClassificationTask(BaseTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self(x)
-        y_hat_hard = y_hat.argmax(dim=1)
         loss = self.criterion(y_hat, y)
         self.log("val_loss", loss)
-        self.val_metrics(y_hat_hard, y)
-        self.log_dict(self.val_metrics)  # type: ignore[arg-type]
+        self.val_metrics(y_hat, y)
+        self.log_dict(self.val_metrics)
 
         if (
             batch_idx < 10
             and hasattr(self.trainer, "datamodule")
+            and hasattr(self.trainer.datamodule, "plot")
             and self.logger
             and hasattr(self.logger, "experiment")
             and hasattr(self.logger.experiment, "add_figure")
         ):
+            datamodule = self.trainer.datamodule
+            batch["prediction"] = y_hat.argmax(dim=-1)
+            for key in ["image", "label", "prediction"]:
+                batch[key] = batch[key].cpu()
+            sample = unbind_samples(batch)[0]
+
+            fig: Optional[Figure] = None
             try:
-                datamodule = self.trainer.datamodule
-                batch["prediction"] = y_hat_hard
-                for key in ["image", "label", "prediction"]:
-                    batch[key] = batch[key].cpu()
-                sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
-                if fig:
-                    summary_writer = self.logger.experiment
-                    summary_writer.add_figure(
-                        f"image/{batch_idx}", fig, global_step=self.global_step
-                    )
-                    plt.close()
-            except ValueError:
+            except RGBBandsMissingError:
                 pass
+
+            if fig:
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=self.global_step
+                )
+                plt.close()
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
@@ -221,11 +225,10 @@ class ClassificationTask(BaseTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self(x)
-        y_hat_hard = y_hat.argmax(dim=1)
         loss = self.criterion(y_hat, y)
         self.log("test_loss", loss)
-        self.test_metrics(y_hat_hard, y)
-        self.log_dict(self.test_metrics)  # type: ignore[arg-type]
+        self.test_metrics(y_hat, y)
+        self.log_dict(self.test_metrics)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -287,7 +290,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         loss: Tensor = self.criterion(y_hat, y.to(torch.float))
         self.log("train_loss", loss)
         self.train_metrics(y_hat_hard, y)
-        self.log_dict(self.train_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.train_metrics)
 
         return loss
 
@@ -308,29 +311,33 @@ class MultiLabelClassificationTask(ClassificationTask):
         loss = self.criterion(y_hat, y.to(torch.float))
         self.log("val_loss", loss)
         self.val_metrics(y_hat_hard, y)
-        self.log_dict(self.val_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.val_metrics)
 
         if (
             batch_idx < 10
             and hasattr(self.trainer, "datamodule")
+            and hasattr(self.trainer.datamodule, "plot")
             and self.logger
             and hasattr(self.logger, "experiment")
             and hasattr(self.logger.experiment, "add_figure")
         ):
+            datamodule = self.trainer.datamodule
+            batch["prediction"] = y_hat_hard
+            for key in ["image", "label", "prediction"]:
+                batch[key] = batch[key].cpu()
+            sample = unbind_samples(batch)[0]
+
+            fig: Optional[Figure] = None
             try:
-                datamodule = self.trainer.datamodule
-                batch["prediction"] = y_hat_hard
-                for key in ["image", "label", "prediction"]:
-                    batch[key] = batch[key].cpu()
-                sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
-                if fig:
-                    summary_writer = self.logger.experiment
-                    summary_writer.add_figure(
-                        f"image/{batch_idx}", fig, global_step=self.global_step
-                    )
-            except ValueError:
+            except RGBBandsMissingError:
                 pass
+
+            if fig:
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=self.global_step
+                )
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
@@ -347,7 +354,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         loss = self.criterion(y_hat, y.to(torch.float))
         self.log("test_loss", loss)
         self.test_metrics(y_hat_hard, y)
-        self.log_dict(self.test_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.test_metrics)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

@@ -16,7 +16,13 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 class RwandaFieldBoundary(NonGeoDataset):
@@ -103,14 +109,13 @@ class RwandaFieldBoundary(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-                or if ``download=True`` and ``api_key=None``
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self._validate_bands(bands)
         assert split in self.splits
         if download and api_key is None:
             raise RuntimeError("Must provide an API key to download the dataset")
-        self.root = os.path.expanduser(root)
+        self.root = root
         self.bands = bands
         self.transforms = transforms
         self.split = split
@@ -200,11 +205,7 @@ class RwandaFieldBoundary(NonGeoDataset):
                 raise ValueError(f"'{band}' is an invalid band name.")
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the subdirectories already exist and have the correct number of files
         checks = []
         for split, num_patches in self.number_of_patches_per_split.items():
@@ -236,21 +237,13 @@ class RwandaFieldBoundary(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         self._download()
 
     def _download(self) -> None:
-        """Download the dataset and extract it.
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
-        """
+        """Download the dataset and extract it."""
         for collection_id in self.collection_ids:
             download_radiant_mlhub_collection(collection_id, self.root, self.api_key)
 
@@ -279,14 +272,14 @@ class RwandaFieldBoundary(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if the RGB bands are not included in ``self.bands``
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         rgb_indices = []
         for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         num_time_points = sample["image"].shape[0]
         assert time_step < num_time_points

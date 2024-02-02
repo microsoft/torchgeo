@@ -16,7 +16,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import percentile_normalization
+from .utils import DatasetNotFoundError, percentile_normalization
 
 
 class BioMassters(NonGeoDataset):
@@ -75,8 +75,9 @@ class BioMassters(NonGeoDataset):
             as_time_series: whether or not to return all available
                 time-steps or just a single one for a given target location
 
-        RuntimeError:
+        Raises:
             AssertionError: if ``split`` or ``sensors`` is invalid
+            DatasetNotFoundError: If dataset is not found.
         """
         self.root = root
 
@@ -197,7 +198,8 @@ class BioMassters(NonGeoDataset):
         with rasterio.open(os.path.join(self.root, "train_agbm", filename), "r") as src:
             arr: "np.typing.NDArray[np.float_]" = src.read()
 
-        target = torch.from_numpy(arr).float()
+        target = torch.from_numpy(arr)
+        target = target.float()
         return target
 
     def _verify(self) -> None:
@@ -212,7 +214,7 @@ class BioMassters(NonGeoDataset):
         if all(exists):
             return
 
-        raise RuntimeError(f"Dataset not found in `root={self.root}`.")
+        raise DatasetNotFoundError(self)
 
     def plot(
         self,

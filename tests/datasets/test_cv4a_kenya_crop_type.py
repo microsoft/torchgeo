@@ -13,7 +13,11 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import CV4AKenyaCropType
+from torchgeo.datasets import (
+    CV4AKenyaCropType,
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+)
 
 
 class Collection:
@@ -84,7 +88,7 @@ class TestCV4AKenyaCropType:
         CV4AKenyaCropType(root=dataset.root, download=True, api_key="")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             CV4AKenyaCropType(str(tmp_path))
 
     def test_invalid_tile(self, dataset: CV4AKenyaCropType) -> None:
@@ -115,5 +119,7 @@ class TestCV4AKenyaCropType:
 
     def test_plot_rgb(self, dataset: CV4AKenyaCropType) -> None:
         dataset = CV4AKenyaCropType(root=dataset.root, bands=tuple(["B01"]))
-        with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
+        with pytest.raises(
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
+        ):
             dataset.plot(dataset[0], time_step=0, suptitle="Single Band")

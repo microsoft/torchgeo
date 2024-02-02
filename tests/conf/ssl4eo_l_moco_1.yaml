@@ -8,6 +8,12 @@ model:
     temperature: 0.07
     memory_bank_size: 10
     moco_momentum: 0.999
+    augmentation1:
+      class_path: kornia.augmentation.RandomResizedCrop
+      init_args:
+        size:
+        - 224
+        - 224
 data:
   class_path: SSL4EOLDataModule
   init_args:

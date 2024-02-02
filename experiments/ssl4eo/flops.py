@@ -22,7 +22,7 @@ for model in models:
     # Calculate memory requirements of model
     mem_params = sum([p.nelement() * p.element_size() for p in m.parameters()])
     mem_bufs = sum([b.nelement() * b.element_size() for b in m.buffers()])
-    mem = (mem_params + mem_bufs) / 2**20
+    mem = (mem_params + mem_bufs) / 1000000
     print(f"Memory: {mem:.2f} MB")
 
     with get_accelerator().device(0):

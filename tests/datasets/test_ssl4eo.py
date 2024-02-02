@@ -15,7 +15,7 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo
-from torchgeo.datasets import SSL4EOL, SSL4EOS12
+from torchgeo.datasets import SSL4EOL, SSL4EOS12, DatasetNotFoundError
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -94,7 +94,7 @@ class TestSSL4EOL:
         SSL4EOL(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SSL4EOL(str(tmp_path))
 
     def test_invalid_split(self) -> None:
@@ -155,7 +155,7 @@ class TestSSL4EOS12:
             SSL4EOS12(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SSL4EOS12(str(tmp_path))
 
     def test_plot(self, dataset: SSL4EOS12) -> None:

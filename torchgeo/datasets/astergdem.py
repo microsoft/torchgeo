@@ -10,6 +10,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
+from .utils import DatasetNotFoundError
 
 
 class AsterGDEM(RasterDataset):
@@ -65,8 +66,7 @@ class AsterGDEM(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``paths``
-            RuntimeError: if dataset is missing
+            DatasetNotFoundError: If dataset is not found.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -78,20 +78,12 @@ class AsterGDEM(RasterDataset):
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if dataset is missing
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exists
         if self.files:
             return
 
-        raise RuntimeError(
-            f"Dataset not found in `root={self.paths}` "
-            "either specify a different `root` directory or make sure you "
-            "have manually downloaded dataset tiles as suggested in the documentation."
-        )
+        raise DatasetNotFoundError(self)
 
     def plot(
         self,

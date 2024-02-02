@@ -17,7 +17,12 @@ from rasterio.enums import Resampling
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, sort_sentinel2_bands
+from .utils import (
+    DatasetNotFoundError,
+    download_url,
+    extract_archive,
+    sort_sentinel2_bands,
+)
 
 
 class BigEarthNet(NonGeoDataset):
@@ -285,6 +290,9 @@ class BigEarthNet(NonGeoDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits_metadata
         assert bands in ["s1", "s2", "all"]
@@ -400,7 +408,8 @@ class BigEarthNet(NonGeoDataset):
                 )
                 images.append(array)
         arrays: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0)
-        tensor = torch.from_numpy(arrays).float()
+        tensor = torch.from_numpy(arrays)
+        tensor = tensor.float()
         return tensor
 
     def _load_target(self, index: int) -> Tensor:
@@ -434,11 +443,7 @@ class BigEarthNet(NonGeoDataset):
         return target
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         keys = ["s1", "s2"] if self.bands == "all" else [self.bands]
         urls = [self.metadata[k]["url"] for k in keys]
         md5s = [self.metadata[k]["md5"] for k in keys]
@@ -478,11 +483,7 @@ class BigEarthNet(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         for url, filename, md5 in zip(urls, filenames, md5s):

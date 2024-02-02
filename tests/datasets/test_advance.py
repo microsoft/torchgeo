@@ -14,7 +14,7 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import ADVANCE
+from torchgeo.datasets import ADVANCE, DatasetNotFoundError
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -68,7 +68,7 @@ class TestADVANCE:
         ADVANCE(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             ADVANCE(str(tmp_path))
 
     def test_mock_missing_module(

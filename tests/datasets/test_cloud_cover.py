@@ -12,7 +12,11 @@ import torch
 import torch.nn as nn
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import CloudCoverDetection
+from torchgeo.datasets import (
+    CloudCoverDetection,
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+)
 
 
 class Collection:
@@ -83,7 +87,7 @@ class TestCloudCoverDetection:
         CloudCoverDetection(root=dataset.root, split="test", download=True, api_key="")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             CloudCoverDetection(str(tmp_path))
 
     def test_plot(self, dataset: CloudCoverDetection) -> None:
@@ -103,5 +107,7 @@ class TestCloudCoverDetection:
             download=True,
             api_key="",
         )
-        with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
+        with pytest.raises(
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
+        ):
             dataset.plot(dataset[0], suptitle="Single Band")

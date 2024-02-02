@@ -18,6 +18,7 @@ from torchgeo.datasets import (
     BoundingBox,
     Chesapeake13,
     ChesapeakeCVPR,
+    DatasetNotFoundError,
     IntersectionDataset,
     UnionDataset,
 )
@@ -70,7 +71,7 @@ class TestChesapeake13:
         Chesapeake13(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             Chesapeake13(str(tmp_path), checksum=True)
 
     def test_plot(self, dataset: Chesapeake13) -> None:
@@ -193,7 +194,7 @@ class TestChesapeakeCVPR:
         ChesapeakeCVPR(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             ChesapeakeCVPR(str(tmp_path), checksum=True)
 
     def test_out_of_bounds_query(self, dataset: ChesapeakeCVPR) -> None:

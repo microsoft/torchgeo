@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import pytest
 from _pytest.fixtures import SubRequest
 
-from torchgeo.datasets import BioMassters
+from torchgeo.datasets import BioMassters, DatasetNotFoundError
 
 
 class TestBioMassters:
@@ -36,8 +36,7 @@ class TestBioMassters:
             BioMassters(dataset.root, sensors=["S3"])
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        match = "Dataset not found"
-        with pytest.raises(RuntimeError, match=match):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             BioMassters(str(tmp_path))
 
     def test_plot(self, dataset: BioMassters) -> None:

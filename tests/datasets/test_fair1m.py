@@ -13,7 +13,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import FAIR1M
+from torchgeo.datasets import FAIR1M, DatasetNotFoundError
 
 
 def download_url(url: str, root: str, filename: str, *args: str, **kwargs: str) -> None:
@@ -120,7 +120,7 @@ class TestFAIR1M:
 
     def test_not_downloaded(self, tmp_path: Path, dataset: FAIR1M) -> None:
         shutil.rmtree(str(tmp_path))
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             FAIR1M(root=str(tmp_path), split=dataset.split)
 
     def test_plot(self, dataset: FAIR1M) -> None:

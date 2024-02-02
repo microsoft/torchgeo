@@ -4,11 +4,11 @@
 """Base classes for all :mod:`torchgeo` trainers."""
 
 from abc import ABC, abstractmethod
-from typing import Any
+from collections.abc import Sequence
+from typing import Any, Optional, Union
 
 import lightning
 from lightning.pytorch import LightningModule
-from lightning.pytorch.callbacks import Callback, EarlyStopping, ModelCheckpoint
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
@@ -28,24 +28,17 @@ class BaseTask(LightningModule, ABC):
     #: Whether the goal is to minimize or maximize the performance metric to monitor.
     mode = "min"
 
-    def __init__(self) -> None:
-        """Initialize a new BaseTask instance."""
+    def __init__(self, ignore: Optional[Union[Sequence[str], str]] = None) -> None:
+        """Initialize a new BaseTask instance.
+
+        Args:
+            ignore: Arguments to skip when saving hyperparameters.
+        """
         super().__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=ignore)
         self.configure_losses()
         self.configure_metrics()
         self.configure_models()
-
-    def configure_callbacks(self) -> list[Callback]:
-        """Initialize model-specific callbacks.
-
-        Returns:
-            List of callbacks to apply.
-        """
-        return [
-            ModelCheckpoint(monitor=self.monitor, mode=self.mode),
-            EarlyStopping(monitor=self.monitor, mode=self.mode),
-        ]
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""

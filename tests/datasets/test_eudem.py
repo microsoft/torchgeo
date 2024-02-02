@@ -12,7 +12,13 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-from torchgeo.datasets import EUDEM, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets import (
+    EUDEM,
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 class TestEUDEM:
@@ -41,7 +47,7 @@ class TestEUDEM:
     def test_no_dataset(self, tmp_path: Path) -> None:
         shutil.rmtree(tmp_path)
         os.makedirs(tmp_path)
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             EUDEM(str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:

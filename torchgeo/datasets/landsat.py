@@ -12,6 +12,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
+from .utils import RGBBandsMissingError
 
 
 class Landsat(RasterDataset, abc.ABC):
@@ -79,7 +80,7 @@ class Landsat(RasterDataset, abc.ABC):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``paths``
+            DatasetNotFoundError: If dataset is not found and *download* is False.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -106,7 +107,7 @@ class Landsat(RasterDataset, abc.ABC):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if the RGB bands are not included in ``self.bands``
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
 
         .. versionchanged:: 0.3
            Method now takes a sample dict, not a Tensor. Additionally, possible to
@@ -117,7 +118,7 @@ class Landsat(RasterDataset, abc.ABC):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         image = sample["image"][rgb_indices].permute(1, 2, 0).float()
 

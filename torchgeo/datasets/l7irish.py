@@ -14,7 +14,13 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import (
+    BoundingBox,
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    download_url,
+    extract_archive,
+)
 
 
 class L7Irish(RasterDataset):
@@ -116,8 +122,7 @@ class L7Irish(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.paths = paths
         self.download = download
@@ -130,11 +135,7 @@ class L7Irish(RasterDataset):
         )
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         if self.files:
             return
@@ -148,11 +149,7 @@ class L7Irish(RasterDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.paths}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -235,13 +232,16 @@ class L7Irish(RasterDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         rgb_indices = []
         for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         image = sample["image"][rgb_indices].permute(1, 2, 0)
 

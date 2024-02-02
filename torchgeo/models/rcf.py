@@ -94,7 +94,7 @@ class RCF(Module):
             ),
         )
         self.register_buffer(
-            "biases", torch.zeros(num_patches, requires_grad=False) + bias
+            "biases", torch.zeros(num_patches, requires_grad=False) + torch.tensor(bias)
         )
 
         if mode == "empirical":

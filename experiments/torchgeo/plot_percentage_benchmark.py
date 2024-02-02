@@ -53,4 +53,4 @@ ax.set_xticklabels(["16", "32", "64", "128", "256"])
 ax.set_xlabel("batch size")
 ax.set_ylabel("% sampling rate (patches/sec)")
 ax.legend()
-plt.show()  # type: ignore[no-untyped-call]
+plt.show()

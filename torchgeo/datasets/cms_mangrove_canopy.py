@@ -11,7 +11,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import check_integrity, extract_archive
+from .utils import DatasetNotFoundError, check_integrity, extract_archive
 
 
 class CMSGlobalMangroveCanopy(RasterDataset):
@@ -192,9 +192,8 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``paths``
-            RuntimeError: if dataset is missing or checksum fails
             AssertionError: if country or measurement arg are not str or invalid
+            DatasetNotFoundError: If dataset is not found.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -225,11 +224,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         if self.files:
             return
@@ -243,11 +238,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             self._extract()
             return
 
-        raise RuntimeError(
-            f"Dataset not found in `root={self.paths}` "
-            "either specify a different `root` directory or make sure you "
-            "have manually downloaded the dataset as instructed in the documentation."
-        )
+        raise DatasetNotFoundError(self)
 
     def _extract(self) -> None:
         """Extract the dataset."""

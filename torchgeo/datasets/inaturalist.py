@@ -12,7 +12,7 @@ import pandas as pd
 from rasterio.crs import CRS
 
 from .geo import GeoDataset
-from .utils import BoundingBox, disambiguate_timestamp
+from .utils import BoundingBox, DatasetNotFoundError, disambiguate_timestamp
 
 
 class INaturalist(GeoDataset):
@@ -40,7 +40,7 @@ class INaturalist(GeoDataset):
             root: root directory where dataset can be found
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            DatasetNotFoundError: If dataset is not found.
         """
         super().__init__()
 
@@ -48,7 +48,7 @@ class INaturalist(GeoDataset):
 
         files = glob.glob(os.path.join(root, "**.csv"))
         if not files:
-            raise FileNotFoundError(f"Dataset not found in `root={self.root}`")
+            raise DatasetNotFoundError(self)
 
         # Read CSV file
         data = pd.read_csv(

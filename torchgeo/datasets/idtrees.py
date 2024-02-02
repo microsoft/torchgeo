@@ -20,7 +20,7 @@ from torchvision.ops import clip_boxes_to_image, remove_small_boxes
 from torchvision.utils import draw_bounding_boxes
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import DatasetNotFoundError, download_url, extract_archive
 
 
 class IDTReeS(NonGeoDataset):
@@ -166,6 +166,7 @@ class IDTReeS(NonGeoDataset):
 
         Raises:
             ImportError: if laspy is not installed
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in ["train", "test"]
         assert task in ["task1", "task2"]
@@ -406,14 +407,12 @@ class IDTReeS(NonGeoDataset):
     @overload
     def _filter_boxes(
         self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: Tensor
-    ) -> tuple[Tensor, Tensor]:
-        ...
+    ) -> tuple[Tensor, Tensor]: ...
 
     @overload
     def _filter_boxes(
         self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: None
-    ) -> tuple[Tensor, None]:
-        ...
+    ) -> tuple[Tensor, None]: ...
 
     def _filter_boxes(
         self,
@@ -443,11 +442,7 @@ class IDTReeS(NonGeoDataset):
         return boxes, labels
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         url = self.metadata[self.split]["url"]
         md5 = self.metadata[self.split]["md5"]
         filename = self.metadata[self.split]["filename"]
@@ -469,11 +464,7 @@ class IDTReeS(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         download_url(
@@ -503,7 +494,9 @@ class IDTReeS(NonGeoDataset):
         assert len(hsi_indices) == 3
 
         def normalize(x: Tensor) -> Tensor:
-            return (x - x.min()) / (x.max() - x.min())
+            # https://github.com/pytorch/pytorch/issues/116327
+            out: Tensor = (x - x.min()) / (x.max() - x.min())
+            return out
 
         ncols = 3
 

@@ -141,4 +141,4 @@ ax.tick_params(axis="both", which="both", top=False, right=False)
 ax.spines[["top", "right"]].set_visible(False)
 
 plt.tight_layout()
-plt.show()  # type: ignore[no-untyped-call]
+plt.show()

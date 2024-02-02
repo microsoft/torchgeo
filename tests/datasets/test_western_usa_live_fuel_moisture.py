@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import WesternUSALiveFuelMoisture
+from torchgeo.datasets import DatasetNotFoundError, WesternUSALiveFuelMoisture
 
 
 class Collection:
@@ -65,7 +65,7 @@ class TestWesternUSALiveFuelMoisture:
         WesternUSALiveFuelMoisture(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             WesternUSALiveFuelMoisture(str(tmp_path))
 
     def test_invalid_features(self, dataset: WesternUSALiveFuelMoisture) -> None:

@@ -14,7 +14,7 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import DatasetNotFoundError, download_url, extract_archive
 
 
 class SKIPPD(NonGeoDataset):
@@ -91,8 +91,8 @@ class SKIPPD(NonGeoDataset):
 
         Raises:
             AssertionError: if ``task`` or ``split`` is invalid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
             ImportError: if h5py is not installed
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
         """
         assert (
             split in self.valid_splits
@@ -173,7 +173,8 @@ class SKIPPD(NonGeoDataset):
         else:
             arr = rearrange(arr, "h w c -> c h w")
 
-        tensor = torch.from_numpy(arr).to(torch.float32)
+        tensor = torch.from_numpy(arr)
+        tensor = tensor.to(torch.float32)
         return tensor
 
     def _load_features(self, index: int) -> dict[str, Union[str, Tensor]]:
@@ -202,11 +203,7 @@ class SKIPPD(NonGeoDataset):
         return features
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         pathname = os.path.join(self.root, self.data_file_name.format(self.task))
         if os.path.exists(pathname):
@@ -220,22 +217,14 @@ class SKIPPD(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
         self._extract()
 
     def _download(self) -> None:
-        """Download the dataset and extract it.
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
-        """
+        """Download the dataset and extract it."""
         download_url(
             self.url.format(self.zipfile_name.format(self.task)),
             self.root,

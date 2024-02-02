@@ -13,7 +13,13 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import BoundingBox, Esri2020, IntersectionDataset, UnionDataset
+from torchgeo.datasets import (
+    BoundingBox,
+    DatasetNotFoundError,
+    Esri2020,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -60,7 +66,7 @@ class TestEsri2020:
         Esri2020(str(tmp_path))
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             Esri2020(str(tmp_path), checksum=True)
 
     def test_and(self, dataset: Esri2020) -> None:

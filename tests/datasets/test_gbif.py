@@ -6,7 +6,13 @@ from pathlib import Path
 
 import pytest
 
-from torchgeo.datasets import GBIF, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets import (
+    GBIF,
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 class TestGBIF:
@@ -31,7 +37,7 @@ class TestGBIF:
         assert isinstance(ds, UnionDataset)
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             GBIF(str(tmp_path))
 
     def test_invalid_query(self, dataset: GBIF) -> None:

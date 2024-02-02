@@ -16,7 +16,13 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 # TODO: read geospatial information from stac.json files
@@ -123,7 +129,7 @@ class CloudCoverDetection(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.split = split
@@ -137,10 +143,7 @@ class CloudCoverDetection(NonGeoDataset):
             self._download(api_key)
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         self.chip_paths = self._load_collections()
 
@@ -331,9 +334,6 @@ class CloudCoverDetection(NonGeoDataset):
 
         Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
         """
         if self._check_integrity():
             print("Files already downloaded and verified")
@@ -369,14 +369,14 @@ class CloudCoverDetection(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if dataset does not contain an RGB band
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         rgb_indices = []
         for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         if "prediction" in sample:
             prediction = sample["prediction"]
@@ -384,7 +384,7 @@ class CloudCoverDetection(NonGeoDataset):
         else:
             n_cols = 2
 
-        image, mask = sample["image"] / 3000, sample["mask"]
+        image, mask = sample["image"] / torch.tensor(3000), sample["mask"]
 
         fig, axs = plt.subplots(nrows=1, ncols=n_cols, figsize=(10, n_cols * 5))
 

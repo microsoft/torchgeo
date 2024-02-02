@@ -218,7 +218,8 @@ class MoCoTask(BaseTask):
             if memory_bank_size > 0:
                 warnings.warn("MoCo v3 does not use a memory bank")
 
-        super().__init__()
+        self.weights = weights
+        super().__init__(ignore=["weights", "augmentation1", "augmentation2"])
 
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
         aug1, aug2 = moco_augmentations(version, size, grayscale_weights)
@@ -236,7 +237,7 @@ class MoCoTask(BaseTask):
     def configure_models(self) -> None:
         """Initialize the model."""
         model: str = self.hparams["model"]
-        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        weights = self.weights
         in_channels: int = self.hparams["in_channels"]
         version: int = self.hparams["version"]
         layers: int = self.hparams["layers"]

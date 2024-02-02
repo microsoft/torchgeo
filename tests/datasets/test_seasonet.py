@@ -15,7 +15,7 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import SeasoNet
+from torchgeo.datasets import DatasetNotFoundError, RGBBandsMissingError, SeasoNet
 
 
 def download_url(url: str, root: str, md5: str, *args: str, **kwargs: str) -> None:
@@ -147,7 +147,7 @@ class TestSeasoNet:
         SeasoNet(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="not found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SeasoNet(str(tmp_path), download=False)
 
     def test_out_of_bounds(self, dataset: SeasoNet) -> None:
@@ -187,7 +187,9 @@ class TestSeasoNet:
         plt.close()
 
     def test_plot_no_rgb(self) -> None:
-        with pytest.raises(ValueError, match="Dataset does not contain"):
+        with pytest.raises(
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
+        ):
             root = os.path.join("tests", "data", "seasonet")
             dataset = SeasoNet(root, bands=["10m_IR"])
             x = dataset[0]

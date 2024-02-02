@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import NASAMarineDebris
+from torchgeo.datasets import DatasetNotFoundError, NASAMarineDebris
 
 
 class Collection:
@@ -90,10 +90,7 @@ class TestNASAMarineDebris:
             NASAMarineDebris(root=str(tmp_path), download=True, checksum=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
-        "either specify a different `root` directory or use `download=True` "
-        "to automatically download the dataset."
-        with pytest.raises(RuntimeError, match=err):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             NASAMarineDebris(str(tmp_path))
 
     def test_plot(self, dataset: NASAMarineDebris) -> None:

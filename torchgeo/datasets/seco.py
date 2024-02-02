@@ -16,7 +16,13 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    download_url,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class SeasonalContrastS2(NonGeoDataset):
@@ -94,8 +100,7 @@ class SeasonalContrastS2(NonGeoDataset):
 
         Raises:
             AssertionError: if ``version`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert version in self.metadata.keys()
         assert seasons in range(5)
@@ -183,11 +188,7 @@ class SeasonalContrastS2(NonGeoDataset):
         return image
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         directory_path = os.path.join(
             self.root, self.metadata[self.version]["directory"]
@@ -203,11 +204,7 @@ class SeasonalContrastS2(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -245,8 +242,8 @@ class SeasonalContrastS2(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if the RGB bands are included in ``self.bands`` or the sample
-                contains a "prediction" key
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+            ValueError: if sample contains a "prediction" key
 
         .. versionadded:: 0.2
         """
@@ -258,7 +255,7 @@ class SeasonalContrastS2(NonGeoDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         fig, axes = plt.subplots(ncols=self.seasons, figsize=(20, 4))
         if self.seasons == 1:

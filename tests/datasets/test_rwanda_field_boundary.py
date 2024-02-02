@@ -14,7 +14,11 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import RwandaFieldBoundary
+from torchgeo.datasets import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    RwandaFieldBoundary,
+)
 
 
 class Collection:
@@ -87,7 +91,7 @@ class TestRwandaFieldBoundary:
         RwandaFieldBoundary(root=dataset.root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             RwandaFieldBoundary(str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
@@ -135,6 +139,8 @@ class TestRwandaFieldBoundary:
 
     def test_failed_plot(self, dataset: RwandaFieldBoundary) -> None:
         single_band_dataset = RwandaFieldBoundary(root=dataset.root, bands=("B01",))
-        with pytest.raises(ValueError, match="Dataset doesn't contain"):
+        with pytest.raises(
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
+        ):
             x = single_band_dataset[0].copy()
             single_band_dataset.plot(x, suptitle="Test")

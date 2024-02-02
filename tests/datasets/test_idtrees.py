@@ -16,7 +16,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import IDTReeS
+from torchgeo.datasets import DatasetNotFoundError, IDTReeS
 
 pytest.importorskip("laspy", minversion="2")
 
@@ -91,10 +91,7 @@ class TestIDTReeS:
         IDTReeS(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
-        "either specify a different `root` directory or use `download=True` "
-        "to automatically download the dataset."
-        with pytest.raises(RuntimeError, match=err):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             IDTReeS(str(tmp_path))
 
     def test_not_extracted(self, tmp_path: Path) -> None:
@@ -140,6 +137,7 @@ class TestIDTReeS:
 
     def test_plot_las(self, dataset: IDTReeS) -> None:
         pyvista = pytest.importorskip("pyvista", minversion="0.34.2")
+        pyvista.OFF_SCREEN = True
 
         # Test point cloud without colors
         point_cloud = dataset.plot_las(index=0)

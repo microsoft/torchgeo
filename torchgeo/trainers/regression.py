@@ -11,11 +11,12 @@ import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
+from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision.models._api import WeightsEnum
 
-from ..datasets import unbind_samples
+from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import FCN, get_weight
 from . import utils
 from .base import BaseTask
@@ -75,7 +76,8 @@ class RegressionTask(BaseTask):
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
         """
-        super().__init__()
+        self.weights = weights
+        super().__init__(ignore="weights")
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion.
@@ -110,7 +112,7 @@ class RegressionTask(BaseTask):
     def configure_models(self) -> None:
         """Initialize the model."""
         # Create model
-        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        weights = self.weights
         self.model = timm.create_model(
             self.hparams["model"],
             num_classes=self.hparams["num_outputs"],
@@ -157,7 +159,7 @@ class RegressionTask(BaseTask):
         loss: Tensor = self.criterion(y_hat, y)
         self.log("train_loss", loss)
         self.train_metrics(y_hat, y)
-        self.log_dict(self.train_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.train_metrics)
 
         return loss
 
@@ -180,33 +182,37 @@ class RegressionTask(BaseTask):
         loss = self.criterion(y_hat, y)
         self.log("val_loss", loss)
         self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.val_metrics)
 
         if (
             batch_idx < 10
             and hasattr(self.trainer, "datamodule")
+            and hasattr(self.trainer.datamodule, "plot")
             and self.logger
             and hasattr(self.logger, "experiment")
             and hasattr(self.logger.experiment, "add_figure")
         ):
+            datamodule = self.trainer.datamodule
+            if self.target_key == "mask":
+                y = y.squeeze(dim=1)
+                y_hat = y_hat.squeeze(dim=1)
+            batch["prediction"] = y_hat
+            for key in ["image", self.target_key, "prediction"]:
+                batch[key] = batch[key].cpu()
+            sample = unbind_samples(batch)[0]
+
+            fig: Optional[Figure] = None
             try:
-                datamodule = self.trainer.datamodule
-                if self.target_key == "mask":
-                    y = y.squeeze(dim=1)
-                    y_hat = y_hat.squeeze(dim=1)
-                batch["prediction"] = y_hat
-                for key in ["image", self.target_key, "prediction"]:
-                    batch[key] = batch[key].cpu()
-                sample = unbind_samples(batch)[0]
                 fig = datamodule.plot(sample)
-                if fig:
-                    summary_writer = self.logger.experiment
-                    summary_writer.add_figure(
-                        f"image/{batch_idx}", fig, global_step=self.global_step
-                    )
-                    plt.close()
-            except ValueError:
+            except RGBBandsMissingError:
                 pass
+
+            if fig:
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f"image/{batch_idx}", fig, global_step=self.global_step
+                )
+                plt.close()
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
@@ -225,7 +231,7 @@ class RegressionTask(BaseTask):
         loss = self.criterion(y_hat, y)
         self.log("test_loss", loss)
         self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics)  # type: ignore[arg-type]
+        self.log_dict(self.test_metrics)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -255,7 +261,7 @@ class PixelwiseRegressionTask(RegressionTask):
 
     def configure_models(self) -> None:
         """Initialize the model."""
-        weights: Optional[Union[WeightsEnum, str, bool]] = self.hparams["weights"]
+        weights = self.weights
 
         if self.hparams["model"] == "unet":
             self.model = smp.Unet(

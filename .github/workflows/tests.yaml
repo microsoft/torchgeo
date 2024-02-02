@@ -14,20 +14,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.1.0
+      uses: actions/checkout@v4.1.1
     - name: Set up python
-      uses: actions/setup-python@v4.7.1
+      uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.11'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/tests.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
+      run: |
+        pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
+        pip cache purge
     - name: List pip dependencies
       run: pip list
     - name: Run mypy checks
@@ -43,13 +45,13 @@ jobs:
         python-version: ['3.9', '3.10', '3.11']
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.1.0
+      uses: actions/checkout@v4.1.1
     - name: Set up python
-      uses: actions/setup-python@v4.7.1
+      uses: actions/setup-python@v5.0.0
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache dependencies
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -66,11 +68,13 @@ jobs:
       run: brew install rar
       if: ${{ runner.os == 'macOS' }}
     - name: Install choco dependencies (Windows)
-      run: choco install unrar
+      run: choco install 7zip
       if: ${{ runner.os == 'Windows' }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
+      run: |
+        pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
+        pip cache purge
     - name: List pip dependencies
       run: pip list
     - name: Run pytest checks
@@ -78,7 +82,7 @@ jobs:
         pytest --cov=torchgeo --cov-report=xml --durations=10
         python3 -m torchgeo --help
     - name: Report coverage
-      uses: codecov/codecov-action@v3.1.4
+      uses: codecov/codecov-action@v3.1.5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
@@ -88,13 +92,13 @@ jobs:
       MPLBACKEND: Agg
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.1.0
+      uses: actions/checkout@v4.1.1
     - name: Set up python
-      uses: actions/setup-python@v4.7.1
+      uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.9'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.2
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -107,7 +111,9 @@ jobs:
         sudo apt-get install unrar
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
-      run: pip install -r requirements/min-reqs.old -c requirements/min-cons.old
+      run: |
+        pip install -r requirements/min-reqs.old -c requirements/min-cons.old
+        pip cache purge
     - name: List pip dependencies
       run: pip list
     - name: Run pytest checks
@@ -115,7 +121,7 @@ jobs:
         pytest --cov=torchgeo --cov-report=xml --durations=10
         python3 -m torchgeo --help
     - name: Report coverage
-      uses: codecov/codecov-action@v3.1.4
+      uses: codecov/codecov-action@v3.1.5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:

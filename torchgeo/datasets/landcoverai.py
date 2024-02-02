@@ -20,7 +20,13 @@ from torch import Tensor
 from torch.utils.data import Dataset
 
 from .geo import NonGeoDataset, RasterDataset
-from .utils import BoundingBox, download_url, extract_archive, working_dir
+from .utils import (
+    BoundingBox,
+    DatasetNotFoundError,
+    download_url,
+    extract_archive,
+    working_dir,
+)
 
 
 class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
@@ -84,8 +90,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.download = download
@@ -99,11 +104,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
         self._verify()
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         if self._verify_data():
             return
 
@@ -115,11 +116,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -234,8 +231,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         LandCoverAIBase.__init__(self, root, download, checksum)
         RasterDataset.__init__(self, root, crs, res, transforms=transforms, cache=cache)
@@ -319,8 +315,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in ["train", "val", "test"]
 
@@ -369,7 +364,8 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         filename = os.path.join(self.root, "output", id_ + ".jpg")
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
-            tensor = torch.from_numpy(array).float()
+            tensor = torch.from_numpy(array)
+            tensor = tensor.float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -387,7 +383,8 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         filename = os.path.join(self.root, "output", id_ + "_m.png")
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
-            tensor = torch.from_numpy(array).long()
+            tensor = torch.from_numpy(array)
+            tensor = tensor.long()
             return tensor
 
     def _verify_data(self) -> bool:

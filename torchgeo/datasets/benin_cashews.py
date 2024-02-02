@@ -18,7 +18,13 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 # TODO: read geospatial information from stac.json files
@@ -198,11 +204,11 @@ class BeninSmallHolderCashews(NonGeoDataset):
             verbose: if True, print messages when new tiles are loaded
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self._validate_bands(bands)
 
-        self.root = os.path.expanduser(root)
+        self.root = root
         self.chip_size = chip_size
         self.stride = stride
         self.bands = bands
@@ -214,10 +220,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             self._download(api_key)
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         # Calculate the indices that we will use over all tiles
         self.chips_metadata = []
@@ -384,7 +387,8 @@ class BeninSmallHolderCashews(NonGeoDataset):
             dtype=np.uint8,
         )
 
-        mask = torch.from_numpy(mask_data).long()
+        mask = torch.from_numpy(mask_data)
+        mask = mask.long()
         return mask
 
     def _check_integrity(self) -> bool:
@@ -445,7 +449,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if the RGB bands are not included in ``self.bands``
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
 
         .. versionadded:: 0.2
         """
@@ -454,7 +458,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         num_time_points = sample["image"].shape[0]
         assert time_step < num_time_points

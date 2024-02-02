@@ -14,7 +14,14 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import BoundingBox, IntersectionDataset, L8Biome, UnionDataset
+from torchgeo.datasets import (
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    L8Biome,
+    RGBBandsMissingError,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -68,7 +75,7 @@ class TestL8Biome:
         L8Biome(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             L8Biome(str(tmp_path))
 
     def test_plot_prediction(self, dataset: L8Biome) -> None:
@@ -86,7 +93,7 @@ class TestL8Biome:
 
     def test_rgb_bands_absent_plot(self, dataset: L8Biome) -> None:
         with pytest.raises(
-            ValueError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             ds = L8Biome(dataset.paths, bands=["B1", "B2", "B5"])
             x = ds[ds.bounds]

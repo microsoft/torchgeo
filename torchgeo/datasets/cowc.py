@@ -16,7 +16,7 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive
+from .utils import DatasetNotFoundError, check_integrity, download_and_extract_archive
 
 
 class COWC(NonGeoDataset, abc.ABC):
@@ -81,8 +81,7 @@ class COWC(NonGeoDataset, abc.ABC):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in ["train", "test"]
 
@@ -95,10 +94,7 @@ class COWC(NonGeoDataset, abc.ABC):
             self._download()
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         self.images = []
         self.targets = []
@@ -148,7 +144,8 @@ class COWC(NonGeoDataset, abc.ABC):
         filename = os.path.join(self.root, self.images[index])
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
-            tensor = torch.from_numpy(array).float()
+            tensor = torch.from_numpy(array)
+            tensor = tensor.float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -163,7 +160,8 @@ class COWC(NonGeoDataset, abc.ABC):
             the target
         """
         target = int(self.targets[index])
-        tensor = torch.tensor(target).float()
+        tensor = torch.tensor(target)
+        tensor = tensor.float()
         return tensor
 
     def _check_integrity(self) -> bool:

@@ -14,7 +14,12 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    check_integrity,
+    percentile_normalization,
+)
 
 
 class So2Sat(NonGeoDataset):
@@ -208,7 +213,7 @@ class So2Sat(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if data is not found in ``root``, or checksums don't match
+            DatasetNotFoundError: If dataset is not found.
 
         .. versionadded:: 0.3
            The *bands* parameter.
@@ -257,7 +262,7 @@ class So2Sat(NonGeoDataset):
         self.fn = os.path.join(self.root, self.filenames_by_version[version][split])
 
         if not self._check_integrity():
-            raise RuntimeError("Dataset not found or corrupted.")
+            raise DatasetNotFoundError(self)
 
         with h5py.File(self.fn, "r") as f:
             self.size: int = f["label"].shape[0]
@@ -348,7 +353,7 @@ class So2Sat(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if RGB bands are not found in dataset
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
 
         .. versionadded:: 0.2
         """
@@ -358,7 +363,7 @@ class So2Sat(NonGeoDataset):
                 idx = self.s2_band_names.index(band) + len(self.s1_band_names)
                 rgb_indices.append(idx)
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         image = np.take(sample["image"].numpy(), indices=rgb_indices, axis=0)
         image = np.rollaxis(image, 0, 3)

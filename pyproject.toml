@@ -44,7 +44,9 @@ dependencies = [
     # kornia 0.6.9+ required for kornia.augmentation.RandomBrightness
     "kornia>=0.6.9",
     # lightly 1.4.4+ required for MoCo v3 support
-    "lightly>=1.4.4",
+    # lightly 1.4.26 is incompatible with the version of timm required by smp
+    # https://github.com/microsoft/torchgeo/issues/1824
+    "lightly>=1.4.4,!=1.4.26",
     # lightning 2+ required for LightningCLI args + sys.argv support
     "lightning[pytorch-extra]>=2",
     # matplotlib 3.3.3+ required for Python 3.9 wheels
@@ -67,12 +69,12 @@ dependencies = [
     "shapely>=1.7.1",
     # timm 0.4.12 required by segmentation-models-pytorch
     "timm>=0.4.12",
-    # torch 1.12+ required by torchvision
-    "torch>=1.12",
+    # torch 1.13+ required by torchvision
+    "torch>=1.13",
     # torchmetrics 0.10+ required for binary/multiclass/multilabel classification metrics
     "torchmetrics>=0.10",
-    # torchvision 0.13+ required for torchvision.models._api.WeightsEnum
-    "torchvision>=0.13",
+    # torchvision 0.14+ required for torchvision.models.swin_v2_b
+    "torchvision>=0.14",
 ]
 dynamic = ["version"]
 
@@ -131,10 +133,10 @@ tests = [
     "mypy>=0.900",
     # nbmake 1.3.3+ required for variable mocking
     "nbmake>=1.3.3",
-    # pytest 6.2+ required for pytest.MonkeyPatch
-    "pytest>=6.2",
-    # pytest-cov 2.4+ required for pytest --cov flags
-    "pytest-cov>=2.4",
+    # pytest 7.3+ required for tmp_path_retention_policy
+    "pytest>=7.3",
+    # pytest-cov 4+ required for pytest 7.2+ compatibility
+    "pytest-cov>=4",
 ]
 all = [
     "torchgeo[datasets,docs,style,tests]",
@@ -197,9 +199,6 @@ match_dir = "(datamodules|datasets|losses|models|samplers|torchgeo|trainers|tran
 addopts = "-m 'not slow'"
 # https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
-    # Treat all warnings as errors
-    "error",
-
     # Warnings raised by dependencies of dependencies, out of our control
     # https://github.com/Cadene/pretrained-models.pytorch/issues/221
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:pretrainedmodels.datasets.utils",
@@ -212,6 +211,9 @@ filterwarnings = [
     # https://github.com/pytorch/pytorch/pull/69823
     "ignore:distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning",
     "ignore:The distutils package is deprecated and slated for removal in Python 3.12:DeprecationWarning:torch.utils.tensorboard",
+    # https://github.com/Lightning-AI/torchmetrics/issues/2121
+    # https://github.com/Lightning-AI/torchmetrics/pull/2137
+    "ignore:The distutils package is deprecated and slated for removal in Python 3.12:DeprecationWarning:torchmetrics.utilities.imports",
     # https://github.com/Lightning-AI/lightning/issues/13256
     # https://github.com/Lightning-AI/lightning/pull/13261
     "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning:torch.distributed._sharded_tensor",
@@ -242,10 +244,13 @@ filterwarnings = [
     "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning",
     "ignore:pkg_resources is deprecated as an API.:DeprecationWarning:lightning_utilities.core.imports",
     "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:jsonargparse",
+    # https://github.com/pytorch/pytorch/issues/110549
+    "ignore:allow_ops_in_compiled_graph failed to import torch:ImportWarning:einops",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
-    "ignore:The dataloader, .*, does not have many workers which may be a bottleneck:UserWarning",
+    "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:UserWarning:lightning",
+    "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:lightning.fabric.utilities.warnings.PossibleUserWarning:lightning",
     # Lightning warns us about using the CPU when GPU/MPS is available
     "ignore:GPU available but not used.:UserWarning",
     "ignore:MPS available but not used.:UserWarning",
@@ -257,6 +262,8 @@ filterwarnings = [
     "ignore:`ColorJitter` is now following Torchvision implementation.:DeprecationWarning:kornia.augmentation._2d.intensity.color_jitter",
     # https://github.com/kornia/kornia/pull/1663
     "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning:kornia.augmentation._2d.intensity.gaussian_blur",
+    # https://github.com/pytorch/pytorch/pull/111576
+    "ignore:Skipping device Apple Paravirtual device that does not support Metal 2.0:UserWarning",
 
     # Unexpected warnings, worth investigating
     # Lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
@@ -276,6 +283,7 @@ testpaths = [
     "tests",
     "docs/tutorials",
 ]
+tmp_path_retention_policy = "failed"
 
 # https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [tool.setuptools.dynamic]

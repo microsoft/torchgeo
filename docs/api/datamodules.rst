@@ -34,6 +34,11 @@ BigEarthNet
 
 .. autoclass:: BigEarthNetDataModule
 
+ChaBuD
+^^^^^^
+
+.. autoclass:: ChaBuDDataModule
+
 COWC
 ^^^^
 
@@ -79,6 +84,16 @@ LandCover.ai
 ^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAIDataModule
+
+LEVIR-CD
+^^^^^^^^
+
+.. autoclass:: LEVIRCDDataModule
+
+LEVIR-CD+
+^^^^^^^^^
+
+.. autoclass:: LEVIRCDPlusDataModule
 
 LoveDA
 ^^^^^^
@@ -130,6 +145,11 @@ SSL4EO
 
 .. autoclass:: SSL4EOLDataModule
 .. autoclass:: SSL4EOS12DataModule
+
+SSL4EO-L Benchmark
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SSL4EOLBenchmarkDataModule
 
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^

@@ -16,7 +16,12 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    check_integrity,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class InriaAerialImageLabeling(NonGeoDataset):
@@ -73,7 +78,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` is invalid
-            RuntimeError: if dataset is missing
+            DatasetNotFoundError: If dataset is not found.
         """
         self.root = root
         assert split in {"train", "val", "test"}
@@ -130,7 +135,8 @@ class InriaAerialImageLabeling(NonGeoDataset):
         """
         with rio.open(path) as img:
             array = img.read().astype(np.int32)
-            tensor = torch.from_numpy(array).float()
+            tensor = torch.from_numpy(array)
+            tensor = tensor.float()
             return tensor
 
     def _load_target(self, path: str) -> Tensor:
@@ -145,7 +151,8 @@ class InriaAerialImageLabeling(NonGeoDataset):
         with rio.open(path) as img:
             array = img.read().astype(np.int32)
             array = np.clip(array, 0, 1)
-            mask = torch.from_numpy(array[0]).long()
+            mask = torch.from_numpy(array[0])
+            mask = mask.long()
             return mask
 
     def __len__(self) -> int:
@@ -185,11 +192,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         archive_path = os.path.join(self.root, self.filename)
         md5_hash = self.md5 if self.checksum else None
         if not os.path.isfile(archive_path):
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` "
-                "either specify a different `root` directory "
-                "or download the dataset to this directory"
-            )
+            raise DatasetNotFoundError(self)
         if not check_integrity(archive_path, md5_hash):
             raise RuntimeError("Dataset corrupted")
         print("Extracting...")

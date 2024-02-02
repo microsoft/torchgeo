@@ -16,7 +16,12 @@ from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 class TropicalCyclone(NonGeoDataset):
@@ -86,7 +91,7 @@ class TropicalCyclone(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.md5s
 
@@ -99,10 +104,7 @@ class TropicalCyclone(NonGeoDataset):
             self._download(api_key)
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         output_dir = "_".join([self.collection_id, split, "source"])
         filename = os.path.join(root, output_dir, "collection.json")
@@ -161,7 +163,9 @@ class TropicalCyclone(NonGeoDataset):
                     resample = Image.BILINEAR
                 img = img.resize(size=(self.size, self.size), resample=resample)
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
-            tensor = torch.from_numpy(array).permute((2, 0, 1)).float()
+            tensor = torch.from_numpy(array)
+            tensor = tensor.permute((2, 0, 1))
+            tensor = tensor.float()
             return tensor
 
     def _load_features(self, directory: str) -> dict[str, Any]:
@@ -206,9 +210,6 @@ class TropicalCyclone(NonGeoDataset):
 
         Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
         """
         if self._check_integrity():
             print("Files already downloaded and verified")
