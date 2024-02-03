@@ -51,9 +51,6 @@ class TestAgriFieldNet:
         assert isinstance(x["image"], torch.Tensor)
         assert isinstance(x["mask"], torch.Tensor)
 
-    # def test_len(self, dataset: AgriFieldNet) -> None:
-    #     assert len(dataset) == 5
-
     def test_and(self, dataset: AgriFieldNet) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)

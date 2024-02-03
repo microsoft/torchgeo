@@ -217,7 +217,7 @@ class AgriFieldNet(RasterDataset):
         mask_filepaths = []
         for root, dirs, files in os.walk(os.path.join(self.paths, "train_labels")):
             for file in files:
-                if not file.endswith("_field_ids.tif"):
+                if not file.endswith("_field_ids.tif") and file.endswith(".tif"):
                     file_path = os.path.join(root, file)
                     mask_filepaths.append(file_path)
 
