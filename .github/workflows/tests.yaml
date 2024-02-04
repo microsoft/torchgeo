@@ -81,10 +81,11 @@ jobs:
       run: |
         pytest --cov=torchgeo --cov-report=xml --durations=10
         python3 -m torchgeo --help
-    - name: Report coverage
-      uses: codecov/codecov-action@v3.1.5
+    - name: Upload coverage artifact
+      uses: actions/upload-artifact@v4.3.0
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+        name: coverage_${{ matrix.os }}_py-${{ matrix.python-version }}
+        path: coverage.xml
   minimum:
     name: minimum
     runs-on: ubuntu-latest
@@ -120,10 +121,11 @@ jobs:
       run: |
         pytest --cov=torchgeo --cov-report=xml --durations=10
         python3 -m torchgeo --help
-    - name: Report coverage
-      uses: codecov/codecov-action@v3.1.5
+    - name: Upload coverage artifact
+      uses: actions/upload-artifact@v4.3.0
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+        name: coverage_minimum
+        path: coverage.xml
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true
