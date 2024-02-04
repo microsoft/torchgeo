@@ -7,13 +7,11 @@ jobs:
   codecov:
     name: codecov
     runs-on: ubuntu-latest
-    needs: [pytest, minimum]
     steps:
     - name: Clone repo
       uses: actions/checkout@v4.1.1
     - name: Download coverage artifacts
       uses: actions/download-artifact@v4.1.1
-
     - name: Report coverage
       uses: codecov/codecov-action@v4.0.1
       with:
