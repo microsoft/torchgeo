@@ -9,8 +9,8 @@ on:
     - main
     - release**
 jobs:
-  pytest:
-    name: pytest
+  latest:
+    name: latest
     runs-on: ${{ matrix.os }}
     env:
       MPLBACKEND: Agg
