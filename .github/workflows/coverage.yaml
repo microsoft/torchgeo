@@ -1,7 +1,7 @@
 name: coverage
 on:
   workflow_run:
-    workflows: [tests, minimum]
+    workflows: [tests]
     types: [completed]
 jobs:
   codecov:

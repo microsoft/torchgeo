@@ -9,31 +9,6 @@ on:
     - main
     - release**
 jobs:
-  mypy:
-    name: mypy
-    runs-on: ubuntu-latest
-    steps:
-    - name: Clone repo
-      uses: actions/checkout@v4.1.1
-    - name: Set up python
-      uses: actions/setup-python@v5.0.0
-      with:
-        python-version: '3.11'
-    - name: Cache dependencies
-      uses: actions/cache@v4.0.0
-      id: cache
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/tests.txt') }}
-    - name: Install pip dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
-        pip cache purge
-    - name: List pip dependencies
-      run: pip list
-    - name: Run mypy checks
-      run: mypy .
   pytest:
     name: pytest
     runs-on: ${{ matrix.os }}
