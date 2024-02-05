@@ -70,8 +70,8 @@ class AgriFieldNet(RasterDataset):
     36 - Rice
 
     If you use this dataset in your research, please cite the following dataset:
-    Radiant Earth Foundation & IDinsight (2022) AgriFieldNet Competition Dataset,
-    Version 1.0, Radiant MLHub. https://doi.org/10.34911/rdnt.wu92p1
+    
+    * https://doi.org/10.34911/rdnt.wu92p1
 
     .. versionadded:: 0.6
     """
