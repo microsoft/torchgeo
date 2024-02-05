@@ -111,7 +111,7 @@ jobs:
     - name: Download coverage artifacts
       uses: actions/download-artifact@v4.1.1
     - name: Report coverage
-      uses: codecov/codecov-action@v3.1.6
+      uses: codecov/codecov-action@v4.0.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: true
