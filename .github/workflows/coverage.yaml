@@ -13,7 +13,7 @@ jobs:
     - name: Download coverage artifacts
       uses: actions/download-artifact@v4.1.1
       with:
-        run-id: context.payload.workflow_run.id
+        run-id: ${{ context.payload.workflow_run.id }}
     - name: Report coverage
       uses: codecov/codecov-action@v4.0.1
       with:
