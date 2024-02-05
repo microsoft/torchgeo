@@ -13,6 +13,7 @@ jobs:
     - name: Download coverage artifacts
       uses: actions/download-artifact@v4.1.1
       with:
+        github-token: ${{ github.token }}
         run-id: ${{ github.event.workflow_run.id }}
     - name: Report coverage
       uses: codecov/codecov-action@v4.0.1
