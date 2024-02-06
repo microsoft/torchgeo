@@ -99,6 +99,7 @@ from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
 from .so2sat import So2Sat
+from .south_america_soybean import SouthAmericaSoybean
 from .spacenet import (
     SpaceNet,
     SpaceNet1,
@@ -186,6 +187,7 @@ __all__ = (
     "Sentinel",
     "Sentinel1",
     "Sentinel2",
+    "SouthAmericaSoybean",
     # NonGeoDataset
     "ADVANCE",
     "AgriFieldNet",
