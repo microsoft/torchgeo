@@ -132,7 +132,7 @@ from torchgeo.models import ResNet18_Weights
 
 weights = ResNet18_Weights.SENTINEL2_ALL_MOCO
 model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"], num_classes=10)
-model = model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
 ```
 
 These weights can also directly be used in TorchGeo Lightning modules that are shown in the following section via the `weights` argument. For a notebook example, see this [tutorial](https://torchgeo.readthedocs.io/en/stable/tutorials/pretrained_weights.html).
