@@ -130,8 +130,7 @@ class NASAMarineDebris(NonGeoDataset):
         """
         with rasterio.open(path) as f:
             array = f.read()
-        tensor = torch.from_numpy(array)
-        tensor = tensor.float()
+        tensor = torch.from_numpy(array).float()
         return tensor
 
     def _load_target(self, path: str) -> Tensor:

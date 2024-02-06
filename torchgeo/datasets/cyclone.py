@@ -162,8 +162,7 @@ class TropicalCyclone(NonGeoDataset):
                 img = img.resize(size=(self.size, self.size), resample=resample)
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
             tensor = torch.from_numpy(array)
-            tensor = tensor.permute((2, 0, 1))
-            tensor = tensor.float()
+            tensor = tensor.permute((2, 0, 1)).float()
             return tensor
 
     def _load_features(self, directory: str) -> dict[str, Any]:

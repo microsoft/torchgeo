@@ -384,8 +384,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             dtype=np.uint8,
         )
 
-        mask = torch.from_numpy(mask_data)
-        mask = mask.long()
+        mask = torch.from_numpy(mask_data).long()
         return mask
 
     def _check_integrity(self) -> bool:

@@ -350,9 +350,7 @@ class SeasoNet(NonGeoDataset):
         path = self.files.iloc[index][0]
         with rasterio.open(f"{path}_labels.tif") as f:
             array = f.read() - 1
-        tensor = torch.from_numpy(array)
-        tensor = tensor.squeeze()
-        tensor = tensor.long()
+        tensor = torch.from_numpy(array).squeeze().long()
         return tensor
 
     def _verify(self) -> None:

@@ -218,8 +218,7 @@ class MapInWild(NonGeoDataset):
             array: "np.typing.NDArray[np.int_]" = np.stack(raw_array, axis=0)
             if array.dtype == np.uint16:
                 array = array.astype(np.int32)
-            tensor = torch.from_numpy(array)
-            tensor = tensor.float()
+            tensor = torch.from_numpy(array).float()
             return tensor
 
     def _verify(self, url: str, md5: Optional[str] = None) -> None:
