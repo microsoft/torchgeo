@@ -43,59 +43,37 @@ class SouthAmericaSoybean(RasterDataset):
     date_format = "%Y"
     is_image = False
     url = "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_{}.tif"
-    years = [
-        2001,
-        2002,
-        2003,
-        2004,
-        2005,
-        2006,
-        2007,
-        2008,
-        2009,
-        2010,
-        2011,
-        2012,
-        2013,
-        2014,
-        2015,
-        2016,
-        2017,
-        2018,
-        2019,
-        2020,
-        2021,
-    ]
+
     md5s = {
-        2001: "2914b0af7590a0ca4dfa9ccefc99020f",
-        2002: "8a4a9dcea54b3ec7de07657b9f2c0893",
-        2003: "cad5ed461ff4ab45c90177841aaecad2",
-        2004: "f9882ca9c70e054e50172835cb75a8c3",
-        2005: "89faae27f9b5afbd06935a465e5fe414",
-        2006: "eabaa525414ecbff89301d3d5c706f0b",
-        2007: "bb8549b6674163fe20ffd47ec4ce8903",
-        2008: "96fc3f737ab3ce9bcd16cbf7761427e2",
-        2009: "341387c1bb42a15140c80702e4cca02d",
-        2010: "9264532d36ffa93493735a6e44caef0d",
-        2011: "b73352ebea3d5658959e9044ec526143",
-        2012: "9f3a71097c9836fcff18a13b9ba608b2",
-        2013: "0263e19b3cae6fdaba4e3b450cef985e",
-        2014: "824ff91c62a4ba9f4ccfd281729830e5",
-        2015: "6beb96a61fe0e9ce8c06263e500dde8f",
-        2016: "770c558f6ac40550d0e264da5e44b3e",
-        2017: "4d0487ac1105d171e5f506f1766ea777",
-        2018: "503c2d0a803c2a2629ebbbd9558a3013",
-        2019: "441836493bbcd5e123cff579a58f5a4f",
-        2020: "0709dec807f576c9707c8c7e183db31",
         2021: "edff3ada13a1a9910d1fe844d28ae4f",
+        2020: "0709dec807f576c9707c8c7e183db31",
+        2019: "441836493bbcd5e123cff579a58f5a4f",
+        2018: "503c2d0a803c2a2629ebbbd9558a3013",
+        2017: "4d0487ac1105d171e5f506f1766ea777",
+        2016: "770c558f6ac40550d0e264da5e44b3e",
+        2015: "6beb96a61fe0e9ce8c06263e500dde8f",
+        2014: "824ff91c62a4ba9f4ccfd281729830e5",
+        2013: "0263e19b3cae6fdaba4e3b450cef985e",
+        2012: "9f3a71097c9836fcff18a13b9ba608b2",
+        2011: "b73352ebea3d5658959e9044ec526143",
+        2010: "9264532d36ffa93493735a6e44caef0d",
+        2009: "341387c1bb42a15140c80702e4cca02d",
+        2008: "96fc3f737ab3ce9bcd16cbf7761427e2",
+        2007: "bb8549b6674163fe20ffd47ec4ce8903",
+        2006: "eabaa525414ecbff89301d3d5c706f0b",
+        2005: "89faae27f9b5afbd06935a465e5fe414",
+        2004: "f9882ca9c70e054e50172835cb75a8c3",
+        2003: "cad5ed461ff4ab45c90177841aaecad2",
+        2002: "8a4a9dcea54b3ec7de07657b9f2c0893",
+        2001: "2914b0af7590a0ca4dfa9ccefc99020f",
     }
 
     def __init__(
         self,
         paths: Union[str, Iterable[str]] = "data",
-        years: list[int] = years,
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
+        years: list[int] = [2021],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
@@ -109,6 +87,7 @@ class SouthAmericaSoybean(RasterDataset):
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
+            years: list of years for which to use the South America Soybean layer
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
