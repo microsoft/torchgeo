@@ -140,6 +140,7 @@ from .zuericrop import ZueriCrop
 __all__ = (
     # GeoDataset
     "AbovegroundLiveWoodyBiomassDensity",
+    "AgriFieldNet",
     "Airphen",
     "AsterGDEM",
     "CanadianBuildingFootprints",
@@ -190,7 +191,6 @@ __all__ = (
     "SouthAmericaSoybean",
     # NonGeoDataset
     "ADVANCE",
-    "AgriFieldNet",
     "BeninSmallHolderCashews",
     "BigEarthNet",
     "BioMassters",

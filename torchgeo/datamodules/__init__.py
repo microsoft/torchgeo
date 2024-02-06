@@ -48,7 +48,6 @@ __all__ = (
     "L8BiomeDataModule",
     "NAIPChesapeakeDataModule",
     # NonGeoDataset
-    "AgriFieldNetDataModule",
     "BigEarthNetDataModule",
     "ChaBuDDataModule",
     "COWCCountingDataModule",
