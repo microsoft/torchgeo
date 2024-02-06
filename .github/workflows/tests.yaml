@@ -101,20 +101,6 @@ jobs:
       with:
         name: coverage_minimum
         path: coverage.xml
-  codecov:
-    name: codecov
-    runs-on: ubuntu-latest
-    needs: [latest, minimum]
-    steps:
-    - name: Clone repo
-      uses: actions/checkout@v4.1.1
-    - name: Download coverage artifacts
-      uses: actions/download-artifact@v4.1.1
-    - name: Report coverage
-      uses: codecov/codecov-action@v3.1.6
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        fail_ci_if_error: true
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true
