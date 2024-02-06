@@ -6,7 +6,6 @@
 from typing import Any, Optional
 
 import kornia.augmentation as K
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
@@ -113,7 +112,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         self.test_splits = test_splits
         self.class_set = class_set
         self.use_prior_labels = use_prior_labels
-        self.prior_smoothing_constant = torch.tensor(prior_smoothing_constant)
+        self.prior_smoothing_constant = prior_smoothing_constant
 
         if self.use_prior_labels:
             self.layers = [
