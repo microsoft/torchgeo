@@ -102,28 +102,42 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
 
+        print("passed length", length)
+
         if units == Units.PIXELS:
             self.size = (self.size[0] * self.res, self.size[1] * self.res)
 
         self.batch_size = batch_size
+        print("self size", self.size)
         self.length = 0
+
+        print("init length", self.length)
+
         self.hits = []
         areas = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
+            print("passing in loop")
             bounds = BoundingBox(*hit.bounds)
+            print("bound everytime", bounds)
+            print("calc x", bounds.maxx - bounds.minx)
+            print("calc y", bounds.maxy - bounds.miny)
             if (
                 bounds.maxx - bounds.minx >= self.size[1]
                 and bounds.maxy - bounds.miny >= self.size[0]
             ):
                 if bounds.area > 0:
+                    print("passing here 1")
                     rows, cols = tile_to_chips(bounds, self.size)
                     self.length += rows * cols
                 else:
+                    print("passing here 2")
                     self.length += 1
                 self.hits.append(hit)
                 areas.append(bounds.area)
+        print("passing here out", self.length)
         if length is not None:
             self.length = length
+        print("passing here out final", self.length)
 
         # torch.multinomial requires float probabilities > 0
         self.areas = torch.tensor(areas, dtype=torch.float)

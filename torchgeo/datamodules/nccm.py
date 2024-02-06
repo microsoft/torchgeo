@@ -67,13 +67,22 @@ class NCCMSentinel2DataModule(GeoDataModule):
         self.dataset = self.sentinel2 & self.nccm
 
         roi = self.dataset.bounds
+        print("roi is", roi)
         midx = roi.minx + (roi.maxx - roi.minx) / 2
         midy = roi.miny + (roi.maxy - roi.miny) / 2
+        print("midx is ", midx)
+        print("midy is", midy)
+
 
         if stage in ["fit"]:
+            print("train roi all parameters ", roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt)
             train_roi = BoundingBox(
                 roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt
             )
+
+          
+
+            print("train batch sampler ", self.patch_size, self.batch_size,self.length)
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.dataset, self.patch_size, self.batch_size, self.length, train_roi
             )
