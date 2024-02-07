@@ -20,3 +20,5 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: true
+        override_commit: ${{ github.event.workflow_run.pull_requests.head.sha || '' }}
+        override_pr: ${{ github.event.workflow_run.pull_requests.number || '' }}
