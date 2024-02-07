@@ -12,15 +12,19 @@ import fiona
 from rasterio.crs import CRS
 from shapely.geometry import Polygon, mapping
 
-SIZE = 100
+SIZE = 1000
 
 
 def create_data_file(dataname):
     schema = {"geometry": "Polygon", "properties": {"EC_hcat_c": "str"}}
     with fiona.open(
-        dataname, "w", crs=CRS.from_epsg(31287), driver="ESRI Shapefile", schema=schema
+        dataname, "w", crs=CRS.from_epsg(32616), driver="ESRI Shapefile", schema=schema
     ) as shpfile:
         coordinates = [[0.0, 0.0], [0.0, SIZE], [SIZE, SIZE], [SIZE, 0.0], [0.0, 0.0]]
+        # The offset aligns with tests/data/sentinel2/data.py.
+        offset = [399960 - SIZE / 2, 4500000 - SIZE / 2]
+        coordinates = [[x + offset[0], y + offset[1]] for x, y in coordinates]
+
         polygon = Polygon(coordinates)
         properties = {"EC_hcat_c": "1000000010"}
         shpfile.write({"geometry": mapping(polygon), "properties": properties})
@@ -36,12 +40,12 @@ def create_csv(fname):
 
 if __name__ == "__main__":
     csvname = "HCAT2.csv"
-    dataname = "AA_2021_EC21.shp"
+    dataname = "AA_2022_EC21.shp"
     supportnames = [
-        "AA_2021_EC21.cpg",
-        "AA_2021_EC21.dbf",
-        "AA_2021_EC21.prj",
-        "AA_2021_EC21.shx",
+        "AA_2022_EC21.cpg",
+        "AA_2022_EC21.dbf",
+        "AA_2022_EC21.prj",
+        "AA_2022_EC21.shx",
     ]
     zipfilename = "AA.zip"
 

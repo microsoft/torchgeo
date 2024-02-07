@@ -722,7 +722,7 @@ class VectorDataset(GeoDataset):
         # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
         masks = array_to_tensor(masks)
 
-        sample = {"mask": masks, "crs": self.crs, "bbox": query}
+        sample = {"mask": masks.long(), "crs": self.crs, "bbox": query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)

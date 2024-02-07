@@ -10,6 +10,7 @@ from .cowc import COWCCountingDataModule
 from .cyclone import TropicalCycloneDataModule
 from .deepglobelandcover import DeepGlobeLandCoverDataModule
 from .etci2021 import ETCI2021DataModule
+from .eurocrops import EuroCropsSentinel2DataModule
 from .eurosat import EuroSAT100DataModule, EuroSATDataModule
 from .fair1m import FAIR1MDataModule
 from .fire_risk import FireRiskDataModule
@@ -44,6 +45,7 @@ from .xview import XView2DataModule
 __all__ = (
     # GeoDataset
     "ChesapeakeCVPRDataModule",
+    "EuroCropsSentinel2DataModule",
     "L7IrishDataModule",
     "L8BiomeDataModule",
     "NAIPChesapeakeDataModule",

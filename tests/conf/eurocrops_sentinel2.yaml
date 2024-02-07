@@ -1,0 +1,18 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: "ce"
+    model: "deeplabv3+"
+    backbone: "resnet34"
+    in_channels: 13
+    num_classes: 3
+    num_filters: 1
+    ignore_index: 4
+data:
+  class_path: EuroCropsSentinel2DataModule
+  init_args:
+    batch_size: 2
+    patch_size: 16
+  dict_kwargs:
+    eurocrops_paths: "tests/data/eurocrops"
+    sentinel2_paths: "tests/data/sentinel2"
