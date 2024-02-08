@@ -87,7 +87,7 @@ class NCCM(RasterDataset):
         paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        years: list[int] = [2019],
+        years: list[int] = [2017, 2018, 2019],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
