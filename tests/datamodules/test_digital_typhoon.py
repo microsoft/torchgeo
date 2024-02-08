@@ -34,7 +34,10 @@ class TestDigitalTyphoonAnalysisDataModule:
         dataset = DigitalTyphoonAnalysis(
             root=os.path.join("tests", "data", "digital_typhoon")
         )
-        train_sequences, val_sequences = dm._split_dataset(dataset)
+        train_indices, val_indices = dm._split_dataset(dataset.sample_sequences)
+        train_sequences, val_sequences = [
+            dataset.sample_sequences[i] for i in train_indices
+        ], [dataset.sample_sequences[i] for i in val_indices]
 
         if split_by == "time":
 
