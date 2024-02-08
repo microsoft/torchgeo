@@ -96,25 +96,25 @@ jobs:
       run: |
         pytest --cov=torchgeo --cov-report=xml --durations=10
         python3 -m torchgeo --help
-    - name: Save PR information
-      run: |
-        echo "${{ github.event.number }}" > pr_number.txt
-        echo "${{ github.event.pull_request.head.sha }}" > commit_sha.txt
     - name: Upload coverage artifact
       uses: actions/upload-artifact@v4.3.0
       with:
         name: coverage_minimum
         path: coverage.xml
-    - name: Upload PR number
-      uses: actions/upload-artifact@v4.3.0
+  codecov:
+    name: codecov
+    runs-on: ubuntu-latest
+    needs: [latest, minimum]
+    steps:
+    - name: Clone repo
+      uses: actions/checkout@v4.1.1
+    - name: Download coverage artifacts
+      uses: actions/download-artifact@v4.1.1
+    - name: Report coverage
+      uses: codecov/codecov-action@v3.1.6
       with:
-        name: pr_number
-        path: pr_number.txt
-    - name: Upload commit SHA
-      uses: actions/upload-artifact@v4.3.0
-      with:
-        name: commit_sha
-        path: commit_sha.txt
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: true
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true
