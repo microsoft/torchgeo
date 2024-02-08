@@ -7,8 +7,8 @@ from typing import Any, Optional, Union
 
 import kornia.augmentation as K
 from matplotlib.figure import Figure
-
-from ..datasets import NCCM, BoundingBox, Sentinel2
+import torch
+from ..datasets import NCCM, BoundingBox, Sentinel2, random_bbox_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
@@ -23,7 +23,7 @@ class NCCMSentinel2DataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[int, tuple[int, int]] = 256,
+        patch_size: Union[int, tuple[int, int]] = 16,
         length: Optional[int] = None,
         num_workers: int = 0,
         **kwargs: Any,
@@ -66,37 +66,23 @@ class NCCMSentinel2DataModule(GeoDataModule):
         self.nccm = NCCM(**self.nccm_kwargs)
         self.dataset = self.sentinel2 & self.nccm
 
-        roi = self.dataset.bounds
-        print("roi is", roi)
-        midx = roi.minx + (roi.maxx - roi.minx) / 2
-        midy = roi.miny + (roi.maxy - roi.miny) / 2
-        print("midx is ", midx)
-        print("midy is", midy)
-
+        (self.train_dataset, self.val_dataset, self.test_dataset) = (
+            random_bbox_assignment(self.dataset, [0.5, 0.25, 0.25])
+        )
 
         if stage in ["fit"]:
-            print("train roi all parameters ", roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt)
-            train_roi = BoundingBox(
-                roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt
-            )
-
-          
-
-            print("train batch sampler ", self.patch_size, self.batch_size,self.length)
             self.train_batch_sampler = RandomBatchGeoSampler(
-                self.dataset, self.patch_size, self.batch_size, self.length, train_roi
+                self.train_dataset, self.patch_size, self.batch_size, self.length 
             )
+    
         if stage in ["fit", "validate"]:
-            val_roi = BoundingBox(midx, roi.maxx, roi.miny, midy, roi.mint, roi.maxt)
             self.val_sampler = GridGeoSampler(
-                self.dataset, self.patch_size, self.patch_size, val_roi
+                self.val_dataset, self.patch_size, self.patch_size, 
             )
+      
         if stage in ["test"]:
-            test_roi = BoundingBox(
-                roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt
-            )
             self.test_sampler = GridGeoSampler(
-                self.dataset, self.patch_size, self.patch_size, test_roi
+                self.test_dataset, self.patch_size, self.patch_size,
             )
 
     def plot(self, *args: Any, **kwargs: Any) -> Figure:

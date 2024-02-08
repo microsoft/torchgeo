@@ -4,7 +4,7 @@ model:
     loss: "ce"
     model: "deeplabv3+"
     backbone: "resnet34"
-    in_channels: 4
+    in_channels: 13
     num_classes: 14
     num_filters: 1
     ignore_index: 4
