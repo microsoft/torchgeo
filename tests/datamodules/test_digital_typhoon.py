@@ -34,7 +34,7 @@ class TestDigitalTyphoonAnalysisDataModule:
         dataset = DigitalTyphoonAnalysis(
             root=os.path.join("tests", "data", "digital_typhoon")
         )
-        train_sequences, val_sequences = dm.split_dataset(dataset)
+        train_sequences, val_sequences = dm._split_dataset(dataset)
 
         if split_by == "time":
 

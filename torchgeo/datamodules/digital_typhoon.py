@@ -41,7 +41,7 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
         ), f"Please choose from {self.valid_split_types}"
         self.split_by = split_by
 
-    def split_dataset(
+    def _split_dataset(
         self, dataset: DigitalTyphoonAnalysis
     ) -> tuple[list[_SampleSequenceDict], list[_SampleSequenceDict]]:
         """Split dataset into two parts.
@@ -82,12 +82,12 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
         """
         self.dataset = DigitalTyphoonAnalysis(**self.kwargs)
 
-        train_sequences, test_sequences = self.split_dataset(self.dataset)
+        train_sequences, test_sequences = self._split_dataset(self.dataset)
 
         if stage in ["fit", "validate"]:
             # resplit the train indices into train and val
             self.dataset.sample_sequences = train_sequences
-            train_sequences, val_sequences = self.split_dataset(self.dataset)
+            train_sequences, val_sequences = self._split_dataset(self.dataset)
 
             # create training dataset
             self.train_dataset = DigitalTyphoonAnalysis(**self.kwargs)
