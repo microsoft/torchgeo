@@ -19,7 +19,7 @@ from .geo import NonGeoDataset
 from .utils import DatasetNotFoundError, download_url, percentile_normalization
 
 
-class SampleSequenceDict(TypedDict):
+class _SampleSequenceDict(TypedDict):
     """Sample sequence dictionary."""
 
     id: str
@@ -27,7 +27,7 @@ class SampleSequenceDict(TypedDict):
 
 
 class DigitalTyphoonAnalysis(NonGeoDataset):
-    """Digital Tyhphoon Dataset for Analysis Task.
+    """Digital Typhoon Dataset for Analysis Task.
 
     This dataset contains typhoon-centered images, derived from hourly infrared channel
     images captured by meteorological satellites. It incorporates data from multiple
@@ -46,7 +46,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
       at 5km spatial resolution
     * auxiliary features such as wind speed, pressure, and more that can be used
       for regression or classification tasks
-    * 1,099 typhoons and 189,364 image
+    * 1,099 typhoons and 189,364 images
 
     Dataset format:
 
@@ -90,6 +90,9 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         "ab": "2c5d25455ac8aef1de33fe6456ab2c8d",
     }
 
+    min_input_clamp = 170.0
+    max_input_clamp = 300.0
+
     data_root = "WP"
 
     def __init__(
@@ -97,7 +100,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         root: str = "data",
         task: str = "regression",
         features: Sequence[str] = ["wind"],
-        target: list[str] = ["wind"],
+        targets: list[str] = ["wind"],
         sequence_length: int = 3,
         min_feature_value: Optional[dict[str, float]] = None,
         max_feature_value: Optional[dict[str, float]] = None,
@@ -111,7 +114,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             root: root directory where dataset can be found
             task: whether to load "regression" or "classification" labels
             features: which auxiliary features to return
-            target: which auxiliary features to use as targets
+            targets: which auxiliary features to use as targets
             sequence_length: length of the sequence to return
             min_feature_value: minimum value for each feature
             max_feature_value: maximum value for each feature
@@ -122,8 +125,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
         Raises:
             AssertionError: if ``task`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         try:
             import h5py  # noqa: F401
@@ -140,14 +142,16 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         self.min_feature_value = min_feature_value
         self.max_feature_value = max_feature_value
 
-        assert task in self.valid_tasks, f"Please choose one of {self.valid_tasks}"
+        assert (
+            task in self.valid_tasks
+        ), f"Please choose one of {self.valid_tasks}, you provided {task}."
         self.task = task
 
         assert set(features).issubset(set(self.valid_features))
         self.features = features
 
-        assert set(target).issubset(set(self.valid_features))
-        self.target = target
+        assert set(targets).issubset(set(self.valid_features))
+        self.targets = targets
 
         self._verify()
 
@@ -202,7 +206,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             for feature, max_value in self.max_feature_value.items():
                 self.aux_df = self.aux_df[self.aux_df[feature] <= max_value]
 
-        def get_subsequences(df: pd.DataFrame, k: int) -> list[dict[str, list[int]]]:
+        def _get_subsequences(df: pd.DataFrame, k: int) -> list[dict[str, list[int]]]:
             """Generate all possible subsequences of length k for a given group.
 
             Args:
@@ -226,10 +230,10 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
                 if set(subseq["seq_id"]).issubset(df["seq_id"])
             ]
 
-        self.sample_sequences: list[SampleSequenceDict] = [
+        self.sample_sequences: list[_SampleSequenceDict] = [
             item
             for sublist in self.aux_df.groupby("id")
-            .apply(get_subsequences, k=self.sequence_length)
+            .apply(_get_subsequences, k=self.sequence_length)
             .tolist()
             for item in sublist
         ]
@@ -264,7 +268,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         )
 
         # torchgeo expects a single label
-        sample["label"] = torch.Tensor([sample[target] for target in self.target])
+        sample["label"] = torch.Tensor([sample[target] for target in self.targets])
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -306,6 +310,13 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             with h5py.File(full_path, "r") as h5f:
                 # tensor with added channel dimension
                 tensor = torch.from_numpy(h5f["Infrared"][:]).unsqueeze(0)
+
+                # follow normalization procedure
+                # https://github.com/kitamoto-lab/benchmarks/blob/1bdbefd7c570cb1bdbdf9e09f9b63f7c22bbdb27/analysis/regression/FrameDatamodule.py#L94 # noqa: E501
+                tensor = torch.clamp(tensor, self.min_input_clamp, self.max_input_clamp)
+                tensor = (tensor - self.min_input_clamp) / (
+                    self.max_input_clamp - self.min_input_clamp
+                )
             return tensor
 
         # tensor of shape [sequence_length, height, width]
@@ -418,13 +429,13 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         if show_titles:
             title_dict = {
                 label_name: label[idx].item()
-                for idx, label_name in enumerate(self.target)
+                for idx, label_name in enumerate(self.targets)
             }
             title = f"Label: {title_dict}"
             if showing_predictions:
                 title_dict = {
                     label_name: prediction[idx].item()
-                    for idx, label_name in enumerate(self.target)
+                    for idx, label_name in enumerate(self.targets)
                 }
                 title += f"\nPrediction: {title_dict}"
             ax.set_title(title)

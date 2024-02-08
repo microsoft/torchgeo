@@ -222,8 +222,8 @@ DFC2022
 .. autoclass:: DFC2022
 
 
-Digitial Typhoon Analysis
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Digital Typhoon Analysis
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: DigitalTyphoonAnalysis
 

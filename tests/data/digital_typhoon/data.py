@@ -10,21 +10,15 @@ import pandas as pd
 from torchvision.datasets.utils import calculate_md5
 
 # Define the root directory
-root = "WP/"
+root = "WP"
 IMAGE_SIZE = 32
 NUM_TYHOON_IDS = 5
 NUM_IMAGES_PER_ID = 4
 CHUNK_SIZE = 2**12
 
-# Define the root directory
-root = "./WP"
-
 # If the root directory exists, remove it
 if os.path.exists(root):
     shutil.rmtree(root)
-
-# Create the root directory if it doesn't exist
-os.makedirs(root)
 
 # Create the 'image' and 'metadata' directories
 os.makedirs(os.path.join(root, "image"))
@@ -36,7 +30,7 @@ for typhoon_id in range(NUM_TYHOON_IDS):
     # Create a directory under 'root/image/typhoon_id/'
     os.makedirs(os.path.join(root, "image", str(typhoon_id)), exist_ok=True)
 
-    # Create dummy .hf files
+    # Create dummy .h5 files
     image_paths_per_typhoon = []
     for image_id in range(NUM_IMAGES_PER_ID):
         image_file_name = f"{image_id}.h5"

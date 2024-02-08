@@ -77,6 +77,7 @@ class TestTropicalCyclone:
         x = dataset[index]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
+        assert x["image"].min() >= 0 and x["image"].max() <= 1
         assert isinstance(x["label"], torch.Tensor)
 
     def test_already_downloaded(self, dataset: DigitalTyphoonAnalysis) -> None:

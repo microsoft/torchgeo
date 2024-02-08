@@ -6,7 +6,7 @@
 from typing import Any
 
 from ..datasets import DigitalTyphoonAnalysis
-from ..datasets.digital_typhoon import SampleSequenceDict
+from ..datasets.digital_typhoon import _SampleSequenceDict
 from .geo import NonGeoDataModule
 from .utils import group_shuffle_split
 
@@ -43,7 +43,7 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
 
     def split_dataset(
         self, dataset: DigitalTyphoonAnalysis
-    ) -> tuple[list[SampleSequenceDict], ...]:
+    ) -> tuple[list[_SampleSequenceDict], list[_SampleSequenceDict]]:
         """Split dataset into two parts.
 
         Args:
