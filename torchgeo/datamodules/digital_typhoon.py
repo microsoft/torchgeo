@@ -3,7 +3,10 @@
 
 """Digital Typhoon Data Module."""
 
+import copy
 from typing import Any
+
+from torch.utils.data import Subset
 
 from ..datasets import DigitalTyphoonAnalysis
 from ..datasets.digital_typhoon import _SampleSequenceDict
@@ -42,8 +45,8 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
         self.split_by = split_by
 
     def _split_dataset(
-        self, dataset: DigitalTyphoonAnalysis
-    ) -> tuple[list[_SampleSequenceDict], list[_SampleSequenceDict]]:
+        self, sample_sequences: list[_SampleSequenceDict]
+    ) -> tuple[list[int], list[int]]:
         """Split dataset into two parts.
 
         Args:
@@ -53,7 +56,7 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
             a tuple of the subset datasets
         """
         if self.split_by == "time":
-            sequences = list(enumerate(dataset.sample_sequences))
+            sequences = list(enumerate(sample_sequences))
 
             sorted_sequences = sorted(sequences, key=lambda x: x[1]["seq_id"])
             selected_indices = [x[0] for x in sorted_sequences]
@@ -63,16 +66,12 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
             val_indices = selected_indices[split_idx:]
 
         else:
-            sequences = list(enumerate(dataset.sample_sequences))
+            sequences = list(enumerate(sample_sequences))
             train_indices, val_indices = group_shuffle_split(
                 [x[1]["id"] for x in sequences], train_size=0.8, random_state=0
             )
 
-        # select train and val sequences and remove enumeration
-        train_sequences = [sequences[i][1] for i in train_indices]
-        val_sequences = [sequences[i][1] for i in val_indices]
-
-        return train_sequences, val_sequences
+        return train_indices, val_indices
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -82,21 +81,24 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
         """
         self.dataset = DigitalTyphoonAnalysis(**self.kwargs)
 
-        train_sequences, test_sequences = self._split_dataset(self.dataset)
+        all_sample_sequences = copy.deepcopy(self.dataset.sample_sequences)
+
+        train_indices, test_indices = self._split_dataset(self.dataset.sample_sequences)
 
         if stage in ["fit", "validate"]:
-            # resplit the train indices into train and val
-            self.dataset.sample_sequences = train_sequences
-            train_sequences, val_sequences = self._split_dataset(self.dataset)
+            # Randomly split train into train and validation sets
+            index_mapping = {
+                new_index: original_index
+                for new_index, original_index in enumerate(train_indices)
+            }
+            train_sequences = [all_sample_sequences[i] for i in train_indices]
+            train_indices, val_indices = self._split_dataset(train_sequences)
+            train_indices = [index_mapping[i] for i in train_indices]
+            val_indices = [index_mapping[i] for i in val_indices]
 
-            # create training dataset
-            self.train_dataset = DigitalTyphoonAnalysis(**self.kwargs)
-            self.train_dataset.sample_sequences = train_sequences
-
-            # create validation dataseqt
-            self.val_dataset = DigitalTyphoonAnalysis(**self.kwargs)
-            self.val_dataset.sample_sequences = val_sequences
+            # Create train val subset dataset
+            self.train_dataset = Subset(self.dataset, train_indices)
+            self.val_dataset = Subset(self.dataset, val_indices)
 
         if stage in ["test"]:
-            self.test_dataset = DigitalTyphoonAnalysis(**self.kwargs)
-            self.test_dataset.sample_sequences = test_sequences
+            self.test_dataset = Subset(self.dataset, test_indices)
