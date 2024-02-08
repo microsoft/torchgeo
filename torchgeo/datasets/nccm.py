@@ -14,7 +14,7 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
+from .utils import BoundingBox, DatasetNotFoundError, download_url
 
 
 class NCCM(RasterDataset):
@@ -55,12 +55,24 @@ class NCCM(RasterDataset):
 
     filename_regex = r"CDL(?P<year>\d{4})_clip"
     filename_glob = "CDL*.*"
-    zipfile_glob = "13090442.zip"
 
     date_format = "%Y"
     is_image = False
-    url = "https://figshare.com/ndownloader/articles/13090442/versions/1"
-    md5 = "eae952f1b346d7e649d027e8139a76f5"
+    urls = {
+        2017: "https://figshare.com/ndownloader/files/25070582",
+        2018: "https://figshare.com/ndownloader/files/25070624",
+        2019: "https://figshare.com/ndownloader/files/25070540",
+    }
+    md5s = {
+        2017: "d047fbe4a85341fa6248fd7e0badab6c",
+        2018: "b3bb4894478d10786aa798fb11693ec1",
+        2019: "0d062bbd42e483fdc8239d22dba7020f",
+    }
+    fnames = {
+        2017: "CDL2017_clip.tif",
+        2018: "CDL2018_clip1.tif",
+        2019: "CDL2019_clip.tif",
+    }
 
     cmap = {
         0: (0, 255, 0, 255),
@@ -75,6 +87,7 @@ class NCCM(RasterDataset):
         paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
+        years: list[int] = [2019],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
@@ -88,6 +101,7 @@ class NCCM(RasterDataset):
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
+            years: list of years for which to use nccm layers
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
@@ -97,7 +111,12 @@ class NCCM(RasterDataset):
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
+        assert set(years) <= self.md5s.keys(), (
+            "NCCM data product only exists for the following years: "
+            f"{list(self.md5s.keys())}."
+        )
         self.paths = paths
+        self.years = years
         self.download = download
         self.checksum = checksum
         self.ordinal_map = torch.full((max(self.cmap.keys()) + 1,), 4, dtype=self.dtype)
@@ -132,11 +151,10 @@ class NCCM(RasterDataset):
         if self.files:
             return
 
-        # Check if the zip file has already been downloaded
+        # Check if the mask files have already been downloaded
         assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, "**", self.zipfile_glob)
+        pathname = os.path.join(self.paths, self.filename_glob)
         if glob.glob(pathname, recursive=True):
-            self._extract()
             return
 
         # Check if the user requested to download the dataset
@@ -145,20 +163,16 @@ class NCCM(RasterDataset):
 
         # Download the dataset
         self._download()
-        self._extract()
 
     def _download(self) -> None:
         """Download the dataset."""
-        filename = "13090442.zip"
-        download_url(
-            self.url, self.paths, filename, md5=self.md5 if self.checksum else None
-        )
-
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, "**", self.zipfile_glob)
-        extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
+        for year in self.years:
+            download_url(
+                self.urls[year],
+                self.paths,
+                filename=self.fnames[year],
+                md5=self.md5s[year] if self.checksum else None,
+            )
 
     def plot(
         self,
