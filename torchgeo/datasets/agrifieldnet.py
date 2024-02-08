@@ -15,7 +15,7 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import RasterDataset
-from .utils import (  # DatasetNotFoundError,; check_integrity,
+from .utils import (
     BoundingBox,
     RGBBandsMissingError,
     download_url,
@@ -70,7 +70,7 @@ class AgriFieldNet(RasterDataset):
     36 - Rice
 
     If you use this dataset in your research, please cite the following dataset:
-    
+
     * https://doi.org/10.34911/rdnt.wu92p1
 
     .. versionadded:: 0.6
@@ -128,17 +128,15 @@ class AgriFieldNet(RasterDataset):
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         cache: bool = True,
         download: bool = False,
-        checksum: bool = False,
     ) -> None:
         """Initialize a new AgriFieldNet dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search for files to load
             bands: the subset of bands to load
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
-            download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
+            cache: if True, cache the dataset in memory
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -150,17 +148,12 @@ class AgriFieldNet(RasterDataset):
 
         self.paths = paths
         self.classes = classes
-        self.checksum = checksum
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
         self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
 
         # not downloading for now
         if download:
             self._download()
-
-        # not checking integrity for now
-        # if not self._check_integrity():
-        #     raise DatasetNotFoundError(self)
 
         super().__init__(
             paths=paths, crs=crs, bands=bands, transforms=transforms, cache=cache
@@ -283,7 +276,7 @@ class AgriFieldNet(RasterDataset):
             axs[1].set_title("Mask")
 
         if showing_prediction:
-            axs[2].imshow(pred)
+            axs[2].imshow(self.ordinal_cmap[pred], interpolation="none")
             axs[2].axis("off")
             if show_titles:
                 axs[2].set_title("Prediction")
@@ -292,41 +285,3 @@ class AgriFieldNet(RasterDataset):
             plt.suptitle(suptitle)
 
         return fig
-
-    # download and checksum verification not implemented yet
-    # def _download(self) -> None:
-    #     """Download the dataset and extract it.
-
-    #     Raises:
-    #         RuntimeError: if download doesn't work correctly or checksums don't match
-    #     """
-    #     # not checking the integrity because no compressed files in the dataset
-    #     if self._check_integrity():
-    #         print("Files already downloaded and verified")
-    #         return
-    #     # make the data not auto-downloadable until azure-storage-blob is integrated
-
-    # def _check_integrity(self) -> bool:
-    #     """Check integrity of dataset.
-
-    #     Returns:
-    #         True if dataset files are found and/or MD5s match, else False
-    #     """
-    #     assert isinstance(self.paths, str)
-
-    #     sources: bool = check_integrity(
-    #         os.path.join(self.paths, self.source_meta["filename"]),
-    #         self.source_meta["md5"] if self.checksum else None,
-    #     )
-
-    #     images: bool = check_integrity(
-    #         os.path.join(self.root, self.image_meta["filename"]),
-    #         self.image_meta["md5"] if self.checksum else None,
-    #     )
-
-    #     targets: bool = check_integrity(
-    #         os.path.join(self.root, self.target_meta["filename"]),
-    #         self.target_meta["md5"] if self.checksum else None,
-    #     )
-
-    #     return sources and images and targets
