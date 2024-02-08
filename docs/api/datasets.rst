@@ -23,6 +23,11 @@ Aboveground Woody Biomass
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
 
+Airphen
+^^^^^^^
+
+.. autoclass:: Airphen
+
 Aster Global DEM
 ^^^^^^^^^^^^^^^^
 
@@ -77,6 +82,11 @@ EU-DEM
 ^^^^^^
 
 .. autoclass:: EUDEM
+
+EuroCrops
+^^^^^^^^^
+
+.. autoclass:: EuroCrops
 
 GBIF
 ^^^^
@@ -156,6 +166,13 @@ Sentinel
 .. autoclass:: Sentinel1
 .. autoclass:: Sentinel2
 
+
+South America Soybean 
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SouthAmericaSoybean
+
+
 .. _Non-geospatial Datasets:
 
 Non-geospatial Datasets
@@ -205,6 +222,11 @@ COWC
 .. autoclass:: COWC
 .. autoclass:: COWCCounting
 .. autoclass:: COWCDetection
+
+CropHarvest
+^^^^^^^^^^^
+
+.. autoclass:: CropHarvest
 
 Kenya Crop Type
 ^^^^^^^^^^^^^^^
@@ -272,6 +294,12 @@ LandCover.ai
 ^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAI
+
+LEVIR-CD
+^^^^^^^^
+
+.. autoclass:: LEVIRCDBase
+.. autoclass:: LEVIRCD
 
 LEVIR-CD+
 ^^^^^^^^^

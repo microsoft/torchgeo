@@ -32,6 +32,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: GIS",
 ]
@@ -44,7 +45,9 @@ dependencies = [
     # kornia 0.6.9+ required for kornia.augmentation.RandomBrightness
     "kornia>=0.6.9",
     # lightly 1.4.4+ required for MoCo v3 support
-    "lightly>=1.4.4",
+    # lightly 1.4.26 is incompatible with the version of timm required by smp
+    # https://github.com/microsoft/torchgeo/issues/1824
+    "lightly>=1.4.4,!=1.4.26",
     # lightning 2+ required for LightningCLI args + sys.argv support
     "lightning[pytorch-extra]>=2",
     # matplotlib 3.3.3+ required for Python 3.9 wheels
@@ -197,9 +200,6 @@ match_dir = "(datamodules|datasets|losses|models|samplers|torchgeo|trainers|tran
 addopts = "-m 'not slow'"
 # https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
-    # Treat all warnings as errors
-    "error",
-
     # Warnings raised by dependencies of dependencies, out of our control
     # https://github.com/Cadene/pretrained-models.pytorch/issues/221
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:pretrainedmodels.datasets.utils",

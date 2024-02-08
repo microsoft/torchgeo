@@ -137,7 +137,7 @@ class ClassificationTask(BaseTask):
                 _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            self.model = utils.load_state_dict(self.model, state_dict)
+            utils.load_state_dict(self.model, state_dict)
 
         # Freeze backbone and unfreeze classifier head
         if self.hparams["freeze_backbone"]:
@@ -162,10 +162,9 @@ class ClassificationTask(BaseTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self(x)
-        y_hat_hard = y_hat.argmax(dim=1)
         loss: Tensor = self.criterion(y_hat, y)
         self.log("train_loss", loss)
-        self.train_metrics(y_hat_hard, y)
+        self.train_metrics(y_hat, y)
         self.log_dict(self.train_metrics)
 
         return loss
@@ -183,10 +182,9 @@ class ClassificationTask(BaseTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self(x)
-        y_hat_hard = y_hat.argmax(dim=1)
         loss = self.criterion(y_hat, y)
         self.log("val_loss", loss)
-        self.val_metrics(y_hat_hard, y)
+        self.val_metrics(y_hat, y)
         self.log_dict(self.val_metrics)
 
         if (
@@ -198,7 +196,7 @@ class ClassificationTask(BaseTask):
             and hasattr(self.logger.experiment, "add_figure")
         ):
             datamodule = self.trainer.datamodule
-            batch["prediction"] = y_hat_hard
+            batch["prediction"] = y_hat.argmax(dim=-1)
             for key in ["image", "label", "prediction"]:
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
@@ -227,10 +225,9 @@ class ClassificationTask(BaseTask):
         x = batch["image"]
         y = batch["label"]
         y_hat = self(x)
-        y_hat_hard = y_hat.argmax(dim=1)
         loss = self.criterion(y_hat, y)
         self.log("test_loss", loss)
-        self.test_metrics(y_hat_hard, y)
+        self.test_metrics(y_hat, y)
         self.log_dict(self.test_metrics)
 
     def predict_step(

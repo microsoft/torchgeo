@@ -237,9 +237,11 @@ class SSL4EOLBenchmark(NonGeoDataset):
         download_url(
             self.url.format(self.mask_dir_name),
             self.root,
-            md5=self.mask_md5s[self.sensor.split("_")[0]][self.product]
-            if self.checksum
-            else None,
+            md5=(
+                self.mask_md5s[self.sensor.split("_")[0]][self.product]
+                if self.checksum
+                else None
+            ),
         )
 
     def _extract(self) -> None:
@@ -318,7 +320,8 @@ class SSL4EOLBenchmark(NonGeoDataset):
         """
         with rasterio.open(path) as src:
             mask = torch.from_numpy(src.read()).long()
-        return self.ordinal_map[mask]
+        mask = self.ordinal_map[mask]
+        return mask
 
     def plot(
         self,
