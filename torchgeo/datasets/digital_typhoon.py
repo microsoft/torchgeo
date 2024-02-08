@@ -206,6 +206,10 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             for feature, max_value in self.max_feature_value.items():
                 self.aux_df = self.aux_df[self.aux_df[feature] <= max_value]
 
+        # collect target mean and std for each target
+        self.target_mean: dict[str, float] = self.aux_df[self.targets].mean().to_dict()
+        self.target_std: dict[str, float] = self.aux_df[self.targets].std().to_dict()
+
         def _get_subsequences(df: pd.DataFrame, k: int) -> list[dict[str, list[int]]]:
             """Generate all possible subsequences of length k for a given group.
 
@@ -344,6 +348,12 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             name: torch.tensor(feature_df[name].item()).float()
             for name in self.features
         }
+        # normalize the targets for regression
+        if self.task == "regression":
+            for feature, mean in self.target_mean.items():
+                feature_dict[feature] = (
+                    feature_dict[feature] - mean
+                ) / self.target_std[feature]
         return feature_dict
 
     def _verify(self) -> None:
