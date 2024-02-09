@@ -6,6 +6,7 @@
 from typing import Any, Optional, Union
 
 import kornia.augmentation as K
+import torch
 from matplotlib.figure import Figure
 
 from ..datasets import NCCM, Sentinel2, random_bbox_assignment
@@ -64,12 +65,14 @@ class NCCMSentinel2DataModule(GeoDataModule):
         """
         self.sentinel2 = Sentinel2(**self.sentinel2_kwargs)
         self.nccm = NCCM(**self.nccm_kwargs)
+        generator = torch.Generator().manual_seed(0)
+
         self.dataset = self.sentinel2 & self.nccm
         (
             self.train_dataset,
             self.val_dataset,
             self.test_dataset,
-        ) = random_bbox_assignment(self.dataset, [0.5, 0.25, 0.25])
+        ) = random_bbox_assignment(self.dataset, [0.8, 0.1, 0.1], generator)
 
         if stage in ["fit"]:
             self.train_batch_sampler = RandomBatchGeoSampler(
@@ -80,7 +83,7 @@ class NCCMSentinel2DataModule(GeoDataModule):
             self.val_sampler = GridGeoSampler(
                 self.val_dataset, self.patch_size, self.patch_size
             )
-
+        print("passed")
         if stage in ["test"]:
             self.test_sampler = GridGeoSampler(
                 self.test_dataset, self.patch_size, self.patch_size
