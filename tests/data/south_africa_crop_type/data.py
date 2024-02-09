@@ -67,7 +67,7 @@ def generate_test_data() -> str:
 
     # s1_timestamps = ["2017_04_01", "2017_11_28"]
     s2_timestamps = ["2017_05_04", "2017_10_22"]
-    
+
     def write_raster(path: str, arr: np.array) -> None:
         with rasterio.open(path, "w", **profile) as src:
             src.write(arr, 1)
@@ -76,29 +76,25 @@ def generate_test_data() -> str:
         # for date in s1_timestamps:
         #     s1_dir = os.path.join(
         #         train_imagery_s1_dir, field_id, date
-        #     )   
+        #     )
         #     os.makedirs(s1_dir, exist_ok=True)
         #     for band in s1_bands:
-        #         train_arr = np.random.randint(dtype_max, size=(SIZE, SIZE), dtype=dtype)
+        #         train_arr = np.random.randint(dtype_max, size=(SIZE, SIZE), dtype=dtype) # noqa: E501
         #         path = os.path.join(
         #             s1_dir, f"{field_id}_{date}_{band}_10m.tif"
         #         )
         #         write_raster(path, train_arr)
         for date in s2_timestamps:
-            s2_dir = os.path.join(
-                train_imagery_s2_dir, field_id
-            )
+            s2_dir = os.path.join(train_imagery_s2_dir, field_id)
             os.makedirs(s2_dir, exist_ok=True)
             for band in s2_bands:
                 train_arr = np.random.randint(dtype_max, size=(SIZE, SIZE), dtype=dtype)
-                path = os.path.join(
-                    s2_dir, f"{field_id}_{date}_{band}_10m.tif"
-                )
+                path = os.path.join(s2_dir, f"{field_id}_{date}_{band}_10m.tif")
                 write_raster(path, train_arr)
         label_path = os.path.join(train_labels_dir, f"{field_id}.tif")
         label_arr = np.random.randint(dtype_max, size=(SIZE, SIZE), dtype=dtype)
         write_raster(label_path, label_arr)
-        
+
 
 if __name__ == "__main__":
     generate_test_data()

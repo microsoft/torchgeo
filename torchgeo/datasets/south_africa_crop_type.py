@@ -62,6 +62,7 @@ class SouthAfricaCropType(RasterDataset):
     "Crop Type Classification Dataset for Western Cape, South Africa", 
     Version 1.0, Radiant MLHub, https://doi.org/10.34911/rdnt.j0co8q
 
+    Note: Temporal querying is not supported, all masks are from 2017/2018
     .. versionadded:: 0.6
     """
 
