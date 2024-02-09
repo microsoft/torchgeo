@@ -15,11 +15,7 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import RasterDataset
-from .utils import (
-    BoundingBox,
-    RGBBandsMissingError,
-    download_url,
-)
+from .utils import BoundingBox, RGBBandsMissingError, download_url
 
 
 class AgriFieldNet(RasterDataset):
@@ -127,6 +123,7 @@ class AgriFieldNet(RasterDataset):
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         cache: bool = True,
         download: bool = False,
+        split: str = "train",
     ) -> None:
         """Initialize a new AgriFieldNet dataset instance.
 
