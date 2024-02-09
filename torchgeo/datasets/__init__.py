@@ -80,6 +80,7 @@ from .loveda import LoveDA
 from .mapinwild import MapInWild
 from .millionaid import MillionAID
 from .naip import NAIP
+from .naip_cluster import NAIPCluster
 from .nasa_marine_debris import NASAMarineDebris
 from .nccm import NCCM
 from .nlcd import NLCD
@@ -218,6 +219,7 @@ __all__ = (
     "MapInWild",
     "MillionAID",
     "NASAMarineDebris",
+    "NAIPCluster",
     "OSCD",
     "PASTIS",
     "PatternNet",
