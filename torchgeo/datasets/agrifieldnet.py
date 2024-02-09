@@ -81,8 +81,7 @@ class AgriFieldNet(RasterDataset):
     filename_regex = r"""
         ^ref_agrifieldnet_competition_v1_source_
         (?P<unique_folder_id>[a-z0-9]{5})
-        _(?P<band>B[0-9A-Z]{2})+_10m
-        \.tif$
+        _(?P<band>B[0-9A-Z]{2})_10m
     """
     separate_files = True
 
