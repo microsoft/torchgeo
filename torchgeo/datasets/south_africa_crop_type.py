@@ -69,7 +69,7 @@ class SouthAfricaCropType(RasterDataset):
 
     #1_2017_04_01_B01_10m.tif
     filename_regex = r"""
-        ^(?P<field_id>[0-9]*)_(?P<date>[0-9_]*)_(?P<band>[0-9A-Z]*)+_10m\.tif"""
+        ^(?P<field_id>[0-9]*)_(?P<date>[0-9_]*)_VH+_10m\.tif"""
     date_format = "%Y_%m_%d"
     separate_files = True
 
@@ -106,7 +106,7 @@ class SouthAfricaCropType(RasterDataset):
     def __init__(
         self,
         root: str = "data",
-        crs: CRS = CRS.from_epsg(4326),
+        crs: CRS = CRS.from_epsg(32634),
         classes: list[int] = list(cmap.keys()),
         bands: tuple[str, ...] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -158,6 +158,117 @@ class SouthAfricaCropType(RasterDataset):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+        """Return an index within the dataset.
+
+        Args:
+            index: index to return
+
+        Returns:
+            data, label, and field ids at that index
+        """
+        hits = self.index.intersection(tuple(query), objects=True)
+        filepaths = cast(list[str], [hit.object for hit in hits])
+
+        if not filepaths:
+            raise IndexError(
+                f"query: {query} not found in index with bounds: {self.bounds}"
+            )
+
+        if self.separate_files:
+            data_list: list[Tensor] = []
+            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+            for band in self.bands:
+                band_filepaths = []
+                for filepath in filepaths:
+                    filename = os.path.basename(filepath)
+                    directory = os.path.dirname(filepath)
+                    match = re.match(filename_regex, filename)
+                    if match:
+                        if "band" in match.groupdict():
+                            start = match.start("band")
+                            end = match.end("band")
+                            filename = filename[:start] + band + filename[end:]
+                    filepath = os.path.join(directory, filename)
+                    band_filepaths.append(filepath)
+                data_list.append(self._merge_files(band_filepaths, query))
+            image = torch.cat(data_list)
+        else:
+            image = self._merge_files(filepaths, query, self.band_indexes)
+
+        all_mask_filepaths = glob.glob(os.path.join(self.paths, "train_labels", "*.tif"))
+        mask_filepaths =[file for file in all_mask_filepaths if not file.endswith('_field_ids.tif')]
+        mask = self._merge_files(mask_filepaths, query)
+        mask = self.ordinal_map[mask.squeeze().long()]
+
+        sample = {
+            "crs": self.crs,
+            "bbox": query,
+            "image": image.float(),
+            "mask": mask.long(),
+        }
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def plot(
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: Optional[str] = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+        """
+        rgb_indices = []
+        for band in self.rgb_bands:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise RGBBandsMissingError()
+
+        image = sample["image"][rgb_indices].permute(1, 2, 0)
+        image = (image - image.min()) / (image.max() - image.min())
+
+        mask = sample["mask"].squeeze()
+        ncols = 2
+
+        showing_prediction = "prediction" in sample
+        if showing_prediction:
+            pred = sample["prediction"].squeeze()
+            ncols += 1
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
+        axs[0].imshow(image)
+        axs[0].axis("off")
+        axs[1].imshow(self.ordinal_cmap[mask], interpolation="none")
+        axs[1].axis("off")
+        if show_titles:
+            axs[0].set_title("Image")
+            axs[1].set_title("Mask")
+
+        if showing_prediction:
+            axs[2].imshow(pred)
+            axs[2].axis("off")
+            if show_titles:
+                axs[2].set_title("Prediction")
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        return fig
 
 # download and checksum verification not implemented yet
 # def _download(self) -> None:
