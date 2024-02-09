@@ -7,8 +7,8 @@ from typing import Any, Optional, Union
 
 import kornia.augmentation as K
 from matplotlib.figure import Figure
-import torch
-from ..datasets import NCCM, BoundingBox, Sentinel2, random_bbox_assignment
+
+from ..datasets import NCCM, Sentinel2, random_bbox_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
@@ -65,24 +65,25 @@ class NCCMSentinel2DataModule(GeoDataModule):
         self.sentinel2 = Sentinel2(**self.sentinel2_kwargs)
         self.nccm = NCCM(**self.nccm_kwargs)
         self.dataset = self.sentinel2 & self.nccm
-
-        (self.train_dataset, self.val_dataset, self.test_dataset) = (
-            random_bbox_assignment(self.dataset, [0.5, 0.25, 0.25])
-        )
+        (
+            self.train_dataset,
+            self.val_dataset,
+            self.test_dataset,
+        ) = random_bbox_assignment(self.dataset, [0.5, 0.25, 0.25])
 
         if stage in ["fit"]:
             self.train_batch_sampler = RandomBatchGeoSampler(
-                self.train_dataset, self.patch_size, self.batch_size, self.length 
+                self.train_dataset, self.patch_size, self.batch_size, self.length
             )
-    
+
         if stage in ["fit", "validate"]:
             self.val_sampler = GridGeoSampler(
-                self.val_dataset, self.patch_size, self.patch_size, 
+                self.val_dataset, self.patch_size, self.patch_size
             )
-      
+
         if stage in ["test"]:
             self.test_sampler = GridGeoSampler(
-                self.test_dataset, self.patch_size, self.patch_size,
+                self.test_dataset, self.patch_size, self.patch_size
             )
 
     def plot(self, *args: Any, **kwargs: Any) -> Figure:

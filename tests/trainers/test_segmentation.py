@@ -106,7 +106,6 @@ class TestSemanticSegmentationTask:
             "--trainer.log_every_n_steps",
             "1",
         ]
-       
 
         main(["fit"] + args)
         try:

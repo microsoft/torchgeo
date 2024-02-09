@@ -9,13 +9,14 @@ from typing import Any, Optional, Union
 
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
+import torch
 import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
 from torchvision.models._api import WeightsEnum
-import torch
+
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import FCN, get_weight
 from . import utils
@@ -234,19 +235,9 @@ class SemanticSegmentationTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-
-        print("original batch:", batch)
-
         x = batch["image"]
-        print("x: image ", x)
-
         y = batch["mask"]
-
-        print("y: mask ", y)
-
         y_hat = self(x)
-        print("y_hat: ", y_hat)
-
         loss = self.criterion(y_hat, y)
         self.log("val_loss", loss)
         self.val_metrics(y_hat, y)
@@ -262,16 +253,15 @@ class SemanticSegmentationTask(BaseTask):
         ):
             datamodule = self.trainer.datamodule
             batch["prediction"] = y_hat.argmax(dim=1)
-            
-            print("original batch prediction", batch["prediction"])
-            output,indices = torch.unique(batch["prediction"], sorted = True, return_inverse = True)
-            print("unique values", output)
+
+            output, indices = torch.unique(
+                batch["prediction"], sorted=True, return_inverse=True
+            )
+
             for key in ["image", "mask", "prediction"]:
                 batch[key] = batch[key].cpu()
-            
-            print("batch is",  batch)
+
             sample = unbind_samples(batch)[0]
-            print("sample is", sample)
 
             fig: Optional[Figure] = None
             try:
