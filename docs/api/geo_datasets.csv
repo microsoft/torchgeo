@@ -24,3 +24,4 @@ Dataset,Type,Source,License,Size (px),Resolution (m)
 `Open Buildings`_,Geometries,"Maxar, CNES/Airbus","CC-BY-4.0 OR ODbL-1.0",-,-
 `PRISMA`_,Imagery,PRISMA,-,512x512,5--30
 `Sentinel`_,Imagery,Sentinel,"CC-BY-SA-3.0-IGO","10,000x10,000",10
+`South Africa Crop Type`_,"Imagery, Masks",Sentinel-2,"CC-BY-4.0","256x256",10
