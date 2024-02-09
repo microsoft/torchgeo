@@ -15,7 +15,7 @@ from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import RasterDataset
-from .utils import BoundingBox, RGBBandsMissingError, download_url
+from .utils import BoundingBox, RGBBandsMissingError
 
 
 class AgriFieldNet(RasterDataset):
@@ -117,25 +117,27 @@ class AgriFieldNet(RasterDataset):
     def __init__(
         self,
         paths: Union[str, Iterable[str]] = "data",
-        crs: CRS = CRS.from_epsg(32644),
+        crs: Optional[CRS] = None,
         classes: list[int] = list(cmap.keys()),
         bands: Sequence[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         cache: bool = True,
-        download: bool = False,
-        split: str = "train",
     ) -> None:
         """Initialize a new AgriFieldNet dataset instance.
 
         Args:
             paths: one or more root directories to search for files to load
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            classes: list of classes to include, the rest will be mapped to 0
+                (defaults to all classes)
             bands: the subset of bands to load
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             cache: if True, cache the dataset in memory
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
+            DatasetNotFoundError: If dataset is not found.
         """
         assert (
             set(classes) <= self.cmap.keys()
@@ -147,10 +149,6 @@ class AgriFieldNet(RasterDataset):
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
         self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
 
-        # not downloading for now
-        if download:
-            self._download()
-
         super().__init__(
             paths=paths, crs=crs, bands=bands, transforms=transforms, cache=cache
         )
@@ -159,11 +157,6 @@ class AgriFieldNet(RasterDataset):
         for v, k in enumerate(self.classes):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
-
-    def _download(self) -> None:
-        """Download the dataset."""
-        assert isinstance(self.paths, str)
-        download_url(self.url, self.paths)
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Return an index within the dataset.
