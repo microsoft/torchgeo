@@ -69,14 +69,13 @@ class SouthAfricaCropType(RasterDataset):
 
     #1_2017_04_01_B01_10m.tif
     filename_regex = r"""
-        ^(?P<field_id>[0-9]*)_(?P<date>[0-9_]*)_VH+_10m\.tif"""
-    date_format = "%Y_%m_%d"
+        ^(?P<field_id>[0-9]*)_(?P<year>[0-9]{4})_(?P<month>[0-9]{2})_(?P<day>[0-9]{2})_(?P<band>B[0-9A-Z]{2})_10m\.tif"""
     separate_files = True
 
     rgb_bands = ["B04", "B03", "B02"]
     all_bands = (
-        "VH",
-        "VV"
+        # "VH",
+        # "VV",
         "B01",
         "B02",
         "B03",
@@ -105,13 +104,11 @@ class SouthAfricaCropType(RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: str = "",
         crs: CRS = CRS.from_epsg(32634),
         classes: list[int] = list(cmap.keys()),
         bands: tuple[str, ...] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
-        split: str = "train",
-        cache: bool = True,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -122,7 +119,6 @@ class SouthAfricaCropType(RasterDataset):
             bands: the subset of bands to load
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
-            split: portion of dataset to load
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
@@ -150,7 +146,6 @@ class SouthAfricaCropType(RasterDataset):
             crs=crs,
             bands=bands,
             transforms=transforms,
-            cache=cache
         )
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
@@ -196,10 +191,14 @@ class SouthAfricaCropType(RasterDataset):
         else:
             image = self._merge_files(filepaths, query, self.band_indexes)
 
-        all_mask_filepaths = glob.glob(os.path.join(self.paths, "train_labels", "*.tif"))
-        mask_filepaths =[file for file in all_mask_filepaths if not file.endswith('_field_ids.tif')]
+        mask_filepaths = []
+        for root, dirs, files in os.walk(os.path.join(self.paths, "train", "labels")):
+            for file in files:
+                if not file.endswith("_field_ids.tif") and file.endswith(".tif"):
+                    file_path = os.path.join(root, file)
+                    mask_filepaths.append(file_path)
+
         mask = self._merge_files(mask_filepaths, query)
-        mask = self.ordinal_map[mask.squeeze().long()]
 
         sample = {
             "crs": self.crs,
@@ -270,7 +269,7 @@ class SouthAfricaCropType(RasterDataset):
 
         return fig
 
-# download and checksum verification not implemented yet
+# download and checksum require further investigation 
 # def _download(self) -> None:
 #     """Download the dataset and extract it.
 

@@ -27,10 +27,10 @@ def generate_test_data() -> str:
 
     np.random.seed(0)
 
-    s1_bands = (
-        "VH",
-        "VV",
-    )
+    # s1_bands = (
+    #     "VH",
+    #     "VV",
+    # )
     s2_bands = (
         "B01",
         "B02",
@@ -44,7 +44,6 @@ def generate_test_data() -> str:
         "B09",
         "B11",
         "B12",
-        "CLM",
     )
 
     profile = {
@@ -56,24 +55,17 @@ def generate_test_data() -> str:
         "transform": Affine(10.0, 0.0, 535840.0, 0.0, -10.0, 3079680.0),
     }
 
-    train_imagery_s1_dir = os.path.join(paths, "train", "imagery", "s1")
+    # train_imagery_s1_dir = os.path.join(paths, "train", "imagery", "s1")
     train_imagery_s2_dir = os.path.join(paths, "train", "imagery", "s2")
-    test_imagery_s1_dir = os.path.join(paths, "test","imagery", "s1")
-    test_imagery_s2_dir = os.path.join(paths, "test","imagery", "s2")
     train_labels_dir = os.path.join(paths, "train", "labels")
-    test_labels_dir = os.path.join(paths, "test", "labels")
 
-    os.makedirs(train_imagery_s1_dir, exist_ok=True)
+    # os.makedirs(train_imagery_s1_dir, exist_ok=True)
     os.makedirs(train_imagery_s2_dir, exist_ok=True)
-    os.makedirs(test_imagery_s1_dir, exist_ok=True)
-    os.makedirs(test_imagery_s2_dir, exist_ok=True)
     os.makedirs(train_labels_dir, exist_ok=True)
-    os.makedirs(test_labels_dir, exist_ok=True)
 
     train_field_ids = ["12", "2415"]
-    test_field_ids = ["17", "9220"]
 
-    s1_timestamps = ["2017_04_01", "2017_11_28"]
+    # s1_timestamps = ["2017_04_01", "2017_11_28"]
     s2_timestamps = ["2017_05_04", "2017_10_22"]
     
     def write_raster(path: str, arr: np.array) -> None:
@@ -81,17 +73,17 @@ def generate_test_data() -> str:
             src.write(arr, 1)
 
     for field_id in train_field_ids:
-        for date in s1_timestamps:
-            s1_dir = os.path.join(
-                train_imagery_s1_dir, field_id, date
-            )   
-            os.makedirs(s1_dir, exist_ok=True)
-            for band in s1_bands:
-                train_arr = np.random.randint(dtype_max, size=(SIZE, SIZE), dtype=dtype)
-                path = os.path.join(
-                    s1_dir, f"{field_id}_{date}_{band}_10m.tif"
-                )
-                write_raster(path, train_arr)
+        # for date in s1_timestamps:
+        #     s1_dir = os.path.join(
+        #         train_imagery_s1_dir, field_id, date
+        #     )   
+        #     os.makedirs(s1_dir, exist_ok=True)
+        #     for band in s1_bands:
+        #         train_arr = np.random.randint(dtype_max, size=(SIZE, SIZE), dtype=dtype)
+        #         path = os.path.join(
+        #             s1_dir, f"{field_id}_{date}_{band}_10m.tif"
+        #         )
+        #         write_raster(path, train_arr)
         for date in s2_timestamps:
             s2_dir = os.path.join(
                 train_imagery_s2_dir, field_id
@@ -104,33 +96,6 @@ def generate_test_data() -> str:
                 )
                 write_raster(path, train_arr)
         label_path = os.path.join(train_labels_dir, f"{field_id}.tif")
-        label_arr = np.random.randint(dtype_max, size=(SIZE, SIZE), dtype=dtype)
-        write_raster(label_path, label_arr)
-    
-    for field_id in test_field_ids:
-        for date in s1_timestamps:
-            s1_dir = os.path.join(
-                test_imagery_s1_dir, field_id, date
-            )   
-            os.makedirs(s1_dir, exist_ok=True)
-            for band in s1_bands:
-                test_arr = np.random.randint(dtype_max, size=(SIZE, SIZE), dtype=dtype)
-                path = os.path.join(
-                    s1_dir, f"{field_id}_{date}_{band}_10m.tif"
-                )
-                write_raster(path, test_arr)
-        for date in s2_timestamps:
-            s2_dir = os.path.join(
-                test_imagery_s2_dir, field_id
-            )
-            os.makedirs(s2_dir, exist_ok=True)
-            for band in s2_bands:
-                test_arr = np.random.randint(dtype_max, size=(SIZE, SIZE), dtype=dtype)
-                path = os.path.join(
-                    s2_dir, f"{field_id}_{date}_{band}_10m.tif"
-                )
-                write_raster(path, test_arr)
-        label_path = os.path.join(test_labels_dir, f"{field_id}.tif")
         label_arr = np.random.randint(dtype_max, size=(SIZE, SIZE), dtype=dtype)
         write_raster(label_path, label_arr)
         
