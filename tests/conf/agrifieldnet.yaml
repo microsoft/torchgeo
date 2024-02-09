@@ -1,0 +1,28 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: "ce"
+    model: "unet"
+    backbone: "resnet18"
+    in_channels: 12
+    num_classes: 14
+    num_filters: 1
+    ignore_index: 0
+data:
+  class_path: AgriFieldNetDataModule
+  init_args:
+    batch_size: 2
+    patch_size: 16
+  dict_kwargs:
+    paths: "tests/data/agrifieldnet"
+
+
+data:
+  class_path: L7IrishDataModule
+  init_args:
+    batch_size: 1
+    patch_size: 32
+    length: 5
+  dict_kwargs:
+    paths: "tests/data/l7irish"
+    download: true
