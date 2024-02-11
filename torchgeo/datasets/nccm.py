@@ -3,8 +3,6 @@
 
 """Northeastern China Crop Map Dataset."""
 
-import glob
-import os
 from collections.abc import Iterable
 from typing import Any, Callable, Optional, Union
 
@@ -59,19 +57,19 @@ class NCCM(RasterDataset):
     date_format = "%Y"
     is_image = False
     urls = {
-        2017: "https://figshare.com/ndownloader/files/25070582",
-        2018: "https://figshare.com/ndownloader/files/25070624",
         2019: "https://figshare.com/ndownloader/files/25070540",
+        2018: "https://figshare.com/ndownloader/files/25070624",
+        2017: "https://figshare.com/ndownloader/files/25070582",
     }
     md5s = {
-        2017: "d047fbe4a85341fa6248fd7e0badab6c",
-        2018: "b3bb4894478d10786aa798fb11693ec1",
         2019: "0d062bbd42e483fdc8239d22dba7020f",
+        2018: "b3bb4894478d10786aa798fb11693ec1",
+        2017: "d047fbe4a85341fa6248fd7e0badab6c",
     }
     fnames = {
-        2017: "CDL2017_clip.tif",
-        2018: "CDL2018_clip1.tif",
         2019: "CDL2019_clip.tif",
+        2018: "CDL2018_clip1.tif",
+        2017: "CDL2017_clip.tif",
     }
 
     cmap = {
@@ -87,7 +85,7 @@ class NCCM(RasterDataset):
         paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        years: list[int] = [2017, 2018, 2019],
+        years: list[int] = [2019],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
@@ -147,14 +145,8 @@ class NCCM(RasterDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        # Check if the extracted files already exist
+        # Check if the files already exist
         if self.files:
-            return
-
-        # Check if the mask files have already been downloaded
-        assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, self.filename_glob)
-        if glob.glob(pathname, recursive=True):
             return
 
         # Check if the user requested to download the dataset
