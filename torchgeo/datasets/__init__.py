@@ -5,6 +5,7 @@
 
 from .advance import ADVANCE
 from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
+from .agrifieldnet import AgriFieldNet
 from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
@@ -139,6 +140,7 @@ from .zuericrop import ZueriCrop
 __all__ = (
     # GeoDataset
     "AbovegroundLiveWoodyBiomassDensity",
+    "AgriFieldNet",
     "Airphen",
     "AsterGDEM",
     "CanadianBuildingFootprints",
