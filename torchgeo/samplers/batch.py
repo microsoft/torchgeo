@@ -107,7 +107,6 @@ class RandomBatchGeoSampler(BatchGeoSampler):
 
         self.batch_size = batch_size
         self.length = 0
-
         self.hits = []
         areas = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
