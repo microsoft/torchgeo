@@ -62,7 +62,7 @@ class AgriFieldNet(RasterDataset):
     13 - Gram
     14 - Coriander
     15 - Potato
-    16 - Bersem
+    16 - Berseem
     36 - Rice
 
     If you use this dataset in your research, please cite the following dataset:
@@ -72,14 +72,11 @@ class AgriFieldNet(RasterDataset):
     .. versionadded:: 0.6
     """
 
-    url = "https://radiantearth.blob.core.windows.net/mlhub/ref_agrifieldnet_competition_v1"  # noqa: E501
-
     filename_regex = r"""
         ^ref_agrifieldnet_competition_v1_source_
         (?P<unique_folder_id>[a-z0-9]{5})
         _(?P<band>B[0-9A-Z]{2})_10m
     """
-    separate_files = True
 
     rgb_bands = ["B04", "B03", "B02"]
     all_bands = [
@@ -177,24 +174,23 @@ class AgriFieldNet(RasterDataset):
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
 
-        if self.separate_files:
-            data_list: list[Tensor] = []
-            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-            for band in self.bands:
-                band_filepaths = []
-                for filepath in filepaths:
-                    filename = os.path.basename(filepath)
-                    directory = os.path.dirname(filepath)
-                    match = re.match(filename_regex, filename)
-                    if match:
-                        if "band" in match.groupdict():
-                            start = match.start("band")
-                            end = match.end("band")
-                            filename = filename[:start] + band + filename[end:]
-                    filepath = os.path.join(directory, filename)
-                    band_filepaths.append(filepath)
-                data_list.append(self._merge_files(band_filepaths, query))
-            image = torch.cat(data_list)
+        data_list: list[Tensor] = []
+        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+        for band in self.bands:
+            band_filepaths = []
+            for filepath in filepaths:
+                filename = os.path.basename(filepath)
+                directory = os.path.dirname(filepath)
+                match = re.match(filename_regex, filename)
+                if match:
+                    if "band" in match.groupdict():
+                        start = match.start("band")
+                        end = match.end("band")
+                        filename = filename[:start] + band + filename[end:]
+                filepath = os.path.join(directory, filename)
+                band_filepaths.append(filepath)
+            data_list.append(self._merge_files(band_filepaths, query))
+        image = torch.cat(data_list)
 
         mask_filepaths = []
         for root, dirs, files in os.walk(os.path.join(self.paths, "train_labels")):
