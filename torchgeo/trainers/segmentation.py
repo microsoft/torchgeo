@@ -9,7 +9,6 @@ from typing import Any, Optional, Union
 
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
-import torch
 import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor

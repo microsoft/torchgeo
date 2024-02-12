@@ -68,11 +68,9 @@ class NCCMSentinel2DataModule(GeoDataModule):
         generator = torch.Generator().manual_seed(0)
 
         self.dataset = self.sentinel2 & self.nccm
-        (
-            self.train_dataset,
-            self.val_dataset,
-            self.test_dataset,
-        ) = random_bbox_assignment(self.dataset, [0.8, 0.1, 0.1], generator)
+        (self.train_dataset, self.val_dataset, self.test_dataset) = (
+            random_bbox_assignment(self.dataset, [0.8, 0.1, 0.1], generator)
+        )
 
         if stage in ["fit"]:
             self.train_batch_sampler = RandomBatchGeoSampler(
