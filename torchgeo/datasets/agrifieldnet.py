@@ -46,7 +46,7 @@ class AgriFieldNet(RasterDataset):
     Dataset format:
 
     * images are 12-band Sentinel-2 data
-    * masks are tiff image with unique values representing the class and field id
+    * masks are tiff images with unique values representing the class and field id
 
     Dataset classes:
 
