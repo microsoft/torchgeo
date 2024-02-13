@@ -15,14 +15,3 @@ data:
     patch_size: 16
   dict_kwargs:
     paths: "tests/data/agrifieldnet"
-
-
-data:
-  class_path: L7IrishDataModule
-  init_args:
-    batch_size: 1
-    patch_size: 32
-    length: 5
-  dict_kwargs:
-    paths: "tests/data/l7irish"
-    download: true

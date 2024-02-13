@@ -55,6 +55,7 @@ class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         "name",
         [
+            "agrifieldnet",
             "chabud",
             "chesapeake_cvpr_5",
             "chesapeake_cvpr_7",
