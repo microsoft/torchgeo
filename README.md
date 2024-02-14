@@ -8,7 +8,8 @@ The goal of this library is to make it simple:
 2. for remote sensing experts to explore machine learning solutions.
 
 Community:
-[![slack](https://img.shields.io/badge/slack-join-purple?logo=slack)](https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw)
+[![slack](https://img.shields.io/badge/slack-join-7C0385?logo=slack)](https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw)
+[![osgeo](https://img.shields.io/badge/OSGeo-join-4CB05B?logo=osgeo)](https://www.osgeo.org/community/getting-started-osgeo/)
 
 Packaging:
 [![pypi](https://badge.fury.io/py/torchgeo.svg)](https://pypi.org/project/torchgeo/)
