@@ -83,6 +83,7 @@ def get_random_bounding_box_check_valid_overlap(
     size: Union[tuple[float, float], float],
     res: float,
     valid_footprint: shapely.geometry.Polygon,
+    max_retries: int = 50_000,
 ) -> BoundingBox:
     """Returns a random bounding box within a given bounding box.
 
@@ -100,18 +101,22 @@ def get_random_bounding_box_check_valid_overlap(
         bounds: the larger bounding box to sample from
         size: the size of the bounding box to sample
         valid_footprint: a Polygon in the common CRS of the originating RasterDataset
+        max_retries: if bounds unluckily contain very little valid data, give up.
 
     Returns:
         randomly sampled bounding box from the extent of the input
     """
     # We should be able to trust that torchgeo/rtree
-    # can guarantee that there are valid pixels within the bounds
+    # can guarantee that there are valid pixels within the bounds.
+    # Just in case, we give up after a while.
+    retries = 0
     while True:
+        retries += 1
         bounding_box = get_random_bounding_box(bounds, size, res)
         bbox = shapely.geometry.box(
             bounding_box.minx, bounding_box.miny, bounding_box.maxx, bounding_box.maxy
         )
-        if shapely.overlaps(bbox, valid_footprint):
+        if shapely.overlaps(bbox, valid_footprint) or (retries >= max_retries):
             return bounding_box
 
 
