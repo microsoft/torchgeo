@@ -41,6 +41,7 @@ from .utils import (
     disambiguate_timestamp,
     merge_samples,
     path_is_vsi,
+    valid_data_footprint_from_datasource,
 )
 
 
@@ -462,6 +463,8 @@ class RasterDataset(GeoDataset):
                         if crs is None:
                             crs = src.crs
 
+                        valid_footprint = valid_data_footprint_from_datasource(src, crs)
+
                         with WarpedVRT(src, crs=crs) as vrt:
                             minx, miny, maxx, maxy = vrt.bounds
                             if res is None:
@@ -482,7 +485,12 @@ class RasterDataset(GeoDataset):
                         _, maxt = disambiguate_timestamp(stop, self.date_format)
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
-                    self.index.insert(i, coords, filepath)
+
+                    self.index.insert(
+                        i,
+                        coords,
+                        {"filepath": filepath, "valid_footprint": valid_footprint},
+                    )
                     i += 1
 
         if i == 0:
@@ -518,7 +526,7 @@ class RasterDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[Path], [hit.object for hit in hits])
+        filepaths = cast(list[Path], [hit.object["filepath"] for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -997,7 +1005,7 @@ class IntersectionDataset(GeoDataset):
                 box3 = box1 & box2
                 # Skip 0 area overlap (unless 0 area dataset)
                 if box3.area > 0 or box1.area == 0 or box2.area == 0:
-                    self.index.insert(i, tuple(box3))
+                    self.index.insert(i, tuple(box3), hit1.object["valid_footprint"])
                     i += 1
 
         if i == 0:

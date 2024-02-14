@@ -6,6 +6,7 @@
 import math
 from typing import overload
 
+import shapely
 import torch
 
 from ..datasets import BoundingBox
@@ -75,6 +76,43 @@ def get_random_bounding_box(
 
     query = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
     return query
+
+
+def get_random_bounding_box_check_valid_overlap(
+    bounds: BoundingBox,
+    size: Union[tuple[float, float], float],
+    res: float,
+    valid_footprint: shapely.geometry.Polygon,
+) -> BoundingBox:
+    """Returns a random bounding box within a given bounding box.
+
+    Extends `get_random_bounding_box`by guaranteeing that
+    the bounding box overlaps spatially with the valid_footprint of the raster.
+
+    The ``size`` argument can either be:
+
+        * a single ``float`` - in which case the same value is used for the height and
+          width dimension
+        * a ``tuple`` of two floats - in which case, the first *float* is used for the
+          height dimension, and the second *float* for the width dimension
+
+    Args:
+        bounds: the larger bounding box to sample from
+        size: the size of the bounding box to sample
+        valid_footprint: a Polygon in the common CRS of the originating RasterDataset
+
+    Returns:
+        randomly sampled bounding box from the extent of the input
+    """
+    # We should be able to trust that torchgeo/rtree
+    # can guarantee that there are valid pixels within the bounds
+    while True:
+        bounding_box = get_random_bounding_box(bounds, size, res)
+        bbox = shapely.geometry.box(
+            bounding_box.minx, bounding_box.miny, bounding_box.maxx, bounding_box.maxy
+        )
+        if shapely.overlaps(bbox, valid_footprint):
+            return bounding_box
 
 
 def tile_to_chips(

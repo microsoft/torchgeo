@@ -12,7 +12,7 @@ from torch.utils.data import Sampler
 
 from ..datasets import BoundingBox, GeoDataset
 from .constants import Units
-from .utils import _to_tuple, get_random_bounding_box, tile_to_chips
+from .utils import _to_tuple, get_random_bounding_box_check_valid_overlap, tile_to_chips
 
 
 class GeoSampler(Sampler[BoundingBox], abc.ABC):
@@ -141,10 +141,9 @@ class RandomGeoSampler(GeoSampler):
             hit = self.hits[idx]
             bounds = BoundingBox(*hit.bounds)
 
-            # Choose a random index within that tile
-            bounding_box = get_random_bounding_box(bounds, self.size, self.res)
-
-            yield bounding_box
+            yield get_random_bounding_box_check_valid_overlap(
+                bounds, self.size, self.res, hit.object
+            )
 
     def __len__(self) -> int:
         """Return the number of samples in a single epoch.

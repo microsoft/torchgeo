@@ -24,8 +24,12 @@ from datetime import datetime, timedelta
 from typing import Any, TypeAlias, cast, overload
 
 import numpy as np
+import pyproj
 import rasterio
 import torch
+from rasterio.features import shapes, sieve
+from rasterio.warp import transform_geom
+from shapely.geometry import Polygon
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
@@ -854,3 +858,20 @@ def which(name: Path) -> Executable:
     else:
         msg = f'{name} is not installed and is required to use this dataset.'
         raise DependencyNotFoundError(msg) from None
+
+
+def valid_data_footprint_from_datasource(
+    src: rasterio.io.DatasetReader, destination_crs: pyproj.crs.crs.CRS
+) -> Polygon:
+    # Read valid/nodata-mask
+    mask = src.read_masks()
+    # Close holes
+    sieved_mask = sieve(mask, 500)
+    # extract polygon for valid data values
+    geom = next(g for g, v in shapes(sieved_mask, transform=src.transform) if v > 0)
+
+    # Transform to the common CRS chosen in RasterDataset
+    polygon_dict = transform_geom(src_crs=src.crs, dst_crs=destination_crs, geom=geom)
+    # Create a Shapely Polygon object
+    polygon = Polygon(polygon_dict["coordinates"][0])
+    return polygon
