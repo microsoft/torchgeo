@@ -62,21 +62,18 @@ class SouthAfricaCropType(RasterDataset):
     "Crop Type Classification Dataset for Western Cape, South Africa", 
     Version 1.0, Radiant MLHub, https://doi.org/10.34911/rdnt.j0co8q
 
-    Note: Temporal querying is not supported, all masks are from 2017/2018
     .. versionadded:: 0.6
     """
-
-    url = "https://beta.source.coop/repositories/radiantearth/south-africa-crops-competition/download/"
-
-    #1_2017_04_01_B01_10m.tif
+    
     filename_regex = r"""
-        ^(?P<field_id>[0-9]*)_(?P<year>[0-9]{4})_(?P<month>[0-9]{2})_(?P<day>[0-9]{2})_(?P<band>B[0-9A-Z]{2})_10m\.tif"""
-    separate_files = True
+        ^(?P<field_id>[0-9]*)_(?P<year>[0-9]{4})_(?P<month>[0-9]{2})_(?P<day>[0-9]{2})_(?P<band>(B[0-9A-Z]{2} | VH | VV))_10m\.tif"""
 
     rgb_bands = ["B04", "B03", "B02"]
-    all_bands = (
-        # "VH",
-        # "VV",
+    S1_bands = (
+        "VH",
+        "VV",
+    )
+    S2_bands  = (
         "B01",
         "B02",
         "B03",
@@ -90,7 +87,7 @@ class SouthAfricaCropType(RasterDataset):
         "B11",
         "B12",
     )
-
+    all_bands = S1_bands + S2_bands
     cmap = {
         0: (0, 0, 0, 255),
         1: (255, 211, 0, 255),
@@ -110,8 +107,6 @@ class SouthAfricaCropType(RasterDataset):
         classes: list[int] = list(cmap.keys()),
         bands: tuple[str, ...] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
-        download: bool = False,
-        checksum: bool = False,
     ) -> None:
         """Initialize a new South Africa dataset instance.
 
@@ -130,17 +125,8 @@ class SouthAfricaCropType(RasterDataset):
 
         self.root = root
         self.classes = classes
-        self.checksum = checksum
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
         self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
-
-        # not downloading for now
-        # if download:
-        #     self._download()
-
-        # not checking integrity for now
-        # if not self._check_integrity():
-        #     raise DatasetNotFoundError(self)
 
         super().__init__(
             paths=root,
@@ -170,27 +156,25 @@ class SouthAfricaCropType(RasterDataset):
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
-
-        if self.separate_files:
-            data_list: list[Tensor] = []
-            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-            for band in self.bands:
-                band_filepaths = []
-                for filepath in filepaths:
-                    filename = os.path.basename(filepath)
-                    directory = os.path.dirname(filepath)
-                    match = re.match(filename_regex, filename)
-                    if match:
-                        if "band" in match.groupdict():
-                            start = match.start("band")
-                            end = match.end("band")
-                            filename = filename[:start] + band + filename[end:]
-                    filepath = os.path.join(directory, filename)
-                    band_filepaths.append(filepath)
-                data_list.append(self._merge_files(band_filepaths, query))
-            image = torch.cat(data_list)
-        else:
-            image = self._merge_files(filepaths, query, self.band_indexes)
+        
+    
+        data_list: list[Tensor] = []
+        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+        for band in self.bands:
+            band_filepaths = []
+            for filepath in filepaths:
+                filename = os.path.basename(filepath)
+                directory = os.path.dirname(filepath)
+                match = re.match(filename_regex, filename)
+                if match:
+                    if "band" in match.groupdict():
+                        start = match.start("band")
+                        end = match.end("band")
+                        filename = filename[:start] + band + filename[end:]
+                filepath = os.path.join(directory, filename)
+                band_filepaths.append(filepath)
+            data_list.append(self._merge_files(band_filepaths, query))
+        image = torch.cat(data_list)
 
         mask_filepaths = []
         for root, dirs, files in os.walk(os.path.join(self.paths, "train", "labels")):
@@ -269,23 +253,3 @@ class SouthAfricaCropType(RasterDataset):
             plt.suptitle(suptitle)
 
         return fig
-
-# download and checksum require further investigation 
-# def _download(self) -> None:
-#     """Download the dataset and extract it.
-
-#     Raises:
-#         RuntimeError: if download doesn't work correctly or checksums don't match
-#     """
-#     # not checking the integrity because no compressed files in the dataset
-#     if self._check_integrity():
-#         print("Files already downloaded and verified")
-#         return
-#     # make the data not auto-downloadable until azure-storage-blob is integrated
-
-# def _check_integrity(self) -> bool:
-#     """Check integrity of dataset.
-
-#     Returns:
-#         True if dataset files are found and/or MD5s match, else False
-#     """
