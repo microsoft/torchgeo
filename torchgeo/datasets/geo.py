@@ -619,11 +619,21 @@ class RasterDataset(GeoDataset):
         Returns:
             file handle of warped VRT
         """
+        # Todo: need to update meta kwarg `nodata` if it is not set.
+        #  create memory-file?
+        #  https://rasterio.groups.io/g/main/topic/change_the_nodata_value_in_a/28801885?p=
         src = rasterio.open(filepath)
 
         # Only warp if necessary
         if src.crs != self.crs:
-            vrt = WarpedVRT(src, crs=self.crs)
+            valid_nodatavals = [val for val in src.nodatavals if val is not None]
+            if not valid_nodatavals:  # Case for Sentinel2 L1C
+                nodata = 0.0  # Is it safe to assume? For Sentinel2 L1C it is 0.0
+            else:
+                # Get the first valid nodata value.
+                # Usualy the same value for all bands
+                nodata = valid_nodatavals[0]
+            vrt = WarpedVRT(src, nodata=nodata, crs=self.crs)
             src.close()
             return vrt
         else:
