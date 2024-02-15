@@ -12,7 +12,12 @@ from torch.utils.data import Sampler
 
 from ..datasets import BoundingBox, GeoDataset
 from .constants import Units
-from .utils import _to_tuple, get_random_bounding_box_check_valid_overlap, tile_to_chips
+from .utils import (
+    _to_tuple,
+    get_random_bounding_box,
+    get_random_bounding_box_check_valid_overlap,
+    tile_to_chips,
+)
 
 
 class GeoSampler(Sampler[BoundingBox], abc.ABC):
@@ -72,6 +77,8 @@ class RandomGeoSampler(GeoSampler):
         length: int | None = None,
         roi: BoundingBox | None = None,
         units: Units = Units.PIXELS,
+        exclude_nodata_samples: bool = False,
+        max_retries: int = 50_000,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -98,9 +105,16 @@ class RandomGeoSampler(GeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
+            exclude_nodata_samples: will ensure that samples are not outside of the
+                footprint of the valid pixel. No-data regions may occur due to
+                re-projection or inherit no-data regions in rasters.
+            max_retries: is used when exclude_nodata_samples are True. Is a safe-guard
+                for infinite loops in case the nodata-mask of the raster is wrong.
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
+        self.exclude_nodata_samples = exclude_nodata_samples
+        self.max_retries = max_retries
 
         if units == Units.PIXELS:
             self.size = (self.size[0] * self.res, self.size[1] * self.res)
@@ -141,9 +155,16 @@ class RandomGeoSampler(GeoSampler):
             hit = self.hits[idx]
             bounds = BoundingBox(*hit.bounds)
 
-            yield get_random_bounding_box_check_valid_overlap(
-                bounds, self.size, self.res, hit.object
-            )
+            if self.exclude_nodata_samples:
+                yield get_random_bounding_box_check_valid_overlap(
+                    bounds,
+                    self.size,
+                    self.res,
+                    hit.object,
+                    max_retries=self.max_retries,
+                )
+            else:
+                yield get_random_bounding_box(bounds, self.size, self.res)
 
     def __len__(self) -> int:
         """Return the number of samples in a single epoch.
