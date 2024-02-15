@@ -10,6 +10,7 @@ The goal of this library is to make it simple:
 Community:
 [![slack](https://img.shields.io/badge/slack-join-7C0385?logo=slack)](https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw)
 [![osgeo](https://img.shields.io/badge/OSGeo-join-4CB05B?logo=osgeo)](https://www.osgeo.org/community/getting-started-osgeo/)
+[![pytorch](https://img.shields.io/badge/PyTorch-join-DE3412?logo=pytorch)](https://pytorch.org/ecosystem/join)
 
 Packaging:
 [![pypi](https://badge.fury.io/py/torchgeo.svg)](https://pypi.org/project/torchgeo/)
