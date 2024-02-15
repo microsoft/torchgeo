@@ -29,17 +29,6 @@ class MSS2Transform(torch.nn.Module):
         return x
 
 
-# Custom transform for Landsat multispectral model inputs.
-class LandsatTransform(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x):
-        # Normalize using the specified formula (N-4000)/16320 and clip to (0, 1)
-        normalized = torch.clamp((x - 4000) / 16320, 0.0, 1.0)
-        return normalized
-
-
 # https://github.com/allenai/satlas/blob/bcaa968da5395f675d067613e02613a344e81415/satlas/cmd/model/train.py#L42 # noqa: E501
 # Satlas Sentinel-1 and RGB Sentinel-2 and NAIP imagery is uint8 and is normalized to (0, 1) by dividing by 255. # noqa: E501
 _satlas_transforms = AugmentationSequential(
@@ -55,7 +44,10 @@ _sentinel2_ms_satlas_transforms = AugmentationSequential(
 
 # Satlas Landsat imagery is 16-bit, normalized by clipping some pixel N with (N-4000)/16320 to (0, 1). # noqa: E501
 _landsat_satlas_transforms = AugmentationSequential(
-    K.CenterCrop(256), LandsatTransform(), data_keys=["image"]
+    K.CenterCrop(256),
+    K.Normalize(mean=torch.tensor(4000), std=torch.tensor(1)),
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(16320)),
+    data_keys=["image"],
 )
 
 # https://github.com/pytorch/vision/pull/6883
