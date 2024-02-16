@@ -1,29 +1,20 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""South Africa Crop Type Competition Dataset"""
+"""South Africa Crop Type Competition Dataset."""
 
 import os
 import re
-import glob
-from collections.abc import Iterable
-from typing import Any, Callable, Optional, Union, cast
+from typing import Any, Callable, Optional, cast
 
 import matplotlib.pyplot as plt
-import rasterio
-from rasterio.crs import CRS
 import torch
 from matplotlib.figure import Figure
+from rasterio.crs import CRS
 from torch import Tensor
 
 from .geo import RasterDataset
-from .utils import (
-    BoundingBox,
-    DatasetNotFoundError,
-    RGBBandsMissingError,
-    check_integrity,
-    download_url,
-)
+from .utils import BoundingBox, RGBBandsMissingError
 
 
 class SouthAfricaCropType(RasterDataset):
@@ -59,21 +50,20 @@ class SouthAfricaCropType(RasterDataset):
 
     If you use this dataset in your research, please cite the following dataset:
     Western Cape Department of Agriculture, Radiant Earth Foundation (2021)
-    "Crop Type Classification Dataset for Western Cape, South Africa", 
+    "Crop Type Classification Dataset for Western Cape, South Africa",
     Version 1.0, Radiant MLHub, https://doi.org/10.34911/rdnt.j0co8q
 
     .. versionadded:: 0.6
     """
-    
+
     filename_regex = r"""
-        ^(?P<field_id>[0-9]*)_(?P<year>[0-9]{4})_(?P<month>[0-9]{2})_(?P<day>[0-9]{2})_(?P<band>(B[0-9A-Z]{2} | VH | VV))_10m\.tif"""
+        ^(?P<field_id>[0-9]*)_(?P<year>[0-9]{4})_
+        (?P<month>[0-9]{2})_(?P<day>[0-9]{2})_
+        (?P<band>(B[0-9A-Z]{2} | VH | VV))_10m\.tif"""
 
     rgb_bands = ["B04", "B03", "B02"]
-    S1_bands = (
-        "VH",
-        "VV",
-    )
-    S2_bands  = (
+    S1_bands = ("VH", "VV")
+    S2_bands = (
         "B01",
         "B02",
         "B03",
@@ -87,7 +77,7 @@ class SouthAfricaCropType(RasterDataset):
         "B11",
         "B12",
     )
-    all_bands = S1_bands + S2_bands
+    all_bands: tuple = S1_bands + S2_bands
     cmap = {
         0: (0, 0, 0, 255),
         1: (255, 211, 0, 255),
@@ -97,7 +87,7 @@ class SouthAfricaCropType(RasterDataset):
         5: (37, 111, 0, 255),
         6: (255, 255, 0, 255),
         8: (111, 166, 0, 255),
-        9: (0, 175, 73, 255)
+        9: (0, 175, 73, 255),
     }
 
     def __init__(
@@ -112,6 +102,8 @@ class SouthAfricaCropType(RasterDataset):
 
         Args:
             root: root directory where dataset can be found
+            crs: coordinate reference system to be used
+            classes: crop type classes to be included
             bands: the subset of bands to load
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -128,12 +120,7 @@ class SouthAfricaCropType(RasterDataset):
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
         self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
 
-        super().__init__(
-            paths=root,
-            crs=crs,
-            bands=bands,
-            transforms=transforms,
-        )
+        super().__init__(paths=root, crs=crs, bands=bands, transforms=transforms)
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
         for v, k in enumerate(self.classes):
@@ -156,18 +143,16 @@ class SouthAfricaCropType(RasterDataset):
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
-        
-    
+
         data_list: list[Tensor] = []
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         for band in self.bands:
             band_filepaths = []
             for filepath in filepaths:
                 filename = os.path.basename(filepath)
-                directory = os.path.dirname(filepath)
                 match = re.match(filename_regex, filename)
-                if match:
-                    if "band" in match.groupdict() and match.groupdict()["band"] == band:
+                if match and "band" in match.groupdict():
+                    if match.groupdict()["band"] == band:
                         band_filepaths.append(filepath)
             data_list.append(self._merge_files(band_filepaths, query))
         image = torch.cat(data_list)
@@ -218,7 +203,7 @@ class SouthAfricaCropType(RasterDataset):
                 rgb_indices.append(self.bands.index(band))
             else:
                 raise RGBBandsMissingError()
-        
+
         image = sample["image"][rgb_indices].permute(1, 2, 0)
         image = (image - image.min()) / (image.max() - image.min())
 
