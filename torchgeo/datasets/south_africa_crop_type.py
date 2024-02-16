@@ -167,12 +167,8 @@ class SouthAfricaCropType(RasterDataset):
                 directory = os.path.dirname(filepath)
                 match = re.match(filename_regex, filename)
                 if match:
-                    if "band" in match.groupdict():
-                        start = match.start("band")
-                        end = match.end("band")
-                        filename = filename[:start] + band + filename[end:]
-                filepath = os.path.join(directory, filename)
-                band_filepaths.append(filepath)
+                    if "band" in match.groupdict() and match.groupdict()["band"] == band:
+                        band_filepaths.append(filepath)
             data_list.append(self._merge_files(band_filepaths, query))
         image = torch.cat(data_list)
 
@@ -222,7 +218,7 @@ class SouthAfricaCropType(RasterDataset):
                 rgb_indices.append(self.bands.index(band))
             else:
                 raise RGBBandsMissingError()
-
+        
         image = sample["image"][rgb_indices].permute(1, 2, 0)
         image = (image - image.min()) / (image.max() - image.min())
 
