@@ -28,7 +28,7 @@ opencv-python==4.4.0.46
 pycocotools==2.0.5
 pyvista==0.34.2
 radiant-mlhub==0.3.0
-source-cooperative==beta
+cooperative==0.1.12
 rarfile==4.0
 scikit-image==0.18.0
 scipy==1.6.2
