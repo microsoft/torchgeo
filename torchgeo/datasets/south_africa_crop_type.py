@@ -62,8 +62,8 @@ class SouthAfricaCropType(RasterDataset):
         (?P<band>(B[0-9A-Z]{2} | VH | VV))_10m\.tif"""
 
     rgb_bands = ["B04", "B03", "B02"]
-    S1_bands = ("VH", "VV")
-    S2_bands = (
+    S1_bands = ["VH", "VV"]
+    S2_bands = [
         "B01",
         "B02",
         "B03",
@@ -76,8 +76,8 @@ class SouthAfricaCropType(RasterDataset):
         "B09",
         "B11",
         "B12",
-    )
-    all_bands: tuple = S1_bands + S2_bands
+    ]
+    all_bands: list[str] = S1_bands + S2_bands
     cmap = {
         0: (0, 0, 0, 255),
         1: (255, 211, 0, 255),
@@ -95,7 +95,7 @@ class SouthAfricaCropType(RasterDataset):
         root: str = "",
         crs: CRS = CRS.from_epsg(32634),
         classes: list[int] = list(cmap.keys()),
-        bands: tuple[str, ...] = all_bands,
+        bands: list[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
     ) -> None:
         """Initialize a new South Africa dataset instance.
@@ -158,7 +158,7 @@ class SouthAfricaCropType(RasterDataset):
         image = torch.cat(data_list)
 
         mask_filepaths = []
-        for root, dirs, files in os.walk(os.path.join(self.paths, "train", "labels")):
+        for root, dirs, files in os.walk(os.path.join(self.root, "train", "labels")):
             for file in files:
                 if not file.endswith("_field_ids.tif") and file.endswith(".tif"):
                     file_path = os.path.join(root, file)

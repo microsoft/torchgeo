@@ -43,7 +43,7 @@ class TestSouthAfricaCropType:
         assert isinstance(ds, UnionDataset)
 
     def test_already_downloaded(self, dataset: SouthAfricaCropType) -> None:
-        SouthAfricaCropType(root=dataset.paths)
+        SouthAfricaCropType(root=dataset.root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
@@ -71,7 +71,7 @@ class TestSouthAfricaCropType:
         with pytest.raises(
             RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
-            ds = SouthAfricaCropType(dataset.paths, bands=("B01", "B02", "B05"))
+            ds = SouthAfricaCropType(dataset.root, bands=["B01", "B02", "B05"])
             x = ds[ds.bounds]
             ds.plot(x, suptitle="Test")
             plt.close()
