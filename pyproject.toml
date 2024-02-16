@@ -93,6 +93,8 @@ datasets = [
     "pyvista>=0.34.2",
     # radiant-mlhub 0.3+ required for newer tqdm support required by lightning
     "radiant-mlhub>=0.3",
+    # source-cooperative 
+    "source-cooperative>=beta",
     # rarfile 4+ required for wheels
     "rarfile>=4",
     # scikit-image 0.18+ required for numpy 1.17+ compatibility

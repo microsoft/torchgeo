@@ -26,6 +26,8 @@ from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
+from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
+import os
 
 __all__ = (
     "check_integrity",
@@ -241,6 +243,36 @@ def download_radiant_mlhub_dataset(
 
     dataset = radiant_mlhub.Dataset.fetch(dataset_id, api_key=api_key)
     dataset.download(output_dir=download_root, api_key=api_key)
+
+def download_source_cooperative_dataset_to_azureblob(
+    dataset_id: str, 
+    container_url: str, 
+    azure_sas_token: str, 
+    local_download_root: str, 
+    source_api_key: str | None = None
+) -> None:
+    """Download a dataset from Source Cooperative and upload to Azure Blob storage.
+
+    Args:
+        dataset_id: the ID of the dataset to fetch
+        container_url: URL to the Azure Blob storage container
+        azure_sas_token: SAS token for Azure Blob storage authentication
+        local_download_root: local directory to download to before uploading
+        source_api_key: the API key for Source Cooperative. Can also be
+            configured in environment variables or any secure place.
+    """
+    # Ensure local download directory exists
+    if not os.path.exists(local_download_root):
+        os.makedirs(local_download_root)
+    
+    # Initialize Azure Blob service client
+    blob_service_client = BlobServiceClient(account_url=container_url, credential=azure_sas_token)
+    
+    # Download each file from Source Cooperative and upload to Azure Blob
+    for file_url in dataset_file_urls:
+        file_name = file_url.split("/")[-1]  # Extract file name
+        local_file_path = os.path.join(local_download_root, file_name)     
+
 
 
 def download_radiant_mlhub_collection(
