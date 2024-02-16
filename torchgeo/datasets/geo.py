@@ -1027,7 +1027,12 @@ class IntersectionDataset(GeoDataset):
                     ]
                     all_footprints_cropped_to_bounds = shapely.intersection(
                         shapely.ops.unary_union(all_footprints_overlapping),
-                        shapely.geometry.box(box1.minx, box1.miny, box1.maxx, box1.maxy),
+                        shapely.geometry.box(
+                            box_intersection.minx,
+                            box_intersection.miny,
+                            box_intersection.maxx,
+                            box_intersection.maxy,
+                        ),
                     )
                     self.index.insert(
                         i,
@@ -1035,8 +1040,9 @@ class IntersectionDataset(GeoDataset):
                         cast(
                             dict[str, shapely.geometry.Polygon],
                             all_footprints_cropped_to_bounds,
-                        )
-                    i += 1
+                        ),
+                    )
+                i += 1
 
         if i == 0:
             raise RuntimeError('Datasets have no spatiotemporal intersection')
