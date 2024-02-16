@@ -8,7 +8,9 @@ The goal of this library is to make it simple:
 2. for remote sensing experts to explore machine learning solutions.
 
 Community:
-[![slack](https://img.shields.io/badge/slack-join-purple?logo=slack)](https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw)
+[![slack](https://img.shields.io/badge/slack-join-7C0385?logo=slack)](https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw)
+[![osgeo](https://img.shields.io/badge/OSGeo-join-4CB05B?logo=osgeo)](https://www.osgeo.org/community/getting-started-osgeo/)
+[![pytorch](https://img.shields.io/badge/PyTorch-join-DE3412?logo=pytorch)](https://pytorch.org/ecosystem/join)
 
 Packaging:
 [![pypi](https://badge.fury.io/py/torchgeo.svg)](https://pypi.org/project/torchgeo/)
@@ -132,7 +134,7 @@ from torchgeo.models import ResNet18_Weights
 
 weights = ResNet18_Weights.SENTINEL2_ALL_MOCO
 model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"], num_classes=10)
-model = model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
 ```
 
 These weights can also directly be used in TorchGeo Lightning modules that are shown in the following section via the `weights` argument. For a notebook example, see this [tutorial](https://torchgeo.readthedocs.io/en/stable/tutorials/pretrained_weights.html).

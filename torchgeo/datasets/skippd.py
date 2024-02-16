@@ -173,8 +173,7 @@ class SKIPPD(NonGeoDataset):
         else:
             arr = rearrange(arr, "h w c -> c h w")
 
-        tensor = torch.from_numpy(arr)
-        tensor = tensor.to(torch.float32)
+        tensor = torch.from_numpy(arr).to(torch.float32)
         return tensor
 
     def _load_features(self, index: int) -> dict[str, Union[str, Tensor]]:

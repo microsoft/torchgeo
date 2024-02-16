@@ -23,6 +23,11 @@ Aboveground Woody Biomass
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
 
+AgriFieldNet
+^^^^^^^^^^^^
+
+.. autoclass:: AgriFieldNet
+
 Airphen
 ^^^^^^^
 
@@ -167,8 +172,14 @@ Sentinel
 .. autoclass:: Sentinel2
 
 South Africa Crop Type
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SouthAfricaCropType
+
+South America Soybean 
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SouthAmericaSoybean
 
 .. _Non-geospatial Datasets:
 
