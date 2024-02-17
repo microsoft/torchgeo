@@ -40,11 +40,11 @@ class CDLSentinel2DataModule(GeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.CDL`.
         """
-        self.nccm_kwargs = {}
+        self.cdl_kwargs = {}
         self.sentinel2_kwargs = {}
         for key, val in kwargs.items():
             if key.startswith("cdl_"):
-                self.nccm_kwargs[key[5:]] = val
+                self.cdl_kwargs[key[5:]] = val
             elif key.startswith("sentinel2_"):
                 self.sentinel2_kwargs[key[10:]] = val
 
