@@ -5,8 +5,8 @@
 
 from typing import Any, Optional, Union
 
-import torch
 import kornia.augmentation as K
+import torch
 from kornia.constants import DataKey, Resample
 
 from ..datasets import CDL, Sentinel2, random_grid_cell_assignment
@@ -76,6 +76,7 @@ class CDLSentinel2DataModule(GeoDataModule):
 
     def setup(self, stage: str) -> None:
         """Set up datasets and samplers.
+
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
