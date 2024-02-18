@@ -11,7 +11,6 @@ import shutil
 import numpy as np
 import rasterio
 from rasterio import Affine
-from rasterio.crs import CRS
 
 SIZE = 32
 
