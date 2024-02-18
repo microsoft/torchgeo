@@ -10,6 +10,8 @@ import shutil
 
 import numpy as np
 import rasterio
+from rasterio import Affine
+from rasterio.crs import CRS
 
 SIZE = 32
 
@@ -22,8 +24,8 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
     profile["driver"] = "GTiff"
     profile["dtype"] = dtype
     profile["count"] = num_channels
-    profile["crs"] = "epsg:4326"
-    profile["transform"] = rasterio.transform.from_bounds(0, 0, 1, 1, 1, 1)
+    profile["crs"] = "epsg:32616"
+    profile["transform"] = Affine(30, 0.0, 399960.0, 0.0, -30, 4500000.0)
     profile["height"] = SIZE
     profile["width"] = SIZE
     profile["compress"] = "lzw"
