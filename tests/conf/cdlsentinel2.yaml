@@ -2,9 +2,10 @@ model:
   class_path: SemanticSegmentationTask
   init_args:
     loss: "ce"
-    model: "resnet50"
+    model: "unet"
+    backbone: "resnet50"
     in_channels: 13
-    num_classes: 5
+    num_classes: 134
     num_filters: 1
     ignore_index: 0
 data:
