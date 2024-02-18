@@ -44,7 +44,7 @@ class CDLSentinel2DataModule(GeoDataModule):
         self.sentinel2_kwargs = {}
         for key, val in kwargs.items():
             if key.startswith("cdl_"):
-                self.cdl_kwargs[key[5:]] = val
+                self.cdl_kwargs[key[4:]] = val
             elif key.startswith("sentinel2_"):
                 self.sentinel2_kwargs[key[10:]] = val
 
