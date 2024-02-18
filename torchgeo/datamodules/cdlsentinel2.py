@@ -87,7 +87,9 @@ class CDLSentinel2DataModule(GeoDataModule):
         generator = torch.Generator().manual_seed(0)
 
         (self.train_dataset, self.val_dataset, self.test_dataset) = (
-            random_grid_cell_assignment(self.dataset, [0.8, 0.1, 0.1], generator)
+            random_grid_cell_assignment(
+                self.dataset, [0.8, 0.1, 0.1], generator=generator
+            )
         )
 
         if stage in ["fit"]:
