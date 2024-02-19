@@ -6,10 +6,13 @@
 from typing import Any, Optional, Union
 
 import kornia.augmentation as K
-import torch
+
+# import torch
 from kornia.constants import DataKey, Resample
 
-from ..datasets import CDL, Sentinel2, random_grid_cell_assignment, BoundingBox
+from ..datasets import CDL, BoundingBox, Sentinel2
+
+# from ..datasets import random_grid_cell_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
@@ -85,7 +88,6 @@ class CDLSentinel2DataModule(GeoDataModule):
         self.sentinel2 = Sentinel2(**self.sentinel2_kwargs)
         self.cdl = CDL(**self.cdl_kwargs)
         self.dataset = self.sentinel2 & self.cdl
-
 
         roi = self.dataset.bounds
         midx = roi.minx + (roi.maxx - roi.minx) / 2
