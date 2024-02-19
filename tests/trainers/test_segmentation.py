@@ -87,8 +87,8 @@ class TestSemanticSegmentationTask:
                 CDL,
                 "md5s",
                 {
-                    2023: "0c9eb2b1749e545fdd0a6dbd26bc4bc6",
-                    2022: "9efe46ee3c84264e45815b3f842c6900",
+                    2023: "e94d199f8f99762c00bcf9ee4d020286",
+                    2022: "e6b90d15ced04a759d1860d92438f68f",
                 },
             )
         if name == "naipchesapeake":
