@@ -50,7 +50,7 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
         src.write_colormap(1, cmap)
 
 
-directories = ["2020_30m_cdls", "2021_30m_cdls"]
+directories = ["2020_30m_cdls", "2021_30m_cdls", "2022_30m_cdls"]
 raster_extensions = [".tif", ".tif.ovr"]
 
 

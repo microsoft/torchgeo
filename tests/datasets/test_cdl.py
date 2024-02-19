@@ -34,8 +34,9 @@ class TestCDL:
         monkeypatch.setattr(torchgeo.datasets.cdl, "download_url", download_url)
 
         md5s = {
-            2021: "e929beb9c8e59fa1d7b7f82e64edaae1",
-            2020: "e95c2d40ce0c261ed6ee0bd00b49e4b6",
+            2022: "0c9eb2b1749e545fdd0a6dbd26bc4bc6",
+            2021: "9efe46ee3c84264e45815b3f842c6900",
+            2020: "02086e14ce31b3ba4fd35cbf2af3b0fd",
         }
         monkeypatch.setattr(CDL, "md5s", md5s)
         url = os.path.join("tests", "data", "cdl", "{}_30m_cdls.zip")
