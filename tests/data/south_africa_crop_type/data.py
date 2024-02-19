@@ -60,10 +60,10 @@ def generate_test_data() -> str:
     os.makedirs(train_imagery_s2_dir, exist_ok=True)
     os.makedirs(train_labels_dir, exist_ok=True)
 
-    train_field_ids = ["12"]  # , "2415"]
+    train_field_ids = ["12"]
 
-    s1_timestamps = ["2017_04_01"]  # , "2017_11_28"]
-    s2_timestamps = ["2017_05_04"]  # , "2017_10_22"]
+    s1_timestamps = ["2017_04_01", "2017_07_28"]
+    s2_timestamps = ["2017_05_04", "2017_07_22"]
 
     def write_raster(path: str, arr: np.array) -> None:
         with rasterio.open(path, "w", **profile) as src:

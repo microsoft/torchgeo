@@ -146,14 +146,20 @@ class SouthAfricaCropType(RasterDataset):
 
         data_list: list[Tensor] = []
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+
         for band in self.bands:
+            fields_added = []
             band_filepaths = []
             for filepath in filepaths:
                 filename = os.path.basename(filepath)
                 match = re.match(filename_regex, filename)
                 if match and "band" in match.groupdict():
                     if match.groupdict()["band"] == band:
-                        band_filepaths.append(filepath)
+                        field_id = match.groupdict()["field_id"]
+                        month = match.groupdict()["month"]
+                        if field_id not in fields_added and month == "07":
+                            band_filepaths.append(filepath)
+                            fields_added.append(field_id)
             data_list.append(self._merge_files(band_filepaths, query))
         image = torch.cat(data_list)
 
