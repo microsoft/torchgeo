@@ -17,7 +17,7 @@ from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
-from torchgeo.datasets import LandCoverAI, RGBBandsMissingError
+from torchgeo.datasets import CDL, LandCoverAI, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import SemanticSegmentationTask
@@ -82,6 +82,15 @@ class TestSemanticSegmentationTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
+        if name == "cdlsentinel2":
+            monkeypatch.setattr(
+                CDL,
+                "md5s",
+                {
+                    2023: "0c9eb2b1749e545fdd0a6dbd26bc4bc6",
+                    2022: "9efe46ee3c84264e45815b3f842c6900",
+                },
+            )
         if name == "naipchesapeake":
             pytest.importorskip("zipfile_deflate64")
 

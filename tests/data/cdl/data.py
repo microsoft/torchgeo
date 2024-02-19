@@ -12,7 +12,7 @@ import numpy as np
 import rasterio
 from rasterio import Affine
 
-SIZE = 32
+SIZE = 1000
 
 np.random.seed(0)
 random.seed(0)
@@ -50,7 +50,7 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
         src.write_colormap(1, cmap)
 
 
-directories = ["2020_30m_cdls", "2021_30m_cdls", "2022_30m_cdls"]
+directories = ["2023_30m_cdls", "2022_30m_cdls"]
 raster_extensions = [".tif", ".tif.ovr"]
 
 
@@ -78,5 +78,8 @@ if __name__ == "__main__":
         with open(filename, "rb") as f:
             md5 = hashlib.md5(f.read()).hexdigest()
             print(f"{filename}: {md5}")
+
+        # Uncompress data
+        shutil.unpack_archive(filename, dir)
 
         shutil.rmtree(dir)
