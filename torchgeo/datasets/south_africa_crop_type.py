@@ -147,8 +147,8 @@ class SouthAfricaCropType(RasterDataset):
         data_list: list[Tensor] = []
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
 
-        sample_dates_s1 = {}
-        sample_dates_s2 = {}
+        sample_dates_s1: dict[str, str] = {}
+        sample_dates_s2: dict[str, str] = {}
         for band in self.bands:
             sample_dates = sample_dates_s1 if band in self.S1_bands else sample_dates_s2
             fields_added = []
