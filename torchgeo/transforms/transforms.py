@@ -8,7 +8,7 @@ from typing import Any, Optional, Union
 import kornia.augmentation as K
 import torch
 from einops import rearrange
-from kornia.contrib import extract_tensor_patches
+from kornia.contrib import Lambda, extract_tensor_patches
 from kornia.geometry import crop_by_indices
 from kornia.geometry.boxes import Boxes
 from torch import Tensor
@@ -25,7 +25,7 @@ class AugmentationSequential(Module):
 
     def __init__(
         self,
-        *args: Union[K.base._AugmentationBase, K.ImageSequential],
+        *args: Union[K.base._AugmentationBase, K.ImageSequential, Lambda],
         data_keys: list[str],
         **kwargs: Any,
     ) -> None:

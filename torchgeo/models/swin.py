@@ -8,6 +8,7 @@ from typing import Any, Optional
 import kornia.augmentation as K
 import torch
 import torchvision
+from kornia.contrib import Lambda
 from torchvision.models import SwinTransformer
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -15,38 +16,27 @@ from ..transforms import AugmentationSequential
 
 __all__ = ["Swin_V2_B_Weights"]
 
-
-# Custom transform for Sentinel-2 multispectral model inputs; Uses 9 bands.
-class MSS2Transform(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x):
-        # Divide the first 3 channels by 255
-        x[:, :3, :, :] = x[:, :3, :, :] / 255.0
-        # Divide the last 6 channels by 8160 and clip to 0-1
-        x[:, -6:, :, :] = torch.clamp(x[:, -6:, :, :] / 8160.0, 0.0, 1.0)
-        return x
-
-
 # https://github.com/allenai/satlas/blob/bcaa968da5395f675d067613e02613a344e81415/satlas/cmd/model/train.py#L42 # noqa: E501
 # Satlas Sentinel-1 and RGB Sentinel-2 and NAIP imagery is uint8 and is normalized to (0, 1) by dividing by 255. # noqa: E501
 _satlas_transforms = AugmentationSequential(
-    K.CenterCrop(256),
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
-    data_keys=["image"],
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)), data_keys=["image"]
 )
 
 # Satlas multispectral Sentinel-2 imagery divides first 3 bands by 255 and the following 6 bands by 8160, both clipped to (0, 1). # noqa: E501
+_std = torch.tensor(
+    [255.0, 255.0, 255.0, 8160.0, 8160.0, 8160.0, 8160.0, 8160.0, 8160.0]
+)  # noqa: E501
+_mean = torch.zeros_like(_std)
 _sentinel2_ms_satlas_transforms = AugmentationSequential(
-    K.CenterCrop(256), MSS2Transform(), data_keys=["image"]
+    K.Normalize(mean=_mean, std=_std),
+    Lambda(lambda x: torch.clamp(x, min=0.0, max=1.0)),
+    data_keys=["image"],
 )
 
 # Satlas Landsat imagery is 16-bit, normalized by clipping some pixel N with (N-4000)/16320 to (0, 1). # noqa: E501
 _landsat_satlas_transforms = AugmentationSequential(
-    K.CenterCrop(256),
-    K.Normalize(mean=torch.tensor(4000), std=torch.tensor(1)),
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(16320)),
+    K.Normalize(mean=torch.tensor(4000), std=torch.tensor(16320)),
+    Lambda(lambda x: torch.clamp(x, min=0.0, max=1.0)),
     data_keys=["image"],
 )
 
@@ -98,6 +88,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
             "model": "swin_v2_b",
             "publication": "https://arxiv.org/abs/2211.15660",
             "repo": "https://github.com/allenai/satlas",
+            "bands": ["B02", "B03", "B04", "B05", "B06", "B07", "B08", "B11", "B12"],
         },
     )
 
