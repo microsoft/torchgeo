@@ -101,6 +101,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
             "model": "swin_v2_b",
             "publication": "https://arxiv.org/abs/2211.15660",
             "repo": "https://github.com/allenai/satlas",
+            "bands": ["VH", "VV"],
         },
     )
 
@@ -109,10 +110,23 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
         transforms=_landsat_satlas_transforms,
         meta={
             "dataset": "Satlas",
-            "in_chans": 2,
+            "in_chans": 11,
             "model": "swin_v2_b",
             "publication": "https://arxiv.org/abs/2211.15660",
             "repo": "https://github.com/allenai/satlas",
+            "bands": [
+                "B01",
+                "B02",
+                "B03",
+                "B04",
+                "B05",
+                "B06",
+                "B07",
+                "B08",
+                "B09",
+                "B10",
+                "B11",
+            ],  # noqa: E501
         },
     )
 
