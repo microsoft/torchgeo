@@ -6,13 +6,10 @@
 from typing import Any, Optional, Union
 
 import kornia.augmentation as K
-
-# import torch
+import torch
 from kornia.constants import DataKey, Resample
 
-from ..datasets import CDL, BoundingBox, Sentinel2
-
-# from ..datasets import random_grid_cell_assignment
+from ..datasets import CDL, Sentinel2, random_grid_cell_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
@@ -89,44 +86,22 @@ class CDLSentinel2DataModule(GeoDataModule):
         self.cdl = CDL(**self.cdl_kwargs)
         self.dataset = self.sentinel2 & self.cdl
 
-        roi = self.dataset.bounds
-        midx = roi.minx + (roi.maxx - roi.minx) / 2
-        midy = roi.miny + (roi.maxy - roi.miny) / 2
+        generator = torch.Generator().manual_seed(0)
 
-        if stage in ["fit"]:
-            train_roi = BoundingBox(
-                roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt
+        (self.train_dataset, self.val_dataset, self.test_dataset) = (
+            random_grid_cell_assignment(
+                self.dataset, [0.5, 0.25, 0.25], grid_size=2, generator=generator
             )
+        )
+        if stage in ["fit"]:
             self.train_batch_sampler = RandomBatchGeoSampler(
-                self.dataset, self.patch_size, self.batch_size, self.length, train_roi
+                self.train_dataset, self.patch_size, self.batch_size, self.length
             )
         if stage in ["fit", "validate"]:
-            val_roi = BoundingBox(midx, roi.maxx, roi.miny, midy, roi.mint, roi.maxt)
             self.val_sampler = GridGeoSampler(
-                self.dataset, self.patch_size, self.patch_size, val_roi
+                self.val_dataset, self.patch_size, self.patch_size
             )
         if stage in ["test"]:
-            test_roi = BoundingBox(
-                roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt
-            )
             self.test_sampler = GridGeoSampler(
-                self.dataset, self.patch_size, self.patch_size, test_roi
+                self.dataset, self.patch_size, self.patch_size
             )
-
-        # generator = torch.Generator().manual_seed(0)
-
-        # (self.train_dataset, self.val_dataset, self.test_dataset) = (
-        #     random_grid_cell_assignment(
-        #         self.dataset, [0.8, 0.1, 0.1], generator=generator
-        #     )
-        # )
-
-        # if stage in ["fit"]:
-        #     self.train_batch_sampler = RandomBatchGeoSampler(
-        #         self.train_dataset, self.patch_size, self.batch_size, self.length
-        #     )
-
-        # if stage in ["fit", "validate"]:
-        #     self.val_sampler = GridGeoSampler(
-        #         self.val_dataset, self.patch_size, self.patch_size
-        #     )
