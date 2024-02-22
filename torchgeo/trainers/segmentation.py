@@ -70,9 +70,6 @@ class SemanticSegmentationTask(BaseTask):
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
 
-        Warns:
-            UserWarning: When loss='jaccard' and ignore_index is specified.
-
         .. versionchanged:: 0.3
            *ignore_zeros* was renamed to *ignore_index*.
 
@@ -87,13 +84,10 @@ class SemanticSegmentationTask(BaseTask):
            The *weights* parameter now supports WeightEnums and checkpoint paths.
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
-        """
-        if ignore_index is not None and loss == "jaccard":
-            warnings.warn(
-                "ignore_index has no effect on training when loss='jaccard'",
-                UserWarning,
-            )
 
+        .. versionchanged:: 0.6
+            The *ignore_index* parameter now works for jaccard loss.
+        """
         self.weights = weights
         super().__init__(ignore="weights")
 
