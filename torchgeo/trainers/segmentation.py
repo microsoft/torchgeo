@@ -4,7 +4,6 @@
 """Trainers for semantic segmentation."""
 
 import os
-import warnings
 from typing import Any, Optional, Union
 
 import matplotlib.pyplot as plt
