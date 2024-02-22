@@ -5,7 +5,7 @@ model:
     model: "unet"
     backbone: "resnet18"
     in_channels: 3
-    num_classes: 6
+    num_classes: 5
     num_filters: 1
     ignore_index: null
 data:
