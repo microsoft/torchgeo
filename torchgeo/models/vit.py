@@ -39,7 +39,7 @@ Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 
 class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
-    """Vision Transformer Samll Patch Size 16 weights.
+    """Vision Transformer Small Patch Size 16 weights.
 
     For `timm <https://github.com/rwightman/pytorch-image-models>`_
     *vit_small_patch16_224* implementation.
