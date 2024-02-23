@@ -13,6 +13,7 @@
 #     name: geo
 # ---
 
+# flake8: noqa: E501
 # Copyright (c) Microsoft Corporation. All rights reserved.
 #
 # Licensed under the MIT License.
@@ -35,28 +36,29 @@
 #
 # Next, we import TorchGeo and any other libraries we need.
 
-# +
-from torchgeo.trainers import SemanticSegmentationTask
-from torchgeo.datamodules import LandCoverAIDataModule
+# Get rid of the pesky warnings raised by kornia
+# UserWarning: Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0. Please specify align_corners=True if the old behavior is desired. See the documentation of grid_sample for details.
+import warnings
+
+import lightning
+import lightning.pytorch as pl
+import torch
+from lightning.pytorch.callbacks import ModelCheckpoint
+from torch.optim import AdamW
+from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchmetrics import MetricCollection
 from torchmetrics.classification import (
     Accuracy,
     FBetaScore,
+    JaccardIndex,
     Precision,
     Recall,
-    JaccardIndex,
 )
 
-import lightning.pytorch as pl
-from lightning.pytorch.callbacks import ModelCheckpoint
-import torch
+from torchgeo.datamodules import LandCoverAIDataModule
 
-from torch.optim.lr_scheduler import CosineAnnealingLR
-from torch.optim import AdamW
-
-# Get rid of the pesky warnings raised by kornia
-# UserWarning: Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0. Please specify align_corners=True if the old behavior is desired. See the documentation of grid_sample for details.
-import warnings
+# +
+from torchgeo.trainers import SemanticSegmentationTask
 
 warnings.filterwarnings("ignore", category=UserWarning, module="torch.nn.functional")
 
