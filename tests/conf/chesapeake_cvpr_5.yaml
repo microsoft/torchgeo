@@ -1,7 +1,7 @@
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    loss: "ce"
+    loss: "jaccard"
     model: "unet"
     backbone: "resnet50"
     in_channels: 4
