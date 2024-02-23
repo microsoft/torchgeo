@@ -40,6 +40,8 @@
 # UserWarning: Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0. Please specify align_corners=True if the old behavior is desired. See the documentation of grid_sample for details.
 import warnings
 
+from typing import Any, Union, Sequence
+from lightning.pytorch.callbacks.callback import Callback
 import lightning
 import lightning.pytorch as pl
 from lightning.pytorch.callbacks import ModelCheckpoint
@@ -79,7 +81,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="torch.nn.functio
 class CustomSemanticSegmentationTask(SemanticSegmentationTask):
 
     # any keywords we add here between *args and **kwargs will be found in self.hparams
-    def __init__(self, *args, tmax=50, eta_min=1e-6, **kwargs) -> None:
+    def __init__(self, *args: Any, tmax: int=50, eta_min: float=1e-6, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)  # pass args and kwargs to the parent class
 
     def configure_optimizers(
@@ -130,7 +132,7 @@ class CustomSemanticSegmentationTask(SemanticSegmentationTask):
         self.val_metrics = self.train_metrics.clone(prefix="val_")
         self.test_metrics = self.train_metrics.clone(prefix="test_")
 
-    def configure_callbacks(self):
+    def configure_callbacks(self) -> Union[Sequence[Callback], Callback]:
         """Initialize callbacks for saving the best and latest models.
 
         Returns:
@@ -143,8 +145,12 @@ class CustomSemanticSegmentationTask(SemanticSegmentationTask):
 
     def on_train_epoch_start(self) -> None:
         """Log the learning rate at the start of each training epoch."""
-        lr = self.optimizers().param_groups[0]["lr"]
-        self.logger.experiment.add_scalar("lr", lr, self.current_epoch)
+        optimizers = self.optimizers()
+        if isinstance(optimizers, list):
+            lr = optimizers[0].param_groups[0]["lr"]
+        else:
+            lr = optimizers.param_groups[0]["lr"]
+        self.logger.experiment.add_scalar("lr", lr, self.current_epoch)  # type: ignore
 
 
 # ## Train model
