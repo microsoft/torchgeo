@@ -170,17 +170,7 @@ task = CustomSemanticSegmentationTask(
 # validate that the task's hyperparameters are as expected
 task.hparams
 
-# +
-accelerator = "gpu" if torch.cuda.is_available() else "cpu"
-
-trainer = pl.Trainer(
-    accelerator=accelerator,
-    devices=[0],
-    min_epochs=150,
-    max_epochs=300,
-    log_every_n_steps=50,
-)
-# -
+trainer = pl.Trainer(min_epochs=150, max_epochs=300, log_every_n_steps=50)
 
 trainer.fit(task, dm)
 
