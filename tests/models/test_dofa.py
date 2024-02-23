@@ -1,11 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+from functools import partial
 from pathlib import Path
 from typing import Any
 
 import pytest
 import torch
+import torch.nn as nn
 import torchvision
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
@@ -13,6 +15,7 @@ from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
     DOFABase16_Weights,
+    OFAViT,
     dofa_base_patch16_224,
     dofa_huge_patch16_224,
     dofa_large_patch16_224,
@@ -23,6 +26,54 @@ from torchgeo.models import (
 def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
     state_dict: dict[str, Any] = torch.load(url)
     return state_dict
+
+
+class TestDOFA:
+    @pytest.mark.parametrize(
+        "wavelengths",
+        [
+            # Gaofen
+            [0.443, 0.565, 0.763, 0.765, 0.910],
+            # NAIP
+            [0.640, 0.560, 0.480],
+            [0.480, 0.560, 0.640, 0.810],
+            # Sentinel-1
+            [5.405],
+            [5.405, 5.405],
+            # Sentinel-2
+            [
+                0.443,
+                0.490,
+                0.560,
+                0.665,
+                0.705,
+                0.740,
+                0.783,
+                0.842,
+                0.865,
+                0.945,
+                1.375,
+                1.610,
+                2.190,
+            ],
+        ],
+    )
+    def test_dofa(self, wavelengths: list[float]) -> None:
+        batch_size = 2
+        num_classes = 10
+        model = OFAViT(
+            patch_size=16,
+            embed_dim=384,
+            depth=12,
+            num_heads=6,
+            num_classes=num_classes,
+            mlp_ratio=4,
+            norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        )
+        num_channels = len(wavelengths)
+        batch = torch.randn([batch_size, num_channels, 224, 224])
+        out = model(batch, wavelengths)
+        assert out.shape == torch.Size([batch_size, num_classes])
 
 
 class TestDOFASmall16:
