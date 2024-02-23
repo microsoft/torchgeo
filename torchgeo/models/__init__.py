@@ -5,6 +5,14 @@
 
 from .api import get_model, get_model_weights, get_weight, list_models
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
+from .dofa import (
+    DOFABase16_Weights,
+    OFAViT,
+    dofa_base_patch16_224,
+    dofa_huge_patch16_224,
+    dofa_large_patch16_224,
+    dofa_small_patch16_224,
+)
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff

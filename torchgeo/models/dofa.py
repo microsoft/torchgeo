@@ -673,7 +673,7 @@ def dofa_large_patch16_224(*args: Any, **kwargs: Any) -> OFAViT:
     return model
 
 
-def dofa_huge_patch14_224(*args: Any, **kwargs: Any) -> OFAViT:
+def dofa_huge_patch16_224(*args: Any, **kwargs: Any) -> OFAViT:
     """Dynamic One-For-All (DOFA) huge patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
