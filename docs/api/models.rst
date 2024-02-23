@@ -10,6 +10,16 @@ Change Star
 .. autoclass:: ChangeStarFarSeg
 .. autoclass:: ChangeMixin
 
+DOFA
+^^^^
+
+.. autoclass:: OFAViT
+.. autofunction:: dofa_small_patch16_224
+.. autofunction:: dofa_base_patch16_224
+.. autofunction:: dofa_large_patch16_224
+.. autofunction:: dofa_huge_patch16_224
+.. autoclass:: DOFABase16_Weights
+
 FarSeg
 ^^^^^^
 
@@ -63,15 +73,16 @@ Utility Functions
 Pretrained Weights
 ^^^^^^^^^^^^^^^^^^
 
-NAIP
-----
+Sensor-Agnostic
+---------------
+
+These weights can be used with imagery from any satellite/sensor.
 
 .. csv-table::
-   :widths: 45 10 10 10 10
+   :widths: 45 10 10 10
    :header-rows: 1
    :align: center
-   :file: naip_pretrained_weights.csv
-
+   :file: agnostic_pretrained_weights.csv
 
 Landsat
 -------
@@ -81,6 +92,16 @@ Landsat
    :header-rows: 1
    :align: center
    :file: landsat_pretrained_weights.csv
+
+
+NAIP
+----
+
+.. csv-table::
+   :widths: 45 10 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: naip_pretrained_weights.csv
 
 
 Sentinel-1
