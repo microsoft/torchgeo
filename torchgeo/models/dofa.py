@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import json
 from functools import partial
 
 import numpy as np
@@ -133,170 +132,6 @@ def interpolate_pos_embed(model, checkpoint_model, _num_patches=None):
             pos_tokens = pos_tokens.permute(0, 2, 3, 1).flatten(1, 2)
             new_pos_embed = torch.cat((extra_tokens, pos_tokens), dim=1)
             checkpoint_model["pos_embed"] = new_pos_embed
-
-
-class OFAViT(nn.Module):
-    """Masked Autoencoder with VisionTransformer backbone"""
-
-    def __init__(
-        self,
-        img_size=224,
-        patch_size=16,
-        drop_rate=0.0,
-        embed_dim=1024,
-        depth=24,
-        num_heads=16,
-        wv_planes=128,
-        num_classes=45,
-        global_pool=True,
-        mlp_ratio=4.0,
-        norm_layer=nn.LayerNorm,
-    ):
-        super().__init__()
-
-        self.wv_planes = wv_planes
-        self.global_pool = global_pool
-        if self.global_pool:
-            norm_layer = norm_layer
-            embed_dim = embed_dim
-            self.fc_norm = norm_layer(embed_dim)
-        else:
-            self.norm = norm_layer(embed_dim)
-
-        # --------------------------------------------------------------------------
-        # MAE encoder specifics
-        self.patch_embed = Dynamic_MLP_OFA(
-            wv_planes=128, inter_dim=128, kernel_size=16, embed_dim=embed_dim
-        )
-        self.num_patches = (img_size // patch_size) ** 2
-        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
-        # ---------------------------------------------------------------------------
-        self.pos_embed = nn.Parameter(
-            torch.zeros(1, self.num_patches + 1, embed_dim), requires_grad=False
-        )  # fixed sin-cos embedding
-
-        self.blocks = nn.ModuleList(
-            [
-                Block(
-                    embed_dim,
-                    num_heads,
-                    mlp_ratio,
-                    qkv_bias=True,
-                    norm_layer=norm_layer,
-                )
-                for i in range(depth)
-            ]
-        )
-
-        self.head_drop = nn.Dropout(drop_rate)
-        self.head = (
-            nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
-        )
-
-    def forward_features(self, x, wave_list):
-        # embed patches
-        wavelist = torch.tensor(wave_list, device=x.device).float()
-        self.waves = wavelist
-
-        x, _ = self.patch_embed(x, self.waves)
-
-        x = x + self.pos_embed[:, 1:, :]
-        # append cls token
-        cls_token = self.cls_token + self.pos_embed[:, :1, :]
-        cls_tokens = cls_token.expand(x.shape[0], -1, -1)
-        x = torch.cat((cls_tokens, x), dim=1)
-
-        # apply Transformer blocks
-        for block in self.blocks:
-            x = block(x)
-
-        if self.global_pool:
-            x = x[:, 1:, :].mean(dim=1)  # global pool without cls token
-            outcome = self.fc_norm(x)
-        else:
-            x = self.norm(x)
-            outcome = x[:, 0]
-        return outcome
-
-    def forward_head(self, x, pre_logits=False):
-        x = self.head_drop(x)
-        return x if pre_logits else self.head(x)
-
-    def forward(self, x, wave_list):
-        x = self.forward_features(x, wave_list)
-        x = self.forward_head(x)
-        return x
-
-
-def vit_small_patch16(**kwargs):
-    model = OFAViT(
-        patch_size=16,
-        embed_dim=384,
-        depth=12,
-        num_heads=6,
-        mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs,
-    )
-    return model
-
-
-def vit_base_patch16(**kwargs):
-    model = OFAViT(
-        patch_size=16,
-        embed_dim=768,
-        depth=12,
-        num_heads=12,
-        mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs,
-    )
-    return model
-
-
-def vit_large_patch16(**kwargs):
-    model = OFAViT(
-        patch_size=16,
-        embed_dim=1024,
-        depth=24,
-        num_heads=16,
-        mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs,
-    )
-    return model
-
-
-def vit_huge_patch14(**kwargs):
-    model = OFAViT(
-        patch_size=14,
-        embed_dim=1280,
-        depth=32,
-        num_heads=16,
-        mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        **kwargs,
-    )
-    return model
-
-
-if __name__ == "__main__":
-    check_point = torch.load("ofa_base_checkpoint_e99.pth")
-    vit_model = vit_base_patch16()
-    vit_model.load_state_dict(check_point["model"], strict=False)
-    vit_model = vit_model.cuda()
-    # can be 2,3,4,6,9,12,13,202 or any number if you can provide the wavelengths of
-    # them
-    C = 2
-    inp = torch.randn([1, C, 224, 224]).cuda()
-    with open("waves.json", "r") as wf:
-        wavelists = json.load(wf)
-    test_out = vit_model(inp, wave_list=wavelists[f"{C}"])
-    print(test_out.shape)
-
-
-random_seed = 1234
-torch.manual_seed(random_seed)
 
 
 class TransformerWeightGenerator(nn.Module):
@@ -610,45 +445,146 @@ class Dynamic_MLP_OFA(nn.Module):
         return x, waves
 
 
-if __name__ == "__main__":
-    # num_channels, transformer_dim, patch_depth, patch_height, patch_width
-    in_chans = 5
-    # pev1 = PatchEmbed()
-    # pev2 = PatchEmbed_v2(768, 3, 16, 16)
-    # pev3 = BlockwisePatchEmbedding(in_chans, 768, 1, 16, 16)
-    inp = torch.randn([5, in_chans, 224, 224])
-    inpt = torch.randn([5, 196, 512])
-    wave_lengths = torch.tensor(list(range(in_chans))).float()
-    wv_planes = 128
-    gfl = GaussianFourierFeatureTransform(1, wv_planes // 2, 0.5)
-    wvs = wave_lengths.view([in_chans, 1, 1, 1])
-    waves1 = gfl(wvs)
-    print(waves1.squeeze().shape)
-    waves = get_1d_sincos_pos_embed_from_grid_torch(wv_planes, wave_lengths)
-    print(waves.shape)
-    wg = TransformerWeightGenerator(128, 768 * 256, 768)
-    tout = wg(torch.randn([5, 128]))
-    # print(tout.view(5,768,16,16).shape)
-    # print(pev1(inp).shape)
-    # print(pev2(inp).shape)
-    # print(pev3(inp).shape)
-    # waves, inplanes, wv_planes, kernel_size
-    decod = Dynamic_MLP_Decoder(wv_planes, inter_dim=64, kernel_size=16)
-    dmlp = Dynamic_MLP_OFA(wv_planes, inter_dim=64, kernel_size=16)
-    out = dmlp(inp, wave_lengths)
-    dout = decod(inpt, waves)
-    uniprompt = torch.randn([1, 1, 128])
-    clstoken = torch.randn([1, 1, 128])
-    print(dout.shape)
+class OFAViT(nn.Module):
+    """Masked Autoencoder with VisionTransformer backbone"""
 
-    gfl = GaussianFourierFeatureTransform(1, 5, 0.2)
-    gfl2 = GaussianFourierFeatureTransform(1, 5, 0.2)
-    x1 = torch.tensor([73.4]).view([1, 1, 1, 1])
-    x2 = torch.tensor([74.0]).view([1, 1, 1, 1])
-    s1 = gfl(x1).view([1, 10])
-    s2 = gfl(x2).view([1, 10])
-    s3 = gfl(x1).view([1, 10])
-    print(torch.nn.functional.cosine_similarity(s1, s2))
-    print(s1)
-    print(s3)
-    print(s2)
+    def __init__(
+        self,
+        img_size=224,
+        patch_size=16,
+        drop_rate=0.0,
+        embed_dim=1024,
+        depth=24,
+        num_heads=16,
+        wv_planes=128,
+        num_classes=45,
+        global_pool=True,
+        mlp_ratio=4.0,
+        norm_layer=nn.LayerNorm,
+    ):
+        super().__init__()
+
+        self.wv_planes = wv_planes
+        self.global_pool = global_pool
+        if self.global_pool:
+            norm_layer = norm_layer
+            embed_dim = embed_dim
+            self.fc_norm = norm_layer(embed_dim)
+        else:
+            self.norm = norm_layer(embed_dim)
+
+        # --------------------------------------------------------------------------
+        # MAE encoder specifics
+        self.patch_embed = Dynamic_MLP_OFA(
+            wv_planes=128, inter_dim=128, kernel_size=16, embed_dim=embed_dim
+        )
+        self.num_patches = (img_size // patch_size) ** 2
+        self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
+        # ---------------------------------------------------------------------------
+        self.pos_embed = nn.Parameter(
+            torch.zeros(1, self.num_patches + 1, embed_dim), requires_grad=False
+        )  # fixed sin-cos embedding
+
+        self.blocks = nn.ModuleList(
+            [
+                Block(
+                    embed_dim,
+                    num_heads,
+                    mlp_ratio,
+                    qkv_bias=True,
+                    norm_layer=norm_layer,
+                )
+                for i in range(depth)
+            ]
+        )
+
+        self.head_drop = nn.Dropout(drop_rate)
+        self.head = (
+            nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
+        )
+
+    def forward_features(self, x, wave_list):
+        # embed patches
+        wavelist = torch.tensor(wave_list, device=x.device).float()
+        self.waves = wavelist
+
+        x, _ = self.patch_embed(x, self.waves)
+
+        x = x + self.pos_embed[:, 1:, :]
+        # append cls token
+        cls_token = self.cls_token + self.pos_embed[:, :1, :]
+        cls_tokens = cls_token.expand(x.shape[0], -1, -1)
+        x = torch.cat((cls_tokens, x), dim=1)
+
+        # apply Transformer blocks
+        for block in self.blocks:
+            x = block(x)
+
+        if self.global_pool:
+            x = x[:, 1:, :].mean(dim=1)  # global pool without cls token
+            outcome = self.fc_norm(x)
+        else:
+            x = self.norm(x)
+            outcome = x[:, 0]
+        return outcome
+
+    def forward_head(self, x, pre_logits=False):
+        x = self.head_drop(x)
+        return x if pre_logits else self.head(x)
+
+    def forward(self, x, wave_list):
+        x = self.forward_features(x, wave_list)
+        x = self.forward_head(x)
+        return x
+
+
+def vit_small_patch16(**kwargs):
+    model = OFAViT(
+        patch_size=16,
+        embed_dim=384,
+        depth=12,
+        num_heads=6,
+        mlp_ratio=4,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        **kwargs,
+    )
+    return model
+
+
+def vit_base_patch16(**kwargs):
+    model = OFAViT(
+        patch_size=16,
+        embed_dim=768,
+        depth=12,
+        num_heads=12,
+        mlp_ratio=4,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        **kwargs,
+    )
+    return model
+
+
+def vit_large_patch16(**kwargs):
+    model = OFAViT(
+        patch_size=16,
+        embed_dim=1024,
+        depth=24,
+        num_heads=16,
+        mlp_ratio=4,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        **kwargs,
+    )
+    return model
+
+
+def vit_huge_patch14(**kwargs):
+    model = OFAViT(
+        patch_size=14,
+        embed_dim=1280,
+        depth=32,
+        num_heads=16,
+        mlp_ratio=4,
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        **kwargs,
+    )
+    return model
