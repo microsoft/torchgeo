@@ -30,7 +30,7 @@
 #
 # As always, we install TorchGeo.
 
-# %pip install torchgeo
+# %pip install torchgeo[datasets]
 
 # ## Imports
 #
