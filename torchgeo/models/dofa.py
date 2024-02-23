@@ -1,14 +1,23 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from functools import partial
+"""Dynamic One-For-All (DOFA) models."""
 
+from functools import partial
+from typing import Any, Optional
+
+import kornia.augmentation as K
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 from timm.models.vision_transformer import Block
+from torchvision.models._api import Weights, WeightsEnum
+
+from ..transforms import AugmentationSequential
+
+__all__ = ["DOFABase16_Weights"]
 
 
 # --------------------------------------------------------
@@ -538,7 +547,51 @@ class OFAViT(nn.Module):
         return x
 
 
-def vit_small_patch16(**kwargs):
+# https://github.com/ShadowXZT/DOFA-Net
+# TODO: find where these are defined
+_dofa_transforms = AugmentationSequential(K.CenterCrop((224, 224)), data_keys=["image"])
+
+# https://github.com/pytorch/vision/pull/6883
+# https://github.com/pytorch/vision/pull/7107
+# Can be removed once torchvision>=0.15 is required
+Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
+
+
+class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
+    """Dynamic One-For-All (DOFA) base patch size 16 weights.
+
+    .. versionadded:: 0.6
+    """
+
+    DOFA_MAE = Weights(
+        url="https://huggingface.co/XShadow/DOFA-Net/raw/main/ofa_base_checkpoint_e99.pth",  # noqa: E501
+        transforms=_dofa_transforms,
+        meta={
+            "dataset": "SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k",
+            "model": "dofa_base_patch16_224",
+            "publication": "TODO",
+            "repo": "https://github.com/ShadowXZT/DOFA-Net",
+            "ssl_method": "mae",
+        },
+    )
+
+
+def dofa_small_patch16_224(*args: Any, **kwargs: Any) -> OFAViT:
+    """Dynamic One-For-All (DOFA) small patch size 16 model.
+
+    If you use this model in your research, please cite the following paper:
+
+    * TODO
+
+    .. versionadded:: 0.6
+
+    Args:
+        *args: Additional arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`.
+
+    Returns:
+        A DOFA small 16 model.
+    """
     model = OFAViT(
         patch_size=16,
         embed_dim=384,
@@ -546,12 +599,31 @@ def vit_small_patch16(**kwargs):
         num_heads=6,
         mlp_ratio=4,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        *args,
         **kwargs,
     )
     return model
 
 
-def vit_base_patch16(**kwargs):
+def dofa_base_patch16_224(
+    weights: Optional[DOFABase16_Weights] = None, *args: Any, **kwargs: Any
+) -> OFAViT:
+    """Dynamic One-For-All (DOFA) base patch size 16 model.
+
+    If you use this model in your research, please cite the following paper:
+
+    * TODO
+
+    .. versionadded:: 0.6
+
+    Args:
+        weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`.
+
+    Returns:
+        A DOFA base 16 model.
+    """
     model = OFAViT(
         patch_size=16,
         embed_dim=768,
@@ -559,12 +631,36 @@ def vit_base_patch16(**kwargs):
         num_heads=12,
         mlp_ratio=4,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        *args,
         **kwargs,
     )
+
+    if weights:
+        missing_keys, unexpected_keys = model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        assert set(missing_keys) <= {"head.weight", "head.bias"}
+        assert not unexpected_keys
+
     return model
 
 
-def vit_large_patch16(**kwargs):
+def dofa_large_patch16_224(*args: Any, **kwargs: Any) -> OFAViT:
+    """Dynamic One-For-All (DOFA) large patch size 16 model.
+
+    If you use this model in your research, please cite the following paper:
+
+    * TODO
+
+    .. versionadded:: 0.6
+
+    Args:
+        *args: Additional arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`.
+
+    Returns:
+        A DOFA large 16 model.
+    """
     model = OFAViT(
         patch_size=16,
         embed_dim=1024,
@@ -572,12 +668,28 @@ def vit_large_patch16(**kwargs):
         num_heads=16,
         mlp_ratio=4,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        *args,
         **kwargs,
     )
     return model
 
 
-def vit_huge_patch14(**kwargs):
+def dofa_huge_patch14_224(*args: Any, **kwargs: Any) -> OFAViT:
+    """Dynamic One-For-All (DOFA) huge patch size 16 model.
+
+    If you use this model in your research, please cite the following paper:
+
+    * TODO
+
+    .. versionadded:: 0.6
+
+    Args:
+        *args: Additional arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`.
+
+    Returns:
+        A DOFA huge 16 model.
+    """
     model = OFAViT(
         patch_size=14,
         embed_dim=1280,
@@ -585,6 +697,7 @@ def vit_huge_patch14(**kwargs):
         num_heads=16,
         mlp_ratio=4,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        *args,
         **kwargs,
     )
     return model
