@@ -42,7 +42,6 @@ import warnings
 
 import lightning
 import lightning.pytorch as pl
-import torch
 from lightning.pytorch.callbacks import ModelCheckpoint
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -81,8 +80,6 @@ class CustomSemanticSegmentationTask(SemanticSegmentationTask):
 
     # any keywords we add here between *args and **kwargs will be found in self.hparams
     def __init__(self, *args, tmax=50, eta_min=1e-6, **kwargs) -> None:
-        if "ignore" in kwargs:
-            del kwargs["ignore"]  # this is a hack
         super().__init__(*args, **kwargs)  # pass args and kwargs to the parent class
 
     def configure_optimizers(
@@ -140,7 +137,7 @@ class CustomSemanticSegmentationTask(SemanticSegmentationTask):
             List of callbacks to apply.
         """
         return [
-            ModelCheckpoint(every_n_epochs=50, save_top_k=-1),
+            ModelCheckpoint(every_n_epochs=50, save_top_k=-1, save_last=True),
             ModelCheckpoint(monitor=self.monitor, mode=self.mode, save_top_k=5),
         ]
 
@@ -170,17 +167,22 @@ task = CustomSemanticSegmentationTask(
 # validate that the task's hyperparameters are as expected
 task.hparams
 
-trainer = pl.Trainer(min_epochs=150, max_epochs=250, log_every_n_steps=50)
+# The following Trainer config is useful just for testing the code in this notebook.
+trainer = pl.Trainer(
+    limit_train_batches=1, limit_val_batches=1, num_sanity_val_steps=0, max_epochs=1
+)
+# You can use the following for actual training runs.
+# trainer = pl.Trainer(min_epochs=150, max_epochs=250, log_every_n_steps=50)
 
 trainer.fit(task, dm)
 
 # ## Test model
 #
-# Finally, we test the model on the test set and visualize the results.
+# Finally, we test the model (optionally loading from a previously saved checkpoint).
 
-# If you are starting from a checkpoint, run this cell
+# You can load directly from a saved checkpoint with `.load_from_checkpoint(...)`
 task = CustomSemanticSegmentationTask.load_from_checkpoint(
-    "lightning_logs/version_3/checkpoints/epoch=0-step=117.ckpt"
+    "lightning_logs/version_0/checkpoints/epoch=0-step=1.ckpt"
 )
 
 trainer.test(task, dm)
