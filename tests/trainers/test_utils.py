@@ -41,7 +41,7 @@ def test_get_input_layer_name_and_module() -> None:
 
 def test_load_state_dict(checkpoint: str, model: Module) -> None:
     _, state_dict = extract_backbone(checkpoint)
-    model = load_state_dict(model, state_dict)
+    load_state_dict(model, state_dict)
 
 
 def test_load_state_dict_unequal_input_channels(checkpoint: str, model: Module) -> None:
@@ -58,7 +58,7 @@ def test_load_state_dict_unequal_input_channels(checkpoint: str, model: Module) 
         f" model {expected_in_channels}. Overriding with new input channels"
     )
     with pytest.warns(UserWarning, match=warning):
-        model = load_state_dict(model, state_dict)
+        load_state_dict(model, state_dict)
 
 
 def test_load_state_dict_unequal_classes(checkpoint: str, model: Module) -> None:
@@ -74,7 +74,7 @@ def test_load_state_dict_unequal_classes(checkpoint: str, model: Module) -> None
         f" {expected_num_classes}. Overriding with new num classes"
     )
     with pytest.warns(UserWarning, match=warning):
-        model = load_state_dict(model, state_dict)
+        load_state_dict(model, state_dict)
 
 
 def test_reinit_initial_conv_layer() -> None:
