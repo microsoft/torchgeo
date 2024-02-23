@@ -60,17 +60,19 @@ class TestDOFA:
     )
     def test_dofa(self, wavelengths: list[float]) -> None:
         batch_size = 2
+        num_channels = len(wavelengths)
         num_classes = 10
+        global_pool = num_channels % 2 == 0
         model = OFAViT(
             patch_size=16,
             embed_dim=384,
             depth=12,
             num_heads=6,
             num_classes=num_classes,
+            global_pool=global_pool,
             mlp_ratio=4,
             norm_layer=partial(nn.LayerNorm, eps=1e-6),
         )
-        num_channels = len(wavelengths)
         batch = torch.randn([batch_size, num_channels, 224, 224])
         out = model(batch, wavelengths)
         assert out.shape == torch.Size([batch_size, num_classes])
