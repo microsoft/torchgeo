@@ -14,8 +14,8 @@
 # ---
 
 # flake8: noqa: E501
-# Copyright (c) Microsoft Corporation. All rights reserved.
 #
+# Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
 # # Custom Trainers
@@ -81,7 +81,8 @@ class CustomSemanticSegmentationTask(SemanticSegmentationTask):
 
     # any keywords we add here between *args and **kwargs will be found in self.hparams
     def __init__(self, *args, tmax=50, eta_min=1e-6, **kwargs) -> None:
-        del kwargs["ignore"]  # this is a hack
+        if "ignore" in kwargs:
+            del kwargs["ignore"]  # this is a hack
         super().__init__(*args, **kwargs)  # pass args and kwargs to the parent class
 
     def configure_optimizers(
