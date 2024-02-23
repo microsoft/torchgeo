@@ -39,12 +39,13 @@
 # Get rid of the pesky warnings raised by kornia
 # UserWarning: Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0. Please specify align_corners=True if the old behavior is desired. See the documentation of grid_sample for details.
 import warnings
+from collections.abc import Sequence
+from typing import Any, Union
 
-from typing import Any, Union, Sequence
-from lightning.pytorch.callbacks.callback import Callback
 import lightning
 import lightning.pytorch as pl
 from lightning.pytorch.callbacks import ModelCheckpoint
+from lightning.pytorch.callbacks.callback import Callback
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchmetrics import MetricCollection
@@ -81,7 +82,9 @@ warnings.filterwarnings("ignore", category=UserWarning, module="torch.nn.functio
 class CustomSemanticSegmentationTask(SemanticSegmentationTask):
 
     # any keywords we add here between *args and **kwargs will be found in self.hparams
-    def __init__(self, *args: Any, tmax: int=50, eta_min: float=1e-6, **kwargs: Any) -> None:
+    def __init__(
+        self, *args: Any, tmax: int = 50, eta_min: float = 1e-6, **kwargs: Any
+    ) -> None:
         super().__init__(*args, **kwargs)  # pass args and kwargs to the parent class
 
     def configure_optimizers(
