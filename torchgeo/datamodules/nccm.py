@@ -5,7 +5,6 @@
 
 from typing import Any, Optional, Union
 
-
 import kornia.augmentation as K
 import torch
 from kornia.constants import DataKey, Resample
