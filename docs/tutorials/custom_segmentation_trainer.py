@@ -74,6 +74,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="torch.nn.functio
 #
 # Overall these demonstrate how to customize the training routine to investigate specific research questions (e.g. of the scheduler on test performance).
 
+
 class CustomSemanticSegmentationTask(SemanticSegmentationTask):
 
     # any keywords we add here between *args and **kwargs will be found in self.hparams
@@ -190,5 +191,3 @@ task = CustomSemanticSegmentationTask.load_from_checkpoint(
 )
 
 trainer.test(task, dm)
-
-
