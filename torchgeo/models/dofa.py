@@ -547,8 +547,7 @@ class OFAViT(nn.Module):
         return x
 
 
-# https://github.com/ShadowXZT/DOFA-Net
-# TODO: find where these are defined
+# https://github.com/ShadowXZT/DOFA-Net/blob/master/normalize_dataset.py
 _dofa_transforms = AugmentationSequential(K.CenterCrop((224, 224)), data_keys=["image"])
 
 # https://github.com/pytorch/vision/pull/6883
