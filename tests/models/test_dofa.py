@@ -71,7 +71,7 @@ class TestDOFA:
             num_classes=num_classes,
             global_pool=global_pool,
             mlp_ratio=4,
-            norm_layer=partial(nn.LayerNorm, eps=1e-6),
+            norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore[arg-type]
         )
         batch = torch.randn([batch_size, num_channels, 224, 224])
         out = model(batch, wavelengths)

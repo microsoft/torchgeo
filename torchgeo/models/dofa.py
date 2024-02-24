@@ -84,7 +84,7 @@ class TransformerWeightGenerator(nn.Module):
         )
         self.transformer_encoder = nn.TransformerEncoder(
             encoder_layer, num_layers=num_layers, enable_nested_tensor=False
-        )
+        )  # type: ignore[no-untyped-call]
 
         # Linear layer to map transformer output to desired weight shape
         self.fc_weight = nn.Linear(input_dim, output_dim)
@@ -149,7 +149,7 @@ class FCResLayer(nn.Module):
         y = self.nonlin1(y)
         y = self.w2(y)
         y = self.nonlin2(y)
-        out = x + y
+        out: Tensor = x + y
         return out
 
 
@@ -201,7 +201,7 @@ class Dynamic_MLP_OFA(nn.Module):
         Returns:
             Dynamic weights.
         """
-        dynamic_weights = self.weight_generator(waves)
+        dynamic_weights: Tensor = self.weight_generator(waves)
 
         return dynamic_weights
 
@@ -272,7 +272,7 @@ class OFAViT(nn.Module):
         num_classes: int = 45,
         global_pool: bool = True,
         mlp_ratio: float = 4.0,
-        norm_layer: nn.Module = nn.LayerNorm,
+        norm_layer: type[nn.Module] = nn.LayerNorm,
     ) -> None:
         """Initialize a new OFAViT instance.
 
@@ -358,7 +358,7 @@ class OFAViT(nn.Module):
 
         if self.global_pool:
             x = x[:, 1:, :].mean(dim=1)  # global pool without cls token
-            outcome = self.fc_norm(x)
+            outcome: Tensor = self.fc_norm(x)
         else:
             x = self.norm(x)
             outcome = x[:, 0]
@@ -375,7 +375,8 @@ class OFAViT(nn.Module):
             Output mini-batch.
         """
         x = self.head_drop(x)
-        return x if pre_logits else self.head(x)
+        x = x if pre_logits else self.head(x)
+        return x
 
     def forward(self, x: Tensor, wave_list: list[float]) -> Tensor:
         """Forward pass of the model.
@@ -442,7 +443,7 @@ def dofa_small_patch16_224(**kwargs: Any) -> OFAViT:
         depth=12,
         num_heads=6,
         mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore[arg-type]
         **kwargs,
     )
     return model
@@ -472,7 +473,7 @@ def dofa_base_patch16_224(
         depth=12,
         num_heads=12,
         mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore[arg-type]
         **kwargs,
     )
 
@@ -507,7 +508,7 @@ def dofa_large_patch16_224(**kwargs: Any) -> OFAViT:
         depth=24,
         num_heads=16,
         mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore[arg-type]
         **kwargs,
     )
     return model
@@ -534,7 +535,7 @@ def dofa_huge_patch16_224(**kwargs: Any) -> OFAViT:
         depth=32,
         num_heads=16,
         mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore[arg-type]
         **kwargs,
     )
     return model
