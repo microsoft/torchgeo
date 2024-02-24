@@ -421,7 +421,7 @@ class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-def dofa_small_patch16_224(*args: Any, **kwargs: Any) -> OFAViT:
+def dofa_small_patch16_224(**kwargs: Any) -> OFAViT:
     """Dynamic One-For-All (DOFA) small patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -431,8 +431,7 @@ def dofa_small_patch16_224(*args: Any, **kwargs: Any) -> OFAViT:
     .. versionadded:: 0.6
 
     Args:
-        *args: Additional arguments to pass to :func:`timm.create_model`.
-        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keywork arguments to pass to :class:`OFAViT`.
 
     Returns:
         A DOFA small 16 model.
@@ -444,14 +443,13 @@ def dofa_small_patch16_224(*args: Any, **kwargs: Any) -> OFAViT:
         num_heads=6,
         mlp_ratio=4,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        *args,
         **kwargs,
     )
     return model
 
 
 def dofa_base_patch16_224(
-    weights: Optional[DOFABase16_Weights] = None, *args: Any, **kwargs: Any
+    weights: Optional[DOFABase16_Weights] = None, **kwargs: Any
 ) -> OFAViT:
     """Dynamic One-For-All (DOFA) base patch size 16 model.
 
@@ -463,8 +461,7 @@ def dofa_base_patch16_224(
 
     Args:
         weights: Pre-trained model weights to use.
-        *args: Additional arguments to pass to :func:`timm.create_model`.
-        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keywork arguments to pass to :class:`OFAViT`.
 
     Returns:
         A DOFA base 16 model.
@@ -476,7 +473,6 @@ def dofa_base_patch16_224(
         num_heads=12,
         mlp_ratio=4,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        *args,
         **kwargs,
     )
 
@@ -490,7 +486,7 @@ def dofa_base_patch16_224(
     return model
 
 
-def dofa_large_patch16_224(*args: Any, **kwargs: Any) -> OFAViT:
+def dofa_large_patch16_224(**kwargs: Any) -> OFAViT:
     """Dynamic One-For-All (DOFA) large patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -500,8 +496,7 @@ def dofa_large_patch16_224(*args: Any, **kwargs: Any) -> OFAViT:
     .. versionadded:: 0.6
 
     Args:
-        *args: Additional arguments to pass to :func:`timm.create_model`.
-        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keywork arguments to pass to :class:`OFAViT`.
 
     Returns:
         A DOFA large 16 model.
@@ -513,13 +508,12 @@ def dofa_large_patch16_224(*args: Any, **kwargs: Any) -> OFAViT:
         num_heads=16,
         mlp_ratio=4,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        *args,
         **kwargs,
     )
     return model
 
 
-def dofa_huge_patch16_224(*args: Any, **kwargs: Any) -> OFAViT:
+def dofa_huge_patch16_224(**kwargs: Any) -> OFAViT:
     """Dynamic One-For-All (DOFA) huge patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -529,8 +523,7 @@ def dofa_huge_patch16_224(*args: Any, **kwargs: Any) -> OFAViT:
     .. versionadded:: 0.6
 
     Args:
-        *args: Additional arguments to pass to :func:`timm.create_model`.
-        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keywork arguments to pass to :class:`OFAViT`.
 
     Returns:
         A DOFA huge 16 model.
@@ -542,7 +535,6 @@ def dofa_huge_patch16_224(*args: Any, **kwargs: Any) -> OFAViT:
         num_heads=16,
         mlp_ratio=4,
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-        *args,
         **kwargs,
     )
     return model
