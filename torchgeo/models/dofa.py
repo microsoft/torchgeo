@@ -407,7 +407,7 @@ class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DOFA_MAE = Weights(
-        url="https://huggingface.co/XShadow/DOFA-Net/raw/main/ofa_base_checkpoint_e99.pth",  # noqa: E501
+        url="https://huggingface.co/torchgeo/dofa/resolve/main/dofa_base_patch16_224-7cc0f413.pth",  # noqa: E501
         transforms=_dofa_transforms,
         meta={
             "dataset": "SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k",
@@ -478,7 +478,13 @@ def dofa_base_patch16_224(
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
-        assert set(missing_keys) <= {"head.weight", "head.bias"}
+        # Both fc_norm and head are generated dynamically
+        assert set(missing_keys) <= {
+            "fc_norm.weight",
+            "fc_norm.bias",
+            "head.weight",
+            "head.bias",
+        }
         assert not unexpected_keys
 
     return model
