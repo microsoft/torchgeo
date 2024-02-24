@@ -23,8 +23,6 @@ __all__ = ["DOFABase16_Weights"]
 def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor) -> Tensor:
     """Compute the 1D sine/cosine position embeddings in a grid.
 
-    .. versionadded:: 0.6
-
     Args:
         embed_dim: Output dimension D for each position. Must be even.
         pos: A list of positions to be encoded, of size (M,).
@@ -51,10 +49,7 @@ def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor) -> Tens
 
 
 class TransformerWeightGenerator(nn.Module):
-    """Dynamic weight generator for DOFA.
-
-    .. versionadded:: 0.6
-    """
+    """Dynamic weight generator for DOFA."""
 
     def __init__(
         self,
@@ -118,10 +113,7 @@ class TransformerWeightGenerator(nn.Module):
 
 
 class FCResLayer(nn.Module):
-    """Fully-connected residual layer.
-
-    .. versionadded:: 0.6
-    """
+    """Fully-connected residual layer."""
 
     def __init__(self, linear_size: int = 128) -> None:
         """Initialize a new FCResLayer instance.
@@ -154,10 +146,7 @@ class FCResLayer(nn.Module):
 
 
 class Dynamic_MLP_OFA(nn.Module):
-    """Dynamic Multilayer Perceptron for DOFA.
-
-    .. versionadded:: 0.6
-    """
+    """Dynamic Multilayer Perceptron for DOFA."""
 
     def __init__(
         self,
@@ -256,6 +245,14 @@ class Dynamic_MLP_OFA(nn.Module):
 
 class OFAViT(nn.Module):
     """Masked Autoencoder with VisionTransformer backbone.
+
+    Reference implementation:
+
+    * https://github.com/ShadowXZT/DOFA-Net
+
+    If you use this model in your research, please cite the following paper:
+
+    * TODO
 
     .. versionadded:: 0.6
     """
