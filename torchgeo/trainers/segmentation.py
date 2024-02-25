@@ -104,9 +104,11 @@ class SemanticSegmentationTask(BaseTask):
                 ignore_index=ignore_value, weight=self.hparams["class_weights"]
             )
         elif loss == "jaccard":
-            class_set = set(range(self.hparams["num_classes"]))
-            if ignore_index is not None:
-                class_set.remove(ignore_index)
+            class_set = [
+                i
+                for i in range(self.hparams["num_classes"])
+                if i != ignore_index
+            ]
 
             self.criterion = smp.losses.JaccardLoss(
                 mode="multiclass", classes=class_set
