@@ -110,9 +110,7 @@ class SemanticSegmentationTask(BaseTask):
                 i for i in range(self.hparams["num_classes"]) if i != ignore_index
             ]
 
-            self.criterion = smp.losses.JaccardLoss(
-                mode="multiclass", classes=classes
-            )
+            self.criterion = smp.losses.JaccardLoss(mode="multiclass", classes=classes)
         elif loss == "focal":
             self.criterion = smp.losses.FocalLoss(
                 "multiclass", ignore_index=ignore_index, normalized=True
