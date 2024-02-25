@@ -104,6 +104,7 @@ class SemanticSegmentationTask(BaseTask):
                 ignore_index=ignore_value, weight=self.hparams["class_weights"]
             )
         elif loss == "jaccard":
+            # JaccardLoss requires a list of classes to use instead of a class index to ignore.
             class_set = [
                 i for i in range(self.hparams["num_classes"]) if i != ignore_index
             ]
