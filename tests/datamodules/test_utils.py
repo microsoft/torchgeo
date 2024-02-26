@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import json
+import os
 import re
 
 import numpy as np
@@ -31,7 +32,7 @@ def test_dataset_split() -> None:
 
 
 def test_group_shuffle_split() -> None:
-    with open("tests/datamodules/train_test_indices.json") as f:
+    with open(os.path.join("tests", "datamodules", "train_test_indices.json")) as f:
         data = json.load(f)
         train_indices = data["train_indices"]
         test_indices = data["test_indices"]
