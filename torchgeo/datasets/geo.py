@@ -285,7 +285,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self._res = new_res
 
     @property
-    def files(self) -> set[str]:
+    def files(self) -> list[str]:
         """A list of all files in the dataset.
 
         Returns:
@@ -314,7 +314,8 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
                     UserWarning,
                 )
 
-        return files
+        # Sort the output to enforce deterministic behavior.
+        return sorted(files)
 
 
 class RasterDataset(GeoDataset):

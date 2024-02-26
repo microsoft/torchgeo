@@ -171,6 +171,21 @@ class TestGeoDataset:
         ]
         assert len(CustomGeoDataset(paths=paths).files) == len(paths)
 
+    def test_files_property_ordered(self) -> None:
+        """Ensure that the list of files is ordered."""
+        paths = ["file://file3.tif", "file://file1.tif", "file://file2.tif"]
+        assert CustomGeoDataset(paths=paths).files == sorted(paths)
+
+    def test_files_property_deterministic(self) -> None:
+        """Ensure that the list of files is consistent regardless of their original
+        order.
+        """
+        paths1 = ["file://file3.tif", "file://file1.tif", "file://file2.tif"]
+        paths2 = ["file://file2.tif", "file://file3.tif", "file://file1.tif"]
+        assert (
+            CustomGeoDataset(paths=paths1).files == CustomGeoDataset(paths=paths2).files
+        )
+
 
 class TestRasterDataset:
     @pytest.fixture(params=zip([["R", "G", "B"], None], [True, False]))
