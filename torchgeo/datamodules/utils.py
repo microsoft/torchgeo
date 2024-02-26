@@ -186,7 +186,7 @@ def group_shuffle_split(
         raise ValueError("`train_size` and `test_size` must be in the range (0,1).")
 
     group_vals = sorted(list(groups))
-    n_groups = len(group_vals)
+    n_groups = len(set(group_vals))
     n_test_groups = round(n_groups * test_size)
     n_train_groups = n_groups - n_test_groups
 

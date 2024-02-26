@@ -46,13 +46,30 @@ def test_group_shuffle_split() -> None:
     with pytest.raises(ValueError, match="26 groups were found, however the current *"):
         group_shuffle_split(groups, train_size=None, test_size=0.999)
 
-    train_indices, test_indices = group_shuffle_split(
-        groups, train_size=None, test_size=0.2
+    train_indices1, test_indices1 = group_shuffle_split(
+        groups, train_size=None, test_size=0.2, random_state=42
     )
-    assert len(set(train_indices) & set(test_indices)) == 0
-    assert len(set(groups[train_indices])) == 21
-    train_indices, test_indices = group_shuffle_split(
-        groups, train_size=0.8, test_size=None
+    train_indices2, test_indices2 = group_shuffle_split(
+        groups, train_size=None, test_size=0.2, random_state=42
     )
-    assert len(set(train_indices) & set(test_indices)) == 0
-    assert len(set(groups[train_indices])) == 21
+
+    # Check that the group values are the same for repeated calls
+    assert set(groups[train_indices1]) == set(groups[train_indices2])
+    assert set(groups[test_indices1]) == set(groups[test_indices2])
+
+    assert len(set(train_indices1) & set(test_indices1)) == 0
+    assert len(set(groups[train_indices1])) == 21
+
+    train_indices1, test_indices1 = group_shuffle_split(
+        groups, train_size=0.8, test_size=None, random_state=42
+    )
+    train_indices2, test_indices2 = group_shuffle_split(
+        groups, train_size=0.8, test_size=None, random_state=42
+    )
+
+    # Check that the group values are the same for repeated calls
+    assert set(groups[train_indices1]) == set(groups[train_indices2])
+    assert set(groups[test_indices1]) == set(groups[test_indices2])
+
+    assert len(set(train_indices1) & set(test_indices1)) == 0
+    assert len(set(groups[train_indices1])) == 21
