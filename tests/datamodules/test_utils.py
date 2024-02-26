@@ -1,7 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import multiprocessing
 import re
+from multiprocessing.queues import Queue
+from typing import Optional
 
 import numpy as np
 import pytest
@@ -29,6 +32,19 @@ def test_dataset_split() -> None:
     assert len(test_ds) == round(num_samples / 3)
 
 
+def worker(
+    groups: "np.typing.NDArray[np.str_]",
+    train_size: Optional[float],
+    test_size: Optional[float],
+    random_state: int,
+    result_queue: Queue[tuple[list[int], list[int]]],
+) -> None:
+    train_indices, test_indices = group_shuffle_split(
+        groups, train_size=train_size, test_size=test_size, random_state=random_state
+    )
+    result_queue.put((train_indices, test_indices))
+
+
 def test_group_shuffle_split() -> None:
     alphabet = np.array(list("abcdefghijklmnopqrstuvwxyz"))
     groups = np.random.randint(0, 26, size=(1000))
@@ -46,30 +62,34 @@ def test_group_shuffle_split() -> None:
     with pytest.raises(ValueError, match="26 groups were found, however the current *"):
         group_shuffle_split(groups, train_size=None, test_size=0.999)
 
-    train_indices1, test_indices1 = group_shuffle_split(
-        groups, train_size=None, test_size=0.2, random_state=42
-    )
-    train_indices2, test_indices2 = group_shuffle_split(
-        groups, train_size=None, test_size=0.2, random_state=42
+    result_queue: multiprocessing.Queue[tuple[list[int], tuple[list[int]]]] = (
+        multiprocessing.Queue()
     )
 
-    # Check that the group values are the same for repeated calls
-    assert set(groups[train_indices1]) == set(groups[train_indices2])
-    assert set(groups[test_indices1]) == set(groups[test_indices2])
+    test_cases = [(None, 0.2, 42), (0.8, None, 42)]
 
-    assert len(set(train_indices1) & set(test_indices1)) == 0
-    assert len(set(groups[train_indices1])) == 21
+    for train_size, test_size, random_state in test_cases:
+        p1 = multiprocessing.Process(
+            target=worker,
+            args=(groups, train_size, test_size, random_state, result_queue),
+        )
+        p1.start()
+        p1.join()
 
-    train_indices1, test_indices1 = group_shuffle_split(
-        groups, train_size=0.8, test_size=None, random_state=42
-    )
-    train_indices2, test_indices2 = group_shuffle_split(
-        groups, train_size=0.8, test_size=None, random_state=42
-    )
+        train_indices1, test_indices1 = result_queue.get()
 
-    # Check that the group values are the same for repeated calls
-    assert set(groups[train_indices1]) == set(groups[train_indices2])
-    assert set(groups[test_indices1]) == set(groups[test_indices2])
+        p2 = multiprocessing.Process(
+            target=worker,
+            args=(groups, train_size, test_size, random_state, result_queue),
+        )
+        p2.start()
+        p2.join()
 
-    assert len(set(train_indices1) & set(test_indices1)) == 0
-    assert len(set(groups[train_indices1])) == 21
+        train_indices2, test_indices2 = result_queue.get()
+
+        # Check that the results are the same as the saved results
+        assert np.array_equal(train_indices2, train_indices1)
+        assert np.array_equal(test_indices2, test_indices1)
+
+        assert len(set(train_indices1) & set(test_indices1)) == 0
+        assert len(set(groups[train_indices1])) == 21
