@@ -37,7 +37,7 @@ def worker(
     train_size: Optional[float],
     test_size: Optional[float],
     random_state: int,
-    result_queue: Queue[tuple[list[int], list[int]]],
+    result_queue: Queue,
 ) -> None:
     train_indices, test_indices = group_shuffle_split(
         groups, train_size=train_size, test_size=test_size, random_state=random_state
@@ -62,9 +62,7 @@ def test_group_shuffle_split() -> None:
     with pytest.raises(ValueError, match="26 groups were found, however the current *"):
         group_shuffle_split(groups, train_size=None, test_size=0.999)
 
-    result_queue: multiprocessing.Queue[tuple[list[int], tuple[list[int]]]] = (
-        multiprocessing.Queue()
-    )
+    result_queue: Queue = multiprocessing.Queue()
 
     test_cases = [(None, 0.2, 42), (0.8, None, 42)]
 
