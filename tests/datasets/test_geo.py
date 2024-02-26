@@ -76,15 +76,6 @@ class TestGeoDataset:
     def dataset(self) -> GeoDataset:
         return CustomGeoDataset()
 
-    @pytest.fixture(scope="class")
-    def files(self) -> list[str]:
-        """Example list of files in the expected output order.
-
-        Used to test the titular property.
-        """
-        files = ["file://file1.tif", "file://file2.tif", "file://file3.tif"]
-        return files
-
     def test_getitem(self, dataset: GeoDataset) -> None:
         query = BoundingBox(0, 1, 2, 3, 4, 5)
         assert dataset[query] == {"index": query}
@@ -186,12 +177,12 @@ class TestGeoDataset:
         ]
         assert len(CustomGeoDataset(paths=paths).files) == len(paths)
 
-    def test_files_property_ordered(self, files: list[str]) -> None:
+    def test_files_property_ordered(self) -> None:
         """Ensure that the list of files is ordered."""
         paths = ["file://file3.tif", "file://file1.tif", "file://file2.tif"]
-        assert CustomGeoDataset(paths=paths).files == files
+        assert CustomGeoDataset(paths=paths).files == sorted(paths)
 
-    def test_files_property_deterministic(self, files: list[str]) -> None:
+    def test_files_property_deterministic(self) -> None:
         """Ensure that the list of files is consistent regardless of their original
         order.
         """
