@@ -40,7 +40,7 @@ class SemanticSegmentationTask(BaseTask):
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
     ) -> None:
-        """Inititalize a new SemanticSegmentationTask instance.
+        """Initialize a new SemanticSegmentationTask instance.
 
         Args:
             model: Name of the
