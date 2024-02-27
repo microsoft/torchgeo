@@ -122,7 +122,12 @@ class SemanticSegmentationTask(BaseTask):
             )
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        Metrics are reported for MulticlassAccuracy and MulticlassJaccardIndex using
+        average="micro". The micro reduction method weights per pixel giving the overall
+        accuracy of each pixel across the entire dataset.
+        """
         num_classes: int = self.hparams["num_classes"]
         ignore_index: Optional[int] = self.hparams["ignore_index"]
         metrics = MetricCollection(
