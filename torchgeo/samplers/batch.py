@@ -122,7 +122,6 @@ class RandomBatchGeoSampler(BatchGeoSampler):
                     self.length += 1
                 self.hits.append(hit)
                 areas.append(bounds.area)
-
         if length is not None:
             self.length = length
 

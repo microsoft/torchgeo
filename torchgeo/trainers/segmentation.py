@@ -254,7 +254,6 @@ class SemanticSegmentationTask(BaseTask):
             batch["prediction"] = y_hat.argmax(dim=1)
             for key in ["image", "mask", "prediction"]:
                 batch[key] = batch[key].cpu()
-
             sample = unbind_samples(batch)[0]
 
             fig: Optional[Figure] = None
