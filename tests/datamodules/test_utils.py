@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import json
-import os
 import re
 
 import numpy as np
@@ -31,14 +29,14 @@ def test_dataset_split() -> None:
     assert len(test_ds) == round(num_samples / 3)
 
 
+train_indices = [0, 2, 5, 6, 7, 8, 9, 10, 11, 13, 14]
+test_indices = [1, 3, 4, 12]
+
+
 def test_group_shuffle_split() -> None:
-    with open(os.path.join("tests", "datamodules", "train_test_indices.json")) as f:
-        data = json.load(f)
-        train_indices = data["train_indices"]
-        test_indices = data["test_indices"]
     np.random.seed(0)
-    alphabet = np.array(list("abcdefghijklmnopqrstuvwxyz"))
-    groups = np.random.randint(0, 26, size=(1000))
+    alphabet = np.array(list("abc"))
+    groups = np.random.randint(0, 3, size=(15))
     groups = alphabet[groups]
 
     with pytest.raises(ValueError, match="You must specify `train_size` *"):
@@ -50,7 +48,7 @@ def test_group_shuffle_split() -> None:
         match=re.escape("`train_size` and `test_size` must be in the range (0,1)."),
     ):
         group_shuffle_split(groups, train_size=-0.2, test_size=1.2)
-    with pytest.raises(ValueError, match="26 groups were found, however the current *"):
+    with pytest.raises(ValueError, match="3 groups were found, however the current *"):
         group_shuffle_split(groups, train_size=None, test_size=0.999)
 
     test_cases = [(None, 0.2, 42), (0.8, None, 42)]
@@ -67,4 +65,4 @@ def test_group_shuffle_split() -> None:
         assert np.array_equal(test_indices, test_indices1)
 
         assert len(set(train_indices1) & set(test_indices1)) == 0
-        assert len(set(groups[train_indices1])) == 21
+        assert len(set(groups[train_indices1])) == 2
