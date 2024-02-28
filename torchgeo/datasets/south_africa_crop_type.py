@@ -37,16 +37,16 @@ class SouthAfricaCropType(RasterDataset):
 
     Dataset classes:
 
-    0: No Data
-    1: Lucerne/Medics
-    2: Planted pastures (perennial)
-    3: Fallow
-    4: Wine grapes
-    5: Weeds
-    6: Small grain grazing
-    7: Wheat
-    8: Canola
-    9: Rooibos
+    0. No Data
+    1. Lucerne/Medics
+    2. Planted pastures (perennial)
+    3. Fallow
+    4. Wine grapes
+    5. Weeds
+    6. Small grain grazing
+    7. Wheat
+    8. Canola
+    9. Rooibos
 
     If you use this dataset in your research, please cite the following dataset:
     Western Cape Department of Agriculture, Radiant Earth Foundation (2021)
@@ -92,13 +92,13 @@ class SouthAfricaCropType(RasterDataset):
 
     def __init__(
         self,
-        root: str = "",
+        root: str = "data",
         crs: CRS = CRS.from_epsg(32634),
         classes: list[int] = list(cmap.keys()),
         bands: list[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
     ) -> None:
-        """Initialize a new South Africa dataset instance.
+        """Initialize a new South Africa Crop Type dataset instance.
 
         Args:
             root: root directory where dataset can be found

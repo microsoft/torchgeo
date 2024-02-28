@@ -12,10 +12,12 @@ from rasterio.transform import Affine
 
 
 def generate_test_data() -> str:
-    """Create test data archive for AgriFieldNet dataset.
+    """Create test data archive for SouthAfricaCropType dataset.
+
     Args:
         paths: path to store test data
         n_samples: number of samples.
+
     Returns:
         md5 hash of created archive
     """
@@ -76,7 +78,7 @@ def generate_test_data() -> str:
             for band in s1_bands:
                 train_arr = np.random.randint(
                     dtype_max, size=(SIZE, SIZE), dtype=dtype
-                )  # noqa: E501
+                )
                 path = os.path.join(s1_dir, f"{field_id}_{date}_{band}_10m.tif")
                 write_raster(path, train_arr)
         for date in s2_timestamps:
