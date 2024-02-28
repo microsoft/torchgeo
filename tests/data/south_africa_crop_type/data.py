@@ -78,7 +78,7 @@ def generate_test_data() -> str:
             for band in s1_bands:
                 train_arr = np.random.randint(
                     dtype_max, size=(SIZE, SIZE), dtype=dtype
-                )  # noqa: E501
+                )
                 path = os.path.join(s1_dir, f"{field_id}_{date}_{band}_10m.tif")
                 write_raster(path, train_arr)
         for date in s2_timestamps:
