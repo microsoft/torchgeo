@@ -37,16 +37,16 @@ class SouthAfricaCropType(RasterDataset):
 
     Dataset classes:
 
-    0: No Data
-    1: Lucerne/Medics
-    2: Planted pastures (perennial)
-    3: Fallow
-    4: Wine grapes
-    5: Weeds
-    6: Small grain grazing
-    7: Wheat
-    8: Canola
-    9: Rooibos
+    0. No Data
+    1. Lucerne/Medics
+    2. Planted pastures (perennial)
+    3. Fallow
+    4. Wine grapes
+    5. Weeds
+    6. Small grain grazing
+    7. Wheat
+    8. Canola
+    9. Rooibos
 
     If you use this dataset in your research, please cite the following dataset:
     Western Cape Department of Agriculture, Radiant Earth Foundation (2021)
