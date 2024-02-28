@@ -92,7 +92,7 @@ class SouthAfricaCropType(RasterDataset):
 
     def __init__(
         self,
-        root: str = "",
+        root: str = "data",
         crs: CRS = CRS.from_epsg(32634),
         classes: list[int] = list(cmap.keys()),
         bands: list[str] = all_bands,
