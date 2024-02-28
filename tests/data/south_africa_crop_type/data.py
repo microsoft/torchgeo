@@ -12,10 +12,12 @@ from rasterio.transform import Affine
 
 
 def generate_test_data() -> str:
-    """Create test data archive for AgriFieldNet dataset.
+    """Create test data archive for SouthAfricaCropType dataset.
+
     Args:
         paths: path to store test data
         n_samples: number of samples.
+
     Returns:
         md5 hash of created archive
     """
