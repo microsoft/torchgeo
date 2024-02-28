@@ -198,8 +198,7 @@ class BioMassters(NonGeoDataset):
         with rasterio.open(os.path.join(self.root, "train_agbm", filename), "r") as src:
             arr: "np.typing.NDArray[np.float_]" = src.read()
 
-        target = torch.from_numpy(arr)
-        target = target.float()
+        target = torch.from_numpy(arr).float()
         return target
 
     def _verify(self) -> None:

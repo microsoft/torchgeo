@@ -306,8 +306,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
             image
         """
         with rasterio.open(path) as src:
-            image = torch.from_numpy(src.read())
-            image = image.float()
+            image = torch.from_numpy(src.read()).float()
         return image
 
     def _load_mask(self, path: str) -> Tensor:
@@ -320,8 +319,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
             mask
         """
         with rasterio.open(path) as src:
-            mask = torch.from_numpy(src.read())
-            mask = mask.long()
+            mask = torch.from_numpy(src.read()).long()
         mask = self.ordinal_map[mask]
         return mask
 

@@ -23,6 +23,11 @@ Aboveground Woody Biomass
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
 
+AgriFieldNet
+^^^^^^^^^^^^
+
+.. autoclass:: AgriFieldNet
+
 Airphen
 ^^^^^^^
 
@@ -165,6 +170,13 @@ Sentinel
 .. autoclass:: Sentinel
 .. autoclass:: Sentinel1
 .. autoclass:: Sentinel2
+
+
+South America Soybean 
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SouthAmericaSoybean
+
 
 .. _Non-geospatial Datasets:
 
