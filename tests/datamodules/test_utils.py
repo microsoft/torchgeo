@@ -58,7 +58,7 @@ def test_group_shuffle_split() -> None:
             test_size=test_size,
             random_state=random_state,
         )
-        # Check that the results are the same as the saved results
+        # Check that the results are the same as expcected
         assert np.array_equal(train_indices, train_indices1)
         assert np.array_equal(test_indices, test_indices1)
 
