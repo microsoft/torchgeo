@@ -29,11 +29,9 @@ def test_dataset_split() -> None:
     assert len(test_ds) == round(num_samples / 3)
 
 
-train_indices = [0, 2, 5, 6, 7, 8, 9, 10, 11, 13, 14]
-test_indices = [1, 3, 4, 12]
-
-
 def test_group_shuffle_split() -> None:
+    train_indices = [0, 2, 5, 6, 7, 8, 9, 10, 11, 13, 14]
+    test_indices = [1, 3, 4, 12]
     np.random.seed(0)
     alphabet = np.array(list("abc"))
     groups = np.random.randint(0, 3, size=(15))
