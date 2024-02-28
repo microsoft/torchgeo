@@ -281,6 +281,10 @@ class SpaceNet(NonGeoDataset, abc.ABC):
             collections: Collections to be downloaded
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
         """
+        ##-- feb2024
+        ##--- Spacenet6 data may have been retracted
+        ##--  ref https://github.com/orgs/SpaceNetChallenge/repositories
+
         for collection in collections:
             download_radiant_mlhub_collection(collection, self.root, api_key)
             archive_path = os.path.join(self.root, f"{collection}.tar.gz")

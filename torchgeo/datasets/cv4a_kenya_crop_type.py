@@ -398,6 +398,9 @@ class CV4AKenyaCropType(NonGeoDataset):
             print("Files already downloaded and verified")
             return
 
+        ##-- feb2024
+        ## azcopy sync https://radiantearth.blob.core.windows.net/mlhub/african-crops-01/kenya . --recursive=true
+
         for collection_id in self.collection_ids:
             download_radiant_mlhub_collection(collection_id, self.root, api_key)
 

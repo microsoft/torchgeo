@@ -214,6 +214,9 @@ class TropicalCyclone(NonGeoDataset):
             print("Files already downloaded and verified")
             return
 
+        ##-- feb2024
+        ## azcopy sync https://radiantearth.blob.core.windows.net/mlhub/nasa-tropical-storm-challenge . --recursive=true
+
         for collection_id in self.collection_ids:
             download_radiant_mlhub_collection(collection_id, self.root, api_key)
 

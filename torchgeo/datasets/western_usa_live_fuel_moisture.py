@@ -335,6 +335,10 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
         """
+
+        ##-- feb2024
+        ## azcopy sync https://radiantearth.blob.core.windows.net/mlhub/su-sar-moisture-content . --recursive=true
+
         download_radiant_mlhub_collection(self.collection_id, self.root, api_key)
         filename = os.path.join(self.root, self.collection_id) + ".tar.gz"
         extract_archive(filename, self.root)
