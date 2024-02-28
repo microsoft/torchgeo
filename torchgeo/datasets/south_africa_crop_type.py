@@ -98,7 +98,7 @@ class SouthAfricaCropType(RasterDataset):
         bands: list[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
     ) -> None:
-        """Initialize a new South Africa dataset instance.
+        """Initialize a new South Africa Crop Type dataset instance.
 
         Args:
             root: root directory where dataset can be found
