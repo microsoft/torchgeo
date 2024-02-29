@@ -6,8 +6,8 @@
 from .api import get_model, get_model_weights, get_weight, list_models
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .dofa import (
+    DOFA,
     DOFABase16_Weights,
-    OFAViT,
     dofa_base_patch16_224,
     dofa_huge_patch16_224,
     dofa_large_patch16_224,
@@ -34,7 +34,7 @@ __all__ = (
     "FCN",
     "FCSiamConc",
     "FCSiamDiff",
-    "OFAViT",
+    "DOFA",
     "RCF",
     "resnet18",
     "resnet50",

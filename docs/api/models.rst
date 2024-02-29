@@ -13,7 +13,7 @@ Change Star
 DOFA
 ^^^^
 
-.. autoclass:: OFAViT
+.. autoclass:: DOFA
 .. autofunction:: dofa_small_patch16_224
 .. autofunction:: dofa_base_patch16_224
 .. autofunction:: dofa_large_patch16_224

@@ -14,8 +14,8 @@ from pytest import MonkeyPatch
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
+    DOFA,
     DOFABase16_Weights,
-    OFAViT,
     dofa_base_patch16_224,
     dofa_huge_patch16_224,
     dofa_large_patch16_224,
@@ -63,7 +63,7 @@ class TestDOFA:
         num_channels = len(wavelengths)
         num_classes = 10
         global_pool = num_channels % 2 == 0
-        model = OFAViT(
+        model = DOFA(
             patch_size=16,
             embed_dim=384,
             depth=12,

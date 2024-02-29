@@ -243,7 +243,7 @@ class Dynamic_MLP_OFA(nn.Module):
         return x, waves
 
 
-class OFAViT(nn.Module):
+class DOFA(nn.Module):
     """Masked Autoencoder with VisionTransformer backbone.
 
     Reference implementation:
@@ -271,7 +271,7 @@ class OFAViT(nn.Module):
         mlp_ratio: float = 4.0,
         norm_layer: type[nn.Module] = nn.LayerNorm,
     ) -> None:
-        """Initialize a new OFAViT instance.
+        """Initialize a new DOFA instance.
 
         Args:
             img_size: Input image size.
@@ -419,7 +419,7 @@ class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-def dofa_small_patch16_224(**kwargs: Any) -> OFAViT:
+def dofa_small_patch16_224(**kwargs: Any) -> DOFA:
     """Dynamic One-For-All (DOFA) small patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -429,12 +429,12 @@ def dofa_small_patch16_224(**kwargs: Any) -> OFAViT:
     .. versionadded:: 0.6
 
     Args:
-        **kwargs: Additional keywork arguments to pass to :class:`OFAViT`.
+        **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA small 16 model.
     """
-    model = OFAViT(
+    model = DOFA(
         patch_size=16,
         embed_dim=384,
         depth=12,
@@ -448,7 +448,7 @@ def dofa_small_patch16_224(**kwargs: Any) -> OFAViT:
 
 def dofa_base_patch16_224(
     weights: Optional[DOFABase16_Weights] = None, **kwargs: Any
-) -> OFAViT:
+) -> DOFA:
     """Dynamic One-For-All (DOFA) base patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -459,12 +459,12 @@ def dofa_base_patch16_224(
 
     Args:
         weights: Pre-trained model weights to use.
-        **kwargs: Additional keywork arguments to pass to :class:`OFAViT`.
+        **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA base 16 model.
     """
-    model = OFAViT(
+    model = DOFA(
         patch_size=16,
         embed_dim=768,
         depth=12,
@@ -490,7 +490,7 @@ def dofa_base_patch16_224(
     return model
 
 
-def dofa_large_patch16_224(**kwargs: Any) -> OFAViT:
+def dofa_large_patch16_224(**kwargs: Any) -> DOFA:
     """Dynamic One-For-All (DOFA) large patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -500,12 +500,12 @@ def dofa_large_patch16_224(**kwargs: Any) -> OFAViT:
     .. versionadded:: 0.6
 
     Args:
-        **kwargs: Additional keywork arguments to pass to :class:`OFAViT`.
+        **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA large 16 model.
     """
-    model = OFAViT(
+    model = DOFA(
         patch_size=16,
         embed_dim=1024,
         depth=24,
@@ -517,7 +517,7 @@ def dofa_large_patch16_224(**kwargs: Any) -> OFAViT:
     return model
 
 
-def dofa_huge_patch16_224(**kwargs: Any) -> OFAViT:
+def dofa_huge_patch16_224(**kwargs: Any) -> DOFA:
     """Dynamic One-For-All (DOFA) huge patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -527,12 +527,12 @@ def dofa_huge_patch16_224(**kwargs: Any) -> OFAViT:
     .. versionadded:: 0.6
 
     Args:
-        **kwargs: Additional keywork arguments to pass to :class:`OFAViT`.
+        **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA huge 16 model.
     """
-    model = OFAViT(
+    model = DOFA(
         patch_size=14,
         embed_dim=1280,
         depth=32,
