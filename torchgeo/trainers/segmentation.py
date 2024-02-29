@@ -124,19 +124,19 @@ class SemanticSegmentationTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        - Multiclass Pixel Accuracy: Ratio of correctly classified pixels.
-        - Multiclass Jaccard Index (IoU): Per-pixel overlap between predicted and
-        actual segments.
+        * Multiclass Pixel Accuracy: Ratio of correctly classified pixels.
+        * Multiclass Jaccard Index (IoU): Per-pixel overlap between predicted and
+          actual segments.
 
         Uses 'micro' averaging, aggregating pixel predictions across classes. Each
         pixel is weighted equally, favoring classes with more pixels. This may skew
         performance metrics towards majority classes due to class imbalance.
 
-        Note:
-        - 'Micro' averaging suits overall performance evaluation but may not reflect
-        minority class accuracy.
-        - 'Macro' averaging, not used here, gives equal weight to each class, useful
-        for balanced performance assessment across imbalanced classes.
+        .. note::
+            * 'Micro' averaging suits overall performance evaluation but may not reflect
+              minority class accuracy.
+            * 'Macro' averaging, not used here, gives equal weight to each class, useful
+              for balanced performance assessment across imbalanced classes.
         """
         num_classes: int = self.hparams["num_classes"]
         ignore_index: Optional[int] = self.hparams["ignore_index"]
