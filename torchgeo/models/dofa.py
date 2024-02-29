@@ -319,7 +319,7 @@ class DOFA(nn.Module):
 
         Args:
             x: Input mini-batch.
-            wave_list: List of wavelengths.
+            wave_list: Wavelengths of each spectral band (μm).
 
         Returns:
             Output mini-batch.
@@ -367,7 +367,7 @@ class DOFA(nn.Module):
 
         Args:
             x: Input mini-batch.
-            wave_list: List of wavelengths.
+            wave_list: Wavelengths of each spectral band (μm).
 
         Returns:
             Output mini-batch.
