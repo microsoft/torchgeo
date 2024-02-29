@@ -6,7 +6,6 @@
 from typing import Any
 
 import kornia.augmentation as K
-import torch
 from torch import Tensor
 
 from ..datasets import SpaceNet1
@@ -88,6 +87,6 @@ class SpaceNet1DataModule(NonGeoDataModule):
         # We add 1 to the mask to map the current {background, building} labels to
         # the values {1, 2}. This is necessary because we add 0 padding to the
         # mask that we want to ignore in the loss function.
-        batch["mask"] += torch.tensor(1)
+        batch["mask"] += 1
 
         return super().on_after_batch_transfer(batch, dataloader_idx)

@@ -8,8 +8,9 @@ from typing import Any, Optional, Union
 import kornia.augmentation as K
 import torch
 from einops import rearrange
-from kornia.contrib import extract_tensor_patches
+from kornia.contrib import Lambda, extract_tensor_patches
 from kornia.geometry import crop_by_indices
+from kornia.geometry.boxes import Boxes
 from torch import Tensor
 from torch.nn.modules import Module
 
@@ -24,7 +25,7 @@ class AugmentationSequential(Module):
 
     def __init__(
         self,
-        *args: Union[K.base._AugmentationBase, K.ImageSequential],
+        *args: Union[K.base._AugmentationBase, K.ImageSequential, Lambda],
         data_keys: list[str],
         **kwargs: Any,
     ) -> None:
@@ -47,10 +48,12 @@ class AugmentationSequential(Module):
                 keys.append("input")
             elif key == "boxes":
                 keys.append("bbox")
+            elif key == "masks":
+                keys.append("mask")
             else:
                 keys.append(key)
 
-        self.augs = K.AugmentationSequential(*args, data_keys=keys, **kwargs)
+        self.augs = K.AugmentationSequential(*args, data_keys=keys, **kwargs)  # type: ignore[arg-type] # noqa: E501
 
     def forward(self, batch: dict[str, Tensor]) -> dict[str, Tensor]:
         """Perform augmentations and update data dict.
@@ -67,9 +70,18 @@ class AugmentationSequential(Module):
             dtype[key] = batch[key].dtype
             batch[key] = batch[key].float()
 
+        # Convert shape of boxes from [N, 4] to [N, 4, 2]
+        if "boxes" in batch and (
+            isinstance(batch["boxes"], list) or batch["boxes"].ndim == 2
+        ):
+            batch["boxes"] = Boxes.from_tensor(batch["boxes"]).data
+
         # Kornia requires masks to have a channel dimension
-        if "mask" in batch and len(batch["mask"].shape) == 3:
+        if "mask" in batch and batch["mask"].ndim == 3:
             batch["mask"] = rearrange(batch["mask"], "b h w -> b () h w")
+
+        if "masks" in batch and batch["masks"].ndim == 3:
+            batch["masks"] = rearrange(batch["masks"], "c h w -> () c h w")
 
         inputs = [batch[k] for k in self.data_keys]
         outputs_list: Union[Tensor, list[Tensor]] = self.augs(*inputs)
@@ -85,9 +97,17 @@ class AugmentationSequential(Module):
         for key in self.data_keys:
             batch[key] = batch[key].to(dtype[key])
 
+        # Convert boxes to default [N, 4]
+        if "boxes" in batch:
+            batch["boxes"] = Boxes(batch["boxes"]).to_tensor(
+                mode="xyxy"
+            )  # type:ignore[assignment]
+
         # Torchmetrics does not support masks with a channel dimension
         if "mask" in batch and batch["mask"].shape[1] == 1:
             batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
+        if "masks" in batch and batch["masks"].ndim == 4:
+            batch["masks"] = rearrange(batch["masks"], "() c h w -> c h w")
 
         return batch
 

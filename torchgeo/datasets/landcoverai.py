@@ -364,8 +364,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         filename = os.path.join(self.root, "output", id_ + ".jpg")
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
-            tensor = torch.from_numpy(array)
-            tensor = tensor.float()
+            tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -383,8 +382,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         filename = os.path.join(self.root, "output", id_ + "_m.png")
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
-            tensor = torch.from_numpy(array)
-            tensor = tensor.long()
+            tensor = torch.from_numpy(array).long()
             return tensor
 
     def _verify_data(self) -> bool:

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 import os
 import pickle
+import sys
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Optional, Union
@@ -51,6 +52,10 @@ class CustomGeoDataset(GeoDataset):
 
 class CustomVectorDataset(VectorDataset):
     filename_glob = "*.geojson"
+    date_format = "%Y"
+    filename_regex = r"""
+        ^vector_(?P<date>\d{4})\.geojson
+    """
 
 
 class CustomSentinelDataset(Sentinel2):
@@ -171,6 +176,21 @@ class TestGeoDataset:
             "/vsizip//vsiaz/azure_bucket/prefix/archive.zip/folder_in_archive/file.tif",
         ]
         assert len(CustomGeoDataset(paths=paths).files) == len(paths)
+
+    def test_files_property_ordered(self) -> None:
+        """Ensure that the list of files is ordered."""
+        paths = ["file://file3.tif", "file://file1.tif", "file://file2.tif"]
+        assert CustomGeoDataset(paths=paths).files == sorted(paths)
+
+    def test_files_property_deterministic(self) -> None:
+        """Ensure that the list of files is consistent regardless of their original
+        order.
+        """
+        paths1 = ["file://file3.tif", "file://file1.tif", "file://file2.tif"]
+        paths2 = ["file://file2.tif", "file://file3.tif", "file://file1.tif"]
+        assert (
+            CustomGeoDataset(paths=paths1).files == CustomGeoDataset(paths=paths2).files
+        )
 
 
 class TestRasterDataset:
@@ -305,6 +325,10 @@ class TestVectorDataset:
             torch.tensor([0, 1], dtype=torch.uint8),
         )
 
+    def test_time_index(self, dataset: CustomVectorDataset) -> None:
+        assert dataset.index.bounds[4] > 0
+        assert dataset.index.bounds[5] < sys.maxsize
+
     def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
         x = multilabel[multilabel.bounds]
         assert isinstance(x, dict)
@@ -316,7 +340,7 @@ class TestVectorDataset:
         )
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
-        query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, 0)
+        query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, sys.maxsize)
         x = dataset[query]
         assert torch.equal(x["mask"], torch.zeros(8, 8, dtype=torch.uint8))
 

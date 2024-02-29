@@ -5,6 +5,8 @@
 
 from .advance import ADVANCE
 from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
+from .agrifieldnet import AgriFieldNet
+from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
@@ -28,6 +30,7 @@ from .chesapeake import (
 from .cloud_cover import CloudCoverDetection
 from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .cowc import COWC, COWCCounting, COWCDetection
+from .cropharvest import CropHarvest
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
@@ -37,6 +40,7 @@ from .enviroatlas import EnviroAtlas
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eudem import EUDEM
+from .eurocrops import EuroCrops
 from .eurosat import EuroSAT, EuroSAT100
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
@@ -95,6 +99,7 @@ from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
 from .so2sat import So2Sat
+from .south_america_soybean import SouthAmericaSoybean
 from .spacenet import (
     SpaceNet,
     SpaceNet1,
@@ -135,6 +140,8 @@ from .zuericrop import ZueriCrop
 __all__ = (
     # GeoDataset
     "AbovegroundLiveWoodyBiomassDensity",
+    "AgriFieldNet",
+    "Airphen",
     "AsterGDEM",
     "CanadianBuildingFootprints",
     "CDL",
@@ -150,8 +157,10 @@ __all__ = (
     "ChesapeakeWV",
     "ChesapeakeCVPR",
     "CMSGlobalMangroveCanopy",
+    "CropHarvest",
     "EDDMapS",
     "Esri2020",
+    "EuroCrops",
     "EUDEM",
     "GBIF",
     "GlobBiomass",
@@ -179,6 +188,7 @@ __all__ = (
     "Sentinel",
     "Sentinel1",
     "Sentinel2",
+    "SouthAmericaSoybean",
     # NonGeoDataset
     "ADVANCE",
     "BeninSmallHolderCashews",

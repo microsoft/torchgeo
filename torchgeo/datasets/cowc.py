@@ -144,8 +144,7 @@ class COWC(NonGeoDataset, abc.ABC):
         filename = os.path.join(self.root, self.images[index])
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
-            tensor = torch.from_numpy(array)
-            tensor = tensor.float()
+            tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -160,8 +159,7 @@ class COWC(NonGeoDataset, abc.ABC):
             the target
         """
         target = int(self.targets[index])
-        tensor = torch.tensor(target)
-        tensor = tensor.float()
+        tensor = torch.tensor(target).float()
         return tensor
 
     def _check_integrity(self) -> bool:

@@ -20,17 +20,17 @@ jobs:
     - name: Set up python
       uses: actions/setup-python@v5.0.0
       with:
-        python-version: '3.11'
+        python-version: '3.12'
     - name: Cache dependencies
-      uses: actions/cache@v3.3.3
+      uses: actions/cache@v4.0.0
       id: cache
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-tutorials
+        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/docs.txt') }}-${{ hashFiles('requirements/tests.txt') }}-tutorials
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
-        pip install .[docs,tests] planetary_computer pystac
+        pip install -r requirements/required.txt -r requirements/docs.txt -r requirements/tests.txt planetary_computer pystac
         pip cache purge
     - name: List pip dependencies
       run: pip list

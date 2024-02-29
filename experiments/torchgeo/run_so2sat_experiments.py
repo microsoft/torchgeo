@@ -37,7 +37,7 @@ if __name__ == "__main__":
     for model, lr, loss, weights in itertools.product(
         model_options, lr_options, loss_options, weight_options
     ):
-        experiment_name = f"{model}_{lr}_{loss}_{weights.replace('_','-')}"
+        experiment_name = f"{model}_{lr}_{loss}_{weights.replace('_', '-')}"
 
         output_dir = os.path.join("output", "so2sat_experiments")
         log_dir = os.path.join(output_dir, "logs")
