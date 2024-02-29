@@ -4,6 +4,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      # codecov-action 4 is not compatible with forks
+      # https://github.com/codecov/feedback/issues/126
+      # https://github.com/codecov/feedback/issues/273
+      - dependency-name: "codecov/codecov-action"
   - package-ecosystem: "pip"
     directory: "/requirements"
     schedule:
@@ -12,7 +17,7 @@ updates:
       # setuptools releases new versions almost daily
       - dependency-name: "setuptools"
         update-types: ["version-update:semver-patch"]
-      # Sphinx 6 is incompatible with pytorch-sphinx-theme
+      # sphinx 6 is incompatible with pytorch-sphinx-theme
       # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
       - dependency-name: "sphinx"
       # segmentation-models-pytorch pins timm, must update in unison
