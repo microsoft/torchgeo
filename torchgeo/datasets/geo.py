@@ -349,11 +349,11 @@ class RasterDataset(GeoDataset):
     #: True if the dataset only contains model inputs (such as images). False if the
     #: dataset only contains ground truth model outputs (such as segmentation masks).
     #:
-    #: The sample returned by the dataset/data loader will use the ``image`` key if
-    #: ``is_image`` is True, otherwise it will use the ``mask`` key.
+    #: The sample returned by the dataset/data loader will use the "image" key if
+    #: *is_image* is True, otherwise it will use the "mask" key.
     #:
-    #: For datasets with both model inputs and outputs, a custom ``__getitem__`` method
-    #: must be implemented.
+    #: For datasets with both model inputs and outputs, a custom
+    #: :func:`~RasterDataset.__getitem__` method must be implemented.
     is_image = True
 
     #: True if data is stored in a separate file for each band, else False.
@@ -372,7 +372,7 @@ class RasterDataset(GeoDataset):
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
 
-        Defaults to float32 for ``is_image = True`` and long for ``is_image = False``.
+        Defaults to float32 if :attr:`~RasterDataset.is_image` is True, else long.
         Can be overridden for tasks like pixel-wise regression where the mask should be
         float32 instead of long.
 
