@@ -68,11 +68,9 @@ class L7IrishDataModule(GeoDataModule):
         """
         dataset = L7Irish(**self.kwargs)
         generator = torch.Generator().manual_seed(0)
-        (
-            self.train_dataset,
-            self.val_dataset,
-            self.test_dataset,
-        ) = random_bbox_assignment(dataset, [0.6, 0.2, 0.2], generator)
+        (self.train_dataset, self.val_dataset, self.test_dataset) = (
+            random_bbox_assignment(dataset, [0.6, 0.2, 0.2], generator)
+        )
 
         if stage in ["fit"]:
             self.train_batch_sampler = RandomBatchGeoSampler(

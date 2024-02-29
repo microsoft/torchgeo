@@ -7,7 +7,7 @@ model:
     in_channels: 4
     num_classes: 7
     num_filters: 1
-    ignore_index: null
+    ignore_index: 0
 data:
   class_path: ChesapeakeCVPRDataModule
   init_args:

@@ -49,6 +49,7 @@ class CDL(RasterDataset):
 
     url = "https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip"  # noqa: E501
     md5s = {
+        2023: "8c7685d6278d50c554f934b16a6076b7",
         2022: "754cf50670cdfee511937554785de3e6",
         2021: "27606eab08fe975aa138baad3e5dfcd8",
         2020: "483ee48c503aa81b684225179b402d42",
@@ -208,7 +209,7 @@ class CDL(RasterDataset):
         paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        years: list[int] = [2022],
+        years: list[int] = [2023],
         classes: list[int] = list(cmap.keys()),
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
