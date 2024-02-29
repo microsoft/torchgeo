@@ -314,18 +314,18 @@ class DOFA(nn.Module):
             nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
         )
 
-    def forward_features(self, x: Tensor, wave_list: list[float]) -> Tensor:
+    def forward_features(self, x: Tensor, wavelengths: list[float]) -> Tensor:
         """Forward pass of the feature embedding layer.
 
         Args:
             x: Input mini-batch.
-            wave_list: Wavelengths of each spectral band (μm).
+            wavelengths: Wavelengths of each spectral band (μm).
 
         Returns:
             Output mini-batch.
         """
         # embed patches
-        wavelist = torch.tensor(wave_list, device=x.device).float()
+        wavelist = torch.tensor(wavelengths, device=x.device).float()
         self.waves = wavelist
 
         x, _ = self.patch_embed(x, self.waves)
@@ -362,17 +362,17 @@ class DOFA(nn.Module):
         x = x if pre_logits else self.head(x)
         return x
 
-    def forward(self, x: Tensor, wave_list: list[float]) -> Tensor:
+    def forward(self, x: Tensor, wavelengths: list[float]) -> Tensor:
         """Forward pass of the model.
 
         Args:
             x: Input mini-batch.
-            wave_list: Wavelengths of each spectral band (μm).
+            wavelengths: Wavelengths of each spectral band (μm).
 
         Returns:
             Output mini-batch.
         """
-        x = self.forward_features(x, wave_list)
+        x = self.forward_features(x, wavelengths)
         x = self.forward_head(x)
         return x
 
