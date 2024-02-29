@@ -119,12 +119,45 @@ TorchGeo includes a number of [*benchmark datasets*](https://torchgeo.readthedoc
 If you've used [torchvision](https://pytorch.org/vision) before, these datasets should seem very familiar. In this example, we'll create a dataset for the Northwestern Polytechnical University (NWPU) very-high-resolution ten-class ([VHR-10](https://github.com/chaozhong2010/VHR-10_dataset_coco)) geospatial object detection dataset. This dataset can be automatically downloaded, checksummed, and extracted, just like with torchvision.
 
 ```python
-dataset = VHR10(root="...", download=True, checksum=True)
-dataloader = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=4)
+import kornia.augmentation as K
+import torch
+from torch.utils.data import DataLoader
 
+from torchgeo.datamodules.utils import AugPipe, collate_fn_detection
+from torchgeo.datasets import VHR10
+from torchgeo.transforms import AugmentationSequential
+
+batch_size = 2
+
+# Initialize the dataset
+dataset = VHR10(root="...", download=True, checksum=True)
+
+# Initialize the dataloader with the custom collate function
+dataloader = DataLoader(
+    dataset,
+    batch_size=batch_size,
+    shuffle=True,
+    num_workers=4,
+    collate_fn=collate_fn_detection,
+)
+
+# Initialize augs to normalize and resize images to size (512, 512)
+aug = AugPipe(
+    augs=AugmentationSequential(
+        K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
+        K.Resize((512, 512)),
+        data_keys=["image", "boxes", "masks"],
+    ),
+    batch_size=batch_size,
+)
+
+# Training loop
 for batch in dataloader:
-    image = batch["image"]
-    label = batch["label"]
+    batch = aug(batch)
+    images = batch["image"] # List of images
+    boxes = batch["boxes"] # List of boxes
+    labels = batch["labels"] # List of labels
+    masks = batch["masks"] # List of masks
 
     # train a model, or make predictions using a pre-trained model
 ```
