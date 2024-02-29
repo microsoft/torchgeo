@@ -181,19 +181,6 @@ class Dynamic_MLP_OFA(nn.Module):
 
         self._init_weights()
 
-    def _get_weights(self, waves: Tensor) -> Tensor:
-        """Generate dynamic weights.
-
-        Args:
-            waves: Input wavelengths.
-
-        Returns:
-            Dynamic weights.
-        """
-        dynamic_weights: Tensor = self.weight_generator(waves)
-
-        return dynamic_weights
-
     def weight_init(self, m: object) -> None:
         """Initialize weights of a single layer.
 
@@ -223,7 +210,7 @@ class Dynamic_MLP_OFA(nn.Module):
         # wv_feats: 9,128 -> 9, 3x3x3
         waves = get_1d_sincos_pos_embed_from_grid_torch(self.wv_planes, wvs * 1000)
         waves = self.fclayer(waves)
-        weight, bias = self._get_weights(waves)  # 3x3x3
+        weight, bias = self.weight_generator(waves)  # 3x3x3
 
         dynamic_weight = weight.view(
             self.embed_dim, inplanes, self.kernel_size, self.kernel_size
