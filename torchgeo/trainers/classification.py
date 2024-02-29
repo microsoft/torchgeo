@@ -96,7 +96,23 @@ class ClassificationTask(BaseTask):
             raise ValueError(f"Loss type '{loss}' is not valid.")
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        * Multiclass Overall Accuracy: Ratio of correctly classified pixels. Uses
+          'micro' averaging.
+        * Multiclass Average Accuracy: Ratio of correctly classified classes. Uses
+          'macro' averaging.
+        * Multiclass Jaccard Index (IoU): Per-class overlap between predicted and
+          actual classes. Uses 'macro' averaging.
+        * Multiclass F1 Score: The harmonic mean of precision and recall. Uses
+          'micro' averaging.
+
+        .. note::
+            * 'Micro' averaging suits overall performance evaluation but may not reflect
+              minority class accuracy.
+            * 'Macro' averaging, gives equal weight to each class, useful for
+              balanced performance assessment across imbalanced classes.
+        """
         metrics = MetricCollection(
             {
                 "OverallAccuracy": MulticlassAccuracy(
@@ -252,7 +268,21 @@ class MultiLabelClassificationTask(ClassificationTask):
     """Multi-label image classification."""
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        * Multiclass Overall Accuracy: Ratio of correctly classified pixels. Uses
+          'micro' averaging.
+        * Multiclass Average Accuracy: Ratio of correctly classified classes. Uses
+          'macro' averaging.
+        * Multiclass F1 Score: The harmonic mean of precision and recall. Uses
+          'micro' averaging.
+
+        .. note::
+            * 'Micro' averaging suits overall performance evaluation but may not
+            reflect minority class accuracy.
+            * 'Macro' averaging, gives equal weight to each class, useful for
+              balanced performance assessment across imbalanced classes.
+        """
         metrics = MetricCollection(
             {
                 "OverallAccuracy": MultilabelAccuracy(

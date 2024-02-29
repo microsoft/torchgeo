@@ -204,7 +204,20 @@ class ObjectDetectionTask(BaseTask):
             raise ValueError(f"Model type '{model}' is not valid.")
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        * Mean Average Precision: Computes the Mean-Average-Precision (mAP)
+          and Mean-Average-Recall (mAR) for object detection. Prediction is
+          based on the intersection of union (IoU) between the predicted
+          bounding boxes and the ground truth bounding boxes. Uses
+          'Macro' averaging.
+
+        .. note::
+            * 'Micro' averaging suits overall performance evaluation but may not
+              reflect minority class accuracy.
+            * 'Macro' averaging, gives equal weight to each class, useful for
+              balanced performance assessment across imbalanced classes.
+        """
         metrics = MetricCollection([MeanAveragePrecision()])
         self.val_metrics = metrics.clone(prefix="val_")
         self.test_metrics = metrics.clone(prefix="test_")

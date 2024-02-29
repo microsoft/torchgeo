@@ -97,7 +97,20 @@ class RegressionTask(BaseTask):
             )
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        * Root MeanSquared Error: The squared root of the mean squared error
+        * Mean Squared Error: The ratio of the sum of the average of squared errors to
+          the number of samples.
+        * Mean Absolute Error: The ratio of the sum of the absolute value between
+          targets and predictions to the number of samples.
+
+        .. note::
+            * 'Micro' averaging suits overall performance evaluation but may not reflect
+              minority class accuracy.
+            * 'Macro' averaging, gives equal weight to each class, useful for
+              balanced performance assessment across imbalanced classes.
+        """
         metrics = MetricCollection(
             {
                 "RMSE": MeanSquaredError(squared=False),
