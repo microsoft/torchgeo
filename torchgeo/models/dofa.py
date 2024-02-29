@@ -196,11 +196,11 @@ class Dynamic_MLP_OFA(nn.Module):
         self.weight_generator.apply(self.weight_init)
         self.fclayer.apply(self.weight_init)
 
-    def forward(self, img_feat: Tensor, wavelengths: Tensor) -> tuple[Tensor, Tensor]:
+    def forward(self, x: Tensor, wavelengths: Tensor) -> tuple[Tensor, Tensor]:
         """Forward pass of the model.
 
         Args:
-            img_feat: Input mini-batch.
+            x: Input mini-batch.
             wavelengths: Wavelengths of each spectral band (μm).
 
         Return:
@@ -223,7 +223,7 @@ class Dynamic_MLP_OFA(nn.Module):
         weights = dynamic_weight * self.scaler
 
         dynamic_out = F.conv2d(
-            img_feat, weights, bias=bias, stride=self.kernel_size, padding=1, dilation=1
+            x, weights, bias=bias, stride=self.kernel_size, padding=1, dilation=1
         )
 
         x = dynamic_out
