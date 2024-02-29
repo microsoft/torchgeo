@@ -196,19 +196,21 @@ class Dynamic_MLP_OFA(nn.Module):
         self.weight_generator.apply(self.weight_init)
         self.fclayer.apply(self.weight_init)
 
-    def forward(self, img_feat: Tensor, wvs: Tensor) -> tuple[Tensor, Tensor]:
+    def forward(self, img_feat: Tensor, wavelengths: Tensor) -> tuple[Tensor, Tensor]:
         """Forward pass of the model.
 
         Args:
             img_feat: Input mini-batch.
-            wvs: Wavelengths.
+            wavelengths: Wavelengths of each spectral band (μm).
 
         Return:
             Output mini-batch and wavelengths.
         """
-        inplanes = wvs.size(0)
+        inplanes = wavelengths.size(0)
         # wv_feats: 9,128 -> 9, 3x3x3
-        waves = get_1d_sincos_pos_embed_from_grid_torch(self.wv_planes, wvs * 1000)
+        waves = get_1d_sincos_pos_embed_from_grid_torch(
+            self.wv_planes, wavelengths * 1000
+        )
         waves = self.fclayer(waves)
         weight, bias = self.weight_generator(waves)  # 3x3x3
 
