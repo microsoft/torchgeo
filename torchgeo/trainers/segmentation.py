@@ -122,7 +122,7 @@ class SemanticSegmentationTask(BaseTask):
             )
 
     def configure_metrics(self) -> None:
-        """Sets up segmentation accuracy metrics.
+        """Initialize the performance metrics.
 
         - Multiclass Pixel Accuracy: Ratio of correctly classified pixels.
         - Multiclass Jaccard Index (IoU): Per-pixel overlap between predicted and
