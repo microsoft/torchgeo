@@ -144,7 +144,6 @@ filenames: FILENAME_HIERARCHY = {
     },
 }
 
-
 def create_file(path: str, dtype: str, num_channels: int) -> None:
     res = 10
     root, _ = os.path.splitext(path)
