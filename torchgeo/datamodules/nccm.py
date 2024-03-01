@@ -86,7 +86,7 @@ class NCCMSentinel2DataModule(GeoDataModule):
 
         self.dataset = self.sentinel2 & self.nccm
         (self.train_dataset, self.val_dataset, self.test_dataset) = (
-            random_grid_cell_assignment(self.dataset, [0.8, 0.1, 0.1], 2, generator)
+            random_grid_cell_assignment(self.dataset, [0.5, 0.25, 0.25], 8, generator)
         )
 
         if stage in ["fit"]:
