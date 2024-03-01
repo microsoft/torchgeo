@@ -5,7 +5,8 @@
 
 import os
 import re
-from typing import Any, Callable, Optional, cast
+from collections.abc import Iterable
+from typing import Any, Callable, Optional, Union, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -25,10 +26,9 @@ class SouthAfricaCropType(RasterDataset):
     dataset includes satellite imagery from Sentinel-1 and Sentinel-2 and labels for
     crop type that were collected by aerial
     and vehicle survey from May 2017 to March 2018. Data was collected by the
-    provided by the Western Cape Department of Agriculture and is
-    is available via the Radiant Earth Foundation.
-    Each chip is matched with a label.
-    Each pixel in the label contains an integer field number and crop type class.
+    provided by the Western Cape Department of Agriculture and is available
+    via the Radiant Earth Foundation. Each chip is matched with a label. Each
+    pixel in the label contains an integer field number and crop type class.
 
     Dataset format:
 
@@ -57,13 +57,14 @@ class SouthAfricaCropType(RasterDataset):
     """
 
     filename_regex = r"""
-        ^(?P<field_id>[0-9]*)_(?P<year>[0-9]{4})_
-        (?P<month>[0-9]{2})_(?P<day>[0-9]{2})_
-        (?P<band>(B[0-9A-Z]{2} | VH | VV))_10m\.tif"""
-
+        ^(?P<field_id>[0-9]*)
+        _(?P<date>[0-9]{4}_[0-9]{2}_[0-9]{2})
+        _(?P<band>(B[0-9A-Z]{2} | VH | VV))
+        _10m"""
+    date_format = "%Y_%m_%d"
     rgb_bands = ["B04", "B03", "B02"]
-    S1_bands = ["VH", "VV"]
-    S2_bands = [
+    s1_bands = ["VH", "VV"]
+    s2_bands = [
         "B01",
         "B02",
         "B03",
@@ -77,7 +78,7 @@ class SouthAfricaCropType(RasterDataset):
         "B11",
         "B12",
     ]
-    all_bands: list[str] = S1_bands + S2_bands
+    all_bands: list[str] = s1_bands + s2_bands
     cmap = {
         0: (0, 0, 0, 255),
         1: (255, 211, 0, 255),
@@ -86,14 +87,15 @@ class SouthAfricaCropType(RasterDataset):
         4: (255, 158, 9, 255),
         5: (37, 111, 0, 255),
         6: (255, 255, 0, 255),
+        7: (222, 166, 9, 255),
         8: (111, 166, 0, 255),
         9: (0, 175, 73, 255),
     }
 
     def __init__(
         self,
-        root: str = "data",
-        crs: CRS = CRS.from_epsg(32634),
+        paths: Union[str, Iterable[str]] = "data",
+        crs: Optional[CRS] = None,
         classes: list[int] = list(cmap.keys()),
         bands: list[str] = all_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -101,12 +103,13 @@ class SouthAfricaCropType(RasterDataset):
         """Initialize a new South Africa Crop Type dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: paths directory where dataset can be found
             crs: coordinate reference system to be used
             classes: crop type classes to be included
             bands: the subset of bands to load
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
@@ -115,12 +118,12 @@ class SouthAfricaCropType(RasterDataset):
         ), f"Only the following classes are valid: {list(self.cmap.keys())}."
         assert 0 in classes, "Classes must include the background class: 0"
 
-        self.root = root
+        self.paths = paths
         self.classes = classes
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
         self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
 
-        super().__init__(paths=root, crs=crs, bands=bands, transforms=transforms)
+        super().__init__(paths=paths, crs=crs, bands=bands, transforms=transforms)
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
         for v, k in enumerate(self.classes):
@@ -134,8 +137,10 @@ class SouthAfricaCropType(RasterDataset):
             index: index to return
 
         Returns:
-            data, label, and field ids at that index
+            data adn labels at that index
         """
+        assert isinstance(self.paths, str)
+
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = cast(list[str], [hit.object for hit in hits])
 
@@ -147,34 +152,50 @@ class SouthAfricaCropType(RasterDataset):
         data_list: list[Tensor] = []
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
 
-        sample_dates_s1: dict[str, str] = {}
-        sample_dates_s2: dict[str, str] = {}
+        field_ids: list[str] = []
+        imagery_dates: dict[str, dict[str, str]] = {}
+
+        for filepath in filepaths:
+            filename = os.path.basename(filepath)
+            match = re.match(filename_regex, filename)
+            if match:
+                field_id = match.groupdict()["field_id"]
+                date = match.groupdict()["date"]
+                band = match.groupdict()["band"]
+                band_type = "s1" if band in self.s1_bands else "s2"
+                if field_id not in field_ids:
+                    field_ids.append(field_id)
+                    imagery_dates[field_id] = {"s1": "", "s2": ""}
+                if (
+                    date.split("_")[1] == "07"
+                    and not imagery_dates[field_id][band_type]
+                ):
+                    imagery_dates[field_id][band_type] = date
+
         for band in self.bands:
-            sample_dates = sample_dates_s1 if band in self.S1_bands else sample_dates_s2
-            fields_added = []
+            band_type = "s1" if band in self.s1_bands else "s2"
             band_filepaths = []
-            for filepath in filepaths:
-                filename = os.path.basename(filepath)
-                match = re.match(filename_regex, filename)
-                if match and match.groupdict()["band"] == band:
-                    field_id = match.groupdict()["field_id"]
-                    month = match.groupdict()["month"]
-                    day = match.groupdict()["day"]
-                    if field_id not in fields_added and month == "07":
-                        if field_id not in sample_dates:
-                            sample_dates[field_id] = day
-                        if day == sample_dates[field_id]:
-                            band_filepaths.append(filepath)
-                            fields_added.append(field_id)
+            for field_id in field_ids:
+                date = imagery_dates[field_id][band_type]
+                filepath = os.path.join(
+                    self.paths,
+                    "train",
+                    "imagery",
+                    band_type,
+                    field_id,
+                    date,
+                    f"{field_id}_{date}_{band}_10m.tif",
+                )
+                band_filepaths.append(filepath)
             data_list.append(self._merge_files(band_filepaths, query))
         image = torch.cat(data_list)
 
-        mask_filepaths = []
-        for root, dirs, files in os.walk(os.path.join(self.root, "train", "labels")):
-            for file in files:
-                if not file.endswith("_field_ids.tif") and file.endswith(".tif"):
-                    file_path = os.path.join(root, file)
-                    mask_filepaths.append(file_path)
+        mask_filepaths: list[str] = []
+        for field_id in field_ids:
+            file_path = filepath = os.path.join(
+                self.paths, "train", "labels", f"{field_id}.tif"
+            )
+            mask_filepaths.append(file_path)
 
         mask = self._merge_files(mask_filepaths, query)
 
