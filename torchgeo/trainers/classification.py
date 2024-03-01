@@ -110,7 +110,7 @@ class ClassificationTask(BaseTask):
         .. note::
             * 'Micro' averaging suits overall performance evaluation but may not reflect
               minority class accuracy.
-            * 'Macro' averaging, gives equal weight to each class, useful for
+            * 'Macro' averaging gives equal weight to each class, and is useful for
               balanced performance assessment across imbalanced classes.
         """
         metrics = MetricCollection(
