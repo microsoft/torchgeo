@@ -1,3 +1,3 @@
 #!/bin/bash
-export DEBIAN_FRONTEND=noninteractive
+# Install package
 yes | pip install -e .

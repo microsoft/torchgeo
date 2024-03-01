@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/python
 {
-  "name": "Torchgeo Dev - CPU",
+  "name": "Torchgeo DevContainer",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "image": "mcr.microsoft.com/devcontainers/python:3.10",
 
@@ -19,6 +19,11 @@
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
   "postStartCommand": "./.devcontainer/postStartCommand.sh",
+
+  // Enable GPU support
+  "hostRequirements": {
+    "gpu": "optional"
+  },
 
   // Configure tool-specific properties.
   "customizations": {
