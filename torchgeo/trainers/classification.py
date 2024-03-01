@@ -279,7 +279,7 @@ class MultiLabelClassificationTask(ClassificationTask):
 
         .. note::
             * 'Micro' averaging suits overall performance evaluation but may not
-            reflect minority class accuracy.
+              reflect minority class accuracy.
             * 'Macro' averaging, gives equal weight to each class, useful for
               balanced performance assessment across imbalanced classes.
         """
