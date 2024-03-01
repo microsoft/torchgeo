@@ -11,7 +11,7 @@ import rasterio
 from rasterio import Affine
 from rasterio.crs import CRS
 
-SIZE = 64
+SIZE = 36
 
 np.random.seed(0)
 
