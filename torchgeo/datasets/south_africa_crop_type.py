@@ -49,9 +49,10 @@ class SouthAfricaCropType(RasterDataset):
     9. Rooibos
 
     If you use this dataset in your research, please cite the following dataset:
-    Western Cape Department of Agriculture, Radiant Earth Foundation (2021)
-    "Crop Type Classification Dataset for Western Cape, South Africa",
-    Version 1.0, Radiant MLHub, https://doi.org/10.34911/rdnt.j0co8q
+
+    * Western Cape Department of Agriculture, Radiant Earth Foundation (2021)
+      "Crop Type Classification Dataset for Western Cape, South Africa",
+      Version 1.0, Radiant MLHub, https://doi.org/10.34911/rdnt.j0co8q
 
     .. versionadded:: 0.6
     """
