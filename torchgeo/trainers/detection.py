@@ -210,12 +210,12 @@ class ObjectDetectionTask(BaseTask):
           and Mean-Average-Recall (mAR) for object detection. Prediction is
           based on the intersection of union (IoU) between the predicted
           bounding boxes and the ground truth bounding boxes. Uses
-          'Macro' averaging.
+          'Macro' averaging. Higher values are better.
 
         .. note::
             * 'Micro' averaging suits overall performance evaluation but may not
               reflect minority class accuracy.
-            * 'Macro' averaging, gives equal weight to each class, useful for
+            * 'Macro' averaging gives equal weight to each class, and is useful for
               balanced performance assessment across imbalanced classes.
         """
         metrics = MetricCollection([MeanAveragePrecision()])

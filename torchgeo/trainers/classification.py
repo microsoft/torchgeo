@@ -99,13 +99,13 @@ class ClassificationTask(BaseTask):
         """Initialize the performance metrics.
 
         * Multiclass Overall Accuracy: Ratio of correctly classified pixels. Uses
-          'micro' averaging.
+          'micro' averaging. Higher values are better.
         * Multiclass Average Accuracy: Ratio of correctly classified classes. Uses
-          'macro' averaging.
+          'macro' averaging. Higher values are better.
         * Multiclass Jaccard Index (IoU): Per-class overlap between predicted and
-          actual classes. Uses 'macro' averaging.
+          actual classes. Uses 'macro' averaging. Higher valuers are better.
         * Multiclass F1 Score: The harmonic mean of precision and recall. Uses
-          'micro' averaging.
+          'micro' averaging. Higher values are better.
 
         .. note::
             * 'Micro' averaging suits overall performance evaluation but may not reflect
@@ -271,16 +271,16 @@ class MultiLabelClassificationTask(ClassificationTask):
         """Initialize the performance metrics.
 
         * Multiclass Overall Accuracy: Ratio of correctly classified pixels. Uses
-          'micro' averaging.
+          'micro' averaging. Higher values are better.
         * Multiclass Average Accuracy: Ratio of correctly classified classes. Uses
-          'macro' averaging.
+          'macro' averaging. Higher values are better.
         * Multiclass F1 Score: The harmonic mean of precision and recall. Uses
-          'micro' averaging.
+          'micro' averaging. Higher values are better.
 
         .. note::
             * 'Micro' averaging suits overall performance evaluation but may not
               reflect minority class accuracy.
-            * 'Macro' averaging, gives equal weight to each class, useful for
+            * 'Macro' averaging gives equal weight to each class, and is useful for
               balanced performance assessment across imbalanced classes.
         """
         metrics = MetricCollection(
