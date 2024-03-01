@@ -9,12 +9,12 @@ updates:
     schedule:
       interval: "daily"
     ignore:
-      # radiant-mlhub 0.5+ changed download behavior:
-      # https://github.com/radiantearth/radiant-mlhub/pull/104
-      - dependency-name: "radiant-mlhub"
       # setuptools releases new versions almost daily
       - dependency-name: "setuptools"
         update-types: ["version-update:semver-patch"]
+      # Sphinx 6 is incompatible with pytorch-sphinx-theme
+      # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
+      - dependency-name: "sphinx"
       # segmentation-models-pytorch pins timm, must update in unison
       - dependency-name: "timm"
       # torchvision pins torch, must update in unison

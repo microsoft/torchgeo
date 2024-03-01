@@ -11,17 +11,20 @@ import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import numpy as np
 import pytest
 import torch
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
+from torch.utils.data import Dataset
 
 import torchgeo.datasets.utils
 from torchgeo.datasets.utils import (
     BoundingBox,
+    DatasetNotFoundError,
+    array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
     download_and_extract_archive,
@@ -36,6 +39,52 @@ from torchgeo.datasets.utils import (
 )
 
 
+class TestDatasetNotFoundError:
+    def test_none(self) -> None:
+        ds: Dataset[Any] = Dataset()
+        match = "Dataset not found."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+    def test_root(self) -> None:
+        ds: Dataset[Any] = Dataset()
+        ds.root = "foo"  # type: ignore[attr-defined]
+        match = "Dataset not found in `root='foo'` and cannot be automatically "
+        match += "downloaded, either specify a different `root` or manually "
+        match += "download the dataset."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+    def test_paths(self) -> None:
+        ds: Dataset[Any] = Dataset()
+        ds.paths = "foo"  # type: ignore[attr-defined]
+        match = "Dataset not found in `paths='foo'` and cannot be automatically "
+        match += "downloaded, either specify a different `paths` or manually "
+        match += "download the dataset."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+    def test_root_download(self) -> None:
+        ds: Dataset[Any] = Dataset()
+        ds.root = "foo"  # type: ignore[attr-defined]
+        ds.download = False  # type: ignore[attr-defined]
+        match = "Dataset not found in `root='foo'` and `download=False`, either "
+        match += "specify a different `root` or use `download=True` to automatically "
+        match += "download the dataset."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+    def test_paths_download(self) -> None:
+        ds: Dataset[Any] = Dataset()
+        ds.paths = "foo"  # type: ignore[attr-defined]
+        ds.download = False  # type: ignore[attr-defined]
+        match = "Dataset not found in `paths='foo'` and `download=False`, either "
+        match += "specify a different `paths` or use `download=True` to automatically "
+        match += "download the dataset."
+        with pytest.raises(DatasetNotFoundError, match=match):
+            raise DatasetNotFoundError(ds)
+
+
 @pytest.fixture
 def mock_missing_module(monkeypatch: MonkeyPatch) -> None:
     import_orig = builtins.__import__
@@ -48,7 +97,7 @@ def mock_missing_module(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(builtins, "__import__", mocked_import)
 
 
-class Dataset:
+class MLHubDataset:
     def download(self, output_dir: str, **kwargs: str) -> None:
         glob_path = os.path.join(
             "tests", "data", "ref_african_crops_kenya_02", "*.tar.gz"
@@ -66,8 +115,8 @@ class Collection:
             shutil.copy(tarball, output_dir)
 
 
-def fetch_dataset(dataset_id: str, **kwargs: str) -> Dataset:
-    return Dataset()
+def fetch_dataset(dataset_id: str, **kwargs: str) -> MLHubDataset:
+    return MLHubDataset()
 
 
 def fetch_collection(collection_id: str, **kwargs: str) -> Collection:
@@ -95,7 +144,7 @@ def test_mock_missing_module(mock_missing_module: None) -> None:
 )
 def test_extract_archive(src: str, tmp_path: Path) -> None:
     if src.endswith(".rar"):
-        pytest.importorskip("rarfile", minversion="3")
+        pytest.importorskip("rarfile", minversion="4")
     if src.startswith("chesapeake"):
         pytest.importorskip("zipfile_deflate64")
     extract_archive(os.path.join("tests", "data", src), str(tmp_path))
@@ -134,7 +183,7 @@ def test_download_and_extract_archive(tmp_path: Path, monkeypatch: MonkeyPatch) 
 def test_download_radiant_mlhub_dataset(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
-    radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+    radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
     monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch_dataset)
     download_radiant_mlhub_dataset("", str(tmp_path))
 
@@ -142,7 +191,7 @@ def test_download_radiant_mlhub_dataset(
 def test_download_radiant_mlhub_collection(
     tmp_path: Path, monkeypatch: MonkeyPatch
 ) -> None:
-    radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+    radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
     monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_collection)
     download_radiant_mlhub_collection("", str(tmp_path))
 
@@ -221,7 +270,7 @@ class TestBoundingBox:
     )
     def test_contains(
         self,
-        test_input: Tuple[float, float, float, float, float, float],
+        test_input: tuple[float, float, float, float, float, float],
         expected: bool,
     ) -> None:
         bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
@@ -256,8 +305,8 @@ class TestBoundingBox:
     )
     def test_or(
         self,
-        test_input: Tuple[float, float, float, float, float, float],
-        expected: Tuple[float, float, float, float, float, float],
+        test_input: tuple[float, float, float, float, float, float],
+        expected: tuple[float, float, float, float, float, float],
     ) -> None:
         bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
         bbox2 = BoundingBox(*test_input)
@@ -290,8 +339,8 @@ class TestBoundingBox:
     )
     def test_and_intersection(
         self,
-        test_input: Tuple[float, float, float, float, float, float],
-        expected: Tuple[float, float, float, float, float, float],
+        test_input: tuple[float, float, float, float, float, float],
+        expected: tuple[float, float, float, float, float, float],
     ) -> None:
         bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
         bbox2 = BoundingBox(*test_input)
@@ -309,7 +358,7 @@ class TestBoundingBox:
         ],
     )
     def test_and_no_intersection(
-        self, test_input: Tuple[float, float, float, float, float, float]
+        self, test_input: tuple[float, float, float, float, float, float]
     ) -> None:
         bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
         bbox2 = BoundingBox(*test_input)
@@ -334,7 +383,7 @@ class TestBoundingBox:
         ],
     )
     def test_area(
-        self, test_input: Tuple[float, float, float, float, float, float], expected: int
+        self, test_input: tuple[float, float, float, float, float, float], expected: int
     ) -> None:
         bbox = BoundingBox(*test_input)
         assert bbox.area == expected
@@ -354,7 +403,7 @@ class TestBoundingBox:
         ],
     )
     def test_volume(
-        self, test_input: Tuple[float, float, float, float, float, float], expected: int
+        self, test_input: tuple[float, float, float, float, float, float], expected: int
     ) -> None:
         bbox = BoundingBox(*test_input)
         assert bbox.volume == expected
@@ -387,12 +436,41 @@ class TestBoundingBox:
     )
     def test_intersects(
         self,
-        test_input: Tuple[float, float, float, float, float, float],
+        test_input: tuple[float, float, float, float, float, float],
         expected: bool,
     ) -> None:
         bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
         bbox2 = BoundingBox(*test_input)
         assert bbox1.intersects(bbox2) == bbox2.intersects(bbox1) == expected
+
+    @pytest.mark.parametrize(
+        "proportion,horizontal,expected",
+        [
+            (0.25, True, ((0, 0.25, 0, 1, 0, 1), (0.25, 1, 0, 1, 0, 1))),
+            (0.25, False, ((0, 1, 0, 0.25, 0, 1), (0, 1, 0.25, 1, 0, 1))),
+        ],
+    )
+    def test_split(
+        self,
+        proportion: float,
+        horizontal: bool,
+        expected: tuple[
+            tuple[float, float, float, float, float, float],
+            tuple[float, float, float, float, float, float],
+        ],
+    ) -> None:
+        bbox = BoundingBox(0, 1, 0, 1, 0, 1)
+        bbox1, bbox2 = bbox.split(proportion, horizontal)
+        assert bbox1 == BoundingBox(*expected[0])
+        assert bbox2 == BoundingBox(*expected[1])
+        assert bbox1 | bbox2 == bbox
+
+    def test_split_error(self) -> None:
+        bbox = BoundingBox(0, 1, 0, 1, 0, 1)
+        with pytest.raises(
+            ValueError, match="Input proportion must be between 0 and 1."
+        ):
+            bbox.split(1.5)
 
     def test_picklable(self) -> None:
         bbox = BoundingBox(0, 1, 2, 3, 4, 5)
@@ -483,13 +561,13 @@ def test_disambiguate_timestamp(
 
 class TestCollateFunctionsMatchingKeys:
     @pytest.fixture(scope="class")
-    def samples(self) -> List[Dict[str, Any]]:
+    def samples(self) -> list[dict[str, Any]]:
         return [
             {"image": torch.tensor([1, 2, 0]), "crs": CRS.from_epsg(2000)},
             {"image": torch.tensor([0, 0, 3]), "crs": CRS.from_epsg(2001)},
         ]
 
-    def test_stack_unbind_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_stack_unbind_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = stack_samples(samples)
         assert sample["image"].size() == torch.Size([2, 3])
         assert torch.allclose(sample["image"], torch.tensor([[1, 2, 0], [0, 0, 3]]))
@@ -500,13 +578,13 @@ class TestCollateFunctionsMatchingKeys:
             assert torch.allclose(samples[i]["image"], new_samples[i]["image"])
             assert samples[i]["crs"] == new_samples[i]["crs"]
 
-    def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_concat_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = concat_samples(samples)
         assert sample["image"].size() == torch.Size([6])
         assert torch.allclose(sample["image"], torch.tensor([1, 2, 0, 0, 0, 3]))
         assert sample["crs"] == CRS.from_epsg(2000)
 
-    def test_merge_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_merge_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = merge_samples(samples)
         assert sample["image"].size() == torch.Size([3])
         assert torch.allclose(sample["image"], torch.tensor([1, 2, 3]))
@@ -515,13 +593,13 @@ class TestCollateFunctionsMatchingKeys:
 
 class TestCollateFunctionsDifferingKeys:
     @pytest.fixture(scope="class")
-    def samples(self) -> List[Dict[str, Any]]:
+    def samples(self) -> list[dict[str, Any]]:
         return [
             {"image": torch.tensor([1, 2, 0]), "crs1": CRS.from_epsg(2000)},
             {"mask": torch.tensor([0, 0, 3]), "crs2": CRS.from_epsg(2001)},
         ]
 
-    def test_stack_unbind_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_stack_unbind_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = stack_samples(samples)
         assert sample["image"].size() == torch.Size([1, 3])
         assert sample["mask"].size() == torch.Size([1, 3])
@@ -536,7 +614,7 @@ class TestCollateFunctionsDifferingKeys:
         assert torch.allclose(samples[1]["mask"], new_samples[0]["mask"])
         assert samples[1]["crs2"] == new_samples[0]["crs2"]
 
-    def test_concat_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_concat_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = concat_samples(samples)
         assert sample["image"].size() == torch.Size([3])
         assert sample["mask"].size() == torch.Size([3])
@@ -545,7 +623,7 @@ class TestCollateFunctionsDifferingKeys:
         assert sample["crs1"] == CRS.from_epsg(2000)
         assert sample["crs2"] == CRS.from_epsg(2001)
 
-    def test_merge_samples(self, samples: List[Dict[str, Any]]) -> None:
+    def test_merge_samples(self, samples: list[dict[str, Any]]) -> None:
         sample = merge_samples(samples)
         assert sample["image"].size() == torch.Size([3])
         assert sample["mask"].size() == torch.Size([3])
@@ -580,3 +658,18 @@ def test_percentile_normalization() -> None:
     img = percentile_normalization(img, 2, 98)
     assert img.min() == 0
     assert img.max() == 1
+
+
+@pytest.mark.parametrize(
+    "array_dtype",
+    [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
+)
+def test_array_to_tensor(array_dtype: "np.typing.DTypeLike") -> None:
+    array: "np.typing.NDArray[Any]" = np.zeros((2,), dtype=array_dtype)
+    array[0] = np.iinfo(array.dtype).min
+    array[1] = np.iinfo(array.dtype).max
+    tensor = array_to_tensor(array)
+    # We need to use large integer type here since otherwise casting will make the
+    # values equal even if they differ.
+    assert array[0].item() == tensor[0].item()
+    assert array[1].item() == tensor[1].item()

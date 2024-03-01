@@ -11,20 +11,20 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-from torchgeo.datasets import TropicalCyclone
+from torchgeo.datasets import DatasetNotFoundError, TropicalCyclone
 
 
-class Dataset:
+class Collection:
     def download(self, output_dir: str, **kwargs: str) -> None:
         for tarball in glob.iglob(os.path.join("tests", "data", "cyclone", "*.tar.gz")):
             shutil.copy(tarball, output_dir)
 
 
-def fetch(collection_id: str, **kwargs: str) -> Dataset:
-    return Dataset()
+def fetch(collection_id: str, **kwargs: str) -> Collection:
+    return Collection()
 
 
 class TestTropicalCyclone:
@@ -32,8 +32,8 @@ class TestTropicalCyclone:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> TropicalCyclone:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
+        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
+        monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
         md5s = {
             "train": {
                 "source": "2b818e0a0873728dabf52c7054a0ce4c",
@@ -80,7 +80,7 @@ class TestTropicalCyclone:
             TropicalCyclone(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             TropicalCyclone(str(tmp_path))
 
     def test_plot(self, dataset: TropicalCyclone) -> None:

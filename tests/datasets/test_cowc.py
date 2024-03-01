@@ -10,12 +10,11 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import COWCCounting, COWCDetection
-from torchgeo.datasets.cowc import COWC
+from torchgeo.datasets import COWC, COWCCounting, COWCDetection, DatasetNotFoundError
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -78,7 +77,7 @@ class TestCOWCCounting:
             COWCCounting(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             COWCCounting(str(tmp_path))
 
     def test_plot(self, dataset: COWCCounting) -> None:
@@ -142,7 +141,7 @@ class TestCOWCDetection:
             COWCDetection(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             COWCDetection(str(tmp_path))
 
     def test_plot(self, dataset: COWCDetection) -> None:

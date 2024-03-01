@@ -1,15 +1,14 @@
-experiment:
-  task: "resisc45"
-  module:
+model:
+  class_path: ClassificationTask
+  init_args:
     loss: "ce"
     model: "resnet18"
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
-    weights: null
     in_channels: 3
     num_classes: 3
-  datamodule:
+data:
+  class_path: RESISC45DataModule
+  init_args:
+    batch_size: 1
+  dict_kwargs:
     root: "tests/data/resisc45"
     download: true
-    batch_size: 1
-    num_workers: 0

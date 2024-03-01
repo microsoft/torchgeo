@@ -12,11 +12,11 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import VHR10
+from torchgeo.datasets import VHR10, DatasetNotFoundError
 
 pytest.importorskip("pycocotools")
 
@@ -30,16 +30,16 @@ class TestVHR10:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> VHR10:
-        pytest.importorskip("rarfile", minversion="3")
+        pytest.importorskip("rarfile", minversion="4")
         monkeypatch.setattr(torchgeo.datasets.vhr10, "download_url", download_url)
         monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
         url = os.path.join("tests", "data", "vhr10", "NWPU VHR-10 dataset.rar")
         monkeypatch.setitem(VHR10.image_meta, "url", url)
-        md5 = "5fddb0dfd56a80638831df9f90cbf37a"
+        md5 = "92769845cae6a4e8c74bfa1a0d1d4a80"
         monkeypatch.setitem(VHR10.image_meta, "md5", md5)
         url = os.path.join("tests", "data", "vhr10", "annotations.json")
         monkeypatch.setitem(VHR10.target_meta, "url", url)
-        md5 = "833899cce369168e0d4ee420dac326dc"
+        md5 = "567c4cd8c12624864ff04865de504c58"
         monkeypatch.setitem(VHR10.target_meta, "md5", md5)
         root = str(tmp_path)
         split = request.param
@@ -90,7 +90,7 @@ class TestVHR10:
             VHR10(split="train")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             VHR10(str(tmp_path))
 
     def test_mock_missing_module(

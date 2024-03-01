@@ -3,7 +3,8 @@
 
 """Fully convolutional change detection (FCCD) implementations."""
 
-from typing import Any, Callable, Optional, Sequence, Union
+from collections.abc import Sequence
+from typing import Any, Callable, Optional, Union
 
 import segmentation_models_pytorch as smp
 import torch

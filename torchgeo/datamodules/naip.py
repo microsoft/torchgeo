@@ -3,10 +3,10 @@
 
 """National Agriculture Imagery Program (NAIP) datamodule."""
 
-from typing import Any, Tuple, Union
+from typing import Any, Optional, Union
 
 import kornia.augmentation as K
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
 from ..datasets import NAIP, BoundingBox, Chesapeake13
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
@@ -23,8 +23,8 @@ class NAIPChesapeakeDataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[int, Tuple[int, int]] = 256,
-        length: int = 1000,
+        patch_size: Union[int, tuple[int, int]] = 256,
+        length: Optional[int] = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
@@ -95,7 +95,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
                 self.dataset, self.patch_size, self.patch_size, test_roi
             )
 
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
+    def plot(self, *args: Any, **kwargs: Any) -> Figure:
         """Run NAIP plot method.
 
         Args:

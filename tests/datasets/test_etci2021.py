@@ -10,10 +10,10 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import ETCI2021
+from torchgeo.datasets import ETCI2021, DatasetNotFoundError
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -77,7 +77,7 @@ class TestETCI2021:
             ETCI2021(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             ETCI2021(str(tmp_path))
 
     def test_plot(self, dataset: ETCI2021) -> None:

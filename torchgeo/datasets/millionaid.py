@@ -4,17 +4,18 @@
 """Million-AID dataset."""
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import Any, Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
 from torchgeo.datasets import NonGeoDataset
 
-from .utils import check_integrity, extract_archive
+from .utils import DatasetNotFoundError, check_integrity, extract_archive
 
 
 class MillionAID(NonGeoDataset):
@@ -190,7 +191,7 @@ class MillionAID(NonGeoDataset):
         root: str = "data",
         task: str = "multi-class",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new MillionAID dataset instance.
@@ -204,7 +205,7 @@ class MillionAID(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if dataset is not found
+            DatasetNotFoundError: If dataset is not found.
         """
         self.root = root
         self.transforms = transforms
@@ -219,7 +220,7 @@ class MillionAID(NonGeoDataset):
         self.files = self._load_files(self.root)
 
         self.classes = sorted({cls for f in self.files for cls in f["label"]})
-        self.class_to_idx: Dict[str, int] = {c: i for i, c in enumerate(self.classes)}
+        self.class_to_idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -229,7 +230,7 @@ class MillionAID(NonGeoDataset):
         """
         return len(self.files)
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -249,7 +250,7 @@ class MillionAID(NonGeoDataset):
 
         return sample
 
-    def _load_files(self, root: str) -> List[Dict[str, Any]]:
+    def _load_files(self, root: str) -> list[dict[str, Any]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -325,18 +326,14 @@ class MillionAID(NonGeoDataset):
             extract_archive(filepath)
             return
 
-        raise RuntimeError(
-            f"Dataset not found in `root={self.root}` directory, either "
-            "specify a different `root` directory or manually download "
-            "the dataset to this directory."
-        )
+        raise DatasetNotFoundError(self)
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

@@ -1,28 +1,46 @@
 # TorchGeo modules
 datamodules:
-- "torchgeo/datamodules/**"
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/datamodules/**"
 datasets:
-- "torchgeo/datasets/**"
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/datasets/**"
 losses:
-- "torchgeo/losses/**"
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/losses/**"
 models:
-- "torchgeo/models/**"
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/models/**"
 samplers:
-- "torchgeo/samplers/**"
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/samplers/**"
 trainers:
-- "torchgeo/trainers/**"
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/trainers/**"
 transforms:
-- "torchgeo/transforms/**"
+- changed-files:
+  - any-glob-to-any-file: "torchgeo/transforms/**"
 
 # Other
 dependencies:
-- "environment.yml"
-- "setup.cfg"
-- "requirements/**"
+- changed-files:
+  - any-glob-to-any-file:
+    - "pyproject.toml"
+    - "requirements/**"
 documentation:
-- "docs/**"
+- changed-files:
+  - any-glob-to-any-file:
+    - "docs/**"
+    - "*.md"
+    - ".github/*.md"
 scripts:
-- "*.py"
+- changed-files:
+  - any-glob-to-any-file:
+    - "torchgeo/__main__.py"
+    - "torchgeo/main.py"
+    - "experiments/**"
 testing:
-- "tests/**"
-- ".github/workflows/**"
+- changed-files:
+  - any-glob-to-any-file:
+    - "tests/**"
+    - ".github/workflows/**"

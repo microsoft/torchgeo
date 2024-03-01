@@ -5,10 +5,10 @@
 
 For more information about indices see the following references:
 - https://www.indexdatabase.de/db/i.php
-- https://github.com/davemlz/awesome-spectral-indices
+- https://github.com/awesome-spectral-indices/awesome-spectral-indices
 """
 
-from typing import Dict, Optional
+from typing import Optional
 
 import torch
 from kornia.augmentation import IntensityAugmentationBase2D
@@ -42,8 +42,8 @@ class AppendNormalizedDifferenceIndex(IntensityAugmentationBase2D):
     def apply_transform(
         self,
         input: Tensor,
-        params: Dict[str, Tensor],
-        flags: Dict[str, int],
+        params: dict[str, Tensor],
+        flags: dict[str, int],
         transform: Optional[Tensor] = None,
     ) -> Tensor:
         """Apply the transform.
@@ -317,8 +317,8 @@ class AppendTriBandNormalizedDifferenceIndex(IntensityAugmentationBase2D):
     def apply_transform(
         self,
         input: Tensor,
-        params: Dict[str, Tensor],
-        flags: Dict[str, int],
+        params: dict[str, Tensor],
+        flags: dict[str, int],
         transform: Optional[Tensor] = None,
     ) -> Tensor:
         """Apply the transform.

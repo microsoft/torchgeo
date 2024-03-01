@@ -4,15 +4,22 @@
 """So2Sat dataset."""
 
 import os
-from typing import Callable, Dict, Optional, Sequence, cast
+from collections.abc import Sequence
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    check_integrity,
+    percentile_normalization,
+)
 
 
 class So2Sat(NonGeoDataset):
@@ -23,18 +30,24 @@ class So2Sat(NonGeoDataset):
     acquired by the Sentinel-1 and Sentinel-2 remote sensing satellites, and a
     corresponding local climate zones (LCZ) label. The dataset is distributed over
     42 cities across different continents and cultural regions of the world, and comes
-    with a split into fully independent, non-overlapping training, validation,
-    and test sets.
+    with a variety of different splits.
 
-    This implementation focuses on the *2nd* version of the dataset as described in
-    the author's github repository https://github.com/zhu-xlab/So2Sat-LCZ42 and hosted
-    at https://mediatum.ub.tum.de/1483140. This version is identical to the first
-    version of the dataset but includes the test data. The splits are defined as
-    follows:
+    This implementation covers the *2nd* and *3rd* versions of the dataset as described
+    in the author's github repository: https://github.com/zhu-xlab/So2Sat-LCZ42.
+
+    The different versions are as follows:
+
+    Version 2: This version contains imagery from 52 cities and is split into train/val/test as follows:
 
     * Training: 42 cities around the world
     * Validation: western half of 10 other cities covering 10 cultural zones
     * Testing: eastern half of the 10 other cities
+
+    Version 3: A version of the dataset with 3 different train/test splits, as follows:
+
+    * Random split: every city 80% training / 20% testing (randomly sampled)
+    * Block split: every city is split in a geospatial 80%/20%-manner
+    * Cultural 10: 10 cities from different cultural zones are held back for testing purposes
 
     Dataset classes:
 
@@ -62,7 +75,8 @@ class So2Sat(NonGeoDataset):
 
     .. note::
 
-       This dataset can be automatically downloaded using the following bash script:
+       The version 2 dataset can be automatically downloaded using the following bash
+       script:
 
        .. code-block:: bash
 
@@ -73,18 +87,56 @@ class So2Sat(NonGeoDataset):
 
        or manually downloaded from https://dataserv.ub.tum.de/index.php/s/m1483140
        This download will likely take several hours.
-    """
 
-    filenames = {
-        "train": "training.h5",
-        "validation": "validation.h5",
-        "test": "testing.h5",
+       The version 3 datasets can be downloaded using the following bash script:
+
+       .. code-block:: bash
+
+          for version in random block culture_10
+          do
+            for split in training testing
+            do
+              wget -P $version/ ftp://m1613658:m1613658@dataserv.ub.tum.de/$version/$split.h5
+            done
+          done
+
+       or manually downloaded from https://mediatum.ub.tum.de/1613658
+    """  # noqa: E501
+
+    versions = ["2", "3_random", "3_block", "3_culture_10"]
+    filenames_by_version = {
+        "2": {
+            "train": "training.h5",
+            "validation": "validation.h5",
+            "test": "testing.h5",
+        },
+        "3_random": {"train": "random/training.h5", "test": "random/testing.h5"},
+        "3_block": {"train": "block/training.h5", "test": "block/testing.h5"},
+        "3_culture_10": {
+            "train": "culture_10/training.h5",
+            "test": "culture_10/testing.h5",
+        },
     }
-    md5s = {
-        "train": "702bc6a9368ebff4542d791e53469244",
-        "validation": "71cfa6795de3e22207229d06d6f8775d",
-        "test": "e81426102b488623a723beab52b31a8a",
+    md5s_by_version = {
+        "2": {
+            "train": "702bc6a9368ebff4542d791e53469244",
+            "validation": "71cfa6795de3e22207229d06d6f8775d",
+            "test": "e81426102b488623a723beab52b31a8a",
+        },
+        "3_random": {
+            "train": "94e2e2e667b406c2adf61e113b42204e",
+            "test": "1e15c425585ce816342d1cd779d453d8",
+        },
+        "3_block": {
+            "train": "a91d6150e8b059dac86105853f377a11",
+            "test": "6414af1ec33ace417e879f9c88066d47",
+        },
+        "3_culture_10": {
+            "train": "702bc6a9368ebff4542d791e53469244",
+            "test": "58335ce34ca3a18424e19da84f2832fc",
+        },
     }
+
     classes = [
         "Compact high rise",
         "Compact mid rise",
@@ -135,20 +187,23 @@ class So2Sat(NonGeoDataset):
         "all": all_band_names,
         "s1": all_s1_band_names,
         "s2": all_s2_band_names,
+        "rgb": rgb_bands,
     }
 
     def __init__(
         self,
         root: str = "data",
+        version: str = "2",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new So2Sat dataset instance.
 
         Args:
             root: root directory where dataset can be found
+            version: one of "2", "3_random", "3_block", or "3_culture_10"
             split: one of "train", "validation", or "test"
             bands: a sequence of band names to use where the indices correspond to the
                 array index of combined Sentinel 1 and Sentinel 2
@@ -158,10 +213,13 @@ class So2Sat(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if data is not found in ``root``, or checksums don't match
+            DatasetNotFoundError: If dataset is not found.
 
         .. versionadded:: 0.3
            The *bands* parameter.
+
+        .. versionadded:: 0.5
+           The *version* parameter.
         """
         try:
             import h5py  # noqa: F401
@@ -169,8 +227,8 @@ class So2Sat(NonGeoDataset):
             raise ImportError(
                 "h5py is not installed and is required to use this dataset"
             )
-
-        assert split in ["train", "validation", "test"]
+        assert version in self.versions
+        assert split in self.filenames_by_version[version]
 
         self._validate_bands(bands)
         self.s1_band_indices: "np.typing.NDArray[np.int_]" = np.array(
@@ -196,19 +254,20 @@ class So2Sat(NonGeoDataset):
         self.bands = bands
 
         self.root = root
+        self.version = version
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
 
-        self.fn = os.path.join(self.root, self.filenames[split])
+        self.fn = os.path.join(self.root, self.filenames_by_version[version][split])
 
         if not self._check_integrity():
-            raise RuntimeError("Dataset not found or corrupted.")
+            raise DatasetNotFoundError(self)
 
         with h5py.File(self.fn, "r") as f:
             self.size: int = f["label"].shape[0]
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -255,7 +314,7 @@ class So2Sat(NonGeoDataset):
         Returns:
             True if dataset files are found and/or MD5s match, else False
         """
-        md5 = self.md5s[self.split]
+        md5 = self.md5s_by_version[self.version][self.split]
         if not check_integrity(self.fn, md5 if self.checksum else None):
             return False
         return True
@@ -279,10 +338,10 @@ class So2Sat(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -294,7 +353,7 @@ class So2Sat(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if RGB bands are not found in dataset
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
 
         .. versionadded:: 0.2
         """
@@ -304,7 +363,7 @@ class So2Sat(NonGeoDataset):
                 idx = self.s2_band_names.index(band) + len(self.s1_band_names)
                 rgb_indices.append(idx)
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         image = np.take(sample["image"].numpy(), indices=rgb_indices, axis=0)
         image = np.rollaxis(image, 0, 3)

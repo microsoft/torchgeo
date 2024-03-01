@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
 import os
 import pickle
+import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Dict, List
+from typing import Optional, Union
 
 import pytest
 import torch
@@ -16,6 +17,7 @@ from torch.utils.data import ConcatDataset
 from torchgeo.datasets import (
     NAIP,
     BoundingBox,
+    DatasetNotFoundError,
     GeoDataset,
     IntersectionDataset,
     NonGeoClassificationDataset,
@@ -31,15 +33,17 @@ class CustomGeoDataset(GeoDataset):
     def __init__(
         self,
         bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
-        crs: CRS = CRS.from_epsg(3005),
+        crs: CRS = CRS.from_epsg(4087),
         res: float = 1,
+        paths: Optional[Union[str, Iterable[str]]] = None,
     ) -> None:
         super().__init__()
         self.index.insert(0, tuple(bounds))
         self._crs = crs
         self.res = res
+        self.paths = paths or []
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
         hits = self.index.intersection(tuple(query), objects=True)
         hit = next(iter(hits))
         bounds = BoundingBox(*hit.bounds)
@@ -48,14 +52,19 @@ class CustomGeoDataset(GeoDataset):
 
 class CustomVectorDataset(VectorDataset):
     filename_glob = "*.geojson"
+    date_format = "%Y"
+    filename_regex = r"""
+        ^vector_(?P<date>\d{4})\.geojson
+    """
 
 
 class CustomSentinelDataset(Sentinel2):
-    all_bands: List[str] = []
+    all_bands: list[str] = []
+    separate_files = False
 
 
 class CustomNonGeoDataset(NonGeoDataset):
-    def __getitem__(self, index: int) -> Dict[str, int]:
+    def __getitem__(self, index: int) -> dict[str, int]:
         return {"index": index}
 
     def __len__(self) -> int:
@@ -74,7 +83,7 @@ class TestGeoDataset:
     def test_len(self, dataset: GeoDataset) -> None:
         assert len(dataset) == 1
 
-    @pytest.mark.parametrize("crs", [CRS.from_epsg(3005), CRS.from_epsg(32616)])
+    @pytest.mark.parametrize("crs", [CRS.from_epsg(4087), CRS.from_epsg(32631)])
     def test_crs(self, dataset: GeoDataset, crs: CRS) -> None:
         dataset.crs = crs
 
@@ -151,13 +160,45 @@ class TestGeoDataset:
         ):
             dataset & ds2  # type: ignore[operator]
 
+    def test_files_property_for_non_existing_file_or_dir(self, tmp_path: Path) -> None:
+        paths = [str(tmp_path), str(tmp_path / "non_existing_file.tif")]
+        with pytest.warns(UserWarning, match="Path was ignored."):
+            assert len(CustomGeoDataset(paths=paths).files) == 0
+
+    def test_files_property_for_virtual_files(self) -> None:
+        # Tests only a subset of schemes and combinations.
+        paths = [
+            "file://directory/file.tif",
+            "zip://archive.zip!folder/file.tif",
+            "az://azure_bucket/prefix/file.tif",
+            "/vsiaz/azure_bucket/prefix/file.tif",
+            "zip+az://azure_bucket/prefix/archive.zip!folder_in_archive/file.tif",
+            "/vsizip//vsiaz/azure_bucket/prefix/archive.zip/folder_in_archive/file.tif",
+        ]
+        assert len(CustomGeoDataset(paths=paths).files) == len(paths)
+
+    def test_files_property_ordered(self) -> None:
+        """Ensure that the list of files is ordered."""
+        paths = ["file://file3.tif", "file://file1.tif", "file://file2.tif"]
+        assert CustomGeoDataset(paths=paths).files == sorted(paths)
+
+    def test_files_property_deterministic(self) -> None:
+        """Ensure that the list of files is consistent regardless of their original
+        order.
+        """
+        paths1 = ["file://file3.tif", "file://file1.tif", "file://file2.tif"]
+        paths2 = ["file://file2.tif", "file://file3.tif", "file://file1.tif"]
+        assert (
+            CustomGeoDataset(paths=paths1).files == CustomGeoDataset(paths=paths2).files
+        )
+
 
 class TestRasterDataset:
     @pytest.fixture(params=zip([["R", "G", "B"], None], [True, False]))
     def naip(self, request: SubRequest) -> NAIP:
         root = os.path.join("tests", "data", "naip")
         bands = request.param[0]
-        crs = CRS.from_epsg(3005)
+        crs = CRS.from_epsg(4087)
         transforms = nn.Identity()
         cache = request.param[1]
         return NAIP(root, crs=crs, bands=bands, transforms=transforms, cache=cache)
@@ -178,10 +219,38 @@ class TestRasterDataset:
         cache = request.param[1]
         return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
 
-    @pytest.fixture()
-    def custom_dtype_ds(self) -> RasterDataset:
-        root = os.path.join("tests", "data", "raster")
-        return RasterDataset(root)
+    @pytest.mark.parametrize(
+        "paths",
+        [
+            # Single directory
+            os.path.join("tests", "data", "naip"),
+            # Multiple directories
+            [
+                os.path.join("tests", "data", "naip"),
+                os.path.join("tests", "data", "naip"),
+            ],
+            # Single file
+            os.path.join("tests", "data", "naip", "m_3807511_ne_18_060_20181104.tif"),
+            # Multiple files
+            (
+                os.path.join(
+                    "tests", "data", "naip", "m_3807511_ne_18_060_20181104.tif"
+                ),
+                os.path.join(
+                    "tests", "data", "naip", "m_3807511_ne_18_060_20190605.tif"
+                ),
+            ),
+            # Combination
+            {
+                os.path.join("tests", "data", "naip"),
+                os.path.join(
+                    "tests", "data", "naip", "m_3807511_ne_18_060_20181104.tif"
+                ),
+            },
+        ],
+    )
+    def test_files(self, paths: Union[str, Iterable[str]]) -> None:
+        assert 1 <= len(NAIP(paths).files) <= 2
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]
@@ -197,8 +266,11 @@ class TestRasterDataset:
         assert isinstance(x["image"], torch.Tensor)
         assert len(sentinel.bands) == x["image"].shape[0]
 
-    def test_getitem_uint_dtype(self, custom_dtype_ds: RasterDataset) -> None:
-        x = custom_dtype_ds[custom_dtype_ds.bounds]
+    @pytest.mark.parametrize("dtype", ["uint16", "uint32"])
+    def test_getitem_uint_dtype(self, dtype: str) -> None:
+        root = os.path.join("tests", "data", "raster", dtype)
+        ds = RasterDataset(root)
+        x = ds[ds.bounds]
         assert isinstance(x, dict)
         assert isinstance(x["image"], torch.Tensor)
         assert x["image"].dtype == torch.float32
@@ -211,10 +283,10 @@ class TestRasterDataset:
             sentinel[query]
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No RasterDataset data was found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             RasterDataset(str(tmp_path))
 
-    def test_no_allbands(self) -> None:
+    def test_no_all_bands(self) -> None:
         root = os.path.join("tests", "data", "sentinel2")
         bands = ["B04", "B03", "B02"]
         transforms = nn.Identity()
@@ -253,6 +325,10 @@ class TestVectorDataset:
             torch.tensor([0, 1], dtype=torch.uint8),
         )
 
+    def test_time_index(self, dataset: CustomVectorDataset) -> None:
+        assert dataset.index.bounds[4] > 0
+        assert dataset.index.bounds[5] < sys.maxsize
+
     def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
         x = multilabel[multilabel.bounds]
         assert isinstance(x, dict)
@@ -264,7 +340,7 @@ class TestVectorDataset:
         )
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
-        query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, 0)
+        query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, sys.maxsize)
         x = dataset[query]
         assert torch.equal(x["mask"], torch.zeros(8, 8, dtype=torch.uint8))
 
@@ -276,7 +352,7 @@ class TestVectorDataset:
             dataset[query]
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No VectorDataset data was found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             VectorDataset(str(tmp_path))
 
 
@@ -377,14 +453,15 @@ class TestNonGeoClassificationDataset:
 class TestIntersectionDataset:
     @pytest.fixture(scope="class")
     def dataset(self) -> IntersectionDataset:
-        ds1 = CustomGeoDataset()
-        ds2 = CustomGeoDataset()
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_4_epsg_4326"))
         transforms = nn.Identity()
         return IntersectionDataset(ds1, ds2, transforms=transforms)
 
     def test_getitem(self, dataset: IntersectionDataset) -> None:
-        query = BoundingBox(0, 1, 2, 3, 4, 5)
-        assert dataset[query] == {"index": query}
+        query = dataset.bounds
+        sample = dataset[query]
+        assert isinstance(sample["image"], torch.Tensor)
 
     def test_len(self, dataset: IntersectionDataset) -> None:
         assert len(dataset) == 1
@@ -403,26 +480,79 @@ class TestIntersectionDataset:
         ):
             IntersectionDataset(ds1, ds2)  # type: ignore[arg-type]
 
-    def test_different_crs(self) -> None:
-        ds1 = CustomGeoDataset(crs=CRS.from_epsg(3005))
-        ds2 = CustomGeoDataset(crs=CRS.from_epsg(32616))
+    def test_different_crs_12(self) -> None:
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4326"))
         ds = IntersectionDataset(ds1, ds2)
-        assert len(ds) == 0
+        sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds.res == 2
+        assert len(ds1) == len(ds2) == len(ds) == 1
+        assert isinstance(sample["image"], torch.Tensor)
 
-    def test_different_res(self) -> None:
-        ds1 = CustomGeoDataset(res=1)
-        ds2 = CustomGeoDataset(res=2)
+    def test_different_crs_12_3(self) -> None:
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4326"))
+        ds3 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_32631"))
+        ds = (ds1 & ds2) & ds3
+        sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
+        assert isinstance(sample["image"], torch.Tensor)
+
+    def test_different_crs_1_23(self) -> None:
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4326"))
+        ds3 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_32631"))
+        ds = ds1 & (ds2 & ds3)
+        sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
+        assert isinstance(sample["image"], torch.Tensor)
+
+    def test_different_res_12(self) -> None:
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_4_epsg_4087"))
         ds = IntersectionDataset(ds1, ds2)
-        assert len(ds) == 1
+        sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds.res == 2
+        assert len(ds1) == len(ds2) == len(ds) == 1
+        assert isinstance(sample["image"], torch.Tensor)
+
+    def test_different_res_12_3(self) -> None:
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_4_epsg_4087"))
+        ds3 = RasterDataset(os.path.join("tests", "data", "raster", "res_8_epsg_4087"))
+        ds = (ds1 & ds2) & ds3
+        sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
+        assert isinstance(sample["image"], torch.Tensor)
+
+    def test_different_res_1_23(self) -> None:
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_4_epsg_4087"))
+        ds3 = RasterDataset(os.path.join("tests", "data", "raster", "res_8_epsg_4087"))
+        ds = ds1 & (ds2 & ds3)
+        sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
+        assert isinstance(sample["image"], torch.Tensor)
 
     def test_no_overlap(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
         ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
-        ds = IntersectionDataset(ds1, ds2)
-        assert len(ds) == 0
+        msg = "Datasets have no spatiotemporal intersection"
+        with pytest.raises(RuntimeError, match=msg):
+            IntersectionDataset(ds1, ds2)
 
     def test_invalid_query(self, dataset: IntersectionDataset) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(-1, -1, -1, -1, -1, -1)
         with pytest.raises(
             IndexError, match="query: .* not found in index with bounds:"
         ):
@@ -432,14 +562,15 @@ class TestIntersectionDataset:
 class TestUnionDataset:
     @pytest.fixture(scope="class")
     def dataset(self) -> UnionDataset:
-        ds1 = CustomGeoDataset(bounds=BoundingBox(0, 1, 0, 1, 0, 1))
-        ds2 = CustomGeoDataset(bounds=BoundingBox(2, 3, 2, 3, 2, 3))
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_4_epsg_4326"))
         transforms = nn.Identity()
         return UnionDataset(ds1, ds2, transforms=transforms)
 
     def test_getitem(self, dataset: UnionDataset) -> None:
-        query = BoundingBox(0, 1, 0, 1, 0, 1)
-        assert dataset[query] == {"index": query}
+        query = dataset.bounds
+        sample = dataset[query]
+        assert isinstance(sample["image"], torch.Tensor)
 
     def test_len(self, dataset: UnionDataset) -> None:
         assert len(dataset) == 2
@@ -449,6 +580,76 @@ class TestUnionDataset:
         assert "type: UnionDataset" in out
         assert "bbox: BoundingBox" in out
         assert "size: 2" in out
+
+    def test_different_crs_12(self) -> None:
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4326"))
+        ds = UnionDataset(ds1, ds2)
+        sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds.res == 2
+        assert len(ds1) == len(ds2) == 1
+        assert len(ds) == 2
+        assert isinstance(sample["image"], torch.Tensor)
+
+    def test_different_crs_12_3(self) -> None:
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4326"))
+        ds3 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_32631"))
+        ds = (ds1 | ds2) | ds3
+        sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert len(ds1) == len(ds2) == len(ds3) == 1
+        assert len(ds) == 3
+        assert isinstance(sample["image"], torch.Tensor)
+
+    def test_different_crs_1_23(self) -> None:
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4326"))
+        ds3 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_32631"))
+        ds = ds1 | (ds2 | ds3)
+        sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert len(ds1) == len(ds2) == len(ds3) == 1
+        assert len(ds) == 3
+        assert isinstance(sample["image"], torch.Tensor)
+
+    def test_different_res_12(self) -> None:
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_4_epsg_4087"))
+        ds = UnionDataset(ds1, ds2)
+        sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds.res == 2
+        assert len(ds1) == len(ds2) == 1
+        assert len(ds) == 2
+        assert isinstance(sample["image"], torch.Tensor)
+
+    def test_different_res_12_3(self) -> None:
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_4_epsg_4087"))
+        ds3 = RasterDataset(os.path.join("tests", "data", "raster", "res_8_epsg_4087"))
+        ds = (ds1 | ds2) | ds3
+        sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert len(ds1) == len(ds2) == len(ds3) == 1
+        assert len(ds) == 3
+        assert isinstance(sample["image"], torch.Tensor)
+
+    def test_different_res_1_23(self) -> None:
+        ds1 = RasterDataset(os.path.join("tests", "data", "raster", "res_2_epsg_4087"))
+        ds2 = RasterDataset(os.path.join("tests", "data", "raster", "res_4_epsg_4087"))
+        ds3 = RasterDataset(os.path.join("tests", "data", "raster", "res_8_epsg_4087"))
+        ds = ds1 | (ds2 | ds3)
+        sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert len(ds1) == len(ds2) == len(ds3) == 1
+        assert len(ds) == 3
+        assert isinstance(sample["image"], torch.Tensor)
 
     def test_nongeo_dataset(self) -> None:
         ds1 = CustomNonGeoDataset()
@@ -462,22 +663,8 @@ class TestUnionDataset:
         with pytest.raises(ValueError, match=msg):
             UnionDataset(ds3, ds1)  # type: ignore[arg-type]
 
-    def test_different_crs(self) -> None:
-        ds1 = CustomGeoDataset(crs=CRS.from_epsg(3005))
-        ds2 = CustomGeoDataset(crs=CRS.from_epsg(32616))
-        ds = UnionDataset(ds1, ds2)
-        assert ds.crs == ds1.crs
-        assert len(ds) == 2
-
-    def test_different_res(self) -> None:
-        ds1 = CustomGeoDataset(res=1)
-        ds2 = CustomGeoDataset(res=2)
-        ds = UnionDataset(ds1, ds2)
-        assert ds.res == ds1.res
-        assert len(ds) == 2
-
     def test_invalid_query(self, dataset: UnionDataset) -> None:
-        query = BoundingBox(4, 5, 4, 5, 4, 5)
+        query = BoundingBox(-1, -1, -1, -1, -1, -1)
         with pytest.raises(
             IndexError, match="query: .* not found in index with bounds:"
         ):

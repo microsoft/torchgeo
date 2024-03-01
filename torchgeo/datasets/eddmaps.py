@@ -5,13 +5,14 @@
 
 import os
 import sys
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
+import pandas as pd
 from rasterio.crs import CRS
 
 from .geo import GeoDataset
-from .utils import BoundingBox, disambiguate_timestamp
+from .utils import BoundingBox, DatasetNotFoundError, disambiguate_timestamp
 
 
 class EDDMapS(GeoDataset):
@@ -34,11 +35,6 @@ class EDDMapS(GeoDataset):
       Georgia - Center for Invasive Species and Ecosystem Health. Available online at
       https://www.eddmaps.org/; last accessed *DATE*.
 
-    .. note::
-       This dataset requires the following additional library to be installed:
-
-       * `pandas <https://pypi.org/project/pandas/>`_ to load CSV files
-
     .. versionadded:: 0.3
     """
 
@@ -52,8 +48,7 @@ class EDDMapS(GeoDataset):
             root: root directory where dataset can be found
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
-            ImportError: if pandas is not installed
+            DatasetNotFoundError: If dataset is not found.
         """
         super().__init__()
 
@@ -61,14 +56,7 @@ class EDDMapS(GeoDataset):
 
         filepath = os.path.join(root, "mappings.csv")
         if not os.path.exists(filepath):
-            raise FileNotFoundError(f"Dataset not found in `root={self.root}`")
-
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
+            raise DatasetNotFoundError(self)
 
         # Read CSV file
         data = pd.read_csv(
@@ -91,7 +79,7 @@ class EDDMapS(GeoDataset):
             self.index.insert(i, coords)
             i += 1
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve metadata indexed by query.
 
         Args:

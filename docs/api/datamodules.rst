@@ -11,6 +11,16 @@ Chesapeake Land Cover
 
 .. autoclass:: ChesapeakeCVPRDataModule
 
+L7 Irish
+^^^^^^^^
+
+.. autoclass:: L7IrishDataModule
+
+L8 Biome
+^^^^^^^^
+
+.. autoclass:: L8BiomeDataModule
+
 NAIP
 ^^^^
 
@@ -23,6 +33,11 @@ BigEarthNet
 ^^^^^^^^^^^
 
 .. autoclass:: BigEarthNetDataModule
+
+ChaBuD
+^^^^^^
+
+.. autoclass:: ChaBuDDataModule
 
 COWC
 ^^^^
@@ -43,11 +58,17 @@ EuroSAT
 ^^^^^^^
 
 .. autoclass:: EuroSATDataModule
+.. autoclass:: EuroSAT100DataModule
 
 FAIR1M
 ^^^^^^
 
 .. autoclass:: FAIR1MDataModule
+
+FireRisk
+^^^^^^^^
+
+.. autoclass:: FireRiskDataModule
 
 GID-15
 ^^^^^^
@@ -63,6 +84,16 @@ LandCover.ai
 ^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAIDataModule
+
+LEVIR-CD
+^^^^^^^^
+
+.. autoclass:: LEVIRCDDataModule
+
+LEVIR-CD+
+^^^^^^^^^
+
+.. autoclass:: LEVIRCDPlusDataModule
 
 LoveDA
 ^^^^^^
@@ -89,6 +120,11 @@ RESISC45
 
 .. autoclass:: RESISC45DataModule
 
+Seasonal Contrast
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SeasonalContrastS2DataModule
+
 SEN12MS
 ^^^^^^^
 
@@ -103,6 +139,22 @@ SpaceNet
 ^^^^^^^^
 
 .. autoclass:: SpaceNet1DataModule
+
+SSL4EO
+^^^^^^
+
+.. autoclass:: SSL4EOLDataModule
+.. autoclass:: SSL4EOS12DataModule
+
+SSL4EO-L Benchmark
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SSL4EOLBenchmarkDataModule
+
+SustainBench Crop Yield
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SustainBenchCropYieldDataModule
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
@@ -131,6 +183,11 @@ xView2
 
 Base Classes
 ------------
+
+BaseDataModule
+^^^^^^^^^^^^^^
+
+.. autoclass:: BaseDataModule
 
 GeoDataModule
 ^^^^^^^^^^^^^

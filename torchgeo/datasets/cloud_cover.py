@@ -5,16 +5,24 @@
 
 import json
 import os
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_dataset, extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 # TODO: read geospatial information from stac.json files
@@ -54,7 +62,12 @@ class CloudCoverDetection(NonGeoDataset):
     .. versionadded:: 0.4
     """
 
-    dataset_id = "ref_cloud_cover_detection_challenge_v1"
+    collection_ids = [
+        "ref_cloud_cover_detection_challenge_v1_train_source",
+        "ref_cloud_cover_detection_challenge_v1_train_labels",
+        "ref_cloud_cover_detection_challenge_v1_test_source",
+        "ref_cloud_cover_detection_challenge_v1_test_labels",
+    ]
 
     image_meta = {
         "train": {
@@ -98,7 +111,7 @@ class CloudCoverDetection(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         bands: Sequence[str] = band_names,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -116,7 +129,7 @@ class CloudCoverDetection(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.split = split
@@ -130,10 +143,7 @@ class CloudCoverDetection(NonGeoDataset):
             self._download(api_key)
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         self.chip_paths = self._load_collections()
 
@@ -145,7 +155,7 @@ class CloudCoverDetection(NonGeoDataset):
         """
         return len(self.chip_paths)
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Returns a sample from dataset.
 
         Args:
@@ -156,7 +166,7 @@ class CloudCoverDetection(NonGeoDataset):
         """
         image = self._load_image(index)
         label = self._load_target(index)
-        sample: Dict[str, Tensor] = {"image": image, "mask": label}
+        sample: dict[str, Tensor] = {"image": image, "mask": label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -214,7 +224,7 @@ class CloudCoverDetection(NonGeoDataset):
             json_data = json.load(read_contents)
         return json_data
 
-    def _load_items(self, item_json: str) -> Dict[str, List[str]]:
+    def _load_items(self, item_json: str) -> dict[str, list[str]]:
         """Loads the label item and corresponding source items.
 
         Args:
@@ -257,7 +267,7 @@ class CloudCoverDetection(NonGeoDataset):
         item_meta["source"] = source_item_paths
         return item_meta
 
-    def _load_collections(self) -> List[Dict[str, Any]]:
+    def _load_collections(self) -> list[dict[str, Any]]:
         """Loads the paths to source and label assets for each collection.
 
         Returns:
@@ -267,7 +277,7 @@ class CloudCoverDetection(NonGeoDataset):
             RuntimeError if collection.json is not found in the uncompressed dataset
         """
         indexed_chips = []
-        label_collection: List[str] = []
+        label_collection: list[str] = []
         for c in self.collection_names[self.split]:
             if "label" in c:
                 label_collection.append(c)
@@ -324,15 +334,13 @@ class CloudCoverDetection(NonGeoDataset):
 
         Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
         """
         if self._check_integrity():
             print("Files already downloaded and verified")
             return
 
-        download_radiant_mlhub_dataset(self.dataset_id, self.root, api_key)
+        for collection_id in self.collection_ids:
+            download_radiant_mlhub_collection(collection_id, self.root, api_key)
 
         image_archive_path = os.path.join(
             self.root, self.image_meta[self.split]["filename"]
@@ -345,10 +353,10 @@ class CloudCoverDetection(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -361,14 +369,14 @@ class CloudCoverDetection(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if dataset does not contain an RGB band
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         rgb_indices = []
         for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         if "prediction" in sample:
             prediction = sample["prediction"]

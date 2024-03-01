@@ -1,18 +1,28 @@
-Dataset,Type,Source,Size (px),Resolution (m)
-`Aboveground Woody Biomass`_,Masks,"Landsat, LiDAR","40,000x40,000",30
-`Aster Global DEM`_,Masks,Aster,"3,601x3,601",30
-`Canadian Building Footprints`_,Geometries,Bing Imagery,-,-
-`Chesapeake Land Cover`_,"Imagery, Masks",NAIP,-,1
-`Global Mangrove Distribution`_,Masks,"Remote Sensing, In Situ Measurements",-,3
-`Cropland Data Layer`_,Masks,Aerial,-,30
-`EDDMapS`_,Points,Citizen Scientists,-,-
-`EnviroAtlas`_,"Imagery, Masks","NAIP, NLCD, OpenStreetMap",-,1
-`Esri2020`_,Masks,Sentinel-2,-,10
-`EU-DEM`_,Masks,"Aster, SRTM, Russian Topomaps",-,25
-`GBIF`_,Points,Citizen Scientists,-,-
-`GlobBiomass`_,Masks,Landsat,"45,000x45,000",100
-`iNaturalist`_,Points,Citizen Scientists,-,-
-`Landsat`_,Imagery,Landsat,"8,900x8,900",30
-`NAIP`_,Imagery,Aerial,"6,100x7,600",1
-`Open Buildings`_,Geometries,"Maxar, CNES/Airbus",-,-
-`Sentinel`_,Imagery,Sentinel,"10,000x10,000",10
+Dataset,Type,Source,License,Size (px),Resolution (m)
+`Aboveground Woody Biomass`_,Masks,"Landsat, LiDAR","CC-BY-4.0","40,000x40,000",30
+`AgriFieldNet`_,"Imagery, Masks",Sentinel-2,"CC-BY-4.0","256x256",10
+`Airphen`_,Imagery,Airphen,-,"1,280x960",0.047--0.09
+`Aster Global DEM`_,Masks,Aster,"public domain","3,601x3,601",30
+`Canadian Building Footprints`_,Geometries,Bing Imagery,"ODbL-1.0",-,-
+`Chesapeake Land Cover`_,"Imagery, Masks",NAIP,"CC-BY-4.0",-,1
+`Global Mangrove Distribution`_,Masks,"Remote Sensing, In Situ Measurements","public domain",-,3
+`Cropland Data Layer`_,Masks,Landsat,"public domain",-,30
+`EDDMapS`_,Points,Citizen Scientists,-,-,-
+`EnviroAtlas`_,"Imagery, Masks","NAIP, NLCD, OpenStreetMap","CC-BY-4.0",-,1
+`Esri2020`_,Masks,Sentinel-2,"CC-BY-4.0",-,10
+`EU-DEM`_,Masks,"Aster, SRTM, Russian Topomaps","CSCDA-ESA",-,25
+`EuroCrops`_,Geometries,EU Countries,"CC-BY-SA-4.0",-,-
+`GBIF`_,Points,Citizen Scientists,"CC0-1.0 OR CC-BY-4.0 OR CC-BY-NC-4.0",-,-
+`GlobBiomass`_,Masks,Landsat,"CC-BY-4.0","45,000x45,000",100
+`iNaturalist`_,Points,Citizen Scientists,-,-,-
+`L7 Irish`_,"Imagery, Masks",Landsat,"CC0-1.0","8,400x7,500","15, 30"
+`L8 Biome`_,"Imagery, Masks",Landsat,"CC0-1.0","8,900x8,900","15, 30"
+`LandCover.ai Geo`_,"Imagery, Masks",Aerial,"CC-BY-NC-SA-4.0","4,200--9,500",0.25--0.5
+`Landsat`_,Imagery,Landsat,"public domain","8,900x8,900",30
+`NAIP`_,Imagery,Aerial,"public domain","6,100x7,600",1
+`NCCM`_,Masks,Sentinel-2,"CC-BY-4.0",-,10
+`NLCD`_,Masks,Landsat,"public domain",-,30
+`Open Buildings`_,Geometries,"Maxar, CNES/Airbus","CC-BY-4.0 OR ODbL-1.0",-,-
+`PRISMA`_,Imagery,PRISMA,-,512x512,5--30
+`Sentinel`_,Imagery,Sentinel,"CC-BY-SA-3.0-IGO","10,000x10,000",10
+`South America Soybean`_,Masks,"Landsat, MODIS",-,-,30

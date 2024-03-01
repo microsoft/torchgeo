@@ -81,10 +81,9 @@ def generate_test_data(root: str, n_samples: int = 2) -> str:
     shutil.make_archive(
         archive_path, "zip", root_dir=root, base_dir="AerialImageDataset"
     )
-    shutil.rmtree(folder_path)
     return calculate_md5(f"{archive_path}.zip")
 
 
 if __name__ == "__main__":
-    md5_hash = generate_test_data(os.getcwd(), 5)
+    md5_hash = generate_test_data(os.getcwd(), 7)
     print(md5_hash)

@@ -3,16 +3,17 @@
 
 """CDL dataset."""
 
-import glob
 import os
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Iterable
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
-import numpy as np
+import torch
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import download_url, extract_archive
+from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
 
 
 class CDL(RasterDataset):
@@ -27,6 +28,10 @@ class CDL(RasterDataset):
     Agricultural Statistics Districts (ASD), State, and Region. The data is created
     annually using moderate resolution satellite imagery and extensive agricultural
     ground truth.
+
+    The dataset contains 134 classes, for a description of the classes see the
+    xls file at the top of
+    `this page <https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php>`_.
 
     If you use this dataset in your research, please cite it using the following format:
 
@@ -43,265 +48,149 @@ class CDL(RasterDataset):
     is_image = False
 
     url = "https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip"  # noqa: E501
-    md5s = [
-        (2021, "27606eab08fe975aa138baad3e5dfcd8"),
-        (2020, "483ee48c503aa81b684225179b402d42"),
-        (2019, "a5168a2fc93acbeaa93e24eee3d8c696"),
-        (2018, "4ad0d7802a9bb751685eb239b0fa8609"),
-        (2017, "d173f942a70f94622f9b8290e7548684"),
-        (2016, "fddc5dff0bccc617d70a12864c993e51"),
-        (2015, "2e92038ab62ba75e1687f60eecbdd055"),
-        (2014, "50bdf9da84ebd0457ddd9e0bf9bbcc1f"),
-        (2013, "7be66c650416dc7c4a945dd7fd93c5b7"),
-        (2012, "286504ff0512e9fe1a1975c635a1bec2"),
-        (2011, "517bad1a99beec45d90abb651fb1f0e3"),
-        (2010, "98d354c5a62c9e3e40ccadce265c721c"),
-        (2009, "663c8a5fdd92ebfc0d6bee008586d19a"),
-        (2008, "0610f2f17ab60a9fbb3baeb7543993a4"),
-    ]
+    md5s = {
+        2023: "8c7685d6278d50c554f934b16a6076b7",
+        2022: "754cf50670cdfee511937554785de3e6",
+        2021: "27606eab08fe975aa138baad3e5dfcd8",
+        2020: "483ee48c503aa81b684225179b402d42",
+        2019: "a5168a2fc93acbeaa93e24eee3d8c696",
+        2018: "4ad0d7802a9bb751685eb239b0fa8609",
+        2017: "d173f942a70f94622f9b8290e7548684",
+        2016: "fddc5dff0bccc617d70a12864c993e51",
+        2015: "2e92038ab62ba75e1687f60eecbdd055",
+        2014: "50bdf9da84ebd0457ddd9e0bf9bbcc1f",
+        2013: "7be66c650416dc7c4a945dd7fd93c5b7",
+        2012: "286504ff0512e9fe1a1975c635a1bec2",
+        2011: "517bad1a99beec45d90abb651fb1f0e3",
+        2010: "98d354c5a62c9e3e40ccadce265c721c",
+        2009: "663c8a5fdd92ebfc0d6bee008586d19a",
+        2008: "0610f2f17ab60a9fbb3baeb7543993a4",
+    }
 
     cmap = {
-        0: (0, 0, 0, 0),
+        0: (0, 0, 0, 255),
         1: (255, 211, 0, 255),
-        2: (255, 38, 38, 255),
-        3: (0, 168, 228, 255),
-        4: (255, 158, 11, 255),
-        5: (38, 112, 0, 255),
+        2: (255, 37, 37, 255),
+        3: (0, 168, 226, 255),
+        4: (255, 158, 9, 255),
+        5: (37, 111, 0, 255),
         6: (255, 255, 0, 255),
-        7: (0, 0, 0, 255),
-        8: (0, 0, 0, 255),
-        9: (0, 0, 0, 255),
-        10: (112, 165, 0, 255),
-        11: (0, 175, 75, 255),
-        12: (221, 165, 11, 255),
-        13: (221, 165, 11, 255),
-        14: (126, 211, 255, 255),
-        15: (0, 0, 0, 255),
-        16: (0, 0, 0, 255),
-        17: (0, 0, 0, 255),
-        18: (0, 0, 0, 255),
-        19: (0, 0, 0, 255),
-        20: (0, 0, 0, 255),
+        10: (111, 166, 0, 255),
+        11: (0, 175, 73, 255),
+        12: (222, 166, 9, 255),
+        13: (222, 166, 9, 255),
+        14: (124, 211, 255, 255),
         21: (226, 0, 124, 255),
-        22: (137, 98, 84, 255),
-        23: (216, 181, 107, 255),
-        24: (165, 112, 0, 255),
-        25: (214, 158, 188, 255),
-        26: (112, 112, 0, 255),
-        27: (172, 0, 124, 255),
-        28: (160, 89, 137, 255),
-        29: (112, 0, 73, 255),
-        30: (214, 158, 188, 255),
+        22: (137, 96, 83, 255),
+        23: (217, 181, 107, 255),
+        24: (166, 111, 0, 255),
+        25: (213, 158, 188, 255),
+        26: (111, 111, 0, 255),
+        27: (171, 0, 124, 255),
+        28: (160, 88, 137, 255),
+        29: (111, 0, 73, 255),
+        30: (213, 158, 188, 255),
         31: (209, 255, 0, 255),
-        32: (126, 153, 255, 255),
-        33: (214, 214, 0, 255),
+        32: (124, 153, 255, 255),
+        33: (213, 213, 0, 255),
         34: (209, 255, 0, 255),
-        35: (0, 175, 75, 255),
-        36: (255, 165, 226, 255),
-        37: (165, 242, 140, 255),
-        38: (0, 175, 75, 255),
-        39: (214, 158, 188, 255),
-        40: (0, 0, 0, 255),
-        41: (168, 0, 228, 255),
-        42: (165, 0, 0, 255),
-        43: (112, 38, 0, 255),
-        44: (0, 175, 75, 255),
-        45: (177, 126, 255, 255),
-        46: (112, 38, 0, 255),
+        35: (0, 175, 73, 255),
+        36: (255, 166, 226, 255),
+        37: (166, 241, 139, 255),
+        38: (0, 175, 73, 255),
+        39: (213, 158, 188, 255),
+        41: (168, 0, 226, 255),
+        42: (166, 0, 0, 255),
+        43: (111, 37, 0, 255),
+        44: (0, 175, 73, 255),
+        45: (175, 124, 255, 255),
+        46: (111, 37, 0, 255),
         47: (255, 102, 102, 255),
         48: (255, 102, 102, 255),
         49: (255, 204, 102, 255),
         50: (255, 102, 102, 255),
-        51: (0, 175, 75, 255),
-        52: (0, 221, 175, 255),
-        53: (84, 255, 0, 255),
-        54: (242, 163, 119, 255),
+        51: (0, 175, 73, 255),
+        52: (0, 222, 175, 255),
+        53: (83, 255, 0, 255),
+        54: (241, 162, 120, 255),
         55: (255, 102, 102, 255),
-        56: (0, 175, 75, 255),
-        57: (126, 211, 255, 255),
-        58: (232, 191, 255, 255),
-        59: (175, 255, 221, 255),
-        60: (0, 175, 75, 255),
-        61: (191, 191, 119, 255),
-        62: (0, 0, 0, 255),
+        56: (0, 175, 73, 255),
+        57: (124, 211, 255, 255),
+        58: (232, 190, 255, 255),
+        59: (175, 255, 222, 255),
+        60: (0, 175, 73, 255),
+        61: (190, 190, 120, 255),
         63: (147, 204, 147, 255),
-        64: (198, 214, 158, 255),
-        65: (204, 191, 163, 255),
+        64: (198, 213, 158, 255),
+        65: (204, 190, 162, 255),
         66: (255, 0, 255, 255),
-        67: (255, 142, 170, 255),
-        68: (186, 0, 79, 255),
-        69: (112, 68, 137, 255),
-        70: (0, 119, 119, 255),
-        71: (177, 154, 112, 255),
-        72: (255, 255, 126, 255),
-        73: (0, 0, 0, 255),
-        74: (181, 112, 91, 255),
-        75: (0, 165, 130, 255),
-        76: (233, 214, 175, 255),
-        77: (177, 154, 112, 255),
-        78: (0, 0, 0, 255),
-        79: (0, 0, 0, 255),
-        80: (0, 0, 0, 255),
-        81: (242, 242, 242, 255),
-        82: (154, 154, 154, 255),
-        83: (75, 112, 163, 255),
-        84: (0, 0, 0, 255),
-        85: (0, 0, 0, 255),
-        86: (0, 0, 0, 255),
-        87: (126, 177, 177, 255),
-        88: (232, 255, 191, 255),
-        89: (0, 0, 0, 255),
-        90: (0, 0, 0, 255),
-        91: (0, 0, 0, 255),
+        67: (255, 143, 171, 255),
+        68: (185, 0, 79, 255),
+        69: (111, 69, 137, 255),
+        70: (0, 120, 120, 255),
+        71: (175, 153, 111, 255),
+        72: (255, 255, 124, 255),
+        74: (181, 111, 92, 255),
+        75: (0, 166, 130, 255),
+        76: (232, 213, 175, 255),
+        77: (175, 153, 111, 255),
+        81: (241, 241, 241, 255),
+        82: (153, 153, 153, 255),
+        83: (73, 111, 162, 255),
+        87: (124, 175, 175, 255),
+        88: (232, 255, 190, 255),
         92: (0, 255, 255, 255),
-        93: (0, 0, 0, 255),
-        94: (0, 0, 0, 255),
-        95: (0, 0, 0, 255),
-        96: (0, 0, 0, 255),
-        97: (0, 0, 0, 255),
-        98: (0, 0, 0, 255),
-        99: (0, 0, 0, 255),
-        100: (0, 0, 0, 255),
-        101: (0, 0, 0, 255),
-        102: (0, 0, 0, 255),
-        103: (0, 0, 0, 255),
-        104: (0, 0, 0, 255),
-        105: (0, 0, 0, 255),
-        106: (0, 0, 0, 255),
-        107: (0, 0, 0, 255),
-        108: (0, 0, 0, 255),
-        109: (0, 0, 0, 255),
-        110: (0, 0, 0, 255),
-        111: (75, 112, 163, 255),
+        111: (73, 111, 162, 255),
         112: (211, 226, 249, 255),
-        113: (0, 0, 0, 255),
-        114: (0, 0, 0, 255),
-        115: (0, 0, 0, 255),
-        116: (0, 0, 0, 255),
-        117: (0, 0, 0, 255),
-        118: (0, 0, 0, 255),
-        119: (0, 0, 0, 255),
-        120: (0, 0, 0, 255),
-        121: (154, 154, 154, 255),
-        122: (154, 154, 154, 255),
-        123: (154, 154, 154, 255),
-        124: (154, 154, 154, 255),
-        125: (0, 0, 0, 255),
-        126: (0, 0, 0, 255),
-        127: (0, 0, 0, 255),
-        128: (0, 0, 0, 255),
-        129: (0, 0, 0, 255),
-        130: (0, 0, 0, 255),
-        131: (204, 191, 163, 255),
-        132: (0, 0, 0, 255),
-        133: (0, 0, 0, 255),
-        134: (0, 0, 0, 255),
-        135: (0, 0, 0, 255),
-        136: (0, 0, 0, 255),
-        137: (0, 0, 0, 255),
-        138: (0, 0, 0, 255),
-        139: (0, 0, 0, 255),
-        140: (0, 0, 0, 255),
+        121: (153, 153, 153, 255),
+        122: (153, 153, 153, 255),
+        123: (153, 153, 153, 255),
+        124: (153, 153, 153, 255),
+        131: (204, 190, 162, 255),
         141: (147, 204, 147, 255),
         142: (147, 204, 147, 255),
         143: (147, 204, 147, 255),
-        144: (0, 0, 0, 255),
-        145: (0, 0, 0, 255),
-        146: (0, 0, 0, 255),
-        147: (0, 0, 0, 255),
-        148: (0, 0, 0, 255),
-        149: (0, 0, 0, 255),
-        150: (0, 0, 0, 255),
-        151: (0, 0, 0, 255),
-        152: (198, 214, 158, 255),
-        153: (0, 0, 0, 255),
-        154: (0, 0, 0, 255),
-        155: (0, 0, 0, 255),
-        156: (0, 0, 0, 255),
-        157: (0, 0, 0, 255),
-        158: (0, 0, 0, 255),
-        159: (0, 0, 0, 255),
-        160: (0, 0, 0, 255),
-        161: (0, 0, 0, 255),
-        162: (0, 0, 0, 255),
-        163: (0, 0, 0, 255),
-        164: (0, 0, 0, 255),
-        165: (0, 0, 0, 255),
-        166: (0, 0, 0, 255),
-        167: (0, 0, 0, 255),
-        168: (0, 0, 0, 255),
-        169: (0, 0, 0, 255),
-        170: (0, 0, 0, 255),
-        171: (0, 0, 0, 255),
-        172: (0, 0, 0, 255),
-        173: (0, 0, 0, 255),
-        174: (0, 0, 0, 255),
-        175: (0, 0, 0, 255),
-        176: (232, 255, 191, 255),
-        177: (0, 0, 0, 255),
-        178: (0, 0, 0, 255),
-        179: (0, 0, 0, 255),
-        180: (0, 0, 0, 255),
-        181: (0, 0, 0, 255),
-        182: (0, 0, 0, 255),
-        183: (0, 0, 0, 255),
-        184: (0, 0, 0, 255),
-        185: (0, 0, 0, 255),
-        186: (0, 0, 0, 255),
-        187: (0, 0, 0, 255),
-        188: (0, 0, 0, 255),
-        189: (0, 0, 0, 255),
-        190: (126, 177, 177, 255),
-        191: (0, 0, 0, 255),
-        192: (0, 0, 0, 255),
-        193: (0, 0, 0, 255),
-        194: (0, 0, 0, 255),
-        195: (126, 177, 177, 255),
-        196: (0, 0, 0, 255),
-        197: (0, 0, 0, 255),
-        198: (0, 0, 0, 255),
-        199: (0, 0, 0, 255),
-        200: (0, 0, 0, 255),
-        201: (0, 0, 0, 255),
-        202: (0, 0, 0, 255),
-        203: (0, 0, 0, 255),
-        204: (0, 255, 140, 255),
-        205: (214, 158, 188, 255),
+        152: (198, 213, 158, 255),
+        176: (232, 255, 190, 255),
+        190: (124, 175, 175, 255),
+        195: (124, 175, 175, 255),
+        204: (0, 255, 139, 255),
+        205: (213, 158, 188, 255),
         206: (255, 102, 102, 255),
         207: (255, 102, 102, 255),
         208: (255, 102, 102, 255),
         209: (255, 102, 102, 255),
-        210: (255, 142, 170, 255),
+        210: (255, 143, 171, 255),
         211: (51, 73, 51, 255),
-        212: (228, 112, 38, 255),
+        212: (226, 111, 37, 255),
         213: (255, 102, 102, 255),
         214: (255, 102, 102, 255),
-        215: (102, 153, 76, 255),
+        215: (102, 153, 77, 255),
         216: (255, 102, 102, 255),
-        217: (177, 154, 112, 255),
-        218: (255, 142, 170, 255),
+        217: (175, 153, 111, 255),
+        218: (255, 143, 171, 255),
         219: (255, 102, 102, 255),
-        220: (255, 142, 170, 255),
+        220: (255, 143, 171, 255),
         221: (255, 102, 102, 255),
         222: (255, 102, 102, 255),
-        223: (255, 142, 170, 255),
-        224: (0, 175, 75, 255),
+        223: (255, 143, 171, 255),
+        224: (0, 175, 73, 255),
         225: (255, 211, 0, 255),
         226: (255, 211, 0, 255),
         227: (255, 102, 102, 255),
-        228: (255, 210, 0, 255),
+        228: (255, 211, 0, 255),
         229: (255, 102, 102, 255),
-        230: (137, 98, 84, 255),
+        230: (137, 96, 83, 255),
         231: (255, 102, 102, 255),
-        232: (255, 38, 38, 255),
+        232: (255, 37, 37, 255),
         233: (226, 0, 124, 255),
-        234: (255, 158, 11, 255),
-        235: (255, 158, 11, 255),
-        236: (165, 112, 0, 255),
+        234: (255, 158, 9, 255),
+        235: (255, 158, 9, 255),
+        236: (166, 111, 0, 255),
         237: (255, 211, 0, 255),
-        238: (165, 112, 0, 255),
-        239: (38, 112, 0, 255),
-        240: (38, 112, 0, 255),
+        238: (166, 111, 0, 255),
+        239: (37, 111, 0, 255),
+        240: (37, 111, 0, 255),
         241: (255, 211, 0, 255),
         242: (0, 0, 153, 255),
         243: (255, 102, 102, 255),
@@ -312,19 +201,17 @@ class CDL(RasterDataset):
         248: (255, 102, 102, 255),
         249: (255, 102, 102, 255),
         250: (255, 102, 102, 255),
-        251: (0, 0, 0, 255),
-        252: (0, 0, 0, 255),
-        253: (0, 0, 0, 255),
-        254: (38, 112, 0, 255),
-        255: (0, 0, 0, 255),
+        254: (37, 111, 0, 255),
     }
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, Iterable[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        years: list[int] = [2023],
+        classes: list[int] = list(cmap.keys()),
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -332,54 +219,97 @@ class CDL(RasterDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
+            years: list of years for which to use cdl layer
+            classes: list of classes to include, the rest will be mapped to 0
+                (defaults to all classes)
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 after downloading files (may be slow)
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            AssertionError: if ``years`` or ``classes`` are invalid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionadded:: 0.5
+           The *years* and *classes* parameters.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
-        self.root = root
+        assert set(years) <= self.md5s.keys(), (
+            "CDL data product only exists for the following years: "
+            f"{list(self.md5s.keys())}."
+        )
+        assert (
+            set(classes) <= self.cmap.keys()
+        ), f"Only the following classes are valid: {list(self.cmap.keys())}."
+        assert 0 in classes, "Classes must include the background class: 0"
+
+        self.paths = paths
+        self.years = years
+        self.classes = classes
         self.download = download
         self.checksum = checksum
+        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
+        self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms=transforms, cache=cache)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
-    def _verify(self) -> None:
-        """Verify the integrity of the dataset.
+        # Map chosen classes to ordinal numbers, all others mapped to background class
+        for v, k in enumerate(self.classes):
+            self.ordinal_map[k] = v
+            self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
+
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+        """Retrieve mask and metadata indexed by query.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            sample of mask and metadata at that index
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            IndexError: if query is not found in the index
         """
+        sample = super().__getitem__(query)
+        sample["mask"] = self.ordinal_map[sample["mask"]]
+        return sample
+
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        pathname = os.path.join(self.root, "**", self.filename_glob)
-        for fname in glob.iglob(pathname, recursive=True):
-            if not fname.endswith(".zip"):
-                return
+        if self.files:
+            return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.zipfile_glob)
-        if glob.glob(pathname):
-            self._extract()
+        exists = []
+        assert isinstance(self.paths, str)
+        for year in self.years:
+            pathname = os.path.join(
+                self.paths, self.zipfile_glob.replace("*", str(year))
+            )
+            if os.path.exists(pathname):
+                exists.append(True)
+                self._extract()
+            else:
+                exists.append(False)
+
+        if all(exists):
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -387,23 +317,27 @@ class CDL(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        for year, md5 in self.md5s:
+        for year in self.years:
             download_url(
-                self.url.format(year), self.root, md5=md5 if self.checksum else None
+                self.url.format(year),
+                self.paths,
+                md5=self.md5s[year] if self.checksum else None,
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        pathname = os.path.join(self.root, self.zipfile_glob)
-        for zipfile in glob.iglob(pathname):
-            extract_archive(zipfile)
+        assert isinstance(self.paths, str)
+        for year in self.years:
+            zipfile_name = self.zipfile_glob.replace("*", str(year))
+            pathname = os.path.join(self.paths, zipfile_name)
+            extract_archive(pathname, self.paths)
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -418,37 +352,31 @@ class CDL(RasterDataset):
            Method now takes a sample dict, not a Tensor. Additionally, possible to
            show subplot titles and/or use a custom suptitle.
         """
-        mask = sample["mask"].squeeze().numpy()
+        mask = sample["mask"].squeeze()
         ncols = 1
-
-        cmap: "np.typing.NDArray[np.int_]" = np.array(
-            [self.cmap[i] for i in range(len(self.cmap))]
-        )
-        mask = cmap[mask]
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze().numpy()
-            pred = cmap[pred]
+            pred = sample["prediction"].squeeze()
             ncols = 2
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
+        fig, axs = plt.subplots(
+            nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
+        )
+
+        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation="none")
+        axs[0, 0].axis("off")
+
+        if show_titles:
+            axs[0, 0].set_title("Mask")
 
         if showing_predictions:
-            axs[0].imshow(mask)
-            axs[0].axis("off")
-            axs[1].imshow(pred)
-            axs[1].axis("off")
+            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation="none")
+            axs[0, 1].axis("off")
             if show_titles:
-                axs[0].set_title("Mask")
-                axs[1].set_title("Prediction")
-        else:
-            axs.imshow(mask)
-            axs.axis("off")
-            if show_titles:
-                axs.set_title("Mask")
+                axs[0, 1].set_title("Prediction")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
 
-        return
+        return fig

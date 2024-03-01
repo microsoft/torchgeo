@@ -5,18 +5,25 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional, Sequence
+from collections.abc import Sequence
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
 from matplotlib import colors
+from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    check_integrity,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class DFC2022(NonGeoDataset):
@@ -137,7 +144,7 @@ class DFC2022(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new DFC2022 dataset instance.
@@ -151,6 +158,7 @@ class DFC2022(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` is invalid
+            DatasetNotFoundError: If dataset is not found.
         """
         assert split in self.metadata
         self.root = root
@@ -163,7 +171,7 @@ class DFC2022(NonGeoDataset):
         self.class2idx = {c: i for i, c in enumerate(self.classes)}
         self.files = self._load_files()
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -196,7 +204,7 @@ class DFC2022(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self) -> List[Dict[str, str]]:
+    def _load_files(self) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Returns:
@@ -256,11 +264,7 @@ class DFC2022(NonGeoDataset):
             return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if checksum fails or the dataset is not downloaded
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         exists = []
         for split_info in self.metadata.values():
@@ -286,18 +290,14 @@ class DFC2022(NonGeoDataset):
         if all(exists):
             return
 
-        # Check if the user requested to download the dataset
-        raise RuntimeError(
-            "Dataset not found in `root` directory, either specify a different"
-            + " `root` directory or manually download the dataset to this directory."
-        )
+        raise DatasetNotFoundError(self)
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -335,13 +335,13 @@ class DFC2022(NonGeoDataset):
         axs[1].imshow(dem)
         axs[1].axis("off")
         if showing_mask:
-            axs[2].imshow(mask, cmap=cmap, interpolation=None)
+            axs[2].imshow(mask, cmap=cmap, interpolation="none")
             axs[2].axis("off")
             if showing_prediction:
-                axs[3].imshow(pred, cmap=cmap, interpolation=None)
+                axs[3].imshow(pred, cmap=cmap, interpolation="none")
                 axs[3].axis("off")
         elif showing_prediction:
-            axs[2].imshow(pred, cmap=cmap, interpolation=None)
+            axs[2].imshow(pred, cmap=cmap, interpolation="none")
             axs[2].axis("off")
 
         if show_titles:

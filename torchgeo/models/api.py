@@ -10,27 +10,31 @@ See the following references for design details:
 * https://github.com/pytorch/vision/blob/main/torchvision/models/_api.py
 """  # noqa: E501
 
-from typing import Any, Callable, List, Union
+from typing import Any, Callable, Union
 
 import torch.nn as nn
 from torchvision.models._api import WeightsEnum
 
 from .resnet import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50
+from .swin import Swin_V2_B_Weights, swin_v2_b
 from .vit import ViTSmall16_Weights, vit_small_patch16_224
 
 _model = {
     "resnet18": resnet18,
     "resnet50": resnet50,
     "vit_small_patch16_224": vit_small_patch16_224,
+    "swin_v2_b": swin_v2_b,
 }
 
 _model_weights = {
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
     vit_small_patch16_224: ViTSmall16_Weights,
+    swin_v2_b: Swin_V2_B_Weights,
     "resnet18": ResNet18_Weights,
     "resnet50": ResNet50_Weights,
     "vit_small_patch16_224": ViTSmall16_Weights,
+    "swin_v2_b": Swin_V2_B_Weights,
 }
 
 
@@ -79,7 +83,7 @@ def get_weight(name: str) -> WeightsEnum:
     return eval(name)
 
 
-def list_models() -> List[str]:
+def list_models() -> list[str]:
     """List the registered models.
 
     .. versionadded:: 0.4

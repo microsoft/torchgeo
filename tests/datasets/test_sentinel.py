@@ -3,7 +3,6 @@
 
 import os
 from pathlib import Path
-from typing import List
 
 import matplotlib.pyplot as plt
 import pytest
@@ -14,7 +13,9 @@ from rasterio.crs import CRS
 
 from torchgeo.datasets import (
     BoundingBox,
+    DatasetNotFoundError,
     IntersectionDataset,
+    RGBBandsMissingError,
     Sentinel1,
     Sentinel2,
     UnionDataset,
@@ -65,7 +66,7 @@ class TestSentinel1:
         plt.close()
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No Sentinel1 data was found in "):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             Sentinel1(str(tmp_path))
 
     def test_empty_bands(self) -> None:
@@ -73,19 +74,19 @@ class TestSentinel1:
             Sentinel1(bands=[])
 
     @pytest.mark.parametrize("bands", [["HH", "HH"], ["HH", "HV", "HH"]])
-    def test_duplicate_bands(self, bands: List[str]) -> None:
+    def test_duplicate_bands(self, bands: list[str]) -> None:
         with pytest.raises(AssertionError, match="'bands' contains duplicate bands"):
             Sentinel1(bands=bands)
 
     @pytest.mark.parametrize("bands", [["HH_HV"], ["HH", "HV", "HH_HV"]])
-    def test_invalid_bands(self, bands: List[str]) -> None:
+    def test_invalid_bands(self, bands: list[str]) -> None:
         with pytest.raises(AssertionError, match="invalid band 'HH_HV'"):
             Sentinel1(bands=bands)
 
     @pytest.mark.parametrize(
         "bands", [["HH", "VV"], ["HH", "VH"], ["VV", "HV"], ["HH", "HV", "VV", "VH"]]
     )
-    def test_dual_transmit(self, bands: List[str]) -> None:
+    def test_dual_transmit(self, bands: list[str]) -> None:
         with pytest.raises(AssertionError, match="'bands' cannot contain both "):
             Sentinel1(bands=bands)
 
@@ -124,7 +125,7 @@ class TestSentinel2:
         assert isinstance(ds, UnionDataset)
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No Sentinel2 data was found in "):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             Sentinel2(str(tmp_path))
 
     def test_plot(self, dataset: Sentinel2) -> None:
@@ -134,10 +135,10 @@ class TestSentinel2:
 
     def test_plot_wrong_bands(self, dataset: Sentinel2) -> None:
         bands = ["B02"]
-        ds = Sentinel2(root=dataset.root, res=dataset.res, bands=bands)
+        ds = Sentinel2(dataset.paths, res=dataset.res, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
-            ValueError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
             ds.plot(x)
 

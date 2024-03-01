@@ -5,16 +5,17 @@
 
 import glob
 import os
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import DatasetNotFoundError, download_and_extract_archive
 
 
 class LoveDA(NonGeoDataset):
@@ -91,8 +92,8 @@ class LoveDA(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        scene: List[str] = ["urban", "rural"],
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        scene: list[str] = ["urban", "rural"],
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -108,10 +109,8 @@ class LoveDA(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``split`` argument is invalid
-            AssertionError: if ``scene`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            AssertionError: if ``split`` or ``scene`` arguments are invalid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
         assert set(scene).intersection(
@@ -138,14 +137,11 @@ class LoveDA(NonGeoDataset):
             self._download()
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found at root directory or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         self.files = self._load_files(self.scene_paths, self.split)
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -177,7 +173,7 @@ class LoveDA(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, scene_paths: List[str], split: str) -> List[Dict[str, str]]:
+    def _load_files(self, scene_paths: list[str], split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -248,11 +244,7 @@ class LoveDA(NonGeoDataset):
         return True
 
     def _download(self) -> None:
-        """Download the dataset and extract it.
-
-        Raises:
-            AssertionError: if the checksum of split.py does not match
-        """
+        """Download the dataset and extract it."""
         if self._check_integrity():
             print("Files already downloaded and verified")
             return
@@ -264,9 +256,7 @@ class LoveDA(NonGeoDataset):
             md5=self.md5 if self.checksum else None,
         )
 
-    def plot(
-        self, sample: Dict[str, Tensor], suptitle: Optional[str] = None
-    ) -> plt.Figure:
+    def plot(self, sample: dict[str, Tensor], suptitle: Optional[str] = None) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

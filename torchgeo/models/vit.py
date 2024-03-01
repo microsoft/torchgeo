@@ -7,6 +7,7 @@ from typing import Any, Optional
 
 import kornia.augmentation as K
 import timm
+import torch
 from timm.models.vision_transformer import VisionTransformer
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -14,8 +15,21 @@ from ..transforms import AugmentationSequential
 
 __all__ = ["ViTSmall16_Weights"]
 
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167 # noqa: E501
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97 # noqa: E501
+# Normalization either by 10K or channel-wise with band statistics
 _zhu_xlab_transforms = AugmentationSequential(
-    K.Resize(256), K.CenterCrop(224), data_keys=["image"]
+    K.Resize(256),
+    K.CenterCrop(224),
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
+    data_keys=["image"],
+)
+
+# https://github.com/microsoft/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43 # noqa: E501
+_ssl4eo_l_transforms = AugmentationSequential(
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
+    K.CenterCrop((224, 224)),
+    data_keys=["image"],
 )
 
 # https://github.com/pytorch/vision/pull/6883
@@ -25,7 +39,7 @@ Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 
 class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
-    """Vision Transformer Samll Patch Size 16 weights.
+    """Vision Transformer Small Patch Size 16 weights.
 
     For `timm <https://github.com/rwightman/pytorch-image-models>`_
     *vit_small_patch16_224* implementation.
@@ -33,27 +47,138 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.4
     """
 
-    SENTINEL2_ALL_MOCO = Weights(
-        url=(
-            "https://huggingface.co/torchgeo/vit_small_patch16_224_sentinel2_all_moco/"
-            "resolve/main/vit_small_patch16_224_sentinel2_all_moco.pth"
-        ),
-        transforms=_zhu_xlab_transforms,
+    LANDSAT_TM_TOA_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_tm_toa_moco-a1c967d8.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
         meta={
-            "dataset": "SSL4EO-S12",
-            "in_chans": 13,
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
             "model": "vit_small_patch16_224",
-            "publication": "https://arxiv.org/abs/2211.07044",
-            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
             "ssl_method": "moco",
         },
     )
 
+    LANDSAT_TM_TOA_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_tm_toa_simclr-7c2d9799.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
+    LANDSAT_ETM_TOA_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_etm_toa_moco-26d19bcf.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 9,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_ETM_TOA_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_etm_toa_simclr-34fb12cb.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 9,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
+    LANDSAT_ETM_SR_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_etm_sr_moco-eaa4674e.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 6,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_ETM_SR_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_etm_sr_simclr-a14c466a.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 6,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
+    LANDSAT_OLI_TIRS_TOA_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_oli_tirs_toa_moco-c7c2cceb.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 11,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_OLI_TIRS_TOA_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_oli_tirs_toa_simclr-ad43e9a4.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 11,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
+    LANDSAT_OLI_SR_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_oli_sr_moco-c9b8898d.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "moco",
+        },
+    )
+
+    LANDSAT_OLI_SR_SIMCLR = Weights(
+        url="https://huggingface.co/torchgeo/ssl4eo_landsat/resolve/main/vits16_landsat_oli_sr_simclr-4e8f6102.pth",  # noqa: E501
+        transforms=_ssl4eo_l_transforms,
+        meta={
+            "dataset": "SSL4EO-L",
+            "in_chans": 7,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2306.09424",
+            "repo": "https://github.com/microsoft/torchgeo",
+            "ssl_method": "simclr",
+        },
+    )
+
     SENTINEL2_ALL_DINO = Weights(
-        url=(
-            "https://huggingface.co/torchgeo/vit_small_patch16_224_sentinel2_all_dino/"
-            "resolve/main/vit_small_patch16_224_sentinel2_all_dino.pth"
-        ),
+        url="https://huggingface.co/torchgeo/vit_small_patch16_224_sentinel2_all_dino/resolve/main/vit_small_patch16_224_sentinel2_all_dino-36bcc127.pth",  # noqa: E501
         transforms=_zhu_xlab_transforms,
         meta={
             "dataset": "SSL4EO-S12",
@@ -62,6 +187,19 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             "publication": "https://arxiv.org/abs/2211.07044",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
             "ssl_method": "dino",
+        },
+    )
+
+    SENTINEL2_ALL_MOCO = Weights(
+        url="https://huggingface.co/torchgeo/vit_small_patch16_224_sentinel2_all_moco/resolve/main/vit_small_patch16_224_sentinel2_all_moco-67c9032d.pth",  # noqa: E501
+        transforms=_zhu_xlab_transforms,
+        meta={
+            "dataset": "SSL4EO-S12",
+            "in_chans": 13,
+            "model": "vit_small_patch16_224",
+            "publication": "https://arxiv.org/abs/2211.07044",
+            "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
+            "ssl_method": "moco",
         },
     )
 
@@ -93,6 +231,10 @@ def vit_small_patch16_224(
     )
 
     if weights:
-        model.load_state_dict(weights.get_state_dict(progress=True), strict=False)
+        missing_keys, unexpected_keys = model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        assert set(missing_keys) <= {"head.weight", "head.bias"}
+        assert not unexpected_keys
 
     return model

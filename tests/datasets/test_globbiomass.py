@@ -9,11 +9,12 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import (
     BoundingBox,
+    DatasetNotFoundError,
     GlobBiomass,
     IntersectionDataset,
     UnionDataset,
@@ -47,17 +48,17 @@ class TestGlobBiomass:
         assert isinstance(x["mask"], torch.Tensor)
 
     def test_already_extracted(self, dataset: GlobBiomass) -> None:
-        GlobBiomass(root=dataset.root)
+        GlobBiomass(dataset.paths)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             GlobBiomass(str(tmp_path), checksum=True)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, "N00E020_agb.zip"), "w") as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            GlobBiomass(root=str(tmp_path), checksum=True)
+            GlobBiomass(str(tmp_path), checksum=True)
 
     def test_and(self, dataset: GlobBiomass) -> None:
         ds = dataset & dataset

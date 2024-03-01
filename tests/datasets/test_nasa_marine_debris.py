@@ -10,28 +10,40 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
-from torchgeo.datasets import NASAMarineDebris
+from torchgeo.datasets import DatasetNotFoundError, NASAMarineDebris
 
 
-class Dataset:
+class Collection:
     def download(self, output_dir: str, **kwargs: str) -> None:
         glob_path = os.path.join("tests", "data", "nasa_marine_debris", "*.tar.gz")
         for tarball in glob.iglob(glob_path):
             shutil.copy(tarball, output_dir)
 
 
-def fetch(dataset_id: str, **kwargs: str) -> Dataset:
-    return Dataset()
+def fetch(collection_id: str, **kwargs: str) -> Collection:
+    return Collection()
+
+
+class Collection_corrupted:
+    def download(self, output_dir: str, **kwargs: str) -> None:
+        filenames = NASAMarineDebris.filenames
+        for filename in filenames:
+            with open(os.path.join(output_dir, filename), "w") as f:
+                f.write("bad")
+
+
+def fetch_corrupted(collection_id: str, **kwargs: str) -> Collection_corrupted:
+    return Collection_corrupted()
 
 
 class TestNASAMarineDebris:
     @pytest.fixture()
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NASAMarineDebris:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
-        monkeypatch.setattr(radiant_mlhub.Dataset, "fetch", fetch)
-        md5s = ["fe8698d1e68b3f24f0b86b04419a797d", "d8084f5a72778349e07ac90ec1e1d990"]
+        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
+        monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
+        md5s = ["6f4f0d2313323950e45bf3fc0c09b5de", "540cf1cf4fd2c13b609d0355abe955d7"]
         monkeypatch.setattr(NASAMarineDebris, "md5s", md5s)
         root = str(tmp_path)
         transforms = nn.Identity()
@@ -58,14 +70,27 @@ class TestNASAMarineDebris:
     ) -> None:
         shutil.rmtree(dataset.root)
         os.makedirs(str(tmp_path), exist_ok=True)
-        Dataset().download(output_dir=str(tmp_path))
+        Collection().download(output_dir=str(tmp_path))
         NASAMarineDebris(root=str(tmp_path), download=False)
 
+    def test_corrupted_previously_downloaded(self, tmp_path: Path) -> None:
+        filenames = NASAMarineDebris.filenames
+        for filename in filenames:
+            with open(os.path.join(tmp_path, filename), "w") as f:
+                f.write("bad")
+        with pytest.raises(RuntimeError, match="Dataset checksum mismatch."):
+            NASAMarineDebris(root=str(tmp_path), download=False, checksum=True)
+
+    def test_corrupted_new_download(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        with pytest.raises(RuntimeError, match="Dataset checksum mismatch."):
+            radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
+            monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch_corrupted)
+            NASAMarineDebris(root=str(tmp_path), download=True, checksum=True)
+
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
-        "either specify a different `root` directory or use `download=True` "
-        "to automatically download the dataset."
-        with pytest.raises(RuntimeError, match=err):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             NASAMarineDebris(str(tmp_path))
 
     def test_plot(self, dataset: NASAMarineDebris) -> None:

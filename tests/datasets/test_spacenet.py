@@ -11,9 +11,10 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
+    DatasetNotFoundError,
     SpaceNet1,
     SpaceNet2,
     SpaceNet3,
@@ -24,7 +25,7 @@ from torchgeo.datasets import (
 )
 
 TEST_DATA_DIR = "tests/data/spacenet"
-radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.2.1")
+radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
 
 
 class Collection:
@@ -91,7 +92,7 @@ class TestSpaceNet1:
         SpaceNet1(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SpaceNet1(str(tmp_path))
 
     def test_plot(self, dataset: SpaceNet1) -> None:
@@ -147,7 +148,7 @@ class TestSpaceNet2:
         SpaceNet2(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SpaceNet2(str(tmp_path))
 
     def test_collection_checksum(self, dataset: SpaceNet2) -> None:
@@ -207,7 +208,7 @@ class TestSpaceNet3:
         SpaceNet3(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SpaceNet3(str(tmp_path))
 
     def test_collection_checksum(self, dataset: SpaceNet3) -> None:
@@ -271,7 +272,7 @@ class TestSpaceNet4:
         SpaceNet4(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SpaceNet4(str(tmp_path))
 
     def test_collection_checksum(self, dataset: SpaceNet4) -> None:
@@ -333,7 +334,7 @@ class TestSpaceNet5:
         SpaceNet5(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SpaceNet5(str(tmp_path))
 
     def test_collection_checksum(self, dataset: SpaceNet5) -> None:
@@ -427,7 +428,7 @@ class TestSpaceNet7:
         SpaceNet7(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             SpaceNet7(str(tmp_path))
 
     def test_collection_checksum(self, dataset: SpaceNet4) -> None:

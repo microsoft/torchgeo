@@ -4,7 +4,8 @@
 """TorchGeo samplers."""
 
 import abc
-from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
+from collections.abc import Iterable, Iterator
+from typing import Callable, Optional, Union
 
 import torch
 from rtree.index import Index, Property
@@ -68,7 +69,7 @@ class RandomGeoSampler(GeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[Tuple[float, float], float],
+        size: Union[tuple[float, float], float],
         length: Optional[int],
         roi: Optional[BoundingBox] = None,
         units: Units = Units.PIXELS,
@@ -168,16 +169,13 @@ class GridGeoSampler(GeoSampler):
     The overlap between each chip (``chip_size - stride``) should be approximately equal
     to the `receptive field <https://distill.pub/2019/computing-receptive-fields/>`_ of
     the CNN.
-
-    Note that the stride of the final set of chips in each row/column may be adjusted so
-    that the entire :term:`tile` is sampled without exceeding the bounds of the dataset.
     """
 
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[Tuple[float, float], float],
-        stride: Union[Tuple[float, float], float],
+        size: Union[tuple[float, float], float],
+        stride: Union[tuple[float, float], float],
         roi: Optional[BoundingBox] = None,
         units: Units = Units.PIXELS,
     ) -> None:
@@ -241,17 +239,11 @@ class GridGeoSampler(GeoSampler):
             for i in range(rows):
                 miny = bounds.miny + i * self.stride[0]
                 maxy = miny + self.size[0]
-                if maxy > bounds.maxy:
-                    maxy = bounds.maxy
-                    miny = bounds.maxy - self.size[0]
 
                 # For each column...
                 for j in range(cols):
                     minx = bounds.minx + j * self.stride[1]
                     maxx = minx + self.size[1]
-                    if maxx > bounds.maxx:
-                        maxx = bounds.maxx
-                        minx = bounds.maxx - self.size[1]
 
                     yield BoundingBox(minx, maxx, miny, maxy, mint, maxt)
 

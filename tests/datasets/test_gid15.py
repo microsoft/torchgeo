@@ -10,10 +10,10 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import GID15
+from torchgeo.datasets import GID15, DatasetNotFoundError
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -58,7 +58,7 @@ class TestGID15:
             GID15(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found or corrupted."):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             GID15(str(tmp_path))
 
     def test_plot(self, dataset: GID15) -> None:

@@ -1,15 +1,14 @@
-experiment:
-  task: "eurosat"
-  module:
+model:
+  class_path: ClassificationTask
+  init_args:
     loss: "ce"
     model: "resnet18"
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
-    weights: null
     in_channels: 13
     num_classes: 2
-  datamodule:
+data:
+  class_path: EuroSATDataModule
+  init_args:
+    batch_size: 1
+  dict_kwargs:
     root: "tests/data/eurosat"
     download: true
-    batch_size: 1
-    num_workers: 0

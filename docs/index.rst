@@ -10,6 +10,7 @@ torchgeo
    user/installation
    user/contributing
    user/glossary
+   user/alternatives
 
 .. toctree::
    :maxdepth: 2
@@ -32,7 +33,6 @@ torchgeo
    tutorials/transforms
    tutorials/indices
    tutorials/trainers
-   tutorials/benchmarking
    tutorials/pretrained_weights
 
 .. toctree::
@@ -45,4 +45,4 @@ torchgeo
    torchvision <https://pytorch.org/vision>
    TorchElastic <https://pytorch.org/elastic/>
    TorchServe <https://pytorch.org/serve>
-   PyTorch on XLA Devices <http://pytorch.org/xla/>
+   PyTorch on XLA Devices <https://pytorch.org/xla/>

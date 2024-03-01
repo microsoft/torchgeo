@@ -7,7 +7,6 @@ import csv
 import hashlib
 import os
 import shutil
-from typing import List
 
 import numpy as np
 from PIL import Image
@@ -25,7 +24,7 @@ PATHS = {
 }
 
 
-def create_annotation(path: str, img_paths: List[str]) -> None:
+def create_annotation(path: str, img_paths: list[str]) -> None:
     cols = ["img_path", "xmin", "ymin", "xmax", "ymax", "group", "AGB"]
     data = []
     for img_path in img_paths:

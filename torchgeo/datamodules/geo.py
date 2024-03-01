@@ -3,12 +3,12 @@
 
 """Base classes for all :mod:`torchgeo` data modules."""
 
-from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
+from typing import Any, Callable, Optional, Union, cast
 
 import kornia.augmentation as K
-import matplotlib.pyplot as plt
 import torch
-from pytorch_lightning import LightningDataModule
+from lightning.pytorch import LightningDataModule
+from matplotlib.figure import Figure
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, default_collate
 
@@ -23,10 +23,10 @@ from ..transforms import AugmentationSequential
 from .utils import MisconfigurationException
 
 
-class GeoDataModule(LightningDataModule):
-    """Base class for data modules containing geospatial information.
+class BaseDataModule(LightningDataModule):
+    """Base class for all TorchGeo data modules.
 
-    .. versionadded:: 0.4
+    .. versionadded:: 0.5
     """
 
     mean = torch.tensor(0)
@@ -34,10 +34,146 @@ class GeoDataModule(LightningDataModule):
 
     def __init__(
         self,
-        dataset_class: Type[GeoDataset],
+        dataset_class: type[Dataset[dict[str, Tensor]]],
         batch_size: int = 1,
-        patch_size: Union[int, Tuple[int, int]] = 64,
-        length: int = 1000,
+        num_workers: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a new BaseDataModule instance.
+
+        Args:
+            dataset_class: Class used to instantiate a new dataset.
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to ``dataset_class``
+        """
+        super().__init__()
+
+        self.dataset_class = dataset_class
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+        self.kwargs = kwargs
+
+        # Datasets
+        self.dataset: Optional[Dataset[dict[str, Tensor]]] = None
+        self.train_dataset: Optional[Dataset[dict[str, Tensor]]] = None
+        self.val_dataset: Optional[Dataset[dict[str, Tensor]]] = None
+        self.test_dataset: Optional[Dataset[dict[str, Tensor]]] = None
+        self.predict_dataset: Optional[Dataset[dict[str, Tensor]]] = None
+
+        # Data loaders
+        self.train_batch_size: Optional[int] = None
+        self.val_batch_size: Optional[int] = None
+        self.test_batch_size: Optional[int] = None
+        self.predict_batch_size: Optional[int] = None
+
+        # Data augmentation
+        Transform = Callable[[dict[str, Tensor]], dict[str, Tensor]]
+        self.aug: Transform = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=["image"]
+        )
+        self.train_aug: Optional[Transform] = None
+        self.val_aug: Optional[Transform] = None
+        self.test_aug: Optional[Transform] = None
+        self.predict_aug: Optional[Transform] = None
+
+    def prepare_data(self) -> None:
+        """Download and prepare data.
+
+        During distributed training, this method is called only within a single process
+        to avoid corrupted data. This method should not set state since it is not called
+        on every device, use ``setup`` instead.
+        """
+        if self.kwargs.get("download", False):
+            self.dataset_class(**self.kwargs)
+
+    def _valid_attribute(self, *args: str) -> Any:
+        """Find a valid attribute with length > 0.
+
+        Args:
+            args: One or more names of attributes to check.
+
+        Returns:
+            The first valid attribute found.
+
+        Raises:
+            MisconfigurationException: If no attribute is defined, or has length 0.
+        """
+        for arg in args:
+            obj = getattr(self, arg)
+
+            if obj is None:
+                continue
+
+            if not obj:
+                msg = f"{self.__class__.__name__}.{arg} has length 0."
+                raise MisconfigurationException(msg)
+
+            return obj
+
+        msg = f"{self.__class__.__name__}.setup must define one of {args}."
+        raise MisconfigurationException(msg)
+
+    def on_after_batch_transfer(
+        self, batch: dict[str, Tensor], dataloader_idx: int
+    ) -> dict[str, Tensor]:
+        """Apply batch augmentations to the batch after it is transferred to the device.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            A batch of data.
+        """
+        if self.trainer:
+            if self.trainer.training:
+                split = "train"
+            elif self.trainer.validating or self.trainer.sanity_checking:
+                split = "val"
+            elif self.trainer.testing:
+                split = "test"
+            elif self.trainer.predicting:
+                split = "predict"
+
+            aug = self._valid_attribute(f"{split}_aug", "aug")
+            batch = aug(batch)
+
+        return batch
+
+    def plot(self, *args: Any, **kwargs: Any) -> Optional[Figure]:
+        """Run the plot method of the validation dataset if one exists.
+
+        Should only be called during 'fit' or 'validate' stages as ``val_dataset``
+        may not exist during other stages.
+
+        Args:
+            *args: Arguments passed to plot method.
+            **kwargs: Keyword arguments passed to plot method.
+
+        Returns:
+            A matplotlib Figure with the image, ground truth, and predictions.
+        """
+        fig: Optional[Figure] = None
+        dataset = self.dataset or self.val_dataset
+        if dataset is not None:
+            if hasattr(dataset, "plot"):
+                fig = dataset.plot(*args, **kwargs)
+        return fig
+
+
+class GeoDataModule(BaseDataModule):
+    """Base class for data modules containing geospatial information.
+
+    .. versionadded:: 0.4
+    """
+
+    def __init__(
+        self,
+        dataset_class: type[GeoDataset],
+        batch_size: int = 1,
+        patch_size: Union[int, tuple[int, int]] = 64,
+        length: Optional[int] = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
@@ -51,21 +187,13 @@ class GeoDataModule(LightningDataModule):
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to ``dataset_class``
         """
-        super().__init__()
+        super().__init__(dataset_class, batch_size, num_workers, **kwargs)
 
-        self.dataset_class = dataset_class
-        self.batch_size = batch_size
         self.patch_size = patch_size
         self.length = length
-        self.num_workers = num_workers
-        self.kwargs = kwargs
 
-        # Datasets
-        self.dataset: Optional[Dataset[Dict[str, Tensor]]] = None
-        self.train_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
-        self.val_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
-        self.test_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
-        self.predict_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
+        # Collation
+        self.collate_fn = stack_samples
 
         # Samplers
         self.sampler: Optional[GeoSampler] = None
@@ -81,35 +209,6 @@ class GeoDataModule(LightningDataModule):
         self.test_batch_sampler: Optional[BatchGeoSampler] = None
         self.predict_batch_sampler: Optional[BatchGeoSampler] = None
 
-        # Data loaders
-        self.train_batch_size: Optional[int] = None
-        self.val_batch_size: Optional[int] = None
-        self.test_batch_size: Optional[int] = None
-        self.predict_batch_size: Optional[int] = None
-
-        # Collation
-        self.collate_fn = stack_samples
-
-        # Data augmentation
-        Transform = Callable[[Dict[str, Tensor]], Dict[str, Tensor]]
-        self.aug: Transform = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=["image"]
-        )
-        self.train_aug: Optional[Transform] = None
-        self.val_aug: Optional[Transform] = None
-        self.test_aug: Optional[Transform] = None
-        self.predict_aug: Optional[Transform] = None
-
-    def prepare_data(self) -> None:
-        """Download and prepare data.
-
-        During distributed training, this method is called only within a single process
-        to avoid corrupted data. This method should not set state since it is not called
-        on every device, use :meth:`setup` instead.
-        """
-        if self.kwargs.get("download", False):
-            self.dataset_class(**self.kwargs)
-
     def setup(self, stage: str) -> None:
         """Set up datasets and samplers.
 
@@ -121,28 +220,72 @@ class GeoDataModule(LightningDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ["fit"]:
-            self.train_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split="train", **self.kwargs
+            self.train_dataset = cast(
+                GeoDataset,
+                self.dataset_class(  # type: ignore[call-arg]
+                    split="train", **self.kwargs
+                ),
             )
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.train_dataset, self.patch_size, self.batch_size, self.length
             )
         if stage in ["fit", "validate"]:
-            self.val_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split="val", **self.kwargs
+            self.val_dataset = cast(
+                GeoDataset,
+                self.dataset_class(  # type: ignore[call-arg]
+                    split="val", **self.kwargs
+                ),
             )
             self.val_sampler = GridGeoSampler(
                 self.val_dataset, self.patch_size, self.patch_size
             )
         if stage in ["test"]:
-            self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split="test", **self.kwargs
+            self.test_dataset = cast(
+                GeoDataset,
+                self.dataset_class(  # type: ignore[call-arg]
+                    split="test", **self.kwargs
+                ),
             )
             self.test_sampler = GridGeoSampler(
                 self.test_dataset, self.patch_size, self.patch_size
             )
 
-    def train_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+    def _dataloader_factory(self, split: str) -> DataLoader[dict[str, Tensor]]:
+        """Implement one or more PyTorch DataLoaders.
+
+        Args:
+            split: Either 'train', 'val', 'test', or 'predict'.
+
+        Returns:
+            A collection of data loaders specifying samples.
+
+        Raises:
+            MisconfigurationException: If :meth:`setup` does not define a
+                dataset or sampler, or if the dataset or sampler has length 0.
+        """
+        dataset = self._valid_attribute(f"{split}_dataset", "dataset")
+        sampler = self._valid_attribute(
+            f"{split}_batch_sampler", f"{split}_sampler", "batch_sampler", "sampler"
+        )
+        batch_size = self._valid_attribute(f"{split}_batch_size", "batch_size")
+
+        if isinstance(sampler, BatchGeoSampler):
+            batch_size = 1
+            batch_sampler = sampler
+            sampler = None
+        else:
+            batch_sampler = None
+
+        return DataLoader(
+            dataset=dataset,
+            batch_size=batch_size,
+            sampler=sampler,
+            batch_sampler=batch_sampler,
+            num_workers=self.num_workers,
+            collate_fn=self.collate_fn,
+        )
+
+    def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for training.
 
         Returns:
@@ -150,29 +293,11 @@ class GeoDataModule(LightningDataModule):
 
         Raises:
             MisconfigurationException: If :meth:`setup` does not define a
-                'train_dataset'.
+                dataset or sampler, or if the dataset or sampler has length 0.
         """
-        dataset = self.train_dataset or self.dataset
-        sampler = self.train_sampler or self.sampler
-        batch_sampler = self.train_batch_sampler or self.batch_sampler
-        if dataset is not None and (sampler or batch_sampler) is not None:
-            batch_size = self.train_batch_size or self.batch_size
-            if batch_sampler is not None:
-                batch_size = 1
-                sampler = None
-            return DataLoader(
-                dataset=dataset,
-                batch_size=batch_size,
-                sampler=sampler,
-                batch_sampler=batch_sampler,
-                num_workers=self.num_workers,
-                collate_fn=self.collate_fn,
-            )
-        else:
-            msg = f"{self.__class__.__name__}.setup does not define a 'train_dataset'"
-            raise MisconfigurationException(msg)
+        return self._dataloader_factory("train")
 
-    def val_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+    def val_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for validation.
 
         Returns:
@@ -180,29 +305,11 @@ class GeoDataModule(LightningDataModule):
 
         Raises:
             MisconfigurationException: If :meth:`setup` does not define a
-                'val_dataset'.
+                dataset or sampler, or if the dataset or sampler has length 0.
         """
-        dataset = self.val_dataset or self.dataset
-        sampler = self.val_sampler or self.sampler
-        batch_sampler = self.val_batch_sampler or self.batch_sampler
-        if dataset is not None and (sampler or batch_sampler) is not None:
-            batch_size = self.val_batch_size or self.batch_size
-            if batch_sampler is not None:
-                batch_size = 1
-                sampler = None
-            return DataLoader(
-                dataset=dataset,
-                batch_size=batch_size,
-                sampler=sampler,
-                batch_sampler=batch_sampler,
-                num_workers=self.num_workers,
-                collate_fn=self.collate_fn,
-            )
-        else:
-            msg = f"{self.__class__.__name__}.setup does not define a 'val_dataset'"
-            raise MisconfigurationException(msg)
+        return self._dataloader_factory("val")
 
-    def test_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+    def test_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for testing.
 
         Returns:
@@ -210,29 +317,11 @@ class GeoDataModule(LightningDataModule):
 
         Raises:
             MisconfigurationException: If :meth:`setup` does not define a
-                'test_dataset'.
+                dataset or sampler, or if the dataset or sampler has length 0.
         """
-        dataset = self.test_dataset or self.dataset
-        sampler = self.test_sampler or self.sampler
-        batch_sampler = self.test_batch_sampler or self.batch_sampler
-        if dataset is not None and (sampler or batch_sampler) is not None:
-            batch_size = self.test_batch_size or self.batch_size
-            if batch_sampler is not None:
-                batch_size = 1
-                sampler = None
-            return DataLoader(
-                dataset=dataset,
-                batch_size=batch_size,
-                sampler=sampler,
-                batch_sampler=batch_sampler,
-                num_workers=self.num_workers,
-                collate_fn=self.collate_fn,
-            )
-        else:
-            msg = f"{self.__class__.__name__}.setup does not define a 'test_dataset'"
-            raise MisconfigurationException(msg)
+        return self._dataloader_factory("test")
 
-    def predict_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+    def predict_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for prediction.
 
         Returns:
@@ -240,31 +329,13 @@ class GeoDataModule(LightningDataModule):
 
         Raises:
             MisconfigurationException: If :meth:`setup` does not define a
-                'predict_dataset'.
+                dataset or sampler, or if the dataset or sampler has length 0.
         """
-        dataset = self.predict_dataset or self.dataset
-        sampler = self.predict_sampler or self.sampler
-        batch_sampler = self.predict_batch_sampler or self.batch_sampler
-        if dataset is not None and (sampler or batch_sampler) is not None:
-            batch_size = self.predict_batch_size or self.batch_size
-            if batch_sampler is not None:
-                batch_size = 1
-                sampler = None
-            return DataLoader(
-                dataset=dataset,
-                batch_size=batch_size,
-                sampler=sampler,
-                batch_sampler=batch_sampler,
-                num_workers=self.num_workers,
-                collate_fn=self.collate_fn,
-            )
-        else:
-            msg = f"{self.__class__.__name__}.setup does not define a 'predict_dataset'"
-            raise MisconfigurationException(msg)
+        return self._dataloader_factory("predict")
 
     def transfer_batch_to_device(
-        self, batch: Dict[str, Tensor], device: torch.device, dataloader_idx: int
-    ) -> Dict[str, Tensor]:
+        self, batch: dict[str, Tensor], device: torch.device, dataloader_idx: int
+    ) -> dict[str, Tensor]:
         """Transfer batch to device.
 
         Defines how custom data types are moved to the target device.
@@ -284,63 +355,16 @@ class GeoDataModule(LightningDataModule):
         batch = super().transfer_batch_to_device(batch, device, dataloader_idx)
         return batch
 
-    def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
-        """Apply batch augmentations to the batch after it is transferred to the device.
 
-        Args:
-            batch: A batch of data that needs to be altered or augmented.
-            dataloader_idx: The index of the dataloader to which the batch belongs.
-
-        Returns:
-            A batch of data.
-        """
-        if self.trainer:
-            if self.trainer.training:
-                aug = self.train_aug or self.aug
-            elif self.trainer.validating or self.trainer.sanity_checking:
-                aug = self.val_aug or self.aug
-            elif self.trainer.testing:
-                aug = self.test_aug or self.aug
-            elif self.trainer.predicting:
-                aug = self.predict_aug or self.aug
-
-            batch = aug(batch)
-
-        return batch
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run the plot method of the validation dataset if one exists.
-
-        Should only be called during 'fit' or 'validate' stages as ``val_dataset``
-        may not exist during other stages.
-
-        Args:
-            *args: Arguments passed to plot method.
-            **kwargs: Keyword arguments passed to plot method.
-
-        Returns:
-            A matplotlib Figure with the image, ground truth, and predictions.
-        """
-        dataset = self.val_dataset or self.dataset
-        if dataset is not None:
-            if hasattr(dataset, "plot"):
-                return dataset.plot(*args, **kwargs)
-
-
-class NonGeoDataModule(LightningDataModule):
+class NonGeoDataModule(BaseDataModule):
     """Base class for data modules lacking geospatial information.
 
     .. versionadded:: 0.4
     """
 
-    mean = torch.tensor(0)
-    std = torch.tensor(255)
-
     def __init__(
         self,
-        dataset_class: Type[NonGeoDataset],
+        dataset_class: type[NonGeoDataset],
         batch_size: int = 1,
         num_workers: int = 0,
         **kwargs: Any,
@@ -353,48 +377,10 @@ class NonGeoDataModule(LightningDataModule):
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to ``dataset_class``
         """
-        super().__init__()
-
-        self.dataset_class = dataset_class
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.kwargs = kwargs
-
-        # Datasets
-        self.dataset: Optional[Dataset[Dict[str, Tensor]]] = None
-        self.train_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
-        self.val_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
-        self.test_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
-        self.predict_dataset: Optional[Dataset[Dict[str, Tensor]]] = None
-
-        # Data loaders
-        self.train_batch_size: Optional[int] = None
-        self.val_batch_size: Optional[int] = None
-        self.test_batch_size: Optional[int] = None
-        self.predict_batch_size: Optional[int] = None
+        super().__init__(dataset_class, batch_size, num_workers, **kwargs)
 
         # Collation
         self.collate_fn = default_collate
-
-        # Data augmentation
-        Transform = Callable[[Dict[str, Tensor]], Dict[str, Tensor]]
-        self.aug: Transform = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=["image"]
-        )
-        self.train_aug: Optional[Transform] = None
-        self.val_aug: Optional[Transform] = None
-        self.test_aug: Optional[Transform] = None
-        self.predict_aug: Optional[Transform] = None
-
-    def prepare_data(self) -> None:
-        """Download and prepare data.
-
-        During distributed training, this method is called only within a single process
-        to avoid corrupted data. This method should not set state since it is not called
-        on every device, use :meth:`setup` instead.
-        """
-        if self.kwargs.get("download", False):
-            self.dataset_class(**self.kwargs)
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -419,7 +405,30 @@ class NonGeoDataModule(LightningDataModule):
                 split="test", **self.kwargs
             )
 
-    def train_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+    def _dataloader_factory(self, split: str) -> DataLoader[dict[str, Tensor]]:
+        """Implement one or more PyTorch DataLoaders.
+
+        Args:
+            split: Either 'train', 'val', 'test', or 'predict'.
+
+        Returns:
+            A collection of data loaders specifying samples.
+
+        Raises:
+            MisconfigurationException: If :meth:`setup` does not define a
+                dataset or sampler, or if the dataset or sampler has length 0.
+        """
+        dataset = self._valid_attribute(f"{split}_dataset", "dataset")
+        batch_size = self._valid_attribute(f"{split}_batch_size", "batch_size")
+        return DataLoader(
+            dataset=dataset,
+            batch_size=batch_size,
+            shuffle=split == "train",
+            num_workers=self.num_workers,
+            collate_fn=self.collate_fn,
+        )
+
+    def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for training.
 
         Returns:
@@ -427,22 +436,11 @@ class NonGeoDataModule(LightningDataModule):
 
         Raises:
             MisconfigurationException: If :meth:`setup` does not define a
-                'train_dataset'.
+                dataset, or if the dataset has length 0.
         """
-        dataset = self.train_dataset or self.dataset
-        if dataset is not None:
-            return DataLoader(
-                dataset=dataset,
-                batch_size=self.train_batch_size or self.batch_size,
-                shuffle=True,
-                num_workers=self.num_workers,
-                collate_fn=self.collate_fn,
-            )
-        else:
-            msg = f"{self.__class__.__name__}.setup does not define a 'train_dataset'"
-            raise MisconfigurationException(msg)
+        return self._dataloader_factory("train")
 
-    def val_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+    def val_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for validation.
 
         Returns:
@@ -450,22 +448,11 @@ class NonGeoDataModule(LightningDataModule):
 
         Raises:
             MisconfigurationException: If :meth:`setup` does not define a
-                'val_dataset'.
+                dataset, or if the dataset has length 0.
         """
-        dataset = self.val_dataset or self.dataset
-        if dataset is not None:
-            return DataLoader(
-                dataset=dataset,
-                batch_size=self.val_batch_size or self.batch_size,
-                shuffle=False,
-                num_workers=self.num_workers,
-                collate_fn=self.collate_fn,
-            )
-        else:
-            msg = f"{self.__class__.__name__}.setup does not define a 'val_dataset'"
-            raise MisconfigurationException(msg)
+        return self._dataloader_factory("val")
 
-    def test_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+    def test_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for testing.
 
         Returns:
@@ -473,22 +460,11 @@ class NonGeoDataModule(LightningDataModule):
 
         Raises:
             MisconfigurationException: If :meth:`setup` does not define a
-                'test_dataset'.
+                dataset, or if the dataset has length 0.
         """
-        dataset = self.test_dataset or self.dataset
-        if dataset is not None:
-            return DataLoader(
-                dataset=dataset,
-                batch_size=self.test_batch_size or self.batch_size,
-                shuffle=False,
-                num_workers=self.num_workers,
-                collate_fn=self.collate_fn,
-            )
-        else:
-            msg = f"{self.__class__.__name__}.setup does not define a 'test_dataset'"
-            raise MisconfigurationException(msg)
+        return self._dataloader_factory("test")
 
-    def predict_dataloader(self) -> DataLoader[Dict[str, Tensor]]:
+    def predict_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for prediction.
 
         Returns:
@@ -496,61 +472,6 @@ class NonGeoDataModule(LightningDataModule):
 
         Raises:
             MisconfigurationException: If :meth:`setup` does not define a
-                'predict_dataset'.
+                dataset, or if the dataset has length 0.
         """
-        dataset = self.predict_dataset or self.dataset
-        if dataset is not None:
-            return DataLoader(
-                dataset=dataset,
-                batch_size=self.predict_batch_size or self.batch_size,
-                shuffle=False,
-                num_workers=self.num_workers,
-                collate_fn=self.collate_fn,
-            )
-        else:
-            msg = f"{self.__class__.__name__}.setup does not define a 'predict_dataset'"
-            raise MisconfigurationException(msg)
-
-    def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
-        """Apply batch augmentations to the batch after it is transferred to the device.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented.
-            dataloader_idx: The index of the dataloader to which the batch belongs.
-
-        Returns:
-            A batch of data.
-        """
-        if self.trainer:
-            if self.trainer.training:
-                aug = self.train_aug or self.aug
-            elif self.trainer.validating or self.trainer.sanity_checking:
-                aug = self.val_aug or self.aug
-            elif self.trainer.testing:
-                aug = self.test_aug or self.aug
-            elif self.trainer.predicting:
-                aug = self.predict_aug or self.aug
-
-            batch = aug(batch)
-
-        return batch
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run the plot method of the validation dataset if one exists.
-
-        Should only be called during 'fit' or 'validate' stages as ``val_dataset``
-        may not exist during other stages.
-
-        Args:
-            *args: Arguments passed to plot method.
-            **kwargs: Keyword arguments passed to plot method.
-
-        Returns:
-            A matplotlib Figure with the image, ground truth, and predictions.
-        """
-        dataset = self.dataset or self.val_dataset
-        if dataset is not None:
-            if hasattr(dataset, "plot"):
-                return dataset.plot(*args, **kwargs)
+        return self._dataloader_factory("predict")

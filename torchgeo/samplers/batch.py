@@ -4,7 +4,8 @@
 """TorchGeo batch samplers."""
 
 import abc
-from typing import Iterator, List, Optional, Tuple, Union
+from collections.abc import Iterator
+from typing import Optional, Union
 
 import torch
 from rtree.index import Index, Property
@@ -15,7 +16,7 @@ from .constants import Units
 from .utils import _to_tuple, get_random_bounding_box, tile_to_chips
 
 
-class BatchGeoSampler(Sampler[List[BoundingBox]], abc.ABC):
+class BatchGeoSampler(Sampler[list[BoundingBox]], abc.ABC):
     """Abstract base class for sampling from :class:`~torchgeo.datasets.GeoDataset`.
 
     Unlike PyTorch's :class:`~torch.utils.data.BatchSampler`, :class:`BatchGeoSampler`
@@ -46,7 +47,7 @@ class BatchGeoSampler(Sampler[List[BoundingBox]], abc.ABC):
         self.roi = roi
 
     @abc.abstractmethod
-    def __iter__(self) -> Iterator[List[BoundingBox]]:
+    def __iter__(self) -> Iterator[list[BoundingBox]]:
         """Return a batch of indices of a dataset.
 
         Returns:
@@ -65,7 +66,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[Tuple[float, float], float],
+        size: Union[tuple[float, float], float],
         batch_size: int,
         length: Optional[int] = None,
         roi: Optional[BoundingBox] = None,
@@ -129,7 +130,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         if torch.sum(self.areas) == 0:
             self.areas += 1
 
-    def __iter__(self) -> Iterator[List[BoundingBox]]:
+    def __iter__(self) -> Iterator[list[BoundingBox]]:
         """Return the indices of a dataset.
 
         Returns:

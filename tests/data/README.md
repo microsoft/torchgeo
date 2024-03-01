@@ -10,17 +10,18 @@ GeoDataset data can be created like so. We first open an existing data example a
 import os
 
 import numpy as np
-import rasterio
+import rasterio as rio
 
 ROOT = "data/landsat8"
 FILENAME = "LC08_L2SP_023032_20210622_20210629_02_T1_SR_B1.TIF"
+SIZE = 64
 
-src = rasterio.open(os.path.join(ROOT, FILENAME))
-dtype = src.read().dtype
-Z = np.random.randint(np.iinfo(dtype).max, size=(64, 64), dtype=dtype)
-dst = rasterio.open(FILENAME, "w", driver=src.driver, height=Z.shape[0], width=Z.shape[1], count=src.count, dtype=Z.dtype, crs=src.crs, transform=src.transform)
-for i in range(1, dst.count + 1):
-    dst.write(Z, i)
+with rio.open(os.path.join(ROOT, FILENAME), "r") as src:
+    dtype = src.profile["dtype"]
+    Z = np.random.randint(np.iinfo(dtype).max, size=(SIZE, SIZE), dtype=dtype)
+    with rio.open(FILENAME, "w", **src.profile) as dst:
+        for i in dst.profile.indexes:
+            dst.write(Z, i)
 ```
 Optionally, if the dataset has a colormap, this can be copied like so:
 ```python
@@ -39,11 +40,11 @@ import fiona
 ROOT = "data/cbf"
 FILENAME = "Ontario.geojson"
 
-src = fiona.open(os.path.join(ROOT, FILENAME))
-src.meta["schema"]["properties"] = OrderedDict()
-dst = fiona.open(FILENAME, "w", **src.meta)
 rec = {"type": "Feature", "id": "0", "properties": OrderedDict(), "geometry": {"type": "Polygon", "coordinates": [[(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]]}}
-dst.write(rec)
+with fiona.open(os.path.join(ROOT, FILENAME), "r") as src:
+    src.meta["schema"]["properties"] = OrderedDict()
+    with fiona.open(FILENAME, "w", **src.meta) as dst:
+        dst.write(rec)
 ```
 
 ## NonGeoDataset

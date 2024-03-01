@@ -1,19 +1,16 @@
-experiment:
-  task: "chesapeake_cvpr"
-  module:
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
     loss: "ce"
     model: "unet"
     backbone: "resnet18"
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
     in_channels: 4
     num_classes: 7
     num_filters: 1
-    ignore_index: null
-    weights: null
-  datamodule:
-    root: "tests/data/chesapeake/cvpr"
-    download: true
+    ignore_index: 0
+data:
+  class_path: ChesapeakeCVPRDataModule
+  init_args:
     train_splits:
     - "de-test"
     val_splits:
@@ -22,6 +19,8 @@ experiment:
     - "de-test"
     batch_size: 2
     patch_size: 64
-    num_workers: 0
-    class_set: ${experiment.module.num_classes}
+    class_set: 7
     use_prior_labels: False
+  dict_kwargs:
+    root: "tests/data/chesapeake/cvpr"
+    download: true

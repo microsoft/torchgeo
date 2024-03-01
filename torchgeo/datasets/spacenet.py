@@ -9,7 +9,7 @@ import glob
 import math
 import os
 import re
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Optional
 
 import fiona
 import matplotlib.pyplot as plt
@@ -26,6 +26,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
+    DatasetNotFoundError,
     check_integrity,
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
@@ -57,7 +58,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def imagery(self) -> Dict[str, str]:
+    def imagery(self) -> dict[str, str]:
         """Mapping of image identifier and filename."""
 
     @property
@@ -67,20 +68,20 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def collection_md5_dict(self) -> Dict[str, str]:
+    def collection_md5_dict(self) -> dict[str, str]:
         """Mapping of collection id and md5 checksum."""
 
     @property
     @abc.abstractmethod
-    def chip_size(self) -> Dict[str, Tuple[int, int]]:
+    def chip_size(self) -> dict[str, tuple[int, int]]:
         """Mapping of images and their chip size."""
 
     def __init__(
         self,
         root: str,
         image: str,
-        collections: List[str] = [],
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        collections: list[str] = [],
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -98,7 +99,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.image = image  # For testing
@@ -116,17 +117,13 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         if to_be_downloaded:
             if not download:
-                raise RuntimeError(
-                    f"Dataset not found in `root={self.root}` and `download=False`, "
-                    "either specify a different `root` directory or use "
-                    "`download=True` to automatically download the dataset."
-                )
+                raise DatasetNotFoundError(self)
             else:
                 self._download(to_be_downloaded, api_key)
 
         self.files = self._load_files(root)
 
-    def _load_files(self, root: str) -> List[Dict[str, str]]:
+    def _load_files(self, root: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -146,7 +143,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
                 files.append({"image_path": imgpath, "label_path": lbl_path})
         return files
 
-    def _load_image(self, path: str) -> Tuple[Tensor, Affine, CRS]:
+    def _load_image(self, path: str) -> tuple[Tensor, Affine, CRS]:
         """Load a single image.
 
         Args:
@@ -162,7 +159,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
             return tensor, img.transform, img.crs
 
     def _load_mask(
-        self, path: str, tfm: Affine, raster_crs: CRS, shape: Tuple[int, int]
+        self, path: str, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
     ) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format).
 
@@ -215,7 +212,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         """
         return len(self.files)
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -237,7 +234,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         return sample
 
-    def _check_integrity(self) -> List[str]:
+    def _check_integrity(self) -> list[str]:
         """Checks the integrity of the dataset structure.
 
         Returns:
@@ -277,15 +274,12 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         return to_be_downloaded
 
-    def _download(self, collections: List[str], api_key: Optional[str] = None) -> None:
+    def _download(self, collections: list[str], api_key: Optional[str] = None) -> None:
         """Download the dataset and extract it.
 
         Args:
             collections: Collections to be downloaded
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
         """
         for collection in collections:
             download_radiant_mlhub_collection(collection, self.root, api_key)
@@ -303,7 +297,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> Figure:
@@ -404,7 +398,7 @@ class SpaceNet1(SpaceNet):
         self,
         root: str = "data",
         image: str = "rgb",
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -421,7 +415,7 @@ class SpaceNet1(SpaceNet):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         collections = ["sn1_AOI_1_RIO"]
         assert image in {"rgb", "8band"}
@@ -519,8 +513,8 @@ class SpaceNet2(SpaceNet):
         self,
         root: str = "data",
         image: str = "PS-RGB",
-        collections: List[str] = [],
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        collections: list[str] = [],
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -541,7 +535,7 @@ class SpaceNet2(SpaceNet):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert image in {"MS", "PAN", "PS-MS", "PS-RGB"}
         super().__init__(
@@ -640,8 +634,8 @@ class SpaceNet3(SpaceNet):
         root: str = "data",
         image: str = "PS-RGB",
         speed_mask: Optional[bool] = False,
-        collections: List[str] = [],
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        collections: list[str] = [],
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -664,7 +658,7 @@ class SpaceNet3(SpaceNet):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert image in {"MS", "PAN", "PS-MS", "PS-RGB"}
         self.speed_mask = speed_mask
@@ -673,7 +667,7 @@ class SpaceNet3(SpaceNet):
         )
 
     def _load_mask(
-        self, path: str, tfm: Affine, raster_crs: CRS, shape: Tuple[int, int]
+        self, path: str, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
     ) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format).
 
@@ -737,7 +731,7 @@ class SpaceNet3(SpaceNet):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
     ) -> Figure:
@@ -889,8 +883,8 @@ class SpaceNet4(SpaceNet):
         self,
         root: str = "data",
         image: str = "PS-RGBNIR",
-        angles: List[str] = [],
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        angles: list[str] = [],
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -909,7 +903,7 @@ class SpaceNet4(SpaceNet):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         collections = ["sn4_AOI_6_Atlanta"]
         assert image in {"MS", "PAN", "PS-RGBNIR"}
@@ -921,7 +915,7 @@ class SpaceNet4(SpaceNet):
             root, image, collections, transforms, download, api_key, checksum
         )
 
-    def _load_files(self, root: str) -> List[Dict[str, str]]:
+    def _load_files(self, root: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -1058,8 +1052,8 @@ class SpaceNet5(SpaceNet3):
         root: str = "data",
         image: str = "PS-RGB",
         speed_mask: Optional[bool] = False,
-        collections: List[str] = [],
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        collections: list[str] = [],
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -1081,7 +1075,7 @@ class SpaceNet5(SpaceNet3):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         super().__init__(
             root,
@@ -1189,7 +1183,7 @@ class SpaceNet6(SpaceNet):
         self,
         root: str = "data",
         image: str = "PS-RGB",
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
     ) -> None:
@@ -1205,7 +1199,7 @@ class SpaceNet6(SpaceNet):
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.image = image  # For testing
@@ -1223,9 +1217,6 @@ class SpaceNet6(SpaceNet):
 
         Args:
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
         """
         if os.path.exists(
             os.path.join(
@@ -1290,7 +1281,7 @@ class SpaceNet7(SpaceNet):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         api_key: Optional[str] = None,
         checksum: bool = False,
@@ -1307,7 +1298,7 @@ class SpaceNet7(SpaceNet):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` but dataset is missing
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.split = split
@@ -1326,17 +1317,13 @@ class SpaceNet7(SpaceNet):
 
         if to_be_downloaded:
             if not download:
-                raise RuntimeError(
-                    f"Dataset not found in `root={self.root}` and `download=False`, "
-                    "either specify a different `root` directory or use "
-                    "`download=True` to automatically download the dataset."
-                )
+                raise DatasetNotFoundError(self)
             else:
                 self._download(to_be_downloaded, api_key)
 
         self.files = self._load_files(root)
 
-    def _load_files(self, root: str) -> List[Dict[str, str]]:
+    def _load_files(self, root: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -1363,7 +1350,7 @@ class SpaceNet7(SpaceNet):
                 files.append({"image_path": img})
         return files
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:

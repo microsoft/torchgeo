@@ -5,20 +5,22 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast, overload
+from typing import Any, Callable, Optional, cast, overload
 
 import fiona
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
+from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
 from torchvision.ops import clip_boxes_to_image, remove_small_boxes
 from torchvision.utils import draw_bounding_boxes
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import DatasetNotFoundError, download_url, extract_archive
 
 
 class IDTReeS(NonGeoDataset):
@@ -146,7 +148,7 @@ class IDTReeS(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         task: str = "task1",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -163,7 +165,8 @@ class IDTReeS(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            ImportError: if laspy or pandas are are not installed
+            ImportError: if laspy is not installed
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in ["train", "test"]
         assert task in ["task1", "task2"]
@@ -179,12 +182,6 @@ class IDTReeS(NonGeoDataset):
         self._verify()
 
         try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
-        try:
             import laspy  # noqa: F401
         except ImportError:
             raise ImportError(
@@ -193,7 +190,7 @@ class IDTReeS(NonGeoDataset):
 
         self.images, self.geometries, self.labels = self._load(root)
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -281,7 +278,7 @@ class IDTReeS(NonGeoDataset):
             the bounding boxes
         """
         base_path = os.path.basename(path)
-        geometries = cast(Dict[int, Dict[str, Any]], self.geometries)
+        geometries = cast(dict[int, dict[str, Any]], self.geometries)
 
         # Find object ids and geometries
         # The train set geometry->image mapping is contained
@@ -336,7 +333,7 @@ class IDTReeS(NonGeoDataset):
 
     def _load(
         self, root: str
-    ) -> Tuple[List[str], Optional[Dict[int, Dict[str, Any]]], Any]:
+    ) -> tuple[list[str], Optional[dict[int, dict[str, Any]]], Any]:
         """Load files, geometries, and labels.
 
         Args:
@@ -345,8 +342,6 @@ class IDTReeS(NonGeoDataset):
         Returns:
             the image path, geometries, and labels
         """
-        import pandas as pd
-
         if self.split == "train":
             directory = os.path.join(root, self.directories[self.split][0])
             labels: pd.DataFrame = self._load_labels(directory)
@@ -373,8 +368,6 @@ class IDTReeS(NonGeoDataset):
         Returns:
             a pandas DataFrame containing the labels for each image
         """
-        import pandas as pd
-
         path_mapping = os.path.join(directory, "Field", "itc_rsFile.csv")
         path_labels = os.path.join(directory, "Field", "train_data.csv")
         df_mapping = pd.read_csv(path_mapping)
@@ -386,7 +379,7 @@ class IDTReeS(NonGeoDataset):
         df.reset_index()
         return df
 
-    def _load_geometries(self, directory: str) -> Dict[int, Dict[str, Any]]:
+    def _load_geometries(self, directory: str) -> dict[int, dict[str, Any]]:
         """Load the shape files containing the geometries.
 
         Args:
@@ -398,7 +391,7 @@ class IDTReeS(NonGeoDataset):
         filepaths = glob.glob(os.path.join(directory, "ITC", "*.shp"))
 
         i = 0
-        features: Dict[int, Dict[str, Any]] = {}
+        features: dict[int, dict[str, Any]] = {}
         for path in filepaths:
             with fiona.open(path) as src:
                 for feature in src:
@@ -413,23 +406,21 @@ class IDTReeS(NonGeoDataset):
 
     @overload
     def _filter_boxes(
-        self, image_size: Tuple[int, int], min_size: int, boxes: Tensor, labels: Tensor
-    ) -> Tuple[Tensor, Tensor]:
-        ...
+        self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: Tensor
+    ) -> tuple[Tensor, Tensor]: ...
 
     @overload
     def _filter_boxes(
-        self, image_size: Tuple[int, int], min_size: int, boxes: Tensor, labels: None
-    ) -> Tuple[Tensor, None]:
-        ...
+        self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: None
+    ) -> tuple[Tensor, None]: ...
 
     def _filter_boxes(
         self,
-        image_size: Tuple[int, int],
+        image_size: tuple[int, int],
         min_size: int,
         boxes: Tensor,
         labels: Optional[Tensor],
-    ) -> Tuple[Tensor, Optional[Tensor]]:
+    ) -> tuple[Tensor, Optional[Tensor]]:
         """Clip boxes to image size and filter boxes with sides less than ``min_size``.
 
         Args:
@@ -451,11 +442,7 @@ class IDTReeS(NonGeoDataset):
         return boxes, labels
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         url = self.metadata[self.split]["url"]
         md5 = self.metadata[self.split]["md5"]
         filename = self.metadata[self.split]["filename"]
@@ -477,11 +464,7 @@ class IDTReeS(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         download_url(
@@ -492,11 +475,11 @@ class IDTReeS(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-        hsi_indices: Tuple[int, int, int] = (0, 1, 2),
-    ) -> plt.Figure:
+        hsi_indices: tuple[int, int, int] = (0, 1, 2),
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -597,7 +580,7 @@ class IDTReeS(NonGeoDataset):
         points: "np.typing.NDArray[np.int_]" = np.stack(
             [las.x, las.y, las.z], axis=0
         ).transpose((1, 0))
-        point_cloud = pyvista.PolyData(points)  # type: ignore[attr-defined]
+        point_cloud = pyvista.PolyData(points)
 
         # Some point cloud files have no color->points mapping
         if hasattr(las, "red"):

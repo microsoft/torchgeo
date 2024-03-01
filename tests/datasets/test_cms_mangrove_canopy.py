@@ -9,10 +9,15 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-from torchgeo.datasets import CMSGlobalMangroveCanopy, IntersectionDataset, UnionDataset
+from torchgeo.datasets import (
+    CMSGlobalMangroveCanopy,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -44,9 +49,9 @@ class TestCMSGlobalMangroveCanopy:
         assert isinstance(x["crs"], CRS)
         assert isinstance(x["mask"], torch.Tensor)
 
-    def test_no_dataset(self) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in."):
-            CMSGlobalMangroveCanopy(root="/test")
+    def test_no_dataset(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+            CMSGlobalMangroveCanopy(str(tmp_path))
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(
@@ -65,7 +70,7 @@ class TestCMSGlobalMangroveCanopy:
         ) as f:
             f.write("bad")
         with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            CMSGlobalMangroveCanopy(root=str(tmp_path), country="Angola", checksum=True)
+            CMSGlobalMangroveCanopy(str(tmp_path), country="Angola", checksum=True)
 
     def test_invalid_country(self) -> None:
         with pytest.raises(AssertionError):

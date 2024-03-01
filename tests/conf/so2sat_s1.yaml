@@ -1,15 +1,15 @@
-experiment:
-  task: "so2sat"
-  module:
+model:
+  class_path: ClassificationTask
+  init_args:
     loss: "focal"
     model: "resnet18"
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
-    weights: null
     in_channels: 8
     num_classes: 17
-  datamodule:
-    root: "tests/data/so2sat"
+data:
+  class_path: So2SatDataModule
+  init_args:
     batch_size: 1
-    num_workers: 0
     band_set: "s1"
+  dict_kwargs:
+    root: "tests/data/so2sat"
+    version: "2"

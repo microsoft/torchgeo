@@ -3,14 +3,16 @@
 
 """UC Merced dataset."""
 import os
-from typing import Callable, Dict, Optional, cast
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torchvision.transforms.functional as F
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import DatasetNotFoundError, check_integrity, download_url, extract_archive
 
 
 class UCMerced(NonGeoClassificationDataset):
@@ -66,29 +68,6 @@ class UCMerced(NonGeoClassificationDataset):
     md5 = "5b7ec56793786b6dc8a908e8854ac0e4"
 
     base_dir = os.path.join("UCMerced_LandUse", "Images")
-    classes = [
-        "agricultural",
-        "airplane",
-        "baseballdiamond",
-        "beach",
-        "buildings",
-        "chaparral",
-        "denseresidential",
-        "forest",
-        "freeway",
-        "golfcourse",
-        "harbor",
-        "intersection",
-        "mediumresidential",
-        "mobilehomepark",
-        "overpass",
-        "parkinglot",
-        "river",
-        "runway",
-        "sparseresidential",
-        "storagetanks",
-        "tenniscourt",
-    ]
 
     splits = ["train", "val", "test"]
     split_urls = {
@@ -106,7 +85,7 @@ class UCMerced(NonGeoClassificationDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -121,8 +100,7 @@ class UCMerced(NonGeoClassificationDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
         self.root = root
@@ -143,6 +121,19 @@ class UCMerced(NonGeoClassificationDataset):
             is_valid_file=is_in_split,
         )
 
+    def _load_image(self, index: int) -> tuple[Tensor, Tensor]:
+        """Load a single image and its class label.
+
+        Args:
+            index: index to return
+
+        Returns:
+            the image and class label
+        """
+        img, label = super()._load_image(index)
+        img = F.resize(img, size=(256, 256), antialias=True)
+        return img, label
+
     def _check_integrity(self) -> bool:
         """Check integrity of dataset.
 
@@ -155,11 +146,7 @@ class UCMerced(NonGeoClassificationDataset):
         return integrity
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         filepath = os.path.join(self.root, self.base_dir)
         if os.path.exists(filepath):
@@ -172,11 +159,7 @@ class UCMerced(NonGeoClassificationDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         self._download()
@@ -205,10 +188,10 @@ class UCMerced(NonGeoClassificationDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -222,6 +205,11 @@ class UCMerced(NonGeoClassificationDataset):
         .. versionadded:: 0.2
         """
         image = np.rollaxis(sample["image"].numpy(), 0, 3)
+
+        # Normalize the image if the max value is greater than 1
+        if image.max() > 1:
+            image = image.astype(np.float32) / 255.0  # Scale to [0, 1]
+
         label = cast(int, sample["label"].item())
         label_class = self.classes[label]
 

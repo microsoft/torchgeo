@@ -3,7 +3,7 @@
 
 """Chesapeake Bay High-Resolution Land Cover Project datamodule."""
 
-from typing import Any, Dict, List
+from typing import Any, Optional
 
 import kornia.augmentation as K
 import torch.nn as nn
@@ -29,7 +29,7 @@ class _Transform(nn.Module):
         super().__init__()
         self.aug = aug
 
-    def forward(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def forward(self, sample: dict[str, Any]) -> dict[str, Any]:
         """Apply the augmentation.
 
         Args:
@@ -58,12 +58,12 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
 
     def __init__(
         self,
-        train_splits: List[str],
-        val_splits: List[str],
-        test_splits: List[str],
+        train_splits: list[str],
+        val_splits: list[str],
+        test_splits: list[str],
         batch_size: int = 64,
         patch_size: int = 256,
-        length: int = 1000,
+        length: Optional[int] = None,
         num_workers: int = 0,
         class_set: int = 7,
         use_prior_labels: bool = False,
@@ -93,7 +93,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         """
         # This is a rough estimate of how large of a patch we will need to sample in
         # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
-        self.original_patch_size = patch_size * 2
+        self.original_patch_size = patch_size * 3
         kwargs["transforms"] = _Transform(K.CenterCrop(patch_size))
 
         super().__init__(
@@ -158,8 +158,8 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             )
 
     def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
+        self, batch: dict[str, Tensor], dataloader_idx: int
+    ) -> dict[str, Tensor]:
         """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:

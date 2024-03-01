@@ -13,12 +13,11 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import IDTReeS
+from torchgeo.datasets import DatasetNotFoundError, IDTReeS
 
-pytest.importorskip("pandas", minversion="0.23.2")
 pytest.importorskip("laspy", minversion="2")
 
 
@@ -51,7 +50,7 @@ class TestIDTReeS:
         transforms = nn.Identity()
         return IDTReeS(root, split, task, transforms, download=True, checksum=True)
 
-    @pytest.fixture(params=["pandas", "laspy", "pyvista"])
+    @pytest.fixture(params=["laspy", "pyvista"])
     def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
         import_orig = builtins.__import__
         package = str(request.param)
@@ -92,10 +91,7 @@ class TestIDTReeS:
         IDTReeS(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
-        "either specify a different `root` directory or use `download=True` "
-        "to automatically download the dataset."
-        with pytest.raises(RuntimeError, match=err):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             IDTReeS(str(tmp_path))
 
     def test_not_extracted(self, tmp_path: Path) -> None:
@@ -110,13 +106,13 @@ class TestIDTReeS:
     ) -> None:
         package = mock_missing_module
 
-        if package in ["pandas", "laspy"]:
+        if package == "laspy":
             with pytest.raises(
                 ImportError,
                 match=f"{package} is not installed and is required to use this dataset",
             ):
                 IDTReeS(dataset.root, dataset.split, dataset.task)
-        elif package in ["pyvista"]:
+        elif package == "pyvista":
             with pytest.raises(
                 ImportError,
                 match=f"{package} is not installed and is required to plot point cloud",
@@ -140,7 +136,8 @@ class TestIDTReeS:
             plt.close()
 
     def test_plot_las(self, dataset: IDTReeS) -> None:
-        pyvista = pytest.importorskip("pyvista", minversion="0.35.1")
+        pyvista = pytest.importorskip("pyvista", minversion="0.34.2")
+        pyvista.OFF_SCREEN = True
 
         # Test point cloud without colors
         point_cloud = dataset.plot_las(index=0)

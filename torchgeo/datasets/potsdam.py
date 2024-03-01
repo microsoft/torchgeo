@@ -4,7 +4,7 @@
 """Potsdam dataset."""
 
 import os
-from typing import Callable, Dict, Optional
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,6 +16,7 @@ from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import (
+    DatasetNotFoundError,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -26,7 +27,7 @@ from .utils import (
 class Potsdam2D(NonGeoDataset):
     """Potsdam 2D Semantic Segmentation dataset.
 
-    The `Potsdam <https://www2.isprs.org/commissions/comm2/wg4/benchmark/2d-sem-label-potsdam/>`__
+    The `Potsdam <https://www.isprs.org/education/benchmarks/UrbanSemLab/2d-sem-label-potsdam.aspx>`__
     dataset is a dataset for urban semantic segmentation used in the 2D Semantic Labeling
     Contest - Potsdam. This dataset uses the "4_Ortho_RGBIR.zip" and "5_Labels_all.zip"
     files to create the train/test sets used in the challenge. The dataset can be
@@ -122,7 +123,7 @@ class Potsdam2D(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Potsdam dataset instance.
@@ -133,6 +134,10 @@ class Potsdam2D(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            AssertionError: If *split* is invalid.
+            DatasetNotFoundError: If dataset is not found.
         """
         assert split in self.splits
         self.root = root
@@ -149,7 +154,7 @@ class Potsdam2D(NonGeoDataset):
             if os.path.exists(image) and os.path.exists(mask):
                 self.files.append(dict(image=image, mask=mask))
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -209,11 +214,7 @@ class Potsdam2D(NonGeoDataset):
         return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if checksum fails or the dataset is not downloaded
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         if os.path.exists(os.path.join(self.root, self.image_root)):
             return
@@ -233,15 +234,11 @@ class Potsdam2D(NonGeoDataset):
         if all(exists):
             return
 
-        # Check if the user requested to download the dataset
-        raise RuntimeError(
-            "Dataset not found in `root` directory, either specify a different"
-            + " `root` directory or manually download the dataset to this directory."
-        )
+        raise DatasetNotFoundError(self)
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         alpha: float = 0.5,

@@ -3,7 +3,7 @@
 
 """SpaceNet datamodules."""
 
-from typing import Any, Dict
+from typing import Any
 
 import kornia.augmentation as K
 from torch import Tensor
@@ -52,14 +52,7 @@ class SpaceNet1DataModule(NonGeoDataModule):
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             K.RandomSharpness(p=0.5),
-            K.ColorJitter(
-                p=0.5,
-                brightness=0.1,
-                contrast=0.1,
-                saturation=0.1,
-                hue=0.1,
-                silence_instantiation_warning=True,
-            ),
+            K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
             data_keys=["image", "mask"],
         )
         self.aug = AugmentationSequential(
@@ -80,8 +73,8 @@ class SpaceNet1DataModule(NonGeoDataModule):
         )
 
     def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
+        self, batch: dict[str, Tensor], dataloader_idx: int
+    ) -> dict[str, Tensor]:
         """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:

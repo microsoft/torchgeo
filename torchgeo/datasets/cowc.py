@@ -6,16 +6,17 @@
 import abc
 import csv
 import os
-from typing import Callable, Dict, List, Optional, cast
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive
+from .utils import DatasetNotFoundError, check_integrity, download_and_extract_archive
 
 
 class COWC(NonGeoDataset, abc.ABC):
@@ -47,12 +48,12 @@ class COWC(NonGeoDataset, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def filenames(self) -> List[str]:
+    def filenames(self) -> list[str]:
         """List of files to download."""
 
     @property
     @abc.abstractmethod
-    def md5s(self) -> List[str]:
+    def md5s(self) -> list[str]:
         """List of MD5 checksums of files to download."""
 
     @property
@@ -64,7 +65,7 @@ class COWC(NonGeoDataset, abc.ABC):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -80,8 +81,7 @@ class COWC(NonGeoDataset, abc.ABC):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in ["train", "test"]
 
@@ -94,10 +94,7 @@ class COWC(NonGeoDataset, abc.ABC):
             self._download()
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         self.images = []
         self.targets = []
@@ -111,7 +108,7 @@ class COWC(NonGeoDataset, abc.ABC):
                 self.images.append(row[0])
                 self.targets.append(row[1])
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -193,10 +190,10 @@ class COWC(NonGeoDataset, abc.ABC):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

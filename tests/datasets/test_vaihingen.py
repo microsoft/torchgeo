@@ -10,9 +10,9 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
-from torchgeo.datasets import Vaihingen2D
+from torchgeo.datasets import DatasetNotFoundError, Vaihingen2D
 
 
 class TestVaihingen2D:
@@ -69,7 +69,7 @@ class TestVaihingen2D:
             Vaihingen2D(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in `root` directory"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             Vaihingen2D(str(tmp_path))
 
     def test_plot(self, dataset: Vaihingen2D) -> None:

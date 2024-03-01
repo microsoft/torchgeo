@@ -9,7 +9,7 @@ from torchgeo.models import FarSeg
 
 
 class TestFarSeg:
-    @torch.no_grad()  # type: ignore[misc]
+    @torch.no_grad()
     @pytest.mark.parametrize(
         "backbone,pretrained",
         [

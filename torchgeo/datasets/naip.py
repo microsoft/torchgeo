@@ -3,9 +3,10 @@
 
 """National Agriculture Imagery Program (NAIP) dataset."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
 from .geo import RasterDataset
 
@@ -14,7 +15,7 @@ class NAIP(RasterDataset):
     """National Agriculture Imagery Program (NAIP) dataset.
 
     The `National Agriculture Imagery Program (NAIP)
-    <https://www.fsa.usda.gov/programs-and-services/aerial-photography/imagery-programs/naip-imagery/>`_
+    <https://catalog.data.gov/dataset/national-agriculture-imagery-program-naip>`_
     acquires aerial imagery during the agricultural growing seasons in the continental
     U.S. A primary goal of the NAIP program is to make digital ortho photography
     available to governmental agencies and the public within a year of acquisition.
@@ -49,10 +50,10 @@ class NAIP(RasterDataset):
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

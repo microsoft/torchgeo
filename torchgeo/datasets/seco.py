@@ -4,24 +4,31 @@
 """Sentinel 2 imagery from the Seasonal Contrast paper."""
 
 import os
-from collections import defaultdict
-from typing import Callable, Dict, List, Optional
+import random
+from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, percentile_normalization
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    download_url,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class SeasonalContrastS2(NonGeoDataset):
     """Sentinel 2 imagery from the Seasonal Contrast paper.
 
-    The `Seasonal Contrast imagery <https://github.com/ElementAI/seasonal-contrast/>`_
+    The `Seasonal Contrast imagery <https://github.com/ServiceNow/seasonal-contrast>`_
     dataset contains Sentinel 2 imagery patches sampled from different points in time
     around the 10k most populated cities on Earth.
 
@@ -51,33 +58,41 @@ class SeasonalContrastS2(NonGeoDataset):
     ]
     rgb_bands = ["B4", "B3", "B2"]
 
-    urls = {
-        # 7.3 GB
-        "100k": "https://zenodo.org/record/4728033/files/seco_100k.zip?download=1",
-        # 36.3 GB
-        "1m": "https://zenodo.org/record/4728033/files/seco_1m.zip?download=1",
+    metadata = {
+        "100k": {
+            "url": "https://zenodo.org/record/4728033/files/seco_100k.zip?download=1",
+            "md5": "ebf2d5e03adc6e657f9a69a20ad863e0",
+            "filename": "seco_100k.zip",
+            "directory": "seasonal_contrast_100k",
+        },
+        "1m": {
+            "url": "https://zenodo.org/record/4728033/files/seco_1m.zip?download=1",
+            "md5": "187963d852d4d3ce6637743ec3a4bd9e",
+            "filename": "seco_1m.zip",
+            "directory": "seasonal_contrast_1m",
+        },
     }
-    filenames = {"100k": "seco_100k.zip", "1m": "seco_1m.zip"}
-    md5s = {
-        "100k": "ebf2d5e03adc6e657f9a69a20ad863e0",
-        "1m": "187963d852d4d3ce6637743ec3a4bd9e",
-    }
-    directory_names = {"100k": "seasonal_contrast_100k", "1m": "seasonal_contrast_1m"}
 
     def __init__(
         self,
         root: str = "data",
         version: str = "100k",
-        bands: List[str] = rgb_bands,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        seasons: int = 1,
+        bands: list[str] = rgb_bands,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new SeCo dataset instance.
+        """Initialize a new SeasonalContrastS2 instance.
+
+        .. versionadded:: 0.5
+           The *seasons* parameter.
 
         Args:
             root: root directory where dataset can be found
             version: one of "100k" or "1m" for the version of the dataset to use
+            seasons: number of seasonal patches to sample per location, 1--5
+            bands: list of bands to load
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -85,60 +100,44 @@ class SeasonalContrastS2(NonGeoDataset):
 
         Raises:
             AssertionError: if ``version`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert version in ["100k", "1m"]
+        assert version in self.metadata.keys()
+        assert seasons in range(5)
         for band in bands:
             assert band in self.all_bands
 
         self.root = root
+        self.version = version
+        self.seasons = seasons
         self.bands = bands
-        self.url = self.urls[version]
-        self.filename = self.filenames[version]
-        self.md5 = self.md5s[version]
-        self.directory_name = self.directory_names[version]
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
 
         self._verify()
 
-        # TODO: This is slow, I think this should be generated on download and then
-        # loaded in the constructor
-        self.scene_to_patches = defaultdict(list)
-        for root_directory, directories, fns in os.walk(
-            os.path.join(self.root, self.directory_name)
-        ):
-            if len(directories) == 0 and len(fns) > 0:
-                root_directory, patch_name = os.path.split(root_directory)
-                _, scene_name = os.path.split(root_directory)
-                self.scene_to_patches[scene_name].append(patch_name)
-
-        self.scenes = sorted(self.scene_to_patches.keys())
-        for scene_name in self.scenes:
-            self.scene_to_patches[scene_name] = sorted(
-                self.scene_to_patches[scene_name]
-            )
-
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
             index: index to return
 
         Returns:
-            sample with an "image" in 5xCxHxW format where the 5 indexes over the same
-                patch sampled from different points in time by the SeCo method
+            sample with an "image" in SCxHxW format where S is the number of seasons
+
+        .. versionchanged:: 0.5
+           Image shape changed from 5xCxHxW to SCxHxW
         """
-        scene_name = self.scenes[index]
-        patch_names = self.scene_to_patches[scene_name]
+        root = os.path.join(
+            self.root, self.metadata[self.version]["directory"], f"{index:06}"
+        )
+        subdirs = [f for f in os.listdir(root) if os.path.isdir(os.path.join(root, f))]
+        subdirs = random.sample(subdirs, self.seasons)
 
-        imagery = [
-            self._load_patch(scene_name, patch_name) for patch_name in patch_names
-        ]
+        images = [self._load_patch(root, subdir) for subdir in subdirs]
 
-        sample = {"image": torch.stack(imagery, dim=0)}
+        sample = {"image": torch.cat(images)}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -151,26 +150,23 @@ class SeasonalContrastS2(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        return len(self.scenes)
+        return (10**5 if self.version == "100k" else 10**6) // 5
 
-    def _load_patch(self, scene_name: str, patch_name: str) -> Tensor:
+    def _load_patch(self, root: str, subdir: str) -> Tensor:
         """Load a single image patch.
 
         Args:
-            scene_name: the name of the scene to load from, e.g. '019999'
-            patch_name: the name of the patch to load, e.g.
-                '20200713T075609_20200713T081050_T36QZH'
+            root: root directory containing all seasons
+            subdir: season to load
 
         Returns:
             the image with the subset of bands specified by ``self.bands``
         """
         all_data = []
         for band in self.bands:
-            fn = os.path.join(
-                self.root, self.directory_name, scene_name, patch_name, f"{band}.tif"
-            )
+            fn = os.path.join(root, subdir, f"{band}.tif")
             with rasterio.open(fn) as f:
-                band_data = f.read(1)
+                band_data = f.read(1).astype(np.float32)
                 height, width = band_data.shape
                 size = min(height, width)
                 if size < 264:
@@ -192,29 +188,23 @@ class SeasonalContrastS2(NonGeoDataset):
         return image
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        directory_path = os.path.join(self.root, self.directory_name)
+        directory_path = os.path.join(
+            self.root, self.metadata[self.version]["directory"]
+        )
         if os.path.exists(directory_path):
             return
 
         # Check if the zip files have already been downloaded
-        zip_path = os.path.join(self.root, self.filename)
+        zip_path = os.path.join(self.root, self.metadata[self.version]["filename"])
         if os.path.exists(zip_path):
             self._extract()
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -223,22 +213,24 @@ class SeasonalContrastS2(NonGeoDataset):
     def _download(self) -> None:
         """Download the dataset."""
         download_url(
-            self.url,
+            self.metadata[self.version]["url"],
             self.root,
-            filename=self.filename,
-            md5=self.md5 if self.checksum else None,
+            filename=self.metadata[self.version]["filename"],
+            md5=self.metadata[self.version]["md5"] if self.checksum else None,
         )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        extract_archive(os.path.join(self.root, self.filename))
+        extract_archive(
+            os.path.join(self.root, self.metadata[self.version]["filename"])
+        )
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -250,8 +242,8 @@ class SeasonalContrastS2(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if the RGB bands are included in ``self.bands`` or the sample
-                contains a "prediction" key
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+            ValueError: if sample contains a "prediction" key
 
         .. versionadded:: 0.2
         """
@@ -263,21 +255,22 @@ class SeasonalContrastS2(NonGeoDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
-        images = []
-        for i in range(5):
-            image = np.rollaxis(sample["image"][i, rgb_indices].numpy(), 0, 3)
+        fig, axes = plt.subplots(ncols=self.seasons, figsize=(20, 4))
+        if self.seasons == 1:
+            axes = [axes]
+
+        indices = torch.tensor(rgb_indices)
+        for i in range(self.seasons):
+            image = sample["image"][indices + i * len(self.bands)].numpy()
+            image = np.rollaxis(image, 0, 3)
             image = percentile_normalization(image, 0, 100)
-            images.append(image)
 
-        fig, axs = plt.subplots(ncols=5, figsize=(20, 4))
-        for i in range(5):
-            axs[i].imshow(images[i])
-            axs[i].axis("off")
-            if show_titles:
-                axs[i].set_title(f"t={i+1}")
+            axes[i].imshow(image)
+            axes[i].axis("off")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
+
         return fig

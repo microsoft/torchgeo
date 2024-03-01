@@ -5,21 +5,27 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Optional
 from xml.etree import ElementTree
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive, extract_archive
+from .utils import (
+    DatasetNotFoundError,
+    check_integrity,
+    download_and_extract_archive,
+    extract_archive,
+)
 
 
-def parse_pascal_voc(path: str) -> Dict[str, Any]:
+def parse_pascal_voc(path: str) -> dict[str, Any]:
     """Read a PASCAL VOC annotation file.
 
     Args:
@@ -71,7 +77,7 @@ class ForestDamage(NonGeoDataset):
 
     * images are three-channel jpgs
     * annotations are in `Pascal VOC XML format
-      <https://roboflow.com/formats/pascal-voc-xml#w-tabs-0-data-w-pane-3>`_
+      <https://roboflow.com/formats/pascal-voc-xml>`_
 
     Dataset Classes:
 
@@ -104,7 +110,7 @@ class ForestDamage(NonGeoDataset):
     def __init__(
         self,
         root: str = "data",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -118,8 +124,7 @@ class ForestDamage(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.transforms = transforms
@@ -130,9 +135,9 @@ class ForestDamage(NonGeoDataset):
 
         self.files = self._load_files(self.root)
 
-        self.class_to_idx: Dict[str, int] = {c: i for i, c in enumerate(self.classes)}
+        self.class_to_idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -162,7 +167,7 @@ class ForestDamage(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str) -> List[Dict[str, str]]:
+    def _load_files(self, root: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -202,8 +207,8 @@ class ForestDamage(NonGeoDataset):
             return tensor
 
     def _load_target(
-        self, bboxes: List[List[int]], labels_list: List[str]
-    ) -> Tuple[Tensor, Tensor]:
+        self, bboxes: list[list[int]], labels_list: list[str]
+    ) -> tuple[Tensor, Tensor]:
         """Load the target mask for a single image.
 
         Args:
@@ -236,21 +241,13 @@ class ForestDamage(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory, either specify a different"
-                + " `root` directory or manually download "
-                + "the dataset to this directory."
-            )
+            raise DatasetNotFoundError(self)
 
         # else download the dataset
         self._download()
 
     def _download(self) -> None:
-        """Download the dataset and extract it.
-
-        Raises:
-            AssertionError: if the checksum does not match
-        """
+        """Download the dataset and extract it."""
         download_and_extract_archive(
             self.url,
             self.root,
@@ -260,10 +257,10 @@ class ForestDamage(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

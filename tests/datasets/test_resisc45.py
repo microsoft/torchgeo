@@ -10,10 +10,10 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import RESISC45
+from torchgeo.datasets import RESISC45, DatasetNotFoundError
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -25,7 +25,7 @@ class TestRESISC45:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> RESISC45:
-        pytest.importorskip("rarfile", minversion="3")
+        pytest.importorskip("rarfile", minversion="4")
 
         monkeypatch.setattr(torchgeo.datasets.resisc45, "download_url", download_url)
         md5 = "5895dea3757ba88707d52f5521c444d3"
@@ -78,10 +78,7 @@ class TestRESISC45:
         RESISC45(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
-        "either specify a different `root` directory or use `download=True` "
-        "to automatically download the dataset."
-        with pytest.raises(RuntimeError, match=err):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             RESISC45(str(tmp_path))
 
     def test_plot(self, dataset: RESISC45) -> None:

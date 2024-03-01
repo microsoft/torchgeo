@@ -5,7 +5,7 @@
 
 import os
 import shutil
-from typing import Any, Dict
+from typing import Any
 
 import fiona
 import fiona.transform
@@ -29,7 +29,7 @@ suffix_to_key_map = {
     "prior_from_cooccurrences_101_31_no_osm_no_buildings": "prior_no_osm_no_buildings",
 }
 
-layer_data_profiles: Dict[str, Dict[Any, Any]] = {
+layer_data_profiles: dict[str, dict[Any, Any]] = {
     "a_naip": {
         "profile": {
             "driver": "GTiff",
@@ -198,7 +198,7 @@ tile_list = [
 ]
 
 
-def write_data(path: str, profile: Dict[Any, Any], data_type: Any, vals: Any) -> None:
+def write_data(path: str, profile: dict[Any, Any], data_type: Any, vals: Any) -> None:
     assert all(key in profile for key in ("count", "height", "width", "dtype"))
     with rasterio.open(path, "w", **profile) as dst:
         size = (profile["count"], profile["height"], profile["width"])

@@ -4,21 +4,27 @@
 """NWPU VHR-10 dataset."""
 
 import os
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib import patches
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive, download_url
+from .utils import (
+    DatasetNotFoundError,
+    check_integrity,
+    download_and_extract_archive,
+    download_url,
+)
 
 
 def convert_coco_poly_to_mask(
-    segmentations: List[int], height: int, width: int
+    segmentations: list[int], height: int, width: int
 ) -> Tensor:
     """Convert coco polygons to mask tensor.
 
@@ -39,10 +45,7 @@ def convert_coco_poly_to_mask(
         mask = torch.as_tensor(mask, dtype=torch.uint8)
         mask = mask.any(dim=2)
         masks.append(mask)
-    if masks:
-        masks_tensor = torch.stack(masks, dim=0)
-    else:
-        masks_tensor = torch.zeros((0, height, width), dtype=torch.uint8)
+    masks_tensor = torch.stack(masks, dim=0)
     return masks_tensor
 
 
@@ -53,7 +56,7 @@ class ConvertCocoAnnotations:
     https://github.com/pytorch/vision/blob/v0.14.0/references/detection/coco_utils.py
     """
 
-    def __call__(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def __call__(self, sample: dict[str, Any]) -> dict[str, Any]:
         """Converts MS COCO fields (boxes, masks & labels) from list of ints to tensors.
 
         Args:
@@ -83,10 +86,8 @@ class ConvertCocoAnnotations:
         categories = [obj["category_id"] for obj in anno]
         classes = torch.tensor(categories, dtype=torch.int64)
 
-        if "segmentation" in anno[0]:
-            segmentations = [obj["segmentation"] for obj in anno]
-        else:
-            segmentations = []
+        segmentations = [obj["segmentation"] for obj in anno]
+
         masks = convert_coco_poly_to_mask(segmentations, h, w)
 
         keep = (boxes[:, 3] > boxes[:, 1]) & (boxes[:, 2] > boxes[:, 0])
@@ -159,10 +160,7 @@ class VHR10(NonGeoDataset):
         "md5": "d30a7ff99d92123ebb0b3a14d9102081",
     }
     target_meta = {
-        "url": (
-            "https://raw.githubusercontent.com/chaozhong2010/VHR-10_dataset_coco/"
-            "master/NWPU%20VHR-10_dataset_coco/annotations.json"
-        ),
+        "url": "https://raw.githubusercontent.com/chaozhong2010/VHR-10_dataset_coco/ce0ba0f5f6a0737031f1cbe05e785ddd5ef05bd7/NWPU%20VHR-10_dataset_coco/annotations.json",  # noqa: E501
         "filename": "annotations.json",
         "md5": "7c76ec50c17a61bb0514050d20f22c08",
     }
@@ -185,7 +183,7 @@ class VHR10(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "positive",
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -202,8 +200,7 @@ class VHR10(NonGeoDataset):
         Raises:
             AssertionError: if ``split`` argument is invalid
             ImportError: if ``split="positive"`` and pycocotools is not installed
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in ["positive", "negative"]
 
@@ -216,10 +213,7 @@ class VHR10(NonGeoDataset):
             self._download()
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         if split == "positive":
             # Must be installed to parse annotations file
@@ -239,7 +233,7 @@ class VHR10(NonGeoDataset):
             self.coco_convert = ConvertCocoAnnotations()
             self.ids = list(sorted(self.coco.imgs.keys()))
 
-    def __getitem__(self, index: int) -> Dict[str, Any]:
+    def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an index within the dataset.
 
         Args:
@@ -250,7 +244,7 @@ class VHR10(NonGeoDataset):
         """
         id_ = index % len(self) + 1
 
-        sample: Dict[str, Any] = {
+        sample: dict[str, Any] = {
             "image": self._load_image(id_),
             "label": self._load_target(id_),
         }
@@ -259,8 +253,7 @@ class VHR10(NonGeoDataset):
             sample = self.coco_convert(sample)
             sample["labels"] = sample["label"]["labels"]
             sample["boxes"] = sample["label"]["boxes"]
-            if "masks" in sample["label"]:
-                sample["masks"] = sample["label"]["masks"]
+            sample["masks"] = sample["label"]["masks"]
             del sample["label"]
 
         if self.transforms is not None:
@@ -297,11 +290,12 @@ class VHR10(NonGeoDataset):
         with Image.open(filename) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img)
             tensor = torch.from_numpy(array)
+            tensor = tensor.float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, id_: int) -> Dict[str, Any]:
+    def _load_target(self, id_: int) -> dict[str, Any]:
         """Load the annotations for a single image.
 
         Args:
@@ -368,13 +362,13 @@ class VHR10(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
         show_feats: Optional[str] = "both",
         box_alpha: float = 0.7,
         mask_alpha: float = 0.7,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -397,13 +391,13 @@ class VHR10(NonGeoDataset):
         assert show_feats in {"boxes", "masks", "both"}
 
         if self.split == "negative":
-            plt.imshow(sample["image"].permute(1, 2, 0))
-            axs = plt.gca()
-            axs.axis("off")
+            fig, axs = plt.subplots(squeeze=False)
+            axs[0, 0].imshow(sample["image"].permute(1, 2, 0))
+            axs[0, 0].axis("off")
 
             if suptitle is not None:
                 plt.suptitle(suptitle)
-            return plt.gcf()
+            return fig
 
         if show_feats != "boxes":
             try:
@@ -440,11 +434,9 @@ class VHR10(NonGeoDataset):
             ncols += 1
 
         # Display image
-        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
-        if not isinstance(axs, np.ndarray):
-            axs = [axs]
-        axs[0].imshow(image)
-        axs[0].axis("off")
+        fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 10, 13))
+        axs[0, 0].imshow(image)
+        axs[0, 0].axis("off")
 
         cm = plt.get_cmap("gist_rainbow")
         for i in range(n_gt):
@@ -454,7 +446,7 @@ class VHR10(NonGeoDataset):
             # Add bounding boxes
             x1, y1, x2, y2 = boxes[i]
             if show_feats in {"boxes", "both"}:
-                p = patches.Rectangle(
+                r = patches.Rectangle(
                     (x1, y1),
                     x2 - x1,
                     y2 - y1,
@@ -464,32 +456,32 @@ class VHR10(NonGeoDataset):
                     edgecolor=color,
                     facecolor="none",
                 )
-                axs[0].add_patch(p)
+                axs[0, 0].add_patch(r)
 
             # Add labels
             label = self.categories[class_num]
             caption = label
-            axs[0].text(
+            axs[0, 0].text(
                 x1, y1 - 8, caption, color="white", size=11, backgroundcolor="none"
             )
 
             # Add masks
             if show_feats in {"masks", "both"} and "masks" in sample:
                 mask = masks[i]
-                contours = find_contours(mask, 0.5)
+                contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
                 for verts in contours:
                     verts = np.fliplr(verts)
                     p = patches.Polygon(
                         verts, facecolor=color, alpha=mask_alpha, edgecolor="white"
                     )
-                    axs[0].add_patch(p)
+                    axs[0, 0].add_patch(p)
 
             if show_titles:
-                axs[0].set_title("Ground Truth")
+                axs[0, 0].set_title("Ground Truth")
 
         if show_predictions:
-            axs[1].imshow(image)
-            axs[1].axis("off")
+            axs[0, 1].imshow(image)
+            axs[0, 1].axis("off")
             for i in range(n_pred):
                 score = prediction_scores[i]
                 if score < 0.5:
@@ -501,7 +493,7 @@ class VHR10(NonGeoDataset):
                 if show_pred_boxes:
                     # Add bounding boxes
                     x1, y1, x2, y2 = prediction_boxes[i]
-                    p = patches.Rectangle(
+                    r = patches.Rectangle(
                         (x1, y1),
                         x2 - x1,
                         y2 - y1,
@@ -511,12 +503,12 @@ class VHR10(NonGeoDataset):
                         edgecolor=color,
                         facecolor="none",
                     )
-                    axs[1].add_patch(p)
+                    axs[0, 1].add_patch(r)
 
                     # Add labels
                     label = self.categories[class_num]
                     caption = f"{label} {score:.3f}"
-                    axs[1].text(
+                    axs[0, 1].text(
                         x1,
                         y1 - 8,
                         caption,
@@ -528,20 +520,20 @@ class VHR10(NonGeoDataset):
                 # Add masks
                 if show_pred_masks:
                     mask = prediction_masks[i]
-                    contours = find_contours(mask, 0.5)
+                    contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
                     for verts in contours:
                         verts = np.fliplr(verts)
                         p = patches.Polygon(
                             verts, facecolor=color, alpha=mask_alpha, edgecolor="white"
                         )
-                        axs[1].add_patch(p)
+                        axs[0, 1].add_patch(p)
 
             if show_titles:
-                axs[1].set_title("Prediction")
-
-        plt.tight_layout()
+                axs[0, 1].set_title("Prediction")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
+
+        plt.tight_layout()
 
         return fig

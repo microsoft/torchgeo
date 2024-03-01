@@ -1,19 +1,17 @@
-experiment:
-  task: "loveda"
-  module:
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
     loss: "ce"
     model: "unet"
     backbone: "resnet18"
-    weights: null
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
-    verbose: false
     in_channels: 3
     num_classes: 8
     num_filters: 1
     ignore_index: null
-  datamodule:
+data:
+  class_path: LoveDADataModule
+  init_args:
+    batch_size: 1
+  dict_kwargs:
     root: "tests/data/loveda"
     download: true
-    batch_size: 1
-    num_workers: 0

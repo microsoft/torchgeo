@@ -3,15 +3,15 @@
 
 """CMS Global Mangrove Canopy dataset."""
 
-import glob
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional, Union
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .geo import RasterDataset
-from .utils import check_integrity, extract_archive
+from .utils import DatasetNotFoundError, check_integrity, extract_archive
 
 
 class CMSGlobalMangroveCanopy(RasterDataset):
@@ -167,19 +167,19 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        paths: Union[str, list[str]] = "data",
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         measurement: str = "agb",
         country: str = all_countries[0],
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -192,11 +192,13 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if dataset is missing or checksum fails
             AssertionError: if country or measurement arg are not str or invalid
+            DatasetNotFoundError: If dataset is not found.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
-        self.root = root
+        self.paths = paths
         self.checksum = checksum
 
         assert isinstance(country, str), "Country argument must be a str."
@@ -219,44 +221,37 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms=transforms, cache=cache)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        pathname = os.path.join(self.root, "**", self.filename_glob)
-        if glob.glob(pathname):
+        if self.files:
             return
 
         # Check if the zip file has already been downloaded
-        pathname = os.path.join(self.root, self.zipfile)
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, self.zipfile)
         if os.path.exists(pathname):
             if self.checksum and not check_integrity(pathname, self.md5):
                 raise RuntimeError("Dataset found, but corrupted.")
             self._extract()
             return
 
-        raise RuntimeError(
-            f"Dataset not found in `root={self.root}` "
-            "either specify a different `root` directory or make sure you "
-            "have manually downloaded the dataset as instructed in the documentation."
-        )
+        raise DatasetNotFoundError(self)
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        pathname = os.path.join(self.root, self.zipfile)
+        assert isinstance(self.paths, str)
+        pathname = os.path.join(self.paths, self.zipfile)
         extract_archive(pathname)
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -294,4 +289,4 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         if suptitle is not None:
             plt.suptitle(suptitle)
 
-        return
+        return fig

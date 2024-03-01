@@ -11,12 +11,12 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import ZueriCrop
+from torchgeo.datasets import DatasetNotFoundError, RGBBandsMissingError, ZueriCrop
 
-pytest.importorskip("h5py", minversion="2.6")
+pytest.importorskip("h5py", minversion="3")
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -79,10 +79,7 @@ class TestZueriCrop:
         ZueriCrop(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        err = "Dataset not found in `root` directory and `download=False`, "
-        "either specify a different `root` directory or use `download=True` "
-        "to automatically download the dataset."
-        with pytest.raises(RuntimeError, match=err):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             ZueriCrop(str(tmp_path))
 
     def test_mock_missing_module(
@@ -109,5 +106,7 @@ class TestZueriCrop:
 
     def test_plot_rgb(self, dataset: ZueriCrop) -> None:
         dataset = ZueriCrop(root=dataset.root, bands=("B02",))
-        with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
+        with pytest.raises(
+            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
+        ):
             dataset.plot(dataset[0], time_step=0, suptitle="Single Band")

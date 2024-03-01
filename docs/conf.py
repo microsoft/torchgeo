@@ -57,12 +57,17 @@ needs_sphinx = "4.0"
 nitpicky = True
 nitpick_ignore = [
     # Undocumented classes
+    ("py:class", "fiona.model.Feature"),
     ("py:class", "kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D"),
+    ("py:class", "kornia.augmentation.base._AugmentationBase"),
+    ("py:class", "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig"),
     ("py:class", "segmentation_models_pytorch.base.model.SegmentationModel"),
     ("py:class", "timm.models.resnet.ResNet"),
     ("py:class", "timm.models.vision_transformer.VisionTransformer"),
+    ("py:class", "torch.optim.lr_scheduler.LRScheduler"),
     ("py:class", "torchvision.models._api.WeightsEnum"),
     ("py:class", "torchvision.models.resnet.ResNet"),
+    ("py:class", "torchvision.models.swin_transformer.SwinTransformer"),
 ]
 
 
@@ -108,11 +113,12 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "python": ("https://docs.python.org/3", None),
-    "pytorch-lightning": ("https://pytorch-lightning.readthedocs.io/en/stable/", None),
-    "pyvista": ("https://docs.pyvista.org/", None),
+    "lightning": ("https://lightning.ai/docs/pytorch/stable/", None),
+    "pyvista": ("https://docs.pyvista.org/version/stable/", None),
     "rasterio": ("https://rasterio.readthedocs.io/en/stable/", None),
     "rtree": ("https://rtree.readthedocs.io/en/stable/", None),
     "segmentation_models_pytorch": ("https://smp.readthedocs.io/en/stable/", None),
+    "sklearn": ("https://scikit-learn.org/stable/", None),
     "timm": ("https://huggingface.co/docs/timm/main/en/", None),
     "torch": ("https://pytorch.org/docs/stable", None),
     "torchvision": ("https://pytorch.org/vision/stable", None),

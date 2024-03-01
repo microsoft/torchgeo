@@ -4,15 +4,24 @@
 """EuroSAT dataset."""
 
 import os
-from typing import Callable, Dict, Optional, Sequence, cast
+from collections.abc import Sequence
+from typing import Callable, Optional, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .geo import NonGeoClassificationDataset
-from .utils import check_integrity, download_url, extract_archive, rasterio_loader
+from .utils import (
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+    check_integrity,
+    download_url,
+    extract_archive,
+    rasterio_loader,
+)
 
 
 class EuroSAT(NonGeoClassificationDataset):
@@ -29,16 +38,16 @@ class EuroSAT(NonGeoClassificationDataset):
 
     Dataset classes:
 
-    * Industrial Buildings
-    * Residential Buildings
     * Annual Crop
-    * Permanent Crop
-    * River
-    * Sea and Lake
+    * Forest
     * Herbaceous Vegetation
     * Highway
+    * Industrial Buildings
     * Pasture
-    * Forest
+    * Permanent Crop
+    * Residential Buildings
+    * River
+    * SeaLake
 
     This dataset uses the train/val/test splits defined in the "In-domain representation
     learning for remote sensing" paper:
@@ -71,18 +80,6 @@ class EuroSAT(NonGeoClassificationDataset):
         "val": "95de90f2aa998f70a3b2416bfe0687b4",
         "test": "7ae5ab94471417b6e315763121e67c5f",
     }
-    classes = [
-        "Industrial Buildings",
-        "Residential Buildings",
-        "Annual Crop",
-        "Permanent Crop",
-        "River",
-        "Sea and Lake",
-        "Herbaceous Vegetation",
-        "Highway",
-        "Pasture",
-        "Forest",
-    ]
 
     all_band_names = (
         "B01",
@@ -93,7 +90,7 @@ class EuroSAT(NonGeoClassificationDataset):
         "B06",
         "B07",
         "B08",
-        "B08A",
+        "B8A",
         "B09",
         "B10",
         "B11",
@@ -109,7 +106,7 @@ class EuroSAT(NonGeoClassificationDataset):
         root: str = "data",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -126,8 +123,7 @@ class EuroSAT(NonGeoClassificationDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
 
         .. versionadded:: 0.3
            The *bands* parameter.
@@ -160,7 +156,7 @@ class EuroSAT(NonGeoClassificationDataset):
             is_valid_file=is_in_split,
         )
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -190,11 +186,7 @@ class EuroSAT(NonGeoClassificationDataset):
         return integrity
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         filepath = os.path.join(self.root, self.base_dir)
         if os.path.exists(filepath):
@@ -207,11 +199,7 @@ class EuroSAT(NonGeoClassificationDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         self._download()
@@ -257,10 +245,10 @@ class EuroSAT(NonGeoClassificationDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -272,7 +260,7 @@ class EuroSAT(NonGeoClassificationDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if RGB bands are not found in dataset
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
 
         .. versionadded:: 0.2
         """
@@ -281,7 +269,7 @@ class EuroSAT(NonGeoClassificationDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         image = np.take(sample["image"].numpy(), indices=rgb_indices, axis=0)
         image = np.rollaxis(image, 0, 3)
@@ -307,3 +295,30 @@ class EuroSAT(NonGeoClassificationDataset):
         if suptitle is not None:
             plt.suptitle(suptitle)
         return fig
+
+
+class EuroSAT100(EuroSAT):
+    """Subset of EuroSAT containing only 100 images.
+
+    Intended for tutorials and demonstrations, not for benchmarking.
+
+    Maintains the same file structure, classes, and train-val-test split. Each class has
+    10 images (6 train, 2 val, 2 test), for a total of 100 images.
+
+    .. versionadded:: 0.5
+    """
+
+    url = "https://huggingface.co/datasets/torchgeo/eurosat/resolve/main/EuroSAT100.zip"
+    filename = "EuroSAT100.zip"
+    md5 = "c21c649ba747e86eda813407ef17d596"
+
+    split_urls = {
+        "train": "https://huggingface.co/datasets/torchgeo/eurosat/raw/main/eurosat-train.txt",  # noqa: E501
+        "val": "https://huggingface.co/datasets/torchgeo/eurosat/raw/main/eurosat-val.txt",  # noqa: E501
+        "test": "https://huggingface.co/datasets/torchgeo/eurosat/raw/main/eurosat-test.txt",  # noqa: E501
+    }
+    split_md5s = {
+        "train": "033d0c23e3a75e3fa79618b0e35fe1c7",
+        "val": "3e3f8b3c344182b8d126c4cc88f3f215",
+        "test": "f908f151b950f270ad18e61153579794",
+    }

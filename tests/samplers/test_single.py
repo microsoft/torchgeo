@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 
 import math
+from collections.abc import Iterator
 from itertools import product
-from typing import Dict, Iterator
 
 import pytest
 from _pytest.fixtures import SubRequest
@@ -39,7 +39,7 @@ class CustomGeoDataset(GeoDataset):
         self._crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
         return {"index": query}
 
 
@@ -162,7 +162,16 @@ class TestGridGeoSampler:
     @pytest.fixture(
         scope="function",
         params=product(
-            [(8, 1), (6, 2), (4, 3), (2.5, 3), ((8, 6), (1, 2)), ((6, 4), (2, 3))],
+            [
+                (8, 1),
+                (6, 2),
+                (4, 3),
+                (4, 4),
+                (2, 4),
+                (2.5, 3),
+                ((8, 6), (1, 2)),
+                ((6, 4), (2, 3)),
+            ],
             [Units.PIXELS, Units.CRS],
         ),
     )
@@ -172,8 +181,18 @@ class TestGridGeoSampler:
 
     def test_iter(self, sampler: GridGeoSampler) -> None:
         for query in sampler:
-            assert sampler.roi.minx <= query.minx <= query.maxx <= sampler.roi.maxx
-            assert sampler.roi.miny <= query.miny <= query.miny <= sampler.roi.maxy
+            assert (
+                sampler.roi.minx
+                <= query.minx
+                <= query.maxx
+                < sampler.roi.maxx + sampler.stride[1]
+            )
+            assert (
+                sampler.roi.miny
+                <= query.miny
+                <= query.miny
+                < sampler.roi.maxy + sampler.stride[0]
+            )
             assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
 
             assert math.isclose(query.maxx - query.minx, sampler.size[1])
@@ -222,7 +241,7 @@ class TestGridGeoSampler:
         iterator = iter(sampler)
         assert len(sampler) == 2
         assert next(iterator) == BoundingBox(0, 5, 0, 5, 0, 10)
-        assert next(iterator) == BoundingBox(1, 6, 0, 5, 0, 10)
+        assert next(iterator) == BoundingBox(5, 10, 0, 5, 0, 10)
 
     @pytest.mark.slow
     @pytest.mark.parametrize("num_workers", [0, 1, 2])

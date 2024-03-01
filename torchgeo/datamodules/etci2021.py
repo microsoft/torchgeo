@@ -3,7 +3,7 @@
 
 """ETCI 2021 datamodule."""
 
-from typing import Any, Dict
+from typing import Any
 
 import torch
 from torch import Tensor
@@ -63,8 +63,8 @@ class ETCI2021DataModule(NonGeoDataModule):
             self.predict_dataset = ETCI2021(split="test", **self.kwargs)
 
     def on_after_batch_transfer(
-        self, batch: Dict[str, Tensor], dataloader_idx: int
-    ) -> Dict[str, Tensor]:
+        self, batch: dict[str, Tensor], dataloader_idx: int
+    ) -> dict[str, Tensor]:
         """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:

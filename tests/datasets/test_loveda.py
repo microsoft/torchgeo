@@ -10,10 +10,10 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import LoveDA
+from torchgeo.datasets import DatasetNotFoundError, LoveDA
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -83,9 +83,7 @@ class TestLoveDA:
             LoveDA(scene=["garden"])
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(
-            RuntimeError, match="Dataset not found at root directory or corrupted."
-        ):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             LoveDA(str(tmp_path))
 
     def test_plot(self, dataset: LoveDA) -> None:

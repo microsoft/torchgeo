@@ -10,9 +10,9 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
-from torchgeo.datasets import XView2
+from torchgeo.datasets import DatasetNotFoundError, XView2
 
 
 class TestXView2:
@@ -80,7 +80,7 @@ class TestXView2:
             XView2(split="foo")
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in `root` directory"):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             XView2(str(tmp_path))
 
     def test_plot(self, dataset: XView2) -> None:

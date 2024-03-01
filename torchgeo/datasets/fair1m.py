@@ -5,21 +5,22 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast
+from typing import Any, Callable, Optional, cast
 from xml.etree.ElementTree import Element, parse
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive
+from .utils import DatasetNotFoundError, check_integrity, download_url, extract_archive
 
 
-def parse_pascal_voc(path: str) -> Dict[str, Any]:
+def parse_pascal_voc(path: str) -> dict[str, Any]:
     """Read a PASCAL VOC annotation file.
 
     Args:
@@ -53,7 +54,7 @@ def parse_pascal_voc(path: str) -> Dict[str, Any]:
 class FAIR1M(NonGeoDataset):
     """FAIR1M dataset.
 
-    The `FAIR1M <http://gaofen-challenge.com/benchmark>`__
+    The `FAIR1M <https://www.gaofen-challenge.com/benchmark>`__
     dataset is a dataset for remote sensing fine-grained oriented object detection.
 
     Dataset features:
@@ -111,7 +112,7 @@ class FAIR1M(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/2103.05569
+    * https://doi.org/10.1016/j.isprsjprs.2021.12.004
 
     .. versionadded:: 0.2
     """
@@ -156,15 +157,81 @@ class FAIR1M(NonGeoDataset):
         "Bridge": {"id": 36, "category": "Road"},
     }
 
+    filename_glob = {
+        "train": os.path.join("train", "**", "images", "*.tif"),
+        "val": os.path.join("validation", "images", "*.tif"),
+        "test": os.path.join("test", "images", "*.tif"),
+    }
+    directories = {
+        "train": (
+            os.path.join("train", "part1", "images"),
+            os.path.join("train", "part1", "labelXml"),
+            os.path.join("train", "part2", "images"),
+            os.path.join("train", "part2", "labelXml"),
+        ),
+        "val": (
+            os.path.join("validation", "images"),
+            os.path.join("validation", "labelXml"),
+        ),
+        "test": (os.path.join("test", "images")),
+    }
+    paths = {
+        "train": (
+            os.path.join("train", "part1", "images.zip"),
+            os.path.join("train", "part1", "labelXml.zip"),
+            os.path.join("train", "part2", "images.zip"),
+            os.path.join("train", "part2", "labelXmls.zip"),
+        ),
+        "val": (
+            os.path.join("validation", "images.zip"),
+            os.path.join("validation", "labelXmls.zip"),
+        ),
+        "test": (
+            os.path.join("test", "images0.zip"),
+            os.path.join("test", "images1.zip"),
+            os.path.join("test", "images2.zip"),
+        ),
+    }
+    urls = {
+        "train": (
+            "https://drive.google.com/file/d/1LWT_ybL-s88Lzg9A9wHpj0h2rJHrqrVf",
+            "https://drive.google.com/file/d/1CnOuS8oX6T9JMqQnfFsbmf7U38G6Vc8u",
+            "https://drive.google.com/file/d/1cx4MRfpmh68SnGAYetNlDy68w0NgKucJ",
+            "https://drive.google.com/file/d/1RFVjadTHA_bsB7BJwSZoQbiyM7KIDEUI",
+        ),
+        "val": (
+            "https://drive.google.com/file/d/1lSSHOD02B6_sUmr2b-R1iqhgWRQRw-S9",
+            "https://drive.google.com/file/d/1sTTna1C5n3Senpfo-73PdiNilnja1AV4",
+        ),
+        "test": (
+            "https://drive.google.com/file/d/1HtOOVfK9qetDBjE7MM0dK_u5u7n4gdw3",
+            "https://drive.google.com/file/d/1iXKCPmmJtRYcyuWCQC35bk97NmyAsasq",
+            "https://drive.google.com/file/d/1oUc25FVf8Zcp4pzJ31A1j1sOLNHu63P0",
+        ),
+    }
+    md5s = {
+        "train": (
+            "a460fe6b1b5b276bf856ce9ac72d6568",
+            "80f833ff355f91445c92a0c0c1fa7414",
+            "ad237e61dba304fcef23cd14aa6c4280",
+            "5c5948e68cd0f991a0d73f10956a3b05",
+        ),
+        "val": ("dce782be65405aa381821b5f4d9eac94", "700b516a21edc9eae66ca315b72a09a1"),
+        "test": (
+            "fb8ccb274f3075d50ac9f7803fbafd3d",
+            "dc9bbbdee000e97f02276aa61b03e585",
+            "700b516a21edc9eae66ca315b72a09a1",
+        ),
+    }
     image_root: str = "images"
-    labels_root: str = "labelXmls"
-    filenames = ["images.zip", "labelXmls.zip"]
-    md5s = ["a460fe6b1b5b276bf856ce9ac72d6568", "ca8666dc43a553f8d65e5dc671a8ac3c"]
+    label_root: str = "labelXml"
 
     def __init__(
         self,
         root: str = "data",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        split: str = "train",
+        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        download: bool = False,
         checksum: bool = False,
     ) -> None:
         """Initialize a new FAIR1M dataset instance.
@@ -174,16 +241,26 @@ class FAIR1M(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            AssertionError: if ``split`` argument is invalid
+            DatasetNotFoundError: If dataset is not found.
+
+        .. versionchanged:: 0.5
+           Added *split* and *download* parameters.
         """
+        assert split in self.directories
         self.root = root
+        self.split = split
         self.transforms = transforms
+        self.download = download
         self.checksum = checksum
         self._verify()
         self.files = sorted(
-            glob.glob(os.path.join(self.root, self.labels_root, "*.xml"))
+            glob.glob(os.path.join(self.root, self.filename_glob[split]))
         )
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -193,10 +270,16 @@ class FAIR1M(NonGeoDataset):
             data and label at that index
         """
         path = self.files[index]
-        parsed = parse_pascal_voc(path)
-        image = self._load_image(parsed["filename"])
-        boxes, labels = self._load_target(parsed["points"], parsed["labels"])
-        sample = {"image": image, "boxes": boxes, "label": labels}
+
+        image = self._load_image(path)
+        sample = {"image": image}
+
+        if self.split != "test":
+            label_path = path.replace(self.image_root, self.label_root)
+            label_path = label_path.replace(".tif", ".xml")
+            voc = parse_pascal_voc(label_path)
+            boxes, labels = self._load_target(voc["points"], voc["labels"])
+            sample = {"image": image, "boxes": boxes, "label": labels}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -220,7 +303,6 @@ class FAIR1M(NonGeoDataset):
         Returns:
             the image
         """
-        path = os.path.join(self.root, self.image_root, path)
         with Image.open(path) as img:
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
             tensor = torch.from_numpy(array)
@@ -229,8 +311,8 @@ class FAIR1M(NonGeoDataset):
             return tensor
 
     def _load_target(
-        self, points: List[List[Tuple[float, float]]], labels: List[str]
-    ) -> Tuple[Tensor, Tensor]:
+        self, points: list[list[tuple[float, float]]], labels: list[str]
+    ) -> tuple[Tensor, Tensor]:
         """Load the target mask for a single image.
 
         Args:
@@ -246,22 +328,20 @@ class FAIR1M(NonGeoDataset):
         return boxes, labels_tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if checksum fails or the dataset is not found
-        """
-        # Check if the files already exist
+        """Verify the integrity of the dataset."""
+        # Check if the directories already exist
         exists = []
-        for directory in [self.image_root, self.labels_root]:
+        for directory in self.directories[self.split]:
             exists.append(os.path.exists(os.path.join(self.root, directory)))
         if all(exists):
             return
 
         # Check if .zip files already exists (if so extract)
         exists = []
-        for filename, md5 in zip(self.filenames, self.md5s):
-            filepath = os.path.join(self.root, filename)
+        paths = self.paths[self.split]
+        md5s = self.md5s[self.split]
+        for path, md5 in zip(paths, md5s):
+            filepath = os.path.join(self.root, path)
             if os.path.isfile(filepath):
                 if self.checksum and not check_integrity(filepath, md5):
                     raise RuntimeError("Dataset found, but corrupted.")
@@ -273,17 +353,37 @@ class FAIR1M(NonGeoDataset):
         if all(exists):
             return
 
-        raise RuntimeError(
-            "Dataset not found in `root` directory, "
-            "specify a different `root` directory."
-        )
+        if self.download:
+            self._download()
+            return
+
+        raise DatasetNotFoundError(self)
+
+    def _download(self) -> None:
+        """Download the dataset and extract it."""
+        paths = self.paths[self.split]
+        urls = self.urls[self.split]
+        md5s = self.md5s[self.split]
+        for directory in self.directories[self.split]:
+            os.makedirs(os.path.join(self.root, directory), exist_ok=True)
+
+        for path, url, md5 in zip(paths, urls, md5s):
+            filepath = os.path.join(self.root, path)
+            if not os.path.exists(filepath):
+                download_url(
+                    url=url,
+                    root=os.path.dirname(filepath),
+                    filename=os.path.basename(filepath),
+                    md5=md5 if self.checksum else None,
+                )
+                extract_archive(filepath)
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -306,12 +406,14 @@ class FAIR1M(NonGeoDataset):
 
         axs[0].imshow(image)
         axs[0].axis("off")
-        polygons = [
-            patches.Polygon(points, color="r", fill=False)
-            for points in sample["boxes"].numpy()
-        ]
-        for polygon in polygons:
-            axs[0].add_patch(polygon)
+
+        if "boxes" in sample:
+            polygons = [
+                patches.Polygon(points, color="r", fill=False)
+                for points in sample["boxes"].numpy()
+            ]
+            for polygon in polygons:
+                axs[0].add_patch(polygon)
 
         if show_titles:
             axs[0].set_title("Ground Truth")

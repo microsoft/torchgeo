@@ -10,7 +10,13 @@ import torch
 import torch.nn as nn
 from rasterio.crs import CRS
 
-from torchgeo.datasets import NAIP, BoundingBox, IntersectionDataset, UnionDataset
+from torchgeo.datasets import (
+    NAIP,
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 class TestNAIP:
@@ -41,7 +47,7 @@ class TestNAIP:
         plt.close()
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No NAIP data was found in "):
+        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
             NAIP(str(tmp_path))
 
     def test_invalid_query(self, dataset: NAIP) -> None:
