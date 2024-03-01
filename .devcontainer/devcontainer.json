@@ -17,8 +17,8 @@
   // "forwardPorts": [],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
-  "postStartCommand": "./.devcontainer/postStartCommand.sh",
+  "postCreateCommand": "pip install .[datasets,docs,style,tests]",
+  "postStartCommand": "pip install -e .",
 
   // Enable GPU support
   "hostRequirements": {
@@ -32,34 +32,18 @@
         "ms-python.python",
         "ms-python.isort",
         "ms-python.black-formatter",
-        "ms-python.vscode-pylance"
+        "ms-python.vscode-pylance",
+        "ms-python.pylint",
+        "ms-python.flake8",
+        "ms-python.mypy-type-checker",
+        "GitHub.codespaces",
+        "ms-toolsai.jupyter"
       ],
       "settings": {
         "telemetry.telemetryLevel": "off",
         "python.languageServer": "Pylance",
         "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "python.analysis.typeCheckingMode": "basic",
-        "python.formatting.provider": "black",
-        "python.formatting.blackArgs": [
-          "--skip-magic-trailing-comma",
-          "--no-color"
-        ],
-        "python.editor.defaultFormatter": "ms-python.black-formatter",
         "python.formatting.blackPath": "/usr/local/py-utils/bin/black",
-        "python.linting.enabled": true,
-        "python.linting.pylintEnabled": true,
-        "python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
-        "python.linting.flake8Enabled": true,
-        "python.linting.flake8Path": "/usr/local/py-utils/bin/flake8",
-        "python.linting.mypyEnabled": true,
-        "python.linting.mypyPath": "/usr/local/py-utils/bin/mypy",
-        "python.linting.mypyArgs": [
-          "--follow-imports=silent",
-          "--ignore-missing-imports",
-          "--show-error-codes"
-        ],
-        "python.linting.pydocstyleEnabled": true,
-        "python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
         "python.testing.pytestEnabled": true,
         "python.testing.pytestPath": "/usr/local/py-utils/bin/pytest",
         "python.editor.formatOnSave": true,
