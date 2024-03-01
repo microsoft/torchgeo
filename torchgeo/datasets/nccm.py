@@ -51,7 +51,7 @@ class NCCM(RasterDataset):
     .. versionadded:: 0.6
     """
 
-    filename_regex = r"CDL(?P<year>\d{4})_clip"
+    filename_regex = r"CDL(?P<date>\d{4})_clip"
     filename_glob = "CDL*.*"
 
     date_format = "%Y"
