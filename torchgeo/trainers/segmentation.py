@@ -40,7 +40,7 @@ class SemanticSegmentationTask(BaseTask):
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
     ) -> None:
-        """Inititalize a new SemanticSegmentationTask instance.
+        """Initialize a new SemanticSegmentationTask instance.
 
         Args:
             model: Name of the
@@ -122,7 +122,19 @@ class SemanticSegmentationTask(BaseTask):
             )
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        * Multiclass Pixel Accuracy: Ratio of correctly classified pixels.
+          Uses 'micro' averaging. Higher values are better.
+        * Multiclass Jaccard Index (IoU): Per-pixel overlap between predicted and
+          actual segments. Uses 'macro' averaging. Higher values are better.
+
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not reflect
+             minority class accuracy.
+           * 'Macro' averaging, not used here, gives equal weight to each class, useful
+             for balanced performance assessment across imbalanced classes.
+        """
         num_classes: int = self.hparams["num_classes"]
         ignore_index: Optional[int] = self.hparams["ignore_index"]
         metrics = MetricCollection(
