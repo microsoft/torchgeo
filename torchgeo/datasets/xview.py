@@ -139,7 +139,7 @@ class XView2(NonGeoDataset):
         images = glob.glob(os.path.join(image_root, "*.png"))
         basenames = [os.path.basename(f) for f in images]
         basenames = ["_".join(f.split("_")[:-2]) for f in basenames]
-        for name in set(basenames):
+        for name in sorted(set(basenames)):
             image1 = os.path.join(image_root, f"{name}_pre_disaster.png")
             image2 = os.path.join(image_root, f"{name}_post_disaster.png")
             mask1 = os.path.join(mask_root, f"{name}_pre_disaster_target.png")
