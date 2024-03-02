@@ -206,17 +206,16 @@ class ObjectDetectionTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * Mean Average Precision: Computes the Mean-Average-Precision (mAP)
-          and Mean-Average-Recall (mAR) for object detection. Prediction is
-          based on the intersection of union (IoU) between the predicted
-          bounding boxes and the ground truth bounding boxes. Uses
-          'Macro' averaging. Higher values are better.
+        * Mean Average Precision (mAP): Computes the Mean-Average-Precision (mAP) and
+          Mean-Average-Recall (mAR) for object detection. Prediction is based on the
+          intersection over union (IoU) between the predicted bounding boxes and the
+          ground truth bounding boxes. Uses 'macro' averaging. Higher values are better.
 
         .. note::
-            * 'Micro' averaging suits overall performance evaluation but may not
-              reflect minority class accuracy.
-            * 'Macro' averaging gives equal weight to each class, and is useful for
-              balanced performance assessment across imbalanced classes.
+           * 'Micro' averaging suits overall performance evaluation but may not
+             reflect minority class accuracy.
+           * 'Macro' averaging gives equal weight to each class, and is useful for
+             balanced performance assessment across imbalanced classes.
         """
         metrics = MetricCollection([MeanAveragePrecision()])
         self.val_metrics = metrics.clone(prefix="val_")

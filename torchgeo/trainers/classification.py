@@ -98,20 +98,20 @@ class ClassificationTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * Multiclass Overall Accuracy: Ratio of correctly classified pixels. Uses
-          'micro' averaging. Higher values are better.
-        * Multiclass Average Accuracy: Ratio of correctly classified classes. Uses
-          'macro' averaging. Higher values are better.
+        * Multiclass Overall Accuracy (OA): Ratio of correctly classified pixels.
+          Uses 'micro' averaging. Higher values are better.
+        * Multiclass Average Accuracy (AA): Ratio of correctly classified classes.
+          Uses 'macro' averaging. Higher values are better.
         * Multiclass Jaccard Index (IoU): Per-class overlap between predicted and
           actual classes. Uses 'macro' averaging. Higher valuers are better.
-        * Multiclass F1 Score: The harmonic mean of precision and recall. Uses
-          'micro' averaging. Higher values are better.
+        * Multiclass F1 Score: The harmonic mean of precision and recall.
+          Uses 'micro' averaging. Higher values are better.
 
         .. note::
-            * 'Micro' averaging suits overall performance evaluation but may not reflect
-              minority class accuracy.
-            * 'Macro' averaging gives equal weight to each class, and is useful for
-              balanced performance assessment across imbalanced classes.
+           * 'Micro' averaging suits overall performance evaluation but may not reflect
+             minority class accuracy.
+           * 'Macro' averaging gives equal weight to each class, and is useful for
+             balanced performance assessment across imbalanced classes.
         """
         metrics = MetricCollection(
             {
@@ -270,18 +270,18 @@ class MultiLabelClassificationTask(ClassificationTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * Multiclass Overall Accuracy: Ratio of correctly classified pixels. Uses
-          'micro' averaging. Higher values are better.
-        * Multiclass Average Accuracy: Ratio of correctly classified classes. Uses
-          'macro' averaging. Higher values are better.
-        * Multiclass F1 Score: The harmonic mean of precision and recall. Uses
-          'micro' averaging. Higher values are better.
+        * Multiclass Overall Accuracy (OA): Ratio of correctly classified pixels.
+          Uses 'micro' averaging. Higher values are better.
+        * Multiclass Average Accuracy (AA): Ratio of correctly classified classes.
+          Uses 'macro' averaging. Higher values are better.
+        * Multiclass F1 Score: The harmonic mean of precision and recall.
+          Uses 'micro' averaging. Higher values are better.
 
         .. note::
-            * 'Micro' averaging suits overall performance evaluation but may not
-              reflect minority class accuracy.
-            * 'Macro' averaging gives equal weight to each class, and is useful for
-              balanced performance assessment across imbalanced classes.
+           * 'Micro' averaging suits overall performance evaluation but may not
+             reflect minority class accuracy.
+           * 'Macro' averaging gives equal weight to each class, and is useful for
+             balanced performance assessment across imbalanced classes.
         """
         metrics = MetricCollection(
             {
