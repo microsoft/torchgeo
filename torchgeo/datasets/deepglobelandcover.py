@@ -61,8 +61,18 @@ class DeepGlobeLandCover(NonGeoDataset):
 
     * https://arxiv.org/pdf/1805.06561.pdf
 
+    .. note::
+
+       This dataset can be downloaded using:
+
+       .. code-block:: console
+
+          $ pip install kaggle  # place api key at ~/.kaggle/kaggle.json
+          $ kaggle datasets download -d geoap96/deepglobe2018-landcover-segmentation-traindataset
+          $ unzip deepglobe2018-landcover-segmentation-traindataset.zip
+
     .. versionadded:: 0.3
-    """
+    """  # noqa: E501
 
     filename = "data.zip"
     data_root = "data"
