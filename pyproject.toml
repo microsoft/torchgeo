@@ -67,7 +67,9 @@ dependencies = [
     # segmentation-models-pytorch 0.2+ required for smp.losses module
     "segmentation-models-pytorch>=0.2",
     # shapely 1.7.1+ required for Python 3.9 wheels
+    # shapely 2.0.2+ required for Python 3.12 support
     "shapely>=1.7.1",
+    "shapely>=2.0.2; python_version>='3.12'",
     # timm 0.4.12 required by segmentation-models-pytorch
     "timm>=0.4.12",
     # torch 1.12+ required by torchvision
