@@ -47,7 +47,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    url = "https://huggingface.co/datasets/torchgeo/ssl4eo-l-benchmark/resolve/main/{}.tar.gz"  # noqa: E501
+    url = "https://hf.co/datasets/torchgeo/ssl4eo-l-benchmark/resolve/da96ae2b04cb509710b72fce9131c2a3d5c211c2/{}.tar.gz"  # noqa: E501
 
     valid_sensors = ["tm_toa", "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"]
     valid_products = ["cdl", "nlcd"]
