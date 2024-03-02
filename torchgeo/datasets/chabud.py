@@ -68,7 +68,7 @@ class ChaBuD(NonGeoDataset):
     ]
     rgb_bands = ["B04", "B03", "B02"]
     folds = {"train": [1, 2, 3, 4], "val": [0]}
-    url = "https://huggingface.co/datasets/chabud-team/chabud-ecml-pkdd2023/resolve/main/train_eval.hdf5"  # noqa: E501
+    url = "https://hf.co/datasets/chabud-team/chabud-ecml-pkdd2023/resolve/de222d434e26379aa3d4f3dd1b2caf502427a8b2/train_eval.hdf5"  # noqa: E501
     filename = "train_eval.hdf5"
     md5 = "15d78fb825f9a81dad600db828d22c08"
 
