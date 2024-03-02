@@ -70,12 +70,12 @@ dependencies = [
     "shapely>=1.7.1",
     # timm 0.4.12 required by segmentation-models-pytorch
     "timm>=0.4.12",
-    # torch 1.12+ required by torchvision
-    "torch>=1.12",
+    # torch 1.13+ required by torchvision
+    "torch>=1.13",
     # torchmetrics 0.10+ required for binary/multiclass/multilabel classification metrics
     "torchmetrics>=0.10",
     # torchvision 0.13+ required for torchvision.models._api.WeightsEnum
-    "torchvision>=0.13",
+    "torchvision>=0.14",
 ]
 dynamic = ["version"]
 
