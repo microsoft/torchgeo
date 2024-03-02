@@ -406,14 +406,12 @@ class IDTReeS(NonGeoDataset):
     @overload
     def _filter_boxes(
         self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: Tensor
-    ) -> tuple[Tensor, Tensor]:
-        ...
+    ) -> tuple[Tensor, Tensor]: ...
 
     @overload
     def _filter_boxes(
         self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: None
-    ) -> tuple[Tensor, None]:
-        ...
+    ) -> tuple[Tensor, None]: ...
 
     def _filter_boxes(
         self,
