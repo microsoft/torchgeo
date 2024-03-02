@@ -52,6 +52,7 @@ import csv
 import json
 import os
 import time
+import warnings
 from collections import defaultdict
 from datetime import date, timedelta
 from multiprocessing.dummy import Lock, Pool
@@ -473,7 +474,13 @@ if __name__ == "__main__":
     counter = Counter()
 
     def worker(idx: int) -> None:
+        # Skip if idx has already been downloaded
         if idx in ext_coords.keys():
+            return
+
+        # Skip if idx is not in pre-sampled coordinates
+        if idx not in match_coords.keys():
+            warnings.warn(f"{idx} not found in {args.match_file}, skipping.")
             return
 
         worker_start = time.time()
