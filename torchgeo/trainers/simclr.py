@@ -142,14 +142,6 @@ class SimCLRTask(BaseTask):
             size, grayscale_weights
         )
 
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion."""
-        self.criterion = NTXentLoss(
-            self.hparams["temperature"],
-            self.hparams["memory_bank_size"],
-            self.hparams["gather_distributed"],
-        )
-
     def configure_models(self) -> None:
         """Initialize the model."""
         weights = self.weights
@@ -191,6 +183,14 @@ class SimCLRTask(BaseTask):
         # TODO
         # v1+: add global batch norm
         # v2: add selective kernels, channel-wise attention mechanism
+
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion."""
+        self.criterion = NTXentLoss(
+            self.hparams["temperature"],
+            self.hparams["memory_bank_size"],
+            self.hparams["gather_distributed"],
+        )
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
         """Forward pass of the model.
