@@ -105,12 +105,6 @@ class RegressionTask(BaseTask):
           predicted and actual values. Lower values are better.
         * Mean Absolute Error (MAE): The average of the absolute differences between the
           predicted and actual values. Lower values are better.
-
-        .. note::
-           * 'Micro' averaging suits overall performance evaluation but may not reflect
-             minority class accuracy.
-           * 'Macro' averaging gives equal weight to each class, and is useful for
-             balanced performance assessment across imbalanced classes.
         """
         metrics = MetricCollection(
             {

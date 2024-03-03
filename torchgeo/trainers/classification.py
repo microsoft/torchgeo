@@ -98,10 +98,11 @@ class ClassificationTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * Multiclass Overall Accuracy (OA): Ratio of correctly classified pixels.
-          Uses 'micro' averaging. Higher values are better.
-        * Multiclass Average Accuracy (AA): Ratio of correctly classified classes.
-          Uses 'macro' averaging. Higher values are better.
+        * Multiclass Overall Accuracy (OA): The number of true positives divided by
+          the dataset size. Uses 'micro' averaging. Higher values are better.
+        * Multiclass Average Accuracy (AA): The number of true positives divided by
+          the class size, averaged across all classes. Uses 'macro' averaging.
+          Higher values are better.
         * Multiclass Jaccard Index (IoU): Per-class overlap between predicted and
           actual classes. Uses 'macro' averaging. Higher valuers are better.
         * Multiclass F1 Score: The harmonic mean of precision and recall.
@@ -270,10 +271,11 @@ class MultiLabelClassificationTask(ClassificationTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * Multiclass Overall Accuracy (OA): Ratio of correctly classified pixels.
-          Uses 'micro' averaging. Higher values are better.
-        * Multiclass Average Accuracy (AA): Ratio of correctly classified classes.
-          Uses 'macro' averaging. Higher values are better.
+        * Multilabel Overall Accuracy (OA): The number of true positives divided by
+          the dataset size. Uses 'micro' averaging. Higher values are better.
+        * Multilabel Average Accuracy (AA): The number of true positives divided by
+          the class size, averaged across all classes. Uses 'macro' averaging.
+          Higher values are better.
         * Multiclass F1 Score: The harmonic mean of precision and recall.
           Uses 'micro' averaging. Higher values are better.
 

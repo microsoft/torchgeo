@@ -206,10 +206,12 @@ class ObjectDetectionTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * Mean Average Precision (mAP): Computes the Mean-Average-Precision (mAP) and
-          Mean-Average-Recall (mAR) for object detection. Prediction is based on the
-          intersection over union (IoU) between the predicted bounding boxes and the
-          ground truth bounding boxes. Uses 'macro' averaging. Higher values are better.
+        * Mean Average Precision (mAP): Precision is the number of true positives
+          (as defined by intersection over union) divided by the number of true
+          positives + false positives. Uses 'macro' averaging. Higher values are better.
+        * Mean Average Recall (mAR): Recall is the number of true positives
+          (as defined by intersection over union) divived by the number of true
+          positives + false negatives. Uses 'macro' averaging. Higher values are better.
 
         .. note::
            * 'Micro' averaging suits overall performance evaluation but may not
