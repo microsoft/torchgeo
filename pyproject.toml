@@ -257,8 +257,8 @@ filterwarnings = [
     # "ignore:MPS available but not used.:UserWarning",
     # # Lightning warns us if TensorBoard is not installed
     # "ignore:Starting from v1.9.0, `tensorboardX` has been removed as a dependency of the `lightning.pytorch` package:UserWarning",
-    # # https://github.com/Lightning-AI/lightning/issues/18545
-    # "ignore:LightningCLI's args parameter is intended to run from within Python like if it were from the command line.:UserWarning",
+    # https://github.com/Lightning-AI/lightning/issues/18545
+    "ignore:LightningCLI's args parameter is intended to run from within Python like if it were from the command line.:UserWarning",
     # # https://github.com/kornia/kornia/pull/1611
     # "ignore:`ColorJitter` is now following Torchvision implementation.:DeprecationWarning:kornia.augmentation._2d.intensity.color_jitter",
     # # https://github.com/kornia/kornia/pull/1663
