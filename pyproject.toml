@@ -247,6 +247,10 @@ filterwarnings = [
     "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:jsonargparse",
     # https://github.com/pytorch/pytorch/issues/110549
     "ignore:allow_ops_in_compiled_graph failed to import torch:ImportWarning:einops",
+    # https://github.com/rr-/docstring_parser/pull/82
+    "ignore:ast.* is deprecated and will be removed in Python 3.14:DeprecationWarning:docstring_parser.attrdoc",
+    # https://github.com/python/cpython/pull/102953
+    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:tarfile",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
