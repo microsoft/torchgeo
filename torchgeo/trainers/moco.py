@@ -278,7 +278,7 @@ class MoCoTask(BaseTask):
         """Initialize the loss criterion."""
         self.criterion = NTXentLoss(
             self.hparams["temperature"],
-            self.hparams["memory_bank_size"],
+            (self.hparams["memory_bank_size"], self.hparams["output_dim"]),
             self.hparams["gather_distributed"],
         )
 
