@@ -38,7 +38,9 @@ class CDLSentinel2DataModule(GeoDataModule):
             length: Length of each training epoch.
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.CDL`.
+                :class:`~torchgeo.datasets.CDL` (prefix keys with ``cdl_``) and
+                :class:`~torchgeo.datasets.Sentinel2`
+                (prefix keys with ``sentinel2_``).
         """
         # Define prefix for Cropland Data Layer (CDL) and Sentinel-2 arguments
         cdl_signature = "cdl_"
