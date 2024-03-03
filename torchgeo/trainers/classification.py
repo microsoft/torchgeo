@@ -97,14 +97,15 @@ class ClassificationTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * Multiclass Overall Accuracy (OA): Ratio of correctly classified pixels.
-          Uses 'micro' averaging. Higher values are better.
-        * Multiclass Average Accuracy (AA): Ratio of correctly classified classes.
-          Uses 'macro' averaging. Higher values are better.
-        * Multiclass Jaccard Index (IoU): Per-class overlap between predicted and
-          actual classes. Uses 'macro' averaging. Higher valuers are better.
-        * Multiclass F1 Score: The harmonic mean of precision and recall.
-          Uses 'micro' averaging. Higher values are better.
+        * :class:`~torchmetrics.classification.MulticlassAccuracy`: The number of
+          true positives divided by the dataset size. Both overall accuracy (OA)
+          using 'micro' averaging and average accuracy (AA) using 'macro' averaging
+          are reported. Higher values are better.
+        * :class:`~torchmetrics.classification.MulticlassJaccardIndex`: Intersection
+          over union (IoU). Uses 'macro' averaging. Higher valuers are better.
+        * :class:`~torchmetrics.classification.MulticlassFBetaScore`: F1 score.
+          The harmonic mean of precision and recall. Uses 'micro' averaging.
+          Higher values are better.
 
         .. note::
            * 'Micro' averaging suits overall performance evaluation but may not reflect
@@ -266,12 +267,13 @@ class MultiLabelClassificationTask(ClassificationTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * Multiclass Overall Accuracy (OA): Ratio of correctly classified pixels.
-          Uses 'micro' averaging. Higher values are better.
-        * Multiclass Average Accuracy (AA): Ratio of correctly classified classes.
-          Uses 'macro' averaging. Higher values are better.
-        * Multiclass F1 Score: The harmonic mean of precision and recall.
-          Uses 'micro' averaging. Higher values are better.
+        * :class:`~torchmetrics.classification.MultilabelAccuracy`: The number of
+          true positives divided by the dataset size. Both overall accuracy (OA)
+          using 'micro' averaging and average accuracy (AA) using 'macro' averaging
+          are reported. Higher values are better.
+        * :class:`~torchmetrics.classification.MultilabelFBetaScore`: F1 score.
+          The harmonic mean of precision and recall. Uses 'micro' averaging.
+          Higher values are better.
 
         .. note::
            * 'Micro' averaging suits overall performance evaluation but may not
