@@ -206,12 +206,11 @@ class ObjectDetectionTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * Mean Average Precision (mAP): Precision is the number of true positives
-          (as defined by intersection over union) divided by the number of true
-          positives + false positives. Uses 'macro' averaging. Higher values are better.
-        * Mean Average Recall (mAR): Recall is the number of true positives
-          (as defined by intersection over union) divived by the number of true
-          positives + false negatives. Uses 'macro' averaging. Higher values are better.
+        * :class:`~torchmetrics.detection.mean_ap.MeanAveragePrecision`: Mean average
+          precision (mAP) and mean average recall (mAR). Precision is the number of
+          true positives divided by the number of true positives + false positives.
+          Recall is the number of true positives divived by the number of true positives
+          + false negatives. Uses 'macro' averaging. Higher values are better.
 
         .. note::
            * 'Micro' averaging suits overall performance evaluation but may not
@@ -219,7 +218,7 @@ class ObjectDetectionTask(BaseTask):
            * 'Macro' averaging gives equal weight to each class, and is useful for
              balanced performance assessment across imbalanced classes.
         """
-        metrics = MetricCollection([MeanAveragePrecision()])
+        metrics = MetricCollection([MeanAveragePrecision(average="macro")])
         self.val_metrics = metrics.clone(prefix="val_")
         self.test_metrics = metrics.clone(prefix="test_")
 
