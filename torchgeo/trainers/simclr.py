@@ -172,7 +172,10 @@ class SimCLRTask(BaseTask):
             self.hparams["output_dim"] = input_dim
 
         self.projection_head = SimCLRProjectionHead(
-            input_dim, self.hparams["hidden_dim"], self.hparams["output_dim"], self.hparams["layers"]
+            input_dim,
+            self.hparams["hidden_dim"],
+            self.hparams["output_dim"],
+            self.hparams["layers"],
         )
 
         # Initialize moving average of output
