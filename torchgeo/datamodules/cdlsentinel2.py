@@ -40,14 +40,20 @@ class CDLSentinel2DataModule(GeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.CDL`.
         """
+        # Define prefix for Cropland Data Layer (CDL) and Sentinel-2 arguments
         cdl_signature = "cdl_"
         sentinel2_signature = "sentinel2_"
         self.cdl_kwargs = {}
         self.sentinel2_kwargs = {}
+
         for key, val in kwargs.items():
+            # Check if the current key starts with the CDL prefix
             if key.startswith(cdl_signature):
+                # If so, extract the key-value pair to the CDL dictionary
                 self.cdl_kwargs[key[len(cdl_signature) :]] = val
+            # Check if the current key starts with the Sentinel-2 prefix
             elif key.startswith(sentinel2_signature):
+                # If so, extract the key-value pair to the Sentinel-2 dictionary
                 self.sentinel2_kwargs[key[len(sentinel2_signature) :]] = val
 
         super().__init__(
@@ -90,7 +96,7 @@ class CDLSentinel2DataModule(GeoDataModule):
 
         (self.train_dataset, self.val_dataset, self.test_dataset) = (
             random_grid_cell_assignment(
-                self.dataset, [0.5, 0.25, 0.25], grid_size=2, generator=generator
+                self.dataset, [0.8, 0.1, 0.1], grid_size=6, generator=generator
             )
         )
         if stage in ["fit"]:
