@@ -242,7 +242,7 @@ class ObjectDetectionTask(BaseTask):
         ]
         loss_dict = self(x, y)
         train_loss: Tensor = sum(loss_dict.values())
-        self.log_dict(loss_dict)
+        self.log_dict(loss_dict, batch_size=batch_size)
         return train_loss
 
     def validation_step(
@@ -267,7 +267,7 @@ class ObjectDetectionTask(BaseTask):
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
         metrics.pop("val_classes", None)
 
-        self.log_dict(metrics)
+        self.log_dict(metrics, batch_size=batch_size)
 
         if (
             batch_idx < 10
@@ -321,7 +321,7 @@ class ObjectDetectionTask(BaseTask):
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
         metrics.pop("test_classes", None)
 
-        self.log_dict(metrics)
+        self.log_dict(metrics, batch_size=batch_size)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
