@@ -124,10 +124,11 @@ class SemanticSegmentationTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * Multiclass Pixel Accuracy: Ratio of correctly classified pixels.
-          Uses 'micro' averaging. Higher values are better.
-        * Multiclass Jaccard Index (IoU): Per-pixel overlap between predicted and
-          actual segments. Uses 'macro' averaging. Higher values are better.
+        * :class:`~torchmetrics.classification.MulticlassAccuracy`: Overall accuracy
+          (OA) using 'micro' averaging. The number of true positives divided by the
+          dataset size. Higher values are better.
+        * :class:`~torchmetrics.classification.MulticlassJaccardIndex`: Intersection
+          over union (IoU). Uses 'micro' averaging. Higher valuers are better.
 
         .. note::
            * 'Micro' averaging suits overall performance evaluation but may not reflect

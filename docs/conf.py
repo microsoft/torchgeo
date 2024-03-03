@@ -121,6 +121,7 @@ intersphinx_mapping = {
     "sklearn": ("https://scikit-learn.org/stable/", None),
     "timm": ("https://huggingface.co/docs/timm/main/en/", None),
     "torch": ("https://pytorch.org/docs/stable", None),
+    "torchmetrics": ("https://lightning.ai/docs/torchmetrics/stable/", None),
     "torchvision": ("https://pytorch.org/vision/stable", None),
 }
 
