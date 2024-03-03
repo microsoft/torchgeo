@@ -4,7 +4,6 @@
 """Trainers for semantic segmentation."""
 
 import os
-import warnings
 from typing import Any, Optional, Union
 
 import matplotlib.pyplot as plt
@@ -41,7 +40,7 @@ class SemanticSegmentationTask(BaseTask):
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
     ) -> None:
-        """Inititalize a new SemanticSegmentationTask instance.
+        """Initialize a new SemanticSegmentationTask instance.
 
         Args:
             model: Name of the
@@ -70,9 +69,6 @@ class SemanticSegmentationTask(BaseTask):
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
 
-        Warns:
-            UserWarning: When loss='jaccard' and ignore_index is specified.
-
         .. versionchanged:: 0.3
            *ignore_zeros* was renamed to *ignore_index*.
 
@@ -87,13 +83,10 @@ class SemanticSegmentationTask(BaseTask):
            The *weights* parameter now supports WeightEnums and checkpoint paths.
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
-        """
-        if ignore_index is not None and loss == "jaccard":
-            warnings.warn(
-                "ignore_index has no effect on training when loss='jaccard'",
-                UserWarning,
-            )
 
+        .. versionchanged:: 0.6
+            The *ignore_index* parameter now works for jaccard loss.
+        """
         self.weights = weights
         super().__init__(ignore="weights")
 
@@ -111,9 +104,13 @@ class SemanticSegmentationTask(BaseTask):
                 ignore_index=ignore_value, weight=self.hparams["class_weights"]
             )
         elif loss == "jaccard":
-            self.criterion = smp.losses.JaccardLoss(
-                mode="multiclass", classes=self.hparams["num_classes"]
-            )
+            # JaccardLoss requires a list of classes to use instead of a class
+            # index to ignore.
+            classes = [
+                i for i in range(self.hparams["num_classes"]) if i != ignore_index
+            ]
+
+            self.criterion = smp.losses.JaccardLoss(mode="multiclass", classes=classes)
         elif loss == "focal":
             self.criterion = smp.losses.FocalLoss(
                 "multiclass", ignore_index=ignore_index, normalized=True
@@ -125,7 +122,19 @@ class SemanticSegmentationTask(BaseTask):
             )
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        * Multiclass Pixel Accuracy: Ratio of correctly classified pixels.
+          Uses 'micro' averaging. Higher values are better.
+        * Multiclass Jaccard Index (IoU): Per-pixel overlap between predicted and
+          actual segments. Uses 'macro' averaging. Higher values are better.
+
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not reflect
+             minority class accuracy.
+           * 'Macro' averaging, not used here, gives equal weight to each class, useful
+             for balanced performance assessment across imbalanced classes.
+        """
         num_classes: int = self.hparams["num_classes"]
         ignore_index: Optional[int] = self.hparams["ignore_index"]
         metrics = MetricCollection(

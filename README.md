@@ -35,7 +35,16 @@ For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation 
 
 ## Documentation
 
-You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://dl.acm.org/doi/10.1145/3557915.3560953) and [blog](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/).
+You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://arxiv.org/abs/2111.08872), [podcast episode](https://www.youtube.com/watch?v=ET8Hb_HqNJQ), [tutorial](https://www.youtube.com/watch?v=R_FhY8aq708), and [blog post](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/).
+
+<p float="left">
+    <a href="https://www.youtube.com/watch?v=ET8Hb_HqNJQ">
+        <img src="https://img.youtube.com/vi/ET8Hb_HqNJQ/0.jpg" style="width:49%;">
+    </a>
+    <a href="https://www.youtube.com/watch?v=R_FhY8aq708">
+        <img src="https://img.youtube.com/vi/R_FhY8aq708/0.jpg" style="width:49%;">
+    </a>
+</p>
 
 ## Example Usage
 
@@ -110,12 +119,29 @@ TorchGeo includes a number of [*benchmark datasets*](https://torchgeo.readthedoc
 If you've used [torchvision](https://pytorch.org/vision) before, these datasets should seem very familiar. In this example, we'll create a dataset for the Northwestern Polytechnical University (NWPU) very-high-resolution ten-class ([VHR-10](https://github.com/chaozhong2010/VHR-10_dataset_coco)) geospatial object detection dataset. This dataset can be automatically downloaded, checksummed, and extracted, just like with torchvision.
 
 ```python
-dataset = VHR10(root="...", download=True, checksum=True)
-dataloader = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=4)
+from torch.utils.data import DataLoader
 
+from torchgeo.datamodules.utils import collate_fn_detection
+from torchgeo.datasets import VHR10
+
+# Initialize the dataset
+dataset = VHR10(root="...", download=True, checksum=True)
+
+# Initialize the dataloader with the custom collate function
+dataloader = DataLoader(
+    dataset,
+    batch_size=128,
+    shuffle=True,
+    num_workers=4,
+    collate_fn=collate_fn_detection,
+)
+
+# Training loop
 for batch in dataloader:
-    image = batch["image"]
-    label = batch["label"]
+    images = batch["image"]  # list of images
+    boxes = batch["boxes"]  # list of boxes
+    labels = batch["labels"]  # list of labels
+    masks = batch["masks"]  # list of masks
 
     # train a model, or make predictions using a pre-trained model
 ```

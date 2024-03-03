@@ -60,7 +60,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     NAIP_RGB_SI_SATLAS = Weights(
-        url="https://huggingface.co/allenai/satlas-pretrain/resolve/main/aerial_swinb_si.pth",  # noqa: E501
+        url="https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/aerial_swinb_si.pth",  # noqa: E501
         transforms=_satlas_transforms,
         meta={
             "dataset": "Satlas",
@@ -72,7 +72,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_SI_SATLAS = Weights(
-        url="https://huggingface.co/allenai/satlas-pretrain/resolve/main/sentinel2_swinb_si_rgb.pth",  # noqa: E501
+        url="https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/sentinel2_swinb_si_rgb.pth",  # noqa: E501
         transforms=_satlas_transforms,
         meta={
             "dataset": "Satlas",
@@ -84,7 +84,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_MS_SI_SATLAS = Weights(
-        url="https://huggingface.co/allenai/satlas-pretrain/resolve/main/sentinel2_swinb_si_ms.pth",  # noqa: E501
+        url="https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/sentinel2_swinb_si_ms.pth",  # noqa: E501
         transforms=_sentinel2_ms_satlas_transforms,
         meta={
             "dataset": "Satlas",
@@ -97,7 +97,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL1_SI_SATLAS = Weights(
-        url="https://huggingface.co/allenai/satlas-pretrain/resolve/main/sentinel1_swinb_si.pth",  # noqa: E501
+        url="https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/sentinel1_swinb_si.pth",  # noqa: E501
         transforms=_satlas_transforms,
         meta={
             "dataset": "Satlas",
@@ -110,7 +110,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_SI_SATLAS = Weights(
-        url="https://huggingface.co/allenai/satlas-pretrain/resolve/main/landsat_swinb_si.pth",  # noqa: E501
+        url="https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/landsat_swinb_si.pth",  # noqa: E501
         transforms=_landsat_satlas_transforms,
         meta={
             "dataset": "Satlas",

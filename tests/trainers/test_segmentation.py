@@ -189,11 +189,6 @@ class TestSemanticSegmentationTask:
         with pytest.raises(ValueError, match=match):
             SemanticSegmentationTask(loss="invalid_loss")
 
-    def test_ignoreindex_with_jaccard(self) -> None:
-        match = "ignore_index has no effect on training when loss='jaccard'"
-        with pytest.warns(UserWarning, match=match):
-            SemanticSegmentationTask(loss="jaccard", ignore_index=0)
-
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, "plot", plot)
         datamodule = SEN12MSDataModule(
