@@ -200,102 +200,102 @@ match_dir = "(datamodules|datasets|losses|models|samplers|torchgeo|trainers|tran
 addopts = "-m 'not slow'"
 # https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
-    # docstring_parser
-    # https://github.com/rr-/docstring_parser/pull/82
-    "ignore:ast.* is deprecated and will be removed in Python 3.14:DeprecationWarning:docstring_parser.attrdoc",
+    # # docstring_parser
+    # # https://github.com/rr-/docstring_parser/pull/82
+    # "ignore:ast.* is deprecated and will be removed in Python 3.14:DeprecationWarning:docstring_parser.attrdoc",
 
-    # kornia
-    # https://github.com/kornia/kornia/issues/777
-    "ignore:Default upsampling behavior when mode=bilinear is changed to align_corners=False since 0.4.0:UserWarning:torch.nn.functional",
-    # https://github.com/kornia/kornia/pull/1611
-    "ignore:`ColorJitter` is now following Torchvision implementation.:DeprecationWarning:kornia.augmentation._2d.intensity.color_jitter",
-    # https://github.com/kornia/kornia/pull/1663
-    "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning:kornia.augmentation._2d.intensity.gaussian_blur",
+    # # kornia
+    # # https://github.com/kornia/kornia/issues/777
+    # "ignore:Default upsampling behavior when mode=bilinear is changed to align_corners=False since 0.4.0:UserWarning:torch.nn.functional",
+    # # https://github.com/kornia/kornia/pull/1611
+    # "ignore:`ColorJitter` is now following Torchvision implementation.:DeprecationWarning:kornia.augmentation._2d.intensity.color_jitter",
+    # # https://github.com/kornia/kornia/pull/1663
+    # "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning:kornia.augmentation._2d.intensity.gaussian_blur",
 
-    # lightning
-    # https://github.com/Lightning-AI/lightning/issues/13256
-    # https://github.com/Lightning-AI/lightning/pull/13261
-    "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning:torch.distributed._sharded_tensor",
-    # https://github.com/Lightning-AI/lightning/issues/13989
-    "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning:lightning.pytorch.trainer.connectors.callback_connector",
-    # https://github.com/Lightning-AI/lightning/issues/14594
-    "ignore:To copy construct from a tensor, it is recommended to use:UserWarning:lightning.pytorch.core.module",
-    # https://github.com/Lightning-AI/lightning/issues/16756
-    "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning",
-    "ignore:pkg_resources is deprecated as an API.:DeprecationWarning:lightning_utilities.core.imports",
-    "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:jsonargparse",
-    # Lightning warns us about using num_workers=0, but it's faster on macOS
-    "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:UserWarning:lightning",
-    "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:lightning.fabric.utilities.warnings.PossibleUserWarning:lightning",
-    # Lightning warns us about using the CPU when GPU/MPS is available
-    "ignore:GPU available but not used.:UserWarning",
-    "ignore:MPS available but not used.:UserWarning",
-    # Lightning warns us if TensorBoard is not installed
-    "ignore:Starting from v1.9.0, `tensorboardX` has been removed as a dependency of the `lightning.pytorch` package:UserWarning",
-    # https://github.com/Lightning-AI/lightning/issues/18545
-    "ignore:LightningCLI's args parameter is intended to run from within Python like if it were from the command line.:UserWarning",
-    # Lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
-    "ignore:Trying to infer the `batch_size` from an ambiguous collection:UserWarning",
+    # # lightning
+    # # https://github.com/Lightning-AI/lightning/issues/13256
+    # # https://github.com/Lightning-AI/lightning/pull/13261
+    # "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning:torch.distributed._sharded_tensor",
+    # # https://github.com/Lightning-AI/lightning/issues/13989
+    # "ignore:SelectableGroups dict interface is deprecated. Use select.:DeprecationWarning:lightning.pytorch.trainer.connectors.callback_connector",
+    # # https://github.com/Lightning-AI/lightning/issues/14594
+    # "ignore:To copy construct from a tensor, it is recommended to use:UserWarning:lightning.pytorch.core.module",
+    # # https://github.com/Lightning-AI/lightning/issues/16756
+    # "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning",
+    # "ignore:pkg_resources is deprecated as an API.:DeprecationWarning:lightning_utilities.core.imports",
+    # "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:jsonargparse",
+    # # Lightning warns us about using num_workers=0, but it's faster on macOS
+    # "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:UserWarning:lightning",
+    # "ignore:The .*dataloader.* does not have many workers which may be a bottleneck:lightning.fabric.utilities.warnings.PossibleUserWarning:lightning",
+    # # Lightning warns us about using the CPU when GPU/MPS is available
+    # "ignore:GPU available but not used.:UserWarning",
+    # "ignore:MPS available but not used.:UserWarning",
+    # # Lightning warns us if TensorBoard is not installed
+    # "ignore:Starting from v1.9.0, `tensorboardX` has been removed as a dependency of the `lightning.pytorch` package:UserWarning",
+    # # https://github.com/Lightning-AI/lightning/issues/18545
+    # "ignore:LightningCLI's args parameter is intended to run from within Python like if it were from the command line.:UserWarning",
+    # # Lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
+    # "ignore:Trying to infer the `batch_size` from an ambiguous collection:UserWarning",
 
-    # pretrainedmodels
-    # https://github.com/Cadene/pretrained-models.pytorch/issues/221
-    "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:pretrainedmodels.datasets.utils",
+    # # pretrainedmodels
+    # # https://github.com/Cadene/pretrained-models.pytorch/issues/221
+    # "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:pretrainedmodels.datasets.utils",
 
-    # pytest
-    # https://github.com/pytest-dev/pytest/issues/11461
-    "ignore::pytest.PytestUnraisableExceptionWarning",
+    # # pytest
+    # # https://github.com/pytest-dev/pytest/issues/11461
+    # "ignore::pytest.PytestUnraisableExceptionWarning",
 
-    # nbmake
-    # https://github.com/treebeardtech/nbmake/issues/68
-    'ignore:The \(fspath. py.path.local\) argument to NotebookFile is deprecated:pytest.PytestDeprecationWarning:nbmake.pytest_plugin',
+    # # nbmake
+    # # https://github.com/treebeardtech/nbmake/issues/68
+    # 'ignore:The \(fspath. py.path.local\) argument to NotebookFile is deprecated:pytest.PytestDeprecationWarning:nbmake.pytest_plugin',
 
-    # rasterio
-    # https://github.com/rasterio/rasterio/issues/1742
-    # https://github.com/rasterio/rasterio/pull/1753
-    "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:rasterio.crs",
+    # # rasterio
+    # # https://github.com/rasterio/rasterio/issues/1742
+    # # https://github.com/rasterio/rasterio/pull/1753
+    # "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:rasterio.crs",
 
-    # skimage
-    # https://github.com/scikit-image/scikit-image/issues/6663
-    # https://github.com/scikit-image/scikit-image/pull/6637
-    "ignore:`np.bool8` is a deprecated alias for `np.bool_`.:DeprecationWarning:skimage.util.dtype",
+    # # skimage
+    # # https://github.com/scikit-image/scikit-image/issues/6663
+    # # https://github.com/scikit-image/scikit-image/pull/6637
+    # "ignore:`np.bool8` is a deprecated alias for `np.bool_`.:DeprecationWarning:skimage.util.dtype",
 
-    # tarfile
-    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata.:DeprecationWarning:tarfile",
+    # # tarfile
+    # "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata.:DeprecationWarning:tarfile",
 
-    # tensorboard
-    # https://github.com/tensorflow/tensorboard/issues/5798
-    "ignore:Call to deprecated create function:DeprecationWarning:tensorboard.compat.proto",
-    # https://github.com/lanpa/tensorboardX/pull/677
-    "ignore:ANTIALIAS is deprecated and will be removed in Pillow 10:DeprecationWarning:tensorboardX.summary",
+    # # tensorboard
+    # # https://github.com/tensorflow/tensorboard/issues/5798
+    # "ignore:Call to deprecated create function:DeprecationWarning:tensorboard.compat.proto",
+    # # https://github.com/lanpa/tensorboardX/pull/677
+    # "ignore:ANTIALIAS is deprecated and will be removed in Pillow 10:DeprecationWarning:tensorboardX.summary",
 
-    # timm
-    # https://github.com/rwightman/pytorch-image-models/pull/1256
-    "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:timm.data",
+    # # timm
+    # # https://github.com/rwightman/pytorch-image-models/pull/1256
+    # "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:timm.data",
 
-    # torch
-    # https://github.com/pytorch/pytorch/issues/72906
-    # https://github.com/pytorch/pytorch/pull/69823
-    "ignore:distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning",
-    "ignore:The distutils package is deprecated and slated for removal in Python 3.12:DeprecationWarning:torch.utils.tensorboard",
-    # https://github.com/pytorch/pytorch/issues/60053
-    # https://github.com/pytorch/pytorch/pull/60059
-    "ignore:Named tensors and all their associated APIs are an experimental feature and subject to change:UserWarning:torch.nn.functional",
-    # https://github.com/pytorch/pytorch/pull/24929
-    "ignore:Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0:UserWarning:torch.nn.functional",
-    # https://github.com/pytorch/pytorch/issues/110549
-    "ignore:allow_ops_in_compiled_graph failed to import torch:ImportWarning:einops",
-    # https://github.com/pytorch/pytorch/pull/111576
-    "ignore:Skipping device Apple Paravirtual device that does not support Metal 2.0:UserWarning",
+    # # torch
+    # # https://github.com/pytorch/pytorch/issues/72906
+    # # https://github.com/pytorch/pytorch/pull/69823
+    # "ignore:distutils Version classes are deprecated. Use packaging.version instead:DeprecationWarning",
+    # "ignore:The distutils package is deprecated and slated for removal in Python 3.12:DeprecationWarning:torch.utils.tensorboard",
+    # # https://github.com/pytorch/pytorch/issues/60053
+    # # https://github.com/pytorch/pytorch/pull/60059
+    # "ignore:Named tensors and all their associated APIs are an experimental feature and subject to change:UserWarning:torch.nn.functional",
+    # # https://github.com/pytorch/pytorch/pull/24929
+    # "ignore:Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0:UserWarning:torch.nn.functional",
+    # # https://github.com/pytorch/pytorch/issues/110549
+    # "ignore:allow_ops_in_compiled_graph failed to import torch:ImportWarning:einops",
+    # # https://github.com/pytorch/pytorch/pull/111576
+    # "ignore:Skipping device Apple Paravirtual device that does not support Metal 2.0:UserWarning",
 
-    # torchmetrics
-    # https://github.com/Lightning-AI/torchmetrics/issues/2121
-    # https://github.com/Lightning-AI/torchmetrics/pull/2137
-    "ignore:The distutils package is deprecated and slated for removal in Python 3.12:DeprecationWarning:torchmetrics.utilities.imports",
+    # # torchmetrics
+    # # https://github.com/Lightning-AI/torchmetrics/issues/2121
+    # # https://github.com/Lightning-AI/torchmetrics/pull/2137
+    # "ignore:The distutils package is deprecated and slated for removal in Python 3.12:DeprecationWarning:torchmetrics.utilities.imports",
 
-    # torchvision
-    # https://github.com/pytorch/vision/pull/5898
-    "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms.functional_pil",
-    "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms._functional_pil",
+    # # torchvision
+    # # https://github.com/pytorch/vision/pull/5898
+    # "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms.functional_pil",
+    # "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms._functional_pil",
 ]
 markers = [
     "slow: marks tests as slow",
