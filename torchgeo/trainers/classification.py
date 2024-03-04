@@ -178,11 +178,12 @@ class ClassificationTask(BaseTask):
         """
         x = batch["image"]
         y = batch["label"]
+        batch_size = x.shape[0]
         y_hat = self(x)
         loss: Tensor = self.criterion(y_hat, y)
-        self.log("train_loss", loss)
+        self.log("train_loss", loss, batch_size=batch_size)
         self.train_metrics(y_hat, y)
-        self.log_dict(self.train_metrics)
+        self.log_dict(self.train_metrics, batch_size=batch_size)
 
         return loss
 
@@ -198,11 +199,12 @@ class ClassificationTask(BaseTask):
         """
         x = batch["image"]
         y = batch["label"]
+        batch_size = x.shape[0]
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log("val_loss", loss)
+        self.log("val_loss", loss, batch_size=batch_size)
         self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics)
+        self.log_dict(self.val_metrics, batch_size=batch_size)
 
         if (
             batch_idx < 10
@@ -241,11 +243,12 @@ class ClassificationTask(BaseTask):
         """
         x = batch["image"]
         y = batch["label"]
+        batch_size = x.shape[0]
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log("test_loss", loss)
+        self.log("test_loss", loss, batch_size=batch_size)
         self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics)
+        self.log_dict(self.test_metrics, batch_size=batch_size)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -317,10 +320,11 @@ class MultiLabelClassificationTask(ClassificationTask):
         """
         x = batch["image"]
         y = batch["label"]
+        batch_size = x.shape[0]
         y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
         loss: Tensor = self.criterion(y_hat, y.to(torch.float))
-        self.log("train_loss", loss)
+        self.log("train_loss", loss, batch_size=batch_size)
         self.train_metrics(y_hat_hard, y)
         self.log_dict(self.train_metrics)
 
@@ -338,12 +342,13 @@ class MultiLabelClassificationTask(ClassificationTask):
         """
         x = batch["image"]
         y = batch["label"]
+        batch_size = x.shape[0]
         y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
         loss = self.criterion(y_hat, y.to(torch.float))
-        self.log("val_loss", loss)
+        self.log("val_loss", loss, batch_size=batch_size)
         self.val_metrics(y_hat_hard, y)
-        self.log_dict(self.val_metrics)
+        self.log_dict(self.val_metrics, batch_size=batch_size)
 
         if (
             batch_idx < 10
@@ -381,12 +386,13 @@ class MultiLabelClassificationTask(ClassificationTask):
         """
         x = batch["image"]
         y = batch["label"]
+        batch_size = x.shape[0]
         y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
         loss = self.criterion(y_hat, y.to(torch.float))
-        self.log("test_loss", loss)
+        self.log("test_loss", loss, batch_size=batch_size)
         self.test_metrics(y_hat_hard, y)
-        self.log_dict(self.test_metrics)
+        self.log_dict(self.test_metrics, batch_size=batch_size)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

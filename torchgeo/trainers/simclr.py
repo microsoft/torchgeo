@@ -222,6 +222,7 @@ class SimCLRTask(BaseTask):
             AssertionError: If channel dimensions are incorrect.
         """
         x = batch["image"]
+        batch_size = x.shape[0]
 
         in_channels: int = self.hparams["in_channels"]
         assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
@@ -250,8 +251,8 @@ class SimCLRTask(BaseTask):
         output_std = torch.mean(output_std, dim=0)
         self.avg_output_std = 0.9 * self.avg_output_std + (1 - 0.9) * output_std.item()
 
-        self.log("train_ssl_std", self.avg_output_std)
-        self.log("train_loss", loss)
+        self.log("train_ssl_std", self.avg_output_std, batch_size=batch_size)
+        self.log("train_loss", loss, batch_size=batch_size)
 
         return loss
 
