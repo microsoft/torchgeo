@@ -6,6 +6,11 @@ torchgeo.datamodules
 Geospatial DataModules
 ----------------------
 
+CDL Sentinel2
+^^^^^^^^^^^^^
+
+.. autoclass:: CDLSentinel2DataModule
+
 Chesapeake Land Cover
 ^^^^^^^^^^^^^^^^^^^^^
 
