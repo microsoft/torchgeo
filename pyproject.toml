@@ -247,6 +247,10 @@ filterwarnings = [
     "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:jsonargparse",
     # https://github.com/pytorch/pytorch/issues/110549
     "ignore:allow_ops_in_compiled_graph failed to import torch:ImportWarning:einops",
+    # https://github.com/rr-/docstring_parser/pull/82
+    "ignore:ast.* is deprecated and will be removed in Python 3.14:DeprecationWarning:docstring_parser.attrdoc",
+    # https://github.com/python/cpython/pull/102953
+    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:tarfile",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
@@ -262,13 +266,11 @@ filterwarnings = [
     # https://github.com/kornia/kornia/pull/1611
     "ignore:`ColorJitter` is now following Torchvision implementation.:DeprecationWarning:kornia.augmentation._2d.intensity.color_jitter",
     # https://github.com/kornia/kornia/pull/1663
-    "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning:kornia.augmentation._2d.intensity.gaussian_blur",
+    "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning",
     # https://github.com/pytorch/pytorch/pull/111576
     "ignore:Skipping device Apple Paravirtual device that does not support Metal 2.0:UserWarning",
 
     # Unexpected warnings, worth investigating
-    # Lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
-    "ignore:Trying to infer the `batch_size` from an ambiguous collection:UserWarning",
     # https://github.com/pytest-dev/pytest/issues/11461
     "ignore::pytest.PytestUnraisableExceptionWarning",
 ]

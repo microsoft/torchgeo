@@ -63,7 +63,7 @@ class UCMerced(NonGeoClassificationDataset):
     * https://dl.acm.org/doi/10.1145/1869790.1869829
     """
 
-    url = "https://huggingface.co/datasets/torchgeo/ucmerced/resolve/main/UCMerced_LandUse.zip"  # noqa: E501
+    url = "https://hf.co/datasets/torchgeo/ucmerced/resolve/d0af6e2eeea2322af86078068bd83337148a2149/UCMerced_LandUse.zip"  # noqa: E501
     filename = "UCMerced_LandUse.zip"
     md5 = "5b7ec56793786b6dc8a908e8854ac0e4"
 

@@ -40,7 +40,7 @@ class SemanticSegmentationTask(BaseTask):
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
     ) -> None:
-        """Inititalize a new SemanticSegmentationTask instance.
+        """Initialize a new SemanticSegmentationTask instance.
 
         Args:
             model: Name of the
@@ -122,7 +122,20 @@ class SemanticSegmentationTask(BaseTask):
             )
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.classification.MulticlassAccuracy`: Overall accuracy
+          (OA) using 'micro' averaging. The number of true positives divided by the
+          dataset size. Higher values are better.
+        * :class:`~torchmetrics.classification.MulticlassJaccardIndex`: Intersection
+          over union (IoU). Uses 'micro' averaging. Higher valuers are better.
+
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not reflect
+             minority class accuracy.
+           * 'Macro' averaging, not used here, gives equal weight to each class, useful
+             for balanced performance assessment across imbalanced classes.
+        """
         num_classes: int = self.hparams["num_classes"]
         ignore_index: Optional[int] = self.hparams["ignore_index"]
         metrics = MetricCollection(

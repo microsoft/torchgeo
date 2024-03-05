@@ -96,7 +96,24 @@ class ClassificationTask(BaseTask):
             raise ValueError(f"Loss type '{loss}' is not valid.")
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.classification.MulticlassAccuracy`: The number of
+          true positives divided by the dataset size. Both overall accuracy (OA)
+          using 'micro' averaging and average accuracy (AA) using 'macro' averaging
+          are reported. Higher values are better.
+        * :class:`~torchmetrics.classification.MulticlassJaccardIndex`: Intersection
+          over union (IoU). Uses 'macro' averaging. Higher valuers are better.
+        * :class:`~torchmetrics.classification.MulticlassFBetaScore`: F1 score.
+          The harmonic mean of precision and recall. Uses 'micro' averaging.
+          Higher values are better.
+
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not reflect
+             minority class accuracy.
+           * 'Macro' averaging gives equal weight to each class, and is useful for
+             balanced performance assessment across imbalanced classes.
+        """
         metrics = MetricCollection(
             {
                 "OverallAccuracy": MulticlassAccuracy(
@@ -252,7 +269,22 @@ class MultiLabelClassificationTask(ClassificationTask):
     """Multi-label image classification."""
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.classification.MultilabelAccuracy`: The number of
+          true positives divided by the dataset size. Both overall accuracy (OA)
+          using 'micro' averaging and average accuracy (AA) using 'macro' averaging
+          are reported. Higher values are better.
+        * :class:`~torchmetrics.classification.MultilabelFBetaScore`: F1 score.
+          The harmonic mean of precision and recall. Uses 'micro' averaging.
+          Higher values are better.
+
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not
+             reflect minority class accuracy.
+           * 'Macro' averaging gives equal weight to each class, and is useful for
+             balanced performance assessment across imbalanced classes.
+        """
         metrics = MetricCollection(
             {
                 "OverallAccuracy": MultilabelAccuracy(
