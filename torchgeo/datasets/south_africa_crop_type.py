@@ -141,6 +141,7 @@ class SouthAfricaCropType(RasterDataset):
         """
         assert isinstance(self.paths, str)
 
+        # Get all files matching the given query
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = cast(list[str], [hit.object for hit in hits])
 
@@ -152,7 +153,9 @@ class SouthAfricaCropType(RasterDataset):
         data_list: list[Tensor] = []
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
 
+        # Loop through matched filepaths and find all unique field ids
         field_ids: list[str] = []
+        # Store date in July for s1 and s2 we want to use for each sample
         imagery_dates: dict[str, dict[str, str]] = {}
 
         for filepath in filepaths:
@@ -172,6 +175,7 @@ class SouthAfricaCropType(RasterDataset):
                 ):
                     imagery_dates[field_id][band_type] = date
 
+        # Create Tensors for each band using stored dates
         for band in self.bands:
             band_type = "s1" if band in self.s1_bands else "s2"
             band_filepaths = []
@@ -190,6 +194,7 @@ class SouthAfricaCropType(RasterDataset):
             data_list.append(self._merge_files(band_filepaths, query))
         image = torch.cat(data_list)
 
+        # Add labels for each field
         mask_filepaths: list[str] = []
         for field_id in field_ids:
             file_path = filepath = os.path.join(
