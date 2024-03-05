@@ -31,7 +31,7 @@ class SouthAfricaCropType(RasterDataset):
 
     Dataset format:
 
-    * images are 2-band Sentinel 1 and 12-bands Sentinel-2 data with a cloud mask
+    * images are 2-band Sentinel 1 and 12-band Sentinel-2 data with a cloud mask
     * masks are tiff image with unique values representing the class and field id.
 
     Dataset classes:
