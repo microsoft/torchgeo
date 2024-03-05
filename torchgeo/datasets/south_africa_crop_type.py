@@ -137,7 +137,7 @@ class SouthAfricaCropType(RasterDataset):
             index: index to return
 
         Returns:
-            data adn labels at that index
+            data and labels at that index
         """
         assert isinstance(self.paths, str)
 
