@@ -105,7 +105,7 @@ class SSL4EOL(NonGeoDataset):
         "oli_sr": {"num_bands": 7, "rgb_bands": [3, 2, 1]},
     }
 
-    url = "https://hf.co/datasets/torchgeo/ssl4eo_l/resolve/main/{0}/ssl4eo_l_{0}.tar.gz{1}"  # noqa: E501
+    url = "https://hf.co/datasets/torchgeo/ssl4eo_l/resolve/e2467887e6a6bcd7547d9d5999f8d9bc3323dc31/{0}/ssl4eo_l_{0}.tar.gz{1}"  # noqa: E501
     checksums = {
         "tm_toa": {
             "aa": "553795b8d73aa253445b1e67c5b81f11",

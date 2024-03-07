@@ -55,9 +55,11 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     based on latitude/longitude. This allows users to do things like:
 
     * Combine image and target labels and sample from both simultaneously
-      (e.g. Landsat and CDL)
+      (e.g., Landsat and CDL)
     * Combine datasets for multiple image sources for multimodal learning or data fusion
-      (e.g. Landsat and Sentinel)
+      (e.g., Landsat and Sentinel)
+    * Combine image and other raster data (e.g., elevation, temperature, pressure)
+      and sample from both simultaneously (e.g., Landsat and Aster Global DEM)
 
     These combinations require that all queries are present in *both* datasets,
     and can be combined using an :class:`IntersectionDataset`:
@@ -69,9 +71,9 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     Users may also want to:
 
     * Combine datasets for multiple image sources and treat them as equivalent
-      (e.g. Landsat 7 and Landsat 8)
+      (e.g., Landsat 7 and Landsat 8)
     * Combine datasets for disparate geospatial locations
-      (e.g. Chesapeake NY and PA)
+      (e.g., Chesapeake NY and PA)
 
     These combinations require that all queries are present in *at least one* dataset,
     and can be combined using a :class:`UnionDataset`:
@@ -108,7 +110,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     def __init__(
         self, transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None
     ) -> None:
-        """Initialize a new Dataset instance.
+        """Initialize a new GeoDataset instance.
 
         Args:
             transforms: a function/transform that takes an input sample
@@ -287,7 +289,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self._res = new_res
 
     @property
-    def files(self) -> set[str]:
+    def files(self) -> list[str]:
         """A list of all files in the dataset.
 
         Returns:
@@ -316,7 +318,8 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
                     UserWarning,
                 )
 
-        return files
+        # Sort the output to enforce deterministic behavior.
+        return sorted(files)
 
 
 class RasterDataset(GeoDataset):
@@ -343,7 +346,14 @@ class RasterDataset(GeoDataset):
     #: ``start`` and ``stop`` groups.
     date_format = "%Y%m%d"
 
-    #: True if dataset contains imagery, False if dataset contains mask
+    #: True if the dataset only contains model inputs (such as images). False if the
+    #: dataset only contains ground truth model outputs (such as segmentation masks).
+    #:
+    #: The sample returned by the dataset/data loader will use the "image" key if
+    #: *is_image* is True, otherwise it will use the "mask" key.
+    #:
+    #: For datasets with both model inputs and outputs, a custom
+    #: :func:`~RasterDataset.__getitem__` method must be implemented.
     is_image = True
 
     #: True if data is stored in a separate file for each band, else False.
@@ -361,6 +371,10 @@ class RasterDataset(GeoDataset):
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
+
+        Defaults to float32 if :attr:`~RasterDataset.is_image` is True, else long.
+        Can be overridden for tasks like pixel-wise regression where the mask should be
+        float32 instead of long.
 
         Returns:
             the dtype of the dataset
@@ -381,7 +395,7 @@ class RasterDataset(GeoDataset):
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
     ) -> None:
-        """Initialize a new Dataset instance.
+        """Initialize a new RasterDataset instance.
 
         Args:
             paths: one or more root directories to search or files to load
@@ -604,7 +618,7 @@ class VectorDataset(GeoDataset):
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         label_name: Optional[str] = None,
     ) -> None:
-        """Initialize a new Dataset instance.
+        """Initialize a new VectorDataset instance.
 
         Args:
             paths: one or more root directories to search or files to load
@@ -872,9 +886,11 @@ class IntersectionDataset(GeoDataset):
     This allows users to do things like:
 
     * Combine image and target labels and sample from both simultaneously
-      (e.g. Landsat and CDL)
+      (e.g., Landsat and CDL)
     * Combine datasets for multiple image sources for multimodal learning or data fusion
-      (e.g. Landsat and Sentinel)
+      (e.g., Landsat and Sentinel)
+    * Combine image and other raster data (e.g., elevation, temperature, pressure)
+      and sample from both simultaneously (e.g., Landsat and Aster Global DEM)
 
     These combinations require that all queries are present in *both* datasets,
     and can be combined using an :class:`IntersectionDataset`:
@@ -895,7 +911,12 @@ class IntersectionDataset(GeoDataset):
         ] = concat_samples,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
     ) -> None:
-        """Initialize a new Dataset instance.
+        """Initialize a new IntersectionDataset instance.
+
+        When computing the intersection between two datasets that both contain model
+        inputs (such as images) or model outputs (such as masks), the default behavior
+        is to stack the data along the channel dimension. The *collate_fn* parameter
+        can be used to change this behavior.
 
         Args:
             dataset1: the first dataset
@@ -1025,9 +1046,9 @@ class UnionDataset(GeoDataset):
     This allows users to do things like:
 
     * Combine datasets for multiple image sources and treat them as equivalent
-      (e.g. Landsat 7 and Landsat 8)
+      (e.g., Landsat 7 and Landsat 8)
     * Combine datasets for disparate geospatial locations
-      (e.g. Chesapeake NY and PA)
+      (e.g., Chesapeake NY and PA)
 
     These combinations require that all queries are present in *at least one* dataset,
     and can be combined using a :class:`UnionDataset`:
@@ -1048,7 +1069,12 @@ class UnionDataset(GeoDataset):
         ] = merge_samples,
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
     ) -> None:
-        """Initialize a new Dataset instance.
+        """Initialize a new UnionDataset instance.
+
+        When computing the union between two datasets that both contain model inputs
+        (such as images) or model outputs (such as masks), the default behavior is to
+        merge the data to create a single image/mask. The *collate_fn* parameter can be
+        used to change this behavior.
 
         Args:
             dataset1: the first dataset
