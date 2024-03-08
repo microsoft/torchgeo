@@ -26,8 +26,12 @@ class SouthAfricaCropType(RasterDataset):
     dataset includes satellite imagery from Sentinel-1 and Sentinel-2 and labels for
     crop type that were collected by aerial and vehicle survey from May 2017 to March
     2018. Data was provided by the Western Cape Department of Agriculture and is
-    available via the Radiant Earth Foundation. Each chip is matched with a label.
-    Each pixel in the label contains an integer field number and crop type class.
+    available via the Radiant Earth Foundation. For each field id the dataset contains
+    time series imagery and a single label mask. Since TorchGeo does not yet support
+    timeseries datasets, the first available imagery in July will be returned for each
+    field. Note that the dates for S1 and S2 imagery for a given field are not
+    guaranteed to be the same. Each pixel in the label contains an integer field number
+    and crop type class.
 
     Dataset format:
 
