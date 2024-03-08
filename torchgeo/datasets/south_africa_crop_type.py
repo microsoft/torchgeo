@@ -162,9 +162,9 @@ class SouthAfricaCropType(RasterDataset):
             filename = os.path.basename(filepath)
             match = re.match(filename_regex, filename)
             if match:
-                field_id = match.groupdict()["field_id"]
-                date = match.groupdict()["date"]
-                band = match.groupdict()["band"]
+                field_id = match.group("field_id")
+                date = match.group("date")
+                band = match.group("band")
                 band_type = "s1" if band in self.s1_bands else "s2"
                 if field_id not in field_ids:
                     field_ids.append(field_id)
