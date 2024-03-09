@@ -97,7 +97,15 @@ class RegressionTask(BaseTask):
             )
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.MeanSquaredError`: The average of the squared
+          differences between the predicted and actual values (MSE) and its
+          square root (RMSE). Lower values are better.
+        * :class:`~torchmetrics.MeanAbsoluteError`: The average of the absolute
+          differences between the predicted and actual values (MAE).
+          Lower values are better.
+        """
         metrics = MetricCollection(
             {
                 "RMSE": MeanSquaredError(squared=False),
