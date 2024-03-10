@@ -121,6 +121,7 @@ from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
 from .ssl4eo_benchmark import SSL4EOLBenchmark
 from .sustainbench_crop_yield import SustainBenchCropYield
 from .ucmerced import UCMerced
+from .urban3d import Urban3DChallenge
 from .usavars import USAVars
 from .utils import (
     BoundingBox,
@@ -247,6 +248,7 @@ __all__ = (
     "SustainBenchCropYield",
     "TropicalCyclone",
     "UCMerced",
+    "Urban3DChallenge",
     "USAVars",
     "Vaihingen2D",
     "VHR10",

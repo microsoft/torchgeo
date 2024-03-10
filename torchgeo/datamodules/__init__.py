@@ -35,6 +35,7 @@ from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
 from .ssl4eo_benchmark import SSL4EOLBenchmarkDataModule
 from .sustainbench_crop_yield import SustainBenchCropYieldDataModule
 from .ucmerced import UCMercedDataModule
+from .urban3d import Urban3DChallengeDataModule
 from .usavars import USAVarsDataModule
 from .utils import MisconfigurationException
 from .vaihingen import Vaihingen2DDataModule
@@ -78,6 +79,7 @@ __all__ = (
     "SustainBenchCropYieldDataModule",
     "TropicalCycloneDataModule",
     "UCMercedDataModule",
+    "Urban3DChallengeDataModule",
     "USAVarsDataModule",
     "Vaihingen2DDataModule",
     "VHR10DataModule",
