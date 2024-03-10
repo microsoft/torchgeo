@@ -45,7 +45,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
     * https://proceedings.neurips.cc/paper_files/paper/2023/hash/bbf7ee04e2aefec136ecf60e346c2e61-Abstract-Datasets_and_Benchmarks.html
 
     .. versionadded:: 0.5
-    """
+    """  # noqa: E501
 
     url = "https://hf.co/datasets/torchgeo/ssl4eo-l-benchmark/resolve/da96ae2b04cb509710b72fce9131c2a3d5c211c2/{}.tar.gz"  # noqa: E501
 
