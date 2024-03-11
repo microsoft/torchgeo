@@ -227,11 +227,12 @@ class SemanticSegmentationTask(BaseTask):
         """
         x = batch["image"]
         y = batch["mask"]
+        batch_size = x.shape[0]
         y_hat = self(x)
         loss: Tensor = self.criterion(y_hat, y)
-        self.log("train_loss", loss)
+        self.log("train_loss", loss, batch_size=batch_size)
         self.train_metrics(y_hat, y)
-        self.log_dict(self.train_metrics)
+        self.log_dict(self.train_metrics, batch_size=batch_size)
         return loss
 
     def validation_step(
@@ -246,11 +247,12 @@ class SemanticSegmentationTask(BaseTask):
         """
         x = batch["image"]
         y = batch["mask"]
+        batch_size = x.shape[0]
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log("val_loss", loss)
+        self.log("val_loss", loss, batch_size=batch_size)
         self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics)
+        self.log_dict(self.val_metrics, batch_size=batch_size)
 
         if (
             batch_idx < 10
@@ -289,11 +291,12 @@ class SemanticSegmentationTask(BaseTask):
         """
         x = batch["image"]
         y = batch["mask"]
+        batch_size = x.shape[0]
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log("test_loss", loss)
+        self.log("test_loss", loss, batch_size=batch_size)
         self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics)
+        self.log_dict(self.test_metrics, batch_size=batch_size)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
