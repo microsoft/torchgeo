@@ -88,7 +88,7 @@ class SSL4EOL(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/2306.09424
+    * https://proceedings.neurips.cc/paper_files/paper/2023/hash/bbf7ee04e2aefec136ecf60e346c2e61-Abstract-Datasets_and_Benchmarks.html
 
     .. versionadded:: 0.5
     """  # noqa: E501

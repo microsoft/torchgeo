@@ -364,6 +364,7 @@ class BYOLTask(BaseTask):
             AssertionError: If channel dimensions are incorrect.
         """
         x = batch["image"]
+        batch_size = x.shape[0]
 
         in_channels = self.hparams["in_channels"]
         assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
@@ -387,7 +388,7 @@ class BYOLTask(BaseTask):
 
         loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
 
-        self.log("train_loss", loss)
+        self.log("train_loss", loss, batch_size=batch_size)
         self.model.update_target()
 
         return loss
