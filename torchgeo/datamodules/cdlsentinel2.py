@@ -73,12 +73,7 @@ class CDLSentinel2DataModule(GeoDataModule):
             },
         )
 
-        self.val_aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            K.CenterCrop(self.patch_size),
-            data_keys=["image", "mask"],
-        )
-        self.test_aug = AugmentationSequential(
+        self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.CenterCrop(self.patch_size),
             data_keys=["image", "mask"],
