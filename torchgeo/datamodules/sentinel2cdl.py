@@ -16,7 +16,7 @@ from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
 
 
-class CDLSentinel2DataModule(GeoDataModule):
+class Sentinel2CDLDataModule(GeoDataModule):
     """LightningDataModule implementation for the CDL dataset.
 
     .. versionadded:: 0.6
@@ -30,7 +30,7 @@ class CDLSentinel2DataModule(GeoDataModule):
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new CDLSentinel2DataModule instance.
+        """Initialize a new Sentinel2CDLDataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.

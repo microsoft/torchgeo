@@ -55,7 +55,7 @@ class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         "name",
         [
-            "cdlsentinel2",
+            "sentinel2cdl",
             "chabud",
             "chesapeake_cvpr_5",
             "chesapeake_cvpr_7",
@@ -82,7 +82,7 @@ class TestSemanticSegmentationTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        if name == "cdlsentinel2":
+        if name == "sentinel2cdl":
             monkeypatch.setattr(
                 CDL,
                 "md5s",

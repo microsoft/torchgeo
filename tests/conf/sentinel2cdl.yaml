@@ -9,7 +9,7 @@ model:
     num_filters: 1
     ignore_index: 0
 data:
-  class_path: CDLSentinel2DataModule
+  class_path: Sentinel2CDLDataModule
   init_args:
     batch_size: 2
     patch_size: 16

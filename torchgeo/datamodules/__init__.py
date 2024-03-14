@@ -4,7 +4,7 @@
 """TorchGeo datamodules."""
 
 from .bigearthnet import BigEarthNetDataModule
-from .cdlsentinel2 import CDLSentinel2DataModule
+from .sentinel2cdl import Sentinel2CDLDataModule
 from .chabud import ChaBuDDataModule
 from .chesapeake import ChesapeakeCVPRDataModule
 from .cowc import COWCCountingDataModule
@@ -44,7 +44,7 @@ from .xview import XView2DataModule
 
 __all__ = (
     # GeoDataset
-    "CDLSentinel2DataModule",
+    "Sentinel2CDLDataModule",
     "ChesapeakeCVPRDataModule",
     "L7IrishDataModule",
     "L8BiomeDataModule",
