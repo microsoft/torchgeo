@@ -75,8 +75,7 @@ class Sentinel2NCCMDataModule(GeoDataModule):
         )
 
         self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            data_keys=["image", "mask"],
+            K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "mask"]
         )
 
     def setup(self, stage: str) -> None:
@@ -110,13 +109,13 @@ class Sentinel2NCCMDataModule(GeoDataModule):
             )
 
     def plot(self, *args: Any, **kwargs: Any) -> Figure:
-         """Run NCCM plot method.
+        """Run NCCM plot method.
 
-         Args:
-             *args: Arguments passed to plot method.
-             **kwargs: Keyword arguments passed to plot method.
+        Args:
+            *args: Arguments passed to plot method.
+            **kwargs: Keyword arguments passed to plot method.
 
-         Returns:
-             A matplotlib Figure with the image, ground truth, and predictions.
-         """
-         return self.nccm.plot(*args, **kwargs)
+        Returns:
+            A matplotlib Figure with the image, ground truth, and predictions.
+        """
+        return self.nccm.plot(*args, **kwargs)
