@@ -8,6 +8,7 @@ from typing import Any, Optional, Union
 import kornia.augmentation as K
 import torch
 from kornia.constants import DataKey, Resample
+from matplotlib.figure import Figure
 
 from ..datasets import CDL, Sentinel2, random_grid_cell_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
