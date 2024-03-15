@@ -6,11 +6,6 @@ torchgeo.datamodules
 Geospatial DataModules
 ----------------------
 
-Sentinel2 CDL
-^^^^^^^^^^^^^
-
-.. autoclass:: Sentinel2CDLDataModule
-
 Chesapeake Land Cover
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -30,6 +25,11 @@ NAIP
 ^^^^
 
 .. autoclass:: NAIPChesapeakeDataModule
+
+Sentinel
+^^^^^^^^
+
+.. autoclass:: Sentinel2CDLDataModule
 
 Non-geospatial DataModules
 --------------------------
