@@ -28,7 +28,7 @@ from .potsdam import Potsdam2DDataModule
 from .resisc45 import RESISC45DataModule
 from .seco import SeasonalContrastS2DataModule
 from .sen12ms import SEN12MSDataModule
-from .sentinel2cdl import Sentinel2CDLDataModule
+from .sentinel2_cdl import Sentinel2CDLDataModule
 from .skippd import SKIPPDDataModule
 from .so2sat import So2SatDataModule
 from .spacenet import SpaceNet1DataModule
