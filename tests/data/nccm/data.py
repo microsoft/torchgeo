@@ -11,10 +11,15 @@ import rasterio
 from rasterio.crs import CRS
 from rasterio.transform import Affine
 
-SIZE = 32
+SIZE = 128
 
 np.random.seed(0)
-files = ["CDL2017_clip.tif", "CDL2018_clip1.tif", "CDL2019_clip.tif"]
+files = [
+    "CDL2017_clip.tif",
+    "CDL2018_clip1.tif",
+    "CDL2019_clip.tif",
+    "CDL2022_clip.tif",
+]
 
 
 def create_file(path: str, dtype: str):
@@ -23,15 +28,8 @@ def create_file(path: str, dtype: str):
         "driver": "GTiff",
         "dtype": dtype,
         "count": 1,
-        "crs": CRS.from_epsg(4326),
-        "transform": Affine(
-            8.983152841195208e-05,
-            0.0,
-            115.483402043364,
-            0.0,
-            -8.983152841195208e-05,
-            53.531397320113605,
-        ),
+        "crs": CRS.from_epsg(32616),
+        "transform": Affine(10, 0.0, 399960.0, 0.0, -10, 4500000.0),
         "height": SIZE,
         "width": SIZE,
         "compress": "lzw",
