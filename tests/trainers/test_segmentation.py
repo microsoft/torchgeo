@@ -73,6 +73,7 @@ class TestSemanticSegmentationTask:
             "sen12ms_s2_all",
             "sen12ms_s2_reduced",
             "spacenet1",
+            "sentinel2nccm",
             "ssl4eo_l_benchmark_cdl",
             "ssl4eo_l_benchmark_nlcd",
             "vaihingen2d",

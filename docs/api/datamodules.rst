@@ -6,6 +6,9 @@ torchgeo.datamodules
 Geospatial DataModules
 ----------------------
 
+Sentinel2 NCCM
+.. autoclass:: Sentinel2NCCMDataModule
+
 Chesapeake Land Cover
 ^^^^^^^^^^^^^^^^^^^^^
 
