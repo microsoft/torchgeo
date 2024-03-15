@@ -106,3 +106,15 @@ class Sentinel2CDLDataModule(GeoDataModule):
             self.test_sampler = GridGeoSampler(
                 self.test_dataset, self.patch_size, self.patch_size
             )
+
+    def plot(self, *args: Any, **kwargs: Any) -> Figure:
+        """Run CDL plot method.
+
+        Args:
+            *args: Arguments passed to plot method.
+            **kwargs: Keyword arguments passed to plot method.
+
+        Returns:
+            A matplotlib Figure with the image, ground truth, and predictions.
+        """
+        return self.cdl.plot(*args, **kwargs)
