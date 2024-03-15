@@ -7,6 +7,7 @@ from typing import Any, Optional, Union
 
 import kornia.augmentation as K
 import torch
+from kornia.constants import DataKey, Resample
 
 from ..datasets import CDL, Sentinel2, random_grid_cell_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
@@ -67,6 +68,9 @@ class Sentinel2CDLDataModule(GeoDataModule):
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
             data_keys=["image", "mask"],
+            extra_args={
+                DataKey.MASK: {"resample": Resample.NEAREST, "align_corners": None}
+            },
         )
 
         self.aug = AugmentationSequential(
