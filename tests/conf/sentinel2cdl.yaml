@@ -3,7 +3,7 @@ model:
   init_args:
     loss: "ce"
     model: "unet"
-    backbone: "resnet50"
+    backbone: "resnet18"
     in_channels: 13
     num_classes: 134
     num_filters: 1
