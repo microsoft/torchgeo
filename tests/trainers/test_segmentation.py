@@ -17,7 +17,7 @@ from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
-from torchgeo.datasets import CDL, LandCoverAI, RGBBandsMissingError
+from torchgeo.datasets import LandCoverAI, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import SemanticSegmentationTask
@@ -55,7 +55,6 @@ class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         "name",
         [
-            "sentinel2cdl",
             "chabud",
             "chesapeake_cvpr_5",
             "chesapeake_cvpr_7",
@@ -73,6 +72,7 @@ class TestSemanticSegmentationTask:
             "sen12ms_s1",
             "sen12ms_s2_all",
             "sen12ms_s2_reduced",
+            "sentinel2cdl",
             "spacenet1",
             "ssl4eo_l_benchmark_cdl",
             "ssl4eo_l_benchmark_nlcd",
@@ -82,15 +82,6 @@ class TestSemanticSegmentationTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        if name == "sentinel2cdl":
-            monkeypatch.setattr(
-                CDL,
-                "md5s",
-                {
-                    2023: "e94d199f8f99762c00bcf9ee4d020286",
-                    2022: "e6b90d15ced04a759d1860d92438f68f",
-                },
-            )
         if name == "naipchesapeake":
             pytest.importorskip("zipfile_deflate64")
 
