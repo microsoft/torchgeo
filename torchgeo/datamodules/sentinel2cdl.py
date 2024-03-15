@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""CDLSentinel2 datamodule."""
+"""Sentinel-2 and CDL datamodule."""
 
 from typing import Any, Optional, Union
 
@@ -17,7 +17,7 @@ from .geo import GeoDataModule
 
 
 class Sentinel2CDLDataModule(GeoDataModule):
-    """LightningDataModule implementation for the CDL dataset.
+    """LightningDataModule implementation for the Sentinel-2 and CDL datasets.
 
     .. versionadded:: 0.6
     """
@@ -25,7 +25,7 @@ class Sentinel2CDLDataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[int, tuple[int, int]] = 16,
+        patch_size: Union[int, tuple[int, int]] = 64,
         length: Optional[int] = None,
         num_workers: int = 0,
         **kwargs: Any,
