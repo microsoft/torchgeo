@@ -250,7 +250,9 @@ class DOFA(nn.Module):
         num_classes: int = 45,
         global_pool: bool = True,
         mlp_ratio: float = 4.0,
-        norm_layer: type[nn.Module] = nn.LayerNorm,
+        norm_layer: type[nn.Module] = partial(
+            nn.LayerNorm, eps=1e-6
+        ),  # type: ignore[assignment]
     ) -> None:
         """Initialize a new DOFA instance.
 
@@ -415,15 +417,7 @@ def dofa_small_patch16_224(**kwargs: Any) -> DOFA:
     Returns:
         A DOFA small 16 model.
     """
-    model = DOFA(
-        patch_size=16,
-        embed_dim=384,
-        depth=12,
-        num_heads=6,
-        mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore[arg-type]
-        **kwargs,
-    )
+    model = DOFA(patch_size=16, embed_dim=384, depth=12, num_heads=6, **kwargs)
     return model
 
 
@@ -445,15 +439,7 @@ def dofa_base_patch16_224(
     Returns:
         A DOFA base 16 model.
     """
-    model = DOFA(
-        patch_size=16,
-        embed_dim=768,
-        depth=12,
-        num_heads=12,
-        mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore[arg-type]
-        **kwargs,
-    )
+    model = DOFA(patch_size=16, embed_dim=768, depth=12, num_heads=12, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -486,15 +472,7 @@ def dofa_large_patch16_224(**kwargs: Any) -> DOFA:
     Returns:
         A DOFA large 16 model.
     """
-    model = DOFA(
-        patch_size=16,
-        embed_dim=1024,
-        depth=24,
-        num_heads=16,
-        mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore[arg-type]
-        **kwargs,
-    )
+    model = DOFA(patch_size=16, embed_dim=1024, depth=24, num_heads=16, **kwargs)
     return model
 
 
@@ -513,13 +491,5 @@ def dofa_huge_patch16_224(**kwargs: Any) -> DOFA:
     Returns:
         A DOFA huge 16 model.
     """
-    model = DOFA(
-        patch_size=14,
-        embed_dim=1280,
-        depth=32,
-        num_heads=16,
-        mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore[arg-type]
-        **kwargs,
-    )
+    model = DOFA(patch_size=14, embed_dim=1280, depth=32, num_heads=16, **kwargs)
     return model
