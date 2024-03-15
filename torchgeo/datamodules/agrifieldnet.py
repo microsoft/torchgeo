@@ -23,7 +23,7 @@ class AgriFieldNetDataModule(GeoDataModule):
 
     def __init__(
         self,
-        batch_size: int = 1,
+        batch_size: int = 64,
         patch_size: Union[int, tuple[int, int]] = 256,
         length: Optional[int] = None,
         num_workers: int = 0,
