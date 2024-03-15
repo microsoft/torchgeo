@@ -20,8 +20,8 @@ from ..transforms import AugmentationSequential
 __all__ = ["DOFABase16_Weights"]
 
 
-def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor) -> Tensor:
-    """Compute the 1D sine/cosine position embeddings in a grid.
+def position_embedding(embed_dim: int, pos: Tensor) -> Tensor:
+    """Compute the 1D sine/cosine position embedding.
 
     Args:
         embed_dim: Output dimension D for each position. Must be even.
@@ -202,7 +202,7 @@ class DOFAEmbedding(nn.Module):
         """
         inplanes = wavelengths.size(0)
         # wv_feats: 9,128 -> 9, 3x3x3
-        waves = get_1d_sincos_pos_embed_from_grid_torch(
+        waves = position_embedding(
             self.wv_planes, wavelengths * 1000
         )
         waves = self.fclayer(waves)
