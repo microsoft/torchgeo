@@ -70,8 +70,7 @@ class Sentinel2CDLDataModule(GeoDataModule):
         )
 
         self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            data_keys=["image", "mask"],
+            K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "mask"]
         )
 
     def setup(self, stage: str) -> None:
