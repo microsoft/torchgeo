@@ -145,13 +145,13 @@ class FCResLayer(nn.Module):
         return out
 
 
-class Dynamic_MLP_OFA(nn.Module):
-    """Dynamic Multilayer Perceptron for DOFA."""
+class DOFAEmbedding(nn.Module):
+    """Dynamic One-For-All (DOFA) embedding."""
 
     def __init__(
         self, wv_planes: int, kernel_size: int = 3, embed_dim: int = 1024
     ) -> None:
-        """Initialize a new Dynamic_MLP_OFA instance.
+        """Initialize a new DOFAEmbedding instance.
 
         Args:
             wv_planes: Dimensions of dynamic weight generator.
@@ -227,7 +227,7 @@ class Dynamic_MLP_OFA(nn.Module):
 
 
 class DOFA(nn.Module):
-    """Masked Autoencoder with VisionTransformer backbone.
+    """Dynamic One-For-All (DOFA) model.
 
     Reference implementation:
 
@@ -282,7 +282,7 @@ class DOFA(nn.Module):
 
         # --------------------------------------------------------------------------
         # MAE encoder specifics
-        self.patch_embed = Dynamic_MLP_OFA(
+        self.patch_embed = DOFAEmbedding(
             wv_planes=128, kernel_size=16, embed_dim=embed_dim
         )
         self.num_patches = (img_size // patch_size) ** 2
