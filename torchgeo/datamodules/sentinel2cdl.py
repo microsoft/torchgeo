@@ -71,7 +71,6 @@ class Sentinel2CDLDataModule(GeoDataModule):
 
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            K.CenterCrop(self.patch_size),
             data_keys=["image", "mask"],
         )
 
