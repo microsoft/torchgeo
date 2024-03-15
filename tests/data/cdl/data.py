@@ -12,7 +12,7 @@ import numpy as np
 import rasterio
 from rasterio import Affine
 
-SIZE = 1000
+SIZE = 128
 
 np.random.seed(0)
 random.seed(0)
@@ -78,8 +78,3 @@ if __name__ == "__main__":
         with open(filename, "rb") as f:
             md5 = hashlib.md5(f.read()).hexdigest()
             print(f"{filename}: {md5}")
-
-        # Uncompress data
-        shutil.unpack_archive(filename, dir)
-
-        shutil.rmtree(dir)
