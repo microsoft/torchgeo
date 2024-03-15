@@ -149,17 +149,17 @@ class DOFAEmbedding(nn.Module):
     """Dynamic One-For-All (DOFA) embedding."""
 
     def __init__(
-        self, wv_planes: int, kernel_size: int = 3, embed_dim: int = 1024
+        self, dynamic_embed_dim: int, kernel_size: int = 3, embed_dim: int = 1024
     ) -> None:
         """Initialize a new DOFAEmbedding instance.
 
         Args:
-            wv_planes: Dimensions of dynamic weight generator.
+            dynamic_embed_dim: Dimensions of dynamic weight generator.
             kernel_size: Kernel size of the depth-wise convolution.
             embed_dim: Embedding dimensions.
         """
         super().__init__()
-        self.wv_planes = wv_planes
+        self.dynamic_embed_dim = dynamic_embed_dim
         self.kernel_size = kernel_size
         self.embed_dim = embed_dim
         self._num_kernel = self.kernel_size * self.kernel_size * self.embed_dim
@@ -167,11 +167,11 @@ class DOFAEmbedding(nn.Module):
         self.num_patches = -1
 
         self.weight_generator = TransformerWeightGenerator(
-            wv_planes, self._num_kernel, embed_dim
+            dynamic_embed_dim, self._num_kernel, embed_dim
         )
         self.scaler = 0.01
 
-        self.fclayer = FCResLayer(wv_planes)
+        self.fclayer = FCResLayer(dynamic_embed_dim)
 
         self._init_weights()
 
@@ -202,9 +202,7 @@ class DOFAEmbedding(nn.Module):
         """
         inplanes = wavelengths.size(0)
         # wv_feats: 9,128 -> 9, 3x3x3
-        waves = position_embedding(
-            self.wv_planes, wavelengths * 1000
-        )
+        waves = position_embedding(self.dynamic_embed_dim, wavelengths * 1000)
         waves = self.fclayer(waves)
         weight, bias = self.weight_generator(waves)  # 3x3x3
 
@@ -248,7 +246,7 @@ class DOFA(nn.Module):
         embed_dim: int = 1024,
         depth: int = 24,
         num_heads: int = 16,
-        wv_planes: int = 128,
+        dynamic_embed_dim: int = 128,
         num_classes: int = 45,
         global_pool: bool = True,
         mlp_ratio: float = 4.0,
@@ -263,7 +261,7 @@ class DOFA(nn.Module):
             embed_dim: Transformer embedding dimension.
             depth: Depth of transformer.
             num_heads: Number of attention heads.
-            wv_planes: Number of wavelengths.
+            dynamic_embed_dim: Dimensions of dynamic weight generator.
             num_classes: Number of classes for classification head.
             global_pool: Whether or not to perform global pooling.
             mlp_ratio: Ratio of MLP hidden dim to embedding dim.
@@ -271,7 +269,7 @@ class DOFA(nn.Module):
         """
         super().__init__()
 
-        self.wv_planes = wv_planes
+        self.dynamic_embed_dim = dynamic_embed_dim
         self.global_pool = global_pool
         if self.global_pool:
             norm_layer = norm_layer
@@ -283,7 +281,7 @@ class DOFA(nn.Module):
         # --------------------------------------------------------------------------
         # MAE encoder specifics
         self.patch_embed = DOFAEmbedding(
-            wv_planes=128, kernel_size=16, embed_dim=embed_dim
+            dynamic_embed_dim=128, kernel_size=16, embed_dim=embed_dim
         )
         self.num_patches = (img_size // patch_size) ** 2
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
