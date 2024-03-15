@@ -149,23 +149,17 @@ class Dynamic_MLP_OFA(nn.Module):
     """Dynamic Multilayer Perceptron for DOFA."""
 
     def __init__(
-        self,
-        wv_planes: int,
-        inter_dim: int = 128,
-        kernel_size: int = 3,
-        embed_dim: int = 1024,
+        self, wv_planes: int, kernel_size: int = 3, embed_dim: int = 1024
     ) -> None:
         """Initialize a new Dynamic_MLP_OFA instance.
 
         Args:
             wv_planes: Dimensions of dynamic weight generator.
-            inter_dim: Internal dimensions.
             kernel_size: Kernel size of the depth-wise convolution.
             embed_dim: Embedding dimensions.
         """
         super().__init__()
         self.wv_planes = wv_planes
-        self.inter_dim = inter_dim
         self.kernel_size = kernel_size
         self.embed_dim = embed_dim
         self._num_kernel = self.kernel_size * self.kernel_size * self.embed_dim
@@ -289,7 +283,7 @@ class DOFA(nn.Module):
         # --------------------------------------------------------------------------
         # MAE encoder specifics
         self.patch_embed = Dynamic_MLP_OFA(
-            wv_planes=128, inter_dim=128, kernel_size=16, embed_dim=embed_dim
+            wv_planes=128, kernel_size=16, embed_dim=embed_dim
         )
         self.num_patches = (img_size // patch_size) ** 2
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
