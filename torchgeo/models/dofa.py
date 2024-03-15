@@ -175,7 +175,7 @@ class DOFAEmbedding(nn.Module):
 
         self._init_weights()
 
-    def weight_init(self, m: object) -> None:
+    def _init_weight(self, m: object) -> None:
         """Initialize weights of a single layer.
 
         Args:
@@ -186,9 +186,9 @@ class DOFAEmbedding(nn.Module):
             m.bias.data.fill_(0.01)
 
     def _init_weights(self) -> None:
-        """Initialize the base weights and dynamic MLP weights."""
-        self.weight_generator.apply(self.weight_init)
-        self.fclayer.apply(self.weight_init)
+        """Initialize weights of all layers."""
+        self.weight_generator.apply(self._init_weight)
+        self.fclayer.apply(self._init_weight)
 
     def forward(self, x: Tensor, wavelengths: Tensor) -> tuple[Tensor, Tensor]:
         """Forward pass of the model.
