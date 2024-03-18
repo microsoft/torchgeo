@@ -17,10 +17,8 @@ np.random.seed(0)
 files = [
     "CDL2017_clip.tif",
     "CDL2018_clip1.tif",
-    "CDL2019_clip.tif",
-    "CDL2022_clip.tif",
+    "CDL2019_clip.tif"
 ]
-
 
 def create_file(path: str, dtype: str):
     """Create the testing file."""
