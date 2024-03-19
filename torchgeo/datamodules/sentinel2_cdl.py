@@ -92,7 +92,7 @@ class Sentinel2CDLDataModule(GeoDataModule):
 
         (self.train_dataset, self.val_dataset, self.test_dataset) = (
             random_grid_cell_assignment(
-                self.dataset, [0.7, 0.10, 0.20], grid_size=8, generator=generator
+                self.dataset, [0.8, 0.10, 0.10], grid_size=8, generator=generator
             )
         )
         if stage in ["fit"]:
