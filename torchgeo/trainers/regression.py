@@ -79,36 +79,6 @@ class RegressionTask(BaseTask):
         self.weights = weights
         super().__init__(ignore="weights")
 
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion.
-
-        Raises:
-            ValueError: If *loss* is invalid.
-        """
-        loss: str = self.hparams["loss"]
-        if loss == "mse":
-            self.criterion: nn.Module = nn.MSELoss()
-        elif loss == "mae":
-            self.criterion = nn.L1Loss()
-        else:
-            raise ValueError(
-                f"Loss type '{loss}' is not valid. "
-                "Currently, supports 'mse' or 'mae' loss."
-            )
-
-    def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
-        metrics = MetricCollection(
-            {
-                "RMSE": MeanSquaredError(squared=False),
-                "MSE": MeanSquaredError(squared=True),
-                "MAE": MeanAbsoluteError(),
-            }
-        )
-        self.train_metrics = metrics.clone(prefix="train_")
-        self.val_metrics = metrics.clone(prefix="val_")
-        self.test_metrics = metrics.clone(prefix="test_")
-
     def configure_models(self) -> None:
         """Initialize the model."""
         # Create model
@@ -137,6 +107,44 @@ class RegressionTask(BaseTask):
             for param in self.model.get_classifier().parameters():
                 param.requires_grad = True
 
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion.
+
+        Raises:
+            ValueError: If *loss* is invalid.
+        """
+        loss: str = self.hparams["loss"]
+        if loss == "mse":
+            self.criterion: nn.Module = nn.MSELoss()
+        elif loss == "mae":
+            self.criterion = nn.L1Loss()
+        else:
+            raise ValueError(
+                f"Loss type '{loss}' is not valid. "
+                "Currently, supports 'mse' or 'mae' loss."
+            )
+
+    def configure_metrics(self) -> None:
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.MeanSquaredError`: The average of the squared
+          differences between the predicted and actual values (MSE) and its
+          square root (RMSE). Lower values are better.
+        * :class:`~torchmetrics.MeanAbsoluteError`: The average of the absolute
+          differences between the predicted and actual values (MAE).
+          Lower values are better.
+        """
+        metrics = MetricCollection(
+            {
+                "RMSE": MeanSquaredError(squared=False),
+                "MSE": MeanSquaredError(squared=True),
+                "MAE": MeanAbsoluteError(),
+            }
+        )
+        self.train_metrics = metrics.clone(prefix="train_")
+        self.val_metrics = metrics.clone(prefix="val_")
+        self.test_metrics = metrics.clone(prefix="test_")
+
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
@@ -151,15 +159,16 @@ class RegressionTask(BaseTask):
             The loss tensor.
         """
         x = batch["image"]
+        batch_size = x.shape[0]
         # TODO: remove .to(...) once we have a real pixelwise regression dataset
         y = batch[self.target_key].to(torch.float)
         y_hat = self(x)
         if y_hat.ndim != y.ndim:
             y = y.unsqueeze(dim=1)
         loss: Tensor = self.criterion(y_hat, y)
-        self.log("train_loss", loss)
+        self.log("train_loss", loss, batch_size=batch_size)
         self.train_metrics(y_hat, y)
-        self.log_dict(self.train_metrics)
+        self.log_dict(self.train_metrics, batch_size=batch_size)
 
         return loss
 
@@ -174,15 +183,16 @@ class RegressionTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
         """
         x = batch["image"]
+        batch_size = x.shape[0]
         # TODO: remove .to(...) once we have a real pixelwise regression dataset
         y = batch[self.target_key].to(torch.float)
         y_hat = self(x)
         if y_hat.ndim != y.ndim:
             y = y.unsqueeze(dim=1)
         loss = self.criterion(y_hat, y)
-        self.log("val_loss", loss)
+        self.log("val_loss", loss, batch_size=batch_size)
         self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics)
+        self.log_dict(self.val_metrics, batch_size=batch_size)
 
         if (
             batch_idx < 10
@@ -223,15 +233,16 @@ class RegressionTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
         """
         x = batch["image"]
+        batch_size = x.shape[0]
         # TODO: remove .to(...) once we have a real pixelwise regression dataset
         y = batch[self.target_key].to(torch.float)
         y_hat = self(x)
         if y_hat.ndim != y.ndim:
             y = y.unsqueeze(dim=1)
         loss = self.criterion(y_hat, y)
-        self.log("test_loss", loss)
+        self.log("test_loss", loss, batch_size=batch_size)
         self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics)
+        self.log_dict(self.test_metrics, batch_size=batch_size)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

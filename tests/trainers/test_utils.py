@@ -9,6 +9,7 @@ import pytest
 import timm
 import torch
 import torch.nn as nn
+from pytest import MonkeyPatch
 from torch.nn.modules import Module
 
 from torchgeo.trainers.utils import (
@@ -44,14 +45,17 @@ def test_load_state_dict(checkpoint: str, model: Module) -> None:
     load_state_dict(model, state_dict)
 
 
-def test_load_state_dict_unequal_input_channels(checkpoint: str, model: Module) -> None:
+def test_load_state_dict_unequal_input_channels(
+    monkeypatch: MonkeyPatch, checkpoint: str, model: Module
+) -> None:
     _, state_dict = extract_backbone(checkpoint)
     expected_in_channels = state_dict["conv1.weight"].shape[1]
 
     in_channels = 7
-    model.conv1 = nn.Conv2d(
+    conv1 = nn.Conv2d(
         in_channels, out_channels=64, kernel_size=7, stride=1, padding=2, bias=False
     )
+    monkeypatch.setattr(model, "conv1", conv1)
 
     warning = (
         f"input channels {in_channels} != input channels in pretrained"
@@ -61,13 +65,16 @@ def test_load_state_dict_unequal_input_channels(checkpoint: str, model: Module) 
         load_state_dict(model, state_dict)
 
 
-def test_load_state_dict_unequal_classes(checkpoint: str, model: Module) -> None:
+def test_load_state_dict_unequal_classes(
+    monkeypatch: MonkeyPatch, checkpoint: str, model: Module
+) -> None:
     _, state_dict = extract_backbone(checkpoint)
     expected_num_classes = state_dict["fc.weight"].shape[0]
 
     num_classes = 10
     in_features = cast(int, cast(nn.Module, model.fc).in_features)
-    model.fc = nn.Linear(in_features, out_features=num_classes)
+    fc = nn.Linear(in_features, out_features=num_classes)
+    monkeypatch.setattr(model, "fc", fc)
 
     warning = (
         f"num classes {num_classes} != num classes in pretrained model"

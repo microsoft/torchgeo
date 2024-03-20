@@ -53,7 +53,7 @@ class MapInWild(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    url = "https://huggingface.co/datasets/burakekim/mapinwild/resolve/main/"
+    url = "https://hf.co/datasets/burakekim/mapinwild/resolve/d963778e31e7e0ed2329c0f4cbe493be532f0e71/"  # noqa: E501
 
     modality_urls = {
         "esa_wc": {"esa_wc/ESA_WC.zip"},

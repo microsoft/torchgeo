@@ -20,13 +20,13 @@ jobs:
         python-version: ['3.9', '3.10', '3.11', '3.12']
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.1.1
+      uses: actions/checkout@v4.1.2
     - name: Set up python
       uses: actions/setup-python@v5.0.0
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache dependencies
-      uses: actions/cache@v4.0.0
+      uses: actions/cache@v4.0.1
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -56,11 +56,10 @@ jobs:
       run: |
         pytest --cov=torchgeo --cov-report=xml --durations=10
         python3 -m torchgeo --help
-    - name: Upload coverage artifact
-      uses: actions/upload-artifact@v4.3.0
+    - name: Report coverage
+      uses: codecov/codecov-action@v3.1.6
       with:
-        name: coverage_${{ matrix.os }}_py-${{ matrix.python-version }}
-        path: coverage.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
     name: minimum
     runs-on: ubuntu-latest
@@ -68,13 +67,13 @@ jobs:
       MPLBACKEND: Agg
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.1.1
+      uses: actions/checkout@v4.1.2
     - name: Set up python
       uses: actions/setup-python@v5.0.0
       with:
         python-version: '3.9'
     - name: Cache dependencies
-      uses: actions/cache@v4.0.0
+      uses: actions/cache@v4.0.1
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -96,11 +95,10 @@ jobs:
       run: |
         pytest --cov=torchgeo --cov-report=xml --durations=10
         python3 -m torchgeo --help
-    - name: Upload coverage artifact
-      uses: actions/upload-artifact@v4.3.0
+    - name: Report coverage
+      uses: codecov/codecov-action@v3.1.6
       with:
-        name: coverage_minimum
-        path: coverage.xml
+        token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true

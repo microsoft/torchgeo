@@ -5,6 +5,7 @@
 
 from .advance import ADVANCE
 from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
+from .agrifieldnet import AgriFieldNet
 from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
@@ -98,6 +99,7 @@ from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
 from .so2sat import So2Sat
+from .south_africa_crop_type import SouthAfricaCropType
 from .south_america_soybean import SouthAmericaSoybean
 from .spacenet import (
     SpaceNet,
@@ -139,6 +141,7 @@ from .zuericrop import ZueriCrop
 __all__ = (
     # GeoDataset
     "AbovegroundLiveWoodyBiomassDensity",
+    "AgriFieldNet",
     "Airphen",
     "AsterGDEM",
     "CanadianBuildingFootprints",
@@ -186,6 +189,7 @@ __all__ = (
     "Sentinel",
     "Sentinel1",
     "Sentinel2",
+    "SouthAfricaCropType",
     "SouthAmericaSoybean",
     # NonGeoDataset
     "ADVANCE",

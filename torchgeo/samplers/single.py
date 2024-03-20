@@ -70,7 +70,7 @@ class RandomGeoSampler(GeoSampler):
         self,
         dataset: GeoDataset,
         size: Union[tuple[float, float], float],
-        length: Optional[int],
+        length: Optional[int] = None,
         roi: Optional[BoundingBox] = None,
         units: Units = Units.PIXELS,
     ) -> None:
