@@ -6,7 +6,9 @@ version: 2
 
 # Set the version of Python
 build:
-  os: ubuntu-22.04
+  apt-packages:
+  - pandoc
+  os: ubuntu-lts-latest
   tools:
     python: "3.12"
 
