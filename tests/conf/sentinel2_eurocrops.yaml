@@ -3,16 +3,16 @@ model:
   init_args:
     loss: "ce"
     model: "deeplabv3+"
-    backbone: "resnet34"
+    backbone: "resnet18"
     in_channels: 13
     num_classes: 3
     num_filters: 1
     ignore_index: 4
 data:
-  class_path: EuroCropsSentinel2DataModule
+  class_path: Sentinel2EuroCropsDataModule
   init_args:
     batch_size: 2
-    patch_size: 16
+    patch_size: 8
   dict_kwargs:
-    eurocrops_paths: "tests/data/eurocrops"
     sentinel2_paths: "tests/data/sentinel2"
+    eurocrops_paths: "tests/data/eurocrops"

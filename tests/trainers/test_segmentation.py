@@ -60,7 +60,6 @@ class TestSemanticSegmentationTask:
             "chesapeake_cvpr_7",
             "deepglobelandcover",
             "etci2021",
-            "eurocrops_sentinel2",
             "gid15",
             "inria",
             "l7irish",
@@ -73,6 +72,7 @@ class TestSemanticSegmentationTask:
             "sen12ms_s1",
             "sen12ms_s2_all",
             "sen12ms_s2_reduced",
+            "sentinel2_eurocrops",
             "spacenet1",
             "ssl4eo_l_benchmark_cdl",
             "ssl4eo_l_benchmark_nlcd",
@@ -82,7 +82,7 @@ class TestSemanticSegmentationTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        if name == "eurocrops_sentinel2":
+        if name == "sentinel2_eurocrops":
             monkeypatch.setattr(
                 EuroCrops,
                 "zenodo_files",

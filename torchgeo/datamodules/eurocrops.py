@@ -7,14 +7,15 @@ from typing import Any, Optional, Union
 
 import kornia.augmentation as K
 from matplotlib.figure import Figure
+import torch
 
-from ..datasets import BoundingBox, EuroCrops, Sentinel2
+from ..datasets import EuroCrops, Sentinel2, random_grid_cell_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
 
 
-class EuroCropsSentinel2DataModule(GeoDataModule):
+class Sentinel2EuroCropsDataModule(GeoDataModule):
     """LightningDataModule implementation for the EuroCrops and Sentinel2 datasets.
 
     Uses the train/val/test splits from the dataset.
@@ -28,7 +29,7 @@ class EuroCropsSentinel2DataModule(GeoDataModule):
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new EuroCropsSentinel2DataModule instance.
+        """Initialize a new Sentinel2EuroCropsDataModule instance.
 
         The dataset is split into train, val, and test by identifying all grid cells
         of size chunk_size with nonzero labels, and randomly assigning those to splits.
@@ -42,6 +43,8 @@ class EuroCropsSentinel2DataModule(GeoDataModule):
                 :class:`~torchgeo.datasets.EuroCrops` (prefix keys with ``eurocrops_``)
                 and :class:`~torchgeo.datasets.Sentinel2`
                 (prefix keys with ``sentinel2_``).
+
+        .. versionadded:: 0.6
         """
         eurocrops_signature = "eurocrops_"
         sentinel2_signature = "sentinel2_"
@@ -75,33 +78,29 @@ class EuroCropsSentinel2DataModule(GeoDataModule):
         self.sentinel2 = Sentinel2(**self.sentinel2_kwargs)
         self.eurocrops = EuroCrops(**self.eurocrops_kwargs)
         self.dataset = self.sentinel2 & self.eurocrops
+        print(self.dataset.bounds)
 
-        roi = self.dataset.bounds
-        midx = roi.minx + (roi.maxx - roi.minx) / 2
-        midy = roi.miny + (roi.maxy - roi.miny) / 2
-
-        if stage in ["fit"]:
-            train_roi = BoundingBox(
-                roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt
+        generator = torch.Generator().manual_seed(0)
+        (self.train_dataset, self.val_dataset, self.test_dataset) = (
+            random_grid_cell_assignment(
+                self.dataset, [0.8, 0.10, 0.10], grid_size=8, generator=generator
             )
+        )
+        if stage in ["fit"]:
             self.train_batch_sampler = RandomBatchGeoSampler(
-                self.dataset, self.patch_size, self.batch_size, self.length, train_roi
+                self.train_dataset, self.patch_size, self.batch_size, self.length
             )
         if stage in ["fit", "validate"]:
-            val_roi = BoundingBox(midx, roi.maxx, roi.miny, midy, roi.mint, roi.maxt)
             self.val_sampler = GridGeoSampler(
-                self.dataset, self.patch_size, self.patch_size, val_roi
+                self.val_dataset, self.patch_size, self.patch_size
             )
         if stage in ["test"]:
-            test_roi = BoundingBox(
-                roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt
-            )
             self.test_sampler = GridGeoSampler(
-                self.dataset, self.patch_size, self.patch_size, test_roi
+                self.test_dataset, self.patch_size, self.patch_size
             )
 
     def plot(self, *args: Any, **kwargs: Any) -> Figure:
-        """Run NCCM plot method.
+        """Run EuroCrops plot method.
 
         Args:
             *args: Arguments passed to plot method.
@@ -109,7 +108,5 @@ class EuroCropsSentinel2DataModule(GeoDataModule):
 
         Returns:
             A matplotlib Figure with the image, ground truth, and predictions.
-
-        .. versionadded:: 0.4
         """
         return self.eurocrops.plot(*args, **kwargs)
