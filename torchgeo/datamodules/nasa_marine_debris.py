@@ -10,9 +10,8 @@ import torch
 from torch.utils.data import random_split
 
 from ..datasets import NASAMarineDebris
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
-from .utils import AugPipe, collate_fn_detection
+from .utils import collate_fn_detection
 
 
 class NASAMarineDebrisDataModule(NonGeoDataModule):
@@ -46,12 +45,10 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
 
-        self.aug = AugPipe(
-            AugmentationSequential(
-                K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'boxes']
-            ),
-            batch_size,
+        self.aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
+        self.aug.keepdim = True  # type: ignore[attr-defined]
 
         self.collate_fn = collate_fn_detection
 
