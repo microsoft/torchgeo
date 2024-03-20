@@ -390,7 +390,7 @@ class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DOFA_MAE = Weights(
-        url="https://huggingface.co/torchgeo/dofa/resolve/main/dofa_base_patch16_224-7cc0f413.pth",  # noqa: E501
+        url="https://hf.co/torchgeo/dofa/resolve/0c252eb36540951934760c96766648733c39d7ab/dofa_base_patch16_224-7cc0f413.pth",  # noqa: E501
         transforms=_dofa_transforms,
         meta={
             "dataset": "SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k",
