@@ -237,8 +237,12 @@ class ObjectDetectionTask(BaseTask):
         """
         x = batch['image']
         batch_size = x.shape[0]
+        # Get bbox key as it can be one of {"bbox", "bbox_xyxy", "bbox_xywh"}
+        for key in batch.keys():
+            if key in {"bbox", "bbox_xyxy", "bbox_xywh"}:
+                bbox_key = key
         y = [
-            {'boxes': batch['boxes'][i], 'labels': batch['labels'][i]}
+            {"boxes": batch[bbox_key][i], "labels": batch["class"][i]}
             for i in range(batch_size)
         ]
         loss_dict = self(x, y)
@@ -258,8 +262,12 @@ class ObjectDetectionTask(BaseTask):
         """
         x = batch['image']
         batch_size = x.shape[0]
+        # Get bbox key as it can be one of {"bbox", "bbox_xyxy", "bbox_xywh"}
+        for key in batch.keys():
+            if key in {"bbox", "bbox_xyxy", "bbox_xywh"}:
+                bbox_key = key
         y = [
-            {'boxes': batch['boxes'][i], 'labels': batch['labels'][i]}
+            {"boxes": batch[bbox_key][i], "labels": batch["class"][i]}
             for i in range(batch_size)
         ]
         y_hat = self(x)
@@ -312,8 +320,12 @@ class ObjectDetectionTask(BaseTask):
         """
         x = batch['image']
         batch_size = x.shape[0]
+        # Get bbox key as it can be one of {"bbox", "bbox_xyxy", "bbox_xywh"}
+        for key in batch.keys():
+            if key in {"bbox", "bbox_xyxy", "bbox_xywh"}:
+                bbox_key = key
         y = [
-            {'boxes': batch['boxes'][i], 'labels': batch['labels'][i]}
+            {"boxes": batch[bbox_key][i], "labels": batch["class"][i]}
             for i in range(batch_size)
         ]
         y_hat = self(x)

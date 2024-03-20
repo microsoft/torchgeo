@@ -70,8 +70,8 @@ class BaseDataModule(LightningDataModule):
 
         # Data augmentation
         Transform = Callable[[dict[str, Tensor]], dict[str, Tensor]]
-        self.aug: Transform = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=['image']
+        self.aug: Transform = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None
         )
         self.train_aug: Transform | None = None
         self.val_aug: Transform | None = None
