@@ -142,19 +142,9 @@ class SimCLRTask(BaseTask):
             size, grayscale_weights
         )
 
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion."""
-        self.criterion = NTXentLoss(
-            self.hparams["temperature"],
-            self.hparams["memory_bank_size"],
-            self.hparams["gather_distributed"],
-        )
-
     def configure_models(self) -> None:
         """Initialize the model."""
         weights = self.weights
-        hidden_dim: int = self.hparams["hidden_dim"]
-        output_dim: int = self.hparams["output_dim"]
 
         # Create backbone
         self.backbone = timm.create_model(
@@ -176,13 +166,16 @@ class SimCLRTask(BaseTask):
 
         # Create projection head
         input_dim = self.backbone.num_features
-        if hidden_dim is None:
-            hidden_dim = input_dim
-        if output_dim is None:
-            output_dim = input_dim
+        if self.hparams["hidden_dim"] is None:
+            self.hparams["hidden_dim"] = input_dim
+        if self.hparams["output_dim"] is None:
+            self.hparams["output_dim"] = input_dim
 
         self.projection_head = SimCLRProjectionHead(
-            input_dim, hidden_dim, output_dim, self.hparams["layers"]
+            input_dim,
+            self.hparams["hidden_dim"],
+            self.hparams["output_dim"],
+            self.hparams["layers"],
         )
 
         # Initialize moving average of output
@@ -191,6 +184,22 @@ class SimCLRTask(BaseTask):
         # TODO
         # v1+: add global batch norm
         # v2: add selective kernels, channel-wise attention mechanism
+
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion."""
+        try:
+            self.criterion = NTXentLoss(
+                self.hparams["temperature"],
+                (self.hparams["memory_bank_size"], self.hparams["output_dim"]),
+                self.hparams["gather_distributed"],
+            )
+        except TypeError:
+            # lightly 1.4.24 and older
+            self.criterion = NTXentLoss(
+                self.hparams["temperature"],
+                self.hparams["memory_bank_size"],
+                self.hparams["gather_distributed"],
+            )
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
         """Forward pass of the model.

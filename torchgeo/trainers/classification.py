@@ -75,6 +75,35 @@ class ClassificationTask(BaseTask):
         self.weights = weights
         super().__init__(ignore="weights")
 
+    def configure_models(self) -> None:
+        """Initialize the model."""
+        weights = self.weights
+
+        # Create model
+        self.model = timm.create_model(
+            self.hparams["model"],
+            num_classes=self.hparams["num_classes"],
+            in_chans=self.hparams["in_channels"],
+            pretrained=weights is True,
+        )
+
+        # Load weights
+        if weights and weights is not True:
+            if isinstance(weights, WeightsEnum):
+                state_dict = weights.get_state_dict(progress=True)
+            elif os.path.exists(weights):
+                _, state_dict = utils.extract_backbone(weights)
+            else:
+                state_dict = get_weight(weights).get_state_dict(progress=True)
+            utils.load_state_dict(self.model, state_dict)
+
+        # Freeze backbone and unfreeze classifier head
+        if self.hparams["freeze_backbone"]:
+            for param in self.model.parameters():
+                param.requires_grad = False
+            for param in self.model.get_classifier().parameters():
+                param.requires_grad = True
+
     def configure_losses(self) -> None:
         """Initialize the loss criterion.
 
@@ -133,35 +162,6 @@ class ClassificationTask(BaseTask):
         self.train_metrics = metrics.clone(prefix="train_")
         self.val_metrics = metrics.clone(prefix="val_")
         self.test_metrics = metrics.clone(prefix="test_")
-
-    def configure_models(self) -> None:
-        """Initialize the model."""
-        weights = self.weights
-
-        # Create model
-        self.model = timm.create_model(
-            self.hparams["model"],
-            num_classes=self.hparams["num_classes"],
-            in_chans=self.hparams["in_channels"],
-            pretrained=weights is True,
-        )
-
-        # Load weights
-        if weights and weights is not True:
-            if isinstance(weights, WeightsEnum):
-                state_dict = weights.get_state_dict(progress=True)
-            elif os.path.exists(weights):
-                _, state_dict = utils.extract_backbone(weights)
-            else:
-                state_dict = get_weight(weights).get_state_dict(progress=True)
-            utils.load_state_dict(self.model, state_dict)
-
-        # Freeze backbone and unfreeze classifier head
-        if self.hparams["freeze_backbone"]:
-            for param in self.model.parameters():
-                param.requires_grad = False
-            for param in self.model.get_classifier().parameters():
-                param.requires_grad = True
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

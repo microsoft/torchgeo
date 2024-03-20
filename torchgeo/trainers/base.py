@@ -36,19 +36,19 @@ class BaseTask(LightningModule, ABC):
         """
         super().__init__()
         self.save_hyperparameters(ignore=ignore)
+        self.configure_models()
         self.configure_losses()
         self.configure_metrics()
-        self.configure_models()
+
+    @abstractmethod
+    def configure_models(self) -> None:
+        """Initialize the model."""
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
-
-    @abstractmethod
-    def configure_models(self) -> None:
-        """Initialize the model."""
 
     def configure_optimizers(
         self,

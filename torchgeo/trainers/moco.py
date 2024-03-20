@@ -226,14 +226,6 @@ class MoCoTask(BaseTask):
         self.augmentation1 = augmentation1 or aug1
         self.augmentation2 = augmentation2 or aug2
 
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion."""
-        self.criterion = NTXentLoss(
-            self.hparams["temperature"],
-            self.hparams["memory_bank_size"],
-            self.hparams["gather_distributed"],
-        )
-
     def configure_models(self) -> None:
         """Initialize the model."""
         model: str = self.hparams["model"]
@@ -281,6 +273,22 @@ class MoCoTask(BaseTask):
 
         # Initialize moving average of output
         self.avg_output_std = 0.0
+
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion."""
+        try:
+            self.criterion = NTXentLoss(
+                self.hparams["temperature"],
+                (self.hparams["memory_bank_size"], self.hparams["output_dim"]),
+                self.hparams["gather_distributed"],
+            )
+        except TypeError:
+            # lightly 1.4.24 and older
+            self.criterion = NTXentLoss(
+                self.hparams["temperature"],
+                self.hparams["memory_bank_size"],
+                self.hparams["gather_distributed"],
+            )
 
     def configure_optimizers(
         self,
