@@ -1,2 +1,2 @@
-Weight,Source,Citation,License
-DOFABase16_Weights.DOFA_MAE,`link <https://github.com/ShadowXZT/DOFA-Net>`__,`link <TODO>`__,CC-BY-4.0
+Weight,Source,Citation,License,bigearthnet,forestnet,brick-kiln,pv4ger,so2sat,eurosat,pv4ger-seg,nz-cattle,NeonTree,cashew-plant,SA-crop,chesapeake
+DOFABase16_Weights.DOFA_MAE,`link <https://github.com/ShadowXZT/DOFA-Net>`__,`link <TODO>`__,CC-BY-4.0,63.8,45.3,94.7,96.9,52.1,92.2,94.7,81.6,58.6,48.3,31.3,65.4
