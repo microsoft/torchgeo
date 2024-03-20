@@ -4,73 +4,17 @@
 """Common datamodule utilities."""
 
 import math
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from typing import Any
 
 import numpy as np
 import torch
-from einops import rearrange
 from torch import Tensor
-from torch.nn import Module
 
 
 # Based on lightning_lite.utilities.exceptions
 class MisconfigurationException(Exception):
     """Exception used to inform users of misuse with Lightning."""
-
-
-class AugPipe(Module):
-    """Pipeline for applying augmentations sequentially on select data keys.
-
-    .. versionadded:: 0.6
-    """
-
-    def __init__(
-        self, augs: Callable[[dict[str, Any]], dict[str, Any]], batch_size: int
-    ) -> None:
-        """Initialize a new AugPipe instance.
-
-        Args:
-            augs: Augmentations to apply.
-            batch_size: Batch size
-        """
-        super().__init__()
-        self.augs = augs
-        self.batch_size = batch_size
-
-    def forward(self, batch: dict[str, Tensor]) -> dict[str, Tensor]:
-        """Apply the augmentation.
-
-        Args:
-            batch: Input batch.
-
-        Returns:
-            Augmented batch.
-        """
-        batch_len = len(batch['image'])
-        for bs in range(batch_len):
-            batch_dict = {
-                'image': batch['image'][bs],
-                'labels': batch['labels'][bs],
-                'boxes': batch['boxes'][bs],
-            }
-
-            if 'masks' in batch:
-                batch_dict['masks'] = batch['masks'][bs]
-
-            batch_dict = self.augs(batch_dict)
-
-            batch['image'][bs] = batch_dict['image']
-            batch['labels'][bs] = batch_dict['labels']
-            batch['boxes'][bs] = batch_dict['boxes']
-
-            if 'masks' in batch:
-                batch['masks'][bs] = batch_dict['masks']
-
-        # Stack images
-        batch['image'] = rearrange(batch['image'], 'b () c h w -> b c h w')
-
-        return batch
 
 
 def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
@@ -85,17 +29,23 @@ def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
     .. versionadded:: 0.6
     """
     output: dict[str, Any] = {}
-    output['image'] = [sample['image'] for sample in batch]
-    output['boxes'] = [sample['boxes'].float() for sample in batch]
-    if 'labels' in batch[0]:
-        output['labels'] = [sample['labels'] for sample in batch]
+    output['image'] = torch.stack([sample['image'] for sample in batch])
+    # Get bbox key as it can be one of {"bbox", "bbox_xyxy", "bbox_xywh"}
+    bbox_key = 'boxes'
+    for key in batch[0].keys():
+        if key in {'bbox', 'bbox_xyxy', 'bbox_xywh'}:
+            bbox_key = key
+
+    output[bbox_key] = [sample[bbox_key].float() for sample in batch]
+    if 'class' in batch[0].keys():
+        output['class'] = [sample['class'] for sample in batch]
     else:
-        output['labels'] = [
-            torch.tensor([1] * len(sample['boxes'])) for sample in batch
+        output['class'] = [
+            torch.tensor([1] * len(sample[bbox_key])) for sample in batch
         ]
 
-    if 'masks' in batch[0]:
-        output['masks'] = [sample['masks'] for sample in batch]
+    if 'mask' in batch[0]:
+        output['mask'] = [sample['mask'] for sample in batch]
     return output
 
 

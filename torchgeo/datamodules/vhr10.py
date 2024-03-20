@@ -11,9 +11,8 @@ from torch.utils.data import random_split
 
 from ..datasets import VHR10
 from ..samplers.utils import _to_tuple
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
-from .utils import AugPipe, collate_fn_detection
+from .utils import collate_fn_detection
 
 
 class VHR10DataModule(NonGeoDataModule):
@@ -52,25 +51,20 @@ class VHR10DataModule(NonGeoDataModule):
 
         self.collate_fn = collate_fn_detection
 
-        self.train_aug = AugPipe(
-            AugmentationSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                K.Resize(self.patch_size),
-                K.RandomHorizontalFlip(),
-                K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.7),
-                K.RandomVerticalFlip(),
-                data_keys=['image', 'boxes', 'masks'],
-            ),
-            batch_size,
+        self.train_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            K.RandomHorizontalFlip(),
+            K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.7),
+            K.RandomVerticalFlip(),
+            data_keys=None,
+            keepdim=True,
         )
-        self.aug = AugPipe(
-            AugmentationSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                K.Resize(self.patch_size),
-                data_keys=['image', 'boxes', 'masks'],
-            ),
-            batch_size,
+        self.train_aug.keepdim = True  # type: ignore[attr-defined]
+
+        self.aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
+        self.aug.keepdim = True  # type: ignore[attr-defined]
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -78,6 +72,10 @@ class VHR10DataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
+        self.kwargs['transforms'] = K.AugmentationSequential(
+            K.Resize(self.patch_size), data_keys=None, keepdim=True
+        )
+        self.kwargs['transforms'].keepdim = True
         self.dataset = VHR10(**self.kwargs)
         generator = torch.Generator().manual_seed(0)
         self.train_dataset, self.val_dataset, self.test_dataset = random_split(
