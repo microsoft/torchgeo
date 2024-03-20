@@ -79,7 +79,7 @@ Sensor-Agnostic
 These weights can be used with imagery from any satellite/sensor.
 
 .. csv-table::
-   :widths: 45 10 10 10
+   :widths: 45 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10
    :header-rows: 1
    :align: center
    :file: agnostic_pretrained_weights.csv
@@ -89,7 +89,7 @@ NAIP
 ----
 
 .. csv-table::
-   :widths: 45 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10
+   :widths: 45 10 10 10 10
    :header-rows: 1
    :align: center
    :file: naip_pretrained_weights.csv
