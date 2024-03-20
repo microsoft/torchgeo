@@ -1,13 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from functools import partial
 from pathlib import Path
 from typing import Any
 
 import pytest
 import torch
-import torch.nn as nn
 import torchvision
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
@@ -64,14 +62,11 @@ class TestDOFA:
         num_classes = 10
         global_pool = num_channels % 2 == 0
         model = DOFA(
-            patch_size=16,
             embed_dim=384,
             depth=12,
             num_heads=6,
             num_classes=num_classes,
             global_pool=global_pool,
-            mlp_ratio=4,
-            norm_layer=partial(nn.LayerNorm, eps=1e-6),  # type: ignore[arg-type]
         )
         batch = torch.randn([batch_size, num_channels, 224, 224])
         out = model(batch, wavelengths)
