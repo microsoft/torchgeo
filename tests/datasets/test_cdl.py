@@ -34,8 +34,8 @@ class TestCDL:
         monkeypatch.setattr(torchgeo.datasets.cdl, "download_url", download_url)
 
         md5s = {
-            2021: "e929beb9c8e59fa1d7b7f82e64edaae1",
-            2020: "e95c2d40ce0c261ed6ee0bd00b49e4b6",
+            2023: "3fbd3eecf92b8ce1ae35060ada463c6d",
+            2022: "826c6fd639d9cdd94a44302fbc5b76c3",
         }
         monkeypatch.setattr(CDL, "md5s", md5s)
         url = os.path.join("tests", "data", "cdl", "{}_30m_cdls.zip")
@@ -48,7 +48,7 @@ class TestCDL:
             transforms=transforms,
             download=True,
             checksum=True,
-            years=[2020, 2021],
+            years=[2023, 2022],
         )
 
     def test_getitem(self, dataset: CDL) -> None:
@@ -60,7 +60,7 @@ class TestCDL:
     def test_classes(self) -> None:
         root = os.path.join("tests", "data", "cdl")
         classes = list(CDL.cmap.keys())[:5]
-        ds = CDL(root, years=[2021], classes=classes)
+        ds = CDL(root, years=[2023], classes=classes)
         sample = ds[ds.bounds]
         mask = sample["mask"]
         assert mask.max() < len(classes)
@@ -75,19 +75,19 @@ class TestCDL:
 
     def test_full_year(self, dataset: CDL) -> None:
         bbox = dataset.bounds
-        time = datetime(2021, 6, 1).timestamp()
+        time = datetime(2023, 6, 1).timestamp()
         query = BoundingBox(bbox.minx, bbox.maxx, bbox.miny, bbox.maxy, time, time)
         next(dataset.index.intersection(tuple(query)))
 
     def test_already_extracted(self, dataset: CDL) -> None:
-        CDL(dataset.paths, years=[2020, 2021])
+        CDL(dataset.paths, years=[2023, 2022])
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join("tests", "data", "cdl", "*_30m_cdls.zip")
         root = str(tmp_path)
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)
-        CDL(root, years=[2020, 2021])
+        CDL(root, years=[2023, 2022])
 
     def test_invalid_year(self, tmp_path: Path) -> None:
         with pytest.raises(

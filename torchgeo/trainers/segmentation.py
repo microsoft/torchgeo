@@ -90,6 +90,63 @@ class SemanticSegmentationTask(BaseTask):
         self.weights = weights
         super().__init__(ignore="weights")
 
+    def configure_models(self) -> None:
+        """Initialize the model.
+
+        Raises:
+            ValueError: If *model* is invalid.
+        """
+        model: str = self.hparams["model"]
+        backbone: str = self.hparams["backbone"]
+        weights = self.weights
+        in_channels: int = self.hparams["in_channels"]
+        num_classes: int = self.hparams["num_classes"]
+        num_filters: int = self.hparams["num_filters"]
+
+        if model == "unet":
+            self.model = smp.Unet(
+                encoder_name=backbone,
+                encoder_weights="imagenet" if weights is True else None,
+                in_channels=in_channels,
+                classes=num_classes,
+            )
+        elif model == "deeplabv3+":
+            self.model = smp.DeepLabV3Plus(
+                encoder_name=backbone,
+                encoder_weights="imagenet" if weights is True else None,
+                in_channels=in_channels,
+                classes=num_classes,
+            )
+        elif model == "fcn":
+            self.model = FCN(
+                in_channels=in_channels, classes=num_classes, num_filters=num_filters
+            )
+        else:
+            raise ValueError(
+                f"Model type '{model}' is not valid. "
+                "Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
+            )
+
+        if model != "fcn":
+            if weights and weights is not True:
+                if isinstance(weights, WeightsEnum):
+                    state_dict = weights.get_state_dict(progress=True)
+                elif os.path.exists(weights):
+                    _, state_dict = utils.extract_backbone(weights)
+                else:
+                    state_dict = get_weight(weights).get_state_dict(progress=True)
+                self.model.encoder.load_state_dict(state_dict)
+
+        # Freeze backbone
+        if self.hparams["freeze_backbone"] and model in ["unet", "deeplabv3+"]:
+            for param in self.model.encoder.parameters():
+                param.requires_grad = False
+
+        # Freeze decoder
+        if self.hparams["freeze_decoder"] and model in ["unet", "deeplabv3+"]:
+            for param in self.model.decoder.parameters():
+                param.requires_grad = False
+
     def configure_losses(self) -> None:
         """Initialize the loss criterion.
 
@@ -154,63 +211,6 @@ class SemanticSegmentationTask(BaseTask):
         self.train_metrics = metrics.clone(prefix="train_")
         self.val_metrics = metrics.clone(prefix="val_")
         self.test_metrics = metrics.clone(prefix="test_")
-
-    def configure_models(self) -> None:
-        """Initialize the model.
-
-        Raises:
-            ValueError: If *model* is invalid.
-        """
-        model: str = self.hparams["model"]
-        backbone: str = self.hparams["backbone"]
-        weights = self.weights
-        in_channels: int = self.hparams["in_channels"]
-        num_classes: int = self.hparams["num_classes"]
-        num_filters: int = self.hparams["num_filters"]
-
-        if model == "unet":
-            self.model = smp.Unet(
-                encoder_name=backbone,
-                encoder_weights="imagenet" if weights is True else None,
-                in_channels=in_channels,
-                classes=num_classes,
-            )
-        elif model == "deeplabv3+":
-            self.model = smp.DeepLabV3Plus(
-                encoder_name=backbone,
-                encoder_weights="imagenet" if weights is True else None,
-                in_channels=in_channels,
-                classes=num_classes,
-            )
-        elif model == "fcn":
-            self.model = FCN(
-                in_channels=in_channels, classes=num_classes, num_filters=num_filters
-            )
-        else:
-            raise ValueError(
-                f"Model type '{model}' is not valid. "
-                "Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
-            )
-
-        if model != "fcn":
-            if weights and weights is not True:
-                if isinstance(weights, WeightsEnum):
-                    state_dict = weights.get_state_dict(progress=True)
-                elif os.path.exists(weights):
-                    _, state_dict = utils.extract_backbone(weights)
-                else:
-                    state_dict = get_weight(weights).get_state_dict(progress=True)
-                self.model.encoder.load_state_dict(state_dict)
-
-        # Freeze backbone
-        if self.hparams["freeze_backbone"] and model in ["unet", "deeplabv3+"]:
-            for param in self.model.encoder.parameters():
-                param.requires_grad = False
-
-        # Freeze decoder
-        if self.hparams["freeze_decoder"] and model in ["unet", "deeplabv3+"]:
-            for param in self.model.decoder.parameters():
-                param.requires_grad = False
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
