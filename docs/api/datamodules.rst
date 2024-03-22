@@ -26,6 +26,11 @@ NAIP
 
 .. autoclass:: NAIPChesapeakeDataModule
 
+Sentinel
+^^^^^^^^
+
+.. autoclass:: Sentinel2CDLDataModule
+
 Non-geospatial DataModules
 --------------------------
 
