@@ -29,6 +29,7 @@ from .resisc45 import RESISC45DataModule
 from .seco import SeasonalContrastS2DataModule
 from .sen12ms import SEN12MSDataModule
 from .sentinel2_cdl import Sentinel2CDLDataModule
+from .sentinel2_nccm import Sentinel2NCCMDataModule
 from .skippd import SKIPPDDataModule
 from .so2sat import So2SatDataModule
 from .spacenet import SpaceNet1DataModule
@@ -49,6 +50,7 @@ __all__ = (
     "L8BiomeDataModule",
     "NAIPChesapeakeDataModule",
     "Sentinel2CDLDataModule",
+    "Sentinel2NCCMDataModule",
     # NonGeoDataset
     "BigEarthNetDataModule",
     "ChaBuDDataModule",
