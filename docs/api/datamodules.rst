@@ -6,6 +6,11 @@ torchgeo.datamodules
 Geospatial DataModules
 ----------------------
 
+AgriFieldNet
+^^^^^^^^^^^^
+
+.. autoclass:: AgriFieldNetDataModule
+
 Chesapeake Land Cover
 ^^^^^^^^^^^^^^^^^^^^^
 
