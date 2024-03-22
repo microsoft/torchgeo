@@ -43,7 +43,7 @@ class Sentinel2NCCMDataModule(GeoDataModule):
                 :class:`~torchgeo.datasets.Sentinel2`
                 (prefix keys with ``sentinel2_``).
         """
-        # Define prefix for Cropland Data Layer (NCCM) and Sentinel-2 arguments
+        # Define prefix for NCCM and Sentinel-2 arguments
         nccm_signature = "nccm_"
         sentinel2_signature = "sentinel2_"
         self.nccm_kwargs = {}
@@ -92,7 +92,7 @@ class Sentinel2NCCMDataModule(GeoDataModule):
 
         (self.train_dataset, self.val_dataset, self.test_dataset) = (
             random_grid_cell_assignment(
-                self.dataset, [0.7, 0.1, 0.2], grid_size=8, generator=generator
+                self.dataset, [0.8, 0.1, 0.1], grid_size=8, generator=generator
             )
         )
         if stage in ["fit"]:
