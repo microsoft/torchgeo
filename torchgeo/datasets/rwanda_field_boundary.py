@@ -244,6 +244,10 @@ class RwandaFieldBoundary(NonGeoDataset):
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
+
+        ##-- feb2024
+        ## azcopy sync https://radiantearth.blob.core.windows.net/mlhub/nasa_rwanda_field_boundary_competition . --recursive=true
+
         for collection_id in self.collection_ids:
             download_radiant_mlhub_collection(collection_id, self.root, self.api_key)
 
