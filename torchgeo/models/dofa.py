@@ -17,7 +17,7 @@ from torchvision.models._api import Weights, WeightsEnum
 
 from ..transforms import AugmentationSequential
 
-__all__ = ["DOFABase16_Weights"]
+__all__ = ["DOFABase16_Weights", "DOFALarge16_Weights"]
 
 
 def position_embedding(embed_dim: int, pos: Tensor) -> Tensor:
