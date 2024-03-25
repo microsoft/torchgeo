@@ -36,6 +36,7 @@ Sentinel
 
 .. autoclass:: Sentinel2CDLDataModule
 .. autoclass:: Sentinel2NCCMDataModule
+.. autoclass:: Sentinel2SouthAmericaSoybeanDataModule
 
 Non-geospatial DataModules
 --------------------------
