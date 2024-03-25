@@ -92,7 +92,9 @@ class Sentinel2SouthAmericaSoybeanDataModule(GeoDataModule):
 
         generator = torch.Generator().manual_seed(1)
         (self.train_dataset, self.val_dataset, self.test_dataset) = (
-            random_grid_cell_assignment(self.dataset, [0.8, 0.1, 0.1], grid_size=8, generator=generator)
+            random_grid_cell_assignment(
+                self.dataset, [0.8, 0.1, 0.1], grid_size=8, generator=generator
+            )
         )
 
         if stage in ["fit"]:
