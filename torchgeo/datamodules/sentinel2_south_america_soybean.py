@@ -9,10 +9,12 @@ from typing import Any, Optional, Union
 
 import kornia.augmentation as K
 import torch
+from kornia.constants import DataKey, Resample
 from matplotlib.figure import Figure
 
 from ..datasets import Sentinel2, SouthAmericaSoybean, random_grid_cell_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
+from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
 
@@ -61,6 +63,17 @@ class Sentinel2SouthAmericaSoybeanDataModule(GeoDataModule):
             **kwargs,
         )
 
+        self.train_aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
+            K.RandomVerticalFlip(p=0.5),
+            K.RandomHorizontalFlip(p=0.5),
+            data_keys=["image", "mask"],
+            extra_args={
+                DataKey.MASK: {"resample": Resample.NEAREST, "align_corners": None}
+            },
+        )
+
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "mask"]
         )
@@ -79,7 +92,7 @@ class Sentinel2SouthAmericaSoybeanDataModule(GeoDataModule):
 
         generator = torch.Generator().manual_seed(1)
         (self.train_dataset, self.val_dataset, self.test_dataset) = (
-            random_grid_cell_assignment(self.dataset, [0.8, 0.1, 0.1], 8, generator)
+            random_grid_cell_assignment(self.dataset, [0.8, 0.1, 0.1], grid_size=8, generator=generator)
         )
 
         if stage in ["fit"]:
