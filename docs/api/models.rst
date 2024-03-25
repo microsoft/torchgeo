@@ -19,6 +19,7 @@ DOFA
 .. autofunction:: dofa_large_patch16_224
 .. autofunction:: dofa_huge_patch16_224
 .. autoclass:: DOFABase16_Weights
+.. autoclass:: DOFALarge16_Weights
 
 FarSeg
 ^^^^^^

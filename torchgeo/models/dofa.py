@@ -229,11 +229,11 @@ class DOFA(nn.Module):
 
     Reference implementation:
 
-    * https://github.com/ShadowXZT/DOFA-Net
+    * https://github.com/zhu-xlab/DOFA
 
     If you use this model in your research, please cite the following paper:
 
-    * TODO
+    * https://arxiv.org/abs/2403.15356
 
     .. versionadded:: 0.6
     """
@@ -373,7 +373,7 @@ class DOFA(nn.Module):
         return x
 
 
-# https://github.com/ShadowXZT/DOFA-Net/blob/master/normalize_dataset.py
+# https://github.com/zhu-xlab/DOFA/blob/master/normalize_dataset.py
 # Normalization is sensor-dependent and is therefore left out
 _dofa_transforms = AugmentationSequential(K.CenterCrop((224, 224)), data_keys=["image"])
 
@@ -390,13 +390,32 @@ class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DOFA_MAE = Weights(
-        url="https://hf.co/torchgeo/dofa/resolve/0c252eb36540951934760c96766648733c39d7ab/dofa_base_patch16_224-7cc0f413.pth",  # noqa: E501
+        url="https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_base_patch16_224-7cc0f413.pth",  # noqa: E501
         transforms=_dofa_transforms,
         meta={
             "dataset": "SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k",
             "model": "dofa_base_patch16_224",
-            "publication": "TODO",
-            "repo": "https://github.com/ShadowXZT/DOFA-Net",
+            "publication": "https://arxiv.org/abs/2403.15356",
+            "repo": "https://github.com/zhu-xlab/DOFA",
+            "ssl_method": "mae",
+        },
+    )
+
+
+class DOFALarge16_Weights(WeightsEnum):  # type: ignore[misc]
+    """Dynamic One-For-All (DOFA) large patch size 16 weights.
+
+    .. versionadded:: 0.6
+    """
+
+    DOFA_MAE = Weights(
+        url="https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_large_patch16_224-fbd47fa9.pth",  # noqa: E501
+        transforms=_dofa_transforms,
+        meta={
+            "dataset": "SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k",
+            "model": "dofa_large_patch16_224",
+            "publication": "https://arxiv.org/abs/2403.15356",
+            "repo": "https://github.com/zhu-xlab/DOFA",
             "ssl_method": "mae",
         },
     )
@@ -407,7 +426,7 @@ def dofa_small_patch16_224(**kwargs: Any) -> DOFA:
 
     If you use this model in your research, please cite the following paper:
 
-    * TODO
+    * https://arxiv.org/abs/2403.15356
 
     .. versionadded:: 0.6
 
@@ -428,7 +447,7 @@ def dofa_base_patch16_224(
 
     If you use this model in your research, please cite the following paper:
 
-    * TODO
+    * https://arxiv.org/abs/2403.15356
 
     .. versionadded:: 0.6
 
@@ -457,22 +476,39 @@ def dofa_base_patch16_224(
     return model
 
 
-def dofa_large_patch16_224(**kwargs: Any) -> DOFA:
+def dofa_large_patch16_224(
+    weights: Optional[DOFALarge16_Weights] = None, **kwargs: Any
+) -> DOFA:
     """Dynamic One-For-All (DOFA) large patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
 
-    * TODO
+    * https://arxiv.org/abs/2403.15356
 
     .. versionadded:: 0.6
 
     Args:
+        weights: Pre-trained model weights to use.
         **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA large 16 model.
     """
     model = DOFA(patch_size=16, embed_dim=1024, depth=24, num_heads=16, **kwargs)
+
+    if weights:
+        missing_keys, unexpected_keys = model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        # Both fc_norm and head are generated dynamically
+        assert set(missing_keys) <= {
+            "fc_norm.weight",
+            "fc_norm.bias",
+            "head.weight",
+            "head.bias",
+        }
+        assert not unexpected_keys
+
     return model
 
 
@@ -481,7 +517,7 @@ def dofa_huge_patch16_224(**kwargs: Any) -> DOFA:
 
     If you use this model in your research, please cite the following paper:
 
-    * TODO
+    * https://arxiv.org/abs/2403.15356
 
     .. versionadded:: 0.6
 
