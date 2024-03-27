@@ -61,6 +61,11 @@ Deep Globe Land Cover Challenge
 
 .. autoclass:: DeepGlobeLandCoverDataModule
 
+Digital Typhoon Analysis
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: DigitalTyphoonAnalysisDataModule
+
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
