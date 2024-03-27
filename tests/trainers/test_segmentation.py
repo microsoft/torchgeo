@@ -82,13 +82,6 @@ class TestSemanticSegmentationTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        if name == "sentinel2_eurocrops":
-            monkeypatch.setattr(
-                EuroCrops,
-                "zenodo_files",
-                [("AA.zip", "95cb7be03bddafbf6195ae3ef187e9a3")],
-            )
-
         if name == "naipchesapeake":
             pytest.importorskip("zipfile_deflate64")
 

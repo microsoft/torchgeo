@@ -12,7 +12,7 @@ data:
   class_path: Sentinel2EuroCropsDataModule
   init_args:
     batch_size: 2
-    patch_size: 8
+    patch_size: 16
   dict_kwargs:
     sentinel2_paths: "tests/data/sentinel2"
     eurocrops_paths: "tests/data/eurocrops"

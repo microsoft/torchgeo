@@ -78,12 +78,11 @@ class Sentinel2EuroCropsDataModule(GeoDataModule):
         self.sentinel2 = Sentinel2(**self.sentinel2_kwargs)
         self.eurocrops = EuroCrops(**self.eurocrops_kwargs)
         self.dataset = self.sentinel2 & self.eurocrops
-        print(self.dataset.bounds)
 
         generator = torch.Generator().manual_seed(0)
         (self.train_dataset, self.val_dataset, self.test_dataset) = (
             random_grid_cell_assignment(
-                self.dataset, [0.8, 0.10, 0.10], grid_size=8, generator=generator
+                self.dataset, [0.8, 0.1, 0.1], grid_size=8, generator=generator
             )
         )
         if stage in ["fit"]:
