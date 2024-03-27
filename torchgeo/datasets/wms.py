@@ -36,7 +36,7 @@ class WMSDataset(GeoDataset):
         if crs is not None:
             self._crs = CRS.from_epsg(crs)
         self._wms = WebMapService(url)
-        self._format = self._wms.getOperationByName('GetMap').formatOptions[0]
+        self._format = self._wms.getOperationByName("GetMap").formatOptions[0]
         self._layers = list(self._wms.contents)
 
         if layer in self._layers:
@@ -47,16 +47,25 @@ class WMSDataset(GeoDataset):
         self._layer_name = layer
         coords = self._wms[layer].boundingBox
         self.index = Index(interleaved=False, properties=Property(dimension=3),)
-        self.index.insert(0, (float(coords[0]), float(coords[2]), float(coords[1]),
-                              float(coords[3]), 0, 9.223372036854776e+18))
+        self.index.insert(
+            0,
+            (
+                float(coords[0]),
+                float(coords[2]),
+                float(coords[1]),
+                float(coords[3]),
+                0,
+                9.223372036854776e+18
+            )
+        )
         if crs is None:
             i = 0
             while self._crs is None:
                 crs_str = sorted(self._layer.crsOptions)[i].upper()
-                if 'EPSG:' in crs_str:
+                if "EPSG:" in crs_str:
                     crs_str = crs_str[5:]
-                elif 'CRS:84':
-                    crs_str = '4326'
+                elif "CRS:84":
+                    crs_str = "4326"
                 try:
                     self._crs = CRS.from_epsg(crs_str)
                 except CRSError:
@@ -80,14 +89,15 @@ class WMSDataset(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        img = self._wms.getmap(layers=[self._layer_name],
-                               srs="epsg:"+str(self.crs.to_epsg()),
-                               bbox=(query.minx, query.miny, query.maxx, query.maxy),
-                               # TODO fix size
-                               size=(500, 500),
-                               format=self._format,
-                               transparent=True
-                               )
+        img = self._wms.getmap(
+            layers=[self._layer_name],
+            srs="epsg:"+str(self.crs.to_epsg()),
+            bbox=(query.minx, query.miny, query.maxx, query.maxy),
+            # TODO fix size
+            size=(500, 500),
+            format=self._format,
+            transparent=True
+        )
         sample = {"crs": self.crs, "bbox": query}
 
         transform = transforms.Compose([transforms.ToTensor()])
