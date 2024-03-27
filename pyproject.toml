@@ -276,6 +276,7 @@ filterwarnings = [
 ]
 markers = [
     "slow: marks tests as slow",
+    "online: marks a test as needing to be online"
 ]
 norecursedirs = [
     ".ipynb_checkpoints",
