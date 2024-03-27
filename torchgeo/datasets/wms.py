@@ -21,6 +21,7 @@ class WMSDataset(GeoDataset):
     """
     Allow models to fetch images from a WMS (at a good resolution)
     """
+
     _url = None
     _wms = None
 
@@ -46,7 +47,7 @@ class WMSDataset(GeoDataset):
         self._layer = self._wms[layer]
         self._layer_name = layer
         coords = self._wms[layer].boundingBox
-        self.index = Index(interleaved=False, properties=Property(dimension=3),)
+        self.index = Index(interleaved=False, properties=Property(dimension=3))
         self.index.insert(
             0,
             (
@@ -55,8 +56,8 @@ class WMSDataset(GeoDataset):
                 float(coords[1]),
                 float(coords[3]),
                 0,
-                9.223372036854776e+18
-            )
+                9.223372036854776e18,
+            ),
         )
         if crs is None:
             i = 0
@@ -91,12 +92,12 @@ class WMSDataset(GeoDataset):
         """
         img = self._wms.getmap(
             layers=[self._layer_name],
-            srs="epsg:"+str(self.crs.to_epsg()),
+            srs="epsg:" + str(self.crs.to_epsg()),
             bbox=(query.minx, query.miny, query.maxx, query.maxy),
             # TODO fix size
             size=(500, 500),
             format=self._format,
-            transparent=True
+            transparent=True,
         )
         sample = {"crs": self.crs, "bbox": query}
 
