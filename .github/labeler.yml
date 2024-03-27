@@ -33,6 +33,7 @@ documentation:
     - "docs/**"
     - "*.md"
     - ".github/*.md"
+    - ".readthedocs.yaml"
 scripts:
 - changed-files:
   - any-glob-to-any-file:
