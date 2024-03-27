@@ -2,7 +2,7 @@
 h5py==3.10.0
 laspy==2.5.3
 opencv-python==4.9.0.80
-OWSLib=0.30.0
+OWSLib==0.30.0
 pycocotools==2.0.7
 pyvista==0.43.4
 radiant-mlhub==0.4.1
