@@ -2,9 +2,9 @@
 # Licensed under the MIT License.
 
 import pytest
-from torchgeo.datasets import WMSDataset
 import requests
 
+from torchgeo.datasets import WMSDataset
 
 SERVICE_URL = "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r-t.cgi?"
 

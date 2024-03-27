@@ -2,19 +2,18 @@
 # Licensed under the MIT License.
 # Author: Ian Turton, Glasgow University ian.turton@gla.ac.uk
 
+from io import BytesIO
 from typing import Any
 
+import torchvision.transforms as transforms
 from owslib.wms import WebMapService
-
+from PIL import Image
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.errors import CRSError
+from rtree.index import Index, Property
 
 from torchgeo.datasets import GeoDataset
-from io import BytesIO
-from PIL import Image
-import torchvision.transforms as transforms
-from rtree.index import Index, Property
 
 
 class WMSDataset(GeoDataset):
