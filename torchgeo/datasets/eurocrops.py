@@ -138,6 +138,10 @@ class EuroCrops(VectorDataset):
         Returns:
             True if dataset files are found and/or MD5s match, else False
         """
+        # Check if the extracted files already exist
+        if self.files and not self.checksum:
+            return True
+
         assert isinstance(self.paths, str)
 
         filepath = os.path.join(self.paths, self.hcat_fname)
