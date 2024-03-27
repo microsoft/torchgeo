@@ -10,7 +10,7 @@ lightning[pytorch-extra]==2.0.0
 matplotlib==3.5.0
 numpy==1.21.2
 pandas==1.3.3
-pillow==8.3.2
+pillow==8.4.0
 pyproj==3.3.0
 rasterio==1.3.0
 rtree==1.0.0
