@@ -19,6 +19,8 @@ class Sentinel2EuroCropsDataModule(GeoDataModule):
     """LightningDataModule implementation for the EuroCrops and Sentinel2 datasets.
 
     Uses the train/val/test splits from the dataset.
+
+    .. versionadded:: 0.6
     """
 
     def __init__(
@@ -43,8 +45,6 @@ class Sentinel2EuroCropsDataModule(GeoDataModule):
                 :class:`~torchgeo.datasets.EuroCrops` (prefix keys with ``eurocrops_``)
                 and :class:`~torchgeo.datasets.Sentinel2`
                 (prefix keys with ``sentinel2_``).
-
-        .. versionadded:: 0.6
         """
         eurocrops_signature = "eurocrops_"
         sentinel2_signature = "sentinel2_"
