@@ -12,7 +12,7 @@ import fiona
 from rasterio.crs import CRS
 from shapely.geometry import Polygon, mapping
 
-SIZE = 1000
+SIZE = 1280
 
 
 def create_data_file(dataname):
@@ -22,7 +22,7 @@ def create_data_file(dataname):
     ) as shpfile:
         coordinates = [[0.0, 0.0], [0.0, SIZE], [SIZE, SIZE], [SIZE, 0.0], [0.0, 0.0]]
         # The offset aligns with tests/data/sentinel2/data.py.
-        offset = [399960 - SIZE / 2, 4500000 - SIZE / 2]
+        offset = [399960, 4500000 - SIZE]
         coordinates = [[x + offset[0], y + offset[1]] for x, y in coordinates]
 
         polygon = Polygon(coordinates)

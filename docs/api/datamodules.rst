@@ -6,6 +6,11 @@ torchgeo.datamodules
 Geospatial DataModules
 ----------------------
 
+AgriFieldNet
+^^^^^^^^^^^^
+
+.. autoclass:: AgriFieldNetDataModule
+
 Chesapeake Land Cover
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -25,6 +30,13 @@ NAIP
 ^^^^
 
 .. autoclass:: NAIPChesapeakeDataModule
+
+Sentinel
+^^^^^^^^
+
+.. autoclass:: Sentinel2CDLDataModule
+.. autoclass:: Sentinel2NCCMDataModule
+.. autoclass:: Sentinel2SouthAmericaSoybeanDataModule
 
 Non-geospatial DataModules
 --------------------------

@@ -3,6 +3,7 @@
 
 """TorchGeo datamodules."""
 
+from .agrifieldnet import AgriFieldNetDataModule
 from .bigearthnet import BigEarthNetDataModule
 from .chabud import ChaBuDDataModule
 from .chesapeake import ChesapeakeCVPRDataModule
@@ -10,7 +11,6 @@ from .cowc import COWCCountingDataModule
 from .cyclone import TropicalCycloneDataModule
 from .deepglobelandcover import DeepGlobeLandCoverDataModule
 from .etci2021 import ETCI2021DataModule
-from .eurocrops import Sentinel2EuroCropsDataModule
 from .eurosat import EuroSAT100DataModule, EuroSATDataModule
 from .fair1m import FAIR1MDataModule
 from .fire_risk import FireRiskDataModule
@@ -29,6 +29,10 @@ from .potsdam import Potsdam2DDataModule
 from .resisc45 import RESISC45DataModule
 from .seco import SeasonalContrastS2DataModule
 from .sen12ms import SEN12MSDataModule
+from .sentinel2_cdl import Sentinel2CDLDataModule
+from .sentinel2_eurocrops import Sentinel2EuroCropsDataModule
+from .sentinel2_nccm import Sentinel2NCCMDataModule
+from .sentinel2_south_america_soybean import Sentinel2SouthAmericaSoybeanDataModule
 from .skippd import SKIPPDDataModule
 from .so2sat import So2SatDataModule
 from .spacenet import SpaceNet1DataModule
@@ -44,11 +48,15 @@ from .xview import XView2DataModule
 
 __all__ = (
     # GeoDataset
+    "AgriFieldNetDataModule",
     "ChesapeakeCVPRDataModule",
     "L7IrishDataModule",
     "L8BiomeDataModule",
     "NAIPChesapeakeDataModule",
+    "Sentinel2CDLDataModule",
     "Sentinel2EuroCropsDataModule",
+    "Sentinel2NCCMDataModule",
+    "Sentinel2SouthAmericaSoybeanDataModule",
     # NonGeoDataset
     "BigEarthNetDataModule",
     "ChaBuDDataModule",

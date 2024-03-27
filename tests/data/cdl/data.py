@@ -10,8 +10,9 @@ import shutil
 
 import numpy as np
 import rasterio
+from rasterio import Affine
 
-SIZE = 32
+SIZE = 128
 
 np.random.seed(0)
 random.seed(0)
@@ -22,8 +23,8 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
     profile["driver"] = "GTiff"
     profile["dtype"] = dtype
     profile["count"] = num_channels
-    profile["crs"] = "epsg:4326"
-    profile["transform"] = rasterio.transform.from_bounds(0, 0, 1, 1, 1, 1)
+    profile["crs"] = "epsg:32616"
+    profile["transform"] = Affine(30, 0.0, 399960.0, 0.0, -30, 4500000.0)
     profile["height"] = SIZE
     profile["width"] = SIZE
     profile["compress"] = "lzw"
@@ -49,7 +50,7 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
         src.write_colormap(1, cmap)
 
 
-directories = ["2020_30m_cdls", "2021_30m_cdls"]
+directories = ["2023_30m_cdls", "2022_30m_cdls"]
 raster_extensions = [".tif", ".tif.ovr"]
 
 
@@ -77,5 +78,3 @@ if __name__ == "__main__":
         with open(filename, "rb") as f:
             md5 = hashlib.md5(f.read()).hexdigest()
             print(f"{filename}: {md5}")
-
-        shutil.rmtree(dir)

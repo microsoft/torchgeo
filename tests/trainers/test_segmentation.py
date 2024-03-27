@@ -55,6 +55,7 @@ class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         "name",
         [
+            "agrifieldnet",
             "chabud",
             "chesapeake_cvpr_5",
             "chesapeake_cvpr_7",
@@ -72,7 +73,10 @@ class TestSemanticSegmentationTask:
             "sen12ms_s1",
             "sen12ms_s2_all",
             "sen12ms_s2_reduced",
+            "sentinel2_cdl",
             "sentinel2_eurocrops",
+            "sentinel2_nccm",
+            "sentinel2_south_america_soybean",
             "spacenet1",
             "ssl4eo_l_benchmark_cdl",
             "ssl4eo_l_benchmark_nlcd",
