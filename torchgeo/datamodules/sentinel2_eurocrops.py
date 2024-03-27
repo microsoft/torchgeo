@@ -6,8 +6,8 @@
 from typing import Any, Optional, Union
 
 import kornia.augmentation as K
-from matplotlib.figure import Figure
 import torch
+from matplotlib.figure import Figure
 
 from ..datasets import EuroCrops, Sentinel2, random_grid_cell_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
