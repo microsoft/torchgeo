@@ -12,6 +12,9 @@ import fiona
 from rasterio.crs import CRS
 from shapely.geometry import Polygon, mapping
 
+# Size of example crop field polygon in projection units.
+# This is set to align with Sentinel-2 test data, which is a 128x128 image at 10
+# projection units per pixel (1280x1280 projection units).
 SIZE = 1280
 
 
