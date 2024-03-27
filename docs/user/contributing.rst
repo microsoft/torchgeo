@@ -103,7 +103,7 @@ All of these tools should be used from the root of the project to ensure that ou
 
    $ black .
    $ isort .
-   $ pyupgrade --py39-plus $(find . -name "*.py")
+   $ pyupgrade --py310-plus $(find . -name "*.py")
 
 
 Flake8, pydocstyle, and mypy won't format your code for you, but they will warn you about potential issues with your code or docstrings:
