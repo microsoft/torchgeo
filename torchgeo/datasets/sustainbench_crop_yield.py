@@ -4,7 +4,8 @@
 """SustainBench Crop Yield dataset."""
 
 import os
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -60,7 +61,7 @@ class SustainBenchCropYield(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         countries: list[str] = ["usa"],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -195,7 +196,7 @@ class SustainBenchCropYield(NonGeoDataset):
         sample: dict[str, Any],
         band_idx: int = 0,
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

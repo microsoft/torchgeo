@@ -5,8 +5,7 @@
 
 import glob
 import os
-from collections.abc import Sequence
-from typing import Callable, Optional, Union
+from collections.abc import Callable, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -103,7 +102,7 @@ class OSCD(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         bands: Sequence[str] = all_bands,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -164,7 +163,7 @@ class OSCD(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self) -> list[dict[str, Union[str, Sequence[str]]]]:
+    def _load_files(self) -> list[dict[str, str | Sequence[str]]]:
         regions = []
         labels_root = os.path.join(
             self.root,
@@ -284,7 +283,7 @@ class OSCD(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
         alpha: float = 0.5,
     ) -> Figure:
         """Plot a sample from the dataset.

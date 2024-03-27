@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Any, Callable, Optional, cast
+from collections.abc import Callable
+from typing import Any, cast
 from xml.etree.ElementTree import Element, parse
 
 import matplotlib.patches as patches
@@ -230,7 +231,7 @@ class FAIR1M(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -382,7 +383,7 @@ class FAIR1M(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

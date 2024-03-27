@@ -5,7 +5,7 @@
 
 import os
 import random
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -79,7 +79,7 @@ class SeasonalContrastS2(NonGeoDataset):
         version: str = "100k",
         seasons: int = 1,
         bands: list[str] = rgb_bands,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -229,7 +229,7 @@ class SeasonalContrastS2(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

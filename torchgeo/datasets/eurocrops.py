@@ -5,8 +5,8 @@
 
 import csv
 import os
-from collections.abc import Iterable
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable, Iterable
+from typing import Any
 
 import fiona
 import matplotlib.pyplot as plt
@@ -88,11 +88,11 @@ class EuroCrops(VectorDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
+        paths: str | Iterable[str] = "data",
         crs: CRS = CRS.from_epsg(4326),
         res: float = 0.00001,
-        classes: Optional[list[str]] = None,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        classes: list[str] | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -166,7 +166,7 @@ class EuroCrops(VectorDataset):
                 self.base_url + fname, self.paths, md5=md5 if self.checksum else None
             )
 
-    def _load_class_map(self, classes: Optional[list[str]]) -> None:
+    def _load_class_map(self, classes: list[str] | None) -> None:
         """Load map from HCAT class codes to class indices.
 
         If classes is provided, then we simply use those codes. Otherwise, we load
@@ -221,7 +221,7 @@ class EuroCrops(VectorDataset):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

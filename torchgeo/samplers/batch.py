@@ -5,7 +5,6 @@
 
 import abc
 from collections.abc import Iterator
-from typing import Optional, Union
 
 import torch
 from rtree.index import Index, Property
@@ -25,7 +24,7 @@ class BatchGeoSampler(Sampler[list[BoundingBox]], abc.ABC):
     longitude, height, width, projection, coordinate system, and time.
     """
 
-    def __init__(self, dataset: GeoDataset, roi: Optional[BoundingBox] = None) -> None:
+    def __init__(self, dataset: GeoDataset, roi: BoundingBox | None = None) -> None:
         """Initialize a new Sampler instance.
 
         Args:
@@ -66,10 +65,10 @@ class RandomBatchGeoSampler(BatchGeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[tuple[float, float], float],
+        size: tuple[float, float] | float,
         batch_size: int,
-        length: Optional[int] = None,
-        roi: Optional[BoundingBox] = None,
+        length: int | None = None,
+        roi: BoundingBox | None = None,
         units: Units = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.

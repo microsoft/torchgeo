@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -82,7 +82,7 @@ class ETCI2021(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -255,7 +255,7 @@ class ETCI2021(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

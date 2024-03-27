@@ -56,7 +56,7 @@ import warnings
 from collections import defaultdict
 from datetime import date, timedelta
 from multiprocessing.dummy import Lock, Pool
-from typing import Any, Optional
+from typing import Any
 
 import ee
 import numpy as np
@@ -168,7 +168,7 @@ def get_patch(
     new_resolutions: list[int],
     dtype: str = "float32",
     meta_cloud_name: str = "CLOUD_COVER",
-    default_value: Optional[float] = None,
+    default_value: float | None = None,
 ) -> dict[str, Any]:
     image = collection.sort(meta_cloud_name).first()
     region = ee.Geometry.Point(center_coord).buffer(radius).bounds()
@@ -214,7 +214,7 @@ def get_random_patches_match(
     new_resolutions: list[int],
     dtype: str,
     meta_cloud_name: str,
-    default_value: Optional[float],
+    default_value: float | None,
     dates: list[date],
     radius: float,
     debug: bool = False,
