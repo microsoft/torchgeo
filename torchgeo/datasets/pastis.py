@@ -4,8 +4,7 @@
 """PASTIS dataset."""
 
 import os
-from collections.abc import Sequence
-from typing import Callable, Optional
+from collections.abc import Callable, Sequence
 
 import fiona
 import matplotlib.pyplot as plt
@@ -132,7 +131,7 @@ class PASTIS(NonGeoDataset):
         folds: Sequence[int] = (1, 2, 3, 4, 5),
         bands: str = "s2",
         mode: str = "semantic",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -347,7 +346,7 @@ class PASTIS(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

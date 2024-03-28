@@ -6,7 +6,8 @@
 import glob
 import json
 import os
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 import pandas as pd
 import torch
@@ -204,9 +205,9 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         self,
         root: str = "data",
         input_features: list[str] = all_variable_names,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Western USA Live Fuel Moisture Dataset.
@@ -329,7 +330,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         pathname = os.path.join(self.root, self.collection_id) + ".tar.gz"
         extract_archive(pathname, self.root)
 
-    def _download(self, api_key: Optional[str] = None) -> None:
+    def _download(self, api_key: str | None = None) -> None:
         """Download the dataset and extract it.
 
         Args:

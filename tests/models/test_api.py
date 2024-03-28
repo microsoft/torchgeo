@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import enum
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 import torch.nn as nn

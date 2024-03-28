@@ -3,7 +3,7 @@
 
 """TorchGeo transforms."""
 
-from typing import Any, Optional, Union
+from typing import Any
 
 import kornia.augmentation as K
 import torch
@@ -25,7 +25,7 @@ class AugmentationSequential(Module):
 
     def __init__(
         self,
-        *args: Union[K.base._AugmentationBase, K.ImageSequential, Lambda],
+        *args: K.base._AugmentationBase | K.ImageSequential | Lambda,
         data_keys: list[str],
         **kwargs: Any,
     ) -> None:
@@ -84,7 +84,7 @@ class AugmentationSequential(Module):
             batch["masks"] = rearrange(batch["masks"], "c h w -> () c h w")
 
         inputs = [batch[k] for k in self.data_keys]
-        outputs_list: Union[Tensor, list[Tensor]] = self.augs(*inputs)
+        outputs_list: Tensor | list[Tensor] = self.augs(*inputs)
         outputs_list = (
             outputs_list if isinstance(outputs_list, list) else [outputs_list]
         )
@@ -147,7 +147,7 @@ class _RandomNCrop(K.GeometricAugmentationBase2D):
         input: Tensor,
         params: dict[str, Tensor],
         flags: dict[str, Any],
-        transform: Optional[Tensor] = None,
+        transform: Tensor | None = None,
     ) -> Tensor:
         """Apply the transform.
 
@@ -169,7 +169,7 @@ class _RandomNCrop(K.GeometricAugmentationBase2D):
 class _NCropGenerator(K.random_generator.CropGenerator):
     """Generate N random crops."""
 
-    def __init__(self, size: Union[tuple[int, int], Tensor], num: int) -> None:
+    def __init__(self, size: tuple[int, int] | Tensor, num: int) -> None:
         """Initialize a new _NCropGenerator instance.
 
         Args:
@@ -207,9 +207,9 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
 
     def __init__(
         self,
-        window_size: Union[int, tuple[int, int]],
-        stride: Optional[Union[int, tuple[int, int]]] = None,
-        padding: Optional[Union[int, tuple[int, int]]] = 0,
+        window_size: int | tuple[int, int],
+        stride: int | tuple[int, int] | None = None,
+        padding: int | tuple[int, int] | None = 0,
         keepdim: bool = True,
     ) -> None:
         """Initialize a new _ExtractPatches instance.
@@ -250,7 +250,7 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
         input: Tensor,
         params: dict[str, Tensor],
         flags: dict[str, Any],
-        transform: Optional[Tensor] = None,
+        transform: Tensor | None = None,
     ) -> Tensor:
         """Apply the transform.
 

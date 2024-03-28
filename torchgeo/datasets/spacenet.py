@@ -9,7 +9,8 @@ import glob
 import math
 import os
 import re
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 import fiona
 import matplotlib.pyplot as plt
@@ -81,9 +82,9 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         root: str,
         image: str,
         collections: list[str] = [],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SpaceNet Dataset instance.
@@ -274,7 +275,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         return to_be_downloaded
 
-    def _download(self, collections: list[str], api_key: Optional[str] = None) -> None:
+    def _download(self, collections: list[str], api_key: str | None = None) -> None:
         """Download the dataset and extract it.
 
         Args:
@@ -299,7 +300,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -398,9 +399,9 @@ class SpaceNet1(SpaceNet):
         self,
         root: str = "data",
         image: str = "rgb",
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SpaceNet 1 Dataset instance.
@@ -514,9 +515,9 @@ class SpaceNet2(SpaceNet):
         root: str = "data",
         image: str = "PS-RGB",
         collections: list[str] = [],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SpaceNet 2 Dataset instance.
@@ -633,11 +634,11 @@ class SpaceNet3(SpaceNet):
         self,
         root: str = "data",
         image: str = "PS-RGB",
-        speed_mask: Optional[bool] = False,
+        speed_mask: bool | None = False,
         collections: list[str] = [],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SpaceNet 3 Dataset instance.
@@ -733,7 +734,7 @@ class SpaceNet3(SpaceNet):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -884,9 +885,9 @@ class SpaceNet4(SpaceNet):
         root: str = "data",
         image: str = "PS-RGBNIR",
         angles: list[str] = [],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SpaceNet 4 Dataset instance.
@@ -1051,11 +1052,11 @@ class SpaceNet5(SpaceNet3):
         self,
         root: str = "data",
         image: str = "PS-RGB",
-        speed_mask: Optional[bool] = False,
+        speed_mask: bool | None = False,
         collections: list[str] = [],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SpaceNet 5 Dataset instance.
@@ -1183,9 +1184,9 @@ class SpaceNet6(SpaceNet):
         self,
         root: str = "data",
         image: str = "PS-RGB",
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
     ) -> None:
         """Initialize a new SpaceNet 6 Dataset instance.
 
@@ -1212,7 +1213,7 @@ class SpaceNet6(SpaceNet):
 
         self.files = self._load_files(os.path.join(root, self.dataset_id))
 
-    def __download(self, api_key: Optional[str] = None) -> None:
+    def __download(self, api_key: str | None = None) -> None:
         """Download the dataset and extract it.
 
         Args:
@@ -1281,9 +1282,9 @@ class SpaceNet7(SpaceNet):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SpaceNet 7 Dataset instance.

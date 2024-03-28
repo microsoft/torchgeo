@@ -5,7 +5,7 @@
 
 import warnings
 from collections import OrderedDict
-from typing import Optional, Union, cast
+from typing import cast
 
 import torch
 import torch.nn as nn
@@ -127,8 +127,8 @@ def reinit_initial_conv_layer(
     layer: Conv2d,
     new_in_channels: int,
     keep_rgb_weights: bool,
-    new_stride: Optional[Union[int, tuple[int, int]]] = None,
-    new_padding: Optional[Union[str, Union[int, tuple[int, int]]]] = None,
+    new_stride: int | tuple[int, int] | None = None,
+    new_padding: str | int | tuple[int, int] | None = None,
 ) -> Conv2d:
     """Clones a Conv2d layer while optionally retaining some of the original weights.
 

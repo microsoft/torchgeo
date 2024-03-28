@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import math
-from typing import Optional, Union
+from typing import Union
 
 import pytest
 
@@ -33,7 +33,7 @@ MAYBE_TUPLE = Union[float, tuple[float, float]]
     ],
 )
 def test_tile_to_chips(
-    size: MAYBE_TUPLE, stride: Optional[MAYBE_TUPLE], expected: MAYBE_TUPLE
+    size: MAYBE_TUPLE, stride: MAYBE_TUPLE | None, expected: MAYBE_TUPLE
 ) -> None:
     bounds = BoundingBox(0, 10, 20, 30, 40, 50)
     size = _to_tuple(size)

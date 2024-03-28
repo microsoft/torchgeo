@@ -5,8 +5,8 @@
 
 import os
 import sys
-from collections.abc import Sequence
-from typing import Any, Callable, Optional, cast
+from collections.abc import Callable, Sequence
+from typing import Any, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -255,7 +255,7 @@ class EnviroAtlas(GeoDataset):
         root: str = "data",
         splits: Sequence[str] = ["pittsburgh_pa-2010_1m-train"],
         layers: Sequence[str] = ["naip", "prior"],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         prior_as_input: bool = False,
         cache: bool = True,
         download: bool = False,
@@ -445,7 +445,7 @@ class EnviroAtlas(GeoDataset):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

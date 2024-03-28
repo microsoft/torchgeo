@@ -5,8 +5,8 @@
 
 import json
 import os
+from collections.abc import Callable
 from functools import lru_cache
-from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -182,9 +182,9 @@ class BeninSmallHolderCashews(NonGeoDataset):
         chip_size: int = 256,
         stride: int = 128,
         bands: tuple[str, ...] = all_bands,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         checksum: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -408,7 +408,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
         return images and targets
 
-    def _download(self, api_key: Optional[str] = None) -> None:
+    def _download(self, api_key: str | None = None) -> None:
         """Download the dataset and extract it.
 
         Args:
@@ -434,7 +434,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         time_step: int = 0,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

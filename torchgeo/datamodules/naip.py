@@ -3,7 +3,7 @@
 
 """National Agriculture Imagery Program (NAIP) datamodule."""
 
-from typing import Any, Optional, Union
+from typing import Any
 
 import kornia.augmentation as K
 from matplotlib.figure import Figure
@@ -23,8 +23,8 @@ class NAIPChesapeakeDataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[int, tuple[int, int]] = 256,
-        length: Optional[int] = None,
+        patch_size: int | tuple[int, int] = 256,
+        length: int | None = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:

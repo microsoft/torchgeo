@@ -3,7 +3,7 @@
 
 """Pre-trained Vision Transformer models."""
 
-from typing import Any, Optional
+from typing import Any
 
 import kornia.augmentation as K
 import timm
@@ -205,7 +205,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
 
 
 def vit_small_patch16_224(
-    weights: Optional[ViTSmall16_Weights] = None, *args: Any, **kwargs: Any
+    weights: ViTSmall16_Weights | None = None, *args: Any, **kwargs: Any
 ) -> VisionTransformer:
     """Vision Transform (ViT) small patch size 16 model.
 

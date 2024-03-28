@@ -5,7 +5,6 @@ import pickle
 import sys
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Optional, Union
 
 import pytest
 import torch
@@ -35,7 +34,7 @@ class CustomGeoDataset(GeoDataset):
         bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
         crs: CRS = CRS.from_epsg(4087),
         res: float = 1,
-        paths: Optional[Union[str, Iterable[str]]] = None,
+        paths: str | Iterable[str] | None = None,
     ) -> None:
         super().__init__()
         self.index.insert(0, tuple(bounds))
@@ -249,7 +248,7 @@ class TestRasterDataset:
             },
         ],
     )
-    def test_files(self, paths: Union[str, Iterable[str]]) -> None:
+    def test_files(self, paths: str | Iterable[str]) -> None:
         assert 1 <= len(NAIP(paths).files) <= 2
 
     def test_getitem_single_file(self, naip: NAIP) -> None:

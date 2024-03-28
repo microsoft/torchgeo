@@ -4,7 +4,8 @@
 """NWPU VHR-10 dataset."""
 
 import os
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -183,7 +184,7 @@ class VHR10(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "positive",
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -364,8 +365,8 @@ class VHR10(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
-        show_feats: Optional[str] = "both",
+        suptitle: str | None = None,
+        show_feats: str | None = "both",
         box_alpha: float = 0.7,
         mask_alpha: float = 0.7,
     ) -> Figure:

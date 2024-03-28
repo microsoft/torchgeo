@@ -4,7 +4,7 @@
 """Trainers for regression."""
 
 import os
-from typing import Any, Optional, Union
+from typing import Any
 
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
@@ -31,7 +31,7 @@ class RegressionTask(BaseTask):
         self,
         model: str = "resnet50",
         backbone: str = "resnet50",
-        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         num_outputs: int = 1,
         num_filters: int = 3,
@@ -211,7 +211,7 @@ class RegressionTask(BaseTask):
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
 
-            fig: Optional[Figure] = None
+            fig: Figure | None = None
             try:
                 fig = datamodule.plot(sample)
             except RGBBandsMissingError:

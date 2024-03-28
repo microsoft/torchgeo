@@ -5,7 +5,6 @@
 
 import os
 from collections.abc import Sequence
-from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -219,7 +218,7 @@ class BioMassters(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

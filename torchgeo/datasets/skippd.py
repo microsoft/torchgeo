@@ -4,7 +4,8 @@
 """SKy Images and Photovoltaic Power Dataset (SKIPP'D)."""
 
 import os
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -74,7 +75,7 @@ class SKIPPD(NonGeoDataset):
         root: str = "data",
         split: str = "trainval",
         task: str = "nowcast",
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -133,7 +134,7 @@ class SKIPPD(NonGeoDataset):
 
         return num_datapoints
 
-    def __getitem__(self, index: int) -> dict[str, Union[str, Tensor]]:
+    def __getitem__(self, index: int) -> dict[str, str | Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -142,7 +143,7 @@ class SKIPPD(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        sample: dict[str, Union[str, Tensor]] = {"image": self._load_image(index)}
+        sample: dict[str, str | Tensor] = {"image": self._load_image(index)}
         sample.update(self._load_features(index))
 
         if self.transforms is not None:
@@ -176,7 +177,7 @@ class SKIPPD(NonGeoDataset):
         tensor = torch.from_numpy(arr).to(torch.float32)
         return tensor
 
-    def _load_features(self, index: int) -> dict[str, Union[str, Tensor]]:
+    def _load_features(self, index: int) -> dict[str, str | Tensor]:
         """Load label.
 
         Args:
@@ -195,7 +196,7 @@ class SKIPPD(NonGeoDataset):
         path = os.path.join(self.root, f"times_{self.split}_{self.task}.npy")
         datestring = np.load(path, allow_pickle=True)[index].strftime(self.dateformat)
 
-        features: dict[str, Union[str, Tensor]] = {
+        features: dict[str, str | Tensor] = {
             "label": torch.tensor(label, dtype=torch.float32),
             "date": datestring,
         }
@@ -241,7 +242,7 @@ class SKIPPD(NonGeoDataset):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

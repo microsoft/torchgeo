@@ -5,7 +5,7 @@
 
 import os
 import warnings
-from typing import Any, Optional, Union
+from typing import Any
 
 import kornia.augmentation as K
 import lightning
@@ -73,20 +73,20 @@ class SimCLRTask(BaseTask):
     def __init__(
         self,
         model: str = "resnet50",
-        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         version: int = 2,
         layers: int = 3,
-        hidden_dim: Optional[int] = None,
-        output_dim: Optional[int] = None,
+        hidden_dim: int | None = None,
+        output_dim: int | None = None,
         lr: float = 4.8,
         weight_decay: float = 1e-4,
         temperature: float = 0.07,
         memory_bank_size: int = 64000,
         gather_distributed: bool = False,
         size: int = 224,
-        grayscale_weights: Optional[Tensor] = None,
-        augmentations: Optional[nn.Module] = None,
+        grayscale_weights: Tensor | None = None,
+        augmentations: nn.Module | None = None,
     ) -> None:
         """Initialize a new SimCLRTask instance.
 

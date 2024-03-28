@@ -4,7 +4,8 @@
 """CMS Global Mangrove Canopy dataset."""
 
 import os
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable
+from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -167,12 +168,12 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
+        paths: str | list[str] = "data",
+        crs: CRS | None = None,
+        res: float | None = None,
         measurement: str = "agb",
         country: str = all_countries[0],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         checksum: bool = False,
     ) -> None:
@@ -250,7 +251,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

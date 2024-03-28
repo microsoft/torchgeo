@@ -10,7 +10,8 @@ See the following references for design details:
 * https://github.com/pytorch/vision/blob/main/torchvision/models/_api.py
 """  # noqa: E501
 
-from typing import Any, Callable, Union
+from collections.abc import Callable
+from typing import Any
 
 import torch.nn as nn
 from torchvision.models._api import WeightsEnum
@@ -55,7 +56,7 @@ def get_model(name: str, *args: Any, **kwargs: Any) -> nn.Module:
     return model
 
 
-def get_model_weights(name: Union[Callable[..., nn.Module], str]) -> WeightsEnum:
+def get_model_weights(name: Callable[..., nn.Module] | str) -> WeightsEnum:
     """Get the weights enum class associated with a given model.
 
     .. versionadded:: 0.4

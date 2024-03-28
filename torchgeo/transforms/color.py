@@ -3,8 +3,6 @@
 
 """TorchGeo color transforms."""
 
-from typing import Optional
-
 from kornia.augmentation import IntensityAugmentationBase2D
 from torch import Tensor
 
@@ -57,7 +55,7 @@ class RandomGrayscale(IntensityAugmentationBase2D):
         input: Tensor,
         params: dict[str, Tensor],
         flags: dict[str, Tensor],
-        transform: Optional[Tensor] = None,
+        transform: Tensor | None = None,
     ) -> Tensor:
         """Apply the transform.
 

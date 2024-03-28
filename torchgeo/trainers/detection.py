@@ -4,7 +4,7 @@
 """Trainers for object detection."""
 
 from functools import partial
-from typing import Any, Optional
+from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
@@ -60,7 +60,7 @@ class ObjectDetectionTask(BaseTask):
         self,
         model: str = "faster-rcnn",
         backbone: str = "resnet50",
-        weights: Optional[bool] = None,
+        weights: bool | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
         trainable_layers: int = 3,
@@ -109,7 +109,7 @@ class ObjectDetectionTask(BaseTask):
         """
         backbone: str = self.hparams["backbone"]
         model: str = self.hparams["model"]
-        weights: Optional[bool] = self.hparams["weights"]
+        weights: bool | None = self.hparams["weights"]
         num_classes: int = self.hparams["num_classes"]
         freeze_backbone: bool = self.hparams["freeze_backbone"]
 
@@ -289,7 +289,7 @@ class ObjectDetectionTask(BaseTask):
                 sample["image"] *= 255
                 sample["image"] = sample["image"].to(torch.uint8)
 
-            fig: Optional[Figure] = None
+            fig: Figure | None = None
             try:
                 fig = datamodule.plot(sample)
             except RGBBandsMissingError:

@@ -4,7 +4,7 @@
 """Trainers for image classification."""
 
 import os
-from typing import Any, Optional, Union
+from typing import Any
 
 import matplotlib.pyplot as plt
 import timm
@@ -35,11 +35,11 @@ class ClassificationTask(BaseTask):
     def __init__(
         self,
         model: str = "resnet50",
-        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
         loss: str = "ce",
-        class_weights: Optional[Tensor] = None,
+        class_weights: Tensor | None = None,
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
@@ -220,7 +220,7 @@ class ClassificationTask(BaseTask):
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
 
-            fig: Optional[Figure] = None
+            fig: Figure | None = None
             try:
                 fig = datamodule.plot(sample)
             except RGBBandsMissingError:
@@ -364,7 +364,7 @@ class MultiLabelClassificationTask(ClassificationTask):
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
 
-            fig: Optional[Figure] = None
+            fig: Figure | None = None
             try:
                 fig = datamodule.plot(sample)
             except RGBBandsMissingError:

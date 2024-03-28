@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Optional
 
 import numpy as np
 import rasterio as rio
@@ -18,7 +17,7 @@ def write_raster(
     res: int = RES[0],
     epsg: int = EPSG[0],
     dtype: str = "uint8",
-    path: Optional[str] = None,
+    path: str | None = None,
 ) -> None:
     """Write a raster file.
 

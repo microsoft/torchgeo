@@ -3,7 +3,7 @@
 
 """AgriFieldNet datamodule."""
 
-from typing import Any, Optional, Union
+from typing import Any
 
 import kornia.augmentation as K
 import torch
@@ -25,8 +25,8 @@ class AgriFieldNetDataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[int, tuple[int, int]] = 256,
-        length: Optional[int] = None,
+        patch_size: int | tuple[int, int] = 256,
+        length: int | None = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:

@@ -3,8 +3,8 @@
 
 """Sentinel datasets."""
 
-from collections.abc import Iterable, Sequence
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
@@ -141,11 +141,11 @@ class Sentinel1(Sentinel):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
-        crs: Optional[CRS] = None,
+        paths: str | list[str] = "data",
+        crs: CRS | None = None,
         res: float = 10,
         bands: Sequence[str] = ["VV", "VH"],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -194,7 +194,7 @@ To create a dataset containing both, use:
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -297,11 +297,11 @@ class Sentinel2(Sentinel):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
-        crs: Optional[CRS] = None,
+        paths: str | Iterable[str] = "data",
+        crs: CRS | None = None,
         res: float = 10,
-        bands: Optional[Sequence[str]] = None,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        bands: Sequence[str] | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -333,7 +333,7 @@ class Sentinel2(Sentinel):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
