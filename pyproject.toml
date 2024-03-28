@@ -38,7 +38,7 @@ classifiers = [
 dependencies = [
     # einops 0.3+ required for einops.repeat
     "einops>=0.3",
-    # fiona 1.8.19+ required for Python 3.10 wheels
+    # fiona 1.8.21+ required for Python 3.10 wheels
     "fiona>=1.8.21",
     # kornia 0.6.9+ required for kornia.augmentation.RandomBrightness
     "kornia>=0.6.9",
