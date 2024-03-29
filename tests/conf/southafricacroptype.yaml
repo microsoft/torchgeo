@@ -4,8 +4,8 @@ model:
     loss: "ce"
     model: "unet"
     backbone: "resnet18"
-    in_channels: 12
-    num_classes: 14
+    in_channels: 14
+    num_classes: 10
     num_filters: 1
     ignore_index: 0
 data:
