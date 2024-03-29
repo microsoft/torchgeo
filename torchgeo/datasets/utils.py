@@ -266,10 +266,15 @@ def download_radiant_mlhub_collection(
     collection.download(output_dir=download_root, api_key=api_key)
 
 
-def download_azure_container(*args: Any, **kwargs: Any) -> None:
+def download_azure_container(
+    root: str, name_starts_with: str, *args: Any, **kwargs: Any
+) -> None:
     """Download a container from Azure blob storage.
 
     Args:
+        root: Root directory to download to.
+        name_starts_with: Filters the results to return only blobs whose names
+            begin with the specified prefix.
         *args: Additional arguments to pass to
             :class:`~azure.storage.blob.ContainerClient`
         **kwargs: Additional keyword arguments to pass to
@@ -289,6 +294,11 @@ def download_azure_container(*args: Any, **kwargs: Any) -> None:
         )
 
     client = ContainerClient(*args, **kwargs)
+    for blob in client.list_blob_names(name_starts_with=name_starts_with):
+        path = os.path.join(root, blob)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "wb") as f:
+            f.write(client.download_blob(blob).readall())
 
 
 @dataclass(frozen=True)
