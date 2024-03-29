@@ -38,6 +38,11 @@ Sentinel
 .. autoclass:: Sentinel2NCCMDataModule
 .. autoclass:: Sentinel2SouthAmericaSoybeanDataModule
 
+SouthAfricaCropType
+^^^^^^^^^^^^
+
+.. autoclass:: SouthAfricaCropTypeDataModule
+
 Non-geospatial DataModules
 --------------------------
 

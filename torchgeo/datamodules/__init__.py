@@ -34,6 +34,7 @@ from .sentinel2_nccm import Sentinel2NCCMDataModule
 from .sentinel2_south_america_soybean import Sentinel2SouthAmericaSoybeanDataModule
 from .skippd import SKIPPDDataModule
 from .so2sat import So2SatDataModule
+from .southafricacroptype import SouthAfricaCropTypeDataModule
 from .spacenet import SpaceNet1DataModule
 from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
 from .ssl4eo_benchmark import SSL4EOLBenchmarkDataModule
@@ -55,6 +56,7 @@ __all__ = (
     "Sentinel2CDLDataModule",
     "Sentinel2NCCMDataModule",
     "Sentinel2SouthAmericaSoybeanDataModule",
+    "SouthAfricaCropTypeDataModule",
     # NonGeoDataset
     "BigEarthNetDataModule",
     "ChaBuDDataModule",
