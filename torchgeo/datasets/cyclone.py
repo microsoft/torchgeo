@@ -50,10 +50,6 @@ class TropicalCyclone(NonGeoDataset):
        to be consistent with TropicalCycloneDataModule.
     """
 
-    account_url = "https://radiantearth.blob.core.windows.net"
-    container_name = "mlhub"
-    name_starts_with = "nasa-tropical-storm-challenge"
-
     collection_id = "nasa_tropical_storm_competition"
     collection_ids = [
         "nasa_tropical_storm_competition_train_source",
