@@ -81,6 +81,8 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 datasets = [
+    # TODO: determine minimum version
+    "azure-storage-blob",
     # h5py 3+ required for Python 3.9 wheels
     "h5py>=3",
     # laspy 2+ required for laspy.read
@@ -93,8 +95,6 @@ datasets = [
     "pyvista>=0.34.2",
     # radiant-mlhub 0.3+ required for newer tqdm support required by lightning
     "radiant-mlhub>=0.3",
-    # source-cooperative 
-    "cooperative>=0.1.12",
     # rarfile 4+ required for wheels
     "rarfile>=4",
     # scikit-image 0.18+ required for numpy 1.17+ compatibility
