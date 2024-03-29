@@ -109,6 +109,10 @@ autodoc_typehints_description_target = "documented"
 
 # sphinx.ext.intersphinx
 intersphinx_mapping = {
+    "azure-storage-blob": (
+        "https://azuresdkdocs.blob.core.windows.net/$web/python/azure-storage-blob/stable/",  # noqa: E501
+        None,
+    ),
     "kornia": ("https://kornia.readthedocs.io/en/stable/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
