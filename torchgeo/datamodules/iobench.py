@@ -6,7 +6,7 @@
 from typing import Any, Optional, Union
 
 from ..datasets import IOBench
-from ..samplers import GridGeoSampler, RandomBatchGeoSampler
+from ..samplers import GridGeoSampler, RandomGeoSampler
 from .geo import GeoDataModule
 
 
@@ -52,8 +52,8 @@ class IOBenchDataModule(GeoDataModule):
         self.dataset = IOBench(**self.kwargs)
 
         if stage in ["fit"]:
-            self.train_batch_sampler = RandomBatchGeoSampler(
-                self.dataset, self.patch_size, self.batch_size, self.length
+            self.train_sampler = RandomGeoSampler(
+                self.dataset, self.patch_size, self.length
             )
         if stage in ["fit", "validate"]:
             self.val_sampler = GridGeoSampler(
