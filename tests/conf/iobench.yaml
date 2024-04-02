@@ -1,0 +1,17 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: "ce"
+    model: "unet"
+    backbone: "resnet18"
+    in_channels: 8
+    num_classes: 255
+    num_filters: 1
+    ignore_index: null
+data:
+  class_path: IOBenchDataModule
+  init_args:
+    batch_size: 2
+    patch_size: 16
+  dict_kwargs:
+    root: "tests/data/iobench"

@@ -63,6 +63,7 @@ class TestSemanticSegmentationTask:
             "etci2021",
             "gid15",
             "inria",
+            "iobench",
             "l7irish",
             "l8biome",
             "landcoverai",
