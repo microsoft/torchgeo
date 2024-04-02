@@ -160,7 +160,7 @@ class TropicalCyclone(NonGeoDataset):
                 try:
                     resample = Image.Resampling.BILINEAR
                 except AttributeError:
-                    resample = Image.BILINEAR
+                    resample = Image.BILINEAR  # type: ignore[attr-defined]
                 img = img.resize(size=(self.size, self.size), resample=resample)
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
             tensor = torch.from_numpy(array)
