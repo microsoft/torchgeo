@@ -63,13 +63,13 @@ for batch in datamodule.test_dataloader():
             data = sample[key]
             if key == "image":
                 data = data[[2, 1, 0]].permute(1, 2, 0).numpy().astype("uint8")
-                Image.fromarray(data, "RGB").save(
+                Image.fromarray(data, "RGB").save(  # type: ignore[no-untyped-call]
                     f"{path}/{key}.png"
-                )  # type: ignore[no-untyped-call]
+                )
             else:
                 data = data * 255 / 4
                 data = data.numpy().astype("uint8").squeeze()
-                Image.fromarray(data, "L").save(
+                Image.fromarray(data, "L").save(  # type: ignore[no-untyped-call]
                     f"{path}/{key}.png"
-                )  # type: ignore[no-untyped-call]
+                )
         i += 1
