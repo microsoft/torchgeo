@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Any, Callable, Optional, Sequence
+from typing import Any, Callable, Optional
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
