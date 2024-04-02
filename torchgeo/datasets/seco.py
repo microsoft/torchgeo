@@ -174,7 +174,9 @@ class SeasonalContrastS2(NonGeoDataset):
                     # what could be sped up throughout later. There is also a potential
                     # slowdown here from converting to/from a PIL Image just to resize.
                     # https://gist.github.com/calebrob6/748045ac8d844154067b2eefa47de92f
-                    pil_image = Image.fromarray(band_data)
+                    pil_image = Image.fromarray(
+                        band_data
+                    )  # type: ignore[no-untyped-call]
                     resample = Image.BILINEAR
                     band_data = np.array(
                         pil_image.resize((264, 264), resample=resample)
