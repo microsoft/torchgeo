@@ -59,6 +59,7 @@ class IOBench(IntersectionDataset):
         crs: Optional[CRS] = None,
         res: Optional[float] = None,
         bands: Optional[Sequence[str]] = Landsat9.default_bands + ["SR_QA_AEROSOL"],
+        classes: list[int] = [0],
         transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
         cache: bool = True,
         download: bool = False,
@@ -74,6 +75,7 @@ class IOBench(IntersectionDataset):
             res: Resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found).
             bands: Bands to return (defaults to all bands).
+            classes: List of classes to include, the rest will be mapped to 0.
             transforms: A function/transform that takes an input sample
                 and returns a transformed version.
             cache: If True, cache file handle to speed up repeated sampling.
@@ -95,7 +97,7 @@ class IOBench(IntersectionDataset):
 
         root = os.path.join(root, split)
         self.landsat = Landsat9(root, crs, res, bands, transforms, cache)
-        self.cdl = CDL(root, crs, res, transforms=transforms, cache=cache)
+        self.cdl = CDL(root, crs, res, [2023], classes, transforms, cache)
 
         super().__init__(self.landsat, self.cdl)
 
