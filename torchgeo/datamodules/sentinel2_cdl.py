@@ -91,9 +91,7 @@ class Sentinel2CDLDataModule(GeoDataModule):
         generator = torch.Generator().manual_seed(0)
 
         (self.train_dataset, self.val_dataset, self.test_dataset) = (
-            random_bbox_assignment(
-                self.dataset, [0.8, 0.1, 0.1], generator=generator
-            )
+            random_bbox_assignment(self.dataset, [0.8, 0.1, 0.1], generator=generator)
         )
         if stage in ["fit"]:
             self.train_batch_sampler = RandomGeoSampler(
