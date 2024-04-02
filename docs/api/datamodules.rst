@@ -31,6 +31,11 @@ NAIP
 
 .. autoclass:: NAIPChesapeakeDataModule
 
+I/O Bench
+^^^^^^^^^
+
+.. autoclass:: IOBenchDataModule
+
 Sentinel
 ^^^^^^^^
 
