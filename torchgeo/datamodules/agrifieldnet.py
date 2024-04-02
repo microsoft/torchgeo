@@ -10,7 +10,7 @@ import torch
 from kornia.constants import DataKey, Resample
 
 from ..datasets import AgriFieldNet, random_bbox_assignment
-from ..samplers import GridGeoSampler, RandomBatchGeoSampler
+from ..samplers import GridGeoSampler, RandomGeoSampler
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
@@ -73,7 +73,7 @@ class AgriFieldNetDataModule(GeoDataModule):
         )
 
         if stage in ["fit"]:
-            self.train_batch_sampler = RandomBatchGeoSampler(
+            self.train_batch_sampler = RandomGeoSampler(
                 self.train_dataset, self.patch_size, self.batch_size, self.length
             )
         if stage in ["fit", "validate"]:
