@@ -40,8 +40,8 @@ dependencies = [
     "einops>=0.3",
     # fiona 1.8.21+ required for Python 3.10 wheels
     "fiona>=1.8.21",
-    # kornia 0.6.9+ required for kornia.augmentation.RandomBrightness
-    "kornia>=0.6.9",
+    # kornia 0.7.2+ required for dict support in AugmentationSequential
+    "kornia>=0.7.2",
     # lightly 1.4.4+ required for MoCo v3 support
     # lightly 1.4.26 is incompatible with the version of timm required by smp
     # https://github.com/microsoft/torchgeo/issues/1824
