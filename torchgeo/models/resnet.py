@@ -11,19 +11,17 @@ import torch
 from timm.models import ResNet
 from torchvision.models._api import Weights, WeightsEnum
 
-from ..transforms import AugmentationSequential
-
 __all__ = ["ResNet50_Weights", "ResNet18_Weights"]
 
 
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167  # noqa: E501
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97  # noqa: E501
 # Normalization either by 10K or channel-wise with band statistics
-_zhu_xlab_transforms = AugmentationSequential(
+_zhu_xlab_transforms = K.AugmentationSequential(
     K.Resize(256),
     K.CenterCrop(224),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
-    data_keys=["image"],
+    data_keys=None,
 )
 
 # Normalization only available for RGB dataset, defined here:
@@ -32,31 +30,31 @@ _min = torch.tensor([3, 2, 0])
 _max = torch.tensor([88, 103, 129])
 _mean = torch.tensor([0.485, 0.456, 0.406])
 _std = torch.tensor([0.229, 0.224, 0.225])
-_seco_transforms = AugmentationSequential(
+_seco_transforms = K.AugmentationSequential(
     K.Resize(256),
     K.CenterCrop(224),
     K.Normalize(mean=_min, std=_max - _min),
     K.Normalize(mean=torch.tensor(0), std=1 / torch.tensor(255)),
     K.Normalize(mean=_mean, std=_std),
-    data_keys=["image"],
+    data_keys=None,
 )
 
 # Normalization only available for RGB dataset, defined here:
 # https://github.com/sustainlab-group/geography-aware-ssl/blob/main/moco_fmow/main_moco_geo%2Btp.py#L287  # noqa: E501
 _mean = torch.tensor([0.485, 0.456, 0.406])
 _std = torch.tensor([0.229, 0.224, 0.225])
-_gassl_transforms = AugmentationSequential(
+_gassl_transforms = K.AugmentationSequential(
     K.Resize(224),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
     K.Normalize(mean=_mean, std=_std),
-    data_keys=["image"],
+    data_keys=None,
 )
 
 # https://github.com/microsoft/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43  # noqa: E501
-_ssl4eo_l_transforms = AugmentationSequential(
+_ssl4eo_l_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
     K.CenterCrop((224, 224)),
-    data_keys=["image"],
+    data_keys=None,
 )
 
 # https://github.com/pytorch/vision/pull/6883
