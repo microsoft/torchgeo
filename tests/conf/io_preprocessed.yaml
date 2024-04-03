@@ -1,0 +1,25 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: "ce"
+    model: "unet"
+    backbone: "resnet18"
+    in_channels: 8
+    num_classes: 2
+    num_filters: 1
+    ignore_index: null
+data:
+  class_path: IOBenchDataModule
+  init_args:
+    batch_size: 9
+    patch_size: 512
+    num_workers: 9
+  dict_kwargs:
+    root: "data/io"
+    split: "preprocessed"
+    download: true
+    checksum: true
+trainer:
+  max_epochs: 1
+  num_sanity_val_steps: 0
+  profiler: "simple"
