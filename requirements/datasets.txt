@@ -5,7 +5,7 @@ opencv-python==4.9.0.80
 pycocotools==2.0.7
 pyvista==0.43.4
 radiant-mlhub==0.4.1
-rarfile==4.1
+rarfile==4.2
 scikit-image==0.22.0
 scipy==1.13.0
 zipfile-deflate64==0.2.0
