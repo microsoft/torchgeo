@@ -31,14 +31,14 @@ _std = torch.tensor(
 _mean = torch.zeros_like(_std)
 _sentinel2_ms_satlas_transforms = K.AugmentationSequential(
     K.Normalize(mean=_mean, std=_std),
-    Lambda(lambda x: torch.clamp(x, min=0.0, max=1.0)),
+    Lambda(lambda x: torch.clamp(x, min=0.0, max=1.0)),  # type: ignore[arg-type]
     data_keys=None,
 )
 
 # Satlas Landsat imagery is 16-bit, normalized by clipping some pixel N with (N-4000)/16320 to (0, 1). # noqa: E501
 _landsat_satlas_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(4000), std=torch.tensor(16320)),
-    Lambda(lambda x: torch.clamp(x, min=0.0, max=1.0)),
+    Lambda(lambda x: torch.clamp(x, min=0.0, max=1.0)),  # type: ignore[arg-type]
     data_keys=None,
 )
 
