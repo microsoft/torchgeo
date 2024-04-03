@@ -146,7 +146,7 @@ class IOBench(IntersectionDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: A sample returned by :meth:`IntersectionDataaset.__getitem__`.
+            sample: A sample returned by :meth:`IntersectionDataset.__getitem__`.
             show_titles: Flag indicating whether to show titles above each panel.
             suptitle: Optional string to use as a suptitle.
 
