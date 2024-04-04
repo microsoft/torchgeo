@@ -5,6 +5,11 @@
 
 from typing import Any
 
+import lightning
+import torch
+from torch import Tensor
+from torch.optim import SGD
+
 from .base import BaseTask
 
 
@@ -17,19 +22,31 @@ class IOBenchTask(BaseTask):
     def configure_models(self) -> None:
         """No-op."""
 
-    def configure_optimizers(self) -> None:
-        """No-op."""
+    def configure_optimizers(
+        self,
+    ) -> "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig":
+        """Initialize the optimizer.
+
+        Returns:
+            Optimizer.
+        """
+        optimizer = SGD([torch.tensor(0.0, requires_grad=True)])
+        return {"optimizer": optimizer}
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> None:
+    ) -> Tensor:
         """No-op.
 
         Args:
             batch: The output of your DataLoader.
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
+
+        Returns:
+            Zero.
         """
+        return torch.tensor(0.0, requires_grad=True)
 
     def validation_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

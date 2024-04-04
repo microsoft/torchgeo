@@ -1,13 +1,5 @@
 model:
-  class_path: SemanticSegmentationTask
-  init_args:
-    loss: "ce"
-    model: "unet"
-    backbone: "resnet18"
-    in_channels: 8
-    num_classes: 2
-    num_filters: 1
-    ignore_index: null
+  class_path: IOBenchTask
 data:
   class_path: IOBenchDataModule
   init_args:
