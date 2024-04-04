@@ -19,7 +19,7 @@ class IOBenchDataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 32,
-        patch_size: int | tuple[int, int] = 512,
+        patch_size: int | tuple[int, int] = 256,
         length: int | None = None,
         num_workers: int = 0,
         **kwargs: Any,
