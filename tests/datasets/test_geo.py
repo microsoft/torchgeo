@@ -543,9 +543,25 @@ class TestIntersectionDataset:
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
         assert isinstance(sample["image"], torch.Tensor)
 
+    def test_point_dataset(self) -> None:
+        ds1 = CustomGeoDataset(BoundingBox(0, 2, 2, 4, 4, 6))
+        ds2 = CustomGeoDataset(BoundingBox(1, 1, 3, 3, 5, 5))
+        ds = IntersectionDataset(ds1, ds2)
+        sample = ds[ds.bounds]
+        assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds.res == 1
+        assert len(ds1) == len(ds2) == len(ds) == 1
+
     def test_no_overlap(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
         ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
+        msg = "Datasets have no spatiotemporal intersection"
+        with pytest.raises(RuntimeError, match=msg):
+            IntersectionDataset(ds1, ds2)
+
+    def test_grid_overlap(self) -> None:
+        ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
+        ds2 = CustomGeoDataset(BoundingBox(1, 2, 3, 4, 5, 6))
         msg = "Datasets have no spatiotemporal intersection"
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
