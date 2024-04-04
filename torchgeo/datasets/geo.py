@@ -955,7 +955,7 @@ class IntersectionDataset(GeoDataset):
                 box3 = box1 & box2
                 # Skip 0 area overlap (unless 0 area dataset)
                 if box3.area > 0 or box1.area == 0 or box2.area == 0:
-                    self.index.insert(i, tuple(box1 & box2))
+                    self.index.insert(i, tuple(box3))
                     i += 1
 
         if i == 0:
