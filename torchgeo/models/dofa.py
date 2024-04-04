@@ -4,7 +4,7 @@
 """Dynamic One-For-All (DOFA) models."""
 
 from functools import partial
-from typing import Any, Optional
+from typing import Any
 
 import kornia.augmentation as K
 import torch
@@ -441,7 +441,7 @@ def dofa_small_patch16_224(**kwargs: Any) -> DOFA:
 
 
 def dofa_base_patch16_224(
-    weights: Optional[DOFABase16_Weights] = None, **kwargs: Any
+    weights: DOFABase16_Weights | None = None, **kwargs: Any
 ) -> DOFA:
     """Dynamic One-For-All (DOFA) base patch size 16 model.
 
@@ -477,7 +477,7 @@ def dofa_base_patch16_224(
 
 
 def dofa_large_patch16_224(
-    weights: Optional[DOFALarge16_Weights] = None, **kwargs: Any
+    weights: DOFALarge16_Weights | None = None, **kwargs: Any
 ) -> DOFA:
     """Dynamic One-For-All (DOFA) large patch size 16 model.
 

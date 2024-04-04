@@ -3,7 +3,8 @@
 
 """Base classes for all :mod:`torchgeo` data modules."""
 
-from typing import Any, Callable, Optional, Union, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 import kornia.augmentation as K
 import torch
@@ -55,27 +56,27 @@ class BaseDataModule(LightningDataModule):
         self.kwargs = kwargs
 
         # Datasets
-        self.dataset: Optional[Dataset[dict[str, Tensor]]] = None
-        self.train_dataset: Optional[Dataset[dict[str, Tensor]]] = None
-        self.val_dataset: Optional[Dataset[dict[str, Tensor]]] = None
-        self.test_dataset: Optional[Dataset[dict[str, Tensor]]] = None
-        self.predict_dataset: Optional[Dataset[dict[str, Tensor]]] = None
+        self.dataset: Dataset[dict[str, Tensor]] | None = None
+        self.train_dataset: Dataset[dict[str, Tensor]] | None = None
+        self.val_dataset: Dataset[dict[str, Tensor]] | None = None
+        self.test_dataset: Dataset[dict[str, Tensor]] | None = None
+        self.predict_dataset: Dataset[dict[str, Tensor]] | None = None
 
         # Data loaders
-        self.train_batch_size: Optional[int] = None
-        self.val_batch_size: Optional[int] = None
-        self.test_batch_size: Optional[int] = None
-        self.predict_batch_size: Optional[int] = None
+        self.train_batch_size: int | None = None
+        self.val_batch_size: int | None = None
+        self.test_batch_size: int | None = None
+        self.predict_batch_size: int | None = None
 
         # Data augmentation
         Transform = Callable[[dict[str, Tensor]], dict[str, Tensor]]
         self.aug: Transform = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std), data_keys=["image"]
         )
-        self.train_aug: Optional[Transform] = None
-        self.val_aug: Optional[Transform] = None
-        self.test_aug: Optional[Transform] = None
-        self.predict_aug: Optional[Transform] = None
+        self.train_aug: Transform | None = None
+        self.val_aug: Transform | None = None
+        self.test_aug: Transform | None = None
+        self.predict_aug: Transform | None = None
 
     def prepare_data(self) -> None:
         """Download and prepare data.
@@ -141,7 +142,7 @@ class BaseDataModule(LightningDataModule):
 
         return batch
 
-    def plot(self, *args: Any, **kwargs: Any) -> Optional[Figure]:
+    def plot(self, *args: Any, **kwargs: Any) -> Figure | None:
         """Run the plot method of the validation dataset if one exists.
 
         Should only be called during 'fit' or 'validate' stages as ``val_dataset``
@@ -154,7 +155,7 @@ class BaseDataModule(LightningDataModule):
         Returns:
             A matplotlib Figure with the image, ground truth, and predictions.
         """
-        fig: Optional[Figure] = None
+        fig: Figure | None = None
         dataset = self.dataset or self.val_dataset
         if dataset is not None:
             if hasattr(dataset, "plot"):
@@ -172,8 +173,8 @@ class GeoDataModule(BaseDataModule):
         self,
         dataset_class: type[GeoDataset],
         batch_size: int = 1,
-        patch_size: Union[int, tuple[int, int]] = 64,
-        length: Optional[int] = None,
+        patch_size: int | tuple[int, int] = 64,
+        length: int | None = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
@@ -196,18 +197,18 @@ class GeoDataModule(BaseDataModule):
         self.collate_fn = stack_samples
 
         # Samplers
-        self.sampler: Optional[GeoSampler] = None
-        self.train_sampler: Optional[GeoSampler] = None
-        self.val_sampler: Optional[GeoSampler] = None
-        self.test_sampler: Optional[GeoSampler] = None
-        self.predict_sampler: Optional[GeoSampler] = None
+        self.sampler: GeoSampler | None = None
+        self.train_sampler: GeoSampler | None = None
+        self.val_sampler: GeoSampler | None = None
+        self.test_sampler: GeoSampler | None = None
+        self.predict_sampler: GeoSampler | None = None
 
         # Batch samplers
-        self.batch_sampler: Optional[BatchGeoSampler] = None
-        self.train_batch_sampler: Optional[BatchGeoSampler] = None
-        self.val_batch_sampler: Optional[BatchGeoSampler] = None
-        self.test_batch_sampler: Optional[BatchGeoSampler] = None
-        self.predict_batch_sampler: Optional[BatchGeoSampler] = None
+        self.batch_sampler: BatchGeoSampler | None = None
+        self.train_batch_sampler: BatchGeoSampler | None = None
+        self.val_batch_sampler: BatchGeoSampler | None = None
+        self.test_batch_sampler: BatchGeoSampler | None = None
+        self.predict_batch_sampler: BatchGeoSampler | None = None
 
     def setup(self, stage: str) -> None:
         """Set up datasets and samplers.

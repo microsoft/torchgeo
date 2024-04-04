@@ -158,7 +158,7 @@ jobs:
     - name: List pip dependencies
       run: pip list
     - name: Run pyupgrade checks
-      run: pyupgrade --py39-plus $(find . -path ./docs/src -prune -o -name "*.py" -print)
+      run: pyupgrade --py310-plus $(find . -path ./docs/src -prune -o -name "*.py" -print)
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true

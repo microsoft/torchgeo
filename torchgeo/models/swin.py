@@ -3,7 +3,7 @@
 
 """Pre-trained Swin v2 Transformer models."""
 
-from typing import Any, Optional
+from typing import Any
 
 import kornia.augmentation as K
 import torch
@@ -136,7 +136,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
 
 
 def swin_v2_b(
-    weights: Optional[Swin_V2_B_Weights] = None, *args: Any, **kwargs: Any
+    weights: Swin_V2_B_Weights | None = None, *args: Any, **kwargs: Any
 ) -> SwinTransformer:
     """Swin Transformer v2 base model.
 

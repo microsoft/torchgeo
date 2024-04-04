@@ -5,8 +5,7 @@
 
 import glob
 import os
-from collections.abc import Sequence
-from typing import Callable, Optional
+from collections.abc import Callable, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -144,7 +143,7 @@ class DFC2022(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new DFC2022 dataset instance.
@@ -229,7 +228,7 @@ class DFC2022(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str, shape: Optional[Sequence[int]] = None) -> Tensor:
+    def _load_image(self, path: str, shape: Sequence[int] | None = None) -> Tensor:
         """Load a single image.
 
         Args:
@@ -296,7 +295,7 @@ class DFC2022(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

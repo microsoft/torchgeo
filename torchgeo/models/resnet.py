@@ -3,7 +3,7 @@
 
 """Pre-trained ResNet models."""
 
-from typing import Any, Optional
+from typing import Any
 
 import kornia.augmentation as K
 import timm
@@ -463,7 +463,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
 
 
 def resnet18(
-    weights: Optional[ResNet18_Weights] = None, *args: Any, **kwargs: Any
+    weights: ResNet18_Weights | None = None, *args: Any, **kwargs: Any
 ) -> ResNet:
     """ResNet-18 model.
 
@@ -497,7 +497,7 @@ def resnet18(
 
 
 def resnet50(
-    weights: Optional[ResNet50_Weights] = None, *args: Any, **kwargs: Any
+    weights: ResNet50_Weights | None = None, *args: Any, **kwargs: Any
 ) -> ResNet:
     """ResNet-50 model.
 
