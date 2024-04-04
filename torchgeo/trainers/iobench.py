@@ -30,7 +30,7 @@ class IOBenchTask(BaseTask):
         Returns:
             Optimizer.
         """
-        optimizer = SGD([torch.tensor(0.0, requires_grad=True)])
+        optimizer = SGD([torch.tensor(0.0, requires_grad=True)], lr=0)
         return {"optimizer": optimizer}
 
     def training_step(
