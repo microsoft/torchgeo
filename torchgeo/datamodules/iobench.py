@@ -3,7 +3,7 @@
 
 """I/O benchmark datamodule."""
 
-from typing import Any, Optional, Union
+from typing import Any
 
 from ..datasets import IOBench
 from ..samplers import GridGeoSampler, RandomGeoSampler
@@ -19,8 +19,8 @@ class IOBenchDataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 32,
-        patch_size: Union[int, tuple[int, int]] = 512,
-        length: Optional[int] = None,
+        patch_size: int | tuple[int, int] = 512,
+        length: int | None = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:

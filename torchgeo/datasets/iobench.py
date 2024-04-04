@@ -5,8 +5,8 @@
 
 import glob
 import os
-from collections.abc import Sequence
-from typing import Any, Callable, Optional
+from collections.abc import Callable, Sequence
+from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -56,11 +56,11 @@ class IOBench(IntersectionDataset):
         self,
         root: str = "data",
         split: str = "preprocessed",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        bands: Optional[Sequence[str]] = Landsat9.default_bands + ["SR_QA_AEROSOL"],
+        crs: CRS | None = None,
+        res: float | None = None,
+        bands: Sequence[str] | None = Landsat9.default_bands + ["SR_QA_AEROSOL"],
         classes: list[int] = [0],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -141,7 +141,7 @@ class IOBench(IntersectionDataset):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
