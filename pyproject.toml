@@ -228,8 +228,6 @@ filterwarnings = [
     "ignore:Call to deprecated create function:DeprecationWarning:tensorboard.compat.proto",
     # https://github.com/treebeardtech/nbmake/issues/68
     'ignore:The \(fspath. py.path.local\) argument to NotebookFile is deprecated:pytest.PytestDeprecationWarning:nbmake.pytest_plugin',
-    # https://github.com/kornia/kornia/issues/777
-    "ignore:Default upsampling behavior when mode=bilinear is changed to align_corners=False since 0.4.0:UserWarning:torch.nn.functional",
     # https://github.com/pytorch/pytorch/pull/24929
     "ignore:Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0:UserWarning:torch.nn.functional",
     # https://github.com/scikit-image/scikit-image/issues/6663
@@ -259,8 +257,6 @@ filterwarnings = [
     "ignore:Starting from v1.9.0, `tensorboardX` has been removed as a dependency of the `lightning.pytorch` package:UserWarning",
     # https://github.com/Lightning-AI/lightning/issues/18545
     "ignore:LightningCLI's args parameter is intended to run from within Python like if it were from the command line.:UserWarning",
-    # https://github.com/kornia/kornia/pull/1611
-    "ignore:`ColorJitter` is now following Torchvision implementation.:DeprecationWarning:kornia.augmentation._2d.intensity.color_jitter",
     # https://github.com/kornia/kornia/pull/1663
     "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning",
     # https://github.com/pytorch/pytorch/pull/111576
