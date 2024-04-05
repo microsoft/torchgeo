@@ -15,8 +15,6 @@ from timm.models.vision_transformer import Block
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
 
-from ..transforms import AugmentationSequential
-
 __all__ = ["DOFABase16_Weights", "DOFALarge16_Weights"]
 
 
@@ -375,7 +373,7 @@ class DOFA(nn.Module):
 
 # https://github.com/zhu-xlab/DOFA/blob/master/normalize_dataset.py
 # Normalization is sensor-dependent and is therefore left out
-_dofa_transforms = AugmentationSequential(K.CenterCrop((224, 224)), data_keys=["image"])
+_dofa_transforms = K.AugmentationSequential(K.CenterCrop((224, 224)), data_keys=None)
 
 # https://github.com/pytorch/vision/pull/6883
 # https://github.com/pytorch/vision/pull/7107
