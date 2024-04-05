@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import pytest
-import requests
+import urllib3
 
 from torchgeo.datasets import WMSDataset
 
@@ -11,11 +11,10 @@ SERVICE_URL = "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r-t.cgi?"
 
 def service_ok(url: str, timeout: int = 5) -> bool:
     try:
-        resp = requests.head(url, allow_redirects=True, timeout=timeout)
-        ok = bool(resp.ok)
-    except requests.exceptions.ReadTimeout:
-        ok = False
-    except requests.exceptions.ConnectTimeout:
+        http = urllib3.PoolManager()
+        resp = http.request("HEAD", url, allow_redirects=True, timeout=timeout)
+        ok = 200 == resp.status
+    except urllib3.exceptions.NewConnectionError:
         ok = False
     except Exception:
         ok = False
