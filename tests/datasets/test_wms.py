@@ -12,7 +12,7 @@ SERVICE_URL = "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r-t.cgi?"
 def service_ok(url: str, timeout: int = 5) -> bool:
     try:
         http = urllib3.PoolManager()
-        resp = http.request("HEAD", url, allow_redirects=True, timeout=timeout)
+        resp = http.request("HEAD", url, timeout=timeout)
         ok = 200 == resp.status
     except urllib3.exceptions.NewConnectionError:
         ok = False
@@ -23,7 +23,7 @@ def service_ok(url: str, timeout: int = 5) -> bool:
 
 class TestWMSDataset:
 
-    @pytest.mark.online
+    @pytest.mark.slow
     @pytest.mark.skipif(
         not service_ok(SERVICE_URL), reason="WMS service is unreachable"
     )
@@ -39,6 +39,10 @@ class TestWMSDataset:
         assert 50 == wms.index.bounds[3]
         assert "image/png" == wms._format
 
+    @pytest.mark.slow
+    @pytest.mark.skipif(
+        not service_ok(SERVICE_URL), reason="WMS service is unreachable"
+    )
     def test_wms_layer(self) -> None:
         """MESONET GetMap 1.1.1"""
         wms = WMSDataset(SERVICE_URL, 10.0, layer="nexrad_base_reflect", crs=4326)
@@ -49,6 +53,10 @@ class TestWMSDataset:
         assert 50 == wms.index.bounds[3]
         assert "image/png" == wms._format
 
+    @pytest.mark.slow
+    @pytest.mark.skipif(
+        not service_ok(SERVICE_URL), reason="WMS service is unreachable"
+    )
     def test_wms_layer_nocrs(self) -> None:
         """MESONET GetMap 1.1.1"""
         wms = WMSDataset(SERVICE_URL, 10.0, layer="nexrad_base_reflect")
