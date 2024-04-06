@@ -9,6 +9,7 @@ lightly==1.5.2
 lightning[pytorch-extra]==2.2.1
 matplotlib==3.8.4
 numpy==1.26.4
+owsLib==0.30.0
 pandas==2.2.1
 pillow==10.3.0
 pyproj==3.6.1
