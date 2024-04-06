@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from copy import deepcopy
 from itertools import accumulate
 from math import floor, isclose
-from typing import Optional, Union, cast
+from typing import cast
 
 from rtree.index import Index, Property
 from torch import Generator, default_generator, randint, randperm
@@ -50,7 +50,7 @@ def _fractions_to_lengths(fractions: Sequence[float], total: int) -> Sequence[in
 def random_bbox_assignment(
     dataset: GeoDataset,
     lengths: Sequence[float],
-    generator: Optional[Generator] = default_generator,
+    generator: Generator | None = default_generator,
 ) -> list[GeoDataset]:
     """Split a GeoDataset randomly assigning its index's BoundingBoxes.
 
@@ -104,7 +104,7 @@ def random_bbox_assignment(
 def random_bbox_splitting(
     dataset: GeoDataset,
     fractions: Sequence[float],
-    generator: Optional[Generator] = default_generator,
+    generator: Generator | None = default_generator,
 ) -> list[GeoDataset]:
     """Split a GeoDataset randomly splitting its index's BoundingBoxes.
 
@@ -172,7 +172,7 @@ def random_grid_cell_assignment(
     dataset: GeoDataset,
     fractions: Sequence[float],
     grid_size: int = 6,
-    generator: Optional[Generator] = default_generator,
+    generator: Generator | None = default_generator,
 ) -> list[GeoDataset]:
     """Overlays a grid over a GeoDataset and randomly assigns cells to new GeoDatasets.
 
@@ -289,7 +289,7 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> list[GeoDatas
 
 
 def time_series_split(
-    dataset: GeoDataset, lengths: Sequence[Union[float, tuple[float, float]]]
+    dataset: GeoDataset, lengths: Sequence[float | tuple[float, float]]
 ) -> list[GeoDataset]:
     """Split a GeoDataset on its time dimension to create non-overlapping GeoDatasets.
 

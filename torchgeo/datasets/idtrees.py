@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Any, Callable, Optional, cast, overload
+from collections.abc import Callable
+from typing import Any, cast, overload
 
 import fiona
 import matplotlib.pyplot as plt
@@ -148,7 +149,7 @@ class IDTReeS(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         task: str = "task1",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -333,7 +334,7 @@ class IDTReeS(NonGeoDataset):
 
     def _load(
         self, root: str
-    ) -> tuple[list[str], Optional[dict[int, dict[str, Any]]], Any]:
+    ) -> tuple[list[str], dict[int, dict[str, Any]] | None, Any]:
         """Load files, geometries, and labels.
 
         Args:
@@ -419,8 +420,8 @@ class IDTReeS(NonGeoDataset):
         image_size: tuple[int, int],
         min_size: int,
         boxes: Tensor,
-        labels: Optional[Tensor],
-    ) -> tuple[Tensor, Optional[Tensor]]:
+        labels: Tensor | None,
+    ) -> tuple[Tensor, Tensor | None]:
         """Clip boxes to image size and filter boxes with sides less than ``min_size``.
 
         Args:
@@ -477,7 +478,7 @@ class IDTReeS(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
         hsi_indices: tuple[int, int, int] = (0, 1, 2),
     ) -> Figure:
         """Plot a sample from the dataset.

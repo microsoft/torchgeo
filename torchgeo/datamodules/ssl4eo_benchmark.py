@@ -3,7 +3,7 @@
 
 """SSL4EO datamodule."""
 
-from typing import Any, Union
+from typing import Any
 
 import kornia.augmentation as K
 from kornia.constants import DataKey, Resample
@@ -23,7 +23,7 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[int, tuple[int, int]] = 224,
+        patch_size: int | tuple[int, int] = 224,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
