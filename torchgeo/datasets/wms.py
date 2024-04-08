@@ -3,8 +3,9 @@
 # Author: Ian Turton, Glasgow University ian.turton@gla.ac.uk
 
 """A simple class to fetch WMS images."""
+from collections.abc import Callable
 from io import BytesIO
-from typing import Any, Callable, Optional, Union
+from typing import Any
 
 import torchvision.transforms as transforms
 from owslib.map.wms111 import ContentMetadata
@@ -33,9 +34,9 @@ class WMSDataset(GeoDataset):
         self,
         url: str,
         res: float,
-        layer: Optional[str] = None,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
-        crs: Optional[Union[str, int]] = None,
+        layer: str | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        crs: str | int | None = None,
     ) -> None:
         """Initialize the data set instance.
 
@@ -64,7 +65,7 @@ class WMSDataset(GeoDataset):
         if layer is not None and layer in self._layers:
             self.layer(layer, crs)
 
-    def layer(self, layer: str, crs: Optional[Union[str, int]] = None) -> None:
+    def layer(self, layer: str, crs: str | int | None = None) -> None:
         """Set the layer to be fetched.
 
         Args:
