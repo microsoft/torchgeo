@@ -87,6 +87,8 @@ datasets = [
     "laspy>=2",
     # opencv-python 4.4.0.46+ required for Python 3.9 wheels
     "opencv-python>=4.4.0.46",
+    # OWSLib is required for WMS Dataset
+    "OWSLib>=0.30.0",
     # pycocotools 2.0.5+ required for cython 3+ support
     "pycocotools>=2.0.5",
     # pyvista 0.34.2+ required to avoid ImportError in CI

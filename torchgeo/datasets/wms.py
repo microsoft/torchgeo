@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-# Author: Ian Turton, Glasgow University ian.turton@gla.ac.uk
 
 """A simple class to fetch WMS images."""
 from collections.abc import Callable
@@ -8,8 +7,6 @@ from io import BytesIO
 from typing import Any
 
 import torchvision.transforms as transforms
-from owslib.map.wms111 import ContentMetadata
-from owslib.wms import WebMapService
 from PIL import Image
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
@@ -22,6 +19,11 @@ from torchgeo.datasets import GeoDataset
 class WMSDataset(GeoDataset):
     """Allow models to fetch images from a WMS (at a good resolution)."""
 
+    try:
+        from owslib.map.wms111 import ContentMetadata
+        from owslib.wms import WebMapService
+    except ImportError:
+        raise ImportError("OWSLib is not installed and is required to use this dataset")
     _url: str = ""
     _wms: WebMapService = None
 
@@ -53,9 +55,16 @@ class WMSDataset(GeoDataset):
                 valid EPSG code (without the 'EPSG:')
 
         """
+        try:
+            from owslib.wms import WebMapService
+        except ImportError:
+            raise ImportError(
+                "OWSLib is not installed and is required to use this dataset"
+            )
         super().__init__(transforms)
         self._url = url
         self._res = res
+
         if crs is not None:
             self._crs = CRS.from_epsg(crs)
         self._wms = WebMapService(url)

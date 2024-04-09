@@ -25,6 +25,7 @@ torchvision==0.14.0
 h5py==3.0.0
 laspy==2.0.0
 opencv-python==4.4.0.46
+OWSLib==0.21.0
 pycocotools==2.0.5
 pyvista==0.34.2
 radiant-mlhub==0.3.0
