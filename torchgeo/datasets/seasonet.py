@@ -6,7 +6,6 @@
 import os
 import random
 from collections.abc import Callable, Collection, Iterable
-from typing import Optional
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -219,7 +218,7 @@ class SeasoNet(NonGeoDataset):
         bands: Iterable[str] = all_bands,
         grids: Iterable[int] = [1, 2],
         concat_seasons: int = 1,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -405,7 +404,7 @@ class SeasoNet(NonGeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         show_legend: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

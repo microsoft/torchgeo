@@ -6,8 +6,8 @@
 import abc
 import os
 import sys
-from collections.abc import Iterable, Sequence
-from typing import Any, Callable, Optional, Union, cast
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -90,10 +90,10 @@ class Chesapeake(RasterDataset, abc.ABC):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        paths: str | Iterable[str] = "data",
+        crs: CRS | None = None,
+        res: float | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -170,7 +170,7 @@ class Chesapeake(RasterDataset, abc.ABC):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -512,7 +512,7 @@ class ChesapeakeCVPR(GeoDataset):
         root: str = "data",
         splits: Sequence[str] = ["de-train"],
         layers: Sequence[str] = ["naip-new", "lc"],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -711,7 +711,7 @@ class ChesapeakeCVPR(GeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

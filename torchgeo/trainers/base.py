@@ -5,7 +5,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import Any, Optional, Union
+from typing import Any
 
 import lightning
 from lightning.pytorch import LightningModule
@@ -28,7 +28,7 @@ class BaseTask(LightningModule, ABC):
     #: Whether the goal is to minimize or maximize the performance metric to monitor.
     mode = "min"
 
-    def __init__(self, ignore: Optional[Union[Sequence[str], str]] = None) -> None:
+    def __init__(self, ignore: Sequence[str] | str | None = None) -> None:
         """Initialize a new BaseTask instance.
 
         Args:

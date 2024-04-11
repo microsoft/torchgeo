@@ -4,8 +4,8 @@
 """EuroSAT dataset."""
 
 import os
-from collections.abc import Sequence
-from typing import Callable, Optional, cast
+from collections.abc import Callable, Sequence
+from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -106,7 +106,7 @@ class EuroSAT(NonGeoClassificationDataset):
         root: str = "data",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -247,7 +247,7 @@ class EuroSAT(NonGeoClassificationDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

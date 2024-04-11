@@ -6,7 +6,8 @@
 import glob
 import os
 import random
-from typing import Callable, Optional, TypedDict
+from collections.abc import Callable
+from typing import TypedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -163,7 +164,7 @@ class SSL4EOL(NonGeoDataset):
         root: str = "data",
         split: str = "oli_sr",
         seasons: int = 1,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -285,7 +286,7 @@ class SSL4EOL(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -405,7 +406,7 @@ class SSL4EOS12(NonGeoDataset):
         root: str = "data",
         split: str = "s2c",
         seasons: int = 1,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SSL4EOS12 instance.
@@ -500,7 +501,7 @@ class SSL4EOS12(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
