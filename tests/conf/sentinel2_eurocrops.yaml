@@ -2,12 +2,11 @@ model:
   class_path: SemanticSegmentationTask
   init_args:
     loss: "ce"
-    model: "deeplabv3+"
+    model: "unet"
     backbone: "resnet18"
     in_channels: 13
     num_classes: 3
     num_filters: 1
-    ignore_index: 4
 data:
   class_path: Sentinel2EuroCropsDataModule
   init_args:

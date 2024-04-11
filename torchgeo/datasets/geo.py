@@ -608,6 +608,19 @@ class VectorDataset(GeoDataset):
     #: Not used if :attr:`filename_regex` does not contain a ``date`` group.
     date_format = "%Y%m%d"
 
+    @property
+    def dtype(self) -> torch.dtype:
+        """The dtype of the dataset (overrides the dtype of the data file via a cast).
+
+        Defaults to long.
+
+        Returns:
+            the dtype of the dataset
+
+        .. versionadded:: 0.6
+        """
+        return torch.long
+
     def __init__(
         self,
         paths: str | Iterable[str] = "data",
@@ -734,7 +747,8 @@ class VectorDataset(GeoDataset):
         # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
         masks = array_to_tensor(masks)
 
-        sample = {"mask": masks.long(), "crs": self.crs, "bbox": query}
+        masks = masks.to(self.dtype)
+        sample = {"mask": masks, "crs": self.crs, "bbox": query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)

@@ -7,10 +7,12 @@ from typing import Any, Optional, Union
 
 import kornia.augmentation as K
 import torch
+from kornia.constants import DataKey, Resample
 from matplotlib.figure import Figure
 
 from ..datasets import EuroCrops, Sentinel2, random_grid_cell_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
+from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
 
@@ -32,9 +34,6 @@ class Sentinel2EuroCropsDataModule(GeoDataModule):
         **kwargs: Any,
     ) -> None:
         """Initialize a new Sentinel2EuroCropsDataModule instance.
-
-        The dataset is split into train, val, and test by identifying all grid cells
-        of size chunk_size with nonzero labels, and randomly assigning those to splits.
 
         Args:
             batch_size: Size of each mini-batch.
@@ -63,6 +62,17 @@ class Sentinel2EuroCropsDataModule(GeoDataModule):
             length,
             num_workers,
             **self.eurocrops_kwargs,
+        )
+
+        self.train_aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
+            K.RandomVerticalFlip(p=0.5),
+            K.RandomHorizontalFlip(p=0.5),
+            data_keys=["image", "mask"],
+            extra_args={
+                DataKey.MASK: {"resample": Resample.NEAREST, "align_corners": None}
+            },
         )
 
         self.aug = AugmentationSequential(
