@@ -6,8 +6,9 @@ import abc
 import glob
 import hashlib
 import os
+from collections.abc import Callable
 from functools import lru_cache
-from typing import Any, Callable, Optional, cast
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -152,7 +153,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -209,9 +210,9 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
     def __init__(
         self,
         root: str = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        crs: CRS | None = None,
+        res: float | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -299,7 +300,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:

@@ -6,7 +6,7 @@
 import os
 import warnings
 from collections.abc import Sequence
-from typing import Any, Optional, Union
+from typing import Any
 
 import kornia.augmentation as K
 import lightning
@@ -141,7 +141,7 @@ class MoCoTask(BaseTask):
     def __init__(
         self,
         model: str = "resnet50",
-        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         version: int = 3,
         layers: int = 3,
@@ -156,9 +156,9 @@ class MoCoTask(BaseTask):
         moco_momentum: float = 0.99,
         gather_distributed: bool = False,
         size: int = 224,
-        grayscale_weights: Optional[Tensor] = None,
-        augmentation1: Optional[nn.Module] = None,
-        augmentation2: Optional[nn.Module] = None,
+        grayscale_weights: Tensor | None = None,
+        augmentation1: nn.Module | None = None,
+        augmentation2: nn.Module | None = None,
     ) -> None:
         """Initialize a new MoCoTask instance.
 

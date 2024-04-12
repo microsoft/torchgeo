@@ -4,7 +4,7 @@
 """Common sampler utilities."""
 
 import math
-from typing import Optional, Union, overload
+from typing import overload
 
 import torch
 
@@ -12,14 +12,14 @@ from ..datasets import BoundingBox
 
 
 @overload
-def _to_tuple(value: Union[tuple[int, int], int]) -> tuple[int, int]: ...
+def _to_tuple(value: tuple[int, int] | int) -> tuple[int, int]: ...
 
 
 @overload
-def _to_tuple(value: Union[tuple[float, float], float]) -> tuple[float, float]: ...
+def _to_tuple(value: tuple[float, float] | float) -> tuple[float, float]: ...
 
 
-def _to_tuple(value: Union[tuple[float, float], float]) -> tuple[float, float]:
+def _to_tuple(value: tuple[float, float] | float) -> tuple[float, float]:
     """Convert value to a tuple if it is not already a tuple.
 
     Args:
@@ -35,7 +35,7 @@ def _to_tuple(value: Union[tuple[float, float], float]) -> tuple[float, float]:
 
 
 def get_random_bounding_box(
-    bounds: BoundingBox, size: Union[tuple[float, float], float], res: float
+    bounds: BoundingBox, size: tuple[float, float] | float, res: float
 ) -> BoundingBox:
     """Returns a random bounding box within a given bounding box.
 
@@ -80,7 +80,7 @@ def get_random_bounding_box(
 def tile_to_chips(
     bounds: BoundingBox,
     size: tuple[float, float],
-    stride: Optional[tuple[float, float]] = None,
+    stride: tuple[float, float] | None = None,
 ) -> tuple[int, int]:
     r"""Compute number of :term:`chips <chip>` that can be sampled from a :term:`tile`.
 

@@ -4,7 +4,7 @@
 """Trainers for semantic segmentation."""
 
 import os
-from typing import Any, Optional, Union
+from typing import Any
 
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
@@ -28,13 +28,13 @@ class SemanticSegmentationTask(BaseTask):
         self,
         model: str = "unet",
         backbone: str = "resnet50",
-        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
         num_filters: int = 3,
         loss: str = "ce",
-        class_weights: Optional[Tensor] = None,
-        ignore_index: Optional[int] = None,
+        class_weights: Tensor | None = None,
+        ignore_index: int | None = None,
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
@@ -194,7 +194,7 @@ class SemanticSegmentationTask(BaseTask):
              for balanced performance assessment across imbalanced classes.
         """
         num_classes: int = self.hparams["num_classes"]
-        ignore_index: Optional[int] = self.hparams["ignore_index"]
+        ignore_index: int | None = self.hparams["ignore_index"]
         metrics = MetricCollection(
             [
                 MulticlassAccuracy(
@@ -268,7 +268,7 @@ class SemanticSegmentationTask(BaseTask):
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
 
-            fig: Optional[Figure] = None
+            fig: Figure | None = None
             try:
                 fig = datamodule.plot(sample)
             except RGBBandsMissingError:

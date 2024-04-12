@@ -3,8 +3,8 @@
 
 """Fully convolutional change detection (FCCD) implementations."""
 
-from collections.abc import Sequence
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable, Sequence
+from typing import Any
 
 import segmentation_models_pytorch as smp
 import torch
@@ -25,13 +25,13 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
         self,
         encoder_name: str = "resnet34",
         encoder_depth: int = 5,
-        encoder_weights: Optional[str] = "imagenet",
+        encoder_weights: str | None = "imagenet",
         decoder_use_batchnorm: bool = True,
         decoder_channels: Sequence[int] = (256, 128, 64, 32, 16),
-        decoder_attention_type: Optional[str] = None,
+        decoder_attention_type: str | None = None,
         in_channels: int = 3,
         classes: int = 1,
-        activation: Optional[Union[str, Callable[[Tensor], Tensor]]] = None,
+        activation: str | Callable[[Tensor], Tensor] | None = None,
     ):
         """Initialize a new FCSiamConc model.
 

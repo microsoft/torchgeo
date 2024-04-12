@@ -6,7 +6,7 @@
 import os
 import shutil
 from collections import defaultdict
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -111,7 +111,7 @@ class MapInWild(NonGeoDataset):
         root: str = "data",
         modality: list[str] = ["mask", "esa_wc", "viirs", "s2_summer"],
         split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -223,7 +223,7 @@ class MapInWild(NonGeoDataset):
             tensor = torch.from_numpy(array).float()
             return tensor
 
-    def _verify(self, url: str, md5: Optional[str] = None) -> None:
+    def _verify(self, url: str, md5: str | None = None) -> None:
         """Verify the integrity of the dataset.
 
         Args:
@@ -258,7 +258,7 @@ class MapInWild(NonGeoDataset):
         if not url.endswith(".csv"):
             self._extract(url)
 
-    def _download(self, url: str, md5: Optional[str]) -> None:
+    def _download(self, url: str, md5: str | None) -> None:
         """Downloads a modality.
 
         Args:
@@ -330,7 +330,7 @@ class MapInWild(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
