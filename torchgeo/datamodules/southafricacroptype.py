@@ -3,7 +3,7 @@
 
 """SouthAfricaCropType datamodule."""
 
-from typing import Any, Optional, Union
+from typing import Any
 
 import kornia.augmentation as K
 import torch
