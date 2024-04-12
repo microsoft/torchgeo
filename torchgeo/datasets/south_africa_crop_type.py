@@ -101,7 +101,7 @@ class SouthAfricaCropType(RasterDataset):
         crs: CRS | None = None,
         classes: list[int] = list(cmap.keys()),
         bands: list[str] = s2_bands,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
     ) -> None:
         """Initialize a new South Africa Crop Type dataset instance.
 
@@ -183,8 +183,6 @@ class SouthAfricaCropType(RasterDataset):
             band_filepaths = []
             for field_id in field_ids:
                 date = imagery_dates[field_id][band_type]
-                if not date:
-                    print(self.files)
                 filepath = os.path.join(
                     self.paths,
                     "train",
