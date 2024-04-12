@@ -39,7 +39,7 @@ Sentinel
 .. autoclass:: Sentinel2SouthAmericaSoybeanDataModule
 
 SouthAfricaCropType
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SouthAfricaCropTypeDataModule
 
