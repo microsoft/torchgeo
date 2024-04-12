@@ -25,8 +25,8 @@ class SouthAfricaCropTypeDataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[int, tuple[int, int]] = 16,
-        length: Optional[int] = None,
+        patch_size: int | tuple[int, int] = 16,
+        length: int | None = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
