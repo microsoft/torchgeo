@@ -25,7 +25,7 @@ class SouthAfricaCropTypeDataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[int, tuple[int, int]] = 256,
+        patch_size: Union[int, tuple[int, int]] = 16,
         length: Optional[int] = None,
         num_workers: int = 0,
         **kwargs: Any,
@@ -68,9 +68,12 @@ class SouthAfricaCropTypeDataModule(GeoDataModule):
         """
         dataset = SouthAfricaCropType(**self.kwargs)
         generator = torch.Generator().manual_seed(0)
-        (self.train_dataset, self.val_dataset, self.test_dataset) = (
-            random_bbox_assignment(dataset, [0.8, 0.1, 0.1], generator)
-        )
+        (
+            self.train_dataset,
+            self.val_dataset,
+            self.test_dataset,
+        ) = random_bbox_assignment(dataset, [0.8, 0.1, 0.1], generator)
+        print(len(self.train_dataset), len(self.val_dataset))
 
         if stage in ["fit"]:
             self.train_batch_sampler = RandomBatchGeoSampler(
