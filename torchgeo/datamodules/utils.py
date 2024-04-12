@@ -4,8 +4,8 @@
 """Common datamodule utilities."""
 
 import math
-from collections.abc import Iterable
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable, Iterable
+from typing import Any
 
 import numpy as np
 import torch
@@ -103,9 +103,9 @@ def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
 
 
 def dataset_split(
-    dataset: Union[TensorDataset, NonGeoDataset],
+    dataset: TensorDataset | NonGeoDataset,
     val_pct: float,
-    test_pct: Optional[float] = None,
+    test_pct: float | None = None,
 ) -> list[Subset[Any]]:
     """Split a torch Dataset into train/val/test sets.
 
@@ -142,9 +142,9 @@ def dataset_split(
 
 def group_shuffle_split(
     groups: Iterable[Any],
-    train_size: Optional[float] = None,
-    test_size: Optional[float] = None,
-    random_state: Optional[int] = None,
+    train_size: float | None = None,
+    test_size: float | None = None,
+    random_state: int | None = None,
 ) -> tuple[list[int], list[int]]:
     """Method for performing a single group-wise shuffle split of data.
 

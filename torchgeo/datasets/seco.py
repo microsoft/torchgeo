@@ -5,7 +5,7 @@
 
 import os
 import random
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -79,7 +79,7 @@ class SeasonalContrastS2(NonGeoDataset):
         version: str = "100k",
         seasons: int = 1,
         bands: list[str] = rgb_bands,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -174,12 +174,14 @@ class SeasonalContrastS2(NonGeoDataset):
                     # what could be sped up throughout later. There is also a potential
                     # slowdown here from converting to/from a PIL Image just to resize.
                     # https://gist.github.com/calebrob6/748045ac8d844154067b2eefa47de92f
-                    pil_image = Image.fromarray(band_data)
+                    pil_image = Image.fromarray(
+                        band_data
+                    )  # type: ignore[no-untyped-call]
                     # Moved in PIL 9.1.0
                     try:
                         resample = Image.Resampling.BILINEAR
                     except AttributeError:
-                        resample = Image.BILINEAR
+                        resample = Image.BILINEAR  # type: ignore[attr-defined]
                     band_data = np.array(
                         pil_image.resize((264, 264), resample=resample)
                     )
@@ -229,7 +231,7 @@ class SeasonalContrastS2(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

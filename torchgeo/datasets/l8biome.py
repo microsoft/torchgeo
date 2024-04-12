@@ -5,8 +5,8 @@
 
 import glob
 import os
-from collections.abc import Iterable, Sequence
-from typing import Any, Callable, Optional, Union, cast
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -96,11 +96,11 @@ class L8Biome(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]],
-        crs: Optional[CRS] = CRS.from_epsg(3857),
-        res: Optional[float] = None,
+        paths: str | Iterable[str],
+        crs: CRS | None = CRS.from_epsg(3857),
+        res: float | None = None,
         bands: Sequence[str] = all_bands,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -217,7 +217,7 @@ class L8Biome(RasterDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -5,8 +5,8 @@
 
 import os
 import re
-from collections.abc import Iterable
-from typing import Any, Callable, Optional, Union, cast
+from collections.abc import Callable, Iterable
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -97,8 +97,8 @@ class SouthAfricaCropType(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
-        crs: Optional[CRS] = None,
+        paths: str | Iterable[str] = "data",
+        crs: CRS | None = None,
         classes: list[int] = list(cmap.keys()),
         bands: list[str] = s2_bands,
         transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
@@ -224,7 +224,7 @@ class SouthAfricaCropType(RasterDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
