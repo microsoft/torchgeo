@@ -258,6 +258,7 @@ tmp_path_retention_policy = "failed"
 
 # https://docs.astral.sh/ruff/settings/
 [tool.ruff]
+extend-include = ["*.ipynb"]
 fix = true
 unsafe-fixes = true
 
