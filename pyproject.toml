@@ -113,17 +113,8 @@ docs = [
     "sphinx>=4,<6",
 ]
 style = [
-    # black 21.8+ required for Jupyter support
-    "black[jupyter]>=21.8",
-    # flake8 3.8+ depends on pyflakes 2.2+, which fixes a bug with mypy error code ignores:
-    # https://github.com/PyCQA/pyflakes/pull/455
-    "flake8>=3.8",
-    # isort 5.8+ required for extend_skip option
-    "isort[colors]>=5.8",
-    # pydocstyle 6.1+ required for pyproject.toml support
-    "pydocstyle[toml]>=6.1",
-    # pyupgrade 2.8+ required for --py310-plus flag
-    "pyupgrade>=2.8",
+    # ruff 0.2+ required for [ruff.lint]
+    "ruff>=0.2",
 ]
 tests = [
     # mypy 0.900+ required for pyproject.toml support
