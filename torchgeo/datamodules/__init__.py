@@ -23,6 +23,7 @@ from .landcoverai import LandCoverAIDataModule
 from .levircd import LEVIRCDDataModule, LEVIRCDPlusDataModule
 from .loveda import LoveDADataModule
 from .naip import NAIPChesapeakeDataModule
+from .naip_cluster import NAIPClusterDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
 from .oscd import OSCDDataModule
 from .potsdam import Potsdam2DDataModule
@@ -73,6 +74,7 @@ __all__ = (
     "LEVIRCDDataModule",
     "LEVIRCDPlusDataModule",
     "LoveDADataModule",
+    "NAIPClusterDataModule",
     "NASAMarineDebrisDataModule",
     "OSCDDataModule",
     "Potsdam2DDataModule",
