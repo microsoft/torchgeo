@@ -248,9 +248,7 @@ class DOFA(nn.Module):
         num_classes: int = 45,
         global_pool: bool = True,
         mlp_ratio: float = 4.0,
-        norm_layer: type[nn.Module] = partial(
-            nn.LayerNorm, eps=1e-6
-        ),  # type: ignore[assignment]
+        norm_layer: type[nn.Module] = partial(nn.LayerNorm, eps=1e-6),  # type: ignore[assignment]
     ) -> None:
         """Initialize a new DOFA instance.
 

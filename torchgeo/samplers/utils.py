@@ -28,7 +28,7 @@ def _to_tuple(value: tuple[float, float] | float) -> tuple[float, float]:
     Returns:
         value if value is a tuple, else (value, value)
     """
-    if isinstance(value, (float, int)):
+    if isinstance(value, float | int):
         return (value, value)
     else:
         return value
@@ -49,6 +49,7 @@ def get_random_bounding_box(
     Args:
         bounds: the larger bounding box to sample from
         size: the size of the bounding box to sample
+        res: the resolution of the image
 
     Returns:
         randomly sampled bounding box from the extent of the input

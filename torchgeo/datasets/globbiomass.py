@@ -154,9 +154,7 @@ class GlobBiomass(RasterDataset):
         assert isinstance(measurement, str), "Measurement argument must be a str."
         assert (
             measurement in self.measurements
-        ), "You have entered an invalid measurement, please choose one of {}.".format(
-            self.measurements
-        )
+        ), f"You have entered an invalid measurement, please choose one of {self.measurements}."
         self.measurement = measurement
 
         self.filename_glob = f"*0_{self.measurement}*.tif"

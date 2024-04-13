@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """UC Merced dataset."""
+
 import os
 from collections.abc import Callable
 from typing import cast
@@ -114,7 +115,8 @@ class UCMerced(NonGeoClassificationDataset):
         with open(os.path.join(self.root, f"uc_merced-{split}.txt")) as f:
             for fn in f:
                 valid_fns.add(fn.strip())
-        is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
+        def is_in_split(x: str) -> bool:
+            return os.path.basename(x) in valid_fns
 
         super().__init__(
             root=os.path.join(root, self.base_dir),
