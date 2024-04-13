@@ -6,8 +6,8 @@ import math
 import pytest
 
 from torchgeo.datasets import BoundingBox
-from torchgeo.samplers.utils import _to_tuple
 from torchgeo.samplers import tile_to_chips
+from torchgeo.samplers.utils import _to_tuple
 
 MAYBE_TUPLE = float | tuple[float, float]
 
