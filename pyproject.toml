@@ -146,11 +146,6 @@ torchgeo = "torchgeo.main:main"
 Homepage = "https://github.com/microsoft/torchgeo"
 Documentation = "https://torchgeo.readthedocs.io"
 
-[tool.black]
-target-version = ["py310"]
-color = true
-skip_magic_trailing_comma = true
-
 [tool.coverage.report]
 # Ignore warnings for overloads
 # https://github.com/nedbat/coveragepy/issues/970#issuecomment-612602180
@@ -158,12 +153,6 @@ exclude_lines = [
     "pragma: no cover",
     "@overload",
 ]
-
-[tool.isort]
-profile = "black"
-known_first_party = ["docs", "tests", "torchgeo", "train"]
-skip_gitignore = true
-color_output = true
 
 [tool.mypy]
 python_version = "3.10"
@@ -186,10 +175,6 @@ warn_unused_ignores = true
 warn_return_any = true
 no_implicit_reexport = true
 strict_equality = true
-
-[tool.pydocstyle]
-convention = "google"
-match_dir = "(datamodules|datasets|losses|models|samplers|torchgeo|trainers|transforms)"
 
 [tool.pytest.ini_options]
 # Skip slow tests by default
@@ -279,6 +264,24 @@ testpaths = [
     "docs/tutorials",
 ]
 tmp_path_retention_policy = "failed"
+
+# https://docs.astral.sh/ruff/settings/
+[tool.ruff]
+fix = true
+
+[tool.ruff.format]
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+extend-select = ["D", "I", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"docs/**" = ["D"]
+"experiments/**" = ["D"]
+"tests/**" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 # https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [tool.setuptools.dynamic]
