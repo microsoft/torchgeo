@@ -24,11 +24,11 @@ jobs:
       id: cache
       with:
         path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/style.txt') }}
+        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/style.txt') }}-${{ hashFiles('requirements/tests.txt') }}
     - name: Install pip dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
-        pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/style.txt
+        pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/style.txt -r requirements/tests.txt
         pip cache purge
     - name: List pip dependencies
       run: pip list
