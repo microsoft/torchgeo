@@ -6,7 +6,7 @@ einops==0.7.0
 fiona==1.9.6
 kornia==0.7.2
 lightly==1.5.2
-lightning[pytorch-extra]==2.2.1
+lightning[pytorch-extra]==2.2.2
 matplotlib==3.8.4
 numpy==1.26.4
 pandas==2.2.2
