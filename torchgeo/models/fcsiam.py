@@ -134,8 +134,10 @@ class FCSiamDiff(Unet):  # type: ignore[misc]
         """Initialize a new FCSiamConc model.
 
         Args:
-            *args: Additional arguments passed to :class:`Unet`
-            **kwargs: Additional keyword arguments passed to :class:`Unet`
+            *args: Additional arguments passed to
+                :class:`~segmentation_models_pytorch.Unet`
+            **kwargs: Additional keyword arguments passed to
+                :class:`~segmentation_models_pytorch.Unet`
         """
         kwargs["aux_params"] = None
         super().__init__(*args, **kwargs)
