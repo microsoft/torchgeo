@@ -98,6 +98,7 @@ These tools should be used from the root of the project to ensure that our confi
 .. code-block:: console
 
    $ ruff check
+   $ ruff format
 
 
 Mypy won't fix your code for you, but will warn you about potential issues with your code:
