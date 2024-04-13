@@ -33,7 +33,7 @@ jobs:
     - name: List pip dependencies
       run: pip list
     - name: Run ruff checks
-      run: ruff check --output-format=github --no-fix --no-unsafe-fixes .
+      run: ruff check --output-format=github --no-fix .
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true

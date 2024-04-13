@@ -260,7 +260,6 @@ tmp_path_retention_policy = "failed"
 [tool.ruff]
 extend-include = ["*.ipynb"]
 fix = true
-unsafe-fixes = true
 
 [tool.ruff.format]
 skip-magic-trailing-comma = true
