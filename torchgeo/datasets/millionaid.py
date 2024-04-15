@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """Million-AID dataset."""
+
 import glob
 import os
 from collections.abc import Callable
@@ -290,7 +291,7 @@ class MillionAID(NonGeoDataset):
 
         images = imgs_no_subcat + imgs_subcat
 
-        files = [dict(image=img, label=l) for img, l in zip(images, labels)]
+        files = [dict(image=image, label=label) for image, label in zip(images, labels)]
 
         return files
 

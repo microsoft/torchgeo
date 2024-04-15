@@ -6,7 +6,6 @@
 import hashlib
 import os
 import shutil
-from typing import Union
 
 import numpy as np
 import rasterio
@@ -17,7 +16,7 @@ SIZE = 36
 
 np.random.seed(0)
 
-FILENAME_HIERARCHY = Union[dict[str, "FILENAME_HIERARCHY"], list[str]]
+FILENAME_HIERARCHY = dict[str, "FILENAME_HIERARCHY"] | list[str]
 
 filenames: FILENAME_HIERARCHY = {
     "l8biome": {

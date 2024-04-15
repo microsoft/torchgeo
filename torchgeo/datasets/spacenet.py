@@ -167,6 +167,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         Args:
             path: path to the label
             tfm: transform of corresponding image
+            raster_crs: CRS of raster file
             shape: shape of corresponding image
 
         Returns:
@@ -675,6 +676,7 @@ class SpaceNet3(SpaceNet):
         Args:
             path: path to the label
             tfm: transform of corresponding image
+            raster_crs: CRS of raster file
             shape: shape of corresponding image
 
         Returns:

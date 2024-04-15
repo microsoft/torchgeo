@@ -31,6 +31,7 @@ from .resisc45 import RESISC45DataModule
 from .seco import SeasonalContrastS2DataModule
 from .sen12ms import SEN12MSDataModule
 from .sentinel2_cdl import Sentinel2CDLDataModule
+from .sentinel2_eurocrops import Sentinel2EuroCropsDataModule
 from .sentinel2_nccm import Sentinel2NCCMDataModule
 from .sentinel2_south_america_soybean import Sentinel2SouthAmericaSoybeanDataModule
 from .skippd import SKIPPDDataModule
@@ -55,6 +56,7 @@ __all__ = (
     "L8BiomeDataModule",
     "NAIPChesapeakeDataModule",
     "Sentinel2CDLDataModule",
+    "Sentinel2EuroCropsDataModule",
     "Sentinel2NCCMDataModule",
     "Sentinel2SouthAmericaSoybeanDataModule",
     # NonGeoDataset

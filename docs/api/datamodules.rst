@@ -40,6 +40,7 @@ Sentinel
 ^^^^^^^^
 
 .. autoclass:: Sentinel2CDLDataModule
+.. autoclass:: Sentinel2EuroCropsDataModule
 .. autoclass:: Sentinel2NCCMDataModule
 .. autoclass:: Sentinel2SouthAmericaSoybeanDataModule
 

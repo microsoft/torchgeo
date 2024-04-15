@@ -87,7 +87,7 @@ class TestCropHarvest:
 
     def test_plot(self, dataset: CropHarvest) -> None:
         x = dataset[0].copy()
-        dataset.plot(x, subtitle="Test")
+        dataset.plot(x, suptitle="Test")
         plt.close()
 
     def test_mock_missing_module(

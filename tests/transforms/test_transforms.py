@@ -113,7 +113,7 @@ def test_augmentation_sequential_rgb(batch_rgb: dict[str, Tensor]) -> None:
 
 
 def test_augmentation_sequential_multispectral(
-    batch_multispectral: dict[str, Tensor]
+    batch_multispectral: dict[str, Tensor],
 ) -> None:
     expected = {
         "image": torch.tensor(
@@ -140,7 +140,7 @@ def test_augmentation_sequential_multispectral(
 
 
 def test_augmentation_sequential_image_only(
-    batch_multispectral: dict[str, Tensor]
+    batch_multispectral: dict[str, Tensor],
 ) -> None:
     expected = {
         "image": torch.tensor(
@@ -167,7 +167,7 @@ def test_augmentation_sequential_image_only(
 
 
 def test_sequential_transforms_augmentations(
-    batch_multispectral: dict[str, Tensor]
+    batch_multispectral: dict[str, Tensor],
 ) -> None:
     expected = {
         "image": torch.tensor(

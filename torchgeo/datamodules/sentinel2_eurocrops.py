@@ -1,8 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-
-"""South America Soybean datamodule."""
+"""EuroCrops datamodule."""
 
 from typing import Any
 
@@ -11,15 +10,17 @@ import torch
 from kornia.constants import DataKey, Resample
 from matplotlib.figure import Figure
 
-from ..datasets import Sentinel2, SouthAmericaSoybean, random_grid_cell_assignment
+from ..datasets import EuroCrops, Sentinel2, random_grid_cell_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
 
 
-class Sentinel2SouthAmericaSoybeanDataModule(GeoDataModule):
-    """LightningDataModule for SouthAmericaSoybean and Sentinel2 datasets.
+class Sentinel2EuroCropsDataModule(GeoDataModule):
+    """LightningDataModule implementation for the EuroCrops and Sentinel2 datasets.
+
+    Uses the train/val/test splits from the dataset.
 
     .. versionadded:: 0.6
     """
@@ -27,12 +28,12 @@ class Sentinel2SouthAmericaSoybeanDataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: int | tuple[int, int] = 64,
+        patch_size: int | tuple[int, int] = 256,
         length: int | None = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new Sentinel2SouthAmericaSoybeanDataModule instance.
+        """Initialize a new Sentinel2EuroCropsDataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.
@@ -40,26 +41,27 @@ class Sentinel2SouthAmericaSoybeanDataModule(GeoDataModule):
             length: Length of each training epoch.
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.SouthAmericaSoybean`
-                (prefix keys with ``south_america_soybean_``) and
-                :class:`~torchgeo.datasets.Sentinel2`
+                :class:`~torchgeo.datasets.EuroCrops` (prefix keys with ``eurocrops_``)
+                and :class:`~torchgeo.datasets.Sentinel2`
                 (prefix keys with ``sentinel2_``).
         """
-        self.south_america_soybean_kwargs = {}
+        eurocrops_signature = "eurocrops_"
+        sentinel2_signature = "sentinel2_"
+        self.eurocrops_kwargs = {}
         self.sentinel2_kwargs = {}
         for key, val in kwargs.items():
-            if key.startswith("south_america_soybean_"):
-                self.south_america_soybean_kwargs[key[22:]] = val
-            elif key.startswith("sentinel2_"):
-                self.sentinel2_kwargs[key[10:]] = val
+            if key.startswith(eurocrops_signature):
+                self.eurocrops_kwargs[key[len(eurocrops_signature) :]] = val
+            elif key.startswith(sentinel2_signature):
+                self.sentinel2_kwargs[key[len(sentinel2_signature) :]] = val
 
         super().__init__(
-            SouthAmericaSoybean,
-            batch_size=batch_size,
-            patch_size=patch_size,
-            length=length,
-            num_workers=num_workers,
-            **kwargs,
+            EuroCrops,
+            batch_size,
+            patch_size,
+            length,
+            num_workers,
+            **self.eurocrops_kwargs,
         )
 
         self.train_aug = AugmentationSequential(
@@ -84,18 +86,15 @@ class Sentinel2SouthAmericaSoybeanDataModule(GeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         self.sentinel2 = Sentinel2(**self.sentinel2_kwargs)
-        self.south_america_soybean = SouthAmericaSoybean(
-            **self.south_america_soybean_kwargs
-        )
-        self.dataset = self.sentinel2 & self.south_america_soybean
+        self.eurocrops = EuroCrops(**self.eurocrops_kwargs)
+        self.dataset = self.sentinel2 & self.eurocrops
 
-        generator = torch.Generator().manual_seed(1)
+        generator = torch.Generator().manual_seed(0)
         (self.train_dataset, self.val_dataset, self.test_dataset) = (
             random_grid_cell_assignment(
                 self.dataset, [0.8, 0.1, 0.1], grid_size=8, generator=generator
             )
         )
-
         if stage in ["fit"]:
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.train_dataset, self.patch_size, self.batch_size, self.length
@@ -110,7 +109,7 @@ class Sentinel2SouthAmericaSoybeanDataModule(GeoDataModule):
             )
 
     def plot(self, *args: Any, **kwargs: Any) -> Figure:
-        """Run SouthAmericaSoybean plot method.
+        """Run EuroCrops plot method.
 
         Args:
             *args: Arguments passed to plot method.
@@ -119,4 +118,4 @@ class Sentinel2SouthAmericaSoybeanDataModule(GeoDataModule):
         Returns:
             A matplotlib Figure with the image, ground truth, and predictions.
         """
-        return self.south_america_soybean.plot(*args, **kwargs)
+        return self.eurocrops.plot(*args, **kwargs)
