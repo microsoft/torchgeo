@@ -285,12 +285,14 @@ class QuakeSet(NonGeoDataset):
             title = f"Label: {label_class}"
             if "magnitude" in sample:
                 magnitude = cast(float, sample["magnitude"].item())
-                title += f"\nMagnitude: {magnitude:.2f}"
+                title += f" | Magnitude: {magnitude:.2f}"
             if showing_predictions:
                 title += f"\nPrediction: {prediction_class}"
             fig.supxlabel(title, y=0.22)
 
         if suptitle is not None:
             fig.suptitle(suptitle, y=0.8)
+
+        fig.tight_layout()
 
         return fig
