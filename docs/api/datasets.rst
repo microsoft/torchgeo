@@ -349,7 +349,7 @@ Potsdam
 .. autoclass:: Potsdam2D
 
 QuakeSet
-^^^^^^^
+^^^^^^^^
 
 .. autoclass:: QuakeSet
 
