@@ -33,7 +33,9 @@ class TestQuakeSet:
         root = str(tmp_path)
         split = request.param
         transforms = nn.Identity()
-        return QuakeSet(root, split, transforms, download=True, checksum=True)
+        return QuakeSet(
+            root, split, transforms=transforms, download=True, checksum=True
+        )
 
     def test_getitem(self, dataset: QuakeSet) -> None:
         x = dataset[0]

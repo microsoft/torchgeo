@@ -55,7 +55,6 @@ class QuakeSet(NonGeoDataset):
     .. versionadded:: 0.6
     """
 
-    all_bands = ["VV", "VH"]
     filename = "earthquakes.h5"
     url = ("https://hf.co/datasets/DarthReca/quakeset/resolve/main/earthquakes.h5",)
     md5 = "76fc7c76b7ca56f4844d852e175e1560"
@@ -66,7 +65,6 @@ class QuakeSet(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        bands: list[str] = all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -76,27 +74,23 @@ class QuakeSet(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             split: one of "train", "val", or "test"
-            bands: the subset of bands to load
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: If ``split`` or ``bands`` arguments are invalid.
+            AssertionError: If ``split`` argument is invalid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
-        assert set(bands) <= set(self.all_bands)
 
         self.root = root
         self.split = split
-        self.bands = bands
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
         self.filepath = os.path.join(root, self.filename)
-        self.band_indices = [self.all_bands.index(b) for b in bands]
 
         self._verify()
 
@@ -200,11 +194,8 @@ class QuakeSet(NonGeoDataset):
             pre_array = np.nan_to_num(pre_array, nan=0)
             post_array = f[key][patch][images[1]][:]
             post_array = np.nan_to_num(post_array, nan=0)
-
-        # index specified bands and concatenate
-        pre_array = pre_array[..., self.band_indices]
-        post_array = post_array[..., self.band_indices]
-        array = np.concatenate([pre_array, post_array], axis=-1).astype(np.float32)
+            array = np.concatenate([pre_array, post_array], axis=-1)
+            array = array.astype(np.float32)
 
         tensor = torch.from_numpy(array)
         # Convert from HxWxC to CxHxW
