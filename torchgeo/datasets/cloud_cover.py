@@ -159,7 +159,7 @@ class CloudCoverDetection(NonGeoDataset):
         """Returns a sample from dataset.
 
         Args:
-            Index: index to return
+            index: index to return
 
         Returns:
             data and label at given index

@@ -147,7 +147,9 @@ class EuroSAT(NonGeoClassificationDataset):
         with open(os.path.join(self.root, f"eurosat-{split}.txt")) as f:
             for fn in f:
                 valid_fns.add(fn.strip().replace(".jpg", ".tif"))
-        is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
+
+        def is_in_split(x: str) -> bool:
+            return os.path.basename(x) in valid_fns
 
         super().__init__(
             root=os.path.join(root, self.base_dir),

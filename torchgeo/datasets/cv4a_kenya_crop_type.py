@@ -276,7 +276,7 @@ class CV4AKenyaCropType(NonGeoDataset):
             tile_name: name of tile to load
             bands: tuple of bands to load
 
-        Returns
+        Returns:
             imagery of shape (13, number of bands, 3035, 2016) where 13 is the number of
                 points in time, 3035 is the tile height, and 2016 is the tile width
 
@@ -446,9 +446,9 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         assert time_step <= image.shape[0] - 1, (
             "The specified time step"
-            " does not exist, image only contains {} time"
+            f" does not exist, image only contains {image.shape[0]} time"
             " instances."
-        ).format(image.shape[0])
+        )
 
         image = image[time_step, rgb_indices, :, :]
 

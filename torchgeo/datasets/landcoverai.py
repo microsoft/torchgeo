@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 """LandCover.ai dataset."""
+
 import abc
 import glob
 import hashlib

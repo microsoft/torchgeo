@@ -6,7 +6,6 @@
 import hashlib
 import os
 import shutil
-from typing import Union
 
 import fiona
 import numpy as np
@@ -16,7 +15,7 @@ NUM_SAMPLES = 5
 MAX_NUM_TIME_STEPS = 10
 np.random.seed(0)
 
-FILENAME_HIERARCHY = Union[dict[str, "FILENAME_HIERARCHY"], list[str]]
+FILENAME_HIERARCHY = dict[str, "FILENAME_HIERARCHY"] | list[str]
 
 filenames: FILENAME_HIERARCHY = {
     "DATA_S2": ["S2"],
