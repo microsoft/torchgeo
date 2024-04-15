@@ -131,7 +131,7 @@ class QuakeSet(NonGeoDataset):
         """
         return len(self.data)
 
-    def _load_data(self) -> list[dict[str, str | tuple[str, str], int | float]]:
+    def _load_data(self) -> list[dict[str, str | tuple[str, str] | int | float]]:
         """Return the metadata for a given split.
 
         Returns:
