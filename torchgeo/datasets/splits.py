@@ -62,7 +62,7 @@ def random_bbox_assignment(
         lengths: lengths or fractions of splits to be produced
         generator: (optional) generator used for the random permutation
 
-    Returns
+    Returns:
         A list of the subset datasets.
 
     .. versionadded:: 0.5
@@ -117,7 +117,7 @@ def random_bbox_splitting(
         fractions: fractions of splits to be produced
         generator: generator used for the random permutation
 
-    Returns
+    Returns:
         A list of the subset datasets.
 
     .. versionadded:: 0.5
@@ -185,7 +185,7 @@ def random_grid_cell_assignment(
         grid_size: number of rows and columns for the grid
         generator: generator used for the random permutation
 
-    Returns
+    Returns:
         A list of the subset datasets.
 
     .. versionadded:: 0.5
@@ -258,7 +258,7 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> list[GeoDatas
         dataset: dataset to be split
         rois: regions of interest of splits to be produced
 
-    Returns
+    Returns:
         A list of the subset datasets.
 
     .. versionadded:: 0.5
@@ -298,7 +298,7 @@ def time_series_split(
         lengths: lengths, fractions or pairs of timestamps (start, end) of splits
             to be produced
 
-    Returns
+    Returns:
         A list of the subset datasets.
 
     .. versionadded:: 0.5

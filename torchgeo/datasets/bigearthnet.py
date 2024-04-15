@@ -520,7 +520,7 @@ class BigEarthNet(NonGeoDataset):
         Args:
             label_mask: a boolean mask corresponding to a set of labels or predictions
 
-        Returns
+        Returns:
             a list of class names corresponding to the input mask
         """
         labels = []

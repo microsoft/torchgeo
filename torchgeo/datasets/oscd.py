@@ -111,6 +111,7 @@ class OSCD(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             split: one of "train" or "test"
+            bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -211,7 +212,7 @@ class OSCD(NonGeoDataset):
         """Load a single image.
 
         Args:
-            path: path to the image
+            paths: paths to each image band
 
         Returns:
             the image
