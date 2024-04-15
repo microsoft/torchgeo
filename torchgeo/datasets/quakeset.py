@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable
+from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,7 +29,9 @@ class QuakeSet(NonGeoDataset):
     * Sentinel-1 SAR imagery
     * before/pre/post imagery of areas affected by earthquakes
     * 2 multispectral bands (VV/VH)
-    * 356 pairs of pre and post images with 5 m per pixel resolution (512x512 px)
+    * 3,327 pairs of pre and post images with 5 m per pixel resolution (512x512 px)
+    * 2 classification labels (unaffected / affected by earthquake)
+    * earthquake magnitudes for each sample
 
     Dataset format:
 
@@ -54,9 +57,10 @@ class QuakeSet(NonGeoDataset):
 
     all_bands = ["VV", "VH"]
     filename = "earthquakes.h5"
-    url = "https://hf.co/datasets/DarthReca/quakeset/resolve/main/earthquakes.h5",
+    url = ("https://hf.co/datasets/DarthReca/quakeset/resolve/main/earthquakes.h5",)
     md5 = "76fc7c76b7ca56f4844d852e175e1560"
-    splits = ["train", "val", "test"]
+    splits = {"train": "train", "val": "validation", "test": "test"}
+    classes = ["unaffected_area", "earthquake_affected_area"]
 
     def __init__(
         self,
@@ -145,18 +149,34 @@ class QuakeSet(NonGeoDataset):
 
         data = []
         for k in sorted(f.keys()):
-            if f[k].attrs["split"] != self.split:
+            if f[k].attrs["split"] != self.splits[self.split]:
                 continue
 
             for patch in sorted(f[k].keys()):
                 if patch not in ["x", "y"]:
                     # positive sample
                     magnitude = float(f[k].attrs["magnitude"])
-                    data.append(dict(key=k, patch=patch, images=("pre", "post"), label=1, magnitude=magnitude))
+                    data.append(
+                        dict(
+                            key=k,
+                            patch=patch,
+                            images=("pre", "post"),
+                            label=1,
+                            magnitude=magnitude,
+                        )
+                    )
 
                     # hard negative sample
                     if "before" in f[k][patch].keys():
-                        data.append(dict(key=k, patch=patch, images=("before", "pre"), label=0, magnitude=0.0))
+                        data.append(
+                            dict(
+                                key=k,
+                                patch=patch,
+                                images=("before", "pre"),
+                                label=0,
+                                magnitude=0.0,
+                            )
+                        )
         f.close()
         return data
 
@@ -177,7 +197,9 @@ class QuakeSet(NonGeoDataset):
 
         with h5py.File(self.filepath) as f:
             pre_array = f[key][patch][images[0]][:]
+            pre_array = np.nan_to_num(pre_array, nan=0)
             post_array = f[key][patch][images[1]][:]
+            post_array = np.nan_to_num(post_array, nan=0)
 
         # index specified bands and concatenate
         pre_array = pre_array[..., self.band_indices]
@@ -211,3 +233,65 @@ class QuakeSet(NonGeoDataset):
                 filename=self.filename,
                 md5=self.md5 if self.checksum else None,
             )
+
+    def plot(
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: str | None = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for figure
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        image = sample["image"].permute((1, 2, 0)).numpy()
+        label = cast(int, sample["label"].item())
+        label_class = self.classes[label]
+
+        # Create false color image for pre image
+        vv = percentile_normalization(image[..., 0]) + 1e-16
+        vh = percentile_normalization(image[..., 1]) + 1e-16
+        pre_fci = np.stack([vv, vh, vv / vh], axis=-1).clip(0, 1)
+
+        # Create false color image for post image
+        vv = percentile_normalization(image[..., 2]) + 1e-16
+        vh = percentile_normalization(image[..., 3]) + 1e-16
+        post_fci = np.stack([vv, vh, vv / vh], axis=-1).clip(0, 1)
+
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = cast(int, sample["prediction"].item())
+            prediction_class = self.classes[prediction]
+
+        ncols = 2
+        fig, axs = plt.subplots(
+            nrows=1,
+            ncols=ncols,
+            figsize=(10, ncols * 5),
+            sharex=True,
+            layout="constrained",
+        )
+
+        axs[0].imshow(pre_fci)
+        axs[0].axis("off")
+        axs[0].set_title("Image Pre")
+        axs[1].imshow(post_fci)
+        axs[1].axis("off")
+        axs[1].set_title("Image Post")
+
+        if show_titles:
+            title = f"Label: {label_class}"
+            if showing_predictions:
+                title += f"\nPrediction: {prediction_class}"
+            fig.supxlabel(title)
+
+        if suptitle is not None:
+            fig.suptitle(suptitle)
+
+        return fig

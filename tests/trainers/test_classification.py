@@ -76,6 +76,7 @@ class TestClassificationTask:
             "eurosat",
             "eurosat100",
             "fire_risk",
+            "quakeset",
             "resisc45",
             "so2sat_all",
             "so2sat_s1",
