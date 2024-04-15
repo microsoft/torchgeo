@@ -271,11 +271,7 @@ class QuakeSet(NonGeoDataset):
 
         ncols = 2
         fig, axs = plt.subplots(
-            nrows=1,
-            ncols=ncols,
-            figsize=(10, ncols * 5),
-            sharex=True,
-            layout="constrained",
+            nrows=1, ncols=ncols, figsize=(ncols * 5, 10), sharex=True
         )
 
         axs[0].imshow(pre_fci)
@@ -287,11 +283,14 @@ class QuakeSet(NonGeoDataset):
 
         if show_titles:
             title = f"Label: {label_class}"
+            if "magnitude" in sample:
+                magnitude = cast(float, sample["magnitude"].item())
+                title += f"\nMagnitude: {magnitude:.2f}"
             if showing_predictions:
                 title += f"\nPrediction: {prediction_class}"
-            fig.supxlabel(title)
+            fig.supxlabel(title, y=0.22)
 
         if suptitle is not None:
-            fig.suptitle(suptitle)
+            fig.suptitle(suptitle, y=0.8)
 
         return fig
