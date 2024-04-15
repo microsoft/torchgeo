@@ -56,7 +56,7 @@ class QuakeSet(NonGeoDataset):
     """
 
     filename = "earthquakes.h5"
-    url = ("https://hf.co/datasets/DarthReca/quakeset/resolve/main/earthquakes.h5",)
+    url = "https://hf.co/datasets/DarthReca/quakeset/resolve/main/earthquakes.h5"
     md5 = "76fc7c76b7ca56f4844d852e175e1560"
     splits = {"train": "train", "val": "validation", "test": "test"}
     classes = ["unaffected_area", "earthquake_affected_area"]
