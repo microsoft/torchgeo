@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import cast
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -131,7 +131,7 @@ class QuakeSet(NonGeoDataset):
         """
         return len(self.data)
 
-    def _load_data(self) -> list[dict[str, str | tuple[str, str] | int | float]]:
+    def _load_data(self) -> list[dict[str, Any]]:
         """Return the metadata for a given split.
 
         Returns:
