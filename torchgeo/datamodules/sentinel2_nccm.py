@@ -10,8 +10,8 @@ import torch
 from kornia.constants import DataKey, Resample
 from matplotlib.figure import Figure
 
-from ..datasets import NCCM, Sentinel2, random_grid_cell_assignment
-from ..samplers import GridGeoSampler, RandomBatchGeoSampler
+from ..datasets import NCCM, Sentinel2, random_bbox_assignment
+from ..samplers import GridGeoSampler, RandomGeoSampler
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
@@ -91,13 +91,11 @@ class Sentinel2NCCMDataModule(GeoDataModule):
         generator = torch.Generator().manual_seed(0)
 
         (self.train_dataset, self.val_dataset, self.test_dataset) = (
-            random_grid_cell_assignment(
-                self.dataset, [0.8, 0.1, 0.1], grid_size=8, generator=generator
-            )
+            random_bbox_assignment(self.dataset, [0.8, 0.1, 0.1], generator=generator)
         )
         if stage in ["fit"]:
-            self.train_batch_sampler = RandomBatchGeoSampler(
-                self.train_dataset, self.patch_size, self.batch_size, self.length
+            self.train_batch_sampler = RandomGeoSampler(
+                self.train_dataset, self.patch_size, self.length
             )
         if stage in ["fit", "validate"]:
             self.val_sampler = GridGeoSampler(
