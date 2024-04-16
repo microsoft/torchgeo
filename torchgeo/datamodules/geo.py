@@ -11,7 +11,7 @@ import torch
 from lightning.pytorch import LightningDataModule
 from matplotlib.figure import Figure
 from torch import Tensor
-from torch.utils.data import DataLoader, Dataset, default_collate, Subset
+from torch.utils.data import DataLoader, Dataset, Subset, default_collate
 
 from ..datasets import GeoDataset, NonGeoDataset, stack_samples
 from ..samplers import (
