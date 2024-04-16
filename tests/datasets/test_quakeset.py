@@ -50,6 +50,15 @@ class TestQuakeSet:
 
         monkeypatch.setattr(builtins, "__import__", mocked_import)
 
+    def test_mock_missing_module(
+        self, dataset: QuakeSet, tmp_path: Path, mock_missing_module: None
+    ) -> None:
+        with pytest.raises(
+            ImportError,
+            match="h5py is not installed and is required to use this dataset",
+        ):
+            QuakeSet(dataset.root, download=True, checksum=True)
+
     def test_getitem(self, dataset: QuakeSet) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
