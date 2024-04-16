@@ -3,8 +3,6 @@
 
 """Implementation of a random convolutional feature projection model."""
 
-from typing import Optional
-
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -43,9 +41,9 @@ class RCF(Module):
         features: int = 16,
         kernel_size: int = 3,
         bias: float = -1.0,
-        seed: Optional[int] = None,
+        seed: int | None = None,
         mode: str = "gaussian",
-        dataset: Optional[NonGeoDataset] = None,
+        dataset: NonGeoDataset | None = None,
     ) -> None:
         """Initializes the RCF model.
 
@@ -138,7 +136,7 @@ class RCF(Module):
             min_divisor: a small number to guard against division by zero
             zca_bias: bias term for ZCA whitening
 
-        Returns
+        Returns:
             a numpy array of size (N, C, H, W) containing the normalized patches
 
         .. versionadded:: 0.5

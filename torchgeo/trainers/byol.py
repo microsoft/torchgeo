@@ -4,7 +4,7 @@
 """BYOL trainer for self-supervised learning (SSL)."""
 
 import os
-from typing import Any, Optional, Union
+from typing import Any
 
 import timm
 import torch
@@ -148,8 +148,8 @@ class BackboneWrapper(nn.Module):
         self.hidden_size = hidden_size
         self.layer = layer
 
-        self._projector: Optional[nn.Module] = None
-        self._projector_dim: Optional[int] = None
+        self._projector: nn.Module | None = None
+        self._projector_dim: int | None = None
         self._encoded = torch.empty(0)
         self._register_hook()
 
@@ -223,7 +223,7 @@ class BYOL(nn.Module):
         in_channels: int = 4,
         projection_size: int = 256,
         hidden_size: int = 4096,
-        augment_fn: Optional[nn.Module] = None,
+        augment_fn: nn.Module | None = None,
         beta: float = 0.99,
         **kwargs: Any,
     ) -> None:
@@ -240,6 +240,7 @@ class BYOL(nn.Module):
             augment_fn: an instance of a module that performs data augmentation
             beta: the speed at which the target backbone is updated using the main
                 backbone
+            **kwargs: Additional keyword arguments passed to :class:`nn.Module`
         """
         super().__init__()
 
@@ -297,7 +298,7 @@ class BYOLTask(BaseTask):
     def __init__(
         self,
         model: str = "resnet50",
-        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         lr: float = 1e-3,
         patience: int = 10,

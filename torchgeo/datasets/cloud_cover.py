@@ -5,8 +5,8 @@
 
 import json
 import os
-from collections.abc import Sequence
-from typing import Any, Callable, Optional
+from collections.abc import Callable, Sequence
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -111,9 +111,9 @@ class CloudCoverDetection(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         bands: Sequence[str] = band_names,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initiatlize a new Cloud Cover Detection Dataset instance.
@@ -159,7 +159,7 @@ class CloudCoverDetection(NonGeoDataset):
         """Returns a sample from dataset.
 
         Args:
-            Index: index to return
+            index: index to return
 
         Returns:
             data and label at given index
@@ -329,7 +329,7 @@ class CloudCoverDetection(NonGeoDataset):
 
         return images and targets
 
-    def _download(self, api_key: Optional[str] = None) -> None:
+    def _download(self, api_key: str | None = None) -> None:
         """Download the dataset and extract it.
 
         Args:
@@ -355,7 +355,7 @@ class CloudCoverDetection(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

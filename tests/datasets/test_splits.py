@@ -3,7 +3,7 @@
 
 from collections.abc import Sequence
 from math import floor, isclose
-from typing import Any, Union
+from typing import Any
 
 import pytest
 from rasterio.crs import CRS
@@ -65,7 +65,7 @@ class CustomGeoDataset(GeoDataset):
     ],
 )
 def test_random_bbox_assignment(
-    lengths: Sequence[Union[int, float]], expected_lengths: Sequence[int]
+    lengths: Sequence[int | float], expected_lengths: Sequence[int]
 ) -> None:
     ds = CustomGeoDataset(
         [
@@ -255,8 +255,7 @@ def test_roi_split() -> None:
     ],
 )
 def test_time_series_split(
-    lengths: Sequence[Union[tuple[int, int], int, float]],
-    expected_lengths: Sequence[int],
+    lengths: Sequence[tuple[int, int] | int | float], expected_lengths: Sequence[int]
 ) -> None:
     ds = CustomGeoDataset(
         [

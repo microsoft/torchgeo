@@ -5,8 +5,8 @@
 
 import csv
 import os
+from collections.abc import Callable
 from functools import lru_cache
-from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -125,9 +125,9 @@ class CV4AKenyaCropType(NonGeoDataset):
         chip_size: int = 256,
         stride: int = 128,
         bands: tuple[str, ...] = band_names,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         checksum: bool = False,
         verbose: bool = False,
     ) -> None:
@@ -276,7 +276,7 @@ class CV4AKenyaCropType(NonGeoDataset):
             tile_name: name of tile to load
             bands: tuple of bands to load
 
-        Returns
+        Returns:
             imagery of shape (13, number of bands, 3035, 2016) where 13 is the number of
                 points in time, 3035 is the tile height, and 2016 is the tile width
 
@@ -388,7 +388,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         return train_field_ids, test_field_ids
 
-    def _download(self, api_key: Optional[str] = None) -> None:
+    def _download(self, api_key: str | None = None) -> None:
         """Download the dataset and extract it.
 
         Args:
@@ -411,7 +411,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         time_step: int = 0,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -446,9 +446,9 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         assert time_step <= image.shape[0] - 1, (
             "The specified time step"
-            " does not exist, image only contains {} time"
+            f" does not exist, image only contains {image.shape[0]} time"
             " instances."
-        ).format(image.shape[0])
+        )
 
         image = image[time_step, rgb_indices, :, :]
 

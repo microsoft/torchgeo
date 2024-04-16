@@ -4,8 +4,8 @@
 """EuroSAT dataset."""
 
 import os
-from collections.abc import Sequence
-from typing import Callable, Optional, cast
+from collections.abc import Callable, Sequence
+from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -106,7 +106,7 @@ class EuroSAT(NonGeoClassificationDataset):
         root: str = "data",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -147,7 +147,9 @@ class EuroSAT(NonGeoClassificationDataset):
         with open(os.path.join(self.root, f"eurosat-{split}.txt")) as f:
             for fn in f:
                 valid_fns.add(fn.strip().replace(".jpg", ".tif"))
-        is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
+
+        def is_in_split(x: str) -> bool:
+            return os.path.basename(x) in valid_fns
 
         super().__init__(
             root=os.path.join(root, self.base_dir),
@@ -247,7 +249,7 @@ class EuroSAT(NonGeoClassificationDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

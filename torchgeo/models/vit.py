@@ -3,7 +3,7 @@
 
 """Pre-trained Vision Transformer models."""
 
-from typing import Any, Optional
+from typing import Any
 
 import kornia.augmentation as K
 import timm
@@ -11,25 +11,23 @@ import torch
 from timm.models.vision_transformer import VisionTransformer
 from torchvision.models._api import Weights, WeightsEnum
 
-from ..transforms import AugmentationSequential
-
 __all__ = ["ViTSmall16_Weights"]
 
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167 # noqa: E501
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97 # noqa: E501
 # Normalization either by 10K or channel-wise with band statistics
-_zhu_xlab_transforms = AugmentationSequential(
+_zhu_xlab_transforms = K.AugmentationSequential(
     K.Resize(256),
     K.CenterCrop(224),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
-    data_keys=["image"],
+    data_keys=None,
 )
 
 # https://github.com/microsoft/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43 # noqa: E501
-_ssl4eo_l_transforms = AugmentationSequential(
+_ssl4eo_l_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
     K.CenterCrop((224, 224)),
-    data_keys=["image"],
+    data_keys=None,
 )
 
 # https://github.com/pytorch/vision/pull/6883
@@ -205,7 +203,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
 
 
 def vit_small_patch16_224(
-    weights: Optional[ViTSmall16_Weights] = None, *args: Any, **kwargs: Any
+    weights: ViTSmall16_Weights | None = None, *args: Any, **kwargs: Any
 ) -> VisionTransformer:
     """Vision Transform (ViT) small patch size 16 model.
 

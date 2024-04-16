@@ -88,36 +88,29 @@ These tests require `pytest <https://docs.pytest.org/>`_ and `pytest-cov <https:
 Linters
 -------
 
-In order to remain `PEP-8 <https://peps.python.org/pep-0008/>`_ compliant and maintain a high-quality codebase, we use several linting tools:
+In order to remain `PEP-8 <https://peps.python.org/pep-0008/>`_ compliant and maintain a high-quality codebase, we use a couple of linting tools:
 
-* `black <https://black.readthedocs.io/>`_ for code formatting
-* `isort <https://pycqa.github.io/isort/>`_ for import ordering
-* `flake8 <https://flake8.pycqa.org/>`_ for code formatting
-* `pydocstyle <https://www.pydocstyle.org/>`_ for docstrings
-* `pyupgrade <https://github.com/asottile/pyupgrade>`_ for code formatting
+* `ruff <https://docs.astral.sh/ruff/>`_ for code formatting
 * `mypy <https://mypy.readthedocs.io/>`_ for static type analysis
 
-All of these tools should be used from the root of the project to ensure that our configuration files are found. Black, isort, and pyupgrade are relatively easy to use, and will automatically format your code for you:
+These tools should be used from the root of the project to ensure that our configuration files are found. Ruff is relatively easy to use, and will automatically fix most issues it encounters:
 
 .. code-block:: console
 
-   $ black .
-   $ isort .
-   $ pyupgrade --py39-plus $(find . -name "*.py")
+   $ ruff check
+   $ ruff format
 
 
-Flake8, pydocstyle, and mypy won't format your code for you, but they will warn you about potential issues with your code or docstrings:
+Mypy won't fix your code for you, but will warn you about potential issues with your code:
 
 .. code-block:: console
 
-   $ flake8
-   $ pydocstyle
    $ mypy .
 
 
 If you've never used mypy before or aren't familiar with `Python type hints <https://docs.python.org/3/library/typing.html>`_, this check can be particularly daunting. Don't hesitate to ask for help with resolving any of these warnings on your pull request.
 
-You can also use `git pre-commit hooks <https://pre-commit.com/>`_ to automatically run these checks before each commit. pre-commit is a tool that automatically runs linters locally, so that you don't have to remember to run them manually and then have your code flagged by CI. You can setup pre-commit with:
+You can also use `git pre-commit hooks <https://pre-commit.com/>`_ to automatically run these checks before each commit. pre-commit is a tool that automatically runs linters locally, so that you don't have to remember to run them manually and then have your code flagged by CI. You can set up pre-commit with:
 
 .. code-block:: console
 

@@ -10,8 +10,8 @@ import os
 import re
 import sys
 import warnings
-from collections.abc import Iterable, Sequence
-from typing import Any, Callable, Optional, Union, cast
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any, cast
 
 import fiona
 import fiona.transform
@@ -83,7 +83,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    paths: Union[str, Iterable[str]]
+    paths: str | Iterable[str]
     _crs = CRS.from_epsg(4326)
     _res = 0.0
 
@@ -108,7 +108,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     __add__ = None  # type: ignore[assignment]
 
     def __init__(
-        self, transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None
+        self, transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None
     ) -> None:
         """Initialize a new GeoDataset instance.
 
@@ -190,9 +190,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     # NOTE: This hack should be removed once the following issue is fixed:
     # https://github.com/Toblerity/rtree/issues/87
 
-    def __getstate__(
-        self,
-    ) -> tuple[dict[str, Any], list[tuple[Any, Any, Optional[Any]]]]:
+    def __getstate__(self) -> tuple[dict[str, Any], list[tuple[Any, Any, Any | None]]]:
         """Define how instances are pickled.
 
         Returns:
@@ -388,11 +386,11 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        bands: Optional[Sequence[str]] = None,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        paths: str | Iterable[str] = "data",
+        crs: CRS | None = None,
+        res: float | None = None,
+        bands: Sequence[str] | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new RasterDataset instance.
@@ -539,7 +537,7 @@ class RasterDataset(GeoDataset):
         self,
         filepaths: Sequence[str],
         query: BoundingBox,
-        band_indexes: Optional[Sequence[int]] = None,
+        band_indexes: Sequence[int] | None = None,
     ) -> Tensor:
         """Load and merge one or more files.
 
@@ -610,13 +608,26 @@ class VectorDataset(GeoDataset):
     #: Not used if :attr:`filename_regex` does not contain a ``date`` group.
     date_format = "%Y%m%d"
 
+    @property
+    def dtype(self) -> torch.dtype:
+        """The dtype of the dataset (overrides the dtype of the data file via a cast).
+
+        Defaults to long.
+
+        Returns:
+            the dtype of the dataset
+
+        .. versionadded:: 0.6
+        """
+        return torch.long
+
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
-        crs: Optional[CRS] = None,
+        paths: str | Iterable[str] = "data",
+        crs: CRS | None = None,
         res: float = 0.0001,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
-        label_name: Optional[str] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        label_name: str | None = None,
     ) -> None:
         """Initialize a new VectorDataset instance.
 
@@ -736,6 +747,7 @@ class VectorDataset(GeoDataset):
         # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
         masks = array_to_tensor(masks)
 
+        masks = masks.to(self.dtype)
         sample = {"mask": masks, "crs": self.crs, "bbox": query}
 
         if self.transforms is not None:
@@ -809,9 +821,9 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
     def __init__(
         self,
         root: str = "data",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
-        loader: Optional[Callable[[str], Any]] = pil_loader,
-        is_valid_file: Optional[Callable[[str], bool]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        loader: Callable[[str], Any] | None = pil_loader,
+        is_valid_file: Callable[[str], bool] | None = None,
     ) -> None:
         """Initialize a new NonGeoClassificationDataset instance.
 
@@ -909,7 +921,7 @@ class IntersectionDataset(GeoDataset):
         collate_fn: Callable[
             [Sequence[dict[str, Any]]], dict[str, Any]
         ] = concat_samples,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
     ) -> None:
         """Initialize a new IntersectionDataset instance.
 
@@ -1067,7 +1079,7 @@ class UnionDataset(GeoDataset):
         collate_fn: Callable[
             [Sequence[dict[str, Any]]], dict[str, Any]
         ] = merge_samples,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
     ) -> None:
         """Initialize a new UnionDataset instance.
 

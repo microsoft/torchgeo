@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -110,8 +110,8 @@ class SSL4EOLBenchmark(NonGeoDataset):
         sensor: str = "oli_sr",
         product: str = "cdl",
         split: str = "train",
-        classes: Optional[list[int]] = None,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        classes: list[int] | None = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -327,7 +327,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

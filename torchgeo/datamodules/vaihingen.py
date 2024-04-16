@@ -3,7 +3,7 @@
 
 """Vaihingen datamodule."""
 
-from typing import Any, Union
+from typing import Any
 
 import kornia.augmentation as K
 
@@ -26,7 +26,7 @@ class Vaihingen2DDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[tuple[int, int], int] = 64,
+        patch_size: tuple[int, int] | int = 64,
         val_split_pct: float = 0.2,
         num_workers: int = 0,
         **kwargs: Any,

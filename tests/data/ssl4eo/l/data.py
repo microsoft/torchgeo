@@ -6,7 +6,6 @@
 import hashlib
 import os
 import shutil
-from typing import Union
 
 import numpy as np
 import rasterio
@@ -18,7 +17,7 @@ CHUNK_SIZE = 2**12
 
 np.random.seed(0)
 
-FILENAME_HIERARCHY = Union[dict[str, "FILENAME_HIERARCHY"], list[str]]
+FILENAME_HIERARCHY = dict[str, "FILENAME_HIERARCHY"] | list[str]
 
 filenames: FILENAME_HIERARCHY = {
     "ssl4eo_l_tm_toa": {

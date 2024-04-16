@@ -4,7 +4,7 @@
 """Dynamic One-For-All (DOFA) models."""
 
 from functools import partial
-from typing import Any, Optional
+from typing import Any
 
 import kornia.augmentation as K
 import torch
@@ -14,8 +14,6 @@ import torch.nn.init as init
 from timm.models.vision_transformer import Block
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
-
-from ..transforms import AugmentationSequential
 
 __all__ = ["DOFABase16_Weights", "DOFALarge16_Weights"]
 
@@ -250,9 +248,7 @@ class DOFA(nn.Module):
         num_classes: int = 45,
         global_pool: bool = True,
         mlp_ratio: float = 4.0,
-        norm_layer: type[nn.Module] = partial(
-            nn.LayerNorm, eps=1e-6
-        ),  # type: ignore[assignment]
+        norm_layer: type[nn.Module] = partial(nn.LayerNorm, eps=1e-6),  # type: ignore[assignment]
     ) -> None:
         """Initialize a new DOFA instance.
 
@@ -375,7 +371,7 @@ class DOFA(nn.Module):
 
 # https://github.com/zhu-xlab/DOFA/blob/master/normalize_dataset.py
 # Normalization is sensor-dependent and is therefore left out
-_dofa_transforms = AugmentationSequential(K.CenterCrop((224, 224)), data_keys=["image"])
+_dofa_transforms = K.AugmentationSequential(K.CenterCrop((224, 224)), data_keys=None)
 
 # https://github.com/pytorch/vision/pull/6883
 # https://github.com/pytorch/vision/pull/7107
@@ -441,7 +437,7 @@ def dofa_small_patch16_224(**kwargs: Any) -> DOFA:
 
 
 def dofa_base_patch16_224(
-    weights: Optional[DOFABase16_Weights] = None, **kwargs: Any
+    weights: DOFABase16_Weights | None = None, **kwargs: Any
 ) -> DOFA:
     """Dynamic One-For-All (DOFA) base patch size 16 model.
 
@@ -477,7 +473,7 @@ def dofa_base_patch16_224(
 
 
 def dofa_large_patch16_224(
-    weights: Optional[DOFALarge16_Weights] = None, **kwargs: Any
+    weights: DOFALarge16_Weights | None = None, **kwargs: Any
 ) -> DOFA:
     """Dynamic One-For-All (DOFA) large patch size 16 model.
 

@@ -2,9 +2,11 @@
 # Licensed under the MIT License.
 
 """Million-AID dataset."""
+
 import glob
 import os
-from typing import Any, Callable, Optional, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -191,7 +193,7 @@ class MillionAID(NonGeoDataset):
         root: str = "data",
         task: str = "multi-class",
         split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new MillionAID dataset instance.
@@ -289,7 +291,7 @@ class MillionAID(NonGeoDataset):
 
         images = imgs_no_subcat + imgs_subcat
 
-        files = [dict(image=img, label=l) for img, l in zip(images, labels)]
+        files = [dict(image=image, label=label) for image, label in zip(images, labels)]
 
         return files
 
@@ -332,7 +334,7 @@ class MillionAID(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
