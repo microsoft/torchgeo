@@ -28,9 +28,11 @@ class QuakeSet(NonGeoDataset):
 
     * Sentinel-1 SAR imagery
     * before/pre/post imagery of areas affected by earthquakes
-    * 2 multispectral bands (VV/VH)
+    * 2 SAR bands (VV/VH)
     * 3,327 pairs of pre and post images with 5 m per pixel resolution (512x512 px)
     * 2 classification labels (unaffected / affected by earthquake)
+    * pre/post image pairs represent earthquake affected areas
+    * before/pre image pairs represent hard negative unaffected areas
     * earthquake magnitudes for each sample
 
     Dataset format:
@@ -245,15 +247,15 @@ class QuakeSet(NonGeoDataset):
         label = cast(int, sample["label"].item())
         label_class = self.classes[label]
 
-        # Create false color image for pre image
+        # Create false color image for image1
         vv = percentile_normalization(image[..., 0]) + 1e-16
         vh = percentile_normalization(image[..., 1]) + 1e-16
-        pre_fci = np.stack([vv, vh, vv / vh], axis=-1).clip(0, 1)
+        fci1 = np.stack([vv, vh, vv / vh], axis=-1).clip(0, 1)
 
-        # Create false color image for post image
+        # Create false color image for image2
         vv = percentile_normalization(image[..., 2]) + 1e-16
         vh = percentile_normalization(image[..., 3]) + 1e-16
-        post_fci = np.stack([vv, vh, vv / vh], axis=-1).clip(0, 1)
+        fci2 = np.stack([vv, vh, vv / vh], axis=-1).clip(0, 1)
 
         showing_predictions = "prediction" in sample
         if showing_predictions:
@@ -265,10 +267,10 @@ class QuakeSet(NonGeoDataset):
             nrows=1, ncols=ncols, figsize=(ncols * 5, 10), sharex=True
         )
 
-        axs[0].imshow(pre_fci)
+        axs[0].imshow(fci1)
         axs[0].axis("off")
         axs[0].set_title("Image Pre")
-        axs[1].imshow(post_fci)
+        axs[1].imshow(fci2)
         axs[1].axis("off")
         axs[1].set_title("Image Post")
 
