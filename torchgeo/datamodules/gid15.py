@@ -6,13 +6,13 @@
 from typing import Any
 
 import kornia.augmentation as K
+from torch.utils.data import dataset_split
 
 from ..datasets import GID15
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
-from .utils import dataset_split
 
 
 class GID15DataModule(NonGeoDataModule):

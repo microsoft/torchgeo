@@ -7,11 +7,11 @@ from typing import Any
 
 import kornia.augmentation as K
 from torch import Tensor
+from torch.utils.data import dataset_split
 
 from ..datasets import SpaceNet1
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
-from .utils import dataset_split
 
 
 class SpaceNet1DataModule(NonGeoDataModule):

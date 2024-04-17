@@ -5,9 +5,10 @@
 
 from typing import Any
 
+from torch.utils.data import dataset_split
+
 from ..datasets import SKIPPD
 from .geo import NonGeoDataModule
-from .utils import dataset_split
 
 
 class SKIPPDDataModule(NonGeoDataModule):

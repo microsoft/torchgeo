@@ -6,8 +6,8 @@
 from typing import Any
 
 import kornia.augmentation as K
+from torch.utils.data import dataset_split
 
-from torchgeo.datamodules.utils import dataset_split
 from torchgeo.samplers.utils import _to_tuple
 
 from ..datasets import LEVIRCD, LEVIRCDPlus

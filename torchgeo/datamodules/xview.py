@@ -5,9 +5,10 @@
 
 from typing import Any
 
+from torch.utils.data import dataset_split
+
 from ..datasets import XView2
 from .geo import NonGeoDataModule
-from .utils import dataset_split
 
 
 class XView2DataModule(NonGeoDataModule):

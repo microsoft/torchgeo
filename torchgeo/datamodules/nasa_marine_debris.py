@@ -7,11 +7,12 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch
+from torch.utils.data import dataset_split
 
 from ..datasets import NASAMarineDebris
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
-from .utils import AugPipe, collate_fn_detection, dataset_split
+from .utils import AugPipe, collate_fn_detection
 
 
 class NASAMarineDebrisDataModule(NonGeoDataModule):
