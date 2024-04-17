@@ -6,6 +6,7 @@
 from typing import Any
 
 import kornia.augmentation as K
+import torch
 from torch.utils.data import random_split
 
 from ..datasets import Vaihingen2D
@@ -61,8 +62,9 @@ class Vaihingen2DDataModule(NonGeoDataModule):
         """
         if stage in ["fit", "validate"]:
             self.dataset = Vaihingen2D(split="train", **self.kwargs)
+            generator = torch.Generator().manual_seed(0)
             self.train_dataset, self.val_dataset = random_split(
-                self.dataset, self.val_split_pct
+                self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
             )
         if stage in ["test"]:
             self.test_dataset = Vaihingen2D(split="test", **self.kwargs)

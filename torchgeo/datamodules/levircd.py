@@ -6,6 +6,7 @@
 from typing import Any
 
 import kornia.augmentation as K
+import torch
 from torch.utils.data import random_split
 
 from torchgeo.samplers.utils import _to_tuple
@@ -113,8 +114,9 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         """
         if stage in ["fit", "validate"]:
             self.dataset = LEVIRCDPlus(split="train", **self.kwargs)
+            generator = torch.Generator().manual_seed(0)
             self.train_dataset, self.val_dataset = random_split(
-                self.dataset, val_pct=self.val_split_pct
+                self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
             )
         if stage in ["test"]:
             self.test_dataset = LEVIRCDPlus(split="test", **self.kwargs)

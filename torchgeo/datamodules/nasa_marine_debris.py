@@ -62,6 +62,13 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         self.dataset = NASAMarineDebris(**self.kwargs)
+        generator = torch.Generator().manual_seed(0)
         self.train_dataset, self.val_dataset, self.test_dataset = random_split(
-            self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
+            self.dataset,
+            [
+                1 - self.val_split_pct - self.test_split_pct,
+                self.val_split_pct,
+                self.test_split_pct,
+            ],
+            generator,
         )
