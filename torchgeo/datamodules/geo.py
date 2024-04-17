@@ -11,7 +11,7 @@ import torch
 from lightning.pytorch import LightningDataModule
 from matplotlib.figure import Figure
 from torch import Tensor
-from torch.utils.data import DataLoader, Dataset, default_collate
+from torch.utils.data import DataLoader, Dataset, Subset, default_collate
 
 from ..datasets import GeoDataset, NonGeoDataset, stack_samples
 from ..samplers import (
@@ -157,6 +157,8 @@ class BaseDataModule(LightningDataModule):
         """
         fig: Figure | None = None
         dataset = self.dataset or self.val_dataset
+        if isinstance(dataset, Subset):
+            dataset = dataset.dataset
         if dataset is not None:
             if hasattr(dataset, "plot"):
                 fig = dataset.plot(*args, **kwargs)
