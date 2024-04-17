@@ -12,8 +12,8 @@ from torch.utils.data import random_split
 from ..datasets import VHR10
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
-from ..transforms.utils import AugPipe, collate_fn_detection
 from .geo import NonGeoDataModule
+from .utils import AugPipe, collate_fn_detection
 
 
 class VHR10DataModule(NonGeoDataModule):
