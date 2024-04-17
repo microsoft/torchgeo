@@ -7,7 +7,7 @@ from typing import Any
 
 import kornia.augmentation as K
 from torch import Tensor
-from torch.utils.data import dataset_split
+from torch.utils.data import random_split
 
 from ..datasets import SpaceNet1
 from ..transforms import AugmentationSequential
@@ -68,7 +68,7 @@ class SpaceNet1DataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         self.dataset = SpaceNet1(**self.kwargs)
-        self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
+        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
             self.dataset, self.val_split_pct, self.test_split_pct
         )
 

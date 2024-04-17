@@ -5,8 +5,6 @@ import re
 
 import numpy as np
 import pytest
-import torch
-from torch.utils.data import TensorDataset
 
 from torchgeo.datamodules.utils import group_shuffle_split
 

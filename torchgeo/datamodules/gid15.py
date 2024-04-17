@@ -6,7 +6,7 @@
 from typing import Any
 
 import kornia.augmentation as K
-from torch.utils.data import dataset_split
+from torch.utils.data import random_split
 
 from ..datasets import GID15
 from ..samplers.utils import _to_tuple
@@ -66,7 +66,7 @@ class GID15DataModule(NonGeoDataModule):
         """
         if stage in ["fit", "validate"]:
             self.dataset = GID15(split="train", **self.kwargs)
-            self.train_dataset, self.val_dataset = dataset_split(
+            self.train_dataset, self.val_dataset = random_split(
                 self.dataset, self.val_split_pct
             )
         if stage in ["test"]:

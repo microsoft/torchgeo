@@ -5,7 +5,7 @@
 
 from typing import Any
 
-from torch.utils.data import dataset_split
+from torch.utils.data import random_split
 
 from ..datasets import SKIPPD
 from .geo import NonGeoDataModule
@@ -48,7 +48,7 @@ class SKIPPDDataModule(NonGeoDataModule):
         """
         if stage in ["fit", "validate"]:
             self.dataset = SKIPPD(split="trainval", **self.kwargs)
-            self.train_dataset, self.val_dataset = dataset_split(
+            self.train_dataset, self.val_dataset = random_split(
                 self.dataset, val_pct=self.val_split_pct
             )
         if stage in ["test"]:

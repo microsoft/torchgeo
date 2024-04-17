@@ -7,7 +7,7 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch
-from torch.utils.data import dataset_split
+from torch.utils.data import random_split
 
 from ..datasets import OSCD
 from ..samplers.utils import _to_tuple
@@ -99,7 +99,7 @@ class OSCDDataModule(NonGeoDataModule):
         """
         if stage in ["fit", "validate"]:
             self.dataset = OSCD(split="train", **self.kwargs)
-            self.train_dataset, self.val_dataset = dataset_split(
+            self.train_dataset, self.val_dataset = random_split(
                 self.dataset, val_pct=self.val_split_pct
             )
         if stage in ["test"]:
