@@ -40,20 +40,3 @@ class QuakeSetDataModule(NonGeoDataModule):
             K.RandomVerticalFlip(p=0.5),
             data_keys=["image"],
         )
-
-    def setup(self, stage: str) -> None:
-        """Set up datasets.
-
-        Called at the beginning of fit, validate, test, or predict. During distributed
-        training, this method is called from every process across all the nodes. Setting
-        state here is recommended.
-
-        Args:
-            stage: Either 'fit', 'validate', 'test', or 'predict'.
-        """
-        if stage in ["fit"]:
-            self.train_dataset = QuakeSet(split="train", **self.kwargs)
-        if stage in ["fit", "validate"]:
-            self.val_dataset = QuakeSet(split="validation", **self.kwargs)
-        if stage in ["test"]:
-            self.test_dataset = QuakeSet(split="test", **self.kwargs)

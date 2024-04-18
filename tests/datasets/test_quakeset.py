@@ -23,7 +23,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestQuakeSet:
-    @pytest.fixture(params=["train", "validation", "test"])
+    @pytest.fixture(params=["train", "val", "test"])
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> QuakeSet:

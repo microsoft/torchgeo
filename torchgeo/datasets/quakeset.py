@@ -60,7 +60,7 @@ class QuakeSet(NonGeoDataset):
     filename = "earthquakes.h5"
     url = "https://hf.co/datasets/DarthReca/quakeset/resolve/bead1d25fb9979dbf703f9ede3e8b349f73b29f7/earthquakes.h5"
     md5 = "76fc7c76b7ca56f4844d852e175e1560"
-    splits = ["train", "validation", "test"]
+    splits = {"train": "train", "val": "validation", "test": "test"}
     classes = ["unaffected_area", "earthquake_affected_area"]
 
     def __init__(
@@ -75,7 +75,7 @@ class QuakeSet(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: one of "train", "validation", or "test"
+            split: one of "train", "val", or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -144,7 +144,7 @@ class QuakeSet(NonGeoDataset):
         data = []
         with h5py.File(self.filepath) as f:
             for k in sorted(f.keys()):
-                if f[k].attrs["split"] != self.split:
+                if f[k].attrs["split"] != self.splits[self.split]:
                     continue
 
                 for patch in sorted(f[k].keys()):
