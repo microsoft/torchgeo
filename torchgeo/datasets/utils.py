@@ -20,8 +20,13 @@ from datetime import datetime, timedelta
 from typing import Any, cast, overload
 
 import numpy as np
+import pyproj
 import rasterio
 import torch
+from rasterio.features import shapes, sieve
+from rasterio.warp import transform_geom
+from shapely import MultiPolygon
+from shapely.geometry import Polygon
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets.utils import check_integrity, download_url
@@ -847,3 +852,34 @@ def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:
     elif array.dtype == np.uint32:
         array = array.astype(np.int64)
     return torch.tensor(array)
+
+
+def valid_data_footprint_from_datasource(
+    src: rasterio.io.DatasetReader, destination_crs: pyproj.crs.crs.CRS
+) -> Polygon:
+    # Read valid/nodata-mask. Could choose only the first bands mask for peed-up.
+    # Currently supports spatial shifts between the bands, and include all of this
+    # as one combined mask.
+    mask = src.read_masks()
+    if len(mask) > 1:
+        mask = np.logical_or(*mask[:, ...])
+    # Close eventual holes within the raster that have area smaller than 500 pixels.
+    # Yields two bands, one all-zero representing nodata pixels,
+    # the other representing valid data
+    sieved_mask = sieve(mask, 500)
+    # Extract polygon for valid data values. Only interested in the valid-band.
+    # To support complex footprints we allow multiple such polygons and merge them
+    # to one multipolygon later
+    geoms = [g for g, v in shapes(sieved_mask, transform=src.transform) if v > 0]
+    # Transform to the common CRS chosen in RasterDataset
+    features = transform_geom(src_crs=src.crs, dst_crs=destination_crs, geom=geoms)
+    # Create a Shapely Polygon object(s)
+    vector_footprint = MultiPolygon(
+        [Polygon(feature["coordinates"][0]) for feature in features]
+    )
+    # The resulting polygon(s) is very staggered/pixelated,
+    # which could result in thousands of corners.
+    # The valid data footprints are usually very simple (3-5 corners)
+    # Simplifying each side to length 1/5 of the raster size (assumes crs is meters)
+    max_distance_of_polygon_length = src.width // src.res[0] / 5
+    return vector_footprint.simplify(max_distance_of_polygon_length)

@@ -38,6 +38,7 @@ from .utils import (
     disambiguate_timestamp,
     merge_samples,
     path_is_vsi,
+    valid_data_footprint_from_datasource,
 )
 
 
@@ -438,6 +439,8 @@ class RasterDataset(GeoDataset):
                         if res is None:
                             res = src.res[0]
 
+                        valid_footprint = valid_data_footprint_from_datasource(src, crs)
+
                         with WarpedVRT(src, crs=crs) as vrt:
                             minx, miny, maxx, maxy = vrt.bounds
                 except rasterio.errors.RasterioIOError:
@@ -456,7 +459,12 @@ class RasterDataset(GeoDataset):
                         _, maxt = disambiguate_timestamp(stop, self.date_format)
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
-                    self.index.insert(i, coords, filepath)
+
+                    self.index.insert(
+                        i,
+                        coords,
+                        {"filepath": filepath, "valid_footprint": valid_footprint},
+                    )
                     i += 1
 
         if i == 0:
@@ -492,7 +500,9 @@ class RasterDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        filepaths = cast(
+            list[str], [cast(dict[str, Any], hit.object)["filepath"] for hit in hits]
+        )
 
         if not filepaths:
             raise IndexError(
@@ -581,11 +591,21 @@ class RasterDataset(GeoDataset):
         Returns:
             file handle of warped VRT
         """
+        # Todo: need to update meta kwarg `nodata` if it is not set.
+        #  create memory-file?
+        #  https://rasterio.groups.io/g/main/topic/change_the_nodata_value_in_a/28801885?p=
         src = rasterio.open(filepath)
 
         # Only warp if necessary
         if src.crs != self.crs:
-            vrt = WarpedVRT(src, crs=self.crs)
+            valid_nodatavals = [val for val in src.nodatavals if val is not None]
+            if not valid_nodatavals:  # Case for Sentinel2 L1C
+                nodata = 0.0  # Is it safe to assume? For Sentinel2 L1C it is 0.0
+            else:
+                # Get the first valid nodata value.
+                # Usualy the same value for all bands
+                nodata = valid_nodatavals[0]
+            vrt = WarpedVRT(src, nodata=nodata, crs=self.crs)
             src.close()
             return vrt
         else:
@@ -966,7 +986,32 @@ class IntersectionDataset(GeoDataset):
             for hit2 in ds2.index.intersection(hit1.bounds, objects=True):
                 box1 = BoundingBox(*hit1.bounds)
                 box2 = BoundingBox(*hit2.bounds)
-                self.index.insert(i, tuple(box1 & box2))
+                box_intersection = box1 & box2
+                # assuming hit1 is the rasterfile.
+                # It might have nodata-regions covered by other files,
+                # which RasterData will read from.
+                # we merge the footprint from all files covering this bounds
+                all_footprints_overlapping = [
+                    other.object["valid_footprint"]
+                    for other in ds1.index.intersection(ds1.index.bounds, objects=True)
+                ]
+                all_footprints_cropped_to_bounds = shapely.intersection(
+                    shapely.ops.unary_union(all_footprints_overlapping),
+                    shapely.geometry.box(
+                        box_intersection.minx,
+                        box_intersection.miny,
+                        box_intersection.maxx,
+                        box_intersection.maxy,
+                    ),
+                )
+                self.index.insert(
+                    i,
+                    tuple(box_intersection),
+                    cast(
+                        dict[str, shapely.geometry.Polygon],
+                        all_footprints_cropped_to_bounds,
+                    ),
+                )
                 i += 1
 
         if i == 0:
