@@ -60,7 +60,7 @@ class QuakeSet(NonGeoDataset):
     filename = "earthquakes.h5"
     url = "https://hf.co/datasets/DarthReca/quakeset/resolve/bead1d25fb9979dbf703f9ede3e8b349f73b29f7/earthquakes.h5"
     md5 = "76fc7c76b7ca56f4844d852e175e1560"
-    splits = {"train": "train", "val": "validation", "test": "test"}
+    splits = ["train", "validation", "test"]
     classes = ["unaffected_area", "earthquake_affected_area"]
 
     def __init__(
@@ -75,7 +75,7 @@ class QuakeSet(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: one of "train", "val", or "test"
+            split: one of "train", "validation", or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -141,39 +141,37 @@ class QuakeSet(NonGeoDataset):
         """
         import h5py
 
-        f = h5py.File(self.filepath)
-
         data = []
-        for k in sorted(f.keys()):
-            if f[k].attrs["split"] != self.splits[self.split]:
-                continue
+        with h5py.File(self.filepath) as f:
+            for k in sorted(f.keys()):
+                if f[k].attrs["split"] != self.split:
+                    continue
 
-            for patch in sorted(f[k].keys()):
-                if patch not in ["x", "y"]:
-                    # positive sample
-                    magnitude = float(f[k].attrs["magnitude"])
-                    data.append(
-                        dict(
-                            key=k,
-                            patch=patch,
-                            images=("pre", "post"),
-                            label=1,
-                            magnitude=magnitude,
-                        )
-                    )
-
-                    # hard negative sample
-                    if "before" in f[k][patch].keys():
+                for patch in sorted(f[k].keys()):
+                    if patch not in ["x", "y"]:
+                        # positive sample
+                        magnitude = float(f[k].attrs["magnitude"])
                         data.append(
                             dict(
                                 key=k,
                                 patch=patch,
-                                images=("before", "pre"),
-                                label=0,
-                                magnitude=0.0,
+                                images=("pre", "post"),
+                                label=1,
+                                magnitude=magnitude,
                             )
                         )
-        f.close()
+
+                        # hard negative sample
+                        if "before" in f[k][patch].keys():
+                            data.append(
+                                dict(
+                                    key=k,
+                                    patch=patch,
+                                    images=("before", "pre"),
+                                    label=0,
+                                    magnitude=0.0,
+                                )
+                            )
         return data
 
     def _load_image(self, index: int) -> Tensor:
