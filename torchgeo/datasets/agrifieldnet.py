@@ -159,7 +159,7 @@ class AgriFieldNet(RasterDataset):
         """Return an index within the dataset.
 
         Args:
-            index: index to return
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
             data, label, and field ids at that index

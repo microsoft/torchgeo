@@ -239,8 +239,10 @@ class FAIR1M(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
+            split: one of "train", "val", or "test"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:

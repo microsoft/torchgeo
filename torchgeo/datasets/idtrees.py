@@ -550,9 +550,7 @@ class IDTReeS(NonGeoDataset):
 
         return fig
 
-    def plot_las(
-        self, index: int
-    ) -> "pyvista.Plotter":  # type: ignore[name-defined] # noqa: F821
+    def plot_las(self, index: int) -> "pyvista.Plotter":  # type: ignore[name-defined] # noqa: F821
         """Plot a sample point cloud at the index.
 
         Args:

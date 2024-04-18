@@ -136,7 +136,7 @@ class RCF(Module):
             min_divisor: a small number to guard against division by zero
             zca_bias: bias term for ZCA whitening
 
-        Returns
+        Returns:
             a numpy array of size (N, C, H, W) containing the normalized patches
 
         .. versionadded:: 0.5

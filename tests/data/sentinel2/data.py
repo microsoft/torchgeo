@@ -4,7 +4,6 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Union
 
 import numpy as np
 import rasterio
@@ -15,7 +14,7 @@ SIZE = 128
 
 np.random.seed(0)
 
-FILENAME_HIERARCHY = Union[dict[str, "FILENAME_HIERARCHY"], list[str]]
+FILENAME_HIERARCHY = dict[str, "FILENAME_HIERARCHY"] | list[str]
 
 filenames: FILENAME_HIERARCHY = {
     # USGS Earth Explorer

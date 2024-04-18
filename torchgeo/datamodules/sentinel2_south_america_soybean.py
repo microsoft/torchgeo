@@ -4,7 +4,6 @@
 
 """South America Soybean datamodule."""
 
-
 from typing import Any
 
 import kornia.augmentation as K
