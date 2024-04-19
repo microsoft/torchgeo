@@ -133,6 +133,11 @@ Potsdam
 
 .. autoclass:: Potsdam2DDataModule
 
+QuakeSet
+^^^^^^^^
+
+.. autoclass:: QuakeSetDataModule
+
 RESISC45
 ^^^^^^^^
 

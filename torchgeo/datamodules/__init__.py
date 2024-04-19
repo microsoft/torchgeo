@@ -27,6 +27,7 @@ from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
 from .oscd import OSCDDataModule
 from .potsdam import Potsdam2DDataModule
+from .quakeset import QuakeSetDataModule
 from .resisc45 import RESISC45DataModule
 from .seco import SeasonalContrastS2DataModule
 from .sen12ms import SEN12MSDataModule
@@ -78,6 +79,7 @@ __all__ = (
     "NASAMarineDebrisDataModule",
     "OSCDDataModule",
     "Potsdam2DDataModule",
+    "QuakeSetDataModule",
     "RESISC45DataModule",
     "SeasonalContrastS2DataModule",
     "SEN12MSDataModule",
