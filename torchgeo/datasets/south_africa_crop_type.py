@@ -137,7 +137,7 @@ class SouthAfricaCropType(RasterDataset):
         """Return an index within the dataset.
 
         Args:
-            index: index to return
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
             data and labels at that index

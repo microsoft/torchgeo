@@ -31,10 +31,16 @@ NAIP
 
 .. autoclass:: NAIPChesapeakeDataModule
 
+I/O Bench
+^^^^^^^^^
+
+.. autoclass:: IOBenchDataModule
+
 Sentinel
 ^^^^^^^^
 
 .. autoclass:: Sentinel2CDLDataModule
+.. autoclass:: Sentinel2EuroCropsDataModule
 .. autoclass:: Sentinel2NCCMDataModule
 .. autoclass:: Sentinel2SouthAmericaSoybeanDataModule
 
@@ -131,6 +137,11 @@ Potsdam
 ^^^^^^^
 
 .. autoclass:: Potsdam2DDataModule
+
+QuakeSet
+^^^^^^^^
+
+.. autoclass:: QuakeSetDataModule
 
 RESISC45
 ^^^^^^^^

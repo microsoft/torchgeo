@@ -354,8 +354,9 @@ class OpenBuildings(VectorDataset):
             [query.miny, query.maxy],
         )
         df_query = (
-            "longitude >= {} & longitude <= {} & " "latitude >= {} & latitude <= {}"
-        ).format(minx, maxx, miny, maxy)
+            f"longitude >= {minx} & longitude <= {maxx} & "
+            f"latitude >= {miny} & latitude <= {maxy}"
+        )
         shapes = []
         for f in filepaths:
             csv_chunks = pd.read_csv(f, chunksize=200000, compression="gzip")

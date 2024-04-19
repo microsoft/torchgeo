@@ -9,7 +9,6 @@ import glob
 import json
 import os
 from collections import defaultdict
-from typing import DefaultDict
 
 from tbparse import SummaryReader
 
@@ -17,7 +16,7 @@ OUTPUT_DIR = ""
 
 
 # mypy does not yet support recursive type hints
-def nested_dict() -> DefaultDict[str, defaultdict]:  # type: ignore[type-arg]
+def nested_dict() -> defaultdict[str, defaultdict]:  # type: ignore[type-arg]
     """Recursive defaultdict.
 
     Returns:

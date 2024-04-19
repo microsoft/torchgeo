@@ -113,21 +113,12 @@ docs = [
     "sphinx>=4,<6",
 ]
 style = [
-    # black 21.8+ required for Jupyter support
-    "black[jupyter]>=21.8",
-    # flake8 3.8+ depends on pyflakes 2.2+, which fixes a bug with mypy error code ignores:
-    # https://github.com/PyCQA/pyflakes/pull/455
-    "flake8>=3.8",
-    # isort 5.8+ required for extend_skip option
-    "isort[colors]>=5.8",
-    # pydocstyle 6.1+ required for pyproject.toml support
-    "pydocstyle[toml]>=6.1",
-    # pyupgrade 2.8+ required for --py310-plus flag
-    "pyupgrade>=2.8",
-]
-tests = [
     # mypy 0.900+ required for pyproject.toml support
     "mypy>=0.900",
+    # ruff 0.2+ required for [ruff.lint]
+    "ruff>=0.2",
+]
+tests = [
     # nbmake 1.3.3+ required for variable mocking
     "nbmake>=1.3.3",
     # pytest 7.3+ required for tmp_path_retention_policy
@@ -146,11 +137,6 @@ torchgeo = "torchgeo.main:main"
 Homepage = "https://github.com/microsoft/torchgeo"
 Documentation = "https://torchgeo.readthedocs.io"
 
-[tool.black]
-target-version = ["py310"]
-color = true
-skip_magic_trailing_comma = true
-
 [tool.coverage.report]
 # Ignore warnings for overloads
 # https://github.com/nedbat/coveragepy/issues/970#issuecomment-612602180
@@ -158,12 +144,6 @@ exclude_lines = [
     "pragma: no cover",
     "@overload",
 ]
-
-[tool.isort]
-profile = "black"
-known_first_party = ["docs", "tests", "torchgeo", "train"]
-skip_gitignore = true
-color_output = true
 
 [tool.mypy]
 python_version = "3.10"
@@ -186,10 +166,6 @@ warn_unused_ignores = true
 warn_return_any = true
 no_implicit_reexport = true
 strict_equality = true
-
-[tool.pydocstyle]
-convention = "google"
-match_dir = "(datamodules|datasets|losses|models|samplers|torchgeo|trainers|transforms)"
 
 [tool.pytest.ini_options]
 # Skip slow tests by default
@@ -279,6 +255,28 @@ testpaths = [
     "docs/tutorials",
 ]
 tmp_path_retention_policy = "failed"
+
+# https://docs.astral.sh/ruff/settings/
+[tool.ruff]
+extend-include = ["*.ipynb"]
+fix = true
+
+[tool.ruff.format]
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+extend-select = ["D", "I", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"docs/**" = ["D"]
+"experiments/**" = ["D"]
+"tests/**" = ["D"]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 # https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [tool.setuptools.dynamic]

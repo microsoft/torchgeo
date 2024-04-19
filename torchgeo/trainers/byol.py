@@ -240,6 +240,7 @@ class BYOL(nn.Module):
             augment_fn: an instance of a module that performs data augmentation
             beta: the speed at which the target backbone is updated using the main
                 backbone
+            **kwargs: Additional keyword arguments passed to :class:`nn.Module`
         """
         super().__init__()
 

@@ -74,6 +74,7 @@ class TestSemanticSegmentationTask:
             "sen12ms_s2_all",
             "sen12ms_s2_reduced",
             "sentinel2_cdl",
+            "sentinel2_eurocrops",
             "sentinel2_nccm",
             "sentinel2_south_america_soybean",
             "southafricacroptype",

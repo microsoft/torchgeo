@@ -7,6 +7,7 @@ from .base import BaseTask
 from .byol import BYOLTask
 from .classification import ClassificationTask, MultiLabelClassificationTask
 from .detection import ObjectDetectionTask
+from .iobench import IOBenchTask
 from .moco import MoCoTask
 from .regression import PixelwiseRegressionTask, RegressionTask
 from .segmentation import SemanticSegmentationTask
@@ -26,4 +27,6 @@ __all__ = (
     "SimCLRTask",
     # Base classes
     "BaseTask",
+    # Other
+    "IOBenchTask",
 )
