@@ -62,9 +62,10 @@ class SouthAfricaCropType(RasterDataset):
 
     filename_regex = r"""
         ^(?P<field_id>[0-9]*)
-        _(?P<timestamp>[0-9]{4}_07_[0-9]{2})
+        _(?P<date>[0-9]{4}_07_[0-9]{2})
         _(?P<band>(B[0-9A-Z]{2} | VH | VV))
         _10m"""
+    date_format = "%Y_%m_%d"
     rgb_bands = ["B04", "B03", "B02"]
     s1_bands = ["VH", "VV"]
     s2_bands = [
@@ -152,6 +153,7 @@ class SouthAfricaCropType(RasterDataset):
             raise IndexError(
                 f"query: {query} not found in index with bounds: {self.bounds}"
             )
+
         data_list: list[Tensor] = []
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
 
@@ -165,7 +167,7 @@ class SouthAfricaCropType(RasterDataset):
             match = re.match(filename_regex, filename)
             if match:
                 field_id = match.group("field_id")
-                date = match.group("timestamp")
+                date = match.group("date")
                 band = match.group("band")
                 band_type = "s1" if band in self.s1_bands else "s2"
                 if field_id not in field_ids:
