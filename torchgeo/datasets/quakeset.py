@@ -84,6 +84,7 @@ class QuakeSet(NonGeoDataset):
         Raises:
             AssertionError: If ``split`` argument is invalid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            ImportError: if h5py is not installed
         """
         assert split in self.splits
 
