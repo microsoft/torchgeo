@@ -166,3 +166,24 @@ A major component of TorchGeo is the large collection of :mod:`torchgeo.datasets
 * Add the dataset metadata to either ``docs/api/geo_datasets.csv`` or ``docs/api/non_geo_datasets.csv``
 
 A good way to get started is by looking at some of the existing implementations that are most closely related to the dataset that you are implementing (e.g. if you are implementing a semantic segmentation dataset, looking at the LandCover.ai dataset implementation would be a good starting point).
+
+I/O Benchmarking
+----------------
+
+For PRs that may affect GeoDataset sampling speed, you can test the performance impact as follows. On the main branch (before) and on your PR branch (after), run the following commands:
+
+.. code-block:: console
+
+   $ python -m torchgeo fit --config tests/conf/io_raw.yaml
+   $ python -m torchgeo fit --config tests/conf/io_preprocessed.yaml
+
+This code will download a small (1 GB) dataset consisting of a single Landsat 9 scene and CDL file. It will then profile the speed at which various samplers work for both raw data (original downloaded files) and preprocessed data (same CRS, res, TAP, COG). The important output to look out for is the total time taken by ``train_dataloader_next`` (RandomGeoSampler) and ``val_next`` (GridGeoSampler). With this, you can create a table on your PR like:
+
+======  ============  ==========  =====================  ===================
+        raw (random)  raw (grid)  preprocessed (random)  preprocessed (grid)
+======  ============  ==========  =====================  ===================
+before        17.223      10.974                 15.685               4.6075
+ after        17.360      11.032                  9.613               4.6673
+======  ============  ==========  =====================  ===================
+
+In this example, we see a 60% speed-up for RandomGeoSampler on preprocessed data. All other numbers are more or less the same across multiple runs.
