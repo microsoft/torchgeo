@@ -5,12 +5,14 @@ import pickle
 import sys
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
+from rasterio.enums import Resampling
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
@@ -47,6 +49,16 @@ class CustomGeoDataset(GeoDataset):
         hit = next(iter(hits))
         bounds = BoundingBox(*hit.bounds)
         return {'index': bounds}
+
+
+class CustomRasterDataset(RasterDataset):
+    def __init__(self, dtype: torch.dtype, *args: Any, **kwargs: Any) -> Any:
+        super().__init__(*args, **kwargs)
+        self._dtype = dtype
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return self._dtype
 
 
 class CustomVectorDataset(VectorDataset):
@@ -273,6 +285,22 @@ class TestRasterDataset:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert x['image'].dtype == torch.float32
+
+    @pytest.mark.parametrize("dtype", [torch.float, torch.double])
+    def test_resampling_float_dtype(self, dtype: str) -> None:
+        paths = os.path.join("tests", "data", "raster", "uint16")
+        ds = CustomRasterDataset(dtype, paths)
+        x = ds[ds.bounds]
+        assert x["image"].dtype == dtype
+        assert ds.resampling == Resampling.cubic
+
+    @pytest.mark.parametrize("dtype", [torch.long, torch.bool])
+    def test_resampling_int_dtype(self, dtype: str) -> None:
+        paths = os.path.join("tests", "data", "raster", "uint16")
+        ds = CustomRasterDataset(dtype, paths)
+        x = ds[ds.bounds]
+        assert x["image"].dtype == dtype
+        assert ds.resampling == Resampling.nearest
 
     def test_invalid_query(self, sentinel: Sentinel2) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

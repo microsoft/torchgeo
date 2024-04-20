@@ -22,6 +22,7 @@ import rasterio.merge
 import shapely
 import torch
 from rasterio.crs import CRS
+from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
 from rtree.index import Index, Property
@@ -384,6 +385,23 @@ class RasterDataset(GeoDataset):
         else:
             return torch.long
 
+    @property
+    def resampling(self) -> Resampling:
+        """Resampling algorithm used when reading input files.
+
+        Defaults to cubic for float dtypes and nearest for int dtypes.
+
+        Returns:
+            The resampling method to use.
+
+        .. versionadded:: 0.6
+        """
+        # Based on torch.is_floating_point
+        if self.dtype in [torch.float64, torch.float32, torch.float16, torch.bfloat16]:
+            return Resampling.cubic
+        else:
+            return Resampling.nearest
+
     def __init__(
         self,
         paths: str | Iterable[str] = 'data',
@@ -555,7 +573,9 @@ class RasterDataset(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         bounds = (query.minx, query.miny, query.maxx, query.maxy)
-        dest, _ = rasterio.merge.merge(vrt_fhs, bounds, self.res, indexes=band_indexes)
+        dest, _ = rasterio.merge.merge(
+            vrt_fhs, bounds, self.res, indexes=band_indexes, resampling=self.resampling
+        )
         # Use array_to_tensor since merge may return uint16/uint32 arrays.
         tensor = array_to_tensor(dest)
         return tensor
