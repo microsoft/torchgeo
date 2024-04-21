@@ -31,6 +31,11 @@ NAIP
 
 .. autoclass:: NAIPChesapeakeDataModule
 
+I/O Bench
+^^^^^^^^^
+
+.. autoclass:: IOBenchDataModule
+
 Sentinel
 ^^^^^^^^
 
@@ -127,6 +132,11 @@ Potsdam
 ^^^^^^^
 
 .. autoclass:: Potsdam2DDataModule
+
+QuakeSet
+^^^^^^^^
+
+.. autoclass:: QuakeSetDataModule
 
 RESISC45
 ^^^^^^^^

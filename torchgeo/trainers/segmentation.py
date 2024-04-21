@@ -76,7 +76,7 @@ class SemanticSegmentationTask(BaseTask):
            *segmentation_model*, *encoder_name*, and *encoder_weights*
            were renamed to *model*, *backbone*, and *weights*.
 
-        .. versionadded: 0.5
+        .. versionadded:: 0.5
             The *class_weights*, *freeze_backbone*, and *freeze_decoder* parameters.
 
         .. versionchanged:: 0.5

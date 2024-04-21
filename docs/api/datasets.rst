@@ -108,6 +108,11 @@ iNaturalist
 
 .. autoclass:: INaturalist
 
+I/O Bench
+^^^^^^^^^
+
+.. autoclass:: IOBench
+
 L7 Irish
 ^^^^^^^^
 
@@ -176,7 +181,7 @@ South Africa Crop Type
 
 .. autoclass:: SouthAfricaCropType
 
-South America Soybean 
+South America Soybean
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SouthAmericaSoybean
@@ -347,6 +352,11 @@ Potsdam
 ^^^^^^^
 
 .. autoclass:: Potsdam2D
+
+QuakeSet
+^^^^^^^^
+
+.. autoclass:: QuakeSet
 
 ReforesTree
 ^^^^^^^^^^^
