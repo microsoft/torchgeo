@@ -389,7 +389,7 @@ class RasterDataset(GeoDataset):
     def resampling(self) -> Resampling:
         """Resampling algorithm used when reading input files.
 
-        Defaults to cubic for float dtypes and nearest for int dtypes.
+        Defaults to bilinear for float dtypes and nearest for int dtypes.
 
         Returns:
             The resampling method to use.
@@ -398,7 +398,7 @@ class RasterDataset(GeoDataset):
         """
         # Based on torch.is_floating_point
         if self.dtype in [torch.float64, torch.float32, torch.float16, torch.bfloat16]:
-            return Resampling.cubic
+            return Resampling.bilinear
         else:
             return Resampling.nearest
 

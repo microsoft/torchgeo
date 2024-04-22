@@ -292,7 +292,7 @@ class TestRasterDataset:
         ds = CustomRasterDataset(dtype, paths)
         x = ds[ds.bounds]
         assert x["image"].dtype == dtype
-        assert ds.resampling == Resampling.cubic
+        assert ds.resampling == Resampling.bilinear
 
     @pytest.mark.parametrize("dtype", [torch.long, torch.bool])
     def test_resampling_int_dtype(self, dtype: torch.dtype) -> None:
