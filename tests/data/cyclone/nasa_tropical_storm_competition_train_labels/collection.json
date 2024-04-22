@@ -1,24 +1,24 @@
 {
-    "links": [
-        {
-            "href": "nasa_tropical_storm_competition_train_labels_a_000/stac.json",
-            "rel": "item"
-        },
-        {
-            "href": "nasa_tropical_storm_competition_train_labels_b_001/stac.json",
-            "rel": "item"
-        },
-        {
-            "href": "nasa_tropical_storm_competition_train_labels_c_002/stac.json",
-            "rel": "item"
-        },
-        {
-            "href": "nasa_tropical_storm_competition_train_labels_d_003/stac.json",
-            "rel": "item"
-        },
-        {
-            "href": "nasa_tropical_storm_competition_train_labels_e_004/stac.json",
-            "rel": "item"
-        }
-    ]
+  "links": [
+    {
+      "href": "nasa_tropical_storm_competition_train_labels_a_000/stac.json",
+      "rel": "item"
+    },
+    {
+      "href": "nasa_tropical_storm_competition_train_labels_b_001/stac.json",
+      "rel": "item"
+    },
+    {
+      "href": "nasa_tropical_storm_competition_train_labels_c_002/stac.json",
+      "rel": "item"
+    },
+    {
+      "href": "nasa_tropical_storm_competition_train_labels_d_003/stac.json",
+      "rel": "item"
+    },
+    {
+      "href": "nasa_tropical_storm_competition_train_labels_e_004/stac.json",
+      "rel": "item"
+    }
+  ]
 }

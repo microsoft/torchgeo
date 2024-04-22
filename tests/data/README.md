@@ -23,7 +23,9 @@ with rio.open(os.path.join(ROOT, FILENAME), "r") as src:
         for i in dst.profile.indexes:
             dst.write(Z, i)
 ```
+
 Optionally, if the dataset has a colormap, this can be copied like so:
+
 ```python
 cmap = src.colormap(1)
 dst.write_colormap(1, cmap)

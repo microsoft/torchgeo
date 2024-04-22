@@ -10,11 +10,11 @@ data:
   class_path: ChesapeakeCVPRDataModule
   init_args:
     train_splits:
-    - "de-test"
+      - "de-test"
     val_splits:
-    - "de-test"
+      - "de-test"
     test_splits:
-    - "de-test"
+      - "de-test"
     batch_size: 2
     patch_size: 64
     class_set: 5

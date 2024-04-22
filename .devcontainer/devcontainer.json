@@ -38,7 +38,7 @@
         "python.editor.codeActionsOnSave": {
           "source.organizeImports": true
         },
-        "python.diffEditor.wordWrap": "off",
+        "python.diffEditor.wordWrap": "off"
       }
     }
   }

@@ -1,16 +1,16 @@
 {
-    "labels": [
-        "Non-irrigated arable land",
-        "Broad-leaved forest",
-        "Water courses"
-    ],
-    "coordinates": {
-        "ulx": 0,
-        "uly": 0,
-        "lrx": 0,
-        "lry": 0
-    },
-    "projection": "",
-    "tile_source": "",
-    "acquisition_date": ""
+  "labels": [
+    "Non-irrigated arable land",
+    "Broad-leaved forest",
+    "Water courses"
+  ],
+  "coordinates": {
+    "ulx": 0,
+    "uly": 0,
+    "lrx": 0,
+    "lry": 0
+  },
+  "projection": "",
+  "tile_source": "",
+  "acquisition_date": ""
 }

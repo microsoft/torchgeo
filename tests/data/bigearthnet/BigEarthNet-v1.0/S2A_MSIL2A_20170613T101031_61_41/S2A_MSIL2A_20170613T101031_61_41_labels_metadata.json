@@ -1,17 +1,17 @@
 {
-    "labels": [
-        "Discontinuous urban fabric",
-        "Non-irrigated arable land",
-        "Broad-leaved forest",
-        "Coniferous forest"
-    ],
-    "coordinates": {
-        "ulx": 0,
-        "uly": 0,
-        "lrx": 0,
-        "lry": 0
-    },
-    "projection": "",
-    "tile_source": "",
-    "acquisition_date": ""
+  "labels": [
+    "Discontinuous urban fabric",
+    "Non-irrigated arable land",
+    "Broad-leaved forest",
+    "Coniferous forest"
+  ],
+  "coordinates": {
+    "ulx": 0,
+    "uly": 0,
+    "lrx": 0,
+    "lry": 0
+  },
+  "projection": "",
+  "tile_source": "",
+  "acquisition_date": ""
 }
