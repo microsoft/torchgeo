@@ -377,7 +377,7 @@ class RasterDataset(GeoDataset):
         Returns:
             the dtype of the dataset
 
-        .. versionadded:: 5.0
+        .. versionadded:: 0.5
         """
         if self.is_image:
             return torch.float32
@@ -966,8 +966,11 @@ class IntersectionDataset(GeoDataset):
             for hit2 in ds2.index.intersection(hit1.bounds, objects=True):
                 box1 = BoundingBox(*hit1.bounds)
                 box2 = BoundingBox(*hit2.bounds)
-                self.index.insert(i, tuple(box1 & box2))
-                i += 1
+                box3 = box1 & box2
+                # Skip 0 area overlap (unless 0 area dataset)
+                if box3.area > 0 or box1.area == 0 or box2.area == 0:
+                    self.index.insert(i, tuple(box3))
+                    i += 1
 
         if i == 0:
             raise RuntimeError("Datasets have no spatiotemporal intersection")
