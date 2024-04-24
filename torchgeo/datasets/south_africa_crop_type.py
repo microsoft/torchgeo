@@ -71,6 +71,7 @@ class SouthAfricaCropType(RasterDataset):
         _(?P<date>[0-9]{4}_07_[0-9]{2})
         _(?P<band>(B[0-9A-Z]{2}))
         _10m"""
+    filename_regex = s2_regex
     date_format = "%Y_%m_%d"
     rgb_bands = ["B04", "B03", "B02"]
     s1_bands = ["VH", "VV"]
@@ -134,8 +135,6 @@ class SouthAfricaCropType(RasterDataset):
         self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
         if set(bands).issubset(set(self.s1_bands)):
             self.filename_regex = self.s1_regex
-        else:
-            self.filename_regex = self.s2_regex
 
         super().__init__(paths=paths, crs=crs, bands=bands, transforms=transforms)
 
