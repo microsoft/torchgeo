@@ -77,7 +77,7 @@ class TransformerWeightGenerator(nn.Module):
         )
         self.transformer_encoder = nn.TransformerEncoder(
             encoder_layer, num_layers=num_layers, enable_nested_tensor=False
-        )  # type: ignore[no-untyped-call]
+        )
 
         # Linear layer to map transformer output to desired weight shape
         self.fc_weight = nn.Linear(input_dim, output_dim)
