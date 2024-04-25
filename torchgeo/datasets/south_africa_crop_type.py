@@ -30,8 +30,9 @@ class SouthAfricaCropType(RasterDataset):
     time series imagery and a single label mask. Since TorchGeo does not yet support
     timeseries datasets, the first available imagery in July will be returned for each
     field. Note that the dates for S1 and S2 imagery for a given field are not
-    guaranteed to be the same. Each pixel in the label contains an integer field number
-    and crop type class.
+    guaranteed to be the same. Due to this date mismatch only S1 or S2 bands may be
+    queried at a time, a mix of both is not supported. Each pixel in the label
+    contains an integer field number and crop type class.
 
     Dataset format:
 
@@ -60,11 +61,17 @@ class SouthAfricaCropType(RasterDataset):
     .. versionadded:: 0.6
     """
 
-    filename_regex = r"""
-        ^(?P<field_id>[0-9]*)
-        _(?P<date>[0-9]{4}_[0-9]{2}_[0-9]{2})
-        _(?P<band>(B[0-9A-Z]{2} | VH | VV))
+    s1_regex = r"""
+        ^(?P<field_id>\d+)
+        _(?P<date>\d{4}_07_\d{2})
+        _(?P<band>[VH]{2})
         _10m"""
+    s2_regex = r"""
+        ^(?P<field_id>\d+)
+        _(?P<date>\d{4}_07_\d{2})
+        _(?P<band>(B[0-9A-Z]{2}))
+        _10m"""
+    filename_regex = s2_regex
     date_format = "%Y_%m_%d"
     rgb_bands = ["B04", "B03", "B02"]
     s1_bands = ["VH", "VV"]
@@ -101,7 +108,7 @@ class SouthAfricaCropType(RasterDataset):
         paths: str | Iterable[str] = "data",
         crs: CRS | None = None,
         classes: list[int] = list(cmap.keys()),
-        bands: list[str] = all_bands,
+        bands: list[str] = s2_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
     ) -> None:
         """Initialize a new South Africa Crop Type dataset instance.
@@ -126,6 +133,8 @@ class SouthAfricaCropType(RasterDataset):
         self.classes = classes
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
         self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
+        if set(bands).issubset(set(self.s1_bands)):
+            self.filename_regex = self.s1_regex
 
         super().__init__(paths=paths, crs=crs, bands=bands, transforms=transforms)
 
