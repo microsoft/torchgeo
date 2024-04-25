@@ -78,7 +78,7 @@ class TestSouthAfricaCropType:
         with pytest.raises(
             RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
         ):
-            ds = SouthAfricaCropType(path, bands=["B01", "B02", "B05"])
+            ds = SouthAfricaCropType(path, bands=SouthAfricaCropType.s1_bands)
             x = ds[ds.bounds]
             ds.plot(x, suptitle="Test")
             plt.close()
