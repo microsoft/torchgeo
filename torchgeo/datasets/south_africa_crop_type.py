@@ -62,13 +62,13 @@ class SouthAfricaCropType(RasterDataset):
     """
 
     s1_regex = r"""
-        ^(?P<field_id>[0-9]*)
-        _(?P<date>[0-9]{4}_07_[0-9]{2})
-        _(?P<band>( VH || "VV" ))
+        ^(?P<field_id>\d+)
+        _(?P<date>\d{4}_07_\d{2})
+        _(?P<band>[VH]{2})
         _10m"""
     s2_regex = r"""
-        ^(?P<field_id>[0-9]*)
-        _(?P<date>[0-9]{4}_07_[0-9]{2})
+        ^(?P<field_id>\d+)
+        _(?P<date>\d{4}_07_\d{2})
         _(?P<band>(B[0-9A-Z]{2}))
         _10m"""
     filename_regex = s2_regex
