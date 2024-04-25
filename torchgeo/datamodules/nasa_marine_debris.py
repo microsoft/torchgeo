@@ -7,11 +7,12 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch
+from torch.utils.data import random_split
 
 from ..datasets import NASAMarineDebris
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
-from .utils import AugPipe, collate_fn_detection, dataset_split
+from .utils import AugPipe, collate_fn_detection
 
 
 class NASAMarineDebrisDataModule(NonGeoDataModule):
@@ -61,6 +62,13 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         self.dataset = NASAMarineDebris(**self.kwargs)
-        self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
+        generator = torch.Generator().manual_seed(0)
+        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
+            self.dataset,
+            [
+                1 - self.val_split_pct - self.test_split_pct,
+                self.val_split_pct,
+                self.test_split_pct,
+            ],
+            generator,
         )
