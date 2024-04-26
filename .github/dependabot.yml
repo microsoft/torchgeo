@@ -24,3 +24,7 @@ updates:
       - dependency-name: "timm"
       # torchvision pins torch, must update in unison
       - dependency-name: "torch"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
