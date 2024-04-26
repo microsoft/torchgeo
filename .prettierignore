@@ -1,2 +1,2 @@
 # Ignore artifacts:
-tests/data/*
+tests/data/*/**
