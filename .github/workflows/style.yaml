@@ -68,13 +68,13 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.1.2
       - name: Set up nodejs
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.0.2
         with:
           node-version: "20"
           cache: "npm"
       - name: Installing prettier
         run: |
-          npm install --save-dev --save-exact prettier
+          npm ci
           npm cache clean --force
       - name: List npm dependencies
         run: npm ls --all
