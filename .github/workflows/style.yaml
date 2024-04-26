@@ -79,7 +79,7 @@ jobs:
       - name: List npm dependencies
         run: npm ls --all
       - name: Run prettier formatting
-        run: npx prettier . --write
+        run: npx prettier . --check
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true
