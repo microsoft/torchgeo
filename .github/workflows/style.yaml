@@ -74,7 +74,7 @@ jobs:
           cache: "npm"
       - name: Installing prettier
         run: |
-          npm ci
+          npm ci --prefix requirements/
           npm cache clean --force
       - name: List npm dependencies
         run: npm ls --all
