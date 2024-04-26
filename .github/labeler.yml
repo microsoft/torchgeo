@@ -27,6 +27,7 @@ dependencies:
       - any-glob-to-any-file:
           - "pyproject.toml"
           - "requirements/**"
+          - ".github/dependabot.yml"
 documentation:
   - changed-files:
       - any-glob-to-any-file:
