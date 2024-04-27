@@ -207,6 +207,18 @@ class L7Irish(IntersectionDataset):
 
         super().__init__(self.image, self.mask)
 
+    def _merge_dataset_indices(self) -> None:
+        """Create a new R-tree out of the individual indices from two datasets."""
+        i = 0
+        ds1, ds2 = self.datasets
+        for hit1 in ds1.index.intersection(ds1.index.bounds, objects=True):
+            for hit2 in ds2.index.intersection(hit1.bounds, objects=True):
+                box1 = BoundingBox(*hit1.bounds)
+                box2 = BoundingBox(*hit2.bounds)
+                if box1 == box2:
+                    self.index.insert(i, tuple(box1 & box2))
+                    i += 1
+
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
