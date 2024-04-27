@@ -51,7 +51,7 @@ class L7IrishMask(RasterDataset):
     """
     is_image = False
     classes = ['Fill', 'Cloud Shadow', 'Clear', 'Thin Cloud', 'Cloud']
-    ordinal_map = torch.zeros(256, dtype=torch.uint8)
+    ordinal_map = torch.zeros(256, dtype=torch.long)
     ordinal_map[64] = 1
     ordinal_map[128] = 2
     ordinal_map[192] = 3
