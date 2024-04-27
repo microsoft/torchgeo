@@ -44,6 +44,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 requirements/node_modules
+.idea
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
