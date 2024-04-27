@@ -66,6 +66,7 @@ class TestL7Irish:
 
     def test_already_extracted(self, dataset: L7Irish) -> None:
         L7Irish(dataset.paths, download=True)
+        L7Irish([dataset.paths], download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'l7irish', '*.tar.gz')
