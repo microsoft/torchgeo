@@ -31,7 +31,7 @@ jobs:
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/tests.txt') }}
-        if: ${{ ! (runner.os == 'macOS' && (matrix.python-version == '3.11' || matrix.python-version == '3.12')) }}
+        if: ${{ runner.os != 'macOS' }}
       - name: Setup headless display for pyvista
         uses: pyvista/setup-headless-display-action@v2
       - name: Install apt dependencies (Linux)
