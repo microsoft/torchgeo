@@ -1,17 +1,17 @@
 {
-  "labels": [
-    "Non-irrigated arable land",
-    "Broad-leaved forest",
-    "Water courses"
-  ],
-  "coordinates": {
-    "ulx": 0,
-    "uly": 0,
-    "lrx": 0,
-    "lly": 0
-  },
-  "projection": "",
-  "corresponding_s2_patch": "S2A_MSIL2A_20170613T101031_61_39",
-  "scene_source": "",
-  "acquisition_time": ""
+    "labels": [
+        "Non-irrigated arable land",
+        "Broad-leaved forest",
+        "Water courses"
+    ],
+    "coordinates": {
+        "ulx": 0,
+        "uly": 0,
+        "lrx": 0,
+        "lly": 0
+    },
+    "projection": "",
+    "corresponding_s2_patch": "S2A_MSIL2A_20170613T101031_61_39",
+    "scene_source": "",
+    "acquisition_time": ""
 }

@@ -1,59 +1,8 @@
 {
-  "type": "FeatureCollection",
-  "crs": {
-    "type": "name",
-    "properties": { "name": "urn:ogc:def:crs:EPSG::3857" }
-  },
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "split": "de-test",
-        "naip-new": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_naip-new.tif",
-        "naip-old": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_naip-old.tif",
-        "landsat-leaf-on": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_landsat-leaf-on.tif",
-        "landsat-leaf-off": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_landsat-leaf-off.tif",
-        "lc": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_lc.tif",
-        "nlcd": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_nlcd.tif",
-        "buildings": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_buildings.tif"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [-8410584.096628403, 4720630.851772271],
-            [-8410588.098020129, 4721291.66449807],
-            [-8411246.25243577, 4721287.624903633],
-            [-8411242.208315516, 4720626.81310193],
-            [-8410584.096628403, 4720630.851772271]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "split": "de-train",
-        "naip-new": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_naip-new.tif",
-        "naip-old": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_naip-old.tif",
-        "landsat-leaf-on": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_landsat-leaf-on.tif",
-        "landsat-leaf-off": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_landsat-leaf-off.tif",
-        "lc": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_lc.tif",
-        "nlcd": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_nlcd.tif",
-        "buildings": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_buildings.tif"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [-8410584.096628403, 4720630.851772271],
-            [-8410588.098020129, 4721291.66449807],
-            [-8411246.25243577, 4721287.624903633],
-            [-8411242.208315516, 4720626.81310193],
-            [-8410584.096628403, 4720630.851772271]
-          ]
-        ]
-      }
-    }
-  ]
+"type": "FeatureCollection",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3857" } },
+"features": [
+{ "type": "Feature", "properties": { "split": "de-test", "naip-new": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_naip-new.tif", "naip-old": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_naip-old.tif", "landsat-leaf-on": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_landsat-leaf-on.tif", "landsat-leaf-off": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_landsat-leaf-off.tif", "lc": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_lc.tif", "nlcd": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_nlcd.tif", "buildings": "de_1m_2013_extended-debuffered-test_tiles/m_3807504_ne_18_1_buildings.tif" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -8410584.096628403, 4720630.851772271 ], [ -8410588.098020129, 4721291.66449807 ], [ -8411246.25243577, 4721287.624903633 ], [ -8411242.208315516, 4720626.81310193 ], [ -8410584.096628403, 4720630.851772271 ] ] ] } },
+{ "type": "Feature", "properties": { "split": "de-train", "naip-new": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_naip-new.tif", "naip-old": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_naip-old.tif", "landsat-leaf-on": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_landsat-leaf-on.tif", "landsat-leaf-off": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_landsat-leaf-off.tif", "lc": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_lc.tif", "nlcd": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_nlcd.tif", "buildings": "de_1m_2013_extended-debuffered-train_tiles/m_3807504_ne_18_1_buildings.tif" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -8410584.096628403, 4720630.851772271 ], [ -8410588.098020129, 4721291.66449807 ], [ -8411246.25243577, 4721287.624903633 ], [ -8411242.208315516, 4720626.81310193 ], [ -8410584.096628403, 4720630.851772271 ] ] ] } }
+]
 }

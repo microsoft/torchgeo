@@ -1,19 +1,19 @@
 {
-  "labels": [
-    "Discontinuous urban fabric",
-    "Non-irrigated arable land",
-    "Land principally occupied by agriculture, with significant areas of natural vegetation",
-    "Broad-leaved forest",
-    "Inland marshes",
-    "Water courses"
-  ],
-  "coordinates": {
-    "ulx": 0,
-    "uly": 0,
-    "lrx": 0,
-    "lry": 0
-  },
-  "projection": "",
-  "tile_source": "",
-  "acquisition_date": ""
+    "labels": [
+        "Discontinuous urban fabric",
+        "Non-irrigated arable land",
+        "Land principally occupied by agriculture, with significant areas of natural vegetation",
+        "Broad-leaved forest",
+        "Inland marshes",
+        "Water courses"
+    ],
+    "coordinates": {
+        "ulx": 0,
+        "uly": 0,
+        "lrx": 0,
+        "lry": 0
+    },
+    "projection": "",
+    "tile_source": "",
+    "acquisition_date": ""
 }
