@@ -6,19 +6,75 @@
 import glob
 import os
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, cast
+from typing import Any
 
 import matplotlib.pyplot as plt
+import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
-from .geo import RasterDataset
+from .geo import IntersectionDataset, RasterDataset
 from .utils import BoundingBox, download_url, extract_archive
 
 
-class L7Irish(RasterDataset):
+class L7IrishImage(RasterDataset):
+    """Images from the L7 Irish dataset."""
+
+    # https://landsat.usgs.gov/cloud-validation/cca_irish_2015/L7_Irish_Cloud_Validation_Masks.xml
+    filename_glob = 'L71*.TIF'
+    filename_regex = r"""
+        ^L71
+        (?P<wrs_path>\d{3})
+        (?P<wrs_row>\d{3})
+        _(?P=wrs_row)
+        (?P<date>\d{8})
+        \.TIF$
+    """
+    date_format = '%Y%m%d'
+    is_image = True
+    rgb_bands = ['B30', 'B20', 'B10']
+    all_bands = ['B10', 'B20', 'B30', 'B40', 'B50', 'B61', 'B62', 'B70', 'B80']
+
+
+class L7IrishMask(RasterDataset):
+    """Masks from the L7 Irish dataset."""
+
+    # https://landsat.usgs.gov/cloud-validation/cca_irish_2015/L7_Irish_Cloud_Validation_Masks.xml
+    filename_glob = 'L7_p*_r*_newmask2015.TIF'
+    filename_regex = r"""
+        ^L7
+        _p(?P<wrs_path>\d+)
+        _r(?P<wrs_row>\d+)
+        _newmask2015\.TIF$
+    """
+    is_image = False
+    classes = ['Fill', 'Cloud Shadow', 'Clear', 'Thin Cloud', 'Cloud']
+    ordinal_map = torch.zeros(256, dtype=torch.uint8)
+    ordinal_map[64] = 1
+    ordinal_map[128] = 2
+    ordinal_map[192] = 3
+    ordinal_map[255] = 4
+
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+        """Retrieve image/mask and metadata indexed by query.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            sample of image, mask and metadata at that index
+
+        Raises:
+            IndexError: if query is not found in the index
+        """
+        sample = super().__getitem__(query)
+        sample['mask'] = self.ordinal_map[sample['mask']]
+        return sample
+
+
+class L7Irish(IntersectionDataset):
     """L7 Irish dataset.
 
     The `L7 Irish <https://landsat.usgs.gov/landsat-7-cloud-cover-assessment-validation-data>`__
@@ -72,30 +128,12 @@ class L7Irish(RasterDataset):
         'tropical': 'd7931419c70f3520a17361d96f1a4810',
     }
 
-    classes = ['Fill', 'Cloud Shadow', 'Clear', 'Thin Cloud', 'Cloud']
-
-    # https://landsat.usgs.gov/cloud-validation/cca_irish_2015/L7_Irish_Cloud_Validation_Masks.xml
-    filename_glob = 'L71*.TIF'
-    filename_regex = r"""
-        ^L71
-        (?P<wrs_path>\d{3})
-        (?P<wrs_row>\d{3})
-        _(?P=wrs_row)
-        (?P<date>\d{8})
-        \.TIF$
-    """
-    date_format = '%Y%m%d'
-
-    separate_files = False
-    rgb_bands = ['B30', 'B20', 'B10']
-    all_bands = ['B10', 'B20', 'B30', 'B40', 'B50', 'B61', 'B62', 'B70', 'B80']
-
     def __init__(
         self,
         paths: str | Iterable[str] = 'data',
         crs: CRS | None = CRS.from_epsg(3857),
         res: float | None = None,
-        bands: Sequence[str] = all_bands,
+        bands: Sequence[str] = L7IrishImage.all_bands,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
@@ -125,18 +163,25 @@ class L7Irish(RasterDataset):
 
         self._verify()
 
-        super().__init__(
-            paths, crs=crs, res=res, bands=bands, transforms=transforms, cache=cache
-        )
+        self.image = L7IrishImage(paths, crs, res, bands, transforms, cache)
+        self.mask = L7IrishMask(paths, crs, res, None, transforms, cache)
+
+        super().__init__(self.image, self.mask)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        if self.files:
+        if not isinstance(self.paths, str):
+            return
+
+        for classname in [L7IrishImage, L7IrishMask]:
+            pathname = os.path.join(self.paths, '**', classname.filename_glob)
+            if not glob.glob(pathname, recursive=True):
+                break
+        else:
             return
 
         # Check if the tar.gz files have already been downloaded
-        assert isinstance(self.paths, str)
         pathname = os.path.join(self.paths, '*.tar.gz')
         if glob.glob(pathname):
             self._extract()
@@ -164,54 +209,6 @@ class L7Irish(RasterDataset):
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
-
-        Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-
-        Returns:
-            sample of image, mask and metadata at that index
-
-        Raises:
-            IndexError: if query is not found in the index
-        """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
-
-        if not filepaths:
-            raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
-            )
-
-        image = self._merge_files(filepaths, query, self.band_indexes)
-
-        mask_filepaths = []
-        for filepath in filepaths:
-            path, row = os.path.basename(os.path.dirname(filepath)).split('_')[:2]
-            mask_filepath = filepath.replace(
-                os.path.basename(filepath), f'L7_{path}_{row}_newmask2015.TIF'
-            )
-            mask_filepaths.append(mask_filepath)
-
-        mask = self._merge_files(mask_filepaths, query)
-        mask_mapping = {64: 1, 128: 2, 192: 3, 255: 4}
-
-        for k, v in mask_mapping.items():
-            mask[mask == k] = v
-
-        sample = {
-            'crs': self.crs,
-            'bbox': query,
-            'image': image.float(),
-            'mask': mask.long(),
-        }
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
-
     def plot(
         self,
         sample: dict[str, Tensor],
@@ -232,9 +229,9 @@ class L7Irish(RasterDataset):
             RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         rgb_indices = []
-        for band in self.rgb_bands:
-            if band in self.bands:
-                rgb_indices.append(self.bands.index(band))
+        for band in self.image.rgb_bands:
+            if band in self.image.bands:
+                rgb_indices.append(self.image.bands.index(band))
             else:
                 raise RGBBandsMissingError()
 
