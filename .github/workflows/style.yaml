@@ -72,6 +72,7 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
+          cache-dependency-path: "requirements/"
       - name: Installing prettier
         run: |
           npm ci --prefix requirements/
