@@ -5,18 +5,20 @@
 
 import glob
 import os
+import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
+from rtree.index import Index, Property
 from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, disambiguate_timestamp, download_url, extract_archive
 
 
 class L7IrishImage(RasterDataset):
@@ -56,6 +58,43 @@ class L7IrishMask(RasterDataset):
     ordinal_map[128] = 2
     ordinal_map[192] = 3
     ordinal_map[255] = 4
+
+    def __init__(
+        self,
+        paths: str | Iterable[str] = 'data',
+        crs: CRS | None = None,
+        res: float | None = None,
+        bands: Sequence[str] | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        cache: bool = True,
+    ) -> None:
+        """Initialize a new L7IrishMask instance.
+
+        Args:
+            paths: one or more root directories to search or files to load
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
+            bands: bands to return (defaults to all bands)
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
+        """
+        super().__init__(paths, crs, res, bands, transforms, cache)
+
+        # Mask filename does not include the date, grab it from the image filename
+        filename_regex = re.compile(L7IrishImage.filename_regex, re.VERBOSE)
+        index = Index(interleaved=False, properties=Property(dimension=3))
+        for hit in self.index.intersection(self.index.bounds, objects=True):
+            dirname = os.path.dirname(cast(str, hit.object))
+            image = glob.glob(os.path.join(dirname, L7IrishImage.filename_glob))[0]
+            minx, maxx, miny, maxy, mint, maxt = hit.bounds
+            if match := re.match(filename_regex, os.path.basename(image)):
+                date = match.group('date')
+                mint, maxt = disambiguate_timestamp(date, L7IrishImage.date_format)
+            index.insert(hit.id, (minx, maxx, miny, maxy, mint, maxt), hit.object)
+        self.index = index
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
