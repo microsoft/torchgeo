@@ -20,7 +20,7 @@ jobs:
         python-version: ['3.10', '3.11', '3.12']
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.1.2
+      uses: actions/checkout@v4.1.4
     - name: Set up python
       uses: actions/setup-python@v5.1.0
       with:
@@ -31,7 +31,7 @@ jobs:
       with:
         path: ${{ env.pythonLocation }}
         key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/tests.txt') }}
-      if: ${{ ! (runner.os == 'macOS' && (matrix.python-version == '3.11' || matrix.python-version == '3.12')) }}
+      if: ${{ runner.os != 'macOS' }}
     - name: Setup headless display for pyvista
       uses: pyvista/setup-headless-display-action@v2
     - name: Install apt dependencies (Linux)
@@ -57,7 +57,7 @@ jobs:
         pytest --cov=torchgeo --cov-report=xml --durations=10
         python3 -m torchgeo --help
     - name: Report coverage
-      uses: codecov/codecov-action@v3.1.6
+      uses: codecov/codecov-action@v4.3.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
@@ -67,7 +67,7 @@ jobs:
       MPLBACKEND: Agg
     steps:
     - name: Clone repo
-      uses: actions/checkout@v4.1.2
+      uses: actions/checkout@v4.1.4
     - name: Set up python
       uses: actions/setup-python@v5.1.0
       with:
@@ -96,7 +96,7 @@ jobs:
         pytest --cov=torchgeo --cov-report=xml --durations=10
         python3 -m torchgeo --help
     - name: Report coverage
-      uses: codecov/codecov-action@v3.1.6
+      uses: codecov/codecov-action@v4.3.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:
