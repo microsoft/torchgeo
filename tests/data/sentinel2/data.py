@@ -19,34 +19,99 @@ FILENAME_HIERARCHY = dict[str, dict | list[str]]
 
 filenames: FILENAME_HIERARCHY = {}
 
+# USGS Earth Explorer
 base_path = "S2A_MSIL1C_20220412T162841_N0400_R083_{tile_id}_20220412T202300.SAFE"
 granule_path = "L1C_{tile_id}_A035544_20220412T163959"
 bands = [
-    "B01.jp2",
-    "B02.jp2",
-    "B03.jp2",
-    "B04.jp2",
-    "B05.jp2",
-    "B06.jp2",
-    "B07.jp2",
-    "B08.jp2",
-    "B09.jp2",
-    "B10.jp2",
-    "B11.jp2",
-    "B12.jp2",
-    "B8A.jp2",
-    "TCI.jp2",
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "B05",
+    "B06",
+    "B07",
+    "B08",
+    "B09",
+    "B10",
+    "B11",
+    "B12",
+    "B8A",
+    "TCI",
 ]
 
 for i in range(16, 26):
     tile_id = f"T{i}TFM"
     safe_file = base_path.format(tile_id=tile_id)
     granule = granule_path.format(tile_id=tile_id)
-    img_data = [f"{tile_id}_20220412T162841_{band}" for band in bands] + [
-        f"{tile_id}_20190412T162841_{band}" for band in bands
+    img_data = [f"{tile_id}_20220412T162841_{band}.jp2" for band in bands] + [
+        f"{tile_id}_20190412T162841_{band}.jp2" for band in bands
     ]
 
     filenames[safe_file] = {"GRANULE": {granule: {"IMG_DATA": img_data}}}
+
+# Copernicus Open Access Hub
+base_path = "S2A_MSIL2A_20220414T110751_N0400_R108_{tile_id}_20220414T165533.SAFE"
+granule_path = "L2A_{tile_id}_A035569_20220414T110747"
+resolutions = ["10m", "20m", "60m"]
+bands_10m = ["AOT", "B02", "B03", "B04", "B08", "TCI", "WVP"]
+bands_20m = [
+    "AOT",
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "B05",
+    "B06",
+    "B07",
+    "B11",
+    "B12",
+    "B8A",
+    "SCL",
+    "TCI",
+    "WVP",
+]
+bands_60m = [
+    "AOT",
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "B05",
+    "B06",
+    "B07",
+    "B09",
+    "B11",
+    "B12",
+    "B8A",
+    "SCL",
+    "TCI",
+    "WVP",
+]
+
+for resolution in resolutions:
+    if resolution == "10m":
+        bands = bands_10m
+    elif resolution == "20m":
+        bands = bands_20m
+    else:
+        bands = bands_60m
+
+    for i in range(26, 36):
+        tile_id = f"T{i}EMU"
+        safe_file = base_path.format(tile_id=tile_id)
+        granule = granule_path.format(tile_id=tile_id)
+        img_data = [
+            f"{tile_id}_20220414T110751_{band}_{resolution}.jp2" for band in bands
+        ] + [f"{tile_id}_20190414T110751_{band}_{resolution}.jp2" for band in bands]
+
+        if safe_file not in filenames:
+            filenames[safe_file] = {"GRANULE": {}}
+        if granule not in filenames[safe_file]["GRANULE"]:
+            filenames[safe_file]["GRANULE"][granule] = {"IMG_DATA": {}}
+
+        filenames[safe_file]["GRANULE"][granule]["IMG_DATA"][
+            f"R{resolution}"
+        ] = img_data
 
 
 def create_file(path: str, dtype: str, num_channels: int, x_offset: int) -> None:
@@ -87,7 +152,6 @@ def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
             create_directory(path, value)
     else:
         # Base case
-        print(current_x_offset)
         for value in hierarchy:
             path = os.path.join(directory, value)
             create_file(path, dtype="uint16", num_channels=1, x_offset=current_x_offset)

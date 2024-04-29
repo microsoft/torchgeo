@@ -108,7 +108,7 @@ class TestSentinel2:
         return Sentinel2(root, res=res, bands=bands, transforms=transforms)
 
     def test_separate_files(self, dataset: Sentinel2) -> None:
-        assert dataset.index.count(dataset.index.bounds) == 20
+        assert dataset.index.count(dataset.index.bounds) == 40
 
     def test_getitem(self, dataset: Sentinel2) -> None:
         x = dataset[dataset.bounds]
