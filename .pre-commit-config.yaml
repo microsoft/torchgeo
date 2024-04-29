@@ -41,4 +41,4 @@ repos:
         language_version: 22.0.0
         args:
           - --write
-        exclude: ^data\/[^\/]+\/$
+        exclude: ^tests/data/[^/]+/$
