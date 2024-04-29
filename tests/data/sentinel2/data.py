@@ -109,9 +109,9 @@ for resolution in resolutions:
         if granule not in filenames[safe_file]["GRANULE"]:
             filenames[safe_file]["GRANULE"][granule] = {"IMG_DATA": {}}
 
-        filenames[safe_file]["GRANULE"][granule]["IMG_DATA"][
-            f"R{resolution}"
-        ] = img_data
+        filenames[safe_file]["GRANULE"][granule]["IMG_DATA"][f"R{resolution}"] = (
+            img_data
+        )
 
 
 def create_file(path: str, dtype: str, num_channels: int, x_offset: int) -> None:
