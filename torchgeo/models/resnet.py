@@ -6,6 +6,7 @@
 from typing import Any
 
 import kornia.augmentation as K
+from kornia.contrib import Lambda
 import timm
 import torch
 from timm.models import ResNet
@@ -54,6 +55,19 @@ _gassl_transforms = K.AugmentationSequential(
 _ssl4eo_l_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
     K.CenterCrop((224, 224)),
+    data_keys=None,
+)
+
+# Satlas uses the TCI product for Sentinel-2 RGB, which is in the range (0, 255).
+# See details:  https://github.com/allenai/satlas/blob/main/Normalization.md#sentinel-2-images.  # noqa: E501
+# Satlas Sentinel-2 multispectral imagery has first 3 bands divided by 255 and the following 6 bands by 8160, both clipped to (0, 1). # noqa: E501
+_std = torch.tensor(
+    [255.0, 255.0, 255.0, 8160.0, 8160.0, 8160.0, 8160.0, 8160.0, 8160.0]
+)  # noqa: E501
+_mean = torch.zeros_like(_std)
+_sentinel2_ms_satlas_transforms = K.AugmentationSequential(
+    K.Normalize(mean=_mean, std=_std),
+    K.ImageSequential(Lambda(lambda x: torch.clamp(x, min=0.0, max=1.0))),
     data_keys=None,
 )
 
@@ -430,6 +444,19 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             "publication": "https://arxiv.org/abs/2211.07044",
             "repo": "https://github.com/zhu-xlab/SSL4EO-S12",
             "ssl_method": "moco",
+        },
+    )
+
+    SENTINEL2_MS_MI_SATLAS = Weights(
+        url="https://huggingface.co/allenai/satlas-pretrain/resolve/main/sentinel2_resnet50_mi_ms.pth?download=true",  # noqa: E501
+        transforms=_sentinel2_ms_satlas_transforms,
+        meta={
+            "dataset": "SATLASPretrain",
+            "in_chans": 9,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2211.15660",
+            "repo":"https://github.com/allenai/satlaspretrain_models",
+            "ssl_method": "satlaspretrain",
         },
     )
 
