@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,12 +42,12 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/2306.09424
+    * https://proceedings.neurips.cc/paper_files/paper/2023/hash/bbf7ee04e2aefec136ecf60e346c2e61-Abstract-Datasets_and_Benchmarks.html
 
     .. versionadded:: 0.5
-    """
+    """  # noqa: E501
 
-    url = "https://huggingface.co/datasets/torchgeo/ssl4eo-l-benchmark/resolve/main/{}.tar.gz"  # noqa: E501
+    url = "https://hf.co/datasets/torchgeo/ssl4eo-l-benchmark/resolve/da96ae2b04cb509710b72fce9131c2a3d5c211c2/{}.tar.gz"  # noqa: E501
 
     valid_sensors = ["tm_toa", "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"]
     valid_products = ["cdl", "nlcd"]
@@ -110,8 +110,8 @@ class SSL4EOLBenchmark(NonGeoDataset):
         sensor: str = "oli_sr",
         product: str = "cdl",
         split: str = "train",
-        classes: Optional[list[int]] = None,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        classes: list[int] | None = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -327,7 +327,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

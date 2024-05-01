@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -72,7 +72,7 @@ class XView2(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new xView2 dataset instance.
@@ -148,7 +148,7 @@ class XView2(NonGeoDataset):
         images = glob.glob(os.path.join(image_root, "*.png"))
         basenames = [os.path.basename(f) for f in images]
         basenames = ["_".join(f.split("_")[:-2]) for f in basenames]
-        for name in set(basenames):
+        for name in sorted(set(basenames)):
             image1 = os.path.join(image_root, f"{name}_pre_disaster.png")
             image2 = os.path.join(image_root, f"{name}_post_disaster.png")
             mask1 = os.path.join(mask_root, f"{name}_pre_disaster_target.png")
@@ -225,7 +225,7 @@ class XView2(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
         alpha: float = 0.5,
     ) -> Figure:
         """Plot a sample from the dataset.

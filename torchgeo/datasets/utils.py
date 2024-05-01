@@ -818,7 +818,7 @@ def percentile_normalization(
         axis: Axis or axes along which the percentiles are computed. The default
             is to compute the percentile(s) along a flattened version of the array.
 
-    Returns
+    Returns:
         normalized version of ``img``
 
     .. versionadded:: 0.2

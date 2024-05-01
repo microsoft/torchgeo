@@ -4,17 +4,14 @@
 """Common datamodule utilities."""
 
 import math
-from collections.abc import Iterable
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable, Iterable
+from typing import Any
 
 import numpy as np
 import torch
 from einops import rearrange
-from torch import Generator, Tensor
+from torch import Tensor
 from torch.nn import Module
-from torch.utils.data import Subset, TensorDataset, random_split
-
-from ..datasets import NonGeoDataset
 
 
 # Based on lightning_lite.utilities.exceptions
@@ -102,49 +99,11 @@ def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
     return output
 
 
-def dataset_split(
-    dataset: Union[TensorDataset, NonGeoDataset],
-    val_pct: float,
-    test_pct: Optional[float] = None,
-) -> list[Subset[Any]]:
-    """Split a torch Dataset into train/val/test sets.
-
-    If ``test_pct`` is not set then only train and validation splits are returned.
-
-    .. deprecated:: 0.4
-       Use :func:`torch.utils.data.random_split` instead, ``random_split``
-       now supports percentages as of PyTorch 1.13.
-
-    Args:
-        dataset: dataset to be split into train/val or train/val/test subsets
-        val_pct: percentage of samples to be in validation set
-        test_pct: (Optional) percentage of samples to be in test set
-
-    Returns:
-        a list of the subset datasets. Either [train, val] or [train, val, test]
-    """
-    if test_pct is None:
-        val_length = round(len(dataset) * val_pct)
-        train_length = len(dataset) - val_length
-        return random_split(
-            dataset, [train_length, val_length], generator=Generator().manual_seed(0)
-        )
-    else:
-        val_length = round(len(dataset) * val_pct)
-        test_length = round(len(dataset) * test_pct)
-        train_length = len(dataset) - (val_length + test_length)
-        return random_split(
-            dataset,
-            [train_length, val_length, test_length],
-            generator=Generator().manual_seed(0),
-        )
-
-
 def group_shuffle_split(
     groups: Iterable[Any],
-    train_size: Optional[float] = None,
-    test_size: Optional[float] = None,
-    random_state: Optional[int] = None,
+    train_size: float | None = None,
+    test_size: float | None = None,
+    random_state: int | None = None,
 ) -> tuple[list[int], list[int]]:
     """Method for performing a single group-wise shuffle split of data.
 
@@ -185,7 +144,7 @@ def group_shuffle_split(
     if train_size <= 0 or train_size >= 1 or test_size <= 0 or test_size >= 1:
         raise ValueError("`train_size` and `test_size` must be in the range (0,1).")
 
-    group_vals = set(groups)
+    group_vals = sorted(set(groups))
     n_groups = len(group_vals)
     n_test_groups = round(n_groups * test_size)
     n_train_groups = n_groups - n_test_groups
@@ -198,7 +157,7 @@ def group_shuffle_split(
 
     generator = np.random.default_rng(seed=random_state)
     train_group_vals = set(
-        generator.choice(list(group_vals), size=n_train_groups, replace=False)
+        generator.choice(group_vals, size=n_train_groups, replace=False)
     )
 
     train_idxs = []

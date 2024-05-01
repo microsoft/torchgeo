@@ -5,14 +5,13 @@
 
 import hashlib
 import os
-import shutil
 
 import numpy as np
 import rasterio
 from rasterio.crs import CRS
 from rasterio.transform import Affine
 
-SIZE = 32
+SIZE = 128
 
 np.random.seed(0)
 files = ["CDL2017_clip.tif", "CDL2018_clip1.tif", "CDL2019_clip.tif"]
@@ -24,15 +23,8 @@ def create_file(path: str, dtype: str):
         "driver": "GTiff",
         "dtype": dtype,
         "count": 1,
-        "crs": CRS.from_epsg(4326),
-        "transform": Affine(
-            8.983152841195208e-05,
-            0.0,
-            115.483402043364,
-            0.0,
-            -8.983152841195208e-05,
-            53.531397320113605,
-        ),
+        "crs": CRS.from_epsg(32616),
+        "transform": Affine(10, 0.0, 399960.0, 0.0, -10, 4500000.0),
         "height": SIZE,
         "width": SIZE,
         "compress": "lzw",
@@ -48,20 +40,14 @@ def create_file(path: str, dtype: str):
 
 
 if __name__ == "__main__":
-    dir = os.path.join(os.getcwd(), "13090442")
-
-    if os.path.exists(dir) and os.path.isdir(dir):
-        shutil.rmtree(dir)
-
+    dir = os.path.join(os.getcwd())
     os.makedirs(dir, exist_ok=True)
 
     for file in files:
         create_file(os.path.join(dir, file), dtype="int8")
 
-    # Compress data
-    shutil.make_archive("13090442", "zip", ".", dir)
-
     # Compute checksums
-    with open("13090442.zip", "rb") as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f"13090442.zip: {md5}")
+    for file in files:
+        with open(file, "rb") as f:
+            md5 = hashlib.md5(f.read()).hexdigest()
+            print(f"{file}: {md5}")

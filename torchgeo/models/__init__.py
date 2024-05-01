@@ -5,6 +5,15 @@
 
 from .api import get_model, get_model_weights, get_weight, list_models
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
+from .dofa import (
+    DOFA,
+    DOFABase16_Weights,
+    DOFALarge16_Weights,
+    dofa_base_patch16_224,
+    dofa_huge_patch16_224,
+    dofa_large_patch16_224,
+    dofa_small_patch16_224,
+)
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
@@ -18,6 +27,11 @@ __all__ = (
     "ChangeMixin",
     "ChangeStar",
     "ChangeStarFarSeg",
+    "DOFA",
+    "dofa_small_patch16_224",
+    "dofa_base_patch16_224",
+    "dofa_large_patch16_224",
+    "dofa_huge_patch16_224",
     "FarSeg",
     "FCN",
     "FCSiamConc",
@@ -28,6 +42,8 @@ __all__ = (
     "swin_v2_b",
     "vit_small_patch16_224",
     # weights
+    "DOFABase16_Weights",
+    "DOFALarge16_Weights",
     "ResNet50_Weights",
     "ResNet18_Weights",
     "Swin_V2_B_Weights",

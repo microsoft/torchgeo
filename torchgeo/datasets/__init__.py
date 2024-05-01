@@ -5,6 +5,7 @@
 
 from .advance import ADVANCE
 from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
+from .agrifieldnet import AgriFieldNet
 from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
@@ -59,6 +60,7 @@ from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
 from .inria import InriaAerialImageLabeling
+from .iobench import IOBench
 from .l7irish import L7Irish
 from .l8biome import L8Biome
 from .landcoverai import LandCoverAI, LandCoverAIBase, LandCoverAIGeo
@@ -89,6 +91,7 @@ from .pastis import PASTIS
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .prisma import PRISMA
+from .quakeset import QuakeSet
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
@@ -98,6 +101,7 @@ from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
 from .so2sat import So2Sat
+from .south_africa_crop_type import SouthAfricaCropType
 from .south_america_soybean import SouthAmericaSoybean
 from .spacenet import (
     SpaceNet,
@@ -139,6 +143,7 @@ from .zuericrop import ZueriCrop
 __all__ = (
     # GeoDataset
     "AbovegroundLiveWoodyBiomassDensity",
+    "AgriFieldNet",
     "Airphen",
     "AsterGDEM",
     "CanadianBuildingFootprints",
@@ -163,6 +168,7 @@ __all__ = (
     "GBIF",
     "GlobBiomass",
     "INaturalist",
+    "IOBench",
     "L7Irish",
     "L8Biome",
     "LandCoverAIBase",
@@ -186,6 +192,7 @@ __all__ = (
     "Sentinel",
     "Sentinel1",
     "Sentinel2",
+    "SouthAfricaCropType",
     "SouthAmericaSoybean",
     # NonGeoDataset
     "ADVANCE",
@@ -222,6 +229,7 @@ __all__ = (
     "PASTIS",
     "PatternNet",
     "Potsdam2D",
+    "QuakeSet",
     "RESISC45",
     "ReforesTree",
     "RwandaFieldBoundary",

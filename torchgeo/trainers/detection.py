@@ -4,7 +4,7 @@
 """Trainers for object detection."""
 
 from functools import partial
-from typing import Any, Optional
+from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
@@ -60,7 +60,7 @@ class ObjectDetectionTask(BaseTask):
         self,
         model: str = "faster-rcnn",
         backbone: str = "resnet50",
-        weights: Optional[bool] = None,
+        weights: bool | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
         trainable_layers: int = 3,
@@ -109,7 +109,7 @@ class ObjectDetectionTask(BaseTask):
         """
         backbone: str = self.hparams["backbone"]
         model: str = self.hparams["model"]
-        weights: Optional[bool] = self.hparams["weights"]
+        weights: bool | None = self.hparams["weights"]
         num_classes: int = self.hparams["num_classes"]
         freeze_backbone: bool = self.hparams["freeze_backbone"]
 
@@ -204,8 +204,21 @@ class ObjectDetectionTask(BaseTask):
             raise ValueError(f"Model type '{model}' is not valid.")
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
-        metrics = MetricCollection([MeanAveragePrecision()])
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.detection.mean_ap.MeanAveragePrecision`: Mean average
+          precision (mAP) and mean average recall (mAR). Precision is the number of
+          true positives divided by the number of true positives + false positives.
+          Recall is the number of true positives divived by the number of true positives
+          + false negatives. Uses 'macro' averaging. Higher values are better.
+
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not
+             reflect minority class accuracy.
+           * 'Macro' averaging gives equal weight to each class, and is useful for
+             balanced performance assessment across imbalanced classes.
+        """
+        metrics = MetricCollection([MeanAveragePrecision(average="macro")])
         self.val_metrics = metrics.clone(prefix="val_")
         self.test_metrics = metrics.clone(prefix="test_")
 
@@ -230,7 +243,7 @@ class ObjectDetectionTask(BaseTask):
         ]
         loss_dict = self(x, y)
         train_loss: Tensor = sum(loss_dict.values())
-        self.log_dict(loss_dict)
+        self.log_dict(loss_dict, batch_size=batch_size)
         return train_loss
 
     def validation_step(
@@ -255,7 +268,7 @@ class ObjectDetectionTask(BaseTask):
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
         metrics.pop("val_classes", None)
 
-        self.log_dict(metrics)
+        self.log_dict(metrics, batch_size=batch_size)
 
         if (
             batch_idx < 10
@@ -276,7 +289,7 @@ class ObjectDetectionTask(BaseTask):
                 sample["image"] *= 255
                 sample["image"] = sample["image"].to(torch.uint8)
 
-            fig: Optional[Figure] = None
+            fig: Figure | None = None
             try:
                 fig = datamodule.plot(sample)
             except RGBBandsMissingError:
@@ -309,7 +322,7 @@ class ObjectDetectionTask(BaseTask):
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
         metrics.pop("test_classes", None)
 
-        self.log_dict(metrics)
+        self.log_dict(metrics, batch_size=batch_size)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

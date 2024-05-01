@@ -1,0 +1,45 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+{
+  "name": "Torchgeo DevContainer",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": { "version": "os-provided" }
+  },
+
+  // "postCreateCommand": "",
+  "postStartCommand": "pip install -e .[all]",
+
+  // Enable GPU support
+  "hostRequirements": {
+    "gpu": "optional"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.codespaces",
+        "charliermarsh.ruff",
+        "ms-python.python",
+        "ms-python.mypy-type-checker",
+        "ms-toolsai.jupyter"
+      ],
+      "settings": {
+        "telemetry.telemetryLevel": "off",
+        "python.languageServer": "Pylance",
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestPath": "/usr/local/py-utils/bin/pytest",
+        "python.editor.formatOnSave": true,
+        "python.editor.formatOnSaveMode": "file",
+        "python.editor.formatOnPaste": false,
+        "python.editor.codeActionsOnSave": {
+          "source.organizeImports": true
+        },
+        "python.diffEditor.wordWrap": "off",
+      }
+    }
+  }
+}

@@ -11,7 +11,7 @@ import rasterio
 from rasterio.crs import CRS
 from rasterio.transform import Affine
 
-SIZE = 32
+SIZE = 128
 
 
 np.random.seed(0)
@@ -24,15 +24,8 @@ def create_file(path: str, dtype: str):
         "driver": "GTiff",
         "dtype": dtype,
         "count": 1,
-        "crs": CRS.from_epsg(4326),
-        "transform": Affine(
-            0.0002499999999999943131,
-            0.0,
-            -82.0005000000000024,
-            0.0,
-            -0.0002499999999999943131,
-            0.0005000000000000,
-        ),
+        "crs": CRS.from_epsg(32616),
+        "transform": Affine(10, 0.0, 399960.0, 0.0, -10, 4500000.0),
         "height": SIZE,
         "width": SIZE,
         "compress": "lzw",

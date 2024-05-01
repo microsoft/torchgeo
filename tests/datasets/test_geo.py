@@ -5,7 +5,6 @@ import pickle
 import sys
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Optional, Union
 
 import pytest
 import torch
@@ -35,7 +34,7 @@ class CustomGeoDataset(GeoDataset):
         bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
         crs: CRS = CRS.from_epsg(4087),
         res: float = 1,
-        paths: Optional[Union[str, Iterable[str]]] = None,
+        paths: str | Iterable[str] | None = None,
     ) -> None:
         super().__init__()
         self.index.insert(0, tuple(bounds))
@@ -177,6 +176,21 @@ class TestGeoDataset:
         ]
         assert len(CustomGeoDataset(paths=paths).files) == len(paths)
 
+    def test_files_property_ordered(self) -> None:
+        """Ensure that the list of files is ordered."""
+        paths = ["file://file3.tif", "file://file1.tif", "file://file2.tif"]
+        assert CustomGeoDataset(paths=paths).files == sorted(paths)
+
+    def test_files_property_deterministic(self) -> None:
+        """Ensure that the list of files is consistent regardless of their original
+        order.
+        """
+        paths1 = ["file://file3.tif", "file://file1.tif", "file://file2.tif"]
+        paths2 = ["file://file2.tif", "file://file3.tif", "file://file1.tif"]
+        assert (
+            CustomGeoDataset(paths=paths1).files == CustomGeoDataset(paths=paths2).files
+        )
+
 
 class TestRasterDataset:
     @pytest.fixture(params=zip([["R", "G", "B"], None], [True, False]))
@@ -234,7 +248,7 @@ class TestRasterDataset:
             },
         ],
     )
-    def test_files(self, paths: Union[str, Iterable[str]]) -> None:
+    def test_files(self, paths: str | Iterable[str]) -> None:
         assert 1 <= len(NAIP(paths).files) <= 2
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
@@ -529,9 +543,24 @@ class TestIntersectionDataset:
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
         assert isinstance(sample["image"], torch.Tensor)
 
+    def test_point_dataset(self) -> None:
+        ds1 = CustomGeoDataset(BoundingBox(0, 2, 2, 4, 4, 6))
+        ds2 = CustomGeoDataset(BoundingBox(1, 1, 3, 3, 5, 5))
+        ds = IntersectionDataset(ds1, ds2)
+        assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
+        assert ds1.res == ds2.res == ds.res == 1
+        assert len(ds1) == len(ds2) == len(ds) == 1
+
     def test_no_overlap(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
         ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
+        msg = "Datasets have no spatiotemporal intersection"
+        with pytest.raises(RuntimeError, match=msg):
+            IntersectionDataset(ds1, ds2)
+
+    def test_grid_overlap(self) -> None:
+        ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
+        ds2 = CustomGeoDataset(BoundingBox(1, 2, 3, 4, 5, 6))
         msg = "Datasets have no spatiotemporal intersection"
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)

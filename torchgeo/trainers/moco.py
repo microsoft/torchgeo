@@ -6,7 +6,7 @@
 import os
 import warnings
 from collections.abc import Sequence
-from typing import Any, Optional, Union
+from typing import Any
 
 import kornia.augmentation as K
 import lightning
@@ -141,7 +141,7 @@ class MoCoTask(BaseTask):
     def __init__(
         self,
         model: str = "resnet50",
-        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         version: int = 3,
         layers: int = 3,
@@ -156,9 +156,9 @@ class MoCoTask(BaseTask):
         moco_momentum: float = 0.99,
         gather_distributed: bool = False,
         size: int = 224,
-        grayscale_weights: Optional[Tensor] = None,
-        augmentation1: Optional[nn.Module] = None,
-        augmentation2: Optional[nn.Module] = None,
+        grayscale_weights: Tensor | None = None,
+        augmentation1: nn.Module | None = None,
+        augmentation2: nn.Module | None = None,
     ) -> None:
         """Initialize a new MoCoTask instance.
 
@@ -226,14 +226,6 @@ class MoCoTask(BaseTask):
         self.augmentation1 = augmentation1 or aug1
         self.augmentation2 = augmentation2 or aug2
 
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion."""
-        self.criterion = NTXentLoss(
-            self.hparams["temperature"],
-            self.hparams["memory_bank_size"],
-            self.hparams["gather_distributed"],
-        )
-
     def configure_models(self) -> None:
         """Initialize the model."""
         model: str = self.hparams["model"]
@@ -281,6 +273,22 @@ class MoCoTask(BaseTask):
 
         # Initialize moving average of output
         self.avg_output_std = 0.0
+
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion."""
+        try:
+            self.criterion = NTXentLoss(
+                self.hparams["temperature"],
+                (self.hparams["memory_bank_size"], self.hparams["output_dim"]),
+                self.hparams["gather_distributed"],
+            )
+        except TypeError:
+            # lightly 1.4.24 and older
+            self.criterion = NTXentLoss(
+                self.hparams["temperature"],
+                self.hparams["memory_bank_size"],
+                self.hparams["gather_distributed"],
+            )
 
     def configure_optimizers(
         self,
@@ -372,6 +380,7 @@ class MoCoTask(BaseTask):
             The loss tensor.
         """
         x = batch["image"]
+        batch_size = x.shape[0]
 
         in_channels = self.hparams["in_channels"]
         assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
@@ -420,8 +429,8 @@ class MoCoTask(BaseTask):
         output_std = torch.mean(output_std, dim=0)
         self.avg_output_std = 0.9 * self.avg_output_std + (1 - 0.9) * output_std.item()
 
-        self.log("train_ssl_std", self.avg_output_std)
-        self.log("train_loss", loss)
+        self.log("train_ssl_std", self.avg_output_std, batch_size=batch_size)
+        self.log("train_loss", loss, batch_size=batch_size)
 
         return loss
 

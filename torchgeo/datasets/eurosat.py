@@ -4,8 +4,8 @@
 """EuroSAT dataset."""
 
 import os
-from collections.abc import Sequence
-from typing import Callable, Optional, cast
+from collections.abc import Callable, Sequence
+from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -60,7 +60,7 @@ class EuroSAT(NonGeoClassificationDataset):
     * https://ieeexplore.ieee.org/document/8519248
     """
 
-    url = "https://huggingface.co/datasets/torchgeo/eurosat/resolve/main/EuroSATallBands.zip"  # noqa: E501
+    url = "https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/EuroSATallBands.zip"  # noqa: E501
     filename = "EuroSATallBands.zip"
     md5 = "5ac12b3b2557aa56e1826e981e8e200e"
 
@@ -106,7 +106,7 @@ class EuroSAT(NonGeoClassificationDataset):
         root: str = "data",
         split: str = "train",
         bands: Sequence[str] = BAND_SETS["all"],
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -147,7 +147,9 @@ class EuroSAT(NonGeoClassificationDataset):
         with open(os.path.join(self.root, f"eurosat-{split}.txt")) as f:
             for fn in f:
                 valid_fns.add(fn.strip().replace(".jpg", ".tif"))
-        is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
+
+        def is_in_split(x: str) -> bool:
+            return os.path.basename(x) in valid_fns
 
         super().__init__(
             root=os.path.join(root, self.base_dir),
@@ -247,7 +249,7 @@ class EuroSAT(NonGeoClassificationDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -308,14 +310,14 @@ class EuroSAT100(EuroSAT):
     .. versionadded:: 0.5
     """
 
-    url = "https://huggingface.co/datasets/torchgeo/eurosat/resolve/main/EuroSAT100.zip"
+    url = "https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/EuroSAT100.zip"  # noqa: E501
     filename = "EuroSAT100.zip"
     md5 = "c21c649ba747e86eda813407ef17d596"
 
     split_urls = {
-        "train": "https://huggingface.co/datasets/torchgeo/eurosat/raw/main/eurosat-train.txt",  # noqa: E501
-        "val": "https://huggingface.co/datasets/torchgeo/eurosat/raw/main/eurosat-val.txt",  # noqa: E501
-        "test": "https://huggingface.co/datasets/torchgeo/eurosat/raw/main/eurosat-test.txt",  # noqa: E501
+        "train": "https://hf.co/datasets/torchgeo/eurosat/raw/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-train.txt",  # noqa: E501
+        "val": "https://hf.co/datasets/torchgeo/eurosat/raw/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-val.txt",  # noqa: E501
+        "test": "https://hf.co/datasets/torchgeo/eurosat/raw/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-test.txt",  # noqa: E501
     }
     split_md5s = {
         "train": "033d0c23e3a75e3fa79618b0e35fe1c7",

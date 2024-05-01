@@ -4,18 +4,17 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Union
 
 import numpy as np
 import rasterio
 from rasterio import Affine
 from rasterio.crs import CRS
 
-SIZE = 36
+SIZE = 128
 
 np.random.seed(0)
 
-FILENAME_HIERARCHY = Union[dict[str, "FILENAME_HIERARCHY"], list[str]]
+FILENAME_HIERARCHY = dict[str, "FILENAME_HIERARCHY"] | list[str]
 
 filenames: FILENAME_HIERARCHY = {
     # USGS Earth Explorer
@@ -37,6 +36,20 @@ filenames: FILENAME_HIERARCHY = {
                     "T16TFM_20220412T162841_B12.jp2",
                     "T16TFM_20220412T162841_B8A.jp2",
                     "T16TFM_20220412T162841_TCI.jp2",
+                    "T16TFM_20190412T162841_B01.jp2",
+                    "T16TFM_20190412T162841_B02.jp2",
+                    "T16TFM_20190412T162841_B03.jp2",
+                    "T16TFM_20190412T162841_B04.jp2",
+                    "T16TFM_20190412T162841_B05.jp2",
+                    "T16TFM_20190412T162841_B06.jp2",
+                    "T16TFM_20190412T162841_B07.jp2",
+                    "T16TFM_20190412T162841_B08.jp2",
+                    "T16TFM_20190412T162841_B09.jp2",
+                    "T16TFM_20190412T162841_B10.jp2",
+                    "T16TFM_20190412T162841_B11.jp2",
+                    "T16TFM_20190412T162841_B12.jp2",
+                    "T16TFM_20190412T162841_B8A.jp2",
+                    "T16TFM_20190412T162841_TCI.jp2",
                 ]
             }
         }
@@ -54,6 +67,13 @@ filenames: FILENAME_HIERARCHY = {
                         "T26EMU_20220414T110751_B08_10m.jp2",
                         "T26EMU_20220414T110751_TCI_10m.jp2",
                         "T26EMU_20220414T110751_WVP_10m.jp2",
+                        "T26EMU_20190414T110751_AOT_10m.jp2",
+                        "T26EMU_20190414T110751_B02_10m.jp2",
+                        "T26EMU_20190414T110751_B03_10m.jp2",
+                        "T26EMU_20190414T110751_B04_10m.jp2",
+                        "T26EMU_20190414T110751_B08_10m.jp2",
+                        "T26EMU_20190414T110751_TCI_10m.jp2",
+                        "T26EMU_20190414T110751_WVP_10m.jp2",
                     ],
                     "R20m": [
                         "T26EMU_20220414T110751_AOT_20m.jp2",
@@ -70,6 +90,20 @@ filenames: FILENAME_HIERARCHY = {
                         "T26EMU_20220414T110751_SCL_20m.jp2",
                         "T26EMU_20220414T110751_TCI_20m.jp2",
                         "T26EMU_20220414T110751_WVP_20m.jp2",
+                        "T26EMU_20190414T110751_AOT_20m.jp2",
+                        "T26EMU_20190414T110751_B01_20m.jp2",
+                        "T26EMU_20190414T110751_B02_20m.jp2",
+                        "T26EMU_20190414T110751_B03_20m.jp2",
+                        "T26EMU_20190414T110751_B04_20m.jp2",
+                        "T26EMU_20190414T110751_B05_20m.jp2",
+                        "T26EMU_20190414T110751_B06_20m.jp2",
+                        "T26EMU_20190414T110751_B07_20m.jp2",
+                        "T26EMU_20190414T110751_B11_20m.jp2",
+                        "T26EMU_20190414T110751_B12_20m.jp2",
+                        "T26EMU_20190414T110751_B8A_20m.jp2",
+                        "T26EMU_20190414T110751_SCL_20m.jp2",
+                        "T26EMU_20190414T110751_TCI_20m.jp2",
+                        "T26EMU_20190414T110751_WVP_20m.jp2",
                     ],
                     "R60m": [
                         "T26EMU_20220414T110751_AOT_60m.jp2",
@@ -87,6 +121,21 @@ filenames: FILENAME_HIERARCHY = {
                         "T26EMU_20220414T110751_SCL_60m.jp2",
                         "T26EMU_20220414T110751_TCI_60m.jp2",
                         "T26EMU_20220414T110751_WVP_60m.jp2",
+                        "T26EMU_20190414T110751_AOT_60m.jp2",
+                        "T26EMU_20190414T110751_B01_60m.jp2",
+                        "T26EMU_20190414T110751_B02_60m.jp2",
+                        "T26EMU_20190414T110751_B03_60m.jp2",
+                        "T26EMU_20190414T110751_B04_60m.jp2",
+                        "T26EMU_20190414T110751_B05_60m.jp2",
+                        "T26EMU_20190414T110751_B06_60m.jp2",
+                        "T26EMU_20190414T110751_B07_60m.jp2",
+                        "T26EMU_20190414T110751_B09_60m.jp2",
+                        "T26EMU_20190414T110751_B11_60m.jp2",
+                        "T26EMU_20190414T110751_B12_60m.jp2",
+                        "T26EMU_20190414T110751_B8A_60m.jp2",
+                        "T26EMU_20190414T110751_SCL_60m.jp2",
+                        "T26EMU_20190414T110751_TCI_60m.jp2",
+                        "T26EMU_20190414T110751_WVP_60m.jp2",
                     ],
                 }
             }

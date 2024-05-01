@@ -55,6 +55,7 @@ class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         "name",
         [
+            "agrifieldnet",
             "chabud",
             "chesapeake_cvpr_5",
             "chesapeake_cvpr_7",
@@ -72,6 +73,11 @@ class TestSemanticSegmentationTask:
             "sen12ms_s1",
             "sen12ms_s2_all",
             "sen12ms_s2_reduced",
+            "sentinel2_cdl",
+            "sentinel2_eurocrops",
+            "sentinel2_nccm",
+            "sentinel2_south_america_soybean",
+            "southafricacroptype",
             "spacenet1",
             "ssl4eo_l_benchmark_cdl",
             "ssl4eo_l_benchmark_nlcd",
@@ -178,11 +184,6 @@ class TestSemanticSegmentationTask:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
             SemanticSegmentationTask(loss="invalid_loss")
-
-    def test_ignoreindex_with_jaccard(self) -> None:
-        match = "ignore_index has no effect on training when loss='jaccard'"
-        with pytest.warns(UserWarning, match=match):
-            SemanticSegmentationTask(loss="jaccard", ignore_index=0)
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, "plot", plot)

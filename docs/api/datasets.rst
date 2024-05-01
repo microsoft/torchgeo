@@ -23,6 +23,11 @@ Aboveground Woody Biomass
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
 
+AgriFieldNet
+^^^^^^^^^^^^
+
+.. autoclass:: AgriFieldNet
+
 Airphen
 ^^^^^^^
 
@@ -103,6 +108,11 @@ iNaturalist
 
 .. autoclass:: INaturalist
 
+I/O Bench
+^^^^^^^^^
+
+.. autoclass:: IOBench
+
 L7 Irish
 ^^^^^^^^
 
@@ -166,12 +176,15 @@ Sentinel
 .. autoclass:: Sentinel1
 .. autoclass:: Sentinel2
 
+South Africa Crop Type
+^^^^^^^^^^^^^^^^^^^^^^
 
-South America Soybean 
+.. autoclass:: SouthAfricaCropType
+
+South America Soybean
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SouthAmericaSoybean
-
 
 .. _Non-geospatial Datasets:
 
@@ -339,6 +352,11 @@ Potsdam
 ^^^^^^^
 
 .. autoclass:: Potsdam2D
+
+QuakeSet
+^^^^^^^^
+
+.. autoclass:: QuakeSet
 
 ReforesTree
 ^^^^^^^^^^^

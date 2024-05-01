@@ -7,8 +7,8 @@ import glob
 import json
 import os
 import sys
-from collections.abc import Iterable
-from typing import Any, Callable, Optional, Union, cast
+from collections.abc import Callable, Iterable
+from typing import Any, cast
 
 import fiona
 import fiona.transform
@@ -206,10 +206,10 @@ class OpenBuildings(VectorDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
-        crs: Optional[CRS] = None,
+        paths: str | Iterable[str] = "data",
+        crs: CRS | None = None,
         res: float = 0.0001,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -354,8 +354,9 @@ class OpenBuildings(VectorDataset):
             [query.miny, query.maxy],
         )
         df_query = (
-            "longitude >= {} & longitude <= {} & " "latitude >= {} & latitude <= {}"
-        ).format(minx, maxx, miny, maxy)
+            f"longitude >= {minx} & longitude <= {maxx} & "
+            f"latitude >= {miny} & latitude <= {maxy}"
+        )
         shapes = []
         for f in filepaths:
             csv_chunks = pd.read_csv(f, chunksize=200000, compression="gzip")
@@ -413,7 +414,7 @@ class OpenBuildings(VectorDataset):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -4,8 +4,7 @@
 """Rwanda Field Boundary Competition dataset."""
 
 import os
-from collections.abc import Sequence
-from typing import Callable, Optional
+from collections.abc import Callable, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -91,9 +90,9 @@ class RwandaFieldBoundary(NonGeoDataset):
         root: str = "data",
         split: str = "train",
         bands: Sequence[str] = all_bands,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new RwandaFieldBoundary instance.
@@ -258,7 +257,7 @@ class RwandaFieldBoundary(NonGeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         time_step: int = 0,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

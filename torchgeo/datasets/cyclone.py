@@ -5,8 +5,9 @@
 
 import json
 import os
+from collections.abc import Callable
 from functools import lru_cache
-from typing import Any, Callable, Optional
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -73,9 +74,9 @@ class TropicalCyclone(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Tropical Cyclone Wind Estimation Competition Dataset.
@@ -160,7 +161,7 @@ class TropicalCyclone(NonGeoDataset):
                 try:
                     resample = Image.Resampling.BILINEAR
                 except AttributeError:
-                    resample = Image.BILINEAR
+                    resample = Image.BILINEAR  # type: ignore[attr-defined]
                 img = img.resize(size=(self.size, self.size), resample=resample)
             array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
             tensor = torch.from_numpy(array)
@@ -204,7 +205,7 @@ class TropicalCyclone(NonGeoDataset):
                     return False
         return True
 
-    def _download(self, api_key: Optional[str] = None) -> None:
+    def _download(self, api_key: str | None = None) -> None:
         """Download the dataset and extract it.
 
         Args:
@@ -227,7 +228,7 @@ class TropicalCyclone(NonGeoDataset):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

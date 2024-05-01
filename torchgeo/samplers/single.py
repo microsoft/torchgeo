@@ -4,8 +4,7 @@
 """TorchGeo samplers."""
 
 import abc
-from collections.abc import Iterable, Iterator
-from typing import Callable, Optional, Union
+from collections.abc import Callable, Iterable, Iterator
 
 import torch
 from rtree.index import Index, Property
@@ -25,7 +24,7 @@ class GeoSampler(Sampler[BoundingBox], abc.ABC):
     longitude, height, width, projection, coordinate system, and time.
     """
 
-    def __init__(self, dataset: GeoDataset, roi: Optional[BoundingBox] = None) -> None:
+    def __init__(self, dataset: GeoDataset, roi: BoundingBox | None = None) -> None:
         """Initialize a new Sampler instance.
 
         Args:
@@ -69,9 +68,9 @@ class RandomGeoSampler(GeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[tuple[float, float], float],
-        length: Optional[int],
-        roi: Optional[BoundingBox] = None,
+        size: tuple[float, float] | float,
+        length: int | None = None,
+        roi: BoundingBox | None = None,
         units: Units = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
@@ -174,9 +173,9 @@ class GridGeoSampler(GeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[tuple[float, float], float],
-        stride: Union[tuple[float, float], float],
-        roi: Optional[BoundingBox] = None,
+        size: tuple[float, float] | float,
+        stride: tuple[float, float] | float,
+        roi: BoundingBox | None = None,
         units: Units = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
@@ -271,10 +270,7 @@ class PreChippedGeoSampler(GeoSampler):
     """
 
     def __init__(
-        self,
-        dataset: GeoDataset,
-        roi: Optional[BoundingBox] = None,
-        shuffle: bool = False,
+        self, dataset: GeoDataset, roi: BoundingBox | None = None, shuffle: bool = False
     ) -> None:
         """Initialize a new Sampler instance.
 

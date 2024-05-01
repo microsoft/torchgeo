@@ -6,7 +6,8 @@
 import glob
 import os
 import random
-from typing import Callable, Optional, TypedDict
+from collections.abc import Callable
+from typing import TypedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -88,7 +89,7 @@ class SSL4EOL(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/2306.09424
+    * https://proceedings.neurips.cc/paper_files/paper/2023/hash/bbf7ee04e2aefec136ecf60e346c2e61-Abstract-Datasets_and_Benchmarks.html
 
     .. versionadded:: 0.5
     """  # noqa: E501
@@ -105,7 +106,7 @@ class SSL4EOL(NonGeoDataset):
         "oli_sr": {"num_bands": 7, "rgb_bands": [3, 2, 1]},
     }
 
-    url = "https://hf.co/datasets/torchgeo/ssl4eo_l/resolve/main/{0}/ssl4eo_l_{0}.tar.gz{1}"  # noqa: E501
+    url = "https://hf.co/datasets/torchgeo/ssl4eo_l/resolve/e2467887e6a6bcd7547d9d5999f8d9bc3323dc31/{0}/ssl4eo_l_{0}.tar.gz{1}"  # noqa: E501
     checksums = {
         "tm_toa": {
             "aa": "553795b8d73aa253445b1e67c5b81f11",
@@ -163,7 +164,7 @@ class SSL4EOL(NonGeoDataset):
         root: str = "data",
         split: str = "oli_sr",
         seasons: int = 1,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -285,7 +286,7 @@ class SSL4EOL(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -405,7 +406,7 @@ class SSL4EOS12(NonGeoDataset):
         root: str = "data",
         split: str = "s2c",
         seasons: int = 1,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SSL4EOS12 instance.
@@ -500,7 +501,7 @@ class SSL4EOS12(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

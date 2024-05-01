@@ -4,7 +4,8 @@
 """FireRisk dataset."""
 
 import os
-from typing import Callable, Optional, cast
+from collections.abc import Callable
+from typing import cast
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -49,7 +50,7 @@ class FireRisk(NonGeoClassificationDataset):
     .. versionadded:: 0.5
     """
 
-    url = "https://drive.google.com/file/d/1J5GrJJPLWkpuptfY_kgqkiDtcSNP88OP"
+    url = "https://hf.co/datasets/torchgeo/fire_risk/resolve/e6046a04350c6f1ab4ad791fb3a40bf8940be269/FireRisk.zip"
     md5 = "a77b9a100d51167992ae8c51d26198a6"
     filename = "FireRisk.zip"
     directory = "FireRisk"
@@ -68,7 +69,7 @@ class FireRisk(NonGeoClassificationDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -136,7 +137,7 @@ class FireRisk(NonGeoClassificationDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 

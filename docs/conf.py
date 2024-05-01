@@ -93,7 +93,7 @@ html_theme_options = {
 html_favicon = os.path.join("..", "logo", "favicon.ico")
 
 html_static_path = ["_static"]
-html_css_files = ["button-width.css", "notebook-prompt.css"]
+html_css_files = ["button-width.css", "notebook-prompt.css", "table-scroll.css"]
 
 # -- Extension configuration -------------------------------------------------
 
@@ -125,6 +125,7 @@ intersphinx_mapping = {
     "sklearn": ("https://scikit-learn.org/stable/", None),
     "timm": ("https://huggingface.co/docs/timm/main/en/", None),
     "torch": ("https://pytorch.org/docs/stable", None),
+    "torchmetrics": ("https://lightning.ai/docs/torchmetrics/stable/", None),
     "torchvision": ("https://pytorch.org/vision/stable", None),
 }
 

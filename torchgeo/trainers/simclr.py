@@ -5,7 +5,7 @@
 
 import os
 import warnings
-from typing import Any, Optional, Union
+from typing import Any
 
 import kornia.augmentation as K
 import lightning
@@ -73,20 +73,20 @@ class SimCLRTask(BaseTask):
     def __init__(
         self,
         model: str = "resnet50",
-        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         version: int = 2,
         layers: int = 3,
-        hidden_dim: Optional[int] = None,
-        output_dim: Optional[int] = None,
+        hidden_dim: int | None = None,
+        output_dim: int | None = None,
         lr: float = 4.8,
         weight_decay: float = 1e-4,
         temperature: float = 0.07,
         memory_bank_size: int = 64000,
         gather_distributed: bool = False,
         size: int = 224,
-        grayscale_weights: Optional[Tensor] = None,
-        augmentations: Optional[nn.Module] = None,
+        grayscale_weights: Tensor | None = None,
+        augmentations: nn.Module | None = None,
     ) -> None:
         """Initialize a new SimCLRTask instance.
 
@@ -142,19 +142,9 @@ class SimCLRTask(BaseTask):
             size, grayscale_weights
         )
 
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion."""
-        self.criterion = NTXentLoss(
-            self.hparams["temperature"],
-            self.hparams["memory_bank_size"],
-            self.hparams["gather_distributed"],
-        )
-
     def configure_models(self) -> None:
         """Initialize the model."""
         weights = self.weights
-        hidden_dim: int = self.hparams["hidden_dim"]
-        output_dim: int = self.hparams["output_dim"]
 
         # Create backbone
         self.backbone = timm.create_model(
@@ -176,13 +166,16 @@ class SimCLRTask(BaseTask):
 
         # Create projection head
         input_dim = self.backbone.num_features
-        if hidden_dim is None:
-            hidden_dim = input_dim
-        if output_dim is None:
-            output_dim = input_dim
+        if self.hparams["hidden_dim"] is None:
+            self.hparams["hidden_dim"] = input_dim
+        if self.hparams["output_dim"] is None:
+            self.hparams["output_dim"] = input_dim
 
         self.projection_head = SimCLRProjectionHead(
-            input_dim, hidden_dim, output_dim, self.hparams["layers"]
+            input_dim,
+            self.hparams["hidden_dim"],
+            self.hparams["output_dim"],
+            self.hparams["layers"],
         )
 
         # Initialize moving average of output
@@ -191,6 +184,22 @@ class SimCLRTask(BaseTask):
         # TODO
         # v1+: add global batch norm
         # v2: add selective kernels, channel-wise attention mechanism
+
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion."""
+        try:
+            self.criterion = NTXentLoss(
+                self.hparams["temperature"],
+                (self.hparams["memory_bank_size"], self.hparams["output_dim"]),
+                self.hparams["gather_distributed"],
+            )
+        except TypeError:
+            # lightly 1.4.24 and older
+            self.criterion = NTXentLoss(
+                self.hparams["temperature"],
+                self.hparams["memory_bank_size"],
+                self.hparams["gather_distributed"],
+            )
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
         """Forward pass of the model.
@@ -222,6 +231,7 @@ class SimCLRTask(BaseTask):
             AssertionError: If channel dimensions are incorrect.
         """
         x = batch["image"]
+        batch_size = x.shape[0]
 
         in_channels: int = self.hparams["in_channels"]
         assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
@@ -250,8 +260,8 @@ class SimCLRTask(BaseTask):
         output_std = torch.mean(output_std, dim=0)
         self.avg_output_std = 0.9 * self.avg_output_std + (1 - 0.9) * output_std.item()
 
-        self.log("train_ssl_std", self.avg_output_std)
-        self.log("train_loss", loss)
+        self.log("train_ssl_std", self.avg_output_std, batch_size=batch_size)
+        self.log("train_loss", loss, batch_size=batch_size)
 
         return loss
 

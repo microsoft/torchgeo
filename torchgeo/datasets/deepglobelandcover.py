@@ -4,7 +4,7 @@
 """DeepGlobe Land Cover Classification Challenge dataset."""
 
 import os
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -62,8 +62,18 @@ class DeepGlobeLandCover(NonGeoDataset):
 
     * https://arxiv.org/pdf/1805.06561.pdf
 
+    .. note::
+
+       This dataset can be downloaded using:
+
+       .. code-block:: console
+
+          $ pip install kaggle  # place api key at ~/.kaggle/kaggle.json
+          $ kaggle datasets download -d geoap96/deepglobe2018-landcover-segmentation-traindataset
+          $ unzip deepglobe2018-landcover-segmentation-traindataset.zip
+
     .. versionadded:: 0.3
-    """
+    """  # noqa: E501
 
     filename = "data.zip"
     data_root = "data"
@@ -92,7 +102,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         self,
         root: str = "data",
         split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new DeepGlobeLandCover dataset instance.
@@ -219,7 +229,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
         alpha: float = 0.5,
     ) -> Figure:
         """Plot a sample from the dataset.

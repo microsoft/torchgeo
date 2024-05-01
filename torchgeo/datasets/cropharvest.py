@@ -6,7 +6,7 @@
 import glob
 import json
 import os
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -96,7 +96,7 @@ class CropHarvest(NonGeoDataset):
     def __init__(
         self,
         root: str = "data",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -293,12 +293,12 @@ class CropHarvest(NonGeoDataset):
         features_path = os.path.join(self.root, self.file_dict["features"]["filename"])
         extract_archive(features_path)
 
-    def plot(self, sample: dict[str, Tensor], subtitle: Optional[str] = None) -> Figure:
+    def plot(self, sample: dict[str, Tensor], suptitle: str | None = None) -> Figure:
         """Plot a sample from the dataset using bands for Agriculture RGB composite.
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
-            suptitle: optional subtitle to use for figure
+            suptitle: optional suptitle to use for figure
 
         Returns:
             a matplotlib Figure with the rendered sample
@@ -312,7 +312,7 @@ class CropHarvest(NonGeoDataset):
         axs.set_xticklabels(np.arange(12) + 1)
         axs.set_yticks([])
         axs.set_xlabel("Month")
-        if subtitle is not None:
-            plt.suptitle(subtitle)
+        if suptitle is not None:
+            plt.suptitle(suptitle)
 
         return fig
