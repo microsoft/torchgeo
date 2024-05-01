@@ -28,6 +28,7 @@ from torchgeo.datasets.utils import (
     concat_samples,
     disambiguate_timestamp,
     download_and_extract_archive,
+    download_azure_container,
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
     extract_archive,
@@ -90,7 +91,12 @@ def mock_missing_module(monkeypatch: MonkeyPatch) -> None:
     import_orig = builtins.__import__
 
     def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name in ["radiant_mlhub", "rarfile", "zipfile_deflate64"]:
+        if name in [
+            "azure.storage.blob",
+            "radiant_mlhub",
+            "rarfile",
+            "zipfile_deflate64",
+        ]:
             raise ImportError()
         return import_orig(name, *args, **kwargs)
 
@@ -178,6 +184,27 @@ def test_download_and_extract_archive(tmp_path: Path, monkeypatch: MonkeyPatch) 
         os.path.join("tests", "data", "landcoverai", "landcover.ai.v1.zip"),
         str(tmp_path),
     )
+
+
+def test_download_azure_container(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    split = "train"
+    account_url = "https://radiantearth.blob.core.windows.net"
+    container_name = "mlhub"
+    name_starts_with = f"nasa-tropical-storm-challenge/{split}/abs_000"
+    download_azure_container(
+        account_url=account_url,
+        container_name=container_name,
+        root=str(tmp_path),
+        name_starts_with=name_starts_with,
+    )
+
+
+def test_missing_azure_storage_blob(mock_missing_module: None) -> None:
+    with pytest.raises(
+        ImportError,
+        match="azure-storage-blob is not installed and is required to download this dataset",
+    ):
+        download_azure_container("", "")
 
 
 def test_download_radiant_mlhub_dataset(
