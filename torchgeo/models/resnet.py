@@ -460,6 +460,19 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    SENTINEL2_MS_SI_SATLAS = Weights(
+        url="https://huggingface.co/allenai/satlas-pretrain/resolve/main/sentinel2_resnet50_si_ms.pth?download=true",  # noqa: E501
+        transforms=_sentinel2_ms_satlas_transforms,
+        meta={
+            "dataset": "SATLASPretrain",
+            "in_chans": 9,
+            "model": "resnet50",
+            "publication": "https://arxiv.org/abs/2211.15660",
+            "repo":"https://github.com/allenai/satlaspretrain_models",
+            "ssl_method": "satlaspretrain",
+        },
+    )
+
     SENTINEL2_RGB_MOCO = Weights(
         url="https://hf.co/torchgeo/resnet50_sentinel2_rgb_moco/resolve/efd9723b59a88e9dc1420dc1e96afb25b0630a3c/resnet50_sentinel2_rgb_moco-2b57ba8b.pth",  # noqa: E501
         transforms=_zhu_xlab_transforms,
