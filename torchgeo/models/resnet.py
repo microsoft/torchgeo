@@ -6,9 +6,9 @@
 from typing import Any
 
 import kornia.augmentation as K
-from kornia.contrib import Lambda
 import timm
 import torch
+from kornia.contrib import Lambda
 from timm.models import ResNet
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -455,7 +455,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             "in_chans": 9,
             "model": "resnet50",
             "publication": "https://arxiv.org/abs/2211.15660",
-            "repo":"https://github.com/allenai/satlaspretrain_models",
+            "repo": "https://github.com/allenai/satlaspretrain_models",
             "ssl_method": "satlaspretrain",
         },
     )
@@ -468,7 +468,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             "in_chans": 9,
             "model": "resnet50",
             "publication": "https://arxiv.org/abs/2211.15660",
-            "repo":"https://github.com/allenai/satlaspretrain_models",
+            "repo": "https://github.com/allenai/satlaspretrain_models",
             "ssl_method": "satlaspretrain",
         },
     )
