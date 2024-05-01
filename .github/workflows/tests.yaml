@@ -93,7 +93,7 @@ jobs:
       run: pip list
     - name: Run pytest checks
       run: |
-        pytest --cov=torchgeo --cov-report=xml --durations=10 tests/datasets/test_utils.py
+        pytest --cov=torchgeo --cov-report=xml --durations=10
         python3 -m torchgeo --help
     - name: Report coverage
       uses: codecov/codecov-action@v4.3.0

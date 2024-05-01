@@ -79,8 +79,8 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 datasets = [
-    # TODO: determine minimum version
-    "azure-storage-blob",
+    # azure-storage-blob 12.4+ required for ContainerClient.list_blob_names
+    "azure-storage-blob>=12.4",
     # h5py 3.6+ required for Python 3.10 wheels
     "h5py>=3.6",
     # laspy 2+ required for laspy.read

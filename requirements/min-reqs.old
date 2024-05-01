@@ -22,7 +22,6 @@ torchmetrics==0.10.0
 torchvision==0.14.0
 
 # datasets
-# TODO: determine minimum supported version
 azure-storage-blob==12.14.0
 h5py==3.6.0
 laspy==2.0.0
