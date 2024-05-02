@@ -75,7 +75,7 @@ jobs:
           cache-dependency-path: "requirements/package-lock.json"
       - name: Installing prettier
         run: |
-          npm ci --install-strategy
+          npm ci --install-strategy hoisted
           npm cache clean --force
         working-directory: requirements/
       - name: List npm dependencies
