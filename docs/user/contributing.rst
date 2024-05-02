@@ -118,7 +118,7 @@ Prettier is a code formatter that helps to ensure consistent code style across a
 
 .. code-block:: console
 
-   $ npm install --save-dev --save-exact prettier
+   $ npm install requirements/
 
 
 3. Run Prettier: Use the following command to run Prettier formating:
