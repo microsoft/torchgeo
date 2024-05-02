@@ -84,6 +84,7 @@ instance/
 
 # Node stuff:
 node_modules/
+/*.json
 
 # Scrapy stuff:
 .scrapy
