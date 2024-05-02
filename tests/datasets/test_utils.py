@@ -186,7 +186,24 @@ def test_download_and_extract_archive(tmp_path: Path, monkeypatch: MonkeyPatch) 
     )
 
 
-def test_download_azure_container(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+def test_download_azure_container(tmp_path: Path, container_client: None) -> None:
+    account_url = os.path.join("tests", "data")
+    container_name = "cyclone"
+    name_starts_with = "nasa_tropical_storm_competition_test_source"
+    download_azure_container(
+        account_url=account_url,
+        container_name=container_name,
+        root=str(tmp_path),
+        name_starts_with=name_starts_with,
+    )
+    assert os.path.exists(
+        tmp_path / "nasa_tropical_storm_competition_test_source" / "collection.json"
+    )
+
+
+@pytest.mark.slow
+def test_download_azure_container_slow(tmp_path: Path) -> None:
+    pytest.importorskip("azure.storage.blob", minversion="12.4")
     split = "train"
     account_url = "https://radiantearth.blob.core.windows.net"
     container_name = "mlhub"
