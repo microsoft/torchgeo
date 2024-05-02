@@ -75,12 +75,10 @@ jobs:
           cache-dependency-path: "requirements/package-lock.json"
       - name: Installing prettier
         run: |
-          npm ci
+          npm install requirements/
           npm cache clean --force
-        working-directory: requirements/
       - name: List npm dependencies
         run: npm ls --all
-        working-directory: requirements/
       - name: Run prettier formatting
         run: npx prettier . --check
 concurrency:

@@ -1,4 +1,5 @@
 {
+  "name": "torchgeo",
   "private": "true",
   "dependencies": {
     "prettier": "^3.2.5"
