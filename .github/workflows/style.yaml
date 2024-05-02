@@ -77,9 +77,12 @@ jobs:
         run: |
           npm ci --install-strategy hoisted
           npm cache clean --force
+          ls -la
         working-directory: requirements/
       - name: List npm dependencies
-        run: npm ls --all
+        run: |
+          ls -la
+          npm ls --all
       - name: Run prettier formatting
         run: npx prettier . --check
 concurrency:
