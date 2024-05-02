@@ -77,12 +77,9 @@ jobs:
         run: |
           npm ci
           npm cache clean --force
-          ls -la
         working-directory: requirements/
       - name: List npm dependencies
-        run: |
-          ls -la
-          npm ls --all
+        run: npm ls --all
         working-directory: requirements/
       - name: Run prettier formatting
         run: npx prettier . --check
