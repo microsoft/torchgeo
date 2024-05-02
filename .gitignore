@@ -82,6 +82,9 @@ db.sqlite3-journal
 instance/
 .webassets-cache
 
+# Node stuff:
+node_modules/
+
 # Scrapy stuff:
 .scrapy
 
