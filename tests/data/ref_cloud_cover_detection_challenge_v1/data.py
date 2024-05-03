@@ -32,17 +32,17 @@ from rasterio.transform import Affine
 np.random.seed(0)
 
 SIZE = 512
-BANDS = ["B02", "B03", "B04", "B08"]
+BANDS = ['B02', 'B03', 'B04', 'B08']
 
-SOURCE_COLLECTION_ID = "ref_cloud_cover_detection_challenge_v1_test_source"
-SOURCE_ITEM_ID = "ref_cloud_cover_detection_challenge_v1_test_source_aaaa"
-LABEL_COLLECTION_ID = "ref_cloud_cover_detection_challenge_v1_test_labels"
-LABEL_ITEM_ID = "ref_cloud_cover_detection_challenge_v1_test_labels_aaaa"
+SOURCE_COLLECTION_ID = 'ref_cloud_cover_detection_challenge_v1_test_source'
+SOURCE_ITEM_ID = 'ref_cloud_cover_detection_challenge_v1_test_source_aaaa'
+LABEL_COLLECTION_ID = 'ref_cloud_cover_detection_challenge_v1_test_labels'
+LABEL_ITEM_ID = 'ref_cloud_cover_detection_challenge_v1_test_labels_aaaa'
 
 # geometry used by both source and label items
 TEST_GEOMETRY = {
-    "type": "Polygon",
-    "coordinates": [
+    'type': 'Polygon',
+    'coordinates': [
         [
             [137.86580132892396, -29.52744848758255],
             [137.86450090473795, -29.481297003404038],
@@ -63,14 +63,14 @@ TEST_BBOX = [
 
 # sentinel-2 bands for EO extension
 S2_BANDS = [
-    Band.create(name="B02", common_name="blue", description="Blue"),
-    Band.create(name="B03", common_name="green", description="Green"),
-    Band.create(name="B04", common_name="red", description="Red"),
-    Band.create(name="B08", common_name="nir", description="NIR"),
+    Band.create(name='B02', common_name='blue', description='Blue'),
+    Band.create(name='B03', common_name='green', description='Green'),
+    Band.create(name='B04', common_name='red', description='Red'),
+    Band.create(name='B08', common_name='nir', description='NIR'),
 ]
 
 # class map for overviews
-CLASS_COUNT_MAP = {"0": "no cloud", "1": "cloud"}
+CLASS_COUNT_MAP = {'0': 'no cloud', '1': 'cloud'}
 
 # define the spatial and temporal extent of collections
 TEST_EXTENT = Extent(
@@ -87,8 +87,8 @@ TEST_EXTENT = Extent(
     temporal=TemporalExtent(
         intervals=[
             [
-                dt.strptime("2018-02-18", "%Y-%m-%d"),
-                dt.strptime("2020-09-13", "%Y-%m-%d"),
+                dt.strptime('2018-02-18', '%Y-%m-%d'),
+                dt.strptime('2020-09-13', '%Y-%m-%d'),
             ]
         ]
     ),
@@ -100,30 +100,30 @@ def create_raster(path: str, dtype: str, num_channels: int, collection: str) -> 
         Path(os.path.split(path)[0]).mkdir(parents=True)
 
     profile = {}
-    profile["driver"] = "GTiff"
-    profile["dtype"] = dtype
-    profile["count"] = num_channels
-    profile["crs"] = CRS.from_epsg(32753)
-    profile["transform"] = Affine(1.0, 0.0, 777760.0, 0.0, -10.0, 6735270.0)
-    profile["height"] = SIZE
-    profile["width"] = SIZE
-    profile["compress"] = "lzw"
-    profile["predictor"] = 2
+    profile['driver'] = 'GTiff'
+    profile['dtype'] = dtype
+    profile['count'] = num_channels
+    profile['crs'] = CRS.from_epsg(32753)
+    profile['transform'] = Affine(1.0, 0.0, 777760.0, 0.0, -10.0, 6735270.0)
+    profile['height'] = SIZE
+    profile['width'] = SIZE
+    profile['compress'] = 'lzw'
+    profile['predictor'] = 2
 
-    if collection == "source":
-        if "float" in profile["dtype"]:
-            Z = np.random.randn(SIZE, SIZE).astype(profile["dtype"])
+    if collection == 'source':
+        if 'float' in profile['dtype']:
+            Z = np.random.randn(SIZE, SIZE).astype(profile['dtype'])
         else:
             Z = np.random.randint(
-                np.iinfo(profile["dtype"]).max,
+                np.iinfo(profile['dtype']).max,
                 size=(SIZE, SIZE),
-                dtype=profile["dtype"],
+                dtype=profile['dtype'],
             )
-    elif collection == "labels":
-        Z = np.random.randint(0, 2, (SIZE, SIZE)).astype(profile["dtype"])
+    elif collection == 'labels':
+        Z = np.random.randint(0, 2, (SIZE, SIZE)).astype(profile['dtype'])
 
-    with rasterio.open(path, "w", **profile) as src:
-        for i in range(1, profile["count"] + 1):
+    with rasterio.open(path, 'w', **profile) as src:
+        for i in range(1, profile['count'] + 1):
             src.write(Z, i)
 
 
@@ -133,14 +133,14 @@ def create_source_item() -> Item:
         id=SOURCE_ITEM_ID,
         geometry=TEST_GEOMETRY,
         bbox=TEST_BBOX,
-        datetime=dt.strptime("2020-06-03", "%Y-%m-%d"),
+        datetime=dt.strptime('2020-06-03', '%Y-%m-%d'),
         properties={},
     )
 
     # add Asset with EO Extension for each S2 band
     for band in BANDS:
         img_path = os.path.join(
-            os.getcwd(), SOURCE_COLLECTION_ID, SOURCE_ITEM_ID, f"{band}.tif"
+            os.getcwd(), SOURCE_COLLECTION_ID, SOURCE_ITEM_ID, f'{band}.tif'
         )
         image_asset = Asset(href=img_path, media_type=MediaType.GEOTIFF)
         eo_asset_ext = EOExtension.ext(image_asset)
@@ -157,8 +157,8 @@ def create_source_item() -> Item:
 
 
 def get_class_label_list(overview: LabelOverview) -> LabelClasses:
-    label_list = [d["name"] for d in overview.properties["counts"]]
-    label_classes = LabelClasses.create(classes=label_list, name="labels")
+    label_list = [d['name'] for d in overview.properties['counts']]
+    label_classes = LabelClasses.create(classes=label_list, name='labels')
     return label_classes
 
 
@@ -189,7 +189,7 @@ def get_item_class_overview(label_type: LabelType, asset_path: str) -> LabelOver
             count_list.append(label_count)
 
     overview = LabelOverview(properties={})
-    overview.apply(property_key="labels", counts=count_list)
+    overview.apply(property_key='labels', counts=count_list)
 
     return overview
 
@@ -200,7 +200,7 @@ def create_label_item() -> Item:
         id=LABEL_ITEM_ID,
         geometry=TEST_GEOMETRY,
         bbox=TEST_BBOX,
-        datetime=dt.strptime("2020-06-03", "%Y-%m-%d"),
+        datetime=dt.strptime('2020-06-03', '%Y-%m-%d'),
         properties={},
     )
 
@@ -209,39 +209,39 @@ def create_label_item() -> Item:
 
     label_ext = LabelExtension.ext(test_label_item, add_if_missing=True)
     label_ext.apply(
-        label_description="Sentinel-2 Cloud Cover Segmentation Test Labels",
+        label_description='Sentinel-2 Cloud Cover Segmentation Test Labels',
         label_type=LabelType.RASTER,
         label_classes=[label_list],
         label_overviews=[label_overview],
     )
 
     label_asset = Asset(href=label_path, media_type=MediaType.GEOTIFF)
-    test_label_item.add_asset(key="labels", asset=label_asset)
+    test_label_item.add_asset(key='labels', asset=label_asset)
 
     return test_label_item
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # create a geotiff for each s2 band
     for b in BANDS:
         tif_path = os.path.join(
-            os.getcwd(), SOURCE_COLLECTION_ID, SOURCE_ITEM_ID, f"{b}.tif"
+            os.getcwd(), SOURCE_COLLECTION_ID, SOURCE_ITEM_ID, f'{b}.tif'
         )
-        create_raster(tif_path, "uint8", 1, "source")
+        create_raster(tif_path, 'uint8', 1, 'source')
 
     # create a geotiff for label
     label_path = os.path.join(
-        os.getcwd(), LABEL_COLLECTION_ID, LABEL_ITEM_ID, "labels.tif"
+        os.getcwd(), LABEL_COLLECTION_ID, LABEL_ITEM_ID, 'labels.tif'
     )
-    create_raster(label_path, "uint8", 1, "labels")
+    create_raster(label_path, 'uint8', 1, 'labels')
 
     # instantiate the source Collection
     test_source_collection = Collection(
         id=SOURCE_COLLECTION_ID,
-        description="Test Source Collection for Torchgo Cloud Cover Detection Dataset",
+        description='Test Source Collection for Torchgo Cloud Cover Detection Dataset',
         extent=TEST_EXTENT,
         catalog_type=CatalogType.RELATIVE_PUBLISHED,
-        license="CC-BY-4.0",
+        license='CC-BY-4.0',
     )
 
     source_item = create_source_item()
@@ -256,15 +256,15 @@ if __name__ == "__main__":
     # instantiate the label Collection
     test_label_collection = Collection(
         id=LABEL_COLLECTION_ID,
-        description="Test Label Collection for Torchgo Cloud Cover Detection Dataset",
+        description='Test Label Collection for Torchgo Cloud Cover Detection Dataset',
         extent=TEST_EXTENT,
         catalog_type=CatalogType.RELATIVE_PUBLISHED,
-        license="CC-BY-4.0",
+        license='CC-BY-4.0',
     )
 
     label_item = create_label_item()
     label_item.add_link(
-        Link(rel="source", target=source_item, media_type=MediaType.GEOTIFF)
+        Link(rel='source', target=source_item, media_type=MediaType.GEOTIFF)
     )
     test_label_collection.add_item(label_item)
 

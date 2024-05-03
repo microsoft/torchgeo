@@ -24,14 +24,14 @@ class IOBenchTask(BaseTask):
 
     def configure_optimizers(
         self,
-    ) -> "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig":
+    ) -> 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig':
         """Initialize the optimizer.
 
         Returns:
             Optimizer.
         """
         optimizer = SGD([torch.tensor(0.0, requires_grad=True)], lr=0)
-        return {"optimizer": optimizer}
+        return {'optimizer': optimizer}
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

@@ -47,15 +47,15 @@ class LEVIRCDDataModule(NonGeoDataModule):
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=["image1", "image2", "mask"],
+            data_keys=['image1', 'image2', 'mask'],
         )
         self.val_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            data_keys=["image1", "image2", "mask"],
+            data_keys=['image1', 'image2', 'mask'],
         )
         self.test_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            data_keys=["image1", "image2", "mask"],
+            data_keys=['image1', 'image2', 'mask'],
         )
 
 
@@ -95,15 +95,15 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=["image1", "image2", "mask"],
+            data_keys=['image1', 'image2', 'mask'],
         )
         self.val_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            data_keys=["image1", "image2", "mask"],
+            data_keys=['image1', 'image2', 'mask'],
         )
         self.test_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            data_keys=["image1", "image2", "mask"],
+            data_keys=['image1', 'image2', 'mask'],
         )
 
     def setup(self, stage: str) -> None:
@@ -112,11 +112,11 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit", "validate"]:
-            self.dataset = LEVIRCDPlus(split="train", **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.dataset = LEVIRCDPlus(split='train', **self.kwargs)
             generator = torch.Generator().manual_seed(0)
             self.train_dataset, self.val_dataset = random_split(
                 self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
             )
-        if stage in ["test"]:
-            self.test_dataset = LEVIRCDPlus(split="test", **self.kwargs)
+        if stage in ['test']:
+            self.test_dataset = LEVIRCDPlus(split='test', **self.kwargs)

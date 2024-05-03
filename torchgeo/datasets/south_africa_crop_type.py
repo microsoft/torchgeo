@@ -72,22 +72,22 @@ class SouthAfricaCropType(RasterDataset):
         _(?P<band>(B[0-9A-Z]{2}))
         _10m"""
     filename_regex = s2_regex
-    date_format = "%Y_%m_%d"
-    rgb_bands = ["B04", "B03", "B02"]
-    s1_bands = ["VH", "VV"]
+    date_format = '%Y_%m_%d'
+    rgb_bands = ['B04', 'B03', 'B02']
+    s1_bands = ['VH', 'VV']
     s2_bands = [
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06",
-        "B07",
-        "B08",
-        "B8A",
-        "B09",
-        "B11",
-        "B12",
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B09',
+        'B11',
+        'B12',
     ]
     all_bands: list[str] = s1_bands + s2_bands
     cmap = {
@@ -105,7 +105,7 @@ class SouthAfricaCropType(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = "data",
+        paths: str | Iterable[str] = 'data',
         crs: CRS | None = None,
         classes: list[int] = list(cmap.keys()),
         bands: list[str] = s2_bands,
@@ -126,8 +126,8 @@ class SouthAfricaCropType(RasterDataset):
         """
         assert (
             set(classes) <= self.cmap.keys()
-        ), f"Only the following classes are valid: {list(self.cmap.keys())}."
-        assert 0 in classes, "Classes must include the background class: 0"
+        ), f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert 0 in classes, 'Classes must include the background class: 0'
 
         self.paths = paths
         self.classes = classes
@@ -160,7 +160,7 @@ class SouthAfricaCropType(RasterDataset):
 
         if not filepaths:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
         data_list: list[Tensor] = []
@@ -175,33 +175,33 @@ class SouthAfricaCropType(RasterDataset):
             filename = os.path.basename(filepath)
             match = re.match(filename_regex, filename)
             if match:
-                field_id = match.group("field_id")
-                date = match.group("date")
-                band = match.group("band")
-                band_type = "s1" if band in self.s1_bands else "s2"
+                field_id = match.group('field_id')
+                date = match.group('date')
+                band = match.group('band')
+                band_type = 's1' if band in self.s1_bands else 's2'
                 if field_id not in field_ids:
                     field_ids.append(field_id)
-                    imagery_dates[field_id] = {"s1": "", "s2": ""}
+                    imagery_dates[field_id] = {'s1': '', 's2': ''}
                 if (
-                    date.split("_")[1] == "07"
+                    date.split('_')[1] == '07'
                     and not imagery_dates[field_id][band_type]
                 ):
                     imagery_dates[field_id][band_type] = date
 
         # Create Tensors for each band using stored dates
         for band in self.bands:
-            band_type = "s1" if band in self.s1_bands else "s2"
+            band_type = 's1' if band in self.s1_bands else 's2'
             band_filepaths = []
             for field_id in field_ids:
                 date = imagery_dates[field_id][band_type]
                 filepath = os.path.join(
                     self.paths,
-                    "train",
-                    "imagery",
+                    'train',
+                    'imagery',
                     band_type,
                     field_id,
                     date,
-                    f"{field_id}_{date}_{band}_10m.tif",
+                    f'{field_id}_{date}_{band}_10m.tif',
                 )
                 band_filepaths.append(filepath)
             data_list.append(self._merge_files(band_filepaths, query))
@@ -211,17 +211,17 @@ class SouthAfricaCropType(RasterDataset):
         mask_filepaths: list[str] = []
         for field_id in field_ids:
             file_path = filepath = os.path.join(
-                self.paths, "train", "labels", f"{field_id}.tif"
+                self.paths, 'train', 'labels', f'{field_id}.tif'
             )
             mask_filepaths.append(file_path)
 
         mask = self._merge_files(mask_filepaths, query)
 
         sample = {
-            "crs": self.crs,
-            "bbox": query,
-            "image": image.float(),
-            "mask": mask.long(),
+            'crs': self.crs,
+            'bbox': query,
+            'image': image.float(),
+            'mask': mask.long(),
         }
 
         if self.transforms is not None:
@@ -255,31 +255,31 @@ class SouthAfricaCropType(RasterDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image = sample["image"][rgb_indices].permute(1, 2, 0)
+        image = sample['image'][rgb_indices].permute(1, 2, 0)
         image = (image - image.min()) / (image.max() - image.min())
 
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 2
 
-        showing_prediction = "prediction" in sample
+        showing_prediction = 'prediction' in sample
         if showing_prediction:
-            pred = sample["prediction"].squeeze()
+            pred = sample['prediction'].squeeze()
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
         axs[0].imshow(image)
-        axs[0].axis("off")
-        axs[1].imshow(self.ordinal_cmap[mask], interpolation="none")
-        axs[1].axis("off")
+        axs[0].axis('off')
+        axs[1].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[1].axis('off')
         if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
+            axs[0].set_title('Image')
+            axs[1].set_title('Mask')
 
         if showing_prediction:
             axs[2].imshow(pred)
-            axs[2].axis("off")
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Prediction")
+                axs[2].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

@@ -55,47 +55,47 @@ class CropHarvest(NonGeoDataset):
 
     # https://github.com/nasaharvest/cropharvest/blob/main/cropharvest/bands.py
     all_bands = [
-        "VV",
-        "VH",
-        "B2",
-        "B3",
-        "B4",
-        "B5",
-        "B6",
-        "B7",
-        "B8",
-        "B8A",
-        "B9",
-        "B11",
-        "B12",
-        "temperature_2m",
-        "total_precipitation",
-        "elevation",
-        "slope",
-        "NDVI",
+        'VV',
+        'VH',
+        'B2',
+        'B3',
+        'B4',
+        'B5',
+        'B6',
+        'B7',
+        'B8',
+        'B8A',
+        'B9',
+        'B11',
+        'B12',
+        'temperature_2m',
+        'total_precipitation',
+        'elevation',
+        'slope',
+        'NDVI',
     ]
-    rgb_bands = ["B4", "B3", "B2"]
+    rgb_bands = ['B4', 'B3', 'B2']
 
-    features_url = "https://zenodo.org/records/7257688/files/features.tar.gz?download=1"
-    labels_url = "https://zenodo.org/records/7257688/files/labels.geojson?download=1"
+    features_url = 'https://zenodo.org/records/7257688/files/features.tar.gz?download=1'
+    labels_url = 'https://zenodo.org/records/7257688/files/labels.geojson?download=1'
     file_dict = {
-        "features": {
-            "url": features_url,
-            "filename": "features.tar.gz",
-            "extracted_filename": os.path.join("features", "arrays"),
-            "md5": "cad4df655c75caac805a80435e46ee3e",
+        'features': {
+            'url': features_url,
+            'filename': 'features.tar.gz',
+            'extracted_filename': os.path.join('features', 'arrays'),
+            'md5': 'cad4df655c75caac805a80435e46ee3e',
         },
-        "labels": {
-            "url": labels_url,
-            "filename": "labels.geojson",
-            "extracted_filename": "labels.geojson",
-            "md5": "bf7bae6812fc7213481aff6a2e34517d",
+        'labels': {
+            'url': labels_url,
+            'filename': 'labels.geojson',
+            'extracted_filename': 'labels.geojson',
+            'md5': 'bf7bae6812fc7213481aff6a2e34517d',
         },
     }
 
     def __init__(
         self,
-        root: str = "data",
+        root: str = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -117,7 +117,7 @@ class CropHarvest(NonGeoDataset):
             import h5py  # noqa: F401
         except ImportError:
             raise ImportError(
-                "h5py is not installed and is required to use this dataset"
+                'h5py is not installed and is required to use this dataset'
             )
 
         self.root = root
@@ -129,9 +129,9 @@ class CropHarvest(NonGeoDataset):
 
         self.files = self._load_features(self.root)
         self.labels = self._load_labels(self.root)
-        self.classes = self.labels["properties.label"].unique()
+        self.classes = self.labels['properties.label'].unique()
         self.classes = self.classes[self.classes != np.array(None)]
-        self.classes = np.insert(self.classes, 0, ["None", "Other"])
+        self.classes = np.insert(self.classes, 0, ['None', 'Other'])
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -143,10 +143,10 @@ class CropHarvest(NonGeoDataset):
             single pixel time-series array and label at that index
         """
         files = self.files[index]
-        data = self._load_array(files["chip"])
+        data = self._load_array(files['chip'])
 
-        label = self._load_label(files["index"], files["dataset"])
-        sample = {"array": data, "label": label}
+        label = self._load_label(files['index'], files['dataset'])
+        sample = {'array': data, 'label': label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -173,15 +173,15 @@ class CropHarvest(NonGeoDataset):
         """
         files = []
         chips = glob.glob(
-            os.path.join(root, self.file_dict["features"]["extracted_filename"], "*.h5")
+            os.path.join(root, self.file_dict['features']['extracted_filename'], '*.h5')
         )
         chips = sorted(os.path.basename(chip) for chip in chips)
         for chip in chips:
             chip_path = os.path.join(
-                root, self.file_dict["features"]["extracted_filename"], chip
+                root, self.file_dict['features']['extracted_filename'], chip
             )
-            index = chip.split("_")[0]
-            dataset = chip.split("_")[1][:-3]
+            index = chip.split('_')[0]
+            dataset = chip.split('_')[1][:-3]
             files.append(dict(chip=chip_path, index=index, dataset=dataset))
         return files
 
@@ -194,10 +194,10 @@ class CropHarvest(NonGeoDataset):
         Returns:
             pandas dataframe containing label data for each feature
         """
-        filename = self.file_dict["labels"]["extracted_filename"]
-        with open(os.path.join(root, filename), encoding="utf8") as f:
+        filename = self.file_dict['labels']['extracted_filename']
+        with open(os.path.join(root, filename), encoding='utf8') as f:
             data = json.load(f)
-            df = pd.json_normalize(data["features"])
+            df = pd.json_normalize(data['features'])
             return df
 
     def _load_array(self, path: str) -> Tensor:
@@ -212,8 +212,8 @@ class CropHarvest(NonGeoDataset):
         import h5py
 
         filename = os.path.join(path)
-        with h5py.File(filename, "r") as f:
-            array = f.get("array")[()]
+        with h5py.File(filename, 'r') as f:
+            array = f.get('array')[()]
             tensor = torch.from_numpy(array)
             return tensor
 
@@ -229,15 +229,15 @@ class CropHarvest(NonGeoDataset):
         """
         index = int(idx)
         row = self.labels[
-            (self.labels["properties.index"] == index)
-            & (self.labels["properties.dataset"] == dataset)
+            (self.labels['properties.index'] == index)
+            & (self.labels['properties.dataset'] == dataset)
         ]
-        row = row.to_dict(orient="records")[0]
-        label = "None"
-        if row["properties.label"]:
-            label = row["properties.label"]
-        elif row["properties.is_crop"] == 1:
-            label = "Other"
+        row = row.to_dict(orient='records')[0]
+        label = 'None'
+        if row['properties.label']:
+            label = row['properties.label']
+        elif row['properties.is_crop'] == 1:
+            label = 'Other'
 
         return torch.tensor(np.where(self.classes == label)[0][0])
 
@@ -245,13 +245,13 @@ class CropHarvest(NonGeoDataset):
         """Verify the integrity of the dataset."""
         # Check if feature files already exist
         feature_path = os.path.join(
-            self.root, self.file_dict["features"]["extracted_filename"]
+            self.root, self.file_dict['features']['extracted_filename']
         )
         feature_path_zip = os.path.join(
-            self.root, self.file_dict["features"]["filename"]
+            self.root, self.file_dict['features']['filename']
         )
         label_path = os.path.join(
-            self.root, self.file_dict["labels"]["extracted_filename"]
+            self.root, self.file_dict['labels']['extracted_filename']
         )
         # Check if labels exist
         if os.path.exists(label_path):
@@ -273,24 +273,24 @@ class CropHarvest(NonGeoDataset):
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
-        features_path = os.path.join(self.file_dict["features"]["filename"])
+        features_path = os.path.join(self.file_dict['features']['filename'])
         download_url(
-            self.file_dict["features"]["url"],
+            self.file_dict['features']['url'],
             self.root,
             filename=features_path,
-            md5=self.file_dict["features"]["md5"] if self.checksum else None,
+            md5=self.file_dict['features']['md5'] if self.checksum else None,
         )
 
         download_url(
-            self.file_dict["labels"]["url"],
+            self.file_dict['labels']['url'],
             self.root,
-            filename=os.path.join(self.file_dict["labels"]["filename"]),
-            md5=self.file_dict["labels"]["md5"] if self.checksum else None,
+            filename=os.path.join(self.file_dict['labels']['filename']),
+            md5=self.file_dict['labels']['md5'] if self.checksum else None,
         )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        features_path = os.path.join(self.root, self.file_dict["features"]["filename"])
+        features_path = os.path.join(self.root, self.file_dict['features']['filename'])
         extract_archive(features_path)
 
     def plot(self, sample: dict[str, Tensor], suptitle: str | None = None) -> Figure:
@@ -305,13 +305,13 @@ class CropHarvest(NonGeoDataset):
         """
         fig, axs = plt.subplots()
         bands = [self.all_bands.index(band) for band in self.rgb_bands]
-        rgb = np.array(sample["array"])[:, bands] / 3000
+        rgb = np.array(sample['array'])[:, bands] / 3000
         axs.imshow(rgb[None, ...])
         axs.set_title(f'Crop type: {self.classes[sample["label"]]}')
         axs.set_xticks(np.arange(12))
         axs.set_xticklabels(np.arange(12) + 1)
         axs.set_yticks([])
-        axs.set_xlabel("Month")
+        axs.set_xlabel('Month')
         if suptitle is not None:
             plt.suptitle(suptitle)
 

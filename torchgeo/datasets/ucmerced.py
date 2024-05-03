@@ -65,28 +65,28 @@ class UCMerced(NonGeoClassificationDataset):
     * https://dl.acm.org/doi/10.1145/1869790.1869829
     """
 
-    url = "https://hf.co/datasets/torchgeo/ucmerced/resolve/d0af6e2eeea2322af86078068bd83337148a2149/UCMerced_LandUse.zip"  # noqa: E501
-    filename = "UCMerced_LandUse.zip"
-    md5 = "5b7ec56793786b6dc8a908e8854ac0e4"
+    url = 'https://hf.co/datasets/torchgeo/ucmerced/resolve/d0af6e2eeea2322af86078068bd83337148a2149/UCMerced_LandUse.zip'  # noqa: E501
+    filename = 'UCMerced_LandUse.zip'
+    md5 = '5b7ec56793786b6dc8a908e8854ac0e4'
 
-    base_dir = os.path.join("UCMerced_LandUse", "Images")
+    base_dir = os.path.join('UCMerced_LandUse', 'Images')
 
-    splits = ["train", "val", "test"]
+    splits = ['train', 'val', 'test']
     split_urls = {
-        "train": "https://storage.googleapis.com/remote_sensing_representations/uc_merced-train.txt",  # noqa: E501
-        "val": "https://storage.googleapis.com/remote_sensing_representations/uc_merced-val.txt",  # noqa: E501
-        "test": "https://storage.googleapis.com/remote_sensing_representations/uc_merced-test.txt",  # noqa: E501
+        'train': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-train.txt',  # noqa: E501
+        'val': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-val.txt',  # noqa: E501
+        'test': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-test.txt',  # noqa: E501
     }
     split_md5s = {
-        "train": "f2fb12eb2210cfb53f93f063a35ff374",
-        "val": "11ecabfc52782e5ea6a9c7c0d263aca0",
-        "test": "046aff88472d8fc07c4678d03749e28d",
+        'train': 'f2fb12eb2210cfb53f93f063a35ff374',
+        'val': '11ecabfc52782e5ea6a9c7c0d263aca0',
+        'test': '046aff88472d8fc07c4678d03749e28d',
     }
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -112,7 +112,7 @@ class UCMerced(NonGeoClassificationDataset):
         self._verify()
 
         valid_fns = set()
-        with open(os.path.join(self.root, f"uc_merced-{split}.txt")) as f:
+        with open(os.path.join(self.root, f'uc_merced-{split}.txt')) as f:
             for fn in f:
                 valid_fns.add(fn.strip())
 
@@ -181,7 +181,7 @@ class UCMerced(NonGeoClassificationDataset):
             download_url(
                 self.split_urls[split],
                 self.root,
-                filename=f"uc_merced-{split}.txt",
+                filename=f'uc_merced-{split}.txt',
                 md5=self.split_md5s[split] if self.checksum else None,
             )
 
@@ -208,27 +208,27 @@ class UCMerced(NonGeoClassificationDataset):
 
         .. versionadded:: 0.2
         """
-        image = np.rollaxis(sample["image"].numpy(), 0, 3)
+        image = np.rollaxis(sample['image'].numpy(), 0, 3)
 
         # Normalize the image if the max value is greater than 1
         if image.max() > 1:
             image = image.astype(np.float32) / 255.0  # Scale to [0, 1]
 
-        label = cast(int, sample["label"].item())
+        label = cast(int, sample['label'].item())
         label_class = self.classes[label]
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = cast(int, sample["prediction"].item())
+            prediction = cast(int, sample['prediction'].item())
             prediction_class = self.classes[prediction]
 
         fig, ax = plt.subplots(figsize=(4, 4))
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
         if show_titles:
-            title = f"Label: {label_class}"
+            title = f'Label: {label_class}'
             if showing_predictions:
-                title += f"\nPrediction: {prediction_class}"
+                title += f'\nPrediction: {prediction_class}'
             ax.set_title(title)
 
         if suptitle is not None:

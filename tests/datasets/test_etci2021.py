@@ -21,33 +21,33 @@ def download_url(url: str, root: str, *args: str) -> None:
 
 
 class TestETCI2021:
-    @pytest.fixture(params=["train", "val", "test"])
+    @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> ETCI2021:
-        monkeypatch.setattr(torchgeo.datasets.utils, "download_url", download_url)
-        data_dir = os.path.join("tests", "data", "etci2021")
+        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
+        data_dir = os.path.join('tests', 'data', 'etci2021')
         metadata = {
-            "train": {
-                "filename": "train.zip",
-                "md5": "bd55f2116e43a35d5b94a765938be2aa",
-                "directory": "train",
-                "url": os.path.join(data_dir, "train.zip"),
+            'train': {
+                'filename': 'train.zip',
+                'md5': 'bd55f2116e43a35d5b94a765938be2aa',
+                'directory': 'train',
+                'url': os.path.join(data_dir, 'train.zip'),
             },
-            "val": {
-                "filename": "val_with_ref_labels.zip",
-                "md5": "96ed69904043e514c13c14ffd3ec45cd",
-                "directory": "test",
-                "url": os.path.join(data_dir, "val_with_ref_labels.zip"),
+            'val': {
+                'filename': 'val_with_ref_labels.zip',
+                'md5': '96ed69904043e514c13c14ffd3ec45cd',
+                'directory': 'test',
+                'url': os.path.join(data_dir, 'val_with_ref_labels.zip'),
             },
-            "test": {
-                "filename": "test_without_ref_labels.zip",
-                "md5": "1b66d85e22c8f5b0794b3542c5ea09ef",
-                "directory": "test_internal",
-                "url": os.path.join(data_dir, "test_without_ref_labels.zip"),
+            'test': {
+                'filename': 'test_without_ref_labels.zip',
+                'md5': '1b66d85e22c8f5b0794b3542c5ea09ef',
+                'directory': 'test_internal',
+                'url': os.path.join(data_dir, 'test_without_ref_labels.zip'),
             },
         }
-        monkeypatch.setattr(ETCI2021, "metadata", metadata)
+        monkeypatch.setattr(ETCI2021, 'metadata', metadata)
         root = str(tmp_path)
         split = request.param
         transforms = nn.Identity()
@@ -56,15 +56,15 @@ class TestETCI2021:
     def test_getitem(self, dataset: ETCI2021) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
-        assert isinstance(x["mask"], torch.Tensor)
-        assert x["image"].shape[0] == 6
-        assert x["image"].shape[-2:] == x["mask"].shape[-2:]
+        assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['mask'], torch.Tensor)
+        assert x['image'].shape[0] == 6
+        assert x['image'].shape[-2:] == x['mask'].shape[-2:]
 
-        if dataset.split != "test":
-            assert x["mask"].shape[0] == 2
+        if dataset.split != 'test':
+            assert x['mask'].shape[0] == 2
         else:
-            assert x["mask"].shape[0] == 1
+            assert x['mask'].shape[0] == 1
 
     def test_len(self, dataset: ETCI2021) -> None:
         assert len(dataset) == 3
@@ -74,18 +74,18 @@ class TestETCI2021:
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
-            ETCI2021(split="foo")
+            ETCI2021(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             ETCI2021(str(tmp_path))
 
     def test_plot(self, dataset: ETCI2021) -> None:
         x = dataset[0].copy()
-        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle='Test')
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        x["prediction"] = x["mask"][0].clone()
+        x['prediction'] = x['mask'][0].clone()
         dataset.plot(x)
         plt.close()

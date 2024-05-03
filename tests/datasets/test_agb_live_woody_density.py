@@ -32,15 +32,15 @@ class TestAbovegroundLiveWoodyBiomassDensity:
     ) -> AbovegroundLiveWoodyBiomassDensity:
         transforms = nn.Identity()
         monkeypatch.setattr(
-            torchgeo.datasets.agb_live_woody_density, "download_url", download_url
+            torchgeo.datasets.agb_live_woody_density, 'download_url', download_url
         )
         url = os.path.join(
-            "tests",
-            "data",
-            "agb_live_woody_density",
-            "Aboveground_Live_Woody_Biomass_Density.geojson",
+            'tests',
+            'data',
+            'agb_live_woody_density',
+            'Aboveground_Live_Woody_Biomass_Density.geojson',
         )
-        monkeypatch.setattr(AbovegroundLiveWoodyBiomassDensity, "url", url)
+        monkeypatch.setattr(AbovegroundLiveWoodyBiomassDensity, 'url', url)
 
         root = str(tmp_path)
         return AbovegroundLiveWoodyBiomassDensity(
@@ -50,11 +50,11 @@ class TestAbovegroundLiveWoodyBiomassDensity:
     def test_getitem(self, dataset: AbovegroundLiveWoodyBiomassDensity) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x["crs"], CRS)
-        assert isinstance(x["mask"], torch.Tensor)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['mask'], torch.Tensor)
 
     def test_no_dataset(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             AbovegroundLiveWoodyBiomassDensity(str(tmp_path))
 
     def test_already_downloaded(
@@ -73,12 +73,12 @@ class TestAbovegroundLiveWoodyBiomassDensity:
     def test_plot(self, dataset: AbovegroundLiveWoodyBiomassDensity) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: AbovegroundLiveWoodyBiomassDensity) -> None:
         query = dataset.bounds
         x = dataset[query]
-        x["prediction"] = x["mask"].clone()
-        dataset.plot(x, suptitle="Prediction")
+        x['prediction'] = x['mask'].clone()
+        dataset.plot(x, suptitle='Prediction')
         plt.close()

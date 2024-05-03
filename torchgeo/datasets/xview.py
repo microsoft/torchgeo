@@ -54,24 +54,24 @@ class XView2(NonGeoDataset):
     """
 
     metadata = {
-        "train": {
-            "filename": "train_images_labels_targets.tar.gz",
-            "md5": "a20ebbfb7eb3452785b63ad02ffd1e16",
-            "directory": "train",
+        'train': {
+            'filename': 'train_images_labels_targets.tar.gz',
+            'md5': 'a20ebbfb7eb3452785b63ad02ffd1e16',
+            'directory': 'train',
         },
-        "test": {
-            "filename": "test_images_labels_targets.tar.gz",
-            "md5": "1b39c47e05d1319c17cc8763cee6fe0c",
-            "directory": "test",
+        'test': {
+            'filename': 'test_images_labels_targets.tar.gz',
+            'md5': '1b39c47e05d1319c17cc8763cee6fe0c',
+            'directory': 'test',
         },
     }
-    classes = ["background", "no-damage", "minor-damage", "major-damage", "destroyed"]
-    colormap = ["green", "blue", "orange", "red"]
+    classes = ['background', 'no-damage', 'minor-damage', 'major-damage', 'destroyed']
+    colormap = ['green', 'blue', 'orange', 'red']
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
@@ -109,14 +109,14 @@ class XView2(NonGeoDataset):
             data and label at that index
         """
         files = self.files[index]
-        image1 = self._load_image(files["image1"])
-        image2 = self._load_image(files["image2"])
-        mask1 = self._load_target(files["mask1"])
-        mask2 = self._load_target(files["mask2"])
+        image1 = self._load_image(files['image1'])
+        image2 = self._load_image(files['image2'])
+        mask1 = self._load_target(files['mask1'])
+        mask2 = self._load_target(files['mask2'])
 
         image = torch.stack(tensors=[image1, image2], dim=0)
         mask = torch.stack(tensors=[mask1, mask2], dim=0)
-        sample = {"image": image, "mask": mask}
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -142,17 +142,17 @@ class XView2(NonGeoDataset):
             list of dicts containing paths for each pair of images and masks
         """
         files = []
-        directory = self.metadata[split]["directory"]
-        image_root = os.path.join(root, directory, "images")
-        mask_root = os.path.join(root, directory, "targets")
-        images = glob.glob(os.path.join(image_root, "*.png"))
+        directory = self.metadata[split]['directory']
+        image_root = os.path.join(root, directory, 'images')
+        mask_root = os.path.join(root, directory, 'targets')
+        images = glob.glob(os.path.join(image_root, '*.png'))
         basenames = [os.path.basename(f) for f in images]
-        basenames = ["_".join(f.split("_")[:-2]) for f in basenames]
+        basenames = ['_'.join(f.split('_')[:-2]) for f in basenames]
         for name in sorted(set(basenames)):
-            image1 = os.path.join(image_root, f"{name}_pre_disaster.png")
-            image2 = os.path.join(image_root, f"{name}_post_disaster.png")
-            mask1 = os.path.join(mask_root, f"{name}_pre_disaster_target.png")
-            mask2 = os.path.join(mask_root, f"{name}_post_disaster_target.png")
+            image1 = os.path.join(image_root, f'{name}_pre_disaster.png')
+            image2 = os.path.join(image_root, f'{name}_post_disaster.png')
+            mask1 = os.path.join(mask_root, f'{name}_pre_disaster_target.png')
+            mask2 = os.path.join(mask_root, f'{name}_post_disaster_target.png')
             files.append(dict(image1=image1, image2=image2, mask1=mask1, mask2=mask2))
         return files
 
@@ -167,7 +167,7 @@ class XView2(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
+            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
@@ -184,7 +184,7 @@ class XView2(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
+            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = tensor.to(torch.long)
             return tensor
@@ -194,10 +194,10 @@ class XView2(NonGeoDataset):
         # Check if the files already exist
         exists = []
         for split_info in self.metadata.values():
-            for directory in ["images", "targets"]:
+            for directory in ['images', 'targets']:
                 exists.append(
                     os.path.exists(
-                        os.path.join(self.root, split_info["directory"], directory)
+                        os.path.join(self.root, split_info['directory'], directory)
                     )
                 )
 
@@ -207,10 +207,10 @@ class XView2(NonGeoDataset):
         # Check if .tar.gz files already exists (if so then extract)
         exists = []
         for split_info in self.metadata.values():
-            filepath = os.path.join(self.root, split_info["filename"])
+            filepath = os.path.join(self.root, split_info['filename'])
             if os.path.isfile(filepath):
-                if self.checksum and not check_integrity(filepath, split_info["md5"]):
-                    raise RuntimeError("Dataset found, but corrupted.")
+                if self.checksum and not check_integrity(filepath, split_info['md5']):
+                    raise RuntimeError('Dataset found, but corrupted.')
                 exists.append(True)
                 extract_archive(filepath)
             else:
@@ -241,34 +241,34 @@ class XView2(NonGeoDataset):
         """
         ncols = 2
         image1 = draw_semantic_segmentation_masks(
-            sample["image"][0], sample["mask"][0], alpha=alpha, colors=self.colormap
+            sample['image'][0], sample['mask'][0], alpha=alpha, colors=self.colormap
         )
         image2 = draw_semantic_segmentation_masks(
-            sample["image"][1], sample["mask"][1], alpha=alpha, colors=self.colormap
+            sample['image'][1], sample['mask'][1], alpha=alpha, colors=self.colormap
         )
-        if "prediction" in sample:  # NOTE: this assumes predictions are made for post
+        if 'prediction' in sample:  # NOTE: this assumes predictions are made for post
             ncols += 1
             image3 = draw_semantic_segmentation_masks(
-                sample["image"][1],
-                sample["prediction"],
+                sample['image'][1],
+                sample['prediction'],
                 alpha=alpha,
                 colors=self.colormap,
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image1)
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(image2)
-        axs[1].axis("off")
+        axs[1].axis('off')
         if ncols > 2:
             axs[2].imshow(image3)
-            axs[2].axis("off")
+            axs[2].axis('off')
 
         if show_titles:
-            axs[0].set_title("Pre disaster")
-            axs[1].set_title("Post disaster")
+            axs[0].set_title('Pre disaster')
+            axs[1].set_title('Post disaster')
             if ncols > 2:
-                axs[2].set_title("Predictions")
+                axs[2].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

@@ -57,38 +57,38 @@ class RwandaFieldBoundary(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    dataset_id = "nasa_rwanda_field_boundary_competition"
+    dataset_id = 'nasa_rwanda_field_boundary_competition'
     collection_ids = [
-        "nasa_rwanda_field_boundary_competition_source_train",
-        "nasa_rwanda_field_boundary_competition_labels_train",
-        "nasa_rwanda_field_boundary_competition_source_test",
+        'nasa_rwanda_field_boundary_competition_source_train',
+        'nasa_rwanda_field_boundary_competition_labels_train',
+        'nasa_rwanda_field_boundary_competition_source_test',
     ]
-    number_of_patches_per_split = {"train": 57, "test": 13}
+    number_of_patches_per_split = {'train': 57, 'test': 13}
 
     filenames = {
-        "train_images": "nasa_rwanda_field_boundary_competition_source_train.tar.gz",
-        "test_images": "nasa_rwanda_field_boundary_competition_source_test.tar.gz",
-        "train_labels": "nasa_rwanda_field_boundary_competition_labels_train.tar.gz",
+        'train_images': 'nasa_rwanda_field_boundary_competition_source_train.tar.gz',
+        'test_images': 'nasa_rwanda_field_boundary_competition_source_test.tar.gz',
+        'train_labels': 'nasa_rwanda_field_boundary_competition_labels_train.tar.gz',
     }
     md5s = {
-        "train_images": "1f9ec08038218e67e11f82a86849b333",
-        "test_images": "17bb0e56eedde2e7a43c57aa908dc125",
-        "train_labels": "10e4eb761523c57b6d3bdf9394004f5f",
+        'train_images': '1f9ec08038218e67e11f82a86849b333',
+        'test_images': '17bb0e56eedde2e7a43c57aa908dc125',
+        'train_labels': '10e4eb761523c57b6d3bdf9394004f5f',
     }
 
-    dates = ("2021_03", "2021_04", "2021_08", "2021_10", "2021_11", "2021_12")
+    dates = ('2021_03', '2021_04', '2021_08', '2021_10', '2021_11', '2021_12')
 
-    all_bands = ("B01", "B02", "B03", "B04")
-    rgb_bands = ("B03", "B02", "B01")
+    all_bands = ('B01', 'B02', 'B03', 'B04')
+    rgb_bands = ('B03', 'B02', 'B01')
 
-    classes = ["No field-boundary", "Field-boundary"]
+    classes = ['No field-boundary', 'Field-boundary']
 
-    splits = ["train", "test"]
+    splits = ['train', 'test']
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         bands: Sequence[str] = all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -113,7 +113,7 @@ class RwandaFieldBoundary(NonGeoDataset):
         self._validate_bands(bands)
         assert split in self.splits
         if download and api_key is None:
-            raise RuntimeError("Must provide an API key to download the dataset")
+            raise RuntimeError('Must provide an API key to download the dataset')
         self.root = root
         self.bands = bands
         self.transforms = transforms
@@ -132,9 +132,9 @@ class RwandaFieldBoundary(NonGeoDataset):
                 for band in self.bands:
                     fn = os.path.join(
                         self.root,
-                        f"nasa_rwanda_field_boundary_competition_source_{split}",
-                        f"nasa_rwanda_field_boundary_competition_source_{split}_{i:02d}_{date}",  # noqa: E501
-                        f"{band}.tif",
+                        f'nasa_rwanda_field_boundary_competition_source_{split}',
+                        f'nasa_rwanda_field_boundary_competition_source_{split}_{i:02d}_{date}',  # noqa: E501
+                        f'{band}.tif',
                     )
                     patch.append(fn)
                 dates.append(patch)
@@ -142,9 +142,9 @@ class RwandaFieldBoundary(NonGeoDataset):
             self.mask_filenames.append(
                 os.path.join(
                     self.root,
-                    f"nasa_rwanda_field_boundary_competition_labels_{split}",
-                    f"nasa_rwanda_field_boundary_competition_labels_{split}_{i:02d}",
-                    "raster_labels.tif",
+                    f'nasa_rwanda_field_boundary_competition_labels_{split}',
+                    f'nasa_rwanda_field_boundary_competition_labels_{split}_{i:02d}',
+                    'raster_labels.tif',
                 )
             )
 
@@ -169,13 +169,13 @@ class RwandaFieldBoundary(NonGeoDataset):
             imgs.append(bands)
         img = torch.from_numpy(np.array(imgs))
 
-        sample = {"image": img}
+        sample = {'image': img}
 
-        if self.split == "train":
+        if self.split == 'train':
             with rasterio.open(mask_fn) as f:
                 mask = f.read(1)
             mask = torch.from_numpy(mask)
-            sample["mask"] = mask
+            sample['mask'] = mask
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -209,7 +209,7 @@ class RwandaFieldBoundary(NonGeoDataset):
         checks = []
         for split, num_patches in self.number_of_patches_per_split.items():
             path = os.path.join(
-                self.root, f"nasa_rwanda_field_boundary_competition_source_{split}"
+                self.root, f'nasa_rwanda_field_boundary_competition_source_{split}'
             )
             if os.path.exists(path):
                 num_files = len(os.listdir(path))
@@ -223,11 +223,11 @@ class RwandaFieldBoundary(NonGeoDataset):
 
         # Check if tar file already exists (if so then extract)
         have_all_files = True
-        for group in ["train_images", "train_labels", "test_images"]:
+        for group in ['train_images', 'train_labels', 'test_images']:
             filepath = os.path.join(self.root, self.filenames[group])
             if os.path.exists(filepath):
                 if self.checksum and not check_integrity(filepath, self.md5s[group]):
-                    raise RuntimeError("Dataset found, but corrupted.")
+                    raise RuntimeError('Dataset found, but corrupted.')
                 extract_archive(filepath)
             else:
                 have_all_files = False
@@ -246,10 +246,10 @@ class RwandaFieldBoundary(NonGeoDataset):
         for collection_id in self.collection_ids:
             download_radiant_mlhub_collection(collection_id, self.root, self.api_key)
 
-        for group in ["train_images", "train_labels", "test_images"]:
+        for group in ['train_images', 'train_labels', 'test_images']:
             filepath = os.path.join(self.root, self.filenames[group])
             if self.checksum and not check_integrity(filepath, self.md5s[group]):
-                raise RuntimeError("Dataset not found or corrupted.")
+                raise RuntimeError('Dataset not found or corrupted.')
             extract_archive(filepath, self.root)
 
     def plot(
@@ -280,40 +280,40 @@ class RwandaFieldBoundary(NonGeoDataset):
             else:
                 raise RGBBandsMissingError()
 
-        num_time_points = sample["image"].shape[0]
+        num_time_points = sample['image'].shape[0]
         assert time_step < num_time_points
 
-        image = np.rollaxis(sample["image"][time_step, rgb_indices].numpy(), 0, 3)
+        image = np.rollaxis(sample['image'][time_step, rgb_indices].numpy(), 0, 3)
         image = np.clip(image / 2000, 0, 1)
 
-        if "mask" in sample:
-            mask = sample["mask"].numpy()
+        if 'mask' in sample:
+            mask = sample['mask'].numpy()
         else:
             mask = np.zeros_like(image)
 
         num_panels = 2
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            predictions = sample["prediction"].numpy()
+            predictions = sample['prediction'].numpy()
             num_panels += 1
 
         fig, axs = plt.subplots(ncols=num_panels, figsize=(4 * num_panels, 4))
 
         axs[0].imshow(image)
-        axs[0].axis("off")
+        axs[0].axis('off')
         if show_titles:
-            axs[0].set_title(f"t={time_step}")
+            axs[0].set_title(f't={time_step}')
 
-        axs[1].imshow(mask, vmin=0, vmax=1, interpolation="none")
-        axs[1].axis("off")
+        axs[1].imshow(mask, vmin=0, vmax=1, interpolation='none')
+        axs[1].axis('off')
         if show_titles:
-            axs[1].set_title("Mask")
+            axs[1].set_title('Mask')
 
         if showing_predictions:
-            axs[2].imshow(predictions, vmin=0, vmax=1, interpolation="none")
-            axs[2].axis("off")
+            axs[2].imshow(predictions, vmin=0, vmax=1, interpolation='none')
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Predictions")
+                axs[2].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

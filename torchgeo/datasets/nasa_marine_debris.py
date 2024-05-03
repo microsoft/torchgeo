@@ -57,15 +57,15 @@ class NASAMarineDebris(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    collection_ids = ["nasa_marine_debris_source", "nasa_marine_debris_labels"]
-    directories = ["nasa_marine_debris_source", "nasa_marine_debris_labels"]
-    filenames = ["nasa_marine_debris_source.tar.gz", "nasa_marine_debris_labels.tar.gz"]
-    md5s = ["fe8698d1e68b3f24f0b86b04419a797d", "d8084f5a72778349e07ac90ec1e1d990"]
-    class_label = "marine_debris"
+    collection_ids = ['nasa_marine_debris_source', 'nasa_marine_debris_labels']
+    directories = ['nasa_marine_debris_source', 'nasa_marine_debris_labels']
+    filenames = ['nasa_marine_debris_source.tar.gz', 'nasa_marine_debris_labels.tar.gz']
+    md5s = ['fe8698d1e68b3f24f0b86b04419a797d', 'd8084f5a72778349e07ac90ec1e1d990']
+    class_label = 'marine_debris'
 
     def __init__(
         self,
-        root: str = "data",
+        root: str = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         api_key: str | None = None,
@@ -104,15 +104,15 @@ class NASAMarineDebris(NonGeoDataset):
         Returns:
             data and labels at that index
         """
-        image = self._load_image(self.files[index]["image"])
-        boxes = self._load_target(self.files[index]["target"])
-        sample = {"image": image, "boxes": boxes}
+        image = self._load_image(self.files[index]['image'])
+        boxes = self._load_target(self.files[index]['target'])
+        sample = {'image': image, 'boxes': boxes}
 
         # Filter invalid boxes
-        w_check = (sample["boxes"][:, 2] - sample["boxes"][:, 0]) > 0
-        h_check = (sample["boxes"][:, 3] - sample["boxes"][:, 1]) > 0
+        w_check = (sample['boxes'][:, 2] - sample['boxes'][:, 0]) > 0
+        h_check = (sample['boxes'][:, 3] - sample['boxes'][:, 1]) > 0
         indices = w_check & h_check
-        sample["boxes"] = sample["boxes"][indices]
+        sample['boxes'] = sample['boxes'][indices]
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -165,18 +165,18 @@ class NASAMarineDebris(NonGeoDataset):
         image_root = os.path.join(self.root, self.directories[0])
         target_root = os.path.join(self.root, self.directories[1])
         image_folders = sorted(
-            f for f in os.listdir(image_root) if not f.endswith("json")
+            f for f in os.listdir(image_root) if not f.endswith('json')
         )
 
         files = []
         for folder in image_folders:
             files.append(
                 {
-                    "image": os.path.join(image_root, folder, "image_geotiff.tif"),
-                    "target": os.path.join(
+                    'image': os.path.join(image_root, folder, 'image_geotiff.tif'),
+                    'target': os.path.join(
                         target_root,
-                        folder.replace("source", "labels"),
-                        "pixel_bounds.npy",
+                        folder.replace('source', 'labels'),
+                        'pixel_bounds.npy',
                     ),
                 }
             )
@@ -198,7 +198,7 @@ class NASAMarineDebris(NonGeoDataset):
             filepath = os.path.join(self.root, filename)
             if os.path.exists(filepath):
                 if self.checksum and not check_integrity(filepath, md5):
-                    raise RuntimeError("Dataset checksum mismatch.")
+                    raise RuntimeError('Dataset checksum mismatch.')
                 exists.append(True)
                 extract_archive(filepath)
             else:
@@ -217,7 +217,7 @@ class NASAMarineDebris(NonGeoDataset):
         for filename, md5 in zip(self.filenames, self.md5s):
             filepath = os.path.join(self.root, filename)
             if self.checksum and not check_integrity(filepath, md5):
-                raise RuntimeError("Dataset checksum mismatch.")
+                raise RuntimeError('Dataset checksum mismatch.')
             extract_archive(filepath)
 
     def plot(
@@ -238,34 +238,34 @@ class NASAMarineDebris(NonGeoDataset):
         """
         ncols = 1
 
-        sample["image"] = sample["image"].byte()
-        image = sample["image"]
-        if "boxes" in sample and len(sample["boxes"]):
-            image = draw_bounding_boxes(image=sample["image"], boxes=sample["boxes"])
+        sample['image'] = sample['image'].byte()
+        image = sample['image']
+        if 'boxes' in sample and len(sample['boxes']):
+            image = draw_bounding_boxes(image=sample['image'], boxes=sample['boxes'])
         image = image.permute((1, 2, 0)).numpy()
 
-        if "prediction_boxes" in sample and len(sample["prediction_boxes"]):
+        if 'prediction_boxes' in sample and len(sample['prediction_boxes']):
             ncols += 1
             preds = draw_bounding_boxes(
-                image=sample["image"], boxes=sample["prediction_boxes"]
+                image=sample['image'], boxes=sample['prediction_boxes']
             )
             preds = preds.permute((1, 2, 0)).numpy()
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         if ncols < 2:
             axs.imshow(image)
-            axs.axis("off")
+            axs.axis('off')
             if show_titles:
-                axs.set_title("Ground Truth")
+                axs.set_title('Ground Truth')
         else:
             axs[0].imshow(image)
-            axs[0].axis("off")
+            axs[0].axis('off')
             axs[1].imshow(preds)
-            axs[1].axis("off")
+            axs[1].axis('off')
 
             if show_titles:
-                axs[0].set_title("Ground Truth")
-                axs[1].set_title("Predictions")
+                axs[0].set_title('Ground Truth')
+                axs[1].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

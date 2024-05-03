@@ -59,7 +59,7 @@ class VHR10DataModule(NonGeoDataModule):
                 K.RandomHorizontalFlip(),
                 K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.7),
                 K.RandomVerticalFlip(),
-                data_keys=["image", "boxes", "masks"],
+                data_keys=['image', 'boxes', 'masks'],
             ),
             batch_size,
         )
@@ -67,7 +67,7 @@ class VHR10DataModule(NonGeoDataModule):
             AugmentationSequential(
                 K.Normalize(mean=self.mean, std=self.std),
                 K.Resize(self.patch_size),
-                data_keys=["image", "boxes", "masks"],
+                data_keys=['image', 'boxes', 'masks'],
             ),
             batch_size,
         )

@@ -16,35 +16,35 @@ from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
 
 MEAN = {
-    "B01": 1583.0741,
-    "B02": 1374.3202,
-    "B03": 1294.1616,
-    "B04": 1325.6158,
-    "B05": 1478.7408,
-    "B06": 1933.0822,
-    "B07": 2166.0608,
-    "B08": 2076.4868,
-    "B8A": 2306.0652,
-    "B09": 690.9814,
-    "B10": 16.2360,
-    "B11": 2080.3347,
-    "B12": 1524.6930,
+    'B01': 1583.0741,
+    'B02': 1374.3202,
+    'B03': 1294.1616,
+    'B04': 1325.6158,
+    'B05': 1478.7408,
+    'B06': 1933.0822,
+    'B07': 2166.0608,
+    'B08': 2076.4868,
+    'B8A': 2306.0652,
+    'B09': 690.9814,
+    'B10': 16.2360,
+    'B11': 2080.3347,
+    'B12': 1524.6930,
 }
 
 STD = {
-    "B01": 52.1937,
-    "B02": 83.4168,
-    "B03": 105.6966,
-    "B04": 151.1401,
-    "B05": 147.4615,
-    "B06": 115.9289,
-    "B07": 123.1974,
-    "B08": 114.6483,
-    "B8A": 141.4530,
-    "B09": 73.2758,
-    "B10": 4.8368,
-    "B11": 213.4821,
-    "B12": 179.4793,
+    'B01': 52.1937,
+    'B02': 83.4168,
+    'B03': 105.6966,
+    'B04': 151.1401,
+    'B05': 147.4615,
+    'B06': 115.9289,
+    'B07': 123.1974,
+    'B08': 114.6483,
+    'B8A': 141.4530,
+    'B09': 73.2758,
+    'B10': 4.8368,
+    'B11': 213.4821,
+    'B12': 179.4793,
 }
 
 
@@ -81,14 +81,14 @@ class OSCDDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
-        self.bands = kwargs.get("bands", OSCD.all_bands)
+        self.bands = kwargs.get('bands', OSCD.all_bands)
         self.mean = torch.tensor([MEAN[b] for b in self.bands])
         self.std = torch.tensor([STD[b] for b in self.bands])
 
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=["image1", "image2", "mask"],
+            data_keys=['image1', 'image2', 'mask'],
         )
 
     def setup(self, stage: str) -> None:
@@ -97,11 +97,11 @@ class OSCDDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit", "validate"]:
-            self.dataset = OSCD(split="train", **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.dataset = OSCD(split='train', **self.kwargs)
             generator = torch.Generator().manual_seed(0)
             self.train_dataset, self.val_dataset = random_split(
                 self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
             )
-        if stage in ["test"]:
-            self.test_dataset = OSCD(split="test", **self.kwargs)
+        if stage in ['test']:
+            self.test_dataset = OSCD(split='test', **self.kwargs)

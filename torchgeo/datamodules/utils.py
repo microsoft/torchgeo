@@ -47,28 +47,28 @@ class AugPipe(Module):
         Returns:
             Augmented batch.
         """
-        batch_len = len(batch["image"])
+        batch_len = len(batch['image'])
         for bs in range(batch_len):
             batch_dict = {
-                "image": batch["image"][bs],
-                "labels": batch["labels"][bs],
-                "boxes": batch["boxes"][bs],
+                'image': batch['image'][bs],
+                'labels': batch['labels'][bs],
+                'boxes': batch['boxes'][bs],
             }
 
-            if "masks" in batch:
-                batch_dict["masks"] = batch["masks"][bs]
+            if 'masks' in batch:
+                batch_dict['masks'] = batch['masks'][bs]
 
             batch_dict = self.augs(batch_dict)
 
-            batch["image"][bs] = batch_dict["image"]
-            batch["labels"][bs] = batch_dict["labels"]
-            batch["boxes"][bs] = batch_dict["boxes"]
+            batch['image'][bs] = batch_dict['image']
+            batch['labels'][bs] = batch_dict['labels']
+            batch['boxes'][bs] = batch_dict['boxes']
 
-            if "masks" in batch:
-                batch["masks"][bs] = batch_dict["masks"]
+            if 'masks' in batch:
+                batch['masks'][bs] = batch_dict['masks']
 
         # Stack images
-        batch["image"] = rearrange(batch["image"], "b () c h w -> b c h w")
+        batch['image'] = rearrange(batch['image'], 'b () c h w -> b c h w')
 
         return batch
 
@@ -85,17 +85,17 @@ def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
     .. versionadded:: 0.6
     """
     output: dict[str, Any] = {}
-    output["image"] = [sample["image"] for sample in batch]
-    output["boxes"] = [sample["boxes"].float() for sample in batch]
-    if "labels" in batch[0]:
-        output["labels"] = [sample["labels"] for sample in batch]
+    output['image'] = [sample['image'] for sample in batch]
+    output['boxes'] = [sample['boxes'].float() for sample in batch]
+    if 'labels' in batch[0]:
+        output['labels'] = [sample['labels'] for sample in batch]
     else:
-        output["labels"] = [
-            torch.tensor([1] * len(sample["boxes"])) for sample in batch
+        output['labels'] = [
+            torch.tensor([1] * len(sample['boxes'])) for sample in batch
         ]
 
-    if "masks" in batch[0]:
-        output["masks"] = [sample["masks"] for sample in batch]
+    if 'masks' in batch[0]:
+        output['masks'] = [sample['masks'] for sample in batch]
     return output
 
 
@@ -128,11 +128,11 @@ def group_shuffle_split(
         ValueError if the number of training or testing groups turns out to be 0.
     """
     if train_size is None and test_size is None:
-        raise ValueError("You must specify `train_size`, `test_size`, or both.")
+        raise ValueError('You must specify `train_size`, `test_size`, or both.')
     if (train_size is not None and test_size is not None) and (
         not math.isclose(train_size + test_size, 1)
     ):
-        raise ValueError("`train_size` and `test_size` must sum to 1.")
+        raise ValueError('`train_size` and `test_size` must sum to 1.')
 
     if train_size is None and test_size is not None:
         train_size = 1 - test_size
@@ -142,7 +142,7 @@ def group_shuffle_split(
     assert train_size is not None and test_size is not None
 
     if train_size <= 0 or train_size >= 1 or test_size <= 0 or test_size >= 1:
-        raise ValueError("`train_size` and `test_size` must be in the range (0,1).")
+        raise ValueError('`train_size` and `test_size` must be in the range (0,1).')
 
     group_vals = sorted(set(groups))
     n_groups = len(group_vals)
@@ -151,8 +151,8 @@ def group_shuffle_split(
 
     if n_train_groups == 0 or n_test_groups == 0:
         raise ValueError(
-            f"{n_groups} groups were found, however the current settings of "
-            + "`train_size` and `test_size` result in 0 training or testing groups."
+            f'{n_groups} groups were found, however the current settings of '
+            + '`train_size` and `test_size` result in 0 training or testing groups.'
         )
 
     generator = np.random.default_rng(seed=random_state)

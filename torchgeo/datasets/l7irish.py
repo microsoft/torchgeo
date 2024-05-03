@@ -63,24 +63,24 @@ class L7Irish(RasterDataset):
     .. versionadded:: 0.5
     """  # noqa: E501
 
-    url = "https://hf.co/datasets/torchgeo/l7irish/resolve/6807e0b22eca7f9a8a3903ea673b31a115837464/{}.tar.gz"  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/l7irish/resolve/6807e0b22eca7f9a8a3903ea673b31a115837464/{}.tar.gz'  # noqa: E501
 
     md5s = {
-        "austral": "0a34770b992a62abeb88819feb192436",
-        "boreal": "b7cfdd689a3c2fd2a8d572e1c10ed082",
-        "mid_latitude_north": "c40abe5ad2487f8ab021cfb954982faa",
-        "mid_latitude_south": "37abab7f6ebe3d6cf6a3332144145427",
-        "polar_north": "49d9e616bd715057db9acb1c4d234d45",
-        "polar_south": "c1503db1cf46d5c37b579190f989e7ec",
-        "subtropical_north": "a6010de4c50167260de35beead9d6a65",
-        "subtropical_south": "c37d439df2f05bd7cfe87cf6ff61a690",
-        "tropical": "d7931419c70f3520a17361d96f1a4810",
+        'austral': '0a34770b992a62abeb88819feb192436',
+        'boreal': 'b7cfdd689a3c2fd2a8d572e1c10ed082',
+        'mid_latitude_north': 'c40abe5ad2487f8ab021cfb954982faa',
+        'mid_latitude_south': '37abab7f6ebe3d6cf6a3332144145427',
+        'polar_north': '49d9e616bd715057db9acb1c4d234d45',
+        'polar_south': 'c1503db1cf46d5c37b579190f989e7ec',
+        'subtropical_north': 'a6010de4c50167260de35beead9d6a65',
+        'subtropical_south': 'c37d439df2f05bd7cfe87cf6ff61a690',
+        'tropical': 'd7931419c70f3520a17361d96f1a4810',
     }
 
-    classes = ["Fill", "Cloud Shadow", "Clear", "Thin Cloud", "Cloud"]
+    classes = ['Fill', 'Cloud Shadow', 'Clear', 'Thin Cloud', 'Cloud']
 
     # https://landsat.usgs.gov/cloud-validation/cca_irish_2015/L7_Irish_Cloud_Validation_Masks.xml
-    filename_glob = "L71*.TIF"
+    filename_glob = 'L71*.TIF'
     filename_regex = r"""
         ^L71
         (?P<wrs_path>\d{3})
@@ -89,15 +89,15 @@ class L7Irish(RasterDataset):
         (?P<date>\d{8})
         \.TIF$
     """
-    date_format = "%Y%m%d"
+    date_format = '%Y%m%d'
 
     separate_files = False
-    rgb_bands = ["B30", "B20", "B10"]
-    all_bands = ["B10", "B20", "B30", "B40", "B50", "B61", "B62", "B70", "B80"]
+    rgb_bands = ['B30', 'B20', 'B10']
+    all_bands = ['B10', 'B20', 'B30', 'B40', 'B50', 'B61', 'B62', 'B70', 'B80']
 
     def __init__(
         self,
-        paths: str | Iterable[str] = "data",
+        paths: str | Iterable[str] = 'data',
         crs: CRS | None = CRS.from_epsg(3857),
         res: float | None = None,
         bands: Sequence[str] = all_bands,
@@ -142,7 +142,7 @@ class L7Irish(RasterDataset):
 
         # Check if the tar.gz files have already been downloaded
         assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, "*.tar.gz")
+        pathname = os.path.join(self.paths, '*.tar.gz')
         if glob.glob(pathname):
             self._extract()
             return
@@ -165,7 +165,7 @@ class L7Irish(RasterDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, "*.tar.gz")
+        pathname = os.path.join(self.paths, '*.tar.gz')
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
 
@@ -186,16 +186,16 @@ class L7Irish(RasterDataset):
 
         if not filepaths:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
         image = self._merge_files(filepaths, query, self.band_indexes)
 
         mask_filepaths = []
         for filepath in filepaths:
-            path, row = os.path.basename(os.path.dirname(filepath)).split("_")[:2]
+            path, row = os.path.basename(os.path.dirname(filepath)).split('_')[:2]
             mask_filepath = filepath.replace(
-                os.path.basename(filepath), f"L7_{path}_{row}_newmask2015.TIF"
+                os.path.basename(filepath), f'L7_{path}_{row}_newmask2015.TIF'
             )
             mask_filepaths.append(mask_filepath)
 
@@ -206,10 +206,10 @@ class L7Irish(RasterDataset):
             mask[mask == k] = v
 
         sample = {
-            "crs": self.crs,
-            "bbox": query,
-            "image": image.float(),
-            "mask": mask.long(),
+            'crs': self.crs,
+            'bbox': query,
+            'image': image.float(),
+            'mask': mask.long(),
         }
 
         if self.transforms is not None:
@@ -243,34 +243,34 @@ class L7Irish(RasterDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image = sample["image"][rgb_indices].permute(1, 2, 0)
+        image = sample['image'][rgb_indices].permute(1, 2, 0)
 
         # Stretch to the full range
         image = (image - image.min()) / (image.max() - image.min())
 
-        mask = sample["mask"].numpy().astype("uint8").squeeze()
+        mask = sample['mask'].numpy().astype('uint8').squeeze()
 
         num_panels = 2
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            predictions = sample["prediction"].numpy().astype("uint8").squeeze()
+            predictions = sample['prediction'].numpy().astype('uint8').squeeze()
             num_panels += 1
 
-        kwargs = {"cmap": "gray", "vmin": 0, "vmax": 4, "interpolation": "none"}
+        kwargs = {'cmap': 'gray', 'vmin': 0, 'vmax': 4, 'interpolation': 'none'}
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
         axs[0].imshow(image)
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(mask, **kwargs)
-        axs[1].axis("off")
+        axs[1].axis('off')
         if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
+            axs[0].set_title('Image')
+            axs[1].set_title('Mask')
 
         if showing_predictions:
             axs[2].imshow(predictions, **kwargs)
-            axs[2].axis("off")
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Predictions")
+                axs[2].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

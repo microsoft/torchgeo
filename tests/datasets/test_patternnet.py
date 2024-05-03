@@ -20,13 +20,13 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestPatternNet:
-    @pytest.fixture(params=["train", "test"])
+    @pytest.fixture(params=['train', 'test'])
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> PatternNet:
-        monkeypatch.setattr(torchgeo.datasets.patternnet, "download_url", download_url)
-        md5 = "5649754c78219a2c19074ff93666cc61"
-        monkeypatch.setattr(PatternNet, "md5", md5)
-        url = os.path.join("tests", "data", "patternnet", "PatternNet.zip")
-        monkeypatch.setattr(PatternNet, "url", url)
+        monkeypatch.setattr(torchgeo.datasets.patternnet, 'download_url', download_url)
+        md5 = '5649754c78219a2c19074ff93666cc61'
+        monkeypatch.setattr(PatternNet, 'md5', md5)
+        url = os.path.join('tests', 'data', 'patternnet', 'PatternNet.zip')
+        monkeypatch.setattr(PatternNet, 'url', url)
         root = str(tmp_path)
         transforms = nn.Identity()
         return PatternNet(root, transforms, download=True, checksum=True)
@@ -34,9 +34,9 @@ class TestPatternNet:
     def test_getitem(self, dataset: PatternNet) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
-        assert isinstance(x["label"], torch.Tensor)
-        assert x["image"].shape[0] == 3
+        assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['label'], torch.Tensor)
+        assert x['image'].shape[0] == 3
 
     def test_len(self, dataset: PatternNet) -> None:
         assert len(dataset) == 2
@@ -52,14 +52,14 @@ class TestPatternNet:
         PatternNet(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             PatternNet(str(tmp_path))
 
     def test_plot(self, dataset: PatternNet) -> None:
-        dataset.plot(dataset[0], suptitle="Test")
+        dataset.plot(dataset[0], suptitle='Test')
         plt.close()
 
         sample = dataset[0]
-        sample["prediction"] = sample["label"].clone()
-        dataset.plot(sample, suptitle="Prediction")
+        sample['prediction'] = sample['label'].clone()
+        dataset.plot(sample, suptitle='Prediction')
         plt.close()

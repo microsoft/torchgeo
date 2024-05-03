@@ -48,9 +48,9 @@ class Sentinel2SouthAmericaSoybeanDataModule(GeoDataModule):
         self.south_america_soybean_kwargs = {}
         self.sentinel2_kwargs = {}
         for key, val in kwargs.items():
-            if key.startswith("south_america_soybean_"):
+            if key.startswith('south_america_soybean_'):
                 self.south_america_soybean_kwargs[key[22:]] = val
-            elif key.startswith("sentinel2_"):
+            elif key.startswith('sentinel2_'):
                 self.sentinel2_kwargs[key[10:]] = val
 
         super().__init__(
@@ -67,14 +67,14 @@ class Sentinel2SouthAmericaSoybeanDataModule(GeoDataModule):
             K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
-            data_keys=["image", "mask"],
+            data_keys=['image', 'mask'],
             extra_args={
-                DataKey.MASK: {"resample": Resample.NEAREST, "align_corners": None}
+                DataKey.MASK: {'resample': Resample.NEAREST, 'align_corners': None}
             },
         )
 
         self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "mask"]
+            K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
         )
 
     def setup(self, stage: str) -> None:
@@ -96,15 +96,15 @@ class Sentinel2SouthAmericaSoybeanDataModule(GeoDataModule):
             )
         )
 
-        if stage in ["fit"]:
+        if stage in ['fit']:
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.train_dataset, self.patch_size, self.batch_size, self.length
             )
-        if stage in ["fit", "validate"]:
+        if stage in ['fit', 'validate']:
             self.val_sampler = GridGeoSampler(
                 self.val_dataset, self.patch_size, self.patch_size
             )
-        if stage in ["test"]:
+        if stage in ['test']:
             self.test_sampler = GridGeoSampler(
                 self.test_dataset, self.patch_size, self.patch_size
             )

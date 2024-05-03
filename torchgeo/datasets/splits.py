@@ -16,11 +16,11 @@ from ..datasets import GeoDataset
 from .utils import BoundingBox
 
 __all__ = (
-    "random_bbox_assignment",
-    "random_bbox_splitting",
-    "random_grid_cell_assignment",
-    "roi_split",
-    "time_series_split",
+    'random_bbox_assignment',
+    'random_bbox_splitting',
+    'random_grid_cell_assignment',
+    'roi_split',
+    'time_series_split',
 )
 
 
@@ -73,7 +73,7 @@ def random_bbox_assignment(
         )
 
     if any(n <= 0 for n in lengths):
-        raise ValueError("All items in input lengths must be greater than 0.")
+        raise ValueError('All items in input lengths must be greater than 0.')
 
     if isclose(sum(lengths), 1):
         lengths = _fractions_to_lengths(lengths, len(dataset))
@@ -123,10 +123,10 @@ def random_bbox_splitting(
     .. versionadded:: 0.5
     """
     if not isclose(sum(fractions), 1):
-        raise ValueError("Sum of input fractions must equal 1.")
+        raise ValueError('Sum of input fractions must equal 1.')
 
     if any(n <= 0 for n in fractions):
-        raise ValueError("All items in input fractions must be greater than 0.")
+        raise ValueError('All items in input fractions must be greater than 0.')
 
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in fractions
@@ -191,13 +191,13 @@ def random_grid_cell_assignment(
     .. versionadded:: 0.5
     """
     if not isclose(sum(fractions), 1):
-        raise ValueError("Sum of input fractions must equal 1.")
+        raise ValueError('Sum of input fractions must equal 1.')
 
     if any(n <= 0 for n in fractions):
-        raise ValueError("All items in input fractions must be greater than 0.")
+        raise ValueError('All items in input fractions must be greater than 0.')
 
     if grid_size < 2:
-        raise ValueError("Input grid_size must be greater than 1.")
+        raise ValueError('Input grid_size must be greater than 1.')
 
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in fractions
@@ -316,7 +316,7 @@ def time_series_split(
             )
 
         if any(n <= 0 for n in lengths):
-            raise ValueError("All items in input lengths must be greater than 0.")
+            raise ValueError('All items in input lengths must be greater than 0.')
 
         if isclose(sum(lengths), 1):
             lengths = [totalt * f for f in lengths]
@@ -336,7 +336,7 @@ def time_series_split(
     for i, (start, end) in enumerate(lengths):
         if start >= end:
             raise ValueError(
-                "Pairs of timestamps in lengths must have end greater than start."
+                'Pairs of timestamps in lengths must have end greater than start.'
             )
 
         if start < mint or end > maxt:

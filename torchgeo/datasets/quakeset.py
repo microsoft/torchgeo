@@ -57,16 +57,16 @@ class QuakeSet(NonGeoDataset):
     .. versionadded:: 0.6
     """
 
-    filename = "earthquakes.h5"
-    url = "https://hf.co/datasets/DarthReca/quakeset/resolve/bead1d25fb9979dbf703f9ede3e8b349f73b29f7/earthquakes.h5"
-    md5 = "76fc7c76b7ca56f4844d852e175e1560"
-    splits = {"train": "train", "val": "validation", "test": "test"}
-    classes = ["unaffected_area", "earthquake_affected_area"]
+    filename = 'earthquakes.h5'
+    url = 'https://hf.co/datasets/DarthReca/quakeset/resolve/bead1d25fb9979dbf703f9ede3e8b349f73b29f7/earthquakes.h5'
+    md5 = '76fc7c76b7ca56f4844d852e175e1560'
+    splits = {'train': 'train', 'val': 'validation', 'test': 'test'}
+    classes = ['unaffected_area', 'earthquake_affected_area']
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -101,7 +101,7 @@ class QuakeSet(NonGeoDataset):
             import h5py  # noqa: F401
         except ImportError:
             raise ImportError(
-                "h5py is not installed and is required to use this dataset"
+                'h5py is not installed and is required to use this dataset'
             )
 
         self.data = self._load_data()
@@ -116,10 +116,10 @@ class QuakeSet(NonGeoDataset):
             sample containing image and mask
         """
         image = self._load_image(index)
-        label = torch.tensor(self.data[index]["label"])
-        magnitude = torch.tensor(self.data[index]["magnitude"])
+        label = torch.tensor(self.data[index]['label'])
+        magnitude = torch.tensor(self.data[index]['magnitude'])
 
-        sample = {"image": image, "label": label, "magnitude": magnitude}
+        sample = {'image': image, 'label': label, 'magnitude': magnitude}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -145,30 +145,30 @@ class QuakeSet(NonGeoDataset):
         data = []
         with h5py.File(self.filepath) as f:
             for k in sorted(f.keys()):
-                if f[k].attrs["split"] != self.splits[self.split]:
+                if f[k].attrs['split'] != self.splits[self.split]:
                     continue
 
                 for patch in sorted(f[k].keys()):
-                    if patch not in ["x", "y"]:
+                    if patch not in ['x', 'y']:
                         # positive sample
-                        magnitude = float(f[k].attrs["magnitude"])
+                        magnitude = float(f[k].attrs['magnitude'])
                         data.append(
                             dict(
                                 key=k,
                                 patch=patch,
-                                images=("pre", "post"),
+                                images=('pre', 'post'),
                                 label=1,
                                 magnitude=magnitude,
                             )
                         )
 
                         # hard negative sample
-                        if "before" in f[k][patch].keys():
+                        if 'before' in f[k][patch].keys():
                             data.append(
                                 dict(
                                     key=k,
                                     patch=patch,
-                                    images=("before", "pre"),
+                                    images=('before', 'pre'),
                                     label=0,
                                     magnitude=0.0,
                                 )
@@ -186,9 +186,9 @@ class QuakeSet(NonGeoDataset):
         """
         import h5py
 
-        key = self.data[index]["key"]
-        patch = self.data[index]["patch"]
-        images = self.data[index]["images"]
+        key = self.data[index]['key']
+        patch = self.data[index]['patch']
+        images = self.data[index]['images']
 
         with h5py.File(self.filepath) as f:
             pre_array = f[key][patch][images[0]][:]
@@ -242,8 +242,8 @@ class QuakeSet(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = sample["image"].permute((1, 2, 0)).numpy()
-        label = cast(int, sample["label"].item())
+        image = sample['image'].permute((1, 2, 0)).numpy()
+        label = cast(int, sample['label'].item())
         label_class = self.classes[label]
 
         # Create false color image for image1
@@ -256,9 +256,9 @@ class QuakeSet(NonGeoDataset):
         vh = percentile_normalization(image[..., 3]) + 1e-16
         fci2 = np.stack([vv, vh, vv / vh], axis=-1).clip(0, 1)
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = cast(int, sample["prediction"].item())
+            prediction = cast(int, sample['prediction'].item())
             prediction_class = self.classes[prediction]
 
         ncols = 2
@@ -267,19 +267,19 @@ class QuakeSet(NonGeoDataset):
         )
 
         axs[0].imshow(fci1)
-        axs[0].axis("off")
-        axs[0].set_title("Image Pre")
+        axs[0].axis('off')
+        axs[0].set_title('Image Pre')
         axs[1].imshow(fci2)
-        axs[1].axis("off")
-        axs[1].set_title("Image Post")
+        axs[1].axis('off')
+        axs[1].set_title('Image Post')
 
         if show_titles:
-            title = f"Label: {label_class}"
-            if "magnitude" in sample:
-                magnitude = cast(float, sample["magnitude"].item())
-                title += f" | Magnitude: {magnitude:.2f}"
+            title = f'Label: {label_class}'
+            if 'magnitude' in sample:
+                magnitude = cast(float, sample['magnitude'].item())
+                title += f' | Magnitude: {magnitude:.2f}'
             if showing_predictions:
-                title += f"\nPrediction: {prediction_class}"
+                title += f'\nPrediction: {prediction_class}'
             fig.supxlabel(title, y=0.22)
 
         if suptitle is not None:

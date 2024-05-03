@@ -41,7 +41,7 @@ class EDDMapS(GeoDataset):
     res = 0
     _crs = CRS.from_epsg(4326)  # Lat/Lon
 
-    def __init__(self, root: str = "data") -> None:
+    def __init__(self, root: str = 'data') -> None:
         """Initialize a new Dataset instance.
 
         Args:
@@ -54,13 +54,13 @@ class EDDMapS(GeoDataset):
 
         self.root = root
 
-        filepath = os.path.join(root, "mappings.csv")
+        filepath = os.path.join(root, 'mappings.csv')
         if not os.path.exists(filepath):
             raise DatasetNotFoundError(self)
 
         # Read CSV file
         data = pd.read_csv(
-            filepath, engine="c", usecols=["ObsDate", "Latitude", "Longitude"]
+            filepath, engine='c', usecols=['ObsDate', 'Latitude', 'Longitude']
         )
 
         # Convert from pandas DataFrame to rtree Index
@@ -71,7 +71,7 @@ class EDDMapS(GeoDataset):
                 continue
 
             if not pd.isna(date):
-                mint, maxt = disambiguate_timestamp(date, "%m-%d-%y")
+                mint, maxt = disambiguate_timestamp(date, '%m-%d-%y')
             else:
                 mint, maxt = 0, sys.maxsize
 
@@ -96,9 +96,9 @@ class EDDMapS(GeoDataset):
 
         if not bboxes:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        sample = {"crs": self.crs, "bbox": bboxes}
+        sample = {'crs': self.crs, 'bbox': bboxes}
 
         return sample

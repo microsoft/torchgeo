@@ -15,7 +15,7 @@ from timm.models.vision_transformer import Block
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
 
-__all__ = ["DOFABase16_Weights", "DOFALarge16_Weights"]
+__all__ = ['DOFABase16_Weights', 'DOFALarge16_Weights']
 
 
 def position_embedding(embed_dim: int, pos: Tensor) -> Tensor:
@@ -37,7 +37,7 @@ def position_embedding(embed_dim: int, pos: Tensor) -> Tensor:
     omega = 1.0 / 10000**omega  # (D/2,)
 
     pos = pos.reshape(-1)  # (M,)
-    out = torch.einsum("m,d->md", pos, omega)  # (M, D/2), outer product
+    out = torch.einsum('m,d->md', pos, omega)  # (M, D/2), outer product
 
     emb_sin = torch.sin(out)  # (M, D/2)
     emb_cos = torch.cos(out)  # (M, D/2)
@@ -70,7 +70,7 @@ class TransformerWeightGenerator(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=input_dim,
             nhead=num_heads,
-            activation="gelu",
+            activation='gelu',
             norm_first=False,
             batch_first=False,
             dropout=False,
@@ -386,14 +386,14 @@ class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DOFA_MAE = Weights(
-        url="https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_base_patch16_224-7cc0f413.pth",  # noqa: E501
+        url='https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_base_patch16_224-7cc0f413.pth',  # noqa: E501
         transforms=_dofa_transforms,
         meta={
-            "dataset": "SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k",
-            "model": "dofa_base_patch16_224",
-            "publication": "https://arxiv.org/abs/2403.15356",
-            "repo": "https://github.com/zhu-xlab/DOFA",
-            "ssl_method": "mae",
+            'dataset': 'SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k',
+            'model': 'dofa_base_patch16_224',
+            'publication': 'https://arxiv.org/abs/2403.15356',
+            'repo': 'https://github.com/zhu-xlab/DOFA',
+            'ssl_method': 'mae',
         },
     )
 
@@ -405,14 +405,14 @@ class DOFALarge16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DOFA_MAE = Weights(
-        url="https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_large_patch16_224-fbd47fa9.pth",  # noqa: E501
+        url='https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_large_patch16_224-fbd47fa9.pth',  # noqa: E501
         transforms=_dofa_transforms,
         meta={
-            "dataset": "SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k",
-            "model": "dofa_large_patch16_224",
-            "publication": "https://arxiv.org/abs/2403.15356",
-            "repo": "https://github.com/zhu-xlab/DOFA",
-            "ssl_method": "mae",
+            'dataset': 'SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k',
+            'model': 'dofa_large_patch16_224',
+            'publication': 'https://arxiv.org/abs/2403.15356',
+            'repo': 'https://github.com/zhu-xlab/DOFA',
+            'ssl_method': 'mae',
         },
     )
 
@@ -462,10 +462,10 @@ def dofa_base_patch16_224(
         )
         # Both fc_norm and head are generated dynamically
         assert set(missing_keys) <= {
-            "fc_norm.weight",
-            "fc_norm.bias",
-            "head.weight",
-            "head.bias",
+            'fc_norm.weight',
+            'fc_norm.bias',
+            'head.weight',
+            'head.bias',
         }
         assert not unexpected_keys
 
@@ -498,10 +498,10 @@ def dofa_large_patch16_224(
         )
         # Both fc_norm and head are generated dynamically
         assert set(missing_keys) <= {
-            "fc_norm.weight",
-            "fc_norm.bias",
-            "head.weight",
-            "head.bias",
+            'fc_norm.weight',
+            'fc_norm.bias',
+            'head.weight',
+            'head.bias',
         }
         assert not unexpected_keys
 

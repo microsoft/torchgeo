@@ -22,7 +22,7 @@ class So2SatDataModule(NonGeoDataModule):
     """
 
     means_per_version: dict[str, Tensor] = {
-        "2": torch.tensor(
+        '2': torch.tensor(
             [
                 -0.00003591224260,
                 -0.00000765856128,
@@ -44,7 +44,7 @@ class So2SatDataModule(NonGeoDataModule):
                 0.10905050699570,
             ]
         ),
-        "3_random": torch.tensor(
+        '3_random': torch.tensor(
             [
                 -0.00005541164581,
                 -0.00001363245448,
@@ -66,7 +66,7 @@ class So2SatDataModule(NonGeoDataModule):
                 0.11122536338577,
             ]
         ),
-        "3_block": torch.tensor(
+        '3_block': torch.tensor(
             [
                 -0.00004632368791,
                 0.00001260869365,
@@ -89,10 +89,10 @@ class So2SatDataModule(NonGeoDataModule):
             ]
         ),
     }
-    means_per_version["3_culture_10"] = means_per_version["2"]
+    means_per_version['3_culture_10'] = means_per_version['2']
 
     stds_per_version: dict[str, Tensor] = {
-        "2": torch.tensor(
+        '2': torch.tensor(
             [
                 0.17555201,
                 0.17556463,
@@ -114,7 +114,7 @@ class So2SatDataModule(NonGeoDataModule):
                 0.08780632,
             ]
         ),
-        "3_random": torch.tensor(
+        '3_random': torch.tensor(
             [
                 0.1756914,
                 0.1761190,
@@ -136,7 +136,7 @@ class So2SatDataModule(NonGeoDataModule):
                 0.0873386,
             ]
         ),
-        "3_block": torch.tensor(
+        '3_block': torch.tensor(
             [
                 0.1751797,
                 0.1754073,
@@ -159,13 +159,13 @@ class So2SatDataModule(NonGeoDataModule):
             ]
         ),
     }
-    stds_per_version["3_culture_10"] = stds_per_version["2"]
+    stds_per_version['3_culture_10'] = stds_per_version['2']
 
     def __init__(
         self,
         batch_size: int = 64,
         num_workers: int = 0,
-        band_set: str = "all",
+        band_set: str = 'all',
         val_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
@@ -184,18 +184,18 @@ class So2SatDataModule(NonGeoDataModule):
            The *val_split_pct* parameter, and the 'rgb' argument to *band_set*.
         """
         # https://github.com/Lightning-AI/lightning/issues/18616
-        kwargs["version"] = str(kwargs.get("version", "2"))
-        version = kwargs["version"]
-        kwargs["bands"] = So2Sat.BAND_SETS[band_set]
+        kwargs['version'] = str(kwargs.get('version', '2'))
+        version = kwargs['version']
+        kwargs['bands'] = So2Sat.BAND_SETS[band_set]
         self.val_split_pct = val_split_pct
 
-        if band_set == "s1":
+        if band_set == 's1':
             self.mean = self.means_per_version[version][:8]
             self.std = self.stds_per_version[version][:8]
-        elif band_set == "s2":
+        elif band_set == 's2':
             self.mean = self.means_per_version[version][8:]
             self.std = self.stds_per_version[version][8:]
-        elif band_set == "rgb":
+        elif band_set == 'rgb':
             self.mean = self.means_per_version[version][[10, 9, 8]]
             self.std = self.stds_per_version[version][[10, 9, 8]]
 
@@ -211,16 +211,16 @@ class So2SatDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if self.kwargs.get("version", "2") == "2":
-            if stage in ["fit"]:
-                self.train_dataset = So2Sat(split="train", **self.kwargs)
-            if stage in ["fit", "validate"]:
-                self.val_dataset = So2Sat(split="validation", **self.kwargs)
-            if stage in ["test"]:
-                self.test_dataset = So2Sat(split="test", **self.kwargs)
+        if self.kwargs.get('version', '2') == '2':
+            if stage in ['fit']:
+                self.train_dataset = So2Sat(split='train', **self.kwargs)
+            if stage in ['fit', 'validate']:
+                self.val_dataset = So2Sat(split='validation', **self.kwargs)
+            if stage in ['test']:
+                self.test_dataset = So2Sat(split='test', **self.kwargs)
         else:
-            if stage in ["fit", "validate"]:
-                dataset = So2Sat(split="train", **self.kwargs)
+            if stage in ['fit', 'validate']:
+                dataset = So2Sat(split='train', **self.kwargs)
                 val_length = round(len(dataset) * self.val_split_pct)
                 train_length = len(dataset) - val_length
                 self.train_dataset, self.val_dataset = random_split(
@@ -228,5 +228,5 @@ class So2SatDataModule(NonGeoDataModule):
                     [train_length, val_length],
                     generator=Generator().manual_seed(0),
                 )
-            if stage in ["test"]:
-                self.test_dataset = So2Sat(split="test", **self.kwargs)
+            if stage in ['test']:
+                self.test_dataset = So2Sat(split='test', **self.kwargs)

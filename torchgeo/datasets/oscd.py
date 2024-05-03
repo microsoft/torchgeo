@@ -51,56 +51,56 @@ class OSCD(NonGeoDataset):
     """
 
     urls = {
-        "Onera Satellite Change Detection dataset - Images.zip": (
-            "https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download"
+        'Onera Satellite Change Detection dataset - Images.zip': (
+            'https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download'
         ),
-        "Onera Satellite Change Detection dataset - Train Labels.zip": (
-            "https://partage.mines-telecom.fr/index.php/s/2D6n03k58ygBSpu/download"
+        'Onera Satellite Change Detection dataset - Train Labels.zip': (
+            'https://partage.mines-telecom.fr/index.php/s/2D6n03k58ygBSpu/download'
         ),
-        "Onera Satellite Change Detection dataset - Test Labels.zip": (
-            "https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download"
+        'Onera Satellite Change Detection dataset - Test Labels.zip': (
+            'https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download'
         ),
     }
     md5s = {
-        "Onera Satellite Change Detection dataset - Images.zip": (
-            "c50d4a2941da64e03a47ac4dec63d915"
+        'Onera Satellite Change Detection dataset - Images.zip': (
+            'c50d4a2941da64e03a47ac4dec63d915'
         ),
-        "Onera Satellite Change Detection dataset - Train Labels.zip": (
-            "4d2965af8170c705ebad3d6ee71b6990"
+        'Onera Satellite Change Detection dataset - Train Labels.zip': (
+            '4d2965af8170c705ebad3d6ee71b6990'
         ),
-        "Onera Satellite Change Detection dataset - Test Labels.zip": (
-            "8177d437793c522653c442aa4e66c617"
+        'Onera Satellite Change Detection dataset - Test Labels.zip': (
+            '8177d437793c522653c442aa4e66c617'
         ),
     }
 
-    zipfile_glob = "*Onera*.zip"
-    filename_glob = "*Onera*"
-    splits = ["train", "test"]
+    zipfile_glob = '*Onera*.zip'
+    filename_glob = '*Onera*'
+    splits = ['train', 'test']
 
-    colormap = ["blue"]
+    colormap = ['blue']
 
     all_bands = (
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06",
-        "B07",
-        "B08",
-        "B8A",
-        "B09",
-        "B10",
-        "B11",
-        "B12",
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B09',
+        'B10',
+        'B11',
+        'B12',
     )
 
-    rgb_bands = ("B04", "B03", "B02")
+    rgb_bands = ('B04', 'B03', 'B02')
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         bands: Sequence[str] = all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -146,10 +146,10 @@ class OSCD(NonGeoDataset):
             data and label at that index
         """
         files = self.files[index]
-        image1 = self._load_image(files["images1"])
-        image2 = self._load_image(files["images2"])
-        mask = self._load_target(str(files["mask"]))
-        sample = {"image1": image1, "image2": image2, "mask": mask}
+        image1 = self._load_image(files['images1'])
+        image2 = self._load_image(files['images2'])
+        mask = self._load_target(str(files['mask']))
+        sample = {'image1': image1, 'image2': image2, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -168,21 +168,21 @@ class OSCD(NonGeoDataset):
         regions = []
         labels_root = os.path.join(
             self.root,
-            f"Onera Satellite Change Detection dataset - {self.split.capitalize()} "
-            + "Labels",
+            f'Onera Satellite Change Detection dataset - {self.split.capitalize()} '
+            + 'Labels',
         )
         images_root = os.path.join(
-            self.root, "Onera Satellite Change Detection dataset - Images"
+            self.root, 'Onera Satellite Change Detection dataset - Images'
         )
-        folders = glob.glob(os.path.join(labels_root, "*/"))
+        folders = glob.glob(os.path.join(labels_root, '*/'))
         for folder in folders:
             region = folder.split(os.sep)[-2]
-            mask = os.path.join(labels_root, region, "cm", "cm.png")
+            mask = os.path.join(labels_root, region, 'cm', 'cm.png')
 
             def get_image_paths(ind: int) -> list[str]:
                 return sorted(
                     glob.glob(
-                        os.path.join(images_root, region, f"imgs_{ind}_rect", "*.tif")
+                        os.path.join(images_root, region, f'imgs_{ind}_rect', '*.tif')
                     ),
                     key=sort_sentinel2_bands,
                 )
@@ -191,7 +191,7 @@ class OSCD(NonGeoDataset):
             images1 = [images1[i] for i in self.all_band_indices]
             images2 = [images2[i] for i in self.all_band_indices]
 
-            with open(os.path.join(images_root, region, "dates.txt")) as f:
+            with open(os.path.join(images_root, region, 'dates.txt')) as f:
                 dates = tuple(
                     line.split()[-1] for line in f.read().strip().splitlines()
                 )
@@ -217,11 +217,11 @@ class OSCD(NonGeoDataset):
         Returns:
             the image
         """
-        images: list["np.typing.NDArray[np.int_]"] = []
+        images: list['np.typing.NDArray[np.int_]'] = []
         for path in paths:
             with Image.open(path) as img:
                 images.append(np.array(img))
-        array: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0).astype(np.int_)
+        array: 'np.typing.NDArray[np.int_]' = np.stack(images, axis=0).astype(np.int_)
         tensor = torch.from_numpy(array).float()
         return tensor
 
@@ -236,7 +236,7 @@ class OSCD(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
+            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)
@@ -245,9 +245,9 @@ class OSCD(NonGeoDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        pathname = os.path.join(self.root, "**", self.filename_glob)
+        pathname = os.path.join(self.root, '**', self.filename_glob)
         for fname in glob.iglob(pathname, recursive=True):
-            if not fname.endswith(".zip"):
+            if not fname.endswith('.zip'):
                 return
 
         # Check if the zip files have already been downloaded
@@ -308,32 +308,32 @@ class OSCD(NonGeoDataset):
         except ValueError as e:
             raise RGBBandsMissingError() from e
 
-        def get_masked(img: Tensor) -> "np.typing.NDArray[np.uint8]":
+        def get_masked(img: Tensor) -> 'np.typing.NDArray[np.uint8]':
             rgb_img = img[rgb_indices].float().numpy()
             per02 = np.percentile(rgb_img, 2)
             per98 = np.percentile(rgb_img, 98)
             rgb_img = (np.clip((rgb_img - per02) / (per98 - per02), 0, 1) * 255).astype(
                 np.uint8
             )
-            array: "np.typing.NDArray[np.uint8]" = draw_semantic_segmentation_masks(
+            array: 'np.typing.NDArray[np.uint8]' = draw_semantic_segmentation_masks(
                 torch.from_numpy(rgb_img),
-                sample["mask"],
+                sample['mask'],
                 alpha=alpha,
                 colors=self.colormap,
             )
             return array
 
-        image1 = get_masked(sample["image1"])
-        image2 = get_masked(sample["image2"])
+        image1 = get_masked(sample['image1'])
+        image2 = get_masked(sample['image2'])
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image1)
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(image2)
-        axs[1].axis("off")
+        axs[1].axis('off')
 
         if show_titles:
-            axs[0].set_title("Pre change")
-            axs[1].set_title("Post change")
+            axs[0].set_title('Pre change')
+            axs[1].set_title('Post change')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

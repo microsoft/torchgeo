@@ -16,9 +16,9 @@ from torchgeo.datasets import (
 
 
 class TestGBIF:
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope='class')
     def dataset(self) -> GBIF:
-        root = os.path.join("tests", "data", "gbif")
+        root = os.path.join('tests', 'data', 'gbif')
         return GBIF(root)
 
     def test_getitem(self, dataset: GBIF) -> None:
@@ -37,12 +37,12 @@ class TestGBIF:
         assert isinstance(ds, UnionDataset)
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             GBIF(str(tmp_path))
 
     def test_invalid_query(self, dataset: GBIF) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
-            IndexError, match="query: .* not found in index with bounds:"
+            IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]

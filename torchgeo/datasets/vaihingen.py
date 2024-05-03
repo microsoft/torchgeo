@@ -57,57 +57,57 @@ class Vaihingen2D(NonGeoDataset):
     """  # noqa: E501
 
     filenames = [
-        "ISPRS_semantic_labeling_Vaihingen.zip",
-        "ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip",
+        'ISPRS_semantic_labeling_Vaihingen.zip',
+        'ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip',
     ]
-    md5s = ["462b8dca7b6fa9eaf729840f0cdfc7f3", "4802dd6326e2727a352fb735be450277"]
-    image_root = "top"
+    md5s = ['462b8dca7b6fa9eaf729840f0cdfc7f3', '4802dd6326e2727a352fb735be450277']
+    image_root = 'top'
     splits = {
-        "train": [
-            "top_mosaic_09cm_area1.tif",
-            "top_mosaic_09cm_area11.tif",
-            "top_mosaic_09cm_area13.tif",
-            "top_mosaic_09cm_area15.tif",
-            "top_mosaic_09cm_area17.tif",
-            "top_mosaic_09cm_area21.tif",
-            "top_mosaic_09cm_area23.tif",
-            "top_mosaic_09cm_area26.tif",
-            "top_mosaic_09cm_area28.tif",
-            "top_mosaic_09cm_area3.tif",
-            "top_mosaic_09cm_area30.tif",
-            "top_mosaic_09cm_area32.tif",
-            "top_mosaic_09cm_area34.tif",
-            "top_mosaic_09cm_area37.tif",
-            "top_mosaic_09cm_area5.tif",
-            "top_mosaic_09cm_area7.tif",
+        'train': [
+            'top_mosaic_09cm_area1.tif',
+            'top_mosaic_09cm_area11.tif',
+            'top_mosaic_09cm_area13.tif',
+            'top_mosaic_09cm_area15.tif',
+            'top_mosaic_09cm_area17.tif',
+            'top_mosaic_09cm_area21.tif',
+            'top_mosaic_09cm_area23.tif',
+            'top_mosaic_09cm_area26.tif',
+            'top_mosaic_09cm_area28.tif',
+            'top_mosaic_09cm_area3.tif',
+            'top_mosaic_09cm_area30.tif',
+            'top_mosaic_09cm_area32.tif',
+            'top_mosaic_09cm_area34.tif',
+            'top_mosaic_09cm_area37.tif',
+            'top_mosaic_09cm_area5.tif',
+            'top_mosaic_09cm_area7.tif',
         ],
-        "test": [
-            "top_mosaic_09cm_area6.tif",
-            "top_mosaic_09cm_area24.tif",
-            "top_mosaic_09cm_area35.tif",
-            "top_mosaic_09cm_area16.tif",
-            "top_mosaic_09cm_area14.tif",
-            "top_mosaic_09cm_area22.tif",
-            "top_mosaic_09cm_area10.tif",
-            "top_mosaic_09cm_area4.tif",
-            "top_mosaic_09cm_area2.tif",
-            "top_mosaic_09cm_area20.tif",
-            "top_mosaic_09cm_area8.tif",
-            "top_mosaic_09cm_area31.tif",
-            "top_mosaic_09cm_area33.tif",
-            "top_mosaic_09cm_area27.tif",
-            "top_mosaic_09cm_area38.tif",
-            "top_mosaic_09cm_area12.tif",
-            "top_mosaic_09cm_area29.tif",
+        'test': [
+            'top_mosaic_09cm_area6.tif',
+            'top_mosaic_09cm_area24.tif',
+            'top_mosaic_09cm_area35.tif',
+            'top_mosaic_09cm_area16.tif',
+            'top_mosaic_09cm_area14.tif',
+            'top_mosaic_09cm_area22.tif',
+            'top_mosaic_09cm_area10.tif',
+            'top_mosaic_09cm_area4.tif',
+            'top_mosaic_09cm_area2.tif',
+            'top_mosaic_09cm_area20.tif',
+            'top_mosaic_09cm_area8.tif',
+            'top_mosaic_09cm_area31.tif',
+            'top_mosaic_09cm_area33.tif',
+            'top_mosaic_09cm_area27.tif',
+            'top_mosaic_09cm_area38.tif',
+            'top_mosaic_09cm_area12.tif',
+            'top_mosaic_09cm_area29.tif',
         ],
     }
     classes = [
-        "Clutter/background",
-        "Impervious surfaces",
-        "Building",
-        "Low Vegetation",
-        "Tree",
-        "Car",
+        'Clutter/background',
+        'Impervious surfaces',
+        'Building',
+        'Low Vegetation',
+        'Tree',
+        'Car',
     ]
     colormap = [
         (255, 0, 0),
@@ -120,8 +120,8 @@ class Vaihingen2D(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
@@ -164,7 +164,7 @@ class Vaihingen2D(NonGeoDataset):
         """
         image = self._load_image(index)
         mask = self._load_target(index)
-        sample = {"image": image, "mask": mask}
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -188,9 +188,9 @@ class Vaihingen2D(NonGeoDataset):
         Returns:
             the image
         """
-        path = self.files[index]["image"]
+        path = self.files[index]['image']
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
+            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1)).float()
@@ -205,9 +205,9 @@ class Vaihingen2D(NonGeoDataset):
         Returns:
             the target mask
         """
-        path = self.files[index]["mask"]
+        path = self.files[index]['mask']
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.uint8]" = np.array(img.convert("RGB"))
+            array: 'np.typing.NDArray[np.uint8]' = np.array(img.convert('RGB'))
             array = rgb_to_mask(array, self.colormap)
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
@@ -226,7 +226,7 @@ class Vaihingen2D(NonGeoDataset):
             filepath = os.path.join(self.root, filename)
             if os.path.isfile(filepath):
                 if self.checksum and not check_integrity(filepath, md5):
-                    raise RuntimeError("Dataset found, but corrupted.")
+                    raise RuntimeError('Dataset found, but corrupted.')
                 exists.append(True)
                 extract_archive(filepath)
             else:
@@ -257,13 +257,13 @@ class Vaihingen2D(NonGeoDataset):
         """
         ncols = 1
         image1 = draw_semantic_segmentation_masks(
-            sample["image"][:3], sample["mask"], alpha=alpha, colors=self.colormap
+            sample['image'][:3], sample['mask'], alpha=alpha, colors=self.colormap
         )
-        if "prediction" in sample:
+        if 'prediction' in sample:
             ncols += 1
             image2 = draw_semantic_segmentation_masks(
-                sample["image"][:3],
-                sample["prediction"],
+                sample['image'][:3],
+                sample['prediction'],
                 alpha=alpha,
                 colors=self.colormap,
             )
@@ -275,15 +275,15 @@ class Vaihingen2D(NonGeoDataset):
             ax0 = axs
 
         ax0.imshow(image1)
-        ax0.axis("off")
+        ax0.axis('off')
         if ncols > 1:
             ax1.imshow(image2)
-            ax1.axis("off")
+            ax1.axis('off')
 
         if show_titles:
-            ax0.set_title("Ground Truth")
+            ax0.set_title('Ground Truth')
             if ncols > 1:
-                ax1.set_title("Predictions")
+                ax1.set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

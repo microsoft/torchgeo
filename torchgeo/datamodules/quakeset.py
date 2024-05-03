@@ -38,5 +38,5 @@ class QuakeSetDataModule(NonGeoDataModule):
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
-            data_keys=["image"],
+            data_keys=['image'],
         )

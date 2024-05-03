@@ -31,11 +31,11 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestIOBench:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> IOBench:
-        monkeypatch.setattr(torchgeo.datasets.iobench, "download_url", download_url)
-        md5 = "e82398add7c35896a31c4398c608ef83"
-        url = os.path.join("tests", "data", "iobench", "{}.tar.gz")
-        monkeypatch.setattr(IOBench, "url", url)
-        monkeypatch.setitem(IOBench.md5s, "preprocessed", md5)
+        monkeypatch.setattr(torchgeo.datasets.iobench, 'download_url', download_url)
+        md5 = 'e82398add7c35896a31c4398c608ef83'
+        url = os.path.join('tests', 'data', 'iobench', '{}.tar.gz')
+        monkeypatch.setattr(IOBench, 'url', url)
+        monkeypatch.setitem(IOBench.md5s, 'preprocessed', md5)
         root = str(tmp_path)
         transforms = nn.Identity()
         return IOBench(root, transforms=transforms, download=True, checksum=True)
@@ -43,9 +43,9 @@ class TestIOBench:
     def test_getitem(self, dataset: IOBench) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x["crs"], CRS)
-        assert isinstance(x["image"], torch.Tensor)
-        assert isinstance(x["mask"], torch.Tensor)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['mask'], torch.Tensor)
 
     def test_and(self, dataset: IOBench) -> None:
         ds = dataset & dataset
@@ -57,36 +57,36 @@ class TestIOBench:
 
     def test_plot(self, dataset: IOBench) -> None:
         x = dataset[dataset.bounds]
-        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_already_extracted(self, dataset: IOBench) -> None:
         IOBench(dataset.root, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join("tests", "data", "iobench", "*.tar.gz")
+        pathname = os.path.join('tests', 'data', 'iobench', '*.tar.gz')
         root = str(tmp_path)
         for tarfile in glob.iglob(pathname):
             shutil.copy(tarfile, root)
         IOBench(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             IOBench(str(tmp_path))
 
     def test_invalid_query(self, dataset: IOBench) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
-            IndexError, match="query: .* not found in index with bounds:"
+            IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]
 
     def test_rgb_bands_absent_plot(self, dataset: IOBench) -> None:
         with pytest.raises(
-            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
+            RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):
             print(dataset.root)
-            ds = IOBench(dataset.root, bands=["SR_B1", "SR_B2", "SR_B3"])
+            ds = IOBench(dataset.root, bands=['SR_B1', 'SR_B2', 'SR_B3'])
             x = ds[ds.bounds]
-            ds.plot(x, suptitle="Test")
+            ds.plot(x, suptitle='Test')
             plt.close()

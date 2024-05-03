@@ -13,7 +13,7 @@ MAYBE_TUPLE = float | tuple[float, float]
 
 
 @pytest.mark.parametrize(
-    "size,stride,expected",
+    'size,stride,expected',
     [
         # size == bounds
         (10, 1, 1),
