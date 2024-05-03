@@ -44,11 +44,11 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     is_image = False
 
-    url = "https://opendata.arcgis.com/api/v3/datasets/e4bdbe8d6d8d4e32ace7d36a4aec7b93_0/downloads/data?format=geojson&spatialRefId=4326"  # noqa: E501
+    url = 'https://opendata.arcgis.com/api/v3/datasets/e4bdbe8d6d8d4e32ace7d36a4aec7b93_0/downloads/data?format=geojson&spatialRefId=4326'  # noqa: E501
 
-    base_filename = "Aboveground_Live_Woody_Biomass_Density.geojson"
+    base_filename = 'Aboveground_Live_Woody_Biomass_Density.geojson'
 
-    filename_glob = "*N_*E.*"
+    filename_glob = '*N_*E.*'
     filename_regex = r"""^
         (?P<latitude>[0-9][0-9][A-Z])_
         (?P<longitude>[0-9][0-9][0-9][A-Z])*
@@ -56,7 +56,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = "data",
+        paths: str | Iterable[str] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -110,11 +110,11 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         with open(os.path.join(self.paths, self.base_filename)) as f:
             content = json.load(f)
 
-        for item in content["features"]:
+        for item in content['features']:
             download_url(
-                item["properties"]["Mg_px_1_download"],
+                item['properties']['Mg_px_1_download'],
                 self.paths,
-                item["properties"]["tile_id"] + ".tif",
+                item['properties']['tile_id'] + '.tif',
             )
 
     def plot(
@@ -133,29 +133,29 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze()
+            pred = sample['prediction'].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
 
         if showing_predictions:
             axs[0].imshow(mask)
-            axs[0].axis("off")
+            axs[0].axis('off')
             axs[1].imshow(pred)
-            axs[1].axis("off")
+            axs[1].axis('off')
             if show_titles:
-                axs[0].set_title("Mask")
-                axs[1].set_title("Prediction")
+                axs[0].set_title('Mask')
+                axs[1].set_title('Prediction')
         else:
             axs.imshow(mask)
-            axs.axis("off")
+            axs.axis('off')
             if show_titles:
-                axs.set_title("Mask")
+                axs.set_title('Mask')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

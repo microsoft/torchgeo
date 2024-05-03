@@ -13,7 +13,7 @@ from lightning.pytorch import Trainer
 from torchgeo.datamodules import ChesapeakeCVPRDataModule
 from torchgeo.trainers.chesapeake import SemanticSegmentationTask
 
-ALL_TEST_SPLITS = [["de-val"], ["pa-test"], ["ny-test"], ["pa-test", "ny-test"]]
+ALL_TEST_SPLITS = [['de-val'], ['pa-test'], ['ny-test'], ['pa-test', 'ny-test']]
 
 
 def set_up_parser() -> argparse.ArgumentParser:
@@ -27,33 +27,33 @@ def set_up_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--input-dir",
+        '--input-dir',
         required=True,
         type=str,
-        help="directory containing the experiment run directories",
-        metavar="ROOT",
+        help='directory containing the experiment run directories',
+        metavar='ROOT',
     )
     parser.add_argument(
-        "--chesapeakecvpr-root",
+        '--chesapeakecvpr-root',
         required=True,
         type=str,
-        help="directory containing the ChesapeakeCVPR dataset",
-        metavar="ROOT",
+        help='directory containing the ChesapeakeCVPR dataset',
+        metavar='ROOT',
     )
     parser.add_argument(
-        "--output-fn",
-        default="chesapeakecvpr-results.csv",
+        '--output-fn',
+        default='chesapeakecvpr-results.csv',
         type=str,
-        help="path to the CSV file to write results",
-        metavar="FILE",
+        help='path to the CSV file to write results',
+        metavar='FILE',
     )
     parser.add_argument(
-        "-d",
-        "--device",
+        '-d',
+        '--device',
         default=0,
         type=int,
-        help="GPU ID to use, ignored if no GPUs are available",
-        metavar="ID",
+        help='GPU ID to use, ignored if no GPUs are available',
+        metavar='ID',
     )
 
     return parser
@@ -66,27 +66,27 @@ def main(args: argparse.Namespace) -> None:
         args: command-line arguments
     """
     if os.path.exists(args.output_fn):
-        print(f"The output file {args.output_fn} already exists, exiting...")
+        print(f'The output file {args.output_fn} already exists, exiting...')
         return
 
     # Set up the result file
     fieldnames = [
-        "train-state",
-        "model",
-        "learning-rate",
-        "initialization",
-        "loss",
-        "test-state",
-        "acc",
-        "iou",
+        'train-state',
+        'model',
+        'learning-rate',
+        'initialization',
+        'loss',
+        'test-state',
+        'acc',
+        'iou',
     ]
-    with open(args.output_fn, "w") as f:
+    with open(args.output_fn, 'w') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
 
     # Test loop
     trainer = Trainer(
-        accelerator="auto",
+        accelerator='auto',
         devices=[args.device],
         logger=False,
         enable_progress_bar=False,
@@ -96,13 +96,13 @@ def main(args: argparse.Namespace) -> None:
     for experiment_dir in os.listdir(args.input_dir):
         checkpoint_fn = None
         for fn in os.listdir(os.path.join(args.input_dir, experiment_dir)):
-            if fn.startswith("epoch") and fn.endswith(".ckpt"):
+            if fn.startswith('epoch') and fn.endswith('.ckpt'):
                 checkpoint_fn = fn
                 break
         if checkpoint_fn is None:
             print(
-                f"Skipping {os.path.join(args.input_dir, experiment_dir)} as we are not"
-                + " able to find a checkpoint file"
+                f'Skipping {os.path.join(args.input_dir, experiment_dir)} as we are not'
+                + ' able to find a checkpoint file'
             )
             continue
         checkpoint_fn = os.path.join(args.input_dir, experiment_dir, checkpoint_fn)
@@ -113,22 +113,22 @@ def main(args: argparse.Namespace) -> None:
             model.eval()
         except KeyError:
             print(
-                f"Skipping {experiment_dir} as we are not able to load a valid"
-                + f" SemanticSegmentationTask from {checkpoint_fn}"
+                f'Skipping {experiment_dir} as we are not able to load a valid'
+                + f' SemanticSegmentationTask from {checkpoint_fn}'
             )
             continue
 
         try:
-            experiment_dir_parts = experiment_dir.split("_")
+            experiment_dir_parts = experiment_dir.split('_')
             train_state = experiment_dir_parts[0]
             model_name = experiment_dir_parts[1]
             learning_rate = experiment_dir_parts[2]
             loss = experiment_dir_parts[3]
-            initialization = "random" if len(experiment_dir_parts) == 5 else "imagenet"
+            initialization = 'random' if len(experiment_dir_parts) == 5 else 'imagenet'
         except IndexError:
             print(
-                f"Skipping {experiment_dir} as the directory name is not in the"
-                + " expected format"
+                f'Skipping {experiment_dir} as the directory name is not in the'
+                + ' expected format'
             )
             continue
 
@@ -136,8 +136,8 @@ def main(args: argparse.Namespace) -> None:
         for test_splits in ALL_TEST_SPLITS:
             dm = ChesapeakeCVPRDataModule(
                 root=args.chesapeakecvpr_root,
-                train_splits=["de-train"],
-                val_splits=["de-val"],
+                train_splits=['de-train'],
+                val_splits=['de-val'],
                 test_splits=test_splits,
                 batch_size=32,
                 num_workers=8,
@@ -147,21 +147,21 @@ def main(args: argparse.Namespace) -> None:
             print(experiment_dir, test_splits, results[0])
 
             row = {
-                "train-state": train_state,
-                "model": model_name,
-                "learning-rate": learning_rate,
-                "initialization": initialization,
-                "loss": loss,
-                "test-state": "_".join(test_splits),
-                "acc": results[0]["test_Accuracy"],
-                "iou": results[0]["test_IoU"],
+                'train-state': train_state,
+                'model': model_name,
+                'learning-rate': learning_rate,
+                'initialization': initialization,
+                'loss': loss,
+                'test-state': '_'.join(test_splits),
+                'acc': results[0]['test_Accuracy'],
+                'iou': results[0]['test_IoU'],
             }
-            with open(args.output_fn, "a") as f:
+            with open(args.output_fn, 'a') as f:
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writerow(row)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = set_up_parser()
     args = parser.parse_args()
 

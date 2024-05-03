@@ -19,9 +19,9 @@ SIZE = 1280
 
 
 def create_data_file(dataname):
-    schema = {"geometry": "Polygon", "properties": {"EC_hcat_c": "str"}}
+    schema = {'geometry': 'Polygon', 'properties': {'EC_hcat_c': 'str'}}
     with fiona.open(
-        dataname, "w", crs=CRS.from_epsg(32616), driver="ESRI Shapefile", schema=schema
+        dataname, 'w', crs=CRS.from_epsg(32616), driver='ESRI Shapefile', schema=schema
     ) as shpfile:
         coordinates = [[0.0, 0.0], [0.0, SIZE], [SIZE, SIZE], [SIZE, 0.0], [0.0, 0.0]]
         # The offset aligns with tests/data/sentinel2/data.py.
@@ -29,34 +29,34 @@ def create_data_file(dataname):
         coordinates = [[x + offset[0], y + offset[1]] for x, y in coordinates]
 
         polygon = Polygon(coordinates)
-        properties = {"EC_hcat_c": "1000000010"}
-        shpfile.write({"geometry": mapping(polygon), "properties": properties})
+        properties = {'EC_hcat_c': '1000000010'}
+        shpfile.write({'geometry': mapping(polygon), 'properties': properties})
 
 
 def create_csv(fname):
-    with open(fname, "w") as f:
-        writer = csv.DictWriter(f, fieldnames=["HCAT2_code"])
+    with open(fname, 'w') as f:
+        writer = csv.DictWriter(f, fieldnames=['HCAT2_code'])
         writer.writeheader()
-        writer.writerow({"HCAT2_code": "1000000000"})
-        writer.writerow({"HCAT2_code": "1000000010"})
+        writer.writerow({'HCAT2_code': '1000000000'})
+        writer.writerow({'HCAT2_code': '1000000010'})
 
 
-if __name__ == "__main__":
-    csvname = "HCAT2.csv"
-    dataname = "AA_2022_EC21.shp"
+if __name__ == '__main__':
+    csvname = 'HCAT2.csv'
+    dataname = 'AA_2022_EC21.shp'
     supportnames = [
-        "AA_2022_EC21.cpg",
-        "AA_2022_EC21.dbf",
-        "AA_2022_EC21.prj",
-        "AA_2022_EC21.shx",
+        'AA_2022_EC21.cpg',
+        'AA_2022_EC21.dbf',
+        'AA_2022_EC21.prj',
+        'AA_2022_EC21.shx',
     ]
-    zipfilename = "AA.zip"
+    zipfilename = 'AA.zip'
 
     # create crop type data
     geojson_data = create_data_file(dataname)
 
     # archive the geojson to zip
-    with zipfile.ZipFile(zipfilename, "w") as zipf:
+    with zipfile.ZipFile(zipfilename, 'w') as zipf:
         zipf.write(dataname)
         for name in supportnames:
             zipf.write(name)
@@ -68,9 +68,9 @@ if __name__ == "__main__":
     create_csv(csvname)
 
     # Compute checksums
-    with open(zipfilename, "rb") as f:
+    with open(zipfilename, 'rb') as f:
         md5 = hashlib.md5(f.read()).hexdigest()
-        print(f"{zipfilename}: {md5}")
-    with open(csvname, "rb") as f:
+        print(f'{zipfilename}: {md5}')
+    with open(csvname, 'rb') as f:
         md5 = hashlib.md5(f.read()).hexdigest()
-        print(f"{csvname}: {md5}")
+        print(f'{csvname}: {md5}')

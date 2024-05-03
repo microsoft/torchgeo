@@ -62,114 +62,114 @@ class BeninSmallHolderCashews(NonGeoDataset):
          imagery and labels from the Radiant Earth MLHub
     """
 
-    dataset_id = "ts_cashew_benin"
-    collection_ids = ["ts_cashew_benin_source", "ts_cashew_benin_labels"]
+    dataset_id = 'ts_cashew_benin'
+    collection_ids = ['ts_cashew_benin_source', 'ts_cashew_benin_labels']
     image_meta = {
-        "filename": "ts_cashew_benin_source.tar.gz",
-        "md5": "957272c86e518a925a4e0d90dab4f92d",
+        'filename': 'ts_cashew_benin_source.tar.gz',
+        'md5': '957272c86e518a925a4e0d90dab4f92d',
     }
     target_meta = {
-        "filename": "ts_cashew_benin_labels.tar.gz",
-        "md5": "f9d3f0c671427d852fae9b52a0ae0051",
+        'filename': 'ts_cashew_benin_labels.tar.gz',
+        'md5': 'f9d3f0c671427d852fae9b52a0ae0051',
     }
     dates = (
-        "2019_11_05",
-        "2019_11_10",
-        "2019_11_15",
-        "2019_11_20",
-        "2019_11_30",
-        "2019_12_05",
-        "2019_12_10",
-        "2019_12_15",
-        "2019_12_20",
-        "2019_12_25",
-        "2019_12_30",
-        "2020_01_04",
-        "2020_01_09",
-        "2020_01_14",
-        "2020_01_19",
-        "2020_01_24",
-        "2020_01_29",
-        "2020_02_08",
-        "2020_02_13",
-        "2020_02_18",
-        "2020_02_23",
-        "2020_02_28",
-        "2020_03_04",
-        "2020_03_09",
-        "2020_03_14",
-        "2020_03_19",
-        "2020_03_24",
-        "2020_03_29",
-        "2020_04_03",
-        "2020_04_08",
-        "2020_04_13",
-        "2020_04_18",
-        "2020_04_23",
-        "2020_04_28",
-        "2020_05_03",
-        "2020_05_08",
-        "2020_05_13",
-        "2020_05_18",
-        "2020_05_23",
-        "2020_05_28",
-        "2020_06_02",
-        "2020_06_07",
-        "2020_06_12",
-        "2020_06_17",
-        "2020_06_22",
-        "2020_06_27",
-        "2020_07_02",
-        "2020_07_07",
-        "2020_07_12",
-        "2020_07_17",
-        "2020_07_22",
-        "2020_07_27",
-        "2020_08_01",
-        "2020_08_06",
-        "2020_08_11",
-        "2020_08_16",
-        "2020_08_21",
-        "2020_08_26",
-        "2020_08_31",
-        "2020_09_05",
-        "2020_09_10",
-        "2020_09_15",
-        "2020_09_20",
-        "2020_09_25",
-        "2020_09_30",
-        "2020_10_10",
-        "2020_10_15",
-        "2020_10_20",
-        "2020_10_25",
-        "2020_10_30",
+        '2019_11_05',
+        '2019_11_10',
+        '2019_11_15',
+        '2019_11_20',
+        '2019_11_30',
+        '2019_12_05',
+        '2019_12_10',
+        '2019_12_15',
+        '2019_12_20',
+        '2019_12_25',
+        '2019_12_30',
+        '2020_01_04',
+        '2020_01_09',
+        '2020_01_14',
+        '2020_01_19',
+        '2020_01_24',
+        '2020_01_29',
+        '2020_02_08',
+        '2020_02_13',
+        '2020_02_18',
+        '2020_02_23',
+        '2020_02_28',
+        '2020_03_04',
+        '2020_03_09',
+        '2020_03_14',
+        '2020_03_19',
+        '2020_03_24',
+        '2020_03_29',
+        '2020_04_03',
+        '2020_04_08',
+        '2020_04_13',
+        '2020_04_18',
+        '2020_04_23',
+        '2020_04_28',
+        '2020_05_03',
+        '2020_05_08',
+        '2020_05_13',
+        '2020_05_18',
+        '2020_05_23',
+        '2020_05_28',
+        '2020_06_02',
+        '2020_06_07',
+        '2020_06_12',
+        '2020_06_17',
+        '2020_06_22',
+        '2020_06_27',
+        '2020_07_02',
+        '2020_07_07',
+        '2020_07_12',
+        '2020_07_17',
+        '2020_07_22',
+        '2020_07_27',
+        '2020_08_01',
+        '2020_08_06',
+        '2020_08_11',
+        '2020_08_16',
+        '2020_08_21',
+        '2020_08_26',
+        '2020_08_31',
+        '2020_09_05',
+        '2020_09_10',
+        '2020_09_15',
+        '2020_09_20',
+        '2020_09_25',
+        '2020_09_30',
+        '2020_10_10',
+        '2020_10_15',
+        '2020_10_20',
+        '2020_10_25',
+        '2020_10_30',
     )
 
     all_bands = (
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06",
-        "B07",
-        "B08",
-        "B8A",
-        "B09",
-        "B11",
-        "B12",
-        "CLD",
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B09',
+        'B11',
+        'B12',
+        'CLD',
     )
-    rgb_bands = ("B04", "B03", "B02")
+    rgb_bands = ('B04', 'B03', 'B02')
 
     classes = [
-        "No data",
-        "Well-managed planatation",
-        "Poorly-managed planatation",
-        "Non-planatation",
-        "Residential",
-        "Background",
-        "Uncertain",
+        'No data',
+        'Well-managed planatation',
+        'Poorly-managed planatation',
+        'Non-planatation',
+        'Residential',
+        'Background',
+        'Uncertain',
     ]
 
     # Same for all tiles
@@ -178,7 +178,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: str = 'data',
         chip_size: int = 256,
         stride: int = 128,
         bands: tuple[str, ...] = all_bands,
@@ -250,12 +250,12 @@ class BeninSmallHolderCashews(NonGeoDataset):
         labels = labels[y : y + self.chip_size, x : x + self.chip_size]
 
         sample = {
-            "image": img,
-            "mask": labels,
-            "x": torch.tensor(x),
-            "y": torch.tensor(y),
-            "transform": transform,
-            "crs": crs,
+            'image': img,
+            'mask': labels,
+            'x': torch.tensor(x),
+            'y': torch.tensor(y),
+            'transform': transform,
+            'crs': crs,
         }
 
         if self.transforms is not None:
@@ -281,7 +281,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             AssertionError: if ``bands`` is not a tuple
             ValueError: if an invalid band name is provided
         """
-        assert isinstance(bands, tuple), "The list of bands must be a tuple"
+        assert isinstance(bands, tuple), 'The list of bands must be a tuple'
         for band in bands:
             if band not in self.all_bands:
                 raise ValueError(f"'{band}' is an invalid band name.")
@@ -304,7 +304,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             coordinate reference system of transform
         """
         if self.verbose:
-            print("Loading all imagery")
+            print('Loading all imagery')
 
         img = torch.zeros(
             len(self.dates),
@@ -343,7 +343,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         assert date in self.dates
 
         if self.verbose:
-            print(f"Loading imagery at {date}")
+            print(f'Loading imagery at {date}')
 
         img = torch.zeros(
             len(bands), self.tile_height, self.tile_width, dtype=torch.float32
@@ -351,9 +351,9 @@ class BeninSmallHolderCashews(NonGeoDataset):
         for band_index, band_name in enumerate(self.bands):
             filepath = os.path.join(
                 self.root,
-                "ts_cashew_benin_source",
-                f"ts_cashew_benin_source_00_{date}",
-                f"{band_name}.tif",
+                'ts_cashew_benin_source',
+                f'ts_cashew_benin_source_00_{date}',
+                f'{band_name}.tif',
             )
             with rasterio.open(filepath) as src:
                 transform = src.transform  # same transform for every bands
@@ -368,14 +368,14 @@ class BeninSmallHolderCashews(NonGeoDataset):
         """Rasterizes the dataset's labels (in geojson format)."""
         # Create a mask layer out of the geojson
         mask_geojson_fn = os.path.join(
-            self.root, "ts_cashew_benin_labels", "_common", "labels.geojson"
+            self.root, 'ts_cashew_benin_labels', '_common', 'labels.geojson'
         )
         with open(mask_geojson_fn) as f:
             geojson = json.load(f)
 
         labels = [
-            (feature["geometry"], feature["properties"]["class"])
-            for feature in geojson["features"]
+            (feature['geometry'], feature['properties']['class'])
+            for feature in geojson['features']
         ]
 
         mask_data = rasterio.features.rasterize(
@@ -397,13 +397,13 @@ class BeninSmallHolderCashews(NonGeoDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         images: bool = check_integrity(
-            os.path.join(self.root, self.image_meta["filename"]),
-            self.image_meta["md5"] if self.checksum else None,
+            os.path.join(self.root, self.image_meta['filename']),
+            self.image_meta['md5'] if self.checksum else None,
         )
 
         targets: bool = check_integrity(
-            os.path.join(self.root, self.target_meta["filename"]),
-            self.target_meta["md5"] if self.checksum else None,
+            os.path.join(self.root, self.target_meta['filename']),
+            self.target_meta['md5'] if self.checksum else None,
         )
 
         return images and targets
@@ -418,14 +418,14 @@ class BeninSmallHolderCashews(NonGeoDataset):
             RuntimeError: if download doesn't work correctly or checksums don't match
         """
         if self._check_integrity():
-            print("Files already downloaded and verified")
+            print('Files already downloaded and verified')
             return
 
         for collection_id in self.collection_ids:
             download_radiant_mlhub_collection(collection_id, self.root, api_key)
 
-        image_archive_path = os.path.join(self.root, self.image_meta["filename"])
-        target_archive_path = os.path.join(self.root, self.target_meta["filename"])
+        image_archive_path = os.path.join(self.root, self.image_meta['filename'])
+        target_archive_path = os.path.join(self.root, self.target_meta['filename'])
         for fn in [image_archive_path, target_archive_path]:
             extract_archive(fn, self.root)
 
@@ -459,36 +459,36 @@ class BeninSmallHolderCashews(NonGeoDataset):
             else:
                 raise RGBBandsMissingError()
 
-        num_time_points = sample["image"].shape[0]
+        num_time_points = sample['image'].shape[0]
         assert time_step < num_time_points
 
-        image = np.rollaxis(sample["image"][time_step, rgb_indices].numpy(), 0, 3)
+        image = np.rollaxis(sample['image'][time_step, rgb_indices].numpy(), 0, 3)
         image = np.clip(image / 3000, 0, 1)
-        mask = sample["mask"].numpy()
+        mask = sample['mask'].numpy()
 
         num_panels = 2
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            predictions = sample["prediction"].numpy()
+            predictions = sample['prediction'].numpy()
             num_panels += 1
 
         fig, axs = plt.subplots(ncols=num_panels, figsize=(4 * num_panels, 4))
 
         axs[0].imshow(image)
-        axs[0].axis("off")
+        axs[0].axis('off')
         if show_titles:
-            axs[0].set_title(f"t={time_step}")
+            axs[0].set_title(f't={time_step}')
 
-        axs[1].imshow(mask, vmin=0, vmax=6, interpolation="none")
-        axs[1].axis("off")
+        axs[1].imshow(mask, vmin=0, vmax=6, interpolation='none')
+        axs[1].axis('off')
         if show_titles:
-            axs[1].set_title("Mask")
+            axs[1].set_title('Mask')
 
         if showing_predictions:
-            axs[2].imshow(predictions, vmin=0, vmax=6, interpolation="none")
-            axs[2].axis("off")
+            axs[2].imshow(predictions, vmin=0, vmax=6, interpolation='none')
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Predictions")
+                axs[2].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

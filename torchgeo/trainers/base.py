@@ -23,10 +23,10 @@ class BaseTask(LightningModule, ABC):
     model: Any
 
     #: Performance metric to monitor in learning rate scheduler and callbacks.
-    monitor = "val_loss"
+    monitor = 'val_loss'
 
     #: Whether the goal is to minimize or maximize the performance metric to monitor.
-    mode = "min"
+    mode = 'min'
 
     def __init__(self, ignore: Sequence[str] | str | None = None) -> None:
         """Initialize a new BaseTask instance.
@@ -52,17 +52,17 @@ class BaseTask(LightningModule, ABC):
 
     def configure_optimizers(
         self,
-    ) -> "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig":
+    ) -> 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig':
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
             Optimizer and learning rate scheduler.
         """
-        optimizer = AdamW(self.parameters(), lr=self.hparams["lr"])
-        scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams["patience"])
+        optimizer = AdamW(self.parameters(), lr=self.hparams['lr'])
+        scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams['patience'])
         return {
-            "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},
+            'optimizer': optimizer,
+            'lr_scheduler': {'scheduler': scheduler, 'monitor': self.monitor},
         }
 
     def forward(self, *args: Any, **kwargs: Any) -> Any:

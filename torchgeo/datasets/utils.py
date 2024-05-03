@@ -28,24 +28,24 @@ from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 
 __all__ = (
-    "check_integrity",
-    "DatasetNotFoundError",
-    "RGBBandsMissingError",
-    "download_url",
-    "download_and_extract_archive",
-    "extract_archive",
-    "BoundingBox",
-    "disambiguate_timestamp",
-    "working_dir",
-    "stack_samples",
-    "concat_samples",
-    "merge_samples",
-    "unbind_samples",
-    "rasterio_loader",
-    "sort_sentinel2_bands",
-    "draw_semantic_segmentation_masks",
-    "rgb_to_mask",
-    "percentile_normalization",
+    'check_integrity',
+    'DatasetNotFoundError',
+    'RGBBandsMissingError',
+    'download_url',
+    'download_and_extract_archive',
+    'extract_archive',
+    'BoundingBox',
+    'disambiguate_timestamp',
+    'working_dir',
+    'stack_samples',
+    'concat_samples',
+    'merge_samples',
+    'unbind_samples',
+    'rasterio_loader',
+    'sort_sentinel2_bands',
+    'draw_semantic_segmentation_masks',
+    'rgb_to_mask',
+    'percentile_normalization',
 )
 
 
@@ -61,33 +61,33 @@ class DatasetNotFoundError(FileNotFoundError):
         Args:
             dataset: The dataset that was requested.
         """
-        msg = "Dataset not found"
+        msg = 'Dataset not found'
 
-        if hasattr(dataset, "root"):
-            var = "root"
+        if hasattr(dataset, 'root'):
+            var = 'root'
             val = dataset.root
-        elif hasattr(dataset, "paths"):
-            var = "paths"
+        elif hasattr(dataset, 'paths'):
+            var = 'paths'
             val = dataset.paths
         else:
-            super().__init__(f"{msg}.")
+            super().__init__(f'{msg}.')
             return
 
-        msg += f" in `{var}={val!r}` and "
+        msg += f' in `{var}={val!r}` and '
 
-        if hasattr(dataset, "download") and not dataset.download:
-            msg += "`download=False`"
+        if hasattr(dataset, 'download') and not dataset.download:
+            msg += '`download=False`'
         else:
-            msg += "cannot be automatically downloaded"
+            msg += 'cannot be automatically downloaded'
 
-        msg += f", either specify a different `{var}` or "
+        msg += f', either specify a different `{var}` or '
 
-        if hasattr(dataset, "download") and not dataset.download:
-            msg += "use `download=True` to automatically"
+        if hasattr(dataset, 'download') and not dataset.download:
+            msg += 'use `download=True` to automatically'
         else:
-            msg += "manually"
+            msg += 'manually'
 
-        msg += " download the dataset."
+        msg += ' download the dataset.'
 
         super().__init__(msg)
 
@@ -100,7 +100,7 @@ class RGBBandsMissingError(ValueError):
 
     def __init__(self) -> None:
         """Instantiate a new RGBBandsMissingError instance."""
-        msg = "Dataset does not contain some of the RGB bands"
+        msg = 'Dataset does not contain some of the RGB bands'
         super().__init__(msg)
 
 
@@ -115,7 +115,7 @@ class _rarfile:
                 import rarfile
             except ImportError:
                 raise ImportError(
-                    "rarfile is not installed and is required to extract this dataset"
+                    'rarfile is not installed and is required to extract this dataset'
                 )
 
             # TODO: catch exception for when rarfile is installed but not
@@ -161,34 +161,34 @@ def extract_archive(src: str, dst: str | None = None) -> None:
         dst = os.path.dirname(src)
 
     suffix_and_extractor: list[tuple[str | tuple[str, ...], Any]] = [
-        (".rar", _rarfile.RarFile),
+        ('.rar', _rarfile.RarFile),
         (
-            (".tar", ".tar.gz", ".tar.bz2", ".tar.xz", ".tgz", ".tbz2", ".tbz", ".txz"),
+            ('.tar', '.tar.gz', '.tar.bz2', '.tar.xz', '.tgz', '.tbz2', '.tbz', '.txz'),
             tarfile.open,
         ),
-        (".zip", _zipfile.ZipFile),
+        ('.zip', _zipfile.ZipFile),
     ]
 
     for suffix, extractor in suffix_and_extractor:
         if src.endswith(suffix):
-            with extractor(src, "r") as f:
+            with extractor(src, 'r') as f:
                 f.extractall(dst)
             return
 
     suffix_and_decompressor: list[tuple[str, Any]] = [
-        (".bz2", bz2.open),
-        (".gz", gzip.open),
-        (".xz", lzma.open),
+        ('.bz2', bz2.open),
+        ('.gz', gzip.open),
+        ('.xz', lzma.open),
     ]
 
     for suffix, decompressor in suffix_and_decompressor:
         if src.endswith(suffix):
-            dst = os.path.join(dst, os.path.basename(src).replace(suffix, ""))
-            with decompressor(src, "rb") as sf, open(dst, "wb") as df:
+            dst = os.path.join(dst, os.path.basename(src).replace(suffix, ''))
+            with decompressor(src, 'rb') as sf, open(dst, 'wb') as df:
                 df.write(sf.read())
             return
 
-    raise RuntimeError("src file has unknown archival/compression scheme")
+    raise RuntimeError('src file has unknown archival/compression scheme')
 
 
 def download_and_extract_archive(
@@ -216,7 +216,7 @@ def download_and_extract_archive(
     download_url(url, download_root, filename, md5)
 
     archive = os.path.join(download_root, filename)
-    print(f"Extracting {archive} to {extract_root}")
+    print(f'Extracting {archive} to {extract_root}')
     extract_archive(archive, extract_root)
 
 
@@ -236,7 +236,7 @@ def download_radiant_mlhub_dataset(
         import radiant_mlhub
     except ImportError:
         raise ImportError(
-            "radiant_mlhub is not installed and is required to download this dataset"
+            'radiant_mlhub is not installed and is required to download this dataset'
         )
 
     dataset = radiant_mlhub.Dataset.fetch(dataset_id, api_key=api_key)
@@ -259,7 +259,7 @@ def download_radiant_mlhub_collection(
         import radiant_mlhub
     except ImportError:
         raise ImportError(
-            "radiant_mlhub is not installed and is required to download this collection"
+            'radiant_mlhub is not installed and is required to download this collection'
         )
 
     collection = radiant_mlhub.Collection.fetch(collection_id, api_key=api_key)
@@ -400,7 +400,7 @@ class BoundingBox:
                 min(self.maxt, other.maxt),
             )
         except ValueError:
-            raise ValueError(f"Bounding boxes {self} and {other} do not overlap")
+            raise ValueError(f'Bounding boxes {self} and {other} do not overlap')
 
     @property
     def area(self) -> float:
@@ -461,7 +461,7 @@ class BoundingBox:
         .. versionadded:: 0.5
         """
         if not (0.0 < proportion < 1.0):
-            raise ValueError("Input proportion must be between 0 and 1.")
+            raise ValueError('Input proportion must be between 0 and 1.')
 
         if horizontal:
             w = self.maxx - self.minx
@@ -507,28 +507,28 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
     # TODO: May have issues with time zones, UTC vs. local time, and DST
     # TODO: This is really tedious, is there a better way to do this?
 
-    if not any([f"%{c}" in format for c in "yYcxG"]):
+    if not any([f'%{c}' in format for c in 'yYcxG']):
         # No temporal info
         return 0, sys.maxsize
-    elif not any([f"%{c}" in format for c in "bBmjUWcxV"]):
+    elif not any([f'%{c}' in format for c in 'bBmjUWcxV']):
         # Year resolution
         maxt = datetime(mint.year + 1, 1, 1)
-    elif not any([f"%{c}" in format for c in "aAwdjcxV"]):
+    elif not any([f'%{c}' in format for c in 'aAwdjcxV']):
         # Month resolution
         if mint.month == 12:
             maxt = datetime(mint.year + 1, 1, 1)
         else:
             maxt = datetime(mint.year, mint.month + 1, 1)
-    elif not any([f"%{c}" in format for c in "HIcX"]):
+    elif not any([f'%{c}' in format for c in 'HIcX']):
         # Day resolution
         maxt = mint + timedelta(days=1)
-    elif not any([f"%{c}" in format for c in "McX"]):
+    elif not any([f'%{c}' in format for c in 'McX']):
         # Hour resolution
         maxt = mint + timedelta(hours=1)
-    elif not any([f"%{c}" in format for c in "ScX"]):
+    elif not any([f'%{c}' in format for c in 'ScX']):
         # Minute resolution
         maxt = mint + timedelta(minutes=1)
-    elif not any([f"%{c}" in format for c in "f"]):
+    elif not any([f'%{c}' in format for c in 'f']):
         # Second resolution
         maxt = mint + timedelta(seconds=1)
     else:
@@ -704,10 +704,10 @@ def rasterio_loader(path: str) -> np.typing.NDArray[np.int_]:
 
 def sort_sentinel2_bands(x: str) -> str:
     """Sort Sentinel-2 band files in the correct order."""
-    x = os.path.basename(x).split("_")[-1]
+    x = os.path.basename(x).split('_')[-1]
     x = os.path.splitext(x)[0]
-    if x == "B8A":
-        x = "B08A"
+    if x == 'B8A':
+        x = 'B08A'
     return x
 
 
@@ -736,7 +736,7 @@ def draw_semantic_segmentation_masks(
         image=image.byte(), masks=class_masks, alpha=alpha, colors=colors
     )
     img = img.permute((1, 2, 0)).numpy().astype(np.uint8)
-    return cast("np.typing.NDArray[np.uint8]", img)
+    return cast('np.typing.NDArray[np.uint8]', img)
 
 
 def rgb_to_mask(
@@ -818,7 +818,7 @@ def path_is_vsi(path: str) -> bool:
 
     .. versionadded:: 0.6
     """
-    return "://" in path or path.startswith("/vsi")
+    return '://' in path or path.startswith('/vsi')
 
 
 def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:

@@ -46,11 +46,11 @@ class XView2DataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit", "validate"]:
-            self.dataset = XView2(split="train", **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.dataset = XView2(split='train', **self.kwargs)
             generator = torch.Generator().manual_seed(0)
             self.train_dataset, self.val_dataset = random_split(
                 self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
             )
-        if stage in ["test"]:
-            self.test_dataset = XView2(split="test", **self.kwargs)
+        if stage in ['test']:
+            self.test_dataset = XView2(split='test', **self.kwargs)

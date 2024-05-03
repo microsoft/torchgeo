@@ -44,12 +44,12 @@ class AugmentationSequential(Module):
 
         keys: list[str] = []
         for key in data_keys:
-            if key.startswith("image"):
-                keys.append("input")
-            elif key == "boxes":
-                keys.append("bbox")
-            elif key == "masks":
-                keys.append("mask")
+            if key.startswith('image'):
+                keys.append('input')
+            elif key == 'boxes':
+                keys.append('bbox')
+            elif key == 'masks':
+                keys.append('mask')
             else:
                 keys.append(key)
 
@@ -71,17 +71,17 @@ class AugmentationSequential(Module):
             batch[key] = batch[key].float()
 
         # Convert shape of boxes from [N, 4] to [N, 4, 2]
-        if "boxes" in batch and (
-            isinstance(batch["boxes"], list) or batch["boxes"].ndim == 2
+        if 'boxes' in batch and (
+            isinstance(batch['boxes'], list) or batch['boxes'].ndim == 2
         ):
-            batch["boxes"] = Boxes.from_tensor(batch["boxes"]).data
+            batch['boxes'] = Boxes.from_tensor(batch['boxes']).data
 
         # Kornia requires masks to have a channel dimension
-        if "mask" in batch and batch["mask"].ndim == 3:
-            batch["mask"] = rearrange(batch["mask"], "b h w -> b () h w")
+        if 'mask' in batch and batch['mask'].ndim == 3:
+            batch['mask'] = rearrange(batch['mask'], 'b h w -> b () h w')
 
-        if "masks" in batch and batch["masks"].ndim == 3:
-            batch["masks"] = rearrange(batch["masks"], "c h w -> () c h w")
+        if 'masks' in batch and batch['masks'].ndim == 3:
+            batch['masks'] = rearrange(batch['masks'], 'c h w -> () c h w')
 
         inputs = [batch[k] for k in self.data_keys]
         outputs_list: Tensor | list[Tensor] = self.augs(*inputs)
@@ -98,14 +98,14 @@ class AugmentationSequential(Module):
             batch[key] = batch[key].to(dtype[key])
 
         # Convert boxes to default [N, 4]
-        if "boxes" in batch:
-            batch["boxes"] = Boxes(batch["boxes"]).to_tensor(mode="xyxy")  # type:ignore[assignment]
+        if 'boxes' in batch:
+            batch['boxes'] = Boxes(batch['boxes']).to_tensor(mode='xyxy')  # type:ignore[assignment]
 
         # Torchmetrics does not support masks with a channel dimension
-        if "mask" in batch and batch["mask"].shape[1] == 1:
-            batch["mask"] = rearrange(batch["mask"], "b () h w -> b h w")
-        if "masks" in batch and batch["masks"].ndim == 4:
-            batch["masks"] = rearrange(batch["masks"], "() c h w -> c h w")
+        if 'mask' in batch and batch['mask'].shape[1] == 1:
+            batch['mask'] = rearrange(batch['mask'], 'b () h w -> b h w')
+        if 'masks' in batch and batch['masks'].ndim == 4:
+            batch['masks'] = rearrange(batch['masks'], '() c h w -> c h w')
 
         return batch
 
@@ -122,7 +122,7 @@ class _RandomNCrop(K.GeometricAugmentationBase2D):
         """
         super().__init__(p=1)
         self._param_generator: _NCropGenerator = _NCropGenerator(size, num)
-        self.flags = {"size": size, "num": num}
+        self.flags = {'size': size, 'num': num}
 
     def compute_transformation(
         self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Any]
@@ -159,8 +159,8 @@ class _RandomNCrop(K.GeometricAugmentationBase2D):
             the augmented input
         """
         out = []
-        for i in range(flags["num"]):
-            out.append(crop_by_indices(input, params["src"][i], flags["size"]))
+        for i in range(flags['num']):
+            out.append(crop_by_indices(input, params['src'][i], flags['size']))
         return torch.cat(out)
 
 
@@ -193,10 +193,10 @@ class _NCropGenerator(K.random_generator.CropGenerator):
         for _ in range(self.num):
             out.append(super().forward(batch_shape, same_on_batch))
         return {
-            "src": torch.stack([x["src"] for x in out]),
-            "dst": torch.stack([x["dst"] for x in out]),
-            "input_size": out[0]["input_size"],
-            "output_size": out[0]["output_size"],
+            'src': torch.stack([x['src'] for x in out]),
+            'dst': torch.stack([x['dst'] for x in out]),
+            'input_size': out[0]['input_size'],
+            'output_size': out[0]['output_size'],
         }
 
 
@@ -221,10 +221,10 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
         """
         super().__init__(p=1)
         self.flags = {
-            "window_size": window_size,
-            "stride": stride if stride is not None else window_size,
-            "padding": padding,
-            "keepdim": keepdim,
+            'window_size': window_size,
+            'stride': stride if stride is not None else window_size,
+            'padding': padding,
+            'keepdim': keepdim,
         }
 
     def compute_transformation(
@@ -263,12 +263,12 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
         """
         out = extract_tensor_patches(
             input,
-            window_size=flags["window_size"],
-            stride=flags["stride"],
-            padding=flags["padding"],
+            window_size=flags['window_size'],
+            stride=flags['stride'],
+            padding=flags['padding'],
         )
 
-        if flags["keepdim"]:
-            out = rearrange(out, "b t c h w -> (b t) c h w")
+        if flags['keepdim']:
+            out = rearrange(out, 'b t c h w -> (b t) c h w')
 
         return out

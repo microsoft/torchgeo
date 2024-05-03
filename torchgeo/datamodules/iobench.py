@@ -51,15 +51,15 @@ class IOBenchDataModule(GeoDataModule):
         """
         self.dataset = IOBench(**self.kwargs)
 
-        if stage in ["fit"]:
+        if stage in ['fit']:
             self.train_sampler = RandomGeoSampler(
                 self.dataset, self.patch_size, self.length
             )
-        if stage in ["fit", "validate"]:
+        if stage in ['fit', 'validate']:
             self.val_sampler = GridGeoSampler(
                 self.dataset, self.patch_size, self.patch_size
             )
-        if stage in ["test"]:
+        if stage in ['test']:
             self.test_sampler = GridGeoSampler(
                 self.dataset, self.patch_size, self.patch_size
             )

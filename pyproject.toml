@@ -262,6 +262,7 @@ extend-include = ["*.ipynb"]
 fix = true
 
 [tool.ruff.format]
+quote-style = "single"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]

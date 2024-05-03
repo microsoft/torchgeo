@@ -78,20 +78,20 @@ class AgriFieldNet(RasterDataset):
         _(?P<band>B[0-9A-Z]{2})_10m
     """
 
-    rgb_bands = ["B04", "B03", "B02"]
+    rgb_bands = ['B04', 'B03', 'B02']
     all_bands = [
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06",
-        "B07",
-        "B08",
-        "B8A",
-        "B09",
-        "B11",
-        "B12",
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B09',
+        'B11',
+        'B12',
     ]
 
     cmap = {
@@ -113,7 +113,7 @@ class AgriFieldNet(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = "data",
+        paths: str | Iterable[str] = 'data',
         crs: CRS | None = None,
         classes: list[int] = list(cmap.keys()),
         bands: Sequence[str] = all_bands,
@@ -138,8 +138,8 @@ class AgriFieldNet(RasterDataset):
         """
         assert (
             set(classes) <= self.cmap.keys()
-        ), f"Only the following classes are valid: {list(self.cmap.keys())}."
-        assert 0 in classes, "Classes must include the background class: 0"
+        ), f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert 0 in classes, 'Classes must include the background class: 0'
 
         self.paths = paths
         self.classes = classes
@@ -171,7 +171,7 @@ class AgriFieldNet(RasterDataset):
 
         if not filepaths:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
         data_list: list[Tensor] = []
@@ -183,9 +183,9 @@ class AgriFieldNet(RasterDataset):
                 directory = os.path.dirname(filepath)
                 match = re.match(filename_regex, filename)
                 if match:
-                    if "band" in match.groupdict():
-                        start = match.start("band")
-                        end = match.end("band")
+                    if 'band' in match.groupdict():
+                        start = match.start('band')
+                        end = match.end('band')
                         filename = filename[:start] + band + filename[end:]
                 filepath = os.path.join(directory, filename)
                 band_filepaths.append(filepath)
@@ -193,9 +193,9 @@ class AgriFieldNet(RasterDataset):
         image = torch.cat(data_list)
 
         mask_filepaths = []
-        for root, dirs, files in os.walk(os.path.join(self.paths, "train_labels")):
+        for root, dirs, files in os.walk(os.path.join(self.paths, 'train_labels')):
             for file in files:
-                if not file.endswith("_field_ids.tif") and file.endswith(".tif"):
+                if not file.endswith('_field_ids.tif') and file.endswith('.tif'):
                     file_path = os.path.join(root, file)
                     mask_filepaths.append(file_path)
 
@@ -203,10 +203,10 @@ class AgriFieldNet(RasterDataset):
         mask = self.ordinal_map[mask.squeeze().long()]
 
         sample = {
-            "crs": self.crs,
-            "bbox": query,
-            "image": image.float(),
-            "mask": mask.long(),
+            'crs': self.crs,
+            'bbox': query,
+            'image': image.float(),
+            'mask': mask.long(),
         }
 
         if self.transforms is not None:
@@ -240,31 +240,31 @@ class AgriFieldNet(RasterDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image = sample["image"][rgb_indices].permute(1, 2, 0)
+        image = sample['image'][rgb_indices].permute(1, 2, 0)
         image = (image - image.min()) / (image.max() - image.min())
 
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 2
 
-        showing_prediction = "prediction" in sample
+        showing_prediction = 'prediction' in sample
         if showing_prediction:
-            pred = sample["prediction"].squeeze()
+            pred = sample['prediction'].squeeze()
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
         axs[0].imshow(image)
-        axs[0].axis("off")
-        axs[1].imshow(self.ordinal_cmap[mask], interpolation="none")
-        axs[1].axis("off")
+        axs[0].axis('off')
+        axs[1].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[1].axis('off')
         if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
+            axs[0].set_title('Image')
+            axs[1].set_title('Mask')
 
         if showing_prediction:
-            axs[2].imshow(self.ordinal_cmap[pred], interpolation="none")
-            axs[2].axis("off")
+            axs[2].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Prediction")
+                axs[2].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

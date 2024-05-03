@@ -51,25 +51,25 @@ class NCCM(RasterDataset):
     .. versionadded:: 0.6
     """
 
-    filename_regex = r"CDL(?P<date>\d{4})_clip"
-    filename_glob = "CDL*.*"
+    filename_regex = r'CDL(?P<date>\d{4})_clip'
+    filename_glob = 'CDL*.*'
 
-    date_format = "%Y"
+    date_format = '%Y'
     is_image = False
     urls = {
-        2019: "https://figshare.com/ndownloader/files/25070540",
-        2018: "https://figshare.com/ndownloader/files/25070624",
-        2017: "https://figshare.com/ndownloader/files/25070582",
+        2019: 'https://figshare.com/ndownloader/files/25070540',
+        2018: 'https://figshare.com/ndownloader/files/25070624',
+        2017: 'https://figshare.com/ndownloader/files/25070582',
     }
     md5s = {
-        2019: "0d062bbd42e483fdc8239d22dba7020f",
-        2018: "b3bb4894478d10786aa798fb11693ec1",
-        2017: "d047fbe4a85341fa6248fd7e0badab6c",
+        2019: '0d062bbd42e483fdc8239d22dba7020f',
+        2018: 'b3bb4894478d10786aa798fb11693ec1',
+        2017: 'd047fbe4a85341fa6248fd7e0badab6c',
     }
     fnames = {
-        2019: "CDL2019_clip.tif",
-        2018: "CDL2018_clip1.tif",
-        2017: "CDL2017_clip.tif",
+        2019: 'CDL2019_clip.tif',
+        2018: 'CDL2018_clip1.tif',
+        2017: 'CDL2017_clip.tif',
     }
 
     cmap = {
@@ -82,7 +82,7 @@ class NCCM(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = "data",
+        paths: str | Iterable[str] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         years: list[int] = [2019],
@@ -110,8 +110,8 @@ class NCCM(RasterDataset):
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert set(years) <= self.md5s.keys(), (
-            "NCCM data product only exists for the following years: "
-            f"{list(self.md5s.keys())}."
+            'NCCM data product only exists for the following years: '
+            f'{list(self.md5s.keys())}.'
         )
         self.paths = paths
         self.years = years
@@ -140,7 +140,7 @@ class NCCM(RasterDataset):
             IndexError: if query is not found in the index
         """
         sample = super().__getitem__(query)
-        sample["mask"] = self.ordinal_map[sample["mask"]]
+        sample['mask'] = self.ordinal_map[sample['mask']]
         return sample
 
     def _verify(self) -> None:
@@ -182,29 +182,29 @@ class NCCM(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze()
+            pred = sample['prediction'].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(
             nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
         )
 
-        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation="none")
-        axs[0, 0].axis("off")
+        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[0, 0].axis('off')
 
         if show_titles:
-            axs[0, 0].set_title("Mask")
+            axs[0, 0].set_title('Mask')
 
         if showing_predictions:
-            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation="none")
-            axs[0, 1].axis("off")
+            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[0, 1].axis('off')
             if show_titles:
-                axs[0, 1].set_title("Prediction")
+                axs[0, 1].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

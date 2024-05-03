@@ -14,13 +14,13 @@ np.random.seed(0)
 
 
 profile = {
-    "driver": "GTiff",
-    "dtype": "uint16",
-    "width": SIZE,
-    "height": SIZE,
-    "count": 6,
-    "crs": CRS.from_epsg(4326),
-    "transform": Affine(
+    'driver': 'GTiff',
+    'dtype': 'uint16',
+    'width': SIZE,
+    'height': SIZE,
+    'count': 6,
+    'crs': CRS.from_epsg(4326),
+    'transform': Affine(
         4.497249999999613e-07,
         0.0,
         12.567765446921205,
@@ -31,9 +31,9 @@ profile = {
 }
 
 Z = np.random.randint(
-    np.iinfo(profile["dtype"]).max, size=(SIZE, SIZE), dtype=profile["dtype"]
+    np.iinfo(profile['dtype']).max, size=(SIZE, SIZE), dtype=profile['dtype']
 )
 
-with rasterio.open("zoneA_B_R_NIR.tif", "w", **profile) as src:
-    for i in range(profile["count"]):
+with rasterio.open('zoneA_B_R_NIR.tif', 'w', **profile) as src:
+    for i in range(profile['count']):
         src.write(Z, i + 1)

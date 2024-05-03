@@ -10,12 +10,12 @@ from torchgeo.datamodules import ChesapeakeCVPRDataModule
 
 class TestChesapeakeCVPRDataModule:
     def test_invalid_param_config(self) -> None:
-        with pytest.raises(ValueError, match="The pre-generated prior labels"):
+        with pytest.raises(ValueError, match='The pre-generated prior labels'):
             ChesapeakeCVPRDataModule(
-                root=os.path.join("tests", "data", "chesapeake", "cvpr"),
-                train_splits=["de-test"],
-                val_splits=["de-test"],
-                test_splits=["de-test"],
+                root=os.path.join('tests', 'data', 'chesapeake', 'cvpr'),
+                train_splits=['de-test'],
+                val_splits=['de-test'],
+                test_splits=['de-test'],
                 batch_size=2,
                 patch_size=32,
                 length=4,

@@ -50,25 +50,25 @@ class FireRisk(NonGeoClassificationDataset):
     .. versionadded:: 0.5
     """
 
-    url = "https://hf.co/datasets/torchgeo/fire_risk/resolve/e6046a04350c6f1ab4ad791fb3a40bf8940be269/FireRisk.zip"
-    md5 = "a77b9a100d51167992ae8c51d26198a6"
-    filename = "FireRisk.zip"
-    directory = "FireRisk"
-    splits = ["train", "val"]
+    url = 'https://hf.co/datasets/torchgeo/fire_risk/resolve/e6046a04350c6f1ab4ad791fb3a40bf8940be269/FireRisk.zip'
+    md5 = 'a77b9a100d51167992ae8c51d26198a6'
+    filename = 'FireRisk.zip'
+    directory = 'FireRisk'
+    splits = ['train', 'val']
     classes = [
-        "High",
-        "Low",
-        "Moderate",
-        "Non-burnable",
-        "Very_High",
-        "Very_Low",
-        "Water",
+        'High',
+        'Low',
+        'Moderate',
+        'Non-burnable',
+        'Very_High',
+        'Very_Low',
+        'Water',
     ]
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -149,22 +149,22 @@ class FireRisk(NonGeoClassificationDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = sample["image"].permute((1, 2, 0)).numpy()
-        label = cast(int, sample["label"].item())
+        image = sample['image'].permute((1, 2, 0)).numpy()
+        label = cast(int, sample['label'].item())
         label_class = self.classes[label]
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = cast(int, sample["prediction"].item())
+            prediction = cast(int, sample['prediction'].item())
             prediction_class = self.classes[prediction]
 
         fig, ax = plt.subplots(figsize=(4, 4))
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
         if show_titles:
-            title = f"Label: {label_class}"
+            title = f'Label: {label_class}'
             if showing_predictions:
-                title += f"\nPrediction: {prediction_class}"
+                title += f'\nPrediction: {prediction_class}'
             ax.set_title(title)
 
         if suptitle is not None:

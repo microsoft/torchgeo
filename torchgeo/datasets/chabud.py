@@ -53,29 +53,29 @@ class ChaBuD(NonGeoDataset):
     """
 
     all_bands = [
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06",
-        "B07",
-        "B08",
-        "B8A",
-        "B09",
-        "B11",
-        "B12",
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B09',
+        'B11',
+        'B12',
     ]
-    rgb_bands = ["B04", "B03", "B02"]
-    folds = {"train": [1, 2, 3, 4], "val": [0]}
-    url = "https://hf.co/datasets/chabud-team/chabud-ecml-pkdd2023/resolve/de222d434e26379aa3d4f3dd1b2caf502427a8b2/train_eval.hdf5"  # noqa: E501
-    filename = "train_eval.hdf5"
-    md5 = "15d78fb825f9a81dad600db828d22c08"
+    rgb_bands = ['B04', 'B03', 'B02']
+    folds = {'train': [1, 2, 3, 4], 'val': [0]}
+    url = 'https://hf.co/datasets/chabud-team/chabud-ecml-pkdd2023/resolve/de222d434e26379aa3d4f3dd1b2caf502427a8b2/train_eval.hdf5'  # noqa: E501
+    filename = 'train_eval.hdf5'
+    md5 = '15d78fb825f9a81dad600db828d22c08'
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         bands: list[str] = all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -114,7 +114,7 @@ class ChaBuD(NonGeoDataset):
             import h5py  # noqa: F401
         except ImportError:
             raise ImportError(
-                "h5py is not installed and is required to use this dataset"
+                'h5py is not installed and is required to use this dataset'
             )
 
         self.uuids = self._load_uuids()
@@ -131,7 +131,7 @@ class ChaBuD(NonGeoDataset):
         image = self._load_image(index)
         mask = self._load_target(index)
 
-        sample = {"image": image, "mask": mask}
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -155,9 +155,9 @@ class ChaBuD(NonGeoDataset):
         import h5py
 
         uuids = []
-        with h5py.File(self.filepath, "r") as f:
+        with h5py.File(self.filepath, 'r') as f:
             for k, v in f.items():
-                if v.attrs["fold"] in self.folds[self.split] and "pre_fire" in v:
+                if v.attrs['fold'] in self.folds[self.split] and 'pre_fire' in v:
                     uuids.append(k)
 
         uuids = sorted(uuids)
@@ -175,9 +175,9 @@ class ChaBuD(NonGeoDataset):
         import h5py
 
         uuid = self.uuids[index]
-        with h5py.File(self.filepath, "r") as f:
-            pre_array = f[uuid]["pre_fire"][:]
-            post_array = f[uuid]["post_fire"][:]
+        with h5py.File(self.filepath, 'r') as f:
+            pre_array = f[uuid]['pre_fire'][:]
+            post_array = f[uuid]['post_fire'][:]
 
         # index specified bands and concatenate
         pre_array = pre_array[..., self.band_indices]
@@ -201,8 +201,8 @@ class ChaBuD(NonGeoDataset):
         import h5py
 
         uuid = self.uuids[index]
-        with h5py.File(self.filepath, "r") as f:
-            array = f[uuid]["mask"][:].astype(np.int32).squeeze(axis=-1)
+        with h5py.File(self.filepath, 'r') as f:
+            array = f[uuid]['mask'][:].astype(np.int32).squeeze(axis=-1)
 
         tensor = torch.from_numpy(array)
         tensor = tensor.to(torch.long)
@@ -254,38 +254,38 @@ class ChaBuD(NonGeoDataset):
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        mask = sample["mask"].numpy()
-        image_pre = sample["image"][: len(self.bands)][rgb_indices].numpy()
-        image_post = sample["image"][len(self.bands) :][rgb_indices].numpy()
+        mask = sample['mask'].numpy()
+        image_pre = sample['image'][: len(self.bands)][rgb_indices].numpy()
+        image_post = sample['image'][len(self.bands) :][rgb_indices].numpy()
         image_pre = percentile_normalization(image_pre)
         image_post = percentile_normalization(image_post)
 
         ncols = 3
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = sample["prediction"]
+            prediction = sample['prediction']
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
 
         axs[0].imshow(np.transpose(image_pre, (1, 2, 0)))
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(np.transpose(image_post, (1, 2, 0)))
-        axs[1].axis("off")
+        axs[1].axis('off')
         axs[2].imshow(mask)
-        axs[2].axis("off")
+        axs[2].axis('off')
 
         if showing_predictions:
             axs[3].imshow(prediction)
-            axs[3].axis("off")
+            axs[3].axis('off')
 
         if show_titles:
-            axs[0].set_title("Image Pre")
-            axs[1].set_title("Image Post")
-            axs[2].set_title("Mask")
+            axs[0].set_title('Image Pre')
+            axs[1].set_title('Image Post')
+            axs[2].set_title('Mask')
             if showing_predictions:
-                axs[3].set_title("Prediction")
+                axs[3].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

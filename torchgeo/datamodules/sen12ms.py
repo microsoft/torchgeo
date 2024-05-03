@@ -38,7 +38,7 @@ class SEN12MSDataModule(NonGeoDataModule):
         self,
         batch_size: int = 64,
         num_workers: int = 0,
-        band_set: str = "all",
+        band_set: str = 'all',
         **kwargs: Any,
     ) -> None:
         """Initialize a new SEN12MSDataModule instance.
@@ -52,13 +52,13 @@ class SEN12MSDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.SEN12MS`.
         """
-        kwargs["bands"] = SEN12MS.BAND_SETS[band_set]
+        kwargs['bands'] = SEN12MS.BAND_SETS[band_set]
 
-        if band_set == "s1":
+        if band_set == 's1':
             self.std = self.std[:2]
-        elif band_set == "s2-all":
+        elif band_set == 's2-all':
             self.std = self.std[2:]
-        elif band_set == "s2-reduced":
+        elif band_set == 's2-reduced':
             self.std = self.std[torch.tensor([3, 4, 5, 9, 12, 13])]
 
         super().__init__(SEN12MS, batch_size, num_workers, **kwargs)
@@ -69,10 +69,10 @@ class SEN12MSDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit", "validate"]:
-            season_to_int = {"winter": 0, "spring": 1000, "summer": 2000, "fall": 3000}
+        if stage in ['fit', 'validate']:
+            season_to_int = {'winter': 0, 'spring': 1000, 'summer': 2000, 'fall': 3000}
 
-            self.dataset = SEN12MS(split="train", **self.kwargs)
+            self.dataset = SEN12MS(split='train', **self.kwargs)
 
             # A patch is a filename like:
             #     "ROIs{num}_{season}_s2_{scene_id}_p{patch_id}.tif"
@@ -82,7 +82,7 @@ class SEN12MSDataModule(NonGeoDataModule):
             # as (season_id + scene_id).
             scenes = []
             for scene_fn in self.dataset.ids:
-                parts = scene_fn.split("_")
+                parts = scene_fn.split('_')
                 season_id = season_to_int[parts[1]]
                 scene_id = int(parts[3])
                 scenes.append(season_id + scene_id)
@@ -93,8 +93,8 @@ class SEN12MSDataModule(NonGeoDataModule):
 
             self.train_dataset = Subset(self.dataset, train_indices)
             self.val_dataset = Subset(self.dataset, val_indices)
-        if stage in ["test"]:
-            self.test_dataset = SEN12MS(split="test", **self.kwargs)
+        if stage in ['test']:
+            self.test_dataset = SEN12MS(split='test', **self.kwargs)
 
     def on_after_batch_transfer(
         self, batch: dict[str, Tensor], dataloader_idx: int
@@ -108,6 +108,6 @@ class SEN12MSDataModule(NonGeoDataModule):
         Returns:
             A batch of data.
         """
-        batch["mask"] = torch.take(self.DFC2020_CLASS_MAPPING, batch["mask"])
+        batch['mask'] = torch.take(self.DFC2020_CLASS_MAPPING, batch['mask'])
 
         return super().on_after_batch_transfer(batch, dataloader_idx)

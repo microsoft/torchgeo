@@ -54,13 +54,13 @@ class ETCI2021DataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit"]:
-            self.train_dataset = ETCI2021(split="train", **self.kwargs)
-        if stage in ["fit", "validate"]:
-            self.val_dataset = ETCI2021(split="val", **self.kwargs)
-        if stage in ["predict"]:
+        if stage in ['fit']:
+            self.train_dataset = ETCI2021(split='train', **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.val_dataset = ETCI2021(split='val', **self.kwargs)
+        if stage in ['predict']:
             # Test set masks are not public, use for prediction instead
-            self.predict_dataset = ETCI2021(split="test", **self.kwargs)
+            self.predict_dataset = ETCI2021(split='test', **self.kwargs)
 
     def on_after_batch_transfer(
         self, batch: dict[str, Tensor], dataloader_idx: int
@@ -77,6 +77,6 @@ class ETCI2021DataModule(NonGeoDataModule):
         if self.trainer:
             if not self.trainer.predicting:
                 # Evaluate against flood mask, not water mask
-                batch["mask"] = (batch["mask"][:, 1] > 0).long()
+                batch['mask'] = (batch['mask'][:, 1] > 0).long()
 
         return super().on_after_batch_transfer(batch, dataloader_idx)

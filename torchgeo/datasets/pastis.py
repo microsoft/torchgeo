@@ -70,26 +70,26 @@ class PASTIS(NonGeoDataset):
     """
 
     classes = [
-        "background",  # all non-agricultural land
-        "meadow",
-        "soft_winter_wheat",
-        "corn",
-        "winter_barley",
-        "winter_rapeseed",
-        "spring_barley",
-        "sunflower",
-        "grapevine",
-        "beet",
-        "winter_triticale",
-        "winter_durum_wheat",
-        "fruits_vegetables_flowers",
-        "potatoes",
-        "leguminous_fodder",
-        "soybeans",
-        "orchard",
-        "mixed_cereal",
-        "sorghum",
-        "void_label",  # for parcels mostly outside their patch
+        'background',  # all non-agricultural land
+        'meadow',
+        'soft_winter_wheat',
+        'corn',
+        'winter_barley',
+        'winter_rapeseed',
+        'spring_barley',
+        'sunflower',
+        'grapevine',
+        'beet',
+        'winter_triticale',
+        'winter_durum_wheat',
+        'fruits_vegetables_flowers',
+        'potatoes',
+        'leguminous_fodder',
+        'soybeans',
+        'orchard',
+        'mixed_cereal',
+        'sorghum',
+        'void_label',  # for parcels mostly outside their patch
     ]
     cmap = {
         0: (0, 0, 0, 255),
@@ -113,24 +113,24 @@ class PASTIS(NonGeoDataset):
         18: (23, 190, 207, 255),
         19: (255, 255, 255, 255),
     }
-    directory = "PASTIS-R"
-    filename = "PASTIS-R.zip"
-    url = "https://zenodo.org/record/5735646/files/PASTIS-R.zip?download=1"
-    md5 = "4887513d6c2d2b07fa935d325bd53e09"
+    directory = 'PASTIS-R'
+    filename = 'PASTIS-R.zip'
+    url = 'https://zenodo.org/record/5735646/files/PASTIS-R.zip?download=1'
+    md5 = '4887513d6c2d2b07fa935d325bd53e09'
     prefix = {
-        "s2": os.path.join("DATA_S2", "S2_"),
-        "s1a": os.path.join("DATA_S1A", "S1A_"),
-        "s1d": os.path.join("DATA_S1D", "S1D_"),
-        "semantic": os.path.join("ANNOTATIONS", "TARGET_"),
-        "instance": os.path.join("INSTANCE_ANNOTATIONS", "INSTANCES_"),
+        's2': os.path.join('DATA_S2', 'S2_'),
+        's1a': os.path.join('DATA_S1A', 'S1A_'),
+        's1d': os.path.join('DATA_S1D', 'S1D_'),
+        'semantic': os.path.join('ANNOTATIONS', 'TARGET_'),
+        'instance': os.path.join('INSTANCE_ANNOTATIONS', 'INSTANCES_'),
     }
 
     def __init__(
         self,
-        root: str = "data",
+        root: str = 'data',
         folds: Sequence[int] = (1, 2, 3, 4, 5),
-        bands: str = "s2",
-        mode: str = "semantic",
+        bands: str = 's2',
+        mode: str = 'semantic',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -154,8 +154,8 @@ class PASTIS(NonGeoDataset):
         """
         for fold in folds:
             assert 1 <= fold <= 5
-        assert bands in ["s1a", "s1d", "s2"]
-        assert mode in ["semantic", "instance"]
+        assert bands in ['s1a', 's1d', 's2']
+        assert mode in ['semantic', 'instance']
         self.root = root
         self.folds = folds
         self.bands = bands
@@ -187,12 +187,12 @@ class PASTIS(NonGeoDataset):
             data and label at that index
         """
         image = self._load_image(index)
-        if self.mode == "semantic":
+        if self.mode == 'semantic':
             mask = self._load_semantic_targets(index)
-            sample = {"image": image, "mask": mask}
-        elif self.mode == "instance":
+            sample = {'image': image, 'mask': mask}
+        elif self.mode == 'instance':
             mask, boxes, labels = self._load_instance_targets(index)
-            sample = {"image": image, "mask": mask, "boxes": boxes, "label": labels}
+            sample = {'image': image, 'mask': mask, 'boxes': boxes, 'label': labels}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -233,7 +233,7 @@ class PASTIS(NonGeoDataset):
         """
         # See https://github.com/VSainteuf/pastis-benchmark/blob/main/code/dataloader.py#L201 # noqa: E501
         # even though the mask file is 3 bands, we just select the first band
-        array = np.load(self.files[index]["semantic"])[0].astype(np.uint8)
+        array = np.load(self.files[index]['semantic'])[0].astype(np.uint8)
         tensor = torch.from_numpy(array).long()
         return tensor
 
@@ -246,8 +246,8 @@ class PASTIS(NonGeoDataset):
         Returns:
             the instance segmentation mask, box, and label for each instance
         """
-        mask_array = np.load(self.files[index]["semantic"])[0]
-        instance_array = np.load(self.files[index]["instance"])
+        mask_array = np.load(self.files[index]['semantic'])[0]
+        instance_array = np.load(self.files[index]['instance'])
 
         mask_tensor = torch.from_numpy(mask_array)
         instance_tensor = torch.from_numpy(instance_array)
@@ -289,23 +289,23 @@ class PASTIS(NonGeoDataset):
             list of dicts containing image and semantic/instance target file paths
         """
         self.idxs = []
-        metadata_fn = os.path.join(self.root, self.directory, "metadata.geojson")
+        metadata_fn = os.path.join(self.root, self.directory, 'metadata.geojson')
         with fiona.open(metadata_fn) as f:
             for row in f:
-                fold = int(row["properties"]["Fold"])
+                fold = int(row['properties']['Fold'])
                 if fold in self.folds:
-                    self.idxs.append(row["properties"]["ID_PATCH"])
+                    self.idxs.append(row['properties']['ID_PATCH'])
 
         files = []
         for i in self.idxs:
-            path = os.path.join(self.root, self.directory, "{}") + str(i) + ".npy"
+            path = os.path.join(self.root, self.directory, '{}') + str(i) + '.npy'
             files.append(
                 {
-                    "s2": path.format(self.prefix["s2"]),
-                    "s1a": path.format(self.prefix["s1a"]),
-                    "s1d": path.format(self.prefix["s1d"]),
-                    "semantic": path.format(self.prefix["semantic"]),
-                    "instance": path.format(self.prefix["instance"]),
+                    's2': path.format(self.prefix['s2']),
+                    's1a': path.format(self.prefix['s1a']),
+                    's1d': path.format(self.prefix['s1d']),
+                    'semantic': path.format(self.prefix['semantic']),
+                    'instance': path.format(self.prefix['instance']),
                 }
             )
         return files
@@ -321,7 +321,7 @@ class PASTIS(NonGeoDataset):
         filepath = os.path.join(self.root, self.filename)
         if os.path.exists(filepath):
             if self.checksum and not check_integrity(filepath, self.md5):
-                raise RuntimeError("Dataset found, but corrupted.")
+                raise RuntimeError('Dataset found, but corrupted.')
             extract_archive(filepath)
             return
 
@@ -359,42 +359,42 @@ class PASTIS(NonGeoDataset):
             a matplotlib Figure with the rendered sample
         """
         # Keep the RGB bands and convert to T x H x W x C format
-        images = sample["image"][:, [2, 1, 0], :, :].numpy().transpose(0, 2, 3, 1)
-        mask = sample["mask"].numpy()
+        images = sample['image'][:, [2, 1, 0], :, :].numpy().transpose(0, 2, 3, 1)
+        mask = sample['mask'].numpy()
 
-        if self.mode == "instance":
-            label = sample["label"]
+        if self.mode == 'instance':
+            label = sample['label']
             mask = label[mask.argmax(axis=0)].numpy()
 
         num_panels = 3
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            predictions = sample["prediction"].numpy()
+            predictions = sample['prediction'].numpy()
             num_panels += 1
-            if self.mode == "instance":
+            if self.mode == 'instance':
                 predictions = predictions.argmax(axis=0)
-                label = sample["prediction_labels"]
+                label = sample['prediction_labels']
                 predictions = label[predictions].numpy()
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 4))
         axs[0].imshow(images[0] / 5000)
         axs[1].imshow(images[1] / 5000)
-        axs[2].imshow(mask, vmin=0, vmax=19, cmap=self._cmap, interpolation="none")
-        axs[0].axis("off")
-        axs[1].axis("off")
-        axs[2].axis("off")
+        axs[2].imshow(mask, vmin=0, vmax=19, cmap=self._cmap, interpolation='none')
+        axs[0].axis('off')
+        axs[1].axis('off')
+        axs[2].axis('off')
         if showing_predictions:
             axs[3].imshow(
-                predictions, vmin=0, vmax=19, cmap=self._cmap, interpolation="none"
+                predictions, vmin=0, vmax=19, cmap=self._cmap, interpolation='none'
             )
-            axs[3].axis("off")
+            axs[3].axis('off')
 
         if show_titles:
-            axs[0].set_title("Image 0")
-            axs[1].set_title("Image 1")
-            axs[2].set_title("Mask")
+            axs[0].set_title('Image 0')
+            axs[1].set_title('Image 1')
+            axs[2].set_title('Mask')
             if showing_predictions:
-                axs[3].set_title("Prediction")
+                axs[3].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

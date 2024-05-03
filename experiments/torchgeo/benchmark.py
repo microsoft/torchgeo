@@ -32,85 +32,85 @@ def set_up_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--landsat-root",
-        default=os.path.join("data", "landsat"),
-        help="directory containing Landsat data",
-        metavar="ROOT",
+        '--landsat-root',
+        default=os.path.join('data', 'landsat'),
+        help='directory containing Landsat data',
+        metavar='ROOT',
     )
     parser.add_argument(
-        "--cdl-root",
-        default=os.path.join("data", "cdl"),
-        help="directory containing CDL data",
-        metavar="ROOT",
+        '--cdl-root',
+        default=os.path.join('data', 'cdl'),
+        help='directory containing CDL data',
+        metavar='ROOT',
     )
     parser.add_argument(
-        "-d", "--device", default=0, type=int, help="CPU/GPU ID to use", metavar="ID"
+        '-d', '--device', default=0, type=int, help='CPU/GPU ID to use', metavar='ID'
     )
     parser.add_argument(
-        "-c",
-        "--cache",
-        action="store_true",
-        help="cache file handles during data loading",
+        '-c',
+        '--cache',
+        action='store_true',
+        help='cache file handles during data loading',
     )
     parser.add_argument(
-        "-b",
-        "--batch-size",
+        '-b',
+        '--batch-size',
         default=2**4,
         type=int,
-        help="number of samples in each mini-batch",
-        metavar="SIZE",
+        help='number of samples in each mini-batch',
+        metavar='SIZE',
     )
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
-        "-n",
-        "--num-batches",
+        '-n',
+        '--num-batches',
         type=int,
-        help="number of batches to load",
-        metavar="SIZE",
+        help='number of batches to load',
+        metavar='SIZE',
     )
     group.add_argument(
-        "-e",
-        "--epoch-size",
+        '-e',
+        '--epoch-size',
         type=int,
-        help="number of samples to load, should be evenly divisible by batch size",
-        metavar="SIZE",
+        help='number of samples to load, should be evenly divisible by batch size',
+        metavar='SIZE',
     )
     parser.add_argument(
-        "-p",
-        "--patch-size",
+        '-p',
+        '--patch-size',
         default=224,
         type=int,
-        help="height/width of each patch in pixels",
-        metavar="PIXELS",
+        help='height/width of each patch in pixels',
+        metavar='PIXELS',
     )
     parser.add_argument(
-        "-s",
-        "--stride",
+        '-s',
+        '--stride',
         default=112,
         type=int,
-        help="sampling stride for GridGeoSampler in pixels",
-        metavar="PIXELS",
+        help='sampling stride for GridGeoSampler in pixels',
+        metavar='PIXELS',
     )
     parser.add_argument(
-        "-w",
-        "--num-workers",
+        '-w',
+        '--num-workers',
         default=0,
         type=int,
-        help="number of workers for parallel data loading",
-        metavar="NUM",
+        help='number of workers for parallel data loading',
+        metavar='NUM',
     )
     parser.add_argument(
-        "--seed", default=0, type=int, help="random seed for reproducibility"
+        '--seed', default=0, type=int, help='random seed for reproducibility'
     )
     parser.add_argument(
-        "--output-fn",
-        default="benchmark-results.csv",
+        '--output-fn',
+        default='benchmark-results.csv',
         type=str,
-        help="path to the CSV file to write results",
-        metavar="FILE",
+        help='path to the CSV file to write results',
+        metavar='FILE',
     )
     parser.add_argument(
-        "-v", "--verbose", action="store_true", help="print results to stdout"
+        '-v', '--verbose', action='store_true', help='print results to stdout'
     )
 
     return parser
@@ -124,7 +124,7 @@ def main(args: argparse.Namespace) -> None:
     Args:
         args: command-line arguments
     """
-    bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7"]
+    bands = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7']
 
     # Benchmark samplers
 
@@ -154,7 +154,7 @@ def main(args: argparse.Namespace) -> None:
     results_rows = []
     for sampler in samplers:
         if args.verbose:
-            print(f"\n{sampler.__class__.__name__}:")
+            print(f'\n{sampler.__class__.__name__}:')
 
         if isinstance(sampler, RandomBatchGeoSampler):
             dataloader = DataLoader(
@@ -183,9 +183,9 @@ def main(args: argparse.Namespace) -> None:
         duration = toc - tic
 
         if args.verbose:
-            print(f"  duration: {duration:.3f} sec")
-            print(f"  count: {num_total_patches} patches")
-            print(f"  rate: {num_total_patches / duration:.3f} patches/sec")
+            print(f'  duration: {duration:.3f} sec')
+            print(f'  count: {num_total_patches} patches')
+            print(f'  rate: {num_total_patches / duration:.3f} patches/sec')
 
         if args.cache:
             if args.verbose:
@@ -197,14 +197,14 @@ def main(args: argparse.Namespace) -> None:
 
         results_rows.append(
             {
-                "cached": args.cache,
-                "seed": args.seed,
-                "duration": duration,
-                "count": num_total_patches,
-                "rate": num_total_patches / duration,
-                "sampler": sampler.__class__.__name__,
-                "batch_size": args.batch_size,
-                "num_workers": args.num_workers,
+                'cached': args.cache,
+                'seed': args.seed,
+                'duration': duration,
+                'count': num_total_patches,
+                'rate': num_total_patches / duration,
+                'sampler': sampler.__class__.__name__,
+                'batch_size': args.batch_size,
+                'num_workers': args.num_workers,
             }
         )
 
@@ -219,7 +219,7 @@ def main(args: argparse.Namespace) -> None:
     params = model.parameters()
     optimizer = optim.SGD(params, lr=0.0001)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu", args.device)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu', args.device)
     model = model.to(device)
 
     tic = time.time()
@@ -242,44 +242,44 @@ def main(args: argparse.Namespace) -> None:
     duration = toc - tic
 
     if args.verbose:
-        print("\nResNet-34:")
-        print(f"  duration: {duration:.3f} sec")
-        print(f"  count: {num_total_patches} patches")
-        print(f"  rate: {num_total_patches / duration:.3f} patches/sec")
+        print('\nResNet-34:')
+        print(f'  duration: {duration:.3f} sec')
+        print(f'  count: {num_total_patches} patches')
+        print(f'  rate: {num_total_patches / duration:.3f} patches/sec')
 
     results_rows.append(
         {
-            "cached": args.cache,
-            "seed": args.seed,
-            "duration": duration,
-            "count": num_total_patches,
-            "rate": num_total_patches / duration,
-            "sampler": "ResNet-34",
-            "batch_size": args.batch_size,
-            "num_workers": args.num_workers,
+            'cached': args.cache,
+            'seed': args.seed,
+            'duration': duration,
+            'count': num_total_patches,
+            'rate': num_total_patches / duration,
+            'sampler': 'ResNet-34',
+            'batch_size': args.batch_size,
+            'num_workers': args.num_workers,
         }
     )
 
     fieldnames = [
-        "cached",
-        "seed",
-        "duration",
-        "count",
-        "rate",
-        "sampler",
-        "batch_size",
-        "num_workers",
+        'cached',
+        'seed',
+        'duration',
+        'count',
+        'rate',
+        'sampler',
+        'batch_size',
+        'num_workers',
     ]
     if not os.path.exists(args.output_fn):
-        with open(args.output_fn, "w") as f:
+        with open(args.output_fn, 'w') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
-    with open(args.output_fn, "a") as f:
+    with open(args.output_fn, 'a') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writerows(results_rows)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = set_up_parser()
     args = parser.parse_args()
 

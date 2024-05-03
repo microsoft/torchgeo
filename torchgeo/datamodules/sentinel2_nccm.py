@@ -44,8 +44,8 @@ class Sentinel2NCCMDataModule(GeoDataModule):
                 (prefix keys with ``sentinel2_``).
         """
         # Define prefix for NCCM and Sentinel-2 arguments
-        nccm_signature = "nccm_"
-        sentinel2_signature = "sentinel2_"
+        nccm_signature = 'nccm_'
+        sentinel2_signature = 'sentinel2_'
         self.nccm_kwargs = {}
         self.sentinel2_kwargs = {}
 
@@ -68,14 +68,14 @@ class Sentinel2NCCMDataModule(GeoDataModule):
             K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
-            data_keys=["image", "mask"],
+            data_keys=['image', 'mask'],
             extra_args={
-                DataKey.MASK: {"resample": Resample.NEAREST, "align_corners": None}
+                DataKey.MASK: {'resample': Resample.NEAREST, 'align_corners': None}
             },
         )
 
         self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "mask"]
+            K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
         )
 
     def setup(self, stage: str) -> None:
@@ -95,15 +95,15 @@ class Sentinel2NCCMDataModule(GeoDataModule):
                 self.dataset, [0.8, 0.1, 0.1], grid_size=8, generator=generator
             )
         )
-        if stage in ["fit"]:
+        if stage in ['fit']:
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.train_dataset, self.patch_size, self.batch_size, self.length
             )
-        if stage in ["fit", "validate"]:
+        if stage in ['fit', 'validate']:
             self.val_sampler = GridGeoSampler(
                 self.val_dataset, self.patch_size, self.patch_size
             )
-        if stage in ["test"]:
+        if stage in ['test']:
             self.test_sampler = GridGeoSampler(
                 self.test_dataset, self.patch_size, self.patch_size
             )
