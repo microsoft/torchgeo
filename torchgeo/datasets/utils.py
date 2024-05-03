@@ -13,6 +13,7 @@ import gzip
 import importlib
 import lzma
 import os
+import subprocess
 import sys
 import tarfile
 from collections.abc import Iterable, Iterator, Sequence
@@ -141,6 +142,26 @@ def download_and_extract_archive(
     archive = os.path.join(download_root, filename)
     print(f'Extracting {archive} to {extract_root}')
     extract_archive(archive, extract_root)
+
+
+def azcopy(*args: Any, **kwargs: Any) -> None:
+    """Wrapper around ``azcopy`` command.
+
+    Args:
+        args: Arguments to pass to ``azcopy``.
+        kwargs: Keyword arguments to pass to ``subprocess.run``.
+
+    Raises:
+        FileNotFoundError: If ``azcopy`` is not installed.
+
+    .. versionadded:: 0.6
+    """
+    kwargs["check"] = True
+    try:
+        subprocess.run(("azcopy",) + args, **kwargs)
+    except FileNotFoundError:
+        msg = "azcopy is not installed and is required to download this dataset"
+        raise FileNotFoundError(msg)
 
 
 def download_radiant_mlhub_dataset(
