@@ -6,6 +6,10 @@
 /results/
 *.aux.xml
 
+# Node stuff:
+node_modules/
+/*.json
+
 # Spack
 .spack-env/
 spack.lock
@@ -81,10 +85,6 @@ db.sqlite3-journal
 # Flask stuff:
 instance/
 .webassets-cache
-
-# Node stuff:
-node_modules/
-/*.json
 
 # Scrapy stuff:
 .scrapy
