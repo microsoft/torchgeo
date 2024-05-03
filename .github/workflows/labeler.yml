@@ -1,6 +1,6 @@
 name: "labeler"
 on:
-- pull_request_target
+  - pull_request_target
 jobs:
   labeler:
     permissions:
@@ -8,9 +8,9 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-    - name: Clone repo
-      uses: actions/checkout@v4.1.4
-    - name: Add label
-      uses: actions/labeler@v5.0.0
-      with:
-        sync-labels: true
+      - name: Clone repo
+        uses: actions/checkout@v4.1.4
+      - name: Add label
+        uses: actions/labeler@v5.0.0
+        with:
+          sync-labels: true

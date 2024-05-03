@@ -12,8 +12,8 @@ model:
       class_path: kornia.augmentation.RandomResizedCrop
       init_args:
         size:
-        - 224
-        - 224
+          - 224
+          - 224
 data:
   class_path: SSL4EOLDataModule
   init_args:

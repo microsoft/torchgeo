@@ -6,6 +6,10 @@
 /results/
 *.aux.xml
 
+# Node stuff:
+node_modules/
+/*.json
+
 # Spack
 .spack-env/
 spack.lock

@@ -33,3 +33,12 @@ repos:
           - torch>=2.3
           - torchmetrics>=0.10
         exclude: (build|data|dist|logo|logs|output)/
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        language: node
+        language_version: 22.0.0
+        args:
+          - --write
+        exclude: ^tests/data/[^/]+/$
