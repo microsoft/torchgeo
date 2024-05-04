@@ -30,7 +30,7 @@ class TestVHR10:
     ) -> VHR10:
         split = request.param
         if split == 'positive':
-            pytest.importorskip('pycocotools', minversion='2.0')
+            pytest.importorskip('pycocotools')
         pytest.importorskip('rarfile', minversion='4')
         monkeypatch.setattr(torchgeo.datasets.vhr10, 'download_url', download_url)
         monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)

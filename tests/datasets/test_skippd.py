@@ -52,11 +52,12 @@ class TestSKIPPD:
             checksum=True,
         )
 
-    def test_missing_module(self, dataset: SKIPPD) -> None:
+    def test_missing_module(self) -> None:
         importandskip('h5py')
+        root = os.path.join('tests', 'data', 'skippd')
         match = 'h5py is not installed and is required to use this dataset'
         with pytest.raises(ImportError, match=match):
-            dataset[0]
+            SKIPPD(root)
 
     def test_already_extracted(self, dataset: SKIPPD) -> None:
         SKIPPD(root=dataset.root, download=True)

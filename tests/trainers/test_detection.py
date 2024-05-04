@@ -18,7 +18,7 @@ from torchgeo.main import main
 from torchgeo.trainers import ObjectDetectionTask
 
 # MAP metric requires pycocotools to be installed
-pytest.importorskip('pycocotools', minversion='2.0')
+pytest.importorskip('pycocotools')
 
 
 class PredictObjectDetectionDataModule(NASAMarineDebrisDataModule):
