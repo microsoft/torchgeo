@@ -74,7 +74,7 @@ class TestZueriCrop:
     def test_missing_module(self) -> None:
         importandskip('h5py')
         root = os.path.join('tests', 'data', 'zuericrop')
-        match = ('h5py is not installed and is required to use this dataset',)
+        match = 'h5py is not installed and is required to use this dataset'
         with pytest.raises(ImportError, match=match):
             ZueriCrop(root)
 

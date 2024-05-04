@@ -28,6 +28,7 @@ class TestSKIPPD:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SKIPPD:
+        pytest.importorskip('h5py', minversion='3.6')
         task, split = request.param
 
         monkeypatch.setattr(torchgeo.datasets.skippd, 'download_url', download_url)
@@ -62,6 +63,7 @@ class TestSKIPPD:
 
     @pytest.mark.parametrize('task', ['nowcast', 'forecast'])
     def test_already_downloaded(self, tmp_path: Path, task: str) -> None:
+        pytest.importorskip('h5py', minversion='3.6')
         pathname = os.path.join(
             'tests', 'data', 'skippd', f'2017_2019_images_pv_processed_{task}.zip'
         )
@@ -71,7 +73,6 @@ class TestSKIPPD:
 
     @pytest.mark.parametrize('index', [0, 1, 2])
     def test_getitem(self, dataset: SKIPPD, index: int) -> None:
-        pytest.importorskip('h5py', minversion='3.6')
         x = dataset[index]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
@@ -90,11 +91,11 @@ class TestSKIPPD:
             SKIPPD(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
+        pytest.importorskip('h5py', minversion='3.6')
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             SKIPPD(str(tmp_path))
 
     def test_plot(self, dataset: SKIPPD) -> None:
-        pytest.importorskip('h5py', minversion='3.6')
         dataset.plot(dataset[0], suptitle='Test')
         plt.close()
 
