@@ -1,12 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
 import os
 import shutil
 from itertools import product
 from pathlib import Path
-from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -18,7 +16,7 @@ from pytest import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import SKIPPD, DatasetNotFoundError
 
-pytest.importorskip('h5py', minversion='3.6')
+from .utils import importandskip
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -53,25 +51,11 @@ class TestSKIPPD:
             checksum=True,
         )
 
-    @pytest.fixture
-    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
-        import_orig = builtins.__import__
-
-        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == 'h5py':
-                raise ImportError()
-            return import_orig(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, '__import__', mocked_import)
-
-    def test_mock_missing_module(
-        self, dataset: SKIPPD, tmp_path: Path, mock_missing_module: None
-    ) -> None:
-        with pytest.raises(
-            ImportError,
-            match='h5py is not installed and is required to use this dataset',
-        ):
-            SKIPPD(dataset.root, download=True, checksum=True)
+    def test_missing_module(self, dataset: SKIPPD) -> None:
+        importandskip('h5py')
+        match = 'h5py is not installed and is required to use this dataset'
+        with pytest.raises(ImportError, match=match):
+            dataset[0]
 
     def test_already_extracted(self, dataset: SKIPPD) -> None:
         SKIPPD(root=dataset.root, download=True)
@@ -87,6 +71,7 @@ class TestSKIPPD:
 
     @pytest.mark.parametrize('index', [0, 1, 2])
     def test_getitem(self, dataset: SKIPPD, index: int) -> None:
+        pytest.importorskip('h5py', minversion='3.6')
         x = dataset[index]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
@@ -109,6 +94,7 @@ class TestSKIPPD:
             SKIPPD(str(tmp_path))
 
     def test_plot(self, dataset: SKIPPD) -> None:
+        pytest.importorskip('h5py', minversion='3.6')
         dataset.plot(dataset[0], suptitle='Test')
         plt.close()
 
