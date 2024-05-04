@@ -111,15 +111,7 @@ class CropHarvest(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
-            ImportError: If h5py is not installed
         """
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'h5py is not installed and is required to use this dataset'
-            )
-
         self.root = root
         self.transforms = transforms
         self.checksum = checksum
@@ -141,6 +133,9 @@ class CropHarvest(NonGeoDataset):
 
         Returns:
             single pixel time-series array and label at that index
+
+        Raises:
+            ImportError: If h5py is not installed
         """
         files = self.files[index]
         data = self._load_array(files['chip'])
@@ -209,7 +204,12 @@ class CropHarvest(NonGeoDataset):
         Returns:
             the image
         """
-        import h5py
+        try:
+            import h5py  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                'h5py is not installed and is required to use this dataset'
+            )
 
         filename = os.path.join(path)
         with h5py.File(filename, 'r') as f:
