@@ -15,7 +15,7 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, RGBBandsMissingError, So2Sat
 
-pytest.importorskip('h5py', minversion='3')
+pytest.importorskip('h5py', minversion='3.6')
 
 
 class TestSo2Sat:

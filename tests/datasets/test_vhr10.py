@@ -18,7 +18,7 @@ from torch.utils.data import ConcatDataset
 import torchgeo.datasets.utils
 from torchgeo.datasets import VHR10, DatasetNotFoundError
 
-pytest.importorskip('pycocotools')
+pytest.importorskip('pycocotools', minversion='2.0')
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -111,7 +111,7 @@ class TestVHR10:
                 dataset.plot(x)
 
     def test_plot(self, dataset: VHR10) -> None:
-        pytest.importorskip('skimage', minversion='0.18')
+        pytest.importorskip('skimage', minversion='0.19')
         x = dataset[1].copy()
         dataset.plot(x, suptitle='Test')
         plt.close()
