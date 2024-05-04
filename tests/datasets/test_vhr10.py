@@ -82,18 +82,22 @@ class TestVHR10:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             VHR10(str(tmp_path))
 
-    def test_missing_module(self, dataset: VHR10) -> None:
+    def test_missing_module(self) -> None:
         importandskip('pycocotools')
+        root = os.path.join('tests', 'data', 'vhr10')
         match = 'pycocotools is not installed and is required to use this datase'
         with pytest.raises(ImportError, match=match):
-            VHR10(dataset.root, 'positive')
+            VHR10(root, 'positive')
 
-    def test_missing_module_plot(self, dataset: VHR10) -> None:
+    def test_missing_module_plot(self) -> None:
         importandskip('skimage')
+        root = os.path.join('tests', 'data', 'vhr10')
         match = 'scikit-image is not installed and is required to plot masks'
         with pytest.raises(ImportError, match=match):
-            x = dataset[0]
-            dataset.plot(x)
+            ds = VHR10(root, 'negative')
+            x = ds[0]
+            ds.split = 'positive'
+            ds.plot(x)
 
     def test_plot(self, dataset: VHR10) -> None:
         pytest.importorskip('skimage', minversion='0.19')
