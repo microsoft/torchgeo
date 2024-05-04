@@ -36,7 +36,10 @@ jobs:
         uses: pyvista/setup-headless-display-action@v2
       - name: Install apt dependencies (Linux)
         run: |
-          sudo apt-get install azcopy unrar
+          sudo apt-get install unrar
+          wget https://aka.ms/downloadazcopy-v10-linux
+          tar xvzf downloadazcopy-v10-linux
+          cp azcopy_linux_amd64_*/azcopy /usr/local/bin
         if: ${{ runner.os == 'Linux' }}
       - name: Install brew dependencies (macOS)
         run: brew install azcopy rar
