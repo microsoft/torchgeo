@@ -1,11 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
 import os
 import shutil
 from pathlib import Path
-from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -17,7 +15,7 @@ from pytest import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import ChaBuD, DatasetNotFoundError
 
-pytest.importorskip('h5py', minversion='3.6')
+from .utils import importandskip
 
 
 def download_url(url: str, root: str, filename: str, *args: str, **kwargs: str) -> None:
@@ -29,6 +27,7 @@ class TestChaBuD:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> ChaBuD:
+        pytest.importorskip('h5py', minversion='3.6')
         monkeypatch.setattr(torchgeo.datasets.chabud, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'chabud')
         url = os.path.join(data_dir, 'train_eval.hdf5')
@@ -46,17 +45,6 @@ class TestChaBuD:
             download=True,
             checksum=True,
         )
-
-    @pytest.fixture
-    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
-        import_orig = builtins.__import__
-
-        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == 'h5py':
-                raise ImportError()
-            return import_orig(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, '__import__', mocked_import)
 
     def test_getitem(self, dataset: ChaBuD) -> None:
         x = dataset[0]
@@ -82,17 +70,16 @@ class TestChaBuD:
         ChaBuD(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
+        pytest.importorskip('h5py', minversion='3.6')
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             ChaBuD(str(tmp_path))
 
-    def test_mock_missing_module(
-        self, dataset: ChaBuD, tmp_path: Path, mock_missing_module: None
-    ) -> None:
-        with pytest.raises(
-            ImportError,
-            match='h5py is not installed and is required to use this dataset',
-        ):
-            ChaBuD(dataset.root, download=True, checksum=True)
+    def test_missing_module(self) -> None:
+        importandskip('h5py')
+        root = os.path.join('tests', 'data', 'chabud')
+        match = 'h5py is not installed and is required to use this dataset'
+        with pytest.raises(ImportError, match=match):
+            ChaBuD(root)
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(AssertionError):

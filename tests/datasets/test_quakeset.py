@@ -59,10 +59,8 @@ class TestQuakeSet:
     def test_len(self, dataset: QuakeSet) -> None:
         assert len(dataset) == 8
 
-    def test_already_downloaded(self, tmp_path: Path) -> None:
-        pytest.importorskip('h5py', minversion='3.6')
-        root = os.path.join('tests', 'data', 'quakeset')
-        QuakeSet(root)
+    def test_already_downloaded(self, dataset: QuakeSet) -> None:
+        QuakeSet(dataset.root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         pytest.importorskip('h5py', minversion='3.6')

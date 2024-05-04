@@ -62,10 +62,8 @@ class TestADVANCE:
 
     def test_missing_module(self, dataset: ADVANCE) -> None:
         importandskip('scipy')
-        with pytest.raises(
-            ImportError,
-            match='scipy is not installed and is required to use this dataset',
-        ):
+        match = 'scipy is not installed and is required to use this dataset'
+        with pytest.raises(ImportError, match=match):
             dataset[0]
 
     def test_plot(self, dataset: ADVANCE) -> None:
