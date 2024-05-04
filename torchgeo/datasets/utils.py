@@ -156,11 +156,11 @@ def azcopy(*args: Any, **kwargs: Any) -> None:
 
     .. versionadded:: 0.6
     """
-    kwargs["check"] = True
+    kwargs['check'] = True
     try:
-        subprocess.run(("azcopy",) + args, **kwargs)
+        subprocess.run(('azcopy',) + args, **kwargs)
     except FileNotFoundError:
-        msg = "azcopy is not installed and is required to download this dataset"
+        msg = 'azcopy is not installed and is required to download this dataset'
         raise FileNotFoundError(msg)
 
 

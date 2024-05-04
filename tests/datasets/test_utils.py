@@ -103,16 +103,16 @@ def test_download_and_extract_archive(tmp_path: Path, monkeypatch: MonkeyPatch) 
 
 
 def test_azcopy(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-    source = os.path.join("tests", "data", "cyclone")
-    if shutil.which("azcopy"):
+    source = os.path.join('tests', 'data', 'cyclone')
+    if shutil.which('azcopy'):
         path = os.path.dirname(os.path.realpath(__file__))
-        monkeypatch.setenv("PATH", path, prepend=os.pathsep)
-        azcopy("sync", source, tmp_path, "--recursive=true")
-        assert os.path.exists(tmp_path / "nasa_tropical_storm_competition_test_labels")
+        monkeypatch.setenv('PATH', path, prepend=os.pathsep)
+        azcopy('sync', source, tmp_path, '--recursive=true')
+        assert os.path.exists(tmp_path / 'nasa_tropical_storm_competition_test_labels')
     else:
-        match = "azcopy is not installed and is required to download this dataset"
+        match = 'azcopy is not installed and is required to download this dataset'
         with pytest.raises(FileNotFoundError, match=match):
-            azcopy("sync", source, tmp_path, "--recursive=true")
+            azcopy('sync', source, tmp_path, '--recursive=true')
 
 
 def test_download_radiant_mlhub_dataset(
