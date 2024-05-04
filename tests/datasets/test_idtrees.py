@@ -1,12 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
 import glob
 import os
 import shutil
 from pathlib import Path
-from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -93,12 +91,12 @@ class TestIDTReeS:
 
     def test_missing_module(self, dataset: IDTReeS) -> None:
         importandskip('laspy')
-        match='laspy is not installed and is required to use this dataset'
+        match = 'laspy is not installed and is required to use this dataset'
         with pytest.raises(ImportError, match=match):
             IDTReeS(dataset.root, dataset.split, dataset.task)
 
         importandskip('pyvista')
-        match='pyvista is not installed and is required to plot point cloud'
+        match = 'pyvista is not installed and is required to plot point cloud'
         with pytest.raises(ImportError, match=match):
             dataset.plot_las(0)
 
