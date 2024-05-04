@@ -31,6 +31,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestChesapeake13:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> Chesapeake13:
+        pytest.importorskip('zipfile_deflate64')
         monkeypatch.setattr(torchgeo.datasets.chesapeake, 'download_url', download_url)
         md5 = 'fe35a615b8e749b21270472aa98bb42c'
         monkeypatch.setattr(Chesapeake13, 'md5', md5)
@@ -61,7 +62,6 @@ class TestChesapeake13:
         Chesapeake13(dataset.paths, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        pytest.importorskip('zipfile_deflate64')
         url = os.path.join(
             'tests', 'data', 'chesapeake', 'BAYWIDE', 'Baywide_13Class_20132014.zip'
         )
