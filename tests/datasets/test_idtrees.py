@@ -93,7 +93,7 @@ class TestIDTReeS:
         importandskip('laspy')
         match = 'laspy is not installed and is required to use this dataset'
         with pytest.raises(ImportError, match=match):
-            IDTReeS(dataset.root, dataset.split, dataset.task)
+            dataset[0]
 
         importandskip('pyvista')
         match = 'pyvista is not installed and is required to plot point cloud'

@@ -62,6 +62,7 @@ class TestChesapeake13:
         Chesapeake13(dataset.paths, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
+        pytest.importorskip('zipfile_deflate64')
         url = os.path.join(
             'tests', 'data', 'chesapeake', 'BAYWIDE', 'Baywide_13Class_20132014.zip'
         )
