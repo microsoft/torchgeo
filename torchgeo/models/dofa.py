@@ -417,7 +417,7 @@ class DOFALarge16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-def dofa_small_patch16_224(**kwargs: Any) -> DOFA:
+def dofa_small_patch16_224(*args: Any, **kwargs: Any) -> DOFA:
     """Dynamic One-For-All (DOFA) small patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -427,17 +427,19 @@ def dofa_small_patch16_224(**kwargs: Any) -> DOFA:
     .. versionadded:: 0.6
 
     Args:
+        *args: Additional arguments to pass to :class:`DOFA`.
         **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA small 16 model.
     """
-    model = DOFA(patch_size=16, embed_dim=384, depth=12, num_heads=6, **kwargs)
+    kwargs |= {'patch_size': 16, 'embed_dim': 384, 'depth': 12, 'num_heads': 6}
+    model = DOFA(*args, **kwargs)
     return model
 
 
 def dofa_base_patch16_224(
-    weights: DOFABase16_Weights | None = None, **kwargs: Any
+    weights: DOFABase16_Weights | None = None, *args: Any, **kwargs: Any
 ) -> DOFA:
     """Dynamic One-For-All (DOFA) base patch size 16 model.
 
@@ -449,12 +451,14 @@ def dofa_base_patch16_224(
 
     Args:
         weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :class:`DOFA`.
         **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA base 16 model.
     """
-    model = DOFA(patch_size=16, embed_dim=768, depth=12, num_heads=12, **kwargs)
+    kwargs |= {'patch_size': 16, 'embed_dim': 768, 'depth': 12, 'num_heads': 12}
+    model = DOFA(*args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -473,7 +477,7 @@ def dofa_base_patch16_224(
 
 
 def dofa_large_patch16_224(
-    weights: DOFALarge16_Weights | None = None, **kwargs: Any
+    weights: DOFALarge16_Weights | None = None, *args: Any, **kwargs: Any
 ) -> DOFA:
     """Dynamic One-For-All (DOFA) large patch size 16 model.
 
@@ -485,12 +489,14 @@ def dofa_large_patch16_224(
 
     Args:
         weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :class:`DOFA`.
         **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA large 16 model.
     """
-    model = DOFA(patch_size=16, embed_dim=1024, depth=24, num_heads=16, **kwargs)
+    kwargs |= {'patch_size': 16, 'embed_dim': 1024, 'depth': 24, 'num_heads': 16}
+    model = DOFA(*args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -508,7 +514,7 @@ def dofa_large_patch16_224(
     return model
 
 
-def dofa_huge_patch16_224(**kwargs: Any) -> DOFA:
+def dofa_huge_patch16_224(*args: Any, **kwargs: Any) -> DOFA:
     """Dynamic One-For-All (DOFA) huge patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -518,10 +524,12 @@ def dofa_huge_patch16_224(**kwargs: Any) -> DOFA:
     .. versionadded:: 0.6
 
     Args:
+        *args: Additional arguments to pass to :class:`DOFA`.
         **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA huge 16 model.
     """
-    model = DOFA(patch_size=14, embed_dim=1280, depth=32, num_heads=16, **kwargs)
+    kwargs |= {'patch_size': 14, 'embed_dim': 1280, 'depth': 32, 'num_heads': 16}
+    model = DOFA(*args, **kwargs)
     return model
