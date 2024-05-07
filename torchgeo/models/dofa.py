@@ -15,8 +15,6 @@ from timm.models.vision_transformer import Block
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
 
-__all__ = ['DOFABase16_Weights', 'DOFALarge16_Weights']
-
 
 def position_embedding(embed_dim: int, pos: Tensor) -> Tensor:
     """Compute the 1D sine/cosine position embedding.
