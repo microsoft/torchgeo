@@ -15,7 +15,7 @@ from pytest import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import ChaBuD, DatasetNotFoundError
 
-pytest.importorskip('h5py', minversion='3')
+pytest.importorskip('h5py', minversion='3.6')
 
 
 def download_url(url: str, root: str, filename: str, *args: str, **kwargs: str) -> None:

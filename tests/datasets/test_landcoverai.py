@@ -76,11 +76,12 @@ class TestLandCoverAIGeo:
 
 
 class TestLandCoverAI:
+    pytest.importorskip('cv2', minversion='4.5.4')
+
     @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LandCoverAI:
-        pytest.importorskip('cv2', minversion='4.4.0')
         monkeypatch.setattr(torchgeo.datasets.landcoverai, 'download_url', download_url)
         md5 = 'ff8998857cc8511f644d3f7d0f3688d0'
         monkeypatch.setattr(LandCoverAI, 'md5', md5)
@@ -111,7 +112,6 @@ class TestLandCoverAI:
         LandCoverAI(root=dataset.root, download=True)
 
     def test_already_downloaded(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-        pytest.importorskip('cv2', minversion='4.4.0')
         sha256 = 'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
         monkeypatch.setattr(LandCoverAI, 'sha256', sha256)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')

@@ -71,7 +71,7 @@ class TestRegressionTask:
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         if name == 'skippd':
-            pytest.importorskip('h5py', minversion='3')
+            pytest.importorskip('h5py', minversion='3.6')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 

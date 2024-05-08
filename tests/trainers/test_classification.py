@@ -89,7 +89,7 @@ class TestClassificationTask:
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         if name.startswith('so2sat') or name == 'quakeset':
-            pytest.importorskip('h5py', minversion='3')
+            pytest.importorskip('h5py', minversion='3.6')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 

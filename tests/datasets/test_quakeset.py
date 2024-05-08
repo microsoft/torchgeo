@@ -15,6 +15,8 @@ from pytest import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, QuakeSet
 
+pytest.importorskip('h5py', minversion='3.6')
+
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)

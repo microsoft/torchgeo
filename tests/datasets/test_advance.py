@@ -14,6 +14,8 @@ from pytest import MonkeyPatch
 import torchgeo.datasets.utils
 from torchgeo.datasets import ADVANCE, DatasetNotFoundError
 
+pytest.importorskip('scipy', minversion='1.7.2')
+
 
 def download_url(url: str, root: str, *args: str) -> None:
     shutil.copy(url, root)
@@ -36,7 +38,6 @@ class TestADVANCE:
         return ADVANCE(root, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: ADVANCE) -> None:
-        pytest.importorskip('scipy', minversion='1.6.2')
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
@@ -59,7 +60,6 @@ class TestADVANCE:
             ADVANCE(str(tmp_path))
 
     def test_plot(self, dataset: ADVANCE) -> None:
-        pytest.importorskip('scipy', minversion='1.6.2')
         x = dataset[0].copy()
         dataset.plot(x, suptitle='Test')
         plt.close()

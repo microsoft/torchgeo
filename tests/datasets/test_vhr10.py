@@ -17,6 +17,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import VHR10, DatasetNotFoundError
 
 pytest.importorskip('pycocotools')
+pytest.importorskip('rarfile', minversion='4')
 
 
 def download_url(url: str, root: str, *args: str) -> None:
@@ -28,7 +29,6 @@ class TestVHR10:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> VHR10:
-        pytest.importorskip('rarfile', minversion='4')
         monkeypatch.setattr(torchgeo.datasets.vhr10, 'download_url', download_url)
         monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         url = os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.rar')
@@ -81,7 +81,7 @@ class TestVHR10:
             VHR10(str(tmp_path))
 
     def test_plot(self, dataset: VHR10) -> None:
-        pytest.importorskip('skimage', minversion='0.18')
+        pytest.importorskip('skimage', minversion='0.19')
         x = dataset[1].copy()
         dataset.plot(x, suptitle='Test')
         plt.close()
