@@ -794,7 +794,7 @@ def lazy_import(name: str) -> Any:
     except ModuleNotFoundError:
         # Map from import name to package name on PyPI
         name = name.split('.')[0].replace('_', '-')
-        module_to_pypi = collections.defaultdict(lambda: name)
+        module_to_pypi: dict[str, str] = collections.defaultdict(lambda: name)
         module_to_pypi |= {'cv2': 'opencv-python', 'skimage': 'scikit-image'}
         name = module_to_pypi[name]
         raise MissingDependencyError(name) from None
