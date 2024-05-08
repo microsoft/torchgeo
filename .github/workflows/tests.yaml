@@ -99,6 +99,39 @@ jobs:
         uses: codecov/codecov-action@v4.3.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+  datasets:
+    name: datasets
+    runs-on: ubuntu-latest
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4.1.4
+      - name: Set up python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: "3.12"
+      - name: Cache dependencies
+        uses: actions/cache@v4.0.2
+        id: cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/tests.txt') }}
+      - name: Install pip dependencies
+        if: steps.cache.outputs.cache-hit != "true"
+        run: |
+          pip install -r requirements/required.txt -r requirements/tests.txt
+          pip cache purge
+      - name: List pip dependencies
+        run: pip list
+      - name: Run pytest checks
+        run: |
+          pytest --cov=torchgeo --cov-report=xml --durations=10
+          python3 -m torchgeo --help
+      - name: Report coverage
+        uses: codecov/codecov-action@v4.3.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true
