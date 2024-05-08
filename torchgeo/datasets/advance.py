@@ -194,8 +194,8 @@ class ADVANCE(NonGeoDataset):
         Returns:
             the target audio
         """
-        sio = lazy_import('scipy.io')
-        array = sio.wavfile.read(path, mmap=True)[1]
+        siw = lazy_import('scipy.io.wavfile')
+        array = siw.read(path, mmap=True)[1]
         tensor = torch.from_numpy(array)
         tensor = tensor.unsqueeze(0)
         return tensor
