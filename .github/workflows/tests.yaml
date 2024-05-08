@@ -116,7 +116,7 @@ jobs:
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/tests.txt') }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles("requirements/required.txt") }}-${{ hashFiles("requirements/tests.txt") }}
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != "true"
         run: |
