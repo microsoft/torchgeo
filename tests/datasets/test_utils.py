@@ -20,6 +20,7 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
+from torchgeo.datasets import MissingDependencyError
 from torchgeo.datasets.utils import (
     BoundingBox,
     array_to_tensor,
@@ -29,6 +30,7 @@ from torchgeo.datasets.utils import (
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
     extract_archive,
+    lazy_import,
     merge_samples,
     percentile_normalization,
     stack_samples,
@@ -625,3 +627,14 @@ def test_array_to_tensor(array_dtype: 'np.typing.DTypeLike') -> None:
     # values equal even if they differ.
     assert array[0].item() == tensor[0].item()
     assert array[1].item() == tensor[1].item()
+
+
+@pytest.mark.parametrize('name', ['collections', 'collections.abc'])
+def test_lazy_import(name: str) -> None:
+    lazy_import(name)
+
+
+@pytest.mark.parametrize('name', ['foo_bar', 'foo_bar.baz'])
+def test_lazy_import_missing(name: str) -> None:
+    with pytest.raises(MissingDependencyError, match='pip install foo-bar\n'):
+        lazy_import(name)

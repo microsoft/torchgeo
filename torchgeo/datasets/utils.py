@@ -10,6 +10,7 @@ import bz2
 import collections
 import contextlib
 import gzip
+import importlib
 import lzma
 import os
 import sys
@@ -25,6 +26,8 @@ import torch
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
+
+from .errors import MissingDependencyError
 
 # Only include import redirects
 __all__ = ('check_integrity', 'download_url')
@@ -773,3 +776,25 @@ def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:
     elif array.dtype == np.uint32:
         array = array.astype(np.int64)
     return torch.tensor(array)
+
+
+def lazy_import(name: str) -> Any:
+    """Lazy import of *name*.
+
+    Args:
+        name: Name of module to import.
+
+    Raises:
+        MissingDependencyError: If *name* is not installed.
+
+    .. versionadded:: 0.6
+    """
+    try:
+        return importlib.import_module(name)
+    except ModuleNotFoundError:
+        # Map from import name to package name on PyPI
+        name = name.split('.')[0].replace('_', '-')
+        module_to_pypi = collections.defaultdict(lambda: name)
+        module_to_pypi |= {'cv2': 'opencv-python', 'skimage': 'scikit-image'}
+        name = module_to_pypi[name]
+        raise MissingDependencyError(name) from None
