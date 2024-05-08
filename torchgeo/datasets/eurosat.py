@@ -13,15 +13,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoClassificationDataset
-from .utils import (
-    DatasetNotFoundError,
-    RGBBandsMissingError,
-    check_integrity,
-    download_url,
-    extract_archive,
-    rasterio_loader,
-)
+from .utils import check_integrity, download_url, extract_archive, rasterio_loader
 
 
 class EuroSAT(NonGeoClassificationDataset):

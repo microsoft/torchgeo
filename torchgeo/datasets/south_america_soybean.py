@@ -10,8 +10,9 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import DatasetNotFoundError, download_url
+from .utils import download_url
 
 
 class SouthAmericaSoybean(RasterDataset):

@@ -13,8 +13,9 @@ import numpy as np
 import pandas as pd
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, DatasetNotFoundError
+from .utils import BoundingBox
 
 
 def _disambiguate_timestamps(

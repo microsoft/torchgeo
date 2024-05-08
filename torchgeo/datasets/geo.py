@@ -30,9 +30,9 @@ from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
 
+from .errors import DatasetNotFoundError
 from .utils import (
     BoundingBox,
-    DatasetNotFoundError,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,

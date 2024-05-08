@@ -25,9 +25,9 @@ from rasterio.features import rasterize
 from rasterio.transform import Affine
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
-    DatasetNotFoundError,
     check_integrity,
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,

@@ -14,8 +14,9 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
+from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import BoundingBox, RGBBandsMissingError
+from .utils import BoundingBox
 
 
 class AgriFieldNet(RasterDataset):

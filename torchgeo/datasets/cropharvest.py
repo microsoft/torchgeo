@@ -15,8 +15,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import download_url, extract_archive
 
 
 class CropHarvest(NonGeoDataset):

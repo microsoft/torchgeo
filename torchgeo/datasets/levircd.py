@@ -15,12 +15,9 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    download_and_extract_archive,
-    percentile_normalization,
-)
+from .utils import download_and_extract_archive, percentile_normalization
 
 
 class LEVIRCDBase(NonGeoDataset, abc.ABC):

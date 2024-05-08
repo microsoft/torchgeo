@@ -18,14 +18,9 @@ from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    RGBBandsMissingError,
-    download_url,
-    extract_archive,
-    percentile_normalization,
-)
+from .utils import download_url, extract_archive, percentile_normalization
 
 
 class SeasoNet(NonGeoDataset):

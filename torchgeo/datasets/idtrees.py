@@ -20,8 +20,9 @@ from torch import Tensor
 from torchvision.ops import clip_boxes_to_image, remove_small_boxes
 from torchvision.utils import draw_bounding_boxes
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import download_url, extract_archive
 
 
 class IDTReeS(NonGeoDataset):

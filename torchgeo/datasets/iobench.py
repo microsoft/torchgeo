@@ -13,14 +13,10 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .cdl import CDL
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset
 from .landsat import Landsat9
-from .utils import (
-    DatasetNotFoundError,
-    RGBBandsMissingError,
-    download_url,
-    extract_archive,
-)
+from .utils import download_url, extract_archive
 
 
 class IOBench(IntersectionDataset):

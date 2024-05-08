@@ -23,9 +23,10 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import GeoDataset, RasterDataset
 from .nlcd import NLCD
-from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
+from .utils import BoundingBox, download_url, extract_archive
 
 
 class Chesapeake(RasterDataset, abc.ABC):

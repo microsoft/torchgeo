@@ -15,9 +15,9 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
-from torchgeo.datasets import NonGeoDataset
-
-from .utils import DatasetNotFoundError, check_integrity, extract_archive
+from .errors import DatasetNotFoundError
+from .geo import NonGeoDataset
+from .utils import check_integrity, extract_archive
 
 
 class MillionAID(NonGeoDataset):

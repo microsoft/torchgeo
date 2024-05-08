@@ -21,14 +21,9 @@ from rasterio.crs import CRS
 from torch import Tensor
 from torch.utils.data import Dataset
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset, RasterDataset
-from .utils import (
-    BoundingBox,
-    DatasetNotFoundError,
-    download_url,
-    extract_archive,
-    working_dir,
-)
+from .utils import BoundingBox, download_url, extract_archive, working_dir
 
 
 class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):

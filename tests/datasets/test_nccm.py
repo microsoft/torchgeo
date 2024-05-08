@@ -13,8 +13,13 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import NCCM, BoundingBox, IntersectionDataset, UnionDataset
-from torchgeo.datasets.utils import DatasetNotFoundError
+from torchgeo.datasets import (
+    NCCM,
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:

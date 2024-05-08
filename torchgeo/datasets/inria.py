@@ -16,13 +16,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    check_integrity,
-    extract_archive,
-    percentile_normalization,
-)
+from .utils import check_integrity, extract_archive, percentile_normalization
 
 
 class InriaAerialImageLabeling(NonGeoDataset):

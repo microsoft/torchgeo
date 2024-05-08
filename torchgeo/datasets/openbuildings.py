@@ -22,8 +22,9 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from rtree.index import Index, Property
 
+from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import BoundingBox, DatasetNotFoundError, check_integrity
+from .utils import BoundingBox, check_integrity
 
 
 class OpenBuildings(VectorDataset):
