@@ -12,8 +12,6 @@ from kornia.contrib import Lambda
 from torchvision.models import SwinTransformer
 from torchvision.models._api import Weights, WeightsEnum
 
-__all__ = ['Swin_V2_B_Weights']
-
 # https://github.com/allenai/satlas/blob/bcaa968da5395f675d067613e02613a344e81415/satlas/cmd/model/train.py#L42 # noqa: E501
 # Satlas uses the TCI product for Sentinel-2 RGB, which is in the range (0, 255).
 # See details:  https://github.com/allenai/satlas/blob/main/Normalization.md#sentinel-2-images.  # noqa: E501
