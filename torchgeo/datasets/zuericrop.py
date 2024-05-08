@@ -13,7 +13,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import download_url, percentile_normalization
+from .utils import download_url, lazy_import, percentile_normalization
 
 
 class ZueriCrop(NonGeoDataset):
@@ -97,13 +97,6 @@ class ZueriCrop(NonGeoDataset):
 
         self._verify()
 
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'h5py is not installed and is required to use this dataset'
-            )
-
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
@@ -112,6 +105,9 @@ class ZueriCrop(NonGeoDataset):
 
         Returns:
             sample containing image, mask, bounding boxes, and target label
+
+        Raises:
+            MissingDependencyError: If h5py is not installed.
         """
         image = self._load_image(index)
         mask, boxes, label = self._load_target(index)
@@ -128,9 +124,11 @@ class ZueriCrop(NonGeoDataset):
 
         Returns:
             length of the dataset
-        """
-        import h5py
 
+        Raises:
+            MissingDependencyError: If h5py is not installed.
+        """
+        h5py = lazy_import('h5py')
         with h5py.File(self.filepath, 'r') as f:
             length: int = f['data'].shape[0]
         return length
@@ -144,8 +142,7 @@ class ZueriCrop(NonGeoDataset):
         Returns:
             the image
         """
-        import h5py
-
+        h5py = lazy_import('h5py')
         with h5py.File(self.filepath, 'r') as f:
             array = f['data'][index, ...]
 

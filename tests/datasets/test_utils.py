@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
 import glob
 import math
 import os
@@ -39,18 +38,6 @@ from torchgeo.datasets.utils import (
 )
 
 
-@pytest.fixture
-def mock_missing_module(monkeypatch: MonkeyPatch) -> None:
-    import_orig = builtins.__import__
-
-    def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name in ['radiant_mlhub', 'rarfile', 'zipfile_deflate64']:
-            raise ImportError()
-        return import_orig(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, '__import__', mocked_import)
-
-
 class MLHubDataset:
     def download(self, output_dir: str, **kwargs: str) -> None:
         glob_path = os.path.join(
@@ -81,10 +68,6 @@ def download_url(url: str, root: str, *args: str) -> None:
     shutil.copy(url, root)
 
 
-def test_mock_missing_module(mock_missing_module: None) -> None:
-    import sys  # noqa: F401
-
-
 @pytest.mark.parametrize(
     'src',
     [
@@ -102,21 +85,6 @@ def test_extract_archive(src: str, tmp_path: Path) -> None:
     if src.startswith('chesapeake'):
         pytest.importorskip('zipfile_deflate64')
     extract_archive(os.path.join('tests', 'data', src), str(tmp_path))
-
-
-def test_missing_rarfile(mock_missing_module: None) -> None:
-    with pytest.raises(
-        ImportError,
-        match='rarfile is not installed and is required to extract this dataset',
-    ):
-        extract_archive(
-            os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.rar')
-        )
-
-
-def test_missing_zipfile_deflate64(mock_missing_module: None) -> None:
-    # Should fallback on Python builtin zipfile
-    extract_archive(os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip'))
 
 
 def test_unsupported_scheme() -> None:
@@ -148,21 +116,6 @@ def test_download_radiant_mlhub_collection(
     radiant_mlhub = pytest.importorskip('radiant_mlhub', minversion='0.3')
     monkeypatch.setattr(radiant_mlhub.Collection, 'fetch', fetch_collection)
     download_radiant_mlhub_collection('', str(tmp_path))
-
-
-def test_missing_radiant_mlhub(mock_missing_module: None) -> None:
-    with pytest.raises(
-        ImportError,
-        match='radiant_mlhub is not installed and is required to download this dataset',
-    ):
-        download_radiant_mlhub_dataset('', '')
-
-    with pytest.raises(
-        ImportError,
-        match='radiant_mlhub is not installed and is required to download this'
-        + ' collection',
-    ):
-        download_radiant_mlhub_collection('', '')
 
 
 class TestBoundingBox:

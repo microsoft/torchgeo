@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, percentile_normalization
+from .utils import download_url, lazy_import, percentile_normalization
 
 
 class QuakeSet(NonGeoDataset):
@@ -85,7 +85,7 @@ class QuakeSet(NonGeoDataset):
         Raises:
             AssertionError: If ``split`` argument is invalid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
-            ImportError: if h5py is not installed
+            MissingDependencyError: If h5py is not installed.
         """
         assert split in self.splits
 
@@ -95,16 +95,7 @@ class QuakeSet(NonGeoDataset):
         self.download = download
         self.checksum = checksum
         self.filepath = os.path.join(root, self.filename)
-
         self._verify()
-
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'h5py is not installed and is required to use this dataset'
-            )
-
         self.data = self._load_data()
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -141,7 +132,7 @@ class QuakeSet(NonGeoDataset):
         Returns:
             the sample keys, patches, images, labels, and magnitudes
         """
-        import h5py
+        h5py = lazy_import('h5py')
 
         data = []
         with h5py.File(self.filepath) as f:
@@ -185,7 +176,7 @@ class QuakeSet(NonGeoDataset):
         Returns:
             the image
         """
-        import h5py
+        h5py = lazy_import('h5py')
 
         key = self.data[index]['key']
         patch = self.data[index]['patch']

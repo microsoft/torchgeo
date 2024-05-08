@@ -1,11 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
 import os
 import shutil
 from pathlib import Path
-from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -24,17 +22,6 @@ def download_url(url: str, root: str, filename: str, md5: str) -> None:
 
 
 class TestCropHarvest:
-    @pytest.fixture
-    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
-        import_orig = builtins.__import__
-
-        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == 'h5py':
-                raise ImportError()
-            return import_orig(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, '__import__', mocked_import)
-
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CropHarvest:
         monkeypatch.setattr(torchgeo.datasets.cropharvest, 'download_url', download_url)
@@ -89,12 +76,3 @@ class TestCropHarvest:
         x = dataset[0].copy()
         dataset.plot(x, suptitle='Test')
         plt.close()
-
-    def test_mock_missing_module(
-        self, dataset: CropHarvest, tmp_path: Path, mock_missing_module: None
-    ) -> None:
-        with pytest.raises(
-            ImportError,
-            match='h5py is not installed and is required to use this dataset',
-        ):
-            CropHarvest(root=str(tmp_path), download=True)[0]

@@ -22,7 +22,7 @@ from torchvision.utils import draw_bounding_boxes
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import download_url, extract_archive, lazy_import
 
 
 class IDTReeS(NonGeoDataset):
@@ -167,7 +167,6 @@ class IDTReeS(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            ImportError: if laspy is not installed
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in ['train', 'test']
@@ -182,14 +181,6 @@ class IDTReeS(NonGeoDataset):
         self.idx2class = {i: c for i, c in enumerate(self.classes)}
         self.num_classes = len(self.classes)
         self._verify()
-
-        try:
-            import laspy  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'laspy is not installed and is required to use this dataset'
-            )
-
         self.images, self.geometries, self.labels = self._load(root)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -200,6 +191,9 @@ class IDTReeS(NonGeoDataset):
 
         Returns:
             data and label at that index
+
+        Raises:
+            MissingDependencyError: If laspy is not installed.
         """
         path = self.images[index]
         image = self._load_image(path).to(torch.uint8)
@@ -263,8 +257,7 @@ class IDTReeS(NonGeoDataset):
         Returns:
             the point cloud
         """
-        import laspy
-
+        laspy = lazy_import('laspy')
         las = laspy.read(path)
         array: 'np.typing.NDArray[np.int_]' = np.stack([las.x, las.y, las.z], axis=0)
         tensor = torch.from_numpy(array)
@@ -561,19 +554,13 @@ class IDTReeS(NonGeoDataset):
             pyvista.PolyData object. Run pyvista.plot(point_cloud, ...) to display
 
         Raises:
-            ImportError: if pyvista is not installed
+            MissingDependencyError: If laspy or pyvista are not installed.
 
         .. versionchanged:: 0.4
            Ported from Open3D to PyVista, *colormap* parameter removed.
         """
-        try:
-            import pyvista  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'pyvista is not installed and is required to plot point clouds'
-            )
-        import laspy
-
+        laspy = lazy_import('laspy')
+        pyvista = lazy_import('pyvista')
         path = self.images[index]
         path = path.replace('RGB', 'LAS').replace('.tif', '.las')
         las = laspy.read(path)

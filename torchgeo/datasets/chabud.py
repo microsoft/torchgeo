@@ -14,7 +14,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, percentile_normalization
+from .utils import download_url, lazy_import, percentile_normalization
 
 
 class ChaBuD(NonGeoDataset):
@@ -96,6 +96,7 @@ class ChaBuD(NonGeoDataset):
         Raises:
             AssertionError: If ``split`` or ``bands`` arguments are invalid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            MissingDependencyError: If h5py is not installed.
         """
         assert split in self.folds
         assert set(bands) <= set(self.all_bands)
@@ -110,13 +111,6 @@ class ChaBuD(NonGeoDataset):
         self.band_indices = [self.all_bands.index(b) for b in bands]
 
         self._verify()
-
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'h5py is not installed and is required to use this dataset'
-            )
 
         self.uuids = self._load_uuids()
 
@@ -153,8 +147,7 @@ class ChaBuD(NonGeoDataset):
         Returns:
             the image uuids
         """
-        import h5py
-
+        h5py = lazy_import('h5py')
         uuids = []
         with h5py.File(self.filepath, 'r') as f:
             for k, v in f.items():
@@ -173,8 +166,7 @@ class ChaBuD(NonGeoDataset):
         Returns:
             the image
         """
-        import h5py
-
+        h5py = lazy_import('h5py')
         uuid = self.uuids[index]
         with h5py.File(self.filepath, 'r') as f:
             pre_array = f[uuid]['pre_fire'][:]
@@ -199,8 +191,7 @@ class ChaBuD(NonGeoDataset):
         Returns:
             the target mask
         """
-        import h5py
-
+        h5py = lazy_import('h5py')
         uuid = self.uuids[index]
         with h5py.File(self.filepath, 'r') as f:
             array = f[uuid]['mask'][:].astype(np.int32).squeeze(axis=-1)

@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import download_and_extract_archive, lazy_import
 
 
 class ADVANCE(NonGeoDataset):
@@ -127,6 +127,9 @@ class ADVANCE(NonGeoDataset):
 
         Returns:
             data and label at that index
+
+        Raises:
+            MissingDependencyError: If scipy is not installed.
         """
         files = self.files[index]
         image = self._load_image(files['image'])
@@ -191,14 +194,8 @@ class ADVANCE(NonGeoDataset):
         Returns:
             the target audio
         """
-        try:
-            from scipy.io import wavfile
-        except ImportError:
-            raise ImportError(
-                'scipy is not installed and is required to use this dataset'
-            )
-
-        array = wavfile.read(path, mmap=True)[1]
+        scipy = lazy_import('scipy')
+        array = scipy.io.wavfile.read(path, mmap=True)[1]
         tensor = torch.from_numpy(array)
         tensor = tensor.unsqueeze(0)
         return tensor

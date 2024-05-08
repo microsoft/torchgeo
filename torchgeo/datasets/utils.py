@@ -40,13 +40,7 @@ class _rarfile:
             self.kwargs = kwargs
 
         def __enter__(self) -> Any:
-            try:
-                import rarfile
-            except ImportError:
-                raise ImportError(
-                    'rarfile is not installed and is required to extract this dataset'
-                )
-
+            rarfile = lazy_import('rarfile')
             # TODO: catch exception for when rarfile is installed but not
             # unrar/unar/bsdtar
             return rarfile.RarFile(*self.args, **self.kwargs)
@@ -160,14 +154,11 @@ def download_radiant_mlhub_dataset(
         api_key: the API key to use for all requests from the session. Can also be
             passed in via the ``MLHUB_API_KEY`` environment variable, or configured in
             ``~/.mlhub/profiles``.
-    """
-    try:
-        import radiant_mlhub
-    except ImportError:
-        raise ImportError(
-            'radiant_mlhub is not installed and is required to download this dataset'
-        )
 
+    Raises:
+        MissingDependencyError: If radiant_mlhub is not installed.
+    """
+    radiant_mlhub = lazy_import('radiant_mlhub')
     dataset = radiant_mlhub.Dataset.fetch(dataset_id, api_key=api_key)
     dataset.download(output_dir=download_root, api_key=api_key)
 
@@ -183,14 +174,11 @@ def download_radiant_mlhub_collection(
         api_key: the API key to use for all requests from the session. Can also be
             passed in via the ``MLHUB_API_KEY`` environment variable, or configured in
             ``~/.mlhub/profiles``.
-    """
-    try:
-        import radiant_mlhub
-    except ImportError:
-        raise ImportError(
-            'radiant_mlhub is not installed and is required to download this collection'
-        )
 
+    Raises:
+        MissingDependencyError: If radiant_mlhub is not installed.
+    """
+    radiant_mlhub = lazy_import('radiant_mlhub')
     collection = radiant_mlhub.Collection.fetch(collection_id, api_key=api_key)
     collection.download(output_dir=download_root, api_key=api_key)
 
