@@ -11,8 +11,9 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import DatasetNotFoundError, check_integrity, extract_archive
+from .utils import check_integrity, extract_archive
 
 
 class CMSGlobalMangroveCanopy(RasterDataset):

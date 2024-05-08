@@ -13,9 +13,9 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
-    DatasetNotFoundError,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,

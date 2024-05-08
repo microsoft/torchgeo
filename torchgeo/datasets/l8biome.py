@@ -13,14 +13,9 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import (
-    BoundingBox,
-    DatasetNotFoundError,
-    RGBBandsMissingError,
-    download_url,
-    extract_archive,
-)
+from .utils import BoundingBox, download_url, extract_archive
 
 
 class L8Biome(RasterDataset):

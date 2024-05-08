@@ -9,9 +9,8 @@ import kornia.augmentation as K
 import torch
 from torch.utils.data import random_split
 
-from torchgeo.samplers.utils import _to_tuple
-
 from ..datasets import LEVIRCD, LEVIRCDPlus
+from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule

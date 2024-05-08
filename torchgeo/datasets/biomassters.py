@@ -14,8 +14,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, percentile_normalization
+from .utils import percentile_normalization
 
 
 class BioMassters(NonGeoDataset):

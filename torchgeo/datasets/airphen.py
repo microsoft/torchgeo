@@ -8,8 +8,9 @@ from typing import Any
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
+from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import RGBBandsMissingError, percentile_normalization
+from .utils import percentile_normalization
 
 
 class Airphen(RasterDataset):

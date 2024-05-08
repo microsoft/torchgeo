@@ -11,8 +11,9 @@ from typing import Any
 import pandas as pd
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, DatasetNotFoundError, disambiguate_timestamp
+from .utils import BoundingBox, disambiguate_timestamp
 
 
 class INaturalist(GeoDataset):

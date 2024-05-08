@@ -13,8 +13,9 @@ import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, DatasetNotFoundError, check_integrity, extract_archive
+from .utils import BoundingBox, check_integrity, extract_archive
 
 
 class GlobBiomass(RasterDataset):

@@ -14,10 +14,9 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
 from .utils import (
-    DatasetNotFoundError,
-    RGBBandsMissingError,
     download_url,
     draw_semantic_segmentation_masks,
     extract_archive,

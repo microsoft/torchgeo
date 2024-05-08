@@ -16,13 +16,9 @@ from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    check_integrity,
-    extract_archive,
-    percentile_normalization,
-)
+from .utils import check_integrity, extract_archive, percentile_normalization
 
 
 class DFC2022(NonGeoDataset):

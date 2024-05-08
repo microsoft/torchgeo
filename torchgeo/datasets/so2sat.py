@@ -13,13 +13,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    RGBBandsMissingError,
-    check_integrity,
-    percentile_normalization,
-)
+from .utils import check_integrity, percentile_normalization
 
 
 class So2Sat(NonGeoDataset):

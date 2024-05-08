@@ -17,14 +17,9 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    RGBBandsMissingError,
-    check_integrity,
-    download_radiant_mlhub_collection,
-    extract_archive,
-)
+from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
 
 
 # TODO: read geospatial information from stac.json files

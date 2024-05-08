@@ -11,8 +11,8 @@ import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import RGBBandsMissingError
 
 
 class Sentinel(RasterDataset):

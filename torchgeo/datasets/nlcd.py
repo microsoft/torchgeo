@@ -13,8 +13,9 @@ import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
+from .utils import BoundingBox, download_url, extract_archive
 
 
 class NLCD(RasterDataset):

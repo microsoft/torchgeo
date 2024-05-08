@@ -11,8 +11,9 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import DatasetNotFoundError, check_integrity, download_and_extract_archive
+from .utils import check_integrity, download_and_extract_archive
 
 
 class CanadianBuildingFootprints(VectorDataset):

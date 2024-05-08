@@ -37,6 +37,7 @@ from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eudem import EUDEM
@@ -127,8 +128,6 @@ from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
     BoundingBox,
-    DatasetNotFoundError,
-    RGBBandsMissingError,
     concat_samples,
     merge_samples,
     stack_samples,

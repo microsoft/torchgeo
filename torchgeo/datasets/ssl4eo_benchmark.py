@@ -15,9 +15,10 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .cdl import CDL
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .nlcd import NLCD
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import download_url, extract_archive
 
 
 class SSL4EOLBenchmark(NonGeoDataset):

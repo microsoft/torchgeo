@@ -13,8 +13,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_url, percentile_normalization
+from .utils import download_url, percentile_normalization
 
 
 class QuakeSet(NonGeoDataset):

@@ -16,13 +16,9 @@ from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    download_url,
-    extract_archive,
-    sort_sentinel2_bands,
-)
+from .utils import download_url, extract_archive, sort_sentinel2_bands
 
 
 class BigEarthNet(NonGeoDataset):
