@@ -102,7 +102,7 @@ class So2Sat(NonGeoDataset):
 
        This dataset requires the following additional library to be installed:
 
-       * ` <https://pypi.org/project/h5py/>`_ to load the dataset
+       * `<https://pypi.org/project/h5py/>`_ to load the dataset
     """  # noqa: E501
 
     versions = ['2', '3_random', '3_block', '3_culture_10']

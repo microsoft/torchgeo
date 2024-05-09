@@ -57,7 +57,7 @@ class SKIPPD(NonGeoDataset):
 
        This dataset requires the following additional library to be installed:
 
-       * ` <https://pypi.org/project/h5py/>`_ to load the dataset
+       * `<https://pypi.org/project/h5py/>`_ to load the dataset
 
     .. versionadded:: 0.5
     """
