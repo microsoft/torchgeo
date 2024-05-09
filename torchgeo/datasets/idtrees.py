@@ -92,6 +92,11 @@ class IDTReeS(NonGeoDataset):
 
     * https://doi.org/10.1101/2021.08.06.453503
 
+    This dataset requires the following additional libraries to be installed:
+
+       * `laspy <https://pypi.org/project/laspy/>`_ to read lidar point clouds
+       * `pyvista <https://pypi.org/project/pyvista/>`_ to plot lidar point clouds
+
     .. versionadded:: 0.2
     """
 
@@ -168,9 +173,13 @@ class IDTReeS(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            MissingDependencyError: If laspy is not installed.
         """
+        lazy_import('laspy')
+
         assert split in ['train', 'test']
         assert task in ['task1', 'task2']
+
         self.root = root
         self.split = split
         self.task = task
@@ -191,9 +200,6 @@ class IDTReeS(NonGeoDataset):
 
         Returns:
             data and label at that index
-
-        Raises:
-            MissingDependencyError: If laspy is not installed.
         """
         path = self.images[index]
         image = self._load_image(path).to(torch.uint8)

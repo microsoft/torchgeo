@@ -19,9 +19,8 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import MissingDependencyError
+from torchgeo.datasets import BoundingBox, MissingDependencyError
 from torchgeo.datasets.utils import (
-    BoundingBox,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,

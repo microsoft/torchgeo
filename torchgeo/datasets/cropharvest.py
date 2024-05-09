@@ -112,7 +112,10 @@ class CropHarvest(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            MissingDependencyError: If h5py is not installed.
         """
+        lazy_import('h5py')
+
         self.root = root
         self.transforms = transforms
         self.checksum = checksum
@@ -134,9 +137,6 @@ class CropHarvest(NonGeoDataset):
 
         Returns:
             single pixel time-series array and label at that index
-
-        Raises:
-            MissingDependencyError: If h5py is not installed.
         """
         files = self.files[index]
         data = self._load_array(files['chip'])

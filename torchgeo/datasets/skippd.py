@@ -53,6 +53,12 @@ class SKIPPD(NonGeoDataset):
 
     * https://doi.org/10.48550/arXiv.2207.00913
 
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * ` <https://pypi.org/project/h5py/>`_ to load the dataset
+
     .. versionadded:: 0.5
     """
 
@@ -94,7 +100,10 @@ class SKIPPD(NonGeoDataset):
         Raises:
             AssertionError: if ``task`` or ``split`` is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            MissingDependencyError: If h5py is not installed.
         """
+        lazy_import('h5py')
+
         assert (
             split in self.valid_splits
         ), f'Please choose one of these valid data splits {self.valid_splits}.'
@@ -116,9 +125,6 @@ class SKIPPD(NonGeoDataset):
 
         Returns:
             length of the dataset
-
-        Raises:
-            MissingDependencyError: If h5py is not installed.
         """
         h5py = lazy_import('h5py')
         with h5py.File(
@@ -153,9 +159,6 @@ class SKIPPD(NonGeoDataset):
 
         Returns:
             image tensor at index
-
-        Raises:
-            MissingDependencyError: If h5py is not installed.
         """
         h5py = lazy_import('h5py')
         with h5py.File(
@@ -181,9 +184,6 @@ class SKIPPD(NonGeoDataset):
 
         Returns:
             label tensor at index
-
-        Raises:
-            MissingDependencyError: If h5py is not installed.
         """
         h5py = lazy_import('h5py')
         with h5py.File(

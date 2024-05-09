@@ -82,7 +82,10 @@ class ZueriCrop(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            MissingDependencyError: If h5py is not installed.
         """
+        lazy_import('h5py')
+
         self._validate_bands(bands)
         self.band_indices = torch.tensor(
             [self.band_names.index(b) for b in bands]
@@ -105,9 +108,6 @@ class ZueriCrop(NonGeoDataset):
 
         Returns:
             sample containing image, mask, bounding boxes, and target label
-
-        Raises:
-            MissingDependencyError: If h5py is not installed.
         """
         image = self._load_image(index)
         mask, boxes, label = self._load_target(index)
@@ -124,9 +124,6 @@ class ZueriCrop(NonGeoDataset):
 
         Returns:
             length of the dataset
-
-        Raises:
-            MissingDependencyError: If h5py is not installed.
         """
         h5py = lazy_import('h5py')
         with h5py.File(self.filepath, 'r') as f:

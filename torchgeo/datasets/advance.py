@@ -104,7 +104,10 @@ class ADVANCE(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            MissingDependencyError: If scipy is not installed.
         """
+        lazy_import('scipy.io.wavfile')
+
         self.root = root
         self.transforms = transforms
         self.checksum = checksum
@@ -127,9 +130,6 @@ class ADVANCE(NonGeoDataset):
 
         Returns:
             data and label at that index
-
-        Raises:
-            MissingDependencyError: If scipy is not installed.
         """
         files = self.files[index]
         image = self._load_image(files['image'])

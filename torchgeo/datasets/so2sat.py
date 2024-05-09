@@ -97,6 +97,12 @@ class So2Sat(NonGeoDataset):
           done
 
        or manually downloaded from https://mediatum.ub.tum.de/1613658
+
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * ` <https://pypi.org/project/h5py/>`_ to load the dataset
     """  # noqa: E501
 
     versions = ['2', '3_random', '3_block', '3_culture_10']
@@ -219,6 +225,7 @@ class So2Sat(NonGeoDataset):
            The *version* parameter.
         """
         h5py = lazy_import('h5py')
+
         assert version in self.versions
         assert split in self.filenames_by_version[version]
 

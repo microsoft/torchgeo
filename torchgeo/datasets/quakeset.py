@@ -87,6 +87,8 @@ class QuakeSet(NonGeoDataset):
             DatasetNotFoundError: If dataset is not found and *download* is False.
             MissingDependencyError: If h5py is not installed.
         """
+        lazy_import('h5py')
+
         assert split in self.splits
 
         self.root = root
@@ -133,7 +135,6 @@ class QuakeSet(NonGeoDataset):
             the sample keys, patches, images, labels, and magnitudes
         """
         h5py = lazy_import('h5py')
-
         data = []
         with h5py.File(self.filepath) as f:
             for k in sorted(f.keys()):
