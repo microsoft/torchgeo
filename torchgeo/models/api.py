@@ -17,6 +17,7 @@ import torch.nn as nn
 from torchvision.models._api import WeightsEnum
 
 from .resnet import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50
+from .scale_mae import ScaleMAE_ViTLarge16_Weights, scalemae_vit_large_patch16
 from .swin import Swin_V2_B_Weights, swin_v2_b
 from .vit import ViTSmall16_Weights, vit_small_patch16_224
 
@@ -25,6 +26,7 @@ _model = {
     'resnet50': resnet50,
     'vit_small_patch16_224': vit_small_patch16_224,
     'swin_v2_b': swin_v2_b,
+    'scalemae_vit_large_patch16': scalemae_vit_large_patch16,
 }
 
 _model_weights = {
@@ -32,10 +34,12 @@ _model_weights = {
     resnet50: ResNet50_Weights,
     vit_small_patch16_224: ViTSmall16_Weights,
     swin_v2_b: Swin_V2_B_Weights,
+    scalemae_vit_large_patch16: ScaleMAE_ViTLarge16_Weights,
     'resnet18': ResNet18_Weights,
     'resnet50': ResNet50_Weights,
     'vit_small_patch16_224': ViTSmall16_Weights,
     'swin_v2_b': Swin_V2_B_Weights,
+    'scalemae_vit_large_patch16': ScaleMAE_ViTLarge16_Weights,
 }
 
 
