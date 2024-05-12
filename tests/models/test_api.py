@@ -9,11 +9,15 @@ import torch.nn as nn
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
+    DOFABase16_Weights,
+    DOFALarge16_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
     ScaleMAE_ViTLarge16_Weights,
     Swin_V2_B_Weights,
     ViTSmall16_Weights,
+    dofa_base_patch16_224,
+    dofa_large_patch16_224,
     get_model,
     get_model_weights,
     get_weight,
@@ -26,18 +30,22 @@ from torchgeo.models import (
 )
 
 builders = [
+    dofa_base_patch16_224,
+    dofa_large_patch16_224,
     resnet18,
     resnet50,
-    vit_small_patch16_224,
     swin_v2_b,
     scalemae_vit_large_patch16,
+    vit_small_patch16_224,
 ]
 enums = [
+    DOFABase16_Weights,
+    DOFALarge16_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
-    ViTSmall16_Weights,
     Swin_V2_B_Weights,
     ScaleMAE_ViTLarge16_Weights,
+    ViTSmall16_Weights,
 ]
 
 
