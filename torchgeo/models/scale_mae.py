@@ -1,11 +1,16 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+"""Pre-trained Scale-MAE Vision Transformer models."""
+
 from collections import OrderedDict
 from functools import partial
 from typing import Any
 
 import kornia.augmentation as K
-import timm.models.vision_transformer
 import torch
 import torch.nn as nn
+from timm.models.vision_transformer import VisionTransformer
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -20,7 +25,7 @@ _scale_mae_transforms = K.AugmentationSequential(
 
 def get_2d_sincos_pos_embed_with_resolution(
     embed_dim: int, grid_size: int, res: Tensor, cls_token: bool = False
-):
+) -> Tensor:
     """Generate spatial resolution specific 2D positional embeddings.
 
     Args:
@@ -35,8 +40,7 @@ def get_2d_sincos_pos_embed_with_resolution(
     device, dtype = res.device, res.dtype
     grid_h = torch.arange(grid_size, dtype=dtype, device=device)
     grid_w = torch.arange(grid_size, dtype=dtype, device=device)
-    grid = torch.meshgrid(grid_w, grid_h, indexing='xy')
-    grid = torch.stack(grid, dim=0)
+    grid: Tensor = torch.stack(torch.meshgrid(grid_w, grid_h, indexing='xy'), dim=0)
     grid = torch.einsum('chw,n->cnhw', grid, res)
     _, n, h, w = grid.shape
     pos_embed = get_2d_sincos_pos_embed_from_grid_torch(embed_dim, grid)
@@ -49,7 +53,7 @@ def get_2d_sincos_pos_embed_with_resolution(
     return pos_embed
 
 
-def get_2d_sincos_pos_embed_from_grid_torch(embed_dim: int, grid: Tensor):
+def get_2d_sincos_pos_embed_from_grid_torch(embed_dim: int, grid: Tensor) -> Tensor:
     """Generate 2D sin-cos positional embedding from grid.
 
     Args:
@@ -66,7 +70,7 @@ def get_2d_sincos_pos_embed_from_grid_torch(embed_dim: int, grid: Tensor):
     return emb
 
 
-def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor):
+def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor) -> Tensor:
     """Generate 1D sin-cos positional embedding from grid dimension.
 
     Args:
@@ -88,7 +92,7 @@ def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor):
     return emb
 
 
-class ScaleMAEViT(timm.models.vision_transformer.VisionTransformer):
+class ScaleMAEViT(VisionTransformer):  # type: ignore[misc]
     """Custom Vision Transformer for Scale-MAE with GSD positional embeddings.
 
     This is a ViT encoder only model of the Scale-MAE architecture with GSD positional embeddings.
@@ -116,7 +120,7 @@ class ScaleMAEViT(timm.models.vision_transformer.VisionTransformer):
         self.pos_embed.requires_grad = False
 
     def _pos_embed(self, x: Tensor) -> Tensor:
-        """Apply GSD positional embeddings to the input tensor"""
+        """Apply GSD positional embeddings to the input tensor."""
         res = torch.tensor(self.res, dtype=x.dtype, device=x.device)
         res = res.repeat(x.shape[0])
         pos_embed = (
@@ -136,7 +140,9 @@ class ScaleMAEViT(timm.models.vision_transformer.VisionTransformer):
         return x
 
 
-def interpolate_pos_embed(model: ScaleMAEViT, state_dict: OrderedDict):
+def interpolate_pos_embed(
+    model: ScaleMAEViT, state_dict: OrderedDict[str, Tensor]
+) -> OrderedDict[str, Tensor]:
     """Interpolate the positional embeddings if image size is different than pretrained image size.
 
     Args:
@@ -146,36 +152,32 @@ def interpolate_pos_embed(model: ScaleMAEViT, state_dict: OrderedDict):
     Returns:
         state_dict: State dict with interpolated positional embeddings.
     """
-    if 'pos_embed' in state_dict:
-        pos_embed_checkpoint = state_dict['pos_embed']
-        embedding_size = pos_embed_checkpoint.shape[-1]
-        num_patches = model.patch_embed.num_patches
-        num_extra_tokens = model.pos_embed.shape[-2] - num_patches
-        # height (== width) for the checkpoint position embedding
-        orig_size = int((pos_embed_checkpoint.shape[-2] - num_extra_tokens) ** 0.5)
-        # height (== width) for the new position embedding
-        new_size = int(num_patches**0.5)
-        # class_token and dist_token are kept unchanged
-        if orig_size != new_size:
-            print(
-                'Interpolating positional embeddings from %dx%d to %dx%d'
-                % (orig_size, orig_size, new_size, new_size)
-            )
-            extra_tokens = pos_embed_checkpoint[:, :num_extra_tokens]
-            # only the position tokens are interpolated
-            pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
-            pos_tokens = pos_tokens.reshape(
-                -1, orig_size, orig_size, embedding_size
-            ).permute(0, 3, 1, 2)
-            pos_tokens = torch.nn.functional.interpolate(
-                pos_tokens,
-                size=(new_size, new_size),
-                mode='bicubic',
-                align_corners=False,
-            )
-            pos_tokens = pos_tokens.permute(0, 2, 3, 1).flatten(1, 2)
-            new_pos_embed = torch.cat((extra_tokens, pos_tokens), dim=1)
-            state_dict['pos_embed'] = new_pos_embed
+    pos_embed_checkpoint = state_dict['pos_embed']
+    embedding_size = pos_embed_checkpoint.shape[-1]
+    num_patches = model.patch_embed.num_patches
+    num_extra_tokens = model.pos_embed.shape[-2] - num_patches
+    # height (== width) for the checkpoint position embedding
+    orig_size = int((pos_embed_checkpoint.shape[-2] - num_extra_tokens) ** 0.5)
+    # height (== width) for the new position embedding
+    new_size = int(num_patches**0.5)
+    # class_token and dist_token are kept unchanged
+    if orig_size != new_size:
+        print(
+            'Interpolating positional embeddings from %dx%d to %dx%d'
+            % (orig_size, orig_size, new_size, new_size)
+        )
+        extra_tokens = pos_embed_checkpoint[:, :num_extra_tokens]
+        # only the position tokens are interpolated
+        pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
+        pos_tokens = pos_tokens.reshape(
+            -1, orig_size, orig_size, embedding_size
+        ).permute(0, 3, 1, 2)
+        pos_tokens = torch.nn.functional.interpolate(
+            pos_tokens, size=(new_size, new_size), mode='bicubic', align_corners=False
+        )
+        pos_tokens = pos_tokens.permute(0, 2, 3, 1).flatten(1, 2)
+        new_pos_embed = torch.cat((extra_tokens, pos_tokens), dim=1)
+        state_dict['pos_embed'] = new_pos_embed
 
     return state_dict
 
@@ -207,10 +209,7 @@ class ScaleMAE_ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
 
 
 def scalemae_vit_large_patch16(
-    weights: ScaleMAE_ViTLarge16_Weights | None = None,
-    res: float = 0.3,
-    *args: Any,
-    **kwargs: Any,
+    weights: ScaleMAE_ViTLarge16_Weights | None = None, *args: Any, **kwargs: Any
 ) -> ScaleMAEViT:
     """Scale-MAE ViT Large model.
 
@@ -222,7 +221,6 @@ def scalemae_vit_large_patch16(
 
     Args:
         weights: Pre-trained model weights to use.
-        res: Spatial resolution of the image in meters.
         *args: Additional arguments to
             pass to :class:`timm.models.vision_transformer.VisionTransformer`.
         **kwargs: Additional keyword arguments to
@@ -232,7 +230,6 @@ def scalemae_vit_large_patch16(
         A Scale-MAE ViT Large patch16 model.
     """
     model = ScaleMAEViT(
-        res=res,
         patch_size=16,
         embed_dim=1024,
         depth=24,

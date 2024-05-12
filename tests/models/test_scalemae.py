@@ -29,7 +29,7 @@ class TestViTSmall16:
         self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
-        model = scalemae_vit_large_patch16()
+        model = scalemae_vit_large_patch16(res=1.0)
         torch.save(model.state_dict(), path)
         try:
             monkeypatch.setattr(weights.value, 'url', str(path))
@@ -39,10 +39,16 @@ class TestViTSmall16:
         return weights
 
     def test_scalemae(self) -> None:
-        scalemae_vit_large_patch16()
+        scalemae_vit_large_patch16(res=1.0)
+
+    def test_scalemae_forward_pass(self) -> None:
+        model = scalemae_vit_large_patch16(res=1.0, img_size=64, num_classes=2)
+        x = torch.randn(1, 3, 64, 64)
+        y = model(x)
+        assert y.shape == (1, 2)
 
     def test_scalemae_weights(self, mocked_weights: WeightsEnum) -> None:
-        scalemae_vit_large_patch16(weights=mocked_weights)
+        scalemae_vit_large_patch16(weights=mocked_weights, res=1.0)
 
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta['in_chans']
@@ -51,6 +57,11 @@ class TestViTSmall16:
         }
         mocked_weights.transforms(sample)
 
+    def test_scalemae_weights_diff_image_size(
+        self, mocked_weights: WeightsEnum
+    ) -> None:
+        scalemae_vit_large_patch16(weights=mocked_weights, res=1.0, img_size=256)
+
     @pytest.mark.slow
     def test_scalemae_download(self, weights: WeightsEnum) -> None:
-        scalemae_vit_large_patch16(weights=weights)
+        scalemae_vit_large_patch16(weights=weights, res=1.0)
