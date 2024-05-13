@@ -286,20 +286,20 @@ class TestRasterDataset:
         assert isinstance(x['image'], torch.Tensor)
         assert x['image'].dtype == torch.float32
 
-    @pytest.mark.parametrize("dtype", [torch.float, torch.double])
+    @pytest.mark.parametrize('dtype', [torch.float, torch.double])
     def test_resampling_float_dtype(self, dtype: torch.dtype) -> None:
-        paths = os.path.join("tests", "data", "raster", "uint16")
+        paths = os.path.join('tests', 'data', 'raster', 'uint16')
         ds = CustomRasterDataset(dtype, paths)
         x = ds[ds.bounds]
-        assert x["image"].dtype == dtype
+        assert x['image'].dtype == dtype
         assert ds.resampling == Resampling.bilinear
 
-    @pytest.mark.parametrize("dtype", [torch.long, torch.bool])
+    @pytest.mark.parametrize('dtype', [torch.long, torch.bool])
     def test_resampling_int_dtype(self, dtype: torch.dtype) -> None:
-        paths = os.path.join("tests", "data", "raster", "uint16")
+        paths = os.path.join('tests', 'data', 'raster', 'uint16')
         ds = CustomRasterDataset(dtype, paths)
         x = ds[ds.bounds]
-        assert x["image"].dtype == dtype
+        assert x['image'].dtype == dtype
         assert ds.resampling == Resampling.nearest
 
     def test_invalid_query(self, sentinel: Sentinel2) -> None:

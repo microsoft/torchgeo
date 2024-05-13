@@ -310,7 +310,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
                 files |= set(glob.iglob(pathname, recursive=True))
             elif os.path.isfile(path) or path_is_vsi(path):
                 files.add(path)
-            elif not hasattr(self, "download"):
+            elif not hasattr(self, 'download'):
                 warnings.warn(
                     f"Could not find any relevant files for provided path '{path}'. "
                     f'Path was ignored.',
