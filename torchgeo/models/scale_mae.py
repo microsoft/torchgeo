@@ -102,7 +102,7 @@ class ScaleMAEViT(VisionTransformer):  # type: ignore[misc]
     * https://arxiv.org/abs/2212.14532
     """
 
-    def __init__(self, res: float, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, res: float = 1.0, *args: Any, **kwargs: Any) -> None:
         """Initialize a new ScaleMAEViT model.
 
         Args:
@@ -222,9 +222,9 @@ def scalemae_vit_large_patch16(
     Args:
         weights: Pre-trained model weights to use.
         *args: Additional arguments to
-            pass to :class:`timm.models.vision_transformer.VisionTransformer`.
+            pass to :class:`ScaleMAEViT`.
         **kwargs: Additional keyword arguments to
-            pass to :class:`timm.models.vision_transformer.VisionTransformer`.
+            pass to :class:`ScaleMAEViT`.
 
     Returns:
         A Scale-MAE ViT Large patch16 model.
