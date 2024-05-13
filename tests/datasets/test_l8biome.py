@@ -5,6 +5,7 @@ import glob
 import os
 import shutil
 from pathlib import Path
+from typing import cast
 
 import matplotlib.pyplot as plt
 import pytest
@@ -65,7 +66,9 @@ class TestL8Biome:
         plt.close()
 
     def test_already_extracted(self, dataset: L8Biome) -> None:
-        L8Biome(dataset.paths, download=True)
+        paths = cast(str, dataset.paths)
+        L8Biome(paths, download=True)
+        L8Biome([paths], download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'l8biome', '*.tar.gz')
