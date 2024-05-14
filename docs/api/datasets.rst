@@ -535,5 +535,5 @@ Errors
 ------
 
 .. autoclass:: DatasetNotFoundError
-.. autoclass:: MissingDependencyError
+.. autoclass:: DependencyNotFoundError
 .. autoclass:: RGBBandsMissingError

@@ -39,7 +39,7 @@ def convert_coco_poly_to_mask(
         Tensor: Mask tensor
 
     Raises:
-        MissingDependencyError: If pycocotools is not installed.
+        DependencyNotFoundError: If pycocotools is not installed.
     """
     pycocotools = lazy_import('pycocotools')
     masks = []
@@ -203,8 +203,9 @@ class VHR10(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            MissingDependencyError: if ``split="positive"`` and pycocotools is not installed.
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            DependencyNotFoundError: if ``split="positive"`` and pycocotools is
+                not installed.
         """
         assert split in ['positive', 'negative']
 
@@ -380,7 +381,7 @@ class VHR10(NonGeoDataset):
 
         Raises:
             AssertionError: if ``show_feats`` argument is invalid
-            MissingDependencyError: If plotting masks and scikit-image is not installed.
+            DependencyNotFoundError: If plotting masks and scikit-image is not installed.
 
         .. versionadded:: 0.4
         """

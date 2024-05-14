@@ -104,7 +104,7 @@ class ADVANCE(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
-            MissingDependencyError: If scipy is not installed.
+            DependencyNotFoundError: If scipy is not installed.
         """
         lazy_import('scipy.io.wavfile')
 

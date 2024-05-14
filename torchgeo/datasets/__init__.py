@@ -37,7 +37,7 @@ from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
-from .errors import DatasetNotFoundError, MissingDependencyError, RGBBandsMissingError
+from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eudem import EUDEM
@@ -280,6 +280,6 @@ __all__ = (
     'time_series_split',
     # Errors
     'DatasetNotFoundError',
-    'MissingDependencyError',
+    'DependencyNotFoundError',
     'RGBBandsMissingError',
 )

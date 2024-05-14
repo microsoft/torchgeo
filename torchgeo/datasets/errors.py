@@ -49,14 +49,14 @@ class DatasetNotFoundError(FileNotFoundError):
         super().__init__(msg)
 
 
-class MissingDependencyError(ModuleNotFoundError):
+class DependencyNotFoundError(ModuleNotFoundError):
     """Raised when an optional dataset dependency is not installed.
 
     .. versionadded:: 0.6
     """
 
     def __init__(self, name: str) -> None:
-        """Initialize a new MissingDependencyError instance.
+        """Initialize a new DependencyNotFoundError instance.
 
         Args:
             name: Name of missing dependency.

@@ -27,7 +27,7 @@ from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 
-from .errors import MissingDependencyError
+from .errors import DependencyNotFoundError
 
 # Only include import redirects
 __all__ = ('check_integrity', 'download_url')
@@ -156,7 +156,7 @@ def download_radiant_mlhub_dataset(
             ``~/.mlhub/profiles``.
 
     Raises:
-        MissingDependencyError: If radiant_mlhub is not installed.
+        DependencyNotFoundError: If radiant_mlhub is not installed.
     """
     radiant_mlhub = lazy_import('radiant_mlhub')
     dataset = radiant_mlhub.Dataset.fetch(dataset_id, api_key=api_key)
@@ -176,7 +176,7 @@ def download_radiant_mlhub_collection(
             ``~/.mlhub/profiles``.
 
     Raises:
-        MissingDependencyError: If radiant_mlhub is not installed.
+        DependencyNotFoundError: If radiant_mlhub is not installed.
     """
     radiant_mlhub = lazy_import('radiant_mlhub')
     collection = radiant_mlhub.Collection.fetch(collection_id, api_key=api_key)
@@ -773,7 +773,7 @@ def lazy_import(name: str) -> Any:
         name: Name of module to import.
 
     Raises:
-        MissingDependencyError: If *name* is not installed.
+        DependencyNotFoundError: If *name* is not installed.
 
     .. versionadded:: 0.6
     """
@@ -785,4 +785,4 @@ def lazy_import(name: str) -> Any:
         module_to_pypi: dict[str, str] = collections.defaultdict(lambda: name)
         module_to_pypi |= {'cv2': 'opencv-python', 'skimage': 'scikit-image'}
         name = module_to_pypi[name]
-        raise MissingDependencyError(name) from None
+        raise DependencyNotFoundError(name) from None

@@ -173,7 +173,7 @@ class IDTReeS(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
-            MissingDependencyError: If laspy is not installed.
+            DependencyNotFoundError: If laspy is not installed.
         """
         lazy_import('laspy')
 
@@ -560,7 +560,7 @@ class IDTReeS(NonGeoDataset):
             pyvista.PolyData object. Run pyvista.plot(point_cloud, ...) to display
 
         Raises:
-            MissingDependencyError: If laspy or pyvista are not installed.
+            DependencyNotFoundError: If laspy or pyvista are not installed.
 
         .. versionchanged:: 0.4
            Ported from Open3D to PyVista, *colormap* parameter removed.

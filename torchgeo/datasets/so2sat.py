@@ -216,7 +216,7 @@ class So2Sat(NonGeoDataset):
         Raises:
             AssertionError: if ``split`` argument is invalid
             DatasetNotFoundError: If dataset is not found.
-            MissingDependencyError: If h5py is not installed.
+            DependencyNotFoundError: If h5py is not installed.
 
         .. versionadded:: 0.3
            The *bands* parameter.

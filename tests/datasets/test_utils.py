@@ -19,7 +19,7 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import BoundingBox, MissingDependencyError
+from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
     array_to_tensor,
     concat_samples,
@@ -588,5 +588,5 @@ def test_lazy_import(name: str) -> None:
 
 @pytest.mark.parametrize('name', ['foo_bar', 'foo_bar.baz'])
 def test_lazy_import_missing(name: str) -> None:
-    with pytest.raises(MissingDependencyError, match='pip install foo-bar\n'):
+    with pytest.raises(DependencyNotFoundError, match='pip install foo-bar\n'):
         lazy_import(name)

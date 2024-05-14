@@ -8,7 +8,7 @@ from torch.utils.data import Dataset
 
 from torchgeo.datasets import (
     DatasetNotFoundError,
-    MissingDependencyError,
+    DependencyNotFoundError,
     RGBBandsMissingError,
 )
 
@@ -60,8 +60,8 @@ class TestDatasetNotFoundError:
 
 
 def test_missing_dependency() -> None:
-    with pytest.raises(MissingDependencyError, match='pip install foo'):
-        raise MissingDependencyError('foo')
+    with pytest.raises(DependencyNotFoundError, match='pip install foo'):
+        raise DependencyNotFoundError('foo')
 
 
 def test_rgb_bands_missing() -> None:
