@@ -37,7 +37,7 @@ class TestSouthAmericaSoybean:
             'data',
             'south_america_soybean',
             'SouthAmericaSoybean',
-            'South_America_Soybean_{}.tif',
+            'SouthAmerica_Soybean_{}.tif',
         )
 
         monkeypatch.setattr(SouthAmericaSoybean, 'url', url)
@@ -73,7 +73,7 @@ class TestSouthAmericaSoybean:
             'data',
             'south_america_soybean',
             'SouthAmericaSoybean',
-            'South_America_Soybean_2002.tif',
+            'SouthAmerica_Soybean_2002.tif',
         )
         root = str(tmp_path)
         shutil.copy(pathname, root)
