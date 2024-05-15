@@ -49,6 +49,32 @@ class DatasetNotFoundError(FileNotFoundError):
         super().__init__(msg)
 
 
+class DependencyNotFoundError(ModuleNotFoundError):
+    """Raised when an optional dataset dependency is not installed.
+
+    .. versionadded:: 0.6
+    """
+
+    def __init__(self, name: str) -> None:
+        """Initialize a new DependencyNotFoundError instance.
+
+        Args:
+            name: Name of missing dependency.
+        """
+        msg = f"""\
+{name} is not installed and is required to use this dataset. Either run:
+
+$ pip install {name}
+
+to install just this dependency, or:
+
+$ pip install torchgeo[datasets]
+
+to install all optional dataset dependencies."""
+
+        super().__init__(msg)
+
+
 class RGBBandsMissingError(ValueError):
     """Raised when a dataset is missing RGB bands for plotting.
 

@@ -17,7 +17,12 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive, download_url
+from .utils import (
+    check_integrity,
+    download_and_extract_archive,
+    download_url,
+    lazy_import,
+)
 
 
 def convert_coco_poly_to_mask(
@@ -32,13 +37,15 @@ def convert_coco_poly_to_mask(
 
     Returns:
         Tensor: Mask tensor
-    """
-    from pycocotools import mask as coco_mask  # noqa: F401
 
+    Raises:
+        DependencyNotFoundError: If pycocotools is not installed.
+    """
+    pycocotools = lazy_import('pycocotools')
     masks = []
     for polygons in segmentations:
-        rles = coco_mask.frPyObjects(polygons, height, width)
-        mask = coco_mask.decode(rles)
+        rles = pycocotools.mask.frPyObjects(polygons, height, width)
+        mask = pycocotools.mask.decode(rles)
         mask = torch.as_tensor(mask, dtype=torch.uint8)
         mask = mask.any(dim=2)
         masks.append(mask)
@@ -196,8 +203,9 @@ class VHR10(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            ImportError: if ``split="positive"`` and pycocotools is not installed
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            DependencyNotFoundError: if ``split="positive"`` and pycocotools is
+                not installed.
         """
         assert split in ['positive', 'negative']
 
@@ -213,20 +221,12 @@ class VHR10(NonGeoDataset):
             raise DatasetNotFoundError(self)
 
         if split == 'positive':
-            # Must be installed to parse annotations file
-            try:
-                from pycocotools.coco import COCO  # noqa: F401
-            except ImportError:
-                raise ImportError(
-                    'pycocotools is not installed and is required to use this dataset'
-                )
-
-            self.coco = COCO(
+            pc = lazy_import('pycocotools.coco')
+            self.coco = pc.COCO(
                 os.path.join(
                     self.root, 'NWPU VHR-10 dataset', self.target_meta['filename']
                 )
             )
-
             self.coco_convert = ConvertCocoAnnotations()
             self.ids = list(sorted(self.coco.imgs.keys()))
 
@@ -381,7 +381,7 @@ class VHR10(NonGeoDataset):
 
         Raises:
             AssertionError: if ``show_feats`` argument is invalid
-            ImportError: if plotting masks and scikit-image is not installed
+            DependencyNotFoundError: If plotting masks and scikit-image is not installed.
 
         .. versionadded:: 0.4
         """
@@ -397,12 +397,7 @@ class VHR10(NonGeoDataset):
             return fig
 
         if show_feats != 'boxes':
-            try:
-                from skimage.measure import find_contours  # noqa: F401
-            except ImportError:
-                raise ImportError(
-                    'scikit-image is not installed and is required to plot masks.'
-                )
+            skimage = lazy_import('skimage')
 
         image = sample['image'].permute(1, 2, 0).numpy()
         boxes = sample['boxes'].cpu().numpy()
@@ -465,7 +460,7 @@ class VHR10(NonGeoDataset):
             # Add masks
             if show_feats in {'masks', 'both'} and 'masks' in sample:
                 mask = masks[i]
-                contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
+                contours = skimage.measure.find_contours(mask, 0.5)
                 for verts in contours:
                     verts = np.fliplr(verts)
                     p = patches.Polygon(
@@ -517,7 +512,7 @@ class VHR10(NonGeoDataset):
                 # Add masks
                 if show_pred_masks:
                     mask = prediction_masks[i]
-                    contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
+                    contours = skimage.measure.find_contours(mask, 0.5)
                     for verts in contours:
                         verts = np.fliplr(verts)
                         p = patches.Polygon(

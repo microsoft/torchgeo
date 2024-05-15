@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
 import glob
 import math
 import os
@@ -20,8 +19,8 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
+from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
-    BoundingBox,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
@@ -29,24 +28,13 @@ from torchgeo.datasets.utils import (
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
     extract_archive,
+    lazy_import,
     merge_samples,
     percentile_normalization,
     stack_samples,
     unbind_samples,
     working_dir,
 )
-
-
-@pytest.fixture
-def mock_missing_module(monkeypatch: MonkeyPatch) -> None:
-    import_orig = builtins.__import__
-
-    def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name in ['radiant_mlhub', 'rarfile', 'zipfile_deflate64']:
-            raise ImportError()
-        return import_orig(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, '__import__', mocked_import)
 
 
 class MLHubDataset:
@@ -79,10 +67,6 @@ def download_url(url: str, root: str, *args: str) -> None:
     shutil.copy(url, root)
 
 
-def test_mock_missing_module(mock_missing_module: None) -> None:
-    import sys  # noqa: F401
-
-
 @pytest.mark.parametrize(
     'src',
     [
@@ -100,21 +84,6 @@ def test_extract_archive(src: str, tmp_path: Path) -> None:
     if src.startswith('chesapeake'):
         pytest.importorskip('zipfile_deflate64')
     extract_archive(os.path.join('tests', 'data', src), str(tmp_path))
-
-
-def test_missing_rarfile(mock_missing_module: None) -> None:
-    with pytest.raises(
-        ImportError,
-        match='rarfile is not installed and is required to extract this dataset',
-    ):
-        extract_archive(
-            os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.rar')
-        )
-
-
-def test_missing_zipfile_deflate64(mock_missing_module: None) -> None:
-    # Should fallback on Python builtin zipfile
-    extract_archive(os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip'))
 
 
 def test_unsupported_scheme() -> None:
@@ -146,21 +115,6 @@ def test_download_radiant_mlhub_collection(
     radiant_mlhub = pytest.importorskip('radiant_mlhub', minversion='0.3')
     monkeypatch.setattr(radiant_mlhub.Collection, 'fetch', fetch_collection)
     download_radiant_mlhub_collection('', str(tmp_path))
-
-
-def test_missing_radiant_mlhub(mock_missing_module: None) -> None:
-    with pytest.raises(
-        ImportError,
-        match='radiant_mlhub is not installed and is required to download this dataset',
-    ):
-        download_radiant_mlhub_dataset('', '')
-
-    with pytest.raises(
-        ImportError,
-        match='radiant_mlhub is not installed and is required to download this'
-        + ' collection',
-    ):
-        download_radiant_mlhub_collection('', '')
 
 
 class TestBoundingBox:
@@ -625,3 +579,14 @@ def test_array_to_tensor(array_dtype: 'np.typing.DTypeLike') -> None:
     # values equal even if they differ.
     assert array[0].item() == tensor[0].item()
     assert array[1].item() == tensor[1].item()
+
+
+@pytest.mark.parametrize('name', ['collections', 'collections.abc'])
+def test_lazy_import(name: str) -> None:
+    lazy_import(name)
+
+
+@pytest.mark.parametrize('name', ['foo_bar', 'foo_bar.baz'])
+def test_lazy_import_missing(name: str) -> None:
+    with pytest.raises(DependencyNotFoundError, match='pip install foo-bar\n'):
+        lazy_import(name)
