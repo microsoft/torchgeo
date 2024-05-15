@@ -15,7 +15,7 @@ SIZE = 128
 
 
 np.random.seed(0)
-files = ['South_America_Soybean_2002.tif', 'South_America_Soybean_2021.tif']
+files = ['SouthAmerica_Soybean_2002.tif', 'SouthAmerica_Soybean_2021.tif']
 
 
 def create_file(path: str, dtype: str):
