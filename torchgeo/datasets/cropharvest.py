@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import download_url, extract_archive, lazy_import
 
 
 class CropHarvest(NonGeoDataset):
@@ -112,14 +112,9 @@ class CropHarvest(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
-            ImportError: If h5py is not installed
+            DependencyNotFoundError: If h5py is not installed.
         """
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'h5py is not installed and is required to use this dataset'
-            )
+        lazy_import('h5py')
 
         self.root = root
         self.transforms = transforms
@@ -210,8 +205,7 @@ class CropHarvest(NonGeoDataset):
         Returns:
             the image
         """
-        import h5py
-
+        h5py = lazy_import('h5py')
         filename = os.path.join(path)
         with h5py.File(filename, 'r') as f:
             array = f.get('array')[()]

@@ -10,6 +10,7 @@ import bz2
 import collections
 import contextlib
 import gzip
+import importlib
 import lzma
 import os
 import sys
@@ -26,6 +27,8 @@ from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
 
+from .errors import DependencyNotFoundError
+
 # Only include import redirects
 __all__ = ('check_integrity', 'download_url')
 
@@ -37,13 +40,7 @@ class _rarfile:
             self.kwargs = kwargs
 
         def __enter__(self) -> Any:
-            try:
-                import rarfile
-            except ImportError:
-                raise ImportError(
-                    'rarfile is not installed and is required to extract this dataset'
-                )
-
+            rarfile = lazy_import('rarfile')
             # TODO: catch exception for when rarfile is installed but not
             # unrar/unar/bsdtar
             return rarfile.RarFile(*self.args, **self.kwargs)
@@ -157,14 +154,11 @@ def download_radiant_mlhub_dataset(
         api_key: the API key to use for all requests from the session. Can also be
             passed in via the ``MLHUB_API_KEY`` environment variable, or configured in
             ``~/.mlhub/profiles``.
-    """
-    try:
-        import radiant_mlhub
-    except ImportError:
-        raise ImportError(
-            'radiant_mlhub is not installed and is required to download this dataset'
-        )
 
+    Raises:
+        DependencyNotFoundError: If radiant_mlhub is not installed.
+    """
+    radiant_mlhub = lazy_import('radiant_mlhub')
     dataset = radiant_mlhub.Dataset.fetch(dataset_id, api_key=api_key)
     dataset.download(output_dir=download_root, api_key=api_key)
 
@@ -180,14 +174,11 @@ def download_radiant_mlhub_collection(
         api_key: the API key to use for all requests from the session. Can also be
             passed in via the ``MLHUB_API_KEY`` environment variable, or configured in
             ``~/.mlhub/profiles``.
-    """
-    try:
-        import radiant_mlhub
-    except ImportError:
-        raise ImportError(
-            'radiant_mlhub is not installed and is required to download this collection'
-        )
 
+    Raises:
+        DependencyNotFoundError: If radiant_mlhub is not installed.
+    """
+    radiant_mlhub = lazy_import('radiant_mlhub')
     collection = radiant_mlhub.Collection.fetch(collection_id, api_key=api_key)
     collection.download(output_dir=download_root, api_key=api_key)
 
@@ -773,3 +764,25 @@ def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:
     elif array.dtype == np.uint32:
         array = array.astype(np.int64)
     return torch.tensor(array)
+
+
+def lazy_import(name: str) -> Any:
+    """Lazy import of *name*.
+
+    Args:
+        name: Name of module to import.
+
+    Raises:
+        DependencyNotFoundError: If *name* is not installed.
+
+    .. versionadded:: 0.6
+    """
+    try:
+        return importlib.import_module(name)
+    except ModuleNotFoundError:
+        # Map from import name to package name on PyPI
+        name = name.split('.')[0].replace('_', '-')
+        module_to_pypi: dict[str, str] = collections.defaultdict(lambda: name)
+        module_to_pypi |= {'cv2': 'opencv-python', 'skimage': 'scikit-image'}
+        name = module_to_pypi[name]
+        raise DependencyNotFoundError(name) from None

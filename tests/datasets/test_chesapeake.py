@@ -23,14 +23,14 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 
+pytest.importorskip('zipfile_deflate64')
+
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
 class TestChesapeake13:
-    pytest.importorskip('zipfile_deflate64')
-
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> Chesapeake13:
         monkeypatch.setattr(torchgeo.datasets.chesapeake, 'download_url', download_url)

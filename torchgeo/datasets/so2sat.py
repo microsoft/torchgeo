@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import check_integrity, percentile_normalization
+from .utils import check_integrity, lazy_import, percentile_normalization
 
 
 class So2Sat(NonGeoDataset):
@@ -97,6 +97,12 @@ class So2Sat(NonGeoDataset):
           done
 
        or manually downloaded from https://mediatum.ub.tum.de/1613658
+
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `<https://pypi.org/project/h5py/>`_ to load the dataset
     """  # noqa: E501
 
     versions = ['2', '3_random', '3_block', '3_culture_10']
@@ -210,6 +216,7 @@ class So2Sat(NonGeoDataset):
         Raises:
             AssertionError: if ``split`` argument is invalid
             DatasetNotFoundError: If dataset is not found.
+            DependencyNotFoundError: If h5py is not installed.
 
         .. versionadded:: 0.3
            The *bands* parameter.
@@ -217,12 +224,8 @@ class So2Sat(NonGeoDataset):
         .. versionadded:: 0.5
            The *version* parameter.
         """
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'h5py is not installed and is required to use this dataset'
-            )
+        h5py = lazy_import('h5py')
+
         assert version in self.versions
         assert split in self.filenames_by_version[version]
 
@@ -272,8 +275,7 @@ class So2Sat(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        import h5py
-
+        h5py = lazy_import('h5py')
         with h5py.File(self.fn, 'r') as f:
             s1 = f['sen1'][index].astype(np.float64)  # convert from <f8 to float64
             s1 = np.take(s1, indices=self.s1_band_indices, axis=2)

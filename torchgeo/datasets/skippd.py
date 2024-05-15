@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import download_url, extract_archive, lazy_import
 
 
 class SKIPPD(NonGeoDataset):
@@ -52,6 +52,12 @@ class SKIPPD(NonGeoDataset):
     If you use this dataset in your research, please cite:
 
     * https://doi.org/10.48550/arXiv.2207.00913
+
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `<https://pypi.org/project/h5py/>`_ to load the dataset
 
     .. versionadded:: 0.5
     """
@@ -94,8 +100,10 @@ class SKIPPD(NonGeoDataset):
         Raises:
             AssertionError: if ``task`` or ``split`` is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
-            ImportError: if h5py is not installed
+            DependencyNotFoundError: If h5py is not installed.
         """
+        lazy_import('h5py')
+
         assert (
             split in self.valid_splits
         ), f'Please choose one of these valid data splits {self.valid_splits}.'
@@ -110,14 +118,6 @@ class SKIPPD(NonGeoDataset):
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'h5py is not installed and is required to use this dataset'
-            )
-
         self._verify()
 
     def __len__(self) -> int:
@@ -126,8 +126,7 @@ class SKIPPD(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        import h5py
-
+        h5py = lazy_import('h5py')
         with h5py.File(
             os.path.join(self.root, self.data_file_name.format(self.task)), 'r'
         ) as f:
@@ -161,8 +160,7 @@ class SKIPPD(NonGeoDataset):
         Returns:
             image tensor at index
         """
-        import h5py
-
+        h5py = lazy_import('h5py')
         with h5py.File(
             os.path.join(self.root, self.data_file_name.format(self.task)), 'r'
         ) as f:
@@ -187,8 +185,7 @@ class SKIPPD(NonGeoDataset):
         Returns:
             label tensor at index
         """
-        import h5py
-
+        h5py = lazy_import('h5py')
         with h5py.File(
             os.path.join(self.root, self.data_file_name.format(self.task)), 'r'
         ) as f:
