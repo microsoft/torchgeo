@@ -36,7 +36,6 @@ class TestSouthAmericaSoybean:
             'tests',
             'data',
             'south_america_soybean',
-            'SouthAmericaSoybean',
             'SouthAmerica_Soybean_{}.tif',
         )
 
@@ -72,7 +71,6 @@ class TestSouthAmericaSoybean:
             'tests',
             'data',
             'south_america_soybean',
-            'SouthAmericaSoybean',
             'SouthAmerica_Soybean_2002.tif',
         )
         root = str(tmp_path)

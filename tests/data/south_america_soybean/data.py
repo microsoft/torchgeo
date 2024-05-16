@@ -41,11 +41,11 @@ def create_file(path: str, dtype: str):
 
 
 if __name__ == '__main__':
-    dir = os.path.join(os.getcwd(), 'SouthAmericaSoybean')
-    if os.path.exists(dir) and os.path.isdir(dir):
-        shutil.rmtree(dir)
-
-    os.makedirs(dir, exist_ok=True)
-
     for file in files:
-        create_file(os.path.join(dir, file), dtype='int8')
+        create_file(os.path.join(os.getcwd(), file), dtype='int8')
+
+    # Compute checksums
+    for file in files:
+        with open(file, 'rb') as f:
+            md5 = hashlib.md5(f.read()).hexdigest()
+            print(f'{file}: {md5}')
