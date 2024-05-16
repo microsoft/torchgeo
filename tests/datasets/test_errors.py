@@ -59,9 +59,10 @@ class TestDatasetNotFoundError:
             raise DatasetNotFoundError(ds)
 
 
-def test_missing_dependency() -> None:
-    with pytest.raises(DependencyNotFoundError, match='pip install foo'):
-        raise DependencyNotFoundError('foo')
+def test_dependency_not_found() -> None:
+    msg = 'foo not installed'
+    with pytest.raises(DependencyNotFoundError, match=msg):
+        raise DependencyNotFoundError(msg)
 
 
 def test_rgb_bands_missing() -> None:

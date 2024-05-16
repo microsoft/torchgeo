@@ -21,6 +21,7 @@ from rasterio.crs import CRS
 import torchgeo.datasets.utils
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
+    Executable,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
@@ -33,6 +34,7 @@ from torchgeo.datasets.utils import (
     percentile_normalization,
     stack_samples,
     unbind_samples,
+    which,
     working_dir,
 )
 
@@ -590,3 +592,14 @@ def test_lazy_import(name: str) -> None:
 def test_lazy_import_missing(name: str) -> None:
     with pytest.raises(DependencyNotFoundError, match='pip install foo-bar\n'):
         lazy_import(name)
+
+
+def test_azcopy(tmp_path: Path, azcopy: Executable) -> None:
+    source = os.path.join('tests', 'data', 'cyclone')
+    azcopy('sync', source, tmp_path, '--recursive=true')
+    assert os.path.exists(tmp_path / 'nasa_tropical_storm_competition_test_labels')
+
+
+def test_which() -> None:
+    with pytest.raises(DependencyNotFoundError, match='foo is not installed'):
+        which('foo')

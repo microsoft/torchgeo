@@ -13,6 +13,8 @@ import gzip
 import importlib
 import lzma
 import os
+import shutil
+import subprocess
 import sys
 import tarfile
 from collections.abc import Iterable, Iterator, Sequence
@@ -402,6 +404,31 @@ class BoundingBox:
         return bbox1, bbox2
 
 
+class Executable:
+    """Command-line executable.
+
+    .. versionadded:: 0.6
+    """
+
+    def __init__(self, name: str) -> None:
+        """Initialize a new Executable instance.
+
+        Args:
+            name: Command name.
+        """
+        self.name = name
+
+    def __call__(self, *args: Any, **kwargs: Any) -> None:
+        """Run the command.
+
+        Args:
+            args: Arguments to pass to the command.
+            kwargs: Keyword arguments to pass to :func:`subprocess.run`.
+        """
+        kwargs['check'] = True
+        subprocess.run((self.name,) + args, **kwargs)
+
+
 def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
     """Disambiguate partial timestamps.
 
@@ -772,6 +799,9 @@ def lazy_import(name: str) -> Any:
     Args:
         name: Name of module to import.
 
+    Returns:
+        Module import.
+
     Raises:
         DependencyNotFoundError: If *name* is not installed.
 
@@ -785,4 +815,35 @@ def lazy_import(name: str) -> Any:
         module_to_pypi: dict[str, str] = collections.defaultdict(lambda: name)
         module_to_pypi |= {'cv2': 'opencv-python', 'skimage': 'scikit-image'}
         name = module_to_pypi[name]
-        raise DependencyNotFoundError(name) from None
+        msg = f"""\
+{name} is not installed and is required to use this dataset. Either run:
+
+$ pip install {name}
+
+to install just this dependency, or:
+
+$ pip install torchgeo[datasets]
+
+to install all optional dataset dependencies."""
+        raise DependencyNotFoundError(msg) from None
+
+
+def which(name: str) -> Executable:
+    """Search for executable *name*.
+
+    Args:
+        name: Name of executable to search for.
+
+    Returns:
+        Callable executable instance.
+
+    Raises:
+        DependencyNotFoundError: If *name* is not installed.
+
+    .. versionadded:: 0.6
+    """
+    if shutil.which(name):
+        return Executable(name)
+    else:
+        msg = f'{name} is not installed and is required to use this dataset.'
+        raise DependencyNotFoundError(msg) from None
