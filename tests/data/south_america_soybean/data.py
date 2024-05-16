@@ -49,11 +49,3 @@ if __name__ == '__main__':
 
     for file in files:
         create_file(os.path.join(dir, file), dtype='int8')
-
-    # Compress data
-    shutil.make_archive('SouthAmericaSoybean', 'zip', '.', dir)
-
-    # Compute checksums
-    with open('SouthAmericaSoybean.zip', 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'SouthAmericaSoybean.zip: {md5}')
