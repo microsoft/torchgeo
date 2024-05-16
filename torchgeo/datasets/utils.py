@@ -418,7 +418,7 @@ class Executable:
         """
         self.name = name
 
-    def __call__(self, *args: Any, **kwargs: Any) -> subprocess.CompletedProcess:
+    def __call__(self, *args: Any, **kwargs: Any) -> subprocess.CompletedProcess[bytes]:
         """Run the command.
 
         Args:
