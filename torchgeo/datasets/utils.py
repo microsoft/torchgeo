@@ -418,15 +418,18 @@ class Executable:
         """
         self.name = name
 
-    def __call__(self, *args: Any, **kwargs: Any) -> None:
+    def __call__(self, *args: Any, **kwargs: Any) -> subprocess.CompletedProcess:
         """Run the command.
 
         Args:
             args: Arguments to pass to the command.
             kwargs: Keyword arguments to pass to :func:`subprocess.run`.
+
+        Returns:
+            The completed process.
         """
         kwargs['check'] = True
-        subprocess.run((self.name,) + args, **kwargs)
+        return subprocess.run((self.name,) + args, **kwargs)
 
 
 def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
