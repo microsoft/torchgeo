@@ -33,11 +33,7 @@ class TestSouthAmericaSoybean:
         )
         transforms = nn.Identity()
         url = os.path.join(
-            'tests',
-            'data',
-            'south_america_soybean',
-            'SouthAmericaSoybean',
-            'South_America_Soybean_{}.tif',
+            'tests', 'data', 'south_america_soybean', 'SouthAmerica_Soybean_{}.tif'
         )
 
         monkeypatch.setattr(SouthAmericaSoybean, 'url', url)
@@ -69,11 +65,7 @@ class TestSouthAmericaSoybean:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(
-            'tests',
-            'data',
-            'south_america_soybean',
-            'SouthAmericaSoybean',
-            'South_America_Soybean_2002.tif',
+            'tests', 'data', 'south_america_soybean', 'SouthAmerica_Soybean_2002.tif'
         )
         root = str(tmp_path)
         shutil.copy(pathname, root)
