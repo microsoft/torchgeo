@@ -16,6 +16,7 @@ from torchgeo.samplers import (
     GridGeoSampler,
     PreChippedGeoSampler,
     RandomGeoSampler,
+    ChessboardGeoSampler,
     Units,
     tile_to_chips,
 )
@@ -40,17 +41,17 @@ class CustomGeoDataset(GeoDataset):
         self.res = res
 
     def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
-        return {'index': query}
+        return {"index": query}
 
 
 class TestGeoSampler:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 100, 200, 300, 400, 500))
         return ds
 
-    @pytest.fixture(scope='function')
+    @pytest.fixture(scope="function")
     def sampler(self) -> CustomGeoSampler:
         return CustomGeoSampler()
 
@@ -65,7 +66,7 @@ class TestGeoSampler:
             GeoSampler(dataset)  # type: ignore[abstract]
 
     @pytest.mark.slow
-    @pytest.mark.parametrize('num_workers', [0, 1, 2])
+    @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(
         self, dataset: CustomGeoDataset, sampler: CustomGeoSampler, num_workers: int
     ) -> None:
@@ -77,7 +78,7 @@ class TestGeoSampler:
 
 
 class TestRandomGeoSampler:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 100, 200, 300, 400, 500))
@@ -85,7 +86,7 @@ class TestRandomGeoSampler:
         return ds
 
     @pytest.fixture(
-        scope='function',
+        scope="function",
         params=product([3, 4.5, (2, 2), (3, 4.5), (4.5, 3)], [Units.PIXELS, Units.CRS]),
     )
     def sampler(
@@ -140,7 +141,7 @@ class TestRandomGeoSampler:
             assert bbox == BoundingBox(0, 10, 0, 10, 0, 10)
 
     @pytest.mark.slow
-    @pytest.mark.parametrize('num_workers', [0, 1, 2])
+    @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(
         self, dataset: CustomGeoDataset, sampler: RandomGeoSampler, num_workers: int
     ) -> None:
@@ -152,7 +153,7 @@ class TestRandomGeoSampler:
 
 
 class TestGridGeoSampler:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 100, 200, 300, 400, 500))
@@ -160,7 +161,7 @@ class TestGridGeoSampler:
         return ds
 
     @pytest.fixture(
-        scope='function',
+        scope="function",
         params=product(
             [
                 (8, 1),
@@ -244,7 +245,7 @@ class TestGridGeoSampler:
         assert next(iterator) == BoundingBox(5, 10, 0, 5, 0, 10)
 
     @pytest.mark.slow
-    @pytest.mark.parametrize('num_workers', [0, 1, 2])
+    @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(
         self, dataset: CustomGeoDataset, sampler: GridGeoSampler, num_workers: int
     ) -> None:
@@ -256,14 +257,14 @@ class TestGridGeoSampler:
 
 
 class TestPreChippedGeoSampler:
-    @pytest.fixture(scope='class')
+    @pytest.fixture(scope="class")
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 20, 0, 20, 0, 20))
         ds.index.insert(1, (0, 30, 0, 30, 0, 30))
         return ds
 
-    @pytest.fixture(scope='function')
+    @pytest.fixture(scope="function")
     def sampler(self, dataset: CustomGeoDataset) -> PreChippedGeoSampler:
         return PreChippedGeoSampler(dataset, shuffle=True)
 
@@ -289,9 +290,126 @@ class TestPreChippedGeoSampler:
             continue
 
     @pytest.mark.slow
-    @pytest.mark.parametrize('num_workers', [0, 1, 2])
+    @pytest.mark.parametrize("num_workers", [0, 1, 2])
     def test_dataloader(
         self, dataset: CustomGeoDataset, sampler: PreChippedGeoSampler, num_workers: int
+    ) -> None:
+        dl = DataLoader(
+            dataset, sampler=sampler, num_workers=num_workers, collate_fn=stack_samples
+        )
+        for _ in dl:
+            continue
+
+
+class TestChessboardGeoSampler:
+    @pytest.fixture(scope="class")
+    def dataset(self) -> CustomGeoDataset:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 100, 200, 300, 400, 500))
+        ds.index.insert(1, (0, 100, 200, 300, 400, 500))
+        return ds
+
+    @pytest.fixture(
+        scope="function",
+        params=product(
+            [
+                (8, 1),
+                (6, 2),
+                (4, 3),
+                (4, 4),
+                (2, 4),
+                (2.5, 3),
+                ((8, 6), (1, 2)),
+                ((6, 4), (2, 3)),
+            ],
+            [Units.PIXELS, Units.CRS],
+            [0, 1],  # start positions
+        ),
+    )
+    def sampler(
+        self, dataset: CustomGeoDataset, request: SubRequest
+    ) -> ChessboardGeoSampler:
+        (size, stride), units, start = request.param
+        return ChessboardGeoSampler(dataset, size, stride, units=units, start=start)
+
+    def test_iter(self, sampler: ChessboardGeoSampler) -> None:
+        for query in sampler:
+            assert (
+                sampler.roi.minx
+                <= query.minx
+                <= query.maxx
+                < sampler.roi.maxx + sampler.stride[1]
+            )
+            assert (
+                sampler.roi.miny
+                <= query.miny
+                <= query.maxy
+                < sampler.roi.maxy + sampler.stride[0]
+            )
+            assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
+
+            assert math.isclose(query.maxx - query.minx, sampler.size[1])
+            assert math.isclose(query.maxy - query.miny, sampler.size[0])
+            assert math.isclose(
+                query.maxt - query.mint, sampler.roi.maxt - sampler.roi.mint
+            )
+
+    def test_len(self, sampler: ChessboardGeoSampler) -> None:
+        rows, cols = tile_to_chips(sampler.roi, sampler.size, sampler.stride)
+        expected_length = sum(
+            1 for i in range(rows) for j in range(cols) if (i + j) % 2 == sampler.start
+        ) * len(sampler.hits)
+        assert len(sampler) == expected_length
+
+    def test_roi(self, dataset: CustomGeoDataset) -> None:
+        roi = BoundingBox(0, 50, 200, 250, 400, 450)
+        sampler = ChessboardGeoSampler(dataset, 2, 1, roi=roi)
+        for query in sampler:
+            assert query in roi
+
+    def test_small_area(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 1, 0, 1, 0, 1))
+        sampler = ChessboardGeoSampler(ds, 2, 10)
+        assert len(sampler) == 0
+
+    def test_tiles_side_by_side(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        ds.index.insert(0, (0, 10, 10, 20, 0, 10))
+        sampler = ChessboardGeoSampler(ds, 2, 10)
+        for bbox in sampler:
+            assert bbox.area > 0
+
+    def test_integer_multiple(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        sampler = ChessboardGeoSampler(ds, 10, 10, units=Units.CRS)
+        iterator = iter(sampler)
+        actual_length = len(sampler)
+        assert actual_length == 1
+
+    def test_float_multiple(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 6, 0, 5, 0, 10))
+        sampler = ChessboardGeoSampler(ds, 5, 5, units=Units.CRS)
+        rows, cols = tile_to_chips(sampler.roi, sampler.size, sampler.stride)
+        actual_length = len(sampler)
+        iterator = iter(sampler)
+        actual_bboxes = list(iterator)
+
+        assert rows == 1
+        assert cols == 2
+
+        assert actual_length == 1
+
+        expected_bboxes = [BoundingBox(0, 5, 0, 5, 0, 10)]
+        assert actual_bboxes == expected_bboxes
+
+    @pytest.mark.slow
+    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    def test_dataloader(
+        self, dataset: CustomGeoDataset, sampler: ChessboardGeoSampler, num_workers: int
     ) -> None:
         dl = DataLoader(
             dataset, sampler=sampler, num_workers=num_workers, collate_fn=stack_samples

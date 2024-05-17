@@ -5,22 +5,29 @@
 
 from .batch import BatchGeoSampler, RandomBatchGeoSampler
 from .constants import Units
-from .single import GeoSampler, GridGeoSampler, PreChippedGeoSampler, RandomGeoSampler
+from .single import (
+    GeoSampler,
+    GridGeoSampler,
+    PreChippedGeoSampler,
+    RandomGeoSampler,
+    ChessboardGeoSampler,
+)
 from .utils import get_random_bounding_box, tile_to_chips
 
 __all__ = (
     # Samplers
-    'GridGeoSampler',
-    'PreChippedGeoSampler',
-    'RandomGeoSampler',
+    "GridGeoSampler",
+    "PreChippedGeoSampler",
+    "RandomGeoSampler",
+    "ChessboardGeoSampler",
     # Batch samplers
-    'RandomBatchGeoSampler',
+    "RandomBatchGeoSampler",
     # Base classes
-    'GeoSampler',
-    'BatchGeoSampler',
+    "GeoSampler",
+    "BatchGeoSampler",
     # Utilities
-    'get_random_bounding_box',
-    'tile_to_chips',
+    "get_random_bounding_box",
+    "tile_to_chips",
     # Constants
-    'Units',
+    "Units",
 )
