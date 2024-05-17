@@ -5,13 +5,8 @@
 
 from .batch import BatchGeoSampler, RandomBatchGeoSampler
 from .constants import Units
-from .single import (
-    GeoSampler,
-    GridGeoSampler,
-    PreChippedGeoSampler,
-    RandomGeoSampler,
-    ChessboardGeoSampler,
-)
+from .single import (ChessboardGeoSampler, GeoSampler, GridGeoSampler,
+                     PreChippedGeoSampler, RandomGeoSampler)
 from .utils import get_random_bounding_box, tile_to_chips
 
 __all__ = (

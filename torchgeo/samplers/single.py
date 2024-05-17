@@ -6,8 +6,8 @@
 import abc
 from collections.abc import Callable, Iterable, Iterator
 
-import torch
 import numpy as np
+import torch
 from rtree.index import Index, Property
 from torch.utils.data import Sampler
 

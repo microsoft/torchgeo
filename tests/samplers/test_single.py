@@ -11,15 +11,9 @@ from rasterio.crs import CRS
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
-from torchgeo.samplers import (
-    GeoSampler,
-    GridGeoSampler,
-    PreChippedGeoSampler,
-    RandomGeoSampler,
-    ChessboardGeoSampler,
-    Units,
-    tile_to_chips,
-)
+from torchgeo.samplers import (ChessboardGeoSampler, GeoSampler,
+                               GridGeoSampler, PreChippedGeoSampler,
+                               RandomGeoSampler, Units, tile_to_chips)
 
 
 class CustomGeoSampler(GeoSampler):
