@@ -6,7 +6,6 @@
 import abc
 from collections.abc import Callable, Iterable, Iterator
 
-import numpy as np
 import torch
 from rtree.index import Index, Property
 from torch.utils.data import Sampler
@@ -381,9 +380,6 @@ class ChessboardGeoSampler(GeoSampler):
                 1 for i in range(rows) for j in range(cols) if (i + j) % 2 == self.start
             )
             self.length += num_patches
-
-        np.random.seed(42)
-        np.random.shuffle(self.hits)
 
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
