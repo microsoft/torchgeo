@@ -103,6 +103,8 @@ datasets = [
 docs = [
     # ipywidgets 7+ required by nbsphinx
     "ipywidgets>=7",
+    # TODO: find min version
+    "jupytext",
     # nbsphinx 0.8.5 fixes bug with nbformat attributes
     "nbsphinx>=0.8.5",
     # release versions missing files, must install from master
