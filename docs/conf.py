@@ -126,6 +126,9 @@ intersphinx_mapping = {
 }
 
 # nbsphinx
+nbsphinx_custom_formats = {
+    '.py': 'jupytext.reads',
+}
 nbsphinx_execute = 'never'
 # TODO: branch/tag should change depending on which version of docs you look at
 # TODO: width option of image directive is broken, see:
