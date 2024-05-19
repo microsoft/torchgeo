@@ -52,12 +52,12 @@ from torch.utils.data import DataLoader
 from torchgeo.datasets import EuroSAT100
 from torchgeo.transforms import AugmentationSequential, indices
 
-
 # + [markdown] id="oR3BCeV2AAop"
 # ## Custom Transforms
 
 # + [markdown] id="oVgqhF2udp4z"
 # Here we create a transform to show an example of how you can chain custom operations along with TorchGeo and Kornia transforms/augmentations. Note how our transform takes as input a Dict of Tensors. We specify our data by the keys ["image", "mask", "label", etc.] and follow this standard across TorchGeo datasets.
+
 
 # + id="3mixIK7mAC9G"
 class MinMaxNormalize(K.IntensityAugmentationBase2D):
@@ -182,7 +182,7 @@ print(y, [dataset.classes[i] for i in y])
 # ## Transforms Usage
 
 # + [markdown] id="p28C8cTGE3dP"
-# Transforms are able to operate across batches of samples and singular samples. This allows them to be used inside the dataset itself or externally, chained together with other transform operations using `nn.Sequential`. 
+# Transforms are able to operate across batches of samples and singular samples. This allows them to be used inside the dataset itself or externally, chained together with other transform operations using `nn.Sequential`.
 
 # + colab={"base_uri": "https://localhost:8080/"} id="pJXUycffEjNX" outputId="d029826c-a546-4c8e-e254-db680c5045e8"
 transform = MinMaxNormalize(mins, maxs)

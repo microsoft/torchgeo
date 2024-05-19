@@ -167,6 +167,7 @@ sorted(os.listdir(root))
 #
 # Putting this all together into a single class, we get:
 
+
 # + id="8sFb8BTTTxZD"
 class Sentinel2(RasterDataset):
     filename_glob = 'T*_B02_10m.tif'
@@ -193,6 +194,7 @@ print(dataset)
 # ## Plotting
 #
 # A great test to make sure that the dataset works correctly is to try to plot an image. We'll add a plot function to our dataset to help visualize it. First, we need to modify the image so that it only contains the RGB bands, and ensure that they are in the correct order. We also need to ensure that the image is in the range 0.0 to 1.0 (or 0 to 255). Finally, we'll create a plot using matplotlib.
+
 
 # + id="7PNFOy9mYq6K"
 class Sentinel2(RasterDataset):
@@ -246,6 +248,7 @@ for batch in dataloader:
 #
 # If you want to add custom parameters to the class, you can override the `__init__` method. For example, let's say you have imagery that can be automatically downloaded. The `RasterDataset` base class doesn't support this, but you could add support in your subclass. Simply copy the parameters from the base class and add a new `download` parameter.
 
+
 # + id="TxODAvIHFKNt"
 class Downloadable(RasterDataset):
     def __init__(self, root, crs, res, transforms, cache, download=False):
@@ -254,6 +257,7 @@ class Downloadable(RasterDataset):
         if download:
             # download the dataset
             ...
+
 
 # + [markdown] id="cI43f8DMF3iR"
 # ## Contributing
