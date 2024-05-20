@@ -57,7 +57,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml --durations=10
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.3.1
+        uses: codecov/codecov-action@v4.4.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
@@ -96,7 +96,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml --durations=10
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.3.1
+        uses: codecov/codecov-action@v4.4.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   datasets:
@@ -129,7 +129,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml --durations=10
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.3.0
+        uses: codecov/codecov-action@v4.4.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:
