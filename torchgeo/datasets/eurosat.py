@@ -318,3 +318,25 @@ class EuroSAT100(EuroSAT):
         'val': '3e3f8b3c344182b8d126c4cc88f3f215',
         'test': 'f908f151b950f270ad18e61153579794',
     }
+
+
+class SpatialSplitEuroSAT(EuroSAT):
+    """A subclass of the EuroSAT dataset class overriding the default splits.
+
+    Split 60/20/20 by longitude.
+
+    Attributes:
+        split_urls (dict): A dictionary mapping each split to its corresponding URL.
+        split_md5s (dict): A dictionary mapping each split to its corresponding MD5.
+    """
+    
+    split_urls = {
+        "train": "https://hf.co/datasets/torchgeo/eurosat/resolve/main/eurosat-spatial-train.txt?download=true",  # noqa: E501
+        "val": "https://hf.co/datasets/torchgeo/eurosat/resolve/main/eurosat-spatial-val.txt?download=true",  # noqa: E501
+        "test": "https://hf.co/datasets/torchgeo/eurosat/resolve/main/eurosat-spatial-test.txt?download=true",  # noqa: E501 
+    }
+    split_md5s = {
+        "train": "7be3254be39f23ce4d4d144290c93292",
+        "val": "acf392290050bb3df790dc8fc0ebf193",
+        "test": "5ec1733f9c16116bf0aa2d921fc613ef",
+    }
