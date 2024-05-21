@@ -321,9 +321,10 @@ class EuroSAT100(EuroSAT):
 
 
 class SpatialSplitEuroSAT(EuroSAT):
-    """Overrides the default EuroSAT dataset splits, dividing the data into training, 
-    validation, and test sets based on longitude. The splits are distributed as 
-    60%, 20%, and 20% respectively.
+    """Overrides the default EuroSAT dataset splits.
+    
+    Splits the data into training, validation, and test sets based on longitude.
+    The splits are distributed as 60%, 20%, and 20% respectively.
 
     .. versionadded:: 0.6
     """
