@@ -322,7 +322,7 @@ class EuroSAT100(EuroSAT):
 
 class SpatialSplitEuroSAT(EuroSAT):
     """Overrides the default EuroSAT dataset splits.
-    
+
     Splits the data into training, validation, and test sets based on longitude.
     The splits are distributed as 60%, 20%, and 20% respectively.
 
@@ -330,12 +330,12 @@ class SpatialSplitEuroSAT(EuroSAT):
     """
 
     split_urls = {
-        "train": "https://hf.co/datasets/torchgeo/eurosat/resolve/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-train.txt?download=true",  # noqa: E501
-        "val": "https://hf.co/datasets/torchgeo/eurosat/resolve/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-val.txt?download=true",  # noqa: E501
-        "test": "https://hf.co/datasets/torchgeo/eurosat/resolve/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-test.txt?download=true",  # noqa: E501 
+        'train': 'https://hf.co/datasets/torchgeo/eurosat/resolve/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-train.txt?download=true',  # noqa: E501
+        'val': 'https://hf.co/datasets/torchgeo/eurosat/resolve/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-val.txt?download=true',  # noqa: E501
+        'test': 'https://hf.co/datasets/torchgeo/eurosat/resolve/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-test.txt?download=true',  # noqa: E501
     }
     split_md5s = {
-        "train": "7be3254be39f23ce4d4d144290c93292",
-        "val": "acf392290050bb3df790dc8fc0ebf193",
-        "test": "5ec1733f9c16116bf0aa2d921fc613ef",
+        'train': '7be3254be39f23ce4d4d144290c93292',
+        'val': 'acf392290050bb3df790dc8fc0ebf193',
+        'test': '5ec1733f9c16116bf0aa2d921fc613ef',
     }
