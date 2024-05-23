@@ -29,7 +29,7 @@ def retrieve_mask_chip(
         mask array
     """
     out_shape = (1, *img_src.shape)
-    mask_chip: 'np.typing.NDArray[np.uint8]' = mask_src.read(
+    mask_chip: np.typing.NDArray[np.uint8] = mask_src.read(
         out_shape=out_shape, window=from_bounds(*img_src.bounds, mask_src.transform)
     )
 

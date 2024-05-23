@@ -265,7 +265,7 @@ class IDTReeS(NonGeoDataset):
         """
         laspy = lazy_import('laspy')
         las = laspy.read(path)
-        array: 'np.typing.NDArray[np.int_]' = np.stack([las.x, las.y, las.z], axis=0)
+        array: np.typing.NDArray[np.int_] = np.stack([las.x, las.y, las.z], axis=0)
         tensor = torch.from_numpy(array)
         return tensor
 
@@ -570,7 +570,7 @@ class IDTReeS(NonGeoDataset):
         path = self.images[index]
         path = path.replace('RGB', 'LAS').replace('.tif', '.las')
         las = laspy.read(path)
-        points: 'np.typing.NDArray[np.int_]' = np.stack(
+        points: np.typing.NDArray[np.int_] = np.stack(
             [las.x, las.y, las.z], axis=0
         ).transpose((1, 0))
         point_cloud = pyvista.PolyData(points)

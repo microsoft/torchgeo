@@ -196,7 +196,7 @@ class BioMassters(NonGeoDataset):
             target mask
         """
         with rasterio.open(os.path.join(self.root, 'train_agbm', filename), 'r') as src:
-            arr: 'np.typing.NDArray[np.float_]' = src.read()
+            arr: np.typing.NDArray[np.float_] = src.read()
 
         target = torch.from_numpy(arr).float()
         return target

@@ -190,7 +190,7 @@ class Vaihingen2D(NonGeoDataset):
         """
         path = self.files[index]['image']
         with Image.open(path) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('RGB'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1)).float()
@@ -207,7 +207,7 @@ class Vaihingen2D(NonGeoDataset):
         """
         path = self.files[index]['mask']
         with Image.open(path) as img:
-            array: 'np.typing.NDArray[np.uint8]' = np.array(img.convert('RGB'))
+            array: np.typing.NDArray[np.uint8] = np.array(img.convert('RGB'))
             array = rgb_to_mask(array, self.colormap)
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW

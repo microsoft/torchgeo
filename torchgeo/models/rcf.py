@@ -165,7 +165,7 @@ class RCF(Module):
         sqrt_zca_eigs = np.sqrt(E)
         inv_sqrt_zca_eigs = np.diag(np.power(sqrt_zca_eigs, -1))
         global_ZCA = V.dot(inv_sqrt_zca_eigs).dot(V.T)
-        patches_normalized: 'np.typing.NDArray[np.float32]' = (
+        patches_normalized: np.typing.NDArray[np.float32] = (
             (patches).dot(global_ZCA).dot(global_ZCA.T)
         )
 
