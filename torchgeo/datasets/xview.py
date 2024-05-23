@@ -163,7 +163,7 @@ class XView2(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('RGB'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
@@ -180,7 +180,7 @@ class XView2(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('L'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = tensor.to(torch.long)
             return tensor

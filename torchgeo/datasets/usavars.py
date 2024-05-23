@@ -180,7 +180,7 @@ class USAVars(NonGeoDataset):
             the image
         """
         with rasterio.open(path) as f:
-            array: 'np.typing.NDArray[np.int_]' = f.read()
+            array: np.typing.NDArray[np.int_] = f.read()
             tensor = torch.from_numpy(array).float()
             return tensor
 

@@ -184,7 +184,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         path = self.image_fns[index]
 
         with Image.open(path) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img)
+            array: np.typing.NDArray[np.int_] = np.array(img)
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1)).to(torch.float32)
@@ -201,7 +201,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         """
         path = self.mask_fns[index]
         with Image.open(path) as img:
-            array: 'np.typing.NDArray[np.uint8]' = np.array(img)
+            array: np.typing.NDArray[np.uint8] = np.array(img)
             array = rgb_to_mask(array, self.colormap)
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW

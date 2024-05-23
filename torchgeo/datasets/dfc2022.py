@@ -235,7 +235,7 @@ class DFC2022(NonGeoDataset):
             the image
         """
         with rasterio.open(path) as f:
-            array: 'np.typing.NDArray[np.float_]' = f.read(
+            array: np.typing.NDArray[np.float_] = f.read(
                 out_shape=shape, out_dtype='float32', resampling=Resampling.bilinear
             )
             tensor = torch.from_numpy(array)
@@ -251,7 +251,7 @@ class DFC2022(NonGeoDataset):
             the target mask
         """
         with rasterio.open(path) as f:
-            array: 'np.typing.NDArray[np.int_]' = f.read(
+            array: np.typing.NDArray[np.int_] = f.read(
                 indexes=1, out_dtype='int32', resampling=Resampling.bilinear
             )
             tensor = torch.from_numpy(array)

@@ -230,7 +230,7 @@ class So2Sat(NonGeoDataset):
         assert split in self.filenames_by_version[version]
 
         self._validate_bands(bands)
-        self.s1_band_indices: 'np.typing.NDArray[np.int_]' = np.array(
+        self.s1_band_indices: np.typing.NDArray[np.int_] = np.array(
             [
                 self.all_s1_band_names.index(b)
                 for b in bands
@@ -240,7 +240,7 @@ class So2Sat(NonGeoDataset):
 
         self.s1_band_names = [self.all_s1_band_names[i] for i in self.s1_band_indices]
 
-        self.s2_band_indices: 'np.typing.NDArray[np.int_]' = np.array(
+        self.s2_band_indices: np.typing.NDArray[np.int_] = np.array(
             [
                 self.all_s2_band_names.index(b)
                 for b in bands

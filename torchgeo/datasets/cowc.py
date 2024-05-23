@@ -145,7 +145,7 @@ class COWC(NonGeoDataset, abc.ABC):
         """
         filename = os.path.join(self.root, self.images[index])
         with Image.open(filename) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img)
+            array: np.typing.NDArray[np.int_] = np.array(img)
             tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))

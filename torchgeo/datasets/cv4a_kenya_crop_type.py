@@ -235,7 +235,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         )
 
         with Image.open(os.path.join(directory, 'labels.tif')) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img)
+            array: np.typing.NDArray[np.int_] = np.array(img)
             labels = torch.from_numpy(array)
 
         with Image.open(os.path.join(directory, 'field_ids.tif')) as img:
@@ -332,7 +332,7 @@ class CV4AKenyaCropType(NonGeoDataset):
                 f'{band_name}.tif',
             )
             with Image.open(filepath) as band_img:
-                array: 'np.typing.NDArray[np.int_]' = np.array(band_img)
+                array: np.typing.NDArray[np.int_] = np.array(band_img)
                 img[band_index] = torch.from_numpy(array)
 
         return img
