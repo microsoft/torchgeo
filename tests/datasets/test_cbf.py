@@ -53,6 +53,9 @@ class TestCanadianBuildingFootprints:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: CanadianBuildingFootprints) -> None:
+        assert len(dataset) == 1
+
     def test_and(self, dataset: CanadianBuildingFootprints) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
