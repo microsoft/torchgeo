@@ -29,7 +29,6 @@ filenames: FILENAME_HIERARCHY = {
         '0000007': {'LT05_172034_20020906': ['all_bands.tif']},
         '0000008': {'LT05_172034_20020907': ['all_bands.tif']},
         '0000009': {'LT05_172034_20020908': ['all_bands.tif']},
-        '0000010': {'LT05_172034_20020909': ['all_bands.tif']},
     },
     'etm_sr': {
         '0000001': {'LE07_172030_20010526': ['all_bands.tif']},
@@ -41,7 +40,6 @@ filenames: FILENAME_HIERARCHY = {
         '0000007': {'LE07_172034_20020906': ['all_bands.tif']},
         '0000008': {'LE07_172034_20020907': ['all_bands.tif']},
         '0000009': {'LE07_172034_20020908': ['all_bands.tif']},
-        '0000010': {'LE07_172034_20020909': ['all_bands.tif']},
     },
     'etm_toa': {
         '0000001': {'LE07_172030_20010526': ['all_bands.tif']},
@@ -53,7 +51,6 @@ filenames: FILENAME_HIERARCHY = {
         '0000007': {'LE07_172034_20020906': ['all_bands.tif']},
         '0000008': {'LE07_172034_20020907': ['all_bands.tif']},
         '0000009': {'LE07_172034_20020908': ['all_bands.tif']},
-        '0000010': {'LE07_172034_20020909': ['all_bands.tif']},
     },
     'oli_tirs_toa': {
         '0000001': {'LC08_172030_20010526': ['all_bands.tif']},
@@ -65,7 +62,6 @@ filenames: FILENAME_HIERARCHY = {
         '0000007': {'LC08_172034_20020906': ['all_bands.tif']},
         '0000008': {'LC08_172034_20020907': ['all_bands.tif']},
         '0000009': {'LC08_172034_20020908': ['all_bands.tif']},
-        '0000010': {'LC08_172034_20020909': ['all_bands.tif']},
     },
     'oli_sr': {
         '0000001': {'LC08_172030_20010526': ['all_bands.tif']},
@@ -77,7 +73,6 @@ filenames: FILENAME_HIERARCHY = {
         '0000007': {'LC08_172034_20020906': ['all_bands.tif']},
         '0000008': {'LC08_172034_20020907': ['all_bands.tif']},
         '0000009': {'LC08_172034_20020908': ['all_bands.tif']},
-        '0000010': {'LC08_172034_20020909': ['all_bands.tif']},
     },
 }
 
