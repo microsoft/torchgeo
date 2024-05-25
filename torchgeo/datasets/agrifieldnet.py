@@ -73,6 +73,7 @@ class AgriFieldNet(RasterDataset):
     .. versionadded:: 0.6
     """
 
+    filename_glob = 'ref_agrifieldnet_competition_v1_source_*_{}_10m.*'
     filename_regex = r"""
         ^ref_agrifieldnet_competition_v1_source_
         (?P<unique_folder_id>[a-z0-9]{5})
@@ -146,6 +147,7 @@ class AgriFieldNet(RasterDataset):
         self.classes = classes
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
         self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
+        self.filename_glob = self.filename_glob.format(bands[0])
 
         super().__init__(
             paths=paths, crs=crs, bands=bands, transforms=transforms, cache=cache
