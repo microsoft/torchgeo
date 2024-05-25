@@ -52,6 +52,9 @@ class TestSentinel1:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
 
+    def test_len(self, dataset: Sentinel1) -> None:
+        assert len(dataset) == 1
+
     def test_and(self, dataset: Sentinel1) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
@@ -115,6 +118,9 @@ class TestSentinel2:
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
+
+    def test_len(self, dataset: Sentinel2) -> None:
+        assert len(dataset) == 2
 
     def test_and(self, dataset: Sentinel2) -> None:
         ds = dataset & dataset
