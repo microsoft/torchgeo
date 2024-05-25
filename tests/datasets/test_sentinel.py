@@ -120,7 +120,7 @@ class TestSentinel2:
         assert isinstance(x['image'], torch.Tensor)
 
     def test_len(self, dataset: Sentinel2) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 4
 
     def test_and(self, dataset: Sentinel2) -> None:
         ds = dataset & dataset
