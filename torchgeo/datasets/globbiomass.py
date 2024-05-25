@@ -39,7 +39,7 @@ class GlobBiomass(RasterDataset):
     Dataset features:
 
     * Global estimates of AGB and GSV at ~100 m per pixel resolution
-      (45,000 x 45,0000 px)
+      (45,000 x 45,000 px)
     * Per-pixel uncertainty expressed as standard error
 
     Dataset format:
