@@ -74,13 +74,13 @@ class TestCloudCoverDetection:
                 bands=invalid_bands,
             )
 
-    def test_get_item(self, dataset: CloudCoverDetection) -> None:
+    def test_getitem(self, dataset: CloudCoverDetection) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
 
-    def test_add(self, dataset: CloudCoverDetection) -> None:
+    def test_len(self, dataset: CloudCoverDetection) -> None:
         assert len(dataset) == 1
 
     def test_already_downloaded(self, dataset: CloudCoverDetection) -> None:

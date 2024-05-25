@@ -53,6 +53,9 @@ class TestAbovegroundLiveWoodyBiomassDensity:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: AbovegroundLiveWoodyBiomassDensity) -> None:
+        assert len(dataset) == 1
+
     def test_no_dataset(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             AbovegroundLiveWoodyBiomassDensity(str(tmp_path))

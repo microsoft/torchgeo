@@ -54,6 +54,9 @@ class TestEuroCrops:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: EuroCrops) -> None:
+        assert len(dataset) == 1
+
     def test_and(self, dataset: EuroCrops) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)

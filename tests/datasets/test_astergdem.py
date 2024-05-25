@@ -41,6 +41,9 @@ class TestAsterGDEM:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: AsterGDEM) -> None:
+        assert len(dataset) == 2
+
     def test_and(self, dataset: AsterGDEM) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)

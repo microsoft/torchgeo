@@ -70,6 +70,9 @@ class TestEnviroAtlas:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: EnviroAtlas) -> None:
+        assert len(dataset) == 1
+
     def test_and(self, dataset: EnviroAtlas) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)

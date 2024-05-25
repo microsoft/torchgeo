@@ -47,6 +47,9 @@ class TestIOBench:
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: IOBench) -> None:
+        assert len(dataset) == 1
+
     def test_and(self, dataset: IOBench) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)

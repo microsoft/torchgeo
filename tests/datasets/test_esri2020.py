@@ -52,6 +52,9 @@ class TestEsri2020:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: Esri2020) -> None:
+        assert len(dataset) == 1
+
     def test_already_extracted(self, dataset: Esri2020) -> None:
         Esri2020(dataset.paths, download=True)
 

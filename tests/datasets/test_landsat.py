@@ -44,6 +44,9 @@ class TestLandsat8:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
 
+    def test_len(self, dataset: Landsat8) -> None:
+        assert len(dataset) == 1
+
     def test_and(self, dataset: Landsat8) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
