@@ -47,6 +47,9 @@ class TestGlobBiomass:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: GlobBiomass) -> None:
+        assert len(dataset) == 1
+
     def test_already_extracted(self, dataset: GlobBiomass) -> None:
         GlobBiomass(dataset.paths)
 
