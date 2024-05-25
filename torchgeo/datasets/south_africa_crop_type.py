@@ -62,17 +62,13 @@ class SouthAfricaCropType(RasterDataset):
     .. versionadded:: 0.6
     """
 
-    s1_regex = r"""
+    filename_glob = '*_07_*_{}_10m.*'
+    filename_regex = r"""
         ^(?P<field_id>\d+)
         _(?P<date>\d{4}_07_\d{2})
-        _(?P<band>[VH]{2})
-        _10m"""
-    s2_regex = r"""
-        ^(?P<field_id>\d+)
-        _(?P<date>\d{4}_07_\d{2})
-        _(?P<band>(B[0-9A-Z]{2}))
-        _10m"""
-    filename_regex = s2_regex
+        _(?P<band>[BHV\d]+)
+        _10m
+    """
     date_format = '%Y_%m_%d'
     rgb_bands = ['B04', 'B03', 'B02']
     s1_bands = ['VH', 'VV']
@@ -134,8 +130,7 @@ class SouthAfricaCropType(RasterDataset):
         self.classes = classes
         self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
         self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
-        if set(bands).issubset(set(self.s1_bands)):
-            self.filename_regex = self.s1_regex
+        self.filename_glob = self.filename_glob.format(bands[0])
 
         super().__init__(paths=paths, crs=crs, bands=bands, transforms=transforms)
 

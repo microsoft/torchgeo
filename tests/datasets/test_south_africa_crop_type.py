@@ -36,6 +36,9 @@ class TestSouthAfricaCropType:
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: SouthAfricaCropType) -> None:
+        assert len(dataset) == 2
+
     def test_and(self, dataset: SouthAfricaCropType) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
