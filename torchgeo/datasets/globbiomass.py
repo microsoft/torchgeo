@@ -15,45 +15,56 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, check_integrity, extract_archive
+from .utils import BoundingBox, check_integrity, disambiguate_timestamp, extract_archive
 
 
 class GlobBiomass(RasterDataset):
     """GlobBiomass dataset.
 
-    The `GlobBiomass dataset <https://doi.pangaea.de/10.1594/PANGAEA.894711>`_
-    consists of global pixel wise aboveground biomass (AGB) and growth stock
-    volume (GSV) maps.
+    The `GlobBiomass <https://doi.pangaea.de/10.1594/PANGAEA.894711>`__ dataset consists
+    of global pixelwise aboveground biomass (AGB) and growth stock volume (GSV) maps.
+
+    Definitions:
+
+    * AGB: the mass, expressed as oven-dry weight of the woody parts
+      (stem, bark, branches and twigs) of all living trees excluding stump and roots.
+    * GSV: volume of all living trees more than 10 cm in diameter at breast height
+      measured over bark from ground or stump height to a top stem diameter of 0 cm.
+
+    Units:
+
+    * AGB: m3/ha
+    * GSV: tons/ha (i.e., Mg/ha)
 
     Dataset features:
 
-    * estimates of AGB and GSV around the world at ~100m per pixel resolution
-      (45,000x45,0000 px)
-    * standard error maps of respective measurement at same resolution
+    * Global estimates of AGB and GSV at ~100 m per pixel resolution
+      (45,000 x 45,0000 px)
+    * Per-pixel uncertainty expressed as standard error
 
     Dataset format:
 
-    * estimate maps are single-channel
-    * standard error maps are single-channel
+    * Estimate maps are single-channel
+    * Uncertainty maps are single-channel
 
     The data can be manually downloaded from `this website
-    <https://globbiomass.org/wp-content/uploads/GB_Maps/
-    Globbiomass_global_dataset.html>`_.
+    <https://globbiomass.org/wp-content/uploads/GB_Maps/Globbiomass_global_dataset.html>`_.
 
-    If you use this dataset please cite it with the following citation:
+    If you use this dataset in your research, please cite the following dataset:
 
-    * Santoro, M. et al. (2018): GlobBiomass - global datasets of forest biomass.
-      PANGAEA, https://doi.org/10.1594/PANGAEA.894711
+    * https://doi.org/10.1594/PANGAEA.894711
 
     .. versionadded:: 0.3
     """
 
-    is_image = False
-
-    filename_regex = r"""^
-        (?P<tile>[0-9A-Z]*)
-        _(?P<measurement>[a-z]{3})
+    filename_glob = '*_{}.tif'
+    filename_regex = r"""
+        ^(?P<tile>[NS][\d]{2}[EW][\d]{3})
+        _(?P<measurement>(agb|gsv))
     """
+    mint, maxt = disambiguate_timestamp('2010', '%Y')
+    is_image = False
+    dtype = torch.float32  # pixelwise regression
 
     measurements = ['agb', 'gsv']
 
@@ -128,7 +139,7 @@ class GlobBiomass(RasterDataset):
         cache: bool = True,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new Dataset instance.
+        """Initialize a new GlobBiomass instance.
 
         Args:
             paths: one or more root directories to search or files to load
@@ -143,23 +154,19 @@ class GlobBiomass(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if measurement argument is invalid, or not a str
+            AssertionError: If *measurement* is not valid.
             DatasetNotFoundError: If dataset is not found.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
         """
+        assert measurement in self.measurements
+
         self.paths = paths
+        self.measurement = measurement
         self.checksum = checksum
 
-        assert isinstance(measurement, str), 'Measurement argument must be a str.'
-        assert (
-            measurement in self.measurements
-        ), f'You have entered an invalid measurement, please choose one of {self.measurements}.'
-        self.measurement = measurement
-
-        self.filename_glob = f'*0_{self.measurement}*.tif'
-        self.zipfile_glob = f'*0_{self.measurement}.zip'
+        self.filename_glob = self.filename_glob.format(measurement)
 
         self._verify()
 
@@ -186,10 +193,9 @@ class GlobBiomass(RasterDataset):
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        measurement_paths = [f for f in filepaths if 'err' not in f]
-        mask = self._merge_files(measurement_paths, query)
+        mask = self._merge_files(filepaths, query)
 
-        std_error_paths = [f for f in filepaths if 'err' in f]
+        std_error_paths = [f.replace('.tif', '_err.tif') for f in filepaths]
         std_err_mask = self._merge_files(std_error_paths, query)
 
         mask = torch.cat((mask, std_err_mask), dim=0)
@@ -209,7 +215,7 @@ class GlobBiomass(RasterDataset):
 
         # Check if the zip files have already been downloaded
         assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, self.zipfile_glob)
+        pathname = os.path.join(self.paths, f'*_{self.measurement}.zip')
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):
                 filename = os.path.basename(zipfile)
