@@ -60,7 +60,18 @@ def generate_test_data(paths: str) -> str:
     os.makedirs(train_mask_dir, exist_ok=True)
     os.makedirs(test_field_dir, exist_ok=True)
 
-    source_unique_folder_ids = ['32407', '8641e', 'a419f', 'eac11', 'ff450']
+    source_unique_folder_ids = [
+        '32407',
+        '8641e',
+        'a419f',
+        'eac11',
+        'ff450',
+        '001c1',
+        '004fa',
+        '005fe',
+        '00720',
+        '00c23',
+    ]
     train_folder_ids = source_unique_folder_ids[0:5]
     test_folder_ids = source_unique_folder_ids[3:5]
 
