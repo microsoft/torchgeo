@@ -42,7 +42,7 @@ from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eudem import EUDEM
 from .eurocrops import EuroCrops
-from .eurosat import EuroSAT, EuroSAT100
+from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
@@ -210,6 +210,7 @@ __all__ = (
     'ETCI2021',
     'EuroSAT',
     'EuroSAT100',
+    'EuroSATSpatial',
     'FAIR1M',
     'FireRisk',
     'ForestDamage',
