@@ -75,7 +75,7 @@ class TestClassificationTask:
         [
             'eurosat',
             'eurosat100',
-            'eurosatspatial'
+            'eurosatspatial',
             'fire_risk',
             'quakeset',
             'resisc45',
