@@ -30,7 +30,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 class TestEuroSAT:
     @pytest.fixture(
-            params=product([EuroSAT, EuroSAT100, EuroSATSpatial], ['train', 'val', 'test'])
+        params=product([EuroSAT, EuroSAT100, EuroSATSpatial], ['train', 'val', 'test'])
     )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
