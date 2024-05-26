@@ -216,11 +216,11 @@ class OSCD(NonGeoDataset):
         Returns:
             the image
         """
-        images: list['np.typing.NDArray[np.int_]'] = []
+        images: list[np.typing.NDArray[np.int_]] = []
         for path in paths:
             with Image.open(path) as img:
                 images.append(np.array(img))
-        array: 'np.typing.NDArray[np.int_]' = np.stack(images, axis=0).astype(np.int_)
+        array: np.typing.NDArray[np.int_] = np.stack(images, axis=0).astype(np.int_)
         tensor = torch.from_numpy(array).float()
         return tensor
 
@@ -235,7 +235,7 @@ class OSCD(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('L'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)
@@ -314,7 +314,7 @@ class OSCD(NonGeoDataset):
             rgb_img = (np.clip((rgb_img - per02) / (per98 - per02), 0, 1) * 255).astype(
                 np.uint8
             )
-            array: 'np.typing.NDArray[np.uint8]' = draw_semantic_segmentation_masks(
+            array: np.typing.NDArray[np.uint8] = draw_semantic_segmentation_masks(
                 torch.from_numpy(rgb_img),
                 sample['mask'],
                 alpha=alpha,

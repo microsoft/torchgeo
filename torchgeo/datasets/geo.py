@@ -345,6 +345,12 @@ class RasterDataset(GeoDataset):
     #: ``start`` and ``stop`` groups.
     date_format = '%Y%m%d'
 
+    #: Minimum timestamp if not in filename
+    mint: float = 0
+
+    #: Maximum timestmap if not in filename
+    maxt: float = sys.maxsize
+
     #: True if the dataset only contains model inputs (such as images). False if the
     #: dataset only contains ground truth model outputs (such as segmentation masks).
     #:
@@ -462,8 +468,8 @@ class RasterDataset(GeoDataset):
                     # Skip files that rasterio is unable to read
                     continue
                 else:
-                    mint: float = 0
-                    maxt: float = sys.maxsize
+                    mint = self.mint
+                    maxt = self.maxt
                     if 'date' in match.groupdict():
                         date = match.group('date')
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
@@ -904,7 +910,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
             the image and class label
         """
         img, label = ImageFolder.__getitem__(self, index)
-        array: 'np.typing.NDArray[np.int_]' = np.array(img)
+        array: np.typing.NDArray[np.int_] = np.array(img)
         tensor = torch.from_numpy(array).float()
         # Convert from HxWxC to CxHxW
         tensor = tensor.permute((2, 0, 1))

@@ -52,6 +52,9 @@ class TestSouthAmericaSoybean:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: SouthAmericaSoybean) -> None:
+        assert len(dataset) == 2
+
     def test_and(self, dataset: SouthAmericaSoybean) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)

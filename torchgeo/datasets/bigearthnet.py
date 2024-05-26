@@ -403,7 +403,7 @@ class BigEarthNet(NonGeoDataset):
                     resampling=Resampling.bilinear,
                 )
                 images.append(array)
-        arrays: 'np.typing.NDArray[np.int_]' = np.stack(images, axis=0)
+        arrays: np.typing.NDArray[np.int_] = np.stack(images, axis=0)
         tensor = torch.from_numpy(arrays).float()
         return tensor
 
