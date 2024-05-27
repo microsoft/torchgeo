@@ -98,7 +98,7 @@ class EuroSAT100DataModule(NonGeoDataModule):
 class EuroSATSpatialDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the EuroSATSpatial dataset.
 
-    Intended for tutorials and demonstrations, not for benchmarking.
+    Uses the spatial train/val/test splits from the dataset.
 
     .. versionadded:: 0.5
     """
