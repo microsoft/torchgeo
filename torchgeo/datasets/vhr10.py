@@ -17,13 +17,8 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    check_integrity,
-    download_and_extract_archive,
-    download_url,
-    lazy_import,
-    percentile_normalization
-)
+from .utils import (check_integrity, download_and_extract_archive,
+                    download_url, lazy_import, percentile_normalization)
 
 
 def convert_coco_poly_to_mask(
