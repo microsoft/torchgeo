@@ -81,6 +81,9 @@ class TestOpenBuildings:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: OpenBuildings) -> None:
+        assert len(dataset) == 1
+
     def test_and(self, dataset: OpenBuildings) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)

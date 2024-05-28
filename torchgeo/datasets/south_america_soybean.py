@@ -39,8 +39,8 @@ class SouthAmericaSoybean(RasterDataset):
     .. versionadded:: 0.6
     """
 
-    filename_glob = 'South_America_Soybean_*.*'
-    filename_regex = r'South_America_Soybean_(?P<year>\d{4})'
+    filename_glob = 'SouthAmerica_Soybean_*.*'
+    filename_regex = r'SouthAmerica_Soybean_(?P<year>\d{4})'
 
     date_format = '%Y'
     is_image = False

@@ -57,6 +57,9 @@ class TestCDL:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: CDL) -> None:
+        assert len(dataset) == 2
+
     def test_classes(self) -> None:
         root = os.path.join('tests', 'data', 'cdl')
         classes = list(CDL.cmap.keys())[:5]

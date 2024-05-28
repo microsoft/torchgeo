@@ -21,6 +21,7 @@ from rasterio.crs import CRS
 import torchgeo.datasets.utils
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
+    Executable,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
@@ -33,6 +34,7 @@ from torchgeo.datasets.utils import (
     percentile_normalization,
     stack_samples,
     unbind_samples,
+    which,
     working_dir,
 )
 
@@ -559,7 +561,7 @@ def test_nonexisting_directory(tmp_path: Path) -> None:
 
 
 def test_percentile_normalization() -> None:
-    img: 'np.typing.NDArray[np.int_]' = np.array([[1, 2], [98, 100]])
+    img: np.typing.NDArray[np.int_] = np.array([[1, 2], [98, 100]])
 
     img = percentile_normalization(img, 2, 98)
     assert img.min() == 0
@@ -571,7 +573,7 @@ def test_percentile_normalization() -> None:
     [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
 )
 def test_array_to_tensor(array_dtype: 'np.typing.DTypeLike') -> None:
-    array: 'np.typing.NDArray[Any]' = np.zeros((2,), dtype=array_dtype)
+    array: np.typing.NDArray[Any] = np.zeros((2,), dtype=array_dtype)
     array[0] = np.iinfo(array.dtype).min
     array[1] = np.iinfo(array.dtype).max
     tensor = array_to_tensor(array)
@@ -590,3 +592,14 @@ def test_lazy_import(name: str) -> None:
 def test_lazy_import_missing(name: str) -> None:
     with pytest.raises(DependencyNotFoundError, match='pip install foo-bar\n'):
         lazy_import(name)
+
+
+def test_azcopy(tmp_path: Path, azcopy: Executable) -> None:
+    source = os.path.join('tests', 'data', 'cyclone')
+    azcopy('sync', source, tmp_path, '--recursive=true')
+    assert os.path.exists(tmp_path / 'nasa_tropical_storm_competition_test_labels')
+
+
+def test_which() -> None:
+    with pytest.raises(DependencyNotFoundError, match='foo is not installed'):
+        which('foo')

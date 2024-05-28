@@ -58,6 +58,9 @@ class TestNLCD:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: NLCD) -> None:
+        assert len(dataset) == 2
+
     def test_classes(self) -> None:
         root = os.path.join('tests', 'data', 'nlcd')
         classes = list(NLCD.cmap.keys())[:5]

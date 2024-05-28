@@ -1,4 +1,4 @@
 # tests
 nbmake==1.5.3
-pytest==8.2.0
+pytest==8.2.1
 pytest-cov==5.0.0

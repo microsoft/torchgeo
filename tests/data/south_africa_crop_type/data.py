@@ -12,20 +12,11 @@ from rasterio.transform import Affine
 
 
 def generate_test_data() -> str:
-    """Create test data archive for SouthAfricaCropType dataset.
-
-    Args:
-        paths: path to store test data
-        n_samples: number of samples.
-
-    Returns:
-        md5 hash of created archive
-    """
-    paths = 'south_africa_crop_type'
+    """Create test data archive for SouthAfricaCropType dataset."""
     dtype = np.uint8
     dtype_max = np.iinfo(dtype).max
 
-    SIZE = 256
+    SIZE = 32
 
     np.random.seed(0)
 
@@ -54,18 +45,18 @@ def generate_test_data() -> str:
         'transform': Affine(10.0, 0.0, 535840.0, 0.0, -10.0, 3079680.0),
     }
 
-    train_imagery_s1_dir = os.path.join(paths, 'train', 'imagery', 's1')
-    train_imagery_s2_dir = os.path.join(paths, 'train', 'imagery', 's2')
-    train_labels_dir = os.path.join(paths, 'train', 'labels')
+    train_imagery_s1_dir = os.path.join('train', 'imagery', 's1')
+    train_imagery_s2_dir = os.path.join('train', 'imagery', 's2')
+    train_labels_dir = os.path.join('train', 'labels')
 
     os.makedirs(train_imagery_s1_dir, exist_ok=True)
     os.makedirs(train_imagery_s2_dir, exist_ok=True)
     os.makedirs(train_labels_dir, exist_ok=True)
 
-    train_field_ids = ['12', '66']
+    train_field_ids = map(str, range(10))
 
-    s1_timestamps = ['2017_04_01', '2017_07_28']
-    s2_timestamps = ['2017_05_04', '2017_07_22']
+    s1_timestamps = ['2017_07_28']
+    s2_timestamps = ['2017_07_22']
 
     def write_raster(path: str, arr: np.array) -> None:
         with rasterio.open(path, 'w', **profile) as src:
