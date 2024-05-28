@@ -330,9 +330,9 @@ class EuroSATSpatial(EuroSAT):
     """
 
     split_urls = {
-        'train': 'https://hf.co/datasets/torchgeo/eurosat/raw/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-train.txt',
-        'val': 'https://hf.co/datasets/torchgeo/eurosat/raw/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-val.txt?download=true',
-        'test': 'https://hf.co/datasets/torchgeo/eurosat/raw/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-test.txt?download=true',
+        'train': 'https://hf.co/datasets/torchgeo/eurosat/resolve/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-train.txt',
+        'val': 'https://hf.co/datasets/torchgeo/eurosat/resolve/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-val.txt',
+        'test': 'https://hf.co/datasets/torchgeo/eurosat/resolve/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-test.txt',
     }
     split_md5s = {
         'train': '7be3254be39f23ce4d4d144290c93292',
