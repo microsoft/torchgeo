@@ -100,7 +100,7 @@ class EuroSATSpatialDataModule(NonGeoDataModule):
 
     Uses the spatial train/val/test splits from the dataset.
 
-    .. versionadded:: 0.5
+    .. versionadded:: 0.6
     """
 
     def __init__(
