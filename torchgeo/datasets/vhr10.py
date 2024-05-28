@@ -246,7 +246,7 @@ class VHR10(NonGeoDataset):
             sample = self.coco_convert(sample)
             sample['labels'] = sample['label']['labels']
             sample['boxes'] = sample['label']['boxes']
-            sample['masks'] = sample['label']['masks'] 
+            sample['masks'] = sample['label']['masks']
             del sample['label']
 
         if self.transforms is not None:
