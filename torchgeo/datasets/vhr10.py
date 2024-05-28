@@ -247,7 +247,12 @@ class VHR10(NonGeoDataset):
             sample['labels'] = sample['label']['labels']
             sample['boxes'] = sample['label']['boxes']
             sample['masks'] = sample['label']['masks']
-            del sample['label']
+        else:
+            # Ensure the keys are always present even if there are no annotations
+            sample['labels'] = torch.empty((0,), dtype=torch.int64)
+            sample['boxes'] = torch.empty((0, 4), dtype=torch.float32)
+        
+        del sample['label']
 
         if self.transforms is not None:
             sample = self.transforms(sample)
