@@ -120,15 +120,22 @@ TorchGeo includes a number of [_benchmark datasets_](https://torchgeo.readthedoc
 If you've used [torchvision](https://pytorch.org/vision) before, these datasets should seem very familiar. In this example, we'll create a dataset for the Northwestern Polytechnical University (NWPU) very-high-resolution ten-class ([VHR-10](https://github.com/chaozhong2010/VHR-10_dataset_coco)) geospatial object detection dataset. This dataset can be automatically downloaded, checksummed, and extracted, just like with torchvision.
 
 ```python
+from torch.utils.data import DataLoader
+
+from torchgeo.datamodules.utils import collate_fn_detection
 from torchgeo.datasets import VHR10
-from torchgeo.datamodules import VHR10DataModule
 
 # Initialize the dataset
 dataset = VHR10(root="...", download=True, checksum=True)
 
 # Initialize the dataloader with the custom collate function
-datamodule = VHR10DataModule(root="data", batch_size=32, num_workers=16)
-datamodule.setup("fit")
+dataloader = DataLoader(
+    dataset,
+    batch_size=128,
+    shuffle=True,
+    num_workers=4,
+    collate_fn=collate_fn_detection,
+)
 
 # Training loop
 for batch in dataloader:
