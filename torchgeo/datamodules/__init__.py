@@ -11,7 +11,7 @@ from .cowc import COWCCountingDataModule
 from .cyclone import TropicalCycloneDataModule
 from .deepglobelandcover import DeepGlobeLandCoverDataModule
 from .etci2021 import ETCI2021DataModule
-from .eurosat import EuroSATSpatialDataModule, EuroSAT100DataModule, EuroSATDataModule
+from .eurosat import EuroSAT100DataModule, EuroSATDataModule, EuroSATSpatialDataModule
 from .fair1m import FAIR1MDataModule
 from .fire_risk import FireRiskDataModule
 from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
