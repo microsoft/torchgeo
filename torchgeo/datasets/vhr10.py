@@ -22,6 +22,7 @@ from .utils import (
     download_and_extract_archive,
     download_url,
     lazy_import,
+    percentile_normalization,
 )
 
 
@@ -386,10 +387,11 @@ class VHR10(NonGeoDataset):
         .. versionadded:: 0.4
         """
         assert show_feats in {'boxes', 'masks', 'both'}
+        image = percentile_normalization(sample['image'].permute(1, 2, 0).numpy())
 
         if self.split == 'negative':
             fig, axs = plt.subplots(squeeze=False)
-            axs[0, 0].imshow(sample['image'].permute(1, 2, 0))
+            axs[0, 0].imshow(image)
             axs[0, 0].axis('off')
 
             if suptitle is not None:
@@ -399,9 +401,9 @@ class VHR10(NonGeoDataset):
         if show_feats != 'boxes':
             skimage = lazy_import('skimage')
 
-        image = sample['image'].permute(1, 2, 0).numpy()
         boxes = sample['boxes'].cpu().numpy()
         labels = sample['labels'].cpu().numpy()
+
         if 'masks' in sample:
             masks = [mask.squeeze().cpu().numpy() for mask in sample['masks']]
 
