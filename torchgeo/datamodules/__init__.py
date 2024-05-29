@@ -11,7 +11,7 @@ from .cowc import COWCCountingDataModule
 from .cyclone import TropicalCycloneDataModule
 from .deepglobelandcover import DeepGlobeLandCoverDataModule
 from .etci2021 import ETCI2021DataModule
-from .eurosat import EuroSAT100DataModule, EuroSATDataModule
+from .eurosat import EuroSATSpatialDataModule, EuroSAT100DataModule, EuroSATDataModule
 from .fair1m import FAIR1MDataModule
 from .fire_risk import FireRiskDataModule
 from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
@@ -70,6 +70,7 @@ __all__ = (
     'ETCI2021DataModule',
     'EuroSATDataModule',
     'EuroSAT100DataModule',
+    'EuroSATSpatialDataModule',
     'FAIR1MDataModule',
     'FireRiskDataModule',
     'GID15DataModule',
