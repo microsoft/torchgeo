@@ -101,32 +101,6 @@ class EuroSATDataModule(NonGeoDataModule):
         self.std = torch.tensor([STD[b] for b in bands])
 
 
-class EuroSAT100DataModule(NonGeoDataModule):
-    """LightningDataModule implementation for the EuroSAT100 dataset.
-
-    Intended for tutorials and demonstrations, not for benchmarking.
-
-    .. versionadded:: 0.5
-    """
-
-    def __init__(
-        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
-    ) -> None:
-        """Initialize a new EuroSAT100DataModule instance.
-
-        Args:
-            batch_size: Size of each mini-batch.
-            num_workers: Number of workers for parallel data loading.
-            **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.EuroSAT100`.
-        """
-        super().__init__(EuroSAT100, batch_size, num_workers, **kwargs)
-
-        bands = kwargs.get('bands', EuroSAT.all_band_names)
-        self.mean = torch.tensor([MEAN[b] for b in bands])
-        self.std = torch.tensor([STD[b] for b in bands])
-
-
 class EuroSATSpatialDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the EuroSATSpatial dataset.
 
@@ -151,3 +125,29 @@ class EuroSATSpatialDataModule(NonGeoDataModule):
         bands = kwargs.get('bands', EuroSAT.all_band_names)
         self.mean = torch.tensor([SPATIAL_MEAN[b] for b in bands])
         self.std = torch.tensor([SPATIAL_STD[b] for b in bands])
+
+
+class EuroSAT100DataModule(NonGeoDataModule):
+    """LightningDataModule implementation for the EuroSAT100 dataset.
+
+    Intended for tutorials and demonstrations, not for benchmarking.
+
+    .. versionadded:: 0.5
+    """
+
+    def __init__(
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+    ) -> None:
+        """Initialize a new EuroSAT100DataModule instance.
+
+        Args:
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.EuroSAT100`.
+        """
+        super().__init__(EuroSAT100, batch_size, num_workers, **kwargs)
+
+        bands = kwargs.get('bands', EuroSAT.all_band_names)
+        self.mean = torch.tensor([MEAN[b] for b in bands])
+        self.std = torch.tensor([STD[b] for b in bands])
