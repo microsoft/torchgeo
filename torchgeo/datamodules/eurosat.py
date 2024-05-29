@@ -7,8 +7,40 @@ from typing import Any
 
 import torch
 
-from ..datasets import EuroSAT, EuroSAT100
+from ..datasets import EuroSAT, EuroSAT100, EuroSATSpatial
 from .geo import NonGeoDataModule
+
+SPATIAL_MEAN = {
+    'B01': 1375.9932,
+    'B02': 1142.6339,
+    'B03': 1077.5502,
+    'B04': 1003.8445,
+    'B05': 1280.7300,
+    'B06': 2130.3491,
+    'B07': 2524.0549,
+    'B08': 2454.1938,
+    'B8A': 785.4963,
+    'B09': 12.4639,
+    'B10': 1969.9224,
+    'B11': 1206.2421,
+    'B12': 2779.4104,
+}
+
+SPATIAL_STD = {
+    'B01': 249.8516,
+    'B02': 337.9465,
+    'B03': 392.5661,
+    'B04': 612.4237,
+    'B05': 562.2878,
+    'B06': 806.8271,
+    'B07': 1022.6378,
+    'B08': 1065.4312,
+    'B8A': 410.5831,
+    'B09': 4.8878,
+    'B10': 958.4751,
+    'B11': 740.6196,
+    'B12': 1157.2896,
+}
 
 MEAN = {
     'B01': 1354.40546513,
@@ -67,6 +99,32 @@ class EuroSATDataModule(NonGeoDataModule):
         bands = kwargs.get('bands', EuroSAT.all_band_names)
         self.mean = torch.tensor([MEAN[b] for b in bands])
         self.std = torch.tensor([STD[b] for b in bands])
+
+
+class EuroSATSpatialDataModule(NonGeoDataModule):
+    """LightningDataModule implementation for the EuroSATSpatial dataset.
+
+    Uses the spatial train/val/test splits from the dataset.
+
+    .. versionadded:: 0.6
+    """
+
+    def __init__(
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+    ) -> None:
+        """Initialize a new EuroSATSpatialDataModule instance.
+
+        Args:
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.EuroSATSpatial`.
+        """
+        super().__init__(EuroSATSpatial, batch_size, num_workers, **kwargs)
+
+        bands = kwargs.get('bands', EuroSAT.all_band_names)
+        self.mean = torch.tensor([SPATIAL_MEAN[b] for b in bands])
+        self.std = torch.tensor([SPATIAL_STD[b] for b in bands])
 
 
 class EuroSAT100DataModule(NonGeoDataModule):
