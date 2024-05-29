@@ -267,7 +267,6 @@ EuroSAT
 .. autoclass:: EuroSAT
 .. autoclass:: EuroSAT100
 .. autoclass:: EuroSATSpatial
-.. autoclass:: EuroSATSpatial
 
 FAIR1M
 ^^^^^^
