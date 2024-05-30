@@ -82,7 +82,7 @@ class ObjectDetectionTask(BaseTask):
             weights: Initial model weights. True for ImageNet weights, False or None
                 for random weights.
             in_channels: Number of input channels to model.
-            num_classes: Number of prediction classes.
+            num_classes: Number of prediction classes (including the background).
             trainable_layers: Number of trainable layers.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
