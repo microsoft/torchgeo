@@ -54,7 +54,7 @@ class SemanticSegmentationTask(BaseTask):
                 model does not support pretrained weights. Pretrained ViT weight enums
                 are not supported yet.
             in_channels: Number of input channels to model.
-            num_classes: Number of prediction classes.
+            num_classes: Number of prediction classes (including the background).
             num_filters: Number of filters. Only applicable when model='fcn'.
             loss: Name of the loss function, currently supports
                 'ce', 'jaccard' or 'focal' loss.
