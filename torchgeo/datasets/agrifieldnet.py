@@ -51,20 +51,20 @@ class AgriFieldNet(RasterDataset):
 
     Dataset classes:
 
-    0 - No-Data
-    1 - Wheat
-    2 - Mustard
-    3 - Lentil
-    4 - No Crop/Fallow
-    5 - Green pea
-    6 - Sugarcane
-    8 - Garlic
-    9 - Maize
-    13 - Gram
-    14 - Coriander
-    15 - Potato
-    16 - Berseem
-    36 - Rice
+    0. No-Data
+    1. Wheat
+    2. Mustard
+    3. Lentil
+    4. No Crop/Fallow
+    5. Green pea
+    6. Sugarcane
+    8. Garlic
+    9. Maize
+    13. Gram
+    14. Coriander
+    15. Potato
+    16. Berseem
+    36. Rice
 
     If you use this dataset in your research, please cite the following dataset:
 
