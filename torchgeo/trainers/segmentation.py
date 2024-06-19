@@ -190,23 +190,32 @@ class SemanticSegmentationTask(BaseTask):
         .. note::
            * 'Micro' averaging suits overall performance evaluation but may not reflect
              minority class accuracy.
-           * 'Macro' averaging, not used here, gives equal weight to each class, useful
+           * 'Macro' averaging gives equal weight to each class, useful
              for balanced performance assessment across imbalanced classes.
         """
         num_classes: int = self.hparams['num_classes']
         ignore_index: int | None = self.hparams['ignore_index']
         metrics = MetricCollection(
-            [
-                MulticlassAccuracy(
+            {
+                'OverallAccuracy': MulticlassAccuracy(
                     num_classes=num_classes,
                     ignore_index=ignore_index,
                     multidim_average='global',
                     average='micro',
                 ),
-                MulticlassJaccardIndex(
+                'AverageAccuracy': MulticlassAccuracy(
+                    num_classes=num_classes,
+                    ignore_index=ignore_index,
+                    multidim_average='global',
+                    average='macro',
+                ),
+                'OverallJaccardIndex': MulticlassJaccardIndex(
                     num_classes=num_classes, ignore_index=ignore_index, average='micro'
                 ),
-            ]
+                'AverageJaccardIndex': MulticlassJaccardIndex(
+                    num_classes=num_classes, ignore_index=ignore_index, average='macro'
+                ),
+            }
         )
         self.train_metrics = metrics.clone(prefix='train_')
         self.val_metrics = metrics.clone(prefix='val_')
