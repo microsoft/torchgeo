@@ -4,7 +4,7 @@
 """Trainers for semantic segmentation."""
 
 import os
-from typing import Any
+from typing import Any, Optional, List
 
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
@@ -12,7 +12,14 @@ import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MetricCollection
-from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
+from torchmetrics.classification import (
+    Accuracy,
+    FBetaScore,
+    JaccardIndex,
+    Precision,
+    Recall,
+)
+from torchmetrics.wrappers import ClasswiseWrapper
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
@@ -31,6 +38,7 @@ class SemanticSegmentationTask(BaseTask):
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
+        labels: Optional[List[str]] = None,
         num_filters: int = 3,
         loss: str = 'ce',
         class_weights: Tensor | None = None,
@@ -55,6 +63,7 @@ class SemanticSegmentationTask(BaseTask):
                 are not supported yet.
             in_channels: Number of input channels to model.
             num_classes: Number of prediction classes (including the background).
+            labels: List of class labels.
             num_filters: Number of filters. Only applicable when model='fcn'.
             loss: Name of the loss function, currently supports
                 'ce', 'jaccard' or 'focal' loss.
@@ -195,31 +204,96 @@ class SemanticSegmentationTask(BaseTask):
         """
         num_classes: int = self.hparams['num_classes']
         ignore_index: int | None = self.hparams['ignore_index']
-        metrics = MetricCollection(
+        labels: Optional[List[str]] = self.hparams['labels']
+
+        self.train_metrics = MetricCollection(
             {
-                'OverallAccuracy': MulticlassAccuracy(
+                'OverallAccuracy': Accuracy(
+                    task='multiclass',
+                    num_classes=num_classes,
+                    average='micro',
+                    multidim_average='global',
+                ),
+                'OverallF1Score': FBetaScore(
+                    task='multiclass',
+                    num_classes=num_classes,
+                    beta=1.0,
+                    average='micro',
+                    multidim_average='global',
+                ),
+                'OverallIoU': JaccardIndex(
+                    task='multiclass',
                     num_classes=num_classes,
                     ignore_index=ignore_index,
-                    multidim_average='global',
                     average='micro',
                 ),
-                'AverageAccuracy': MulticlassAccuracy(
+                'AverageAccuracy': Accuracy(
+                    task='multiclass',
+                    num_classes=num_classes,
+                    average='macro',
+                    multidim_average='global',
+                ),
+                'AverageF1Score': FBetaScore(
+                    task='multiclass',
+                    num_classes=num_classes,
+                    beta=1.0,
+                    average='macro',
+                    multidim_average='global',
+                ),
+                'AverageIoU': JaccardIndex(
+                    task='multiclass',
                     num_classes=num_classes,
                     ignore_index=ignore_index,
-                    multidim_average='global',
                     average='macro',
                 ),
-                'OverallJaccardIndex': MulticlassJaccardIndex(
-                    num_classes=num_classes, ignore_index=ignore_index, average='micro'
+                'Accuracy': ClasswiseWrapper(
+                    Accuracy(
+                        task='multiclass',
+                        num_classes=num_classes,
+                        average='none',
+                        multidim_average='global',
+                    ),
+                    labels=labels,
                 ),
-                'AverageJaccardIndex': MulticlassJaccardIndex(
-                    num_classes=num_classes, ignore_index=ignore_index, average='macro'
+                'Precision': ClasswiseWrapper(
+                    Precision(
+                        task='multiclass',
+                        num_classes=num_classes,
+                        average='none',
+                        multidim_average='global',
+                    ),
+                    labels=labels,
                 ),
-            }
+                'Recall': ClasswiseWrapper(
+                    Recall(
+                        task='multiclass',
+                        num_classes=num_classes,
+                        average='none',
+                        multidim_average='global',
+                    ),
+                    labels=labels,
+                ),
+                'F1Score': ClasswiseWrapper(
+                    FBetaScore(
+                        task='multiclass',
+                        num_classes=num_classes,
+                        beta=1.0,
+                        average='none',
+                        multidim_average='global',
+                    ),
+                    labels=labels,
+                ),
+                'IoU': ClasswiseWrapper(
+                    JaccardIndex(
+                        task='multiclass', num_classes=num_classes, average='none'
+                    ),
+                    labels=labels,
+                ),
+            },
+            prefix='train_',
         )
-        self.train_metrics = metrics.clone(prefix='train_')
-        self.val_metrics = metrics.clone(prefix='val_')
-        self.test_metrics = metrics.clone(prefix='test_')
+        self.val_metrics = self.train_metrics.clone(prefix='val_')
+        self.test_metrics = self.train_metrics.clone(prefix='test_')
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -241,7 +315,10 @@ class SemanticSegmentationTask(BaseTask):
         loss: Tensor = self.criterion(y_hat, y)
         self.log('train_loss', loss, batch_size=batch_size)
         self.train_metrics(y_hat, y)
-        self.log_dict(self.train_metrics, batch_size=batch_size)
+        self.log_dict(
+            {f'{k}': v for k, v in self.train_metrics.compute().items()},
+            batch_size=batch_size,
+        )
         return loss
 
     def validation_step(
@@ -261,7 +338,10 @@ class SemanticSegmentationTask(BaseTask):
         loss = self.criterion(y_hat, y)
         self.log('val_loss', loss, batch_size=batch_size)
         self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics, batch_size=batch_size)
+        self.log_dict(
+            {f'{k}': v for k, v in self.val_metrics.compute().items()},
+            batch_size=batch_size,
+        )
 
         if (
             batch_idx < 10
@@ -305,7 +385,10 @@ class SemanticSegmentationTask(BaseTask):
         loss = self.criterion(y_hat, y)
         self.log('test_loss', loss, batch_size=batch_size)
         self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics, batch_size=batch_size)
+        self.log_dict(
+            {f'{k}': v for k, v in self.test_metrics.compute().items()},
+            batch_size=batch_size,
+        )
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
