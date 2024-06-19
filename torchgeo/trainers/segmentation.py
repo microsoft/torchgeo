@@ -4,7 +4,7 @@
 """Trainers for semantic segmentation."""
 
 import os
-from typing import Any, Optional, List
+from typing import Any
 
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
@@ -38,7 +38,7 @@ class SemanticSegmentationTask(BaseTask):
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
-        labels: Optional[List[str]] = None,
+        labels: list[str] | None = None,
         num_filters: int = 3,
         loss: str = 'ce',
         class_weights: Tensor | None = None,
@@ -204,7 +204,7 @@ class SemanticSegmentationTask(BaseTask):
         """
         num_classes: int = self.hparams['num_classes']
         ignore_index: int | None = self.hparams['ignore_index']
-        labels: Optional[List[str]] = self.hparams['labels']
+        labels: list[str] | None = self.hparams['labels']
 
         self.train_metrics = MetricCollection(
             {
