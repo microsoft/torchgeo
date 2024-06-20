@@ -213,6 +213,7 @@ class SemanticSegmentationTask(BaseTask):
                     num_classes=num_classes,
                     average='micro',
                     multidim_average='global',
+                    ignore_index=ignore_index,
                 ),
                 'OverallF1Score': FBetaScore(
                     task='multiclass',
@@ -220,6 +221,7 @@ class SemanticSegmentationTask(BaseTask):
                     beta=1.0,
                     average='micro',
                     multidim_average='global',
+                    ignore_index=ignore_index,
                 ),
                 'OverallJaccardIndex': JaccardIndex(
                     task='multiclass',
@@ -232,6 +234,7 @@ class SemanticSegmentationTask(BaseTask):
                     num_classes=num_classes,
                     average='macro',
                     multidim_average='global',
+                    ignore_index=ignore_index,
                 ),
                 'AverageF1Score': FBetaScore(
                     task='multiclass',
@@ -239,6 +242,7 @@ class SemanticSegmentationTask(BaseTask):
                     beta=1.0,
                     average='macro',
                     multidim_average='global',
+                    ignore_index=ignore_index,
                 ),
                 'AverageJaccardIndex': JaccardIndex(
                     task='multiclass',
@@ -252,6 +256,7 @@ class SemanticSegmentationTask(BaseTask):
                         num_classes=num_classes,
                         average='none',
                         multidim_average='global',
+                        ignore_index=ignore_index,
                     ),
                     labels=labels,
                 ),
@@ -261,6 +266,7 @@ class SemanticSegmentationTask(BaseTask):
                         num_classes=num_classes,
                         average='none',
                         multidim_average='global',
+                        ignore_index=ignore_index,
                     ),
                     labels=labels,
                 ),
@@ -270,6 +276,7 @@ class SemanticSegmentationTask(BaseTask):
                         num_classes=num_classes,
                         average='none',
                         multidim_average='global',
+                        ignore_index=ignore_index,
                     ),
                     labels=labels,
                 ),
@@ -280,12 +287,16 @@ class SemanticSegmentationTask(BaseTask):
                         beta=1.0,
                         average='none',
                         multidim_average='global',
+                        ignore_index=ignore_index,
                     ),
                     labels=labels,
                 ),
                 'JaccardIndex': ClasswiseWrapper(
                     JaccardIndex(
-                        task='multiclass', num_classes=num_classes, average='none'
+                        task='multiclass', 
+                        num_classes=num_classes, 
+                        average='none',
+                        ignore_index=ignore_index,
                     ),
                     labels=labels,
                 ),
