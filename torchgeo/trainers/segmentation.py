@@ -324,13 +324,7 @@ class SemanticSegmentationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x)
         loss: Tensor = self.criterion(y_hat, y)
-        self.log(
-            'train_loss', 
-            loss, 
-            batch_size=batch_size,
-            on_epoch=True,
-            on_step=True,
-        )
+        self.log('train_loss', loss, batch_size=batch_size, on_epoch=True, on_step=True)
         self.train_metrics(y_hat, y)
         self.log_dict(
             {f'{k}': v for k, v in self.train_metrics.compute().items()},
