@@ -1,2 +1,3 @@
 Weight,Channels,Source,Citation,License
 ResNet50_Weights.FMOW_RGB_GASSL, 3,`link <https://github.com/sustainlab-group/geography-aware-ssl>`__,`link <https://arxiv.org/abs/2011.09980>`__,-
+ScaleMAE_ViTLarge16_Weights.FMOW_RGB_SCALEMAE, 3,`link <https://github.com/bair-climate-initiative/scale-mae>`__,`link <https://arxiv.org/abs/2212.14532>`__,"CC-BY-NC-4.0"

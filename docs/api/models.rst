@@ -50,6 +50,12 @@ ResNet
 .. autoclass:: ResNet18_Weights
 .. autoclass:: ResNet50_Weights
 
+Scale-MAE Vision Transformer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: ScaleMAEViT
+.. autoclass:: ScaleMAE_ViTLarge16_Weights
+
 Swin Transformer
 ^^^^^^^^^^^^^^^^^^
 
