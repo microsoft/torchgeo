@@ -7,5 +7,5 @@ pyvista==0.43.10
 radiant-mlhub==0.4.1
 rarfile==4.2
 scikit-image==0.24.0
-scipy==1.13.1
+scipy==1.14.0
 zipfile-deflate64==0.2.0
