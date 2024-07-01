@@ -12,7 +12,6 @@ from kornia.constants import DataKey, Resample
 from ..datasets import L8Biome, random_bbox_assignment
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..samplers.utils import _to_tuple
-from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
 
 
@@ -49,12 +48,12 @@ class L8BiomeDataModule(GeoDataModule):
             **kwargs,
         )
 
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
-            data_keys=['image', 'mask'],
+            data_keys=None,
             extra_args={
                 DataKey.MASK: {'resample': Resample.NEAREST, 'align_corners': None}
             },
