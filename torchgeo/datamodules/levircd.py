@@ -11,7 +11,6 @@ from torch.utils.data import random_split
 
 from ..datasets import LEVIRCD, LEVIRCDPlus
 from ..samplers.utils import _to_tuple
-from ..transforms import AugmentationSequential
 from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
 
@@ -43,18 +42,16 @@ class LEVIRCDDataModule(NonGeoDataModule):
 
         self.patch_size = _to_tuple(patch_size)
 
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=['image1', 'image2', 'mask'],
+            data_keys=None,
         )
-        self.val_aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            data_keys=['image1', 'image2', 'mask'],
+        self.val_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None
         )
-        self.test_aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            data_keys=['image1', 'image2', 'mask'],
+        self.test_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None
         )
 
 
@@ -91,18 +88,16 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=['image1', 'image2', 'mask'],
+            data_keys=None,
         )
-        self.val_aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            data_keys=['image1', 'image2', 'mask'],
+        self.val_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None
         )
-        self.test_aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            data_keys=['image1', 'image2', 'mask'],
+        self.test_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None
         )
 
     def setup(self, stage: str) -> None:

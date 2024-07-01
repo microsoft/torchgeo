@@ -124,7 +124,7 @@ class SpaceNet1DataModule(SpaceNetBaseDataModule):
             SpaceNet1, batch_size, num_workers, val_split_pct, test_split_pct, **kwargs
         )
 
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
             K.RandomRotation(p=0.5, degrees=90),
@@ -134,7 +134,7 @@ class SpaceNet1DataModule(SpaceNetBaseDataModule):
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
             data_keys=['image', 'mask'],
         )
-        self.aug = AugmentationSequential(
+        self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
             data_keys=['image', 'mask'],

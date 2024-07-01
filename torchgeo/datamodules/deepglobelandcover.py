@@ -11,7 +11,6 @@ from torch.utils.data import random_split
 
 from ..datasets import DeepGlobeLandCover
 from ..samplers.utils import _to_tuple
-from ..transforms import AugmentationSequential
 from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
 
@@ -46,10 +45,10 @@ class DeepGlobeLandCoverDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
-        self.aug = AugmentationSequential(
+        self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=['image', 'mask'],
+            data_keys=None,
         )
 
     def setup(self, stage: str) -> None:

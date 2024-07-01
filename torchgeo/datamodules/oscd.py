@@ -11,7 +11,6 @@ from torch.utils.data import random_split
 
 from ..datasets import OSCD
 from ..samplers.utils import _to_tuple
-from ..transforms import AugmentationSequential
 from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
 
@@ -85,10 +84,10 @@ class OSCDDataModule(NonGeoDataModule):
         self.mean = torch.tensor([MEAN[b] for b in self.bands])
         self.std = torch.tensor([STD[b] for b in self.bands])
 
-        self.aug = AugmentationSequential(
+        self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=['image1', 'image2', 'mask'],
+            data_keys=None,
         )
 
     def setup(self, stage: str) -> None:
