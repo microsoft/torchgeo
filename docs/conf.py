@@ -131,19 +131,32 @@ nbsphinx_execute = 'never'
 # TODO: width option of image directive is broken, see:
 # https://github.com/pytorch/pytorch_sphinx_theme/issues/140
 nbsphinx_prolog = """
-{% set host = "https://colab.research.google.com" %}
-{% set repo = "microsoft/torchgeo" %}
-{% set urlpath = "docs/" ~ env.docname ~ ".ipynb" %}
 {% if "dev" in env.config.release %}
     {% set branch = "main" %}
 {% else %}
     {% set branch = "releases/v" ~ env.config.version %}
 {% endif %}
 
-.. image:: {{ host }}/assets/colab-badge.svg
-   :class: colabbadge
+{% set host = "https://colab.research.google.com" %}
+{% set badge = host ~ "/assets/colab-badge.svg" %}
+{% set repo = "microsoft/torchgeo" %}
+{% set path = "docs/" ~ env.docname ~ ".ipynb" %}
+
+.. image:: {{ badge }}
+   :class: badge
    :alt: Open in Colab
-   :target: {{ host }}/github/{{ repo }}/blob/{{ branch }}/{{ urlpath }}
+   :target: {{ host }}/github/{{ repo }}/blob/{{ branch }}/{{ path }}
+
+{% set host = "https://lightning.ai/new" %}
+{% set badge = "https://pl-bolts-doc-images.s3.us-east-2.amazonaws.com" %}
+{% set badge = badge ~ "/app-2/studio-badge.svg" %}
+{% set repo_url = "https://github.com/" ~ repo ~ "/blob/" ~ branch ~ "/" ~ path %}
+{% set repo_url = repo_url | replace(":", "%3A") | replace("/", "%2F") %}
+
+.. image:: {{ badge }}
+   :class: badge
+   :alt: Open in Studio
+   :target: {{ host }}?repo_url={{ repo_url }}
 """
 
 # Disables requirejs in nbsphinx to enable compatibility with the pytorch_sphinx_theme
