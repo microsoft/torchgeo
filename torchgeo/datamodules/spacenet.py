@@ -132,12 +132,12 @@ class SpaceNet1DataModule(SpaceNetBaseDataModule):
             K.RandomVerticalFlip(p=0.5),
             K.RandomSharpness(p=0.5),
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
-            data_keys=['image', 'mask'],
+            data_keys=None,
         )
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
-            data_keys=['image', 'mask'],
+            data_keys=None,
         )
 
         self.predict_aug = AugmentationSequential(

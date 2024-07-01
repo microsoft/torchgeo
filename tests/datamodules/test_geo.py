@@ -68,7 +68,7 @@ class CustomNonGeoDataset(NonGeoDataset):
         self.length = length
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
-        return {"image": torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)}
+        return {'image': torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)}
 
     def __len__(self) -> int:
         return self.length
