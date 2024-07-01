@@ -597,7 +597,7 @@ def test_lazy_import_missing(name: str) -> None:
 def test_azcopy(tmp_path: Path, azcopy: Executable) -> None:
     source = os.path.join('tests', 'data', 'cyclone')
     azcopy('sync', source, tmp_path, '--recursive=true')
-    assert os.path.exists(tmp_path / 'nasa_tropical_storm_competition_test_labels')
+    assert os.path.exists(tmp_path / 'test')
 
 
 def test_which() -> None:
