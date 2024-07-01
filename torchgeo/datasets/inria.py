@@ -217,7 +217,10 @@ class InriaAerialImageLabeling(NonGeoDataset):
         show_predictions = 'prediction' in sample
 
         if show_mask:
-            mask = sample['mask'].numpy()
+            mask = sample['mask']
+            if mask.ndim == 3 and mask.shape[0] == 1:
+                mask = mask.squeeze(0)
+            mask = mask.numpy()
             ncols += 1
 
         if show_predictions:

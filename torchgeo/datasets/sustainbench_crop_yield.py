@@ -149,10 +149,17 @@ class SustainBenchCropYield(NonGeoDataset):
             data and label at that index
         """
         sample: dict[str, Tensor] = {'image': self.images[index]}
-        sample.update(self.features[index])
+        sample['label'] = self.features[index]['label']
 
         if self.transforms is not None:
             sample = self.transforms(sample)
+            sample.update(
+                {
+                    x: self.features[index][x]
+                    for x in self.features[index]
+                    if x != 'label'
+                }
+            )
 
         return sample
 
