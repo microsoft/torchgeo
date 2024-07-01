@@ -91,6 +91,13 @@ class RESISC45(NonGeoClassificationDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/jproc.2017.2675998
+
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `rarfile <https://pypi.org/project/rarfile/>`_ to extract the dataset,
+         which is stored in a RAR file
     """
 
     url = 'https://drive.google.com/file/d/1DnPSU5nVSN7xv95bpZ3XQ0JhKXZOKgIv'
