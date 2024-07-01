@@ -8,7 +8,6 @@ from typing import Any
 import kornia.augmentation as K
 
 from ..datasets import FireRisk
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -30,7 +29,7 @@ class FireRiskDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.FireRisk`.
         """
         super().__init__(FireRisk, batch_size, num_workers, **kwargs)
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomRotation(p=0.5, degrees=90),
             K.RandomHorizontalFlip(p=0.5),
@@ -38,7 +37,7 @@ class FireRiskDataModule(NonGeoDataModule):
             K.RandomSharpness(p=0.5),
             K.RandomErasing(p=0.1),
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
-            data_keys=['image'],
+            data_keys=None,
         )
 
     def setup(self, stage: str) -> None:

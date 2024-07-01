@@ -11,7 +11,6 @@ from torch import Tensor
 from torch.utils.data import random_split
 
 from ..datasets import SpaceNet1
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -46,7 +45,7 @@ class SpaceNet1DataModule(NonGeoDataModule):
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
 
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
             K.RandomRotation(p=0.5, degrees=90),
@@ -56,7 +55,7 @@ class SpaceNet1DataModule(NonGeoDataModule):
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
             data_keys=['image', 'mask'],
         )
-        self.aug = AugmentationSequential(
+        self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
             data_keys=['image', 'mask'],
