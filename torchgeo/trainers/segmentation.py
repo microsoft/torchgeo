@@ -12,7 +12,14 @@ import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MetricCollection
-from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
+from torchmetrics.classification import (
+    Accuracy,
+    FBetaScore,
+    JaccardIndex,
+    Precision,
+    Recall,
+)
+from torchmetrics.wrappers import ClasswiseWrapper
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
@@ -31,6 +38,7 @@ class SemanticSegmentationTask(BaseTask):
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
+        labels: list[str] | None = None,
         num_filters: int = 3,
         loss: str = 'ce',
         class_weights: Tensor | None = None,
@@ -55,6 +63,7 @@ class SemanticSegmentationTask(BaseTask):
                 are not supported yet.
             in_channels: Number of input channels to model.
             num_classes: Number of prediction classes (including the background).
+            labels: List of class labels.
             num_filters: Number of filters. Only applicable when model='fcn'.
             loss: Name of the loss function, currently supports
                 'ce', 'jaccard' or 'focal' loss.
@@ -190,27 +199,112 @@ class SemanticSegmentationTask(BaseTask):
         .. note::
            * 'Micro' averaging suits overall performance evaluation but may not reflect
              minority class accuracy.
-           * 'Macro' averaging, not used here, gives equal weight to each class, useful
+           * 'Macro' averaging gives equal weight to each class, useful
              for balanced performance assessment across imbalanced classes.
         """
         num_classes: int = self.hparams['num_classes']
         ignore_index: int | None = self.hparams['ignore_index']
-        metrics = MetricCollection(
-            [
-                MulticlassAccuracy(
+        labels: list[str] | None = self.hparams['labels']
+
+        self.train_metrics = MetricCollection(
+            {
+                'OverallAccuracy': Accuracy(
+                    task='multiclass',
+                    num_classes=num_classes,
+                    average='micro',
+                    multidim_average='global',
+                    ignore_index=ignore_index,
+                ),
+                'OverallF1Score': FBetaScore(
+                    task='multiclass',
+                    num_classes=num_classes,
+                    beta=1.0,
+                    average='micro',
+                    multidim_average='global',
+                    ignore_index=ignore_index,
+                ),
+                'OverallJaccardIndex': JaccardIndex(
+                    task='multiclass',
                     num_classes=num_classes,
                     ignore_index=ignore_index,
-                    multidim_average='global',
                     average='micro',
                 ),
-                MulticlassJaccardIndex(
-                    num_classes=num_classes, ignore_index=ignore_index, average='micro'
+                'AverageAccuracy': Accuracy(
+                    task='multiclass',
+                    num_classes=num_classes,
+                    average='macro',
+                    multidim_average='global',
+                    ignore_index=ignore_index,
                 ),
-            ]
+                'AverageF1Score': FBetaScore(
+                    task='multiclass',
+                    num_classes=num_classes,
+                    beta=1.0,
+                    average='macro',
+                    multidim_average='global',
+                    ignore_index=ignore_index,
+                ),
+                'AverageJaccardIndex': JaccardIndex(
+                    task='multiclass',
+                    num_classes=num_classes,
+                    ignore_index=ignore_index,
+                    average='macro',
+                ),
+                'Accuracy': ClasswiseWrapper(
+                    Accuracy(
+                        task='multiclass',
+                        num_classes=num_classes,
+                        average='none',
+                        multidim_average='global',
+                        ignore_index=ignore_index,
+                    ),
+                    labels=labels,
+                ),
+                'Precision': ClasswiseWrapper(
+                    Precision(
+                        task='multiclass',
+                        num_classes=num_classes,
+                        average='none',
+                        multidim_average='global',
+                        ignore_index=ignore_index,
+                    ),
+                    labels=labels,
+                ),
+                'Recall': ClasswiseWrapper(
+                    Recall(
+                        task='multiclass',
+                        num_classes=num_classes,
+                        average='none',
+                        multidim_average='global',
+                        ignore_index=ignore_index,
+                    ),
+                    labels=labels,
+                ),
+                'F1Score': ClasswiseWrapper(
+                    FBetaScore(
+                        task='multiclass',
+                        num_classes=num_classes,
+                        beta=1.0,
+                        average='none',
+                        multidim_average='global',
+                        ignore_index=ignore_index,
+                    ),
+                    labels=labels,
+                ),
+                'JaccardIndex': ClasswiseWrapper(
+                    JaccardIndex(
+                        task='multiclass',
+                        num_classes=num_classes,
+                        average='none',
+                        ignore_index=ignore_index,
+                    ),
+                    labels=labels,
+                ),
+            },
+            prefix='train_',
         )
-        self.train_metrics = metrics.clone(prefix='train_')
-        self.val_metrics = metrics.clone(prefix='val_')
-        self.test_metrics = metrics.clone(prefix='test_')
+        self.val_metrics = self.train_metrics.clone(prefix='val_')
+        self.test_metrics = self.train_metrics.clone(prefix='test_')
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -230,9 +324,14 @@ class SemanticSegmentationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x)
         loss: Tensor = self.criterion(y_hat, y)
-        self.log('train_loss', loss, batch_size=batch_size)
+        self.log('train_loss', loss, batch_size=batch_size, on_epoch=True, on_step=True)
         self.train_metrics(y_hat, y)
-        self.log_dict(self.train_metrics, batch_size=batch_size)
+        self.log_dict(
+            {f'{k}': v for k, v in self.train_metrics.compute().items()},
+            batch_size=batch_size,
+            on_epoch=True,
+            on_step=False,
+        )
         return loss
 
     def validation_step(
@@ -250,9 +349,13 @@ class SemanticSegmentationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log('val_loss', loss, batch_size=batch_size)
+        self.log('val_loss', loss, batch_size=batch_size, on_epoch=True)
         self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics, batch_size=batch_size)
+        self.log_dict(
+            {f'{k}': v for k, v in self.val_metrics.compute().items()},
+            batch_size=batch_size,
+            on_epoch=True,
+        )
 
         if (
             batch_idx < 10
@@ -294,9 +397,13 @@ class SemanticSegmentationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log('test_loss', loss, batch_size=batch_size)
+        self.log('test_loss', loss, batch_size=batch_size, on_epoch=True)
         self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics, batch_size=batch_size)
+        self.log_dict(
+            {f'{k}': v for k, v in self.test_metrics.compute().items()},
+            batch_size=batch_size,
+            on_epoch=True,
+        )
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
