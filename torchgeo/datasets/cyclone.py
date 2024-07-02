@@ -125,10 +125,12 @@ class TropicalCyclone(NonGeoDataset):
         )
 
         sample: dict[str, Any] = {'image': self._load_image(directory)}
-        sample.update(self._load_features(directory))
+        features = self._load_features(directory)
+        sample['label'] = features['label']
 
         if self.transforms is not None:
             sample = self.transforms(sample)
+            sample.update({x: features[x] for x in features if x != 'label'})
 
         return sample
 

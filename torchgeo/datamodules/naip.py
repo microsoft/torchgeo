@@ -10,7 +10,6 @@ from matplotlib.figure import Figure
 
 from ..datasets import NAIP, BoundingBox, Chesapeake13
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
-from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
 
 
@@ -57,8 +56,8 @@ class NAIPChesapeakeDataModule(GeoDataModule):
             **self.chesapeake_kwargs,
         )
 
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
+        self.aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None
         )
 
     def setup(self, stage: str) -> None:
