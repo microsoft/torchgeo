@@ -20,7 +20,6 @@ from ..samplers import (
     GridGeoSampler,
     RandomBatchGeoSampler,
 )
-from ..transforms import AugmentationSequential
 from .utils import MisconfigurationException
 
 

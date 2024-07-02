@@ -11,7 +11,7 @@ from torch.utils.data import random_split
 
 from ..datasets import NASAMarineDebris
 from .geo import NonGeoDataModule
-from .utils import collate_fn_detection, dataset_split
+from .utils import collate_fn_detection
 
 
 class NASAMarineDebrisDataModule(NonGeoDataModule):

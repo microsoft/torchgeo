@@ -249,10 +249,10 @@ class VHR10(NonGeoDataset):
 
         if sample['label']['annotations']:
             sample = self.coco_convert(sample)
-            sample["class"] = sample["label"]["labels"]
-            sample["bbox_xyxy"] = sample["label"]["boxes"]
-            sample["mask"] = sample["label"]["masks"].float()
-            del sample["label"]
+            sample['class'] = sample['label']['labels']
+            sample['bbox_xyxy'] = sample['label']['boxes']
+            sample['mask'] = sample['label']['masks'].float()
+            del sample['label']
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -401,11 +401,11 @@ class VHR10(NonGeoDataset):
         if show_feats != 'boxes':
             skimage = lazy_import('skimage')
 
-        image = sample["image"].permute(1, 2, 0).numpy()
-        boxes = sample["bbox_xyxy"].cpu().numpy()
-        labels = sample["class"].cpu().numpy()
-        if "mask" in sample:
-            masks = [mask.squeeze().cpu().numpy() for mask in sample["mask"]]
+        boxes = sample['bbox_xyxy'].cpu().numpy()
+        labels = sample['class'].cpu().numpy()
+
+        if 'mask' in sample:
+            masks = [mask.squeeze().cpu().numpy() for mask in sample['mask']]
 
         n_gt = len(boxes)
 

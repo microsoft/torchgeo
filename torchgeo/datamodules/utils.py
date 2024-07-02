@@ -5,14 +5,11 @@
 
 import math
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 import torch
-from torch import Generator, Tensor
-from torch.utils.data import Subset, TensorDataset, random_split
-
-from ..datasets import NonGeoDataset
+from torch import Tensor
 
 
 # Based on lightning_lite.utilities.exceptions
@@ -32,23 +29,23 @@ def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
     .. versionadded:: 0.6
     """
     output: dict[str, Any] = {}
-    output["image"] = torch.stack([sample["image"] for sample in batch])
+    output['image'] = torch.stack([sample['image'] for sample in batch])
     # Get bbox key as it can be one of {"bbox", "bbox_xyxy", "bbox_xywh"}
-    bbox_key = "boxes"
+    bbox_key = 'boxes'
     for key in batch[0].keys():
-        if key in {"bbox", "bbox_xyxy", "bbox_xywh"}:
+        if key in {'bbox', 'bbox_xyxy', 'bbox_xywh'}:
             bbox_key = key
 
     output[bbox_key] = [sample[bbox_key].float() for sample in batch]
-    if "class" in batch[0].keys():
-        output["class"] = [sample["class"] for sample in batch]
+    if 'class' in batch[0].keys():
+        output['class'] = [sample['class'] for sample in batch]
     else:
-        output["class"] = [
+        output['class'] = [
             torch.tensor([1] * len(sample[bbox_key])) for sample in batch
         ]
 
-    if "mask" in batch[0]:
-        output["mask"] = [sample["mask"] for sample in batch]
+    if 'mask' in batch[0]:
+        output['mask'] = [sample['mask'] for sample in batch]
     return output
 
 

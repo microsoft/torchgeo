@@ -72,10 +72,10 @@ class VHR10DataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.kwargs["transforms"] = K.AugmentationSequential(
+        self.kwargs['transforms'] = K.AugmentationSequential(
             K.Resize(self.patch_size), data_keys=None, keepdim=True
         )
-        self.kwargs["transforms"].keepdim = True
+        self.kwargs['transforms'].keepdim = True
         self.dataset = VHR10(**self.kwargs)
         generator = torch.Generator().manual_seed(0)
         self.train_dataset, self.val_dataset, self.test_dataset = random_split(

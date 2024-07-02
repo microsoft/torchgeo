@@ -100,15 +100,15 @@ class NASAMarineDebris(NonGeoDataset):
         Returns:
             data and labels at that index
         """
-        image = self._load_image(self.files[index]["image"])
-        boxes = self._load_target(self.files[index]["target"])
-        sample = {"image": image, "bbox_xyxy": boxes}
+        image = self._load_image(self.files[index]['image'])
+        boxes = self._load_target(self.files[index]['target'])
+        sample = {'image': image, 'bbox_xyxy': boxes}
 
         # Filter invalid boxes
-        w_check = (sample["bbox_xyxy"][:, 2] - sample["bbox_xyxy"][:, 0]) > 0
-        h_check = (sample["bbox_xyxy"][:, 3] - sample["bbox_xyxy"][:, 1]) > 0
+        w_check = (sample['bbox_xyxy'][:, 2] - sample['bbox_xyxy'][:, 0]) > 0
+        h_check = (sample['bbox_xyxy'][:, 3] - sample['bbox_xyxy'][:, 1]) > 0
         indices = w_check & h_check
-        sample["bbox_xyxy"] = sample["bbox_xyxy"][indices]
+        sample['bbox_xyxy'] = sample['bbox_xyxy'][indices]
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -234,11 +234,11 @@ class NASAMarineDebris(NonGeoDataset):
         """
         ncols = 1
 
-        sample["image"] = sample["image"].byte()
-        image = sample["image"]
-        if "bbox_xyxy" in sample and len(sample["bbox_xyxy"]):
+        sample['image'] = sample['image'].byte()
+        image = sample['image']
+        if 'bbox_xyxy' in sample and len(sample['bbox_xyxy']):
             image = draw_bounding_boxes(
-                image=sample["image"], boxes=sample["bbox_xyxy"]
+                image=sample['image'], boxes=sample['bbox_xyxy']
             )
         image = image.permute((1, 2, 0)).numpy()
 

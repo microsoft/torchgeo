@@ -52,10 +52,10 @@ class TestNASAMarineDebris:
     def test_getitem(self, dataset: NASAMarineDebris) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
-        assert isinstance(x["bbox_xyxy"], torch.Tensor)
-        assert x["image"].shape[0] == 3
-        assert x["bbox_xyxy"].shape[-1] == 4
+        assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['bbox_xyxy'], torch.Tensor)
+        assert x['image'].shape[0] == 3
+        assert x['bbox_xyxy'].shape[-1] == 4
 
     def test_len(self, dataset: NASAMarineDebris) -> None:
         assert len(dataset) == 4
@@ -99,6 +99,6 @@ class TestNASAMarineDebris:
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        x["prediction_boxes"] = x["bbox_xyxy"].clone()
+        x['prediction_boxes'] = x['bbox_xyxy'].clone()
         dataset.plot(x)
         plt.close()
