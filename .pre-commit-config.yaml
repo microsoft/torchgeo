@@ -26,7 +26,7 @@ repos:
           - lightning>=2.0.9
           - matplotlib>=3.8.1
           - numpy>=1.22
-          - pillow>=10.3.0
+          - pillow>=10.4.0
           - pytest>=6.1.2
           - pyvista>=0.34.2
           - scikit-image>=0.22.0
