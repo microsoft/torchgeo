@@ -39,7 +39,7 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.InriaAerialImageLabeling`.
         """
-        super().__init__(InriaAerialImageLabeling, batch_size, num_workers, **kwargs)
+        super().__init__(InriaAerialImageLabeling, 1, num_workers, **kwargs)
 
         self.patch_size = _to_tuple(patch_size)
 
