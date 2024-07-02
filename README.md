@@ -239,7 +239,7 @@ torchgeo fit --config config.yaml
 # Validate-only
 torchgeo validate --config config.yaml
 # Calculate and report test accuracy
-torchgeo test --config config.yaml ckpt_path=...
+torchgeo test --config config.yaml --ckpt_path=...
 ```
 
 It can also be imported and used in a Python script if you need to extend it to add new features:
