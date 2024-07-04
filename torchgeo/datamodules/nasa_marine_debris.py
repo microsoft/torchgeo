@@ -48,6 +48,7 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
+        # https://github.com/kornia/kornia/issues/2848
         self.aug.keepdim = True  # type: ignore[attr-defined]
 
         self.collate_fn = collate_fn_detection
