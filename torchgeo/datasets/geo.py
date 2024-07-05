@@ -35,12 +35,12 @@ from torchvision.datasets.folder import default_loader as pil_loader
 from .errors import DatasetNotFoundError
 from .utils import (
     BoundingBox,
+    Path,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
     merge_samples,
     path_is_vsi,
-    Path
 )
 
 
@@ -299,7 +299,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, (str, pathlib.Path)):
+        if isinstance(self.paths, (str | pathlib.Path)):
             paths: Iterable[Path] = [self.paths]
         else:
             paths = self.paths
