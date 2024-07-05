@@ -13,6 +13,7 @@ import gzip
 import importlib
 import lzma
 import os
+import pathlib
 import shutil
 import subprocess
 import sys
@@ -20,7 +21,7 @@ import tarfile
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast, overload
+from typing import Any, TypeAlias, Union, cast, overload
 
 import numpy as np
 import rasterio
@@ -33,6 +34,7 @@ from .errors import DependencyNotFoundError
 
 # Only include import redirects
 __all__ = ('check_integrity', 'download_url')
+Path: TypeAlias = Union[str, pathlib.Path]
 
 
 class _rarfile:

@@ -7,6 +7,7 @@ import abc
 import functools
 import glob
 import os
+import pathlib
 import re
 import sys
 import warnings
@@ -39,6 +40,7 @@ from .utils import (
     disambiguate_timestamp,
     merge_samples,
     path_is_vsi,
+    Path
 )
 
 
@@ -84,7 +86,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    paths: str | Iterable[str]
+    paths: Path | Iterable[Path]
     _crs = CRS.from_epsg(4326)
     _res = 0.0
 
@@ -288,7 +290,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self._res = new_res
 
     @property
-    def files(self) -> list[str]:
+    def files(self) -> list[Path]:
         """A list of all files in the dataset.
 
         Returns:
@@ -297,18 +299,18 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, str):
-            paths: Iterable[str] = [self.paths]
+        if isinstance(self.paths, (str, pathlib.Path)):
+            paths: Iterable[Path] = [self.paths]
         else:
             paths = self.paths
 
         # Using set to remove any duplicates if directories are overlapping
-        files: set[str] = set()
+        files: set[Path] = set()
         for path in paths:
             if os.path.isdir(path):
                 pathname = os.path.join(path, '**', self.filename_glob)
                 files |= set(glob.iglob(pathname, recursive=True))
-            elif os.path.isfile(path) or path_is_vsi(path):
+            elif os.path.isfile(path) or path_is_vsi(str(path)):
                 files.add(path)
             elif not hasattr(self, 'download'):
                 warnings.warn(
@@ -410,7 +412,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         bands: Sequence[str] | None = None,
@@ -649,7 +651,7 @@ class VectorDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float = 0.0001,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
