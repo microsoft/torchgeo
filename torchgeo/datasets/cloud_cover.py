@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import which
+from .utils import Path, which
 
 
 class CloudCoverDetection(NonGeoDataset):

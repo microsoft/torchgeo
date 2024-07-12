@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import which
+from .utils import Path, download_radiant_mlhub_collection, extract_archive, which
 
 
 class TropicalCyclone(NonGeoDataset):
@@ -167,7 +167,7 @@ class TropicalCyclone(NonGeoDataset):
         for file in files:
             azcopy('copy', f'{self.url}/{file}', self.root)
         for collection_id in self.collection_ids:
-            download_radiant_mlhub_collection(collection_id, self.root, api_key)
+            download_radiant_mlhub_collection(collection_id, self.root)
 
         for split, resources in self.md5s.items():
             for resource_type in resources:
