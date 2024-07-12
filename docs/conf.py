@@ -143,7 +143,6 @@ nbsphinx_prolog = """
 {% set path = "docs/" ~ env.docname ~ ".ipynb" %}
 
 .. image:: {{ badge }}
-   :class: colabbadge
    :alt: Open in Colab
    :target: {{ host }}/github/{{ repo }}/blob/{{ branch }}/{{ path }}
 
@@ -154,7 +153,6 @@ nbsphinx_prolog = """
 {% set repo_url = repo_url | replace(":", "%3A") | replace("/", "%2F") %}
 
 .. image:: {{ badge }}
-   :class: colabbadge
    :alt: Open in Studio
    :target: {{ host }}?repo_url={{ repo_url }}
 """
