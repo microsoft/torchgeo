@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoClassificationDataset
-from .utils import check_integrity, download_url, extract_archive, rasterio_loader
+from .utils import Path, check_integrity, download_url, extract_archive, rasterio_loader
 
 
 class EuroSAT(NonGeoClassificationDataset):
@@ -97,7 +97,7 @@ class EuroSAT(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,

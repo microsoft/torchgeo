@@ -5,6 +5,7 @@
 
 import glob
 import os
+import pathlib
 import re
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, cast
@@ -18,7 +19,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import BoundingBox, disambiguate_timestamp, download_url, extract_archive
+from .utils import (
+    BoundingBox,
+    Path,
+    disambiguate_timestamp,
+    download_url,
+    extract_archive,
+)
 
 
 class L7IrishImage(RasterDataset):
@@ -61,7 +68,7 @@ class L7IrishMask(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         bands: Sequence[str] | None = None,
@@ -169,7 +176,7 @@ class L7Irish(IntersectionDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = CRS.from_epsg(3857),
         res: float | None = None,
         bands: Sequence[str] = L7IrishImage.all_bands,
@@ -222,7 +229,7 @@ class L7Irish(IntersectionDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        if not isinstance(self.paths, str):
+        if not isinstance(self.paths, str | pathlib.Path):
             return
 
         for classname in [L7IrishImage, L7IrishMask]:
@@ -255,7 +262,7 @@ class L7Irish(IntersectionDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         pathname = os.path.join(self.paths, '*.tar.gz')
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)

@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import check_integrity, percentile_normalization
+from .utils import Path, check_integrity, percentile_normalization
 
 
 class SEN12MS(NonGeoDataset):
@@ -165,7 +165,7 @@ class SEN12MS(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,

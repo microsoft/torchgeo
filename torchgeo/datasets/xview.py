@@ -16,7 +16,12 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, draw_semantic_segmentation_masks, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    draw_semantic_segmentation_masks,
+    extract_archive,
+)
 
 
 class XView2(NonGeoDataset):
@@ -66,7 +71,7 @@ class XView2(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
@@ -127,7 +132,7 @@ class XView2(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:

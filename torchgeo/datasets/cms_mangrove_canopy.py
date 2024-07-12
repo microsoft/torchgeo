@@ -13,7 +13,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import check_integrity, extract_archive
+from .utils import Path, check_integrity, extract_archive
 
 
 class CMSGlobalMangroveCanopy(RasterDataset):
@@ -169,7 +169,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
     def __init__(
         self,
-        paths: str | list[str] = 'data',
+        paths: Path | list[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         measurement: str = 'agb',

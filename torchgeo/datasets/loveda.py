@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class LoveDA(NonGeoDataset):
@@ -91,7 +91,7 @@ class LoveDA(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         scene: list[str] = ['urban', 'rural'],
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,

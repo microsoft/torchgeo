@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import percentile_normalization
+from .utils import Path, percentile_normalization
 
 
 class BioMassters(NonGeoDataset):
@@ -57,7 +57,7 @@ class BioMassters(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         sensors: Sequence[str] = ['S1', 'S2'],
         as_time_series: bool = False,

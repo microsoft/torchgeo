@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive, percentile_normalization
+from .utils import Path, check_integrity, extract_archive, percentile_normalization
 
 
 class InriaAerialImageLabeling(NonGeoDataset):
@@ -59,7 +59,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         checksum: bool = False,
@@ -86,7 +86,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         self._verify()
         self.files = self._load_files(root)
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:

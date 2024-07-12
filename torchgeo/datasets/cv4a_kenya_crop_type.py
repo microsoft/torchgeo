@@ -399,7 +399,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         image_archive_path = os.path.join(self.root, self.image_meta['filename'])
         target_archive_path = os.path.join(self.root, self.target_meta['filename'])
         for fn in [image_archive_path, target_archive_path]:
-            extract_archive(fn, self.root)
+            extract_archive(fn, str(self.root))
 
     def plot(
         self,

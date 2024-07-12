@@ -13,7 +13,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import check_integrity, download_and_extract_archive
+from .utils import Path, check_integrity, download_and_extract_archive
 
 
 class CanadianBuildingFootprints(VectorDataset):
@@ -62,7 +62,7 @@ class CanadianBuildingFootprints(VectorDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float = 0.00001,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,

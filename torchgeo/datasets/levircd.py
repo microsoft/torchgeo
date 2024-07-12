@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive, percentile_normalization
+from .utils import Path, download_and_extract_archive, percentile_normalization
 
 
 class LEVIRCDBase(NonGeoDataset, abc.ABC):
@@ -31,7 +31,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -183,7 +183,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         return fig
 
     @abc.abstractmethod
-    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -255,7 +255,7 @@ class LEVIRCD(LEVIRCDBase):
         },
     }
 
-    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -338,7 +338,7 @@ class LEVIRCDPlus(LEVIRCDBase):
     directory = 'LEVIR-CD+'
     splits = ['train', 'test']
 
-    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:

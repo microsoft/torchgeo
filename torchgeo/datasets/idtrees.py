@@ -22,7 +22,7 @@ from torchvision.utils import draw_bounding_boxes
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, lazy_import
+from .utils import Path, download_url, extract_archive, lazy_import
 
 
 class IDTReeS(NonGeoDataset):
@@ -152,7 +152,7 @@ class IDTReeS(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         task: str = 'task1',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -333,7 +333,7 @@ class IDTReeS(NonGeoDataset):
         return tensor
 
     def _load(
-        self, root: str
+        self, root: Path
     ) -> tuple[list[str], dict[int, dict[str, Any]] | None, Any]:
         """Load files, geometries, and labels.
 

@@ -19,7 +19,12 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 # TODO: read geospatial information from stac.json files
@@ -173,7 +178,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         chip_size: int = 256,
         stride: int = 128,
         bands: tuple[str, ...] = all_bands,
@@ -422,7 +427,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         image_archive_path = os.path.join(self.root, self.image_meta['filename'])
         target_archive_path = os.path.join(self.root, self.target_meta['filename'])
         for fn in [image_archive_path, target_archive_path]:
-            extract_archive(fn, self.root)
+            extract_archive(fn, str(self.root))
 
     def plot(
         self,

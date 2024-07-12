@@ -16,7 +16,12 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 class RwandaFieldBoundary(NonGeoDataset):
@@ -82,7 +87,7 @@ class RwandaFieldBoundary(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -245,7 +250,7 @@ class RwandaFieldBoundary(NonGeoDataset):
             filepath = os.path.join(self.root, self.filenames[group])
             if self.checksum and not check_integrity(filepath, self.md5s[group]):
                 raise RuntimeError('Dataset not found or corrupted.')
-            extract_archive(filepath, self.root)
+            extract_archive(filepath, str(self.root))
 
     def plot(
         self,

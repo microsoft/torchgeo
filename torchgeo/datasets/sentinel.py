@@ -13,6 +13,7 @@ from rasterio.crs import CRS
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
+from .utils import Path
 
 
 class Sentinel(RasterDataset):
@@ -141,7 +142,7 @@ class Sentinel1(Sentinel):
 
     def __init__(
         self,
-        paths: str | list[str] = 'data',
+        paths: Path | list[Path] = 'data',
         crs: CRS | None = None,
         res: float = 10,
         bands: Sequence[str] = ['VV', 'VH'],
@@ -297,7 +298,7 @@ class Sentinel2(Sentinel):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float = 10,
         bands: Sequence[str] | None = None,

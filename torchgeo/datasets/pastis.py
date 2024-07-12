@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
 class PASTIS(NonGeoDataset):
@@ -128,7 +128,7 @@ class PASTIS(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         folds: Sequence[int] = (1, 2, 3, 4, 5),
         bands: str = 's2',
         mode: str = 'semantic',
@@ -341,7 +341,7 @@ class PASTIS(NonGeoDataset):
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
-        extract_archive(os.path.join(self.root, self.filename), self.root)
+        extract_archive(os.path.join(self.root, self.filename), str(self.root))
 
     def plot(
         self,

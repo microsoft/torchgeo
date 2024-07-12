@@ -18,7 +18,12 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 class TropicalCyclone(NonGeoDataset):
@@ -68,7 +73,7 @@ class TropicalCyclone(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
@@ -218,7 +223,7 @@ class TropicalCyclone(NonGeoDataset):
             for resource_type in resources:
                 filename = '_'.join([self.collection_id, split, resource_type])
                 filename = os.path.join(self.root, filename) + '.tar.gz'
-                extract_archive(filename, self.root)
+                extract_archive(filename, str(self.root))
 
     def plot(
         self,

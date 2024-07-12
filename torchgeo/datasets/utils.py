@@ -120,8 +120,8 @@ def extract_archive(src: str, dst: str | None = None) -> None:
 
 def download_and_extract_archive(
     url: str,
-    download_root: str,
-    extract_root: str | None = None,
+    download_root: Path,
+    extract_root: Path | None = None,
     filename: str | None = None,
     md5: str | None = None,
 ) -> None:
@@ -144,11 +144,11 @@ def download_and_extract_archive(
 
     archive = os.path.join(download_root, filename)
     print(f'Extracting {archive} to {extract_root}')
-    extract_archive(archive, extract_root)
+    extract_archive(archive, str(extract_root))
 
 
 def download_radiant_mlhub_dataset(
-    dataset_id: str, download_root: str, api_key: str | None = None
+    dataset_id: str, download_root: Path, api_key: str | None = None
 ) -> None:
     """Download a dataset from Radiant Earth.
 
@@ -168,7 +168,7 @@ def download_radiant_mlhub_dataset(
 
 
 def download_radiant_mlhub_collection(
-    collection_id: str, download_root: str, api_key: str | None = None
+    collection_id: str, download_root: Path, api_key: str | None = None
 ) -> None:
     """Download a collection from Radiant Earth.
 
@@ -490,7 +490,7 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
 
 
 @contextlib.contextmanager
-def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
+def working_dir(dirname: Path, create: bool = False) -> Iterator[None]:
     """Context manager for changing directories.
 
     Args:

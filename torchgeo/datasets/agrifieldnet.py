@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import BoundingBox
+from .utils import BoundingBox, Path
 
 
 class AgriFieldNet(RasterDataset):
@@ -115,7 +115,7 @@ class AgriFieldNet(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         classes: list[int] = list(cmap.keys()),
         bands: Sequence[str] = all_bands,

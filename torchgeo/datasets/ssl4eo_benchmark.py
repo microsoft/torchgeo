@@ -18,7 +18,7 @@ from .cdl import CDL
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .nlcd import NLCD
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class SSL4EOLBenchmark(NonGeoDataset):
@@ -107,7 +107,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         sensor: str = 'oli_sr',
         product: str = 'cdl',
         split: str = 'train',

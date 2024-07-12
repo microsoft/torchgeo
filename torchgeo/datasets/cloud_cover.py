@@ -17,7 +17,12 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 # TODO: read geospatial information from stac.json files
@@ -103,7 +108,7 @@ class CloudCoverDetection(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = band_names,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -344,7 +349,7 @@ class CloudCoverDetection(NonGeoDataset):
             self.root, self.target_meta[self.split]['filename']
         )
         for fn in [image_archive_path, target_archive_path]:
-            extract_archive(fn, self.root)
+            extract_archive(fn, str(self.root))
 
     def plot(
         self,
