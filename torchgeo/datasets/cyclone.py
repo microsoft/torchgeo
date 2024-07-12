@@ -166,14 +166,6 @@ class TropicalCyclone(NonGeoDataset):
         files = [f'{self.filename}_features.csv', f'{self.filename}_labels.csv']
         for file in files:
             azcopy('copy', f'{self.url}/{file}', self.root)
-        for collection_id in self.collection_ids:
-            download_radiant_mlhub_collection(collection_id, self.root)
-
-        for split, resources in self.md5s.items():
-            for resource_type in resources:
-                filename = '_'.join([self.collection_id, split, resource_type])
-                filename = os.path.join(self.root, filename) + '.tar.gz'
-                extract_archive(filename, str(self.root))
 
     def plot(
         self,
