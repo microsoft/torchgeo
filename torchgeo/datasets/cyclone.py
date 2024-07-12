@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_radiant_mlhub_collection, extract_archive, which
+from .utils import Path, which
 
 
 class TropicalCyclone(NonGeoDataset):
