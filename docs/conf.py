@@ -93,7 +93,7 @@ html_theme_options = {
 html_favicon = os.path.join('..', 'logo', 'favicon.ico')
 
 html_static_path = ['_static']
-html_css_files = ['button-width.css', 'notebook-prompt.css', 'table-scroll.css']
+html_css_files = ['badge-height.css', 'notebook-prompt.css', 'table-scroll.css']
 
 # -- Extension configuration -------------------------------------------------
 
@@ -127,37 +127,8 @@ intersphinx_mapping = {
 
 # nbsphinx
 nbsphinx_execute = 'never'
-# TODO: branch/tag should change depending on which version of docs you look at
-# TODO: width option of image directive is broken, see:
-# https://github.com/pytorch/pytorch_sphinx_theme/issues/140
-nbsphinx_prolog = """
-{% if "dev" in env.config.release %}
-    {% set branch = "main" %}
-{% else %}
-    {% set branch = "releases/v" ~ env.config.version %}
-{% endif %}
-
-{% set host = "https://colab.research.google.com" %}
-{% set badge = host ~ "/assets/colab-badge.svg" %}
-{% set repo = "microsoft/torchgeo" %}
-{% set path = "docs/" ~ env.docname ~ ".ipynb" %}
-
-.. image:: {{ badge }}
-   :class: colabbadge
-   :alt: Open in Colab
-   :target: {{ host }}/github/{{ repo }}/blob/{{ branch }}/{{ path }}
-
-{% set host = "https://lightning.ai/new" %}
-{% set badge = "https://pl-bolts-doc-images.s3.us-east-2.amazonaws.com" %}
-{% set badge = badge ~ "/app-2/studio-badge.svg" %}
-{% set repo_url = "https://github.com/" ~ repo ~ "/blob/" ~ branch ~ "/" ~ path %}
-{% set repo_url = repo_url | replace(":", "%3A") | replace("/", "%2F") %}
-
-.. image:: {{ badge }}
-   :class: colabbadge
-   :alt: Open in Studio
-   :target: {{ host }}?repo_url={{ repo_url }}
-"""
+with open(os.path.join('tutorials', 'prolog.rst.jinja')) as f:
+    nbsphinx_prolog = f.read()
 
 # Disables requirejs in nbsphinx to enable compatibility with the pytorch_sphinx_theme
 # See more information here https://github.com/spatialaudio/nbsphinx/issues/599
