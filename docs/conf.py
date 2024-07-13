@@ -146,6 +146,17 @@ nbsphinx_prolog = """
    :class: colabbadge
    :alt: Open in Colab
    :target: {{ host }}/github/{{ repo }}/blob/{{ branch }}/{{ path }}
+
+{% set host = "https://lightning.ai/new" %}
+{% set badge = "https://pl-bolts-doc-images.s3.us-east-2.amazonaws.com" %}
+{% set badge = badge ~ "/app-2/studio-badge.svg" %}
+{% set repo_url = "https://github.com/" ~ repo ~ "/blob/" ~ branch ~ "/" ~ path %}
+{% set repo_url = repo_url | replace(":", "%3A") | replace("/", "%2F") %}
+
+.. image:: {{ badge }}
+   :class: colabbadge
+   :alt: Open in Studio
+   :target: {{ host }}?repo_url={{ repo_url }}
 """
 
 # Disables requirejs in nbsphinx to enable compatibility with the pytorch_sphinx_theme
