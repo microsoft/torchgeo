@@ -332,7 +332,7 @@ class CDL(RasterDataset):
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace('*', str(year))
             pathname = os.path.join(self.paths, zipfile_name)
-            extract_archive(pathname, self.paths)
+            extract_archive(pathname, str(self.paths))
 
     def plot(
         self,
