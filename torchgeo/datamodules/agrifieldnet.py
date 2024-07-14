@@ -54,10 +54,13 @@ class AgriFieldNetDataModule(GeoDataModule):
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
             data_keys=None,
+            keepdim=True,
             extra_args={
                 DataKey.MASK: {'resample': Resample.NEAREST, 'align_corners': None}
             },
         )
+        # https://github.com/kornia/kornia/issues/2848
+        self.train_aug.keepdim = True  # type: ignore[attr-defined]
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

@@ -44,4 +44,7 @@ class RESISC45DataModule(NonGeoDataModule):
             K.RandomErasing(p=0.1),
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
             data_keys=None,
+            keepdim=True,
         )
+        # https://github.com/kornia/kornia/issues/2848
+        self.train_aug.keepdim = True  # type: ignore[attr-defined]

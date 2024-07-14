@@ -39,4 +39,7 @@ class QuakeSetDataModule(NonGeoDataModule):
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             data_keys=['image'],
+            keepdim=True,
         )
+        # https://github.com/kornia/kornia/issues/2848
+        self.train_aug.keepdim = True  # type: ignore[attr-defined]

@@ -122,8 +122,10 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             self.layers = ['naip-new', 'lc']
 
         self.aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=None
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
+        # https://github.com/kornia/kornia/issues/2848
+        self.aug.keepdim = True  # type: ignore[attr-defined]
 
     def setup(self, stage: str) -> None:
         """Set up datasets and samplers.

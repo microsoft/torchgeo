@@ -54,12 +54,18 @@ class SpaceNet1DataModule(NonGeoDataModule):
             K.RandomSharpness(p=0.5),
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
             data_keys=None,
+            keepdim=True,
         )
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
             data_keys=None,
+            keepdim=True,
         )
+
+        # https://github.com/kornia/kornia/issues/2848
+        self.train_aug.keepdim = True  # type: ignore[attr-defined]
+        self.aug.keepdim = True  # type: ignore[attr-defined]
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

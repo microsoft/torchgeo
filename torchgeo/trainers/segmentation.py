@@ -9,7 +9,6 @@ from typing import Any
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import torch.nn as nn
-from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MetricCollection
@@ -226,9 +225,6 @@ class SemanticSegmentationTask(BaseTask):
         Returns:
             The loss tensor.
         """
-        if 'mask' in batch and batch['mask'].shape[1] == 1:
-            batch['mask'] = rearrange(batch['mask'], 'b () h w -> b h w')
-
         x = batch['image']
         y = batch['mask']
         batch_size = x.shape[0]
@@ -249,8 +245,6 @@ class SemanticSegmentationTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        if 'mask' in batch and batch['mask'].shape[1] == 1:
-            batch['mask'] = rearrange(batch['mask'], 'b () h w -> b h w')
         x = batch['image']
         y = batch['mask']
         batch_size = x.shape[0]
@@ -295,8 +289,6 @@ class SemanticSegmentationTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        if 'mask' in batch and batch['mask'].shape[1] == 1:
-            batch['mask'] = rearrange(batch['mask'], 'b () h w -> b h w')
         x = batch['image']
         y = batch['mask']
         batch_size = x.shape[0]

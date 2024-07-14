@@ -53,7 +53,10 @@ class SeasonalContrastS2DataModule(NonGeoDataModule):
                 K.Normalize(mean=torch.tensor(0), std=1 / torch.tensor(255)),
                 K.Normalize(mean=_mean, std=_std),
                 data_keys=None,
+                keepdim=True,
             )
+            # https://github.com/kornia/kornia/issues/2848
+            self.aug.keepdim = True  # type: ignore[attr-defined]
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
