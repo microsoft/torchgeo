@@ -38,11 +38,15 @@ class LandCoverAIDataModule(NonGeoDataModule):
             K.RandomSharpness(p=0.5),
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
             data_keys=None,
+            keepdim=True,
         )
         self.aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=None
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
 
+        # https://github.com/kornia/kornia/issues/2848
+        self.train_aug.keepdim = True  # type: ignore[attr-defined]
+        self.aug.keepdim = True  # type: ignore[attr-defined]
 
 class LandCoverAI100DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the LandCoverAI100 dataset.
@@ -66,5 +70,8 @@ class LandCoverAI100DataModule(NonGeoDataModule):
         super().__init__(LandCoverAI100, batch_size, num_workers, **kwargs)
 
         self.aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=None
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
+
+        # https://github.com/kornia/kornia/issues/2848
+        self.aug.keepdim = True  # type: ignore[attr-defined]

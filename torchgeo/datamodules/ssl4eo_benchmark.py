@@ -45,6 +45,7 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
             data_keys=None,
+            keepdim=True,
             extra_args={
                 DataKey.MASK: {'resample': Resample.NEAREST, 'align_corners': None}
             },
@@ -53,9 +54,16 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
             K.Normalize(mean=self.mean, std=self.std),
             K.CenterCrop(self.patch_size),
             data_keys=None,
+            keepdim=True,
         )
         self.test_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.CenterCrop(self.patch_size),
             data_keys=None,
+            keepdim=True,
         )
+
+        # https://github.com/kornia/kornia/issues/2848
+        self.train_aug.keepdim = True  # type: ignore[attr-defined]
+        self.val_aug.keepdim = True  # type: ignore[attr-defined]
+        self.val_aug.keepdim = True  # type: ignore[attr-defined]

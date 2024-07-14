@@ -34,4 +34,7 @@ class UCMercedDataModule(NonGeoDataModule):
             K.Normalize(mean=self.mean, std=self.std),
             K.Resize(size=256),
             data_keys=None,
+            keepdim=True,
         )
+        # https://github.com/kornia/kornia/issues/2848
+        self.aug.keepdim = True  # type: ignore[attr-defined]
