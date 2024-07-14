@@ -4,6 +4,7 @@
 """AgriFieldNet India Challenge dataset."""
 
 import os
+import pathlib
 import re
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, cast
@@ -167,7 +168,7 @@ class AgriFieldNet(RasterDataset):
         Returns:
             data, label, and field ids at that index
         """
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
 
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = cast(list[str], [hit.object for hit in hits])

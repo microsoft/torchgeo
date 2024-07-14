@@ -4,6 +4,7 @@
 """Canadian Building Footprints dataset."""
 
 import os
+import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -104,7 +105,7 @@ class CanadianBuildingFootprints(VectorDataset):
         Returns:
             True if dataset files are found and/or MD5s match, else False
         """
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         for prov_terr, md5 in zip(self.provinces_territories, self.md5s):
             filepath = os.path.join(self.paths, prov_terr + '.zip')
             if not check_integrity(filepath, md5 if self.checksum else None):
@@ -116,7 +117,7 @@ class CanadianBuildingFootprints(VectorDataset):
         if self._check_integrity():
             print('Files already downloaded and verified')
             return
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         for prov_terr, md5 in zip(self.provinces_territories, self.md5s):
             download_and_extract_archive(
                 self.url + prov_terr + '.zip',

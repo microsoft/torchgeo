@@ -4,6 +4,7 @@
 """South Africa Crop Type Competition Dataset."""
 
 import os
+import pathlib
 import re
 from collections.abc import Callable, Iterable
 from typing import Any, cast
@@ -148,7 +149,7 @@ class SouthAfricaCropType(RasterDataset):
         Returns:
             data and labels at that index
         """
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
 
         # Get all files matching the given query
         hits = self.index.intersection(tuple(query), objects=True)

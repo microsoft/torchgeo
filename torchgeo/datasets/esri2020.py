@@ -133,7 +133,7 @@ class Esri2020(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         extract_archive(os.path.join(self.paths, self.zipfile))
 
     def plot(

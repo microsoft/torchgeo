@@ -848,7 +848,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         loader: Callable[[str], Any] | None = pil_loader,
         is_valid_file: Callable[[str], bool] | None = None,

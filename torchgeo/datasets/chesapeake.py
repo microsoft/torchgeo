@@ -5,6 +5,7 @@
 
 import abc
 import os
+import pathlib
 import sys
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, cast
@@ -145,7 +146,7 @@ class Chesapeake(RasterDataset, abc.ABC):
             return
 
         # Check if the zip file has already been downloaded
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         if os.path.exists(os.path.join(self.paths, self.zipfile)):
             self._extract()
             return
@@ -164,7 +165,7 @@ class Chesapeake(RasterDataset, abc.ABC):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         extract_archive(os.path.join(self.paths, self.zipfile))
 
     def plot(
@@ -510,7 +511,7 @@ class ChesapeakeCVPR(GeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         splits: Sequence[str] = ['de-train'],
         layers: Sequence[str] = ['naip-new', 'lc'],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
