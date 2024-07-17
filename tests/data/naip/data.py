@@ -42,32 +42,32 @@ PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",
 
 def create_file(path: str, dtype: str, num_channels: int) -> None:
     profile = {}
-    profile["driver"] = "GTiff"
-    profile["dtype"] = dtype
-    profile["count"] = num_channels
-    profile["crs"] = CRS.from_wkt(wkt)
-    profile["transform"] = Affine(
+    profile['driver'] = 'GTiff'
+    profile['dtype'] = dtype
+    profile['count'] = num_channels
+    profile['crs'] = CRS.from_wkt(wkt)
+    profile['transform'] = Affine(
         1.0, 0.0, 1303555.0000000005, 0.0, -1.0, 2535064.999999998
     )
-    profile["height"] = SIZE
-    profile["width"] = SIZE
-    profile["compress"] = "lzw"
-    profile["predictor"] = 2
+    profile['height'] = SIZE
+    profile['width'] = SIZE
+    profile['compress'] = 'lzw'
+    profile['predictor'] = 2
 
-    if "float" in profile["dtype"]:
-        Z = np.random.randn(SIZE, SIZE).astype(profile["dtype"])
+    if 'float' in profile['dtype']:
+        Z = np.random.randn(SIZE, SIZE).astype(profile['dtype'])
     else:
         Z = np.random.randint(
-            np.iinfo(profile["dtype"]).max, size=(SIZE, SIZE), dtype=profile["dtype"]
+            np.iinfo(profile['dtype']).max, size=(SIZE, SIZE), dtype=profile['dtype']
         )
 
-    with rasterio.open(path, "w", **profile) as src:
-        for i in range(1, profile["count"] + 1):
+    with rasterio.open(path, 'w', **profile) as src:
+        for i in range(1, profile['count'] + 1):
             src.write(Z, i)
 
 
-if __name__ == "__main__":
-    filenames = ["m_3807511_ne_18_060_20181104.tif", "m_3807511_ne_18_060_20190605.tif"]
+if __name__ == '__main__':
+    filenames = ['m_3807511_ne_18_060_20181104.tif', 'm_3807511_ne_18_060_20190605.tif']
 
     for f in filenames:
-        create_file(os.path.join(os.getcwd(), f), "uint8", 4)
+        create_file(os.path.join(os.getcwd(), f), 'uint8', 4)

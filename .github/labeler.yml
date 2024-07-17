@@ -1,47 +1,48 @@
 # TorchGeo modules
 datamodules:
-- changed-files:
-  - any-glob-to-any-file: "torchgeo/datamodules/**"
+  - changed-files:
+      - any-glob-to-any-file: "torchgeo/datamodules/**"
 datasets:
-- changed-files:
-  - any-glob-to-any-file: "torchgeo/datasets/**"
+  - changed-files:
+      - any-glob-to-any-file: "torchgeo/datasets/**"
 losses:
-- changed-files:
-  - any-glob-to-any-file: "torchgeo/losses/**"
+  - changed-files:
+      - any-glob-to-any-file: "torchgeo/losses/**"
 models:
-- changed-files:
-  - any-glob-to-any-file: "torchgeo/models/**"
+  - changed-files:
+      - any-glob-to-any-file: "torchgeo/models/**"
 samplers:
-- changed-files:
-  - any-glob-to-any-file: "torchgeo/samplers/**"
+  - changed-files:
+      - any-glob-to-any-file: "torchgeo/samplers/**"
 trainers:
-- changed-files:
-  - any-glob-to-any-file: "torchgeo/trainers/**"
+  - changed-files:
+      - any-glob-to-any-file: "torchgeo/trainers/**"
 transforms:
-- changed-files:
-  - any-glob-to-any-file: "torchgeo/transforms/**"
+  - changed-files:
+      - any-glob-to-any-file: "torchgeo/transforms/**"
 
 # Other
 dependencies:
-- changed-files:
-  - any-glob-to-any-file:
-    - "pyproject.toml"
-    - "requirements/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "pyproject.toml"
+          - "requirements/**"
+          - ".github/dependabot.yml"
 documentation:
-- changed-files:
-  - any-glob-to-any-file:
-    - "docs/**"
-    - "*.md"
-    - ".github/*.md"
-    - ".readthedocs.yaml"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**"
+          - "*.md"
+          - ".github/*.md"
+          - ".readthedocs.yaml"
 scripts:
-- changed-files:
-  - any-glob-to-any-file:
-    - "torchgeo/__main__.py"
-    - "torchgeo/main.py"
-    - "experiments/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "torchgeo/__main__.py"
+          - "torchgeo/main.py"
+          - "experiments/**"
 testing:
-- changed-files:
-  - any-glob-to-any-file:
-    - "tests/**"
-    - ".github/workflows/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "tests/**"
+          - ".github/workflows/**"

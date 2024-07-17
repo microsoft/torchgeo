@@ -26,13 +26,13 @@ class SemanticSegmentationTask(BaseTask):
 
     def __init__(
         self,
-        model: str = "unet",
-        backbone: str = "resnet50",
+        model: str = 'unet',
+        backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
         num_filters: int = 3,
-        loss: str = "ce",
+        loss: str = 'ce',
         class_weights: Tensor | None = None,
         ignore_index: int | None = None,
         lr: float = 1e-3,
@@ -76,7 +76,7 @@ class SemanticSegmentationTask(BaseTask):
            *segmentation_model*, *encoder_name*, and *encoder_weights*
            were renamed to *model*, *backbone*, and *weights*.
 
-        .. versionadded: 0.5
+        .. versionadded:: 0.5
             The *class_weights*, *freeze_backbone*, and *freeze_decoder* parameters.
 
         .. versionchanged:: 0.5
@@ -88,7 +88,7 @@ class SemanticSegmentationTask(BaseTask):
             The *ignore_index* parameter now works for jaccard loss.
         """
         self.weights = weights
-        super().__init__(ignore="weights")
+        super().__init__(ignore='weights')
 
     def configure_models(self) -> None:
         """Initialize the model.
@@ -96,28 +96,28 @@ class SemanticSegmentationTask(BaseTask):
         Raises:
             ValueError: If *model* is invalid.
         """
-        model: str = self.hparams["model"]
-        backbone: str = self.hparams["backbone"]
+        model: str = self.hparams['model']
+        backbone: str = self.hparams['backbone']
         weights = self.weights
-        in_channels: int = self.hparams["in_channels"]
-        num_classes: int = self.hparams["num_classes"]
-        num_filters: int = self.hparams["num_filters"]
+        in_channels: int = self.hparams['in_channels']
+        num_classes: int = self.hparams['num_classes']
+        num_filters: int = self.hparams['num_filters']
 
-        if model == "unet":
+        if model == 'unet':
             self.model = smp.Unet(
                 encoder_name=backbone,
-                encoder_weights="imagenet" if weights is True else None,
+                encoder_weights='imagenet' if weights is True else None,
                 in_channels=in_channels,
                 classes=num_classes,
             )
-        elif model == "deeplabv3+":
+        elif model == 'deeplabv3+':
             self.model = smp.DeepLabV3Plus(
                 encoder_name=backbone,
-                encoder_weights="imagenet" if weights is True else None,
+                encoder_weights='imagenet' if weights is True else None,
                 in_channels=in_channels,
                 classes=num_classes,
             )
-        elif model == "fcn":
+        elif model == 'fcn':
             self.model = FCN(
                 in_channels=in_channels, classes=num_classes, num_filters=num_filters
             )
@@ -127,7 +127,7 @@ class SemanticSegmentationTask(BaseTask):
                 "Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
             )
 
-        if model != "fcn":
+        if model != 'fcn':
             if weights and weights is not True:
                 if isinstance(weights, WeightsEnum):
                     state_dict = weights.get_state_dict(progress=True)
@@ -138,12 +138,12 @@ class SemanticSegmentationTask(BaseTask):
                 self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
-        if self.hparams["freeze_backbone"] and model in ["unet", "deeplabv3+"]:
+        if self.hparams['freeze_backbone'] and model in ['unet', 'deeplabv3+']:
             for param in self.model.encoder.parameters():
                 param.requires_grad = False
 
         # Freeze decoder
-        if self.hparams["freeze_decoder"] and model in ["unet", "deeplabv3+"]:
+        if self.hparams['freeze_decoder'] and model in ['unet', 'deeplabv3+']:
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
 
@@ -153,24 +153,24 @@ class SemanticSegmentationTask(BaseTask):
         Raises:
             ValueError: If *loss* is invalid.
         """
-        loss: str = self.hparams["loss"]
-        ignore_index = self.hparams["ignore_index"]
-        if loss == "ce":
+        loss: str = self.hparams['loss']
+        ignore_index = self.hparams['ignore_index']
+        if loss == 'ce':
             ignore_value = -1000 if ignore_index is None else ignore_index
             self.criterion = nn.CrossEntropyLoss(
-                ignore_index=ignore_value, weight=self.hparams["class_weights"]
+                ignore_index=ignore_value, weight=self.hparams['class_weights']
             )
-        elif loss == "jaccard":
+        elif loss == 'jaccard':
             # JaccardLoss requires a list of classes to use instead of a class
             # index to ignore.
             classes = [
-                i for i in range(self.hparams["num_classes"]) if i != ignore_index
+                i for i in range(self.hparams['num_classes']) if i != ignore_index
             ]
 
-            self.criterion = smp.losses.JaccardLoss(mode="multiclass", classes=classes)
-        elif loss == "focal":
+            self.criterion = smp.losses.JaccardLoss(mode='multiclass', classes=classes)
+        elif loss == 'focal':
             self.criterion = smp.losses.FocalLoss(
-                "multiclass", ignore_index=ignore_index, normalized=True
+                'multiclass', ignore_index=ignore_index, normalized=True
             )
         else:
             raise ValueError(
@@ -193,24 +193,24 @@ class SemanticSegmentationTask(BaseTask):
            * 'Macro' averaging, not used here, gives equal weight to each class, useful
              for balanced performance assessment across imbalanced classes.
         """
-        num_classes: int = self.hparams["num_classes"]
-        ignore_index: int | None = self.hparams["ignore_index"]
+        num_classes: int = self.hparams['num_classes']
+        ignore_index: int | None = self.hparams['ignore_index']
         metrics = MetricCollection(
             [
                 MulticlassAccuracy(
                     num_classes=num_classes,
                     ignore_index=ignore_index,
-                    multidim_average="global",
-                    average="micro",
+                    multidim_average='global',
+                    average='micro',
                 ),
                 MulticlassJaccardIndex(
-                    num_classes=num_classes, ignore_index=ignore_index, average="micro"
+                    num_classes=num_classes, ignore_index=ignore_index, average='micro'
                 ),
             ]
         )
-        self.train_metrics = metrics.clone(prefix="train_")
-        self.val_metrics = metrics.clone(prefix="val_")
-        self.test_metrics = metrics.clone(prefix="test_")
+        self.train_metrics = metrics.clone(prefix='train_')
+        self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -225,12 +225,12 @@ class SemanticSegmentationTask(BaseTask):
         Returns:
             The loss tensor.
         """
-        x = batch["image"]
-        y = batch["mask"]
+        x = batch['image']
+        y = batch['mask']
         batch_size = x.shape[0]
         y_hat = self(x)
         loss: Tensor = self.criterion(y_hat, y)
-        self.log("train_loss", loss, batch_size=batch_size)
+        self.log('train_loss', loss, batch_size=batch_size)
         self.train_metrics(y_hat, y)
         self.log_dict(self.train_metrics, batch_size=batch_size)
         return loss
@@ -245,26 +245,26 @@ class SemanticSegmentationTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        x = batch["image"]
-        y = batch["mask"]
+        x = batch['image']
+        y = batch['mask']
         batch_size = x.shape[0]
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log("val_loss", loss, batch_size=batch_size)
+        self.log('val_loss', loss, batch_size=batch_size)
         self.val_metrics(y_hat, y)
         self.log_dict(self.val_metrics, batch_size=batch_size)
 
         if (
             batch_idx < 10
-            and hasattr(self.trainer, "datamodule")
-            and hasattr(self.trainer.datamodule, "plot")
+            and hasattr(self.trainer, 'datamodule')
+            and hasattr(self.trainer.datamodule, 'plot')
             and self.logger
-            and hasattr(self.logger, "experiment")
-            and hasattr(self.logger.experiment, "add_figure")
+            and hasattr(self.logger, 'experiment')
+            and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
-            batch["prediction"] = y_hat.argmax(dim=1)
-            for key in ["image", "mask", "prediction"]:
+            batch['prediction'] = y_hat.argmax(dim=1)
+            for key in ['image', 'mask', 'prediction']:
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
 
@@ -277,7 +277,7 @@ class SemanticSegmentationTask(BaseTask):
             if fig:
                 summary_writer = self.logger.experiment
                 summary_writer.add_figure(
-                    f"image/{batch_idx}", fig, global_step=self.global_step
+                    f'image/{batch_idx}', fig, global_step=self.global_step
                 )
                 plt.close()
 
@@ -289,12 +289,12 @@ class SemanticSegmentationTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        x = batch["image"]
-        y = batch["mask"]
+        x = batch['image']
+        y = batch['mask']
         batch_size = x.shape[0]
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log("test_loss", loss, batch_size=batch_size)
+        self.log('test_loss', loss, batch_size=batch_size)
         self.test_metrics(y_hat, y)
         self.log_dict(self.test_metrics, batch_size=batch_size)
 
@@ -311,6 +311,6 @@ class SemanticSegmentationTask(BaseTask):
         Returns:
             Output predicted probabilities.
         """
-        x = batch["image"]
+        x = batch['image']
         y_hat: Tensor = self(x).softmax(dim=1)
         return y_hat

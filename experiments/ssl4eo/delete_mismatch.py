@@ -15,40 +15,40 @@ def delete_scene(directories: list[str], scene_id: str) -> None:
         directories: directories to check
         scene_id: scene to delete
     """
-    print(f"Removing {scene_id}")
+    print(f'Removing {scene_id}')
     for directory in directories:
         scene = os.path.join(directory, scene_id)
         if os.path.exists(scene):
             shutil.rmtree(scene)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("directories", nargs="+", help="directories to compare")
+    parser.add_argument('directories', nargs='+', help='directories to compare')
     parser.add_argument(
-        "--delete-different-locations",
-        action="store_true",
-        help="delete scene locations that do not match",
+        '--delete-different-locations',
+        action='store_true',
+        help='delete scene locations that do not match',
     )
     parser.add_argument(
-        "--delete-different-dates",
-        action="store_true",
-        help="delete scene dates that do not match (must be same satellite)",
+        '--delete-different-dates',
+        action='store_true',
+        help='delete scene dates that do not match (must be same satellite)',
     )
     args = parser.parse_args()
 
-    print("Computing sets...")
+    print('Computing sets...')
     scene_sets = [set(os.listdir(directory)) for directory in args.directories]
 
-    print("Computing union...")
+    print('Computing union...')
     union = set.union(*scene_sets)
     total = len(union)
 
-    print("Computing intersection...")
+    print('Computing intersection...')
     intersection = set.intersection(*scene_sets)
     remaining = len(intersection)
 
-    print("Computing difference...")
+    print('Computing difference...')
     difference = union - intersection
     delete_locations = len(difference)
 
@@ -72,6 +72,6 @@ if __name__ == "__main__":
     remaining -= delete_times
     delete = delete_locations + delete_times
     if not (args.delete_different_locations or args.delete_different_dates):
-        print(f"Would delete {delete} scenes, leaving {remaining} remaining scenes.")
+        print(f'Would delete {delete} scenes, leaving {remaining} remaining scenes.')
     else:
-        print(f"Deleted {delete} scenes, leaving {remaining} remaining scenes.")
+        print(f'Deleted {delete} scenes, leaving {remaining} remaining scenes.')

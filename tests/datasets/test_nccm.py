@@ -13,8 +13,13 @@ from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 import torchgeo.datasets.utils
-from torchgeo.datasets import NCCM, BoundingBox, IntersectionDataset, UnionDataset
-from torchgeo.datasets.utils import DatasetNotFoundError
+from torchgeo.datasets import (
+    NCCM,
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
 def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
@@ -24,19 +29,19 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestNCCM:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NCCM:
-        monkeypatch.setattr(torchgeo.datasets.nccm, "download_url", download_url)
+        monkeypatch.setattr(torchgeo.datasets.nccm, 'download_url', download_url)
         md5s = {
-            2017: "ae5c390d0ffb8970d544b8a09142759f",
-            2018: "0d453bdb8ea5b7318c33e62513760580",
-            2019: "d4ab7ab00bb57623eafb6b27747e5639",
+            2017: 'ae5c390d0ffb8970d544b8a09142759f',
+            2018: '0d453bdb8ea5b7318c33e62513760580',
+            2019: 'd4ab7ab00bb57623eafb6b27747e5639',
         }
-        monkeypatch.setattr(NCCM, "md5s", md5s)
+        monkeypatch.setattr(NCCM, 'md5s', md5s)
         urls = {
-            2017: os.path.join("tests", "data", "nccm", "CDL2017_clip.tif"),
-            2018: os.path.join("tests", "data", "nccm", "CDL2018_clip1.tif"),
-            2019: os.path.join("tests", "data", "nccm", "CDL2019_clip.tif"),
+            2017: os.path.join('tests', 'data', 'nccm', 'CDL2017_clip.tif'),
+            2018: os.path.join('tests', 'data', 'nccm', 'CDL2018_clip1.tif'),
+            2019: os.path.join('tests', 'data', 'nccm', 'CDL2019_clip.tif'),
         }
-        monkeypatch.setattr(NCCM, "urls", urls)
+        monkeypatch.setattr(NCCM, 'urls', urls)
         transforms = nn.Identity()
         root = str(tmp_path)
         return NCCM(root, transforms=transforms, download=True, checksum=True)
@@ -44,8 +49,11 @@ class TestNCCM:
     def test_getitem(self, dataset: NCCM) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x["crs"], CRS)
-        assert isinstance(x["mask"], torch.Tensor)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['mask'], torch.Tensor)
+
+    def test_len(self, dataset: NCCM) -> None:
+        assert len(dataset) == 1
 
     def test_and(self, dataset: NCCM) -> None:
         ds = dataset & dataset
@@ -64,23 +72,23 @@ class TestNCCM:
     def test_plot(self, dataset: NCCM) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: NCCM) -> None:
         query = dataset.bounds
         x = dataset[query]
-        x["prediction"] = x["mask"].clone()
-        dataset.plot(x, suptitle="Prediction")
+        x['prediction'] = x['mask'].clone()
+        dataset.plot(x, suptitle='Prediction')
         plt.close()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             NCCM(str(tmp_path))
 
     def test_invalid_query(self, dataset: NCCM) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
-            IndexError, match="query: .* not found in index with bounds:"
+            IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]

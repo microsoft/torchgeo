@@ -21,15 +21,15 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 
 
 class TestFireRisk:
-    @pytest.fixture(params=["train", "val"])
+    @pytest.fixture(params=['train', 'val'])
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> FireRisk:
-        monkeypatch.setattr(torchgeo.datasets.fire_risk, "download_url", download_url)
-        url = os.path.join("tests", "data", "fire_risk", "FireRisk.zip")
-        md5 = "db22106d61b10d855234b4a74db921ac"
-        monkeypatch.setattr(FireRisk, "md5", md5)
-        monkeypatch.setattr(FireRisk, "url", url)
+        monkeypatch.setattr(torchgeo.datasets.fire_risk, 'download_url', download_url)
+        url = os.path.join('tests', 'data', 'fire_risk', 'FireRisk.zip')
+        md5 = 'db22106d61b10d855234b4a74db921ac'
+        monkeypatch.setattr(FireRisk, 'md5', md5)
+        monkeypatch.setattr(FireRisk, 'url', url)
         root = str(tmp_path)
         split = request.param
         transforms = nn.Identity()
@@ -38,9 +38,9 @@ class TestFireRisk:
     def test_getitem(self, dataset: FireRisk) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
-        assert isinstance(x["label"], torch.Tensor)
-        assert x["image"].shape[0] == 3
+        assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['label'], torch.Tensor)
+        assert x['image'].shape[0] == 3
 
     def test_len(self, dataset: FireRisk) -> None:
         assert len(dataset) == 5
@@ -56,15 +56,15 @@ class TestFireRisk:
         FireRisk(root=str(tmp_path), download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             FireRisk(str(tmp_path))
 
     def test_plot(self, dataset: FireRisk) -> None:
         x = dataset[0].copy()
-        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle='Test')
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        x["prediction"] = x["label"].clone()
+        x['prediction'] = x['label'].clone()
         dataset.plot(x)
         plt.close()

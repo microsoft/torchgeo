@@ -108,6 +108,11 @@ iNaturalist
 
 .. autoclass:: INaturalist
 
+I/O Bench
+^^^^^^^^^
+
+.. autoclass:: IOBench
+
 L7 Irish
 ^^^^^^^^
 
@@ -176,7 +181,7 @@ South Africa Crop Type
 
 .. autoclass:: SouthAfricaCropType
 
-South America Soybean 
+South America Soybean
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SouthAmericaSoybean
@@ -260,6 +265,7 @@ EuroSAT
 ^^^^^^^
 
 .. autoclass:: EuroSAT
+.. autoclass:: EuroSATSpatial
 .. autoclass:: EuroSAT100
 
 FAIR1M
@@ -347,6 +353,11 @@ Potsdam
 ^^^^^^^
 
 .. autoclass:: Potsdam2D
+
+QuakeSet
+^^^^^^^^
+
+.. autoclass:: QuakeSet
 
 ReforesTree
 ^^^^^^^^^^^
@@ -525,4 +536,5 @@ Errors
 ------
 
 .. autoclass:: DatasetNotFoundError
+.. autoclass:: DependencyNotFoundError
 .. autoclass:: RGBBandsMissingError

@@ -13,8 +13,9 @@ import numpy as np
 import pandas as pd
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, DatasetNotFoundError
+from .utils import BoundingBox
 
 
 def _disambiguate_timestamps(
@@ -79,7 +80,7 @@ class GBIF(GeoDataset):
     res = 0
     _crs = CRS.from_epsg(4326)  # Lat/Lon
 
-    def __init__(self, root: str = "data") -> None:
+    def __init__(self, root: str = 'data') -> None:
         """Initialize a new Dataset instance.
 
         Args:
@@ -92,15 +93,15 @@ class GBIF(GeoDataset):
 
         self.root = root
 
-        files = glob.glob(os.path.join(root, "**.csv"))
+        files = glob.glob(os.path.join(root, '**.csv'))
         if not files:
             raise DatasetNotFoundError(self)
 
         # Read tab-delimited CSV file
         data = pd.read_table(
             files[0],
-            engine="c",
-            usecols=["decimalLatitude", "decimalLongitude", "day", "month", "year"],
+            engine='c',
+            usecols=['decimalLatitude', 'decimalLongitude', 'day', 'month', 'year'],
         )
 
         # Convert from pandas DataFrame to rtree Index
@@ -133,9 +134,9 @@ class GBIF(GeoDataset):
 
         if not bboxes:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        sample = {"crs": self.crs, "bbox": bboxes}
+        sample = {'crs': self.crs, 'bbox': bboxes}
 
         return sample

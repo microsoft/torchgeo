@@ -7,6 +7,7 @@ from .base import BaseTask
 from .byol import BYOLTask
 from .classification import ClassificationTask, MultiLabelClassificationTask
 from .detection import ObjectDetectionTask
+from .iobench import IOBenchTask
 from .moco import MoCoTask
 from .regression import PixelwiseRegressionTask, RegressionTask
 from .segmentation import SemanticSegmentationTask
@@ -14,16 +15,18 @@ from .simclr import SimCLRTask
 
 __all__ = (
     # Supervised
-    "ClassificationTask",
-    "MultiLabelClassificationTask",
-    "ObjectDetectionTask",
-    "PixelwiseRegressionTask",
-    "RegressionTask",
-    "SemanticSegmentationTask",
+    'ClassificationTask',
+    'MultiLabelClassificationTask',
+    'ObjectDetectionTask',
+    'PixelwiseRegressionTask',
+    'RegressionTask',
+    'SemanticSegmentationTask',
     # Self-supervised
-    "BYOLTask",
-    "MoCoTask",
-    "SimCLRTask",
+    'BYOLTask',
+    'MoCoTask',
+    'SimCLRTask',
     # Base classes
-    "BaseTask",
+    'BaseTask',
+    # Other
+    'IOBenchTask',
 )

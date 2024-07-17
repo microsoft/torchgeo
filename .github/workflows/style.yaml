@@ -2,163 +2,85 @@ name: style
 on:
   push:
     branches:
-    - main
-    - release**
+      - main
+      - release**
   pull_request:
     branches:
-    - main
-    - release**
+      - main
+      - release**
 jobs:
-  black:
-    name: black
-    runs-on: ubuntu-latest
-    steps:
-    - name: Clone repo
-      uses: actions/checkout@v4.1.2
-    - name: Set up python
-      uses: actions/setup-python@v5.1.0
-      with:
-        python-version: '3.12'
-    - name: Cache dependencies
-      uses: actions/cache@v4.0.2
-      id: cache
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
-    - name: Install pip dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip cache purge
-    - name: List pip dependencies
-      run: pip list
-    - name: Run black checks
-      run: black . --check --diff
-  flake8:
-    name: flake8
-    runs-on: ubuntu-latest
-    steps:
-    - name: Clone repo
-      uses: actions/checkout@v4.1.2
-    - name: Set up python
-      uses: actions/setup-python@v5.1.0
-      with:
-        python-version: '3.12'
-    - name: Cache dependencies
-      uses: actions/cache@v4.0.2
-      id: cache
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
-    - name: Install pip dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip cache purge
-    - name: List pip dependencies
-      run: pip list
-    - name: Run flake8 checks
-      run: flake8
-  isort:
-    name: isort
-    runs-on: ubuntu-latest
-    steps:
-    - name: Clone repo
-      uses: actions/checkout@v4.1.2
-    - name: Set up python
-      uses: actions/setup-python@v5.1.0
-      with:
-        python-version: '3.12'
-    - name: Cache dependencies
-      uses: actions/cache@v4.0.2
-      id: cache
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
-    - name: Install pip dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip cache purge
-    - name: List pip dependencies
-      run: pip list
-    - name: Run isort checks
-      run: isort . --check --diff
   mypy:
     name: mypy
     runs-on: ubuntu-latest
     steps:
-    - name: Clone repo
-      uses: actions/checkout@v4.1.2
-    - name: Set up python
-      uses: actions/setup-python@v5.1.0
-      with:
-        python-version: '3.12'
-    - name: Cache dependencies
-      uses: actions/cache@v4.0.2
-      id: cache
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/tests.txt') }}
-    - name: Install pip dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/tests.txt
-        pip cache purge
-    - name: List pip dependencies
-      run: pip list
-    - name: Run mypy checks
-      run: mypy .
-  pydocstyle:
-    name: pydocstyle
+      - name: Clone repo
+        uses: actions/checkout@v4.1.6
+      - name: Set up python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: "3.12"
+      - name: Cache dependencies
+        uses: actions/cache@v4.0.2
+        id: cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/style.txt') }}-${{ hashFiles('requirements/tests.txt') }}
+      - name: Install pip dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/style.txt -r requirements/tests.txt
+          pip cache purge
+      - name: List pip dependencies
+        run: pip list
+      - name: Run mypy checks
+        run: mypy .
+  ruff:
+    name: ruff
     runs-on: ubuntu-latest
     steps:
-    - name: Clone repo
-      uses: actions/checkout@v4.1.2
-    - name: Set up python
-      uses: actions/setup-python@v5.1.0
-      with:
-        python-version: '3.12'
-    - name: Cache dependencies
-      uses: actions/cache@v4.0.2
-      id: cache
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
-    - name: Install pip dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip cache purge
-    - name: List pip dependencies
-      run: pip list
-    - name: Run pydocstyle checks
-      run: pydocstyle
-  pyupgrade:
-    name: pyupgrade
+      - name: Clone repo
+        uses: actions/checkout@v4.1.6
+      - name: Set up python
+        uses: actions/setup-python@v5.1.0
+        with:
+          python-version: "3.12"
+      - name: Cache dependencies
+        uses: actions/cache@v4.0.2
+        id: cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
+      - name: Install pip dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          pip install -r requirements/style.txt
+          pip cache purge
+      - name: List pip dependencies
+        run: pip list
+      - name: Run ruff checks
+        run: |
+          ruff check --output-format=github --no-fix .
+          ruff format --diff
+  prettier:
+    name: prettier
     runs-on: ubuntu-latest
     steps:
-    - name: Clone repo
-      uses: actions/checkout@v4.1.2
-    - name: Set up python
-      uses: actions/setup-python@v5.1.0
-      with:
-        python-version: '3.12'
-    - name: Cache dependencies
-      uses: actions/cache@v4.0.2
-      id: cache
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
-    - name: Install pip dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install -r requirements/style.txt
-        pip cache purge
-    - name: List pip dependencies
-      run: pip list
-    - name: Run pyupgrade checks
-      run: pyupgrade --py310-plus $(find . -path ./docs/src -prune -o -name "*.py" -print)
+      - name: Clone repo
+        uses: actions/checkout@v4.1.6
+      - name: Set up nodejs
+        uses: actions/setup-node@v4.0.2
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "requirements/package-lock.json"
+      - name: Installing prettier
+        run: |
+          npm install requirements/
+          npm cache clean --force
+      - name: List npm dependencies
+        run: npm ls --all
+      - name: Run prettier formatting
+        run: npx prettier . --check
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true

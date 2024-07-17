@@ -1,18 +1,24 @@
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 version: 2
 updates:
+  - package-ecosystem: "devcontainers"
+    directory: "/.devcontainer"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-    ignore:
-      # codecov-action 4 is not compatible with forks
-      # https://github.com/codecov/feedback/issues/126
-      # https://github.com/codecov/feedback/issues/273
-      - dependency-name: "codecov/codecov-action"
   - package-ecosystem: "pip"
     directory: "/requirements"
     schedule:
       interval: "daily"
+    groups:
+      # torchvision pins torch, must update in unison
+      torch:
+        patterns:
+          - "torch"
+          - "torchvision"
     ignore:
       # setuptools releases new versions almost daily
       - dependency-name: "setuptools"
@@ -20,7 +26,10 @@ updates:
       # sphinx 6 is incompatible with pytorch-sphinx-theme
       # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
       - dependency-name: "sphinx"
+        versions: ">=6"
       # segmentation-models-pytorch pins timm, must update in unison
       - dependency-name: "timm"
-      # torchvision pins torch, must update in unison
-      - dependency-name: "torch"
+  - package-ecosystem: "npm"
+    directory: "/requirements"
+    schedule:
+      interval: "weekly"

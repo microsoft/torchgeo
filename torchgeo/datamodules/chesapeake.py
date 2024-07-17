@@ -38,14 +38,14 @@ class _Transform(nn.Module):
         Returns:
             Augmented sample.
         """
-        for key in ["image", "mask"]:
+        for key in ['image', 'mask']:
             dtype = sample[key].dtype
             # All inputs must be float
             sample[key] = sample[key].float()
             sample[key] = self.aug(sample[key])
             sample[key] = sample[key].to(dtype)
             # Kornia adds batch dimension
-            sample[key] = rearrange(sample[key], "() c h w -> c h w")
+            sample[key] = rearrange(sample[key], '() c h w -> c h w')
         return sample
 
 
@@ -94,7 +94,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         # This is a rough estimate of how large of a patch we will need to sample in
         # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
         self.original_patch_size = patch_size * 3
-        kwargs["transforms"] = _Transform(K.CenterCrop(patch_size))
+        kwargs['transforms'] = _Transform(K.CenterCrop(patch_size))
 
         super().__init__(
             ChesapeakeCVPR, batch_size, patch_size, length, num_workers, **kwargs
@@ -103,8 +103,8 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         assert class_set in [5, 7]
         if use_prior_labels and class_set == 7:
             raise ValueError(
-                "The pre-generated prior labels are only valid for the 5"
-                + " class set of labels"
+                'The pre-generated prior labels are only valid for the 5'
+                + ' class set of labels'
             )
 
         self.train_splits = train_splits
@@ -116,14 +116,14 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
 
         if self.use_prior_labels:
             self.layers = [
-                "naip-new",
-                "prior_from_cooccurrences_101_31_no_osm_no_buildings",
+                'naip-new',
+                'prior_from_cooccurrences_101_31_no_osm_no_buildings',
             ]
         else:
-            self.layers = ["naip-new", "lc"]
+            self.layers = ['naip-new', 'lc']
 
         self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "mask"]
+            K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
         )
 
     def setup(self, stage: str) -> None:
@@ -132,7 +132,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit"]:
+        if stage in ['fit']:
             self.train_dataset = ChesapeakeCVPR(
                 splits=self.train_splits, layers=self.layers, **self.kwargs
             )
@@ -142,14 +142,14 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
                 self.batch_size,
                 self.length,
             )
-        if stage in ["fit", "validate"]:
+        if stage in ['fit', 'validate']:
             self.val_dataset = ChesapeakeCVPR(
                 splits=self.val_splits, layers=self.layers, **self.kwargs
             )
             self.val_sampler = GridGeoSampler(
                 self.val_dataset, self.original_patch_size, self.original_patch_size
             )
-        if stage in ["test"]:
+        if stage in ['test']:
             self.test_dataset = ChesapeakeCVPR(
                 splits=self.test_splits, layers=self.layers, **self.kwargs
             )
@@ -170,13 +170,13 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             A batch of data.
         """
         if self.use_prior_labels:
-            batch["mask"] = F.normalize(batch["mask"].float(), p=1, dim=1)
-            batch["mask"] = F.normalize(
-                batch["mask"] + self.prior_smoothing_constant, p=1, dim=1
+            batch['mask'] = F.normalize(batch['mask'].float(), p=1, dim=1)
+            batch['mask'] = F.normalize(
+                batch['mask'] + self.prior_smoothing_constant, p=1, dim=1
             ).long()
         else:
             if self.class_set == 5:
-                batch["mask"][batch["mask"] == 5] = 4
-                batch["mask"][batch["mask"] == 6] = 4
+                batch['mask'][batch['mask'] == 5] = 4
+                batch['mask'][batch['mask'] == 6] = 4
 
         return super().on_after_batch_transfer(batch, dataloader_idx)

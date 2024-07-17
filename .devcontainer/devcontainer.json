@@ -20,21 +20,16 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-python.python",
-        "ms-python.isort",
-        "ms-python.black-formatter",
-        "ms-python.vscode-pylance",
-        "ms-python.pylint",
-        "ms-python.flake8",
-        "ms-python.mypy-type-checker",
         "GitHub.codespaces",
+        "charliermarsh.ruff",
+        "ms-python.python",
+        "ms-python.mypy-type-checker",
         "ms-toolsai.jupyter"
       ],
       "settings": {
         "telemetry.telemetryLevel": "off",
         "python.languageServer": "Pylance",
         "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "python.formatting.blackPath": "/usr/local/py-utils/bin/black",
         "python.testing.pytestEnabled": true,
         "python.testing.pytestPath": "/usr/local/py-utils/bin/pytest",
         "python.editor.formatOnSave": true,
@@ -43,9 +38,7 @@
         "python.editor.codeActionsOnSave": {
           "source.organizeImports": true
         },
-        "python.diffEditor.wordWrap": "off",
-        "isort.args": ["--profile", "black"],
-        "isort.path": ["/home/vscode/.local/bin/isort"]
+        "python.diffEditor.wordWrap": "off"
       }
     }
   }

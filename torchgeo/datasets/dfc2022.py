@@ -16,13 +16,9 @@ from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    check_integrity,
-    extract_archive,
-    percentile_normalization,
-)
+from .utils import check_integrity, extract_archive, percentile_normalization
 
 
 class DFC2022(NonGeoDataset):
@@ -82,67 +78,67 @@ class DFC2022(NonGeoDataset):
     """  # noqa: E501
 
     classes = [
-        "No information",
-        "Urban fabric",
-        "Industrial, commercial, public, military, private and transport units",
-        "Mine, dump and construction sites",
-        "Artificial non-agricultural vegetated areas",
-        "Arable land (annual crops)",
-        "Permanent crops",
-        "Pastures",
-        "Complex and mixed cultivation patterns",
-        "Orchards at the fringe of urban classes",
-        "Forests",
-        "Herbaceous vegetation associations",
-        "Open spaces with little or no vegetation",
-        "Wetlands",
-        "Water",
-        "Clouds and Shadows",
+        'No information',
+        'Urban fabric',
+        'Industrial, commercial, public, military, private and transport units',
+        'Mine, dump and construction sites',
+        'Artificial non-agricultural vegetated areas',
+        'Arable land (annual crops)',
+        'Permanent crops',
+        'Pastures',
+        'Complex and mixed cultivation patterns',
+        'Orchards at the fringe of urban classes',
+        'Forests',
+        'Herbaceous vegetation associations',
+        'Open spaces with little or no vegetation',
+        'Wetlands',
+        'Water',
+        'Clouds and Shadows',
     ]
     colormap = [
-        "#231F20",
-        "#DB5F57",
-        "#DB9757",
-        "#DBD057",
-        "#ADDB57",
-        "#75DB57",
-        "#7BC47B",
-        "#58B158",
-        "#D4F6D4",
-        "#B0E2B0",
-        "#008000",
-        "#58B0A7",
-        "#995D13",
-        "#579BDB",
-        "#0062FF",
-        "#231F20",
+        '#231F20',
+        '#DB5F57',
+        '#DB9757',
+        '#DBD057',
+        '#ADDB57',
+        '#75DB57',
+        '#7BC47B',
+        '#58B158',
+        '#D4F6D4',
+        '#B0E2B0',
+        '#008000',
+        '#58B0A7',
+        '#995D13',
+        '#579BDB',
+        '#0062FF',
+        '#231F20',
     ]
     metadata = {
-        "train": {
-            "filename": "labeled_train.zip",
-            "md5": "2e87d6a218e466dd0566797d7298c7a9",
-            "directory": "labeled_train",
+        'train': {
+            'filename': 'labeled_train.zip',
+            'md5': '2e87d6a218e466dd0566797d7298c7a9',
+            'directory': 'labeled_train',
         },
-        "train-unlabeled": {
-            "filename": "unlabeled_train.zip",
-            "md5": "1016d724bc494b8c50760ae56bb0585e",
-            "directory": "unlabeled_train",
+        'train-unlabeled': {
+            'filename': 'unlabeled_train.zip',
+            'md5': '1016d724bc494b8c50760ae56bb0585e',
+            'directory': 'unlabeled_train',
         },
-        "val": {
-            "filename": "val.zip",
-            "md5": "6ddd9c0f89d8e74b94ea352d4002073f",
-            "directory": "val",
+        'val': {
+            'filename': 'val.zip',
+            'md5': '6ddd9c0f89d8e74b94ea352d4002073f',
+            'directory': 'val',
         },
     }
 
-    image_root = "BDORTHO"
-    dem_root = "RGEALTI"
-    target_root = "UrbanAtlas"
+    image_root = 'BDORTHO'
+    dem_root = 'RGEALTI'
+    target_root = 'UrbanAtlas'
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
@@ -180,15 +176,15 @@ class DFC2022(NonGeoDataset):
             data and label at that index
         """
         files = self.files[index]
-        image = self._load_image(files["image"])
-        dem = self._load_image(files["dem"], shape=image.shape[1:])
+        image = self._load_image(files['image'])
+        dem = self._load_image(files['dem'], shape=image.shape[1:])
         image = torch.cat(tensors=[image, dem], dim=0)
 
-        sample = {"image": image}
+        sample = {'image': image}
 
-        if self.split == "train":
-            mask = self._load_target(files["target"])
-            sample["mask"] = mask
+        if self.split == 'train':
+            mask = self._load_target(files['target'])
+            sample['mask'] = mask
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -209,19 +205,19 @@ class DFC2022(NonGeoDataset):
         Returns:
             list of dicts containing paths for each pair of image/dem/mask
         """
-        directory = os.path.join(self.root, self.metadata[self.split]["directory"])
+        directory = os.path.join(self.root, self.metadata[self.split]['directory'])
         images = glob.glob(
-            os.path.join(directory, "**", self.image_root, "*.tif"), recursive=True
+            os.path.join(directory, '**', self.image_root, '*.tif'), recursive=True
         )
 
         files = []
         for image in sorted(images):
             dem = image.replace(self.image_root, self.dem_root)
-            dem = f"{os.path.splitext(dem)[0]}_RGEALTI.tif"
+            dem = f'{os.path.splitext(dem)[0]}_RGEALTI.tif'
 
-            if self.split == "train":
+            if self.split == 'train':
                 target = image.replace(self.image_root, self.target_root)
-                target = f"{os.path.splitext(target)[0]}_UA2012.tif"
+                target = f'{os.path.splitext(target)[0]}_UA2012.tif'
                 files.append(dict(image=image, dem=dem, target=target))
             else:
                 files.append(dict(image=image, dem=dem))
@@ -239,8 +235,8 @@ class DFC2022(NonGeoDataset):
             the image
         """
         with rasterio.open(path) as f:
-            array: "np.typing.NDArray[np.float_]" = f.read(
-                out_shape=shape, out_dtype="float32", resampling=Resampling.bilinear
+            array: np.typing.NDArray[np.float_] = f.read(
+                out_shape=shape, out_dtype='float32', resampling=Resampling.bilinear
             )
             tensor = torch.from_numpy(array)
             return tensor
@@ -255,8 +251,8 @@ class DFC2022(NonGeoDataset):
             the target mask
         """
         with rasterio.open(path) as f:
-            array: "np.typing.NDArray[np.int_]" = f.read(
-                indexes=1, out_dtype="int32", resampling=Resampling.bilinear
+            array: np.typing.NDArray[np.int_] = f.read(
+                indexes=1, out_dtype='int32', resampling=Resampling.bilinear
             )
             tensor = torch.from_numpy(array)
             tensor = tensor.to(torch.long)
@@ -268,7 +264,7 @@ class DFC2022(NonGeoDataset):
         exists = []
         for split_info in self.metadata.values():
             exists.append(
-                os.path.exists(os.path.join(self.root, split_info["directory"]))
+                os.path.exists(os.path.join(self.root, split_info['directory']))
             )
 
         if all(exists):
@@ -277,10 +273,10 @@ class DFC2022(NonGeoDataset):
         # Check if .zip files already exists (if so then extract)
         exists = []
         for split_info in self.metadata.values():
-            filepath = os.path.join(self.root, split_info["filename"])
+            filepath = os.path.join(self.root, split_info['filename'])
             if os.path.isfile(filepath):
-                if self.checksum and not check_integrity(filepath, split_info["md5"]):
-                    raise RuntimeError("Dataset found, but corrupted.")
+                if self.checksum and not check_integrity(filepath, split_info['md5']):
+                    raise RuntimeError('Dataset found, but corrupted.')
                 exists.append(True)
                 extract_archive(filepath)
             else:
@@ -308,51 +304,51 @@ class DFC2022(NonGeoDataset):
             a matplotlib Figure with the rendered sample
         """
         ncols = 2
-        image = sample["image"][:3]
+        image = sample['image'][:3]
         image = image.to(torch.uint8)
         image = image.permute(1, 2, 0).numpy()
 
-        dem = sample["image"][-1].numpy()
+        dem = sample['image'][-1].numpy()
         dem = percentile_normalization(dem, lower=0, upper=100, axis=(0, 1))
 
-        showing_mask = "mask" in sample
-        showing_prediction = "prediction" in sample
+        showing_mask = 'mask' in sample
+        showing_prediction = 'prediction' in sample
 
         cmap = colors.ListedColormap(self.colormap)
 
         if showing_mask:
-            mask = sample["mask"].numpy()
+            mask = sample['mask'].numpy()
             ncols += 1
         if showing_prediction:
-            pred = sample["prediction"].numpy()
+            pred = sample['prediction'].numpy()
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
 
         axs[0].imshow(image)
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(dem)
-        axs[1].axis("off")
+        axs[1].axis('off')
         if showing_mask:
-            axs[2].imshow(mask, cmap=cmap, interpolation="none")
-            axs[2].axis("off")
+            axs[2].imshow(mask, cmap=cmap, interpolation='none')
+            axs[2].axis('off')
             if showing_prediction:
-                axs[3].imshow(pred, cmap=cmap, interpolation="none")
-                axs[3].axis("off")
+                axs[3].imshow(pred, cmap=cmap, interpolation='none')
+                axs[3].axis('off')
         elif showing_prediction:
-            axs[2].imshow(pred, cmap=cmap, interpolation="none")
-            axs[2].axis("off")
+            axs[2].imshow(pred, cmap=cmap, interpolation='none')
+            axs[2].axis('off')
 
         if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("DEM")
+            axs[0].set_title('Image')
+            axs[1].set_title('DEM')
 
             if showing_mask:
-                axs[2].set_title("Ground Truth")
+                axs[2].set_title('Ground Truth')
                 if showing_prediction:
-                    axs[3].set_title("Predictions")
+                    axs[3].set_title('Predictions')
             elif showing_prediction:
-                axs[2].set_title("Predictions")
+                axs[2].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

@@ -16,13 +16,9 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    check_integrity,
-    download_radiant_mlhub_collection,
-    extract_archive,
-)
+from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
 
 
 class TropicalCyclone(NonGeoDataset):
@@ -51,29 +47,29 @@ class TropicalCyclone(NonGeoDataset):
        to be consistent with TropicalCycloneDataModule.
     """
 
-    collection_id = "nasa_tropical_storm_competition"
+    collection_id = 'nasa_tropical_storm_competition'
     collection_ids = [
-        "nasa_tropical_storm_competition_train_source",
-        "nasa_tropical_storm_competition_test_source",
-        "nasa_tropical_storm_competition_train_labels",
-        "nasa_tropical_storm_competition_test_labels",
+        'nasa_tropical_storm_competition_train_source',
+        'nasa_tropical_storm_competition_test_source',
+        'nasa_tropical_storm_competition_train_labels',
+        'nasa_tropical_storm_competition_test_labels',
     ]
     md5s = {
-        "train": {
-            "source": "97e913667a398704ea8d28196d91dad6",
-            "labels": "97d02608b74c82ffe7496a9404a30413",
+        'train': {
+            'source': '97e913667a398704ea8d28196d91dad6',
+            'labels': '97d02608b74c82ffe7496a9404a30413',
         },
-        "test": {
-            "source": "8d88099e4b310feb7781d776a6e1dcef",
-            "labels": "d910c430f90153c1f78a99cbc08e7bd0",
+        'test': {
+            'source': '8d88099e4b310feb7781d776a6e1dcef',
+            'labels': 'd910c430f90153c1f78a99cbc08e7bd0',
         },
     }
     size = 366
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
         api_key: str | None = None,
@@ -107,10 +103,10 @@ class TropicalCyclone(NonGeoDataset):
         if not self._check_integrity():
             raise DatasetNotFoundError(self)
 
-        output_dir = "_".join([self.collection_id, split, "source"])
-        filename = os.path.join(root, output_dir, "collection.json")
+        output_dir = '_'.join([self.collection_id, split, 'source'])
+        filename = os.path.join(root, output_dir, 'collection.json')
         with open(filename) as f:
-            self.collection = json.load(f)["links"]
+            self.collection = json.load(f)['links']
 
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an index within the dataset.
@@ -121,14 +117,14 @@ class TropicalCyclone(NonGeoDataset):
         Returns:
             data, labels, field ids, and metadata at that index
         """
-        source_id = os.path.split(self.collection[index]["href"])[0]
+        source_id = os.path.split(self.collection[index]['href'])[0]
         directory = os.path.join(
             self.root,
-            "_".join([self.collection_id, self.split, "{0}"]),
-            source_id.replace("source", "{0}"),
+            '_'.join([self.collection_id, self.split, '{0}']),
+            source_id.replace('source', '{0}'),
         )
 
-        sample: dict[str, Any] = {"image": self._load_image(directory)}
+        sample: dict[str, Any] = {'image': self._load_image(directory)}
         sample.update(self._load_features(directory))
 
         if self.transforms is not None:
@@ -154,7 +150,7 @@ class TropicalCyclone(NonGeoDataset):
         Returns:
             the image
         """
-        filename = os.path.join(directory.format("source"), "image.jpg")
+        filename = os.path.join(directory.format('source'), 'image.jpg')
         with Image.open(filename) as img:
             if img.height != self.size or img.width != self.size:
                 # Moved in PIL 9.1.0
@@ -163,7 +159,7 @@ class TropicalCyclone(NonGeoDataset):
                 except AttributeError:
                     resample = Image.BILINEAR  # type: ignore[attr-defined]
                 img = img.resize(size=(self.size, self.size), resample=resample)
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array)
             tensor = tensor.permute((2, 0, 1)).float()
             return tensor
@@ -177,17 +173,17 @@ class TropicalCyclone(NonGeoDataset):
         Returns:
             the features
         """
-        filename = os.path.join(directory.format("source"), "features.json")
+        filename = os.path.join(directory.format('source'), 'features.json')
         with open(filename) as f:
             features: dict[str, Any] = json.load(f)
 
-        filename = os.path.join(directory.format("labels"), "labels.json")
+        filename = os.path.join(directory.format('labels'), 'labels.json')
         with open(filename) as f:
             features.update(json.load(f))
 
-        features["relative_time"] = int(features["relative_time"])
-        features["ocean"] = int(features["ocean"])
-        features["label"] = torch.tensor(int(features["wind_speed"])).float()
+        features['relative_time'] = int(features['relative_time'])
+        features['ocean'] = int(features['ocean'])
+        features['label'] = torch.tensor(int(features['wind_speed'])).float()
 
         return features
 
@@ -199,8 +195,8 @@ class TropicalCyclone(NonGeoDataset):
         """
         for split, resources in self.md5s.items():
             for resource_type, md5 in resources.items():
-                filename = "_".join([self.collection_id, split, resource_type])
-                filename = os.path.join(self.root, filename + ".tar.gz")
+                filename = '_'.join([self.collection_id, split, resource_type])
+                filename = os.path.join(self.root, filename + '.tar.gz')
                 if not check_integrity(filename, md5 if self.checksum else None):
                     return False
         return True
@@ -212,7 +208,7 @@ class TropicalCyclone(NonGeoDataset):
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
         """
         if self._check_integrity():
-            print("Files already downloaded and verified")
+            print('Files already downloaded and verified')
             return
 
         for collection_id in self.collection_ids:
@@ -220,8 +216,8 @@ class TropicalCyclone(NonGeoDataset):
 
         for split, resources in self.md5s.items():
             for resource_type in resources:
-                filename = "_".join([self.collection_id, split, resource_type])
-                filename = os.path.join(self.root, filename) + ".tar.gz"
+                filename = '_'.join([self.collection_id, split, resource_type])
+                filename = os.path.join(self.root, filename) + '.tar.gz'
                 extract_archive(filename, self.root)
 
     def plot(
@@ -242,21 +238,21 @@ class TropicalCyclone(NonGeoDataset):
 
         .. versionadded:: 0.2
         """
-        image, label = sample["image"], sample["label"]
+        image, label = sample['image'], sample['label']
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = sample["prediction"].item()
+            prediction = sample['prediction'].item()
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
         ax.imshow(image.permute(1, 2, 0))
-        ax.axis("off")
+        ax.axis('off')
 
         if show_titles:
-            title = f"Label: {label}"
+            title = f'Label: {label}'
             if showing_predictions:
-                title += f"\nPrediction: {prediction}"
+                title += f'\nPrediction: {prediction}'
             ax.set_title(title)
 
         if suptitle is not None:

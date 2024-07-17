@@ -15,14 +15,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    RGBBandsMissingError,
-    check_integrity,
-    download_radiant_mlhub_collection,
-    extract_archive,
-)
+from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
 
 
 # TODO: read geospatial information from stac.json files
@@ -63,53 +58,53 @@ class CloudCoverDetection(NonGeoDataset):
     """
 
     collection_ids = [
-        "ref_cloud_cover_detection_challenge_v1_train_source",
-        "ref_cloud_cover_detection_challenge_v1_train_labels",
-        "ref_cloud_cover_detection_challenge_v1_test_source",
-        "ref_cloud_cover_detection_challenge_v1_test_labels",
+        'ref_cloud_cover_detection_challenge_v1_train_source',
+        'ref_cloud_cover_detection_challenge_v1_train_labels',
+        'ref_cloud_cover_detection_challenge_v1_test_source',
+        'ref_cloud_cover_detection_challenge_v1_test_labels',
     ]
 
     image_meta = {
-        "train": {
-            "filename": "ref_cloud_cover_detection_challenge_v1_train_source.tar.gz",
-            "md5": "32cfe38e313bcedc09dca3f0f9575eea",
+        'train': {
+            'filename': 'ref_cloud_cover_detection_challenge_v1_train_source.tar.gz',
+            'md5': '32cfe38e313bcedc09dca3f0f9575eea',
         },
-        "test": {
-            "filename": "ref_cloud_cover_detection_challenge_v1_test_source.tar.gz",
-            "md5": "6c67edae18716598d47298f24992db6c",
+        'test': {
+            'filename': 'ref_cloud_cover_detection_challenge_v1_test_source.tar.gz',
+            'md5': '6c67edae18716598d47298f24992db6c',
         },
     }
 
     target_meta = {
-        "train": {
-            "filename": "ref_cloud_cover_detection_challenge_v1_train_labels.tar.gz",
-            "md5": "695dfb1034924c10fbb17f9293815671",
+        'train': {
+            'filename': 'ref_cloud_cover_detection_challenge_v1_train_labels.tar.gz',
+            'md5': '695dfb1034924c10fbb17f9293815671',
         },
-        "test": {
-            "filename": "ref_cloud_cover_detection_challenge_v1_test_labels.tar.gz",
-            "md5": "ec2b42bb43e9a03a01ae096f9e09db9c",
+        'test': {
+            'filename': 'ref_cloud_cover_detection_challenge_v1_test_labels.tar.gz',
+            'md5': 'ec2b42bb43e9a03a01ae096f9e09db9c',
         },
     }
 
     collection_names = {
-        "train": [
-            "ref_cloud_cover_detection_challenge_v1_train_source",
-            "ref_cloud_cover_detection_challenge_v1_train_labels",
+        'train': [
+            'ref_cloud_cover_detection_challenge_v1_train_source',
+            'ref_cloud_cover_detection_challenge_v1_train_labels',
         ],
-        "test": [
-            "ref_cloud_cover_detection_challenge_v1_test_source",
-            "ref_cloud_cover_detection_challenge_v1_test_labels",
+        'test': [
+            'ref_cloud_cover_detection_challenge_v1_test_source',
+            'ref_cloud_cover_detection_challenge_v1_test_labels',
         ],
     }
 
-    band_names = ["B02", "B03", "B04", "B08"]
+    band_names = ['B02', 'B03', 'B04', 'B08']
 
-    rgb_bands = ["B04", "B03", "B02"]
+    rgb_bands = ['B04', 'B03', 'B02']
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         bands: Sequence[str] = band_names,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -159,14 +154,14 @@ class CloudCoverDetection(NonGeoDataset):
         """Returns a sample from dataset.
 
         Args:
-            Index: index to return
+            index: index to return
 
         Returns:
             data and label at given index
         """
         image = self._load_image(index)
         label = self._load_target(index)
-        sample: dict[str, Tensor] = {"image": image, "mask": label}
+        sample: dict[str, Tensor] = {'image': image, 'mask': label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -182,13 +177,13 @@ class CloudCoverDetection(NonGeoDataset):
         Returns:
             a tensor of stacked source image data
         """
-        source_asset_paths = self.chip_paths[index]["source"]
+        source_asset_paths = self.chip_paths[index]['source']
         images = []
         for path in source_asset_paths:
             with rasterio.open(path) as image_data:
                 image_array = image_data.read(1).astype(np.int32)
                 images.append(image_array)
-        image_stack: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0)
+        image_stack: np.typing.NDArray[np.int_] = np.stack(images, axis=0)
         image_tensor = torch.from_numpy(image_stack)
         return image_tensor
 
@@ -201,11 +196,11 @@ class CloudCoverDetection(NonGeoDataset):
         Returns:
             a tensor of the label image data
         """
-        label_asset_path = self.chip_paths[index]["target"][0]
+        label_asset_path = self.chip_paths[index]['target'][0]
         with rasterio.open(label_asset_path) as target_data:
             target_img = target_data.read(1).astype(np.int32)
 
-        target_array: "np.typing.NDArray[np.int_]" = np.array(target_img)
+        target_array: np.typing.NDArray[np.int_] = np.array(target_img)
         target_tensor = torch.from_numpy(target_array)
         return target_tensor
 
@@ -237,15 +232,15 @@ class CloudCoverDetection(NonGeoDataset):
 
         label_data = self._read_json_data(item_json)
         label_asset_path = os.path.join(
-            os.path.split(item_json)[0], label_data["assets"]["labels"]["href"]
+            os.path.split(item_json)[0], label_data['assets']['labels']['href']
         )
-        item_meta["target"] = [label_asset_path]
+        item_meta['target'] = [label_asset_path]
 
         source_item_hrefs = []
-        for link in label_data["links"]:
-            if link["rel"] == "source":
+        for link in label_data['links']:
+            if link['rel'] == 'source':
                 source_item_hrefs.append(
-                    os.path.join(self.root, link["href"].replace("../../", ""))
+                    os.path.join(self.root, link['href'].replace('../../', ''))
                 )
 
         source_item_hrefs = sorted(source_item_hrefs)
@@ -255,16 +250,16 @@ class CloudCoverDetection(NonGeoDataset):
             source_item_path = os.path.split(item_href)[0]
             source_data = self._read_json_data(item_href)
             source_item_assets = []
-            for asset_key, asset_value in source_data["assets"].items():
+            for asset_key, asset_value in source_data['assets'].items():
                 if asset_key in self.bands:
                     source_item_assets.append(
-                        os.path.join(source_item_path, asset_value["href"])
+                        os.path.join(source_item_path, asset_value['href'])
                     )
             source_item_assets = sorted(source_item_assets)
             for source_item_asset in source_item_assets:
                 source_item_paths.append(source_item_asset)
 
-        item_meta["source"] = source_item_paths
+        item_meta['source'] = source_item_paths
         return item_meta
 
     def _load_collections(self) -> list[dict[str, Any]]:
@@ -279,15 +274,15 @@ class CloudCoverDetection(NonGeoDataset):
         indexed_chips = []
         label_collection: list[str] = []
         for c in self.collection_names[self.split]:
-            if "label" in c:
+            if 'label' in c:
                 label_collection.append(c)
         label_collection_path = os.path.join(self.root, label_collection[0])
-        label_collection_json = os.path.join(label_collection_path, "collection.json")
+        label_collection_json = os.path.join(label_collection_path, 'collection.json')
 
         label_collection_item_hrefs = []
-        for link in self._read_json_data(label_collection_json)["links"]:
-            if link["rel"] == "item":
-                label_collection_item_hrefs.append(link["href"])
+        for link in self._read_json_data(label_collection_json)['links']:
+            if link['rel'] == 'item':
+                label_collection_item_hrefs.append(link['href'])
 
         label_collection_item_hrefs = sorted(label_collection_item_hrefs)
 
@@ -318,13 +313,13 @@ class CloudCoverDetection(NonGeoDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         images: bool = check_integrity(
-            os.path.join(self.root, self.image_meta[self.split]["filename"]),
-            self.image_meta[self.split]["md5"] if self.checksum else None,
+            os.path.join(self.root, self.image_meta[self.split]['filename']),
+            self.image_meta[self.split]['md5'] if self.checksum else None,
         )
 
         targets: bool = check_integrity(
-            os.path.join(self.root, self.target_meta[self.split]["filename"]),
-            self.target_meta[self.split]["md5"] if self.checksum else None,
+            os.path.join(self.root, self.target_meta[self.split]['filename']),
+            self.target_meta[self.split]['md5'] if self.checksum else None,
         )
 
         return images and targets
@@ -336,17 +331,17 @@ class CloudCoverDetection(NonGeoDataset):
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
         """
         if self._check_integrity():
-            print("Files already downloaded and verified")
+            print('Files already downloaded and verified')
             return
 
         for collection_id in self.collection_ids:
             download_radiant_mlhub_collection(collection_id, self.root, api_key)
 
         image_archive_path = os.path.join(
-            self.root, self.image_meta[self.split]["filename"]
+            self.root, self.image_meta[self.split]['filename']
         )
         target_archive_path = os.path.join(
-            self.root, self.target_meta[self.split]["filename"]
+            self.root, self.target_meta[self.split]['filename']
         )
         for fn in [image_archive_path, target_archive_path]:
             extract_archive(fn, self.root)
@@ -378,30 +373,30 @@ class CloudCoverDetection(NonGeoDataset):
             else:
                 raise RGBBandsMissingError()
 
-        if "prediction" in sample:
-            prediction = sample["prediction"]
+        if 'prediction' in sample:
+            prediction = sample['prediction']
             n_cols = 3
         else:
             n_cols = 2
 
-        image, mask = sample["image"] / 3000, sample["mask"]
+        image, mask = sample['image'] / 3000, sample['mask']
 
         fig, axs = plt.subplots(nrows=1, ncols=n_cols, figsize=(10, n_cols * 5))
 
         axs[0].imshow(image.permute(1, 2, 0))
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(mask)
-        axs[1].axis("off")
+        axs[1].axis('off')
 
-        if "prediction" in sample:
+        if 'prediction' in sample:
             axs[2].imshow(prediction)
-            axs[2].axis("off")
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Prediction")
+                axs[2].set_title('Prediction')
 
         if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
+            axs[0].set_title('Image')
+            axs[1].set_title('Mask')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

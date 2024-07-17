@@ -12,12 +12,12 @@ build:
 
 # Configuration of the Python environment to be used
 python:
-   install:
-   - requirements: requirements/required.txt
-   - requirements: requirements/docs.txt
-   - requirements: docs/requirements.txt
+  install:
+    - requirements: requirements/required.txt
+    - requirements: requirements/docs.txt
+    - requirements: docs/requirements.txt
 
 # Configuration for Sphinx documentation
 sphinx:
-   configuration: docs/conf.py
-   fail_on_warning: true
+  configuration: docs/conf.py
+  fail_on_warning: true

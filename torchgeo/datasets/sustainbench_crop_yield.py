@@ -13,8 +13,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import download_url, extract_archive
 
 
 class SustainBenchCropYield(NonGeoDataset):
@@ -46,21 +47,21 @@ class SustainBenchCropYield(NonGeoDataset):
     .. versionadded:: 0.5
     """  # noqa: E501
 
-    valid_countries = ["usa", "brazil", "argentina"]
+    valid_countries = ['usa', 'brazil', 'argentina']
 
-    md5 = "362bad07b51a1264172b8376b39d1fc9"
+    md5 = '362bad07b51a1264172b8376b39d1fc9'
 
-    url = "https://drive.google.com/file/d/1lhbmICpmNuOBlaErywgiD6i9nHuhuv0A/view?usp=drive_link"  # noqa: E501
+    url = 'https://drive.google.com/file/d/1lhbmICpmNuOBlaErywgiD6i9nHuhuv0A/view?usp=drive_link'  # noqa: E501
 
-    dir = "soybeans"
+    dir = 'soybeans'
 
-    valid_splits = ["train", "dev", "test"]
+    valid_splits = ['train', 'dev', 'test']
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        countries: list[str] = ["usa"],
+        root: str = 'data',
+        split: str = 'train',
+        countries: list[str] = ['usa'],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -83,12 +84,12 @@ class SustainBenchCropYield(NonGeoDataset):
         """
         assert set(countries).issubset(
             self.valid_countries
-        ), f"Please choose a subset of these valid countried: {self.valid_countries}."
+        ), f'Please choose a subset of these valid countried: {self.valid_countries}.'
         self.countries = countries
 
         assert (
             split in self.valid_splits
-        ), f"Pleas choose one of these valid data splits {self.valid_splits}."
+        ), f'Pleas choose one of these valid data splits {self.valid_splits}.'
         self.split = split
 
         self.root = root
@@ -103,16 +104,16 @@ class SustainBenchCropYield(NonGeoDataset):
 
         for country in self.countries:
             image_file_path = os.path.join(
-                self.root, self.dir, country, f"{self.split}_hists.npz"
+                self.root, self.dir, country, f'{self.split}_hists.npz'
             )
-            target_file_path = image_file_path.replace("_hists", "_yields")
-            years_file_path = image_file_path.replace("_hists", "_years")
-            ndvi_file_path = image_file_path.replace("_hists", "_ndvi")
+            target_file_path = image_file_path.replace('_hists', '_yields')
+            years_file_path = image_file_path.replace('_hists', '_years')
+            ndvi_file_path = image_file_path.replace('_hists', '_ndvi')
 
-            npz_file = np.load(image_file_path)["data"]
-            target_npz_file = np.load(target_file_path)["data"]
-            year_npz_file = np.load(years_file_path)["data"]
-            ndvi_npz_file = np.load(ndvi_file_path)["data"]
+            npz_file = np.load(image_file_path)['data']
+            target_npz_file = np.load(target_file_path)['data']
+            year_npz_file = np.load(years_file_path)['data']
+            ndvi_npz_file = np.load(ndvi_file_path)['data']
             num_data_points = npz_file.shape[0]
             for idx in range(num_data_points):
                 sample = npz_file[idx]
@@ -124,9 +125,9 @@ class SustainBenchCropYield(NonGeoDataset):
                 ndvi = ndvi_npz_file[idx]
 
                 features = {
-                    "label": torch.tensor(target).to(torch.float32),
-                    "year": torch.tensor(int(year)),
-                    "ndvi": torch.from_numpy(ndvi).to(dtype=torch.float32),
+                    'label': torch.tensor(target).to(torch.float32),
+                    'year': torch.tensor(int(year)),
+                    'ndvi': torch.from_numpy(ndvi).to(dtype=torch.float32),
                 }
                 self.features.append(features)
 
@@ -147,7 +148,7 @@ class SustainBenchCropYield(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        sample: dict[str, Tensor] = {"image": self.images[index]}
+        sample: dict[str, Tensor] = {'image': self.images[index]}
         sample.update(self.features[index])
 
         if self.transforms is not None:
@@ -163,7 +164,7 @@ class SustainBenchCropYield(NonGeoDataset):
             return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.dir) + ".zip"
+        pathname = os.path.join(self.root, self.dir) + '.zip'
         if os.path.exists(pathname):
             self._extract()
             return
@@ -181,14 +182,14 @@ class SustainBenchCropYield(NonGeoDataset):
         download_url(
             self.url,
             self.root,
-            filename=self.dir + ".zip",
+            filename=self.dir + '.zip',
             md5=self.md5 if self.checksum else None,
         )
         self._extract()
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        zipfile_path = os.path.join(self.root, self.dir) + ".zip"
+        zipfile_path = os.path.join(self.root, self.dir) + '.zip'
         extract_archive(zipfile_path, self.root)
 
     def plot(
@@ -210,21 +211,21 @@ class SustainBenchCropYield(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         """
-        image, label = sample["image"], sample["label"].item()
+        image, label = sample['image'], sample['label'].item()
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = sample["prediction"].item()
+            prediction = sample['prediction'].item()
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
         ax.imshow(image.permute(1, 2, 0)[:, :, band_idx])
-        ax.axis("off")
+        ax.axis('off')
 
         if show_titles:
-            title = f"Label: {label:.3f}"
+            title = f'Label: {label:.3f}'
             if showing_predictions:
-                title += f"\nPrediction: {prediction:.3f}"
+                title += f'\nPrediction: {prediction:.3f}'
             ax.set_title(title)
 
         if suptitle is not None:

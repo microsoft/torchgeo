@@ -16,13 +16,9 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    check_integrity,
-    download_and_extract_archive,
-    extract_archive,
-)
+from .utils import check_integrity, download_and_extract_archive, extract_archive
 
 
 class ReforesTree(NonGeoDataset):
@@ -60,15 +56,15 @@ class ReforesTree(NonGeoDataset):
     .. versionadded:: 0.3
     """
 
-    classes = ["other", "banana", "cacao", "citrus", "fruit", "timber"]
-    url = "https://zenodo.org/record/6813783/files/reforesTree.zip?download=1"
+    classes = ['other', 'banana', 'cacao', 'citrus', 'fruit', 'timber']
+    url = 'https://zenodo.org/record/6813783/files/reforesTree.zip?download=1'
 
-    md5 = "f6a4a1d8207aeaa5fbab7b21b683a302"
-    zipfilename = "reforesTree.zip"
+    md5 = 'f6a4a1d8207aeaa5fbab7b21b683a302'
+    zipfilename = 'reforesTree.zip'
 
     def __init__(
         self,
-        root: str = "data",
+        root: str = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -94,7 +90,7 @@ class ReforesTree(NonGeoDataset):
 
         self.files = self._load_files(self.root)
 
-        self.annot_df = pd.read_csv(os.path.join(root, "mapping", "final_dataset.csv"))
+        self.annot_df = pd.read_csv(os.path.join(root, 'mapping', 'final_dataset.csv'))
 
         self.class2idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
@@ -113,7 +109,7 @@ class ReforesTree(NonGeoDataset):
 
         boxes, labels, agb = self._load_target(filepath)
 
-        sample = {"image": image, "boxes": boxes, "label": labels, "agb": agb}
+        sample = {'image': image, 'boxes': boxes, 'label': labels, 'agb': agb}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -137,7 +133,7 @@ class ReforesTree(NonGeoDataset):
         Returns:
             list of dicts containing paths for each pair of image, annotation
         """
-        image_paths = sorted(glob.glob(os.path.join(root, "tiles", "**", "*.png")))
+        image_paths = sorted(glob.glob(os.path.join(root, 'tiles', '**', '*.png')))
 
         return image_paths
 
@@ -151,7 +147,7 @@ class ReforesTree(NonGeoDataset):
             the image
         """
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.uint8]" = np.array(img)
+            array: np.typing.NDArray[np.uint8] = np.array(img)
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
@@ -166,26 +162,26 @@ class ReforesTree(NonGeoDataset):
         Returns:
             dictionary containing boxes, label, and agb value
         """
-        tile_df = self.annot_df[self.annot_df["img_path"] == os.path.basename(filepath)]
+        tile_df = self.annot_df[self.annot_df['img_path'] == os.path.basename(filepath)]
 
-        boxes = torch.Tensor(tile_df[["xmin", "ymin", "xmax", "ymax"]].values.tolist())
+        boxes = torch.Tensor(tile_df[['xmin', 'ymin', 'xmax', 'ymax']].values.tolist())
         labels = torch.Tensor(
-            [self.class2idx[label] for label in tile_df["group"].tolist()]
+            [self.class2idx[label] for label in tile_df['group'].tolist()]
         )
-        agb = torch.Tensor(tile_df["AGB"].tolist())
+        agb = torch.Tensor(tile_df['AGB'].tolist())
 
         return boxes, labels, agb
 
     def _verify(self) -> None:
         """Checks the integrity of the dataset structure."""
-        filepaths = [os.path.join(self.root, dir) for dir in ["tiles", "mapping"]]
+        filepaths = [os.path.join(self.root, dir) for dir in ['tiles', 'mapping']]
         if all([os.path.exists(filepath) for filepath in filepaths]):
             return
 
         filepath = os.path.join(self.root, self.zipfilename)
         if os.path.isfile(filepath):
             if self.checksum and not check_integrity(filepath, self.md5):
-                raise RuntimeError("Dataset found, but corrupted.")
+                raise RuntimeError('Dataset found, but corrupted.')
             extract_archive(filepath)
             return
 
@@ -221,9 +217,9 @@ class ReforesTree(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = sample["image"].permute((1, 2, 0)).numpy()
+        image = sample['image'].permute((1, 2, 0)).numpy()
         ncols = 1
-        showing_predictions = "prediction_boxes" in sample
+        showing_predictions = 'prediction_boxes' in sample
         if showing_predictions:
             ncols += 1
 
@@ -232,7 +228,7 @@ class ReforesTree(NonGeoDataset):
             axs = [axs]
 
         axs[0].imshow(image)
-        axs[0].axis("off")
+        axs[0].axis('off')
 
         bboxes = [
             patches.Rectangle(
@@ -240,20 +236,20 @@ class ReforesTree(NonGeoDataset):
                 bbox[2] - bbox[0],
                 bbox[3] - bbox[1],
                 linewidth=1,
-                edgecolor="r",
-                facecolor="none",
+                edgecolor='r',
+                facecolor='none',
             )
-            for bbox in sample["boxes"].numpy()
+            for bbox in sample['boxes'].numpy()
         ]
         for bbox in bboxes:
             axs[0].add_patch(bbox)
 
         if show_titles:
-            axs[0].set_title("Ground Truth")
+            axs[0].set_title('Ground Truth')
 
         if showing_predictions:
             axs[1].imshow(image)
-            axs[1].axis("off")
+            axs[1].axis('off')
 
             pred_bboxes = [
                 patches.Rectangle(
@@ -261,16 +257,16 @@ class ReforesTree(NonGeoDataset):
                     bbox[2] - bbox[0],
                     bbox[3] - bbox[1],
                     linewidth=1,
-                    edgecolor="r",
-                    facecolor="none",
+                    edgecolor='r',
+                    facecolor='none',
                 )
-                for bbox in sample["prediction_boxes"].numpy()
+                for bbox in sample['prediction_boxes'].numpy()
             ]
             for bbox in pred_bboxes:
                 axs[1].add_patch(bbox)
 
             if show_titles:
-                axs[1].set_title("Predictions")
+                axs[1].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

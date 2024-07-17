@@ -35,7 +35,7 @@ class AppendNormalizedDifferenceIndex(IntensityAugmentationBase2D):
             index_b: difference band channel index
         """
         super().__init__(p=1)
-        self.flags = {"index_a": index_a, "index_b": index_b}
+        self.flags = {'index_a': index_a, 'index_b': index_b}
 
     def apply_transform(
         self,
@@ -55,8 +55,8 @@ class AppendNormalizedDifferenceIndex(IntensityAugmentationBase2D):
         Returns:
             the augmented input
         """
-        band_a = input[..., flags["index_a"], :, :]
-        band_b = input[..., flags["index_b"], :, :]
+        band_a = input[..., flags['index_a'], :, :]
+        band_b = input[..., flags['index_b'], :, :]
         ndi = (band_a - band_b) / (band_a + band_b + _EPSILON)
         ndi = torch.unsqueeze(ndi, -3)
         input = torch.cat((input, ndi), dim=-3)
@@ -310,7 +310,7 @@ class AppendTriBandNormalizedDifferenceIndex(IntensityAugmentationBase2D):
             index_c: difference band channel index of component 2
         """
         super().__init__(p=1)
-        self.flags = {"index_a": index_a, "index_b": index_b, "index_c": index_c}
+        self.flags = {'index_a': index_a, 'index_b': index_b, 'index_c': index_c}
 
     def apply_transform(
         self,
@@ -330,9 +330,9 @@ class AppendTriBandNormalizedDifferenceIndex(IntensityAugmentationBase2D):
         Returns:
             the augmented input
         """
-        band_a = input[..., flags["index_a"], :, :]
-        band_b = input[..., flags["index_b"], :, :]
-        band_c = input[..., flags["index_c"], :, :]
+        band_a = input[..., flags['index_a'], :, :]
+        band_b = input[..., flags['index_b'], :, :]
+        band_c = input[..., flags['index_c'], :, :]
         band_d = band_b + band_c
         tbndi = (band_a - band_d) / (band_a + band_d + _EPSILON)
         tbndi = torch.unsqueeze(tbndi, -3)

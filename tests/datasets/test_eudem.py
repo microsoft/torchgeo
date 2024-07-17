@@ -24,9 +24,9 @@ from torchgeo.datasets import (
 class TestEUDEM:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> EUDEM:
-        md5s = {"eu_dem_v11_E30N10.zip": "ef148466c02197a08be169eaad186591"}
-        monkeypatch.setattr(EUDEM, "md5s", md5s)
-        zipfile = os.path.join("tests", "data", "eudem", "eu_dem_v11_E30N10.zip")
+        md5s = {'eu_dem_v11_E30N10.zip': 'ef148466c02197a08be169eaad186591'}
+        monkeypatch.setattr(EUDEM, 'md5s', md5s)
+        zipfile = os.path.join('tests', 'data', 'eudem', 'eu_dem_v11_E30N10.zip')
         shutil.copy(zipfile, tmp_path)
         root = str(tmp_path)
         transforms = nn.Identity()
@@ -35,25 +35,28 @@ class TestEUDEM:
     def test_getitem(self, dataset: EUDEM) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x["crs"], CRS)
-        assert isinstance(x["mask"], torch.Tensor)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['mask'], torch.Tensor)
+
+    def test_len(self, dataset: EUDEM) -> None:
+        assert len(dataset) == 1
 
     def test_extracted_already(self, dataset: EUDEM) -> None:
         assert isinstance(dataset.paths, str)
-        zipfile = os.path.join(dataset.paths, "eu_dem_v11_E30N10.zip")
-        shutil.unpack_archive(zipfile, dataset.paths, "zip")
+        zipfile = os.path.join(dataset.paths, 'eu_dem_v11_E30N10.zip')
+        shutil.unpack_archive(zipfile, dataset.paths, 'zip')
         EUDEM(dataset.paths)
 
     def test_no_dataset(self, tmp_path: Path) -> None:
         shutil.rmtree(tmp_path)
         os.makedirs(tmp_path)
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             EUDEM(str(tmp_path))
 
     def test_corrupted(self, tmp_path: Path) -> None:
-        with open(os.path.join(tmp_path, "eu_dem_v11_E30N10.zip"), "w") as f:
-            f.write("bad")
-        with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
+        with open(os.path.join(tmp_path, 'eu_dem_v11_E30N10.zip'), 'w') as f:
+            f.write('bad')
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
             EUDEM(str(tmp_path), checksum=True)
 
     def test_and(self, dataset: EUDEM) -> None:
@@ -67,19 +70,19 @@ class TestEUDEM:
     def test_plot(self, dataset: EUDEM) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: EUDEM) -> None:
         query = dataset.bounds
         x = dataset[query]
-        x["prediction"] = x["mask"].clone()
-        dataset.plot(x, suptitle="Prediction")
+        x['prediction'] = x['mask'].clone()
+        dataset.plot(x, suptitle='Prediction')
         plt.close()
 
     def test_invalid_query(self, dataset: EUDEM) -> None:
         query = BoundingBox(100, 100, 100, 100, 0, 0)
         with pytest.raises(
-            IndexError, match="query: .* not found in index with bounds:"
+            IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]

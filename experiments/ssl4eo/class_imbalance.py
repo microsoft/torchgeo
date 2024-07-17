@@ -12,30 +12,30 @@ import rasterio as rio
 from tqdm import tqdm
 from tqdm.contrib.concurrent import thread_map
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("roots", nargs="+", help="directories to search for files")
-    parser.add_argument("--suffix", default=".tif", help="file suffix")
-    parser.add_argument("--sort", action="store_true", help="sort by class frequency")
+    parser.add_argument('roots', nargs='+', help='directories to search for files')
+    parser.add_argument('--suffix', default='.tif', help='file suffix')
+    parser.add_argument('--sort', action='store_true', help='sort by class frequency')
     parser.add_argument(
-        "--weights", action="store_true", help="print weights instead of ratios"
+        '--weights', action='store_true', help='print weights instead of ratios'
     )
     parser.add_argument(
-        "--total-classes", type=int, default=256, help="total number of classes"
+        '--total-classes', type=int, default=256, help='total number of classes'
     )
     parser.add_argument(
-        "--keep-classes",
+        '--keep-classes',
         type=float,
         default=1,
-        help="keep classes with percentage higher than this",
+        help='keep classes with percentage higher than this',
     )
     parser.add_argument(
-        "--ignore-index", type=int, default=0, help="fill value to ignore"
+        '--ignore-index', type=int, default=0, help='fill value to ignore'
     )
-    parser.add_argument("--num-workers", type=int, default=10, help="number of threads")
+    parser.add_argument('--num-workers', type=int, default=10, help='number of threads')
     args = parser.parse_args()
 
-    def class_counts(path: str) -> "np.typing.NDArray[np.float64]":
+    def class_counts(path: str) -> 'np.typing.NDArray[np.float64]':
         """Calculate the number of values in each class.
 
         Args:
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         global args
 
         counts = np.zeros(args.total_classes)
-        with rio.open(path, "r") as src:
+        with rio.open(path, 'r') as src:
             x = src.read()
             unique, unique_counts = np.unique(x, return_counts=True)
             counts[unique] = unique_counts
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     paths = []
     for root in args.roots:
         paths.extend(
-            glob.glob(os.path.join(root, "**", f"*{args.suffix}"), recursive=True)
+            glob.glob(os.path.join(root, '**', f'*{args.suffix}'), recursive=True)
         )
 
     if args.num_workers > 0:

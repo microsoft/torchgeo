@@ -13,12 +13,9 @@ import pandas as pd
 import torch
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    download_radiant_mlhub_collection,
-    extract_archive,
-)
+from .utils import download_radiant_mlhub_collection, extract_archive
 
 
 class WesternUSALiveFuelMoisture(NonGeoDataset):
@@ -53,157 +50,157 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    collection_id = "su_sar_moisture_content"
+    collection_id = 'su_sar_moisture_content'
 
-    md5 = "a6c0721f06a3a0110b7d1243b18614f0"
+    md5 = 'a6c0721f06a3a0110b7d1243b18614f0'
 
-    label_name = "percent(t)"
+    label_name = 'percent(t)'
 
     all_variable_names = [
         # "date",
-        "slope(t)",
-        "elevation(t)",
-        "canopy_height(t)",
-        "forest_cover(t)",
-        "silt(t)",
-        "sand(t)",
-        "clay(t)",
-        "vv(t)",
-        "vh(t)",
-        "red(t)",
-        "green(t)",
-        "blue(t)",
-        "swir(t)",
-        "nir(t)",
-        "ndvi(t)",
-        "ndwi(t)",
-        "nirv(t)",
-        "vv_red(t)",
-        "vv_green(t)",
-        "vv_blue(t)",
-        "vv_swir(t)",
-        "vv_nir(t)",
-        "vv_ndvi(t)",
-        "vv_ndwi(t)",
-        "vv_nirv(t)",
-        "vh_red(t)",
-        "vh_green(t)",
-        "vh_blue(t)",
-        "vh_swir(t)",
-        "vh_nir(t)",
-        "vh_ndvi(t)",
-        "vh_ndwi(t)",
-        "vh_nirv(t)",
-        "vh_vv(t)",
-        "slope(t-1)",
-        "elevation(t-1)",
-        "canopy_height(t-1)",
-        "forest_cover(t-1)",
-        "silt(t-1)",
-        "sand(t-1)",
-        "clay(t-1)",
-        "vv(t-1)",
-        "vh(t-1)",
-        "red(t-1)",
-        "green(t-1)",
-        "blue(t-1)",
-        "swir(t-1)",
-        "nir(t-1)",
-        "ndvi(t-1)",
-        "ndwi(t-1)",
-        "nirv(t-1)",
-        "vv_red(t-1)",
-        "vv_green(t-1)",
-        "vv_blue(t-1)",
-        "vv_swir(t-1)",
-        "vv_nir(t-1)",
-        "vv_ndvi(t-1)",
-        "vv_ndwi(t-1)",
-        "vv_nirv(t-1)",
-        "vh_red(t-1)",
-        "vh_green(t-1)",
-        "vh_blue(t-1)",
-        "vh_swir(t-1)",
-        "vh_nir(t-1)",
-        "vh_ndvi(t-1)",
-        "vh_ndwi(t-1)",
-        "vh_nirv(t-1)",
-        "vh_vv(t-1)",
-        "slope(t-2)",
-        "elevation(t-2)",
-        "canopy_height(t-2)",
-        "forest_cover(t-2)",
-        "silt(t-2)",
-        "sand(t-2)",
-        "clay(t-2)",
-        "vv(t-2)",
-        "vh(t-2)",
-        "red(t-2)",
-        "green(t-2)",
-        "blue(t-2)",
-        "swir(t-2)",
-        "nir(t-2)",
-        "ndvi(t-2)",
-        "ndwi(t-2)",
-        "nirv(t-2)",
-        "vv_red(t-2)",
-        "vv_green(t-2)",
-        "vv_blue(t-2)",
-        "vv_swir(t-2)",
-        "vv_nir(t-2)",
-        "vv_ndvi(t-2)",
-        "vv_ndwi(t-2)",
-        "vv_nirv(t-2)",
-        "vh_red(t-2)",
-        "vh_green(t-2)",
-        "vh_blue(t-2)",
-        "vh_swir(t-2)",
-        "vh_nir(t-2)",
-        "vh_ndvi(t-2)",
-        "vh_ndwi(t-2)",
-        "vh_nirv(t-2)",
-        "vh_vv(t-2)",
-        "slope(t-3)",
-        "elevation(t-3)",
-        "canopy_height(t-3)",
-        "forest_cover(t-3)",
-        "silt(t-3)",
-        "sand(t-3)",
-        "clay(t-3)",
-        "vv(t-3)",
-        "vh(t-3)",
-        "red(t-3)",
-        "green(t-3)",
-        "blue(t-3)",
-        "swir(t-3)",
-        "nir(t-3)",
-        "ndvi(t-3)",
-        "ndwi(t-3)",
-        "nirv(t-3)",
-        "vv_red(t-3)",
-        "vv_green(t-3)",
-        "vv_blue(t-3)",
-        "vv_swir(t-3)",
-        "vv_nir(t-3)",
-        "vv_ndvi(t-3)",
-        "vv_ndwi(t-3)",
-        "vv_nirv(t-3)",
-        "vh_red(t-3)",
-        "vh_green(t-3)",
-        "vh_blue(t-3)",
-        "vh_swir(t-3)",
-        "vh_nir(t-3)",
-        "vh_ndvi(t-3)",
-        "vh_ndwi(t-3)",
-        "vh_nirv(t-3)",
-        "vh_vv(t-3)",
-        "lat",
-        "lon",
+        'slope(t)',
+        'elevation(t)',
+        'canopy_height(t)',
+        'forest_cover(t)',
+        'silt(t)',
+        'sand(t)',
+        'clay(t)',
+        'vv(t)',
+        'vh(t)',
+        'red(t)',
+        'green(t)',
+        'blue(t)',
+        'swir(t)',
+        'nir(t)',
+        'ndvi(t)',
+        'ndwi(t)',
+        'nirv(t)',
+        'vv_red(t)',
+        'vv_green(t)',
+        'vv_blue(t)',
+        'vv_swir(t)',
+        'vv_nir(t)',
+        'vv_ndvi(t)',
+        'vv_ndwi(t)',
+        'vv_nirv(t)',
+        'vh_red(t)',
+        'vh_green(t)',
+        'vh_blue(t)',
+        'vh_swir(t)',
+        'vh_nir(t)',
+        'vh_ndvi(t)',
+        'vh_ndwi(t)',
+        'vh_nirv(t)',
+        'vh_vv(t)',
+        'slope(t-1)',
+        'elevation(t-1)',
+        'canopy_height(t-1)',
+        'forest_cover(t-1)',
+        'silt(t-1)',
+        'sand(t-1)',
+        'clay(t-1)',
+        'vv(t-1)',
+        'vh(t-1)',
+        'red(t-1)',
+        'green(t-1)',
+        'blue(t-1)',
+        'swir(t-1)',
+        'nir(t-1)',
+        'ndvi(t-1)',
+        'ndwi(t-1)',
+        'nirv(t-1)',
+        'vv_red(t-1)',
+        'vv_green(t-1)',
+        'vv_blue(t-1)',
+        'vv_swir(t-1)',
+        'vv_nir(t-1)',
+        'vv_ndvi(t-1)',
+        'vv_ndwi(t-1)',
+        'vv_nirv(t-1)',
+        'vh_red(t-1)',
+        'vh_green(t-1)',
+        'vh_blue(t-1)',
+        'vh_swir(t-1)',
+        'vh_nir(t-1)',
+        'vh_ndvi(t-1)',
+        'vh_ndwi(t-1)',
+        'vh_nirv(t-1)',
+        'vh_vv(t-1)',
+        'slope(t-2)',
+        'elevation(t-2)',
+        'canopy_height(t-2)',
+        'forest_cover(t-2)',
+        'silt(t-2)',
+        'sand(t-2)',
+        'clay(t-2)',
+        'vv(t-2)',
+        'vh(t-2)',
+        'red(t-2)',
+        'green(t-2)',
+        'blue(t-2)',
+        'swir(t-2)',
+        'nir(t-2)',
+        'ndvi(t-2)',
+        'ndwi(t-2)',
+        'nirv(t-2)',
+        'vv_red(t-2)',
+        'vv_green(t-2)',
+        'vv_blue(t-2)',
+        'vv_swir(t-2)',
+        'vv_nir(t-2)',
+        'vv_ndvi(t-2)',
+        'vv_ndwi(t-2)',
+        'vv_nirv(t-2)',
+        'vh_red(t-2)',
+        'vh_green(t-2)',
+        'vh_blue(t-2)',
+        'vh_swir(t-2)',
+        'vh_nir(t-2)',
+        'vh_ndvi(t-2)',
+        'vh_ndwi(t-2)',
+        'vh_nirv(t-2)',
+        'vh_vv(t-2)',
+        'slope(t-3)',
+        'elevation(t-3)',
+        'canopy_height(t-3)',
+        'forest_cover(t-3)',
+        'silt(t-3)',
+        'sand(t-3)',
+        'clay(t-3)',
+        'vv(t-3)',
+        'vh(t-3)',
+        'red(t-3)',
+        'green(t-3)',
+        'blue(t-3)',
+        'swir(t-3)',
+        'nir(t-3)',
+        'ndvi(t-3)',
+        'ndwi(t-3)',
+        'nirv(t-3)',
+        'vv_red(t-3)',
+        'vv_green(t-3)',
+        'vv_blue(t-3)',
+        'vv_swir(t-3)',
+        'vv_nir(t-3)',
+        'vv_ndvi(t-3)',
+        'vv_ndwi(t-3)',
+        'vv_nirv(t-3)',
+        'vh_red(t-3)',
+        'vh_green(t-3)',
+        'vh_blue(t-3)',
+        'vh_swir(t-3)',
+        'vh_nir(t-3)',
+        'vh_ndvi(t-3)',
+        'vh_ndwi(t-3)',
+        'vh_nirv(t-3)',
+        'vh_vv(t-3)',
+        'lat',
+        'lon',
     ]
 
     def __init__(
         self,
-        root: str = "data",
+        root: str = 'data',
         input_features: list[str] = all_variable_names,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
@@ -237,7 +234,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         assert all(
             input in self.all_variable_names for input in input_features
-        ), "Invalid input variable name."
+        ), 'Invalid input variable name.'
         self.input_features = input_features
 
         self.collection = self._retrieve_collection()
@@ -251,7 +248,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             list of sample paths
         """
         return glob.glob(
-            os.path.join(self.root, self.collection_id, "**", "labels.geojson")
+            os.path.join(self.root, self.collection_id, '**', 'labels.geojson')
         )
 
     def __len__(self) -> int:
@@ -274,10 +271,10 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         data = self.dataframe.iloc[index, :]
 
         sample: dict[str, Tensor] = {
-            "input": torch.tensor(
+            'input': torch.tensor(
                 data.drop([self.label_name]).values, dtype=torch.float32
             ),
-            "label": torch.tensor(data[self.label_name], dtype=torch.float32),
+            'label': torch.tensor(data[self.label_name], dtype=torch.float32),
         }
 
         if self.transforms is not None:
@@ -295,9 +292,9 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         for path in self.collection:
             with open(path) as f:
                 content = json.load(f)
-                data_dict = content["properties"]
-                data_dict["lon"] = content["geometry"]["coordinates"][0]
-                data_dict["lat"] = content["geometry"]["coordinates"][1]
+                data_dict = content['properties']
+                data_dict['lon'] = content['geometry']['coordinates'][0]
+                data_dict['lat'] = content['geometry']['coordinates'][1]
                 data_rows.append(data_dict)
 
         df: pd.DataFrame = pd.DataFrame(data_rows)
@@ -312,7 +309,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.collection_id) + ".tar.gz"
+        pathname = os.path.join(self.root, self.collection_id) + '.tar.gz'
         if os.path.exists(pathname):
             self._extract()
             return
@@ -327,7 +324,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        pathname = os.path.join(self.root, self.collection_id) + ".tar.gz"
+        pathname = os.path.join(self.root, self.collection_id) + '.tar.gz'
         extract_archive(pathname, self.root)
 
     def _download(self, api_key: str | None = None) -> None:
@@ -337,5 +334,5 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
         """
         download_radiant_mlhub_collection(self.collection_id, self.root, api_key)
-        filename = os.path.join(self.root, self.collection_id) + ".tar.gz"
+        filename = os.path.join(self.root, self.collection_id) + '.tar.gz'
         extract_archive(filename, self.root)

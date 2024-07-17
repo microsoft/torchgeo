@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import math
-from typing import Union
 
 import pytest
 
@@ -10,11 +9,11 @@ from torchgeo.datasets import BoundingBox
 from torchgeo.samplers import tile_to_chips
 from torchgeo.samplers.utils import _to_tuple
 
-MAYBE_TUPLE = Union[float, tuple[float, float]]
+MAYBE_TUPLE = float | tuple[float, float]
 
 
 @pytest.mark.parametrize(
-    "size,stride,expected",
+    'size,stride,expected',
     [
         # size == bounds
         (10, 1, 1),

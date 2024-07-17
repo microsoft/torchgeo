@@ -23,9 +23,9 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
 
     def __init__(
         self,
-        encoder_name: str = "resnet34",
+        encoder_name: str = 'resnet34',
         encoder_depth: int = 5,
-        encoder_weights: str | None = "imagenet",
+        encoder_weights: str | None = 'imagenet',
         decoder_use_batchnorm: bool = True,
         decoder_channels: Sequence[int] = (256, 128, 64, 32, 16),
         decoder_attention_type: str | None = None,
@@ -86,7 +86,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
             decoder_channels=decoder_channels,
             n_blocks=encoder_depth,
             use_batchnorm=decoder_use_batchnorm,
-            center=True if encoder_name.startswith("vgg") else False,
+            center=True if encoder_name.startswith('vgg') else False,
             attention_type=decoder_attention_type,
         )
 
@@ -97,7 +97,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
             kernel_size=3,
         )
         self.classification_head = None
-        self.name = f"u-{encoder_name}"
+        self.name = f'u-{encoder_name}'
         self.initialize()
 
     def forward(self, x: Tensor) -> Tensor:
@@ -134,37 +134,12 @@ class FCSiamDiff(Unet):  # type: ignore[misc]
         """Initialize a new FCSiamConc model.
 
         Args:
-            encoder_name: Name of the classification model that will
-                be used as an encoder (a.k.a backbone) to extract features
-                of different spatial resolution
-            encoder_depth: A number of stages used in encoder in range [3, 5].
-                two times smaller in spatial dimensions than previous one
-                (e.g. for depth 0 we will have features. Each stage generate
-                features with shapes [(N, C, H, W),], for depth
-                1 - [(N, C, H, W), (N, C, H // 2, W // 2)] and so on). Default is 5
-            encoder_weights: One of **None** (random initialization), **"imagenet"**
-                (pre-training on ImageNet) and other pretrained weights (see table
-                with available weights for each encoder_name)
-            decoder_channels: List of integers which specify **in_channels**
-                parameter for convolutions used in decoder. Length of the list
-                should be the same as **encoder_depth**
-            decoder_use_batchnorm: If **True**, BatchNorm2d layer between
-                Conv2D and Activation layers is used. If **"inplace"** InplaceABN
-                will be used, allows to decrease memory consumption. Available
-                options are **True, False, "inplace"**
-            decoder_attention_type: Attention module used in decoder of the model.
-                Available options are **None** and **scse**. SCSE paper
-                https://arxiv.org/abs/1808.08127
-            in_channels: A number of input channels for the model,
-                default is 3 (RGB images)
-            classes: A number of classes for output mask (or you can think as a number
-                of channels of output mask)
-            activation: An activation function to apply after the final convolution
-                n layer. Available options are **"sigmoid"**, **"softmax"**,
-                **"logsoftmax"**, **"tanh"**, **"identity"**, **callable**
-                and **None**. Default is **None**
+            *args: Additional arguments passed to
+                :class:`~segmentation_models_pytorch.Unet`
+            **kwargs: Additional keyword arguments passed to
+                :class:`~segmentation_models_pytorch.Unet`
         """
-        kwargs["aux_params"] = None
+        kwargs['aux_params'] = None
         super().__init__(*args, **kwargs)
 
     def forward(self, x: Tensor) -> Tensor:

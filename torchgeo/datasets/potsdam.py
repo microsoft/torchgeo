@@ -14,9 +14,9 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
-    DatasetNotFoundError,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -55,60 +55,60 @@ class Potsdam2D(NonGeoDataset):
     .. versionadded:: 0.2
     """  # noqa: E501
 
-    filenames = ["4_Ortho_RGBIR.zip", "5_Labels_all.zip"]
-    md5s = ["c4a8f7d8c7196dd4eba4addd0aae10c1", "cf7403c1a97c0d279414db"]
-    image_root = "4_Ortho_RGBIR"
+    filenames = ['4_Ortho_RGBIR.zip', '5_Labels_all.zip']
+    md5s = ['c4a8f7d8c7196dd4eba4addd0aae10c1', 'cf7403c1a97c0d279414db']
+    image_root = '4_Ortho_RGBIR'
     splits = {
-        "train": [
-            "top_potsdam_2_10",
-            "top_potsdam_2_11",
-            "top_potsdam_2_12",
-            "top_potsdam_3_10",
-            "top_potsdam_3_11",
-            "top_potsdam_3_12",
-            "top_potsdam_4_10",
-            "top_potsdam_4_11",
-            "top_potsdam_4_12",
-            "top_potsdam_5_10",
-            "top_potsdam_5_11",
-            "top_potsdam_5_12",
-            "top_potsdam_6_10",
-            "top_potsdam_6_11",
-            "top_potsdam_6_12",
-            "top_potsdam_6_7",
-            "top_potsdam_6_8",
-            "top_potsdam_6_9",
-            "top_potsdam_7_10",
-            "top_potsdam_7_11",
-            "top_potsdam_7_12",
-            "top_potsdam_7_7",
-            "top_potsdam_7_8",
-            "top_potsdam_7_9",
+        'train': [
+            'top_potsdam_2_10',
+            'top_potsdam_2_11',
+            'top_potsdam_2_12',
+            'top_potsdam_3_10',
+            'top_potsdam_3_11',
+            'top_potsdam_3_12',
+            'top_potsdam_4_10',
+            'top_potsdam_4_11',
+            'top_potsdam_4_12',
+            'top_potsdam_5_10',
+            'top_potsdam_5_11',
+            'top_potsdam_5_12',
+            'top_potsdam_6_10',
+            'top_potsdam_6_11',
+            'top_potsdam_6_12',
+            'top_potsdam_6_7',
+            'top_potsdam_6_8',
+            'top_potsdam_6_9',
+            'top_potsdam_7_10',
+            'top_potsdam_7_11',
+            'top_potsdam_7_12',
+            'top_potsdam_7_7',
+            'top_potsdam_7_8',
+            'top_potsdam_7_9',
         ],
-        "test": [
-            "top_potsdam_5_15",
-            "top_potsdam_6_15",
-            "top_potsdam_6_13",
-            "top_potsdam_3_13",
-            "top_potsdam_4_14",
-            "top_potsdam_6_14",
-            "top_potsdam_5_14",
-            "top_potsdam_2_13",
-            "top_potsdam_4_15",
-            "top_potsdam_2_14",
-            "top_potsdam_5_13",
-            "top_potsdam_4_13",
-            "top_potsdam_3_14",
-            "top_potsdam_7_13",
+        'test': [
+            'top_potsdam_5_15',
+            'top_potsdam_6_15',
+            'top_potsdam_6_13',
+            'top_potsdam_3_13',
+            'top_potsdam_4_14',
+            'top_potsdam_6_14',
+            'top_potsdam_5_14',
+            'top_potsdam_2_13',
+            'top_potsdam_4_15',
+            'top_potsdam_2_14',
+            'top_potsdam_5_13',
+            'top_potsdam_4_13',
+            'top_potsdam_3_14',
+            'top_potsdam_7_13',
         ],
     }
     classes = [
-        "Clutter/background",
-        "Impervious surfaces",
-        "Building",
-        "Low Vegetation",
-        "Tree",
-        "Car",
+        'Clutter/background',
+        'Impervious surfaces',
+        'Building',
+        'Low Vegetation',
+        'Tree',
+        'Car',
     ]
     colormap = [
         (255, 0, 0),
@@ -121,8 +121,8 @@ class Potsdam2D(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
@@ -149,8 +149,8 @@ class Potsdam2D(NonGeoDataset):
 
         self.files = []
         for name in self.splits[split]:
-            image = os.path.join(root, self.image_root, name) + "_RGBIR.tif"
-            mask = os.path.join(root, name) + "_label.tif"
+            image = os.path.join(root, self.image_root, name) + '_RGBIR.tif'
+            mask = os.path.join(root, name) + '_label.tif'
             if os.path.exists(image) and os.path.exists(mask):
                 self.files.append(dict(image=image, mask=mask))
 
@@ -165,7 +165,7 @@ class Potsdam2D(NonGeoDataset):
         """
         image = self._load_image(index)
         mask = self._load_target(index)
-        sample = {"image": image, "mask": mask}
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -189,7 +189,7 @@ class Potsdam2D(NonGeoDataset):
         Returns:
             the image
         """
-        path = self.files[index]["image"]
+        path = self.files[index]['image']
         with rasterio.open(path) as f:
             array = f.read()
             tensor = torch.from_numpy(array).float()
@@ -204,9 +204,9 @@ class Potsdam2D(NonGeoDataset):
         Returns:
             the target mask
         """
-        path = self.files[index]["mask"]
+        path = self.files[index]['mask']
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.uint8]" = np.array(img.convert("RGB"))
+            array: np.typing.NDArray[np.uint8] = np.array(img.convert('RGB'))
             array = rgb_to_mask(array, self.colormap)
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
@@ -225,7 +225,7 @@ class Potsdam2D(NonGeoDataset):
             filepath = os.path.join(self.root, filename)
             if os.path.isfile(filepath):
                 if self.checksum and not check_integrity(filepath, md5):
-                    raise RuntimeError("Dataset found, but corrupted.")
+                    raise RuntimeError('Dataset found, but corrupted.')
                 exists.append(True)
                 extract_archive(filepath)
             else:
@@ -256,13 +256,13 @@ class Potsdam2D(NonGeoDataset):
         """
         ncols = 1
         image1 = draw_semantic_segmentation_masks(
-            sample["image"][:3], sample["mask"], alpha=alpha, colors=self.colormap
+            sample['image'][:3], sample['mask'], alpha=alpha, colors=self.colormap
         )
-        if "prediction" in sample:
+        if 'prediction' in sample:
             ncols += 1
             image2 = draw_semantic_segmentation_masks(
-                sample["image"][:3],
-                sample["prediction"],
+                sample['image'][:3],
+                sample['prediction'],
                 alpha=alpha,
                 colors=self.colormap,
             )
@@ -274,15 +274,15 @@ class Potsdam2D(NonGeoDataset):
             ax0 = axs
 
         ax0.imshow(image1)
-        ax0.axis("off")
+        ax0.axis('off')
         if ncols > 1:
             ax1.imshow(image2)
-            ax1.axis("off")
+            ax1.axis('off')
 
         if show_titles:
-            ax0.set_title("Ground Truth")
+            ax0.set_title('Ground Truth')
             if ncols > 1:
-                ax1.set_title("Predictions")
+                ax1.set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

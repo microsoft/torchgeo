@@ -13,8 +13,9 @@ import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
+from .utils import BoundingBox, download_url, extract_archive
 
 
 class NLCD(RasterDataset):
@@ -67,22 +68,22 @@ class NLCD(RasterDataset):
     .. versionadded:: 0.5
     """  # noqa: E501
 
-    filename_glob = "nlcd_*_land_cover_l48_*.img"
+    filename_glob = 'nlcd_*_land_cover_l48_*.img'
     filename_regex = (
-        r"nlcd_(?P<date>\d{4})_land_cover_l48_(?P<publication_date>\d{8})\.img"
+        r'nlcd_(?P<date>\d{4})_land_cover_l48_(?P<publication_date>\d{8})\.img'
     )
-    zipfile_glob = "nlcd_*_land_cover_l48_*.zip"
-    date_format = "%Y"
+    zipfile_glob = 'nlcd_*_land_cover_l48_*.zip'
+    date_format = '%Y'
     is_image = False
 
-    url = "https://s3-us-west-2.amazonaws.com/mrlc/nlcd_{}_land_cover_l48_20210604.zip"
+    url = 'https://s3-us-west-2.amazonaws.com/mrlc/nlcd_{}_land_cover_l48_20210604.zip'
 
     md5s = {
-        2001: "538166a4d783204764e3df3b221fc4cd",
-        2006: "67454e7874a00294adb9442374d0c309",
-        2011: "ea524c835d173658eeb6fa3c8e6b917b",
-        2016: "452726f6e3bd3f70d8ca2476723d238a",
-        2019: "82851c3f8105763b01c83b4a9e6f3961",
+        2001: '538166a4d783204764e3df3b221fc4cd',
+        2006: '67454e7874a00294adb9442374d0c309',
+        2011: 'ea524c835d173658eeb6fa3c8e6b917b',
+        2016: '452726f6e3bd3f70d8ca2476723d238a',
+        2019: '82851c3f8105763b01c83b4a9e6f3961',
     }
 
     cmap = {
@@ -107,7 +108,7 @@ class NLCD(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = "data",
+        paths: str | Iterable[str] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         years: list[int] = [2019],
@@ -139,13 +140,13 @@ class NLCD(RasterDataset):
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert set(years) <= self.md5s.keys(), (
-            "NLCD data product only exists for the following years: "
-            f"{list(self.md5s.keys())}."
+            'NLCD data product only exists for the following years: '
+            f'{list(self.md5s.keys())}.'
         )
         assert (
             set(classes) <= self.cmap.keys()
-        ), f"Only the following classes are valid: {list(self.cmap.keys())}."
-        assert 0 in classes, "Classes must include the background class: 0"
+        ), f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert 0 in classes, 'Classes must include the background class: 0'
 
         self.paths = paths
         self.years = years
@@ -177,7 +178,7 @@ class NLCD(RasterDataset):
             IndexError: if query is not found in the index
         """
         sample = super().__getitem__(query)
-        sample["mask"] = self.ordinal_map[sample["mask"]]
+        sample['mask'] = self.ordinal_map[sample['mask']]
         return sample
 
     def _verify(self) -> None:
@@ -189,9 +190,9 @@ class NLCD(RasterDataset):
         # Check if the zip files have already been downloaded
         exists = []
         for year in self.years:
-            zipfile_year = self.zipfile_glob.replace("*", str(year), 1)
+            zipfile_year = self.zipfile_glob.replace('*', str(year), 1)
             assert isinstance(self.paths, str)
-            pathname = os.path.join(self.paths, "**", zipfile_year)
+            pathname = os.path.join(self.paths, '**', zipfile_year)
             if glob.glob(pathname, recursive=True):
                 exists.append(True)
                 self._extract()
@@ -221,9 +222,9 @@ class NLCD(RasterDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         for year in self.years:
-            zipfile_name = self.zipfile_glob.replace("*", str(year), 1)
+            zipfile_name = self.zipfile_glob.replace('*', str(year), 1)
             assert isinstance(self.paths, str)
-            pathname = os.path.join(self.paths, "**", zipfile_name)
+            pathname = os.path.join(self.paths, '**', zipfile_name)
             extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
 
     def plot(
@@ -242,29 +243,29 @@ class NLCD(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze()
+            pred = sample['prediction'].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(
             nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
         )
 
-        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation="none")
-        axs[0, 0].axis("off")
+        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[0, 0].axis('off')
 
         if show_titles:
-            axs[0, 0].set_title("Mask")
+            axs[0, 0].set_title('Mask')
 
         if showing_predictions:
-            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation="none")
-            axs[0, 1].axis("off")
+            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[0, 1].axis('off')
             if show_titles:
-                axs[0, 1].set_title("Prediction")
+                axs[0, 1].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

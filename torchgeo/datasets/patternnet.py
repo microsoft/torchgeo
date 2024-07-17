@@ -11,8 +11,9 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoClassificationDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import download_url, extract_archive
 
 
 class PatternNet(NonGeoClassificationDataset):
@@ -77,14 +78,14 @@ class PatternNet(NonGeoClassificationDataset):
     * https://doi.org/10.1016/j.isprsjprs.2018.01.004
     """
 
-    url = "https://drive.google.com/file/d/127lxXYqzO6Bd0yZhvEbgIfz95HaEnr9K"
-    md5 = "96d54b3224c5350a98d55d5a7e6984ad"
-    filename = "PatternNet.zip"
-    directory = os.path.join("PatternNet", "images")
+    url = 'https://drive.google.com/file/d/127lxXYqzO6Bd0yZhvEbgIfz95HaEnr9K'
+    md5 = '96d54b3224c5350a98d55d5a7e6984ad'
+    filename = 'PatternNet.zip'
+    directory = os.path.join('PatternNet', 'images')
 
     def __init__(
         self,
-        root: str = "data",
+        root: str = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -160,21 +161,21 @@ class PatternNet(NonGeoClassificationDataset):
 
         .. versionadded:: 0.2
         """
-        image, label = sample["image"], cast(int, sample["label"].item())
+        image, label = sample['image'], cast(int, sample['label'].item())
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = cast(int, sample["prediction"].item())
+            prediction = cast(int, sample['prediction'].item())
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
         ax.imshow(image.permute(1, 2, 0))
-        ax.axis("off")
+        ax.axis('off')
 
         if show_titles:
-            title = f"Label: {self.classes[label]}"
+            title = f'Label: {self.classes[label]}'
             if showing_predictions:
-                title += f"\nPrediction: {self.classes[prediction]}"
+                title += f'\nPrediction: {self.classes[prediction]}'
             ax.set_title(title)
 
         if suptitle is not None:

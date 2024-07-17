@@ -42,7 +42,7 @@ class RCF(Module):
         kernel_size: int = 3,
         bias: float = -1.0,
         seed: int | None = None,
-        mode: str = "gaussian",
+        mode: str = 'gaussian',
         dataset: NonGeoDataset | None = None,
     ) -> None:
         """Initializes the RCF model.
@@ -66,8 +66,8 @@ class RCF(Module):
             dataset: a NonGeoDataset to sample from when mode is "empirical"
         """
         super().__init__()
-        assert mode in ["empirical", "gaussian"]
-        if mode == "empirical" and dataset is None:
+        assert mode in ['empirical', 'gaussian']
+        if mode == 'empirical' and dataset is None:
             raise ValueError("dataset must be provided when mode is 'empirical'")
         assert features % 2 == 0
         num_patches = features // 2
@@ -81,7 +81,7 @@ class RCF(Module):
         # them explicitely _not_ Parameters of the model (which might get updated) if
         # a user tries to train with this model.
         self.register_buffer(
-            "weights",
+            'weights',
             torch.randn(
                 num_patches,
                 in_channels,
@@ -92,12 +92,12 @@ class RCF(Module):
             ),
         )
         self.register_buffer(
-            "biases", torch.zeros(num_patches, requires_grad=False) + bias
+            'biases', torch.zeros(num_patches, requires_grad=False) + bias
         )
 
-        if mode == "empirical":
+        if mode == 'empirical':
             assert dataset is not None
-            num_channels, height, width = dataset[0]["image"].shape
+            num_channels, height, width = dataset[0]['image'].shape
             assert num_channels == in_channels
             patches = np.zeros(
                 (num_patches, num_channels, kernel_size, kernel_size), dtype=np.float32
@@ -113,7 +113,7 @@ class RCF(Module):
             ).numpy()
 
             for i in range(num_patches):
-                img = dataset[idxs[i]]["image"]
+                img = dataset[idxs[i]]['image']
                 patches[i] = img[
                     :, ys[i] : ys[i] + kernel_size, xs[i] : xs[i] + kernel_size
                 ]
@@ -123,10 +123,10 @@ class RCF(Module):
 
     def _normalize(
         self,
-        patches: "np.typing.NDArray[np.float32]",
+        patches: 'np.typing.NDArray[np.float32]',
         min_divisor: float = 1e-8,
         zca_bias: float = 0.001,
-    ) -> "np.typing.NDArray[np.float32]":
+    ) -> 'np.typing.NDArray[np.float32]':
         """Does ZCA whitening on a set of input patches.
 
         Copied from https://github.com/Global-Policy-Lab/mosaiks-paper/blob/7efb09ed455505562d6bb04c2aaa242ef59f0a82/code/mosaiks/featurization.py#L120
@@ -136,7 +136,7 @@ class RCF(Module):
             min_divisor: a small number to guard against division by zero
             zca_bias: bias term for ZCA whitening
 
-        Returns
+        Returns:
             a numpy array of size (N, C, H, W) containing the normalized patches
 
         .. versionadded:: 0.5
@@ -165,11 +165,11 @@ class RCF(Module):
         sqrt_zca_eigs = np.sqrt(E)
         inv_sqrt_zca_eigs = np.diag(np.power(sqrt_zca_eigs, -1))
         global_ZCA = V.dot(inv_sqrt_zca_eigs).dot(V.T)
-        patches_normalized: "np.typing.NDArray[np.float32]" = (
+        patches_normalized: np.typing.NDArray[np.float32] = (
             (patches).dot(global_ZCA).dot(global_ZCA.T)
         )
 
-        return patches_normalized.reshape(orig_shape).astype("float32")
+        return patches_normalized.reshape(orig_shape).astype('float32')
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the RCF model.

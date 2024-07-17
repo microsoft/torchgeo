@@ -28,14 +28,14 @@ class TestSwin_V2_B:
     def mocked_weights(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
     ) -> WeightsEnum:
-        path = tmp_path / f"{weights}.pth"
+        path = tmp_path / f'{weights}.pth'
         model = torchvision.models.swin_v2_b()
         torch.save(model.state_dict(), path)
         try:
-            monkeypatch.setattr(weights.value, "url", str(path))
+            monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
-            monkeypatch.setattr(weights, "url", str(path))
-        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
+            monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(torchvision.models._api, 'load_state_dict_from_url', load)
         return weights
 
     def test_swin_v2_b(self) -> None:
@@ -45,9 +45,9 @@ class TestSwin_V2_B:
         swin_v2_b(weights=mocked_weights)
 
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta["in_chans"]
+        c = mocked_weights.meta['in_chans']
         sample = {
-            "image": torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
+            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
         }
         mocked_weights.transforms(sample)
 

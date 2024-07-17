@@ -18,75 +18,75 @@ SIZE = 32
 np.random.seed(0)
 
 meta = {
-    "driver": "GTiff",
-    "nodata": None,
-    "width": SIZE,
-    "height": SIZE,
-    "crs": CRS.from_epsg(32720),
-    "transform": Affine(10.0, 0.0, 612190.0, 0.0, -10.0, 7324250.0),
+    'driver': 'GTiff',
+    'nodata': None,
+    'width': SIZE,
+    'height': SIZE,
+    'crs': CRS.from_epsg(32720),
+    'transform': Affine(10.0, 0.0, 612190.0, 0.0, -10.0, 7324250.0),
 }
 
 count = {
-    "ESA_WC": 1,
-    "VIIRS": 1,
-    "mask": 1,
-    "s1_part1": 2,
-    "s1_part2": 2,
-    "s2_temporal_subset_part1": 10,
-    "s2_temporal_subset_part2": 10,
-    "s2_autumn_part1": 10,
-    "s2_autumn_part2": 10,
-    "s2_spring_part1": 10,
-    "s2_spring_part2": 10,
-    "s2_summer_part1": 10,
-    "s2_summer_part2": 10,
-    "s2_winter_part1": 10,
-    "s2_winter_part2": 10,
+    'ESA_WC': 1,
+    'VIIRS': 1,
+    'mask': 1,
+    's1_part1': 2,
+    's1_part2': 2,
+    's2_temporal_subset_part1': 10,
+    's2_temporal_subset_part2': 10,
+    's2_autumn_part1': 10,
+    's2_autumn_part2': 10,
+    's2_spring_part1': 10,
+    's2_spring_part2': 10,
+    's2_summer_part1': 10,
+    's2_summer_part2': 10,
+    's2_winter_part1': 10,
+    's2_winter_part2': 10,
 }
 dtype = {
-    "ESA_WC": np.uint8,
-    "VIIRS": np.float32,
-    "mask": np.byte,
-    "s1_part1": np.float64,
-    "s1_part2": np.float64,
-    "s2_temporal_subset_part1": np.uint16,
-    "s2_temporal_subset_part2": np.uint16,
-    "s2_autumn_part1": np.uint16,
-    "s2_autumn_part2": np.uint16,
-    "s2_spring_part1": np.uint16,
-    "s2_spring_part2": np.uint16,
-    "s2_summer_part1": np.uint16,
-    "s2_summer_part2": np.uint16,
-    "s2_winter_part1": np.uint16,
-    "s2_winter_part2": np.uint16,
+    'ESA_WC': np.uint8,
+    'VIIRS': np.float32,
+    'mask': np.byte,
+    's1_part1': np.float64,
+    's1_part2': np.float64,
+    's2_temporal_subset_part1': np.uint16,
+    's2_temporal_subset_part2': np.uint16,
+    's2_autumn_part1': np.uint16,
+    's2_autumn_part2': np.uint16,
+    's2_spring_part1': np.uint16,
+    's2_spring_part2': np.uint16,
+    's2_summer_part1': np.uint16,
+    's2_summer_part2': np.uint16,
+    's2_winter_part1': np.uint16,
+    's2_winter_part2': np.uint16,
 }
 stop = {
-    "ESA_WC": np.iinfo(np.uint8).max,
-    "VIIRS": np.finfo(np.float32).max,
-    "mask": np.iinfo(np.byte).max,
-    "s1_part1": np.finfo(np.float64).max,
-    "s1_part2": np.finfo(np.float64).max,
-    "s2_temporal_subset_part1": np.iinfo(np.uint16).max,
-    "s2_temporal_subset_part2": np.iinfo(np.uint16).max,
-    "s2_autumn_part1": np.iinfo(np.uint16).max,
-    "s2_autumn_part2": np.iinfo(np.uint16).max,
-    "s2_spring_part1": np.iinfo(np.uint16).max,
-    "s2_spring_part2": np.iinfo(np.uint16).max,
-    "s2_summer_part1": np.iinfo(np.uint16).max,
-    "s2_summer_part2": np.iinfo(np.uint16).max,
-    "s2_winter_part1": np.iinfo(np.uint16).max,
-    "s2_winter_part2": np.iinfo(np.uint16).max,
+    'ESA_WC': np.iinfo(np.uint8).max,
+    'VIIRS': np.finfo(np.float32).max,
+    'mask': np.iinfo(np.byte).max,
+    's1_part1': np.finfo(np.float64).max,
+    's1_part2': np.finfo(np.float64).max,
+    's2_temporal_subset_part1': np.iinfo(np.uint16).max,
+    's2_temporal_subset_part2': np.iinfo(np.uint16).max,
+    's2_autumn_part1': np.iinfo(np.uint16).max,
+    's2_autumn_part2': np.iinfo(np.uint16).max,
+    's2_spring_part1': np.iinfo(np.uint16).max,
+    's2_spring_part2': np.iinfo(np.uint16).max,
+    's2_summer_part1': np.iinfo(np.uint16).max,
+    's2_summer_part2': np.iinfo(np.uint16).max,
+    's2_winter_part1': np.iinfo(np.uint16).max,
+    's2_winter_part2': np.iinfo(np.uint16).max,
 }
 
-folder_path = os.path.join(os.getcwd(), "tests", "data", "mapinwild")
+folder_path = os.path.join(os.getcwd(), 'tests', 'data', 'mapinwild')
 
 dict_all = {
-    "s2_sum": ["s2_summer_part1", "s2_summer_part2"],
-    "s2_spr": ["s2_spring_part1", "s2_spring_part2"],
-    "s2_win": ["s2_winter_part1", "s2_winter_part2"],
-    "s2_aut": ["s2_autumn_part1", "s2_autumn_part2"],
-    "s1": ["s1_part1", "s1_part2"],
-    "s2_temp": ["s2_temporal_subset_part1", "s2_temporal_subset_part2"],
+    's2_sum': ['s2_summer_part1', 's2_summer_part2'],
+    's2_spr': ['s2_spring_part1', 's2_spring_part2'],
+    's2_win': ['s2_winter_part1', 's2_winter_part2'],
+    's2_aut': ['s2_autumn_part1', 's2_autumn_part2'],
+    's1': ['s1_part1', 's1_part2'],
+    's2_temp': ['s2_temporal_subset_part1', 's2_temporal_subset_part2'],
 }
 
 md5s = {}
@@ -103,14 +103,14 @@ for source in modality_download_list:
 
     # Random images
     for i in range(1, 3):
-        filename = f"{i}.tif"
+        filename = f'{i}.tif'
         filepath = os.path.join(directory, filename)
 
-        meta["count"] = count[source]
-        meta["dtype"] = dtype[source]
-        with rasterio.open(filepath, "w", **meta) as f:
+        meta['count'] = count[source]
+        meta['dtype'] = dtype[source]
+        with rasterio.open(filepath, 'w', **meta) as f:
             for j in range(1, count[source] + 1):
-                if meta["dtype"] is np.float32 or meta["dtype"] is np.float64:
+                if meta['dtype'] is np.float32 or meta['dtype'] is np.float64:
                     data = np.random.randn(SIZE, SIZE).astype(dtype[source])
 
                 else:
@@ -145,22 +145,22 @@ for i, source in zip(keys, modality_download_list):
     root = os.path.dirname(directory)
 
     # Compress data
-    shutil.make_archive(directory, "zip", root_dir=root, base_dir=source)
+    shutil.make_archive(directory, 'zip', root_dir=root, base_dir=source)
 
     # Compute checksums
-    with open(directory + ".zip", "rb") as f:
+    with open(directory + '.zip', 'rb') as f:
         md5 = hashlib.md5(f.read()).hexdigest()
-        print(f"{directory}: {md5}")
-        name = i + ".zip"
+        print(f'{directory}: {md5}')
+        name = i + '.zip'
         md5s[name] = md5
 
 tvt_split = pd.DataFrame(
-    [["1", "2", "3"], [np.nan, np.nan, np.nan], [np.nan, np.nan, np.nan]],
-    index=["0", "1", "2"],
-    columns=["train", "validation", "test"],
+    [['1', '2', '3'], [np.nan, np.nan, np.nan], [np.nan, np.nan, np.nan]],
+    index=['0', '1', '2'],
+    columns=['train', 'validation', 'test'],
 )
 tvt_split.dropna()
-tvt_split.to_csv(os.path.join(folder_path, "split_IDs.csv"))
+tvt_split.to_csv(os.path.join(folder_path, 'split_IDs.csv'))
 
-with open(os.path.join(folder_path, "split_IDs.csv"), "rb") as f:
+with open(os.path.join(folder_path, 'split_IDs.csv'), 'rb') as f:
     csv_md5 = hashlib.md5(f.read()).hexdigest()

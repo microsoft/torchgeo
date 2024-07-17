@@ -38,7 +38,7 @@ class FireRiskDataModule(NonGeoDataModule):
             K.RandomSharpness(p=0.5),
             K.RandomErasing(p=0.1),
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
-            data_keys=["image"],
+            data_keys=['image'],
         )
 
     def setup(self, stage: str) -> None:
@@ -47,7 +47,7 @@ class FireRiskDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit"]:
-            self.train_dataset = FireRisk(split="train", **self.kwargs)
-        if stage in ["fit", "validate"]:
-            self.val_dataset = FireRisk(split="val", **self.kwargs)
+        if stage in ['fit']:
+            self.train_dataset = FireRisk(split='train', **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.val_dataset = FireRisk(split='val', **self.kwargs)

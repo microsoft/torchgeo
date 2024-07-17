@@ -15,12 +15,9 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    download_and_extract_archive,
-    percentile_normalization,
-)
+from .utils import download_and_extract_archive, percentile_normalization
 
 
 class LEVIRCDBase(NonGeoDataset, abc.ABC):
@@ -30,12 +27,12 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
     """
 
     splits: list[str] | dict[str, dict[str, str]]
-    directories = ["A", "B", "label"]
+    directories = ['A', 'B', 'label']
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -79,10 +76,10 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
             data and label at that index
         """
         files = self.files[index]
-        image1 = self._load_image(files["image1"])
-        image2 = self._load_image(files["image2"])
-        mask = self._load_target(files["mask"])
-        sample = {"image1": image1, "image2": image2, "mask": mask}
+        image1 = self._load_image(files['image1'])
+        image2 = self._load_image(files['image2'])
+        mask = self._load_target(files['mask'])
+        sample = {'image1': image1, 'image2': image2, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -108,7 +105,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
@@ -125,7 +122,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)
@@ -151,34 +148,34 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         """
         ncols = 3
 
-        image1 = sample["image1"].permute(1, 2, 0).numpy()
+        image1 = sample['image1'].permute(1, 2, 0).numpy()
         image1 = percentile_normalization(image1, axis=(0, 1))
 
-        image2 = sample["image2"].permute(1, 2, 0).numpy()
+        image2 = sample['image2'].permute(1, 2, 0).numpy()
         image2 = percentile_normalization(image2, axis=(0, 1))
 
-        if "prediction" in sample:
+        if 'prediction' in sample:
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
 
         axs[0].imshow(image1)
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(image2)
-        axs[1].axis("off")
-        axs[2].imshow(sample["mask"], cmap="gray", interpolation="none")
-        axs[2].axis("off")
+        axs[1].axis('off')
+        axs[2].imshow(sample['mask'], cmap='gray', interpolation='none')
+        axs[2].axis('off')
 
-        if "prediction" in sample:
-            axs[3].imshow(sample["prediction"], cmap="gray", interpolation="none")
-            axs[3].axis("off")
+        if 'prediction' in sample:
+            axs[3].imshow(sample['prediction'], cmap='gray', interpolation='none')
+            axs[3].axis('off')
             if show_titles:
-                axs[3].set_title("Prediction")
+                axs[3].set_title('Prediction')
 
         if show_titles:
-            axs[0].set_title("Image 1")
-            axs[1].set_title("Image 2")
-            axs[2].set_title("Mask")
+            axs[0].set_title('Image 1')
+            axs[1].set_title('Image 2')
+            axs[2].set_title('Mask')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
@@ -241,20 +238,20 @@ class LEVIRCD(LEVIRCDBase):
     """
 
     splits = {
-        "train": {
-            "url": "https://drive.google.com/file/d/18GuoCuBn48oZKAlEo-LrNwABrFhVALU-",
-            "filename": "train.zip",
-            "md5": "a638e71f480628652dea78d8544307e4",
+        'train': {
+            'url': 'https://drive.google.com/file/d/18GuoCuBn48oZKAlEo-LrNwABrFhVALU-',
+            'filename': 'train.zip',
+            'md5': 'a638e71f480628652dea78d8544307e4',
         },
-        "val": {
-            "url": "https://drive.google.com/file/d/1BqSt4ueO7XAyQ_84mUjswUSJt13ZBuzG",
-            "filename": "val.zip",
-            "md5": "f7b857978524f9aa8c3bf7f94e3047a4",
+        'val': {
+            'url': 'https://drive.google.com/file/d/1BqSt4ueO7XAyQ_84mUjswUSJt13ZBuzG',
+            'filename': 'val.zip',
+            'md5': 'f7b857978524f9aa8c3bf7f94e3047a4',
         },
-        "test": {
-            "url": "https://drive.google.com/file/d/1jj3qJD_grJlgIhUWO09zibRGJe0R4Tn0",
-            "filename": "test.zip",
-            "md5": "07d5dd89e46f5c1359e2eca746989ed9",
+        'test': {
+            'url': 'https://drive.google.com/file/d/1jj3qJD_grJlgIhUWO09zibRGJe0R4Tn0',
+            'filename': 'test.zip',
+            'md5': '07d5dd89e46f5c1359e2eca746989ed9',
         },
     }
 
@@ -268,9 +265,9 @@ class LEVIRCD(LEVIRCDBase):
         Returns:
             list of dicts containing paths for each pair of image1, image2, mask
         """
-        images1 = sorted(glob.glob(os.path.join(root, "A", f"{split}*.png")))
-        images2 = sorted(glob.glob(os.path.join(root, "B", f"{split}*.png")))
-        masks = sorted(glob.glob(os.path.join(root, "label", f"{split}*.png")))
+        images1 = sorted(glob.glob(os.path.join(root, 'A', f'{split}*.png')))
+        images2 = sorted(glob.glob(os.path.join(root, 'B', f'{split}*.png')))
+        masks = sorted(glob.glob(os.path.join(root, 'label', f'{split}*.png')))
 
         files = []
         for image1, image2, mask in zip(images1, images2, masks):
@@ -293,15 +290,15 @@ class LEVIRCD(LEVIRCDBase):
     def _download(self) -> None:
         """Download the dataset and extract it."""
         if self._check_integrity():
-            print("Files already downloaded and verified")
+            print('Files already downloaded and verified')
             return
 
         for split in self.splits:
             download_and_extract_archive(
-                self.splits[split]["url"],
+                self.splits[split]['url'],
                 self.root,
-                filename=self.splits[split]["filename"],
-                md5=self.splits[split]["md5"] if self.checksum else None,
+                filename=self.splits[split]['filename'],
+                md5=self.splits[split]['md5'] if self.checksum else None,
             )
 
 
@@ -335,11 +332,11 @@ class LEVIRCDPlus(LEVIRCDBase):
     .. versionchanged:: 0.6
     """
 
-    url = "https://drive.google.com/file/d/1JamSsxiytXdzAIk6VDVWfc-OsX-81U81"
-    md5 = "1adf156f628aa32fb2e8fe6cada16c04"
-    filename = "LEVIR-CD+.zip"
-    directory = "LEVIR-CD+"
-    splits = ["train", "test"]
+    url = 'https://drive.google.com/file/d/1JamSsxiytXdzAIk6VDVWfc-OsX-81U81'
+    md5 = '1adf156f628aa32fb2e8fe6cada16c04'
+    filename = 'LEVIR-CD+.zip'
+    directory = 'LEVIR-CD+'
+    splits = ['train', 'test']
 
     def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
@@ -352,12 +349,12 @@ class LEVIRCDPlus(LEVIRCDBase):
             list of dicts containing paths for each pair of image1, image2, mask
         """
         files = []
-        images = glob.glob(os.path.join(root, self.directory, split, "A", "*.png"))
+        images = glob.glob(os.path.join(root, self.directory, split, 'A', '*.png'))
         images = sorted(os.path.basename(image) for image in images)
         for image in images:
-            image1 = os.path.join(root, self.directory, split, "A", image)
-            image2 = os.path.join(root, self.directory, split, "B", image)
-            mask = os.path.join(root, self.directory, split, "label", image)
+            image1 = os.path.join(root, self.directory, split, 'A', image)
+            image2 = os.path.join(root, self.directory, split, 'B', image)
+            mask = os.path.join(root, self.directory, split, 'label', image)
             files.append(dict(image1=image1, image2=image2, mask=mask))
         return files
 
@@ -376,7 +373,7 @@ class LEVIRCDPlus(LEVIRCDBase):
     def _download(self) -> None:
         """Download the dataset and extract it."""
         if self._check_integrity():
-            print("Files already downloaded and verified")
+            print('Files already downloaded and verified')
             return
 
         download_and_extract_archive(

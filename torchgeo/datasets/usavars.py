@@ -15,8 +15,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import download_url, extract_archive
 
 
 class USAVars(NonGeoDataset):
@@ -48,45 +49,45 @@ class USAVars(NonGeoDataset):
     .. versionadded:: 0.3
     """
 
-    data_url = "https://hf.co/datasets/torchgeo/usavars/resolve/01377abfaf50c0cc8548aaafb79533666bbf288f/{}"  # noqa: E501
-    dirname = "uar"
+    data_url = 'https://hf.co/datasets/torchgeo/usavars/resolve/01377abfaf50c0cc8548aaafb79533666bbf288f/{}'  # noqa: E501
+    dirname = 'uar'
 
-    md5 = "677e89fd20e5dd0fe4d29b61827c2456"
+    md5 = '677e89fd20e5dd0fe4d29b61827c2456'
 
     label_urls = {
-        "housing": data_url.format("housing.csv"),
-        "income": data_url.format("income.csv"),
-        "roads": data_url.format("roads.csv"),
-        "nightlights": data_url.format("nightlights.csv"),
-        "population": data_url.format("population.csv"),
-        "elevation": data_url.format("elevation.csv"),
-        "treecover": data_url.format("treecover.csv"),
+        'housing': data_url.format('housing.csv'),
+        'income': data_url.format('income.csv'),
+        'roads': data_url.format('roads.csv'),
+        'nightlights': data_url.format('nightlights.csv'),
+        'population': data_url.format('population.csv'),
+        'elevation': data_url.format('elevation.csv'),
+        'treecover': data_url.format('treecover.csv'),
     }
 
     split_metadata = {
-        "train": {
-            "url": data_url.format("train_split.txt"),
-            "filename": "train_split.txt",
-            "md5": "3f58fffbf5fe177611112550297200e7",
+        'train': {
+            'url': data_url.format('train_split.txt'),
+            'filename': 'train_split.txt',
+            'md5': '3f58fffbf5fe177611112550297200e7',
         },
-        "val": {
-            "url": data_url.format("val_split.txt"),
-            "filename": "val_split.txt",
-            "md5": "bca7183b132b919dec0fc24fb11662a0",
+        'val': {
+            'url': data_url.format('val_split.txt'),
+            'filename': 'val_split.txt',
+            'md5': 'bca7183b132b919dec0fc24fb11662a0',
         },
-        "test": {
-            "url": data_url.format("test_split.txt"),
-            "filename": "test_split.txt",
-            "md5": "97bb36bc003ae0bf556a8d6e8f77141a",
+        'test': {
+            'url': data_url.format('test_split.txt'),
+            'filename': 'test_split.txt',
+            'md5': '97bb36bc003ae0bf556a8d6e8f77141a',
         },
     }
 
-    ALL_LABELS = ["treecover", "elevation", "population"]
+    ALL_LABELS = ['treecover', 'elevation', 'population']
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         labels: Sequence[str] = ALL_LABELS,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -125,7 +126,7 @@ class USAVars(NonGeoDataset):
         self.files = self._load_files()
 
         self.label_dfs = {
-            lab: pd.read_csv(os.path.join(self.root, lab + ".csv"), index_col="ID")
+            lab: pd.read_csv(os.path.join(self.root, lab + '.csv'), index_col='ID')
             for lab in self.labels
         }
 
@@ -142,12 +143,12 @@ class USAVars(NonGeoDataset):
         id_ = tif_file[5:-4]
 
         sample = {
-            "labels": Tensor(
+            'labels': Tensor(
                 [self.label_dfs[lab].loc[id_][lab] for lab in self.labels]
             ),
-            "image": self._load_image(os.path.join(self.root, "uar", tif_file)),
-            "centroid_lat": Tensor([self.label_dfs[self.labels[0]].loc[id_]["lat"]]),
-            "centroid_lon": Tensor([self.label_dfs[self.labels[0]].loc[id_]["lon"]]),
+            'image': self._load_image(os.path.join(self.root, 'uar', tif_file)),
+            'centroid_lat': Tensor([self.label_dfs[self.labels[0]].loc[id_]['lat']]),
+            'centroid_lon': Tensor([self.label_dfs[self.labels[0]].loc[id_]['lon']]),
         }
 
         if self.transforms is not None:
@@ -165,7 +166,7 @@ class USAVars(NonGeoDataset):
 
     def _load_files(self) -> list[str]:
         """Loads file names."""
-        with open(os.path.join(self.root, f"{self.split}_split.txt")) as f:
+        with open(os.path.join(self.root, f'{self.split}_split.txt')) as f:
             files = f.read().splitlines()
         return files
 
@@ -179,23 +180,23 @@ class USAVars(NonGeoDataset):
             the image
         """
         with rasterio.open(path) as f:
-            array: "np.typing.NDArray[np.int_]" = f.read()
+            array: np.typing.NDArray[np.int_] = f.read()
             tensor = torch.from_numpy(array).float()
             return tensor
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        pathname = os.path.join(self.root, "uar")
-        csv_pathname = os.path.join(self.root, "*.csv")
-        split_pathname = os.path.join(self.root, "*_split.txt")
+        pathname = os.path.join(self.root, 'uar')
+        csv_pathname = os.path.join(self.root, '*.csv')
+        split_pathname = os.path.join(self.root, '*_split.txt')
 
         csv_split_count = (len(glob.glob(csv_pathname)), len(glob.glob(split_pathname)))
         if glob.glob(pathname) and csv_split_count == (7, 3):
             return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.dirname + ".zip")
+        pathname = os.path.join(self.root, self.dirname + '.zip')
         if glob.glob(pathname) and csv_split_count == (7, 3):
             self._extract()
             return
@@ -210,20 +211,20 @@ class USAVars(NonGeoDataset):
     def _download(self) -> None:
         """Download the dataset."""
         for f_name in self.label_urls:
-            download_url(self.label_urls[f_name], self.root, filename=f_name + ".csv")
+            download_url(self.label_urls[f_name], self.root, filename=f_name + '.csv')
 
         download_url(self.data_url, self.root, md5=self.md5 if self.checksum else None)
 
         for metadata in self.split_metadata.values():
             download_url(
-                metadata["url"],
+                metadata['url'],
                 self.root,
-                md5=metadata["md5"] if self.checksum else None,
+                md5=metadata['md5'] if self.checksum else None,
             )
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        extract_archive(os.path.join(self.root, self.dirname + ".zip"))
+        extract_archive(os.path.join(self.root, self.dirname + '.zip'))
 
     def plot(
         self,
@@ -241,18 +242,18 @@ class USAVars(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = sample["image"][:3].numpy()  # get RGB inds
+        image = sample['image'][:3].numpy()  # get RGB inds
         image = np.moveaxis(image, 0, 2)
 
         fig, axs = plt.subplots(figsize=(10, 10))
         axs.imshow(image)
-        axs.axis("off")
+        axs.axis('off')
 
         if show_labels:
-            labels = [(lab, val) for lab, val in sample.items() if lab != "image"]
-            label_string = ""
+            labels = [(lab, val) for lab, val in sample.items() if lab != 'image']
+            label_string = ''
             for lab, val in labels:
-                label_string += f"{lab}={round(val[0].item(), 2)} "
+                label_string += f'{lab}={round(val[0].item(), 2)} '
             axs.set_title(label_string)
 
         if suptitle is not None:

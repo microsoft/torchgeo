@@ -49,7 +49,7 @@ def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
         K.RandomContrast(contrast=(0.2, 1.8), p=0.8),
         T.RandomGrayscale(weights=weights, p=0.2),
         K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2)),
-        data_keys=["input"],
+        data_keys=['input'],
     )
 
 
@@ -68,11 +68,11 @@ class SimCLRTask(BaseTask):
     .. versionadded:: 0.5
     """
 
-    monitor = "train_loss"
+    monitor = 'train_loss'
 
     def __init__(
         self,
-        model: str = "resnet50",
+        model: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         version: int = 2,
@@ -125,17 +125,17 @@ class SimCLRTask(BaseTask):
         assert version in range(1, 3)
         if version == 1:
             if layers > 2:
-                warnings.warn("SimCLR v1 only uses 2 layers in its projection head")
+                warnings.warn('SimCLR v1 only uses 2 layers in its projection head')
             if memory_bank_size > 0:
-                warnings.warn("SimCLR v1 does not use a memory bank")
+                warnings.warn('SimCLR v1 does not use a memory bank')
         elif version == 2:
             if layers == 2:
-                warnings.warn("SimCLR v2 uses 3+ layers in its projection head")
+                warnings.warn('SimCLR v2 uses 3+ layers in its projection head')
             if memory_bank_size == 0:
-                warnings.warn("SimCLR v2 uses a memory bank")
+                warnings.warn('SimCLR v2 uses a memory bank')
 
         self.weights = weights
-        super().__init__(ignore=["weights", "augmentations"])
+        super().__init__(ignore=['weights', 'augmentations'])
 
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
         self.augmentations = augmentations or simclr_augmentations(
@@ -148,8 +148,8 @@ class SimCLRTask(BaseTask):
 
         # Create backbone
         self.backbone = timm.create_model(
-            self.hparams["model"],
-            in_chans=self.hparams["in_channels"],
+            self.hparams['model'],
+            in_chans=self.hparams['in_channels'],
             num_classes=0,
             pretrained=weights is True,
         )
@@ -166,16 +166,16 @@ class SimCLRTask(BaseTask):
 
         # Create projection head
         input_dim = self.backbone.num_features
-        if self.hparams["hidden_dim"] is None:
-            self.hparams["hidden_dim"] = input_dim
-        if self.hparams["output_dim"] is None:
-            self.hparams["output_dim"] = input_dim
+        if self.hparams['hidden_dim'] is None:
+            self.hparams['hidden_dim'] = input_dim
+        if self.hparams['output_dim'] is None:
+            self.hparams['output_dim'] = input_dim
 
         self.projection_head = SimCLRProjectionHead(
             input_dim,
-            self.hparams["hidden_dim"],
-            self.hparams["output_dim"],
-            self.hparams["layers"],
+            self.hparams['hidden_dim'],
+            self.hparams['output_dim'],
+            self.hparams['layers'],
         )
 
         # Initialize moving average of output
@@ -189,16 +189,16 @@ class SimCLRTask(BaseTask):
         """Initialize the loss criterion."""
         try:
             self.criterion = NTXentLoss(
-                self.hparams["temperature"],
-                (self.hparams["memory_bank_size"], self.hparams["output_dim"]),
-                self.hparams["gather_distributed"],
+                self.hparams['temperature'],
+                (self.hparams['memory_bank_size'], self.hparams['output_dim']),
+                self.hparams['gather_distributed'],
             )
         except TypeError:
             # lightly 1.4.24 and older
             self.criterion = NTXentLoss(
-                self.hparams["temperature"],
-                self.hparams["memory_bank_size"],
-                self.hparams["gather_distributed"],
+                self.hparams['temperature'],
+                self.hparams['memory_bank_size'],
+                self.hparams['gather_distributed'],
             )
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
@@ -230,10 +230,10 @@ class SimCLRTask(BaseTask):
         Raises:
             AssertionError: If channel dimensions are incorrect.
         """
-        x = batch["image"]
+        x = batch['image']
         batch_size = x.shape[0]
 
-        in_channels: int = self.hparams["in_channels"]
+        in_channels: int = self.hparams['in_channels']
         assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
 
         if x.size(1) == in_channels:
@@ -260,8 +260,8 @@ class SimCLRTask(BaseTask):
         output_std = torch.mean(output_std, dim=0)
         self.avg_output_std = 0.9 * self.avg_output_std + (1 - 0.9) * output_std.item()
 
-        self.log("train_ssl_std", self.avg_output_std, batch_size=batch_size)
-        self.log("train_loss", loss, batch_size=batch_size)
+        self.log('train_ssl_std', self.avg_output_std, batch_size=batch_size)
+        self.log('train_loss', loss, batch_size=batch_size)
 
         return loss
 
@@ -280,7 +280,7 @@ class SimCLRTask(BaseTask):
 
     def configure_optimizers(
         self,
-    ) -> "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig":
+    ) -> 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig':
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
@@ -289,13 +289,13 @@ class SimCLRTask(BaseTask):
         # Original paper uses LARS optimizer, but this is not defined in PyTorch
         optimizer = Adam(
             self.parameters(),
-            lr=self.hparams["lr"],
-            weight_decay=self.hparams["weight_decay"],
+            lr=self.hparams['lr'],
+            weight_decay=self.hparams['weight_decay'],
         )
         max_epochs = 200
         if self.trainer and self.trainer.max_epochs:
             max_epochs = self.trainer.max_epochs
-        if self.hparams["version"] == 1:
+        if self.hparams['version'] == 1:
             warmup_epochs = 10
         else:
             warmup_epochs = int(max_epochs * 0.05)
@@ -308,6 +308,6 @@ class SimCLRTask(BaseTask):
             milestones=[warmup_epochs],
         )
         return {
-            "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},
+            'optimizer': optimizer,
+            'lr_scheduler': {'scheduler': scheduler, 'monitor': self.monitor},
         }

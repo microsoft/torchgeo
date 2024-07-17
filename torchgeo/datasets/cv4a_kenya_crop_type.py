@@ -15,14 +15,9 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    RGBBandsMissingError,
-    check_integrity,
-    download_radiant_mlhub_collection,
-    extract_archive,
-)
+from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
 
 
 # TODO: read geospatial information from stac.json files
@@ -64,56 +59,56 @@ class CV4AKenyaCropType(NonGeoDataset):
     """
 
     collection_ids = [
-        "ref_african_crops_kenya_02_labels",
-        "ref_african_crops_kenya_02_source",
+        'ref_african_crops_kenya_02_labels',
+        'ref_african_crops_kenya_02_source',
     ]
     image_meta = {
-        "filename": "ref_african_crops_kenya_02_source.tar.gz",
-        "md5": "9c2004782f6dc83abb1bf45ba4d0da46",
+        'filename': 'ref_african_crops_kenya_02_source.tar.gz',
+        'md5': '9c2004782f6dc83abb1bf45ba4d0da46',
     }
     target_meta = {
-        "filename": "ref_african_crops_kenya_02_labels.tar.gz",
-        "md5": "93949abd0ae82ba564f5a933cefd8215",
+        'filename': 'ref_african_crops_kenya_02_labels.tar.gz',
+        'md5': '93949abd0ae82ba564f5a933cefd8215',
     }
 
     tile_names = [
-        "ref_african_crops_kenya_02_tile_00",
-        "ref_african_crops_kenya_02_tile_01",
-        "ref_african_crops_kenya_02_tile_02",
-        "ref_african_crops_kenya_02_tile_03",
+        'ref_african_crops_kenya_02_tile_00',
+        'ref_african_crops_kenya_02_tile_01',
+        'ref_african_crops_kenya_02_tile_02',
+        'ref_african_crops_kenya_02_tile_03',
     ]
     dates = [
-        "20190606",
-        "20190701",
-        "20190706",
-        "20190711",
-        "20190721",
-        "20190805",
-        "20190815",
-        "20190825",
-        "20190909",
-        "20190919",
-        "20190924",
-        "20191004",
-        "20191103",
+        '20190606',
+        '20190701',
+        '20190706',
+        '20190711',
+        '20190721',
+        '20190805',
+        '20190815',
+        '20190825',
+        '20190909',
+        '20190919',
+        '20190924',
+        '20191004',
+        '20191103',
     ]
     band_names = (
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06",
-        "B07",
-        "B08",
-        "B8A",
-        "B09",
-        "B11",
-        "B12",
-        "CLD",
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B09',
+        'B11',
+        'B12',
+        'CLD',
     )
 
-    rgb_bands = ["B04", "B03", "B02"]
+    rgb_bands = ['B04', 'B03', 'B02']
 
     # Same for all tiles
     tile_height = 3035
@@ -121,7 +116,7 @@ class CV4AKenyaCropType(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: str = 'data',
         chip_size: int = 256,
         stride: int = 128,
         bands: tuple[str, ...] = band_names,
@@ -196,12 +191,12 @@ class CV4AKenyaCropType(NonGeoDataset):
         field_ids = field_ids[y : y + self.chip_size, x : x + self.chip_size]
 
         sample = {
-            "image": img,
-            "mask": labels,
-            "field_ids": field_ids,
-            "tile_index": torch.tensor(tile_index),
-            "x": torch.tensor(x),
-            "y": torch.tensor(y),
+            'image': img,
+            'mask': labels,
+            'field_ids': field_ids,
+            'tile_index': torch.tensor(tile_index),
+            'x': torch.tensor(x),
+            'y': torch.tensor(y),
         }
 
         if self.transforms is not None:
@@ -233,17 +228,17 @@ class CV4AKenyaCropType(NonGeoDataset):
         assert tile_name in self.tile_names
 
         if self.verbose:
-            print(f"Loading labels/field_ids for {tile_name}")
+            print(f'Loading labels/field_ids for {tile_name}')
 
         directory = os.path.join(
-            self.root, "ref_african_crops_kenya_02_labels", tile_name + "_label"
+            self.root, 'ref_african_crops_kenya_02_labels', tile_name + '_label'
         )
 
-        with Image.open(os.path.join(directory, "labels.tif")) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img)
+        with Image.open(os.path.join(directory, 'labels.tif')) as img:
+            array: np.typing.NDArray[np.int_] = np.array(img)
             labels = torch.from_numpy(array)
 
-        with Image.open(os.path.join(directory, "field_ids.tif")) as img:
+        with Image.open(os.path.join(directory, 'field_ids.tif')) as img:
             array = np.array(img)
             field_ids = torch.from_numpy(array)
 
@@ -259,7 +254,7 @@ class CV4AKenyaCropType(NonGeoDataset):
             AssertionError: if ``bands`` is not a tuple
             ValueError: if an invalid band name is provided
         """
-        assert isinstance(bands, tuple), "The list of bands must be a tuple"
+        assert isinstance(bands, tuple), 'The list of bands must be a tuple'
         for band in bands:
             if band not in self.band_names:
                 raise ValueError(f"'{band}' is an invalid band name.")
@@ -276,7 +271,7 @@ class CV4AKenyaCropType(NonGeoDataset):
             tile_name: name of tile to load
             bands: tuple of bands to load
 
-        Returns
+        Returns:
             imagery of shape (13, number of bands, 3035, 2016) where 13 is the number of
                 points in time, 3035 is the tile height, and 2016 is the tile width
 
@@ -286,7 +281,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         assert tile_name in self.tile_names
 
         if self.verbose:
-            print(f"Loading all imagery for {tile_name}")
+            print(f'Loading all imagery for {tile_name}')
 
         img = torch.zeros(
             len(self.dates),
@@ -324,7 +319,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         assert date in self.dates
 
         if self.verbose:
-            print(f"Loading imagery for {tile_name} at {date}")
+            print(f'Loading imagery for {tile_name} at {date}')
 
         img = torch.zeros(
             len(bands), self.tile_height, self.tile_width, dtype=torch.float32
@@ -332,12 +327,12 @@ class CV4AKenyaCropType(NonGeoDataset):
         for band_index, band_name in enumerate(self.bands):
             filepath = os.path.join(
                 self.root,
-                "ref_african_crops_kenya_02_source",
-                f"{tile_name}_{date}",
-                f"{band_name}.tif",
+                'ref_african_crops_kenya_02_source',
+                f'{tile_name}_{date}',
+                f'{band_name}.tif',
             )
             with Image.open(filepath) as band_img:
-                array: "np.typing.NDArray[np.int_]" = np.array(band_img)
+                array: np.typing.NDArray[np.int_] = np.array(band_img)
                 img[band_index] = torch.from_numpy(array)
 
         return img
@@ -349,13 +344,13 @@ class CV4AKenyaCropType(NonGeoDataset):
             True if dataset files are found and/or MD5s match, else False
         """
         images: bool = check_integrity(
-            os.path.join(self.root, self.image_meta["filename"]),
-            self.image_meta["md5"] if self.checksum else None,
+            os.path.join(self.root, self.image_meta['filename']),
+            self.image_meta['md5'] if self.checksum else None,
         )
 
         targets: bool = check_integrity(
-            os.path.join(self.root, self.target_meta["filename"]),
-            self.target_meta["md5"] if self.checksum else None,
+            os.path.join(self.root, self.target_meta['filename']),
+            self.target_meta['md5'] if self.checksum else None,
         )
 
         return images and targets
@@ -370,12 +365,12 @@ class CV4AKenyaCropType(NonGeoDataset):
         test_field_ids = []
         splits_fn = os.path.join(
             self.root,
-            "ref_african_crops_kenya_02_labels",
-            "_common",
-            "field_train_test_ids.csv",
+            'ref_african_crops_kenya_02_labels',
+            '_common',
+            'field_train_test_ids.csv',
         )
 
-        with open(splits_fn, newline="") as f:
+        with open(splits_fn, newline='') as f:
             reader = csv.reader(f)
 
             # Skip header row
@@ -395,14 +390,14 @@ class CV4AKenyaCropType(NonGeoDataset):
             api_key: a RadiantEarth MLHub API key to use for downloading the dataset
         """
         if self._check_integrity():
-            print("Files already downloaded and verified")
+            print('Files already downloaded and verified')
             return
 
         for collection_id in self.collection_ids:
             download_radiant_mlhub_collection(collection_id, self.root, api_key)
 
-        image_archive_path = os.path.join(self.root, self.image_meta["filename"])
-        target_archive_path = os.path.join(self.root, self.target_meta["filename"])
+        image_archive_path = os.path.join(self.root, self.image_meta['filename'])
+        target_archive_path = os.path.join(self.root, self.target_meta['filename'])
         for fn in [image_archive_path, target_archive_path]:
             extract_archive(fn, self.root)
 
@@ -436,38 +431,38 @@ class CV4AKenyaCropType(NonGeoDataset):
             else:
                 raise RGBBandsMissingError()
 
-        if "prediction" in sample:
-            prediction = sample["prediction"]
+        if 'prediction' in sample:
+            prediction = sample['prediction']
             n_cols = 3
         else:
             n_cols = 2
 
-        image, mask = sample["image"], sample["mask"]
+        image, mask = sample['image'], sample['mask']
 
         assert time_step <= image.shape[0] - 1, (
-            "The specified time step"
-            " does not exist, image only contains {} time"
-            " instances."
-        ).format(image.shape[0])
+            'The specified time step'
+            f' does not exist, image only contains {image.shape[0]} time'
+            ' instances.'
+        )
 
         image = image[time_step, rgb_indices, :, :]
 
         fig, axs = plt.subplots(nrows=1, ncols=n_cols, figsize=(10, n_cols * 5))
 
         axs[0].imshow(image.permute(1, 2, 0))
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(mask)
-        axs[1].axis("off")
+        axs[1].axis('off')
 
-        if "prediction" in sample:
+        if 'prediction' in sample:
             axs[2].imshow(prediction)
-            axs[2].axis("off")
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Prediction")
+                axs[2].set_title('Prediction')
 
         if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
+            axs[0].set_title('Image')
+            axs[1].set_title('Mask')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

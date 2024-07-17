@@ -17,7 +17,7 @@ NUM_CLASSES = 14
 
 np.random.seed(0)
 
-filename = "Baywide_13Class_20132014"
+filename = 'Baywide_13Class_20132014'
 wkt = """
 PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",
     GEOGCS["NAD83",
@@ -60,22 +60,22 @@ cmap = {
 
 
 meta = {
-    "driver": "GTiff",
-    "dtype": "uint8",
-    "nodata": None,
-    "width": SIZE,
-    "height": SIZE,
-    "count": 1,
-    "crs": CRS.from_wkt(wkt),
-    "transform": Affine(1.0, 0.0, 1303555.0000000005, 0.0, -1.0, 2535064.999999998),
+    'driver': 'GTiff',
+    'dtype': 'uint8',
+    'nodata': None,
+    'width': SIZE,
+    'height': SIZE,
+    'count': 1,
+    'crs': CRS.from_wkt(wkt),
+    'transform': Affine(1.0, 0.0, 1303555.0000000005, 0.0, -1.0, 2535064.999999998),
 }
 
 # Remove old data
-if os.path.exists(f"{filename}.tif"):
-    os.remove(f"{filename}.tif")
+if os.path.exists(f'{filename}.tif'):
+    os.remove(f'{filename}.tif')
 
 # Create raster file
-with rasterio.open(f"{filename}.tif", "w", **meta) as f:
+with rasterio.open(f'{filename}.tif', 'w', **meta) as f:
     data = np.random.randint(NUM_CLASSES, size=(SIZE, SIZE), dtype=np.uint8)
     f.write(data, 1)
     f.write_colormap(1, cmap)
@@ -84,12 +84,12 @@ with rasterio.open(f"{filename}.tif", "w", **meta) as f:
 # 7z required to create a zip file using the proprietary DEFLATE64 compression algorithm
 # https://github.com/brianhelba/zipfile-deflate64/issues/19#issuecomment-1006077294
 subprocess.run(
-    ["7z", "a", f"{filename}.zip", "-mm=DEFLATE64", f"{filename}.tif"],
+    ['7z', 'a', f'{filename}.zip', '-mm=DEFLATE64', f'{filename}.tif'],
     capture_output=True,
     check=True,
 )
 
 # Compute checksums
-with open(f"{filename}.zip", "rb") as f:
+with open(f'{filename}.zip', 'rb') as f:
     md5 = hashlib.md5(f.read()).hexdigest()
     print(repr(md5))

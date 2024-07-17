@@ -43,9 +43,9 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         self.naip_kwargs = {}
         self.chesapeake_kwargs = {}
         for key, val in kwargs.items():
-            if key.startswith("naip_"):
+            if key.startswith('naip_'):
                 self.naip_kwargs[key[5:]] = val
-            elif key.startswith("chesapeake_"):
+            elif key.startswith('chesapeake_'):
                 self.chesapeake_kwargs[key[11:]] = val
 
         super().__init__(
@@ -58,7 +58,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         )
 
         self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "mask"]
+            K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
         )
 
     def setup(self, stage: str) -> None:
@@ -75,19 +75,19 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         midx = roi.minx + (roi.maxx - roi.minx) / 2
         midy = roi.miny + (roi.maxy - roi.miny) / 2
 
-        if stage in ["fit"]:
+        if stage in ['fit']:
             train_roi = BoundingBox(
                 roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt
             )
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.dataset, self.patch_size, self.batch_size, self.length, train_roi
             )
-        if stage in ["fit", "validate"]:
+        if stage in ['fit', 'validate']:
             val_roi = BoundingBox(midx, roi.maxx, roi.miny, midy, roi.mint, roi.maxt)
             self.val_sampler = GridGeoSampler(
                 self.dataset, self.patch_size, self.patch_size, val_roi
             )
-        if stage in ["test"]:
+        if stage in ['test']:
             test_roi = BoundingBox(
                 roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt
             )

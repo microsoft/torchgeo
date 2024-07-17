@@ -34,5 +34,5 @@ class UCMercedDataModule(NonGeoDataModule):
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.Resize(size=256),
-            data_keys=["image"],
+            data_keys=['image'],
         )

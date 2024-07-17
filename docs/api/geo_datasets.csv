@@ -15,6 +15,7 @@ Dataset,Type,Source,License,Size (px),Resolution (m)
 `GBIF`_,Points,Citizen Scientists,"CC0-1.0 OR CC-BY-4.0 OR CC-BY-NC-4.0",-,-
 `GlobBiomass`_,Masks,Landsat,"CC-BY-4.0","45,000x45,000",100
 `iNaturalist`_,Points,Citizen Scientists,-,-,-
+`I/O Bench`_,"Imagery, Masks",Landsat,"CC-BY-4.0","8,000x8,000",30
 `L7 Irish`_,"Imagery, Masks",Landsat,"CC0-1.0","8,400x7,500","15, 30"
 `L8 Biome`_,"Imagery, Masks",Landsat,"CC0-1.0","8,900x8,900","15, 30"
 `LandCover.ai Geo`_,"Imagery, Masks",Aerial,"CC-BY-NC-SA-4.0","4,200--9,500",0.25--0.5

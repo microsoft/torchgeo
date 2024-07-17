@@ -22,7 +22,7 @@ from torchgeo.datasets import (
 
 class Collection:
     def download(self, output_dir: str, **kwargs: str) -> None:
-        glob_path = os.path.join("tests", "data", "ts_cashew_benin", "*.tar.gz")
+        glob_path = os.path.join('tests', 'data', 'ts_cashew_benin', '*.tar.gz')
         for tarball in glob.iglob(glob_path):
             shutil.copy(tarball, output_dir)
 
@@ -36,13 +36,13 @@ class TestBeninSmallHolderCashews:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> BeninSmallHolderCashews:
-        radiant_mlhub = pytest.importorskip("radiant_mlhub", minversion="0.3")
-        monkeypatch.setattr(radiant_mlhub.Collection, "fetch", fetch)
-        source_md5 = "255efff0f03bc6322470949a09bc76db"
-        labels_md5 = "ed2195d93ca6822d48eb02bc3e81c127"
-        monkeypatch.setitem(BeninSmallHolderCashews.image_meta, "md5", source_md5)
-        monkeypatch.setitem(BeninSmallHolderCashews.target_meta, "md5", labels_md5)
-        monkeypatch.setattr(BeninSmallHolderCashews, "dates", ("2019_11_05",))
+        radiant_mlhub = pytest.importorskip('radiant_mlhub', minversion='0.3')
+        monkeypatch.setattr(radiant_mlhub.Collection, 'fetch', fetch)
+        source_md5 = '255efff0f03bc6322470949a09bc76db'
+        labels_md5 = 'ed2195d93ca6822d48eb02bc3e81c127'
+        monkeypatch.setitem(BeninSmallHolderCashews.image_meta, 'md5', source_md5)
+        monkeypatch.setitem(BeninSmallHolderCashews.target_meta, 'md5', labels_md5)
+        monkeypatch.setattr(BeninSmallHolderCashews, 'dates', ('2019_11_05',))
         root = str(tmp_path)
         transforms = nn.Identity()
         bands = BeninSmallHolderCashews.all_bands
@@ -52,7 +52,7 @@ class TestBeninSmallHolderCashews:
             transforms=transforms,
             bands=bands,
             download=True,
-            api_key="",
+            api_key='',
             checksum=True,
             verbose=True,
         )
@@ -60,10 +60,10 @@ class TestBeninSmallHolderCashews:
     def test_getitem(self, dataset: BeninSmallHolderCashews) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
-        assert isinstance(x["mask"], torch.Tensor)
-        assert isinstance(x["x"], torch.Tensor)
-        assert isinstance(x["y"], torch.Tensor)
+        assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['mask'], torch.Tensor)
+        assert isinstance(x['x'], torch.Tensor)
+        assert isinstance(x['y'], torch.Tensor)
 
     def test_len(self, dataset: BeninSmallHolderCashews) -> None:
         assert len(dataset) == 72
@@ -74,33 +74,33 @@ class TestBeninSmallHolderCashews:
         assert len(ds) == 144
 
     def test_already_downloaded(self, dataset: BeninSmallHolderCashews) -> None:
-        BeninSmallHolderCashews(root=dataset.root, download=True, api_key="")
+        BeninSmallHolderCashews(root=dataset.root, download=True, api_key='')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             BeninSmallHolderCashews(str(tmp_path))
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(AssertionError):
-            BeninSmallHolderCashews(bands=["B01", "B02"])  # type: ignore[arg-type]
+            BeninSmallHolderCashews(bands=['B01', 'B02'])  # type: ignore[arg-type]
 
-        with pytest.raises(ValueError, match="is an invalid band name."):
-            BeninSmallHolderCashews(bands=("foo", "bar"))
+        with pytest.raises(ValueError, match='is an invalid band name.'):
+            BeninSmallHolderCashews(bands=('foo', 'bar'))
 
     def test_plot(self, dataset: BeninSmallHolderCashews) -> None:
         x = dataset[0].copy()
-        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle='Test')
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        x["prediction"] = x["mask"].clone()
+        x['prediction'] = x['mask'].clone()
         dataset.plot(x)
         plt.close()
 
     def test_failed_plot(self, dataset: BeninSmallHolderCashews) -> None:
-        single_band_dataset = BeninSmallHolderCashews(root=dataset.root, bands=("B01",))
+        single_band_dataset = BeninSmallHolderCashews(root=dataset.root, bands=('B01',))
         with pytest.raises(
-            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
+            RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):
             x = single_band_dataset[0].copy()
-            single_band_dataset.plot(x, suptitle="Test")
+            single_band_dataset.plot(x, suptitle='Test')
