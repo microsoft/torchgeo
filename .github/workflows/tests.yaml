@@ -20,9 +20,9 @@ jobs:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.6
+        uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache dependencies
@@ -57,7 +57,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml --durations=10
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.4.1
+        uses: codecov/codecov-action@v4.5.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
@@ -67,9 +67,9 @@ jobs:
       MPLBACKEND: Agg
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.6
+        uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: "3.10"
       - name: Cache dependencies
@@ -96,7 +96,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml --durations=10
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.4.1
+        uses: codecov/codecov-action@v4.5.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   datasets:
@@ -106,9 +106,9 @@ jobs:
       MPLBACKEND: Agg
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.6
+        uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: "3.12"
       - name: Cache dependencies
@@ -129,7 +129,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml --durations=10
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.4.1
+        uses: codecov/codecov-action@v4.5.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:

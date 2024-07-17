@@ -41,7 +41,7 @@ class EuroSAT(NonGeoClassificationDataset):
     * Permanent Crop
     * Residential Buildings
     * River
-    * SeaLake
+    * Sea & Lake
 
     This dataset uses the train/val/test splits defined in the "In-domain representation
     learning for remote sensing" paper:

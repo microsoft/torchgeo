@@ -78,7 +78,7 @@ class PatternNet(NonGeoClassificationDataset):
     * https://doi.org/10.1016/j.isprsjprs.2018.01.004
     """
 
-    url = 'https://drive.google.com/file/d/127lxXYqzO6Bd0yZhvEbgIfz95HaEnr9K'
+    url = 'https://hf.co/datasets/torchgeo/PatternNet/resolve/2dbd901b00e301967a5c5146b25454f5d3455ad0/PatternNet.zip'
     md5 = '96d54b3224c5350a98d55d5a7e6984ad'
     filename = 'PatternNet.zip'
     directory = os.path.join('PatternNet', 'images')

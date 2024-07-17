@@ -40,14 +40,16 @@ dependencies = [
     "einops>=0.3",
     # fiona 1.8.21+ required for Python 3.10 wheels
     "fiona>=1.8.21",
-    # kornia 0.7.2+ required for dict support in AugmentationSequential
-    "kornia>=0.7.2",
+    # kornia 0.7.3+ required for instance segmentation support in AugmentationSequential
+    "kornia>=0.7.3",
     # lightly 1.4.4+ required for MoCo v3 support
     # lightly 1.4.26 is incompatible with the version of timm required by smp
     # https://github.com/microsoft/torchgeo/issues/1824
     "lightly>=1.4.4,!=1.4.26",
     # lightning 2+ required for LightningCLI args + sys.argv support
-    "lightning[pytorch-extra]>=2",
+    # lightning 2.3+ contains known bugs related to YAML parsing
+    # https://github.com/Lightning-AI/pytorch-lightning/issues/19977
+    "lightning[pytorch-extra]>=2,<2.3",
     # matplotlib 3.5+ required for Python 3.10 wheels
     "matplotlib>=3.5",
     # numpy 1.21.2+ required by Python 3.10 wheels
@@ -266,7 +268,7 @@ quote-style = "single"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-extend-select = ["D", "I", "UP"]
+extend-select = ["D", "I", "NPY201", "UP"]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/**" = ["D"]
