@@ -251,13 +251,13 @@ class BigEarthNet(NonGeoDataset):
     }
     metadata = {
         's1': {
-            'url': 'https://bigearth.net/downloads/BigEarthNet-S1-v1.0.tar.gz',
+            'url': 'https://zenodo.org/records/12687186/files/BigEarthNet-S1-v1.0.tar.gz',
             'md5': '94ced73440dea8c7b9645ee738c5a172',
             'filename': 'BigEarthNet-S1-v1.0.tar.gz',
             'directory': 'BigEarthNet-S1-v1.0',
         },
         's2': {
-            'url': 'https://bigearth.net/downloads/BigEarthNet-S2-v1.0.tar.gz',
+            'url': 'https://zenodo.org/records/12687186/files/BigEarthNet-S2-v1.0.tar.gz',
             'md5': '5a64e9ce38deb036a435a7b59494924c',
             'filename': 'BigEarthNet-S2-v1.0.tar.gz',
             'directory': 'BigEarthNet-v1.0',
