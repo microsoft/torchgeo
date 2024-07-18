@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_radiant_mlhub_collection, extract_archive
+from .utils import Path, download_radiant_mlhub_collection, extract_archive
 
 
 class WesternUSALiveFuelMoisture(NonGeoDataset):
@@ -200,7 +200,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         input_features: list[str] = all_variable_names,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,

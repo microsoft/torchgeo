@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class LoveDA(NonGeoDataset):
@@ -91,7 +91,7 @@ class LoveDA(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         scene: list[str] = ['urban', 'rural'],
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -197,7 +197,7 @@ class LoveDA(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -214,7 +214,7 @@ class LoveDA(NonGeoDataset):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load a single mask corresponding to image.
 
         Args:

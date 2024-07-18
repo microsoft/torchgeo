@@ -16,7 +16,9 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import FAIR1M, DatasetNotFoundError
 
 
-def download_url(url: str, root: str, filename: str, *args: str, **kwargs: str) -> None:
+def download_url(
+    url: str, root: str | Path, filename: str, *args: str, **kwargs: str
+) -> None:
     os.makedirs(root, exist_ok=True)
     shutil.copy(url, os.path.join(root, filename))
 
@@ -65,7 +67,7 @@ class TestFAIR1M:
         }
         monkeypatch.setattr(FAIR1M, 'urls', urls)
         monkeypatch.setattr(FAIR1M, 'md5s', md5s)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return FAIR1M(root, split, transforms, download=True, checksum=True)
@@ -89,7 +91,7 @@ class TestFAIR1M:
             assert len(dataset) == 4
 
     def test_already_downloaded(self, dataset: FAIR1M, tmp_path: Path) -> None:
-        FAIR1M(root=str(tmp_path), split=dataset.split, download=True)
+        FAIR1M(root=tmp_path, split=dataset.split, download=True)
 
     def test_already_downloaded_not_extracted(
         self, dataset: FAIR1M, tmp_path: Path
@@ -98,11 +100,11 @@ class TestFAIR1M:
         for filepath, url in zip(
             dataset.paths[dataset.split], dataset.urls[dataset.split]
         ):
-            output = os.path.join(str(tmp_path), filepath)
+            output = os.path.join(tmp_path, filepath)
             os.makedirs(os.path.dirname(output), exist_ok=True)
             download_url(url, root=os.path.dirname(output), filename=output)
 
-        FAIR1M(root=str(tmp_path), split=dataset.split, checksum=True)
+        FAIR1M(root=tmp_path, split=dataset.split, checksum=True)
 
     def test_corrupted(self, tmp_path: Path, dataset: FAIR1M) -> None:
         md5s = tuple(['randomhash'] * len(FAIR1M.md5s[dataset.split]))
@@ -111,17 +113,17 @@ class TestFAIR1M:
         for filepath, url in zip(
             dataset.paths[dataset.split], dataset.urls[dataset.split]
         ):
-            output = os.path.join(str(tmp_path), filepath)
+            output = os.path.join(tmp_path, filepath)
             os.makedirs(os.path.dirname(output), exist_ok=True)
             download_url(url, root=os.path.dirname(output), filename=output)
 
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            FAIR1M(root=str(tmp_path), split=dataset.split, checksum=True)
+            FAIR1M(root=tmp_path, split=dataset.split, checksum=True)
 
     def test_not_downloaded(self, tmp_path: Path, dataset: FAIR1M) -> None:
-        shutil.rmtree(str(tmp_path))
+        shutil.rmtree(tmp_path)
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            FAIR1M(root=str(tmp_path), split=dataset.split)
+            FAIR1M(root=tmp_path, split=dataset.split)
 
     def test_plot(self, dataset: FAIR1M) -> None:
         x = dataset[0].copy()

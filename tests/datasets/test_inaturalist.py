@@ -38,7 +38,7 @@ class TestINaturalist:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            INaturalist(str(tmp_path))
+            INaturalist(tmp_path)
 
     def test_invalid_query(self, dataset: INaturalist) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

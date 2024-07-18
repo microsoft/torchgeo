@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import check_integrity, lazy_import, percentile_normalization
+from .utils import Path, check_integrity, lazy_import, percentile_normalization
 
 
 class So2Sat(NonGeoDataset):
@@ -194,7 +194,7 @@ class So2Sat(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         version: str = '2',
         split: str = 'train',
         bands: Sequence[str] = BAND_SETS['all'],

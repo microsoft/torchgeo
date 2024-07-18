@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class USAVars(NonGeoDataset):
@@ -86,7 +86,7 @@ class USAVars(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         labels: Sequence[str] = ALL_LABELS,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -170,7 +170,7 @@ class USAVars(NonGeoDataset):
             files = f.read().splitlines()
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:

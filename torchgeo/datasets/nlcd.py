@@ -5,6 +5,7 @@
 
 import glob
 import os
+import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -15,7 +16,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, Path, download_url, extract_archive
 
 
 class NLCD(RasterDataset):
@@ -108,7 +109,7 @@ class NLCD(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         years: list[int] = [2019],
@@ -191,7 +192,7 @@ class NLCD(RasterDataset):
         exists = []
         for year in self.years:
             zipfile_year = self.zipfile_glob.replace('*', str(year), 1)
-            assert isinstance(self.paths, str)
+            assert isinstance(self.paths, str | pathlib.Path)
             pathname = os.path.join(self.paths, '**', zipfile_year)
             if glob.glob(pathname, recursive=True):
                 exists.append(True)
@@ -223,7 +224,7 @@ class NLCD(RasterDataset):
         """Extract the dataset."""
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace('*', str(year), 1)
-            assert isinstance(self.paths, str)
+            assert isinstance(self.paths, str | pathlib.Path)
             pathname = os.path.join(self.paths, '**', zipfile_name)
             extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
 

@@ -25,7 +25,7 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -41,7 +41,7 @@ class TestL7Irish:
         url = os.path.join('tests', 'data', 'l7irish', '{}.tar.gz')
         monkeypatch.setattr(L7Irish, 'url', url)
         monkeypatch.setattr(L7Irish, 'md5s', md5s)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return L7Irish(root, transforms=transforms, download=True, checksum=True)
 
@@ -75,14 +75,14 @@ class TestL7Irish:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'l7irish', '*.tar.gz')
-        root = str(tmp_path)
+        root = tmp_path
         for tarfile in glob.iglob(pathname):
             shutil.copy(tarfile, root)
         L7Irish(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            L7Irish(str(tmp_path))
+            L7Irish(tmp_path)
 
     def test_plot_prediction(self, dataset: L7Irish) -> None:
         x = dataset[dataset.bounds]

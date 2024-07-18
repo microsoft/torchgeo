@@ -17,7 +17,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, USAVars
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -73,7 +73,7 @@ class TestUSAVars:
         }
         monkeypatch.setattr(USAVars, 'split_metadata', split_metadata)
 
-        root = str(tmp_path)
+        root = tmp_path
         split, labels = request.param
         transforms = nn.Identity()
 
@@ -109,7 +109,7 @@ class TestUSAVars:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'usavars', 'uar.zip')
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(pathname, root)
         csvs = [
             'elevation.csv',
@@ -130,7 +130,7 @@ class TestUSAVars:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            USAVars(str(tmp_path))
+            USAVars(tmp_path)
 
     def test_plot(self, dataset: USAVars) -> None:
         dataset.plot(dataset[0], suptitle='Test')

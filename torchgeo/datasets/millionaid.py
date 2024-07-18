@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive
+from .utils import Path, check_integrity, extract_archive
 
 
 class MillionAID(NonGeoDataset):
@@ -190,7 +190,7 @@ class MillionAID(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         task: str = 'multi-class',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -252,7 +252,7 @@ class MillionAID(NonGeoDataset):
 
         return sample
 
-    def _load_files(self, root: str) -> list[dict[str, Any]]:
+    def _load_files(self, root: Path) -> list[dict[str, Any]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -295,7 +295,7 @@ class MillionAID(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:

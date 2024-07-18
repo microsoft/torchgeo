@@ -16,7 +16,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import BigEarthNet, DatasetNotFoundError
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -63,7 +63,7 @@ class TestBigEarthNet:
         monkeypatch.setattr(BigEarthNet, 'metadata', metadata)
         monkeypatch.setattr(BigEarthNet, 'splits_metadata', splits_metadata)
         bands, num_classes, split = request.param
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return BigEarthNet(
             root, split, bands, num_classes, transforms, download=True, checksum=True
@@ -95,7 +95,7 @@ class TestBigEarthNet:
 
     def test_already_downloaded(self, dataset: BigEarthNet, tmp_path: Path) -> None:
         BigEarthNet(
-            root=str(tmp_path),
+            root=tmp_path,
             bands=dataset.bands,
             split=dataset.split,
             num_classes=dataset.num_classes,
@@ -112,21 +112,21 @@ class TestBigEarthNet:
             shutil.rmtree(
                 os.path.join(dataset.root, dataset.metadata['s2']['directory'])
             )
-            download_url(dataset.metadata['s1']['url'], root=str(tmp_path))
-            download_url(dataset.metadata['s2']['url'], root=str(tmp_path))
+            download_url(dataset.metadata['s1']['url'], root=tmp_path)
+            download_url(dataset.metadata['s2']['url'], root=tmp_path)
         elif dataset.bands == 's1':
             shutil.rmtree(
                 os.path.join(dataset.root, dataset.metadata['s1']['directory'])
             )
-            download_url(dataset.metadata['s1']['url'], root=str(tmp_path))
+            download_url(dataset.metadata['s1']['url'], root=tmp_path)
         else:
             shutil.rmtree(
                 os.path.join(dataset.root, dataset.metadata['s2']['directory'])
             )
-            download_url(dataset.metadata['s2']['url'], root=str(tmp_path))
+            download_url(dataset.metadata['s2']['url'], root=tmp_path)
 
         BigEarthNet(
-            root=str(tmp_path),
+            root=tmp_path,
             bands=dataset.bands,
             split=dataset.split,
             num_classes=dataset.num_classes,
@@ -135,7 +135,7 @@ class TestBigEarthNet:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            BigEarthNet(str(tmp_path))
+            BigEarthNet(tmp_path)
 
     def test_plot(self, dataset: BigEarthNet) -> None:
         x = dataset[0].copy()

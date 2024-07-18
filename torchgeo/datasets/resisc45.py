@@ -14,7 +14,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoClassificationDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class RESISC45(NonGeoClassificationDataset):
@@ -119,7 +119,7 @@ class RESISC45(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -149,7 +149,7 @@ class RESISC45(NonGeoClassificationDataset):
             for fn in f:
                 valid_fns.add(fn.strip())
 
-        def is_in_split(x: str) -> bool:
+        def is_in_split(x: Path) -> bool:
             return os.path.basename(x) in valid_fns
 
         super().__init__(

@@ -30,7 +30,7 @@ class TestCV4AKenyaCropType:
         monkeypatch.setattr(CV4AKenyaCropType, 'dates', ['20190606'])
         monkeypatch.setattr(CV4AKenyaCropType, 'tile_height', 2)
         monkeypatch.setattr(CV4AKenyaCropType, 'tile_width', 2)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return CV4AKenyaCropType(root, transforms=transforms, download=True)
 
@@ -55,7 +55,7 @@ class TestCV4AKenyaCropType:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            CV4AKenyaCropType(str(tmp_path))
+            CV4AKenyaCropType(tmp_path)
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(AssertionError):

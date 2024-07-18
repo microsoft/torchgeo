@@ -19,6 +19,7 @@ from torch import Tensor
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
+    Path,
     check_integrity,
     download_url,
     extract_archive,
@@ -108,7 +109,7 @@ class MapInWild(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         modality: list[str] = ['mask', 'esa_wc', 'viirs', 's2_summer'],
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -205,7 +206,7 @@ class MapInWild(NonGeoDataset):
         """
         return len(self.ids)
 
-    def _load_raster(self, filename: int, source: str) -> Tensor:
+    def _load_raster(self, filename: int, source: Path) -> Tensor:
         """Load a single raster image or target.
 
         Args:
@@ -272,7 +273,7 @@ class MapInWild(NonGeoDataset):
             md5=md5 if self.checksum else None,
         )
 
-    def _extract(self, path: str) -> None:
+    def _extract(self, path: Path) -> None:
         """Extracts a modality.
 
         Args:

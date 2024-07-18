@@ -61,7 +61,7 @@ class TestXView2:
             ),
             os.path.join(tmp_path, 'test_images_labels_targets.tar.gz'),
         )
-        XView2(root=str(tmp_path))
+        XView2(root=tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(
@@ -73,7 +73,7 @@ class TestXView2:
         ) as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            XView2(root=str(tmp_path), checksum=True)
+            XView2(root=tmp_path, checksum=True)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
@@ -81,7 +81,7 @@ class TestXView2:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            XView2(str(tmp_path))
+            XView2(tmp_path)
 
     def test_plot(self, dataset: XView2) -> None:
         x = dataset[0].copy()

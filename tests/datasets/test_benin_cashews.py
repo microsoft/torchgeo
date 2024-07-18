@@ -29,7 +29,7 @@ class TestBeninSmallHolderCashews:
         monkeypatch.setattr(BeninSmallHolderCashews, 'dates', ('20191105',))
         monkeypatch.setattr(BeninSmallHolderCashews, 'tile_height', 2)
         monkeypatch.setattr(BeninSmallHolderCashews, 'tile_width', 2)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return BeninSmallHolderCashews(root, transforms=transforms, download=True)
 
@@ -54,7 +54,7 @@ class TestBeninSmallHolderCashews:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            BeninSmallHolderCashews(str(tmp_path))
+            BeninSmallHolderCashews(tmp_path)
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(AssertionError):

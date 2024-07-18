@@ -17,7 +17,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import COWC, COWCCounting, COWCDetection, DatasetNotFoundError
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -46,7 +46,7 @@ class TestCOWCCounting:
             '0a4daed8c5f6c4e20faa6e38636e4346',
         ]
         monkeypatch.setattr(COWCCounting, 'md5s', md5s)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return COWCCounting(root, split, transforms, download=True, checksum=True)
@@ -78,7 +78,7 @@ class TestCOWCCounting:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            COWCCounting(str(tmp_path))
+            COWCCounting(tmp_path)
 
     def test_plot(self, dataset: COWCCounting) -> None:
         x = dataset[0].copy()
@@ -110,7 +110,7 @@ class TestCOWCDetection:
             'dccc2257e9c4a9dde2b4f84769804046',
         ]
         monkeypatch.setattr(COWCDetection, 'md5s', md5s)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return COWCDetection(root, split, transforms, download=True, checksum=True)
@@ -142,7 +142,7 @@ class TestCOWCDetection:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            COWCDetection(str(tmp_path))
+            COWCDetection(tmp_path)
 
     def test_plot(self, dataset: COWCDetection) -> None:
         x = dataset[0].copy()

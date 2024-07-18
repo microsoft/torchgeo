@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive
+from .utils import Path, check_integrity, download_and_extract_archive
 
 
 class COWC(NonGeoDataset, abc.ABC):
@@ -65,7 +65,7 @@ class COWC(NonGeoDataset, abc.ABC):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,

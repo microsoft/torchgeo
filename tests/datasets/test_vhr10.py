@@ -20,7 +20,7 @@ pytest.importorskip('pycocotools')
 pytest.importorskip('rarfile', minversion='4')
 
 
-def download_url(url: str, root: str, *args: str) -> None:
+def download_url(url: str, root: str | Path, *args: str) -> None:
     shutil.copy(url, root)
 
 
@@ -39,7 +39,7 @@ class TestVHR10:
         monkeypatch.setitem(VHR10.target_meta, 'url', url)
         md5 = '567c4cd8c12624864ff04865de504c58'
         monkeypatch.setitem(VHR10.target_meta, 'md5', md5)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return VHR10(root, split, transforms, download=True, checksum=True)
@@ -78,7 +78,7 @@ class TestVHR10:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            VHR10(str(tmp_path))
+            VHR10(tmp_path)
 
     def test_plot(self, dataset: VHR10) -> None:
         pytest.importorskip('skimage', minversion='0.19')

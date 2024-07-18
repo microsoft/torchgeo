@@ -28,7 +28,7 @@ class TestEUDEM:
         monkeypatch.setattr(EUDEM, 'md5s', md5s)
         zipfile = os.path.join('tests', 'data', 'eudem', 'eu_dem_v11_E30N10.zip')
         shutil.copy(zipfile, tmp_path)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return EUDEM(root, transforms=transforms)
 
@@ -42,7 +42,7 @@ class TestEUDEM:
         assert len(dataset) == 1
 
     def test_extracted_already(self, dataset: EUDEM) -> None:
-        assert isinstance(dataset.paths, str)
+        assert isinstance(dataset.paths, Path)
         zipfile = os.path.join(dataset.paths, 'eu_dem_v11_E30N10.zip')
         shutil.unpack_archive(zipfile, dataset.paths, 'zip')
         EUDEM(dataset.paths)
@@ -51,13 +51,13 @@ class TestEUDEM:
         shutil.rmtree(tmp_path)
         os.makedirs(tmp_path)
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            EUDEM(str(tmp_path))
+            EUDEM(tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'eu_dem_v11_E30N10.zip'), 'w') as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            EUDEM(str(tmp_path), checksum=True)
+            EUDEM(tmp_path, checksum=True)
 
     def test_and(self, dataset: EUDEM) -> None:
         ds = dataset & dataset

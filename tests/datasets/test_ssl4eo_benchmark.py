@@ -25,7 +25,7 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -43,7 +43,7 @@ class TestSSL4EOLBenchmark:
         monkeypatch.setattr(
             torchgeo.datasets.ssl4eo_benchmark, 'download_url', download_url
         )
-        root = str(tmp_path)
+        root = tmp_path
 
         url = os.path.join('tests', 'data', 'ssl4eo_benchmark_landsat', '{}.tar.gz')
         monkeypatch.setattr(SSL4EOLBenchmark, 'url', url)
@@ -140,14 +140,14 @@ class TestSSL4EOLBenchmark:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'ssl4eo_benchmark_landsat', '*.tar.gz')
-        root = str(tmp_path)
+        root = tmp_path
         for tarfile in glob.iglob(pathname):
             shutil.copy(tarfile, root)
         SSL4EOLBenchmark(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SSL4EOLBenchmark(str(tmp_path))
+            SSL4EOLBenchmark(tmp_path)
 
     def test_plot(self, dataset: SSL4EOLBenchmark) -> None:
         sample = dataset[0]

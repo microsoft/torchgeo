@@ -50,7 +50,7 @@ class TestPRISMA:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            PRISMA(str(tmp_path))
+            PRISMA(tmp_path)
 
     def test_invalid_query(self, dataset: PRISMA) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

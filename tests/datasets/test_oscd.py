@@ -18,7 +18,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import OSCD, DatasetNotFoundError, RGBBandsMissingError
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -63,7 +63,7 @@ class TestOSCD:
         monkeypatch.setattr(OSCD, 'urls', urls)
 
         bands, split = request.param
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return OSCD(
             root, split, bands, transforms=transforms, download=True, checksum=True
@@ -101,14 +101,14 @@ class TestOSCD:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'oscd', '*Onera*.zip')
-        root = str(tmp_path)
+        root = tmp_path
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)
         OSCD(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            OSCD(str(tmp_path))
+            OSCD(tmp_path)
 
     def test_plot(self, dataset: OSCD) -> None:
         dataset.plot(dataset[0], suptitle='Test')

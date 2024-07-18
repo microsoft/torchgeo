@@ -5,6 +5,7 @@
 
 import glob
 import os
+import pathlib
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any
 
@@ -16,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, Path, download_url, extract_archive
 
 
 class L8BiomeImage(RasterDataset):
@@ -132,7 +133,7 @@ class L8Biome(IntersectionDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str],
+        paths: Path | Iterable[Path],
         crs: CRS | None = CRS.from_epsg(3857),
         res: float | None = None,
         bands: Sequence[str] = L8BiomeImage.all_bands,
@@ -173,7 +174,7 @@ class L8Biome(IntersectionDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        if not isinstance(self.paths, str):
+        if not isinstance(self.paths, str | pathlib.Path):
             return
 
         for classname in [L8BiomeImage, L8BiomeMask]:
@@ -206,7 +207,7 @@ class L8Biome(IntersectionDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         pathname = os.path.join(self.paths, '*.tar.gz')
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)

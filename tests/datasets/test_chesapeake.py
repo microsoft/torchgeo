@@ -26,7 +26,7 @@ from torchgeo.datasets import (
 pytest.importorskip('zipfile_deflate64')
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -41,7 +41,7 @@ class TestChesapeake13:
         )
         monkeypatch.setattr(Chesapeake13, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return Chesapeake13(root, transforms=transforms, download=True, checksum=True)
 
@@ -69,13 +69,13 @@ class TestChesapeake13:
         url = os.path.join(
             'tests', 'data', 'chesapeake', 'BAYWIDE', 'Baywide_13Class_20132014.zip'
         )
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(url, root)
         Chesapeake13(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            Chesapeake13(str(tmp_path), checksum=True)
+            Chesapeake13(tmp_path, checksum=True)
 
     def test_plot(self, dataset: Chesapeake13) -> None:
         query = dataset.bounds
@@ -148,7 +148,7 @@ class TestChesapeakeCVPR:
             '_files',
             ['de_1m_2013_extended-debuffered-test_tiles', 'spatial_index.geojson'],
         )
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return ChesapeakeCVPR(
             root,
@@ -180,7 +180,7 @@ class TestChesapeakeCVPR:
         ChesapeakeCVPR(root=dataset.root, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(
             os.path.join(
                 'tests', 'data', 'chesapeake', 'cvpr', 'cvpr_chesapeake_landcover.zip'
@@ -201,7 +201,7 @@ class TestChesapeakeCVPR:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            ChesapeakeCVPR(str(tmp_path), checksum=True)
+            ChesapeakeCVPR(tmp_path, checksum=True)
 
     def test_out_of_bounds_query(self, dataset: ChesapeakeCVPR) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
