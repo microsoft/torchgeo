@@ -42,7 +42,7 @@ class TestEUDEM:
         assert len(dataset) == 1
 
     def test_extracted_already(self, dataset: EUDEM) -> None:
-        assert isinstance(dataset.paths, str)
+        assert isinstance(dataset.paths, Path)
         zipfile = os.path.join(dataset.paths, 'eu_dem_v11_E30N10.zip')
         shutil.unpack_archive(zipfile, dataset.paths, 'zip')
         EUDEM(dataset.paths)
