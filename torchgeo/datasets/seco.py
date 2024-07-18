@@ -147,7 +147,7 @@ class SeasonalContrastS2(NonGeoDataset):
         """
         return (10**5 if self.version == '100k' else 10**6) // 5
 
-    def _load_patch(self, root: str, subdir: str) -> Tensor:
+    def _load_patch(self, root: Path, subdir: Path) -> Tensor:
         """Load a single image patch.
 
         Args:

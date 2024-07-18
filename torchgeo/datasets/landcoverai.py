@@ -254,8 +254,10 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        img_filepaths = cast(list[str], [hit.object for hit in hits])
-        mask_filepaths = [path.replace('images', 'masks') for path in img_filepaths]
+        img_filepaths = cast(list[Path], [hit.object for hit in hits])
+        mask_filepaths = [
+            str(path).replace('images', 'masks') for path in img_filepaths
+        ]
 
         if not img_filepaths:
             raise IndexError(

@@ -22,7 +22,7 @@ from .geo import NonGeoDataset
 from .utils import Path, check_integrity, download_and_extract_archive, extract_archive
 
 
-def parse_pascal_voc(path: str) -> dict[str, Any]:
+def parse_pascal_voc(path: Path) -> dict[str, Any]:
     """Read a PASCAL VOC annotation file.
 
     Args:
@@ -187,7 +187,7 @@ class ForestDamage(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:

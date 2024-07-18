@@ -224,7 +224,7 @@ class DFC2022(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str, shape: Sequence[int] | None = None) -> Tensor:
+    def _load_image(self, path: Path, shape: Sequence[int] | None = None) -> Tensor:
         """Load a single image.
 
         Args:
@@ -241,7 +241,7 @@ class DFC2022(NonGeoDataset):
             tensor = torch.from_numpy(array)
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:

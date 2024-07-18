@@ -297,7 +297,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
             sample_collection.append((img_path, mask_path))
         return sample_collection
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load the input image.
 
         Args:
@@ -310,7 +310,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
             image = torch.from_numpy(src.read()).float()
         return image
 
-    def _load_mask(self, path: str) -> Tensor:
+    def _load_mask(self, path: Path) -> Tensor:
         """Load the mask.
 
         Args:

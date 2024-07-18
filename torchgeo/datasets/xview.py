@@ -157,7 +157,7 @@ class XView2(NonGeoDataset):
             files.append(dict(image1=image1, image2=image2, mask1=mask1, mask2=mask2))
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -174,7 +174,7 @@ class XView2(NonGeoDataset):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:

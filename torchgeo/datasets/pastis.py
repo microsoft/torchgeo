@@ -341,7 +341,7 @@ class PASTIS(NonGeoDataset):
             filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
-        extract_archive(os.path.join(self.root, self.filename), str(self.root))
+        extract_archive(os.path.join(self.root, self.filename), self.root)
 
     def plot(
         self,

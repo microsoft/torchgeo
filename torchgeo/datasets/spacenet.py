@@ -145,7 +145,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
                 files.append({'image_path': imgpath, 'label_path': lbl_path})
         return files
 
-    def _load_image(self, path: str) -> tuple[Tensor, Affine, CRS]:
+    def _load_image(self, path: Path) -> tuple[Tensor, Affine, CRS]:
         """Load a single image.
 
         Args:
@@ -161,7 +161,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
             return tensor, img.transform, img.crs
 
     def _load_mask(
-        self, path: str, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
+        self, path: Path, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
     ) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format).
 
@@ -670,7 +670,7 @@ class SpaceNet3(SpaceNet):
         )
 
     def _load_mask(
-        self, path: str, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
+        self, path: Path, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
     ) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format).
 

@@ -193,7 +193,7 @@ class GlobBiomass(RasterDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        filepaths = cast(list[Path], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -202,7 +202,7 @@ class GlobBiomass(RasterDataset):
 
         mask = self._merge_files(filepaths, query)
 
-        std_error_paths = [f.replace('.tif', '_err.tif') for f in filepaths]
+        std_error_paths = [str(f).replace('.tif', '_err.tif') for f in filepaths]
         std_err_mask = self._merge_files(std_error_paths, query)
 
         mask = torch.cat((mask, std_err_mask), dim=0)

@@ -178,7 +178,7 @@ class GID15(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -195,7 +195,7 @@ class GID15(NonGeoDataset):
             tensor = tensor.permute((2, 0, 1)).float()
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:

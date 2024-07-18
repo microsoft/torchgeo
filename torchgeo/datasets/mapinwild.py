@@ -206,7 +206,7 @@ class MapInWild(NonGeoDataset):
         """
         return len(self.ids)
 
-    def _load_raster(self, filename: int, source: str) -> Tensor:
+    def _load_raster(self, filename: int, source: Path) -> Tensor:
         """Load a single raster image or target.
 
         Args:
@@ -273,7 +273,7 @@ class MapInWild(NonGeoDataset):
             md5=md5 if self.checksum else None,
         )
 
-    def _extract(self, path: str) -> None:
+    def _extract(self, path: Path) -> None:
         """Extracts a modality.
 
         Args:

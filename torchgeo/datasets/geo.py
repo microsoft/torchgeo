@@ -299,7 +299,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, (str | pathlib.Path)):
+        if isinstance(self.paths, str | pathlib.Path):
             paths: Iterable[Path] = [self.paths]
         else:
             paths = self.paths

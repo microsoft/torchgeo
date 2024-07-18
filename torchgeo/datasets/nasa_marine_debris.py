@@ -128,7 +128,7 @@ class NASAMarineDebris(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -142,7 +142,7 @@ class NASAMarineDebris(NonGeoDataset):
         tensor = torch.from_numpy(array).float()
         return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target bounding boxes for a single image.
 
         Args:

@@ -121,7 +121,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -135,7 +135,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
             tensor = torch.from_numpy(array).float()
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Loads the target mask.
 
         Args:

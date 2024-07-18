@@ -94,7 +94,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         """
         return len(self.files)
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -111,7 +111,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:

@@ -325,7 +325,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         pathname = os.path.join(self.root, self.collection_id) + '.tar.gz'
-        extract_archive(pathname, str(self.root))
+        extract_archive(pathname, self.root)
 
     def _download(self, api_key: str | None = None) -> None:
         """Download the dataset and extract it.
@@ -335,4 +335,4 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         """
         download_radiant_mlhub_collection(self.collection_id, self.root, api_key)
         filename = os.path.join(self.root, self.collection_id) + '.tar.gz'
-        extract_archive(filename, str(self.root))
+        extract_archive(filename, self.root)

@@ -167,7 +167,7 @@ class BioMassters(NonGeoDataset):
         """
         return len(self.df['num_index'].unique())
 
-    def _load_input(self, filenames: list[str]) -> Tensor:
+    def _load_input(self, filenames: list[Path]) -> Tensor:
         """Load the input imagery at the index.
 
         Args:
@@ -186,7 +186,7 @@ class BioMassters(NonGeoDataset):
             arr = np.concatenate(arr_list, axis=0)
         return torch.tensor(arr.astype(np.int32))
 
-    def _load_target(self, filename: str) -> Tensor:
+    def _load_target(self, filename: Path) -> Tensor:
         """Load the target mask at the index.
 
         Args:

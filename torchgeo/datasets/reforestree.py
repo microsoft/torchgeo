@@ -137,7 +137,7 @@ class ReforesTree(NonGeoDataset):
 
         return image_paths
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -153,7 +153,7 @@ class ReforesTree(NonGeoDataset):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, filepath: str) -> tuple[Tensor, ...]:
+    def _load_target(self, filepath: Path) -> tuple[Tensor, ...]:
         """Load boxes and labels for a single image.
 
         Args:

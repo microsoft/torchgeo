@@ -669,7 +669,7 @@ class ChesapeakeCVPR(GeoDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
 
-        def exists(filename: str) -> bool:
+        def exists(filename: Path) -> bool:
             return os.path.exists(os.path.join(self.root, filename))
 
         # Check if the extracted files already exist

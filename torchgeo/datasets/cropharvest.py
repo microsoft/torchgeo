@@ -196,7 +196,7 @@ class CropHarvest(NonGeoDataset):
             df = pd.json_normalize(data['features'])
             return df
 
-    def _load_array(self, path: str) -> Tensor:
+    def _load_array(self, path: Path) -> Tensor:
         """Load an individual single pixel time series.
 
         Args:

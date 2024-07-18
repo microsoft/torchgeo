@@ -190,7 +190,7 @@ class SustainBenchCropYield(NonGeoDataset):
     def _extract(self) -> None:
         """Extract the dataset."""
         zipfile_path = os.path.join(self.root, self.dir) + '.zip'
-        extract_archive(zipfile_path, str(self.root))
+        extract_archive(zipfile_path, self.root)
 
     def plot(
         self,

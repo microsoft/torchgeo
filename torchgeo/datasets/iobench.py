@@ -131,7 +131,7 @@ class IOBench(IntersectionDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        extract_archive(os.path.join(self.root, f'{self.split}.tar.gz'), str(self.root))
+        extract_archive(os.path.join(self.root, f'{self.split}.tar.gz'), self.root)
 
     def plot(
         self,

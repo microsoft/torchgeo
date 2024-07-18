@@ -208,7 +208,7 @@ class OSCD(NonGeoDataset):
 
         return regions
 
-    def _load_image(self, paths: Sequence[str]) -> Tensor:
+    def _load_image(self, paths: Sequence[Path]) -> Tensor:
         """Load a single image.
 
         Args:
@@ -225,7 +225,7 @@ class OSCD(NonGeoDataset):
         tensor = torch.from_numpy(array).float()
         return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:

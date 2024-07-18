@@ -762,7 +762,7 @@ def path_is_vsi(path: Path) -> bool:
     * https://rasterio.readthedocs.io/en/latest/topics/datasets.html
 
     Args:
-        path: string representing a directory or file
+        path: a directory or file
 
     Returns:
         True if path is on a virtual file system, else False

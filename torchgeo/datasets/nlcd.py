@@ -226,7 +226,7 @@ class NLCD(RasterDataset):
             zipfile_name = self.zipfile_glob.replace('*', str(year), 1)
             assert isinstance(self.paths, str | pathlib.Path)
             pathname = os.path.join(self.paths, '**', zipfile_name)
-            extract_archive(glob.glob(pathname, recursive=True)[0], str(self.paths))
+            extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
 
     def plot(
         self,
