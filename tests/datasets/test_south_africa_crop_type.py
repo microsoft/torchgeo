@@ -52,7 +52,7 @@ class TestSouthAfricaCropType:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SouthAfricaCropType(str(tmp_path))
+            SouthAfricaCropType(tmp_path)
 
     def test_plot(self) -> None:
         path = os.path.join('tests', 'data', 'south_africa_crop_type')

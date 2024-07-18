@@ -15,7 +15,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, ReforesTree
 
 
-def download_url(url: str, root: str, *args: str) -> None:
+def download_url(url: str, root: str | Path, *args: str) -> None:
     shutil.copy(url, root)
 
 
@@ -31,7 +31,7 @@ class TestReforesTree:
 
         monkeypatch.setattr(ReforesTree, 'url', url)
         monkeypatch.setattr(ReforesTree, 'md5', md5)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return ReforesTree(
             root=root, transforms=transforms, download=True, checksum=True
@@ -57,17 +57,17 @@ class TestReforesTree:
     def test_not_extracted(self, tmp_path: Path) -> None:
         url = os.path.join('tests', 'data', 'reforestree', 'reforesTree.zip')
         shutil.copy(url, tmp_path)
-        ReforesTree(root=str(tmp_path))
+        ReforesTree(root=tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'reforesTree.zip'), 'w') as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            ReforesTree(root=str(tmp_path), checksum=True)
+            ReforesTree(root=tmp_path, checksum=True)
 
     def test_not_found(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            ReforesTree(str(tmp_path))
+            ReforesTree(tmp_path)
 
     def test_plot(self, dataset: ReforesTree) -> None:
         x = dataset[0].copy()

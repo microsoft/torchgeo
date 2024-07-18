@@ -50,7 +50,7 @@ class TestAgriFieldNet:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            AgriFieldNet(str(tmp_path))
+            AgriFieldNet(tmp_path)
 
     def test_plot(self, dataset: AgriFieldNet) -> None:
         x = dataset[dataset.bounds]

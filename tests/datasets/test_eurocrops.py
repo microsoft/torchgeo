@@ -23,7 +23,7 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -42,7 +42,7 @@ class TestEuroCrops:
         base_url = os.path.join('tests', 'data', 'eurocrops') + os.sep
         monkeypatch.setattr(EuroCrops, 'base_url', base_url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return EuroCrops(
             root, classes=classes, transforms=transforms, download=True, checksum=True
@@ -81,7 +81,7 @@ class TestEuroCrops:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            EuroCrops(str(tmp_path))
+            EuroCrops(tmp_path)
 
     def test_invalid_query(self, dataset: EuroCrops) -> None:
         query = BoundingBox(200, 200, 200, 200, 2, 2)

@@ -28,7 +28,7 @@ class TestTropicalCyclone:
         url = os.path.join('tests', 'data', 'cyclone')
         monkeypatch.setattr(TropicalCyclone, 'url', url)
         monkeypatch.setattr(TropicalCyclone, 'size', 2)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return TropicalCyclone(root, split, transforms, download=True)
@@ -60,7 +60,7 @@ class TestTropicalCyclone:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            TropicalCyclone(str(tmp_path))
+            TropicalCyclone(tmp_path)
 
     def test_plot(self, dataset: TropicalCyclone) -> None:
         sample = dataset[0]

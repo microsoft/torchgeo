@@ -33,7 +33,7 @@ class TestRwandaFieldBoundary:
         monkeypatch.setattr(RwandaFieldBoundary, 'url', url)
         monkeypatch.setattr(RwandaFieldBoundary, 'splits', {'train': 1, 'test': 1})
 
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return RwandaFieldBoundary(root, split, transforms=transforms, download=True)
@@ -60,7 +60,7 @@ class TestRwandaFieldBoundary:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            RwandaFieldBoundary(str(tmp_path))
+            RwandaFieldBoundary(tmp_path)
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(AssertionError):

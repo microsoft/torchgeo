@@ -37,7 +37,7 @@ class TestWesternUSALiveFuelMoisture:
         monkeypatch.setattr(radiant_mlhub.Collection, 'fetch', fetch)
         md5 = 'ecbc9269dd27c4efe7aa887960054351'
         monkeypatch.setattr(WesternUSALiveFuelMoisture, 'md5', md5)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return WesternUSALiveFuelMoisture(
             root, transforms=transforms, download=True, api_key='', checksum=True
@@ -60,13 +60,13 @@ class TestWesternUSALiveFuelMoisture:
             'western_usa_live_fuel_moisture',
             'su_sar_moisture_content.tar.gz',
         )
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(pathname, root)
         WesternUSALiveFuelMoisture(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            WesternUSALiveFuelMoisture(str(tmp_path))
+            WesternUSALiveFuelMoisture(tmp_path)
 
     def test_invalid_features(self, dataset: WesternUSALiveFuelMoisture) -> None:
         with pytest.raises(AssertionError, match='Invalid input variable name.'):

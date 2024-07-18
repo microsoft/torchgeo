@@ -39,16 +39,14 @@ class TestDeepGlobeLandCover:
     def test_extract(self, tmp_path: Path) -> None:
         root = os.path.join('tests', 'data', 'deepglobelandcover')
         filename = 'data.zip'
-        shutil.copyfile(
-            os.path.join(root, filename), os.path.join(str(tmp_path), filename)
-        )
-        DeepGlobeLandCover(root=str(tmp_path))
+        shutil.copyfile(os.path.join(root, filename), os.path.join(tmp_path, filename))
+        DeepGlobeLandCover(root=tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'data.zip'), 'w') as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            DeepGlobeLandCover(root=str(tmp_path), checksum=True)
+            DeepGlobeLandCover(root=tmp_path, checksum=True)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
@@ -56,7 +54,7 @@ class TestDeepGlobeLandCover:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            DeepGlobeLandCover(str(tmp_path))
+            DeepGlobeLandCover(tmp_path)
 
     def test_plot(self, dataset: DeepGlobeLandCover) -> None:
         x = dataset[0].copy()

@@ -22,7 +22,7 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -56,7 +56,7 @@ class TestSeasonalContrastS2:
         monkeypatch.setitem(
             SeasonalContrastS2.metadata['1m'], 'md5', '3bb3fcf90f5de7d5781ce0cb85fd20af'
         )
-        root = str(tmp_path)
+        root = tmp_path
         version, seasons, bands = request.param
         transforms = nn.Identity()
         return SeasonalContrastS2(
@@ -88,7 +88,7 @@ class TestSeasonalContrastS2:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'seco', '*.zip')
-        root = str(tmp_path)
+        root = tmp_path
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)
         SeasonalContrastS2(root)
@@ -103,7 +103,7 @@ class TestSeasonalContrastS2:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SeasonalContrastS2(str(tmp_path))
+            SeasonalContrastS2(tmp_path)
 
     def test_plot(self, dataset: SeasonalContrastS2) -> None:
         x = dataset[0]

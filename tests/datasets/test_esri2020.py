@@ -22,7 +22,7 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -42,7 +42,7 @@ class TestEsri2020:
             'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip',
         )
         monkeypatch.setattr(Esri2020, 'url', url)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return Esri2020(root, transforms=transforms, download=True, checksum=True)
 
@@ -66,11 +66,11 @@ class TestEsri2020:
             'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip',
         )
         shutil.copy(url, tmp_path)
-        Esri2020(str(tmp_path))
+        Esri2020(tmp_path)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            Esri2020(str(tmp_path), checksum=True)
+            Esri2020(tmp_path, checksum=True)
 
     def test_and(self, dataset: Esri2020) -> None:
         ds = dataset & dataset

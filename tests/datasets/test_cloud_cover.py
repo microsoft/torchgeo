@@ -30,7 +30,7 @@ class TestCloudCoverDetection:
     ) -> CloudCoverDetection:
         url = os.path.join('tests', 'data', 'ref_cloud_cover_detection_challenge_v1')
         monkeypatch.setattr(CloudCoverDetection, 'url', url)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return CloudCoverDetection(
@@ -55,7 +55,7 @@ class TestCloudCoverDetection:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            CloudCoverDetection(str(tmp_path))
+            CloudCoverDetection(tmp_path)
 
     def test_plot(self, dataset: CloudCoverDetection) -> None:
         sample = dataset[0]
