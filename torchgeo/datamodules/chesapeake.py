@@ -43,8 +43,6 @@ class _Transform(nn.Module):
             sample[key] = sample[key].float()
             sample[key] = self.aug(sample[key])
             sample[key] = sample[key].to(dtype)
-            # Kornia adds batch dimension
-            sample[key] = rearrange(sample[key], '() c h w -> c h w')
         return sample
 
 
@@ -93,7 +91,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         # This is a rough estimate of how large of a patch we will need to sample in
         # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
         self.original_patch_size = patch_size * 3
-        kwargs['transforms'] = _Transform(K.CenterCrop(patch_size))
+        kwargs['transforms'] = _Transform(K.CenterCrop(patch_size, keepdim=True))
 
         super().__init__(
             ChesapeakeCVPR, batch_size, patch_size, length, num_workers, **kwargs

@@ -581,7 +581,7 @@ class ChesapeakeCVPR(GeoDataset):
         sample['mask'] = np.concatenate(sample['mask'], axis=0)
 
         sample['image'] = torch.from_numpy(sample['image']).float()
-        sample['mask'] = torch.from_numpy(sample['mask']).long()
+        sample['mask'] = torch.from_numpy(sample['mask']).long().squeeze(0)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
