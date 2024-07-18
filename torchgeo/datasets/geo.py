@@ -207,7 +207,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self,
         state: tuple[
             dict[Any, Any],
-            list[tuple[int, tuple[float, float, float, float, float, float], str]],
+            list[tuple[int, tuple[float, float, float, float, float, float], Path]],
         ],
     ) -> None:
         """Define how to unpickle an instance.
@@ -310,7 +310,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             if os.path.isdir(path):
                 pathname = os.path.join(path, '**', self.filename_glob)
                 files |= set(glob.iglob(pathname, recursive=True))
-            elif os.path.isfile(path) or path_is_vsi(str(path)):
+            elif os.path.isfile(path) or path_is_vsi(path):
                 files.add(path)
             elif not hasattr(self, 'download'):
                 warnings.warn(
@@ -518,7 +518,7 @@ class RasterDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        filepaths = cast(list[Path], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -561,7 +561,7 @@ class RasterDataset(GeoDataset):
 
     def _merge_files(
         self,
-        filepaths: Sequence[str],
+        filepaths: Sequence[Path],
         query: BoundingBox,
         band_indexes: Sequence[int] | None = None,
     ) -> Tensor:
@@ -589,7 +589,7 @@ class RasterDataset(GeoDataset):
         return tensor
 
     @functools.lru_cache(maxsize=128)
-    def _cached_load_warp_file(self, filepath: str) -> DatasetReader:
+    def _cached_load_warp_file(self, filepath: Path) -> DatasetReader:
         """Cached version of :meth:`_load_warp_file`.
 
         Args:
@@ -600,7 +600,7 @@ class RasterDataset(GeoDataset):
         """
         return self._load_warp_file(filepath)
 
-    def _load_warp_file(self, filepath: str) -> DatasetReader:
+    def _load_warp_file(self, filepath: Path) -> DatasetReader:
         """Load and warp a file to the correct CRS and resolution.
 
         Args:
@@ -850,8 +850,8 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         self,
         root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
-        loader: Callable[[str], Any] | None = pil_loader,
-        is_valid_file: Callable[[str], bool] | None = None,
+        loader: Callable[[Path], Any] | None = pil_loader,
+        is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
         """Initialize a new NonGeoClassificationDataset instance.
 

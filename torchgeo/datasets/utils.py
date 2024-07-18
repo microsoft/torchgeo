@@ -34,6 +34,8 @@ from .errors import DependencyNotFoundError
 
 # Only include import redirects
 __all__ = ('check_integrity', 'download_url')
+
+
 Path: TypeAlias = str | pathlib.Path
 
 
@@ -74,7 +76,7 @@ class _zipfile:
             pass
 
 
-def extract_archive(src: str, dst: str | None = None) -> None:
+def extract_archive(src: Path, dst: Path | None = None) -> None:
     """Extract an archive.
 
     Args:
@@ -97,7 +99,7 @@ def extract_archive(src: str, dst: str | None = None) -> None:
     ]
 
     for suffix, extractor in suffix_and_extractor:
-        if src.endswith(suffix):
+        if str(src).endswith(suffix):
             with extractor(src, 'r') as f:
                 f.extractall(dst)
             return
@@ -109,7 +111,7 @@ def extract_archive(src: str, dst: str | None = None) -> None:
     ]
 
     for suffix, decompressor in suffix_and_decompressor:
-        if src.endswith(suffix):
+        if str(src).endswith(suffix):
             dst = os.path.join(dst, os.path.basename(src).replace(suffix, ''))
             with decompressor(src, 'rb') as sf, open(dst, 'wb') as df:
                 df.write(sf.read())
@@ -122,7 +124,7 @@ def download_and_extract_archive(
     url: str,
     download_root: Path,
     extract_root: Path | None = None,
-    filename: str | None = None,
+    filename: Path | None = None,
     md5: str | None = None,
 ) -> None:
     """Download and extract an archive.
@@ -144,7 +146,7 @@ def download_and_extract_archive(
 
     archive = os.path.join(download_root, filename)
     print(f'Extracting {archive} to {extract_root}')
-    extract_archive(archive, str(extract_root))
+    extract_archive(archive, extract_root)
 
 
 def download_radiant_mlhub_dataset(
@@ -412,7 +414,7 @@ class Executable:
     .. versionadded:: 0.6
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: Path) -> None:
         """Initialize a new Executable instance.
 
         Args:
@@ -635,7 +637,7 @@ def unbind_samples(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
     return _dict_list_to_list_dict(sample)
 
 
-def rasterio_loader(path: str) -> np.typing.NDArray[np.int_]:
+def rasterio_loader(path: Path) -> np.typing.NDArray[np.int_]:
     """Load an image file using rasterio.
 
     Args:
@@ -651,7 +653,7 @@ def rasterio_loader(path: str) -> np.typing.NDArray[np.int_]:
     return array
 
 
-def sort_sentinel2_bands(x: str) -> str:
+def sort_sentinel2_bands(x: Path) -> str:
     """Sort Sentinel-2 band files in the correct order."""
     x = os.path.basename(x).split('_')[-1]
     x = os.path.splitext(x)[0]
@@ -746,7 +748,7 @@ def percentile_normalization(
     return img_normalized
 
 
-def path_is_vsi(path: str) -> bool:
+def path_is_vsi(path: Path) -> bool:
     """Checks if the given path is pointing to a Virtual File System.
 
     .. note::
@@ -767,7 +769,7 @@ def path_is_vsi(path: str) -> bool:
 
     .. versionadded:: 0.6
     """
-    return '://' in path or path.startswith('/vsi')
+    return '://' in str(path) or str(path).startswith('/vsi')
 
 
 def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:
@@ -833,7 +835,7 @@ to install all optional dataset dependencies."""
         raise DependencyNotFoundError(msg) from None
 
 
-def which(name: str) -> Executable:
+def which(name: Path) -> Executable:
     """Search for executable *name*.
 
     Args:

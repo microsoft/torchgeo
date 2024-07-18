@@ -149,7 +149,7 @@ class RESISC45(NonGeoClassificationDataset):
             for fn in f:
                 valid_fns.add(fn.strip())
 
-        def is_in_split(x: str) -> bool:
+        def is_in_split(x: Path) -> bool:
             return os.path.basename(x) in valid_fns
 
         super().__init__(
