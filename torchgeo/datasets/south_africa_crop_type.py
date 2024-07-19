@@ -15,9 +15,9 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
-from .errors import RGBBandsMissingError
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import BoundingBox, Path
+from .utils import BoundingBox, Path, which
 
 
 class SouthAfricaCropType(RasterDataset):
@@ -60,8 +60,15 @@ class SouthAfricaCropType(RasterDataset):
       "Crop Type Classification Dataset for Western Cape, South Africa",
       Version 1.0, Radiant MLHub, https://doi.org/10.34911/rdnt.j0co8q
 
+    .. note::
+       This dataset requires the following additional library to be installed:
+       * `azcopy <https://github.com/Azure/azure-storage-azcopy>`_: to download the
+         dataset from Source Cooperative.
+
     .. versionadded:: 0.6
     """
+
+    url = 'https://radiantearth.blob.core.windows.net/mlhub/ref-south-africa-crops-competition-v1'
 
     filename_glob = '*_07_*_{}_10m.*'
     filename_regex = r"""
@@ -108,6 +115,7 @@ class SouthAfricaCropType(RasterDataset):
         classes: list[int] = list(cmap.keys()),
         bands: list[str] = s2_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        download: bool = False,
     ) -> None:
         """Initialize a new South Africa Crop Type dataset instance.
 
@@ -118,6 +126,7 @@ class SouthAfricaCropType(RasterDataset):
             bands: the subset of bands to load
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -128,15 +137,17 @@ class SouthAfricaCropType(RasterDataset):
         assert 0 in classes, 'Classes must include the background class: 0'
 
         self.paths = paths
-        self.classes = classes
-        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
-        self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
+        self.download = download
         self.filename_glob = self.filename_glob.format(bands[0])
+
+        self._verify()
 
         super().__init__(paths=paths, crs=crs, bands=bands, transforms=transforms)
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
-        for v, k in enumerate(self.classes):
+        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
+        self.ordinal_cmap = torch.zeros((len(classes), 4), dtype=torch.uint8)
+        for v, k in enumerate(classes):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
@@ -225,6 +236,26 @@ class SouthAfricaCropType(RasterDataset):
             sample = self.transforms(sample)
 
         return sample
+
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset."""
+        # Check if the files already exist
+        if self.files:
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise DatasetNotFoundError(self)
+
+        # Download the dataset
+        self._download()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        assert isinstance(self.paths, str | pathlib.Path)
+        os.makedirs(self.paths, exist_ok=True)
+        azcopy = which('azcopy')
+        azcopy('sync', f'{self.url}', self.paths, '--recursive=true')
 
     def plot(
         self,
