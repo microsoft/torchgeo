@@ -62,6 +62,7 @@ class SouthAfricaCropType(RasterDataset):
 
     .. note::
        This dataset requires the following additional library to be installed:
+
        * `azcopy <https://github.com/Azure/azure-storage-azcopy>`_: to download the
          dataset from Source Cooperative.
 
