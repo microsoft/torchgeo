@@ -65,9 +65,9 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
         )
 
         # https://github.com/kornia/kornia/issues/2848
-        self.train_aug.keepdim = True  # type: ignore[attr-defined]
-        self.aug.keepdim = True  # type: ignore[attr-defined]
-        self.predict_aug.keepdim = True  # type: ignore[attr-defined]
+        self.train_aug.keepdim = True
+        self.aug.keepdim = True
+        self.predict_aug.keepdim = True
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
