@@ -9,7 +9,6 @@ import kornia.augmentation as K
 import torch
 
 from ..datasets import QuakeSet
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -34,7 +33,7 @@ class QuakeSetDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.QuakeSet`.
         """
         super().__init__(QuakeSet, batch_size, num_workers, **kwargs)
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
@@ -42,4 +41,4 @@ class QuakeSetDataModule(NonGeoDataModule):
             keepdim=True,
         )
         # https://github.com/kornia/kornia/issues/2848
-        self.train_aug.keepdim = True  # type: ignore[attr-defined]
+        self.train_aug.keepdim = True

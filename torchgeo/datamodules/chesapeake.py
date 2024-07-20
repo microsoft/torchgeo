@@ -6,43 +6,12 @@
 from typing import Any
 
 import kornia.augmentation as K
-import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
 from ..datasets import ChesapeakeCVPR
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from .geo import GeoDataModule
-
-
-class _Transform(nn.Module):
-    """Version of AugmentationSequential designed for samples, not batches."""
-
-    def __init__(self, aug: nn.Module) -> None:
-        """Initialize a new _Transform instance.
-
-        Args:
-            aug: Augmentation to apply.
-        """
-        super().__init__()
-        self.aug = aug
-
-    def forward(self, sample: dict[str, Any]) -> dict[str, Any]:
-        """Apply the augmentation.
-
-        Args:
-            sample: Input sample.
-
-        Returns:
-            Augmented sample.
-        """
-        for key in ['image', 'mask']:
-            dtype = sample[key].dtype
-            # All inputs must be float
-            sample[key] = sample[key].float()
-            sample[key] = self.aug(sample[key])
-            sample[key] = sample[key].to(dtype)
-        return sample
 
 
 class ChesapeakeCVPRDataModule(GeoDataModule):
@@ -90,7 +59,11 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         # This is a rough estimate of how large of a patch we will need to sample in
         # EPSG:3857 in order to guarantee a large enough patch in the local CRS.
         self.original_patch_size = patch_size * 3
-        kwargs['transforms'] = _Transform(K.CenterCrop(patch_size, keepdim=True))
+        kwargs['transforms'] = K.AugmentationSequential(
+            K.CenterCrop(patch_size), data_keys=None, keepdim=True
+        )
+        # https://github.com/kornia/kornia/issues/2848
+        kwargs['transforms'].keepdim = True
 
         super().__init__(
             ChesapeakeCVPR, batch_size, patch_size, length, num_workers, **kwargs
@@ -122,7 +95,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
         # https://github.com/kornia/kornia/issues/2848
-        self.aug.keepdim = True  # type: ignore[attr-defined]
+        self.aug.keepdim = True
 
     def setup(self, stage: str) -> None:
         """Set up datasets and samplers.
