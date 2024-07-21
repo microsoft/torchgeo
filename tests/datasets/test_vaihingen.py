@@ -49,9 +49,9 @@ class TestVaihingen2D:
         ]
         for filename in filenames:
             shutil.copyfile(
-                os.path.join(root, filename), os.path.join(str(tmp_path), filename)
+                os.path.join(root, filename), os.path.join(tmp_path, filename)
             )
-        Vaihingen2D(root=str(tmp_path))
+        Vaihingen2D(root=tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         filenames = [
@@ -62,7 +62,7 @@ class TestVaihingen2D:
             with open(os.path.join(tmp_path, filename), 'w') as f:
                 f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            Vaihingen2D(root=str(tmp_path), checksum=True)
+            Vaihingen2D(root=tmp_path, checksum=True)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
@@ -70,7 +70,7 @@ class TestVaihingen2D:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            Vaihingen2D(str(tmp_path))
+            Vaihingen2D(tmp_path)
 
     def test_plot(self, dataset: Vaihingen2D) -> None:
         x = dataset[0].copy()

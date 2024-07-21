@@ -13,7 +13,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import download_url, lazy_import, percentile_normalization
+from .utils import Path, download_url, lazy_import, percentile_normalization
 
 
 class ZueriCrop(NonGeoDataset):
@@ -64,7 +64,7 @@ class ZueriCrop(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         bands: Sequence[str] = band_names,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,

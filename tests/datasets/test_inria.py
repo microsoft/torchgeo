@@ -50,7 +50,7 @@ class TestInriaAerialImageLabeling:
 
     def test_not_downloaded(self, tmp_path: str) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            InriaAerialImageLabeling(str(tmp_path))
+            InriaAerialImageLabeling(tmp_path)
 
     def test_dataset_checksum(self, dataset: InriaAerialImageLabeling) -> None:
         InriaAerialImageLabeling.md5 = 'randommd5hash123'

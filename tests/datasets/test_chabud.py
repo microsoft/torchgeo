@@ -18,7 +18,9 @@ from torchgeo.datasets import ChaBuD, DatasetNotFoundError
 pytest.importorskip('h5py', minversion='3.6')
 
 
-def download_url(url: str, root: str, filename: str, *args: str, **kwargs: str) -> None:
+def download_url(
+    url: str, root: str | Path, filename: str, *args: str, **kwargs: str
+) -> None:
     shutil.copy(url, os.path.join(root, filename))
 
 
@@ -34,7 +36,7 @@ class TestChaBuD:
         monkeypatch.setattr(ChaBuD, 'url', url)
         monkeypatch.setattr(ChaBuD, 'md5', md5)
         bands, split = request.param
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return ChaBuD(
             root=root,
@@ -70,7 +72,7 @@ class TestChaBuD:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            ChaBuD(str(tmp_path))
+            ChaBuD(tmp_path)
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(AssertionError):

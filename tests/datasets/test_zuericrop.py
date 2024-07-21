@@ -17,7 +17,7 @@ from torchgeo.datasets import DatasetNotFoundError, RGBBandsMissingError, ZueriC
 pytest.importorskip('h5py', minversion='3.6')
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -33,7 +33,7 @@ class TestZueriCrop:
         md5s = ['1635231df67f3d25f4f1e62c98e221a4', '5118398c7a5bbc246f5f6bb35d8d529b']
         monkeypatch.setattr(ZueriCrop, 'urls', urls)
         monkeypatch.setattr(ZueriCrop, 'md5s', md5s)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return ZueriCrop(root=root, transforms=transforms, download=True, checksum=True)
 
@@ -67,7 +67,7 @@ class TestZueriCrop:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            ZueriCrop(str(tmp_path))
+            ZueriCrop(tmp_path)
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(ValueError):

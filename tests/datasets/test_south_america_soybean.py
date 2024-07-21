@@ -21,7 +21,7 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -37,7 +37,7 @@ class TestSouthAmericaSoybean:
         )
 
         monkeypatch.setattr(SouthAmericaSoybean, 'url', url)
-        root = str(tmp_path)
+        root = tmp_path
         return SouthAmericaSoybean(
             paths=root,
             years=[2002, 2021],
@@ -70,7 +70,7 @@ class TestSouthAmericaSoybean:
         pathname = os.path.join(
             'tests', 'data', 'south_america_soybean', 'SouthAmerica_Soybean_2002.tif'
         )
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(pathname, root)
         SouthAmericaSoybean(root)
 
@@ -89,7 +89,7 @@ class TestSouthAmericaSoybean:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SouthAmericaSoybean(str(tmp_path))
+            SouthAmericaSoybean(tmp_path)
 
     def test_invalid_query(self, dataset: SouthAmericaSoybean) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

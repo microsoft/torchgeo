@@ -58,7 +58,7 @@ class TestSo2Sat:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            So2Sat(str(tmp_path))
+            So2Sat(tmp_path)
 
     def test_plot(self, dataset: So2Sat) -> None:
         x = dataset[0].copy()

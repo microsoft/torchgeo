@@ -5,6 +5,7 @@
 
 import glob
 import os
+import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -14,7 +15,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import check_integrity, extract_archive
+from .utils import Path, check_integrity, extract_archive
 
 
 class EUDEM(RasterDataset):
@@ -84,7 +85,7 @@ class EUDEM(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -125,7 +126,7 @@ class EUDEM(RasterDataset):
             return
 
         # Check if the zip files have already been downloaded
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         pathname = os.path.join(self.paths, self.zipfile_glob)
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):

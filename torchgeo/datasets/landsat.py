@@ -13,6 +13,7 @@ from rasterio.crs import CRS
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
+from .utils import Path
 
 
 class Landsat(RasterDataset, abc.ABC):
@@ -59,7 +60,7 @@ class Landsat(RasterDataset, abc.ABC):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         bands: Sequence[str] | None = None,

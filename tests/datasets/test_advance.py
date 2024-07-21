@@ -17,7 +17,7 @@ from torchgeo.datasets import ADVANCE, DatasetNotFoundError
 pytest.importorskip('scipy', minversion='1.7.2')
 
 
-def download_url(url: str, root: str, *args: str) -> None:
+def download_url(url: str, root: str | Path, *args: str) -> None:
     shutil.copy(url, root)
 
 
@@ -33,7 +33,7 @@ class TestADVANCE:
         md5s = ['43acacecebecd17a82bc2c1e719fd7e4', '039b7baa47879a8a4e32b9dd8287f6ad']
         monkeypatch.setattr(ADVANCE, 'urls', urls)
         monkeypatch.setattr(ADVANCE, 'md5s', md5s)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return ADVANCE(root, transforms, download=True, checksum=True)
 
@@ -57,7 +57,7 @@ class TestADVANCE:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            ADVANCE(str(tmp_path))
+            ADVANCE(tmp_path)
 
     def test_plot(self, dataset: ADVANCE) -> None:
         x = dataset[0].copy()

@@ -20,6 +20,10 @@ updates:
           - "torch"
           - "torchvision"
     ignore:
+      # lightning 2.3+ contains known bugs related to YAML parsing
+      # https://github.com/Lightning-AI/pytorch-lightning/issues/19977
+      - dependency-name: "lightning"
+        version: ">=2.3"
       # setuptools releases new versions almost daily
       - dependency-name: "setuptools"
         update-types: ["version-update:semver-patch"]

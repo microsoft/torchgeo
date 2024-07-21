@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, lazy_import, percentile_normalization
+from .utils import Path, download_url, lazy_import, percentile_normalization
 
 
 class QuakeSet(NonGeoDataset):
@@ -66,7 +66,7 @@ class QuakeSet(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,

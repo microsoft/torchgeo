@@ -36,7 +36,7 @@ class CustomGeoDataset(GeoDataset):
         bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
         crs: CRS = CRS.from_epsg(4087),
         res: float = 1,
-        paths: str | Iterable[str] | None = None,
+        paths: str | Path | Iterable[str | Path] | None = None,
     ) -> None:
         super().__init__()
         self.index.insert(0, tuple(bounds))
@@ -172,7 +172,7 @@ class TestGeoDataset:
             dataset & ds2  # type: ignore[operator]
 
     def test_files_property_for_non_existing_file_or_dir(self, tmp_path: Path) -> None:
-        paths = [str(tmp_path), str(tmp_path / 'non_existing_file.tif')]
+        paths = [tmp_path, tmp_path / 'non_existing_file.tif']
         with pytest.warns(UserWarning, match='Path was ignored.'):
             assert len(CustomGeoDataset(paths=paths).files) == 0
 
@@ -311,7 +311,7 @@ class TestRasterDataset:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            RasterDataset(str(tmp_path))
+            RasterDataset(tmp_path)
 
     def test_no_all_bands(self) -> None:
         root = os.path.join('tests', 'data', 'sentinel2')
@@ -380,7 +380,7 @@ class TestVectorDataset:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            VectorDataset(str(tmp_path))
+            VectorDataset(tmp_path)
 
 
 class TestNonGeoDataset:

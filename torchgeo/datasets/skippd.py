@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, lazy_import
+from .utils import Path, download_url, extract_archive, lazy_import
 
 
 class SKIPPD(NonGeoDataset):
@@ -79,7 +79,7 @@ class SKIPPD(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'trainval',
         task: str = 'nowcast',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,

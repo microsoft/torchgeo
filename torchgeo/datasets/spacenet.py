@@ -28,6 +28,7 @@ from torch import Tensor
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
+    Path,
     check_integrity,
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
@@ -79,7 +80,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
     def __init__(
         self,
-        root: str,
+        root: Path,
         image: str,
         collections: list[str] = [],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -124,7 +125,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         self.files = self._load_files(root)
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -144,7 +145,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
                 files.append({'image_path': imgpath, 'label_path': lbl_path})
         return files
 
-    def _load_image(self, path: str) -> tuple[Tensor, Affine, CRS]:
+    def _load_image(self, path: Path) -> tuple[Tensor, Affine, CRS]:
         """Load a single image.
 
         Args:
@@ -160,7 +161,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
             return tensor, img.transform, img.crs
 
     def _load_mask(
-        self, path: str, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
+        self, path: Path, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
     ) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format).
 
@@ -398,7 +399,7 @@ class SpaceNet1(SpaceNet):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         image: str = 'rgb',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
@@ -513,7 +514,7 @@ class SpaceNet2(SpaceNet):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         image: str = 'PS-RGB',
         collections: list[str] = [],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -633,7 +634,7 @@ class SpaceNet3(SpaceNet):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         image: str = 'PS-RGB',
         speed_mask: bool | None = False,
         collections: list[str] = [],
@@ -669,7 +670,7 @@ class SpaceNet3(SpaceNet):
         )
 
     def _load_mask(
-        self, path: str, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
+        self, path: Path, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
     ) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format).
 
@@ -884,7 +885,7 @@ class SpaceNet4(SpaceNet):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         image: str = 'PS-RGBNIR',
         angles: list[str] = [],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -918,7 +919,7 @@ class SpaceNet4(SpaceNet):
             root, image, collections, transforms, download, api_key, checksum
         )
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -1052,7 +1053,7 @@ class SpaceNet5(SpaceNet3):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         image: str = 'PS-RGB',
         speed_mask: bool | None = False,
         collections: list[str] = [],
@@ -1184,7 +1185,7 @@ class SpaceNet6(SpaceNet):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         image: str = 'PS-RGB',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
@@ -1282,7 +1283,7 @@ class SpaceNet7(SpaceNet):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
@@ -1326,7 +1327,7 @@ class SpaceNet7(SpaceNet):
 
         self.files = self._load_files(root)
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:

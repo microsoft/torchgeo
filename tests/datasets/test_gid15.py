@@ -16,7 +16,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import GID15, DatasetNotFoundError
 
 
-def download_url(url: str, root: str, *args: str) -> None:
+def download_url(url: str, root: str | Path, *args: str) -> None:
     shutil.copy(url, root)
 
 
@@ -30,7 +30,7 @@ class TestGID15:
         monkeypatch.setattr(GID15, 'md5', md5)
         url = os.path.join('tests', 'data', 'gid15', 'gid-15.zip')
         monkeypatch.setattr(GID15, 'url', url)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return GID15(root, split, transforms, download=True, checksum=True)
@@ -59,7 +59,7 @@ class TestGID15:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            GID15(str(tmp_path))
+            GID15(tmp_path)
 
     def test_plot(self, dataset: GID15) -> None:
         dataset.plot(dataset[0], suptitle='Test')

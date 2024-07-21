@@ -71,7 +71,7 @@ class TestLandsat8:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            Landsat8(str(tmp_path))
+            Landsat8(tmp_path)
 
     def test_invalid_query(self, dataset: Landsat8) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

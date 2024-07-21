@@ -37,7 +37,7 @@ class TestBioMassters:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            BioMassters(str(tmp_path))
+            BioMassters(tmp_path)
 
     def test_plot(self, dataset: BioMassters) -> None:
         dataset.plot(dataset[0], suptitle='Test')

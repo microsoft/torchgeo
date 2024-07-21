@@ -16,7 +16,7 @@ from .cdl import CDL
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset
 from .landsat import Landsat9
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class IOBench(IntersectionDataset):
@@ -50,7 +50,7 @@ class IOBench(IntersectionDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'preprocessed',
         crs: CRS | None = None,
         res: float | None = None,

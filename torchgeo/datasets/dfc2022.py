@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive, percentile_normalization
+from .utils import Path, check_integrity, extract_archive, percentile_normalization
 
 
 class DFC2022(NonGeoDataset):
@@ -137,7 +137,7 @@ class DFC2022(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
@@ -224,7 +224,7 @@ class DFC2022(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str, shape: Sequence[int] | None = None) -> Tensor:
+    def _load_image(self, path: Path, shape: Sequence[int] | None = None) -> Tensor:
         """Load a single image.
 
         Args:
@@ -235,13 +235,13 @@ class DFC2022(NonGeoDataset):
             the image
         """
         with rasterio.open(path) as f:
-            array: np.typing.NDArray[np.float_] = f.read(
+            array: np.typing.NDArray[np.float64] = f.read(
                 out_shape=shape, out_dtype='float32', resampling=Resampling.bilinear
             )
             tensor = torch.from_numpy(array)
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:

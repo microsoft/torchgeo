@@ -4,6 +4,7 @@
 """AgriFieldNet India Challenge dataset."""
 
 import os
+import pathlib
 import re
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, cast
@@ -16,7 +17,7 @@ from torch import Tensor
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import BoundingBox
+from .utils import BoundingBox, Path
 
 
 class AgriFieldNet(RasterDataset):
@@ -115,7 +116,7 @@ class AgriFieldNet(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         classes: list[int] = list(cmap.keys()),
         bands: Sequence[str] = all_bands,
@@ -167,10 +168,10 @@ class AgriFieldNet(RasterDataset):
         Returns:
             data, label, and field ids at that index
         """
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
 
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        filepaths = cast(list[Path], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(

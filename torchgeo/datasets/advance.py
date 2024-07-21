@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive, lazy_import
+from .utils import Path, download_and_extract_archive, lazy_import
 
 
 class ADVANCE(NonGeoDataset):
@@ -88,7 +88,7 @@ class ADVANCE(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -151,7 +151,7 @@ class ADVANCE(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -169,7 +169,7 @@ class ADVANCE(NonGeoDataset):
         ]
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -185,7 +185,7 @@ class ADVANCE(NonGeoDataset):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target audio for a single image.
 
         Args:

@@ -22,7 +22,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache dependencies
@@ -69,7 +69,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: "3.10"
       - name: Cache dependencies
@@ -108,7 +108,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: "3.12"
       - name: Cache dependencies

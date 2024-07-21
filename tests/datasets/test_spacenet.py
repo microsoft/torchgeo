@@ -68,7 +68,7 @@ class TestSpaceNet1:
 
         # Refer https://github.com/python/mypy/issues/1032
         monkeypatch.setattr(SpaceNet1, 'collection_md5_dict', test_md5)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return SpaceNet1(
             root, image=request.param, transforms=transforms, download=True, api_key=''
@@ -93,7 +93,7 @@ class TestSpaceNet1:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SpaceNet1(str(tmp_path))
+            SpaceNet1(tmp_path)
 
     def test_plot(self, dataset: SpaceNet1) -> None:
         x = dataset[0].copy()
@@ -118,7 +118,7 @@ class TestSpaceNet2:
         }
 
         monkeypatch.setattr(SpaceNet2, 'collection_md5_dict', test_md5)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return SpaceNet2(
             root,
@@ -149,7 +149,7 @@ class TestSpaceNet2:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SpaceNet2(str(tmp_path))
+            SpaceNet2(tmp_path)
 
     def test_collection_checksum(self, dataset: SpaceNet2) -> None:
         dataset.collection_md5_dict['sn2_AOI_2_Vegas'] = 'randommd5hash123'
@@ -177,7 +177,7 @@ class TestSpaceNet3:
         }
 
         monkeypatch.setattr(SpaceNet3, 'collection_md5_dict', test_md5)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return SpaceNet3(
             root,
@@ -209,7 +209,7 @@ class TestSpaceNet3:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SpaceNet3(str(tmp_path))
+            SpaceNet3(tmp_path)
 
     def test_collection_checksum(self, dataset: SpaceNet3) -> None:
         dataset.collection_md5_dict['sn3_AOI_5_Khartoum'] = 'randommd5hash123'
@@ -240,7 +240,7 @@ class TestSpaceNet4:
         test_angles = ['nadir', 'off-nadir', 'very-off-nadir']
 
         monkeypatch.setattr(SpaceNet4, 'collection_md5_dict', test_md5)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return SpaceNet4(
             root,
@@ -273,7 +273,7 @@ class TestSpaceNet4:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SpaceNet4(str(tmp_path))
+            SpaceNet4(tmp_path)
 
     def test_collection_checksum(self, dataset: SpaceNet4) -> None:
         dataset.collection_md5_dict['sn4_AOI_6_Atlanta'] = 'randommd5hash123'
@@ -303,7 +303,7 @@ class TestSpaceNet5:
         }
 
         monkeypatch.setattr(SpaceNet5, 'collection_md5_dict', test_md5)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return SpaceNet5(
             root,
@@ -335,7 +335,7 @@ class TestSpaceNet5:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SpaceNet5(str(tmp_path))
+            SpaceNet5(tmp_path)
 
     def test_collection_checksum(self, dataset: SpaceNet5) -> None:
         dataset.collection_md5_dict['sn5_AOI_8_Mumbai'] = 'randommd5hash123'
@@ -359,7 +359,7 @@ class TestSpaceNet6:
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet6:
         monkeypatch.setattr(radiant_mlhub.Dataset, 'fetch', fetch_dataset)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return SpaceNet6(
             root, image=request.param, transforms=transforms, download=True, api_key=''
@@ -405,7 +405,7 @@ class TestSpaceNet7:
         }
 
         monkeypatch.setattr(SpaceNet7, 'collection_md5_dict', test_md5)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return SpaceNet7(
             root, split=request.param, transforms=transforms, download=True, api_key=''
@@ -429,7 +429,7 @@ class TestSpaceNet7:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SpaceNet7(str(tmp_path))
+            SpaceNet7(tmp_path)
 
     def test_collection_checksum(self, dataset: SpaceNet4) -> None:
         dataset.collection_md5_dict['sn7_train_source'] = 'randommd5hash123'

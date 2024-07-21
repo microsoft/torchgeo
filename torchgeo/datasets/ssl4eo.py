@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
 class SSL4EO(NonGeoDataset):
@@ -162,7 +162,7 @@ class SSL4EOL(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'oli_sr',
         seasons: int = 1,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -404,7 +404,7 @@ class SSL4EOS12(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 's2c',
         seasons: int = 1,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,

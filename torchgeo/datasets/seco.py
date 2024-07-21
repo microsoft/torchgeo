@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, percentile_normalization
+from .utils import Path, download_url, extract_archive, percentile_normalization
 
 
 class SeasonalContrastS2(NonGeoDataset):
@@ -70,7 +70,7 @@ class SeasonalContrastS2(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         version: str = '100k',
         seasons: int = 1,
         bands: list[str] = rgb_bands,
@@ -147,7 +147,7 @@ class SeasonalContrastS2(NonGeoDataset):
         """
         return (10**5 if self.version == '100k' else 10**6) // 5
 
-    def _load_patch(self, root: str, subdir: str) -> Tensor:
+    def _load_patch(self, root: Path, subdir: Path) -> Tensor:
         """Load a single image patch.
 
         Args:

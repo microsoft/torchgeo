@@ -38,7 +38,7 @@ class TestEDDMapS:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            EDDMapS(str(tmp_path))
+            EDDMapS(tmp_path)
 
     def test_invalid_query(self, dataset: EDDMapS) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
