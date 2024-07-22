@@ -10,7 +10,7 @@ import kornia.augmentation as K
 import torch
 from lightning.pytorch import LightningDataModule
 from torch import Tensor
-from torch.utils.data import DataLoader, Dataset, Subset, default_collate
+from torch.utils.data import DataLoader, Dataset, default_collate
 
 from ..datasets import GeoDataset, NonGeoDataset, stack_samples
 from ..samplers import (

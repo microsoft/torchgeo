@@ -6,7 +6,6 @@ import os
 import pytest
 
 from torchgeo.datamodules import XView2DataModule
-from torchgeo.datasets import unbind_samples
 
 
 class TestXView2DataModule:

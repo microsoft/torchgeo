@@ -11,12 +11,11 @@ import timm
 import torch
 import torch.nn as nn
 import torchvision
-from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
+from torchgeo.datamodules import MisconfigurationException
 from torchgeo.datasets import LandCoverAI
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
