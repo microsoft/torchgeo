@@ -6,17 +6,14 @@
 import os
 from typing import Any
 
-import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
-from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision.models._api import WeightsEnum
 
-from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import FCN, get_weight
 from . import utils
 from .base import BaseTask
