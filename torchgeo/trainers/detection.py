@@ -270,38 +270,6 @@ class ObjectDetectionTask(BaseTask):
 
         self.log_dict(metrics, batch_size=batch_size)
 
-        if (
-            batch_idx < 10
-            and hasattr(self.trainer, 'datamodule')
-            and hasattr(self.trainer.datamodule, 'plot')
-            and self.logger
-            and hasattr(self.logger, 'experiment')
-            and hasattr(self.logger.experiment, 'add_figure')
-        ):
-            datamodule = self.trainer.datamodule
-            batch['prediction_boxes'] = [b['boxes'].cpu() for b in y_hat]
-            batch['prediction_labels'] = [b['labels'].cpu() for b in y_hat]
-            batch['prediction_scores'] = [b['scores'].cpu() for b in y_hat]
-            batch['image'] = batch['image'].cpu()
-            sample = unbind_samples(batch)[0]
-            # Convert image to uint8 for plotting
-            if torch.is_floating_point(sample['image']):
-                sample['image'] *= 255
-                sample['image'] = sample['image'].to(torch.uint8)
-
-            fig: Figure | None = None
-            try:
-                fig = datamodule.plot(sample)
-            except RGBBandsMissingError:
-                pass
-
-            if fig:
-                summary_writer = self.logger.experiment
-                summary_writer.add_figure(
-                    f'image/{batch_idx}', fig, global_step=self.global_step
-                )
-                plt.close()
-
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test metrics.
 

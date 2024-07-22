@@ -254,33 +254,6 @@ class SemanticSegmentationTask(BaseTask):
         self.val_metrics(y_hat, y)
         self.log_dict(self.val_metrics, batch_size=batch_size)
 
-        if (
-            batch_idx < 10
-            and hasattr(self.trainer, 'datamodule')
-            and hasattr(self.trainer.datamodule, 'plot')
-            and self.logger
-            and hasattr(self.logger, 'experiment')
-            and hasattr(self.logger.experiment, 'add_figure')
-        ):
-            datamodule = self.trainer.datamodule
-            batch['prediction'] = y_hat.argmax(dim=1)
-            for key in ['image', 'mask', 'prediction']:
-                batch[key] = batch[key].cpu()
-            sample = unbind_samples(batch)[0]
-
-            fig: Figure | None = None
-            try:
-                fig = datamodule.plot(sample)
-            except RGBBandsMissingError:
-                pass
-
-            if fig:
-                summary_writer = self.logger.experiment
-                summary_writer.add_figure(
-                    f'image/{batch_idx}', fig, global_step=self.global_step
-                )
-                plt.close()
-
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
 
