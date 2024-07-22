@@ -1,0 +1,31 @@
+{# Macros #}
+{% macro image(badge, class, alt, target) %}
+.. image:: {{ badge }}
+   :class: {{ class }}
+   :alt: {{ alt }}
+   :target: {{ target }}
+{% endmacro %}
+
+{# Global variables #}
+{% if "dev" in env.config.release %}
+    {% set branch = "main" %}
+{% else %}
+    {% set branch = "releases/v" ~ env.config.version %}
+{% endif %}
+{% set class = "tutorial-badge" %}
+{% set path = "/microsoft/torchgeo/blob/" ~ branch ~ "/docs/" ~ env.docname ~ ".ipynb" %}
+
+{# Lightning Studio #}
+{% set badge = "https://pl-bolts-doc-images.s3.us-east-2.amazonaws.com/app-2/studio-badge.svg" %}
+{% set alt = "Open in Studio" %}
+{% set repo_url = "https://github.com" ~ path %}
+{% set target = "https://lightning.ai/new?repo_url=" ~ repo_url | urlencode %}
+
+{{ image(badge, class, alt, target) }}
+
+{# Google Colab #}
+{% set badge = "https://colab.research.google.com/assets/colab-badge.svg" %}
+{% set alt = "Open in Colab" %}
+{% set target = "https://colab.research.google.com/github" ~ path %}
+
+{{ image(badge, class, alt, target) }}
