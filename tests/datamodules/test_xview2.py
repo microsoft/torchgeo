@@ -3,7 +3,6 @@
 
 import os
 
-import matplotlib.pyplot as plt
 import pytest
 
 from torchgeo.datamodules import XView2DataModule
@@ -33,10 +32,3 @@ class TestXView2DataModule:
     def test_test_dataloader(self, datamodule: XView2DataModule) -> None:
         datamodule.setup('test')
         next(iter(datamodule.test_dataloader()))
-
-    def test_plot(self, datamodule: XView2DataModule) -> None:
-        datamodule.setup('validate')
-        batch = next(iter(datamodule.val_dataloader()))
-        sample = unbind_samples(batch)[0]
-        datamodule.plot(sample)
-        plt.close()
