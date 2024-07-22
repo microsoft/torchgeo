@@ -30,10 +30,9 @@ from .geo import NonGeoDataset
 from .utils import (
     Path,
     check_integrity,
-    download_radiant_mlhub_collection,
-    download_radiant_mlhub_dataset,
     extract_archive,
     percentile_normalization,
+    which,
 )
 
 
@@ -49,14 +48,33 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
        The SpaceNet datasets require the following additional library to be installed:
 
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-           imagery and labels from the Radiant Earth MLHub
+       * `AWS CLI <https://aws.amazon.com/cli/>`_: to download the dataset from AWS.
     """
 
     @property
     @abc.abstractmethod
     def dataset_id(self) -> str:
         """Dataset ID."""
+
+    @property
+    @abc.abstractmethod
+    def all_aois(self) -> list[int]:
+        """List of all valid areas of interest (AOIs)."""
+
+    @property
+    @abc.abstractmethod
+    def images(self) -> list[str]:
+        """List of all valid image products."""
+
+    @property
+    @abc.abstractmethod
+    def tarballs(self) -> dict[str, dict[int, list[str]]]:
+        """Mapping of tarballs[split][aoi] = [tarballs]."""
+
+    @property
+    @abc.abstractmethod
+    def md5s(self) -> dict[str, dict[int, list[str]]]:
+        """Mapping of md5s[split][aoi] = [md5s]."""
 
     @property
     @abc.abstractmethod
@@ -80,48 +98,43 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
     def __init__(
         self,
-        root: Path,
-        image: str,
-        collections: list[str] = [],
+        root: Path = 'data',
+        split: str = 'train',
+        aois: list[str] = [],
+        image: str | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SpaceNet Dataset instance.
 
         Args:
             root: root directory where dataset can be found
+            split: 'train' or 'test' split
             image: image selection
-            collections: collection selection
+            aois: areas of interest
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: if True, download dataset and store it in the root directory.
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
+            AssertionError: If any invalid arguments are passed.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
+        assert split in {'train', 'test'}
+        assert set(aois) <= set(self.all_aois)
+        assert image in self.images
+
         self.root = root
-        self.image = image  # For testing
-
-        if collections:
-            for collection in collections:
-                assert collection in self.collection_md5_dict
-
-        self.collections = collections or list(self.collection_md5_dict.keys())
-        self.filename = self.imagery[image]
+        self.split = split
+        self.aois = aois
+        self.image = image
         self.transforms = transforms
+        self.download = download
         self.checksum = checksum
 
-        to_be_downloaded = self._check_integrity()
-
-        if to_be_downloaded:
-            if not download:
-                raise DatasetNotFoundError(self)
-            else:
-                self._download(to_be_downloaded, api_key)
+        self._verify()
 
         self.files = self._load_files(root)
 
@@ -237,66 +250,33 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         return sample
 
-    def _check_integrity(self) -> list[str]:
-        """Checks the integrity of the dataset structure.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset."""
+        root = os.path.join(self.root, self.dataset_id, self.split)
+        for aoi in self.aois:
+            # Check if the extracted files already exist
+            if glob.glob(os.path.join(root, '**.tif'), recursive=True):
+                continue
 
-        Returns:
-            List of collections to be downloaded
-        """
-        # Check if collections exist
-        missing_collections = []
-        for collection in self.collections:
-            stacpath = os.path.join(self.root, collection, 'collection.json')
+            # Check if the tarball has already been downloaded
+            for tarball, md5 in zip(
+                self.tarballs[self.split][aoi], self.md5s[self.split][aoi]
+            ):
+                if os.path.exists(os.path.join(root, tarball)):
+                    extract_archive(os.path.join(root, tarball), root)
 
-            if not os.path.exists(stacpath):
-                missing_collections.append(collection)
+                # Check if the user requested to download the dataset
+                if not self.download:
+                    raise DatasetNotFoundError(self)
 
-        if not missing_collections:
-            return []
-
-        to_be_downloaded = []
-        for collection in missing_collections:
-            archive_path = os.path.join(self.root, f'{collection}.tar.gz')
-            if os.path.exists(archive_path):
-                print(f'Found {collection} archive')
-                if (
-                    self.checksum
-                    and check_integrity(
-                        archive_path, self.collection_md5_dict[collection]
-                    )
-                    or not self.checksum
-                ):
-                    print('Extracting...')
-                    extract_archive(archive_path)
-                else:
-                    print(f'Collection {collection} is corrupted')
-                    to_be_downloaded.append(collection)
-            else:
-                print(f'{collection} not found')
-                to_be_downloaded.append(collection)
-
-        return to_be_downloaded
-
-    def _download(self, collections: list[str], api_key: str | None = None) -> None:
-        """Download the dataset and extract it.
-
-        Args:
-            collections: Collections to be downloaded
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-        """
-        for collection in collections:
-            download_radiant_mlhub_collection(collection, self.root, api_key)
-            archive_path = os.path.join(self.root, f'{collection}.tar.gz')
-            if (
-                not self.checksum
-                or not check_integrity(
-                    archive_path, self.collection_md5_dict[collection]
+                # Download the dataset
+                url = f's3://spacenet-dataset/spacenet/{self.dataset_id}/tarballs/{tarball}'
+                aws = which('aws')
+                aws('s3', 'cp', url, root)
+                check_integrity(
+                    os.path.join(root, tarball), md5 if self.checksum else None
                 )
-            ) and self.checksum:
-                raise RuntimeError(f'Collection {collection} corrupted')
-
-            print('Extracting...')
-            extract_archive(archive_path)
+                extract_archive(os.path.join(root, tarball), root)
 
     def plot(
         self,
@@ -388,43 +368,39 @@ class SpaceNet1(SpaceNet):
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/1807.01232
-
     """
 
-    dataset_id = 'spacenet1'
+    dataset_id = 'SN1_buildings'
+    tarballs = {
+        'train': {
+            1: [
+                'SN1_buildings_train_AOI_1_Rio_3band.tar.gz',
+                'SN1_buildings_train_AOI_1_Rio_8band.tar.gz',
+                'SN1_buildings_train_AOI_1_Rio_geojson_buildings.tar.gz',
+            ]
+        },
+        'test': {
+            1: [
+                'SN1_buildings_test_AOI_1_Rio_3band.tar.gz',
+                'SN1_buildings_test_AOI_1_Rio_8band.tar.gz',
+            ]
+        },
+    }
+    md5s = {
+        'train': {
+            1: [
+                '279e334a2120ecac70439ea246174516',
+                '6440a9eedbd7c4fe9741875135362c8c',
+                'b6e02fbd727f252ea038abe4f77a77b3',
+            ]
+        },
+        'test': {
+            1: ['18283d78b21c239bc1831f3bf1d2c996', '732b3a40603b76e80aac84e002e2b3e8']
+        },
+    }
+
     imagery = {'rgb': 'RGB.tif', '8band': '8Band.tif'}
     chip_size = {'rgb': (406, 438), '8band': (101, 110)}
-    label_glob = 'labels.geojson'
-    collection_md5_dict = {'sn1_AOI_1_RIO': 'e6ea35331636fa0c036c04b3d1cbf226'}
-
-    def __init__(
-        self,
-        root: Path = 'data',
-        image: str = 'rgb',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-        download: bool = False,
-        api_key: str | None = None,
-        checksum: bool = False,
-    ) -> None:
-        """Initialize a new SpaceNet 1 Dataset instance.
-
-        Args:
-            root: root directory where dataset can be found
-            image: image selection which must be "rgb" or "8band"
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version.
-            download: if True, download dataset and store it in the root directory.
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
-        """
-        collections = ['sn1_AOI_1_RIO']
-        assert image in {'rgb', '8band'}
-        super().__init__(
-            root, image, collections, transforms, download, api_key, checksum
-        )
 
 
 class SpaceNet2(SpaceNet):
@@ -487,15 +463,36 @@ class SpaceNet2(SpaceNet):
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/1807.01232
-
     """
 
-    dataset_id = 'spacenet2'
-    collection_md5_dict = {
-        'sn2_AOI_2_Vegas': 'a5a8de355290783b88ac4d69c7ef0694',
-        'sn2_AOI_3_Paris': '8299186b7bbfb9a256d515bad1b7f146',
-        'sn2_AOI_4_Shanghai': '4e3e80f2f437faca10ca2e6e6df0ef99',
-        'sn2_AOI_5_Khartoum': '8070ff9050f94cd9f0efe9417205d7c3',
+    dataset_id = 'SN2_buildings'
+    tarballs = {
+        'train': {
+            2: ['SN2_buildings_train_AOI_2_Vegas.tar.gz'],
+            3: ['SN2_buildings_train_AOI_3_Paris.tar.gz'],
+            4: ['SN2_buildings_train_AOI_4_Shanghai.tar.gz'],
+            5: ['SN2_buildings_train_AOI_5_Khartoum.tar.gz'],
+        },
+        'test': {
+            2: ['AOI_2_Vegas_Test_public.tar.gz'],
+            3: ['AOI_3_Paris_Test_public.tar.gz'],
+            4: ['AOI_4_Shanghai_Test_public.tar.gz'],
+            5: ['AOI_5_Khartoum_Test_public.tar.gz'],
+        },
+    }
+    md5s = {
+        'train': {
+            2: ['307da318bc43aaf9481828f92eda9126'],
+            3: ['4db469e3e4e7bf025368ad730aec0888'],
+            4: ['986129eecd3e842ebc2063d43b407adb'],
+            5: ['462b4bf0466c945d708befabd4d9115b'],
+        },
+        'test': {
+            2: ['d45405afd6629e693e2f9168b1291ea3'],
+            3: ['2eaee95303e88479246e4ee2f2279b7f'],
+            4: ['f51dc51fa484dc7fb89b3697bd15a950'],
+            5: ['037d7be10530f0dd1c43d4ef79f3236e'],
+        },
     }
 
     imagery = {
@@ -511,39 +508,6 @@ class SpaceNet2(SpaceNet):
         'PS-RGB': (650, 650),
     }
     label_glob = 'label.geojson'
-
-    def __init__(
-        self,
-        root: Path = 'data',
-        image: str = 'PS-RGB',
-        collections: list[str] = [],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-        download: bool = False,
-        api_key: str | None = None,
-        checksum: bool = False,
-    ) -> None:
-        """Initialize a new SpaceNet 2 Dataset instance.
-
-        Args:
-            root: root directory where dataset can be found
-            image: image selection which must be in ["MS", "PAN", "PS-MS", "PS-RGB"]
-            collections: collection selection which must be a subset of:
-                         [sn2_AOI_2_Vegas, sn2_AOI_3_Paris, sn2_AOI_4_Shanghai,
-                         sn2_AOI_5_Khartoum]. If unspecified, all collections will be
-                         used.
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
-            download: if True, download dataset and store it in the root directory.
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
-        """
-        assert image in {'MS', 'PAN', 'PS-MS', 'PS-RGB'}
-        super().__init__(
-            root, image, collections, transforms, download, api_key, checksum
-        )
 
 
 class SpaceNet3(SpaceNet):
@@ -610,12 +574,34 @@ class SpaceNet3(SpaceNet):
     .. versionadded:: 0.3
     """
 
-    dataset_id = 'spacenet3'
-    collection_md5_dict = {
-        'sn3_AOI_2_Vegas': '8ce7e6abffb8849eb88885035f061ee8',
-        'sn3_AOI_3_Paris': '90b9ebd64cd83dc8d3d4773f45050d8f',
-        'sn3_AOI_4_Shanghai': '3ea291df34548962dfba8b5ed37d700c',
-        'sn3_AOI_5_Khartoum': 'b8d549ac9a6d7456c0f7a8e6de23d9f9',
+    dataset_id = 'SN3_roads'
+    tarballs = {
+        'train': {
+            2: ['SN3_roads_train_AOI_2_Vegas.tar.gz', 'SN3_roads_train_AOI_2_Vegas_geojson_roads_speed.tar.gz'],
+            3: ['SN3_roads_train_AOI_3_Paris.tar.gz', 'SN3_roads_train_AOI_3_Paris_geojson_roads_speed.tar.gz'],
+            4: ['SN3_roads_train_AOI_4_Shanghai.tar.gz', 'SN3_roads_train_AOI_4_Shanghai_geojson_roads_speed.tar.gz'],
+            5: ['SN3_roads_train_AOI_5_Khartoum.tar.gz', 'SN3_roads_train_AOI_5_Khartoum_geojson_roads_speed.tar.gz'],
+        },
+        'test': {
+            2: ['SN3_roads_test_public_AOI_2_Vegas.tar.gz'],
+            3: ['SN3_roads_test_public_AOI_3_Paris.tar.gz'],
+            4: ['SN3_roads_test_public_AOI_4_Shanghai.tar.gz'],
+            5: ['SN3_roads_test_public_AOI_5_Khartoum.tar.gz'],
+        },
+    }
+    md5s = {
+        'train': {
+            2: ['06317255b5e0c6df2643efd8a50f22ae', '4acf7846ed8121db1319345cfe9fdca9'],
+            3: ['c13baf88ee10fe47870c303223cabf82', 'abc8199d4c522d3a14328f4f514702ad'],
+            4: ['ef3de027c3da734411d4333bee9c273b', 'f1db36bd17b2be2281f5f7d369e9e25d'],
+            5: ['46f327b550076f87babb5f7b43f27c68', 'd969693760d59401a84bd9215375a636'],
+        },
+        'test': {
+            2: ['e9eb2220888ba38cab175fc6db6799a2'],
+            3: ['21098cfe471dba6208c92b37b8203ae9'],
+            4: ['2e7438b870ffd33d4453366db1c5b317'],
+            5: ['f367c79fa0fc1d38e63a0fdd065ed957'],
+        },
     }
 
     imagery = {
@@ -640,7 +626,6 @@ class SpaceNet3(SpaceNet):
         collections: list[str] = [],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SpaceNet 3 Dataset instance.
@@ -657,7 +642,6 @@ class SpaceNet3(SpaceNet):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
@@ -665,9 +649,7 @@ class SpaceNet3(SpaceNet):
         """
         assert image in {'MS', 'PAN', 'PS-MS', 'PS-RGB'}
         self.speed_mask = speed_mask
-        super().__init__(
-            root, image, collections, transforms, download, api_key, checksum
-        )
+        super().__init__(root, image, collections, transforms, download, checksum)
 
     def _load_mask(
         self, path: Path, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
@@ -840,7 +822,6 @@ class SpaceNet4(SpaceNet):
 
     """
 
-    dataset_id = 'spacenet4'
     collection_md5_dict = {'sn4_AOI_6_Atlanta': 'c597d639cba5257927a97e3eff07b753'}
 
     imagery = {'MS': 'MS.tif', 'PAN': 'PAN.tif', 'PS-RGBNIR': 'PS-RGBNIR.tif'}
@@ -890,7 +871,6 @@ class SpaceNet4(SpaceNet):
         angles: list[str] = [],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SpaceNet 4 Dataset instance.
@@ -903,7 +883,6 @@ class SpaceNet4(SpaceNet):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
@@ -915,9 +894,7 @@ class SpaceNet4(SpaceNet):
         if self.angles:
             for angle in self.angles:
                 assert angle in self.angle_catalog_map.keys()
-        super().__init__(
-            root, image, collections, transforms, download, api_key, checksum
-        )
+        super().__init__(root, image, collections, transforms, download, checksum)
 
     def _load_files(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
@@ -1031,7 +1008,6 @@ class SpaceNet5(SpaceNet3):
     .. versionadded:: 0.2
     """
 
-    dataset_id = 'spacenet5'
     collection_md5_dict = {
         'sn5_AOI_7_Moscow': 'b18107f878152fe7e75444373c320cba',
         'sn5_AOI_8_Mumbai': '1f1e2b3c26fbd15bfbcdbb6b02ae051c',
@@ -1059,7 +1035,6 @@ class SpaceNet5(SpaceNet3):
         collections: list[str] = [],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SpaceNet 5 Dataset instance.
@@ -1075,21 +1050,13 @@ class SpaceNet5(SpaceNet3):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         super().__init__(
-            root,
-            image,
-            speed_mask,
-            collections,
-            transforms,
-            download,
-            api_key,
-            checksum,
+            root, image, speed_mask, collections, transforms, download, checksum
         )
 
 
@@ -1189,7 +1156,6 @@ class SpaceNet6(SpaceNet):
         image: str = 'PS-RGB',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: str | None = None,
     ) -> None:
         """Initialize a new SpaceNet 6 Dataset instance.
 
@@ -1200,7 +1166,6 @@ class SpaceNet6(SpaceNet):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
@@ -1211,26 +1176,7 @@ class SpaceNet6(SpaceNet):
         self.filename = self.imagery[image]
         self.transforms = transforms
 
-        if download:
-            self.__download(api_key)
-
         self.files = self._load_files(os.path.join(root, self.dataset_id))
-
-    def __download(self, api_key: str | None = None) -> None:
-        """Download the dataset and extract it.
-
-        Args:
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-        """
-        if os.path.exists(
-            os.path.join(
-                self.root, self.dataset_id, self.collections[0], 'collection.json'
-            )
-        ):
-            print('Files already downloaded and verified')
-            return
-
-        download_radiant_mlhub_dataset(self.dataset_id, self.root, api_key)
 
 
 class SpaceNet7(SpaceNet):
@@ -1269,7 +1215,6 @@ class SpaceNet7(SpaceNet):
     .. versionadded:: 0.2
     """
 
-    dataset_id = 'spacenet7'
     collection_md5_dict = {
         'sn7_train_source': '9f8cc109d744537d087bd6ff33132340',
         'sn7_train_labels': '16f873e3f0f914d95a916fb39b5111b5',
@@ -1287,7 +1232,6 @@ class SpaceNet7(SpaceNet):
         split: str = 'train',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SpaceNet 7 Dataset instance.
@@ -1298,7 +1242,6 @@ class SpaceNet7(SpaceNet):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory.
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
@@ -1316,14 +1259,6 @@ class SpaceNet7(SpaceNet):
             self.collections = ['sn7_test_source']
         else:
             self.collections = ['sn7_train_source', 'sn7_train_labels']
-
-        to_be_downloaded = self._check_integrity()
-
-        if to_be_downloaded:
-            if not download:
-                raise DatasetNotFoundError(self)
-            else:
-                self._download(to_be_downloaded, api_key)
 
         self.files = self._load_files(root)
 
