@@ -45,7 +45,7 @@ class TestNASAMarineDebris:
         monkeypatch.setattr(radiant_mlhub.Collection, 'fetch', fetch)
         md5s = ['6f4f0d2313323950e45bf3fc0c09b5de', '540cf1cf4fd2c13b609d0355abe955d7']
         monkeypatch.setattr(NASAMarineDebris, 'md5s', md5s)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return NASAMarineDebris(root, transforms, download=True, checksum=True)
 
@@ -63,15 +63,15 @@ class TestNASAMarineDebris:
     def test_already_downloaded(
         self, dataset: NASAMarineDebris, tmp_path: Path
     ) -> None:
-        NASAMarineDebris(root=str(tmp_path), download=True)
+        NASAMarineDebris(root=tmp_path, download=True)
 
     def test_already_downloaded_not_extracted(
         self, dataset: NASAMarineDebris, tmp_path: Path
     ) -> None:
         shutil.rmtree(dataset.root)
-        os.makedirs(str(tmp_path), exist_ok=True)
+        os.makedirs(tmp_path, exist_ok=True)
         Collection().download(output_dir=str(tmp_path))
-        NASAMarineDebris(root=str(tmp_path), download=False)
+        NASAMarineDebris(root=tmp_path, download=False)
 
     def test_corrupted_previously_downloaded(self, tmp_path: Path) -> None:
         filenames = NASAMarineDebris.filenames
@@ -79,7 +79,7 @@ class TestNASAMarineDebris:
             with open(os.path.join(tmp_path, filename), 'w') as f:
                 f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset checksum mismatch.'):
-            NASAMarineDebris(root=str(tmp_path), download=False, checksum=True)
+            NASAMarineDebris(root=tmp_path, download=False, checksum=True)
 
     def test_corrupted_new_download(
         self, tmp_path: Path, monkeypatch: MonkeyPatch
@@ -87,11 +87,11 @@ class TestNASAMarineDebris:
         with pytest.raises(RuntimeError, match='Dataset checksum mismatch.'):
             radiant_mlhub = pytest.importorskip('radiant_mlhub', minversion='0.3')
             monkeypatch.setattr(radiant_mlhub.Collection, 'fetch', fetch_corrupted)
-            NASAMarineDebris(root=str(tmp_path), download=True, checksum=True)
+            NASAMarineDebris(root=tmp_path, download=True, checksum=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            NASAMarineDebris(str(tmp_path))
+            NASAMarineDebris(tmp_path)
 
     def test_plot(self, dataset: NASAMarineDebris) -> None:
         x = dataset[0].copy()

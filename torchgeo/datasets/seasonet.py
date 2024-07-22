@@ -20,7 +20,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, percentile_normalization
+from .utils import Path, download_url, extract_archive, percentile_normalization
 
 
 class SeasoNet(NonGeoDataset):
@@ -207,7 +207,7 @@ class SeasoNet(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         seasons: Collection[str] = all_seasons,
         bands: Iterable[str] = all_bands,

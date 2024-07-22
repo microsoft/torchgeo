@@ -3,6 +3,7 @@
 
 """South America Soybean Dataset."""
 
+import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -12,7 +13,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import download_url
+from .utils import Path, download_url
 
 
 class SouthAmericaSoybean(RasterDataset):
@@ -72,7 +73,7 @@ class SouthAmericaSoybean(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         years: list[int] = [2021],
@@ -112,7 +113,7 @@ class SouthAmericaSoybean(RasterDataset):
         # Check if the extracted files already exist
         if self.files:
             return
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
 
         # Check if the user requested to download the dataset
         if not self.download:

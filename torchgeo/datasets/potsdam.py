@@ -17,6 +17,7 @@ from torch import Tensor
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
+    Path,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -121,7 +122,7 @@ class Potsdam2D(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,

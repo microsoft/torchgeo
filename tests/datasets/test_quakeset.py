@@ -18,7 +18,7 @@ from torchgeo.datasets import DatasetNotFoundError, QuakeSet
 pytest.importorskip('h5py', minversion='3.6')
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -32,7 +32,7 @@ class TestQuakeSet:
         md5 = '127d0d6a1f82d517129535f50053a4c9'
         monkeypatch.setattr(QuakeSet, 'md5', md5)
         monkeypatch.setattr(QuakeSet, 'url', url)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return QuakeSet(
@@ -50,11 +50,11 @@ class TestQuakeSet:
         assert len(dataset) == 8
 
     def test_already_downloaded(self, dataset: QuakeSet, tmp_path: Path) -> None:
-        QuakeSet(root=str(tmp_path), download=True)
+        QuakeSet(root=tmp_path, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            QuakeSet(str(tmp_path))
+            QuakeSet(tmp_path)
 
     def test_plot(self, dataset: QuakeSet) -> None:
         x = dataset[0].copy()

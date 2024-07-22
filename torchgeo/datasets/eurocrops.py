@@ -5,6 +5,7 @@
 
 import csv
 import os
+import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -16,7 +17,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import check_integrity, download_and_extract_archive, download_url
+from .utils import Path, check_integrity, download_and_extract_archive, download_url
 
 
 class EuroCrops(VectorDataset):
@@ -84,7 +85,7 @@ class EuroCrops(VectorDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS = CRS.from_epsg(4326),
         res: float = 0.00001,
         classes: list[str] | None = None,
@@ -138,7 +139,7 @@ class EuroCrops(VectorDataset):
         if self.files and not self.checksum:
             return True
 
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
 
         filepath = os.path.join(self.paths, self.hcat_fname)
         if not check_integrity(filepath, self.hcat_md5 if self.checksum else None):
@@ -155,7 +156,7 @@ class EuroCrops(VectorDataset):
         if self._check_integrity():
             print('Files already downloaded and verified')
             return
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         download_url(
             self.base_url + self.hcat_fname,
             self.paths,
@@ -177,7 +178,7 @@ class EuroCrops(VectorDataset):
                 (defaults to all classes)
         """
         if not classes:
-            assert isinstance(self.paths, str)
+            assert isinstance(self.paths, str | pathlib.Path)
             classes = []
             filepath = os.path.join(self.paths, self.hcat_fname)
             with open(filepath) as f:
@@ -243,10 +244,12 @@ class EuroCrops(VectorDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4, 4))
 
-        def apply_cmap(arr: 'np.typing.NDArray[Any]') -> 'np.typing.NDArray[np.float_]':
+        def apply_cmap(
+            arr: 'np.typing.NDArray[Any]',
+        ) -> 'np.typing.NDArray[np.float64]':
             # Color 0 as black, while applying default color map for the class indices.
             cmap = plt.get_cmap('viridis')
-            im: np.typing.NDArray[np.float_] = cmap(arr / len(self.class_map))
+            im: np.typing.NDArray[np.float64] = cmap(arr / len(self.class_map))
             im[arr == 0] = 0
             return im
 

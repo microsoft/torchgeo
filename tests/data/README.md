@@ -20,7 +20,7 @@ with rio.open(os.path.join(ROOT, FILENAME), "r") as src:
     dtype = src.profile["dtype"]
     Z = np.random.randint(np.iinfo(dtype).max, size=(SIZE, SIZE), dtype=dtype)
     with rio.open(FILENAME, "w", **src.profile) as dst:
-        for i in dst.profile.indexes:
+        for i in dst.indexes:
             dst.write(Z, i)
 ```
 

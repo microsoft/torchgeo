@@ -5,6 +5,7 @@
 
 import glob
 import os
+import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any, cast
 
@@ -15,7 +16,13 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, check_integrity, disambiguate_timestamp, extract_archive
+from .utils import (
+    BoundingBox,
+    Path,
+    check_integrity,
+    disambiguate_timestamp,
+    extract_archive,
+)
 
 
 class GlobBiomass(RasterDataset):
@@ -131,7 +138,7 @@ class GlobBiomass(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         measurement: str = 'agb',
@@ -186,7 +193,7 @@ class GlobBiomass(RasterDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        filepaths = cast(list[Path], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -195,7 +202,7 @@ class GlobBiomass(RasterDataset):
 
         mask = self._merge_files(filepaths, query)
 
-        std_error_paths = [f.replace('.tif', '_err.tif') for f in filepaths]
+        std_error_paths = [str(f).replace('.tif', '_err.tif') for f in filepaths]
         std_err_mask = self._merge_files(std_error_paths, query)
 
         mask = torch.cat((mask, std_err_mask), dim=0)
@@ -214,7 +221,7 @@ class GlobBiomass(RasterDataset):
             return
 
         # Check if the zip files have already been downloaded
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         pathname = os.path.join(self.paths, f'*_{self.measurement}.zip')
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):

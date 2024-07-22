@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, sort_sentinel2_bands
+from .utils import Path, download_url, extract_archive, sort_sentinel2_bands
 
 
 class BigEarthNet(NonGeoDataset):
@@ -251,13 +251,13 @@ class BigEarthNet(NonGeoDataset):
     }
     metadata = {
         's1': {
-            'url': 'https://bigearth.net/downloads/BigEarthNet-S1-v1.0.tar.gz',
+            'url': 'https://zenodo.org/records/12687186/files/BigEarthNet-S1-v1.0.tar.gz',
             'md5': '94ced73440dea8c7b9645ee738c5a172',
             'filename': 'BigEarthNet-S1-v1.0.tar.gz',
             'directory': 'BigEarthNet-S1-v1.0',
         },
         's2': {
-            'url': 'https://bigearth.net/downloads/BigEarthNet-S2-v1.0.tar.gz',
+            'url': 'https://zenodo.org/records/12687186/files/BigEarthNet-S2-v1.0.tar.gz',
             'md5': '5a64e9ce38deb036a435a7b59494924c',
             'filename': 'BigEarthNet-S2-v1.0.tar.gz',
             'directory': 'BigEarthNet-v1.0',
@@ -267,7 +267,7 @@ class BigEarthNet(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         bands: str = 'all',
         num_classes: int = 19,
@@ -486,7 +486,7 @@ class BigEarthNet(NonGeoDataset):
             filepath = os.path.join(self.root, filename)
             self._extract(filepath)
 
-    def _download(self, url: str, filename: str, md5: str) -> None:
+    def _download(self, url: str, filename: Path, md5: str) -> None:
         """Download the dataset.
 
         Args:
@@ -499,13 +499,13 @@ class BigEarthNet(NonGeoDataset):
                 url, self.root, filename=filename, md5=md5 if self.checksum else None
             )
 
-    def _extract(self, filepath: str) -> None:
+    def _extract(self, filepath: Path) -> None:
         """Extract the dataset.
 
         Args:
             filepath: path to file to be extracted
         """
-        if not filepath.endswith('.csv'):
+        if not str(filepath).endswith('.csv'):
             extract_archive(filepath)
 
     def _onehot_labels_to_names(

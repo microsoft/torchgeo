@@ -19,10 +19,10 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
-def parse_pascal_voc(path: str) -> dict[str, Any]:
+def parse_pascal_voc(path: Path) -> dict[str, Any]:
     """Read a PASCAL VOC annotation file.
 
     Args:
@@ -230,7 +230,7 @@ class FAIR1M(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -279,7 +279,7 @@ class FAIR1M(NonGeoDataset):
         sample = {'image': image}
 
         if self.split != 'test':
-            label_path = path.replace(self.image_root, self.label_root)
+            label_path = str(path).replace(self.image_root, self.label_root)
             label_path = label_path.replace('.tif', '.xml')
             voc = parse_pascal_voc(label_path)
             boxes, labels = self._load_target(voc['points'], voc['labels'])
@@ -298,7 +298,7 @@ class FAIR1M(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:

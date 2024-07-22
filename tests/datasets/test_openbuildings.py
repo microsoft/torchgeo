@@ -26,7 +26,7 @@ from torchgeo.datasets import (
 class TestOpenBuildings:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> OpenBuildings:
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(
             os.path.join('tests', 'data', 'openbuildings', 'tiles.geojson'), root
         )
@@ -55,7 +55,7 @@ class TestOpenBuildings:
 
     def test_not_download(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            OpenBuildings(str(tmp_path))
+            OpenBuildings(tmp_path)
 
     def test_corrupted(self, dataset: OpenBuildings, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, '000_buildings.csv.gz'), 'w') as f:

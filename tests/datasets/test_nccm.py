@@ -22,7 +22,7 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -43,7 +43,7 @@ class TestNCCM:
         }
         monkeypatch.setattr(NCCM, 'urls', urls)
         transforms = nn.Identity()
-        root = str(tmp_path)
+        root = tmp_path
         return NCCM(root, transforms=transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: NCCM) -> None:
@@ -84,7 +84,7 @@ class TestNCCM:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            NCCM(str(tmp_path))
+            NCCM(tmp_path)
 
     def test_invalid_query(self, dataset: NCCM) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

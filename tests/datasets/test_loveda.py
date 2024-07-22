@@ -16,7 +16,7 @@ import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, LoveDA
 
 
-def download_url(url: str, root: str, *args: str) -> None:
+def download_url(url: str, root: str | Path, *args: str) -> None:
     shutil.copy(url, root)
 
 
@@ -48,7 +48,7 @@ class TestLoveDA:
 
         monkeypatch.setattr(LoveDA, 'info_dict', info_dict)
 
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return LoveDA(
@@ -84,7 +84,7 @@ class TestLoveDA:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            LoveDA(str(tmp_path))
+            LoveDA(tmp_path)
 
     def test_plot(self, dataset: LoveDA) -> None:
         dataset.plot(dataset[0], suptitle='Test')

@@ -16,7 +16,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: "3.12"
       - name: Cache dependencies
@@ -41,7 +41,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: "3.12"
       - name: Cache dependencies
@@ -68,7 +68,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.1.7
       - name: Set up nodejs
-        uses: actions/setup-node@v4.0.2
+        uses: actions/setup-node@v4.0.3
         with:
           node-version: "20"
           cache: "npm"

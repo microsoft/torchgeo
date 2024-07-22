@@ -22,7 +22,7 @@ from torchvision.utils import draw_bounding_boxes
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, lazy_import
+from .utils import Path, download_url, extract_archive, lazy_import
 
 
 class IDTReeS(NonGeoDataset):
@@ -152,7 +152,7 @@ class IDTReeS(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         task: str = 'task1',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -240,7 +240,7 @@ class IDTReeS(NonGeoDataset):
         """
         return len(self.images)
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a tiff file.
 
         Args:
@@ -254,7 +254,7 @@ class IDTReeS(NonGeoDataset):
         tensor = torch.from_numpy(array)
         return tensor
 
-    def _load_las(self, path: str) -> Tensor:
+    def _load_las(self, path: Path) -> Tensor:
         """Load a single point cloud.
 
         Args:
@@ -269,7 +269,7 @@ class IDTReeS(NonGeoDataset):
         tensor = torch.from_numpy(array)
         return tensor
 
-    def _load_boxes(self, path: str) -> Tensor:
+    def _load_boxes(self, path: Path) -> Tensor:
         """Load object bounding boxes.
 
         Args:
@@ -313,7 +313,7 @@ class IDTReeS(NonGeoDataset):
         tensor = torch.tensor(boxes)
         return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load target label for a single sample.
 
         Args:
@@ -333,7 +333,7 @@ class IDTReeS(NonGeoDataset):
         return tensor
 
     def _load(
-        self, root: str
+        self, root: Path
     ) -> tuple[list[str], dict[int, dict[str, Any]] | None, Any]:
         """Load files, geometries, and labels.
 
@@ -360,7 +360,7 @@ class IDTReeS(NonGeoDataset):
 
         return images, geoms, labels
 
-    def _load_labels(self, directory: str) -> Any:
+    def _load_labels(self, directory: Path) -> Any:
         """Load the csv files containing the labels.
 
         Args:
@@ -380,7 +380,7 @@ class IDTReeS(NonGeoDataset):
         df.reset_index()
         return df
 
-    def _load_geometries(self, directory: str) -> dict[int, dict[str, Any]]:
+    def _load_geometries(self, directory: Path) -> dict[int, dict[str, Any]]:
         """Load the shape files containing the geometries.
 
         Args:

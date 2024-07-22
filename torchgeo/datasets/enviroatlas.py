@@ -23,7 +23,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, Path, download_url, extract_archive
 
 
 class EnviroAtlas(GeoDataset):
@@ -253,7 +253,7 @@ class EnviroAtlas(GeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         splits: Sequence[str] = ['pittsburgh_pa-2010_1m-train'],
         layers: Sequence[str] = ['naip', 'prior'],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -414,7 +414,7 @@ class EnviroAtlas(GeoDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
 
-        def exists(filename: str) -> bool:
+        def exists(filename: Path) -> bool:
             return os.path.exists(os.path.join(self.root, 'enviroatlas_lotp', filename))
 
         # Check if the extracted files already exist

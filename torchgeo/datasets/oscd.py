@@ -17,6 +17,7 @@ from torch import Tensor
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
 from .utils import (
+    Path,
     download_url,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -98,7 +99,7 @@ class OSCD(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -207,7 +208,7 @@ class OSCD(NonGeoDataset):
 
         return regions
 
-    def _load_image(self, paths: Sequence[str]) -> Tensor:
+    def _load_image(self, paths: Sequence[Path]) -> Tensor:
         """Load a single image.
 
         Args:
@@ -224,7 +225,7 @@ class OSCD(NonGeoDataset):
         tensor = torch.from_numpy(array).float()
         return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:

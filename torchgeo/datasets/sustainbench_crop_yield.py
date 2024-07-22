@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class SustainBenchCropYield(NonGeoDataset):
@@ -59,7 +59,7 @@ class SustainBenchCropYield(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         countries: list[str] = ['usa'],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,

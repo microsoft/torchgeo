@@ -65,7 +65,7 @@ def fetch_collection(collection_id: str, **kwargs: str) -> Collection:
     return Collection()
 
 
-def download_url(url: str, root: str, *args: str) -> None:
+def download_url(url: str, root: str | Path, *args: str) -> None:
     shutil.copy(url, root)
 
 
@@ -85,7 +85,7 @@ def test_extract_archive(src: str, tmp_path: Path) -> None:
         pytest.importorskip('rarfile', minversion='4')
     if src.startswith('chesapeake'):
         pytest.importorskip('zipfile_deflate64')
-    extract_archive(os.path.join('tests', 'data', src), str(tmp_path))
+    extract_archive(os.path.join('tests', 'data', src), tmp_path)
 
 
 def test_unsupported_scheme() -> None:
@@ -98,8 +98,7 @@ def test_unsupported_scheme() -> None:
 def test_download_and_extract_archive(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
     download_and_extract_archive(
-        os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip'),
-        str(tmp_path),
+        os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip'), tmp_path
     )
 
 
@@ -108,7 +107,7 @@ def test_download_radiant_mlhub_dataset(
 ) -> None:
     radiant_mlhub = pytest.importorskip('radiant_mlhub', minversion='0.3')
     monkeypatch.setattr(radiant_mlhub.Dataset, 'fetch', fetch_dataset)
-    download_radiant_mlhub_dataset('', str(tmp_path))
+    download_radiant_mlhub_dataset('', tmp_path)
 
 
 def test_download_radiant_mlhub_collection(
@@ -116,7 +115,7 @@ def test_download_radiant_mlhub_collection(
 ) -> None:
     radiant_mlhub = pytest.importorskip('radiant_mlhub', minversion='0.3')
     monkeypatch.setattr(radiant_mlhub.Collection, 'fetch', fetch_collection)
-    download_radiant_mlhub_collection('', str(tmp_path))
+    download_radiant_mlhub_collection('', tmp_path)
 
 
 class TestBoundingBox:
@@ -597,7 +596,7 @@ def test_lazy_import_missing(name: str) -> None:
 def test_azcopy(tmp_path: Path, azcopy: Executable) -> None:
     source = os.path.join('tests', 'data', 'cyclone')
     azcopy('sync', source, tmp_path, '--recursive=true')
-    assert os.path.exists(tmp_path / 'nasa_tropical_storm_competition_test_labels')
+    assert os.path.exists(tmp_path / 'test')
 
 
 def test_which() -> None:

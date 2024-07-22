@@ -16,7 +16,12 @@ from torchvision.utils import draw_bounding_boxes
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_radiant_mlhub_collection, extract_archive
+from .utils import (
+    Path,
+    check_integrity,
+    download_radiant_mlhub_collection,
+    extract_archive,
+)
 
 
 class NASAMarineDebris(NonGeoDataset):
@@ -61,7 +66,7 @@ class NASAMarineDebris(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         api_key: str | None = None,
@@ -123,7 +128,7 @@ class NASAMarineDebris(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -137,7 +142,7 @@ class NASAMarineDebris(NonGeoDataset):
         tensor = torch.from_numpy(array).float()
         return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target bounding boxes for a single image.
 
         Args:

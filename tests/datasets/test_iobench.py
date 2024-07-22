@@ -24,7 +24,7 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -36,7 +36,7 @@ class TestIOBench:
         url = os.path.join('tests', 'data', 'iobench', '{}.tar.gz')
         monkeypatch.setattr(IOBench, 'url', url)
         monkeypatch.setitem(IOBench.md5s, 'preprocessed', md5)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return IOBench(root, transforms=transforms, download=True, checksum=True)
 
@@ -68,14 +68,14 @@ class TestIOBench:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'iobench', '*.tar.gz')
-        root = str(tmp_path)
+        root = tmp_path
         for tarfile in glob.iglob(pathname):
             shutil.copy(tarfile, root)
         IOBench(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            IOBench(str(tmp_path))
+            IOBench(tmp_path)
 
     def test_invalid_query(self, dataset: IOBench) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

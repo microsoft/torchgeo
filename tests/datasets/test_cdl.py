@@ -24,7 +24,7 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -41,7 +41,7 @@ class TestCDL:
         url = os.path.join('tests', 'data', 'cdl', '{}_30m_cdls.zip')
         monkeypatch.setattr(CDL, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return CDL(
             root,
@@ -87,7 +87,7 @@ class TestCDL:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'cdl', '*_30m_cdls.zip')
-        root = str(tmp_path)
+        root = tmp_path
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)
         CDL(root, years=[2023, 2022])
@@ -97,7 +97,7 @@ class TestCDL:
             AssertionError,
             match='CDL data product only exists for the following years:',
         ):
-            CDL(str(tmp_path), years=[1996])
+            CDL(tmp_path, years=[1996])
 
     def test_invalid_classes(self) -> None:
         with pytest.raises(AssertionError):
@@ -121,7 +121,7 @@ class TestCDL:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            CDL(str(tmp_path))
+            CDL(tmp_path)
 
     def test_invalid_query(self, dataset: CDL) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

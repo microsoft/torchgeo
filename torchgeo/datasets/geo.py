@@ -7,6 +7,7 @@ import abc
 import functools
 import glob
 import os
+import pathlib
 import re
 import sys
 import warnings
@@ -34,6 +35,7 @@ from torchvision.datasets.folder import default_loader as pil_loader
 from .errors import DatasetNotFoundError
 from .utils import (
     BoundingBox,
+    Path,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
@@ -84,7 +86,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    paths: str | Iterable[str]
+    paths: Path | Iterable[Path]
     _crs = CRS.from_epsg(4326)
     _res = 0.0
 
@@ -205,7 +207,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self,
         state: tuple[
             dict[Any, Any],
-            list[tuple[int, tuple[float, float, float, float, float, float], str]],
+            list[tuple[int, tuple[float, float, float, float, float, float], Path]],
         ],
     ) -> None:
         """Define how to unpickle an instance.
@@ -288,7 +290,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self._res = new_res
 
     @property
-    def files(self) -> list[str]:
+    def files(self) -> list[Path]:
         """A list of all files in the dataset.
 
         Returns:
@@ -297,13 +299,13 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, str):
-            paths: Iterable[str] = [self.paths]
+        if isinstance(self.paths, str | pathlib.Path):
+            paths: Iterable[Path] = [self.paths]
         else:
             paths = self.paths
 
         # Using set to remove any duplicates if directories are overlapping
-        files: set[str] = set()
+        files: set[Path] = set()
         for path in paths:
             if os.path.isdir(path):
                 pathname = os.path.join(path, '**', self.filename_glob)
@@ -410,7 +412,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         bands: Sequence[str] | None = None,
@@ -516,7 +518,7 @@ class RasterDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        filepaths = cast(list[Path], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -559,7 +561,7 @@ class RasterDataset(GeoDataset):
 
     def _merge_files(
         self,
-        filepaths: Sequence[str],
+        filepaths: Sequence[Path],
         query: BoundingBox,
         band_indexes: Sequence[int] | None = None,
     ) -> Tensor:
@@ -587,7 +589,7 @@ class RasterDataset(GeoDataset):
         return tensor
 
     @functools.lru_cache(maxsize=128)
-    def _cached_load_warp_file(self, filepath: str) -> DatasetReader:
+    def _cached_load_warp_file(self, filepath: Path) -> DatasetReader:
         """Cached version of :meth:`_load_warp_file`.
 
         Args:
@@ -598,7 +600,7 @@ class RasterDataset(GeoDataset):
         """
         return self._load_warp_file(filepath)
 
-    def _load_warp_file(self, filepath: str) -> DatasetReader:
+    def _load_warp_file(self, filepath: Path) -> DatasetReader:
         """Load and warp a file to the correct CRS and resolution.
 
         Args:
@@ -649,7 +651,7 @@ class VectorDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float = 0.0001,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -846,10 +848,10 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
-        loader: Callable[[str], Any] | None = pil_loader,
-        is_valid_file: Callable[[str], bool] | None = None,
+        loader: Callable[[Path], Any] | None = pil_loader,
+        is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
         """Initialize a new NonGeoClassificationDataset instance.
 

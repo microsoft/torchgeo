@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, lazy_import
+from .utils import Path, download_url, extract_archive, lazy_import
 
 
 class CropHarvest(NonGeoDataset):
@@ -96,7 +96,7 @@ class CropHarvest(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -157,7 +157,7 @@ class CropHarvest(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_features(self, root: str) -> list[dict[str, str]]:
+    def _load_features(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -181,7 +181,7 @@ class CropHarvest(NonGeoDataset):
             files.append(dict(chip=chip_path, index=index, dataset=dataset))
         return files
 
-    def _load_labels(self, root: str) -> pd.DataFrame:
+    def _load_labels(self, root: Path) -> pd.DataFrame:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -196,7 +196,7 @@ class CropHarvest(NonGeoDataset):
             df = pd.json_normalize(data['features'])
             return df
 
-    def _load_array(self, path: str) -> Tensor:
+    def _load_array(self, path: Path) -> Tensor:
         """Load an individual single pixel time series.
 
         Args:
