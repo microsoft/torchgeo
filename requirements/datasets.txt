@@ -3,7 +3,7 @@ h5py==3.11.0
 laspy==2.5.4
 opencv-python==4.10.0.84
 pycocotools==2.0.8
-pyvista==0.44.0
+pyvista==0.44.1
 radiant-mlhub==0.4.1
 rarfile==4.2
 scikit-image==0.24.0
