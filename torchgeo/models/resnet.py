@@ -404,6 +404,19 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    SENTINEL1_ALL_DECUR = Weights(
+        url='https://huggingface.co/wangyi111/DeCUR/resolve/main/rn50_ssl4eo-s12_sar_decur_ep100.pth',  # noqa: E501
+        transforms=_zhu_xlab_transforms,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 2,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2309.05300',
+            'repo': 'https://github.com/zhu-xlab/DeCUR',
+            'ssl_method': 'decur',
+        },
+    )
+
     SENTINEL2_ALL_DINO = Weights(
         url='https://hf.co/torchgeo/resnet50_sentinel2_all_dino/resolve/d7f14bf5530d70ac69d763e58e77e44dbecfec7c/resnet50_sentinel2_all_dino-d6c330e9.pth',  # noqa: E501
         transforms=_zhu_xlab_transforms,
@@ -427,6 +440,19 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
+        },
+    )
+
+    SENTINEL2_ALL_DECUR = Weights(
+        url='https://huggingface.co/wangyi111/DeCUR/resolve/main/rn50_ssl4eo-s12_ms_decur_ep100.pth',  # noqa: E501
+        transforms=_zhu_xlab_transforms,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 13,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2309.05300',
+            'repo': 'https://github.com/zhu-xlab/DeCUR',
+            'ssl_method': 'decur',
         },
     )
 
