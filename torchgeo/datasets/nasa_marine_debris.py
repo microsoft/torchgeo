@@ -243,25 +243,25 @@ class NASAMarineDebris(NonGeoDataset):
         image = sample['image']
         if 'boxes' in sample and len(sample['boxes']):
             image = draw_bounding_boxes(image=sample['image'], boxes=sample['boxes'])
-        image = image.permute((1, 2, 0)).numpy()
+        image_arr = image.permute((1, 2, 0)).numpy()
 
         if 'prediction_boxes' in sample and len(sample['prediction_boxes']):
             ncols += 1
             preds = draw_bounding_boxes(
                 image=sample['image'], boxes=sample['prediction_boxes']
             )
-            preds = preds.permute((1, 2, 0)).numpy()
+            preds_arr = preds.permute((1, 2, 0)).numpy()
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         if ncols < 2:
-            axs.imshow(image)
+            axs.imshow(image_arr)
             axs.axis('off')
             if show_titles:
                 axs.set_title('Ground Truth')
         else:
-            axs[0].imshow(image)
+            axs[0].imshow(image_arr)
             axs[0].axis('off')
-            axs[1].imshow(preds)
+            axs[1].imshow(preds_arr)
             axs[1].axis('off')
 
             if show_titles:
