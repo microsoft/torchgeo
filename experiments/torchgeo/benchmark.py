@@ -217,7 +217,7 @@ def main(args: argparse.Namespace) -> None:
 
     criterion = nn.CrossEntropyLoss()
     params = model.parameters()
-    optimizer = optim.SGD(params, lr=0.0001)
+    optimizer = optim.SGD(params, lr=0.0001)  # type: ignore[attr-defined]
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu', args.device)
     model = model.to(device)
