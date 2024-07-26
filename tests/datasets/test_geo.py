@@ -1,5 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
+import math
 import os
 import pickle
 import sys
@@ -276,6 +278,12 @@ class TestRasterDataset:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
         assert len(sentinel.bands) == x['image'].shape[0]
+
+    def test_reprojection(self, naip: NAIP) -> None:
+        ds1 = naip
+        ds2 = NAIP(naip.paths, crs="EPSG:4326")
+        assert ds1.crs != ds2.crs
+        assert not math.isclose(ds1.res, ds2.res)
 
     @pytest.mark.parametrize('dtype', ['uint16', 'uint32'])
     def test_getitem_uint_dtype(self, dtype: str) -> None:
