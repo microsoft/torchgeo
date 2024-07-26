@@ -281,7 +281,7 @@ class TestRasterDataset:
 
     def test_reprojection(self, naip: NAIP) -> None:
         ds1 = naip
-        ds2 = NAIP(naip.paths, crs="EPSG:4326")
+        ds2 = NAIP(naip.paths, crs='EPSG:4326')
         assert ds1.crs != ds2.crs
         assert not math.isclose(ds1.res, ds2.res)
 
