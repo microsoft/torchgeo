@@ -137,6 +137,6 @@ class GBIF(GeoDataset):
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        sample = {'crs': self.crs, 'geo_bbox': bboxes}
+        sample = {'crs': self.crs, 'bounds': bboxes}
 
         return sample
