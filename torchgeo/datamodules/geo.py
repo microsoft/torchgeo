@@ -353,7 +353,7 @@ class GeoDataModule(BaseDataModule):
         """
         # Non-Tensor values cannot be moved to a device
         del batch['crs']
-        del batch['bbox']
+        del batch['geo_bbox']
 
         batch = super().transfer_batch_to_device(batch, device, dataloader_idx)
         return batch

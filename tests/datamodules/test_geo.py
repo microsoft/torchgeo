@@ -32,7 +32,7 @@ class CustomGeoDataset(GeoDataset):
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         image = torch.arange(3 * 2 * 2).view(3, 2, 2)
-        return {'image': image, 'crs': CRS.from_epsg(4326), 'bbox': query}
+        return {'image': image, 'crs': CRS.from_epsg(4326), 'geo_bbox': query}
 
     def plot(self, *args: Any, **kwargs: Any) -> Figure:
         return plt.figure()

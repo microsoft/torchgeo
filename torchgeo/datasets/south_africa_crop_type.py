@@ -228,7 +228,7 @@ class SouthAfricaCropType(RasterDataset):
 
         sample = {
             'crs': self.crs,
-            'bbox': query,
+            'geo_bbox': query,
             'image': image.float(),
             'mask': mask.long(),
         }

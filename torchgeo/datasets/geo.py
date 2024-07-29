@@ -546,7 +546,7 @@ class RasterDataset(GeoDataset):
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)
 
-        sample = {'crs': self.crs, 'bbox': query}
+        sample = {'crs': self.crs, 'geo_bbox': query}
 
         data = data.to(self.dtype)
         if self.is_image:
@@ -776,7 +776,7 @@ class VectorDataset(GeoDataset):
         masks = array_to_tensor(masks)
 
         masks = masks.to(self.dtype)
-        sample = {'mask': masks, 'crs': self.crs, 'bbox': query}
+        sample = {'mask': masks, 'crs': self.crs, 'geo_bbox': query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)

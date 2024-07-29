@@ -328,7 +328,7 @@ class OpenBuildings(VectorDataset):
         else:
             masks = torch.zeros(size=(1, round(height), round(width)))
 
-        sample = {'mask': masks, 'crs': self.crs, 'bbox': query}
+        sample = {'mask': masks, 'crs': self.crs, 'geo_bbox': query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)

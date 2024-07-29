@@ -268,7 +268,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         mask = self._merge_files(mask_filepaths, query, self.band_indexes)
         sample = {
             'crs': self.crs,
-            'bbox': query,
+            'geo_bbox': query,
             'image': img.float(),
             'mask': mask.long(),
         }

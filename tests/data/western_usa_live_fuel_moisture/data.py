@@ -172,7 +172,7 @@ STAC = {
             'type': 'text/csv',
         },
     },
-    'bbox': [-115.8855556, 42.44111111, -115.8855556, 42.44111111],
+    'geo_bbox': [-115.8855556, 42.44111111, -115.8855556, 42.44111111],
     'collection': 'su_sar_moisture_content',
     'geometry': {'coordinates': [-115.8855556, 42.44111111], 'type': 'Point'},
     'id': 'su_sar_moisture_content_0001',

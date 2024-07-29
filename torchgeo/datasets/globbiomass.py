@@ -207,7 +207,7 @@ class GlobBiomass(RasterDataset):
 
         mask = torch.cat((mask, std_err_mask), dim=0)
 
-        sample = {'mask': mask, 'crs': self.crs, 'bbox': query}
+        sample = {'mask': mask, 'crs': self.crs, 'geo_bbox': query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
