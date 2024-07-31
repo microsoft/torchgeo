@@ -4,11 +4,8 @@
 """SpaceNet datasets."""
 
 import abc
-import copy
 import glob
-import math
 import os
-import re
 from collections.abc import Callable
 from typing import Any
 
@@ -399,9 +396,6 @@ class SpaceNet1(SpaceNet):
         },
     }
 
-    imagery = {'rgb': 'RGB.tif', '8band': '8Band.tif'}
-    chip_size = {'rgb': (406, 438), '8band': (101, 110)}
-
 
 class SpaceNet2(SpaceNet):
     r"""SpaceNet 2: Building Detection v2 Dataset.
@@ -495,20 +489,6 @@ class SpaceNet2(SpaceNet):
         },
     }
 
-    imagery = {
-        'MS': 'MS.tif',
-        'PAN': 'PAN.tif',
-        'PS-MS': 'PS-MS.tif',
-        'PS-RGB': 'PS-RGB.tif',
-    }
-    chip_size = {
-        'MS': (162, 162),
-        'PAN': (650, 650),
-        'PS-MS': (650, 650),
-        'PS-RGB': (650, 650),
-    }
-    label_glob = 'label.geojson'
-
 
 class SpaceNet3(SpaceNet):
     r"""SpaceNet 3: Road Network Detection.
@@ -577,10 +557,22 @@ class SpaceNet3(SpaceNet):
     dataset_id = 'SN3_roads'
     tarballs = {
         'train': {
-            2: ['SN3_roads_train_AOI_2_Vegas.tar.gz', 'SN3_roads_train_AOI_2_Vegas_geojson_roads_speed.tar.gz'],
-            3: ['SN3_roads_train_AOI_3_Paris.tar.gz', 'SN3_roads_train_AOI_3_Paris_geojson_roads_speed.tar.gz'],
-            4: ['SN3_roads_train_AOI_4_Shanghai.tar.gz', 'SN3_roads_train_AOI_4_Shanghai_geojson_roads_speed.tar.gz'],
-            5: ['SN3_roads_train_AOI_5_Khartoum.tar.gz', 'SN3_roads_train_AOI_5_Khartoum_geojson_roads_speed.tar.gz'],
+            2: [
+                'SN3_roads_train_AOI_2_Vegas.tar.gz',
+                'SN3_roads_train_AOI_2_Vegas_geojson_roads_speed.tar.gz',
+            ],
+            3: [
+                'SN3_roads_train_AOI_3_Paris.tar.gz',
+                'SN3_roads_train_AOI_3_Paris_geojson_roads_speed.tar.gz',
+            ],
+            4: [
+                'SN3_roads_train_AOI_4_Shanghai.tar.gz',
+                'SN3_roads_train_AOI_4_Shanghai_geojson_roads_speed.tar.gz',
+            ],
+            5: [
+                'SN3_roads_train_AOI_5_Khartoum.tar.gz',
+                'SN3_roads_train_AOI_5_Khartoum_geojson_roads_speed.tar.gz',
+            ],
         },
         'test': {
             2: ['SN3_roads_test_public_AOI_2_Vegas.tar.gz'],
@@ -603,189 +595,6 @@ class SpaceNet3(SpaceNet):
             5: ['f367c79fa0fc1d38e63a0fdd065ed957'],
         },
     }
-
-    imagery = {
-        'MS': 'MS.tif',
-        'PAN': 'PAN.tif',
-        'PS-MS': 'PS-MS.tif',
-        'PS-RGB': 'PS-RGB.tif',
-    }
-    chip_size = {
-        'MS': (325, 325),
-        'PAN': (1300, 1300),
-        'PS-MS': (1300, 1300),
-        'PS-RGB': (1300, 1300),
-    }
-    label_glob = 'labels.geojson'
-
-    def __init__(
-        self,
-        root: Path = 'data',
-        image: str = 'PS-RGB',
-        speed_mask: bool | None = False,
-        collections: list[str] = [],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-        download: bool = False,
-        checksum: bool = False,
-    ) -> None:
-        """Initialize a new SpaceNet 3 Dataset instance.
-
-        Args:
-            root: root directory where dataset can be found
-            image: image selection which must be in ["MS", "PAN", "PS-MS", "PS-RGB"]
-            speed_mask: use multi-class speed mask (created by binning roads at
-                10 mph increments) as label if true, else use binary mask
-            collections: collection selection which must be a subset of:
-                         [sn3_AOI_2_Vegas, sn3_AOI_3_Paris, sn3_AOI_4_Shanghai,
-                         sn3_AOI_5_Khartoum]. If unspecified, all collections will be
-                         used.
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
-            download: if True, download dataset and store it in the root directory.
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
-        """
-        assert image in {'MS', 'PAN', 'PS-MS', 'PS-RGB'}
-        self.speed_mask = speed_mask
-        super().__init__(root, image, collections, transforms, download, checksum)
-
-    def _load_mask(
-        self, path: Path, tfm: Affine, raster_crs: CRS, shape: tuple[int, int]
-    ) -> Tensor:
-        """Rasterizes the dataset's labels (in geojson format).
-
-        Args:
-            path: path to the label
-            tfm: transform of corresponding image
-            raster_crs: CRS of raster file
-            shape: shape of corresponding image
-
-        Returns:
-            Tensor: label tensor
-        """
-        min_speed_bin = 1
-        max_speed_bin = 65
-        speed_arr_bin = np.arange(min_speed_bin, max_speed_bin + 1)
-        bin_size_mph = 10.0
-        speed_cls_arr: np.typing.NDArray[np.int_] = np.array(
-            [math.ceil(s / bin_size_mph) for s in speed_arr_bin]
-        )
-
-        try:
-            with fiona.open(path) as src:
-                vector_crs = CRS(src.crs)
-                labels = []
-
-                for feature in src:
-                    if raster_crs != vector_crs:
-                        geom = transform_geom(
-                            vector_crs.to_string(),
-                            raster_crs.to_string(),
-                            feature['geometry'],
-                        )
-                    else:
-                        geom = feature['geometry']
-
-                    if self.speed_mask:
-                        val = speed_cls_arr[
-                            int(feature['properties']['inferred_speed_mph']) - 1
-                        ]
-                    else:
-                        val = 1
-
-                    labels.append((geom, val))
-
-        except FionaValueError:
-            labels = []
-
-        if not labels:
-            mask_data = np.zeros(shape=shape)
-        else:
-            mask_data = rasterize(
-                labels,
-                out_shape=shape,
-                fill=0,  # nodata value
-                transform=tfm,
-                all_touched=False,
-                dtype=np.uint8,
-            )
-
-        mask = torch.from_numpy(mask_data).long()
-        return mask
-
-    def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
-    ) -> Figure:
-        """Plot a sample from the dataset.
-
-        Args:
-            sample: a sample returned by :meth:`SpaceNet.__getitem__`
-            show_titles: flag indicating whether to show titles above each panel
-            suptitle: optional string to use as a suptitle
-
-        Returns:
-            a matplotlib Figure with the rendered sample
-
-        """
-        # image can be 1 channel or >3 channels
-        if sample['image'].shape[0] == 1:
-            image = np.rollaxis(sample['image'].numpy(), 0, 3)
-        else:
-            image = np.rollaxis(sample['image'][:3].numpy(), 0, 3)
-        image = percentile_normalization(image, axis=(0, 1))
-
-        ncols = 1
-        show_mask = 'mask' in sample
-        show_predictions = 'prediction' in sample
-
-        if show_mask:
-            mask = sample['mask'].numpy()
-            ncols += 1
-
-        if show_predictions:
-            prediction = sample['prediction'].numpy()
-            ncols += 1
-
-        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))
-        if not isinstance(axs, np.ndarray):
-            axs = [axs]
-        axs[0].imshow(image)
-        axs[0].axis('off')
-        if show_titles:
-            axs[0].set_title('Image')
-
-        if show_mask:
-            if self.speed_mask:
-                cmap = copy.copy(plt.get_cmap('autumn_r'))
-                cmap.set_under(color='black')
-                axs[1].imshow(mask, vmin=0.1, vmax=7, cmap=cmap, interpolation='none')
-            else:
-                axs[1].imshow(mask, cmap='Greys_r', interpolation='none')
-            axs[1].axis('off')
-            if show_titles:
-                axs[1].set_title('Label')
-
-        if show_predictions:
-            if self.speed_mask:
-                cmap = copy.copy(plt.get_cmap('autumn_r'))
-                cmap.set_under(color='black')
-                axs[2].imshow(
-                    prediction, vmin=0.1, vmax=7, cmap=cmap, interpolation='none'
-                )
-            else:
-                axs[2].imshow(prediction, cmap='Greys_r', interpolation='none')
-            axs[2].axis('off')
-            if show_titles:
-                axs[2].set_title('Prediction')
-
-        if suptitle is not None:
-            plt.suptitle(suptitle)
-        return fig
 
 
 class SpaceNet4(SpaceNet):
@@ -819,131 +628,79 @@ class SpaceNet4(SpaceNet):
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/1903.12239
-
     """
 
-    collection_md5_dict = {'sn4_AOI_6_Atlanta': 'c597d639cba5257927a97e3eff07b753'}
-
-    imagery = {'MS': 'MS.tif', 'PAN': 'PAN.tif', 'PS-RGBNIR': 'PS-RGBNIR.tif'}
-    chip_size = {'MS': (225, 225), 'PAN': (900, 900), 'PS-RGBNIR': (900, 900)}
-    label_glob = 'labels.geojson'
-
-    angle_catalog_map = {
-        'nadir': [
-            '1030010003D22F00',
-            '10300100023BC100',
-            '1030010003993E00',
-            '1030010003CAF100',
-            '1030010002B7D800',
-            '10300100039AB000',
-            '1030010002649200',
-            '1030010003C92000',
-            '1030010003127500',
-            '103001000352C200',
-            '103001000307D800',
-        ],
-        'off-nadir': [
-            '1030010003472200',
-            '1030010003315300',
-            '10300100036D5200',
-            '103001000392F600',
-            '1030010003697400',
-            '1030010003895500',
-            '1030010003832800',
-        ],
-        'very-off-nadir': [
-            '10300100035D1B00',
-            '1030010003CCD700',
-            '1030010003713C00',
-            '10300100033C5200',
-            '1030010003492700',
-            '10300100039E6200',
-            '1030010003BDDC00',
-            '1030010003CD4300',
-            '1030010003193D00',
-        ],
+    dataset_id = 'SN4_buildings'
+    tarballs = {
+        'train': {
+            6: [
+                'Atlanta_nadir7_catid_1030010003D22F00.tar.gz',
+                'Atlanta_nadir8_catid_10300100023BC100.tar.gz',
+                'Atlanta_nadir10_catid_1030010003993E00.tar.gz',
+                'Atlanta_nadir10_catid_1030010003CAF100.tar.gz',
+                'Atlanta_nadir13_catid_1030010002B7D800.tar.gz',
+                'Atlanta_nadir14_catid_10300100039AB000.tar.gz',
+                'Atlanta_nadir16_catid_1030010002649200.tar.gz',
+                'Atlanta_nadir19_catid_1030010003C92000.tar.gz',
+                'Atlanta_nadir21_catid_1030010003127500.tar.gz',
+                'Atlanta_nadir23_catid_103001000352C200.tar.gz',
+                'Atlanta_nadir25_catid_103001000307D800.tar.gz',
+                'Atlanta_nadir27_catid_1030010003472200.tar.gz',
+                'Atlanta_nadir29_catid_1030010003315300.tar.gz',
+                'Atlanta_nadir30_catid_10300100036D5200.tar.gz',
+                'Atlanta_nadir32_catid_103001000392F600.tar.gz',
+                'Atlanta_nadir34_catid_1030010003697400.tar.gz',
+                'Atlanta_nadir36_catid_1030010003895500.tar.gz',
+                'Atlanta_nadir39_catid_1030010003832800.tar.gz',
+                'Atlanta_nadir42_catid_10300100035D1B00.tar.gz',
+                'Atlanta_nadir44_catid_1030010003CCD700.tar.gz',
+                'Atlanta_nadir46_catid_1030010003713C00.tar.gz',
+                'Atlanta_nadir47_catid_10300100033C5200.tar.gz',
+                'Atlanta_nadir49_catid_1030010003492700.tar.gz',
+                'Atlanta_nadir50_catid_10300100039E6200.tar.gz',
+                'Atlanta_nadir52_catid_1030010003BDDC00.tar.gz',
+                'Atlanta_nadir53_catid_1030010003193D00.tar.gz',
+                'Atlanta_nadir53_catid_1030010003CD4300.tar.gz',
+                'geojson.tar.gz',
+            ]
+        },
+        'test': {6: ['SN4_buildings_AOI_6_Atlanta_test_public.tar.gz']},
     }
-
-    def __init__(
-        self,
-        root: Path = 'data',
-        image: str = 'PS-RGBNIR',
-        angles: list[str] = [],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-        download: bool = False,
-        checksum: bool = False,
-    ) -> None:
-        """Initialize a new SpaceNet 4 Dataset instance.
-
-        Args:
-            root: root directory where dataset can be found
-            image: image selection which must be in ["MS", "PAN", "PS-RGBNIR"]
-            angles: angle selection which must be in ["nadir", "off-nadir",
-                "very-off-nadir"]
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
-            download: if True, download dataset and store it in the root directory.
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
-        """
-        collections = ['sn4_AOI_6_Atlanta']
-        assert image in {'MS', 'PAN', 'PS-RGBNIR'}
-        self.angles = angles
-        if self.angles:
-            for angle in self.angles:
-                assert angle in self.angle_catalog_map.keys()
-        super().__init__(root, image, collections, transforms, download, checksum)
-
-    def _load_files(self, root: Path) -> list[dict[str, str]]:
-        """Return the paths of the files in the dataset.
-
-        Args:
-            root: root dir of dataset
-
-        Returns:
-            list of dicts containing paths for each pair of image and label
-        """
-        files = []
-        nadir = []
-        offnadir = []
-        veryoffnadir = []
-        images = glob.glob(os.path.join(root, self.collections[0], '*', self.filename))
-        images = sorted(images)
-
-        catalog_id_pattern = re.compile(r'(_[A-Z0-9])\w+$')
-        for imgpath in images:
-            imgdir = os.path.basename(os.path.dirname(imgpath))
-            match = catalog_id_pattern.search(imgdir)
-            assert match is not None, 'Invalid image directory'
-            catalog_id = match.group()[1:]
-
-            lbl_dir = os.path.dirname(imgpath).split('-nadir')[0]
-
-            lbl_path = os.path.join(f'{lbl_dir}-labels', self.label_glob)
-            assert os.path.exists(lbl_path)
-
-            _file = {'image_path': imgpath, 'label_path': lbl_path}
-            if catalog_id in self.angle_catalog_map['very-off-nadir']:
-                veryoffnadir.append(_file)
-            elif catalog_id in self.angle_catalog_map['off-nadir']:
-                offnadir.append(_file)
-            elif catalog_id in self.angle_catalog_map['nadir']:
-                nadir.append(_file)
-
-        angle_file_map = {
-            'nadir': nadir,
-            'off-nadir': offnadir,
-            'very-off-nadir': veryoffnadir,
-        }
-
-        if not self.angles:
-            files.extend(nadir + offnadir + veryoffnadir)
-        else:
-            for angle in self.angles:
-                files.extend(angle_file_map[angle])
-        return files
+    md5s = {
+        'train': {
+            6: [
+                'd41ab6ec087b07e1e046c55d1fa5754b',
+                '72f04a7c0c34dd4595c181ee1ae6cb4c',
+                '89559f42ac11a8de570cef9802a577ad',
+                '5489ac756249c336ea506ef0acb3c09d',
+                'bd9ed231cedd8631683ea51ea0602de1',
+                'c497a8a448ed7ccdf63e7706507c0603',
+                '45d54eeecefdc60aa38320be6f29a17c',
+                '611528c0188bbc7e9cdf98609c6b0c49',
+                '532fbf1ca73d3d2e8b03c585f61b7316',
+                '538f48429b0968b6cfad97eb61fa8de1',
+                '3c48e94bc6d9e66e27c3a9bc8d35d65d',
+                'b78cdf951e7bf4fedbe9259abd1e047a',
+                'f307ce3c623d12d5a2fd5acb1e0607e0',
+                '9a17574332cd5513d68a0bcc9c607bdd',
+                'fe905ca809f7bd2ceef75bde23c326f3',
+                'd9f2e4a5c8462f6f9f7d5c573d9a1dc6',
+                'f9425ff38dc82bf0e8f25a6287ff1ad1',
+                '7a6005d6fd972d5ce04caf9b42b36897',
+                '7c5aa16bb64cacf766cf88f89b3093bd',
+                '8f7e959eb0156ad2dfb0b966a1de06a9',
+                '62c4babcbe70034b7deb7c14d5ff61c2',
+                '8001d75f67534edf6932242324b8c1a7',
+                'bc299cb5de432b5f5a1ce65a3bdb0abc',
+                'd7640eda7c4efaf825665e853037bec9',
+                'd4e1931551e9d3c6fd9bf1d8adfd07a0',
+                'b313e23ead8fe6e2c8671a49f2c9de37',
+                '3bd8f07ad57bff841d0cf91c91c6f5ed',
+                '2556339e26a09e57559452eb240ef29c',
+            ]
+        },
+        'test': {6: ['0ec3874bfc19aed63b33ac47b039aace']},
+    }
 
 
 class SpaceNet5(SpaceNet3):
@@ -1008,56 +765,21 @@ class SpaceNet5(SpaceNet3):
     .. versionadded:: 0.2
     """
 
-    collection_md5_dict = {
-        'sn5_AOI_7_Moscow': 'b18107f878152fe7e75444373c320cba',
-        'sn5_AOI_8_Mumbai': '1f1e2b3c26fbd15bfbcdbb6b02ae051c',
+    dataset_id = 'SN5_roads'
+    tarballs = {
+        'train': {
+            7: ['SN5_roads_train_AOI_7_Moscow.tar.gz'],
+            8: ['SN5_roads_train_AOI_8_Mumbai.tar.gz'],
+        },
+        'test': {9: ['SN5_roads_test_public_AOI_9_San_Juan.tar.gz']},
     }
-
-    imagery = {
-        'MS': 'MS.tif',
-        'PAN': 'PAN.tif',
-        'PS-MS': 'PS-MS.tif',
-        'PS-RGB': 'PS-RGB.tif',
+    md5s = {
+        'train': {
+            7: ['03082d01081a6d8df2bc5a9645148d2a'],
+            8: ['1ee20ba781da6cb7696eef9a95a5bdcc'],
+        },
+        'test': {9: ['fc45afef219dfd3a20f2d4fc597f6882']},
     }
-    chip_size = {
-        'MS': (325, 325),
-        'PAN': (1300, 1300),
-        'PS-MS': (1300, 1300),
-        'PS-RGB': (1300, 1300),
-    }
-    label_glob = 'labels.geojson'
-
-    def __init__(
-        self,
-        root: Path = 'data',
-        image: str = 'PS-RGB',
-        speed_mask: bool | None = False,
-        collections: list[str] = [],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-        download: bool = False,
-        checksum: bool = False,
-    ) -> None:
-        """Initialize a new SpaceNet 5 Dataset instance.
-
-        Args:
-            root: root directory where dataset can be found
-            image: image selection which must be in ["MS", "PAN", "PS-MS", "PS-RGB"]
-            speed_mask: use multi-class speed mask (created by binning roads at
-                10 mph increments) as label if true, else use binary mask
-            collections: collection selection which must be a subset of:
-                         [sn5_AOI_7_Moscow, sn5_AOI_8_Mumbai]. If unspecified, all
-                         collections will be used.
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
-            download: if True, download dataset and store it in the root directory.
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
-        """
-        super().__init__(
-            root, image, speed_mask, collections, transforms, download, checksum
-        )
 
 
 class SpaceNet6(SpaceNet):
@@ -1130,53 +852,15 @@ class SpaceNet6(SpaceNet):
     .. versionadded:: 0.4
     """
 
-    dataset_id = 'spacenet6'
-    collections = ['sn6_AOI_11_Rotterdam']
-    # This is actually the metadata hash
-    collection_md5_dict = {'sn6_AOI_11_Rotterdam': '66f7312218fec67a1e0b3b02b22c95cc'}
-    imagery = {
-        'PAN': 'PAN.tif',
-        'RGBNIR': 'RGBNIR.tif',
-        'PS-RGB': 'PS-RGB.tif',
-        'PS-RGBNIR': 'PS-RGBNIR.tif',
-        'SAR-Intensity': 'SAR-Intensity.tif',
+    dataset_id = 'SN6_buildings'
+    tarballs = {
+        'train': {11: ['SN6_buildings_AOI_11_Rotterdam_train.tar.gz']},
+        'test': {11: ['SN6_buildings_AOI_11_Rotterdam_test_public.tar.gz']},
     }
-    chip_size = {
-        'PAN': (900, 900),
-        'RGBNIR': (450, 450),
-        'PS-RGB': (900, 900),
-        'PS-RGBNIR': (900, 900),
-        'SAR-Intensity': (900, 900),
+    md5s = {
+        'train': {11: ['10ca26d2287716e3b6ef0cf0ad9f946e']},
+        'test': {11: ['a07823a5e536feeb8bb6b6f0cb43cf05']},
     }
-    label_glob = 'labels.geojson'
-
-    def __init__(
-        self,
-        root: Path = 'data',
-        image: str = 'PS-RGB',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-        download: bool = False,
-    ) -> None:
-        """Initialize a new SpaceNet 6 Dataset instance.
-
-        Args:
-            root: root directory where dataset can be found
-            image: image selection which must be in ["PAN", "RGBNIR",
-                "PS-RGB", "PS-RGBNIR", "SAR-Intensity"]
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
-            download: if True, download dataset and store it in the root directory.
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
-        """
-        self.root = root
-        self.image = image  # For testing
-
-        self.filename = self.imagery[image]
-        self.transforms = transforms
-
-        self.files = self._load_files(os.path.join(root, self.dataset_id))
 
 
 class SpaceNet7(SpaceNet):
@@ -1215,100 +899,14 @@ class SpaceNet7(SpaceNet):
     .. versionadded:: 0.2
     """
 
-    collection_md5_dict = {
-        'sn7_train_source': '9f8cc109d744537d087bd6ff33132340',
-        'sn7_train_labels': '16f873e3f0f914d95a916fb39b5111b5',
-        'sn7_test_source': 'e97914f58e962bba3e898f08a14f83b2',
+    dataset_id = 'SN7_buildings'
+    tarballs = {
+        'train': {0: ['SN7_buildings_train.tar.gz', 'SN7_buildings_train_csvs.tar.gz']},
+        'test': {0: ['SN7_buildings_test_public.tar.gz']},
     }
-
-    imagery = {'img': 'mosaic.tif'}
-    chip_size = {'img': (1023, 1023)}
-
-    label_glob = 'labels.geojson'
-
-    def __init__(
-        self,
-        root: Path = 'data',
-        split: str = 'train',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-        download: bool = False,
-        checksum: bool = False,
-    ) -> None:
-        """Initialize a new SpaceNet 7 Dataset instance.
-
-        Args:
-            root: root directory where dataset can be found
-            split: split selection which must be in ["train", "test"]
-            transforms: a function/transform that takes input sample and its target as
-                entry and returns a transformed version
-            download: if True, download dataset and store it in the root directory.
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
-
-        Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
-        """
-        self.root = root
-        self.split = split
-        self.filename = self.imagery['img']
-        self.transforms = transforms
-        self.checksum = checksum
-
-        assert split in {'train', 'test'}, 'Invalid split'
-
-        if split == 'test':
-            self.collections = ['sn7_test_source']
-        else:
-            self.collections = ['sn7_train_source', 'sn7_train_labels']
-
-        self.files = self._load_files(root)
-
-    def _load_files(self, root: Path) -> list[dict[str, str]]:
-        """Return the paths of the files in the dataset.
-
-        Args:
-            root: root dir of dataset
-
-        Returns:
-            list of dicts containing paths for images and labels (if train split)
-        """
-        files = []
-        if self.split == 'train':
-            imgs = sorted(
-                glob.glob(os.path.join(root, 'sn7_train_source', '*', self.filename))
-            )
-            lbls = sorted(
-                glob.glob(os.path.join(root, 'sn7_train_labels', '*', self.label_glob))
-            )
-            for img, lbl in zip(imgs, lbls):
-                files.append({'image_path': img, 'label_path': lbl})
-        else:
-            imgs = sorted(
-                glob.glob(os.path.join(root, 'sn7_test_source', '*', self.filename))
-            )
-            for img in imgs:
-                files.append({'image_path': img})
-        return files
-
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
-        """Return an index within the dataset.
-
-        Args:
-            index: index to return
-
-        Returns:
-            data at that index
-        """
-        files = self.files[index]
-        img, tfm, raster_crs = self._load_image(files['image_path'])
-        h, w = img.shape[1:]
-
-        ch, cw = self.chip_size['img']
-        sample = {'image': img[:, :ch, :cw]}
-        if self.split == 'train':
-            mask = self._load_mask(files['label_path'], tfm, raster_crs, (h, w))
-            sample['mask'] = mask[:ch, :cw]
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
+    md5s = {
+        'train': {
+            0: ['6eda13b9c28f6f5cdf00a7e8e218c1b1', '0266ffea18950b1472cedafa8bead7bb']
+        },
+        'test': {0: ['b3bde95a0f8f32f3bfeba49464b9bc97']},
+    }
