@@ -27,6 +27,34 @@ class MMEarth(NonGeoDataset):
     * MMEarth64: 64x64 px, 1.2 M tiles, 162 GB
     * MMEarth100k: 128x128 px, 100 K tiles, 48 GB
 
+    The dataset consists of 12 modalities:
+
+    * Aster: elevation and slope
+    * Biome: 14 terrestrial ecosystem categories
+    * ETH Canopy Height: Canopy height and standard deviation
+    * Dynamic World: 9 landcover categories
+    * Ecoregion: 846 ecoregion categories
+    * era5: Climate reanalysis data for temperature mean, min, and max of [year, month, previous month]
+        and precipitation total of [year, month, previous month] (counted as separate modalities)
+    * ESA World Cover: 11 landcover categories
+    * Sentinel-1: VV, VH, HV, HH for ascending/descending orbit
+    * Sentinel-2: multi-spectral B1-B12 for L1C/L2A products
+    * Geolocation: cyclic encoding of latitude and longitude
+    * Date: cyclic encoding of month
+
+    Additionally, there are three masks available as modalities:
+
+    * Sentinel-2 Cloudmask: Sentinel-2 cloud mask
+    * Sentinel-2 Cloud probability: Sentinel-2 cloud probability
+    * Sentinel-2 SCL: Sentinel-2 scene classification
+
+    that are synchronized across tiles.
+
+    Dataset format:
+
+    * Dataset in single HDF5 file
+    * Json files for band statistics, splits, and tile information
+
     For additional information, as well as bash scripts to
     download the data, please refer to the
     `official repository <https://github.com/vishalned/MMEarth-data?tab=readme-ov-file#data-download>`_.
@@ -160,7 +188,7 @@ class MMEarth(NonGeoDataset):
             root: root directory where dataset can be found
             ds_version: one of "MMEarth", "MMEarth64", or "MMEarth100k"
             modalities: list of modalities to load
-            modality_bands: dictionary of modality bands
+            modality_bands: dictionary of modality bands, see `all_modality_bands`
             split: one of "train", "val", or "test"
             normalization_mode: one of "z-score" or "min-max"
             transforms: a function/transform that takes input sample dictionary
@@ -178,12 +206,14 @@ class MMEarth(NonGeoDataset):
         assert (
             split in self.splits
         ), f'Invalid split: {split}, please choose from {self.splits}'
+
+        self._validate_modalities(modalities)
         if modality_bands is None:
             modality_bands = {
                 modality: self.all_modality_bands[modality] for modality in modalities
             }
+        self._validate_modality_bands(modality_bands)
 
-        self._validate_modalities(modalities, modality_bands)
         self.modalities = modalities
         self.modality_bands = modality_bands
 
@@ -265,26 +295,34 @@ class MMEarth(NonGeoDataset):
 
         return cast(dict[str, dict[str, str]], tile_info)
 
-    def _validate_modalities(
-        self, modalities: Sequence[str], modality_bands: dict[str, list[str]]
-    ) -> None:
+    def _validate_modalities(self, modalities: Sequence[str]) -> None:
         """Validate list of modalities.
 
         Args:
             modalities: user-provided sequence of modalities to load
-            modality_bands: user-provided dictionary of modality bands
 
         Raises:
             AssertionError: if ``modalities`` is not a sequence
             ValueError: if an invalid modality name is provided
-            ValueError: if modality bands are invalid
         """
         # validate modalities
-        assert isinstance(modalities, Sequence), "'bands' must be a sequence"
+        assert isinstance(modalities, Sequence), "'modalities' must be a sequence"
         for modality in modalities:
             if modality not in self.all_modalities:
                 raise ValueError(f"'{modality}' is an invalid modality name.")
 
+    def _validate_modality_bands(self, modality_bands: dict[str, list[str]]) -> None:
+        """Validate modality bands.
+
+        Args:
+            modality_bands: user-provided dictionary of modality bands
+
+        Raises:
+            AssertionError: if ``modality_bands`` is not a dictionary
+            ValueError: if an invalid modality name is provided
+            ValueError: if modality bands are invalid
+        """
+        assert isinstance(modality_bands, dict), "'modality_bands' must be a dictionary"
         # validate modality bands
         for key, vals in modality_bands.items():
             if key not in self.all_modalities:
@@ -405,8 +443,6 @@ class MMEarth(NonGeoDataset):
             'sentinel2_scl',
         ]:
             tensor = torch.from_numpy(data.astype(np.int32)).long()
-        else:
-            tensor = torch.from_numpy(data).float()
 
         # TODO: tensor might still contain nans, how to handle this?
         return tensor
@@ -422,9 +458,6 @@ class MMEarth(NonGeoDataset):
 
         Returns:
             normalized data
-
-        Raises:
-            ValueError: if an invalid normalization mode is provided
         """
         # the modality is called sentinel2 but has different bands stats for l1c and l2a
         if 'sentinel2' in modality:
@@ -454,10 +487,6 @@ class MMEarth(NonGeoDataset):
                 )
             else:
                 data = (data - min_val) / (max_val - min_val)
-        else:
-            raise ValueError(
-                f'Invalid normalization mode: {self.normalization_mode}, please choose from {self.norm_modes}'
-            )
 
         return data
 

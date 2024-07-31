@@ -329,6 +329,11 @@ Million-AID
 
 .. autoclass:: MillionAID
 
+MMEarth
+^^^^^^^^
+
+.. autoclass:: MMEarth
+
 NASA Marine Debris
 ^^^^^^^^^^^^^^^^^^
 

@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
 
-from torchgeo.datasets import MMEarth
+from torchgeo.datasets import DatasetNotFoundError, MMEarth
 
 pytest.importorskip('h5py', minversion='3.6')
 
@@ -23,8 +23,10 @@ data_dir_dict = {
 
 class TestMMEarth:
     @pytest.fixture(
-        params=list(product(['train', 'val', 'test'], ['MMEarth']))
-    )  # , 'MMEarth64', 'MMEarth100k'])))
+        params=list(
+            product(['train', 'val', 'test'], ['MMEarth', 'MMEarth64', 'MMEarth100k'])
+        )
+    )
     def dataset(self, tmp_path: Path, request: SubRequest) -> MMEarth:
         root = tmp_path
         split, version = request.param
@@ -58,6 +60,37 @@ class TestMMEarth:
             else:
                 assert modality not in x
 
+    def test_dataset_not_found(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            MMEarth(tmp_path)
+
+    def test_invalid_modalities(self, dataset: MMEarth) -> None:
+        with pytest.raises(ValueError, match='is an invalid modality name'):
+            MMEarth(
+                dataset.root,
+                split=dataset.split,
+                ds_version=dataset.ds_version,
+                modalities=['invalid'],
+            )
+
+    def test_invalid_modality_bands_modality_name(self, dataset: MMEarth) -> None:
+        with pytest.raises(ValueError, match='is an invalid modality name'):
+            MMEarth(
+                dataset.root,
+                split=dataset.split,
+                ds_version=dataset.ds_version,
+                modality_bands={'invalid': ['invalid']},
+            )
+
+    def test_invalid_modality_bands(self, dataset: MMEarth) -> None:
+        with pytest.raises(ValueError, match='is an invalid band name for modality'):
+            MMEarth(
+                dataset.root,
+                split=dataset.split,
+                ds_version=dataset.ds_version,
+                modality_bands={'sentinel2': ['invalid']},
+            )
+
     def test_subset_modaliy_bands(self, dataset: MMEarth) -> None:
         modality_bands = {'sentinel2': ['B2', 'B3']}
         dataset = MMEarth(
@@ -89,3 +122,6 @@ class TestMMEarth:
         )
         x = dataset[0]
         assert isinstance(x, dict)
+
+    def test_len(self, dataset: MMEarth) -> None:
+        assert len(dataset) >= 2
