@@ -9,6 +9,7 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import (
@@ -19,15 +20,25 @@ from torchgeo.datasets import (
     SouthAfricaCropType,
     UnionDataset,
 )
+from torchgeo.datasets.utils import Executable
 
 
 class TestSouthAfricaCropType:
     @pytest.fixture(params=[SouthAfricaCropType.s1_bands, SouthAfricaCropType.s2_bands])
-    def dataset(self, request: SubRequest) -> SouthAfricaCropType:
-        path = os.path.join('tests', 'data', 'south_africa_crop_type')
+    def dataset(
+        self,
+        request: SubRequest,
+        azcopy: Executable,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+    ) -> SouthAfricaCropType:
+        url = os.path.join('tests', 'data', 'south_africa_crop_type')
+        monkeypatch.setattr(SouthAfricaCropType, 'url', url)
         bands = request.param
         transforms = nn.Identity()
-        return SouthAfricaCropType(path, bands=bands, transforms=transforms)
+        return SouthAfricaCropType(
+            tmp_path, bands=bands, transforms=transforms, download=True
+        )
 
     def test_getitem(self, dataset: SouthAfricaCropType) -> None:
         x = dataset[dataset.bounds]

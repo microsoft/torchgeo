@@ -306,7 +306,7 @@ class DFC2022(NonGeoDataset):
         ncols = 2
         image = sample['image'][:3]
         image = image.to(torch.uint8)
-        image = image.permute(1, 2, 0).numpy()
+        image_arr = image.permute(1, 2, 0).numpy()
 
         dem = sample['image'][-1].numpy()
         dem = percentile_normalization(dem, lower=0, upper=100, axis=(0, 1))
@@ -325,7 +325,7 @@ class DFC2022(NonGeoDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
 
-        axs[0].imshow(image)
+        axs[0].imshow(image_arr)
         axs[0].axis('off')
         axs[1].imshow(dem)
         axs[1].axis('off')
