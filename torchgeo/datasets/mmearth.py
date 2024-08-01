@@ -176,7 +176,7 @@ class MMEarth(NonGeoDataset):
         self,
         root: Path = 'data',
         ds_version: str = 'MMEarth',
-        modalities: list[str] = all_modalities,
+        modalities: Sequence[str] = all_modalities,
         modality_bands: dict[str, list[str]] | None = None,
         split: str = 'train',
         normalization_mode: str = 'z-score',
@@ -234,7 +234,7 @@ class MMEarth(NonGeoDataset):
         self.band_stats = self._load_normalization_stats()
         self.tile_info = self._load_tile_info()
 
-    def _verify(self):
+    def _verify(self) -> None:
         """Verify the dataset.
 
         Raises:
@@ -265,7 +265,7 @@ class MMEarth(NonGeoDataset):
                 self.root, self.filenames[self.ds_version], self.splits_filename
             )
         ) as f:
-            split_indices = json.load(f)
+            split_indices: dict[str, list[int]] = json.load(f)
 
         return split_indices[self.split]
 
@@ -336,6 +336,14 @@ class MMEarth(NonGeoDataset):
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return a sample from the dataset.
 
+        In addition to the modalities, the sample contains the following raw metadata:
+
+        * lat: latitude
+        * lon: longitude
+        * date: date
+        * crs: coordinate reference system
+        * tile_id: tile identifier
+
         Args:
             index: index to return
 
@@ -355,16 +363,18 @@ class MMEarth(NonGeoDataset):
             'r',
         ) as f:
             name = f['metadata'][ds_index][0].decode('utf-8')
-            l2a = self.tile_info[name]['S2_type'] == 'l2a'
+            tile_info = self.tile_info[name]
+            l2a = tile_info['S2_type'] == 'l2a'
             for modality in self.modalities:
                 data = f[modality][ds_index][:]
                 sample[modality] = self._process_modality(data, modality, l2a)
 
-            # add additional info regardless of modality choice
-            sample['lat'] = torch.from_numpy(f['lat'][ds_index][:])
-            sample['lon'] = torch.from_numpy(f['lon'][ds_index][:])
-            sample['month'] = torch.from_numpy(f['month'][ds_index][:])
-            sample['id'] = name
+            # add additional metadata to the sampl3
+            sample['lat'] = tile_info['lat']
+            sample['lon'] = tile_info['lon']
+            sample['date'] = tile_info['S2_DATE']
+            sample['crs'] = tile_info['CRS']
+            sample['tile_id'] = name
 
         if self.transforms is not None:
             sample = self.transforms(sample)
