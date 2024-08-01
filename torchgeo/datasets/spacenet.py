@@ -124,32 +124,10 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         self.checksum = checksum
 
         assert self.split in {'train', 'test'}
-        assert set(self.aois) <= set(self.valid_aois)
-        assert self.image in self.valid_products
+        assert set(self.aois) <= set(self.valid_aois[split])
+        assert self.image in self.valid_images[split]
 
         self._verify()
-
-        self.files = self._list_files(root)
-
-    def _list_files(self, root: Path) -> list[dict[str, str]]:
-        """Return the paths of the files in the dataset.
-
-        Args:
-            root: root dir of dataset
-
-        Returns:
-            list of dicts containing paths for each pair of image and label
-        """
-        files = []
-        for collection in self.collections:
-            images = glob.glob(os.path.join(root, collection, '*', self.filename))
-            images = sorted(images)
-            for imgpath in images:
-                lbl_path = os.path.join(
-                    f'{os.path.dirname(imgpath)}-labels', self.label_glob
-                )
-                files.append({'image_path': imgpath, 'label_path': lbl_path})
-        return files
 
     def _load_image(self, path: Path) -> tuple[Tensor, Affine, CRS]:
         """Load a single image.
@@ -243,12 +221,34 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         return sample
 
+    def _list_files(self, aoi: int) -> list[str]:
+        """List all files in a particular AOI.
+
+        Args:
+            aoi: Area of interest.
+
+        Returns:
+            A list of files.
+        """
+        product_glob = os.path.join(
+            self.root, self.dataset_id, self.split, self.directory_glob, '*.tif'
+        )
+        kwargs = {}
+        if '{aoi}' in self.directory_glob:
+            kwargs['aoi'] = aoi
+        image_glob = product_glob.format(product=self.image, **kwargs)
+        print(image_glob)
+        return sorted(glob.glob(image_glob, recursive=True))
+
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
+        self.files = []
         root = os.path.join(self.root, self.dataset_id, self.split)
         for aoi in self.aois:
             # Check if the extracted files already exist
-            if glob.glob(os.path.join(root, '**.tif'), recursive=True):
+            files = self._list_files(aoi)
+            if files:
+                self.files.extend(files)
                 continue
 
             # Check if the tarball has already been downloaded
@@ -270,6 +270,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
                     os.path.join(root, tarball), md5 if self.checksum else None
                 )
                 extract_archive(os.path.join(root, tarball), root)
+                self.files.extend(self._list_files(aoi))
 
     def plot(
         self,
