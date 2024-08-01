@@ -60,7 +60,8 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         6: 'Atlanta',
         7: 'Moscow',
         8: 'Mumbai',
-        9: 'San_Juan',
+        9: 'San Juan',
+        10: 'Dar Es Salaam',
         11: 'Rotterdam',
     }
 
@@ -129,6 +130,14 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         self._verify()
 
+    def __len__(self) -> int:
+        """Return the number of samples in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return len(self.files)
+
     def _load_image(self, path: Path) -> tuple[Tensor, Affine, CRS]:
         """Load a single image.
 
@@ -191,14 +200,6 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         return mask
 
-    def __len__(self) -> int:
-        """Return the number of samples in the dataset.
-
-        Returns:
-            length of the dataset
-        """
-        return len(self.files)
-
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
@@ -237,7 +238,6 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         if '{aoi}' in self.directory_glob:
             kwargs['aoi'] = aoi
         image_glob = product_glob.format(product=self.image, **kwargs)
-        print(image_glob)
         return sorted(glob.glob(image_glob, recursive=True))
 
     def _verify(self) -> None:
@@ -932,3 +932,41 @@ class SpaceNet7(SpaceNet):
     }
     valid_aois = {'train': [0], 'test': [0]}
     valid_images = {'train': ['images', 'images_masked'], 'test': ['images_masked']}
+
+
+class SpaceNet8(SpaceNet):
+    """SpaceNet8: Flood Detection Challenge Using Multiclass Segmentation.
+
+    `SpaceNet 8 <https://spacenet.ai/sn8-challenge/>`_ is a dataset focusing on
+    infrastructure and flood mapping related to hurricanes and heavy rains that cause
+    route obstructions and significant damage.
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://openaccess.thecvf.com/content/CVPR2022W/EarthVision/html/Hansch_SpaceNet_8_-_The_Detection_of_Flooded_Roads_and_Buildings_CVPRW_2022_paper.html
+
+    .. versionadded:: 0.6
+    """
+
+    directory_glob = '{product}'
+    dataset_id = 'SN8_floods'
+    tarballs = {
+        'train': {
+            0: [
+                'Germany_Training_Public.tar.gz',
+                'Louisiana-East_Training_Public.tar.gz',
+            ]
+        },
+        'test': {0: ['Louisiana-West_Test_Public.tar.gz']},
+    }
+    md5s = {
+        'train': {
+            0: ['81383a9050b93e8f70c8557d4568e8a2', 'fa40ae3cf6ac212c90073bf93d70bd95']
+        },
+        'test': {0: ['d41d8cd98f00b204e9800998ecf8427e']},
+    }
+    valid_aois = {'train': [0], 'test': [0]}
+    valid_images = {
+        'train': ['PRE-event', 'POST-event'],
+        'test': ['PRE-event', 'POST-event'],
+    }
