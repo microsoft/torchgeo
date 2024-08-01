@@ -16,7 +16,7 @@ import torch.nn.functional as F
 from lightly.loss import NTXentLoss
 from lightly.models.modules import SimCLRProjectionHead
 from torch import Tensor
-from torch.optim import Adam
+from torch.optim import Adam  # type: ignore[attr-defined]
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torchvision.models._api import WeightsEnum
 
