@@ -49,6 +49,8 @@ class SpaceNet(NonGeoDataset, abc.ABC):
     """
 
     url = f's3://spacenet-dataset/spacenet/{self.dataset_id}/tarballs/{tarball}'
+    directory_glob = os.path.join('**', 'AOI_{aoi}_*', '{product}')
+
     cities = {
         1: 'Rio',
         2: 'Vegas',
@@ -86,18 +88,6 @@ class SpaceNet(NonGeoDataset, abc.ABC):
     @abc.abstractmethod
     def valid_images(self) -> dict[str, list[str]]:
         """Mapping of valid_images[split] = [images]."""
-
-    @abc.abstractmethod
-    def directory(self, aoi: int, product: str) -> str:
-        """Directory containing a specific product.
-
-        Args:
-            aoi: Area of interest.
-            product: Image product.
-
-        Returns:
-            Directory containing this product.
-        """
 
     def __init__(
         self,
@@ -139,9 +129,9 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         self._verify()
 
-        self.files = self._load_files(root)
+        self.files = self._list_files(root)
 
-    def _load_files(self, root: Path) -> list[dict[str, str]]:
+    def _list_files(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -372,6 +362,7 @@ class SpaceNet1(SpaceNet):
     * https://arxiv.org/abs/1807.01232
     """
 
+    directory_glob = '{product}'
     dataset_id = 'SN1_buildings'
     tarballs = {
         'train': {
@@ -402,18 +393,6 @@ class SpaceNet1(SpaceNet):
     }
     valid_aois = {'train': [1], 'test': [1]}
     valid_images = {'train': ['3band', '8band'], 'test': ['3band', '8band']}
-
-    def directory(self, aoi: int, product: str) -> str:
-        """Directory containing a specific product.
-
-        Args:
-            aoi: Area of interest.
-            product: Image product.
-
-        Returns:
-            Directory containing this product.
-        """
-        return os.path.join(self.root, self.dataset_id, self.split, product)
 
 
 class SpaceNet2(SpaceNet):
@@ -512,20 +491,6 @@ class SpaceNet2(SpaceNet):
         'train': ['MUL', 'MUL-PanSharpen', 'PAN', 'RGB-PanSharpen'],
         'test': ['MUL', 'MUL-PanSharpen', 'PAN', 'RGB-PanSharpen'],
     }
-
-    def directory(self, aoi: int, product: str) -> str:
-        """Directory containing a specific product.
-
-        Args:
-            aoi: Area of interest.
-            product: Image product.
-
-        Returns:
-            Directory containing this product.
-        """
-        split = 'Train' if self.split == 'train' else 'Test_public'
-        subdir = f'AOI_{aoi}_{self.cities[aoi]}_{split}'
-        return os.path.join(self.root, self.dataset_id, self.split, subdir, product)
 
 
 class SpaceNet3(SpaceNet):
@@ -639,22 +604,6 @@ class SpaceNet3(SpaceNet):
         'test': ['MUL', 'MUL-PanSharpen', 'PAN', 'RGB-PanSharpen'],
     }
 
-    def directory(self, aoi: int, product: str) -> str:
-        """Directory containing a specific product.
-
-        Args:
-            aoi: Area of interest.
-            product: Image product.
-
-        Returns:
-            Directory containing this product.
-        """
-        subdir = f'AOI_{aoi}_{self.cities[aoi]}'
-        if self.split == 'test':
-            subdir += '_Test_Public'
-
-        return os.path.join(self.root, self.dataset_id, self.split, subdir, product)
-
 
 class SpaceNet4(SpaceNet):
     """SpaceNet 4: Off-Nadir Buildings Dataset.
@@ -689,6 +638,7 @@ class SpaceNet4(SpaceNet):
     * https://arxiv.org/abs/1903.12239
     """
 
+    directory_glob = os.path.join('Atlanta_*', '{product}')
     dataset_id = 'SN4_buildings'
     tarballs = {
         'train': {
@@ -765,19 +715,6 @@ class SpaceNet4(SpaceNet):
         'train': ['MS', 'PAN', 'Pan-Sharpen'],
         'test': ['MS', 'PAN', 'Pan-Sharpen'],
     }
-
-    def directory(self, aoi: int, product: str) -> str:
-        """Directory containing a specific product.
-
-        Args:
-            aoi: Area of interest.
-            product: Image product.
-
-        Returns:
-            Directory containing this product.
-        """
-        subdir = f'{self.cities[aoi]}_nadir*_catid_*'
-        return os.path.join(self.root, self.dataset_id, self.split, subdir, product)
 
 
 class SpaceNet5(SpaceNet3):
@@ -863,32 +800,6 @@ class SpaceNet5(SpaceNet3):
         'test': ['MS', 'PAN', 'PS-MS', 'PS-RGB'],
     }
 
-    def directory(self, aoi: int, product: str) -> str:
-        """Directory containing a specific product.
-
-        Args:
-            aoi: Area of interest.
-            product: Image product.
-
-        Returns:
-            Directory containing this product.
-        """
-        return os.path.join(
-            self.root,
-            self.dataset_id,
-            self.split,
-            'nfs',
-            'data',
-            'cosmiq',
-            'spacenet',
-            'competitions',
-            self.dataset_id,
-            'tiles_upload',
-            'train' if self.split == 'train' else 'test_public',
-            f'AOI_{aoi}_{self.cities[aoi]}',
-            product,
-        )
-
 
 class SpaceNet6(SpaceNet):
     r"""SpaceNet 6: Multi-Sensor All-Weather Mapping.
@@ -950,13 +861,6 @@ class SpaceNet6(SpaceNet):
 
     * https://arxiv.org/abs/2004.06500
 
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
-
     .. versionadded:: 0.4
     """
 
@@ -974,20 +878,6 @@ class SpaceNet6(SpaceNet):
         'train': ['PAN', 'PS-RGB', 'PS-RGBNIR', 'RGBNIR', 'SAR-Intensity'],
         'test': ['SAR-Intensity'],
     }
-
-    def directory(self, aoi: int, product: str) -> str:
-        """Directory containing a specific product.
-
-        Args:
-            aoi: Area of interest.
-            product: Image product.
-
-        Returns:
-            Directory containing this product.
-        """
-        split = 'train' if self.split == 'train' else 'test_public'
-        subdir = os.path.join(split, f'AOI_{aoi}_{self.cities[aoi]}')
-        return os.path.join(self.root, self.dataset_id, self.split, subdir, product)
 
 
 class SpaceNet7(SpaceNet):
@@ -1026,6 +916,7 @@ class SpaceNet7(SpaceNet):
     .. versionadded:: 0.2
     """
 
+    directory_glob = os.path.join('*', '{product}')
     dataset_id = 'SN7_buildings'
     tarballs = {
         'train': {0: ['SN7_buildings_train.tar.gz', 'SN7_buildings_train_csvs.tar.gz']},
@@ -1039,16 +930,3 @@ class SpaceNet7(SpaceNet):
     }
     valid_aois = {'train': [0], 'test': [0]}
     valid_images = {'train': ['images', 'images_masked'], 'test': ['images_masked']}
-
-    def directory(self, aoi: int, product: str) -> str:
-        """Directory containing a specific product.
-
-        Args:
-            aoi: Area of interest.
-            product: Image product.
-
-        Returns:
-            Directory containing this product.
-        """
-        split = 'train' if self.split == 'train' else 'test_public'
-        return os.path.join(self.root, self.dataset_id, self.split, split, '*', product)
