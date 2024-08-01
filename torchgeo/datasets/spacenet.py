@@ -918,7 +918,7 @@ class SpaceNet7(SpaceNet):
     .. versionadded:: 0.2
     """
 
-    directory_glob = os.path.join('*', '{product}')
+    directory_glob = os.path.join('**', '{product}')
     dataset_id = 'SN7_buildings'
     tarballs = {
         'train': {0: ['SN7_buildings_train.tar.gz', 'SN7_buildings_train_csvs.tar.gz']},

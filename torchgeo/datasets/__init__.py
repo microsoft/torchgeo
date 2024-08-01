@@ -111,6 +111,7 @@ from .spacenet import (
     SpaceNet5,
     SpaceNet6,
     SpaceNet7,
+    SpaceNet8,
 )
 from .splits import (
     random_bbox_assignment,
