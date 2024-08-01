@@ -231,14 +231,18 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         Returns:
             A list of files.
         """
-        product_glob = os.path.join(
-            self.root, self.dataset_id, self.split, self.directory_glob, '*.tif'
-        )
         kwargs = {}
         if '{aoi}' in self.directory_glob:
             kwargs['aoi'] = aoi
-        image_glob = product_glob.format(product=self.image, **kwargs)
-        return sorted(glob.glob(image_glob, recursive=True))
+
+        product_glob = os.path.join(
+            self.root, self.dataset_id, self.split, self.directory_glob, '*.{ext}'
+        )
+        image_glob = product_glob.format(product=self.image, ext='tif', **kwargs)
+        mask_glob = product_glob.format(product='geojson', ext='geojson', **kwargs)
+        images = sorted(glob.glob(image_glob, recursive=True))
+        masks = sorted(glob.glob(mask_glob, recursive=True))
+        return list(zip(images, masks))
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""

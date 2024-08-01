@@ -245,6 +245,7 @@ __all__ = (
     'SpaceNet5',
     'SpaceNet6',
     'SpaceNet7',
+    'SpaceNet8',
     'SSL4EO',
     'SSL4EOLBenchmark',
     'SSL4EOL',
