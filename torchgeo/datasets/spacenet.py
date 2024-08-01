@@ -48,7 +48,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
        * `AWS CLI <https://aws.amazon.com/cli/>`_: to download the dataset from AWS.
     """
 
-    url = f's3://spacenet-dataset/spacenet/{self.dataset_id}/tarballs/{tarball}'
+    url = 's3://spacenet-dataset/spacenet/{dataset_id}/tarballs/{tarball}'
     directory_glob = os.path.join('**', 'AOI_{aoi}_*', '{product}')
 
     cities = {
@@ -263,6 +263,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
                     raise DatasetNotFoundError(self)
 
                 # Download the dataset
+                url = self.url.format(dataset_id=self.dataset_id, tarball=tarball)
                 aws = which('aws')
                 aws('s3', 'cp', url, root)
                 check_integrity(
