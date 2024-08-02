@@ -11,7 +11,6 @@ from typing import Any
 
 import pandas as pd
 import torch
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -202,7 +201,6 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         input_features: list[str] = all_variable_names,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: str | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Western USA Live Fuel Moisture Dataset.
@@ -213,41 +211,23 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``input_features`` contains invalid variable names
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        super().__init__()
+        assert set(input_features) <= set(self.all_variable_names)
 
         self.root = root
+        self.input_features = input_features
         self.transforms = transforms
-        self.checksum = checksum
         self.download = download
-        self.api_key = api_key
+        self.checksum = checksum
 
         self._verify()
 
-        assert all(
-            input in self.all_variable_names for input in input_features
-        ), 'Invalid input variable name.'
-        self.input_features = input_features
-
-        self.collection = self._retrieve_collection()
-
         self.dataframe = self._load_data()
-
-    def _retrieve_collection(self) -> list[str]:
-        """Retrieve dataset collection that maps samples to paths.
-
-        Returns:
-            list of sample paths
-        """
-        return glob.glob(
-            os.path.join(self.root, self.collection_id, '**', 'labels.geojson')
-        )
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -268,7 +248,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         """
         data = self.dataframe.iloc[index, :]
 
-        sample: dict[str, Tensor] = {
+        sample = {
             'input': torch.tensor(
                 data.drop([self.label_name]).values, dtype=torch.float32
             ),
@@ -287,7 +267,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             the features and label
         """
         data_rows = []
-        for path in self.collection:
+        for path in sorted(glob.glob(os.path.join(self.root, 'feature_*.geojson'))):
             with open(path) as f:
                 content = json.load(f)
                 data_dict = content['properties']
@@ -295,13 +275,15 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
                 data_dict['lat'] = content['geometry']['coordinates'][1]
                 data_rows.append(data_dict)
 
-        df: pd.DataFrame = pd.DataFrame(data_rows)
+        df = pd.DataFrame(data_rows)
         df = df[self.input_features + [self.label_name]]
         return df
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the files already exist
+        if glob.glob(os.path.join(self.root, 'feature_*.geojson')):
+            return
 
         # Check if the user requested to download the dataset
         if not self.download:
