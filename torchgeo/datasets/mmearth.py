@@ -369,7 +369,7 @@ class MMEarth(NonGeoDataset):
                 data = f[modality][ds_index][:]
                 sample[modality] = self._process_modality(data, modality, l2a)
 
-            # add additional metadata to the sampl3
+            # add additional metadata to the sample
             sample['lat'] = tile_info['lat']
             sample['lon'] = tile_info['lon']
             sample['date'] = tile_info['S2_DATE']
@@ -382,7 +382,7 @@ class MMEarth(NonGeoDataset):
         return sample
 
     def _process_modality(
-        self, data: 'np.typing.NDArray', modality: str, l2a: bool
+        self, data: 'np.typing.NDArray[Any]', modality: str, l2a: bool
     ) -> Tensor:
         """Process a single modality.
 
@@ -458,8 +458,8 @@ class MMEarth(NonGeoDataset):
         return tensor
 
     def _normalize_modality(
-        self, data: 'np.typing.NDArray', modality: str
-    ) -> 'np.typing.NDArray':
+        self, data: 'np.typing.NDArray[Any]', modality: str
+    ) -> 'np.typing.NDArray[np.float64]':
         """Normalize a single modality.
 
         Args:
