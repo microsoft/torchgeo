@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_radiant_mlhub_collection, extract_archive
+from .utils import Path, which
 
 
 class WesternUSALiveFuelMoisture(NonGeoDataset):
@@ -25,7 +25,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
     (mass of water in vegetation) and remotely sensed variables
     in the western United States. It contains 2615 datapoints and 138
     variables. For more details see the
-    `dataset page <https://mlhub.earth/data/su_sar_moisture_content_main>`_.
+    `dataset page <https://beta.source.coop/stanford/sar-moisture-conent/>`_.
 
     Dataset Format:
 
@@ -44,15 +44,13 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
        This dataset requires the following additional library to be installed:
 
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
+       * `azcopy <https://github.com/Azure/azure-storage-azcopy>`_: to download the
+         dataset from Source Cooperative.
 
     .. versionadded:: 0.5
     """
 
-    collection_id = 'su_sar_moisture_content'
-
-    md5 = 'a6c0721f06a3a0110b7d1243b18614f0'
+    url = 'https://radiantearth.blob.core.windows.net/mlhub/su-sar-moisture-content'
 
     label_name = 'percent(t)'
 
@@ -303,16 +301,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        # Check if the extracted files already exist
-        pathname = os.path.join(self.root, self.collection_id)
-        if os.path.exists(pathname):
-            return
-
-        # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.collection_id) + '.tar.gz'
-        if os.path.exists(pathname):
-            self._extract()
-            return
+        # Check if the files already exist
 
         # Check if the user requested to download the dataset
         if not self.download:
@@ -320,19 +309,9 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         # Download the dataset
         self._download()
-        self._extract()
 
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        pathname = os.path.join(self.root, self.collection_id) + '.tar.gz'
-        extract_archive(pathname, self.root)
-
-    def _download(self, api_key: str | None = None) -> None:
-        """Download the dataset and extract it.
-
-        Args:
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-        """
-        download_radiant_mlhub_collection(self.collection_id, self.root, api_key)
-        filename = os.path.join(self.root, self.collection_id) + '.tar.gz'
-        extract_archive(filename, self.root)
+    def _download(self) -> None:
+        """Download the dataset and extract it."""
+        os.makedirs(self.root, exist_ok=True)
+        azcopy = which('azcopy')
+        azcopy('sync', self.url, self.root, '--recursive=true')
