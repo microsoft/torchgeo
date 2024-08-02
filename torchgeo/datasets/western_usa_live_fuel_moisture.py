@@ -267,7 +267,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             the features and label
         """
         data_rows = []
-        for path in sorted(glob.glob(os.path.join(self.root, 'feature_*.geojson'))):
+        for path in sorted(self.files):
             with open(path) as f:
                 content = json.load(f)
                 data_dict = content['properties']
@@ -282,7 +282,9 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the files already exist
-        if glob.glob(os.path.join(self.root, 'feature_*.geojson')):
+        file_glob = os.path.join(self.root, '**', 'feature_*.geojson')
+        self.files = glob.glob(file_glob, recursive=True)
+        if self.files:
             return
 
         # Check if the user requested to download the dataset
@@ -291,6 +293,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         # Download the dataset
         self._download()
+        self.files = glob.glob(file_glob, recursive=True)
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
