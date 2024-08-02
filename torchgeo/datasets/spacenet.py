@@ -145,7 +145,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         Returns:
             length of the dataset
         """
-        return len(self.files)
+        return len(self.images)
 
     def _load_image(self, path: Path) -> tuple[Tensor, Affine, CRS]:
         """Load a single image.
@@ -231,14 +231,14 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         return sample
 
-    def _list_files(self, aoi: int) -> list[str]:
+    def _list_files(self, aoi: int) -> tuple[list[str], list[str]]:
         """List all files in a particular AOI.
 
         Args:
             aoi: Area of interest.
 
         Returns:
-            A list of files.
+            Lists of image and masks files.
         """
         kwargs = {}
         if '{aoi}' in self.directory_glob:
@@ -251,17 +251,19 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         mask_glob = product_glob.format(product=self.mask, ext='geojson', **kwargs)
         images = sorted(glob.glob(image_glob, recursive=True))
         masks = sorted(glob.glob(mask_glob, recursive=True))
-        return list(zip(images, masks))
+        return images, masks
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        self.files = []
+        self.images = []
+        self.masks = []
         root = os.path.join(self.root, self.dataset_id, self.split)
         for aoi in self.aois:
             # Check if the extracted files already exist
-            files = self._list_files(aoi)
-            if files:
-                self.files.extend(files)
+            images, masks = self._list_files(aoi)
+            if images:
+                self.images.extend(images)
+                self.masks.extend(masks)
                 continue
 
             # Check if the tarball has already been downloaded
@@ -283,7 +285,9 @@ class SpaceNet(NonGeoDataset, abc.ABC):
                     os.path.join(root, tarball), md5 if self.checksum else None
                 )
                 extract_archive(os.path.join(root, tarball), root)
-                self.files.extend(self._list_files(aoi))
+                images, masks = self._list_files(aoi)
+                self.images.extend(images)
+                self.masks.extend(masks)
 
     def plot(
         self,
