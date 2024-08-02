@@ -201,7 +201,6 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         input_features: list[str] = all_variable_names,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        checksum: bool = False,
     ) -> None:
         """Initialize a new Western USA Live Fuel Moisture Dataset.
 
@@ -211,7 +210,6 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``input_features`` contains invalid variable names
@@ -223,7 +221,6 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         self.input_features = input_features
         self.transforms = transforms
         self.download = download
-        self.checksum = checksum
 
         self._verify()
 
