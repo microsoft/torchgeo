@@ -90,12 +90,18 @@ class SpaceNet(NonGeoDataset, abc.ABC):
     def valid_images(self) -> dict[str, list[str]]:
         """Mapping of valid_images[split] = [images]."""
 
+    @property
+    @abc.abstractmethod
+    def valid_masks(self) -> list[str]:
+        """List of valid masks."""
+
     def __init__(
         self,
         root: Path = 'data',
         split: str = 'train',
         aois: list[str] = [],
         image: str | None = None,
+        mask: str | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -107,6 +113,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
             split: 'train' or 'test' split
             aois: areas of interest
             image: image selection
+            mask: mask selection
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: if True, download dataset and store it in the root directory.
@@ -120,6 +127,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         self.split = split
         self.aois = aois or self.valid_aois[split]
         self.image = image or self.valid_images[split][0]
+        self.mask = mask or self.valid_masks[0]
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
@@ -127,6 +135,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         assert self.split in {'train', 'test'}
         assert set(self.aois) <= set(self.valid_aois[split])
         assert self.image in self.valid_images[split]
+        assert self.mask in self.valid_masks
 
         self._verify()
 
@@ -239,7 +248,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
             self.root, self.dataset_id, self.split, self.directory_glob, '*.{ext}'
         )
         image_glob = product_glob.format(product=self.image, ext='tif', **kwargs)
-        mask_glob = product_glob.format(product='geojson', ext='geojson', **kwargs)
+        mask_glob = product_glob.format(product=self.mask, ext='geojson', **kwargs)
         images = sorted(glob.glob(image_glob, recursive=True))
         masks = sorted(glob.glob(mask_glob, recursive=True))
         return list(zip(images, masks))
@@ -399,6 +408,7 @@ class SpaceNet1(SpaceNet):
     }
     valid_aois = {'train': [1], 'test': [1]}
     valid_images = {'train': ['3band', '8band'], 'test': ['3band', '8band']}
+    valid_masks = ['geojson']
 
 
 class SpaceNet2(SpaceNet):
@@ -497,6 +507,7 @@ class SpaceNet2(SpaceNet):
         'train': ['MUL', 'MUL-PanSharpen', 'PAN', 'RGB-PanSharpen'],
         'test': ['MUL', 'MUL-PanSharpen', 'PAN', 'RGB-PanSharpen'],
     }
+    valid_masks = [os.path.join('geojson', 'buildings')]
 
 
 class SpaceNet3(SpaceNet):
@@ -609,6 +620,7 @@ class SpaceNet3(SpaceNet):
         'train': ['MS', 'PS-MS', 'PAN', 'PS-RGB'],
         'test': ['MUL', 'MUL-PanSharpen', 'PAN', 'RGB-PanSharpen'],
     }
+    valid_masks = ['geojson_roads', 'geojson_roads_speed']
 
 
 class SpaceNet4(SpaceNet):
@@ -644,7 +656,7 @@ class SpaceNet4(SpaceNet):
     * https://arxiv.org/abs/1903.12239
     """
 
-    directory_glob = os.path.join('Atlanta_*', '{product}')
+    directory_glob = os.path.join('**', '{product}')
     dataset_id = 'SN4_buildings'
     tarballs = {
         'train': {
@@ -721,6 +733,7 @@ class SpaceNet4(SpaceNet):
         'train': ['MS', 'PAN', 'Pan-Sharpen'],
         'test': ['MS', 'PAN', 'Pan-Sharpen'],
     }
+    valid_masks = [os.path.join('geojson', 'spacenet-buildings')]
 
 
 class SpaceNet5(SpaceNet3):
@@ -805,6 +818,7 @@ class SpaceNet5(SpaceNet3):
         'train': ['MS', 'PAN', 'PS-MS', 'PS-RGB'],
         'test': ['MS', 'PAN', 'PS-MS', 'PS-RGB'],
     }
+    valid_masks = ['geojson_roads_speed']
 
 
 class SpaceNet6(SpaceNet):
@@ -884,6 +898,7 @@ class SpaceNet6(SpaceNet):
         'train': ['PAN', 'PS-RGB', 'PS-RGBNIR', 'RGBNIR', 'SAR-Intensity'],
         'test': ['SAR-Intensity'],
     }
+    valid_masks = ['geojson_buildings']
 
 
 class SpaceNet7(SpaceNet):
@@ -936,6 +951,7 @@ class SpaceNet7(SpaceNet):
     }
     valid_aois = {'train': [0], 'test': [0]}
     valid_images = {'train': ['images', 'images_masked'], 'test': ['images_masked']}
+    valid_masks = ['labels', 'labels_match', 'labels_match_pix']
 
 
 class SpaceNet8(SpaceNet):
@@ -947,7 +963,8 @@ class SpaceNet8(SpaceNet):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://openaccess.thecvf.com/content/CVPR2022W/EarthVision/html/Hansch_SpaceNet_8_-_The_Detection_of_Flooded_Roads_and_Buildings_CVPRW_2022_paper.html
+    * `SpaceNet 8 - The Detection of Flooded Roads and Buildings
+       <https://openaccess.thecvf.com/content/CVPR2022W/EarthVision/html/Hansch_SpaceNet_8_-_The_Detection_of_Flooded_Roads_and_Buildings_CVPRW_2022_paper.html>`_
 
     .. versionadded:: 0.6
     """
@@ -974,3 +991,4 @@ class SpaceNet8(SpaceNet):
         'train': ['PRE-event', 'POST-event'],
         'test': ['PRE-event', 'POST-event'],
     }
+    valid_masks = ['annotations']
