@@ -218,13 +218,15 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         Returns:
             data and label at that index
         """
-        files = self.files[index]
-        img, tfm, raster_crs = self._load_image(files['image_path'])
+        image_path = self.images[index]
+        img, tfm, raster_crs = self._load_image(image_path)
         h, w = img.shape[1:]
-        mask = self._load_mask(files['label_path'], tfm, raster_crs, (h, w))
+        sample = {'image': img}
 
-        ch, cw = self.chip_size[self.image]
-        sample = {'image': img[:, :ch, :cw], 'mask': mask[:ch, :cw]}
+        if self.split == 'train':
+            mask_path = self.masks[index]
+            mask = self._load_mask(mask_path, tfm, raster_crs, (h, w))
+            sample['mask'] = mask
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -251,6 +253,9 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         mask_glob = product_glob.format(product=self.mask, ext='geojson', **kwargs)
         images = sorted(glob.glob(image_glob, recursive=True))
         masks = sorted(glob.glob(mask_glob, recursive=True))
+        # if self.split == 'train':
+        #     print(len(images), len(masks))
+        #     assert len(images) == len(masks)
         return images, masks
 
     def _verify(self) -> None:
