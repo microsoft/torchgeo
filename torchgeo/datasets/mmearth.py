@@ -353,7 +353,7 @@ class MMEarth(NonGeoDataset):
         """
         h5py = lazy_import('h5py')
 
-        sample: dict[str, Tensor] = {}
+        sample: dict[str, Any] = {}
         ds_index = self.indices[index]
 
         with h5py.File(

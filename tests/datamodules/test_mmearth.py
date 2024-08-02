@@ -9,13 +9,13 @@ from lightning.pytorch import Trainer
 from torch import Tensor
 
 from torchgeo.datamodules import MMEarthDataModule
-from torchgeo.datasets.utils import lazy_import
+
+pytest.importorskip('h5py', minversion='3.6')
 
 
 class TestMMEarthDataModule:
     @pytest.fixture(params=['MMEarth', 'MMEarth64', 'MMEarth100k'])
     def datamodule(self, request: SubRequest) -> MMEarthDataModule:
-        lazy_import('h5py')
         ds_version = request.param
         root = os.path.join('tests', 'data', 'mmearth')
         dm = MMEarthDataModule(root=root, ds_version=ds_version, num_workers=0)
