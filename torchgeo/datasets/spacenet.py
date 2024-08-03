@@ -18,6 +18,7 @@ from fiona.errors import FionaValueError
 from fiona.transform import transform_geom
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
+from rasterio.enums import Resampling
 from rasterio.features import rasterize
 from rasterio.transform import Affine
 from torch import Tensor
@@ -50,6 +51,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
     url = 's3://spacenet-dataset/spacenet/{dataset_id}/tarballs/{tarball}'
     directory_glob = os.path.join('**', 'AOI_{aoi}_*', '{product}')
+    chip_size: dict[str, tuple[int, int]] = {}
 
     cities = {
         1: 'Rio',
@@ -156,9 +158,11 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         Returns:
             the image
         """
-        filename = os.path.join(path)
-        with rio.open(filename) as img:
-            array = img.read().astype(np.int32)
+        with rio.open(path) as img:
+            out_shape = (img.count, img.height, img.width)
+            if self.image in self.chip_size:
+                out_shape = (img.count, *self.chip_size[self.image])
+            array = img.read(out_shape=out_shape, resampling=Resampling.bilinear)
             tensor = torch.from_numpy(array).float()
             return tensor, img.transform, img.crs
 
@@ -418,6 +422,7 @@ class SpaceNet1(SpaceNet):
     valid_aois = {'train': [1], 'test': [1]}
     valid_images = {'train': ['3band', '8band'], 'test': ['3band', '8band']}
     valid_masks = ['geojson']
+    chip_size = {'3band': (406, 439), '8band': (102, 110)}
 
 
 class SpaceNet2(SpaceNet):
@@ -517,6 +522,7 @@ class SpaceNet2(SpaceNet):
         'test': ['MUL', 'MUL-PanSharpen', 'PAN', 'RGB-PanSharpen'],
     }
     valid_masks = [os.path.join('geojson', 'buildings')]
+    chip_size = {'MUL': (163, 163)}
 
 
 class SpaceNet3(SpaceNet):
@@ -961,10 +967,11 @@ class SpaceNet7(SpaceNet):
     valid_aois = {'train': [0], 'test': [0]}
     valid_images = {'train': ['images', 'images_masked'], 'test': ['images_masked']}
     valid_masks = ['labels', 'labels_match', 'labels_match_pix']
+    chip_size = {'images': (1024, 1024), 'images_masked': (1024, 1024)}
 
 
 class SpaceNet8(SpaceNet):
-    """SpaceNet8: Flood Detection Challenge Using Multiclass Segmentation.
+    r"""SpaceNet8: Flood Detection Challenge Using Multiclass Segmentation.
 
     `SpaceNet 8 <https://spacenet.ai/sn8-challenge/>`_ is a dataset focusing on
     infrastructure and flood mapping related to hurricanes and heavy rains that cause
@@ -1000,3 +1007,4 @@ class SpaceNet8(SpaceNet):
         'test': ['PRE-event', 'POST-event'],
     }
     valid_masks = ['annotations']
+    chip_size = {'PRE-event': (1300, 1300), 'POST-event': (1300, 1300)}
