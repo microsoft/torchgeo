@@ -972,8 +972,7 @@ class SpaceNet8(SpaceNet):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * `SpaceNet 8 - The Detection of Flooded Roads and Buildings
-       <https://openaccess.thecvf.com/content/CVPR2022W/EarthVision/html/Hansch_SpaceNet_8_-_The_Detection_of_Flooded_Roads_and_Buildings_CVPRW_2022_paper.html>`_
+    * https://openaccess.thecvf.com/content/CVPR2022W/EarthVision/html/Hansch_SpaceNet_8\_-_The_Detection_of_Flooded_Roads_and_Buildings_CVPRW_2022_paper.html
 
     .. versionadded:: 0.6
     """
