@@ -141,6 +141,9 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         self._verify()
 
+        if self.split == 'train':
+            assert len(self.images) == len(self.masks)
+
     def __len__(self) -> int:
         """Return the number of samples in the dataset.
 
@@ -242,7 +245,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
             aoi: Area of interest.
 
         Returns:
-            Lists of image and masks files.
+            Lists of image and mask files.
         """
         kwargs = {}
         if '{aoi}' in self.directory_glob:
@@ -255,9 +258,6 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         mask_glob = product_glob.format(product=self.mask, ext='geojson', **kwargs)
         images = sorted(glob.glob(image_glob, recursive=True))
         masks = sorted(glob.glob(mask_glob, recursive=True))
-        # if self.split == 'train':
-        #     print(len(images), len(masks))
-        #     assert len(images) == len(masks)
         return images, masks
 
     def _verify(self) -> None:
@@ -634,6 +634,32 @@ class SpaceNet3(SpaceNet):
         'test': ['MUL', 'MUL-PanSharpen', 'PAN', 'RGB-PanSharpen'],
     }
     valid_masks = ['geojson_roads', 'geojson_roads_speed']
+
+    def _list_files(self, aoi: int) -> tuple[list[str], list[str]]:
+        """List all files in a particular AOI.
+
+        Args:
+            aoi: Area of interest.
+
+        Returns:
+            Lists of image and mask files.
+        """
+        images, masks = super()._list_files(aoi)
+
+        if self.split == 'train':
+            # Not all images have a corresponding mask file
+            images_iter = iter(images)
+            images = []
+            for mask in masks:
+                mask_index = mask.split('_')[-1].split('.')[0]
+                # Find an image for this mask
+                for image in images_iter:
+                    image_index = image.split('_')[-1].split('.')[0]
+                    if image_index == mask_index:
+                        images.append(image)
+                        break
+
+        return images, masks
 
 
 class SpaceNet4(SpaceNet):
