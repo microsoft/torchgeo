@@ -3,9 +3,10 @@
 
 """SpaceNet datasets."""
 
-import abc
 import glob
 import os
+import re
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import Any
 
@@ -34,7 +35,7 @@ from .utils import (
 )
 
 
-class SpaceNet(NonGeoDataset, abc.ABC):
+class SpaceNet(NonGeoDataset, ABC):
     """Abstract base class for the SpaceNet datasets.
 
     The `SpaceNet <https://spacenet.ai/datasets/>`__ datasets are a set of
@@ -51,6 +52,9 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
     url = 's3://spacenet-dataset/spacenet/{dataset_id}/tarballs/{tarball}'
     directory_glob = os.path.join('**', 'AOI_{aoi}_*', '{product}')
+    image_glob = '*.tif'
+    mask_glob = '*.geojson'
+    file_regex = r'_img(\d+)\.'
     chip_size: dict[str, tuple[int, int]] = {}
 
     cities = {
@@ -68,32 +72,32 @@ class SpaceNet(NonGeoDataset, abc.ABC):
     }
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def dataset_id(self) -> str:
         """Dataset ID."""
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def tarballs(self) -> dict[str, dict[int, list[str]]]:
         """Mapping of tarballs[split][aoi] = [tarballs]."""
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def md5s(self) -> dict[str, dict[int, list[str]]]:
         """Mapping of md5s[split][aoi] = [md5s]."""
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def valid_aois(self) -> dict[str, list[int]]:
         """Mapping of valid_aois[split] = [aois]."""
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def valid_images(self) -> dict[str, list[str]]:
         """Mapping of valid_images[split] = [images]."""
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def valid_masks(self) -> list[str]:
         """List of valid masks."""
 
@@ -238,6 +242,25 @@ class SpaceNet(NonGeoDataset, abc.ABC):
 
         return sample
 
+    def _image_id(self, path: Path) -> list[Any]:
+        """Return the image ID.
+
+        Args:
+            path: An image or mask filepath.
+
+        Returns:
+            A list of integers.
+        """
+        key = re.search(self.file_regex, path).group(1)
+        keys = key.split('_')
+        for i in range(len(keys)):
+            try:
+                keys[i] = int(keys[i])
+            except ValueError:
+                pass
+
+        return keys
+
     def _list_files(self, aoi: int) -> tuple[list[str], list[str]]:
         """List all files in a particular AOI.
 
@@ -247,17 +270,35 @@ class SpaceNet(NonGeoDataset, abc.ABC):
         Returns:
             Lists of image and mask files.
         """
+        # Produce a list of files
         kwargs = {}
         if '{aoi}' in self.directory_glob:
             kwargs['aoi'] = aoi
 
         product_glob = os.path.join(
-            self.root, self.dataset_id, self.split, self.directory_glob, '*.{ext}'
+            self.root, self.dataset_id, self.split, self.directory_glob
         )
-        image_glob = product_glob.format(product=self.image, ext='tif', **kwargs)
-        mask_glob = product_glob.format(product=self.mask, ext='geojson', **kwargs)
-        images = sorted(glob.glob(image_glob, recursive=True))
-        masks = sorted(glob.glob(mask_glob, recursive=True))
+        image_glob = product_glob.format(product=self.image, **kwargs)
+        mask_glob = product_glob.format(product=self.mask, **kwargs)
+        images = glob.glob(os.path.join(image_glob, self.image_glob), recursive=True)
+        masks = glob.glob(os.path.join(mask_glob, self.mask_glob), recursive=True)
+
+        # Sort files based on image ID
+        images.sort(key=self._image_id)
+        masks.sort(key=self._image_id)
+
+        # Remove images missing masks (SN3) or duplicate images (SN8)
+        if self.split == 'train':
+            images_iter = iter(images)
+            images = []
+            for mask in masks:
+                mask_id = self._image_id(mask)
+                for image in images_iter:
+                    image_id = self._image_id(image)
+                    if image_id == mask_id:
+                        images.append(image)
+                        break
+
         return images, masks
 
     def _verify(self) -> None:
@@ -635,32 +676,6 @@ class SpaceNet3(SpaceNet):
     }
     valid_masks = ['geojson_roads', 'geojson_roads_speed']
 
-    def _list_files(self, aoi: int) -> tuple[list[str], list[str]]:
-        """List all files in a particular AOI.
-
-        Args:
-            aoi: Area of interest.
-
-        Returns:
-            Lists of image and mask files.
-        """
-        images, masks = super()._list_files(aoi)
-
-        if self.split == 'train':
-            # Not all images have a corresponding mask file
-            images_iter = iter(images)
-            images = []
-            for mask in masks:
-                mask_index = mask.split('_')[-1].split('.')[0]
-                # Find an image for this mask
-                for image in images_iter:
-                    image_index = image.split('_')[-1].split('.')[0]
-                    if image_index == mask_index:
-                        images.append(image)
-                        break
-
-        return images, masks
-
 
 class SpaceNet4(SpaceNet):
     """SpaceNet 4: Off-Nadir Buildings Dataset.
@@ -696,6 +711,7 @@ class SpaceNet4(SpaceNet):
     """
 
     directory_glob = os.path.join('**', '{product}')
+    file_regex = r'_(\d+_\d+)\.'
     dataset_id = 'SN4_buildings'
     tarballs = {
         'train': {
@@ -837,6 +853,7 @@ class SpaceNet5(SpaceNet3):
     .. versionadded:: 0.2
     """
 
+    file_regex = r'_chip(\d+)\.'
     dataset_id = 'SN5_roads'
     tarballs = {
         'train': {
@@ -923,6 +940,7 @@ class SpaceNet6(SpaceNet):
     .. versionadded:: 0.4
     """
 
+    file_regex = r'_tile_(\d+)\.'
     dataset_id = 'SN6_buildings'
     tarballs = {
         'train': {11: ['SN6_buildings_AOI_11_Rotterdam_train.tar.gz']},
@@ -977,6 +995,8 @@ class SpaceNet7(SpaceNet):
     """
 
     directory_glob = os.path.join('**', '{product}')
+    mask_glob = '*_Buildings.geojson'
+    file_regex = r'global_monthly_(\d+.*\d+)'
     dataset_id = 'SN7_buildings'
     tarballs = {
         'train': {0: ['SN7_buildings_train.tar.gz', 'SN7_buildings_train_csvs.tar.gz']},
@@ -1009,6 +1029,7 @@ class SpaceNet8(SpaceNet):
     """
 
     directory_glob = '{product}'
+    file_regex = r'(\d+_\d+_\d+)\.'
     dataset_id = 'SN8_floods'
     tarballs = {
         'train': {
