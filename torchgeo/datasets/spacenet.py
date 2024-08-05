@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
 import torch
-from fiona.errors import FionaValueError
 from fiona.transform import transform_geom
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
@@ -191,11 +190,10 @@ class SpaceNet(NonGeoDataset, ABC):
             vector_crs = CRS(src.crs)
             labels = [
                 transform_geom(
-                    vector_crs.to_string(),
-                    raster_crs.to_string(),
-                    feature['geometry'],
+                    vector_crs.to_string(), raster_crs.to_string(), feature['geometry']
                 )
-                for feature in src if feature['geometry']
+                for feature in src
+                if feature['geometry']
             ]
 
         mask_data = rasterize(
@@ -297,6 +295,7 @@ class SpaceNet(NonGeoDataset, ABC):
         self.images = []
         self.masks = []
         root = os.path.join(self.root, self.dataset_id, self.split)
+        os.makedirs(root, exist_ok=True)
         for aoi in self.aois:
             # Check if the extracted files already exist
             images, masks = self._list_files(aoi)
@@ -990,13 +989,11 @@ class SpaceNet7(SpaceNet):
     file_regex = r'global_monthly_(\d+.*\d+)'
     dataset_id = 'SN7_buildings'
     tarballs = {
-        'train': {0: ['SN7_buildings_train.tar.gz', 'SN7_buildings_train_csvs.tar.gz']},
+        'train': {0: ['SN7_buildings_train.tar.gz']},
         'test': {0: ['SN7_buildings_test_public.tar.gz']},
     }
     md5s = {
-        'train': {
-            0: ['6eda13b9c28f6f5cdf00a7e8e218c1b1', '0266ffea18950b1472cedafa8bead7bb']
-        },
+        'train': {0: ['6eda13b9c28f6f5cdf00a7e8e218c1b1']},
         'test': {0: ['b3bde95a0f8f32f3bfeba49464b9bc97']},
     }
     valid_aois = {'train': [0], 'test': [0]}
