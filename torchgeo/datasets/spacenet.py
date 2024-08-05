@@ -196,16 +196,19 @@ class SpaceNet(NonGeoDataset, ABC):
                 if feature['geometry']
             ]
 
-        mask_data = rasterize(
-            labels,
-            out_shape=shape,
-            fill=0,  # nodata value
-            transform=tfm,
-            all_touched=False,
-            dtype=np.int64,
-        )
+        if labels:
+            mask = rasterize(
+                labels,
+                out_shape=shape,
+                fill=0,  # nodata value
+                transform=tfm,
+                all_touched=False,
+                dtype=np.int64,
+            )
+        else:
+            mask = np.zeros(shape=shape)
 
-        return torch.from_numpy(mask_data)
+        return torch.from_numpy(mask)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
