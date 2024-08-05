@@ -187,34 +187,25 @@ class SpaceNet(NonGeoDataset, ABC):
         Returns:
             Tensor: label tensor
         """
-        try:
-            with fiona.open(path) as src:
-                vector_crs = CRS(src.crs)
-                if raster_crs == vector_crs:
-                    labels = [feature['geometry'] for feature in src]
-                else:
-                    labels = [
-                        transform_geom(
-                            vector_crs.to_string(),
-                            raster_crs.to_string(),
-                            feature['geometry'],
-                        )
-                        for feature in src
-                    ]
-        except FionaValueError:
-            labels = []
+        with fiona.open(path) as src:
+            vector_crs = CRS(src.crs)
+            labels = [
+                transform_geom(
+                    vector_crs.to_string(),
+                    raster_crs.to_string(),
+                    feature['geometry'],
+                )
+                for feature in src if feature['geometry']
+            ]
 
-        if not labels:
-            mask_data = np.zeros(shape=shape)
-        else:
-            mask_data = rasterize(
-                labels,
-                out_shape=shape,
-                fill=0,  # nodata value
-                transform=tfm,
-                all_touched=False,
-                dtype=np.int64,
-            )
+        mask_data = rasterize(
+            labels,
+            out_shape=shape,
+            fill=0,  # nodata value
+            transform=tfm,
+            all_touched=False,
+            dtype=np.int64,
+        )
 
         return torch.from_numpy(mask_data)
 
