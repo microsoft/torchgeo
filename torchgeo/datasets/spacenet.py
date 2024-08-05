@@ -163,7 +163,7 @@ class SpaceNet(NonGeoDataset, abc.ABC):
             if self.image in self.chip_size:
                 out_shape = (img.count, *self.chip_size[self.image])
             array = img.read(out_shape=out_shape, resampling=Resampling.bilinear)
-            tensor = torch.from_numpy(array).float()
+            tensor = torch.from_numpy(array.astype(np.float32))
             return tensor, img.transform, img.crs
 
     def _load_mask(
@@ -206,12 +206,10 @@ class SpaceNet(NonGeoDataset, abc.ABC):
                 fill=0,  # nodata value
                 transform=tfm,
                 all_touched=False,
-                dtype=np.uint8,
+                dtype=np.int64,
             )
 
-        mask = torch.from_numpy(mask_data).long()
-
-        return mask
+        return torch.from_numpy(mask_data)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
