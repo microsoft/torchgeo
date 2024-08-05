@@ -461,11 +461,11 @@ class RasterDataset(GeoDataset):
 
                         if crs is None:
                             crs = src.crs
-                        if res is None:
-                            res = src.res[0]
 
                         with WarpedVRT(src, crs=crs) as vrt:
                             minx, miny, maxx, maxy = vrt.bounds
+                            if res is None:
+                                res = vrt.res[0]
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
                     continue
