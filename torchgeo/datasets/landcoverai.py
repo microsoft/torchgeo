@@ -2,24 +2,28 @@
 # Licensed under the MIT License.
 
 """LandCover.ai dataset."""
+
 import abc
 import glob
 import hashlib
 import os
+from collections.abc import Callable
 from functools import lru_cache
-from typing import Any, Callable, Optional, cast
+from typing import Any, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib.colors import ListedColormap
+from matplotlib.figure import Figure
 from PIL import Image
 from rasterio.crs import CRS
 from torch import Tensor
 from torch.utils.data import Dataset
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset, RasterDataset
-from .utils import BoundingBox, download_url, extract_archive, working_dir
+from .utils import BoundingBox, Path, download_url, extract_archive, working_dir
 
 
 class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
@@ -57,10 +61,10 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
     .. versionadded:: 0.5
     """
 
-    url = "https://landcover.ai.linuxpolska.com/download/landcover.ai.v1.zip"
-    filename = "landcover.ai.v1.zip"
-    md5 = "3268c89070e8734b4e91d531c0617e03"
-    classes = ["Background", "Building", "Woodland", "Water", "Road"]
+    url = 'https://landcover.ai.linuxpolska.com/download/landcover.ai.v1.zip'
+    filename = 'landcover.ai.v1.zip'
+    md5 = '3268c89070e8734b4e91d531c0617e03'
+    classes = ['Background', 'Building', 'Woodland', 'Water', 'Road']
     cmap = {
         0: (0, 0, 0, 0),
         1: (97, 74, 74, 255),
@@ -70,7 +74,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
     }
 
     def __init__(
-        self, root: str = "data", download: bool = False, checksum: bool = False
+        self, root: Path = 'data', download: bool = False, checksum: bool = False
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
 
@@ -83,8 +87,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.download = download
@@ -98,11 +101,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
         self._verify()
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         if self._verify_data():
             return
 
@@ -114,11 +113,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -154,8 +149,8 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+        suptitle: str | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -166,31 +161,31 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = np.rollaxis(sample["image"].numpy().astype("uint8").squeeze(), 0, 3)
-        mask = sample["mask"].numpy().astype("uint8").squeeze()
+        image = np.rollaxis(sample['image'].numpy().astype('uint8').squeeze(), 0, 3)
+        mask = sample['mask'].numpy().astype('uint8').squeeze()
 
         num_panels = 2
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            predictions = sample["prediction"].numpy()
+            predictions = sample['prediction'].numpy()
             num_panels += 1
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
         axs[0].imshow(image)
-        axs[0].axis("off")
-        axs[1].imshow(mask, vmin=0, vmax=4, cmap=self._lc_cmap, interpolation="none")
-        axs[1].axis("off")
+        axs[0].axis('off')
+        axs[1].imshow(mask, vmin=0, vmax=4, cmap=self._lc_cmap, interpolation='none')
+        axs[1].axis('off')
         if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
+            axs[0].set_title('Image')
+            axs[1].set_title('Mask')
 
         if showing_predictions:
             axs[2].imshow(
-                predictions, vmin=0, vmax=4, cmap=self._lc_cmap, interpolation="none"
+                predictions, vmin=0, vmax=4, cmap=self._lc_cmap, interpolation='none'
             )
-            axs[2].axis("off")
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Predictions")
+                axs[2].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
@@ -205,15 +200,15 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
     .. versionadded:: 0.5
     """
 
-    filename_glob = os.path.join("images", "*.tif")
-    filename_regex = ".*tif"
+    filename_glob = os.path.join('images', '*.tif')
+    filename_regex = '.*tif'
 
     def __init__(
         self,
-        root: str = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        root: Path = 'data',
+        crs: CRS | None = None,
+        res: float | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -221,28 +216,27 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         """Initialize a new LandCover.ai NonGeo dataset instance.
 
         Args:
-           root: root directory where dataset can be found
-           crs: :term:`coordinate reference system (CRS)` to warp to
-               (defaults to the CRS of the first file found)
-           res: resolution of the dataset in units of CRS
-               (defaults to the resolution of the first file found)
-           transforms: a function/transform that takes input sample and its target as
-               entry and returns a transformed version
-           cache: if True, cache file handle to speed up repeated sampling
-           download: if True, download dataset and store it in the root directory
-           checksum: if True, check the MD5 of the downloaded files (may be slow)
+            root: root directory where dataset can be found
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            cache: if True, cache file handle to speed up repeated sampling
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-           RuntimeError: if ``download=False`` and data is not found, or checksums
-               don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         LandCoverAIBase.__init__(self, root, download, checksum)
         RasterDataset.__init__(self, root, crs, res, transforms=transforms, cache=cache)
 
     def _verify_data(self) -> bool:
         """Verify if the images and masks are present."""
-        img_query = os.path.join(self.root, "images", "*.tif")
-        mask_query = os.path.join(self.root, "masks", "*.tif")
+        img_query = os.path.join(self.root, 'images', '*.tif')
+        mask_query = os.path.join(self.root, 'masks', '*.tif')
         images = glob.glob(img_query)
         masks = glob.glob(mask_query)
         return len(images) > 0 and len(images) == len(masks)
@@ -260,21 +254,23 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        img_filepaths = cast(list[str], [hit.object for hit in hits])
-        mask_filepaths = [path.replace("images", "masks") for path in img_filepaths]
+        img_filepaths = cast(list[Path], [hit.object for hit in hits])
+        mask_filepaths = [
+            str(path).replace('images', 'masks') for path in img_filepaths
+        ]
 
         if not img_filepaths:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
         img = self._merge_files(img_filepaths, query, self.band_indexes)
         mask = self._merge_files(mask_filepaths, query, self.band_indexes)
         sample = {
-            "crs": self.crs,
-            "bbox": query,
-            "image": img.float(),
-            "mask": mask.long(),
+            'crs': self.crs,
+            'bounds': query,
+            'image': img.float(),
+            'mask': mask.long(),
         }
 
         if self.transforms is not None:
@@ -296,13 +292,13 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
          the train/val/test split
     """
 
-    sha256 = "15ee4ca9e3fd187957addfa8f0d74ac31bc928a966f76926e11b3c33ea76daa1"
+    sha256 = '15ee4ca9e3fd187957addfa8f0d74ac31bc928a966f76926e11b3c33ea76daa1'
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        split: str = 'train',
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -318,16 +314,15 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert split in ["train", "val", "test"]
+        assert split in ['train', 'val', 'test']
 
         super().__init__(root, download, checksum)
 
         self.transforms = transforms
         self.split = split
-        with open(os.path.join(self.root, split + ".txt")) as f:
+        with open(os.path.join(self.root, split + '.txt')) as f:
             self.ids = f.readlines()
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -340,7 +335,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
             data and label at that index
         """
         id_ = self.ids[index].rstrip()
-        sample = {"image": self._load_image(id_), "mask": self._load_target(id_)}
+        sample = {'image': self._load_image(id_), 'mask': self._load_target(id_)}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -365,9 +360,9 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         Returns:
             the image
         """
-        filename = os.path.join(self.root, "output", id_ + ".jpg")
+        filename = os.path.join(self.root, 'output', id_ + '.jpg')
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img)
+            array: np.typing.NDArray[np.int_] = np.array(img)
             tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
@@ -383,16 +378,16 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         Returns:
             the target mask
         """
-        filename = os.path.join(self.root, "output", id_ + "_m.png")
+        filename = os.path.join(self.root, 'output', id_ + '_m.png')
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array).long()
             return tensor
 
     def _verify_data(self) -> bool:
         """Verify if the images and masks are present."""
-        img_query = os.path.join(self.root, "output", "*_*.jpg")
-        mask_query = os.path.join(self.root, "output", "*_*_m.png")
+        img_query = os.path.join(self.root, 'output', '*_*.jpg')
+        mask_query = os.path.join(self.root, 'output', '*_*_m.png')
         images = glob.glob(img_query)
         masks = glob.glob(mask_query)
         return len(images) > 0 and len(images) == len(masks)
@@ -409,7 +404,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         # Always check the sha256 of this file before executing
         # to avoid malicious code injection
         with working_dir(self.root):
-            with open("split.py") as f:
-                split = f.read().encode("utf-8")
+            with open('split.py') as f:
+                split = f.read().encode('utf-8')
                 assert hashlib.sha256(split).hexdigest() == self.sha256
                 exec(split)

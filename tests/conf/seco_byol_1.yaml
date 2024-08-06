@@ -1,14 +1,17 @@
-module:
-  _target_: torchgeo.trainers.BYOLTask
-  in_channels: 3
-  backbone: "resnet18"
-  learning_rate: 1e-3
-  learning_rate_schedule_patience: 6
-  weights: null
-
-datamodule:
-  _target_: torchgeo.datamodules.SeasonalContrastS2DataModule
-  root: "tests/data/seco"
-  seasons: 1
-  batch_size: 2
-  num_workers: 0
+model:
+  class_path: BYOLTask
+  init_args:
+    in_channels: 3
+    model: "resnet18"
+data:
+  class_path: SeasonalContrastS2DataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: "tests/data/seco"
+    seasons: 1
+    # https://github.com/Lightning-AI/lightning/issues/18616
+    bands:
+      - "B4"
+      - "B3"
+      - "B2"

@@ -1,0 +1,39 @@
+trainer:
+  min_epochs: 20
+  max_epochs: 100
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    model: "unet"
+    backbone: "resnet18"
+    weights: null
+    in_channels: 7
+    num_classes: 14
+    loss: "ce"
+    ignore_index: 0
+    lr: 1e-3
+    patience: 6
+data:
+  class_path: SSL4EOLBenchmarkDataModule
+  init_args:
+    batch_size: 64
+    num_workers: 16
+  dict_kwargs:
+    root: "data/ssl4eo_benchmark"
+    sensor: "tm_toa"
+    product: "nlcd"
+    classes:
+      - 0
+      - 11
+      - 21
+      - 22
+      - 31
+      - 41
+      - 42
+      - 43
+      - 52
+      - 71
+      - 81
+      - 82
+      - 90
+      - 95

@@ -6,6 +6,11 @@ torchgeo.datamodules
 Geospatial DataModules
 ----------------------
 
+AgriFieldNet
+^^^^^^^^^^^^
+
+.. autoclass:: AgriFieldNetDataModule
+
 Chesapeake Land Cover
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -26,6 +31,24 @@ NAIP
 
 .. autoclass:: NAIPChesapeakeDataModule
 
+I/O Bench
+^^^^^^^^^
+
+.. autoclass:: IOBenchDataModule
+
+Sentinel
+^^^^^^^^
+
+.. autoclass:: Sentinel2CDLDataModule
+.. autoclass:: Sentinel2EuroCropsDataModule
+.. autoclass:: Sentinel2NCCMDataModule
+.. autoclass:: Sentinel2SouthAmericaSoybeanDataModule
+
+SouthAfricaCropType
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SouthAfricaCropTypeDataModule
+
 Non-geospatial DataModules
 --------------------------
 
@@ -33,6 +56,11 @@ BigEarthNet
 ^^^^^^^^^^^
 
 .. autoclass:: BigEarthNetDataModule
+
+ChaBuD
+^^^^^^
+
+.. autoclass:: ChaBuDDataModule
 
 COWC
 ^^^^
@@ -53,6 +81,7 @@ EuroSAT
 ^^^^^^^
 
 .. autoclass:: EuroSATDataModule
+.. autoclass:: EuroSATSpatialDataModule
 .. autoclass:: EuroSAT100DataModule
 
 FAIR1M
@@ -80,6 +109,16 @@ LandCover.ai
 
 .. autoclass:: LandCoverAIDataModule
 
+LEVIR-CD
+^^^^^^^^
+
+.. autoclass:: LEVIRCDDataModule
+
+LEVIR-CD+
+^^^^^^^^^
+
+.. autoclass:: LEVIRCDPlusDataModule
+
 LoveDA
 ^^^^^^
 
@@ -99,6 +138,11 @@ Potsdam
 ^^^^^^^
 
 .. autoclass:: Potsdam2DDataModule
+
+QuakeSet
+^^^^^^^^
+
+.. autoclass:: QuakeSetDataModule
 
 RESISC45
 ^^^^^^^^
@@ -130,6 +174,11 @@ SSL4EO
 
 .. autoclass:: SSL4EOLDataModule
 .. autoclass:: SSL4EOS12DataModule
+
+SSL4EO-L Benchmark
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SSL4EOLBenchmarkDataModule
 
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^

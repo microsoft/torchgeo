@@ -2,36 +2,56 @@
 # Licensed under the MIT License.
 
 import enum
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 import torch.nn as nn
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
+    DOFABase16_Weights,
+    DOFALarge16_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
+    Swin_V2_B_Weights,
     ViTSmall16_Weights,
+    dofa_base_patch16_224,
+    dofa_large_patch16_224,
     get_model,
     get_model_weights,
     get_weight,
     list_models,
     resnet18,
     resnet50,
+    swin_v2_b,
     vit_small_patch16_224,
 )
 
-builders = [resnet18, resnet50, vit_small_patch16_224]
-enums = [ResNet18_Weights, ResNet50_Weights, ViTSmall16_Weights]
+builders = [
+    dofa_base_patch16_224,
+    dofa_large_patch16_224,
+    resnet18,
+    resnet50,
+    swin_v2_b,
+    vit_small_patch16_224,
+]
+enums = [
+    DOFABase16_Weights,
+    DOFALarge16_Weights,
+    ResNet18_Weights,
+    ResNet50_Weights,
+    Swin_V2_B_Weights,
+    ViTSmall16_Weights,
+]
 
 
-@pytest.mark.parametrize("builder", builders)
+@pytest.mark.parametrize('builder', builders)
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
     model = get_model(builder.__name__)
     assert isinstance(model, nn.Module)
 
 
-@pytest.mark.parametrize("builder", builders)
+@pytest.mark.parametrize('builder', builders)
 def test_get_model_weights(builder: Callable[..., nn.Module]) -> None:
     weights = get_model_weights(builder)
     assert isinstance(weights, enum.EnumMeta)
@@ -39,7 +59,7 @@ def test_get_model_weights(builder: Callable[..., nn.Module]) -> None:
     assert isinstance(weights, enum.EnumMeta)
 
 
-@pytest.mark.parametrize("enum", enums)
+@pytest.mark.parametrize('enum', enums)
 def test_get_weight(enum: WeightsEnum) -> None:
     for weight in enum:
         assert weight == get_weight(str(weight))

@@ -1,12 +1,11 @@
 # datasets
-h5py==3.9.0
-laspy==2.4.1
-opencv-python==4.7.0.72
-pandas==2.0.2
-pycocotools==2.0.6
-pyvista==0.39.1
+h5py==3.11.0
+laspy==2.5.4
+opencv-python==4.10.0.84
+pycocotools==2.0.8
+pyvista==0.44.1
 radiant-mlhub==0.4.1
-rarfile==4.0
-scikit-image==0.21.0
-scipy==1.10.1
+rarfile==4.2
+scikit-image==0.24.0
+scipy==1.14.0
 zipfile-deflate64==0.2.0

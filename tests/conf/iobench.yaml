@@ -1,0 +1,9 @@
+model:
+  class_path: IOBenchTask
+data:
+  class_path: IOBenchDataModule
+  init_args:
+    batch_size: 2
+    patch_size: 16
+  dict_kwargs:
+    root: "tests/data/iobench"

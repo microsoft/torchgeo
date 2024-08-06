@@ -4,7 +4,7 @@
 """DeepGlobe Land Cover Classification Challenge dataset."""
 
 import os
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,8 +13,10 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
+    Path,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -61,21 +63,31 @@ class DeepGlobeLandCover(NonGeoDataset):
 
     * https://arxiv.org/pdf/1805.06561.pdf
 
-    .. versionadded:: 0.3
-    """
+    .. note::
 
-    filename = "data.zip"
-    data_root = "data"
-    md5 = "f32684b0b2bf6f8d604cd359a399c061"
-    splits = ["train", "test"]
+       This dataset can be downloaded using:
+
+       .. code-block:: console
+
+          $ pip install kaggle  # place api key at ~/.kaggle/kaggle.json
+          $ kaggle datasets download -d geoap96/deepglobe2018-landcover-segmentation-traindataset
+          $ unzip deepglobe2018-landcover-segmentation-traindataset.zip
+
+    .. versionadded:: 0.3
+    """  # noqa: E501
+
+    filename = 'data.zip'
+    data_root = 'data'
+    md5 = 'f32684b0b2bf6f8d604cd359a399c061'
+    splits = ['train', 'test']
     classes = [
-        "Urban land",
-        "Agriculture land",
-        "Rangeland",
-        "Forest land",
-        "Water",
-        "Barren land",
-        "Unknown",
+        'Urban land',
+        'Agriculture land',
+        'Rangeland',
+        'Forest land',
+        'Water',
+        'Barren land',
+        'Unknown',
     ]
     colormap = [
         (0, 255, 255),
@@ -89,9 +101,9 @@ class DeepGlobeLandCover(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        split: str = 'train',
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new DeepGlobeLandCover dataset instance.
@@ -102,6 +114,9 @@ class DeepGlobeLandCover(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found.
         """
         assert split in self.splits
         self.root = root
@@ -110,23 +125,23 @@ class DeepGlobeLandCover(NonGeoDataset):
         self.checksum = checksum
 
         self._verify()
-        if split == "train":
-            split_folder = "training_data"
+        if split == 'train':
+            split_folder = 'training_data'
         else:
-            split_folder = "test_data"
+            split_folder = 'test_data'
 
         self.image_fns = []
         self.mask_fns = []
         for image in sorted(
-            os.listdir(os.path.join(root, self.data_root, split_folder, "images"))
+            os.listdir(os.path.join(root, self.data_root, split_folder, 'images'))
         ):
-            if image.endswith(".jpg"):
+            if image.endswith('.jpg'):
                 id = image[:-8]
                 image_path = os.path.join(
-                    root, self.data_root, split_folder, "images", image
+                    root, self.data_root, split_folder, 'images', image
                 )
                 mask_path = os.path.join(
-                    root, self.data_root, split_folder, "masks", str(id) + "_mask.png"
+                    root, self.data_root, split_folder, 'masks', str(id) + '_mask.png'
                 )
 
                 self.image_fns.append(image_path)
@@ -143,7 +158,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         """
         image = self._load_image(index)
         mask = self._load_target(index)
-        sample = {"image": image, "mask": mask}
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -170,7 +185,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         path = self.image_fns[index]
 
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img)
+            array: np.typing.NDArray[np.int_] = np.array(img)
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1)).to(torch.float32)
@@ -187,7 +202,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         """
         path = self.mask_fns[index]
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.uint8]" = np.array(img)
+            array: np.typing.NDArray[np.uint8] = np.array(img)
             array = rgb_to_mask(array, self.colormap)
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
@@ -195,11 +210,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         return tensor
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if checksum fails or the dataset is not downloaded
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         if os.path.exists(os.path.join(self.root, self.data_root)):
             return
@@ -209,21 +220,17 @@ class DeepGlobeLandCover(NonGeoDataset):
 
         if os.path.isfile(filepath):
             if self.checksum and not check_integrity(filepath, self.md5):
-                raise RuntimeError("Dataset found, but corrupted.")
+                raise RuntimeError('Dataset found, but corrupted.')
             extract_archive(filepath)
             return
 
-        # Check if the user requested to download the dataset
-        raise RuntimeError(
-            "Dataset not found in `root`, either specify a different"
-            + " `root` directory or manually download the dataset to this directory."
-        )
+        raise DatasetNotFoundError(self)
 
     def plot(
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
         alpha: float = 0.5,
     ) -> Figure:
         """Plot a sample from the dataset.
@@ -239,12 +246,12 @@ class DeepGlobeLandCover(NonGeoDataset):
         """
         ncols = 1
         image1 = draw_semantic_segmentation_masks(
-            sample["image"], sample["mask"], alpha=alpha, colors=self.colormap
+            sample['image'], sample['mask'], alpha=alpha, colors=self.colormap
         )
-        if "prediction" in sample:
+        if 'prediction' in sample:
             ncols += 1
             image2 = draw_semantic_segmentation_masks(
-                sample["image"], sample["prediction"], alpha=alpha, colors=self.colormap
+                sample['image'], sample['prediction'], alpha=alpha, colors=self.colormap
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
@@ -254,15 +261,15 @@ class DeepGlobeLandCover(NonGeoDataset):
             ax0 = axs
 
         ax0.imshow(image1)
-        ax0.axis("off")
+        ax0.axis('off')
         if ncols > 1:
             ax1.imshow(image2)
-            ax1.axis("off")
+            ax1.axis('off')
 
         if show_titles:
-            ax0.set_title("Ground Truth")
+            ax0.set_title('Ground Truth')
             if ncols > 1:
-                ax1.set_title("Predictions")
+                ax1.set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

@@ -10,27 +10,44 @@ See the following references for design details:
 * https://github.com/pytorch/vision/blob/main/torchvision/models/_api.py
 """  # noqa: E501
 
-from typing import Any, Callable, Union
+from collections.abc import Callable
+from typing import Any
 
 import torch.nn as nn
 from torchvision.models._api import WeightsEnum
 
+from .dofa import (
+    DOFABase16_Weights,
+    DOFALarge16_Weights,
+    dofa_base_patch16_224,
+    dofa_large_patch16_224,
+)
 from .resnet import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50
+from .swin import Swin_V2_B_Weights, swin_v2_b
 from .vit import ViTSmall16_Weights, vit_small_patch16_224
 
 _model = {
-    "resnet18": resnet18,
-    "resnet50": resnet50,
-    "vit_small_patch16_224": vit_small_patch16_224,
+    'dofa_base_patch16_224': dofa_base_patch16_224,
+    'dofa_large_patch16_224': dofa_large_patch16_224,
+    'resnet18': resnet18,
+    'resnet50': resnet50,
+    'swin_v2_b': swin_v2_b,
+    'vit_small_patch16_224': vit_small_patch16_224,
 }
 
 _model_weights = {
+    dofa_base_patch16_224: DOFABase16_Weights,
+    dofa_large_patch16_224: DOFALarge16_Weights,
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
+    swin_v2_b: Swin_V2_B_Weights,
     vit_small_patch16_224: ViTSmall16_Weights,
-    "resnet18": ResNet18_Weights,
-    "resnet50": ResNet50_Weights,
-    "vit_small_patch16_224": ViTSmall16_Weights,
+    'dofa_base_patch16_224': DOFABase16_Weights,
+    'dofa_large_patch16_224': DOFALarge16_Weights,
+    'resnet18': ResNet18_Weights,
+    'resnet50': ResNet50_Weights,
+    'swin_v2_b': Swin_V2_B_Weights,
+    'vit_small_patch16_224': ViTSmall16_Weights,
 }
 
 
@@ -51,7 +68,7 @@ def get_model(name: str, *args: Any, **kwargs: Any) -> nn.Module:
     return model
 
 
-def get_model_weights(name: Union[Callable[..., nn.Module], str]) -> WeightsEnum:
+def get_model_weights(name: Callable[..., nn.Module] | str) -> WeightsEnum:
     """Get the weights enum class associated with a given model.
 
     .. versionadded:: 0.4

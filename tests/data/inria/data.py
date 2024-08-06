@@ -18,7 +18,7 @@ def write_data(
 ) -> None:
     with rio.open(
         path,
-        "w",
+        'w',
         driver=driver,
         height=img.shape[0],
         width=img.shape[1],
@@ -42,18 +42,18 @@ def generate_test_data(root: str, n_samples: int = 2) -> str:
     Returns:
         str: md5 hash of created archive
     """
-    dtype = np.dtype("uint8")
+    dtype = np.dtype('uint8')
     size = (8, 8)
 
-    driver = "GTiff"
+    driver = 'GTiff'
     transform = Affine(0.3, 0.0, 616500.0, 0.0, -0.3, 3345000.0)
     crs = CRS.from_epsg(26914)
 
-    folder_path = os.path.join(root, "AerialImageDataset")
+    folder_path = os.path.join(root, 'AerialImageDataset')
 
-    img_dir = os.path.join(folder_path, "train", "images")
-    lbl_dir = os.path.join(folder_path, "train", "gt")
-    timg_dir = os.path.join(folder_path, "test", "images")
+    img_dir = os.path.join(folder_path, 'train', 'images')
+    lbl_dir = os.path.join(folder_path, 'train', 'gt')
+    timg_dir = os.path.join(folder_path, 'test', 'images')
 
     if not os.path.exists(img_dir):
         os.makedirs(img_dir)
@@ -68,23 +68,22 @@ def generate_test_data(root: str, n_samples: int = 2) -> str:
         lbl = np.random.randint(2, size=size, dtype=dtype)
         timg = np.random.randint(dtype_max, size=size, dtype=dtype)
 
-        img_path = os.path.join(img_dir, f"austin{i+1}.tif")
-        lbl_path = os.path.join(lbl_dir, f"austin{i+1}.tif")
-        timg_path = os.path.join(timg_dir, f"austin{i+10}.tif")
+        img_path = os.path.join(img_dir, f'austin{i+1}.tif')
+        lbl_path = os.path.join(lbl_dir, f'austin{i+1}.tif')
+        timg_path = os.path.join(timg_dir, f'austin{i+10}.tif')
 
         write_data(img_path, img, driver, crs, transform)
         write_data(lbl_path, lbl, driver, crs, transform)
         write_data(timg_path, timg, driver, crs, transform)
 
     # Create archive
-    archive_path = os.path.join(root, "NEW2-AerialImageDataset")
+    archive_path = os.path.join(root, 'NEW2-AerialImageDataset')
     shutil.make_archive(
-        archive_path, "zip", root_dir=root, base_dir="AerialImageDataset"
+        archive_path, 'zip', root_dir=root, base_dir='AerialImageDataset'
     )
-    shutil.rmtree(folder_path)
-    return calculate_md5(f"{archive_path}.zip")
+    return calculate_md5(f'{archive_path}.zip')
 
 
-if __name__ == "__main__":
-    md5_hash = generate_test_data(os.getcwd(), 5)
+if __name__ == '__main__':
+    md5_hash = generate_test_data(os.getcwd(), 7)
     print(md5_hash)

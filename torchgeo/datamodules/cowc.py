@@ -34,8 +34,8 @@ class COWCCountingDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.dataset = COWCCounting(split="train", **self.kwargs)
-        self.test_dataset = COWCCounting(split="test", **self.kwargs)
+        self.dataset = COWCCounting(split='train', **self.kwargs)
+        self.test_dataset = COWCCounting(split='test', **self.kwargs)
         self.train_dataset, self.val_dataset = random_split(
             self.dataset,
             [len(self.dataset) - len(self.test_dataset), len(self.test_dataset)],

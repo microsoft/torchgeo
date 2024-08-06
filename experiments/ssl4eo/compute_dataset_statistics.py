@@ -12,14 +12,14 @@ import rasterio as rio
 from tqdm import tqdm
 from tqdm.contrib.concurrent import thread_map
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("directory", help="directory to recursively search for files")
-    parser.add_argument("--suffix", default=".tif", help="file suffix")
-    parser.add_argument("--num-workers", type=int, default=10, help="number of threads")
+    parser.add_argument('directory', help='directory to recursively search for files')
+    parser.add_argument('--suffix', default='.tif', help='file suffix')
+    parser.add_argument('--num-workers', type=int, default=10, help='number of threads')
     args = parser.parse_args()
 
-    def compute(path: str) -> tuple["np.typing.NDArray[np.float32]", int]:
+    def compute(path: str) -> tuple['np.typing.NDArray[np.float32]', int]:
         """Compute the min, max, mean, and std dev of a single image.
 
         Args:
@@ -36,15 +36,15 @@ if __name__ == "__main__":
         return out, f.width * f.height
 
     paths = glob.glob(
-        os.path.join(args.directory, "**", f"*{args.suffix}"), recursive=True
+        os.path.join(args.directory, '**', f'*{args.suffix}'), recursive=True
     )
 
     if args.num_workers > 0:
-        out_list, size_list = list(
+        out_tuple, size_tuple = list(
             zip(*thread_map(compute, paths, max_workers=args.num_workers))
         )
-        out = np.array(out_list)
-        sizes = np.array(size_list)
+        out = np.array(out_tuple)
+        sizes = np.array(size_tuple)
     else:
         out_list = []
         size_list = []
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     )
 
     np.set_printoptions(linewidth=2**8)
-    print("min:", repr(minimum))
-    print("max:", repr(maximum))
-    print("mean:", repr(mu))
-    print("std:", repr(sigma))
+    print('min:', repr(minimum))
+    print('max:', repr(maximum))
+    print('mean:', repr(mu))
+    print('std:', repr(sigma))

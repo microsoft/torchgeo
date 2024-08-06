@@ -12,18 +12,25 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-from torchgeo.datasets import BoundingBox, IntersectionDataset, Landsat8, UnionDataset
+from torchgeo.datasets import (
+    BoundingBox,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    Landsat8,
+    RGBBandsMissingError,
+    UnionDataset,
+)
 
 
 class TestLandsat8:
     @pytest.fixture(
         params=[
-            ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"],
-            ["SR_B4", "SR_B3", "SR_B2", "SR_QA_AEROSOL"],
+            ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7'],
+            ['SR_B4', 'SR_B3', 'SR_B2', 'SR_QA_AEROSOL'],
         ]
     )
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> Landsat8:
-        root = os.path.join("tests", "data", "landsat8")
+        root = os.path.join('tests', 'data', 'landsat8')
         bands = request.param
         transforms = nn.Identity()
         return Landsat8(root, bands=bands, transforms=transforms)
@@ -34,8 +41,11 @@ class TestLandsat8:
     def test_getitem(self, dataset: Landsat8) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x["crs"], CRS)
-        assert isinstance(x["image"], torch.Tensor)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['image'], torch.Tensor)
+
+    def test_len(self, dataset: Landsat8) -> None:
+        assert len(dataset) == 1
 
     def test_and(self, dataset: Landsat8) -> None:
         ds = dataset & dataset
@@ -47,25 +57,25 @@ class TestLandsat8:
 
     def test_plot(self, dataset: Landsat8) -> None:
         x = dataset[dataset.bounds]
-        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_wrong_bands(self, dataset: Landsat8) -> None:
-        bands = ("SR_B1",)
-        ds = Landsat8(root=dataset.root, bands=bands)
+        bands = ('SR_B1',)
+        ds = Landsat8(dataset.paths, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
-            ValueError, match="Dataset doesn't contain some of the RGB bands"
+            RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):
             ds.plot(x)
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(FileNotFoundError, match="No Landsat8 data was found in "):
-            Landsat8(str(tmp_path))
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            Landsat8(tmp_path)
 
     def test_invalid_query(self, dataset: Landsat8) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
-            IndexError, match="query: .* not found in index with bounds:"
+            IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]

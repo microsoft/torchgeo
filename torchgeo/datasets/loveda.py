@@ -5,16 +5,18 @@
 
 import glob
 import os
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class LoveDA(NonGeoDataset):
@@ -55,44 +57,44 @@ class LoveDA(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    scenes = ["urban", "rural"]
-    splits = ["train", "val", "test"]
+    scenes = ['urban', 'rural']
+    splits = ['train', 'val', 'test']
 
     info_dict = {
-        "train": {
-            "url": "https://zenodo.org/record/5706578/files/Train.zip?download=1",
-            "filename": "Train.zip",
-            "md5": "de2b196043ed9b4af1690b3f9a7d558f",
+        'train': {
+            'url': 'https://zenodo.org/record/5706578/files/Train.zip?download=1',
+            'filename': 'Train.zip',
+            'md5': 'de2b196043ed9b4af1690b3f9a7d558f',
         },
-        "val": {
-            "url": "https://zenodo.org/record/5706578/files/Val.zip?download=1",
-            "filename": "Val.zip",
-            "md5": "84cae2577468ff0b5386758bb386d31d",
+        'val': {
+            'url': 'https://zenodo.org/record/5706578/files/Val.zip?download=1',
+            'filename': 'Val.zip',
+            'md5': '84cae2577468ff0b5386758bb386d31d',
         },
-        "test": {
-            "url": "https://zenodo.org/record/5706578/files/Test.zip?download=1",
-            "filename": "Test.zip",
-            "md5": "a489be0090465e01fb067795d24e6b47",
+        'test': {
+            'url': 'https://zenodo.org/record/5706578/files/Test.zip?download=1',
+            'filename': 'Test.zip',
+            'md5': 'a489be0090465e01fb067795d24e6b47',
         },
     }
 
     classes = [
-        "background",
-        "building",
-        "road",
-        "water",
-        "barren",
-        "forest",
-        "agriculture",
-        "no-data",
+        'background',
+        'building',
+        'road',
+        'water',
+        'barren',
+        'forest',
+        'agriculture',
+        'no-data',
     ]
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        scene: list[str] = ["urban", "rural"],
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        split: str = 'train',
+        scene: list[str] = ['urban', 'rural'],
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -108,10 +110,8 @@ class LoveDA(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``split`` argument is invalid
-            AssertionError: if ``scene`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            AssertionError: if ``split`` or ``scene`` arguments are invalid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
         assert set(scene).intersection(
@@ -125,9 +125,9 @@ class LoveDA(NonGeoDataset):
         self.transforms = transforms
         self.checksum = checksum
 
-        self.url = self.info_dict[self.split]["url"]
-        self.filename = self.info_dict[self.split]["filename"]
-        self.md5 = self.info_dict[self.split]["md5"]
+        self.url = self.info_dict[self.split]['url']
+        self.filename = self.info_dict[self.split]['filename']
+        self.md5 = self.info_dict[self.split]['md5']
 
         self.directory = os.path.join(self.root, split.capitalize())
         self.scene_paths = [
@@ -138,10 +138,7 @@ class LoveDA(NonGeoDataset):
             self._download()
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found at root directory or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         self.files = self._load_files(self.scene_paths, self.split)
 
@@ -156,13 +153,13 @@ class LoveDA(NonGeoDataset):
             and mask of dimension 1024x1024
         """
         files = self.files[index]
-        image = self._load_image(files["image"])
+        image = self._load_image(files['image'])
 
-        if self.split != "test":
-            mask = self._load_target(files["mask"])
-            sample = {"image": image, "mask": mask}
+        if self.split != 'test':
+            mask = self._load_target(files['mask'])
+            sample = {'image': image, 'mask': mask}
         else:
-            sample = {"image": image}
+            sample = {'image': image}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -188,21 +185,19 @@ class LoveDA(NonGeoDataset):
         images = []
 
         for s in scene_paths:
-            images.extend(glob.glob(os.path.join(s, "images_png", "*.png")))
+            images.extend(glob.glob(os.path.join(s, 'images_png', '*.png')))
 
         images = sorted(images)
 
-        if self.split != "test":
-            masks = [image.replace("images_png", "masks_png") for image in images]
-            files = [
-                dict(image=image, mask=mask) for image, mask, in zip(images, masks)
-            ]
+        if self.split != 'test':
+            masks = [image.replace('images_png', 'masks_png') for image in images]
+            files = [dict(image=image, mask=mask) for image, mask in zip(images, masks)]
         else:
             files = [dict(image=image) for image in images]
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -213,13 +208,13 @@ class LoveDA(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load a single mask corresponding to image.
 
         Args:
@@ -230,7 +225,7 @@ class LoveDA(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = tensor.to(torch.long)
             return tensor
@@ -248,13 +243,9 @@ class LoveDA(NonGeoDataset):
         return True
 
     def _download(self) -> None:
-        """Download the dataset and extract it.
-
-        Raises:
-            AssertionError: if the checksum of split.py does not match
-        """
+        """Download the dataset and extract it."""
         if self._check_integrity():
-            print("Files already downloaded and verified")
+            print('Files already downloaded and verified')
             return
 
         download_and_extract_archive(
@@ -264,9 +255,7 @@ class LoveDA(NonGeoDataset):
             md5=self.md5 if self.checksum else None,
         )
 
-    def plot(
-        self, sample: dict[str, Tensor], suptitle: Optional[str] = None
-    ) -> plt.Figure:
+    def plot(self, sample: dict[str, Tensor], suptitle: str | None = None) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -276,23 +265,23 @@ class LoveDA(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        if self.split != "test":
-            image, mask = sample["image"], sample["mask"]
+        if self.split != 'test':
+            image, mask = sample['image'], sample['mask']
             ncols = 2
         else:
-            image = sample["image"]
+            image = sample['image']
             ncols = 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
 
-        if self.split != "test":
+        if self.split != 'test':
             axs[0].imshow(image.permute(1, 2, 0))
-            axs[0].axis("off")
+            axs[0].axis('off')
             axs[1].imshow(mask)
-            axs[1].axis("off")
+            axs[1].axis('off')
         else:
             axs.imshow(image.permute(1, 2, 0))
-            axs.axis("off")
+            axs.axis('off')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

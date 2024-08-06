@@ -40,17 +40,17 @@ class CustomGeoDataset(GeoDataset):
         self.res = res
 
     def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
-        return {"index": query}
+        return {'index': query}
 
 
 class TestGeoSampler:
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 100, 200, 300, 400, 500))
         return ds
 
-    @pytest.fixture(scope="function")
+    @pytest.fixture(scope='function')
     def sampler(self) -> CustomGeoSampler:
         return CustomGeoSampler()
 
@@ -65,7 +65,7 @@ class TestGeoSampler:
             GeoSampler(dataset)  # type: ignore[abstract]
 
     @pytest.mark.slow
-    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    @pytest.mark.parametrize('num_workers', [0, 1, 2])
     def test_dataloader(
         self, dataset: CustomGeoDataset, sampler: CustomGeoSampler, num_workers: int
     ) -> None:
@@ -77,7 +77,7 @@ class TestGeoSampler:
 
 
 class TestRandomGeoSampler:
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 100, 200, 300, 400, 500))
@@ -85,7 +85,7 @@ class TestRandomGeoSampler:
         return ds
 
     @pytest.fixture(
-        scope="function",
+        scope='function',
         params=product([3, 4.5, (2, 2), (3, 4.5), (4.5, 3)], [Units.PIXELS, Units.CRS]),
     )
     def sampler(
@@ -140,7 +140,7 @@ class TestRandomGeoSampler:
             assert bbox == BoundingBox(0, 10, 0, 10, 0, 10)
 
     @pytest.mark.slow
-    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    @pytest.mark.parametrize('num_workers', [0, 1, 2])
     def test_dataloader(
         self, dataset: CustomGeoDataset, sampler: RandomGeoSampler, num_workers: int
     ) -> None:
@@ -152,7 +152,7 @@ class TestRandomGeoSampler:
 
 
 class TestGridGeoSampler:
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 100, 200, 300, 400, 500))
@@ -160,7 +160,7 @@ class TestGridGeoSampler:
         return ds
 
     @pytest.fixture(
-        scope="function",
+        scope='function',
         params=product(
             [
                 (8, 1),
@@ -244,7 +244,7 @@ class TestGridGeoSampler:
         assert next(iterator) == BoundingBox(5, 10, 0, 5, 0, 10)
 
     @pytest.mark.slow
-    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    @pytest.mark.parametrize('num_workers', [0, 1, 2])
     def test_dataloader(
         self, dataset: CustomGeoDataset, sampler: GridGeoSampler, num_workers: int
     ) -> None:
@@ -256,14 +256,14 @@ class TestGridGeoSampler:
 
 
 class TestPreChippedGeoSampler:
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 20, 0, 20, 0, 20))
         ds.index.insert(1, (0, 30, 0, 30, 0, 30))
         return ds
 
-    @pytest.fixture(scope="function")
+    @pytest.fixture(scope='function')
     def sampler(self, dataset: CustomGeoDataset) -> PreChippedGeoSampler:
         return PreChippedGeoSampler(dataset, shuffle=True)
 
@@ -289,7 +289,7 @@ class TestPreChippedGeoSampler:
             continue
 
     @pytest.mark.slow
-    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    @pytest.mark.parametrize('num_workers', [0, 1, 2])
     def test_dataloader(
         self, dataset: CustomGeoDataset, sampler: PreChippedGeoSampler, num_workers: int
     ) -> None:

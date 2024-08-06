@@ -1,6 +1,3 @@
 # style
-black[jupyter]==23.3.0
-flake8==6.0.0
-isort[colors]==5.12.0
-pydocstyle[toml]==6.3.0
-pyupgrade==3.7.0
+mypy==1.11.1
+ruff==0.5.6

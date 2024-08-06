@@ -24,12 +24,12 @@ def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
     .. versionadded:: 0.5
     """
     output: dict[str, Any] = {}
-    output["image"] = torch.stack([sample["image"] for sample in batch])
+    output['image'] = torch.stack([sample['image'] for sample in batch])
 
-    if "boxes" in batch[0]:
-        output["boxes"] = [sample["boxes"] for sample in batch]
-    if "label" in batch[0]:
-        output["label"] = [sample["label"] for sample in batch]
+    if 'boxes' in batch[0]:
+        output['boxes'] = [sample['boxes'] for sample in batch]
+    if 'label' in batch[0]:
+        output['label'] = [sample['label'] for sample in batch]
 
     return output
 
@@ -63,10 +63,10 @@ class FAIR1MDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit"]:
-            self.train_dataset = FAIR1M(split="train", **self.kwargs)
-        if stage in ["fit", "validate"]:
-            self.val_dataset = FAIR1M(split="val", **self.kwargs)
-        if stage in ["predict"]:
+        if stage in ['fit']:
+            self.train_dataset = FAIR1M(split='train', **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.val_dataset = FAIR1M(split='val', **self.kwargs)
+        if stage in ['predict']:
             # Test set labels are not publicly available
-            self.predict_dataset = FAIR1M(split="test", **self.kwargs)
+            self.predict_dataset = FAIR1M(split='test', **self.kwargs)

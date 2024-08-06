@@ -14,9 +14,9 @@ $ bash sample_conus.sh  # for benchmark datasets
 
 The first section of these scripts includes user-specific parameters that can be modified to change the behavior of the scripts. Of particular importance are:
 
-* `SAVE_PATH`: controls where the sampling location CSV is saved to
-* `START_INDEX`: index to start from (usually 0, can be increased to append more locations)
-* `END_INDEX`: index to stop at (start with ~500K)
+- `SAVE_PATH`: controls where the sampling location CSV is saved to
+- `START_INDEX`: index to start from (usually 0, can be increased to append more locations)
+- `END_INDEX`: index to stop at (start with ~500K)
 
 These scripts will download world city data and write `sampled_locations.csv` files to be used for downloading.
 
@@ -35,12 +35,12 @@ $ bash download_oli_sr.sh
 
 These scripts contain the following variables you may want to modify:
 
-* `ROOT_DIR`: root directory containing all subdirectories
-* `SAVE_PATH`: where the downloaded data is saved
-* `MATCH_FILE`: the CSV created in the previous step
-* `NUM_WOKERS`: number of parallel workers
-* `START_INDEX`: index from which to start downloading
-* `END_INDEX`: index at which to stop downloading
+- `ROOT_DIR`: root directory containing all subdirectories
+- `SAVE_PATH`: where the downloaded data is saved
+- `MATCH_FILE`: the CSV created in the previous step
+- `NUM_WOKERS`: number of parallel workers
+- `START_INDEX`: index from which to start downloading
+- `END_INDEX`: index at which to stop downloading
 
 These scripts are designed for downloading the pre-training datasets. Each script can be easily modified to instead download the benchmarking datasets by changing the `MATCH_FILE`, `YEAR`, and `--dates` passed in to the download script. For ETM+ TOA, you'll also want to set a `--default-value` since you'll need to include nodata pixels due to SLC-off.
 
@@ -89,10 +89,10 @@ This will create patches of NLCD and CDL data with the same locations and dimens
 Using either the newly created datasets or after downloading the datasets from Hugging Face, you can run each experiment using:
 
 ```console
-$ python3 ../../../train.py config_file=...
+$ torchgeo fit --config *.yaml
 ```
 
-The config files to be passed can be found in the `../../../conf/` directory. Feel free to tweak any hyperparameters you see in these files. The default values are the optimal hyperparameters we found.
+The config files to be passed can be found in the `conf/` directory. Feel free to tweak any hyperparameters you see in these files. The default values are the optimal hyperparameters we found.
 
 ## Plotting
 

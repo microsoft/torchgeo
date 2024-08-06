@@ -5,9 +5,10 @@
 
 import abc
 import os
+import pathlib
 import sys
-from collections.abc import Sequence
-from typing import Any, Callable, Optional, cast
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -19,11 +20,14 @@ import shapely.geometry
 import shapely.ops
 import torch
 from matplotlib.colors import ListedColormap
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import GeoDataset, RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .nlcd import NLCD
+from .utils import BoundingBox, Path, download_url, extract_archive
 
 
 class Chesapeake(RasterDataset, abc.ABC):
@@ -82,16 +86,16 @@ class Chesapeake(RasterDataset, abc.ABC):
     @property
     def url(self) -> str:
         """URL to download dataset from."""
-        url = "https://cicwebresources.blob.core.windows.net/chesapeakebaylandcover"
-        url += f"/{self.base_folder}/{self.zipfile}"
+        url = 'https://cicwebresources.blob.core.windows.net/chesapeakebaylandcover'
+        url += f'/{self.base_folder}/{self.zipfile}'
         return url
 
     def __init__(
         self,
-        root: str = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        paths: Path | Iterable[Path] = 'data',
+        crs: CRS | None = None,
+        res: float | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -99,7 +103,7 @@ class Chesapeake(RasterDataset, abc.ABC):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -111,10 +115,12 @@ class Chesapeake(RasterDataset, abc.ABC):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
-        self.root = root
+        self.paths = paths
         self.download = download
         self.checksum = checksum
 
@@ -131,30 +137,23 @@ class Chesapeake(RasterDataset, abc.ABC):
             )
         self._cmap = ListedColormap(colors)
 
-        super().__init__(root, crs, res, transforms=transforms, cache=cache)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted file already exists
-        if os.path.exists(os.path.join(self.root, self.filename)):
+        if self.files:
             return
 
         # Check if the zip file has already been downloaded
-        if os.path.exists(os.path.join(self.root, self.zipfile)):
+        assert isinstance(self.paths, str | pathlib.Path)
+        if os.path.exists(os.path.join(self.paths, self.zipfile)):
             self._extract()
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -162,18 +161,19 @@ class Chesapeake(RasterDataset, abc.ABC):
 
     def _download(self) -> None:
         """Download the dataset."""
-        download_url(self.url, self.root, filename=self.zipfile, md5=self.md5)
+        download_url(self.url, self.paths, filename=self.zipfile, md5=self.md5)
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        extract_archive(os.path.join(self.root, self.zipfile))
+        assert isinstance(self.paths, str | pathlib.Path)
+        extract_archive(os.path.join(self.paths, self.zipfile))
 
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+        suptitle: str | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -188,12 +188,12 @@ class Chesapeake(RasterDataset, abc.ABC):
            Method now takes a sample dict, not a Tensor. Additionally, possible to
            show subplot titles and/or use a custom suptitle.
         """
-        mask = sample["mask"].squeeze(0)
+        mask = sample['mask'].squeeze(0)
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze(0)
+            pred = sample['prediction'].squeeze(0)
             ncols = 2
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4 * ncols, 4))
@@ -204,20 +204,20 @@ class Chesapeake(RasterDataset, abc.ABC):
                 vmin=0,
                 vmax=self._cmap.N - 1,
                 cmap=self._cmap,
-                interpolation="none",
+                interpolation='none',
             )
-            axs[0].axis("off")
+            axs[0].axis('off')
             axs[1].imshow(
                 pred,
                 vmin=0,
                 vmax=self._cmap.N - 1,
                 cmap=self._cmap,
-                interpolation="none",
+                interpolation='none',
             )
-            axs[1].axis("off")
+            axs[1].axis('off')
             if show_titles:
-                axs[0].set_title("Mask")
-                axs[1].set_title("Prediction")
+                axs[0].set_title('Mask')
+                axs[1].set_title('Prediction')
 
         else:
             axs.imshow(
@@ -225,11 +225,11 @@ class Chesapeake(RasterDataset, abc.ABC):
                 vmin=0,
                 vmax=self._cmap.N - 1,
                 cmap=self._cmap,
-                interpolation="none",
+                interpolation='none',
             )
-            axs.axis("off")
+            axs.axis('off')
             if show_titles:
-                axs.set_title("Mask")
+                axs.set_title('Mask')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
@@ -252,11 +252,11 @@ class Chesapeake7(Chesapeake):
     7. Aberdeen Proving Ground: U.S. Army facility with no labels
     """
 
-    base_folder = "BAYWIDE"
-    filename = "Baywide_7class_20132014.tif"
+    base_folder = 'BAYWIDE'
+    filename = 'Baywide_7class_20132014.tif'
     filename_glob = filename
-    zipfile = "Baywide_7Class_20132014.zip"
-    md5 = "61a4e948fb2551840b6557ef195c2084"
+    zipfile = 'Baywide_7Class_20132014.zip'
+    md5 = '61a4e948fb2551840b6557ef195c2084'
 
     cmap = {
         0: (0, 0, 0, 0),
@@ -291,31 +291,31 @@ class Chesapeake13(Chesapeake):
     13. Aberdeen Proving Ground: U.S. Army facility with no labels
     """
 
-    base_folder = "BAYWIDE"
-    filename = "Baywide_13Class_20132014.tif"
+    base_folder = 'BAYWIDE'
+    filename = 'Baywide_13Class_20132014.tif'
     filename_glob = filename
-    zipfile = "Baywide_13Class_20132014.zip"
-    md5 = "7e51118923c91e80e6e268156d25a4b9"
+    zipfile = 'Baywide_13Class_20132014.zip'
+    md5 = '7e51118923c91e80e6e268156d25a4b9'
 
 
 class ChesapeakeDC(Chesapeake):
     """This subset of the dataset contains data only for Washington, D.C."""
 
-    base_folder = "DC"
-    filename = os.path.join("DC_11001", "DC_11001.img")
+    base_folder = 'DC'
+    filename = os.path.join('DC_11001', 'DC_11001.img')
     filename_glob = filename
-    zipfile = "DC_11001.zip"
-    md5 = "ed06ba7570d2955e8857d7d846c53b06"
+    zipfile = 'DC_11001.zip'
+    md5 = 'ed06ba7570d2955e8857d7d846c53b06'
 
 
 class ChesapeakeDE(Chesapeake):
     """This subset of the dataset contains data only for Delaware."""
 
-    base_folder = "DE"
-    filename = "DE_STATEWIDE.tif"
+    base_folder = 'DE'
+    filename = 'DE_STATEWIDE.tif'
     filename_glob = filename
-    zipfile = "_DE_STATEWIDE.zip"
-    md5 = "5e12eff3b6950c01092c7e480b38e544"
+    zipfile = '_DE_STATEWIDE.zip'
+    md5 = '5e12eff3b6950c01092c7e480b38e544'
 
 
 class ChesapeakeMD(Chesapeake):
@@ -329,11 +329,11 @@ class ChesapeakeMD(Chesapeake):
          the proprietary deflate64 compressed zip file.
     """
 
-    base_folder = "MD"
-    filename = "MD_STATEWIDE.tif"
+    base_folder = 'MD'
+    filename = 'MD_STATEWIDE.tif'
     filename_glob = filename
-    zipfile = "_MD_STATEWIDE.zip"
-    md5 = "40c7cd697a887f2ffdb601b5c114e567"
+    zipfile = '_MD_STATEWIDE.zip'
+    md5 = '40c7cd697a887f2ffdb601b5c114e567'
 
 
 class ChesapeakeNY(Chesapeake):
@@ -347,21 +347,21 @@ class ChesapeakeNY(Chesapeake):
          the proprietary deflate64 compressed zip file.
     """
 
-    base_folder = "NY"
-    filename = "NY_STATEWIDE.tif"
+    base_folder = 'NY'
+    filename = 'NY_STATEWIDE.tif'
     filename_glob = filename
-    zipfile = "_NY_STATEWIDE.zip"
-    md5 = "1100078c526616454ef2e508affda915"
+    zipfile = '_NY_STATEWIDE.zip'
+    md5 = '1100078c526616454ef2e508affda915'
 
 
 class ChesapeakePA(Chesapeake):
     """This subset of the dataset contains data only for Pennsylvania."""
 
-    base_folder = "PA"
-    filename = "PA_STATEWIDE.tif"
+    base_folder = 'PA'
+    filename = 'PA_STATEWIDE.tif'
     filename_glob = filename
-    zipfile = "_PA_STATEWIDE.zip"
-    md5 = "20a2a857c527a4dbadd6beed8b47e5ab"
+    zipfile = '_PA_STATEWIDE.zip'
+    md5 = '20a2a857c527a4dbadd6beed8b47e5ab'
 
 
 class ChesapeakeVA(Chesapeake):
@@ -375,21 +375,21 @@ class ChesapeakeVA(Chesapeake):
          the proprietary deflate64 compressed zip file.
     """
 
-    base_folder = "VA"
-    filename = "CIC2014_VA_STATEWIDE.tif"
+    base_folder = 'VA'
+    filename = 'CIC2014_VA_STATEWIDE.tif'
     filename_glob = filename
-    zipfile = "_VA_STATEWIDE.zip"
-    md5 = "6f2c97deaf73bb3e1ea9b21bd7a3fc8e"
+    zipfile = '_VA_STATEWIDE.zip'
+    md5 = '6f2c97deaf73bb3e1ea9b21bd7a3fc8e'
 
 
 class ChesapeakeWV(Chesapeake):
     """This subset of the dataset contains data only for West Virginia."""
 
-    base_folder = "WV"
-    filename = "WV_STATEWIDE.tif"
+    base_folder = 'WV'
+    filename = 'WV_STATEWIDE.tif'
     filename_glob = filename
-    zipfile = "_WV_STATEWIDE.zip"
-    md5 = "350621ea293651fbc557a1c3e3c64cc3"
+    zipfile = '_WV_STATEWIDE.zip'
+    md5 = '350621ea293651fbc557a1c3e3c64cc3'
 
 
 class ChesapeakeCVPR(GeoDataset):
@@ -414,18 +414,18 @@ class ChesapeakeCVPR(GeoDataset):
     * https://doi.org/10.1109/cvpr.2019.01301
     """
 
-    subdatasets = ["base", "prior_extension"]
+    subdatasets = ['base', 'prior_extension']
     urls = {
-        "base": "https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip",  # noqa: E501
-        "prior_extension": "https://zenodo.org/record/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1",  # noqa: E501
+        'base': 'https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip',  # noqa: E501
+        'prior_extension': 'https://zenodo.org/record/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1',  # noqa: E501
     }
     filenames = {
-        "base": "cvpr_chesapeake_landcover.zip",
-        "prior_extension": "cvpr_chesapeake_landcover_prior_extension.zip",
+        'base': 'cvpr_chesapeake_landcover.zip',
+        'prior_extension': 'cvpr_chesapeake_landcover_prior_extension.zip',
     }
     md5s = {
-        "base": "1225ccbb9590e9396875f221e5031514",
-        "prior_extension": "402f41d07823c8faf7ea6960d7c4e17a",
+        'base': '1225ccbb9590e9396875f221e5031514',
+        'prior_extension': '402f41d07823c8faf7ea6960d7c4e17a',
     }
 
     crs = CRS.from_epsg(3857)
@@ -442,26 +442,6 @@ class ChesapeakeCVPR(GeoDataset):
         15: (0, 0, 0, 0),
     }
 
-    nlcd_cmap = {
-        0: (0, 0, 0, 0),
-        11: (70, 107, 159, 255),
-        12: (209, 222, 248, 255),
-        21: (222, 197, 197, 255),
-        22: (217, 146, 130, 255),
-        23: (235, 0, 0, 255),
-        24: (171, 0, 0, 255),
-        31: (179, 172, 159, 255),
-        41: (104, 171, 95, 255),
-        42: (28, 95, 44, 255),
-        43: (181, 197, 143, 255),
-        52: (204, 184, 121, 255),
-        71: (223, 223, 194, 255),
-        81: (220, 217, 57, 255),
-        82: (171, 108, 40, 255),
-        90: (184, 217, 235, 255),
-        95: (108, 159, 184, 255),
-    }
-
     prior_color_matrix = np.array(
         [
             [0.0, 0.77254902, 1.0, 1.0],
@@ -472,69 +452,69 @@ class ChesapeakeCVPR(GeoDataset):
     )
 
     valid_layers = [
-        "naip-new",
-        "naip-old",
-        "landsat-leaf-on",
-        "landsat-leaf-off",
-        "nlcd",
-        "lc",
-        "buildings",
-        "prior_from_cooccurrences_101_31_no_osm_no_buildings",
+        'naip-new',
+        'naip-old',
+        'landsat-leaf-on',
+        'landsat-leaf-off',
+        'nlcd',
+        'lc',
+        'buildings',
+        'prior_from_cooccurrences_101_31_no_osm_no_buildings',
     ]
-    states = ["de", "md", "va", "wv", "pa", "ny"]
+    states = ['de', 'md', 'va', 'wv', 'pa', 'ny']
     splits = (
-        [f"{state}-train" for state in states]
-        + [f"{state}-val" for state in states]
-        + [f"{state}-test" for state in states]
+        [f'{state}-train' for state in states]
+        + [f'{state}-val' for state in states]
+        + [f'{state}-test' for state in states]
     )
 
     # these are used to check the integrity of the dataset
-    files = [
-        "de_1m_2013_extended-debuffered-test_tiles",
-        "de_1m_2013_extended-debuffered-train_tiles",
-        "de_1m_2013_extended-debuffered-val_tiles",
-        "md_1m_2013_extended-debuffered-test_tiles",
-        "md_1m_2013_extended-debuffered-train_tiles",
-        "md_1m_2013_extended-debuffered-val_tiles",
-        "ny_1m_2013_extended-debuffered-test_tiles",
-        "ny_1m_2013_extended-debuffered-train_tiles",
-        "ny_1m_2013_extended-debuffered-val_tiles",
-        "pa_1m_2013_extended-debuffered-test_tiles",
-        "pa_1m_2013_extended-debuffered-train_tiles",
-        "pa_1m_2013_extended-debuffered-val_tiles",
-        "va_1m_2014_extended-debuffered-test_tiles",
-        "va_1m_2014_extended-debuffered-train_tiles",
-        "va_1m_2014_extended-debuffered-val_tiles",
-        "wv_1m_2014_extended-debuffered-test_tiles",
-        "wv_1m_2014_extended-debuffered-train_tiles",
-        "wv_1m_2014_extended-debuffered-val_tiles",
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_buildings.tif",
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif",  # noqa: E501
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif",  # noqa: E501
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_lc.tif",
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-new.tif",
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-old.tif",
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_nlcd.tif",
-        "wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif",  # noqa: E501
-        "spatial_index.geojson",
+    _files = [
+        'de_1m_2013_extended-debuffered-test_tiles',
+        'de_1m_2013_extended-debuffered-train_tiles',
+        'de_1m_2013_extended-debuffered-val_tiles',
+        'md_1m_2013_extended-debuffered-test_tiles',
+        'md_1m_2013_extended-debuffered-train_tiles',
+        'md_1m_2013_extended-debuffered-val_tiles',
+        'ny_1m_2013_extended-debuffered-test_tiles',
+        'ny_1m_2013_extended-debuffered-train_tiles',
+        'ny_1m_2013_extended-debuffered-val_tiles',
+        'pa_1m_2013_extended-debuffered-test_tiles',
+        'pa_1m_2013_extended-debuffered-train_tiles',
+        'pa_1m_2013_extended-debuffered-val_tiles',
+        'va_1m_2014_extended-debuffered-test_tiles',
+        'va_1m_2014_extended-debuffered-train_tiles',
+        'va_1m_2014_extended-debuffered-val_tiles',
+        'wv_1m_2014_extended-debuffered-test_tiles',
+        'wv_1m_2014_extended-debuffered-train_tiles',
+        'wv_1m_2014_extended-debuffered-val_tiles',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_buildings.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif',  # noqa: E501
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif',  # noqa: E501
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_lc.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-new.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-old.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_nlcd.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',  # noqa: E501
+        'spatial_index.geojson',
     ]
 
-    p_src_crs = pyproj.CRS("epsg:3857")
+    p_src_crs = pyproj.CRS('epsg:3857')
     p_transformers = {
-        "epsg:26917": pyproj.Transformer.from_crs(
-            p_src_crs, pyproj.CRS("epsg:26917"), always_xy=True
+        'epsg:26917': pyproj.Transformer.from_crs(
+            p_src_crs, pyproj.CRS('epsg:26917'), always_xy=True
         ).transform,
-        "epsg:26918": pyproj.Transformer.from_crs(
-            p_src_crs, pyproj.CRS("epsg:26918"), always_xy=True
+        'epsg:26918': pyproj.Transformer.from_crs(
+            p_src_crs, pyproj.CRS('epsg:26918'), always_xy=True
         ).transform,
     }
 
     def __init__(
         self,
-        root: str = "data",
-        splits: Sequence[str] = ["de-train"],
-        layers: Sequence[str] = ["naip-new", "lc"],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        root: Path = 'data',
+        splits: Sequence[str] = ['de-train'],
+        layers: Sequence[str] = ['naip-new', 'lc'],
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -556,9 +536,8 @@ class ChesapeakeCVPR(GeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
             AssertionError: if ``splits`` or ``layers`` are not valid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         for split in splits:
             assert split in self.splits
@@ -578,38 +557,38 @@ class ChesapeakeCVPR(GeoDataset):
         lc_colors = lc_colors[:, :3] / 255
         self._lc_cmap = ListedColormap(lc_colors)
 
-        nlcd_colors = np.zeros((max(self.nlcd_cmap.keys()) + 1, 4))
-        nlcd_colors[list(self.nlcd_cmap.keys())] = list(self.nlcd_cmap.values())
+        nlcd_colors = np.zeros((max(NLCD.cmap.keys()) + 1, 4))
+        nlcd_colors[list(NLCD.cmap.keys())] = list(NLCD.cmap.values())
         nlcd_colors = nlcd_colors[:, :3] / 255
         self._nlcd_cmap = ListedColormap(nlcd_colors)
 
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint: float = 0
         maxt: float = sys.maxsize
-        with fiona.open(os.path.join(root, "spatial_index.geojson"), "r") as f:
+        with fiona.open(os.path.join(root, 'spatial_index.geojson'), 'r') as f:
             for i, row in enumerate(f):
-                if row["properties"]["split"] in splits:
-                    box = shapely.geometry.shape(row["geometry"])
+                if row['properties']['split'] in splits:
+                    box = shapely.geometry.shape(row['geometry'])
                     minx, miny, maxx, maxy = box.bounds
                     coords = (minx, maxx, miny, maxy, mint, maxt)
 
-                    prior_fn = row["properties"]["lc"].replace(
-                        "lc.tif",
-                        "prior_from_cooccurrences_101_31_no_osm_no_buildings.tif",
+                    prior_fn = row['properties']['lc'].replace(
+                        'lc.tif',
+                        'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
                     )
 
                     self.index.insert(
                         i,
                         coords,
                         {
-                            "naip-new": row["properties"]["naip-new"],
-                            "naip-old": row["properties"]["naip-old"],
-                            "landsat-leaf-on": row["properties"]["landsat-leaf-on"],
-                            "landsat-leaf-off": row["properties"]["landsat-leaf-off"],
-                            "lc": row["properties"]["lc"],
-                            "nlcd": row["properties"]["nlcd"],
-                            "buildings": row["properties"]["buildings"],
-                            "prior_from_cooccurrences_101_31_no_osm_no_buildings": prior_fn,  # noqa: E501
+                            'naip-new': row['properties']['naip-new'],
+                            'naip-old': row['properties']['naip-old'],
+                            'landsat-leaf-on': row['properties']['landsat-leaf-on'],
+                            'landsat-leaf-off': row['properties']['landsat-leaf-off'],
+                            'lc': row['properties']['lc'],
+                            'nlcd': row['properties']['nlcd'],
+                            'buildings': row['properties']['buildings'],
+                            'prior_from_cooccurrences_101_31_no_osm_no_buildings': prior_fn,  # noqa: E501
                         },
                     )
 
@@ -628,11 +607,11 @@ class ChesapeakeCVPR(GeoDataset):
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = cast(list[dict[str, str]], [hit.object for hit in hits])
 
-        sample = {"image": [], "mask": [], "crs": self.crs, "bbox": query}
+        sample = {'image': [], 'mask': [], 'crs': self.crs, 'bounds': query}
 
         if len(filepaths) == 0:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
         elif len(filepaths) == 1:
             filenames = filepaths[0]
@@ -660,27 +639,27 @@ class ChesapeakeCVPR(GeoDataset):
                     )
 
                 if layer in [
-                    "naip-new",
-                    "naip-old",
-                    "landsat-leaf-on",
-                    "landsat-leaf-off",
+                    'naip-new',
+                    'naip-old',
+                    'landsat-leaf-on',
+                    'landsat-leaf-off',
                 ]:
-                    sample["image"].append(data)
+                    sample['image'].append(data)
                 elif layer in [
-                    "lc",
-                    "nlcd",
-                    "buildings",
-                    "prior_from_cooccurrences_101_31_no_osm_no_buildings",
+                    'lc',
+                    'nlcd',
+                    'buildings',
+                    'prior_from_cooccurrences_101_31_no_osm_no_buildings',
                 ]:
-                    sample["mask"].append(data)
+                    sample['mask'].append(data)
         else:
-            raise IndexError(f"query: {query} spans multiple tiles which is not valid")
+            raise IndexError(f'query: {query} spans multiple tiles which is not valid')
 
-        sample["image"] = np.concatenate(sample["image"], axis=0)
-        sample["mask"] = np.concatenate(sample["mask"], axis=0)
+        sample['image'] = np.concatenate(sample['image'], axis=0)
+        sample['mask'] = np.concatenate(sample['mask'], axis=0)
 
-        sample["image"] = torch.from_numpy(sample["image"]).float()
-        sample["mask"] = torch.from_numpy(sample["mask"]).long()
+        sample['image'] = torch.from_numpy(sample['image']).float()
+        sample['mask'] = torch.from_numpy(sample['mask']).long()
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -688,17 +667,13 @@ class ChesapeakeCVPR(GeoDataset):
         return sample
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
+        """Verify the integrity of the dataset."""
 
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
-
-        def exists(filename: str) -> bool:
+        def exists(filename: Path) -> bool:
             return os.path.exists(os.path.join(self.root, filename))
 
         # Check if the extracted files already exist
-        if all(map(exists, self.files)):
+        if all(map(exists, self._files)):
             return
 
         # Check if the zip files have already been downloaded
@@ -713,11 +688,7 @@ class ChesapeakeCVPR(GeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -742,8 +713,8 @@ class ChesapeakeCVPR(GeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+        suptitle: str | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -756,72 +727,72 @@ class ChesapeakeCVPR(GeoDataset):
 
         .. versionadded:: 0.4
         """
-        image = np.rollaxis(sample["image"].numpy(), 0, 3)
-        mask = sample["mask"].numpy()
+        image = np.rollaxis(sample['image'].numpy(), 0, 3)
+        mask = sample['mask'].numpy()
         if mask.ndim == 3:
             mask = np.rollaxis(mask, 0, 3)
         else:
             mask = np.expand_dims(mask, 2)
 
         num_panels = len(self.layers)
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            predictions = sample["prediction"].numpy()
+            predictions = sample['prediction'].numpy()
             num_panels += 1
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
 
         i = 0
         for layer in self.layers:
-            if layer == "naip-new" or layer == "naip-old":
+            if layer == 'naip-new' or layer == 'naip-old':
                 img = image[:, :, :3] / 255
                 image = image[:, :, 4:]
-                axs[i].axis("off")
+                axs[i].axis('off')
                 axs[i].imshow(img)
-            elif layer == "landsat-leaf-on" or layer == "landsat-leaf-off":
+            elif layer == 'landsat-leaf-on' or layer == 'landsat-leaf-off':
                 img = image[:, :, [3, 2, 1]] / 3000
                 image = image[:, :, 9:]
-                axs[i].axis("off")
+                axs[i].axis('off')
                 axs[i].imshow(img)
-            elif layer == "nlcd":
+            elif layer == 'nlcd':
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
                 axs[i].imshow(
-                    img, vmin=0, vmax=95, cmap=self._nlcd_cmap, interpolation="none"
+                    img, vmin=0, vmax=95, cmap=self._nlcd_cmap, interpolation='none'
                 )
-                axs[i].axis("off")
-            elif layer == "lc":
+                axs[i].axis('off')
+            elif layer == 'lc':
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
                 axs[i].imshow(
-                    img, vmin=0, vmax=15, cmap=self._lc_cmap, interpolation="none"
+                    img, vmin=0, vmax=15, cmap=self._lc_cmap, interpolation='none'
                 )
-                axs[i].axis("off")
-            elif layer == "buildings":
+                axs[i].axis('off')
+            elif layer == 'buildings':
                 img = mask[:, :, 0]
                 mask = mask[:, :, 1:]
-                axs[i].imshow(img, vmin=0, vmax=1, cmap="gray", interpolation="none")
-                axs[i].axis("off")
-            elif layer == "prior_from_cooccurrences_101_31_no_osm_no_buildings":
+                axs[i].imshow(img, vmin=0, vmax=1, cmap='gray', interpolation='none')
+                axs[i].axis('off')
+            elif layer == 'prior_from_cooccurrences_101_31_no_osm_no_buildings':
                 img = (mask[:, :, :4] @ self.prior_color_matrix) / 255
                 mask = mask[:, :, 4:]
                 axs[i].imshow(img)
-                axs[i].axis("off")
+                axs[i].axis('off')
 
             if show_titles:
-                if layer == "prior_from_cooccurrences_101_31_no_osm_no_buildings":
-                    axs[i].set_title("prior")
+                if layer == 'prior_from_cooccurrences_101_31_no_osm_no_buildings':
+                    axs[i].set_title('prior')
                 else:
                     axs[i].set_title(layer)
             i += 1
 
         if showing_predictions:
             axs[i].imshow(
-                predictions, vmin=0, vmax=15, cmap=self._lc_cmap, interpolation="none"
+                predictions, vmin=0, vmax=15, cmap=self._lc_cmap, interpolation='none'
             )
-            axs[i].axis("off")
+            axs[i].axis('off')
             if show_titles:
-                axs[i].set_title("Predictions")
+                axs[i].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

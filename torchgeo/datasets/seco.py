@@ -5,17 +5,19 @@
 
 import os
 import random
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, percentile_normalization
+from .utils import Path, download_url, extract_archive, percentile_normalization
 
 
 class SeasonalContrastS2(NonGeoDataset):
@@ -36,43 +38,43 @@ class SeasonalContrastS2(NonGeoDataset):
     """
 
     all_bands = [
-        "B1",
-        "B2",
-        "B3",
-        "B4",
-        "B5",
-        "B6",
-        "B7",
-        "B8",
-        "B8A",
-        "B9",
-        "B11",
-        "B12",
+        'B1',
+        'B2',
+        'B3',
+        'B4',
+        'B5',
+        'B6',
+        'B7',
+        'B8',
+        'B8A',
+        'B9',
+        'B11',
+        'B12',
     ]
-    rgb_bands = ["B4", "B3", "B2"]
+    rgb_bands = ['B4', 'B3', 'B2']
 
     metadata = {
-        "100k": {
-            "url": "https://zenodo.org/record/4728033/files/seco_100k.zip?download=1",
-            "md5": "ebf2d5e03adc6e657f9a69a20ad863e0",
-            "filename": "seco_100k.zip",
-            "directory": "seasonal_contrast_100k",
+        '100k': {
+            'url': 'https://zenodo.org/record/4728033/files/seco_100k.zip?download=1',
+            'md5': 'ebf2d5e03adc6e657f9a69a20ad863e0',
+            'filename': 'seco_100k.zip',
+            'directory': 'seasonal_contrast_100k',
         },
-        "1m": {
-            "url": "https://zenodo.org/record/4728033/files/seco_1m.zip?download=1",
-            "md5": "187963d852d4d3ce6637743ec3a4bd9e",
-            "filename": "seco_1m.zip",
-            "directory": "seasonal_contrast_1m",
+        '1m': {
+            'url': 'https://zenodo.org/record/4728033/files/seco_1m.zip?download=1',
+            'md5': '187963d852d4d3ce6637743ec3a4bd9e',
+            'filename': 'seco_1m.zip',
+            'directory': 'seasonal_contrast_1m',
         },
     }
 
     def __init__(
         self,
-        root: str = "data",
-        version: str = "100k",
+        root: Path = 'data',
+        version: str = '100k',
         seasons: int = 1,
         bands: list[str] = rgb_bands,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -93,8 +95,7 @@ class SeasonalContrastS2(NonGeoDataset):
 
         Raises:
             AssertionError: if ``version`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert version in self.metadata.keys()
         assert seasons in range(5)
@@ -124,14 +125,14 @@ class SeasonalContrastS2(NonGeoDataset):
            Image shape changed from 5xCxHxW to SCxHxW
         """
         root = os.path.join(
-            self.root, self.metadata[self.version]["directory"], f"{index:06}"
+            self.root, self.metadata[self.version]['directory'], f'{index:06}'
         )
         subdirs = [f for f in os.listdir(root) if os.path.isdir(os.path.join(root, f))]
         subdirs = random.sample(subdirs, self.seasons)
 
         images = [self._load_patch(root, subdir) for subdir in subdirs]
 
-        sample = {"image": torch.cat(images)}
+        sample = {'image': torch.cat(images)}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -144,9 +145,9 @@ class SeasonalContrastS2(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        return (10**5 if self.version == "100k" else 10**6) // 5
+        return (10**5 if self.version == '100k' else 10**6) // 5
 
-    def _load_patch(self, root: str, subdir: str) -> Tensor:
+    def _load_patch(self, root: Path, subdir: Path) -> Tensor:
         """Load a single image patch.
 
         Args:
@@ -158,7 +159,7 @@ class SeasonalContrastS2(NonGeoDataset):
         """
         all_data = []
         for band in self.bands:
-            fn = os.path.join(root, subdir, f"{band}.tif")
+            fn = os.path.join(root, subdir, f'{band}.tif')
             with rasterio.open(fn) as f:
                 band_data = f.read(1).astype(np.float32)
                 height, width = band_data.shape
@@ -173,7 +174,7 @@ class SeasonalContrastS2(NonGeoDataset):
                     try:
                         resample = Image.Resampling.BILINEAR
                     except AttributeError:
-                        resample = Image.BILINEAR
+                        resample = Image.BILINEAR  # type: ignore[attr-defined]
                     band_data = np.array(
                         pil_image.resize((264, 264), resample=resample)
                     )
@@ -182,31 +183,23 @@ class SeasonalContrastS2(NonGeoDataset):
         return image
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         directory_path = os.path.join(
-            self.root, self.metadata[self.version]["directory"]
+            self.root, self.metadata[self.version]['directory']
         )
         if os.path.exists(directory_path):
             return
 
         # Check if the zip files have already been downloaded
-        zip_path = os.path.join(self.root, self.metadata[self.version]["filename"])
+        zip_path = os.path.join(self.root, self.metadata[self.version]['filename'])
         if os.path.exists(zip_path):
             self._extract()
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -215,24 +208,24 @@ class SeasonalContrastS2(NonGeoDataset):
     def _download(self) -> None:
         """Download the dataset."""
         download_url(
-            self.metadata[self.version]["url"],
+            self.metadata[self.version]['url'],
             self.root,
-            filename=self.metadata[self.version]["filename"],
-            md5=self.metadata[self.version]["md5"] if self.checksum else None,
+            filename=self.metadata[self.version]['filename'],
+            md5=self.metadata[self.version]['md5'] if self.checksum else None,
         )
 
     def _extract(self) -> None:
         """Extract the dataset."""
         extract_archive(
-            os.path.join(self.root, self.metadata[self.version]["filename"])
+            os.path.join(self.root, self.metadata[self.version]['filename'])
         )
 
     def plot(
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+        suptitle: str | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -244,12 +237,12 @@ class SeasonalContrastS2(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if the RGB bands are included in ``self.bands`` or the sample
-                contains a "prediction" key
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+            ValueError: if sample contains a "prediction" key
 
         .. versionadded:: 0.2
         """
-        if "prediction" in sample:
+        if 'prediction' in sample:
             raise ValueError("This dataset doesn't support plotting predictions")
 
         rgb_indices = []
@@ -257,7 +250,7 @@ class SeasonalContrastS2(NonGeoDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
         fig, axes = plt.subplots(ncols=self.seasons, figsize=(20, 4))
         if self.seasons == 1:
@@ -265,12 +258,12 @@ class SeasonalContrastS2(NonGeoDataset):
 
         indices = torch.tensor(rgb_indices)
         for i in range(self.seasons):
-            image = sample["image"][indices + i * len(self.bands)].numpy()
+            image = sample['image'][indices + i * len(self.bands)].numpy()
             image = np.rollaxis(image, 0, 3)
             image = percentile_normalization(image, 0, 100)
 
             axes[i].imshow(image)
-            axes[i].axis("off")
+            axes[i].axis('off')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

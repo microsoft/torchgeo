@@ -1,16 +1,14 @@
-module:
-  _target_: torchgeo.trainers.ClassificationTask
-  loss: "ce"
-  model: "resnet18"
-  weights: null
-  learning_rate: 1e-3
-  learning_rate_schedule_patience: 6
-  in_channels: 3
-  num_classes: 5
-
-datamodule:
-  _target_: torchgeo.datamodules.FireRiskDataModule
-  root: "tests/data/fire_risk"
-  download: false
-  batch_size: 2
-  num_workers: 0
+model:
+  class_path: ClassificationTask
+  init_args:
+    loss: "ce"
+    model: "resnet18"
+    in_channels: 3
+    num_classes: 5
+data:
+  class_path: FireRiskDataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: "tests/data/fire_risk"
+    download: false

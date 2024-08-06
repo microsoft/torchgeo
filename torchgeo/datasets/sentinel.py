@@ -3,14 +3,17 @@
 
 """Sentinel datasets."""
 
-from collections.abc import Sequence
-from typing import Any, Callable, Optional
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import RGBBandsMissingError
 from .geo import RasterDataset
+from .utils import Path
 
 
 class Sentinel(RasterDataset):
@@ -114,7 +117,7 @@ class Sentinel1(Sentinel):
     # l:          Entire Area (e) or Clipped Area (c)
     # m:          Dead Reckoning (d) or DEM Matching (m)
     # ssss:       Product ID
-    filename_glob = "S1*{}.*"
+    filename_glob = 'S1*{}.*'
     filename_regex = r"""
         ^S1(?P<mission>[AB])
         _(?P<mode>SM|IW|EW|WV)
@@ -133,23 +136,23 @@ class Sentinel1(Sentinel):
         _(?P<band>[VH]{2})
         \.
     """
-    date_format = "%Y%m%dT%H%M%S"
-    all_bands = ["HH", "HV", "VV", "VH"]
+    date_format = '%Y%m%dT%H%M%S'
+    all_bands = ['HH', 'HV', 'VV', 'VH']
     separate_files = True
 
     def __init__(
         self,
-        root: str = "data",
-        crs: Optional[CRS] = None,
+        paths: Path | list[Path] = 'data',
+        crs: CRS | None = None,
         res: float = 10,
-        bands: Sequence[str] = ["VV", "VH"],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        bands: Sequence[str] = ['VV', 'VH'],
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -161,7 +164,10 @@ class Sentinel1(Sentinel):
 
         Raises:
             AssertionError: if ``bands`` is invalid
-            FileNotFoundError: if no files are found in ``root``
+            DatasetNotFoundError: If dataset is not found.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
         assert len(bands) > 0, "'bands' cannot be an empty list"
         assert len(bands) == len(set(bands)), "'bands' contains duplicate bands"
@@ -183,14 +189,14 @@ To create a dataset containing both, use:
 
         self.filename_glob = self.filename_glob.format(bands[0])
 
-        super().__init__(root, crs, res, bands, transforms, cache)
+        super().__init__(paths, crs, res, bands, transforms, cache)
 
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+        suptitle: str | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -206,20 +212,20 @@ To create a dataset containing both, use:
         if len(bands) == 1:
             # Only horizontal or vertical receive, plot as grayscale
 
-            image = sample["image"][0]
+            image = sample['image'][0]
             image = torch.clamp(image, min=0, max=1)
 
-            title = f"({bands[0]})"
+            title = f'({bands[0]})'
         else:
             # Both horizontal and vertical receive, plot as RGB
 
             # Deal with reverse order
-            if bands in [["HV", "HH"], ["VH", "VV"]]:
+            if bands in [['HV', 'HH'], ['VH', 'VV']]:
                 bands = bands[::-1]
-                sample["image"] = torch.flip(sample["image"], dims=[0])
+                sample['image'] = torch.flip(sample['image'], dims=[0])
 
-            co_polarization = sample["image"][0]  # transmit == receive
-            cross_polarization = sample["image"][1]  # transmit != receive
+            co_polarization = sample['image'][0]  # transmit == receive
+            cross_polarization = sample['image'][1]  # transmit != receive
             ratio = co_polarization / cross_polarization
 
             # https://gis.stackexchange.com/a/400780/123758
@@ -229,12 +235,12 @@ To create a dataset containing both, use:
 
             image = torch.stack((co_polarization, cross_polarization, ratio), dim=-1)
 
-            title = "({0}, {1}, {0}/{1})".format(*bands)
+            title = '({0}, {1}, {0}/{1})'.format(*bands)
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
 
         if show_titles:
             ax.set_title(title)
@@ -260,7 +266,7 @@ class Sentinel2(Sentinel):
 
     # https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-2-msi/naming-convention
     # https://sentinel.esa.int/documents/247904/685211/Sentinel-2-MSI-L2A-Product-Format-Specifications.pdf
-    filename_glob = "T*_*_{}*.*"
+    filename_glob = 'T*_*_{}*.*'
     filename_regex = r"""
         ^T(?P<tile>\d{{2}}[A-Z]{{3}})
         _(?P<date>\d{{8}}T\d{{6}})
@@ -268,41 +274,41 @@ class Sentinel2(Sentinel):
         (?:_(?P<resolution>{}m))?
         \..*$
     """
-    date_format = "%Y%m%dT%H%M%S"
+    date_format = '%Y%m%dT%H%M%S'
 
     # https://gisgeography.com/sentinel-2-bands-combinations/
     all_bands = [
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06",
-        "B07",
-        "B08",
-        "B8A",
-        "B09",
-        "B10",
-        "B11",
-        "B12",
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B09',
+        'B10',
+        'B11',
+        'B12',
     ]
-    rgb_bands = ["B04", "B03", "B02"]
+    rgb_bands = ['B04', 'B03', 'B02']
 
     separate_files = True
 
     def __init__(
         self,
-        root: str = "data",
-        crs: Optional[CRS] = None,
+        paths: Path | Iterable[Path] = 'data',
+        crs: CRS | None = None,
         res: float = 10,
-        bands: Optional[Sequence[str]] = None,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        bands: Sequence[str] | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -313,20 +319,23 @@ class Sentinel2(Sentinel):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            DatasetNotFoundError: If dataset is not found.
+
+        .. versionchanged:: 0.5
+            *root* was renamed to *paths*
         """
         bands = bands or self.all_bands
         self.filename_glob = self.filename_glob.format(bands[0])
         self.filename_regex = self.filename_regex.format(res)
 
-        super().__init__(root, crs, res, bands, transforms, cache)
+        super().__init__(paths, crs, res, bands, transforms, cache)
 
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+        suptitle: str | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -338,7 +347,7 @@ class Sentinel2(Sentinel):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if the RGB bands are not included in ``self.bands``
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
 
         .. versionchanged:: 0.3
            Method now takes a sample dict, not a Tensor. Additionally, possible to
@@ -349,9 +358,9 @@ class Sentinel2(Sentinel):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
-        image = sample["image"][rgb_indices].permute(1, 2, 0)
+        image = sample['image'][rgb_indices].permute(1, 2, 0)
         # DN = 10000 * REFLECTANCE
         # https://docs.sentinel-hub.com/api/latest/data/sentinel-2-l2a/
         image = torch.clamp(image / 10000, min=0, max=1)
@@ -359,10 +368,10 @@ class Sentinel2(Sentinel):
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
 
         if show_titles:
-            ax.set_title("Image")
+            ax.set_title('Image')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

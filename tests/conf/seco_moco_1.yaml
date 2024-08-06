@@ -1,16 +1,22 @@
-module:
-  _target_: torchgeo.trainers.MoCoTask
-  model: "resnet18"
-  in_channels: 3
-  version: 1
-  weight_decay: 1e-4
-  temperature: 0.07
-  memory_bank_size: 10
-  moco_momentum: 0.999
-
-datamodule:
-  _target_: torchgeo.datamodules.SeasonalContrastS2DataModule
-  root: "tests/data/seco"
-  seasons: 1
-  batch_size: 2
-  num_workers: 0
+model:
+  class_path: MoCoTask
+  init_args:
+    model: "resnet18"
+    in_channels: 3
+    version: 1
+    weight_decay: 1e-4
+    temperature: 0.07
+    memory_bank_size: 10
+    moco_momentum: 0.999
+data:
+  class_path: SeasonalContrastS2DataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: "tests/data/seco"
+    seasons: 1
+    # https://github.com/Lightning-AI/lightning/issues/18616
+    bands:
+      - "B4"
+      - "B3"
+      - "B2"

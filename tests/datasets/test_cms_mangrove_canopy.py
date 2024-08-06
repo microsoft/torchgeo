@@ -12,10 +12,15 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-from torchgeo.datasets import CMSGlobalMangroveCanopy, IntersectionDataset, UnionDataset
+from torchgeo.datasets import (
+    CMSGlobalMangroveCanopy,
+    DatasetNotFoundError,
+    IntersectionDataset,
+    UnionDataset,
+)
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
+def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
@@ -24,15 +29,15 @@ class TestCMSGlobalMangroveCanopy:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> CMSGlobalMangroveCanopy:
-        zipfile = "CMS_Global_Map_Mangrove_Canopy_1665.zip"
-        monkeypatch.setattr(CMSGlobalMangroveCanopy, "zipfile", zipfile)
+        zipfile = 'CMS_Global_Map_Mangrove_Canopy_1665.zip'
+        monkeypatch.setattr(CMSGlobalMangroveCanopy, 'zipfile', zipfile)
 
-        md5 = "d6894fa6293cc9c0f3f95a810e842de5"
-        monkeypatch.setattr(CMSGlobalMangroveCanopy, "md5", md5)
+        md5 = 'd6894fa6293cc9c0f3f95a810e842de5'
+        monkeypatch.setattr(CMSGlobalMangroveCanopy, 'md5', md5)
 
-        root = os.path.join("tests", "data", "cms_mangrove_canopy")
+        root = os.path.join('tests', 'data', 'cms_mangrove_canopy')
         transforms = nn.Identity()
-        country = "Angola"
+        country = 'Angola'
 
         return CMSGlobalMangroveCanopy(
             root, country=country, transforms=transforms, checksum=True
@@ -41,39 +46,42 @@ class TestCMSGlobalMangroveCanopy:
     def test_getitem(self, dataset: CMSGlobalMangroveCanopy) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x["crs"], CRS)
-        assert isinstance(x["mask"], torch.Tensor)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['mask'], torch.Tensor)
 
-    def test_no_dataset(self) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found in."):
-            CMSGlobalMangroveCanopy(root="/test")
+    def test_len(self, dataset: CMSGlobalMangroveCanopy) -> None:
+        assert len(dataset) == 1
+
+    def test_no_dataset(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            CMSGlobalMangroveCanopy(tmp_path)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(
-            "tests",
-            "data",
-            "cms_mangrove_canopy",
-            "CMS_Global_Map_Mangrove_Canopy_1665.zip",
+            'tests',
+            'data',
+            'cms_mangrove_canopy',
+            'CMS_Global_Map_Mangrove_Canopy_1665.zip',
         )
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(pathname, root)
-        CMSGlobalMangroveCanopy(root, country="Angola")
+        CMSGlobalMangroveCanopy(root, country='Angola')
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(
-            os.path.join(tmp_path, "CMS_Global_Map_Mangrove_Canopy_1665.zip"), "w"
+            os.path.join(tmp_path, 'CMS_Global_Map_Mangrove_Canopy_1665.zip'), 'w'
         ) as f:
-            f.write("bad")
-        with pytest.raises(RuntimeError, match="Dataset found, but corrupted."):
-            CMSGlobalMangroveCanopy(root=str(tmp_path), country="Angola", checksum=True)
+            f.write('bad')
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+            CMSGlobalMangroveCanopy(tmp_path, country='Angola', checksum=True)
 
     def test_invalid_country(self) -> None:
         with pytest.raises(AssertionError):
-            CMSGlobalMangroveCanopy(country="fakeCountry")
+            CMSGlobalMangroveCanopy(country='fakeCountry')
 
     def test_invalid_measurement(self) -> None:
         with pytest.raises(AssertionError):
-            CMSGlobalMangroveCanopy(measurement="wrongMeasurement")
+            CMSGlobalMangroveCanopy(measurement='wrongMeasurement')
 
     def test_and(self, dataset: CMSGlobalMangroveCanopy) -> None:
         ds = dataset & dataset
@@ -86,12 +94,12 @@ class TestCMSGlobalMangroveCanopy:
     def test_plot(self, dataset: CMSGlobalMangroveCanopy) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: CMSGlobalMangroveCanopy) -> None:
         query = dataset.bounds
         x = dataset[query]
-        x["prediction"] = x["mask"].clone()
-        dataset.plot(x, suptitle="Prediction")
+        x['prediction'] = x['mask'].clone()
+        dataset.plot(x, suptitle='Prediction')
         plt.close()

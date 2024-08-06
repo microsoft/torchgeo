@@ -1,0 +1,43 @@
+trainer:
+  min_epochs: 20
+  max_epochs: 100
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    model: "unet"
+    backbone: "resnet18"
+    weights: null
+    in_channels: 6
+    num_classes: 18
+    loss: "ce"
+    ignore_index: 0
+    lr: 1e-3
+    patience: 6
+data:
+  class_path: SSL4EOLBenchmarkDataModule
+  init_args:
+    batch_size: 64
+    num_workers: 16
+  dict_kwargs:
+    root: "data/ssl4eo_benchmark"
+    sensor: "etm_sr"
+    product: "cdl"
+    classes:
+      - 0
+      - 1
+      - 5
+      - 24
+      - 36
+      - 37
+      - 61
+      - 111
+      - 121
+      - 122
+      - 131
+      - 141
+      - 142
+      - 143
+      - 152
+      - 176
+      - 190
+      - 195

@@ -3,16 +3,19 @@
 
 """Aboveground Live Woody Biomass Density dataset."""
 
-import glob
 import json
 import os
-from typing import Any, Callable, Optional
+import pathlib
+from collections.abc import Callable, Iterable
+from typing import Any
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import download_url
+from .utils import Path, download_url
 
 
 class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
@@ -43,14 +46,11 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     is_image = False
 
-    url = (
-        "https://opendata.arcgis.com/api/v3/datasets/3e8736c8866b458687"
-        "e00d40c9f00bce_0/downloads/data?format=geojson&spatialRefId=4326"
-    )
+    url = 'https://opendata.arcgis.com/api/v3/datasets/e4bdbe8d6d8d4e32ace7d36a4aec7b93_0/downloads/data?format=geojson&spatialRefId=4326'  # noqa: E501
 
-    base_filename = "Aboveground_Live_Woody_Biomass_Density.geojson"
+    base_filename = 'Aboveground_Live_Woody_Biomass_Density.geojson'
 
-    filename_glob = "*N_*E.*"
+    filename_glob = '*N_*E.*'
     filename_regex = r"""^
         (?P<latitude>[0-9][0-9][A-Z])_
         (?P<longitude>[0-9][0-9][0-9][A-Z])*
@@ -58,17 +58,17 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     def __init__(
         self,
-        root: str = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        paths: Path | Iterable[Path] = 'data',
+        crs: CRS | None = None,
+        res: float | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -79,57 +79,52 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
-        self.root = root
+        self.paths = paths
         self.download = download
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms=transforms, cache=cache)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if dataset is missing
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        pathname = os.path.join(self.root, self.filename_glob)
-        if glob.glob(pathname):
+        if self.files:
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
 
     def _download(self) -> None:
         """Download the dataset."""
-        download_url(self.url, self.root, self.base_filename)
+        assert isinstance(self.paths, str | pathlib.Path)
+        download_url(self.url, self.paths, self.base_filename)
 
-        with open(os.path.join(self.root, self.base_filename)) as f:
+        with open(os.path.join(self.paths, self.base_filename)) as f:
             content = json.load(f)
 
-        for item in content["features"]:
+        for item in content['features']:
             download_url(
-                item["properties"]["download"],
-                self.root,
-                item["properties"]["tile_id"] + ".tif",
+                item['properties']['Mg_px_1_download'],
+                self.paths,
+                item['properties']['tile_id'] + '.tif',
             )
 
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+        suptitle: str | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -140,29 +135,29 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze()
+            pred = sample['prediction'].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
 
         if showing_predictions:
             axs[0].imshow(mask)
-            axs[0].axis("off")
+            axs[0].axis('off')
             axs[1].imshow(pred)
-            axs[1].axis("off")
+            axs[1].axis('off')
             if show_titles:
-                axs[0].set_title("Mask")
-                axs[1].set_title("Prediction")
+                axs[0].set_title('Mask')
+                axs[1].set_title('Prediction')
         else:
             axs.imshow(mask)
-            axs.axis("off")
+            axs.axis('off')
             if show_titles:
-                axs.set_title("Mask")
+                axs.set_title('Mask')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
