@@ -607,7 +607,7 @@ class ChesapeakeCVPR(GeoDataset):
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = cast(list[dict[str, str]], [hit.object for hit in hits])
 
-        sample = {'image': [], 'mask': [], 'crs': self.crs, 'bbox': query}
+        sample = {'image': [], 'mask': [], 'crs': self.crs, 'bounds': query}
 
         if len(filepaths) == 0:
             raise IndexError(

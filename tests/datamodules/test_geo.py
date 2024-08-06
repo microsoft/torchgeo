@@ -30,7 +30,7 @@ class CustomGeoDataset(GeoDataset):
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         image = torch.arange(3 * 2 * 2).view(3, 2, 2)
-        return {'image': image, 'crs': CRS.from_epsg(4326), 'bbox': query}
+        return {'image': image, 'crs': CRS.from_epsg(4326), 'bounds': query}
 
 
 class CustomGeoDataModule(GeoDataModule):
