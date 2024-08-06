@@ -3,10 +3,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import json
 import os
-import shutil
 
 NUM_SAMPLES = 3
 
@@ -159,65 +157,9 @@ LABELS = {
     'geometry': {'type': 'Point', 'coordinates': [-115.8855556, 42.44111111]},
 }
 
-STAC = {
-    'assets': {
-        'documentation': {
-            'href': '../_common/documentation.pdf',
-            'type': 'application/pdf',
-        },
-        'labels': {'href': 'labels.geojson', 'type': 'application/geo+json'},
-        'training_features_descriptions': {
-            'href': '../_common/training_features_descriptions.csv',
-            'title': 'Training Features Descriptions',
-            'type': 'text/csv',
-        },
-    },
-    'bbox': [-115.8855556, 42.44111111, -115.8855556, 42.44111111],
-    'collection': 'su_sar_moisture_content',
-    'geometry': {'coordinates': [-115.8855556, 42.44111111], 'type': 'Point'},
-    'id': 'su_sar_moisture_content_0001',
-    'links': [
-        {'href': '../collection.json', 'rel': 'collection'},
-        {'href': '../collection.json', 'rel': 'parent'},
-    ],
-    'properties': {
-        'datetime': '2015-06-30T00:00:00Z',
-        'label:description': '',
-        'label:properties': ['percent(t)'],
-        'label:type': 'vector',
-    },
-    'stac_extensions': ['label'],
-    'stac_version': '1.0.0-beta.2',
-    'type': 'Feature',
-}
 
-
-def create_file(path: str) -> None:
-    label_path = os.path.join(path, 'labels.geojson')
-    with open(label_path, 'w') as f:
+os.makedirs(data_dir, exist_ok=True)
+for i in range(1, NUM_SAMPLES + 1):
+    filename = os.path.join(data_dir, f'feature_{i:04}.geojson')
+    with open(filename, 'w') as f:
         json.dump(LABELS, f)
-
-    stac_path = os.path.join(path, 'stac.json')
-    with open(stac_path, 'w') as f:
-        json.dump(STAC, f)
-
-
-if __name__ == '__main__':
-    # Remove old data
-    if os.path.isdir(data_dir):
-        shutil.rmtree(data_dir)
-
-    os.makedirs(os.path.join(os.getcwd(), data_dir))
-
-    for i in range(NUM_SAMPLES):
-        sample_dir = os.path.join(data_dir, data_dir + f'_{i}')
-        os.makedirs(sample_dir)
-        create_file(sample_dir)
-
-    # Compress data
-    shutil.make_archive(data_dir, 'gztar', '.', data_dir)
-
-    # Compute checksums
-    with open(data_dir + '.tar.gz', 'rb') as f:
-        md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{data_dir}.tar.gz: {md5}')
