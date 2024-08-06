@@ -6,19 +6,14 @@
 # https://github.com/sphinx-doc/sphinx/issues/11327
 from __future__ import annotations
 
-import bz2
 import collections
 import contextlib
-import gzip
 import importlib
-import lzma
 import os
 import pathlib
 import shutil
 import subprocess
 import sys
-import tarfile
-import zipfile
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -28,105 +23,26 @@ import numpy as np
 import rasterio
 import torch
 from torch import Tensor
-from torchvision.datasets.utils import check_integrity, download_url
+from torchvision.datasets.utils import (
+    check_integrity,
+    download_and_extract_archive,
+    download_url,
+    extract_archive,
+)
 from torchvision.utils import draw_segmentation_masks
 
 from .errors import DependencyNotFoundError
 
 # Only include import redirects
-__all__ = ('check_integrity', 'download_url')
+__all__ = (
+    'check_integrity',
+    'download_and_extract_archive',
+    'download_url',
+    'extract_archive',
+)
 
 
 Path: TypeAlias = str | pathlib.Path
-
-
-class _rarfile:
-    class RarFile:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            self.args = args
-            self.kwargs = kwargs
-
-        def __enter__(self) -> Any:
-            rarfile = lazy_import('rarfile')
-            # TODO: catch exception for when rarfile is installed but not
-            # unrar/unar/bsdtar
-            return rarfile.RarFile(*self.args, **self.kwargs)
-
-        def __exit__(self, exc_type: None, exc_value: None, traceback: None) -> None:
-            pass
-
-
-def extract_archive(src: Path, dst: Path | None = None) -> None:
-    """Extract an archive.
-
-    Args:
-        src: file to be extracted
-        dst: directory to extract to (defaults to dirname of ``src``)
-
-    Raises:
-        RuntimeError: if src file has unknown archival/compression scheme
-    """
-    if dst is None:
-        dst = os.path.dirname(src)
-
-    suffix_and_extractor: list[tuple[str | tuple[str, ...], Any]] = [
-        ('.rar', _rarfile.RarFile),
-        (
-            ('.tar', '.tar.gz', '.tar.bz2', '.tar.xz', '.tgz', '.tbz2', '.tbz', '.txz'),
-            tarfile.open,
-        ),
-        ('.zip', zipfile.ZipFile),
-    ]
-
-    for suffix, extractor in suffix_and_extractor:
-        if str(src).endswith(suffix):
-            with extractor(src, 'r') as f:
-                f.extractall(dst)
-            return
-
-    suffix_and_decompressor: list[tuple[str, Any]] = [
-        ('.bz2', bz2.open),
-        ('.gz', gzip.open),
-        ('.xz', lzma.open),
-    ]
-
-    for suffix, decompressor in suffix_and_decompressor:
-        if str(src).endswith(suffix):
-            dst = os.path.join(dst, os.path.basename(src).replace(suffix, ''))
-            with decompressor(src, 'rb') as sf, open(dst, 'wb') as df:
-                df.write(sf.read())
-            return
-
-    raise RuntimeError('src file has unknown archival/compression scheme')
-
-
-def download_and_extract_archive(
-    url: str,
-    download_root: Path,
-    extract_root: Path | None = None,
-    filename: Path | None = None,
-    md5: str | None = None,
-) -> None:
-    """Download and extract an archive.
-
-    Args:
-        url: URL to download
-        download_root: directory to download to
-        extract_root: directory to extract to (defaults to ``download_root``)
-        filename: download filename (defaults to basename of ``url``)
-        md5: checksum for download verification
-    """
-    download_root = os.path.expanduser(download_root)
-    if extract_root is None:
-        extract_root = download_root
-    if not filename:
-        filename = os.path.basename(url)
-
-    download_url(url, download_root, filename, md5)
-
-    archive = os.path.join(download_root, filename)
-    print(f'Extracting {archive} to {extract_root}')
-    extract_archive(archive, extract_root)
 
 
 def download_radiant_mlhub_dataset(
