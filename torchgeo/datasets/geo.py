@@ -5,7 +5,6 @@
 
 import abc
 import functools
-import glob
 import os
 import pathlib
 import re
@@ -40,7 +39,7 @@ from .utils import (
     concat_samples,
     disambiguate_timestamp,
     merge_samples,
-    path_is_vsi, list_directory_recursive,
+    list_directory_recursive,
 )
 
 
