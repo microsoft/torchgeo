@@ -221,13 +221,12 @@ class GeoNRW(NonGeoDataset):
 
         path: str = self.file_list[index]
         utm_coords = os.path.basename(path).split('_')[:2]
+        base_dir = os.path.dirname(path)
 
         sample = {}
         for modality in self.modalities:
-            path = os.path.join(
-                os.path.dirname(path), self.filenames[modality](utm_coords)
-            )
-            sample[modality] = to_tensor(self.readers[modality](path))
+            modality_path = os.path.join(base_dir, self.filenames[modality](utm_coords))
+            sample[modality] = to_tensor(self.readers[modality](modality_path))
 
         # rename rgb to image
         sample['image'] = sample.pop('rgb').float()

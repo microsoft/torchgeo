@@ -29,28 +29,29 @@ class GeoNRWDataModule(NonGeoDataModule):
     std = torch.Tensor(1)
 
     def __init__(
-        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self, batch_size: int = 64, num_workers: int = 0, size: int = 256, **kwargs: Any
     ) -> None:
         """Initialize a new GeoNRWDataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
+            size: resize images of input size 1000x1000 to size x size
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.GeoNRW`.
         """
         super().__init__(GeoNRW, batch_size, num_workers, **kwargs)
 
         self.train_aug = AugmentationSequential(
-            K.Resize(256, 256),
+            K.Resize(size),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             data_keys=['image', 'mask'],
         )
 
-        self.aug = AugmentationSequential(
-            K.Resize(256, 256), data_keys=['image', 'mask']
-        )
+        self.aug = AugmentationSequential(K.Resize(size), data_keys=['image', 'mask'])
+
+        self.size = size
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
