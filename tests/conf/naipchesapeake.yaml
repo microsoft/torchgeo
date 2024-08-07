@@ -3,9 +3,9 @@ model:
   init_args:
     loss: "ce"
     model: "deeplabv3+"
-    backbone: "resnet34"
+    backbone: "resnet18"
     in_channels: 4
-    num_classes: 14
+    num_classes: 39
     num_filters: 1
     ignore_index: null
 data:
@@ -15,4 +15,4 @@ data:
     patch_size: 32
   dict_kwargs:
     naip_paths: "tests/data/naip"
-    chesapeake_paths: "tests/data/chesapeake/BAYWIDE"
+    chesapeake_paths: "tests/data/chesapeake/lulc"
