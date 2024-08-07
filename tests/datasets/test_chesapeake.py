@@ -70,11 +70,7 @@ class TestChesapeakeDC:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         url = os.path.join(
-            'tests',
-            'data',
-            'chesapeake',
-            'lulc',
-            'dc_lulc_2018_2022-Edition.zip',
+            'tests', 'data', 'chesapeake', 'lulc', 'dc_lulc_2018_2022-Edition.zip'
         )
         shutil.copy(url, tmp_path)
         ChesapeakeDC(tmp_path)
