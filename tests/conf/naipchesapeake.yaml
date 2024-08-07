@@ -5,7 +5,7 @@ model:
     model: "deeplabv3+"
     backbone: "resnet18"
     in_channels: 4
-    num_classes: 39
+    num_classes: 128
     num_filters: 1
     ignore_index: null
 data:
