@@ -9,6 +9,7 @@ from glob import glob
 
 import matplotlib
 import matplotlib.cm
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from PIL import Image
@@ -121,21 +122,21 @@ class GeoNRW(NonGeoDataset):
         'buildings',
     ]
 
-    colormap = [
-        '#000000',  # matplotlib black for background
-        '#2ca02c',  # matplotlib green for forest
-        '#1f77b4',  # matplotlib blue for water
-        '#8c564b',  # matplotlib brown for agricultural
-        '#7f7f7f',  # matplotlib gray residential_commercial_industrial
-        '#bcbd22',  # matplotlib olive for grassland_swamp_shrubbery
-        '#ff7f0e',  # matplotlib orange for railway_trainstation
-        '#9467bd',  # matplotlib purple for highway_squares
-        '#17becf',  # matplotlib cyan for airport_shipyard
-        '#d62728',  # matplotlib red for roads
-        '#e377c2',  # matplotlib pink for buildings
-    ]
-
-    modalities = ['sar', 'rgb', 'dem', 'seg']
+    colormap = mcolors.ListedColormap(
+        [
+            '#000000',  # matplotlib black for background
+            '#2ca02c',  # matplotlib green for forest
+            '#1f77b4',  # matplotlib blue for water
+            '#8c564b',  # matplotlib brown for agricultural
+            '#7f7f7f',  # matplotlib gray residential_commercial_industrial
+            '#bcbd22',  # matplotlib olive for grassland_swamp_shrubbery
+            '#ff7f0e',  # matplotlib orange for railway_trainstation
+            '#9467bd',  # matplotlib purple for highway_squares
+            '#17becf',  # matplotlib cyan for airport_shipyard
+            '#d62728',  # matplotlib red for roads
+            '#e377c2',  # matplotlib pink for buildings
+        ]
+    )
 
     readers = {
         'rgb': lambda path: Image.open(path).convert('RGB'),
@@ -190,6 +191,8 @@ class GeoNRW(NonGeoDataset):
         elif split == 'train':
             self.city_names = self.train_list
 
+        self._verify()
+
         self.file_list = self._get_file_list()
 
     def _get_file_list(self) -> list[str]:
@@ -240,8 +243,10 @@ class GeoNRW(NonGeoDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # check if city names directories exist
-        exists = [self.root / cn for cn in self.city_names]
-        if all(e.exists() for e in exists):
+        all_exist = all(
+            os.path.exists(os.path.join(self.root, cn)) for cn in self.city_names
+        )
+        if all_exist:
             return
 
         # Check if the tar file has been downloaded
@@ -300,12 +305,12 @@ class GeoNRW(NonGeoDataset):
         axs[2].axis('off')
 
         if showing_predictions:
-            axs[3].imshow(prediction.squeez(0), cmap=self.colormap)
+            axs[3].imshow(prediction.squeeze(0), cmap=self.colormap)
 
         # show classes in legend
         if show_titles:
             axs[2].legend(
-                [matplotlib.patches.Patch(color=c) for c in self.colormap],
+                [matplotlib.patches.Patch(color=c) for c in self.colormap.colors],
                 self.classes,
                 loc='center left',
                 bbox_to_anchor=(1, 0.5),
