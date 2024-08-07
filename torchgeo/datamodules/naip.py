@@ -47,7 +47,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.NAIP` (prefix keys with ``naip_``) and
-                :class:`~torchgeo.datasets.Chesapeake13`
+                :class:`~torchgeo.datasets.Chesapeake`
                 (prefix keys with ``chesapeake_``).
         """
         self.naip_kwargs = {}
