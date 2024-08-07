@@ -59,7 +59,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
                 self.chesapeake_kwargs[key[11:]] = val
 
         super().__init__(
-            NAIP, batch_size, patch_size, length, num_workers, **self.chesapeake_kwargs
+            NAIP, batch_size, patch_size, length, num_workers, **self.naip_kwargs
         )
 
         self.aug = AugmentationSequential(
