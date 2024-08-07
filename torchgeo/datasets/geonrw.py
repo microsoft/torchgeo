@@ -138,13 +138,13 @@ class GeoNRW(NonGeoDataset):
         ]
     )
 
-    readers = {
+    readers: dict[str, Callable[[str], Image.Image]] = {
         'rgb': lambda path: Image.open(path).convert('RGB'),
         'dem': lambda path: Image.open(path).copy(),
         'seg': lambda path: Image.open(path).convert('I;16'),
     }
 
-    filenames = {
+    modality_filenames: dict[str, Callable[[list[str]], str]] = {
         'rgb': lambda utm_coords: '{}_{}_rgb.jp2'.format(*utm_coords),
         'dem': lambda utm_coords: '{}_{}_dem.tif'.format(*utm_coords),
         'seg': lambda utm_coords: '{}_{}_seg.tif'.format(*utm_coords),
@@ -197,7 +197,7 @@ class GeoNRW(NonGeoDataset):
 
     def _get_file_list(self) -> list[str]:
         """Get a list of files for cities in the dataset split."""
-        file_list = []
+        file_list: list[str] = []
         for cn in self.city_names:
             pattern = os.path.join(self.root, cn, '*rgb.jp2')
             file_list.extend(glob(pattern))
@@ -226,9 +226,11 @@ class GeoNRW(NonGeoDataset):
         utm_coords = os.path.basename(path).split('_')[:2]
         base_dir = os.path.dirname(path)
 
-        sample = {}
+        sample: dict[str, Tensor] = {}
         for modality in self.modalities:
-            modality_path = os.path.join(base_dir, self.filenames[modality](utm_coords))
+            modality_path = os.path.join(
+                base_dir, self.modality_filenames[modality](utm_coords)
+            )
             sample[modality] = to_tensor(self.readers[modality](modality_path))
 
         # rename rgb to image
@@ -274,7 +276,6 @@ class GeoNRW(NonGeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: str | None = None,
-        alpha: float = 0.5,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -282,8 +283,6 @@ class GeoNRW(NonGeoDataset):
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
-            alpha: opacity with which to render predictions on top of the imagery
-
         Returns:
             a matplotlib Figure with the rendered sample
         """
@@ -309,11 +308,9 @@ class GeoNRW(NonGeoDataset):
 
         # show classes in legend
         if show_titles:
+            patches = [matplotlib.patches.Patch(color=c) for c in self.colormap.colors]  # type: ignore
             axs[2].legend(
-                [matplotlib.patches.Patch(color=c) for c in self.colormap.colors],
-                self.classes,
-                loc='center left',
-                bbox_to_anchor=(1, 0.5),
+                patches, self.classes, loc='center left', bbox_to_anchor=(1, 0.5)
             )
 
         if show_titles:
