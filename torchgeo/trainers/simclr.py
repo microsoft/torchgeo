@@ -15,8 +15,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from lightly.loss import NTXentLoss
 from lightly.models.modules import SimCLRProjectionHead
+from lightly.utils.lars import LARS
 from torch import Tensor
-from torch.optim import Adam  # type: ignore[attr-defined]
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torchvision.models._api import WeightsEnum
 
@@ -80,6 +80,7 @@ class SimCLRTask(BaseTask):
         hidden_dim: int | None = None,
         output_dim: int | None = None,
         lr: float = 4.8,
+        momentum: float = 0.9,
         weight_decay: float = 1e-4,
         temperature: float = 0.07,
         memory_bank_size: int = 64000,
@@ -89,6 +90,9 @@ class SimCLRTask(BaseTask):
         augmentations: nn.Module | None = None,
     ) -> None:
         """Initialize a new SimCLRTask instance.
+
+        .. versionadded:: 0.6
+           The *momentum* parameter.
 
         Args:
             model: Name of the `timm
@@ -104,6 +108,7 @@ class SimCLRTask(BaseTask):
             output_dim: Number of output dimensions in projection head
                 (defaults to output dimension of model).
             lr: Learning rate (0.3 x batch_size / 256 is recommended).
+            momentum: Momentum factor.
             weight_decay: Weight decay coefficient (1e-6 for v1, 1e-4 for v2).
             temperature: Temperature used in NT-Xent loss.
             memory_bank_size: Size of memory bank (0 for v1, 64K for v2).
@@ -283,13 +288,16 @@ class SimCLRTask(BaseTask):
     ) -> 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig':
         """Initialize the optimizer and learning rate scheduler.
 
+        .. versionchanged:: 0.6
+           Changed from Adam to LARS optimizer.
+
         Returns:
             Optimizer and learning rate scheduler.
         """
-        # Original paper uses LARS optimizer, but this is not defined in PyTorch
-        optimizer = Adam(
+        optimizer = LARS(
             self.parameters(),
             lr=self.hparams['lr'],
+            momentum=self.hparams['momentum'],
             weight_decay=self.hparams['weight_decay'],
         )
         max_epochs = 200

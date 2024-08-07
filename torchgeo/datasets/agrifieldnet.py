@@ -221,7 +221,7 @@ class AgriFieldNet(RasterDataset):
 
         sample = {
             'crs': self.crs,
-            'bbox': query,
+            'bounds': query,
             'image': image.float(),
             'mask': mask.long(),
         }
