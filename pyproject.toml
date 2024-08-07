@@ -72,8 +72,8 @@ dependencies = [
     "timm>=0.4.12",
     # torch 1.13+ required by torchvision
     "torch>=1.13",
-    # torchmetrics 0.10+ required for binary/multiclass/multilabel classification metrics
-    "torchmetrics>=0.10",
+    # torchmetrics 1.2.0+ required for MetricCollection
+    "torchmetrics>=1.2.0",
     # torchvision 0.14+ required for torchvision.models.swin_v2_b
     "torchvision>=0.14",
 ]

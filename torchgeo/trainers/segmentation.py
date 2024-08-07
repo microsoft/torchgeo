@@ -329,8 +329,6 @@ class SemanticSegmentationTask(BaseTask):
         self.log_dict(
             {f'{k}': v for k, v in self.train_metrics.compute().items()},
             batch_size=batch_size,
-            on_epoch=True,
-            on_step=False,
         )
         return loss
 
@@ -349,12 +347,11 @@ class SemanticSegmentationTask(BaseTask):
         batch_size = x.shape[0]
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log('val_loss', loss, batch_size=batch_size, on_epoch=True)
+        self.log('val_loss', loss, batch_size=batch_size)
         self.val_metrics(y_hat, y)
         self.log_dict(
             {f'{k}': v for k, v in self.val_metrics.compute().items()},
             batch_size=batch_size,
-            on_epoch=True,
         )
 
         if (
@@ -402,7 +399,6 @@ class SemanticSegmentationTask(BaseTask):
         self.log_dict(
             {f'{k}': v for k, v in self.test_metrics.compute().items()},
             batch_size=batch_size,
-            on_epoch=True,
         )
 
     def predict_step(

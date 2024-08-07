@@ -31,7 +31,7 @@ repos:
           - pyvista>=0.34.2
           - scikit-image>=0.22.0
           - torch>=2.3
-          - torchmetrics>=0.10
+          - torchmetrics>=1.2.0
           - torchvision>=0.18
         exclude: (build|data|dist|logo|logs|output)/
   - repo: https://github.com/pre-commit/mirrors-prettier
