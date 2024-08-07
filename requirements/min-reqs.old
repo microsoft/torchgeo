@@ -18,7 +18,7 @@ segmentation-models-pytorch==0.2.0
 shapely==1.8.0
 timm==0.4.12
 torch==1.13.0
-torchmetrics==1.2.0
+torchmetrics==1.1.0
 torchvision==0.14.0
 
 # datasets
