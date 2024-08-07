@@ -16,8 +16,6 @@ from .cdl import CDL
 from .chabud import ChaBuD
 from .chesapeake import (
     Chesapeake,
-    Chesapeake7,
-    Chesapeake13,
     ChesapeakeCVPR,
     ChesapeakeDC,
     ChesapeakeDE,

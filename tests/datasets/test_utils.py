@@ -76,15 +76,12 @@ def download_url(url: str, root: str | Path, *args: str) -> None:
         os.path.join('cowc_detection', 'COWC_test_list_detection.txt.bz2'),
         os.path.join('vhr10', 'NWPU VHR-10 dataset.rar'),
         os.path.join('landcoverai', 'landcover.ai.v1.zip'),
-        os.path.join('chesapeake', 'BAYWIDE', 'Baywide_13Class_20132014.zip'),
         os.path.join('sen12ms', 'ROIs1158_spring_lc.tar.gz'),
     ],
 )
 def test_extract_archive(src: str, tmp_path: Path) -> None:
     if src.endswith('.rar'):
         pytest.importorskip('rarfile', minversion='4')
-    if src.startswith('chesapeake'):
-        pytest.importorskip('zipfile_deflate64')
     extract_archive(os.path.join('tests', 'data', src), tmp_path)
 
 

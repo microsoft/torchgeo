@@ -23,8 +23,6 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 
-pytest.importorskip('zipfile_deflate64')
-
 
 def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
