@@ -4,8 +4,7 @@
 # Licensed under the MIT License.
 
 import hashlib
-import os
-import subprocess
+import shutil
 
 import numpy as np
 import rasterio
@@ -13,7 +12,6 @@ from rasterio.crs import CRS
 from rasterio.transform import Affine
 
 SIZE = 128  # image width/height
-NUM_CLASSES = 14
 
 np.random.seed(0)
 
@@ -41,23 +39,49 @@ PROJCS["USA_Contiguous_Albers_Equal_Area_Conic_USGS_version",
     AXIS["Easting",EAST],
     AXIS["Northing",NORTH]]
 """
-cmap = {
-    0: (0, 0, 0, 255),
-    1: (0, 197, 255, 255),
-    2: (0, 168, 132, 255),
-    3: (38, 115, 0, 255),
-    4: (76, 230, 0, 255),
-    5: (163, 255, 115, 255),
-    6: (255, 170, 0, 255),
-    7: (255, 0, 0, 255),
-    8: (156, 156, 156, 255),
-    9: (0, 0, 0, 255),
-    10: (115, 115, 0, 255),
-    11: (230, 230, 0, 255),
-    12: (255, 255, 115, 255),
-    13: (197, 0, 255, 255),
-}
 
+
+values = [
+    11,
+    12,
+    13,
+    14,
+    15,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    41,
+    42,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    62,
+    63,
+    64,
+    65,
+    72,
+    73,
+    74,
+    75,
+    83,
+    84,
+    85,
+    91,
+    92,
+    93,
+    94,
+    95,
+    127,
+]
 
 meta = {
     'driver': 'GTiff',
@@ -70,26 +94,18 @@ meta = {
     'transform': Affine(1.0, 0.0, 1303555.0000000005, 0.0, -1.0, 2535064.999999998),
 }
 
-# Remove old data
-if os.path.exists(f'{filename}.tif'):
-    os.remove(f'{filename}.tif')
+for state in ['dc', 'de', 'md', 'ny', 'pa', 'va', 'wv']:
+    filename = f'{state}_lulc_2018_2022-Edition'
 
-# Create raster file
-with rasterio.open(f'{filename}.tif', 'w', **meta) as f:
-    data = np.random.randint(NUM_CLASSES, size=(SIZE, SIZE), dtype=np.uint8)
-    f.write(data, 1)
-    f.write_colormap(1, cmap)
+    # Create raster file
+    with rasterio.open(f'{filename}.tif', 'w', **meta) as f:
+        data = np.random.choice(values, size=(SIZE, SIZE))
+        f.write(data, 1)
 
-# Create zip file
-# 7z required to create a zip file using the proprietary DEFLATE64 compression algorithm
-# https://github.com/brianhelba/zipfile-deflate64/issues/19#issuecomment-1006077294
-subprocess.run(
-    ['7z', 'a', f'{filename}.zip', '-mm=DEFLATE64', f'{filename}.tif'],
-    capture_output=True,
-    check=True,
-)
+    # Compress file
+    shutil.make_archive(filename, 'zip', '.', filename + '.tif')
 
-# Compute checksums
-with open(f'{filename}.zip', 'rb') as f:
-    md5 = hashlib.md5(f.read()).hexdigest()
-    print(repr(md5))
+    # Compute checksums
+    with open(f'{filename}.zip', 'rb') as f:
+        md5 = hashlib.md5(f.read()).hexdigest()
+        print(state, repr(md5))
