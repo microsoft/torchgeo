@@ -37,9 +37,9 @@ np.random.seed(0)
 Z = np.random.randint(np.iinfo('uint8').max, size=(SIZE, SIZE), dtype='uint8')
 
 for count in [3, 8]:
-    os.makedirs(os.path.join(dataset_id, f'{count}band'), exist_ok=True)
+    os.makedirs(os.path.join(dataset_id, 'train', f'{count}band'), exist_ok=True)
     for i in range(1, 4):
-        path = os.path.join(dataset_id, f'{count}band', f'3band_AOI_1_RIO_img{i}.tif')
+        path = os.path.join(dataset_id, 'train', f'{count}band', f'3band_AOI_1_RIO_img{i}.tif')
         profile['count'] = count
         with rasterio.open(path, 'w', **profile) as src:
             for j in range(1, count + 1):
@@ -50,7 +50,7 @@ for count in [3, 8]:
             dataset_id, 'tarballs', f'SN1_buildings_train_AOI_1_Rio_{count}band'
         ),
         'gztar',
-        dataset_id,
+        os.path.join(dataset_id, 'train'),
         f'{count}band',
     )
 
@@ -76,9 +76,9 @@ geojson = {
     ],
 }
 
-os.makedirs(os.path.join(dataset_id, 'geojson'), exist_ok=True)
+os.makedirs(os.path.join(dataset_id, 'train', 'geojson'), exist_ok=True)
 for i in range(1, 3):
-    path = os.path.join(dataset_id, 'geojson', f'Geo_AOI_1_RIO_img{i}.geojson')
+    path = os.path.join(dataset_id, 'train', 'geojson', f'Geo_AOI_1_RIO_img{i}.geojson')
     with open(path, 'w') as src:
         json.dump(geojson, src)
 
@@ -87,6 +87,6 @@ shutil.make_archive(
         dataset_id, 'tarballs', 'SN1_buildings_train_AOI_1_Rio_geojson_buildings'
     ),
     'gztar',
-    dataset_id,
+    os.path.join(dataset_id, 'train'),
     'geojson',
 )
