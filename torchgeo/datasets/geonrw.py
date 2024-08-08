@@ -196,7 +196,11 @@ class GeoNRW(NonGeoDataset):
         self.file_list = self._get_file_list()
 
     def _get_file_list(self) -> list[str]:
-        """Get a list of files for cities in the dataset split."""
+        """Get a list of files for cities in the dataset split.
+
+        Returns:
+            list of filenames in the dataset split
+        """
         file_list: list[str] = []
         for cn in self.city_names:
             pattern = os.path.join(self.root, cn, '*rgb.jp2')
@@ -233,7 +237,7 @@ class GeoNRW(NonGeoDataset):
             )
             sample[modality] = to_tensor(self.readers[modality](modality_path))
 
-        # rename rgb to image
+        # rename to torchgeo standard keys
         sample['image'] = sample.pop('rgb').float()
         sample['mask'] = sample.pop('seg').long()
 
@@ -283,6 +287,7 @@ class GeoNRW(NonGeoDataset):
             sample: a sample returned by :meth:`__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
+
         Returns:
             a matplotlib Figure with the rendered sample
         """
