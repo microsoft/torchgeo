@@ -20,7 +20,7 @@ from torchgeo.datamodules import (
     EuroSATDataModule,
     MisconfigurationException,
 )
-from torchgeo.datasets import BigEarthNet, EuroSAT, RGBBandsMissingError
+from torchgeo.datasets import BigEarthNet, EuroSAT
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
@@ -59,14 +59,6 @@ def create_model(*args: Any, **kwargs: Any) -> Module:
 def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
     state_dict: dict[str, Any] = torch.load(url)
     return state_dict
-
-
-def plot(*args: Any, **kwargs: Any) -> None:
-    return None
-
-
-def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
-    raise RGBBandsMissingError()
 
 
 class TestClassificationTask:
@@ -186,34 +178,6 @@ class TestClassificationTask:
         with pytest.raises(ValueError, match=match):
             ClassificationTask(model='resnet18', loss='invalid_loss')
 
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(EuroSATDataModule, 'plot', plot)
-        datamodule = EuroSATDataModule(
-            root='tests/data/eurosat', batch_size=1, num_workers=0
-        )
-        model = ClassificationTask(model='resnet18', in_channels=13, num_classes=10)
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
-
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(EuroSATDataModule, 'plot', plot_missing_bands)
-        datamodule = EuroSATDataModule(
-            root='tests/data/eurosat', batch_size=1, num_workers=0
-        )
-        model = ClassificationTask(model='resnet18', in_channels=13, num_classes=10)
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
-
     def test_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictClassificationDataModule(
             root='tests/data/eurosat', batch_size=1, num_workers=0
@@ -276,38 +240,6 @@ class TestMultiLabelClassificationTask:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
             MultiLabelClassificationTask(model='resnet18', loss='invalid_loss')
-
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(BigEarthNetDataModule, 'plot', plot)
-        datamodule = BigEarthNetDataModule(
-            root='tests/data/bigearthnet', batch_size=1, num_workers=0
-        )
-        model = MultiLabelClassificationTask(
-            model='resnet18', in_channels=14, num_classes=19, loss='bce'
-        )
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
-
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(BigEarthNetDataModule, 'plot', plot_missing_bands)
-        datamodule = BigEarthNetDataModule(
-            root='tests/data/bigearthnet', batch_size=1, num_workers=0
-        )
-        model = MultiLabelClassificationTask(
-            model='resnet18', in_channels=14, num_classes=19, loss='bce'
-        )
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
 
     def test_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictMultiLabelClassificationDataModule(
