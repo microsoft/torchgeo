@@ -3,7 +3,7 @@ setuptools==61.0.0
 
 # install
 einops==0.3.0
-fiona==1.8.21
+fiona==1.9.6
 kornia==0.7.3
 lightly==1.4.5
 lightning[pytorch-extra]==2.0.0

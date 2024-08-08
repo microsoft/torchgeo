@@ -784,13 +784,14 @@ def listdir_vsi_recursive(root: Path) -> list[Path]:
         try:
             subdirs = fiona.listdir(dir)
             dirs.extend([os.path.join(dir, subdir) for subdir in subdirs])
-        except FionaValueError as e:
-            # Assuming file was found as it is not a directory
-            # Also allowing non-existent file while no vsi test data is available.
-            if 'is not a directory' in str(e) or 'does not exist' in str(e):
-                files.append(dir)
-            else:
-                raise e
+        except FionaValueError:
+            # Assuming dir is a file as it is not a directory
+            # fiona.listdir can throw FionaValueError for only two reasons
+            # 1. 'is not a directory'
+            # 2. 'does not exist'
+            # We currently don't have tests for existing vsi, and will thus
+            # allow vsi to not exist.
+            files.append(dir)
     return files
 
 
