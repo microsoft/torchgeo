@@ -776,39 +776,42 @@ def path_is_vsi(path: Path) -> bool:
     return '://' in str(path) or str(path).startswith('/vsi')
 
 
-def _listdir_vsi_recursive(root: str) -> list[str]:
+def _listdir_vsi_recursive(root: Path) -> list[Path]:
     dirs = [root]
     files = []
     while dirs:
         dir = dirs.pop()
         try:
             subdirs = fiona.listdir(dir)
-            dirs.extend([os.path.join(dir, subdir) for subdir in subdirs])
+            dirs.extend([pathlib.Path(dir) / subdir for subdir in subdirs])
         except FionaValueError as e:
-            if "is not a directory" in str(e):
+            if 'is not a directory' in str(e):
                 files.append(dir)
             else:
                 raise e
     return files
 
 
-def list_directory_recursive(root: str, filename_glob: str) -> list[str]:
-    """Lists files in directory recursively.
+def list_directory_recursive(root: Path, filename_glob: str) -> list[Path]:
+    """Lists files in directory recursively matching the given glob expression.
 
     Also supports gdal virtual file systems (vsi).
 
     Args:
-        root: directory to list. For vsi these can start with
+        root: directory to list. For vsi these will have prefix
             e.g. /vsiaz or az:// for azure blob storage
         filename_glob: filename pattern to filter filenames
     """
-    if not path_is_vsi(root):
-        filepaths = _listdir_vsi_recursive(root)
-        filepaths = fnmatch.filter(filepaths, filename_glob)
+    files: list[Path]
+    if path_is_vsi(root):
+        # Change type to match expected input to filter
+        files_as_str: list[str] = [str(file) for file in _listdir_vsi_recursive(root)]
+        # Prefix glob with wildcard to ignore directories
+        files = cast(list[Path], fnmatch.filter(files_as_str, '*' + filename_glob))
     else:
-        pathname = os.path.join(root, "**", filename_glob)
-        filepaths = list(glob.iglob(pathname, recursive=True))
-    return filepaths
+        pathname = os.path.join(root, '**', filename_glob)
+        files = list(glob.iglob(pathname, recursive=True))
+    return files
 
 
 def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:

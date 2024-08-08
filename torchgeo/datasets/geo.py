@@ -38,8 +38,8 @@ from .utils import (
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
-    merge_samples,
     list_directory_recursive,
+    merge_samples,
 )
 
 
