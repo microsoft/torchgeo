@@ -206,52 +206,40 @@ class SemanticSegmentationTask(BaseTask):
         ignore_index: int | None = self.hparams['ignore_index']
         labels: list[str] | None = self.hparams['labels']
 
-        self.train_metrics = MetricCollection(
-            {
-                'OverallAccuracy': Accuracy(
-                    task='multiclass',
-                    num_classes=num_classes,
-                    average='micro',
-                    multidim_average='global',
-                    ignore_index=ignore_index,
-                ),
-                'OverallF1Score': FBetaScore(
-                    task='multiclass',
-                    num_classes=num_classes,
-                    beta=1.0,
-                    average='micro',
-                    multidim_average='global',
-                    ignore_index=ignore_index,
-                ),
-                'OverallJaccardIndex': JaccardIndex(
-                    task='multiclass',
-                    num_classes=num_classes,
-                    ignore_index=ignore_index,
-                    average='micro',
-                ),
-                'AverageAccuracy': Accuracy(
-                    task='multiclass',
-                    num_classes=num_classes,
-                    average='macro',
-                    multidim_average='global',
-                    ignore_index=ignore_index,
-                ),
-                'AverageF1Score': FBetaScore(
-                    task='multiclass',
-                    num_classes=num_classes,
-                    beta=1.0,
-                    average='macro',
-                    multidim_average='global',
-                    ignore_index=ignore_index,
-                ),
-                'AverageJaccardIndex': JaccardIndex(
-                    task='multiclass',
-                    num_classes=num_classes,
-                    ignore_index=ignore_index,
-                    average='macro',
-                ),
-                'Accuracy': ClasswiseWrapper(
-                    Accuracy(
+        metric_classes = {
+            'Accuracy': Accuracy,
+            'F1Score': FBetaScore,
+            'JaccardIndex': JaccardIndex,
+            'Precision': Precision,
+            'Recall': Recall,
+        }
+
+        metrics_dict = {}
+
+        # Loop through the types of averaging
+        for average in ['micro', 'macro']:
+            for metric_name, metric_class in metric_classes.items():
+                name = (
+                    f'Overall{metric_name}'
+                    if average == 'micro'
+                    else f'Average{metric_name}'
+                )
+                params = {
+                    'task': 'multiclass',
+                    'num_classes': num_classes,
+                    'average': average,
+                    'multidim_average': 'global',
+                    'ignore_index': ignore_index,
+                }
+                if metric_name == 'F1Score':
+                    params['beta'] = 1.0
+                metrics_dict[name] = metric_class(**params)
+
+        # Loop through the classwise metrics
+        for metric_name, metric_class in metric_classes.items():
+            if metric_name != 'F1Score':
+                metrics_dict[metric_name] = ClasswiseWrapper(
+                    metric_class(
                         task='multiclass',
                         num_classes=num_classes,
                         average='none',
@@ -259,29 +247,10 @@ class SemanticSegmentationTask(BaseTask):
                         ignore_index=ignore_index,
                     ),
                     labels=labels,
-                ),
-                'Precision': ClasswiseWrapper(
-                    Precision(
-                        task='multiclass',
-                        num_classes=num_classes,
-                        average='none',
-                        multidim_average='global',
-                        ignore_index=ignore_index,
-                    ),
-                    labels=labels,
-                ),
-                'Recall': ClasswiseWrapper(
-                    Recall(
-                        task='multiclass',
-                        num_classes=num_classes,
-                        average='none',
-                        multidim_average='global',
-                        ignore_index=ignore_index,
-                    ),
-                    labels=labels,
-                ),
-                'F1Score': ClasswiseWrapper(
-                    FBetaScore(
+                )
+            else:
+                metrics_dict[metric_name] = ClasswiseWrapper(
+                    metric_class(
                         task='multiclass',
                         num_classes=num_classes,
                         beta=1.0,
@@ -290,19 +259,9 @@ class SemanticSegmentationTask(BaseTask):
                         ignore_index=ignore_index,
                     ),
                     labels=labels,
-                ),
-                'JaccardIndex': ClasswiseWrapper(
-                    JaccardIndex(
-                        task='multiclass',
-                        num_classes=num_classes,
-                        average='none',
-                        ignore_index=ignore_index,
-                    ),
-                    labels=labels,
-                ),
-            },
-            prefix='train_',
-        )
+                )
+
+        self.train_metrics = MetricCollection(metrics_dict, prefix='train_')
         self.val_metrics = self.train_metrics.clone(prefix='val_')
         self.test_metrics = self.train_metrics.clone(prefix='test_')
 
