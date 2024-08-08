@@ -228,16 +228,17 @@ class SemanticSegmentationTask(BaseTask):
                     'task': 'multiclass',
                     'num_classes': num_classes,
                     'average': average,
-                    'multidim_average': 'global',
                     'ignore_index': ignore_index,
                 }
+                if metric_name in ['Accuracy', 'F1Score', 'Precision', 'Recall']:
+                    params['multidim_average'] = 'global'
                 if metric_name == 'F1Score':
                     params['beta'] = 1.0
                 metrics_dict[name] = metric_class(**params)
 
         # Loop through the classwise metrics
         for metric_name, metric_class in metric_classes.items():
-            if metric_name != 'F1Score':
+            if metric_name != 'JaccardIndex':
                 metrics_dict[metric_name] = ClasswiseWrapper(
                     metric_class(
                         task='multiclass',
@@ -253,9 +254,7 @@ class SemanticSegmentationTask(BaseTask):
                     metric_class(
                         task='multiclass',
                         num_classes=num_classes,
-                        beta=1.0,
                         average='none',
-                        multidim_average='global',
                         ignore_index=ignore_index,
                     ),
                     labels=labels,
