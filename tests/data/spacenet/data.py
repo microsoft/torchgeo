@@ -39,7 +39,9 @@ Z = np.random.randint(np.iinfo('uint8').max, size=(SIZE, SIZE), dtype='uint8')
 for count in [3, 8]:
     os.makedirs(os.path.join(dataset_id, 'train', f'{count}band'), exist_ok=True)
     for i in range(1, 4):
-        path = os.path.join(dataset_id, 'train', f'{count}band', f'3band_AOI_1_RIO_img{i}.tif')
+        path = os.path.join(
+            dataset_id, 'train', f'{count}band', f'3band_AOI_1_RIO_img{i}.tif'
+        )
         profile['count'] = count
         with rasterio.open(path, 'w', **profile) as src:
             for j in range(1, count + 1):
