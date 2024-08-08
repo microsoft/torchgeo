@@ -776,7 +776,7 @@ def path_is_vsi(path: Path) -> bool:
     return '://' in str(path) or str(path).startswith('/vsi')
 
 
-def _listdir_vsi_recursive(root: Path) -> list[Path]:
+def listdir_vsi_recursive(root: Path) -> list[Path]:
     dirs = [root]
     files = []
     while dirs:
@@ -807,7 +807,7 @@ def list_directory_recursive(root: Path, filename_glob: str) -> list[Path]:
     files: list[Path]
     if path_is_vsi(root):
         # Change type to match expected input to filter
-        files_as_str: list[str] = [str(file) for file in _listdir_vsi_recursive(root)]
+        files_as_str: list[str] = [str(file) for file in listdir_vsi_recursive(root)]
         # Prefix glob with wildcard to ignore directories
         files = cast(list[Path], fnmatch.filter(files_as_str, '*' + filename_glob))
     else:
