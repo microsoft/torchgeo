@@ -17,4 +17,4 @@ if __name__ == '__main__':
     cp.add_argument('source')
     cp.add_argument('destination')
     args, _ = parser.parse_known_args()
-    shutil.copytree(args.source, args.destination, dirs_exist_ok=True)
+    shutil.copy(args.source, args.destination)
