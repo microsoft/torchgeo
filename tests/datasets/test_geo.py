@@ -1,8 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
 import math
 import os
+import pathlib
 import pickle
 import sys
 from collections.abc import Iterable
@@ -204,6 +204,25 @@ class TestGeoDataset:
         assert (
             CustomGeoDataset(paths=paths1).files == CustomGeoDataset(paths=paths2).files
         )
+
+    def test_zipped_sentinel2_dataset(self) -> None:
+        bands = ['B04', 'B03', 'B02']
+        transforms = nn.Identity()
+        cache = False
+
+        dir_not_zipped = 'tests/data/sentinel2/S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE'
+        dir_zipped = f'zip://{dir_not_zipped}.zip'
+
+        files_not_zipped = Sentinel2(
+            paths=dir_not_zipped, bands=bands, transforms=transforms, cache=cache
+        ).files
+        files_zipped = Sentinel2(
+            paths=[dir_zipped], bands=bands, transforms=transforms, cache=cache
+        ).files
+
+        basenames_not_zipped = [pathlib.Path(path).stem for path in files_not_zipped]
+        basenames_zipped = [pathlib.Path(path).stem for path in files_zipped]
+        assert basenames_zipped == basenames_not_zipped
 
 
 class TestRasterDataset:

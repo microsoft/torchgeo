@@ -783,7 +783,7 @@ def listdir_vsi_recursive(root: Path) -> list[Path]:
         dir = dirs.pop()
         try:
             subdirs = fiona.listdir(dir)
-            dirs.extend([pathlib.Path(dir) / subdir for subdir in subdirs])
+            dirs.extend([os.path.join(dir, subdir) for subdir in subdirs])
         except FionaValueError as e:
             # Assuming file was found as it is not a directory
             # Also allowing non-existent file while no vsi test data is available.
