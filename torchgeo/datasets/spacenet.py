@@ -104,7 +104,7 @@ class SpaceNet(NonGeoDataset, ABC):
         self,
         root: Path = 'data',
         split: str = 'train',
-        aois: list[str] = [],
+        aois: list[int] = [],
         image: str | None = None,
         mask: str | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -234,7 +234,7 @@ class SpaceNet(NonGeoDataset, ABC):
 
         return sample
 
-    def _image_id(self, path: Path) -> list[Any]:
+    def _image_id(self, path: str) -> list[Any]:
         """Return the image ID.
 
         Args:
@@ -243,13 +243,13 @@ class SpaceNet(NonGeoDataset, ABC):
         Returns:
             A list of integers.
         """
-        key = re.search(self.file_regex, path).group(1)
-        keys = key.split('_')
-        for i in range(len(keys)):
-            try:
-                keys[i] = int(keys[i])
-            except ValueError:
-                pass
+        keys: list[Any] = []
+        if match := re.search(self.file_regex, path):
+            for key in match.group(1).split('_'):
+                try:
+                    keys.append(int(key))
+                except ValueError:
+                    keys.append(key)
 
         return keys
 
