@@ -172,7 +172,7 @@ def create_mask_directory(
             create_mask(path.replace('all_bands', f'{mask_product}_{year}'))
 
 
-def create_tarballs(directories) -> None:
+def create_tarballs(directories: str) -> None:
     for directory in directories:
         # Create tarballs
         shutil.make_archive(directory, 'gztar', '.', directory)
