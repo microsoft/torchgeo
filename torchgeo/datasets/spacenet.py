@@ -186,15 +186,21 @@ class SpaceNet(NonGeoDataset, ABC):
         Returns:
             Tensor: label tensor
         """
-        with fiona.open(path) as src:
-            vector_crs = CRS(src.crs)
-            labels = [
-                transform_geom(
-                    vector_crs.to_string(), raster_crs.to_string(), feature['geometry']
-                )
-                for feature in src
-                if feature['geometry']
-            ]
+        try:
+            with fiona.open(path) as src:
+                vector_crs = CRS(src.crs)
+                labels = [
+                    transform_geom(
+                        vector_crs.to_string(),
+                        raster_crs.to_string(),
+                        feature['geometry'],
+                    )
+                    for feature in src
+                    if feature['geometry']
+                ]
+        except (fiona.errors.DriverError, fiona.errors.TransformError):
+            # Empty geojson files, geometries that cannot be transformed
+            labels = []
 
         if labels:
             mask = rasterize(
@@ -349,11 +355,7 @@ class SpaceNet(NonGeoDataset, ABC):
 
         .. versionadded:: 0.2
         """
-        # image can be 1 channel or >3 channels
-        if sample['image'].shape[0] == 1:
-            image = np.rollaxis(sample['image'].numpy(), 0, 3)
-        else:
-            image = np.rollaxis(sample['image'][:3].numpy(), 0, 3)
+        image = np.rollaxis(sample['image'][:3].numpy(), 0, 3)
         image = percentile_normalization(image, axis=(0, 1))
 
         ncols = 1
