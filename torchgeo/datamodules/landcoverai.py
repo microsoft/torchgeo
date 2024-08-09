@@ -48,6 +48,7 @@ class LandCoverAIDataModule(NonGeoDataModule):
         self.train_aug.keepdim = True  # type: ignore[attr-defined]
         self.aug.keepdim = True  # type: ignore[attr-defined]
 
+
 class LandCoverAI100DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the LandCoverAI100 dataset.
 
