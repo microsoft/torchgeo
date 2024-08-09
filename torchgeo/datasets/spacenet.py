@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
 import torch
-from fiona.errors import FionaValueError
+from fiona.errors import FionaError, FionaValueError
 from fiona.transform import transform_geom
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
@@ -199,7 +199,7 @@ class SpaceNet(NonGeoDataset, ABC):
                     for feature in src
                     if feature['geometry']
                 ]
-        except FionaValueError:
+        except (FionaError, FionaValueError):
             # Empty geojson files, geometries that cannot be transformed (SN7)
             labels = []
 
