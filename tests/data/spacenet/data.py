@@ -79,7 +79,8 @@ os.makedirs(os.path.join(dataset_id, 'train', 'geojson'), exist_ok=True)
 for i in range(1, 3):
     path = os.path.join(dataset_id, 'train', 'geojson', f'Geo_AOI_1_RIO_img{i}.geojson')
     with open(path, 'w') as src:
-        json.dump(geojson, src)
+        if i % 2 == 0:
+            json.dump(geojson, src)
 
 shutil.make_archive(
     os.path.join(

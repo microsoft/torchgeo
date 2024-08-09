@@ -27,8 +27,9 @@ class TestSpaceNet:
         transforms = nn.Identity()
         return SpaceNet1(tmp_path, transforms=transforms, download=True)
 
-    def test_getitem(self, dataset: SpaceNet1) -> None:
-        x = dataset[0]
+    @pytest.mark.parametrize("index", [0, 1])
+    def test_getitem(self, dataset: SpaceNet1, index: int) -> None:
+        x = dataset[index]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
@@ -56,3 +57,13 @@ class TestSpaceNet:
         x['prediction'] = x['mask']
         dataset.plot(x, suptitle='Test')
         plt.close()
+
+    def test_image_id(self, monkeypatch: MonkeyPatch, dataset: SpaceNet1) -> None:
+        file_regex = r'global_monthly_(\d+.*\d+)'
+        monkeypatch.setattr(dataset, 'file_regex', file_regex)
+        dataset._image_id('global_monthly_2018_01_mosaic_L15-0331E-1257N_1327_3160.tif')
+
+    def test_list_files(self, monkeypatch: MonkeyPatch, dataset: SpaceNet1) -> None:
+        directory_glob = os.path.join('**', 'AOI_{aoi}_*', '{product}')
+        monkeypatch.setattr(dataset, 'directory_glob', directory_glob)
+        dataset._list_files(aoi=1)

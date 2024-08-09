@@ -199,7 +199,7 @@ class SpaceNet(NonGeoDataset, ABC):
                     if feature['geometry']
                 ]
         except (fiona.errors.DriverError, fiona.errors.TransformError):
-            # Empty geojson files, geometries that cannot be transformed
+            # Empty geojson files, geometries that cannot be transformed (SN7)
             labels = []
 
         if labels:
