@@ -313,6 +313,7 @@ class SpaceNet(NonGeoDataset, ABC):
             ):
                 if os.path.exists(os.path.join(root, tarball)):
                     extract_archive(os.path.join(root, tarball), root)
+                    continue
 
                 # Check if the user requested to download the dataset
                 if not self.download:
@@ -367,25 +368,23 @@ class SpaceNet(NonGeoDataset, ABC):
             prediction = sample['prediction'].numpy()
             ncols += 1
 
-        fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))
-        if not isinstance(axs, np.ndarray):
-            axs = [axs]
-        axs[0].imshow(image)
-        axs[0].axis('off')
+        fig, axs = plt.subplots(ncols=ncols, squeeze=False, figsize=(ncols * 8, 8))
+        axs[0, 0].imshow(image)
+        axs[0, 0].axis('off')
         if show_titles:
-            axs[0].set_title('Image')
+            axs[0, 0].set_title('Image')
 
         if show_mask:
-            axs[1].imshow(mask, interpolation='none')
-            axs[1].axis('off')
+            axs[0, 1].imshow(mask, interpolation='none')
+            axs[0, 1].axis('off')
             if show_titles:
-                axs[1].set_title('Label')
+                axs[0, 1].set_title('Label')
 
         if show_predictions:
-            axs[2].imshow(prediction, interpolation='none')
-            axs[2].axis('off')
+            axs[0, 2].imshow(prediction, interpolation='none')
+            axs[0, 2].axis('off')
             if show_titles:
-                axs[2].set_title('Prediction')
+                axs[0, 2].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

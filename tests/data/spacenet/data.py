@@ -15,7 +15,6 @@ from rasterio.transform import Affine
 SIZE = 2
 
 dataset_id = 'SN1_buildings'
-os.makedirs(os.path.join(dataset_id, 'tarballs'), exist_ok=True)
 
 profile = {
     'driver': 'GTiff',
@@ -48,9 +47,7 @@ for count in [3, 8]:
                 src.write(Z, j)
 
     shutil.make_archive(
-        os.path.join(
-            dataset_id, 'tarballs', f'SN1_buildings_train_AOI_1_Rio_{count}band'
-        ),
+        os.path.join(dataset_id, 'train', f'SN1_buildings_train_AOI_1_Rio_{count}band'),
         'gztar',
         os.path.join(dataset_id, 'train'),
         f'{count}band',
@@ -86,7 +83,7 @@ for i in range(1, 3):
 
 shutil.make_archive(
     os.path.join(
-        dataset_id, 'tarballs', 'SN1_buildings_train_AOI_1_Rio_geojson_buildings'
+        dataset_id, 'train', 'SN1_buildings_train_AOI_1_Rio_geojson_buildings'
     ),
     'gztar',
     os.path.join(dataset_id, 'train'),
