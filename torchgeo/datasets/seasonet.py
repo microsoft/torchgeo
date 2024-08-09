@@ -89,43 +89,43 @@ class SeasoNet(NonGeoDataset):
         {
             'name': 'spring',
             'ext': '.zip',
-            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/spring.zip',  # noqa: E501
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/spring.zip',
             'md5': 'de4cdba7b6196aff624073991b187561',
         },
         {
             'name': 'summer',
             'ext': '.zip',
-            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/summer.zip',  # noqa: E501
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/summer.zip',
             'md5': '6a54d4e134d27ae4eb03f180ee100550',
         },
         {
             'name': 'fall',
             'ext': '.zip',
-            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/fall.zip',  # noqa: E501
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/fall.zip',
             'md5': '5f94920fe41a63c6bfbab7295f7d6b95',
         },
         {
             'name': 'winter',
             'ext': '.zip',
-            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/winter.zip',  # noqa: E501
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/winter.zip',
             'md5': 'dc5e3e09e52ab5c72421b1e3186c9a48',
         },
         {
             'name': 'snow',
             'ext': '.zip',
-            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/snow.zip',  # noqa: E501
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/snow.zip',
             'md5': 'e1b300994143f99ebb03f51d6ab1cbe6',
         },
         {
             'name': 'splits',
             'ext': '.zip',
-            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/splits.zip',  # noqa: E501
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/splits.zip',
             'md5': 'e4ec4a18bc4efc828f0944a7cf4d5fed',
         },
         {
             'name': 'meta.csv',
             'ext': '',
-            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/meta.csv',  # noqa: E501
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/meta.csv',
             'md5': '43ea07974936a6bf47d989c32e16afe7',
         },
     ]
@@ -331,7 +331,7 @@ class SeasoNet(NonGeoDataset):
             for band in self.bands:
                 with rasterio.open(f'{path}_{band}.tif') as f:
                     array = f.read(
-                        out_shape=[f.count] + list(self.image_size),
+                        out_shape=[f.count, *list(self.image_size)],
                         out_dtype='int32',
                         resampling=Resampling.bilinear,
                     )

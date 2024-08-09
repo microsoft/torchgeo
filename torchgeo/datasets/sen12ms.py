@@ -63,7 +63,7 @@ class SEN12MS(NonGeoDataset):
        or manually downloaded from https://dataserv.ub.tum.de/s/m1474000
        and https://github.com/schmitt-muc/SEN12MS/tree/master/splits.
        This download will likely take several hours.
-    """  # noqa: E501
+    """
 
     BAND_SETS: dict[str, tuple[str, ...]] = {
         'all': (

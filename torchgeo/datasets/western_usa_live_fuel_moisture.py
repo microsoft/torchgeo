@@ -273,7 +273,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
                 data_rows.append(data_dict)
 
         df = pd.DataFrame(data_rows)
-        df = df[self.input_features + [self.label_name]]
+        df = df[[*self.input_features, self.label_name]]
         return df
 
     def _verify(self) -> None:

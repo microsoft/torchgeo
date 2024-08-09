@@ -158,9 +158,9 @@ class L7Irish(IntersectionDataset):
     * https://www.sciencebase.gov/catalog/item/573ccf18e4b0dae0d5e4b109
 
     .. versionadded:: 0.5
-    """  # noqa: E501
+    """
 
-    url = 'https://hf.co/datasets/torchgeo/l7irish/resolve/6807e0b22eca7f9a8a3903ea673b31a115837464/{}.tar.gz'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/l7irish/resolve/6807e0b22eca7f9a8a3903ea673b31a115837464/{}.tar.gz'
 
     md5s = {
         'austral': '0a34770b992a62abeb88819feb192436',

@@ -36,7 +36,7 @@ class MapInWild(NonGeoDataset):
     different RS sensors over 1018 locations: dual-pol Sentinel-1, four-season
     Sentinel-2 with 10 bands, ESA WorldCover map, and Visible Infrared Imaging
     Radiometer Suite NightTime Day/Night band. The dataset consists of 8144
-    images with the shape of 1920 × 1920 pixels. The images are weakly annotated
+    images with the shape of 1920 x 1920 pixels. The images are weakly annotated
     from the World Database of Protected Areas (WDPA).
 
     Dataset features:
@@ -54,7 +54,7 @@ class MapInWild(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    url = 'https://hf.co/datasets/burakekim/mapinwild/resolve/d963778e31e7e0ed2329c0f4cbe493be532f0e71/'  # noqa: E501
+    url = 'https://hf.co/datasets/burakekim/mapinwild/resolve/d963778e31e7e0ed2329c0f4cbe493be532f0e71/'
 
     modality_urls = {
         'esa_wc': {'esa_wc/ESA_WC.zip'},

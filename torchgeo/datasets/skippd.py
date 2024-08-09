@@ -62,7 +62,7 @@ class SKIPPD(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    url = 'https://hf.co/datasets/torchgeo/skippd/resolve/a16c7e200b4618cd93be3143cdb973e3f21498fa/{}'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/skippd/resolve/a16c7e200b4618cd93be3143cdb973e3f21498fa/{}'
     md5 = {
         'forecast': 'f4f3509ddcc83a55c433be9db2e51077',
         'nowcast': '0000761d403e45bb5f86c21d3c69aa80',

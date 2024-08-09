@@ -958,7 +958,7 @@ class SpaceNet7(SpaceNet):
 
     `SpaceNet 7 <https://spacenet.ai/sn7-challenge/>`_ is a dataset which
     consist of medium resolution (4.0m) satellite imagery mosaics acquired from
-    Planet Labs’ Dove constellation between 2017 and 2020. It includes ≈ 24
+    Planet Labs' Dove constellation between 2017 and 2020. It includes ≈ 24
     images (one per month) covering > 100 unique geographies, and comprises >
     40,000 km2 of imagery and exhaustive polygon labels of building footprints
     therein, totaling over 11M individual annotations.

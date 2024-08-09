@@ -54,7 +54,7 @@ class Potsdam2D(NonGeoDataset):
     * https://doi.org/10.5194/isprsannals-I-3-293-2012
 
     .. versionadded:: 0.2
-    """  # noqa: E501
+    """
 
     filenames = ['4_Ortho_RGBIR.zip', '5_Labels_all.zip']
     md5s = ['c4a8f7d8c7196dd4eba4addd0aae10c1', 'cf7403c1a97c0d279414db']

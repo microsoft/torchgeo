@@ -232,7 +232,7 @@ class PASTIS(NonGeoDataset):
         Returns:
             the target mask
         """
-        # See https://github.com/VSainteuf/pastis-benchmark/blob/main/code/dataloader.py#L201 # noqa: E501
+        # See https://github.com/VSainteuf/pastis-benchmark/blob/main/code/dataloader.py#L201
         # even though the mask file is 3 bands, we just select the first band
         array = np.load(self.files[index]['semantic'])[0].astype(np.uint8)
         tensor = torch.from_numpy(array).long()

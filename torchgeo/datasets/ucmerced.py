@@ -66,7 +66,7 @@ class UCMerced(NonGeoClassificationDataset):
     * https://dl.acm.org/doi/10.1145/1869790.1869829
     """
 
-    url = 'https://hf.co/datasets/torchgeo/ucmerced/resolve/d0af6e2eeea2322af86078068bd83337148a2149/UCMerced_LandUse.zip'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/ucmerced/resolve/d0af6e2eeea2322af86078068bd83337148a2149/UCMerced_LandUse.zip'
     filename = 'UCMerced_LandUse.zip'
     md5 = '5b7ec56793786b6dc8a908e8854ac0e4'
 
@@ -74,9 +74,9 @@ class UCMerced(NonGeoClassificationDataset):
 
     splits = ['train', 'val', 'test']
     split_urls = {
-        'train': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-train.txt',  # noqa: E501
-        'val': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-val.txt',  # noqa: E501
-        'test': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-test.txt',  # noqa: E501
+        'train': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-train.txt',
+        'val': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-val.txt',
+        'test': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-test.txt',
     }
     split_md5s = {
         'train': 'f2fb12eb2210cfb53f93f063a35ff374',

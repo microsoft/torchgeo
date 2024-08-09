@@ -124,7 +124,7 @@ class BigEarthNet(NonGeoDataset):
 
     * https://doi.org/10.1109/IGARSS.2019.8900532
 
-    """  # noqa: E501
+    """
 
     class_sets = {
         19: [
@@ -234,17 +234,17 @@ class BigEarthNet(NonGeoDataset):
 
     splits_metadata = {
         'train': {
-            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/train.csv?inline=false',  # noqa: E501
+            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/train.csv?inline=false',
             'filename': 'bigearthnet-train.csv',
             'md5': '623e501b38ab7b12fe44f0083c00986d',
         },
         'val': {
-            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/val.csv?inline=false',  # noqa: E501
+            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/val.csv?inline=false',
             'filename': 'bigearthnet-val.csv',
             'md5': '22efe8ed9cbd71fa10742ff7df2b7978',
         },
         'test': {
-            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/test.csv?inline=false',  # noqa: E501
+            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/test.csv?inline=false',
             'filename': 'bigearthnet-test.csv',
             'md5': '697fb90677e30571b9ac7699b7e5b432',
         },

@@ -384,7 +384,7 @@ class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DOFA_MAE = Weights(
-        url='https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_base_patch16_224-7cc0f413.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_base_patch16_224-7cc0f413.pth',
         transforms=_dofa_transforms,
         meta={
             'dataset': 'SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k',
@@ -403,7 +403,7 @@ class DOFALarge16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DOFA_MAE = Weights(
-        url='https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_large_patch16_224-fbd47fa9.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_large_patch16_224-fbd47fa9.pth',
         transforms=_dofa_transforms,
         meta={
             'dataset': 'SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k',

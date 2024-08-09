@@ -74,7 +74,7 @@ class DeepGlobeLandCover(NonGeoDataset):
           $ unzip deepglobe2018-landcover-segmentation-traindataset.zip
 
     .. versionadded:: 0.3
-    """  # noqa: E501
+    """
 
     filename = 'data.zip'
     data_root = 'data'

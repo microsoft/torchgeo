@@ -339,8 +339,8 @@ class ChesapeakeCVPR(GeoDataset):
 
     subdatasets = ['base', 'prior_extension']
     urls = {
-        'base': 'https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip',  # noqa: E501
-        'prior_extension': 'https://zenodo.org/record/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1',  # noqa: E501
+        'base': 'https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip',
+        'prior_extension': 'https://zenodo.org/record/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1',
     }
     filenames = {
         'base': 'cvpr_chesapeake_landcover.zip',
@@ -412,13 +412,13 @@ class ChesapeakeCVPR(GeoDataset):
         'wv_1m_2014_extended-debuffered-train_tiles',
         'wv_1m_2014_extended-debuffered-val_tiles',
         'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_buildings.tif',
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif',  # noqa: E501
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif',  # noqa: E501
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif',
         'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_lc.tif',
         'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-new.tif',
         'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-old.tif',
         'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_nlcd.tif',
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',  # noqa: E501
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
         'spatial_index.geojson',
     ]
 
@@ -511,7 +511,7 @@ class ChesapeakeCVPR(GeoDataset):
                             'lc': row['properties']['lc'],
                             'nlcd': row['properties']['nlcd'],
                             'buildings': row['properties']['buildings'],
-                            'prior_from_cooccurrences_101_31_no_osm_no_buildings': prior_fn,  # noqa: E501
+                            'prior_from_cooccurrences_101_31_no_osm_no_buildings': prior_fn,
                         },
                     )
 

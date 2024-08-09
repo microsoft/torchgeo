@@ -63,7 +63,7 @@ class TestMoCoTask:
             '1',
         ]
 
-        main(['fit'] + args)
+        main(['fit', *args])
 
     def test_version_warnings(self) -> None:
         with pytest.warns(UserWarning, match='MoCo v1 uses a memory bank'):

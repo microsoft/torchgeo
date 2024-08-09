@@ -55,7 +55,7 @@ class Vaihingen2D(NonGeoDataset):
     * https://doi.org/10.5194/isprsannals-I-3-293-2012
 
     .. versionadded:: 0.2
-    """  # noqa: E501
+    """
 
     filenames = [
         'ISPRS_semantic_labeling_Vaihingen.zip',

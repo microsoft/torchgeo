@@ -75,7 +75,7 @@ class DFC2022(NonGeoDataset):
     * https://doi.org/10.1007/s10994-020-05943-y
 
     .. versionadded:: 0.3
-    """  # noqa: E501
+    """
 
     classes = [
         'No information',

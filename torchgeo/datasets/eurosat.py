@@ -54,7 +54,7 @@ class EuroSAT(NonGeoClassificationDataset):
     * https://ieeexplore.ieee.org/document/8519248
     """
 
-    url = 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/EuroSATallBands.zip'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/EuroSATallBands.zip'
     filename = 'EuroSATallBands.zip'
     md5 = '5ac12b3b2557aa56e1826e981e8e200e'
 
@@ -65,9 +65,9 @@ class EuroSAT(NonGeoClassificationDataset):
 
     splits = ['train', 'val', 'test']
     split_urls = {
-        'train': 'https://storage.googleapis.com/remote_sensing_representations/eurosat-train.txt',  # noqa: E501
-        'val': 'https://storage.googleapis.com/remote_sensing_representations/eurosat-val.txt',  # noqa: E501
-        'test': 'https://storage.googleapis.com/remote_sensing_representations/eurosat-test.txt',  # noqa: E501
+        'train': 'https://storage.googleapis.com/remote_sensing_representations/eurosat-train.txt',
+        'val': 'https://storage.googleapis.com/remote_sensing_representations/eurosat-val.txt',
+        'test': 'https://storage.googleapis.com/remote_sensing_representations/eurosat-test.txt',
     }
     split_md5s = {
         'train': '908f142e73d6acdf3f482c5e80d851b1',
@@ -325,14 +325,14 @@ class EuroSAT100(EuroSAT):
     .. versionadded:: 0.5
     """
 
-    url = 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/EuroSAT100.zip'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/EuroSAT100.zip'
     filename = 'EuroSAT100.zip'
     md5 = 'c21c649ba747e86eda813407ef17d596'
 
     split_urls = {
-        'train': 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-train.txt',  # noqa: E501
-        'val': 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-val.txt',  # noqa: E501
-        'test': 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-test.txt',  # noqa: E501
+        'train': 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-train.txt',
+        'val': 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-val.txt',
+        'test': 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-test.txt',
     }
     split_md5s = {
         'train': '033d0c23e3a75e3fa79618b0e35fe1c7',

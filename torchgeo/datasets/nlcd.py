@@ -67,7 +67,7 @@ class NLCD(RasterDataset):
     * 2019: https://doi.org/10.5066/P9KZCM54
 
     .. versionadded:: 0.5
-    """  # noqa: E501
+    """
 
     filename_glob = 'nlcd_*_land_cover_l48_*.img'
     filename_regex = (

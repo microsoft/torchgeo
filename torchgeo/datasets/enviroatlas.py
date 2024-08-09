@@ -65,7 +65,8 @@ class EnviroAtlas(GeoDataset):
         'waterbodies',
         'buildings',
         'lc',
-    ] + valid_prior_layers
+        *valid_prior_layers,
+    ]
 
     cities = [
         'pittsburgh_pa-2010_1m',
@@ -100,8 +101,8 @@ class EnviroAtlas(GeoDataset):
         'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_d_water.tif',
         'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_e_buildings.tif',
         'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_h_highres_labels.tif',
-        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_prior_from_cooccurrences_101_31.tif',  # noqa: E501
-        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',  # noqa: E501
+        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_prior_from_cooccurrences_101_31.tif',
+        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
         'spatial_index.geojson',
     ]
 

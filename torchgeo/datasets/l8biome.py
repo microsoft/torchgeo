@@ -116,9 +116,9 @@ class L8Biome(IntersectionDataset):
     * https://doi.org/10.1016/j.rse.2017.03.026
 
     .. versionadded:: 0.5
-    """  # noqa: E501
+    """
 
-    url = 'https://hf.co/datasets/torchgeo/l8biome/resolve/f76df19accce34d2acc1878d88b9491bc81f94c8/{}.tar.gz'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/l8biome/resolve/f76df19accce34d2acc1878d88b9491bc81f94c8/{}.tar.gz'
 
     md5s = {
         'barren': '0eb691822d03dabd4f5ea8aadd0b41c3',

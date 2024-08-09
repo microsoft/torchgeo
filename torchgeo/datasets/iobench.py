@@ -40,7 +40,7 @@ class IOBench(IntersectionDataset):
     .. versionadded:: 0.6
     """
 
-    url = 'https://hf.co/datasets/torchgeo/io/resolve/c9d9d268cf0b61335941bdc2b6963bf16fc3a6cf/{}.tar.gz'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/io/resolve/c9d9d268cf0b61335941bdc2b6963bf16fc3a6cf/{}.tar.gz'
 
     md5s = {
         'original': 'e3a908a0fd1c05c1af2f4c65724d59b3',
@@ -54,7 +54,7 @@ class IOBench(IntersectionDataset):
         split: str = 'preprocessed',
         crs: CRS | None = None,
         res: float | None = None,
-        bands: Sequence[str] | None = Landsat9.default_bands + ['SR_QA_AEROSOL'],
+        bands: Sequence[str] | None = [*Landsat9.default_bands, 'SR_QA_AEROSOL'],
         classes: list[int] = [0],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,

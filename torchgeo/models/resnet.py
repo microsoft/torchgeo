@@ -11,8 +11,8 @@ import torch
 from timm.models import ResNet
 from torchvision.models._api import Weights, WeightsEnum
 
-# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167  # noqa: E501
-# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97  # noqa: E501
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
 # Normalization either by 10K or channel-wise with band statistics
 _zhu_xlab_transforms = K.AugmentationSequential(
     K.Resize(256),
@@ -22,7 +22,7 @@ _zhu_xlab_transforms = K.AugmentationSequential(
 )
 
 # Normalization only available for RGB dataset, defined here:
-# https://github.com/ServiceNow/seasonal-contrast/blob/8285173ec205b64bc3e53b880344dd6c3f79fa7a/datasets/seco_dataset.py  # noqa: E501
+# https://github.com/ServiceNow/seasonal-contrast/blob/8285173ec205b64bc3e53b880344dd6c3f79fa7a/datasets/seco_dataset.py
 _min = torch.tensor([3, 2, 0])
 _max = torch.tensor([88, 103, 129])
 _mean = torch.tensor([0.485, 0.456, 0.406])
@@ -37,7 +37,7 @@ _seco_transforms = K.AugmentationSequential(
 )
 
 # Normalization only available for RGB dataset, defined here:
-# https://github.com/sustainlab-group/geography-aware-ssl/blob/main/moco_fmow/main_moco_geo%2Btp.py#L287  # noqa: E501
+# https://github.com/sustainlab-group/geography-aware-ssl/blob/main/moco_fmow/main_moco_geo%2Btp.py#L287
 _mean = torch.tensor([0.485, 0.456, 0.406])
 _std = torch.tensor([0.229, 0.224, 0.225])
 _gassl_transforms = K.AugmentationSequential(
@@ -47,7 +47,7 @@ _gassl_transforms = K.AugmentationSequential(
     data_keys=None,
 )
 
-# https://github.com/microsoft/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43  # noqa: E501
+# https://github.com/microsoft/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43
 _ssl4eo_l_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
     K.CenterCrop((224, 224)),
@@ -70,7 +70,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     LANDSAT_TM_TOA_MOCO = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_tm_toa_moco-1c691b4f.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_tm_toa_moco-1c691b4f.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -83,7 +83,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_TM_TOA_SIMCLR = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_tm_toa_simclr-d2d38ace.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_tm_toa_simclr-d2d38ace.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -96,7 +96,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_ETM_TOA_MOCO = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_etm_toa_moco-bb88689c.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_etm_toa_moco-bb88689c.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -109,7 +109,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_ETM_TOA_SIMCLR = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_etm_toa_simclr-4d813f79.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_etm_toa_simclr-4d813f79.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -122,7 +122,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_ETM_SR_MOCO = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_etm_sr_moco-4f078acd.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_etm_sr_moco-4f078acd.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -135,7 +135,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_ETM_SR_SIMCLR = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_etm_sr_simclr-8e8543b4.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_etm_sr_simclr-8e8543b4.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -148,7 +148,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_OLI_TIRS_TOA_MOCO = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_oli_tirs_toa_moco-a3002f51.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_oli_tirs_toa_moco-a3002f51.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -161,7 +161,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_OLI_TIRS_TOA_SIMCLR = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_oli_tirs_toa_simclr-b0635cc6.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_oli_tirs_toa_simclr-b0635cc6.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -174,7 +174,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_OLI_SR_MOCO = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_oli_sr_moco-660e82ed.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_oli_sr_moco-660e82ed.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -187,7 +187,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_OLI_SR_SIMCLR = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_oli_sr_simclr-7bced5be.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet18_landsat_oli_sr_simclr-7bced5be.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -200,7 +200,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_ALL_MOCO = Weights(
-        url='https://hf.co/torchgeo/resnet18_sentinel2_all_moco/resolve/5b8cddc9a14f3844350b7f40b85bcd32aed75918/resnet18_sentinel2_all_moco-59bfdff9.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/resnet18_sentinel2_all_moco/resolve/5b8cddc9a14f3844350b7f40b85bcd32aed75918/resnet18_sentinel2_all_moco-59bfdff9.pth',
         transforms=_zhu_xlab_transforms,
         meta={
             'dataset': 'SSL4EO-S12',
@@ -213,7 +213,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_MOCO = Weights(
-        url='https://hf.co/torchgeo/resnet18_sentinel2_rgb_moco/resolve/e1c032e7785fd0625224cdb6699aa138bb304eec/resnet18_sentinel2_rgb_moco-e3a335e3.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/resnet18_sentinel2_rgb_moco/resolve/e1c032e7785fd0625224cdb6699aa138bb304eec/resnet18_sentinel2_rgb_moco-e3a335e3.pth',
         transforms=_zhu_xlab_transforms,
         meta={
             'dataset': 'SSL4EO-S12',
@@ -226,7 +226,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_SECO = Weights(
-        url='https://hf.co/torchgeo/resnet18_sentinel2_rgb_seco/resolve/f8dcee692cf7142163b55a5c197d981fe0e717a0/resnet18_sentinel2_rgb_seco-cefca942.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/resnet18_sentinel2_rgb_seco/resolve/f8dcee692cf7142163b55a5c197d981fe0e717a0/resnet18_sentinel2_rgb_seco-cefca942.pth',
         transforms=_seco_transforms,
         meta={
             'dataset': 'SeCo Dataset',
@@ -249,7 +249,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     FMOW_RGB_GASSL = Weights(
-        url='https://hf.co/torchgeo/resnet50_fmow_rgb_gassl/resolve/fe8a91026cf9104f1e884316b8e8772d7af9052c/resnet50_fmow_rgb_gassl-da43d987.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/resnet50_fmow_rgb_gassl/resolve/fe8a91026cf9104f1e884316b8e8772d7af9052c/resnet50_fmow_rgb_gassl-da43d987.pth',
         transforms=_gassl_transforms,
         meta={
             'dataset': 'fMoW Dataset',
@@ -262,7 +262,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_TM_TOA_MOCO = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_tm_toa_moco-ba1ce753.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_tm_toa_moco-ba1ce753.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -275,7 +275,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_TM_TOA_SIMCLR = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_tm_toa_simclr-a1c93432.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_tm_toa_simclr-a1c93432.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -288,7 +288,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_ETM_TOA_MOCO = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_etm_toa_moco-e9a84d5a.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_etm_toa_moco-e9a84d5a.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -301,7 +301,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_ETM_TOA_SIMCLR = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_etm_toa_simclr-70b5575f.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_etm_toa_simclr-70b5575f.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -314,7 +314,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_ETM_SR_MOCO = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_etm_sr_moco-1266cde3.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_etm_sr_moco-1266cde3.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -327,7 +327,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_ETM_SR_SIMCLR = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_etm_sr_simclr-e5d185d7.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_etm_sr_simclr-e5d185d7.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -340,7 +340,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_OLI_TIRS_TOA_MOCO = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_oli_tirs_toa_moco-de7f5e0f.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_oli_tirs_toa_moco-de7f5e0f.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -353,7 +353,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_OLI_TIRS_TOA_SIMCLR = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_oli_tirs_toa_simclr-030cebfe.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_oli_tirs_toa_simclr-030cebfe.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -366,7 +366,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_OLI_SR_MOCO = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_oli_sr_moco-ff580dad.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_oli_sr_moco-ff580dad.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -379,7 +379,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_OLI_SR_SIMCLR = Weights(
-        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_oli_sr_simclr-94f78913.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/ssl4eo_landsat/resolve/1c88bb51b6e17a21dde5230738fa38b74bd74f76/resnet50_landsat_oli_sr_simclr-94f78913.pth',
         transforms=_ssl4eo_l_transforms,
         meta={
             'dataset': 'SSL4EO-L',
@@ -392,7 +392,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL1_ALL_MOCO = Weights(
-        url='https://hf.co/torchgeo/resnet50_sentinel1_all_moco/resolve/e79862c667853c10a709bdd77ea8ffbad0e0f1cf/resnet50_sentinel1_all_moco-906e4356.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/resnet50_sentinel1_all_moco/resolve/e79862c667853c10a709bdd77ea8ffbad0e0f1cf/resnet50_sentinel1_all_moco-906e4356.pth',
         transforms=_zhu_xlab_transforms,
         meta={
             'dataset': 'SSL4EO-S12',
@@ -405,7 +405,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_ALL_DINO = Weights(
-        url='https://hf.co/torchgeo/resnet50_sentinel2_all_dino/resolve/d7f14bf5530d70ac69d763e58e77e44dbecfec7c/resnet50_sentinel2_all_dino-d6c330e9.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/resnet50_sentinel2_all_dino/resolve/d7f14bf5530d70ac69d763e58e77e44dbecfec7c/resnet50_sentinel2_all_dino-d6c330e9.pth',
         transforms=_zhu_xlab_transforms,
         meta={
             'dataset': 'SSL4EO-S12',
@@ -418,7 +418,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_ALL_MOCO = Weights(
-        url='https://hf.co/torchgeo/resnet50_sentinel2_all_moco/resolve/da4f3c9dbe09272eb902f3b37f46635fa4726879/resnet50_sentinel2_all_moco-df8b932e.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/resnet50_sentinel2_all_moco/resolve/da4f3c9dbe09272eb902f3b37f46635fa4726879/resnet50_sentinel2_all_moco-df8b932e.pth',
         transforms=_zhu_xlab_transforms,
         meta={
             'dataset': 'SSL4EO-S12',
@@ -431,7 +431,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_MOCO = Weights(
-        url='https://hf.co/torchgeo/resnet50_sentinel2_rgb_moco/resolve/efd9723b59a88e9dc1420dc1e96afb25b0630a3c/resnet50_sentinel2_rgb_moco-2b57ba8b.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/resnet50_sentinel2_rgb_moco/resolve/efd9723b59a88e9dc1420dc1e96afb25b0630a3c/resnet50_sentinel2_rgb_moco-2b57ba8b.pth',
         transforms=_zhu_xlab_transforms,
         meta={
             'dataset': 'SSL4EO-S12',
@@ -444,7 +444,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_SECO = Weights(
-        url='https://hf.co/torchgeo/resnet50_sentinel2_rgb_seco/resolve/fbd07b02a8edb8fc1035f7957160deed4321c145/resnet50_sentinel2_rgb_seco-018bf397.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/resnet50_sentinel2_rgb_seco/resolve/fbd07b02a8edb8fc1035f7957160deed4321c145/resnet50_sentinel2_rgb_seco-018bf397.pth',
         transforms=_seco_transforms,
         meta={
             'dataset': 'SeCo Dataset',

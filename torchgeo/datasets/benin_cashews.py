@@ -199,11 +199,13 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
         # Calculate the indices that we will use over all tiles
         self.chips_metadata = []
-        for y in list(range(0, self.tile_height - self.chip_size, stride)) + [
-            self.tile_height - self.chip_size
+        for y in [
+            *list(range(0, self.tile_height - self.chip_size, stride)),
+            self.tile_height - self.chip_size,
         ]:
-            for x in list(range(0, self.tile_width - self.chip_size, stride)) + [
-                self.tile_width - self.chip_size
+            for x in [
+                *list(range(0, self.tile_width - self.chip_size, stride)),
+                self.tile_width - self.chip_size,
             ]:
                 self.chips_metadata.append((y, x))
 

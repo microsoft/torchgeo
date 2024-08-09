@@ -54,7 +54,7 @@ class ZueriCrop(NonGeoDataset):
 
     urls = [
         'https://polybox.ethz.ch/index.php/s/uXfdr2AcXE3QNB6/download',
-        'https://raw.githubusercontent.com/0zgur0/multi-stage-convSTAR-network/fa92b5b3cb77f5171c5c3be740cd6e6395cc29b6/labels.csv',  # noqa: E501
+        'https://raw.githubusercontent.com/0zgur0/multi-stage-convSTAR-network/fa92b5b3cb77f5171c5c3be740cd6e6395cc29b6/labels.csv',
     ]
     md5s = ['1635231df67f3d25f4f1e62c98e221a4', '5118398c7a5bbc246f5f6bb35d8d529b']
     filenames = ['ZueriCrop.hdf5', 'labels.csv']

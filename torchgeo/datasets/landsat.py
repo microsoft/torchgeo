@@ -33,7 +33,7 @@ class Landsat(RasterDataset, abc.ABC):
     * `Surface Temperature <https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature>`_
     * `Surface Reflectance <https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-reflectance>`_
     * `U.S. Analysis Ready Data <https://www.usgs.gov/landsat-missions/landsat-collection-2-us-analysis-ready-data>`_
-    """  # noqa: E501
+    """
 
     # https://www.usgs.gov/landsat-missions/landsat-collection-2
     filename_regex = r"""
@@ -210,6 +210,6 @@ class Landsat8(Landsat):
 
 
 class Landsat9(Landsat8):
-    """Landsat 9 Operational Land Imager (OLI-2) and Thermal Infrared Sensor (TIRS-2)."""  # noqa: E501
+    """Landsat 9 Operational Land Imager (OLI-2) and Thermal Infrared Sensor (TIRS-2)."""
 
     filename_glob = 'LC09_*_{}.*'
