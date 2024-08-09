@@ -13,4 +13,3 @@ data:
     root: "tests/data/bigearthnet"
     bands: "s2"
     num_classes: 19
-    download: true

@@ -23,4 +23,3 @@ data:
     use_prior_labels: False
   dict_kwargs:
     root: "tests/data/chesapeake/cvpr"
-    download: true

@@ -16,4 +16,3 @@ data:
     length: 5
   dict_kwargs:
     paths: "tests/data/l8biome"
-    download: true

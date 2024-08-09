@@ -12,4 +12,3 @@ data:
     val_split_pct: 0.4
   dict_kwargs:
     root: "tests/data/skippd"
-    download: true

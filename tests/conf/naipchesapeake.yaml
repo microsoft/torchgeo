@@ -16,4 +16,3 @@ data:
   dict_kwargs:
     naip_paths: "tests/data/naip"
     chesapeake_paths: "tests/data/chesapeake/BAYWIDE"
-    chesapeake_download: true
