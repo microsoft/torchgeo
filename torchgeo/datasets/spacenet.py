@@ -212,7 +212,7 @@ class SpaceNet(NonGeoDataset, ABC):
                 dtype=np.int64,
             )
         else:
-            mask = np.zeros(shape=shape)
+            mask = np.zeros(shape=shape, dtype=np.int64)
 
         return torch.from_numpy(mask)
 

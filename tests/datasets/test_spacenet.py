@@ -27,7 +27,7 @@ class TestSpaceNet:
         transforms = nn.Identity()
         return SpaceNet1(tmp_path, transforms=transforms, download=True)
 
-    @pytest.mark.parametrize("index", [0, 1])
+    @pytest.mark.parametrize('index', [0, 1])
     def test_getitem(self, dataset: SpaceNet1, index: int) -> None:
         x = dataset[index]
         assert isinstance(x, dict)
