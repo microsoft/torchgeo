@@ -1,5 +1,5 @@
 model:
-  class_path: MultiLabelClassificationTask
+  class_path: ClassificationTask
   init_args:
     loss: 'bce'
     model: 'resnet18'

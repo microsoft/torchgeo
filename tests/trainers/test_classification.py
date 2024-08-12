@@ -222,7 +222,9 @@ class TestClassificationTask:
         'model_name', ['resnet18', 'efficientnetv2_s', 'vit_base_patch16_384']
     )
     def test_freeze_backbone(self, model_name: str) -> None:
-        model = ClassificationTask(model=model_name, freeze_backbone=True)
+        model = ClassificationTask(
+            model=model_name, num_classes=10, freeze_backbone=True
+        )
         assert not all([param.requires_grad for param in model.model.parameters()])
         assert all(
             [param.requires_grad for param in model.model.get_classifier().parameters()]

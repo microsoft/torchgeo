@@ -231,7 +231,7 @@ class TestSemanticSegmentationTask:
     )
     def test_freeze_backbone(self, model_name: str, backbone: str) -> None:
         model = SemanticSegmentationTask(
-            model=model_name, backbone=backbone, freeze_backbone=True
+            model=model_name, backbone=backbone, num_classes=10, freeze_backbone=True
         )
         assert all(
             [param.requires_grad is False for param in model.model.encoder.parameters()]
