@@ -306,7 +306,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         # Using set to remove any duplicates if directories are overlapping
         files: set[Path] = set()
         for path in paths:
-            if os.path.exists(path) and os.path.isfile(path):
+            if os.path.isfile(path):
                 files.add(path)
             else:
                 files |= set(list_directory_recursive(path, self.filename_glob))
