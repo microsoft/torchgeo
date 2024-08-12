@@ -214,6 +214,25 @@ class TestGeoDataset:
             CustomGeoDataset(paths=paths1).files == CustomGeoDataset(paths=paths2).files
         )
 
+
+class TestZippedDataset:
+    @pytest.mark.parametrize(
+        'temp_archive', [os.path.join('tests', 'data', 'vector')], indirect=True
+    )
+    def test_zipped_file(self, temp_archive: tuple[str, str]) -> None:
+        _, dir_zipped = temp_archive
+        filename = 'vector_2024.geojson'
+
+        # Cannot use os.path.join here, as dir_zipped has .zip extension.
+        # Using '!' as separator between archive and file as per Apache Commons VFS
+        # https://rasterio.readthedocs.io/en/latest/topics/vsi.html
+        specific_file_zipped = f'{dir_zipped}!{filename}'
+
+        files_found = CustomGeoDataset(paths=f'zip://{specific_file_zipped}').files
+        assert len(files_found) == 1
+        file = str(files_found[0])
+        assert file.endswith(filename)
+
     @pytest.mark.parametrize(
         'temp_archive',
         [
@@ -226,24 +245,24 @@ class TestGeoDataset:
         ],
         indirect=True,
     )
-    def test_zipped_sentinel2_dataset_specific_file(
+    def test_zipped_specific_file_nested_dir(
         self, temp_archive: tuple[str, str]
     ) -> None:
         dir_not_zipped, dir_zipped = temp_archive
 
+        # Listing, instead of hardcoding filepath
         filename_glob = Sentinel2.filename_glob.format('B02')
         specific_file_not_zipped = list_directory_recursive(
             dir_not_zipped, filename_glob
         )[0]
-        filepath_within_root = specific_file_not_zipped.replace(dir_not_zipped, '')
+        filepath_within_dir = specific_file_not_zipped.replace(dir_not_zipped, '')
 
-        # Cannot use os.path.join here, as dir_zipped has .zip extension.
-        specific_file_zipped = f'{dir_zipped}{filepath_within_root}'
+        specific_file_zipped = f'zip://{dir_zipped}!{filepath_within_dir}'
 
-        files_found = CustomGeoDataset(paths=f'zip://{specific_file_zipped}').files
+        files_found = CustomGeoDataset(paths=specific_file_zipped).files
         assert len(files_found) == 1
         file = str(files_found[0])
-        assert file.endswith(filepath_within_root)
+        assert file.endswith(filepath_within_dir)
 
     @pytest.mark.parametrize(
         'temp_archive',
