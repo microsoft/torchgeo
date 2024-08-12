@@ -141,7 +141,7 @@ class TestSemanticSegmentationTask:
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'], in_chans=weights.meta['in_chans']
+            weights.meta['model'], in_chans=weights.meta['in_chans'], num_classes=10
         )
         torch.save(model.state_dict(), path)
         try:
@@ -158,6 +158,7 @@ class TestSemanticSegmentationTask:
             backbone=mocked_weights.meta['model'],
             weights=mocked_weights,
             in_channels=mocked_weights.meta['in_chans'],
+            num_classes=10,
         )
 
     def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
@@ -165,6 +166,7 @@ class TestSemanticSegmentationTask:
             backbone=mocked_weights.meta['model'],
             weights=str(mocked_weights),
             in_channels=mocked_weights.meta['in_chans'],
+            num_classes=10,
         )
 
     @pytest.mark.slow
@@ -246,7 +248,9 @@ class TestSemanticSegmentationTask:
 
     @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
     def test_freeze_decoder(self, model_name: str) -> None:
-        model = SemanticSegmentationTask(model=model_name, freeze_decoder=True)
+        model = SemanticSegmentationTask(
+            model=model_name, num_classes=10, freeze_decoder=True
+        )
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]
         )
