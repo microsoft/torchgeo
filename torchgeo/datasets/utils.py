@@ -864,7 +864,7 @@ def valid_data_footprint_from_datasource(
     src: rasterio.io.DatasetReader, destination_crs: pyproj.crs.crs.CRS
 ) -> Polygon:
     # Read valid/nodata-mask. Could choose only the first bands mask for peed-up.
-    # Currently supports spatial shifts between the bands, and include all of this
+    # Currently, supports spatial shifts between the bands, and include all of this
     # as one combined mask.
     mask = src.read_masks()
     if len(mask) > 1:
@@ -872,7 +872,11 @@ def valid_data_footprint_from_datasource(
     # Close eventual holes within the raster that have area smaller than 500 pixels.
     # Yields two bands, one all-zero representing nodata pixels,
     # the other representing valid data
-    sieved_mask = sieve(mask, 500)
+    # To ensure hole size is smaller than raster size cap them at 0.2%.
+    # This value was found empirically as per
+    # https://rasterio.readthedocs.io/en/stable/topics/masks.html#writing-masks
+    max_hole_size = int(mask.size * 0.002)
+    sieved_mask = sieve(mask, max_hole_size)
     # Extract polygon for valid data values. Only interested in the valid-band.
     # To support complex footprints we allow multiple such polygons and merge them
     # to one multipolygon later
