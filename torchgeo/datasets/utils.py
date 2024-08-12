@@ -776,7 +776,7 @@ def path_is_vsi(path: Path) -> bool:
     return '://' in str(path) or str(path).startswith('/vsi')
 
 
-def listdir_vsi_recursive(root: Path) -> list[Path]:
+def listdir_vsi_recursive(root: Path) -> list[str]:
     """Lists all files in Virtual File Systems (VSI) recursively.
 
     Args:
@@ -790,7 +790,7 @@ def listdir_vsi_recursive(root: Path) -> list[Path]:
 
     .. versionadded:: #TODO
     """
-    dirs = [root]
+    dirs = [str(root)]
     files = []
     while dirs:
         dir = dirs.pop()
@@ -808,7 +808,7 @@ def listdir_vsi_recursive(root: Path) -> list[Path]:
     return files
 
 
-def list_directory_recursive(root: Path, filename_glob: str) -> list[Path]:
+def list_directory_recursive(root: Path, filename_glob: str) -> list[str]:
     """Lists files in directory recursively matching the given glob expression.
 
     Also supports GDAL Virtual File Systems (VSI).
@@ -824,12 +824,12 @@ def list_directory_recursive(root: Path, filename_glob: str) -> list[Path]:
 
     .. versionadded:: #TODO
     """
-    files: list[Path]
+    files: list[str]
     if path_is_vsi(root):
         # Change type to match expected input to filter
         files_as_str: list[str] = [str(file) for file in listdir_vsi_recursive(root)]
         # Prefix glob with wildcard to ignore directories
-        files = cast(list[Path], fnmatch.filter(files_as_str, '*' + filename_glob))
+        files = fnmatch.filter(files_as_str, '*' + filename_glob)
     else:
         pathname = os.path.join(root, '**', filename_glob)
         files = list(glob.iglob(pathname, recursive=True))
