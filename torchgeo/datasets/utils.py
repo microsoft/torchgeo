@@ -875,7 +875,7 @@ def valid_data_footprint_from_datasource(
     # To ensure hole size is smaller than raster size cap them at 0.2%.
     # This value was found empirically as per
     # https://rasterio.readthedocs.io/en/stable/topics/masks.html#writing-masks
-    max_hole_size = min(int(mask.size * 0.002), 800)
+    max_hole_size = min(int(mask.size * 0.002), 800) or 1  # failsafe for 0
     sieved_mask = sieve(mask, max_hole_size)
     # Extract polygon for valid data values. Only interested in the valid-band.
     # To support complex footprints we allow multiple such polygons and merge them
