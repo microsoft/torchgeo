@@ -798,7 +798,7 @@ def listdir_vsi_recursive(root: Path) -> list[Path]:
 def list_directory_recursive(root: Path, filename_glob: str) -> list[Path]:
     """Lists files in directory recursively matching the given glob expression.
 
-    Also supports gdal virtual file systems (vsi).
+    Also supports GDAL Virtual File Systems (VSI).
 
     Args:
         root: directory to list. For vsi these will have prefix
