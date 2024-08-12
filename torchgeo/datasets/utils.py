@@ -788,7 +788,7 @@ def listdir_vsi_recursive(root: Path) -> list[str]:
         A list of all file paths matching filename_glob in the root VSI directory or its
         subdirectories.
 
-    .. versionadded:: #TODO
+    .. versionadded:: #0.6
     """
     dirs = [str(root)]
     files = []
@@ -824,7 +824,7 @@ def list_directory_recursive(root: Path, filename_glob: str) -> list[str]:
         A list of all file paths matching filename_glob in the root directory or its
         subdirectories.
 
-    .. versionadded:: #TODO
+    .. versionadded:: #0.6
     """
     files: list[str]
     if path_is_vsi(root):
