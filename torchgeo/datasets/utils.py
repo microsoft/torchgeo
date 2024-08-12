@@ -29,8 +29,7 @@ import rasterio
 import torch
 from rasterio.features import shapes, sieve
 from rasterio.warp import transform_geom
-from shapely import MultiPolygon
-from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon, Polygon
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
