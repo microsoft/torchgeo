@@ -231,12 +231,14 @@ class TestGeoDataset:
     ) -> None:
         dir_not_zipped, dir_zipped = temp_archive
 
+        filename_glob = Sentinel2.filename_glob.format('B02')
         specific_file_not_zipped = list_directory_recursive(
-            dir_not_zipped, '*B02_10m.jp2'
+            dir_not_zipped, filename_glob
         )[0]
         filepath_within_root = specific_file_not_zipped.replace(dir_not_zipped, '')
 
-        specific_file_zipped = os.path.join(dir_zipped, filepath_within_root)
+        # Cannot use os.path.join here, as dir_zipped has .zip extension.
+        specific_file_zipped = f'{dir_zipped}{filepath_within_root}'
 
         files_found = CustomGeoDataset(paths=f'zip://{specific_file_zipped}').files
         assert len(files_found) == 1
