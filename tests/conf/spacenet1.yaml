@@ -16,4 +16,3 @@ data:
     test_split_pct: 0.33
   dict_kwargs:
     root: "tests/data/spacenet"
-    download: true
