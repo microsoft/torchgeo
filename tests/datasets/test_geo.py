@@ -3,6 +3,7 @@
 import math
 import os
 import pickle
+import shutil
 import sys
 from collections.abc import Iterable
 from pathlib import Path
@@ -209,15 +210,21 @@ class TestGeoDataset:
         transforms = nn.Identity()
         cache = False
 
-        dir_not_zipped = 'tests/data/sentinel2/S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE'
-        dir_zipped = f'zip://{dir_not_zipped}.zip'
-
+        dir_not_zipped = os.path.join(
+            'tests',
+            'data',
+            'sentinel2',
+            'S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE',
+        )
         files_not_zipped = Sentinel2(
             paths=dir_not_zipped, bands=bands, transforms=transforms, cache=cache
         ).files
+
+        dir_zipped = shutil.make_archive(dir_not_zipped, 'zip', dir_not_zipped)
         files_zipped = Sentinel2(
-            paths=[dir_zipped], bands=bands, transforms=transforms, cache=cache
+            paths=f'zip://{dir_zipped}', bands=bands, transforms=transforms, cache=cache
         ).files
+        os.remove(dir_zipped)
 
         basenames_not_zipped = [Path(path).stem for path in files_not_zipped]
         basenames_zipped = [Path(path).stem for path in files_zipped]
