@@ -192,17 +192,24 @@ class TestGeoDataset:
         with pytest.warns(UserWarning, match='Path was ignored.'):
             assert len(CustomGeoDataset(paths=paths).files) == 0
 
-    def test_files_property_ordered(self) -> None:
+    def test_files_property_ordered(self, tmp_path: Path) -> None:
         """Ensure that the list of files is ordered."""
-        paths = ['file://file3.tif', 'file://file1.tif', 'file://file2.tif']
+
+        files = ['file3.tif', 'file1.tif', 'file2.tif']
+        paths = [tmp_path / fake_file for fake_file in files]
+        for fake_file in paths:
+            fake_file.touch()
         assert CustomGeoDataset(paths=paths).files == sorted(paths)
 
-    def test_files_property_deterministic(self) -> None:
+    def test_files_property_deterministic(self, tmp_path: Path) -> None:
         """Ensure that the list of files is consistent regardless of their original
         order.
         """
-        paths1 = ['file://file3.tif', 'file://file1.tif', 'file://file2.tif']
-        paths2 = ['file://file2.tif', 'file://file3.tif', 'file://file1.tif']
+        files = ['file3.tif', 'file1.tif', 'file2.tif']
+        paths1 = [tmp_path / fake_file for fake_file in files]
+        paths2 = paths1[::-1]  # reverse order
+        for fake_file in paths1:
+            fake_file.touch()
         assert (
             CustomGeoDataset(paths=paths1).files == CustomGeoDataset(paths=paths2).files
         )
