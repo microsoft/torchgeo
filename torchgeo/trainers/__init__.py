@@ -5,7 +5,7 @@
 
 from .base import BaseTask
 from .byol import BYOLTask
-from .classification import ClassificationTask, MultiLabelClassificationTask
+from .classification import ClassificationTask
 from .detection import ObjectDetectionTask
 from .instance_segmentation import InstanceSegmentationTask
 from .iobench import IOBenchTask
@@ -21,7 +21,6 @@ __all__ = (
     'IOBenchTask',
     'InstanceSegmentationTask',
     'MoCoTask',
-    'MultiLabelClassificationTask',
     'ObjectDetectionTask',
     'PixelwiseRegressionTask',
     'RegressionTask',
