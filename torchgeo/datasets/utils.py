@@ -867,7 +867,9 @@ def valid_data_footprint_from_datasource(
     # Read valid/nodata-mask. Could choose only the first bands mask for peed-up.
     # Currently supports spatial shifts between the bands, and include all of this
     # as one combined mask.
-    mask = np.logical_or(*src.read_masks()[:, ...])
+    mask = src.read_masks()
+    if len(mask) > 1:
+        mask = np.logical_or(*mask[:, ...])
     # Close eventual holes within the raster that have area smaller than 500 pixels.
     # Yields two bands, one all-zero representing nodata pixels,
     # the other representing valid data
