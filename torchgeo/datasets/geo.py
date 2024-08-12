@@ -309,13 +309,15 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             if os.path.isfile(path):
                 files.add(path)
             else:
-                files |= set(list_directory_recursive(path, self.filename_glob))
-            if not files and not hasattr(self, 'download'):
-                warnings.warn(
-                    f"Could not find any relevant files for provided path '{path}'. "
-                    f'Path was ignored.',
-                    UserWarning,
-                )
+                files_found = set(list_directory_recursive(path, self.filename_glob))
+                if not files_found and not hasattr(self, 'download'):
+                    warnings.warn(
+                        f"Could not find any relevant files for provided path '{path}'. "
+                        f'Path was ignored.',
+                        UserWarning,
+                    )
+                else:
+                    files |= files_found
 
         # Sort the output to enforce deterministic behavior.
         return sorted(files)

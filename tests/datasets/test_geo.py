@@ -248,6 +248,29 @@ class TestGeoDataset:
         ],
         indirect=True,
     )
+    def test_zipped_sentinel2_dataset_specific_file_not_exist(
+        self, temp_archive: tuple[str, str]
+    ) -> None:
+        dir_not_zipped, dir_zipped = temp_archive
+        file_zipped_not_existing = os.path.join(dir_zipped, 'non_existing_file.tif')
+        with pytest.warns(UserWarning, match='Path was ignored.'):
+            assert (
+                len(CustomGeoDataset(paths=f'zip://{file_zipped_not_existing}').files)
+                == 0
+            )
+
+    @pytest.mark.parametrize(
+        'temp_archive',
+        [
+            os.path.join(
+                'tests',
+                'data',
+                'sentinel2',
+                'S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE',
+            )
+        ],
+        indirect=True,
+    )
     def test_zipped_sentinel2_dataset_root(self, temp_archive: tuple[str, str]) -> None:
         dir_not_zipped, dir_zipped = temp_archive
         bands = ['B04', 'B03', 'B02']

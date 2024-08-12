@@ -797,14 +797,16 @@ def listdir_vsi_recursive(root: Path) -> list[str]:
         try:
             subdirs = fiona.listdir(dir)
             dirs.extend([os.path.join(dir, subdir) for subdir in subdirs])
-        except FionaValueError:
-            # Assuming dir is a file as it is not a directory
-            # fiona.listdir can throw FionaValueError for only two reasons
-            # 1. 'is not a directory'
-            # 2. 'does not exist'
-            # We currently don't have tests for existing vsi, and will thus
-            # allow vsi to not exist.
-            files.append(dir)
+        except FionaValueError as e:
+            if 'is not a directory' in str(e):
+                # Assuming dir is a file as it is not a directory
+                # fiona.listdir can throw FionaValueError for only two reasons
+                files.append(dir)
+            else:
+                # fiona.listdir can throw FionaValueError for only two reasons
+                # 1. 'is not a directory'
+                # 2. 'does not exist'
+                raise
     return files
 
 
@@ -827,9 +829,15 @@ def list_directory_recursive(root: Path, filename_glob: str) -> list[str]:
     files: list[str]
     if path_is_vsi(root):
         # Change type to match expected input to filter
-        files_as_str: list[str] = [str(file) for file in listdir_vsi_recursive(root)]
+        all_files: list[str] = []
+        try:
+            all_files = listdir_vsi_recursive(root)
+        except FionaValueError:
+            # To match the behaviour of glob.iglob we silently return empty list
+            # for non-existing root.
+            pass
         # Prefix glob with wildcard to ignore directories
-        files = fnmatch.filter(files_as_str, '*' + filename_glob)
+        files = fnmatch.filter(all_files, '*' + filename_glob)
     else:
         pathname = os.path.join(root, '**', filename_glob)
         files = list(glob.iglob(pathname, recursive=True))
