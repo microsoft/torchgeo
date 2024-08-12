@@ -11,8 +11,7 @@ import segmentation_models_pytorch as smp
 import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor
-from torchmetrics import MetricCollection
-from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
+from torchmetrics import Accuracy, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
@@ -30,7 +29,9 @@ class SemanticSegmentationTask(BaseTask):
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
-        num_classes: int = 1000,
+        task: str = 'multiclass',
+        num_classes: int | None = None,
+        num_labels: int | None = None,
         num_filters: int = 3,
         loss: str = 'ce',
         class_weights: Tensor | None = None,
@@ -54,7 +55,9 @@ class SemanticSegmentationTask(BaseTask):
                 model does not support pretrained weights. Pretrained ViT weight enums
                 are not supported yet.
             in_channels: Number of input channels to model.
-            num_classes: Number of prediction classes (including the background).
+            task: One of 'binary', 'multiclass', or 'multilabel'.
+            num_classes: Number of prediction classes (only for ``task='multiclass'``).
+            num_labels: Number of prediction labels (only for ``task='multilabel'``).
             num_filters: Number of filters. Only applicable when model='fcn'.
             loss: Name of the loss function, currently supports
                 'ce', 'jaccard' or 'focal' loss.
@@ -69,23 +72,26 @@ class SemanticSegmentationTask(BaseTask):
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
 
-        .. versionchanged:: 0.3
-           *ignore_zeros* was renamed to *ignore_index*.
+        .. versionadded:: 0.6
+           The *task* and *num_labels* parameters.
 
-        .. versionchanged:: 0.4
-           *segmentation_model*, *encoder_name*, and *encoder_weights*
-           were renamed to *model*, *backbone*, and *weights*.
+        .. versionchanged:: 0.6
+           The *ignore_index* parameter now works for jaccard loss.
 
         .. versionadded:: 0.5
-            The *class_weights*, *freeze_backbone*, and *freeze_decoder* parameters.
+           The *class_weights*, *freeze_backbone*, and *freeze_decoder* parameters.
 
         .. versionchanged:: 0.5
            The *weights* parameter now supports WeightEnums and checkpoint paths.
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
 
-        .. versionchanged:: 0.6
-            The *ignore_index* parameter now works for jaccard loss.
+        .. versionchanged:: 0.4
+           *segmentation_model*, *encoder_name*, and *encoder_weights*
+           were renamed to *model*, *backbone*, and *weights*.
+
+        .. versionchanged:: 0.3
+           *ignore_zeros* was renamed to *ignore_index*.
         """
         self.weights = weights
         super().__init__(ignore='weights')
@@ -100,7 +106,9 @@ class SemanticSegmentationTask(BaseTask):
         backbone: str = self.hparams['backbone']
         weights = self.weights
         in_channels: int = self.hparams['in_channels']
-        num_classes: int = self.hparams['num_classes']
+        num_classes: int = (
+            self.hparams['num_classes'] or self.hparams['num_labels'] or 2
+        )
         num_filters: int = self.hparams['num_filters']
 
         if model == 'unet':
@@ -181,10 +189,10 @@ class SemanticSegmentationTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * :class:`~torchmetrics.classification.MulticlassAccuracy`: Overall accuracy
+        * :class:`~torchmetrics.classification.Accuracy`: Overall accuracy
           (OA) using 'micro' averaging. The number of true positives divided by the
           dataset size. Higher values are better.
-        * :class:`~torchmetrics.classification.MulticlassJaccardIndex`: Intersection
+        * :class:`~torchmetrics.classification.JaccardIndex`: Intersection
           over union (IoU). Uses 'micro' averaging. Higher valuers are better.
 
         .. note::
@@ -193,19 +201,16 @@ class SemanticSegmentationTask(BaseTask):
            * 'Macro' averaging, not used here, gives equal weight to each class, useful
              for balanced performance assessment across imbalanced classes.
         """
-        num_classes: int = self.hparams['num_classes']
-        ignore_index: int | None = self.hparams['ignore_index']
+        kwargs = {
+            'task': self.hparams['task'],
+            'num_classes': self.hparams['num_classes'],
+            'num_labels': self.hparams['num_labels'],
+            'ignore_index': self.hparams['ignore_index'],
+        }
         metrics = MetricCollection(
             [
-                MulticlassAccuracy(
-                    num_classes=num_classes,
-                    ignore_index=ignore_index,
-                    multidim_average='global',
-                    average='micro',
-                ),
-                MulticlassJaccardIndex(
-                    num_classes=num_classes, ignore_index=ignore_index, average='micro'
-                ),
+                Accuracy(multidim_average='global', average='micro', **kwargs),
+                JaccardIndex(average='micro', **kwargs),
             ]
         )
         self.train_metrics = metrics.clone(prefix='train_')

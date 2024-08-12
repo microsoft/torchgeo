@@ -5,7 +5,7 @@
 
 from .base import BaseTask
 from .byol import BYOLTask
-from .classification import ClassificationTask, MultiLabelClassificationTask
+from .classification import ClassificationTask
 from .detection import ObjectDetectionTask
 from .iobench import IOBenchTask
 from .moco import MoCoTask
@@ -16,7 +16,6 @@ from .simclr import SimCLRTask
 __all__ = (
     # Supervised
     'ClassificationTask',
-    'MultiLabelClassificationTask',
     'ObjectDetectionTask',
     'PixelwiseRegressionTask',
     'RegressionTask',
