@@ -868,7 +868,7 @@ def valid_data_footprint_from_datasource(
     # as one combined mask.
     mask = src.read_masks()
     if len(mask) > 1:
-        mask = np.logical_or(*mask[:, ...])
+        mask = np.logical_or.reduce(mask, axis=0).astype('uint8')
     # Close eventual holes within the raster that have area smaller than 500 pixels.
     # Yields two bands, one all-zero representing nodata pixels,
     # the other representing valid data
