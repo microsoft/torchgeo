@@ -6,7 +6,6 @@ data:
     root: "data/io"
     split: "raw"
     checksum: true
-    download: true
 trainer:
   max_epochs: 1
   num_sanity_val_steps: 0
