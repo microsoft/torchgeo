@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 import math
 import os
-import pathlib
 import pickle
 import sys
 from collections.abc import Iterable
@@ -220,8 +219,8 @@ class TestGeoDataset:
             paths=[dir_zipped], bands=bands, transforms=transforms, cache=cache
         ).files
 
-        basenames_not_zipped = [pathlib.Path(path).stem for path in files_not_zipped]
-        basenames_zipped = [pathlib.Path(path).stem for path in files_zipped]
+        basenames_not_zipped = [Path(path).stem for path in files_not_zipped]
+        basenames_zipped = [Path(path).stem for path in files_zipped]
         assert basenames_zipped == basenames_not_zipped
 
 
