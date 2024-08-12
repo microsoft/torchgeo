@@ -80,7 +80,7 @@ def get_random_bounding_box(
 
 def get_random_bounding_box_check_valid_overlap(
     bounds: BoundingBox,
-    size: Union[tuple[float, float], float],
+    size: tuple[float, float] | float,
     res: float,
     valid_footprint: shapely.geometry.Polygon,
     max_retries: int = 50_000,
@@ -100,6 +100,7 @@ def get_random_bounding_box_check_valid_overlap(
     Args:
         bounds: the larger bounding box to sample from
         size: the size of the bounding box to sample
+        res: the resolution of the image
         valid_footprint: a Polygon in the common CRS of the originating RasterDataset
         max_retries: if bounds unluckily contain very little valid data, give up.
 

@@ -882,7 +882,7 @@ def valid_data_footprint_from_datasource(
     features = transform_geom(src_crs=src.crs, dst_crs=destination_crs, geom=geoms)
     # Create a Shapely Polygon object(s)
     vector_footprint = MultiPolygon(
-        [Polygon(feature["coordinates"][0]) for feature in features]
+        [Polygon(feature['coordinates'][0]) for feature in features]
     )
     # The resulting polygon(s) is very staggered/pixelated,
     # which could result in thousands of corners.

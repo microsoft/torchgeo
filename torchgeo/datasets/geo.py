@@ -489,7 +489,7 @@ class RasterDataset(GeoDataset):
                     self.index.insert(
                         i,
                         coords,
-                        {"filepath": filepath, "valid_footprint": valid_footprint},
+                        {'filepath': filepath, 'valid_footprint': valid_footprint},
                     )
                     i += 1
 
@@ -527,7 +527,7 @@ class RasterDataset(GeoDataset):
         """
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = cast(
-            list[Path], [cast(dict[str, Any], hit.object)["filepath"] for hit in hits]
+            list[Path], [cast(dict[str, Any], hit.object)['filepath'] for hit in hits]
         )
 
         if not filepaths:
@@ -1022,8 +1022,10 @@ class IntersectionDataset(GeoDataset):
                     # which RasterData will read from.
                     # we merge the footprint from all files covering this bounds
                     all_footprints_overlapping = [
-                        other.object["valid_footprint"]
-                        for other in ds1.index.intersection(ds1.index.bounds, objects=True)
+                        other.object['valid_footprint']
+                        for other in ds1.index.intersection(
+                            ds1.index.bounds, objects=True
+                        )
                     ]
                     all_footprints_cropped_to_bounds = shapely.intersection(
                         shapely.ops.unary_union(all_footprints_overlapping),
