@@ -146,6 +146,7 @@ class ClassificationTask(BaseTask):
         kwargs = {
             'task': self.hparams['task'],
             'num_classes': self.hparams['num_classes'],
+            'num_labels': self.hparams['num_labels'],
         }
         metrics = MetricCollection(
             {
