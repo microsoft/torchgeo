@@ -777,6 +777,19 @@ def path_is_vsi(path: Path) -> bool:
 
 
 def listdir_vsi_recursive(root: Path) -> list[Path]:
+    """Lists all files in Virtual File Systems (VSI) recursively.
+
+    Args:
+        root: directory to list. These must contain the prefix for the VSI
+            e.g. '/vsiaz/' or 'az://' for azure blob storage
+                 '/vsizip/' or 'zip://' for zipped archives
+
+    Returns:
+        A list of all file paths matching filename_glob in the root VSI directory or its
+        subdirectories.
+
+    .. versionadded:: #TODO
+    """
     dirs = [root]
     files = []
     while dirs:
@@ -801,9 +814,15 @@ def list_directory_recursive(root: Path, filename_glob: str) -> list[Path]:
     Also supports GDAL Virtual File Systems (VSI).
 
     Args:
-        root: directory to list. For vsi these will have prefix
-            e.g. /vsiaz or az:// for azure blob storage
+        root: directory to list. For VSI these will have prefix
+            e.g. /vsiaz/ or az:// for azure blob storage
         filename_glob: filename pattern to filter filenames
+
+    Returns:
+        A list of all file paths matching filename_glob in the root directory or its
+        subdirectories.
+
+    .. versionadded:: #TODO
     """
     files: list[Path]
     if path_is_vsi(root):
