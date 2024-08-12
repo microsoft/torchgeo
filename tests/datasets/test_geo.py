@@ -5,7 +5,7 @@ import os
 import pickle
 import shutil
 import sys
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +30,7 @@ from torchgeo.datasets import (
     UnionDataset,
     VectorDataset,
 )
+from torchgeo.datasets.utils import list_directory_recursive
 
 
 class CustomGeoDataset(GeoDataset):
@@ -82,6 +83,19 @@ class CustomNonGeoDataset(NonGeoDataset):
 
     def __len__(self) -> int:
         return 2
+
+
+@pytest.fixture(scope='module')
+def temp_archive(request: SubRequest) -> Generator[tuple[str, str], None, None]:
+    # Runs before tests
+    dir_not_zipped = request.param
+    dir_zipped = f'{dir_not_zipped}.zip'
+    _ = shutil.make_archive(dir_not_zipped, 'zip', dir_not_zipped)
+    # make_archive returns absolute path, while input may be relative path.
+    # we opt to return the (relative) path as provided.
+    yield dir_not_zipped, dir_zipped
+    # Runs after tests
+    os.remove(dir_zipped)
 
 
 class TestGeoDataset:
@@ -178,18 +192,6 @@ class TestGeoDataset:
         with pytest.warns(UserWarning, match='Path was ignored.'):
             assert len(CustomGeoDataset(paths=paths).files) == 0
 
-    def test_files_property_for_virtual_files(self) -> None:
-        # Tests only a subset of schemes and combinations.
-        paths = [
-            'file://directory/file.tif',
-            'zip://archive.zip!folder/file.tif',
-            'az://azure_bucket/prefix/file.tif',
-            '/vsiaz/azure_bucket/prefix/file.tif',
-            'zip+az://azure_bucket/prefix/archive.zip!folder_in_archive/file.tif',
-            '/vsizip//vsiaz/azure_bucket/prefix/archive.zip/folder_in_archive/file.tif',
-        ]
-        assert len(CustomGeoDataset(paths=paths).files) == len(paths)
-
     def test_files_property_ordered(self) -> None:
         """Ensure that the list of files is ordered."""
         paths = ['file://file3.tif', 'file://file1.tif', 'file://file2.tif']
@@ -205,26 +207,60 @@ class TestGeoDataset:
             CustomGeoDataset(paths=paths1).files == CustomGeoDataset(paths=paths2).files
         )
 
-    def test_zipped_sentinel2_dataset(self) -> None:
+    @pytest.mark.parametrize(
+        'temp_archive',
+        [
+            os.path.join(
+                'tests',
+                'data',
+                'sentinel2',
+                'S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE',
+            )
+        ],
+        indirect=True,
+    )
+    def test_zipped_sentinel2_dataset_specific_file(
+        self, temp_archive: tuple[str, str]
+    ) -> None:
+        dir_not_zipped, dir_zipped = temp_archive
+
+        specific_file_not_zipped = list_directory_recursive(
+            dir_not_zipped, '*B02_10m.jp2'
+        )[0]
+        filepath_within_root = specific_file_not_zipped.replace(dir_not_zipped, '')
+
+        specific_file_zipped = os.path.join(dir_zipped, filepath_within_root)
+
+        files_found = CustomGeoDataset(paths=f'zip://{specific_file_zipped}').files
+        assert len(files_found) == 1
+        file = str(files_found[0])
+        assert file.endswith(filepath_within_root)
+
+    @pytest.mark.parametrize(
+        'temp_archive',
+        [
+            os.path.join(
+                'tests',
+                'data',
+                'sentinel2',
+                'S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE',
+            )
+        ],
+        indirect=True,
+    )
+    def test_zipped_sentinel2_dataset_root(self, temp_archive: tuple[str, str]) -> None:
+        dir_not_zipped, dir_zipped = temp_archive
         bands = ['B04', 'B03', 'B02']
         transforms = nn.Identity()
         cache = False
 
-        dir_not_zipped = os.path.join(
-            'tests',
-            'data',
-            'sentinel2',
-            'S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE',
-        )
         files_not_zipped = Sentinel2(
             paths=dir_not_zipped, bands=bands, transforms=transforms, cache=cache
         ).files
 
-        dir_zipped = shutil.make_archive(dir_not_zipped, 'zip', dir_not_zipped)
         files_zipped = Sentinel2(
             paths=f'zip://{dir_zipped}', bands=bands, transforms=transforms, cache=cache
         ).files
-        os.remove(dir_zipped)
 
         basenames_not_zipped = [Path(path).stem for path in files_not_zipped]
         basenames_zipped = [Path(path).stem for path in files_zipped]
