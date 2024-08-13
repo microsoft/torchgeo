@@ -57,6 +57,7 @@ jobs:
         run: pip list
       - name: Run pytest checks
         run: |
+          echo $PATHEXT
           pytest --cov=torchgeo --cov-report=xml --durations=10
           python3 -m torchgeo --help
       - name: Report coverage
