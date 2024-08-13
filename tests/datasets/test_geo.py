@@ -295,7 +295,7 @@ class TestRasterDataset:
             ],
         ],
     )
-    @pytest.mark.filterwarnings("ignore:Could not find any relevant files")
+    @pytest.mark.filterwarnings('ignore:Could not find any relevant files')
     def test_files_separate(self, paths: str | Iterable[str]) -> None:
         assert len(Sentinel2(paths, bands=Sentinel2.rgb_bands).files) == 2
 
