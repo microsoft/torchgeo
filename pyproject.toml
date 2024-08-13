@@ -223,7 +223,13 @@ filterwarnings = [
     # https://github.com/rr-/docstring_parser/pull/82
     "ignore:ast.* is deprecated and will be removed in Python 3.14:DeprecationWarning:docstring_parser.attrdoc",
     # https://github.com/python/cpython/pull/102953
-    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:tarfile",
+    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchgeo.datasets.utils",
+    # https://github.com/kornia/kornia/pull/2967
+    "ignore:`torch.cuda.amp.custom_fwd\\(args...\\)` is deprecated.:FutureWarning:kornia.feature.lightglue",
+    # https://github.com/kornia/kornia/pull/2981
+    "ignore:torch.is_autocast_cpu_enabled\\(\\) is deprecated.:DeprecationWarning:kornia.utils.helpers",
+    # https://github.com/pytorch/pytorch/pull/129239
+    "ignore:You are using `torch.load` with `weights_only=False`:FutureWarning",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
