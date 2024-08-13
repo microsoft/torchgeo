@@ -313,7 +313,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
                 files |= set(glob.iglob(pathname, recursive=True))
             elif (
                 os.path.isfile(path)
-                and fnmatch.fnmatch(path, os.path.join('*', self.filename_glob))
+                and fnmatch.fnmatch(str(path), os.path.join('*', self.filename_glob))
                 or path_is_vsi(path)
             ):
                 files.add(path)
