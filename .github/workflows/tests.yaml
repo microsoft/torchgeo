@@ -8,6 +8,9 @@ on:
     branches:
       - main
       - release**
+defaults:
+  run:
+    shell: bash
 jobs:
   latest:
     name: latest
@@ -55,6 +58,7 @@ jobs:
       - name: Run pytest checks
         run: |
           pytest --cov=torchgeo --cov-report=xml --durations=10
+          python3 -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v4.5.0
         with:
