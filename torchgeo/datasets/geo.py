@@ -4,6 +4,7 @@
 """Base classes for all :mod:`torchgeo` datasets."""
 
 import abc
+import fnmatch
 import functools
 import os
 import pathlib
@@ -307,17 +308,21 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         files: set[Path] = set()
         for path in paths:
             if os.path.isfile(path):
-                files.add(path)
-            else:
-                files_found = set(list_directory_recursive(path, self.filename_glob))
-                if not files_found and not hasattr(self, 'download'):
-                    warnings.warn(
-                        f"Could not find any relevant files for provided path '{path}'. "
-                        f'Path was ignored.',
-                        UserWarning,
-                    )
+                if fnmatch.fnmatch(str(path), os.path.join('*', self.filename_glob)):
+                    files.add(path)
                 else:
-                    files |= files_found
+                    should_warn = True
+            elif files_found := set(list_directory_recursive(path, self.filename_glob)):
+                files |= files_found
+            else:
+                should_warn = True
+
+            if 'should_warn' in locals():
+                warnings.warn(
+                    f"Could not find any relevant files for provided path '{path}'. "
+                    f'Path was ignored.',
+                    UserWarning,
+                )
 
         # Sort the output to enforce deterministic behavior.
         return sorted(files)
