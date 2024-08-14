@@ -12,7 +12,7 @@ import re
 import sys
 import warnings
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, TypedDict, cast
+from typing import Any, cast
 
 import fiona
 import fiona.transform
@@ -27,16 +27,17 @@ from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
 from rtree.index import Index, Property
+from rtree.index import Item as IndexItem
 from shapely import MultiPolygon, Polygon
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
-from typing_extensions import NotRequired
 
 from .errors import DatasetNotFoundError
 from .utils import (
     BoundingBox,
+    IndexData,
     Path,
     array_to_tensor,
     calc_valid_data_footprint_from_datasource,
@@ -46,13 +47,6 @@ from .utils import (
     merge_samples,
     path_is_vsi,
 )
-
-
-class IndexData(TypedDict):
-    """Used for static typing of rtree index object for RasterDataset."""
-
-    filepath: Path
-    valid_footprint: NotRequired[Polygon | MultiPolygon]
 
 
 class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
@@ -333,6 +327,19 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         # Sort the output to enforce deterministic behavior.
         return sorted(files)
 
+    def filepath_for_hit(self, hit: IndexItem) -> Path:
+        """Utility method for fetching filepath from rtee index item.
+
+        Alleviates the type casting from the user.
+
+        Args:
+            hit: Item of rtree Index
+
+        Returns:
+            filepath for the hit
+        """
+        return cast(IndexData, hit.object)['filepath']
+
     def filespaths_intersecting_query(self, query: BoundingBox) -> list[Path]:
         """Find all filepaths that intersects with query.
 
@@ -343,7 +350,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             list of all filepaths in rtree that intersects with query
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        return [cast(IndexData, hit.object)['filepath'] for hit in hits]
+        return [self.filepath_for_hit(hit) for hit in hits]
 
 
 class RasterDataset(GeoDataset):

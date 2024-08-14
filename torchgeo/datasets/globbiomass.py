@@ -7,7 +7,7 @@ import glob
 import os
 import pathlib
 from collections.abc import Callable, Iterable
-from typing import Any, cast
+from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
@@ -192,8 +192,7 @@ class GlobBiomass(RasterDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[Path], [hit.object['filepath'] for hit in hits])
+        filepaths = self.filespaths_intersecting_query(query)
 
         if not filepaths:
             raise IndexError(

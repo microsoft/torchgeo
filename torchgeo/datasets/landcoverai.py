@@ -9,7 +9,7 @@ import hashlib
 import os
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Any, cast
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -253,8 +253,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        img_filepaths = cast(list[Path], [hit.object['filepath'] for hit in hits])
+        img_filepaths = self.filespaths_intersecting_query(query)
         mask_filepaths = [
             str(path).replace('images', 'masks') for path in img_filepaths
         ]

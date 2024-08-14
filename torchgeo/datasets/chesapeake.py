@@ -8,7 +8,7 @@ import os
 import pathlib
 import sys
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, cast
+from typing import Any
 
 import fiona
 import matplotlib.pyplot as plt
@@ -604,8 +604,7 @@ class ChesapeakeCVPR(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[dict[str, str]], [hit.object['filepath'] for hit in hits])
+        filepaths = self.filespaths_intersecting_query(query)
 
         sample = {'image': [], 'mask': [], 'crs': self.crs, 'bounds': query}
 

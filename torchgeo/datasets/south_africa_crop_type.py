@@ -7,7 +7,7 @@ import os
 import pathlib
 import re
 from collections.abc import Callable, Iterable
-from typing import Any, cast
+from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
@@ -164,8 +164,7 @@ class SouthAfricaCropType(RasterDataset):
         assert isinstance(self.paths, str | pathlib.Path)
 
         # Get all files matching the given query
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[Path], [hit.object['filepath'] for hit in hits])
+        filepaths = self.filespaths_intersecting_query(query)
 
         if not filepaths:
             raise IndexError(

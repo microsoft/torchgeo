@@ -8,7 +8,7 @@ import os
 import pathlib
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, cast
+from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
@@ -94,7 +94,7 @@ class L7IrishMask(RasterDataset):
         filename_regex = re.compile(L7IrishImage.filename_regex, re.VERBOSE)
         index = Index(interleaved=False, properties=Property(dimension=3))
         for hit in self.index.intersection(self.index.bounds, objects=True):
-            dirname = os.path.dirname(cast(Path, hit.object['filepath']))
+            dirname = os.path.dirname(self.filepath_for_hit(hit))
             image = glob.glob(os.path.join(dirname, L7IrishImage.filename_glob))[0]
             minx, maxx, miny, maxy, mint, maxt = hit.bounds
             if match := re.match(filename_regex, os.path.basename(image)):

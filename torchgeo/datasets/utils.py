@@ -21,7 +21,7 @@ import tarfile
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, TypeAlias, cast, overload
+from typing import Any, TypeAlias, TypedDict, cast, overload
 
 import numpy as np
 import pyproj
@@ -36,6 +36,7 @@ from shapely.geometry import MultiPolygon, Polygon
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
 from torchvision.utils import draw_segmentation_masks
+from typing_extensions import NotRequired
 
 from .errors import DependencyNotFoundError
 
@@ -44,6 +45,13 @@ __all__ = ('check_integrity', 'download_url')
 
 
 Path: TypeAlias = str | pathlib.Path
+
+
+class IndexData(TypedDict):
+    """Used for static typing of rtree index object for RasterDataset."""
+
+    filepath: Path
+    valid_footprint: NotRequired[Polygon | MultiPolygon]
 
 
 class _rarfile:
@@ -936,8 +944,8 @@ def union_valid_footprint_from_dataset(
     # which RasterData will read from.
     # we merge the footprint from all files covering this bounds
     all_footprints_overlapping = [
-        other.object['valid_footprint']
-        for other in dataset_index.intersection(dataset_index.bounds, objects=True)
+        cast(IndexData, hit.object)['valid_footprint']
+        for hit in dataset_index.intersection(dataset_index.bounds, objects=True)
     ]
     all_footprints_cropped_to_bounds = shapely.intersection(
         shapely.ops.unary_union(all_footprints_overlapping),

@@ -7,7 +7,7 @@ import os
 import pathlib
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, cast
+from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
@@ -183,8 +183,7 @@ class AgriFieldNet(RasterDataset):
         """
         assert isinstance(self.paths, str | pathlib.Path)
 
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[Path], [hit.object['filepath'] for hit in hits])
+        filepaths = self.filespaths_intersecting_query(query)
 
         if not filepaths:
             raise IndexError(
