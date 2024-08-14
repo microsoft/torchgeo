@@ -184,7 +184,7 @@ class AgriFieldNet(RasterDataset):
         assert isinstance(self.paths, str | pathlib.Path)
 
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[Path], [hit.object for hit in hits])
+        filepaths = cast(list[Path], [hit.object['filepath'] for hit in hits])
 
         if not filepaths:
             raise IndexError(

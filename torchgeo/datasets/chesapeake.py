@@ -605,7 +605,7 @@ class ChesapeakeCVPR(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[dict[str, str]], [hit.object for hit in hits])
+        filepaths = cast(list[dict[str, str]], [hit.object['filepath'] for hit in hits])
 
         sample = {'image': [], 'mask': [], 'crs': self.crs, 'bounds': query}
 

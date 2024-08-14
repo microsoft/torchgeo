@@ -165,7 +165,7 @@ class SouthAfricaCropType(RasterDataset):
 
         # Get all files matching the given query
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[Path], [hit.object for hit in hits])
+        filepaths = cast(list[Path], [hit.object['filepath'] for hit in hits])
 
         if not filepaths:
             raise IndexError(

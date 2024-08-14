@@ -737,7 +737,7 @@ class VectorDataset(GeoDataset):
                         date = match.group('date')
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
                     coords = (minx, maxx, miny, maxy, mint, maxt)
-                    self.index.insert(i, coords, filepath)
+                    self.index.insert(i, coords, {'filepath': filepath})
                     i += 1
 
         if i == 0:
@@ -759,7 +759,7 @@ class VectorDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        filepaths = [hit.object['filepath'] for hit in hits]
 
         if not filepaths:
             raise IndexError(
