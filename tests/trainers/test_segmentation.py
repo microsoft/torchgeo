@@ -10,7 +10,6 @@ import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
-import torchvision
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
@@ -36,11 +35,6 @@ class SegmentationTestModel(Module):
 
 def create_model(**kwargs: Any) -> Module:
     return SegmentationTestModel(**kwargs)
-
-
-def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
-    state_dict: dict[str, Any] = torch.load(url)
-    return state_dict
 
 
 def plot(*args: Any, **kwargs: Any) -> None:
@@ -132,7 +126,11 @@ class TestSemanticSegmentationTask:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -143,7 +141,6 @@ class TestSemanticSegmentationTask:
             monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
             monkeypatch.setattr(weights, 'url', str(path))
-        monkeypatch.setattr(torchvision.models._api, 'load_state_dict_from_url', load)
         return weights
 
     def test_weight_file(self, checkpoint: str) -> None:

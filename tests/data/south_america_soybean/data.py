@@ -17,7 +17,7 @@ np.random.seed(0)
 files = ['SouthAmerica_Soybean_2002.tif', 'SouthAmerica_Soybean_2021.tif']
 
 
-def create_file(path: str, dtype: str):
+def create_file(path: str, dtype: str) -> None:
     """Create the testing file."""
     profile = {
         'driver': 'GTiff',
