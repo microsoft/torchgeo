@@ -88,10 +88,10 @@ for satellite in range(9, 0, -1):
     }
 
     xranges = [(start, end - start) for start, end in working[satellite]]
-    ax.broken_barh(xranges, hatch=None, **kwargs)
+    ax.broken_barh(xranges, hatch=None, **kwargs)  # type: ignore[arg-type]
 
     xranges = [(start, end - start) for start, end in failing[satellite]]
-    ax.broken_barh(xranges, hatch='////', **kwargs)
+    ax.broken_barh(xranges, hatch='////', **kwargs)  # type: ignore[arg-type]
 
     # Label
     xmin = global_xmax
@@ -127,13 +127,13 @@ for satellite in range(9, 0, -1):
         'verticalalignment': 'center_baseline',
     }
 
-    ax.text(x, horizontalalignment=horizontalalignment, **kwargs)
+    ax.text(x, horizontalalignment=horizontalalignment, **kwargs)  # type: ignore[arg-type]
 
     yticks.append(ymin + args.bar_height / 2)
     ymin += args.bar_height + args.bar_sep
 
 ax.xaxis_date()
-ax.set_xlim(global_xmin, global_xmax)
+ax.set_xlim(global_xmin, global_xmax)  # type: ignore[arg-type]
 ax.set_ylabel('Landsat Mission')
 ax.set_yticks(yticks)
 ax.set_yticklabels(map(str, range(9, 0, -1)))
