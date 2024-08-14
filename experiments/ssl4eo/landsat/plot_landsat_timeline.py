@@ -136,7 +136,7 @@ ax.xaxis_date()
 ax.set_xlim(global_xmin, global_xmax)
 ax.set_ylabel('Landsat Mission')
 ax.set_yticks(yticks)
-ax.set_yticklabels(range(9, 0, -1))
+ax.set_yticklabels(map(str, range(9, 0, -1)))
 ax.tick_params(axis='both', which='both', top=False, right=False)
 ax.spines[['top', 'right']].set_visible(False)
 
