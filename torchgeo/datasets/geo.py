@@ -27,6 +27,7 @@ from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
 from rtree.index import Index, Property
+from shapely import MultiPolygon, Polygon
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -37,11 +38,12 @@ from .utils import (
     BoundingBox,
     Path,
     array_to_tensor,
+    calc_valid_data_footprint_from_datasource,
     concat_samples,
     disambiguate_timestamp,
+    get_valid_footprint_between_datasets,
     merge_samples,
     path_is_vsi,
-    valid_data_footprint_from_datasource,
 )
 
 
@@ -463,7 +465,14 @@ class RasterDataset(GeoDataset):
                         if crs is None:
                             crs = src.crs
 
-                        valid_footprint = valid_data_footprint_from_datasource(src, crs)
+                        valid_footprint = calc_valid_data_footprint_from_datasource(
+                            masks=src.read_masks(),
+                            src_crs=src.crs,
+                            src_transform=src.transform,
+                            raster_width=src.width,
+                            raster_resolution_x=src.res[0],
+                            dst_crs=crs,
+                        )
 
                         with WarpedVRT(src, crs=crs) as vrt:
                             minx, miny, maxx, maxy = vrt.bounds
@@ -1010,6 +1019,7 @@ class IntersectionDataset(GeoDataset):
         """Create a new R-tree out of the individual indices from two datasets."""
         i = 0
         ds1, ds2 = self.datasets
+
         for hit1 in ds1.index.intersection(ds1.index.bounds, objects=True):
             for hit2 in ds2.index.intersection(hit1.bounds, objects=True):
                 box1 = BoundingBox(*hit1.bounds)
@@ -1017,34 +1027,19 @@ class IntersectionDataset(GeoDataset):
                 box_intersection = box1 & box2
                 # Skip 0 area overlap (unless 0 area dataset)
                 if box_intersection.area > 0 or box1.area == 0 or box2.area == 0:
-                    # assuming hit1 is the rasterfile.
-                    # It might have nodata-regions covered by other files,
-                    # which RasterData will read from.
-                    # we merge the footprint from all files covering this bounds
-                    all_footprints_overlapping = [
-                        other.object['valid_footprint']
-                        for other in ds1.index.intersection(
-                            ds1.index.bounds, objects=True
+                    valid_footprint: Polygon | MultiPolygon | None = (
+                        get_valid_footprint_between_datasets(
+                            ds1.index if isinstance(ds1, RasterDataset) else None,
+                            ds2.index if isinstance(ds2, RasterDataset) else None,
+                            box_intersection,
                         )
-                    ]
-                    all_footprints_cropped_to_bounds = shapely.intersection(
-                        shapely.ops.unary_union(all_footprints_overlapping),
-                        shapely.geometry.box(
-                            box_intersection.minx,
-                            box_intersection.miny,
-                            box_intersection.maxx,
-                            box_intersection.maxy,
-                        ),
                     )
                     self.index.insert(
                         i,
                         tuple(box_intersection),
-                        cast(
-                            dict[str, shapely.geometry.Polygon],
-                            all_footprints_cropped_to_bounds,
-                        ),
+                        cast(dict[str, shapely.geometry.Polygon], valid_footprint),
                     )
-                i += 1
+                    i += 1
 
         if i == 0:
             raise RuntimeError('Datasets have no spatiotemporal intersection')
