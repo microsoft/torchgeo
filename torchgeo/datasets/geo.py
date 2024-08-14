@@ -12,7 +12,7 @@ import re
 import sys
 import warnings
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, cast
+from typing import Any, TypedDict, cast
 
 import fiona
 import fiona.transform
@@ -45,6 +45,13 @@ from .utils import (
     merge_samples,
     path_is_vsi,
 )
+
+
+class IndexData(TypedDict):
+    """Used for static typing of rtree index object for RasterDataset."""
+
+    filepath: Path
+    valid_footprint: Polygon | MultiPolygon
 
 
 class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
@@ -495,11 +502,12 @@ class RasterDataset(GeoDataset):
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
 
-                    self.index.insert(
-                        i,
-                        coords,
-                        {'filepath': filepath, 'valid_footprint': valid_footprint},
-                    )
+                    index_object: IndexData = {
+                        'filepath': filepath,
+                        'valid_footprint': valid_footprint,
+                    }
+
+                    self.index.insert(i, coords, index_object)
                     i += 1
 
         if i == 0:
@@ -1034,11 +1042,7 @@ class IntersectionDataset(GeoDataset):
                             box_intersection,
                         )
                     )
-                    self.index.insert(
-                        i,
-                        tuple(box_intersection),
-                        cast(dict[str, shapely.geometry.Polygon], valid_footprint),
-                    )
+                    self.index.insert(i, tuple(box_intersection), valid_footprint)
                     i += 1
 
         if i == 0:

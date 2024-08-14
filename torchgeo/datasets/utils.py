@@ -31,7 +31,7 @@ import torch
 from affine import Affine
 from rasterio.features import shapes, sieve
 from rasterio.warp import transform_geom
-from rtree import Index
+from rtree.index import Index
 from shapely.geometry import MultiPolygon, Polygon
 from torch import Tensor
 from torchvision.datasets.utils import check_integrity, download_url
