@@ -190,10 +190,10 @@ class SemanticSegmentationTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * :class:`~torchmetrics.classification.Accuracy`: Overall accuracy
+        * :class:`~torchmetrics.Accuracy`: Overall accuracy
           (OA) using 'micro' averaging. The number of true positives divided by the
           dataset size. Higher values are better.
-        * :class:`~torchmetrics.classification.JaccardIndex`: Intersection
+        * :class:`~torchmetrics.JaccardIndex`: Intersection
           over union (IoU). Uses 'micro' averaging. Higher valuers are better.
 
         .. note::

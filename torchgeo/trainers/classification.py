@@ -128,13 +128,13 @@ class ClassificationTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * :class:`~torchmetrics.classification.Accuracy`: The number of
+        * :class:`~torchmetrics.Accuracy`: The number of
           true positives divided by the dataset size. Both overall accuracy (OA)
           using 'micro' averaging and average accuracy (AA) using 'macro' averaging
           are reported. Higher values are better.
-        * :class:`~torchmetrics.classification.JaccardIndex`: Intersection
+        * :class:`~torchmetrics.JaccardIndex`: Intersection
           over union (IoU). Uses 'macro' averaging. Higher valuers are better.
-        * :class:`~torchmetrics.classification.FBetaScore`: F1 score.
+        * :class:`~torchmetrics.FBetaScore`: F1 score.
           The harmonic mean of precision and recall. Uses 'micro' averaging.
           Higher values are better.
 
