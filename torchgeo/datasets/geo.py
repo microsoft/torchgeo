@@ -32,6 +32,7 @@ from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
+from typing_extensions import NotRequired
 
 from .errors import DatasetNotFoundError
 from .utils import (
@@ -51,7 +52,7 @@ class IndexData(TypedDict):
     """Used for static typing of rtree index object for RasterDataset."""
 
     filepath: Path
-    valid_footprint: Polygon | MultiPolygon
+    valid_footprint: NotRequired[Polygon | MultiPolygon]
 
 
 class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
@@ -332,6 +333,18 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         # Sort the output to enforce deterministic behavior.
         return sorted(files)
 
+    def filespaths_intersecting_query(self, query: BoundingBox) -> list[Path]:
+        """Find all filepaths that intersects with query.
+
+        Args:
+            query: BoundingBox to intersect with
+
+        Returns:
+            list of all filepaths in rtree that intersects with query
+        """
+        hits = self.index.intersection(tuple(query), objects=True)
+        return [cast(IndexData, hit.object)['filepath'] for hit in hits]
+
 
 class RasterDataset(GeoDataset):
     """Abstract base class for :class:`GeoDataset` stored as raster files."""
@@ -542,10 +555,7 @@ class RasterDataset(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(
-            list[Path], [cast(dict[str, Any], hit.object)['filepath'] for hit in hits]
-        )
+        filepaths = self.filespaths_intersecting_query(query)
 
         if not filepaths:
             raise IndexError(
@@ -766,8 +776,7 @@ class VectorDataset(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object['filepath'] for hit in hits]
+        filepaths = self.filespaths_intersecting_query(query)
 
         if not filepaths:
             raise IndexError(
