@@ -849,8 +849,8 @@ def which(cmd: Path) -> Executable:
 
     .. versionadded:: 0.6
     """
-    if cmd := shutil.which(cmd):
-        return Executable(cmd)
+    if path := shutil.which(cmd):
+        return Executable(path)
     else:
         msg = f'{cmd} is not installed and is required to use this dataset.'
         raise DependencyNotFoundError(msg) from None
