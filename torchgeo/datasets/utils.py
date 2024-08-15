@@ -835,22 +835,22 @@ to install all optional dataset dependencies."""
         raise DependencyNotFoundError(msg) from None
 
 
-def which(name: Path) -> Executable:
-    """Search for executable *name*.
+def which(cmd: Path) -> Executable:
+    """Search for executable *cmd*.
 
     Args:
-        name: Name of executable to search for.
+        cmd: Name of executable to search for.
 
     Returns:
         Callable executable instance.
 
     Raises:
-        DependencyNotFoundError: If *name* is not installed.
+        DependencyNotFoundError: If *cmd* is not installed.
 
     .. versionadded:: 0.6
     """
-    if cmd := shutil.which(name):
+    if cmd := shutil.which(cmd):
         return Executable(cmd)
     else:
-        msg = f'{name} is not installed and is required to use this dataset.'
+        msg = f'{cmd} is not installed and is required to use this dataset.'
         raise DependencyNotFoundError(msg) from None
