@@ -45,46 +45,6 @@ __all__ = (
 Path: TypeAlias = str | pathlib.Path
 
 
-def download_radiant_mlhub_dataset(
-    dataset_id: str, download_root: Path, api_key: str | None = None
-) -> None:
-    """Download a dataset from Radiant Earth.
-
-    Args:
-        dataset_id: the ID of the dataset to fetch
-        download_root: directory to download to
-        api_key: the API key to use for all requests from the session. Can also be
-            passed in via the ``MLHUB_API_KEY`` environment variable, or configured in
-            ``~/.mlhub/profiles``.
-
-    Raises:
-        DependencyNotFoundError: If radiant_mlhub is not installed.
-    """
-    radiant_mlhub = lazy_import('radiant_mlhub')
-    dataset = radiant_mlhub.Dataset.fetch(dataset_id, api_key=api_key)
-    dataset.download(output_dir=download_root, api_key=api_key)
-
-
-def download_radiant_mlhub_collection(
-    collection_id: str, download_root: Path, api_key: str | None = None
-) -> None:
-    """Download a collection from Radiant Earth.
-
-    Args:
-        collection_id: the ID of the collection to fetch
-        download_root: directory to download to
-        api_key: the API key to use for all requests from the session. Can also be
-            passed in via the ``MLHUB_API_KEY`` environment variable, or configured in
-            ``~/.mlhub/profiles``.
-
-    Raises:
-        DependencyNotFoundError: If radiant_mlhub is not installed.
-    """
-    radiant_mlhub = lazy_import('radiant_mlhub')
-    collection = radiant_mlhub.Collection.fetch(collection_id, api_key=api_key)
-    collection.download(output_dir=download_root, api_key=api_key)
-
-
 @dataclass(frozen=True)
 class BoundingBox:
     """Data class for indexing spatiotemporal data."""
