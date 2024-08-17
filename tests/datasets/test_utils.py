@@ -5,7 +5,6 @@ import math
 import os
 import pickle
 import re
-import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -14,7 +13,6 @@ from typing import Any
 import numpy as np
 import pytest
 import torch
-from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
