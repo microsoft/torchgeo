@@ -24,8 +24,12 @@ class TestVHR10:
     ) -> VHR10:
         url = os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.zip')
         monkeypatch.setitem(VHR10.image_meta, 'url', url)
+        md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
+        monkeypatch.setitem(VHR10.image_meta, 'md5', md5)
         url = os.path.join('tests', 'data', 'vhr10', 'annotations.json')
         monkeypatch.setitem(VHR10.target_meta, 'url', url)
+        md5 = '567c4cd8c12624864ff04865de504c58'
+        monkeypatch.setitem(VHR10.target_meta, 'md5', md5)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
