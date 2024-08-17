@@ -99,8 +99,6 @@ datasets = [
     "scikit-image>=0.19",
     # scipy 1.7.2+ required for Python 3.10 wheels
     "scipy>=1.7.2",
-    # zipfile-deflate64 0.2+ required for Python 3.10 wheels
-    "zipfile-deflate64>=0.2",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx

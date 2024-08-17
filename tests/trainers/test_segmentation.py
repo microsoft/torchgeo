@@ -89,8 +89,6 @@ class TestSemanticSegmentationTask:
                     'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
                 )
                 monkeypatch.setattr(LandCoverAI, 'sha256', sha256)
-            case 'naipchesapeake':
-                pytest.importorskip('zipfile_deflate64')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 
