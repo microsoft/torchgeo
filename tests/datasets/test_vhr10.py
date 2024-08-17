@@ -15,7 +15,6 @@ from torch.utils.data import ConcatDataset
 from torchgeo.datasets import VHR10, DatasetNotFoundError
 
 pytest.importorskip('pycocotools')
-pytest.importorskip('rarfile', minversion='4')
 
 
 class TestVHR10:
@@ -23,9 +22,9 @@ class TestVHR10:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> VHR10:
-        url = os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.rar')
+        url = os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.zip')
         monkeypatch.setitem(VHR10.image_meta, 'url', url)
-        md5 = '92769845cae6a4e8c74bfa1a0d1d4a80'
+        md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
         monkeypatch.setitem(VHR10.image_meta, 'md5', md5)
         url = os.path.join('tests', 'data', 'vhr10', 'annotations.json')
         monkeypatch.setitem(VHR10.target_meta, 'url', url)

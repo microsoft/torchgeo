@@ -93,8 +93,6 @@ datasets = [
     "pyvista>=0.34.2",
     # radiant-mlhub 0.3+ required for newer tqdm support required by lightning
     "radiant-mlhub>=0.3",
-    # rarfile 4+ required for wheels
-    "rarfile>=4",
     # scikit-image 0.19+ required for Python 3.10 wheels
     "scikit-image>=0.19",
     # scipy 1.7.2+ required for Python 3.10 wheels

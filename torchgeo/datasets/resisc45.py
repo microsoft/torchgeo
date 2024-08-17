@@ -91,25 +91,18 @@ class RESISC45(NonGeoClassificationDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/jproc.2017.2675998
-
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `rarfile <https://pypi.org/project/rarfile/>`_ to extract the dataset,
-         which is stored in a RAR file
     """
 
-    url = 'https://drive.google.com/file/d/1DnPSU5nVSN7xv95bpZ3XQ0JhKXZOKgIv'
-    md5 = 'd824acb73957502b00efd559fc6cfbbb'
-    filename = 'NWPU-RESISC45.rar'
+    url = 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/NWPU-RESISC45.zip'
+    md5 = '75206b2e16446591afa88e2628744886'
+    filename = 'NWPU-RESISC45.zip'
     directory = 'NWPU-RESISC45'
 
     splits = ['train', 'val', 'test']
     split_urls = {
-        'train': 'https://storage.googleapis.com/remote_sensing_representations/resisc45-train.txt',  # noqa: E501
-        'val': 'https://storage.googleapis.com/remote_sensing_representations/resisc45-val.txt',  # noqa: E501
-        'test': 'https://storage.googleapis.com/remote_sensing_representations/resisc45-test.txt',  # noqa: E501
+        'train': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-train.txt',
+        'val': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-val.txt',
+        'test': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-test.txt',
     }
     split_md5s = {
         'train': 'b5a4c05a37de15e4ca886696a85c403e',
