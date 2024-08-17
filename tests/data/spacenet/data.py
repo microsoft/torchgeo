@@ -37,7 +37,7 @@ Z = np.random.randint(np.iinfo('uint8').max, size=(SIZE, SIZE), dtype='uint8')
 
 for count in [3, 8]:
     os.makedirs(os.path.join(dataset_id, 'train', f'{count}band'), exist_ok=True)
-    for i in range(1, 4):
+    for i in range(1, 5):
         path = os.path.join(
             dataset_id, 'train', f'{count}band', f'3band_AOI_1_RIO_img{i}.tif'
         )
@@ -76,7 +76,7 @@ geojson = {
 }
 
 os.makedirs(os.path.join(dataset_id, 'train', 'geojson'), exist_ok=True)
-for i in range(1, 3):
+for i in range(1, 4):
     path = os.path.join(dataset_id, 'train', 'geojson', f'Geo_AOI_1_RIO_img{i}.geojson')
     with open(path, 'w') as src:
         if i % 2 == 0:
