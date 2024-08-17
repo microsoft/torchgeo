@@ -18,17 +18,14 @@ import torch
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
     Executable,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
-    download_and_extract_archive,
     download_radiant_mlhub_collection,
     download_radiant_mlhub_dataset,
-    extract_archive,
     lazy_import,
     merge_samples,
     percentile_normalization,
@@ -63,40 +60,6 @@ def fetch_dataset(dataset_id: str, **kwargs: str) -> MLHubDataset:
 
 def fetch_collection(collection_id: str, **kwargs: str) -> Collection:
     return Collection()
-
-
-def download_url(url: str, root: str | Path, *args: str) -> None:
-    shutil.copy(url, root)
-
-
-@pytest.mark.parametrize(
-    'src',
-    [
-        os.path.join('cowc_detection', 'COWC_Detection_Columbus_CSUAV_AFRL.tbz'),
-        os.path.join('cowc_detection', 'COWC_test_list_detection.txt.bz2'),
-        os.path.join('vhr10', 'NWPU VHR-10 dataset.rar'),
-        os.path.join('landcoverai', 'landcover.ai.v1.zip'),
-        os.path.join('sen12ms', 'ROIs1158_spring_lc.tar.gz'),
-    ],
-)
-def test_extract_archive(src: str, tmp_path: Path) -> None:
-    if src.endswith('.rar'):
-        pytest.importorskip('rarfile', minversion='4')
-    extract_archive(os.path.join('tests', 'data', src), tmp_path)
-
-
-def test_unsupported_scheme() -> None:
-    with pytest.raises(
-        RuntimeError, match='src file has unknown archival/compression scheme'
-    ):
-        extract_archive('foo.bar')
-
-
-def test_download_and_extract_archive(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
-    download_and_extract_archive(
-        os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip'), tmp_path
-    )
 
 
 def test_download_radiant_mlhub_dataset(
