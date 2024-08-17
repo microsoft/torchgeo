@@ -2,23 +2,14 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
-from pathlib import Path
 
 import pytest
 import torchvision.transforms.functional as F
 from lightning.pytorch import Trainer
-from pytest import MonkeyPatch
 from torch import Tensor
 from torchvision.transforms import InterpolationMode
 
-import torchgeo.datasets.utils
 from torchgeo.datamodules import LEVIRCDDataModule, LEVIRCDPlusDataModule
-from torchgeo.datasets import LEVIRCD, LEVIRCDPlus
-
-
-def download_url(url: str, root: str, *args: str) -> None:
-    shutil.copy(url, root)
 
 
 def transforms(sample: dict[str, Tensor]) -> dict[str, Tensor]:
@@ -44,16 +35,8 @@ def transforms(sample: dict[str, Tensor]) -> dict[str, Tensor]:
 
 class TestLEVIRCDPlusDataModule:
     @pytest.fixture
-    def datamodule(
-        self, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> LEVIRCDPlusDataModule:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
-        md5 = '0ccca34310bfe7096dadfbf05b0d180f'
-        monkeypatch.setattr(LEVIRCDPlus, 'md5', md5)
-        url = os.path.join('tests', 'data', 'levircd', 'levircdplus', 'LEVIR-CD+.zip')
-        monkeypatch.setattr(LEVIRCDPlus, 'url', url)
-
-        root = str(tmp_path)
+    def datamodule(self) -> LEVIRCDPlusDataModule:
+        root = os.path.join('tests', 'data', 'levircd', 'levircdplus')
         dm = LEVIRCDPlusDataModule(
             root=root,
             download=True,
@@ -113,29 +96,8 @@ class TestLEVIRCDPlusDataModule:
 
 class TestLEVIRCDDataModule:
     @pytest.fixture
-    def datamodule(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> LEVIRCDDataModule:
-        directory = os.path.join('tests', 'data', 'levircd', 'levircd')
-        splits = {
-            'train': {
-                'url': os.path.join(directory, 'train.zip'),
-                'filename': 'train.zip',
-                'md5': '7c2e24b3072095519f1be7eb01fae4ff',
-            },
-            'val': {
-                'url': os.path.join(directory, 'val.zip'),
-                'filename': 'val.zip',
-                'md5': '5c320223ba88b6fc8ff9d1feebc3b84e',
-            },
-            'test': {
-                'url': os.path.join(directory, 'test.zip'),
-                'filename': 'test.zip',
-                'md5': '021db72d4486726d6a0702563a617b32',
-            },
-        }
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
-        monkeypatch.setattr(LEVIRCD, 'splits', splits)
-
-        root = str(tmp_path)
+    def datamodule(self) -> LEVIRCDDataModule:
+        root = os.path.join('tests', 'data', 'levircd', 'levircd')
         dm = LEVIRCDDataModule(
             root=root,
             download=True,
