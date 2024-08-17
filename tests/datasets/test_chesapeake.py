@@ -13,7 +13,6 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     ChesapeakeCVPR,
@@ -24,14 +23,9 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestChesapeakeDC:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ChesapeakeDC:
-        monkeypatch.setattr(torchgeo.datasets.chesapeake, 'download_url', download_url)
         url = os.path.join(
             'tests',
             'data',
@@ -108,7 +102,6 @@ class TestChesapeakeCVPR:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> ChesapeakeCVPR:
-        monkeypatch.setattr(torchgeo.datasets.chesapeake, 'download_url', download_url)
         monkeypatch.setattr(
             ChesapeakeCVPR,
             'md5s',

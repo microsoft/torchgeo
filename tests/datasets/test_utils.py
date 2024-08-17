@@ -18,7 +18,6 @@ import torch
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
     Executable,
@@ -65,10 +64,6 @@ def fetch_collection(collection_id: str, **kwargs: str) -> Collection:
     return Collection()
 
 
-def download_url(url: str, root: str | Path, *args: str) -> None:
-    shutil.copy(url, root)
-
-
 @pytest.mark.parametrize(
     'src',
     [
@@ -93,7 +88,6 @@ def test_unsupported_scheme() -> None:
 
 
 def test_download_and_extract_archive(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
     download_and_extract_archive(
         os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip'), tmp_path
     )

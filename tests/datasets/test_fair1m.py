@@ -12,15 +12,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import FAIR1M, DatasetNotFoundError
-
-
-def download_url(
-    url: str, root: str | Path, filename: str, *args: str, **kwargs: str
-) -> None:
-    os.makedirs(root, exist_ok=True)
-    shutil.copy(url, os.path.join(root, filename))
 
 
 class TestFAIR1M:
@@ -30,7 +22,6 @@ class TestFAIR1M:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> FAIR1M:
-        monkeypatch.setattr(torchgeo.datasets.fair1m, 'download_url', download_url)
         urls = {
             'train': (
                 os.path.join(self.test_root, 'train', 'part1', 'images.zip'),
@@ -102,7 +93,7 @@ class TestFAIR1M:
         ):
             output = os.path.join(tmp_path, filepath)
             os.makedirs(os.path.dirname(output), exist_ok=True)
-            download_url(url, root=os.path.dirname(output), filename=output)
+            shutil.copy(url, output)
 
         FAIR1M(root=tmp_path, split=dataset.split, checksum=True)
 
@@ -115,7 +106,7 @@ class TestFAIR1M:
         ):
             output = os.path.join(tmp_path, filepath)
             os.makedirs(os.path.dirname(output), exist_ok=True)
-            download_url(url, root=os.path.dirname(output), filename=output)
+            shutil.copy(url, output)
 
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
             FAIR1M(root=tmp_path, split=dataset.split, checksum=True)

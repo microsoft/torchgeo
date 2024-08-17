@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -11,20 +10,14 @@ import torch
 import torch.nn as nn
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, RGBBandsMissingError, ZueriCrop
 
 pytest.importorskip('h5py', minversion='3.6')
 
 
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestZueriCrop:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ZueriCrop:
-        monkeypatch.setattr(torchgeo.datasets.zuericrop, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'zuericrop')
         urls = [
             os.path.join(data_dir, 'ZueriCrop.hdf5'),

@@ -13,14 +13,9 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, IDTReeS
 
 pytest.importorskip('laspy', minversion='2')
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestIDTReeS:
@@ -28,7 +23,6 @@ class TestIDTReeS:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> IDTReeS:
-        monkeypatch.setattr(torchgeo.datasets.idtrees, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'idtrees')
         metadata = {
             'train': {
