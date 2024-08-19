@@ -95,7 +95,7 @@ These weights can be used with imagery from any satellite/sensor. In addition to
    :widths: 45 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10
    :header-rows: 1
    :align: center
-   :file: agnostic_pretrained_weights.csv
+   :file: weights/agnostic.csv
 
 
 Landsat
@@ -105,7 +105,7 @@ Landsat
    :widths: 65 10 10 10 10 10 10 10 10 10
    :header-rows: 1
    :align: center
-   :file: landsat_pretrained_weights.csv
+   :file: weights/landsat.csv
 
 
 NAIP
@@ -115,7 +115,7 @@ NAIP
    :widths: 45 10 10 10 10
    :header-rows: 1
    :align: center
-   :file: naip_pretrained_weights.csv
+   :file: weights/naip.csv
 
 
 Sentinel-1
@@ -125,7 +125,7 @@ Sentinel-1
    :widths: 45 10 10 10 10
    :header-rows: 1
    :align: center
-   :file: sentinel1_pretrained_weights.csv
+   :file: weights/sentinel1.csv
 
 
 Sentinel-2
@@ -135,4 +135,4 @@ Sentinel-2
    :widths: 45 10 10 10 10 15 10 10 10
    :header-rows: 1
    :align: center
-   :file: sentinel2_pretrained_weights.csv
+   :file: weights/sentinel2.csv
