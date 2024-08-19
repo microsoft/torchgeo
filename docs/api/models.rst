@@ -92,7 +92,7 @@ Sensor-Agnostic
 These weights can be used with imagery from any satellite/sensor. In addition to the usual performance metrics, there are also additional columns for dynamic spatial (resolution), temporal (time span), and/or spectral (wavelength) support, either via their training data (implicit) or via their model architecture (explicit).
 
 .. csv-table::
-   :widths: 45 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10
+   :widths: 45 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10
    :header-rows: 1
    :align: center
    :file: weights/agnostic.csv
