@@ -11,9 +11,8 @@ import torch
 from timm.models import ResNet
 from torchvision.models._api import Weights, WeightsEnum
 
-# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167
-# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
-# Normalization either by 10K (for S2 uint16 input) or channel-wise with band statistics
+# https://github.com/zhu-xlab/DeCUR/blob/f190e9a3895ef645c005c8c2fce287ffa5a937e3/src/transfer_classification_BE/linear_BE_resnet.py#L286
+# Normalization by channel-wise band statistics
 _mean_s1 = torch.tensor([-12.59, -20.26])
 _std_s1 = torch.tensor([5.26, 5.91])
 _ssl4eo_s12_transforms_s1 = K.AugmentationSequential(
@@ -23,6 +22,9 @@ _ssl4eo_s12_transforms_s1 = K.AugmentationSequential(
     data_keys=None,
 )
 
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
+# Normalization either by 10K (for S2 uint16 input) or channel-wise with band statistics
 _ssl4eo_s12_transforms_s2_10k = K.AugmentationSequential(
     K.Resize(256),
     K.CenterCrop(224),
