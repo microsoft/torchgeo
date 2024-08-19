@@ -4,6 +4,7 @@
 """Base classes for all :mod:`torchgeo` datasets."""
 
 import abc
+import fnmatch
 import functools
 import glob
 import os
@@ -310,7 +311,9 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             if os.path.isdir(path):
                 pathname = os.path.join(path, '**', self.filename_glob)
                 files |= set(glob.iglob(pathname, recursive=True))
-            elif os.path.isfile(path) or path_is_vsi(path):
+            elif (os.path.isfile(path) or path_is_vsi(path)) and fnmatch.fnmatch(
+                str(path), f'*{self.filename_glob}'
+            ):
                 files.add(path)
             elif not hasattr(self, 'download'):
                 warnings.warn(
