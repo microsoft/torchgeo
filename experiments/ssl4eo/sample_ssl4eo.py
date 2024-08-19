@@ -47,7 +47,7 @@ from tqdm import tqdm
 def get_world_cities(
     download_root: str = 'world_cities', size: int = 10000
 ) -> pd.DataFrame:
-    url = 'https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.71.zip'  # noqa: E501
+    url = 'https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.71.zip'
     filename = 'worldcities.csv'
     download_and_extract_archive(url, download_root)
     cols = ['city', 'lat', 'lng', 'population']

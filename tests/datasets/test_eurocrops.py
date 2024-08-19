@@ -83,5 +83,5 @@ class TestEuroCrops:
             dataset[query]
 
     def test_integrity_error(self, dataset: EuroCrops) -> None:
-        dataset.zenodo_files = [('AA.zip', 'invalid')]
+        dataset.zenodo_files = (('AA.zip', 'invalid'),)
         assert not dataset._check_integrity()

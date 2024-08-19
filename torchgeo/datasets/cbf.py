@@ -30,7 +30,7 @@ class CanadianBuildingFootprints(VectorDataset):
     # https://github.com/microsoft/CanadianBuildingFootprints/issues/11
 
     url = 'https://usbuildingdata.blob.core.windows.net/canadian-buildings-v2/'
-    provinces_territories = [
+    provinces_territories = (
         'Alberta',
         'BritishColumbia',
         'Manitoba',
@@ -44,8 +44,8 @@ class CanadianBuildingFootprints(VectorDataset):
         'Quebec',
         'Saskatchewan',
         'YukonTerritory',
-    ]
-    md5s = [
+    )
+    md5s = (
         '8b4190424e57bb0902bd8ecb95a9235b',
         'fea05d6eb0006710729c675de63db839',
         'adf11187362624d68f9c69aaa693c46f',
@@ -59,7 +59,7 @@ class CanadianBuildingFootprints(VectorDataset):
         '9ff4417ae00354d39a0cf193c8df592c',
         'a51078d8e60082c7d3a3818240da6dd5',
         'c11f3bd914ecabd7cac2cb2871ec0261',
-    ]
+    )
 
     def __init__(
         self,

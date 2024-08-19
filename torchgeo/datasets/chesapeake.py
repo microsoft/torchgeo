@@ -9,7 +9,7 @@ import pathlib
 import sys
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -39,7 +39,7 @@ class Chesapeake(RasterDataset, ABC):
 
     The Chesapeake Bay Land Use and Land Cover Database (LULC) facilitates
     characterization of the landscape and land change for and between discrete time
-    periods. The database was developed by the University of Vermont’s Spatial Analysis
+    periods. The database was developed by the University of Vermont's Spatial Analysis
     Laboratory in cooperation with Chesapeake Conservancy (CC) and U.S. Geological
     Survey (USGS) as part of a 6-year Cooperative Agreement between Chesapeake
     Conservancy and the U.S. Environmental Protection Agency (EPA) and a separate
@@ -83,7 +83,7 @@ class Chesapeake(RasterDataset, ABC):
         """State abbreviation."""
         return self.__class__.__name__[-2:].lower()
 
-    cmap = {
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         11: (0, 92, 230, 255),
         12: (0, 92, 230, 255),
         13: (0, 92, 230, 255),
@@ -255,7 +255,7 @@ class Chesapeake(RasterDataset, ABC):
 class ChesapeakeDC(Chesapeake):
     """This subset of the dataset contains data only for Washington, D.C."""
 
-    md5s = {
+    md5s: ClassVar[dict[int, str]] = {
         2013: '9f1df21afbb9d5c0fcf33af7f6750a7f',
         2017: 'c45e4af2950e1c93ecd47b61af296d9b',
     }
@@ -264,7 +264,7 @@ class ChesapeakeDC(Chesapeake):
 class ChesapeakeDE(Chesapeake):
     """This subset of the dataset contains data only for Delaware."""
 
-    md5s = {
+    md5s: ClassVar[dict[int, str]] = {
         2013: '5850d96d897babba85610658aeb5951a',
         2018: 'ee94c8efeae423d898677104117bdebc',
     }
@@ -273,7 +273,7 @@ class ChesapeakeDE(Chesapeake):
 class ChesapeakeMD(Chesapeake):
     """This subset of the dataset contains data only for Maryland."""
 
-    md5s = {
+    md5s: ClassVar[dict[int, str]] = {
         2013: '9c3ca5040668d15284c1bd64b7d6c7a0',
         2018: '0647530edf8bec6e60f82760dcc7db9c',
     }
@@ -282,7 +282,7 @@ class ChesapeakeMD(Chesapeake):
 class ChesapeakeNY(Chesapeake):
     """This subset of the dataset contains data only for New York."""
 
-    md5s = {
+    md5s: ClassVar[dict[int, str]] = {
         2013: '38a29b721610ba661a7f8b6ec71a48b7',
         2017: '4c1b1a50fd9368cd7b8b12c4d80c63f3',
     }
@@ -291,7 +291,7 @@ class ChesapeakeNY(Chesapeake):
 class ChesapeakePA(Chesapeake):
     """This subset of the dataset contains data only for Pennsylvania."""
 
-    md5s = {
+    md5s: ClassVar[dict[int, str]] = {
         2013: '86febd603a120a49ef7d23ef486152a3',
         2017: 'b11d92e4471e8cb887c790d488a338c1',
     }
@@ -300,7 +300,7 @@ class ChesapeakePA(Chesapeake):
 class ChesapeakeVA(Chesapeake):
     """This subset of the dataset contains data only for Virginia."""
 
-    md5s = {
+    md5s: ClassVar[dict[int, str]] = {
         2014: '49c9700c71854eebd00de24d8488eb7c',
         2018: '51731c8b5632978bfd1df869ea10db5b',
     }
@@ -309,7 +309,7 @@ class ChesapeakeVA(Chesapeake):
 class ChesapeakeWV(Chesapeake):
     """This subset of the dataset contains data only for West Virginia."""
 
-    md5s = {
+    md5s: ClassVar[dict[int, str]] = {
         2014: '32fea42fae147bd58a83e3ea6cccfb94',
         2018: '80f25dcba72e39685ab33215c5d97292',
     }
@@ -337,16 +337,16 @@ class ChesapeakeCVPR(GeoDataset):
     * https://doi.org/10.1109/cvpr.2019.01301
     """
 
-    subdatasets = ['base', 'prior_extension']
-    urls = {
-        'base': 'https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip',  # noqa: E501
-        'prior_extension': 'https://zenodo.org/record/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1',  # noqa: E501
+    subdatasets = ('base', 'prior_extension')
+    urls: ClassVar[dict[str, str]] = {
+        'base': 'https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip',
+        'prior_extension': 'https://zenodo.org/record/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1',
     }
-    filenames = {
+    filenames: ClassVar[dict[str, str]] = {
         'base': 'cvpr_chesapeake_landcover.zip',
         'prior_extension': 'cvpr_chesapeake_landcover_prior_extension.zip',
     }
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'base': '1225ccbb9590e9396875f221e5031514',
         'prior_extension': '402f41d07823c8faf7ea6960d7c4e17a',
     }
@@ -354,7 +354,7 @@ class ChesapeakeCVPR(GeoDataset):
     crs = CRS.from_epsg(3857)
     res = 1
 
-    lc_cmap = {
+    lc_cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 0),
         1: (0, 197, 255, 255),
         2: (38, 115, 0, 255),
@@ -374,7 +374,7 @@ class ChesapeakeCVPR(GeoDataset):
         ]
     )
 
-    valid_layers = [
+    valid_layers = (
         'naip-new',
         'naip-old',
         'landsat-leaf-on',
@@ -383,8 +383,8 @@ class ChesapeakeCVPR(GeoDataset):
         'lc',
         'buildings',
         'prior_from_cooccurrences_101_31_no_osm_no_buildings',
-    ]
-    states = ['de', 'md', 'va', 'wv', 'pa', 'ny']
+    )
+    states = ('de', 'md', 'va', 'wv', 'pa', 'ny')
     splits = (
         [f'{state}-train' for state in states]
         + [f'{state}-val' for state in states]
@@ -392,7 +392,7 @@ class ChesapeakeCVPR(GeoDataset):
     )
 
     # these are used to check the integrity of the dataset
-    _files = [
+    _files = (
         'de_1m_2013_extended-debuffered-test_tiles',
         'de_1m_2013_extended-debuffered-train_tiles',
         'de_1m_2013_extended-debuffered-val_tiles',
@@ -412,18 +412,18 @@ class ChesapeakeCVPR(GeoDataset):
         'wv_1m_2014_extended-debuffered-train_tiles',
         'wv_1m_2014_extended-debuffered-val_tiles',
         'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_buildings.tif',
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif',  # noqa: E501
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif',  # noqa: E501
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-off.tif',
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_landsat-leaf-on.tif',
         'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_lc.tif',
         'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-new.tif',
         'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_naip-old.tif',
         'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_nlcd.tif',
-        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',  # noqa: E501
+        'wv_1m_2014_extended-debuffered-val_tiles/m_3708035_ne_17_1_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
         'spatial_index.geojson',
-    ]
+    )
 
     p_src_crs = pyproj.CRS('epsg:3857')
-    p_transformers = {
+    p_transformers: ClassVar[dict[str, CRS]] = {
         'epsg:26917': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26917'), always_xy=True
         ).transform,
@@ -511,7 +511,7 @@ class ChesapeakeCVPR(GeoDataset):
                             'lc': row['properties']['lc'],
                             'nlcd': row['properties']['nlcd'],
                             'buildings': row['properties']['buildings'],
-                            'prior_from_cooccurrences_101_31_no_osm_no_buildings': prior_fn,  # noqa: E501
+                            'prior_from_cooccurrences_101_31_no_osm_no_buildings': prior_fn,
                         },
                     )
 

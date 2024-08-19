@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,11 +56,11 @@ class RwandaFieldBoundary(NonGeoDataset):
 
     url = 'https://radiantearth.blob.core.windows.net/mlhub/nasa_rwanda_field_boundary_competition'
 
-    splits = {'train': 57, 'test': 13}
+    splits: ClassVar[dict[str, int]] = {'train': 57, 'test': 13}
     dates = ('2021_03', '2021_04', '2021_08', '2021_10', '2021_11', '2021_12')
     all_bands = ('B01', 'B02', 'B03', 'B04')
     rgb_bands = ('B03', 'B02', 'B01')
-    classes = ['No field-boundary', 'Field-boundary']
+    classes = ('No field-boundary', 'Field-boundary')
 
     def __init__(
         self,

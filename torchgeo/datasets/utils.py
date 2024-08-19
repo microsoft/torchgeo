@@ -86,11 +86,11 @@ class BoundingBox:
 
     # https://github.com/PyCQA/pydocstyle/issues/525
     @overload
-    def __getitem__(self, key: int) -> float:  # noqa: D105
+    def __getitem__(self, key: int) -> float:
         pass
 
     @overload
-    def __getitem__(self, key: slice) -> list[float]:  # noqa: D105
+    def __getitem__(self, key: slice) -> list[float]:
         pass
 
     def __getitem__(self, key: int | slice) -> float | list[float]:
@@ -289,7 +289,7 @@ class Executable:
             The completed process.
         """
         kwargs['check'] = True
-        return subprocess.run((self.name,) + args, **kwargs)
+        return subprocess.run((self.name, *args), **kwargs)
 
 
 def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
@@ -547,7 +547,7 @@ def draw_semantic_segmentation_masks(
 
 
 def rgb_to_mask(
-    rgb: np.typing.NDArray[np.uint8], colors: list[tuple[int, int, int]]
+    rgb: np.typing.NDArray[np.uint8], colors: Sequence[tuple[int, int, int]]
 ) -> np.typing.NDArray[np.uint8]:
     """Converts an RGB colormap mask to a integer mask.
 

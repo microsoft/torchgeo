@@ -72,7 +72,7 @@ class CustomVectorDataset(VectorDataset):
 
 
 class CustomSentinelDataset(Sentinel2):
-    all_bands: list[str] = []
+    all_bands: tuple[str, ...] = ()
     separate_files = False
 
 
@@ -356,7 +356,7 @@ class TestRasterDataset:
 
     def test_no_all_bands(self) -> None:
         root = os.path.join('tests', 'data', 'sentinel2')
-        bands = ['B04', 'B03', 'B02']
+        bands = ('B04', 'B03', 'B02')
         transforms = nn.Identity()
         cache = True
         msg = (
