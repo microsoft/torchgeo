@@ -308,7 +308,6 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
     Returns:
         (mint, maxt) tuple for indexing
     """
-    
     format = format.replace('%%', 'TEMP_PERCENT_PLACEHOLDER')
 
     mint = datetime.strptime(date_str, format)
