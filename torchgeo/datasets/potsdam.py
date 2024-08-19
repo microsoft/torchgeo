@@ -258,7 +258,7 @@ class Potsdam2D(NonGeoDataset):
         """
         ncols = 1
         image1 = draw_semantic_segmentation_masks(
-            sample['image'][:3], sample['mask'], alpha=alpha, colors=self.colormap
+            sample['image'][:3], sample['mask'], alpha=alpha, colors=list(self.colormap)
         )
         if 'prediction' in sample:
             ncols += 1

@@ -243,10 +243,16 @@ class XView2(NonGeoDataset):
         """
         ncols = 2
         image1 = draw_semantic_segmentation_masks(
-            sample['image'][0], sample['mask'][0], alpha=alpha, colors=self.colormap
+            sample['image'][0],
+            sample['mask'][0],
+            alpha=alpha,
+            colors=list(self.colormap),
         )
         image2 = draw_semantic_segmentation_masks(
-            sample['image'][1], sample['mask'][1], alpha=alpha, colors=self.colormap
+            sample['image'][1],
+            sample['mask'][1],
+            alpha=alpha,
+            colors=list(self.colormap),
         )
         if 'prediction' in sample:  # NOTE: this assumes predictions are made for post
             ncols += 1
@@ -254,7 +260,7 @@ class XView2(NonGeoDataset):
                 sample['image'][1],
                 sample['prediction'],
                 alpha=alpha,
-                colors=self.colormap,
+                colors=list(self.colormap),
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))

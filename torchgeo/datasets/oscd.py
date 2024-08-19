@@ -320,7 +320,7 @@ class OSCD(NonGeoDataset):
                 torch.from_numpy(rgb_img),
                 sample['mask'],
                 alpha=alpha,
-                colors=self.colormap,
+                colors=list(self.colormap),
             )
             return array
 

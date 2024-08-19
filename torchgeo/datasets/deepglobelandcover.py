@@ -246,12 +246,15 @@ class DeepGlobeLandCover(NonGeoDataset):
         """
         ncols = 1
         image1 = draw_semantic_segmentation_masks(
-            sample['image'], sample['mask'], alpha=alpha, colors=self.colormap
+            sample['image'], sample['mask'], alpha=alpha, colors=list(self.colormap)
         )
         if 'prediction' in sample:
             ncols += 1
             image2 = draw_semantic_segmentation_masks(
-                sample['image'], sample['prediction'], alpha=alpha, colors=self.colormap
+                sample['image'],
+                sample['prediction'],
+                alpha=alpha,
+                colors=list(self.colormap),
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
