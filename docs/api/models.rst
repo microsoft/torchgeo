@@ -53,8 +53,8 @@ ResNet
 Scale-MAE
 ^^^^^^^^^
 
-.. autofunction:: ScaleMA
-.. autoclass:: ScaleMAE_Large16_Weights
+.. autofunction:: ScaleMAE
+.. autoclass:: ScaleMAELarge16_Weights
 
 Swin Transformer
 ^^^^^^^^^^^^^^^^^^
