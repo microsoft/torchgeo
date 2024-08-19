@@ -266,7 +266,7 @@ class Potsdam2D(NonGeoDataset):
                 sample['image'][:3],
                 sample['prediction'],
                 alpha=alpha,
-                colors=self.colormap,
+                colors=list(self.colormap),
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
