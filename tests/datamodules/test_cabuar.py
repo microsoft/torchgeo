@@ -9,6 +9,8 @@ import pytest
 from torchgeo.datamodules import CaBuArDataModule
 from torchgeo.datasets import unbind_samples
 
+pytest.importorskip('h5py', minversion='3.6')
+
 
 class TestCaBuArDataModule:
     @pytest.fixture

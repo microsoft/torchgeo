@@ -81,7 +81,7 @@ class TestCaBuAr:
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(AssertionError):
-            CaBuAr(bands=['OK', 'BK'])
+            CaBuAr(bands=('OK', 'BK'))
 
     def test_plot(self, dataset: CaBuAr) -> None:
         dataset.plot(dataset[0], suptitle='Test')
@@ -93,7 +93,7 @@ class TestCaBuAr:
         plt.close()
 
     def test_plot_rgb(self, dataset: CaBuAr) -> None:
-        dataset = CaBuAr(root=dataset.root, bands=['B02'])
+        dataset = CaBuAr(root=dataset.root, bands=('B02',))
         with pytest.raises(ValueError, match="doesn't contain some of the RGB bands"):
             dataset.plot(dataset[0], suptitle='Single Band')
 

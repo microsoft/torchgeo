@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -53,7 +54,7 @@ class CaBuAr(NonGeoDataset):
     .. versionadded:: 0.6
     """
 
-    all_bands = [
+    all_bands = (
         'B01',
         'B02',
         'B03',
@@ -66,9 +67,13 @@ class CaBuAr(NonGeoDataset):
         'B09',
         'B11',
         'B12',
-    ]
-    rgb_bands = ['B04', 'B03', 'B02']
-    folds = {'train': [1, 2, 3, 4], 'val': [0], 'test': ['chabud']}  # type: dict[str, list[object]]
+    )
+    rgb_bands = ('B04', 'B03', 'B02')
+    folds: ClassVar[dict[str, list[object]]] = {
+        'train': [1, 2, 3, 4],
+        'val': [0],
+        'test': ['chabud'],
+    }
     urls = (
         'https://huggingface.co/datasets/DarthReca/california_burned_areas/resolve/main/raw/patched/512x512.hdf5',
         'https://huggingface.co/datasets/DarthReca/california_burned_areas/resolve/main/raw/patched/chabud_test.h5',
@@ -80,7 +85,7 @@ class CaBuAr(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        bands: list[str] = all_bands,
+        bands: tuple[str, ...] = all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
