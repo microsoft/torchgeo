@@ -5,6 +5,7 @@ import glob
 import os
 import shutil
 from pathlib import Path
+from typing import cast
 
 import matplotlib.pyplot as plt
 import pytest
@@ -13,7 +14,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
@@ -24,14 +24,9 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestL7Irish:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L7Irish:
-        monkeypatch.setattr(torchgeo.datasets.l7irish, 'download_url', download_url)
         md5s = {
             'austral': '0485d6045f6b508068ef8daf9e5a5326',
             'boreal': '5798f32545d7166564c4c4429357b840',
@@ -40,7 +35,7 @@ class TestL7Irish:
         url = os.path.join('tests', 'data', 'l7irish', '{}.tar.gz')
         monkeypatch.setattr(L7Irish, 'url', url)
         monkeypatch.setattr(L7Irish, 'md5s', md5s)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return L7Irish(root, transforms=transforms, download=True, checksum=True)
 
@@ -50,6 +45,9 @@ class TestL7Irish:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
+
+    def test_len(self, dataset: L7Irish) -> None:
+        assert len(dataset) == 5
 
     def test_and(self, dataset: L7Irish) -> None:
         ds = dataset & dataset
@@ -65,18 +63,20 @@ class TestL7Irish:
         plt.close()
 
     def test_already_extracted(self, dataset: L7Irish) -> None:
-        L7Irish(dataset.paths, download=True)
+        paths = cast(str, dataset.paths)
+        L7Irish(paths, download=True)
+        L7Irish([paths], download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'l7irish', '*.tar.gz')
-        root = str(tmp_path)
+        root = tmp_path
         for tarfile in glob.iglob(pathname):
             shutil.copy(tarfile, root)
         L7Irish(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            L7Irish(str(tmp_path))
+            L7Irish(tmp_path)
 
     def test_plot_prediction(self, dataset: L7Irish) -> None:
         x = dataset[dataset.bounds]

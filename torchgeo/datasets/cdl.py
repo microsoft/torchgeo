@@ -4,8 +4,9 @@
 """CDL dataset."""
 
 import os
+import pathlib
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import torch
@@ -14,7 +15,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, Path, download_url, extract_archive
 
 
 class CDL(RasterDataset):
@@ -37,7 +38,7 @@ class CDL(RasterDataset):
     If you use this dataset in your research, please cite it using the following format:
 
     * https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php#Section1_14.0
-    """  # noqa: E501
+    """
 
     filename_glob = '*_30m_cdls.tif'
     filename_regex = r"""
@@ -48,8 +49,8 @@ class CDL(RasterDataset):
     date_format = '%Y'
     is_image = False
 
-    url = 'https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip'  # noqa: E501
-    md5s = {
+    url = 'https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip'
+    md5s: ClassVar[dict[int, str]] = {
         2023: '8c7685d6278d50c554f934b16a6076b7',
         2022: '754cf50670cdfee511937554785de3e6',
         2021: '27606eab08fe975aa138baad3e5dfcd8',
@@ -68,7 +69,7 @@ class CDL(RasterDataset):
         2008: '0610f2f17ab60a9fbb3baeb7543993a4',
     }
 
-    cmap = {
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 255),
         1: (255, 211, 0, 255),
         2: (255, 37, 37, 255),
@@ -207,7 +208,7 @@ class CDL(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         years: list[int] = [2023],
@@ -294,7 +295,7 @@ class CDL(RasterDataset):
 
         # Check if the zip files have already been downloaded
         exists = []
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         for year in self.years:
             pathname = os.path.join(
                 self.paths, self.zipfile_glob.replace('*', str(year))
@@ -327,7 +328,7 @@ class CDL(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace('*', str(year))
             pathname = os.path.join(self.paths, zipfile_name)

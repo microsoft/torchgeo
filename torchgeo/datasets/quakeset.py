@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, percentile_normalization
+from .utils import Path, download_url, lazy_import, percentile_normalization
 
 
 class QuakeSet(NonGeoDataset):
@@ -61,12 +61,16 @@ class QuakeSet(NonGeoDataset):
     filename = 'earthquakes.h5'
     url = 'https://hf.co/datasets/DarthReca/quakeset/resolve/bead1d25fb9979dbf703f9ede3e8b349f73b29f7/earthquakes.h5'
     md5 = '76fc7c76b7ca56f4844d852e175e1560'
-    splits = {'train': 'train', 'val': 'validation', 'test': 'test'}
-    classes = ['unaffected_area', 'earthquake_affected_area']
+    splits: ClassVar[dict[str, str]] = {
+        'train': 'train',
+        'val': 'validation',
+        'test': 'test',
+    }
+    classes = ('unaffected_area', 'earthquake_affected_area')
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -85,8 +89,10 @@ class QuakeSet(NonGeoDataset):
         Raises:
             AssertionError: If ``split`` argument is invalid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
-            ImportError: if h5py is not installed
+            DependencyNotFoundError: If h5py is not installed.
         """
+        lazy_import('h5py')
+
         assert split in self.splits
 
         self.root = root
@@ -95,16 +101,7 @@ class QuakeSet(NonGeoDataset):
         self.download = download
         self.checksum = checksum
         self.filepath = os.path.join(root, self.filename)
-
         self._verify()
-
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'h5py is not installed and is required to use this dataset'
-            )
-
         self.data = self._load_data()
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -141,8 +138,7 @@ class QuakeSet(NonGeoDataset):
         Returns:
             the sample keys, patches, images, labels, and magnitudes
         """
-        import h5py
-
+        h5py = lazy_import('h5py')
         data = []
         with h5py.File(self.filepath) as f:
             for k in sorted(f.keys()):
@@ -185,7 +181,7 @@ class QuakeSet(NonGeoDataset):
         Returns:
             the image
         """
-        import h5py
+        h5py = lazy_import('h5py')
 
         key = self.data[index]['key']
         patch = self.data[index]['patch']

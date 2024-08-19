@@ -16,8 +16,6 @@ from .cdl import CDL
 from .chabud import ChaBuD
 from .chesapeake import (
     Chesapeake,
-    Chesapeake7,
-    Chesapeake13,
     ChesapeakeCVPR,
     ChesapeakeDC,
     ChesapeakeDE,
@@ -37,12 +35,12 @@ from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
-from .errors import DatasetNotFoundError, RGBBandsMissingError
+from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eudem import EUDEM
 from .eurocrops import EuroCrops
-from .eurosat import EuroSAT, EuroSAT100
+from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
@@ -113,6 +111,7 @@ from .spacenet import (
     SpaceNet5,
     SpaceNet6,
     SpaceNet7,
+    SpaceNet8,
 )
 from .splits import (
     random_bbox_assignment,
@@ -209,6 +208,7 @@ __all__ = (
     'EnviroAtlas',
     'ETCI2021',
     'EuroSAT',
+    'EuroSATSpatial',
     'EuroSAT100',
     'FAIR1M',
     'FireRisk',
@@ -245,6 +245,7 @@ __all__ = (
     'SpaceNet5',
     'SpaceNet6',
     'SpaceNet7',
+    'SpaceNet8',
     'SSL4EO',
     'SSL4EOLBenchmark',
     'SSL4EOL',
@@ -280,5 +281,6 @@ __all__ = (
     'time_series_split',
     # Errors
     'DatasetNotFoundError',
+    'DependencyNotFoundError',
     'RGBBandsMissingError',
 )

@@ -8,7 +8,17 @@ from typing import Any
 import kornia.augmentation as K
 from matplotlib.figure import Figure
 
-from ..datasets import NAIP, BoundingBox, Chesapeake13
+from ..datasets import (
+    NAIP,
+    BoundingBox,
+    ChesapeakeDC,
+    ChesapeakeDE,
+    ChesapeakeMD,
+    ChesapeakeNY,
+    ChesapeakePA,
+    ChesapeakeVA,
+    ChesapeakeWV,
+)
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
@@ -37,7 +47,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.NAIP` (prefix keys with ``naip_``) and
-                :class:`~torchgeo.datasets.Chesapeake13`
+                :class:`~torchgeo.datasets.Chesapeake`
                 (prefix keys with ``chesapeake_``).
         """
         self.naip_kwargs = {}
@@ -49,12 +59,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
                 self.chesapeake_kwargs[key[11:]] = val
 
         super().__init__(
-            Chesapeake13,
-            batch_size,
-            patch_size,
-            length,
-            num_workers,
-            **self.chesapeake_kwargs,
+            NAIP, batch_size, patch_size, length, num_workers, **self.naip_kwargs
         )
 
         self.aug = AugmentationSequential(
@@ -67,9 +72,16 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.chesapeake = Chesapeake13(**self.chesapeake_kwargs)
         self.naip = NAIP(**self.naip_kwargs)
-        self.dataset = self.chesapeake & self.naip
+        dc = ChesapeakeDC(**self.chesapeake_kwargs)
+        de = ChesapeakeDE(**self.chesapeake_kwargs)
+        md = ChesapeakeMD(**self.chesapeake_kwargs)
+        ny = ChesapeakeNY(**self.chesapeake_kwargs)
+        pa = ChesapeakePA(**self.chesapeake_kwargs)
+        va = ChesapeakeVA(**self.chesapeake_kwargs)
+        wv = ChesapeakeWV(**self.chesapeake_kwargs)
+        self.chesapeake = dc | de | md | ny | pa | va | wv
+        self.dataset = self.naip & self.chesapeake
 
         roi = self.dataset.bounds
         midx = roi.minx + (roi.maxx - roi.minx) / 2

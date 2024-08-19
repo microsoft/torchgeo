@@ -1,0 +1,5 @@
+/* https://github.com/pytorch/pytorch_sphinx_theme/issues/140 */
+.tutorial-badge {
+  height: 50px !important;
+  width: auto !important;
+}

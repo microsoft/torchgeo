@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -12,7 +11,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     CanadianBuildingFootprints,
@@ -22,16 +20,11 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestCanadianBuildingFootprints:
     @pytest.fixture
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> CanadianBuildingFootprints:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         monkeypatch.setattr(
             CanadianBuildingFootprints, 'provinces_territories', ['Alberta']
         )
@@ -41,7 +34,7 @@ class TestCanadianBuildingFootprints:
         url = os.path.join('tests', 'data', 'cbf') + os.sep
         monkeypatch.setattr(CanadianBuildingFootprints, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return CanadianBuildingFootprints(
             root, res=0.1, transforms=transforms, download=True, checksum=True
@@ -52,6 +45,9 @@ class TestCanadianBuildingFootprints:
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
+
+    def test_len(self, dataset: CanadianBuildingFootprints) -> None:
+        assert len(dataset) == 1
 
     def test_and(self, dataset: CanadianBuildingFootprints) -> None:
         ds = dataset & dataset
@@ -77,7 +73,7 @@ class TestCanadianBuildingFootprints:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            CanadianBuildingFootprints(str(tmp_path))
+            CanadianBuildingFootprints(tmp_path)
 
     def test_invalid_query(self, dataset: CanadianBuildingFootprints) -> None:
         query = BoundingBox(2, 2, 2, 2, 2, 2)

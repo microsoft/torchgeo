@@ -6,9 +6,10 @@
 import glob
 import json
 import os
+import pathlib
 import sys
 from collections.abc import Callable, Iterable
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import fiona
 import fiona.transform
@@ -24,7 +25,7 @@ from rtree.index import Index, Property
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import BoundingBox, check_integrity
+from .utils import BoundingBox, Path, check_integrity
 
 
 class OpenBuildings(VectorDataset):
@@ -60,7 +61,7 @@ class OpenBuildings(VectorDataset):
     .. versionadded:: 0.3
     """
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         '025_buildings.csv.gz': '41db2572bfd08628d01475a2ee1a2f17',
         '04f_buildings.csv.gz': '3232c1c6d45c1543260b77e5689fc8b1',
         '05b_buildings.csv.gz': '4fc57c63bbbf9a21a3902da7adc3a670',
@@ -207,7 +208,7 @@ class OpenBuildings(VectorDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float = 0.0001,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -241,7 +242,7 @@ class OpenBuildings(VectorDataset):
         # Create an R-tree to index the dataset using the polygon centroid as bounds
         self.index = Index(interleaved=False, properties=Property(dimension=3))
 
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         with open(os.path.join(self.paths, 'tiles.geojson')) as f:
             data = json.load(f)
 
@@ -304,7 +305,7 @@ class OpenBuildings(VectorDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        filepaths = cast(list[Path], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -327,7 +328,7 @@ class OpenBuildings(VectorDataset):
         else:
             masks = torch.zeros(size=(1, round(height), round(width)))
 
-        sample = {'mask': masks, 'crs': self.crs, 'bbox': query}
+        sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -335,7 +336,7 @@ class OpenBuildings(VectorDataset):
         return sample
 
     def _filter_geometries(
-        self, query: BoundingBox, filepaths: list[str]
+        self, query: BoundingBox, filepaths: list[Path]
     ) -> list[dict[str, Any]]:
         """Filters a df read from the polygon csv file based on query and conf thresh.
 
@@ -397,7 +398,7 @@ class OpenBuildings(VectorDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the zip files have already been downloaded and checksum
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         pathname = os.path.join(self.paths, self.zipfile_glob)
         i = 0
         for zipfile in glob.iglob(pathname):

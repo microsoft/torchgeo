@@ -49,6 +49,13 @@ class DatasetNotFoundError(FileNotFoundError):
         super().__init__(msg)
 
 
+class DependencyNotFoundError(Exception):
+    """Raised when an optional dataset dependency is not installed.
+
+    .. versionadded:: 0.6
+    """
+
+
 class RGBBandsMissingError(ValueError):
     """Raised when a dataset is missing RGB bands for plotting.
 

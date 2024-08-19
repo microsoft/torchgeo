@@ -1,11 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
 import os
-import shutil
 from pathlib import Path
-from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -13,20 +10,14 @@ import torch
 import torch.nn as nn
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, RGBBandsMissingError, ZueriCrop
 
-pytest.importorskip('h5py', minversion='3')
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
+pytest.importorskip('h5py', minversion='3.6')
 
 
 class TestZueriCrop:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ZueriCrop:
-        monkeypatch.setattr(torchgeo.datasets.zuericrop, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'zuericrop')
         urls = [
             os.path.join(data_dir, 'ZueriCrop.hdf5'),
@@ -35,20 +26,9 @@ class TestZueriCrop:
         md5s = ['1635231df67f3d25f4f1e62c98e221a4', '5118398c7a5bbc246f5f6bb35d8d529b']
         monkeypatch.setattr(ZueriCrop, 'urls', urls)
         monkeypatch.setattr(ZueriCrop, 'md5s', md5s)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return ZueriCrop(root=root, transforms=transforms, download=True, checksum=True)
-
-    @pytest.fixture
-    def mock_missing_module(self, monkeypatch: MonkeyPatch) -> None:
-        import_orig = builtins.__import__
-
-        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == 'h5py':
-                raise ImportError()
-            return import_orig(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, '__import__', mocked_import)
 
     def test_getitem(self, dataset: ZueriCrop) -> None:
         x = dataset[0]
@@ -80,16 +60,7 @@ class TestZueriCrop:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            ZueriCrop(str(tmp_path))
-
-    def test_mock_missing_module(
-        self, dataset: ZueriCrop, tmp_path: Path, mock_missing_module: None
-    ) -> None:
-        with pytest.raises(
-            ImportError,
-            match='h5py is not installed and is required to use this dataset',
-        ):
-            ZueriCrop(dataset.root, download=True, checksum=True)
+            ZueriCrop(tmp_path)
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(ValueError):

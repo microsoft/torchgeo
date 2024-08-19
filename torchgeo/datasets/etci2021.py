@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class ETCI2021(NonGeoDataset):
@@ -56,9 +57,9 @@ class ETCI2021(NonGeoDataset):
         the ETCI competition.
     """
 
-    bands = ['VV', 'VH']
-    masks = ['flood', 'water_body']
-    metadata = {
+    bands = ('VV', 'VH')
+    masks = ('flood', 'water_body')
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'filename': 'train.zip',
             'md5': '1e95792fe0f6e3c9000abdeab2a8ab0f',
@@ -81,7 +82,7 @@ class ETCI2021(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -152,7 +153,7 @@ class ETCI2021(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -193,7 +194,7 @@ class ETCI2021(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -204,13 +205,13 @@ class ETCI2021(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('RGB'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:
@@ -221,7 +222,7 @@ class ETCI2021(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('L'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)

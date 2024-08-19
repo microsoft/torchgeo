@@ -14,27 +14,24 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     DatasetNotFoundError,
     EuroSAT,
     EuroSAT100,
+    EuroSATSpatial,
     RGBBandsMissingError,
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestEuroSAT:
-    @pytest.fixture(params=product([EuroSAT, EuroSAT100], ['train', 'val', 'test']))
+    @pytest.fixture(
+        params=product([EuroSAT, EuroSATSpatial, EuroSAT100], ['train', 'val', 'test'])
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroSAT:
         base_class: type[EuroSAT] = request.param[0]
         split: str = request.param[1]
-        monkeypatch.setattr(torchgeo.datasets.eurosat, 'download_url', download_url)
         md5 = 'aa051207b0547daba0ac6af57808d68e'
         monkeypatch.setattr(base_class, 'md5', md5)
         url = os.path.join('tests', 'data', 'eurosat', 'EuroSATallBands.zip')
@@ -58,7 +55,7 @@ class TestEuroSAT:
                 'test': '4af60a00fdfdf8500572ae5360694b71',
             },
         )
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return base_class(
             root=root, split=split, transforms=transforms, download=True, checksum=True
@@ -87,18 +84,18 @@ class TestEuroSAT:
         assert len(ds) == 4
 
     def test_already_downloaded(self, dataset: EuroSAT, tmp_path: Path) -> None:
-        EuroSAT(root=str(tmp_path), download=True)
+        EuroSAT(root=tmp_path, download=True)
 
     def test_already_downloaded_not_extracted(
         self, dataset: EuroSAT, tmp_path: Path
     ) -> None:
         shutil.rmtree(dataset.root)
-        download_url(dataset.url, root=str(tmp_path))
-        EuroSAT(root=str(tmp_path), download=False)
+        shutil.copy(dataset.url, tmp_path)
+        EuroSAT(root=tmp_path, download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            EuroSAT(str(tmp_path))
+            EuroSAT(tmp_path)
 
     def test_plot(self, dataset: EuroSAT) -> None:
         x = dataset[0].copy()
@@ -111,7 +108,7 @@ class TestEuroSAT:
         plt.close()
 
     def test_plot_rgb(self, dataset: EuroSAT, tmp_path: Path) -> None:
-        dataset = EuroSAT(root=str(tmp_path), bands=('B03',))
+        dataset = EuroSAT(root=tmp_path, bands=('B03',))
         with pytest.raises(
             RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):

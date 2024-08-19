@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,7 +17,14 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive, download_url
+from .utils import (
+    Path,
+    check_integrity,
+    download_and_extract_archive,
+    download_url,
+    lazy_import,
+    percentile_normalization,
+)
 
 
 def convert_coco_poly_to_mask(
@@ -32,13 +39,15 @@ def convert_coco_poly_to_mask(
 
     Returns:
         Tensor: Mask tensor
-    """
-    from pycocotools import mask as coco_mask  # noqa: F401
 
+    Raises:
+        DependencyNotFoundError: If pycocotools is not installed.
+    """
+    pycocotools = lazy_import('pycocotools')
     masks = []
     for polygons in segmentations:
-        rles = coco_mask.frPyObjects(polygons, height, width)
-        mask = coco_mask.decode(rles)
+        rles = pycocotools.mask.frPyObjects(polygons, height, width)
+        mask = pycocotools.mask.decode(rles)
         mask = torch.as_tensor(mask, dtype=torch.uint8)
         mask = mask.any(dim=2)
         masks.append(mask)
@@ -143,26 +152,24 @@ class VHR10(NonGeoDataset):
 
     .. note::
 
-       This dataset requires the following additional libraries to be installed:
+       This dataset requires the following additional library to be installed:
 
        * `pycocotools <https://pypi.org/project/pycocotools/>`_ to load the
          ``annotations.json`` file for the "positive" image set
-       * `rarfile <https://pypi.org/project/rarfile/>`_ to extract the dataset,
-         which is stored in a RAR file
     """
 
-    image_meta = {
-        'url': 'https://drive.google.com/file/d/1--foZ3dV5OCsqXQXT84UeKtrAqc5CkAE',
-        'filename': 'NWPU VHR-10 dataset.rar',
-        'md5': 'd30a7ff99d92123ebb0b3a14d9102081',
+    image_meta: ClassVar[dict[str, str]] = {
+        'url': 'https://hf.co/datasets/torchgeo/vhr10/resolve/7e7968ad265dadc4494e0ca4a079e0b63dc6f3f8/NWPU%20VHR-10%20dataset.zip',
+        'filename': 'NWPU VHR-10 dataset.zip',
+        'md5': '6add6751469c12dd8c8d6223064c6c4d',
     }
-    target_meta = {
-        'url': 'https://raw.githubusercontent.com/chaozhong2010/VHR-10_dataset_coco/ce0ba0f5f6a0737031f1cbe05e785ddd5ef05bd7/NWPU%20VHR-10_dataset_coco/annotations.json',  # noqa: E501
+    target_meta: ClassVar[dict[str, str]] = {
+        'url': 'https://hf.co/datasets/torchgeo/vhr10/resolve/7e7968ad265dadc4494e0ca4a079e0b63dc6f3f8/annotations.json',
         'filename': 'annotations.json',
         'md5': '7c76ec50c17a61bb0514050d20f22c08',
     }
 
-    categories = [
+    categories = (
         'background',
         'airplane',
         'ships',
@@ -174,11 +181,11 @@ class VHR10(NonGeoDataset):
         'harbor',
         'bridge',
         'vehicle',
-    ]
+    )
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'positive',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
@@ -196,8 +203,9 @@ class VHR10(NonGeoDataset):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            ImportError: if ``split="positive"`` and pycocotools is not installed
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            DependencyNotFoundError: if ``split="positive"`` and pycocotools is
+                not installed.
         """
         assert split in ['positive', 'negative']
 
@@ -213,20 +221,12 @@ class VHR10(NonGeoDataset):
             raise DatasetNotFoundError(self)
 
         if split == 'positive':
-            # Must be installed to parse annotations file
-            try:
-                from pycocotools.coco import COCO  # noqa: F401
-            except ImportError:
-                raise ImportError(
-                    'pycocotools is not installed and is required to use this dataset'
-                )
-
-            self.coco = COCO(
+            pc = lazy_import('pycocotools.coco')
+            self.coco = pc.COCO(
                 os.path.join(
                     self.root, 'NWPU VHR-10 dataset', self.target_meta['filename']
                 )
             )
-
             self.coco_convert = ConvertCocoAnnotations()
             self.ids = list(sorted(self.coco.imgs.keys()))
 
@@ -285,7 +285,7 @@ class VHR10(NonGeoDataset):
             f'{id_:03d}.jpg',
         )
         with Image.open(filename) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img)
+            array: np.typing.NDArray[np.int_] = np.array(img)
             tensor = torch.from_numpy(array)
             tensor = tensor.float()
             # Convert from HxWxC to CxHxW
@@ -381,15 +381,16 @@ class VHR10(NonGeoDataset):
 
         Raises:
             AssertionError: if ``show_feats`` argument is invalid
-            ImportError: if plotting masks and scikit-image is not installed
+            DependencyNotFoundError: If plotting masks and scikit-image is not installed.
 
         .. versionadded:: 0.4
         """
         assert show_feats in {'boxes', 'masks', 'both'}
+        image = percentile_normalization(sample['image'].permute(1, 2, 0).numpy())
 
         if self.split == 'negative':
             fig, axs = plt.subplots(squeeze=False)
-            axs[0, 0].imshow(sample['image'].permute(1, 2, 0))
+            axs[0, 0].imshow(image)
             axs[0, 0].axis('off')
 
             if suptitle is not None:
@@ -397,16 +398,11 @@ class VHR10(NonGeoDataset):
             return fig
 
         if show_feats != 'boxes':
-            try:
-                from skimage.measure import find_contours  # noqa: F401
-            except ImportError:
-                raise ImportError(
-                    'scikit-image is not installed and is required to plot masks.'
-                )
+            skimage = lazy_import('skimage')
 
-        image = sample['image'].permute(1, 2, 0).numpy()
         boxes = sample['boxes'].cpu().numpy()
         labels = sample['labels'].cpu().numpy()
+
         if 'masks' in sample:
             masks = [mask.squeeze().cpu().numpy() for mask in sample['masks']]
 
@@ -465,7 +461,7 @@ class VHR10(NonGeoDataset):
             # Add masks
             if show_feats in {'masks', 'both'} and 'masks' in sample:
                 mask = masks[i]
-                contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
+                contours = skimage.measure.find_contours(mask, 0.5)
                 for verts in contours:
                     verts = np.fliplr(verts)
                     p = patches.Polygon(
@@ -517,7 +513,7 @@ class VHR10(NonGeoDataset):
                 # Add masks
                 if show_pred_masks:
                     mask = prediction_masks[i]
-                    contours = find_contours(mask, 0.5)  # type: ignore[no-untyped-call]
+                    contours = skimage.measure.find_contours(mask, 0.5)
                     for verts in contours:
                         verts = np.fliplr(verts)
                         p = patches.Polygon(

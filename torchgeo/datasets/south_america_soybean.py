@@ -3,8 +3,9 @@
 
 """South America Soybean Dataset."""
 
+import pathlib
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -12,7 +13,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import download_url
+from .utils import Path, download_url
 
 
 class SouthAmericaSoybean(RasterDataset):
@@ -39,14 +40,14 @@ class SouthAmericaSoybean(RasterDataset):
     .. versionadded:: 0.6
     """
 
-    filename_glob = 'South_America_Soybean_*.*'
-    filename_regex = r'South_America_Soybean_(?P<year>\d{4})'
+    filename_glob = 'SouthAmerica_Soybean_*.*'
+    filename_regex = r'SouthAmerica_Soybean_(?P<year>\d{4})'
 
     date_format = '%Y'
     is_image = False
     url = 'https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_{}.tif'
 
-    md5s = {
+    md5s: ClassVar[dict[int, str]] = {
         2021: 'edff3ada13a1a9910d1fe844d28ae4f',
         2020: '0709dec807f576c9707c8c7e183db31',
         2019: '441836493bbcd5e123cff579a58f5a4f',
@@ -72,7 +73,7 @@ class SouthAmericaSoybean(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         years: list[int] = [2021],
@@ -112,7 +113,7 @@ class SouthAmericaSoybean(RasterDataset):
         # Check if the extracted files already exist
         if self.files:
             return
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
 
         # Check if the user requested to download the dataset
         if not self.download:

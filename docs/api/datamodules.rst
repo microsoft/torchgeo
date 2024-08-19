@@ -81,6 +81,7 @@ EuroSAT
 ^^^^^^^
 
 .. autoclass:: EuroSATDataModule
+.. autoclass:: EuroSATSpatialDataModule
 .. autoclass:: EuroSAT100DataModule
 
 FAIR1M

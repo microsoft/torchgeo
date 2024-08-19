@@ -52,6 +52,9 @@ class TestSentinel1:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
 
+    def test_len(self, dataset: Sentinel1) -> None:
+        assert len(dataset) == 1
+
     def test_and(self, dataset: Sentinel1) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
@@ -67,7 +70,7 @@ class TestSentinel1:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            Sentinel1(str(tmp_path))
+            Sentinel1(tmp_path)
 
     def test_empty_bands(self) -> None:
         with pytest.raises(AssertionError, match="'bands' cannot be an empty list"):
@@ -116,6 +119,9 @@ class TestSentinel2:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
 
+    def test_len(self, dataset: Sentinel2) -> None:
+        assert len(dataset) == 4
+
     def test_and(self, dataset: Sentinel2) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
@@ -126,7 +132,7 @@ class TestSentinel2:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            Sentinel2(str(tmp_path))
+            Sentinel2(tmp_path)
 
     def test_plot(self, dataset: Sentinel2) -> None:
         x = dataset[dataset.bounds]

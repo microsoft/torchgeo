@@ -43,9 +43,9 @@ class TestPotsdam2D:
         root = os.path.join('tests', 'data', 'potsdam')
         for filename in ['4_Ortho_RGBIR.zip', '5_Labels_all.zip']:
             shutil.copyfile(
-                os.path.join(root, filename), os.path.join(str(tmp_path), filename)
+                os.path.join(root, filename), os.path.join(tmp_path, filename)
             )
-        Potsdam2D(root=str(tmp_path))
+        Potsdam2D(root=tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, '4_Ortho_RGBIR.zip'), 'w') as f:
@@ -53,7 +53,7 @@ class TestPotsdam2D:
         with open(os.path.join(tmp_path, '5_Labels_all.zip'), 'w') as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            Potsdam2D(root=str(tmp_path), checksum=True)
+            Potsdam2D(root=tmp_path, checksum=True)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
@@ -61,7 +61,7 @@ class TestPotsdam2D:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            Potsdam2D(str(tmp_path))
+            Potsdam2D(tmp_path)
 
     def test_plot(self, dataset: Potsdam2D) -> None:
         x = dataset[0].copy()

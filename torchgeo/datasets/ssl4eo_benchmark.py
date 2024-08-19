@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +19,7 @@ from .cdl import CDL
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .nlcd import NLCD
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class SSL4EOLBenchmark(NonGeoDataset):
@@ -46,16 +47,16 @@ class SSL4EOLBenchmark(NonGeoDataset):
     * https://proceedings.neurips.cc/paper_files/paper/2023/hash/bbf7ee04e2aefec136ecf60e346c2e61-Abstract-Datasets_and_Benchmarks.html
 
     .. versionadded:: 0.5
-    """  # noqa: E501
+    """
 
-    url = 'https://hf.co/datasets/torchgeo/ssl4eo-l-benchmark/resolve/da96ae2b04cb509710b72fce9131c2a3d5c211c2/{}.tar.gz'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/ssl4eo-l-benchmark/resolve/da96ae2b04cb509710b72fce9131c2a3d5c211c2/{}.tar.gz'
 
-    valid_sensors = ['tm_toa', 'etm_toa', 'etm_sr', 'oli_tirs_toa', 'oli_sr']
-    valid_products = ['cdl', 'nlcd']
-    valid_splits = ['train', 'val', 'test']
+    valid_sensors = ('tm_toa', 'etm_toa', 'etm_sr', 'oli_tirs_toa', 'oli_sr')
+    valid_products = ('cdl', 'nlcd')
+    valid_splits = ('train', 'val', 'test')
 
     image_root = 'ssl4eo_l_{}_benchmark'
-    img_md5s = {
+    img_md5s: ClassVar[dict[str, str]] = {
         'tm_toa': '8e3c5bcd56d3780a442f1332013b8d15',
         'etm_toa': '1b051c7fe4d61c581b341370c9e76f1f',
         'etm_sr': '34a24fa89a801654f8d01e054662c8cd',
@@ -63,14 +64,14 @@ class SSL4EOLBenchmark(NonGeoDataset):
         'oli_sr': '0700cd15cc2366fe68c2f8c02fa09a15',
     }
 
-    mask_dir_dict = {
+    mask_dir_dict: ClassVar[dict[str, str]] = {
         'tm_toa': 'ssl4eo_l_tm_{}',
         'etm_toa': 'ssl4eo_l_etm_{}',
         'etm_sr': 'ssl4eo_l_etm_{}',
         'oli_tirs_toa': 'ssl4eo_l_oli_{}',
         'oli_sr': 'ssl4eo_l_oli_{}',
     }
-    mask_md5s = {
+    mask_md5s: ClassVar[dict[str, dict[str, str]]] = {
         'tm': {
             'cdl': '3d676770ffb56c7e222a7192a652a846',
             'nlcd': '261149d7614fcfdcb3be368eefa825c7',
@@ -85,7 +86,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         },
     }
 
-    year_dict = {
+    year_dict: ClassVar[dict[str, int]] = {
         'tm_toa': 2011,
         'etm_toa': 2019,
         'etm_sr': 2019,
@@ -93,7 +94,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         'oli_sr': 2019,
     }
 
-    rgb_indices = {
+    rgb_indices: ClassVar[dict[str, list[int]]] = {
         'tm_toa': [2, 1, 0],
         'etm_toa': [2, 1, 0],
         'etm_sr': [2, 1, 0],
@@ -101,13 +102,16 @@ class SSL4EOLBenchmark(NonGeoDataset):
         'oli_sr': [3, 2, 1],
     }
 
-    split_percentages = [0.7, 0.15, 0.15]
+    split_percentages = (0.7, 0.15, 0.15)
 
-    cmaps = {'nlcd': NLCD.cmap, 'cdl': CDL.cmap}
+    cmaps: ClassVar[dict[str, dict[int, tuple[int, int, int, int]]]] = {
+        'nlcd': NLCD.cmap,
+        'cdl': CDL.cmap,
+    }
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         sensor: str = 'oli_sr',
         product: str = 'cdl',
         split: str = 'train',
@@ -297,7 +301,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
             sample_collection.append((img_path, mask_path))
         return sample_collection
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load the input image.
 
         Args:
@@ -310,7 +314,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
             image = torch.from_numpy(src.read()).float()
         return image
 
-    def _load_mask(self, path: str) -> Tensor:
+    def _load_mask(self, path: Path) -> Tensor:
         """Load the mask.
 
         Args:

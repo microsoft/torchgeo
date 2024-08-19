@@ -13,7 +13,6 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
@@ -22,10 +21,6 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 from torchgeo.samplers import RandomGeoSampler
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestEnviroAtlas:
@@ -39,7 +34,6 @@ class TestEnviroAtlas:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> EnviroAtlas:
-        monkeypatch.setattr(torchgeo.datasets.enviroatlas, 'download_url', download_url)
         monkeypatch.setattr(EnviroAtlas, 'md5', '071ec65c611e1d4915a5247bffb5ad87')
         monkeypatch.setattr(
             EnviroAtlas,
@@ -51,7 +45,7 @@ class TestEnviroAtlas:
             '_files',
             ['pittsburgh_pa-2010_1m-train_tiles-debuffered', 'spatial_index.geojson'],
         )
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return EnviroAtlas(
             root,
@@ -70,6 +64,9 @@ class TestEnviroAtlas:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: EnviroAtlas) -> None:
+        assert len(dataset) == 1
+
     def test_and(self, dataset: EnviroAtlas) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
@@ -82,7 +79,7 @@ class TestEnviroAtlas:
         EnviroAtlas(root=dataset.root, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(
             os.path.join('tests', 'data', 'enviroatlas', 'enviroatlas_lotp.zip'), root
         )
@@ -90,7 +87,7 @@ class TestEnviroAtlas:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            EnviroAtlas(str(tmp_path), checksum=True)
+            EnviroAtlas(tmp_path, checksum=True)
 
     def test_out_of_bounds_query(self, dataset: EnviroAtlas) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

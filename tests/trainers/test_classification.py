@@ -9,7 +9,6 @@ import pytest
 import timm
 import torch
 import torch.nn as nn
-import torchvision
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
@@ -56,11 +55,6 @@ def create_model(*args: Any, **kwargs: Any) -> Module:
     return ClassificationTestModel(**kwargs)
 
 
-def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
-    state_dict: dict[str, Any] = torch.load(url)
-    return state_dict
-
-
 def plot(*args: Any, **kwargs: Any) -> None:
     return None
 
@@ -75,6 +69,7 @@ class TestClassificationTask:
         [
             'eurosat',
             'eurosat100',
+            'eurosatspatial',
             'fire_risk',
             'quakeset',
             'resisc45',
@@ -89,7 +84,7 @@ class TestClassificationTask:
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         if name.startswith('so2sat') or name == 'quakeset':
-            pytest.importorskip('h5py', minversion='3')
+            pytest.importorskip('h5py', minversion='3.6')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 
@@ -108,13 +103,13 @@ class TestClassificationTask:
             '1',
         ]
 
-        main(['fit'] + args)
+        main(['fit', *args])
         try:
-            main(['test'] + args)
+            main(['test', *args])
         except MisconfigurationException:
             pass
         try:
-            main(['predict'] + args)
+            main(['predict', *args])
         except MisconfigurationException:
             pass
 
@@ -124,7 +119,11 @@ class TestClassificationTask:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -135,7 +134,6 @@ class TestClassificationTask:
             monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
             monkeypatch.setattr(weights, 'url', str(path))
-        monkeypatch.setattr(torchvision.models._api, 'load_state_dict_from_url', load)
         return weights
 
     def test_weight_file(self, checkpoint: str) -> None:
@@ -261,13 +259,13 @@ class TestMultiLabelClassificationTask:
             '1',
         ]
 
-        main(['fit'] + args)
+        main(['fit', *args])
         try:
-            main(['test'] + args)
+            main(['test', *args])
         except MisconfigurationException:
             pass
         try:
-            main(['predict'] + args)
+            main(['predict', *args])
         except MisconfigurationException:
             pass
 

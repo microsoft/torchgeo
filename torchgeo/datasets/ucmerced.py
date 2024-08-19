@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import cast
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoClassificationDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
 class UCMerced(NonGeoClassificationDataset):
@@ -66,19 +66,19 @@ class UCMerced(NonGeoClassificationDataset):
     * https://dl.acm.org/doi/10.1145/1869790.1869829
     """
 
-    url = 'https://hf.co/datasets/torchgeo/ucmerced/resolve/d0af6e2eeea2322af86078068bd83337148a2149/UCMerced_LandUse.zip'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/ucmerced/resolve/d0af6e2eeea2322af86078068bd83337148a2149/UCMerced_LandUse.zip'
     filename = 'UCMerced_LandUse.zip'
     md5 = '5b7ec56793786b6dc8a908e8854ac0e4'
 
     base_dir = os.path.join('UCMerced_LandUse', 'Images')
 
-    splits = ['train', 'val', 'test']
-    split_urls = {
-        'train': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-train.txt',  # noqa: E501
-        'val': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-val.txt',  # noqa: E501
-        'test': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-test.txt',  # noqa: E501
+    splits = ('train', 'val', 'test')
+    split_urls: ClassVar[dict[str, str]] = {
+        'train': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-train.txt',
+        'val': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-val.txt',
+        'test': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-test.txt',
     }
-    split_md5s = {
+    split_md5s: ClassVar[dict[str, str]] = {
         'train': 'f2fb12eb2210cfb53f93f063a35ff374',
         'val': '11ecabfc52782e5ea6a9c7c0d263aca0',
         'test': '046aff88472d8fc07c4678d03749e28d',
@@ -86,7 +86,7 @@ class UCMerced(NonGeoClassificationDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -117,7 +117,7 @@ class UCMerced(NonGeoClassificationDataset):
             for fn in f:
                 valid_fns.add(fn.strip())
 
-        def is_in_split(x: str) -> bool:
+        def is_in_split(x: Path) -> bool:
             return os.path.basename(x) in valid_fns
 
         super().__init__(

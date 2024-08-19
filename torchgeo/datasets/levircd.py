@@ -7,6 +7,7 @@ import abc
 import glob
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive, percentile_normalization
+from .utils import Path, download_and_extract_archive, percentile_normalization
 
 
 class LEVIRCDBase(NonGeoDataset, abc.ABC):
@@ -26,12 +27,12 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
     .. versionadded:: 0.6
     """
 
-    splits: list[str] | dict[str, dict[str, str]]
-    directories = ['A', 'B', 'label']
+    splits: ClassVar[tuple[str, ...] | dict[str, dict[str, str]]]
+    directories = ('A', 'B', 'label')
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -94,7 +95,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         """
         return len(self.files)
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -105,13 +106,13 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('RGB'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:
@@ -122,7 +123,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('L'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)
@@ -183,7 +184,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         return fig
 
     @abc.abstractmethod
-    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -237,7 +238,7 @@ class LEVIRCD(LEVIRCDBase):
     .. versionadded:: 0.6
     """
 
-    splits = {
+    splits: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'url': 'https://drive.google.com/file/d/18GuoCuBn48oZKAlEo-LrNwABrFhVALU-',
             'filename': 'train.zip',
@@ -255,7 +256,7 @@ class LEVIRCD(LEVIRCDBase):
         },
     }
 
-    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -336,9 +337,9 @@ class LEVIRCDPlus(LEVIRCDBase):
     md5 = '1adf156f628aa32fb2e8fe6cada16c04'
     filename = 'LEVIR-CD+.zip'
     directory = 'LEVIR-CD+'
-    splits = ['train', 'test']
+    splits = ('train', 'test')
 
-    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:

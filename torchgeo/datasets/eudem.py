@@ -5,8 +5,9 @@
 
 import glob
 import os
+import pathlib
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -14,7 +15,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import check_integrity, extract_archive
+from .utils import Path, check_integrity, extract_archive
 
 
 class EUDEM(RasterDataset):
@@ -52,7 +53,7 @@ class EUDEM(RasterDataset):
     zipfile_glob = 'eu_dem_v11_*[A-Z0-9].zip'
     filename_regex = '(?P<name>[eudem_v11]{10})_(?P<id>[A-Z0-9]{6})'
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'eu_dem_v11_E00N20.zip': '96edc7e11bc299b994e848050d6be591',
         'eu_dem_v11_E10N00.zip': 'e14be147ac83eddf655f4833d55c1571',
         'eu_dem_v11_E10N10.zip': '2eb5187e4d827245b33768404529c709',
@@ -84,7 +85,7 @@ class EUDEM(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -125,7 +126,7 @@ class EUDEM(RasterDataset):
             return
 
         # Check if the zip files have already been downloaded
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         pathname = os.path.join(self.paths, self.zipfile_glob)
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):

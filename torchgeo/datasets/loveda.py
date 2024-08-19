@@ -5,7 +5,8 @@
 
 import glob
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class LoveDA(NonGeoDataset):
@@ -57,10 +58,10 @@ class LoveDA(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    scenes = ['urban', 'rural']
-    splits = ['train', 'val', 'test']
+    scenes = ('urban', 'rural')
+    splits = ('train', 'val', 'test')
 
-    info_dict = {
+    info_dict: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'url': 'https://zenodo.org/record/5706578/files/Train.zip?download=1',
             'filename': 'Train.zip',
@@ -78,7 +79,7 @@ class LoveDA(NonGeoDataset):
         },
     }
 
-    classes = [
+    classes = (
         'background',
         'building',
         'road',
@@ -87,13 +88,13 @@ class LoveDA(NonGeoDataset):
         'forest',
         'agriculture',
         'no-data',
-    ]
+    )
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
-        scene: list[str] = ['urban', 'rural'],
+        scene: Sequence[str] = ['urban', 'rural'],
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -197,7 +198,7 @@ class LoveDA(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -208,13 +209,13 @@ class LoveDA(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('RGB'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load a single mask corresponding to image.
 
         Args:
@@ -225,7 +226,7 @@ class LoveDA(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('L'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = tensor.to(torch.long)
             return tensor

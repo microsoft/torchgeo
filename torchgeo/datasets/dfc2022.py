@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive, percentile_normalization
+from .utils import Path, check_integrity, extract_archive, percentile_normalization
 
 
 class DFC2022(NonGeoDataset):
@@ -75,9 +76,9 @@ class DFC2022(NonGeoDataset):
     * https://doi.org/10.1007/s10994-020-05943-y
 
     .. versionadded:: 0.3
-    """  # noqa: E501
+    """
 
-    classes = [
+    classes = (
         'No information',
         'Urban fabric',
         'Industrial, commercial, public, military, private and transport units',
@@ -94,8 +95,8 @@ class DFC2022(NonGeoDataset):
         'Wetlands',
         'Water',
         'Clouds and Shadows',
-    ]
-    colormap = [
+    )
+    colormap = (
         '#231F20',
         '#DB5F57',
         '#DB9757',
@@ -112,8 +113,8 @@ class DFC2022(NonGeoDataset):
         '#579BDB',
         '#0062FF',
         '#231F20',
-    ]
-    metadata = {
+    )
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'filename': 'labeled_train.zip',
             'md5': '2e87d6a218e466dd0566797d7298c7a9',
@@ -137,7 +138,7 @@ class DFC2022(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
@@ -224,7 +225,7 @@ class DFC2022(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str, shape: Sequence[int] | None = None) -> Tensor:
+    def _load_image(self, path: Path, shape: Sequence[int] | None = None) -> Tensor:
         """Load a single image.
 
         Args:
@@ -235,13 +236,13 @@ class DFC2022(NonGeoDataset):
             the image
         """
         with rasterio.open(path) as f:
-            array: 'np.typing.NDArray[np.float_]' = f.read(
+            array: np.typing.NDArray[np.float64] = f.read(
                 out_shape=shape, out_dtype='float32', resampling=Resampling.bilinear
             )
             tensor = torch.from_numpy(array)
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:
@@ -251,7 +252,7 @@ class DFC2022(NonGeoDataset):
             the target mask
         """
         with rasterio.open(path) as f:
-            array: 'np.typing.NDArray[np.int_]' = f.read(
+            array: np.typing.NDArray[np.int_] = f.read(
                 indexes=1, out_dtype='int32', resampling=Resampling.bilinear
             )
             tensor = torch.from_numpy(array)
@@ -306,7 +307,7 @@ class DFC2022(NonGeoDataset):
         ncols = 2
         image = sample['image'][:3]
         image = image.to(torch.uint8)
-        image = image.permute(1, 2, 0).numpy()
+        image_arr = image.permute(1, 2, 0).numpy()
 
         dem = sample['image'][-1].numpy()
         dem = percentile_normalization(dem, lower=0, upper=100, axis=(0, 1))
@@ -325,7 +326,7 @@ class DFC2022(NonGeoDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
 
-        axs[0].imshow(image)
+        axs[0].imshow(image_arr)
         axs[0].axis('off')
         axs[1].imshow(dem)
         axs[1].axis('off')

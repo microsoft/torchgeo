@@ -1,11 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
 import os
-import shutil
 from pathlib import Path
-from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -15,14 +12,9 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import VHR10, DatasetNotFoundError
 
 pytest.importorskip('pycocotools')
-
-
-def download_url(url: str, root: str, *args: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestVHR10:
@@ -30,32 +22,18 @@ class TestVHR10:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> VHR10:
-        pytest.importorskip('rarfile', minversion='4')
-        monkeypatch.setattr(torchgeo.datasets.vhr10, 'download_url', download_url)
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
-        url = os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.rar')
+        url = os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.zip')
         monkeypatch.setitem(VHR10.image_meta, 'url', url)
-        md5 = '92769845cae6a4e8c74bfa1a0d1d4a80'
+        md5 = '497cb7e19a12c7d5abbefe8eac71d22d'
         monkeypatch.setitem(VHR10.image_meta, 'md5', md5)
         url = os.path.join('tests', 'data', 'vhr10', 'annotations.json')
         monkeypatch.setitem(VHR10.target_meta, 'url', url)
         md5 = '567c4cd8c12624864ff04865de504c58'
         monkeypatch.setitem(VHR10.target_meta, 'md5', md5)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return VHR10(root, split, transforms, download=True, checksum=True)
-
-    @pytest.fixture
-    def mock_missing_modules(self, monkeypatch: MonkeyPatch) -> None:
-        import_orig = builtins.__import__
-
-        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name in {'pycocotools.coco', 'skimage.measure'}:
-                raise ImportError()
-            return import_orig(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, '__import__', mocked_import)
 
     def test_getitem(self, dataset: VHR10) -> None:
         for i in range(2):
@@ -91,27 +69,10 @@ class TestVHR10:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            VHR10(str(tmp_path))
-
-    def test_mock_missing_module(
-        self, dataset: VHR10, mock_missing_modules: None
-    ) -> None:
-        if dataset.split == 'positive':
-            with pytest.raises(
-                ImportError,
-                match='pycocotools is not installed and is required to use this datase',
-            ):
-                VHR10(dataset.root, dataset.split)
-
-            with pytest.raises(
-                ImportError,
-                match='scikit-image is not installed and is required to plot masks',
-            ):
-                x = dataset[0]
-                dataset.plot(x)
+            VHR10(tmp_path)
 
     def test_plot(self, dataset: VHR10) -> None:
-        pytest.importorskip('skimage', minversion='0.18')
+        pytest.importorskip('skimage', minversion='0.19')
         x = dataset[1].copy()
         dataset.plot(x, suptitle='Test')
         plt.close()

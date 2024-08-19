@@ -11,4 +11,3 @@ data:
     batch_size: 2
   dict_kwargs:
     root: "tests/data/ucmerced"
-    download: true

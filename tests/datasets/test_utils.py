@@ -1,13 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
-import glob
 import math
 import os
 import pickle
 import re
-import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -16,151 +13,22 @@ from typing import Any
 import numpy as np
 import pytest
 import torch
-from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
+from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
-    BoundingBox,
+    Executable,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
-    download_and_extract_archive,
-    download_radiant_mlhub_collection,
-    download_radiant_mlhub_dataset,
-    extract_archive,
+    lazy_import,
     merge_samples,
     percentile_normalization,
     stack_samples,
     unbind_samples,
+    which,
     working_dir,
 )
-
-
-@pytest.fixture
-def mock_missing_module(monkeypatch: MonkeyPatch) -> None:
-    import_orig = builtins.__import__
-
-    def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-        if name in ['radiant_mlhub', 'rarfile', 'zipfile_deflate64']:
-            raise ImportError()
-        return import_orig(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, '__import__', mocked_import)
-
-
-class MLHubDataset:
-    def download(self, output_dir: str, **kwargs: str) -> None:
-        glob_path = os.path.join(
-            'tests', 'data', 'ref_african_crops_kenya_02', '*.tar.gz'
-        )
-        for tarball in glob.iglob(glob_path):
-            shutil.copy(tarball, output_dir)
-
-
-class Collection:
-    def download(self, output_dir: str, **kwargs: str) -> None:
-        glob_path = os.path.join(
-            'tests', 'data', 'ref_african_crops_kenya_02', '*.tar.gz'
-        )
-        for tarball in glob.iglob(glob_path):
-            shutil.copy(tarball, output_dir)
-
-
-def fetch_dataset(dataset_id: str, **kwargs: str) -> MLHubDataset:
-    return MLHubDataset()
-
-
-def fetch_collection(collection_id: str, **kwargs: str) -> Collection:
-    return Collection()
-
-
-def download_url(url: str, root: str, *args: str) -> None:
-    shutil.copy(url, root)
-
-
-def test_mock_missing_module(mock_missing_module: None) -> None:
-    import sys  # noqa: F401
-
-
-@pytest.mark.parametrize(
-    'src',
-    [
-        os.path.join('cowc_detection', 'COWC_Detection_Columbus_CSUAV_AFRL.tbz'),
-        os.path.join('cowc_detection', 'COWC_test_list_detection.txt.bz2'),
-        os.path.join('vhr10', 'NWPU VHR-10 dataset.rar'),
-        os.path.join('landcoverai', 'landcover.ai.v1.zip'),
-        os.path.join('chesapeake', 'BAYWIDE', 'Baywide_13Class_20132014.zip'),
-        os.path.join('sen12ms', 'ROIs1158_spring_lc.tar.gz'),
-    ],
-)
-def test_extract_archive(src: str, tmp_path: Path) -> None:
-    if src.endswith('.rar'):
-        pytest.importorskip('rarfile', minversion='4')
-    if src.startswith('chesapeake'):
-        pytest.importorskip('zipfile_deflate64')
-    extract_archive(os.path.join('tests', 'data', src), str(tmp_path))
-
-
-def test_missing_rarfile(mock_missing_module: None) -> None:
-    with pytest.raises(
-        ImportError,
-        match='rarfile is not installed and is required to extract this dataset',
-    ):
-        extract_archive(
-            os.path.join('tests', 'data', 'vhr10', 'NWPU VHR-10 dataset.rar')
-        )
-
-
-def test_missing_zipfile_deflate64(mock_missing_module: None) -> None:
-    # Should fallback on Python builtin zipfile
-    extract_archive(os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip'))
-
-
-def test_unsupported_scheme() -> None:
-    with pytest.raises(
-        RuntimeError, match='src file has unknown archival/compression scheme'
-    ):
-        extract_archive('foo.bar')
-
-
-def test_download_and_extract_archive(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
-    download_and_extract_archive(
-        os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip'),
-        str(tmp_path),
-    )
-
-
-def test_download_radiant_mlhub_dataset(
-    tmp_path: Path, monkeypatch: MonkeyPatch
-) -> None:
-    radiant_mlhub = pytest.importorskip('radiant_mlhub', minversion='0.3')
-    monkeypatch.setattr(radiant_mlhub.Dataset, 'fetch', fetch_dataset)
-    download_radiant_mlhub_dataset('', str(tmp_path))
-
-
-def test_download_radiant_mlhub_collection(
-    tmp_path: Path, monkeypatch: MonkeyPatch
-) -> None:
-    radiant_mlhub = pytest.importorskip('radiant_mlhub', minversion='0.3')
-    monkeypatch.setattr(radiant_mlhub.Collection, 'fetch', fetch_collection)
-    download_radiant_mlhub_collection('', str(tmp_path))
-
-
-def test_missing_radiant_mlhub(mock_missing_module: None) -> None:
-    with pytest.raises(
-        ImportError,
-        match='radiant_mlhub is not installed and is required to download this dataset',
-    ):
-        download_radiant_mlhub_dataset('', '')
-
-    with pytest.raises(
-        ImportError,
-        match='radiant_mlhub is not installed and is required to download this'
-        + ' collection',
-    ):
-        download_radiant_mlhub_collection('', '')
 
 
 class TestBoundingBox:
@@ -605,7 +473,7 @@ def test_nonexisting_directory(tmp_path: Path) -> None:
 
 
 def test_percentile_normalization() -> None:
-    img: 'np.typing.NDArray[np.int_]' = np.array([[1, 2], [98, 100]])
+    img: np.typing.NDArray[np.int_] = np.array([[1, 2], [98, 100]])
 
     img = percentile_normalization(img, 2, 98)
     assert img.min() == 0
@@ -617,7 +485,7 @@ def test_percentile_normalization() -> None:
     [np.uint8, np.uint16, np.uint32, np.int8, np.int16, np.int32, np.int64],
 )
 def test_array_to_tensor(array_dtype: 'np.typing.DTypeLike') -> None:
-    array: 'np.typing.NDArray[Any]' = np.zeros((2,), dtype=array_dtype)
+    array: np.typing.NDArray[Any] = np.zeros((2,), dtype=array_dtype)
     array[0] = np.iinfo(array.dtype).min
     array[1] = np.iinfo(array.dtype).max
     tensor = array_to_tensor(array)
@@ -625,3 +493,25 @@ def test_array_to_tensor(array_dtype: 'np.typing.DTypeLike') -> None:
     # values equal even if they differ.
     assert array[0].item() == tensor[0].item()
     assert array[1].item() == tensor[1].item()
+
+
+@pytest.mark.parametrize('name', ['collections', 'collections.abc'])
+def test_lazy_import(name: str) -> None:
+    lazy_import(name)
+
+
+@pytest.mark.parametrize('name', ['foo_bar', 'foo_bar.baz'])
+def test_lazy_import_missing(name: str) -> None:
+    with pytest.raises(DependencyNotFoundError, match='pip install foo-bar\n'):
+        lazy_import(name)
+
+
+def test_azcopy(tmp_path: Path, azcopy: Executable) -> None:
+    source = os.path.join('tests', 'data', 'cyclone')
+    azcopy('sync', source, tmp_path, '--recursive=true')
+    assert os.path.exists(tmp_path / 'test')
+
+
+def test_which() -> None:
+    with pytest.raises(DependencyNotFoundError, match='foo is not installed'):
+        which('foo')

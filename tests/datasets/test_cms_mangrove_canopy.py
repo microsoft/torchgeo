@@ -20,10 +20,6 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestCMSGlobalMangroveCanopy:
     @pytest.fixture
     def dataset(
@@ -49,9 +45,12 @@ class TestCMSGlobalMangroveCanopy:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
+    def test_len(self, dataset: CMSGlobalMangroveCanopy) -> None:
+        assert len(dataset) == 1
+
     def test_no_dataset(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            CMSGlobalMangroveCanopy(str(tmp_path))
+            CMSGlobalMangroveCanopy(tmp_path)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(
@@ -60,7 +59,7 @@ class TestCMSGlobalMangroveCanopy:
             'cms_mangrove_canopy',
             'CMS_Global_Map_Mangrove_Canopy_1665.zip',
         )
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(pathname, root)
         CMSGlobalMangroveCanopy(root, country='Angola')
 
@@ -70,7 +69,7 @@ class TestCMSGlobalMangroveCanopy:
         ) as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            CMSGlobalMangroveCanopy(str(tmp_path), country='Angola', checksum=True)
+            CMSGlobalMangroveCanopy(tmp_path, country='Angola', checksum=True)
 
     def test_invalid_country(self) -> None:
         with pytest.raises(AssertionError):

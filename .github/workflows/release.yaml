@@ -6,43 +6,18 @@ on:
   pull_request:
     branches:
       - release**
+defaults:
+  run:
+    shell: bash
 jobs:
-  datasets:
-    name: datasets
-    runs-on: ubuntu-latest
-    steps:
-      - name: Clone repo
-        uses: actions/checkout@v4.1.5
-      - name: Set up python
-        uses: actions/setup-python@v5.1.0
-        with:
-          python-version: "3.12"
-      - name: Cache dependencies
-        uses: actions/cache@v4.0.2
-        id: cache
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-datasets
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          pip install .[tests]
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
-      - name: Run pytest checks
-        run: |
-          pytest --cov=torchgeo --cov-report=xml --durations=10
-          python -m torchgeo --help
-          torchgeo --help
   integration:
     name: integration
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.5
+        uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: "3.12"
       - name: Cache dependencies
@@ -68,9 +43,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.5
+        uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: "3.12"
       - name: Cache dependencies

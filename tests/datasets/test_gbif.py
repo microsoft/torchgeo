@@ -38,7 +38,7 @@ class TestGBIF:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            GBIF(str(tmp_path))
+            GBIF(tmp_path)
 
     def test_invalid_query(self, dataset: GBIF) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

@@ -4,6 +4,7 @@
 """Canadian Building Footprints dataset."""
 
 import os
+import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -13,7 +14,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import check_integrity, download_and_extract_archive
+from .utils import Path, check_integrity, download_and_extract_archive
 
 
 class CanadianBuildingFootprints(VectorDataset):
@@ -29,7 +30,7 @@ class CanadianBuildingFootprints(VectorDataset):
     # https://github.com/microsoft/CanadianBuildingFootprints/issues/11
 
     url = 'https://usbuildingdata.blob.core.windows.net/canadian-buildings-v2/'
-    provinces_territories = [
+    provinces_territories = (
         'Alberta',
         'BritishColumbia',
         'Manitoba',
@@ -43,8 +44,8 @@ class CanadianBuildingFootprints(VectorDataset):
         'Quebec',
         'Saskatchewan',
         'YukonTerritory',
-    ]
-    md5s = [
+    )
+    md5s = (
         '8b4190424e57bb0902bd8ecb95a9235b',
         'fea05d6eb0006710729c675de63db839',
         'adf11187362624d68f9c69aaa693c46f',
@@ -58,11 +59,11 @@ class CanadianBuildingFootprints(VectorDataset):
         '9ff4417ae00354d39a0cf193c8df592c',
         'a51078d8e60082c7d3a3818240da6dd5',
         'c11f3bd914ecabd7cac2cb2871ec0261',
-    ]
+    )
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float = 0.00001,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -104,7 +105,7 @@ class CanadianBuildingFootprints(VectorDataset):
         Returns:
             True if dataset files are found and/or MD5s match, else False
         """
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         for prov_terr, md5 in zip(self.provinces_territories, self.md5s):
             filepath = os.path.join(self.paths, prov_terr + '.zip')
             if not check_integrity(filepath, md5 if self.checksum else None):
@@ -116,7 +117,7 @@ class CanadianBuildingFootprints(VectorDataset):
         if self._check_integrity():
             print('Files already downloaded and verified')
             return
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         for prov_terr, md5 in zip(self.provinces_territories, self.md5s):
             download_and_extract_archive(
                 self.url + prov_terr + '.zip',

@@ -12,7 +12,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     NLCD,
     BoundingBox,
@@ -22,15 +21,9 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestNLCD:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NLCD:
-        monkeypatch.setattr(torchgeo.datasets.nlcd, 'download_url', download_url)
-
         md5s = {
             2011: '99546a3b89a0dddbe4e28e661c79984e',
             2019: 'a4008746f15720b8908ddd357a75fded',
@@ -42,7 +35,7 @@ class TestNLCD:
         )
         monkeypatch.setattr(NLCD, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return NLCD(
             root,
@@ -57,6 +50,9 @@ class TestNLCD:
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
+
+    def test_len(self, dataset: NLCD) -> None:
+        assert len(dataset) == 2
 
     def test_classes(self) -> None:
         root = os.path.join('tests', 'data', 'nlcd')
@@ -81,7 +77,7 @@ class TestNLCD:
         pathname = os.path.join(
             'tests', 'data', 'nlcd', 'nlcd_2019_land_cover_l48_20210604.zip'
         )
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(pathname, root)
         NLCD(root, years=[2019])
 
@@ -90,7 +86,7 @@ class TestNLCD:
             AssertionError,
             match='NLCD data product only exists for the following years:',
         ):
-            NLCD(str(tmp_path), years=[1996])
+            NLCD(tmp_path, years=[1996])
 
     def test_invalid_classes(self) -> None:
         with pytest.raises(AssertionError):
@@ -114,7 +110,7 @@ class TestNLCD:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            NLCD(str(tmp_path))
+            NLCD(tmp_path)
 
     def test_invalid_query(self, dataset: NLCD) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

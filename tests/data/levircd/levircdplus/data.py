@@ -57,5 +57,3 @@ if __name__ == '__main__':
     with open(f'{root}.zip', 'rb') as f:
         md5 = hashlib.md5(f.read()).hexdigest()
         print(f'{root}.zip: {md5}')
-
-    shutil.rmtree(root)

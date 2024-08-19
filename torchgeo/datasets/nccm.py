@@ -4,7 +4,7 @@
 """Northeastern China Crop Map Dataset."""
 
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import torch
@@ -13,7 +13,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, download_url
+from .utils import BoundingBox, Path, download_url
 
 
 class NCCM(RasterDataset):
@@ -57,23 +57,23 @@ class NCCM(RasterDataset):
 
     date_format = '%Y'
     is_image = False
-    urls = {
+    urls: ClassVar[dict[int, str]] = {
         2019: 'https://figshare.com/ndownloader/files/25070540',
         2018: 'https://figshare.com/ndownloader/files/25070624',
         2017: 'https://figshare.com/ndownloader/files/25070582',
     }
-    md5s = {
+    md5s: ClassVar[dict[int, str]] = {
         2019: '0d062bbd42e483fdc8239d22dba7020f',
         2018: 'b3bb4894478d10786aa798fb11693ec1',
         2017: 'd047fbe4a85341fa6248fd7e0badab6c',
     }
-    fnames = {
+    fnames: ClassVar[dict[int, str]] = {
         2019: 'CDL2019_clip.tif',
         2018: 'CDL2018_clip1.tif',
         2017: 'CDL2017_clip.tif',
     }
 
-    cmap = {
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 255, 0, 255),
         1: (255, 0, 0, 255),
         2: (255, 255, 0, 255),
@@ -83,7 +83,7 @@ class NCCM(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         years: list[int] = [2019],

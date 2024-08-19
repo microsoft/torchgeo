@@ -13,7 +13,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import download_url, percentile_normalization
+from .utils import Path, download_url, lazy_import, percentile_normalization
 
 
 class ZueriCrop(NonGeoDataset):
@@ -52,19 +52,19 @@ class ZueriCrop(NonGeoDataset):
        * `h5py <https://pypi.org/project/h5py/>`_ to load the dataset
     """
 
-    urls = [
+    urls = (
         'https://polybox.ethz.ch/index.php/s/uXfdr2AcXE3QNB6/download',
-        'https://raw.githubusercontent.com/0zgur0/multi-stage-convSTAR-network/fa92b5b3cb77f5171c5c3be740cd6e6395cc29b6/labels.csv',  # noqa: E501
-    ]
-    md5s = ['1635231df67f3d25f4f1e62c98e221a4', '5118398c7a5bbc246f5f6bb35d8d529b']
-    filenames = ['ZueriCrop.hdf5', 'labels.csv']
+        'https://raw.githubusercontent.com/0zgur0/multi-stage-convSTAR-network/fa92b5b3cb77f5171c5c3be740cd6e6395cc29b6/labels.csv',
+    )
+    md5s = ('1635231df67f3d25f4f1e62c98e221a4', '5118398c7a5bbc246f5f6bb35d8d529b')
+    filenames = ('ZueriCrop.hdf5', 'labels.csv')
 
     band_names = ('NIR', 'B03', 'B02', 'B04', 'B05', 'B06', 'B07', 'B11', 'B12')
-    rgb_bands = ['B04', 'B03', 'B02']
+    rgb_bands = ('B04', 'B03', 'B02')
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         bands: Sequence[str] = band_names,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -82,7 +82,10 @@ class ZueriCrop(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            DependencyNotFoundError: If h5py is not installed.
         """
+        lazy_import('h5py')
+
         self._validate_bands(bands)
         self.band_indices = torch.tensor(
             [self.band_names.index(b) for b in bands]
@@ -96,13 +99,6 @@ class ZueriCrop(NonGeoDataset):
         self.filepath = os.path.join(root, 'ZueriCrop.hdf5')
 
         self._verify()
-
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'h5py is not installed and is required to use this dataset'
-            )
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -129,8 +125,7 @@ class ZueriCrop(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        import h5py
-
+        h5py = lazy_import('h5py')
         with h5py.File(self.filepath, 'r') as f:
             length: int = f['data'].shape[0]
         return length
@@ -144,8 +139,7 @@ class ZueriCrop(NonGeoDataset):
         Returns:
             the image
         """
-        import h5py
-
+        h5py = lazy_import('h5py')
         with h5py.File(self.filepath, 'r') as f:
             array = f['data'][index, ...]
 

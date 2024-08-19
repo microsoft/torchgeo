@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import Any, cast, overload
+from typing import Any, ClassVar, cast, overload
 
 import fiona
 import matplotlib.pyplot as plt
@@ -22,7 +22,7 @@ from torchvision.utils import draw_bounding_boxes
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive, lazy_import
 
 
 class IDTReeS(NonGeoDataset):
@@ -92,10 +92,15 @@ class IDTReeS(NonGeoDataset):
 
     * https://doi.org/10.1101/2021.08.06.453503
 
+    This dataset requires the following additional libraries to be installed:
+
+       * `laspy <https://pypi.org/project/laspy/>`_ to read lidar point clouds
+       * `pyvista <https://pypi.org/project/pyvista/>`_ to plot lidar point clouds
+
     .. versionadded:: 0.2
     """
 
-    classes = {
+    classes: ClassVar[dict[str, str]] = {
         'ACPE': 'Acer pensylvanicum L.',
         'ACRU': 'Acer rubrum L.',
         'ACSA3': 'Acer saccharum Marshall',
@@ -130,24 +135,27 @@ class IDTReeS(NonGeoDataset):
         'ROPS': 'Robinia pseudoacacia L.',
         'TSCA': 'Tsuga canadensis (L.) Carriere',
     }
-    metadata = {
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
-            'url': 'https://zenodo.org/record/3934932/files/IDTREES_competition_train_v2.zip?download=1',  # noqa: E501
+            'url': 'https://zenodo.org/record/3934932/files/IDTREES_competition_train_v2.zip?download=1',
             'md5': '5ddfa76240b4bb6b4a7861d1d31c299c',
             'filename': 'IDTREES_competition_train_v2.zip',
         },
         'test': {
-            'url': 'https://zenodo.org/record/3934932/files/IDTREES_competition_test_v2.zip?download=1',  # noqa: E501
+            'url': 'https://zenodo.org/record/3934932/files/IDTREES_competition_test_v2.zip?download=1',
             'md5': 'b108931c84a70f2a38a8234290131c9b',
             'filename': 'IDTREES_competition_test_v2.zip',
         },
     }
-    directories = {'train': ['train'], 'test': ['task1', 'task2']}
+    directories: ClassVar[dict[str, list[str]]] = {
+        'train': ['train'],
+        'test': ['task1', 'task2'],
+    }
     image_size = (200, 200)
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         task: str = 'task1',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -167,11 +175,14 @@ class IDTReeS(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            ImportError: if laspy is not installed
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            DependencyNotFoundError: If laspy is not installed.
         """
+        lazy_import('laspy')
+
         assert split in ['train', 'test']
         assert task in ['task1', 'task2']
+
         self.root = root
         self.split = split
         self.task = task
@@ -182,14 +193,6 @@ class IDTReeS(NonGeoDataset):
         self.idx2class = {i: c for i, c in enumerate(self.classes)}
         self.num_classes = len(self.classes)
         self._verify()
-
-        try:
-            import laspy  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'laspy is not installed and is required to use this dataset'
-            )
-
         self.images, self.geometries, self.labels = self._load(root)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -240,7 +243,7 @@ class IDTReeS(NonGeoDataset):
         """
         return len(self.images)
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a tiff file.
 
         Args:
@@ -254,7 +257,7 @@ class IDTReeS(NonGeoDataset):
         tensor = torch.from_numpy(array)
         return tensor
 
-    def _load_las(self, path: str) -> Tensor:
+    def _load_las(self, path: Path) -> Tensor:
         """Load a single point cloud.
 
         Args:
@@ -263,14 +266,13 @@ class IDTReeS(NonGeoDataset):
         Returns:
             the point cloud
         """
-        import laspy
-
+        laspy = lazy_import('laspy')
         las = laspy.read(path)
-        array: 'np.typing.NDArray[np.int_]' = np.stack([las.x, las.y, las.z], axis=0)
+        array: np.typing.NDArray[np.int_] = np.stack([las.x, las.y, las.z], axis=0)
         tensor = torch.from_numpy(array)
         return tensor
 
-    def _load_boxes(self, path: str) -> Tensor:
+    def _load_boxes(self, path: Path) -> Tensor:
         """Load object bounding boxes.
 
         Args:
@@ -314,7 +316,7 @@ class IDTReeS(NonGeoDataset):
         tensor = torch.tensor(boxes)
         return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load target label for a single sample.
 
         Args:
@@ -334,7 +336,7 @@ class IDTReeS(NonGeoDataset):
         return tensor
 
     def _load(
-        self, root: str
+        self, root: Path
     ) -> tuple[list[str], dict[int, dict[str, Any]] | None, Any]:
         """Load files, geometries, and labels.
 
@@ -361,7 +363,7 @@ class IDTReeS(NonGeoDataset):
 
         return images, geoms, labels
 
-    def _load_labels(self, directory: str) -> Any:
+    def _load_labels(self, directory: Path) -> Any:
         """Load the csv files containing the labels.
 
         Args:
@@ -381,7 +383,7 @@ class IDTReeS(NonGeoDataset):
         df.reset_index()
         return df
 
-    def _load_geometries(self, directory: str) -> dict[int, dict[str, Any]]:
+    def _load_geometries(self, directory: Path) -> dict[int, dict[str, Any]]:
         """Load the shape files containing the geometries.
 
         Args:
@@ -561,23 +563,17 @@ class IDTReeS(NonGeoDataset):
             pyvista.PolyData object. Run pyvista.plot(point_cloud, ...) to display
 
         Raises:
-            ImportError: if pyvista is not installed
+            DependencyNotFoundError: If laspy or pyvista are not installed.
 
         .. versionchanged:: 0.4
            Ported from Open3D to PyVista, *colormap* parameter removed.
         """
-        try:
-            import pyvista  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'pyvista is not installed and is required to plot point clouds'
-            )
-        import laspy
-
+        laspy = lazy_import('laspy')
+        pyvista = lazy_import('pyvista')
         path = self.images[index]
         path = path.replace('RGB', 'LAS').replace('.tif', '.las')
         las = laspy.read(path)
-        points: 'np.typing.NDArray[np.int_]' = np.stack(
+        points: np.typing.NDArray[np.int_] = np.stack(
             [las.x, las.y, las.z], axis=0
         ).transpose((1, 0))
         point_cloud = pyvista.PolyData(points)

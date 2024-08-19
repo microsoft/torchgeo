@@ -12,7 +12,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
@@ -22,14 +21,9 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestEsri2020:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> Esri2020:
-        monkeypatch.setattr(torchgeo.datasets.esri2020, 'download_url', download_url)
         zipfile = 'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip'
         monkeypatch.setattr(Esri2020, 'zipfile', zipfile)
 
@@ -42,7 +36,7 @@ class TestEsri2020:
             'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip',
         )
         monkeypatch.setattr(Esri2020, 'url', url)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return Esri2020(root, transforms=transforms, download=True, checksum=True)
 
@@ -51,6 +45,9 @@ class TestEsri2020:
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
+
+    def test_len(self, dataset: Esri2020) -> None:
+        assert len(dataset) == 1
 
     def test_already_extracted(self, dataset: Esri2020) -> None:
         Esri2020(dataset.paths, download=True)
@@ -63,11 +60,11 @@ class TestEsri2020:
             'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip',
         )
         shutil.copy(url, tmp_path)
-        Esri2020(str(tmp_path))
+        Esri2020(tmp_path)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            Esri2020(str(tmp_path), checksum=True)
+            Esri2020(tmp_path, checksum=True)
 
     def test_and(self, dataset: Esri2020) -> None:
         ds = dataset & dataset

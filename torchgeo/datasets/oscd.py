@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,6 +18,7 @@ from torch import Tensor
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
 from .utils import (
+    Path,
     download_url,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -49,7 +51,7 @@ class OSCD(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    urls = {
+    urls: ClassVar[dict[str, str]] = {
         'Onera Satellite Change Detection dataset - Images.zip': (
             'https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download'
         ),
@@ -60,7 +62,7 @@ class OSCD(NonGeoDataset):
             'https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download'
         ),
     }
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'Onera Satellite Change Detection dataset - Images.zip': (
             'c50d4a2941da64e03a47ac4dec63d915'
         ),
@@ -74,9 +76,9 @@ class OSCD(NonGeoDataset):
 
     zipfile_glob = '*Onera*.zip'
     filename_glob = '*Onera*'
-    splits = ['train', 'test']
+    splits = ('train', 'test')
 
-    colormap = ['blue']
+    colormap = ('blue',)
 
     all_bands = (
         'B01',
@@ -98,7 +100,7 @@ class OSCD(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -207,7 +209,7 @@ class OSCD(NonGeoDataset):
 
         return regions
 
-    def _load_image(self, paths: Sequence[str]) -> Tensor:
+    def _load_image(self, paths: Sequence[Path]) -> Tensor:
         """Load a single image.
 
         Args:
@@ -216,15 +218,15 @@ class OSCD(NonGeoDataset):
         Returns:
             the image
         """
-        images: list['np.typing.NDArray[np.int_]'] = []
+        images: list[np.typing.NDArray[np.int_]] = []
         for path in paths:
             with Image.open(path) as img:
                 images.append(np.array(img))
-        array: 'np.typing.NDArray[np.int_]' = np.stack(images, axis=0).astype(np.int_)
+        array: np.typing.NDArray[np.int_] = np.stack(images, axis=0).astype(np.int_)
         tensor = torch.from_numpy(array).float()
         return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:
@@ -235,7 +237,7 @@ class OSCD(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('L'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)
@@ -314,11 +316,11 @@ class OSCD(NonGeoDataset):
             rgb_img = (np.clip((rgb_img - per02) / (per98 - per02), 0, 1) * 255).astype(
                 np.uint8
             )
-            array: 'np.typing.NDArray[np.uint8]' = draw_semantic_segmentation_masks(
+            array: np.typing.NDArray[np.uint8] = draw_semantic_segmentation_masks(
                 torch.from_numpy(rgb_img),
                 sample['mask'],
                 alpha=alpha,
-                colors=self.colormap,
+                colors=list(self.colormap),
             )
             return array
 

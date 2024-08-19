@@ -8,6 +8,9 @@ on:
     branches:
       - main
       - release**
+defaults:
+  run:
+    shell: bash
 jobs:
   latest:
     name: latest
@@ -20,9 +23,9 @@ jobs:
         python-version: ["3.10", "3.11", "3.12"]
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.5
+        uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache dependencies
@@ -34,17 +37,6 @@ jobs:
         if: ${{ runner.os != 'macOS' }}
       - name: Setup headless display for pyvista
         uses: pyvista/setup-headless-display-action@v2
-      - name: Install apt dependencies (Linux)
-        run: |
-          sudo apt-get update
-          sudo apt-get install unrar
-        if: ${{ runner.os == 'Linux' }}
-      - name: Install brew dependencies (macOS)
-        run: brew install rar
-        if: ${{ runner.os == 'macOS' }}
-      - name: Install choco dependencies (Windows)
-        run: choco install 7zip
-        if: ${{ runner.os == 'Windows' }}
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -57,7 +49,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml --durations=10
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.3.0
+        uses: codecov/codecov-action@v4.5.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
@@ -67,9 +59,9 @@ jobs:
       MPLBACKEND: Agg
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.5
+        uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.1.1
         with:
           python-version: "3.10"
       - name: Cache dependencies
@@ -80,10 +72,6 @@ jobs:
           key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/min-reqs.old') }}-${{ hashFiles('requirements/mins-cons.old') }}
       - name: Setup headless display for pyvista
         uses: pyvista/setup-headless-display-action@v2
-      - name: Install apt dependencies (Linux)
-        run: |
-          sudo apt-get update
-          sudo apt-get install unrar
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -96,7 +84,40 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml --durations=10
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.3.0
+        uses: codecov/codecov-action@v4.5.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+  datasets:
+    name: datasets
+    runs-on: ubuntu-latest
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4.1.7
+      - name: Set up python
+        uses: actions/setup-python@v5.1.1
+        with:
+          python-version: "3.12"
+      - name: Cache dependencies
+        uses: actions/cache@v4.0.2
+        id: cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/tests.txt') }}
+      - name: Install pip dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          pip install -r requirements/required.txt -r requirements/tests.txt
+          pip cache purge
+      - name: List pip dependencies
+        run: pip list
+      - name: Run pytest checks
+        run: |
+          pytest --cov=torchgeo --cov-report=xml --durations=10
+          python3 -m torchgeo --help
+      - name: Report coverage
+        uses: codecov/codecov-action@v4.5.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:

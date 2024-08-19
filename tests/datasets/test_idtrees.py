@@ -1,12 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import builtins
 import glob
 import os
 import shutil
 from pathlib import Path
-from typing import Any
 
 import matplotlib.pyplot as plt
 import pytest
@@ -15,14 +13,9 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, IDTReeS
 
 pytest.importorskip('laspy', minversion='2')
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestIDTReeS:
@@ -30,7 +23,6 @@ class TestIDTReeS:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> IDTReeS:
-        monkeypatch.setattr(torchgeo.datasets.idtrees, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'idtrees')
         metadata = {
             'train': {
@@ -46,22 +38,9 @@ class TestIDTReeS:
         }
         split, task = request.param
         monkeypatch.setattr(IDTReeS, 'metadata', metadata)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return IDTReeS(root, split, task, transforms, download=True, checksum=True)
-
-    @pytest.fixture(params=['laspy', 'pyvista'])
-    def mock_missing_module(self, monkeypatch: MonkeyPatch, request: SubRequest) -> str:
-        import_orig = builtins.__import__
-        package = str(request.param)
-
-        def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == package:
-                raise ImportError()
-            return import_orig(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, '__import__', mocked_import)
-        return package
 
     def test_getitem(self, dataset: IDTReeS) -> None:
         x = dataset[0]
@@ -92,32 +71,14 @@ class TestIDTReeS:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            IDTReeS(str(tmp_path))
+            IDTReeS(tmp_path)
 
     def test_not_extracted(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'idtrees', '*.zip')
-        root = str(tmp_path)
+        root = tmp_path
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)
         IDTReeS(root)
-
-    def test_mock_missing_module(
-        self, dataset: IDTReeS, mock_missing_module: str
-    ) -> None:
-        package = mock_missing_module
-
-        if package == 'laspy':
-            with pytest.raises(
-                ImportError,
-                match=f'{package} is not installed and is required to use this dataset',
-            ):
-                IDTReeS(dataset.root, dataset.split, dataset.task)
-        elif package == 'pyvista':
-            with pytest.raises(
-                ImportError,
-                match=f'{package} is not installed and is required to plot point cloud',
-            ):
-                dataset.plot_las(0)
 
     def test_plot(self, dataset: IDTReeS) -> None:
         x = dataset[0].copy()

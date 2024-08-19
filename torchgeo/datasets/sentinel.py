@@ -13,6 +13,7 @@ from rasterio.crs import CRS
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
+from .utils import Path
 
 
 class Sentinel(RasterDataset):
@@ -136,12 +137,12 @@ class Sentinel1(Sentinel):
         \.
     """
     date_format = '%Y%m%dT%H%M%S'
-    all_bands = ['HH', 'HV', 'VV', 'VH']
+    all_bands = ('HH', 'HV', 'VV', 'VH')
     separate_files = True
 
     def __init__(
         self,
-        paths: str | list[str] = 'data',
+        paths: Path | list[Path] = 'data',
         crs: CRS | None = None,
         res: float = 10,
         bands: Sequence[str] = ['VV', 'VH'],
@@ -276,7 +277,7 @@ class Sentinel2(Sentinel):
     date_format = '%Y%m%dT%H%M%S'
 
     # https://gisgeography.com/sentinel-2-bands-combinations/
-    all_bands = [
+    all_bands: tuple[str, ...] = (
         'B01',
         'B02',
         'B03',
@@ -290,14 +291,14 @@ class Sentinel2(Sentinel):
         'B10',
         'B11',
         'B12',
-    ]
-    rgb_bands = ['B04', 'B03', 'B02']
+    )
+    rgb_bands = ('B04', 'B03', 'B02')
 
     separate_files = True
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float = 10,
         bands: Sequence[str] | None = None,

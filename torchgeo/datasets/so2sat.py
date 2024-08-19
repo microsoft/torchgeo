@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import cast
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import check_integrity, percentile_normalization
+from .utils import Path, check_integrity, lazy_import, percentile_normalization
 
 
 class So2Sat(NonGeoDataset):
@@ -97,10 +97,16 @@ class So2Sat(NonGeoDataset):
           done
 
        or manually downloaded from https://mediatum.ub.tum.de/1613658
-    """  # noqa: E501
 
-    versions = ['2', '3_random', '3_block', '3_culture_10']
-    filenames_by_version = {
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `<https://pypi.org/project/h5py/>`_ to load the dataset
+    """
+
+    versions = ('2', '3_random', '3_block', '3_culture_10')
+    filenames_by_version: ClassVar[dict[str, dict[str, str]]] = {
         '2': {
             'train': 'training.h5',
             'validation': 'validation.h5',
@@ -113,7 +119,7 @@ class So2Sat(NonGeoDataset):
             'test': 'culture_10/testing.h5',
         },
     }
-    md5s_by_version = {
+    md5s_by_version: ClassVar[dict[str, dict[str, str]]] = {
         '2': {
             'train': '702bc6a9368ebff4542d791e53469244',
             'validation': '71cfa6795de3e22207229d06d6f8775d',
@@ -133,7 +139,7 @@ class So2Sat(NonGeoDataset):
         },
     }
 
-    classes = [
+    classes = (
         'Compact high rise',
         'Compact mid rise',
         'Compact low rise',
@@ -151,7 +157,7 @@ class So2Sat(NonGeoDataset):
         'Bare rock or paved',
         'Bare soil or sand',
         'Water',
-    ]
+    )
 
     all_s1_band_names = (
         'S1_B1',
@@ -177,9 +183,9 @@ class So2Sat(NonGeoDataset):
     )
     all_band_names = all_s1_band_names + all_s2_band_names
 
-    rgb_bands = ['S2_B04', 'S2_B03', 'S2_B02']
+    rgb_bands = ('S2_B04', 'S2_B03', 'S2_B02')
 
-    BAND_SETS = {
+    BAND_SETS: ClassVar[dict[str, tuple[str, ...]]] = {
         'all': all_band_names,
         's1': all_s1_band_names,
         's2': all_s2_band_names,
@@ -188,7 +194,7 @@ class So2Sat(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         version: str = '2',
         split: str = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
@@ -210,6 +216,7 @@ class So2Sat(NonGeoDataset):
         Raises:
             AssertionError: if ``split`` argument is invalid
             DatasetNotFoundError: If dataset is not found.
+            DependencyNotFoundError: If h5py is not installed.
 
         .. versionadded:: 0.3
            The *bands* parameter.
@@ -217,17 +224,13 @@ class So2Sat(NonGeoDataset):
         .. versionadded:: 0.5
            The *version* parameter.
         """
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'h5py is not installed and is required to use this dataset'
-            )
+        h5py = lazy_import('h5py')
+
         assert version in self.versions
         assert split in self.filenames_by_version[version]
 
         self._validate_bands(bands)
-        self.s1_band_indices: 'np.typing.NDArray[np.int_]' = np.array(
+        self.s1_band_indices: np.typing.NDArray[np.int_] = np.array(
             [
                 self.all_s1_band_names.index(b)
                 for b in bands
@@ -237,7 +240,7 @@ class So2Sat(NonGeoDataset):
 
         self.s1_band_names = [self.all_s1_band_names[i] for i in self.s1_band_indices]
 
-        self.s2_band_indices: 'np.typing.NDArray[np.int_]' = np.array(
+        self.s2_band_indices: np.typing.NDArray[np.int_] = np.array(
             [
                 self.all_s2_band_names.index(b)
                 for b in bands
@@ -272,8 +275,7 @@ class So2Sat(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        import h5py
-
+        h5py = lazy_import('h5py')
         with h5py.File(self.fn, 'r') as f:
             s1 = f['sen1'][index].astype(np.float64)  # convert from <f8 to float64
             s1 = np.take(s1, indices=self.s1_band_indices, axis=2)

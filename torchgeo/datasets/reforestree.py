@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive, extract_archive
+from .utils import Path, check_integrity, download_and_extract_archive, extract_archive
 
 
 class ReforesTree(NonGeoDataset):
@@ -56,7 +56,7 @@ class ReforesTree(NonGeoDataset):
     .. versionadded:: 0.3
     """
 
-    classes = ['other', 'banana', 'cacao', 'citrus', 'fruit', 'timber']
+    classes = ('other', 'banana', 'cacao', 'citrus', 'fruit', 'timber')
     url = 'https://zenodo.org/record/6813783/files/reforesTree.zip?download=1'
 
     md5 = 'f6a4a1d8207aeaa5fbab7b21b683a302'
@@ -64,7 +64,7 @@ class ReforesTree(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -124,7 +124,7 @@ class ReforesTree(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str) -> list[str]:
+    def _load_files(self, root: Path) -> list[str]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -137,7 +137,7 @@ class ReforesTree(NonGeoDataset):
 
         return image_paths
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -147,13 +147,13 @@ class ReforesTree(NonGeoDataset):
             the image
         """
         with Image.open(path) as img:
-            array: 'np.typing.NDArray[np.uint8]' = np.array(img)
+            array: np.typing.NDArray[np.uint8] = np.array(img)
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, filepath: str) -> tuple[Tensor, ...]:
+    def _load_target(self, filepath: Path) -> tuple[Tensor, ...]:
         """Load boxes and labels for a single image.
 
         Args:

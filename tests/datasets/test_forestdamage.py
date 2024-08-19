@@ -11,27 +11,18 @@ import torch
 import torch.nn as nn
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, ForestDamage
-
-
-def download_url(url: str, root: str, *args: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestForestDamage:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ForestDamage:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'forestdamage')
-
         url = os.path.join(data_dir, 'Data_Set_Larch_Casebearer.zip')
-
         md5 = '52d82ac38899e6e6bb40aacda643ee15'
-
         monkeypatch.setattr(ForestDamage, 'url', url)
         monkeypatch.setattr(ForestDamage, 'md5', md5)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return ForestDamage(
             root=root, transforms=transforms, download=True, checksum=True
@@ -57,17 +48,17 @@ class TestForestDamage:
             'tests', 'data', 'forestdamage', 'Data_Set_Larch_Casebearer.zip'
         )
         shutil.copy(url, tmp_path)
-        ForestDamage(root=str(tmp_path))
+        ForestDamage(root=tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'Data_Set_Larch_Casebearer.zip'), 'w') as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            ForestDamage(root=str(tmp_path), checksum=True)
+            ForestDamage(root=tmp_path, checksum=True)
 
     def test_not_found(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            ForestDamage(str(tmp_path))
+            ForestDamage(tmp_path)
 
     def test_plot(self, dataset: ForestDamage) -> None:
         x = dataset[0].copy()

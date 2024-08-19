@@ -19,10 +19,10 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive, extract_archive
+from .utils import Path, check_integrity, download_and_extract_archive, extract_archive
 
 
-def parse_pascal_voc(path: str) -> dict[str, Any]:
+def parse_pascal_voc(path: Path) -> dict[str, Any]:
     """Read a PASCAL VOC annotation file.
 
     Args:
@@ -96,17 +96,14 @@ class ForestDamage(NonGeoDataset):
     .. versionadded:: 0.3
     """
 
-    classes = ['other', 'H', 'LD', 'HD']
-    url = (
-        'https://lilablobssc.blob.core.windows.net/larch-casebearer/'
-        'Data_Set_Larch_Casebearer.zip'
-    )
+    classes = ('other', 'H', 'LD', 'HD')
+    url = 'https://lilablobssc.blob.core.windows.net/larch-casebearer/Data_Set_Larch_Casebearer.zip'
     data_dir = 'Data_Set_Larch_Casebearer'
     md5 = '907815bcc739bff89496fac8f8ce63d7'
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -164,7 +161,7 @@ class ForestDamage(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -187,7 +184,7 @@ class ForestDamage(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -197,7 +194,7 @@ class ForestDamage(NonGeoDataset):
             the image
         """
         with Image.open(path) as img:
-            array: 'np.typing.NDArray[np.int_]' = np.array(img.convert('RGB'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor: Tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))

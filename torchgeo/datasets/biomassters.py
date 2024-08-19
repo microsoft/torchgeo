@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import percentile_normalization
+from .utils import Path, percentile_normalization
 
 
 class BioMassters(NonGeoDataset):
@@ -50,14 +50,14 @@ class BioMassters(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    valid_splits = ['train', 'test']
+    valid_splits = ('train', 'test')
     valid_sensors = ('S1', 'S2')
 
     metadata_filename = 'The_BioMassters_-_features_metadata.csv.csv'
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         sensors: Sequence[str] = ['S1', 'S2'],
         as_time_series: bool = False,
@@ -167,7 +167,7 @@ class BioMassters(NonGeoDataset):
         """
         return len(self.df['num_index'].unique())
 
-    def _load_input(self, filenames: list[str]) -> Tensor:
+    def _load_input(self, filenames: list[Path]) -> Tensor:
         """Load the input imagery at the index.
 
         Args:
@@ -186,7 +186,7 @@ class BioMassters(NonGeoDataset):
             arr = np.concatenate(arr_list, axis=0)
         return torch.tensor(arr.astype(np.int32))
 
-    def _load_target(self, filename: str) -> Tensor:
+    def _load_target(self, filename: Path) -> Tensor:
         """Load the target mask at the index.
 
         Args:
@@ -196,7 +196,7 @@ class BioMassters(NonGeoDataset):
             target mask
         """
         with rasterio.open(os.path.join(self.root, 'train_agbm', filename), 'r') as src:
-            arr: 'np.typing.NDArray[np.float_]' = src.read()
+            arr: np.typing.NDArray[np.float64] = src.read()
 
         target = torch.from_numpy(arr).float()
         return target

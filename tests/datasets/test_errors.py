@@ -6,7 +6,11 @@ from typing import Any
 import pytest
 from torch.utils.data import Dataset
 
-from torchgeo.datasets import DatasetNotFoundError, RGBBandsMissingError
+from torchgeo.datasets import (
+    DatasetNotFoundError,
+    DependencyNotFoundError,
+    RGBBandsMissingError,
+)
 
 
 class TestDatasetNotFoundError:
@@ -53,6 +57,12 @@ class TestDatasetNotFoundError:
         match += 'download the dataset.'
         with pytest.raises(DatasetNotFoundError, match=match):
             raise DatasetNotFoundError(ds)
+
+
+def test_dependency_not_found() -> None:
+    msg = 'foo not installed'
+    with pytest.raises(DependencyNotFoundError, match=msg):
+        raise DependencyNotFoundError(msg)
 
 
 def test_rgb_bands_missing() -> None:

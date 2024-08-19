@@ -1,16 +1,20 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
+import math
 import os
 import pickle
 import sys
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
+from rasterio.enums import Resampling
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
@@ -34,7 +38,7 @@ class CustomGeoDataset(GeoDataset):
         bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
         crs: CRS = CRS.from_epsg(4087),
         res: float = 1,
-        paths: str | Iterable[str] | None = None,
+        paths: str | Path | Iterable[str | Path] | None = None,
     ) -> None:
         super().__init__()
         self.index.insert(0, tuple(bounds))
@@ -49,6 +53,16 @@ class CustomGeoDataset(GeoDataset):
         return {'index': bounds}
 
 
+class CustomRasterDataset(RasterDataset):
+    def __init__(self, dtype: torch.dtype, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._dtype = dtype
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return self._dtype
+
+
 class CustomVectorDataset(VectorDataset):
     filename_glob = '*.geojson'
     date_format = '%Y'
@@ -58,7 +72,7 @@ class CustomVectorDataset(VectorDataset):
 
 
 class CustomSentinelDataset(Sentinel2):
-    all_bands: list[str] = []
+    all_bands: tuple[str, ...] = ()
     separate_files = False
 
 
@@ -160,7 +174,7 @@ class TestGeoDataset:
             dataset & ds2  # type: ignore[operator]
 
     def test_files_property_for_non_existing_file_or_dir(self, tmp_path: Path) -> None:
-        paths = [str(tmp_path), str(tmp_path / 'non_existing_file.tif')]
+        paths = [tmp_path, tmp_path / 'non_existing_file.tif']
         with pytest.warns(UserWarning, match='Path was ignored.'):
             assert len(CustomGeoDataset(paths=paths).files) == 0
 
@@ -193,14 +207,27 @@ class TestGeoDataset:
 
 
 class TestRasterDataset:
+    naip_dir = os.path.join('tests', 'data', 'naip')
+    s2_dir = os.path.join(
+        'tests',
+        'data',
+        'sentinel2',
+        'S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE',
+        'GRANULE',
+        'L2A_T26EMU_A035569_20220414T110747',
+        'IMG_DATA',
+        'R10m',
+    )
+
     @pytest.fixture(params=zip([['R', 'G', 'B'], None], [True, False]))
     def naip(self, request: SubRequest) -> NAIP:
-        root = os.path.join('tests', 'data', 'naip')
         bands = request.param[0]
         crs = CRS.from_epsg(4087)
         transforms = nn.Identity()
         cache = request.param[1]
-        return NAIP(root, crs=crs, bands=bands, transforms=transforms, cache=cache)
+        return NAIP(
+            self.naip_dir, crs=crs, bands=bands, transforms=transforms, cache=cache
+        )
 
     @pytest.fixture(
         params=zip(
@@ -222,34 +249,55 @@ class TestRasterDataset:
         'paths',
         [
             # Single directory
-            os.path.join('tests', 'data', 'naip'),
+            naip_dir,
             # Multiple directories
-            [
-                os.path.join('tests', 'data', 'naip'),
-                os.path.join('tests', 'data', 'naip'),
-            ],
-            # Single file
-            os.path.join('tests', 'data', 'naip', 'm_3807511_ne_18_060_20181104.tif'),
+            [naip_dir, naip_dir],
             # Multiple files
             (
-                os.path.join(
-                    'tests', 'data', 'naip', 'm_3807511_ne_18_060_20181104.tif'
-                ),
-                os.path.join(
-                    'tests', 'data', 'naip', 'm_3807511_ne_18_060_20190605.tif'
-                ),
+                os.path.join(naip_dir, 'm_3807511_ne_18_060_20181104.tif'),
+                os.path.join(naip_dir, 'm_3807511_ne_18_060_20190605.tif'),
             ),
             # Combination
-            {
-                os.path.join('tests', 'data', 'naip'),
-                os.path.join(
-                    'tests', 'data', 'naip', 'm_3807511_ne_18_060_20181104.tif'
-                ),
-            },
+            {naip_dir, os.path.join(naip_dir, 'm_3807511_ne_18_060_20181104.tif')},
         ],
     )
     def test_files(self, paths: str | Iterable[str]) -> None:
-        assert 1 <= len(NAIP(paths).files) <= 2
+        assert len(NAIP(paths).files) == 2
+
+    @pytest.mark.parametrize(
+        'paths',
+        [
+            # Single directory
+            s2_dir,
+            # Multiple directories
+            [s2_dir, s2_dir],
+            # Multiple files (single band)
+            [
+                os.path.join(s2_dir, 'T26EMU_20190414T110751_B04_10m.jp2'),
+                os.path.join(s2_dir, 'T26EMU_20220414T110751_B04_10m.jp2'),
+            ],
+            # Multiple files (multiple bands)
+            [
+                os.path.join(s2_dir, 'T26EMU_20190414T110751_B04_10m.jp2'),
+                os.path.join(s2_dir, 'T26EMU_20190414T110751_B03_10m.jp2'),
+                os.path.join(s2_dir, 'T26EMU_20190414T110751_B02_10m.jp2'),
+                os.path.join(s2_dir, 'T26EMU_20220414T110751_B04_10m.jp2'),
+                os.path.join(s2_dir, 'T26EMU_20220414T110751_B03_10m.jp2'),
+                os.path.join(s2_dir, 'T26EMU_20220414T110751_B02_10m.jp2'),
+            ],
+            # Combination
+            [
+                s2_dir,
+                os.path.join(s2_dir, 'T26EMU_20190414T110751_B04_10m.jp2'),
+                os.path.join(s2_dir, 'T26EMU_20220414T110751_B04_10m.jp2'),
+                os.path.join(s2_dir, 'T26EMU_20220414T110751_B03_10m.jp2'),
+                os.path.join(s2_dir, 'T26EMU_20220414T110751_B02_10m.jp2'),
+            ],
+        ],
+    )
+    @pytest.mark.filterwarnings('ignore:Could not find any relevant files')
+    def test_files_separate(self, paths: str | Iterable[str]) -> None:
+        assert len(Sentinel2(paths, bands=Sentinel2.rgb_bands).files) == 2
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
         x = naip[naip.bounds]
@@ -265,6 +313,11 @@ class TestRasterDataset:
         assert isinstance(x['image'], torch.Tensor)
         assert len(sentinel.bands) == x['image'].shape[0]
 
+    def test_reprojection(self, naip: NAIP) -> None:
+        naip2 = NAIP(naip.paths, crs='EPSG:4326')
+        assert naip.crs != naip2.crs
+        assert not math.isclose(naip.res, naip2.res)
+
     @pytest.mark.parametrize('dtype', ['uint16', 'uint32'])
     def test_getitem_uint_dtype(self, dtype: str) -> None:
         root = os.path.join('tests', 'data', 'raster', dtype)
@@ -273,6 +326,22 @@ class TestRasterDataset:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert x['image'].dtype == torch.float32
+
+    @pytest.mark.parametrize('dtype', [torch.float, torch.double])
+    def test_resampling_float_dtype(self, dtype: torch.dtype) -> None:
+        paths = os.path.join('tests', 'data', 'raster', 'uint16')
+        ds = CustomRasterDataset(dtype, paths)
+        x = ds[ds.bounds]
+        assert x['image'].dtype == dtype
+        assert ds.resampling == Resampling.bilinear
+
+    @pytest.mark.parametrize('dtype', [torch.long, torch.bool])
+    def test_resampling_int_dtype(self, dtype: torch.dtype) -> None:
+        paths = os.path.join('tests', 'data', 'raster', 'uint16')
+        ds = CustomRasterDataset(dtype, paths)
+        x = ds[ds.bounds]
+        assert x['image'].dtype == dtype
+        assert ds.resampling == Resampling.nearest
 
     def test_invalid_query(self, sentinel: Sentinel2) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
@@ -283,11 +352,11 @@ class TestRasterDataset:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            RasterDataset(str(tmp_path))
+            RasterDataset(tmp_path)
 
     def test_no_all_bands(self) -> None:
         root = os.path.join('tests', 'data', 'sentinel2')
-        bands = ['B04', 'B03', 'B02']
+        bands = ('B04', 'B03', 'B02')
         transforms = nn.Identity()
         cache = True
         msg = (
@@ -352,7 +421,7 @@ class TestVectorDataset:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            VectorDataset(str(tmp_path))
+            VectorDataset(tmp_path)
 
 
 class TestNonGeoDataset:

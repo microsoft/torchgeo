@@ -12,6 +12,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
+from .utils import Path
 
 
 class AsterGDEM(RasterDataset):
@@ -47,7 +48,7 @@ class AsterGDEM(RasterDataset):
 
     def __init__(
         self,
-        paths: str | list[str] = 'data',
+        paths: Path | list[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,

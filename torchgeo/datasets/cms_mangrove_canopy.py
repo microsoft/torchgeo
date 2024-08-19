@@ -4,6 +4,7 @@
 """CMS Global Mangrove Canopy dataset."""
 
 import os
+import pathlib
 from collections.abc import Callable
 from typing import Any
 
@@ -13,7 +14,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import check_integrity, extract_archive
+from .utils import Path, check_integrity, extract_archive
 
 
 class CMSGlobalMangroveCanopy(RasterDataset):
@@ -41,7 +42,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
     zipfile = 'CMS_Global_Map_Mangrove_Canopy_1665.zip'
     md5 = '3e7f9f23bf971c25e828b36e6c5496e3'
 
-    all_countries = [
+    all_countries = (
         'AndamanAndNicobar',
         'Angola',
         'Anguilla',
@@ -163,13 +164,13 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         'VirginIslandsUs',
         'WallisAndFutuna',
         'Yemen',
-    ]
+    )
 
-    measurements = ['agb', 'hba95', 'hmax95']
+    measurements = ('agb', 'hba95', 'hmax95')
 
     def __init__(
         self,
-        paths: str | list[str] = 'data',
+        paths: Path | list[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         measurement: str = 'agb',
@@ -228,7 +229,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             return
 
         # Check if the zip file has already been downloaded
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         pathname = os.path.join(self.paths, self.zipfile)
         if os.path.exists(pathname):
             if self.checksum and not check_integrity(pathname, self.md5):
@@ -240,7 +241,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         pathname = os.path.join(self.paths, self.zipfile)
         extract_archive(pathname)
 

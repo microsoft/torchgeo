@@ -14,12 +14,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, MapInWild
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestMapInWild:
@@ -27,8 +22,6 @@ class TestMapInWild:
     def dataset(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, request: SubRequest
     ) -> MapInWild:
-        monkeypatch.setattr(torchgeo.datasets.mapinwild, 'download_url', download_url)
-
         md5s = {
             'ESA_WC.zip': '3a1e696353d238c50996958855da02fc',
             'VIIRS.zip': 'e8b0e230edb1183c02092357af83bd52',
@@ -53,7 +46,7 @@ class TestMapInWild:
         urls = os.path.join('tests', 'data', 'mapinwild')
         monkeypatch.setattr(MapInWild, 'url', urls)
 
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
 
         transforms = nn.Identity()
@@ -98,12 +91,12 @@ class TestMapInWild:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            MapInWild(root=str(tmp_path))
+            MapInWild(root=tmp_path)
 
     def test_downloaded_not_extracted(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'mapinwild', '*', '*')
         pathname_glob = glob.glob(pathname)
-        root = str(tmp_path)
+        root = tmp_path
         for zipfile in pathname_glob:
             shutil.copy(zipfile, root)
         MapInWild(root, download=False)
@@ -111,7 +104,7 @@ class TestMapInWild:
     def test_corrupted(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'mapinwild', '**', '*.zip')
         pathname_glob = glob.glob(pathname, recursive=True)
-        root = str(tmp_path)
+        root = tmp_path
         for zipfile in pathname_glob:
             shutil.copy(zipfile, root)
         splitfile = os.path.join(
@@ -121,10 +114,10 @@ class TestMapInWild:
         with open(os.path.join(tmp_path, 'mask.zip'), 'w') as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            MapInWild(root=str(tmp_path), download=True, checksum=True)
+            MapInWild(root=tmp_path, download=True, checksum=True)
 
     def test_already_downloaded(self, dataset: MapInWild, tmp_path: Path) -> None:
-        MapInWild(root=str(tmp_path), modality=dataset.modality, download=True)
+        MapInWild(root=tmp_path, modality=dataset.modality, download=True)
 
     def test_plot(self, dataset: MapInWild) -> None:
         x = dataset[0].copy()

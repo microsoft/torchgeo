@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -13,12 +12,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import COWC, COWCCounting, COWCDetection, DatasetNotFoundError
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestCOWC:
@@ -32,7 +26,6 @@ class TestCOWCCounting:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> COWC:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         base_url = os.path.join('tests', 'data', 'cowc_counting') + os.sep
         monkeypatch.setattr(COWCCounting, 'base_url', base_url)
         md5s = [
@@ -46,7 +39,7 @@ class TestCOWCCounting:
             '0a4daed8c5f6c4e20faa6e38636e4346',
         ]
         monkeypatch.setattr(COWCCounting, 'md5s', md5s)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return COWCCounting(root, split, transforms, download=True, checksum=True)
@@ -78,7 +71,7 @@ class TestCOWCCounting:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            COWCCounting(str(tmp_path))
+            COWCCounting(tmp_path)
 
     def test_plot(self, dataset: COWCCounting) -> None:
         x = dataset[0].copy()
@@ -96,7 +89,6 @@ class TestCOWCDetection:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> COWC:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         base_url = os.path.join('tests', 'data', 'cowc_detection') + os.sep
         monkeypatch.setattr(COWCDetection, 'base_url', base_url)
         md5s = [
@@ -110,7 +102,7 @@ class TestCOWCDetection:
             'dccc2257e9c4a9dde2b4f84769804046',
         ]
         monkeypatch.setattr(COWCDetection, 'md5s', md5s)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return COWCDetection(root, split, transforms, download=True, checksum=True)
@@ -142,7 +134,7 @@ class TestCOWCDetection:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            COWCDetection(str(tmp_path))
+            COWCDetection(tmp_path)
 
     def test_plot(self, dataset: COWCDetection) -> None:
         x = dataset[0].copy()
