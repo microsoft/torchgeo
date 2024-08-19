@@ -42,7 +42,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
     zipfile = 'CMS_Global_Map_Mangrove_Canopy_1665.zip'
     md5 = '3e7f9f23bf971c25e828b36e6c5496e3'
 
-    all_countries = [
+    all_countries = (
         'AndamanAndNicobar',
         'Angola',
         'Anguilla',
@@ -164,9 +164,9 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         'VirginIslandsUs',
         'WallisAndFutuna',
         'Yemen',
-    ]
+    )
 
-    measurements = ['agb', 'hba95', 'hmax95']
+    measurements = ('agb', 'hba95', 'hmax95')
 
     def __init__(
         self,

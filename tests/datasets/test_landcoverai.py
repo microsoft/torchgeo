@@ -13,7 +13,6 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
@@ -22,14 +21,9 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestLandCoverAIGeo:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> LandCoverAIGeo:
-        monkeypatch.setattr(torchgeo.datasets.landcoverai, 'download_url', download_url)
         md5 = 'ff8998857cc8511f644d3f7d0f3688d0'
         monkeypatch.setattr(LandCoverAIGeo, 'md5', md5)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
@@ -82,7 +76,6 @@ class TestLandCoverAI:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LandCoverAI:
-        monkeypatch.setattr(torchgeo.datasets.landcoverai, 'download_url', download_url)
         md5 = 'ff8998857cc8511f644d3f7d0f3688d0'
         monkeypatch.setattr(LandCoverAI, 'md5', md5)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')

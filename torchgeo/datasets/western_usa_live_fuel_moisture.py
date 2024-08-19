@@ -6,16 +6,15 @@
 import glob
 import json
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from typing import Any
 
 import pandas as pd
 import torch
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_radiant_mlhub_collection, extract_archive
+from .utils import Path, which
 
 
 class WesternUSALiveFuelMoisture(NonGeoDataset):
@@ -25,7 +24,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
     (mass of water in vegetation) and remotely sensed variables
     in the western United States. It contains 2615 datapoints and 138
     variables. For more details see the
-    `dataset page <https://mlhub.earth/data/su_sar_moisture_content_main>`_.
+    `dataset page <https://beta.source.coop/stanford/sar-moisture-conent/>`_.
 
     Dataset Format:
 
@@ -44,19 +43,17 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
        This dataset requires the following additional library to be installed:
 
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
+       * `azcopy <https://github.com/Azure/azure-storage-azcopy>`_: to download the
+         dataset from Source Cooperative.
 
     .. versionadded:: 0.5
     """
 
-    collection_id = 'su_sar_moisture_content'
-
-    md5 = 'a6c0721f06a3a0110b7d1243b18614f0'
+    url = 'https://radiantearth.blob.core.windows.net/mlhub/su-sar-moisture-content'
 
     label_name = 'percent(t)'
 
-    all_variable_names = [
+    all_variable_names = (
         # "date",
         'slope(t)',
         'elevation(t)',
@@ -196,16 +193,14 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         'vh_vv(t-3)',
         'lat',
         'lon',
-    ]
+    )
 
     def __init__(
         self,
         root: Path = 'data',
-        input_features: list[str] = all_variable_names,
+        input_features: Iterable[str] = all_variable_names,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
-        api_key: str | None = None,
-        checksum: bool = False,
     ) -> None:
         """Initialize a new Western USA Live Fuel Moisture Dataset.
 
@@ -215,41 +210,21 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             AssertionError: if ``input_features`` contains invalid variable names
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        super().__init__()
+        assert set(input_features) <= set(self.all_variable_names)
 
         self.root = root
+        self.input_features = input_features
         self.transforms = transforms
-        self.checksum = checksum
         self.download = download
-        self.api_key = api_key
 
         self._verify()
 
-        assert all(
-            input in self.all_variable_names for input in input_features
-        ), 'Invalid input variable name.'
-        self.input_features = input_features
-
-        self.collection = self._retrieve_collection()
-
         self.dataframe = self._load_data()
-
-    def _retrieve_collection(self) -> list[str]:
-        """Retrieve dataset collection that maps samples to paths.
-
-        Returns:
-            list of sample paths
-        """
-        return glob.glob(
-            os.path.join(self.root, self.collection_id, '**', 'labels.geojson')
-        )
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -270,7 +245,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         """
         data = self.dataframe.iloc[index, :]
 
-        sample: dict[str, Tensor] = {
+        sample = {
             'input': torch.tensor(
                 data.drop([self.label_name]).values, dtype=torch.float32
             ),
@@ -289,7 +264,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
             the features and label
         """
         data_rows = []
-        for path in self.collection:
+        for path in sorted(self.files):
             with open(path) as f:
                 content = json.load(f)
                 data_dict = content['properties']
@@ -297,21 +272,16 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
                 data_dict['lat'] = content['geometry']['coordinates'][1]
                 data_rows.append(data_dict)
 
-        df: pd.DataFrame = pd.DataFrame(data_rows)
-        df = df[self.input_features + [self.label_name]]
+        df = pd.DataFrame(data_rows)
+        df = df[[*self.input_features, self.label_name]]
         return df
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        # Check if the extracted files already exist
-        pathname = os.path.join(self.root, self.collection_id)
-        if os.path.exists(pathname):
-            return
-
-        # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.collection_id) + '.tar.gz'
-        if os.path.exists(pathname):
-            self._extract()
+        # Check if the files already exist
+        file_glob = os.path.join(self.root, '**', 'feature_*.geojson')
+        self.files = glob.glob(file_glob, recursive=True)
+        if self.files:
             return
 
         # Check if the user requested to download the dataset
@@ -320,19 +290,10 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         # Download the dataset
         self._download()
-        self._extract()
+        self.files = glob.glob(file_glob, recursive=True)
 
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        pathname = os.path.join(self.root, self.collection_id) + '.tar.gz'
-        extract_archive(pathname, self.root)
-
-    def _download(self, api_key: str | None = None) -> None:
-        """Download the dataset and extract it.
-
-        Args:
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-        """
-        download_radiant_mlhub_collection(self.collection_id, self.root, api_key)
-        filename = os.path.join(self.root, self.collection_id) + '.tar.gz'
-        extract_archive(filename, self.root)
+    def _download(self) -> None:
+        """Download the dataset and extract it."""
+        os.makedirs(self.root, exist_ok=True)
+        azcopy = which('azcopy')
+        azcopy('sync', self.url, self.root, '--recursive=true')

@@ -47,8 +47,6 @@ Chesapeake Land Cover
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: Chesapeake
-.. autoclass:: Chesapeake7
-.. autoclass:: Chesapeake13
 .. autoclass:: ChesapeakeDC
 .. autoclass:: ChesapeakeDE
 .. autoclass:: ChesapeakeMD
@@ -410,6 +408,7 @@ SpaceNet
 .. autoclass:: SpaceNet5
 .. autoclass:: SpaceNet6
 .. autoclass:: SpaceNet7
+.. autoclass:: SpaceNet8
 
 SSL4EO
 ^^^^^^

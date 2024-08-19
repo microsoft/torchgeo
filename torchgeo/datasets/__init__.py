@@ -16,8 +16,6 @@ from .cdl import CDL
 from .chabud import ChaBuD
 from .chesapeake import (
     Chesapeake,
-    Chesapeake7,
-    Chesapeake13,
     ChesapeakeCVPR,
     ChesapeakeDC,
     ChesapeakeDE,
@@ -113,6 +111,7 @@ from .spacenet import (
     SpaceNet5,
     SpaceNet6,
     SpaceNet7,
+    SpaceNet8,
 )
 from .splits import (
     random_bbox_assignment,
@@ -246,6 +245,7 @@ __all__ = (
     'SpaceNet5',
     'SpaceNet6',
     'SpaceNet7',
+    'SpaceNet8',
     'SSL4EO',
     'SSL4EOLBenchmark',
     'SSL4EOL',

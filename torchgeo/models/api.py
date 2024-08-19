@@ -8,7 +8,7 @@ See the following references for design details:
 * https://pytorch.org/blog/easily-list-and-initialize-models-with-new-apis-in-torchvision/
 * https://pytorch.org/vision/stable/models.html
 * https://github.com/pytorch/vision/blob/main/torchvision/models/_api.py
-"""  # noqa: E501
+"""
 
 from collections.abc import Callable
 from typing import Any

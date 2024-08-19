@@ -63,14 +63,14 @@ class ADVANCE(NonGeoDataset):
         * `scipy <https://pypi.org/project/scipy/>`_ to load the audio files to tensors
     """
 
-    urls = [
+    urls = (
         'https://zenodo.org/record/3828124/files/ADVANCE_vision.zip?download=1',
         'https://zenodo.org/record/3828124/files/ADVANCE_sound.zip?download=1',
-    ]
-    filenames = ['ADVANCE_vision.zip', 'ADVANCE_sound.zip']
-    md5s = ['a9e8748219ef5864d3b5a8979a67b471', 'a2d12f2d2a64f5c3d3a9d8c09aaf1c31']
-    directories = ['vision', 'sound']
-    classes = [
+    )
+    filenames = ('ADVANCE_vision.zip', 'ADVANCE_sound.zip')
+    md5s = ('a9e8748219ef5864d3b5a8979a67b471', 'a2d12f2d2a64f5c3d3a9d8c09aaf1c31')
+    directories = ('vision', 'sound')
+    classes: tuple[str, ...] = (
         'airport',
         'beach',
         'bridge',
@@ -84,7 +84,7 @@ class ADVANCE(NonGeoDataset):
         'sparse shrub land',
         'sports land',
         'train station',
-    ]
+    )
 
     def __init__(
         self,
@@ -119,7 +119,7 @@ class ADVANCE(NonGeoDataset):
             raise DatasetNotFoundError(self)
 
         self.files = self._load_files(self.root)
-        self.classes = sorted({f['cls'] for f in self.files})
+        self.classes = tuple(sorted({f['cls'] for f in self.files}))
         self.class_to_idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:

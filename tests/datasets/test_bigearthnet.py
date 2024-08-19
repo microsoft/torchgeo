@@ -12,12 +12,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import BigEarthNet, DatasetNotFoundError
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestBigEarthNet:
@@ -27,7 +22,6 @@ class TestBigEarthNet:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> BigEarthNet:
-        monkeypatch.setattr(torchgeo.datasets.bigearthnet, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'bigearthnet')
         metadata = {
             's1': {
@@ -112,18 +106,18 @@ class TestBigEarthNet:
             shutil.rmtree(
                 os.path.join(dataset.root, dataset.metadata['s2']['directory'])
             )
-            download_url(dataset.metadata['s1']['url'], root=tmp_path)
-            download_url(dataset.metadata['s2']['url'], root=tmp_path)
+            shutil.copy(dataset.metadata['s1']['url'], tmp_path)
+            shutil.copy(dataset.metadata['s2']['url'], tmp_path)
         elif dataset.bands == 's1':
             shutil.rmtree(
                 os.path.join(dataset.root, dataset.metadata['s1']['directory'])
             )
-            download_url(dataset.metadata['s1']['url'], root=tmp_path)
+            shutil.copy(dataset.metadata['s1']['url'], tmp_path)
         else:
             shutil.rmtree(
                 os.path.join(dataset.root, dataset.metadata['s2']['directory'])
             )
-            download_url(dataset.metadata['s2']['url'], root=tmp_path)
+            shutil.copy(dataset.metadata['s2']['url'], tmp_path)
 
         BigEarthNet(
             root=tmp_path,

@@ -12,8 +12,7 @@ data:
   class_path: SpaceNet1DataModule
   init_args:
     batch_size: 1
-    val_split_pct: 0.33
-    test_split_pct: 0.33
+    val_split_pct: 0.34
+    test_split_pct: 0.34
   dict_kwargs:
     root: "tests/data/spacenet"
-    download: true

@@ -140,7 +140,7 @@ class RCF(Module):
             a numpy array of size (N, C, H, W) containing the normalized patches
 
         .. versionadded:: 0.5
-        """  # noqa: E501
+        """
         n_patches = patches.shape[0]
         orig_shape = patches.shape
         patches = patches.reshape(patches.shape[0], -1)

@@ -18,7 +18,7 @@ from shapely.geometry import Polygon, mapping
 SIZE = 1280
 
 
-def create_data_file(dataname):
+def create_data_file(dataname: str) -> None:
     schema = {'geometry': 'Polygon', 'properties': {'EC_hcat_c': 'str'}}
     with fiona.open(
         dataname, 'w', crs=CRS.from_epsg(32616), driver='ESRI Shapefile', schema=schema
@@ -33,7 +33,7 @@ def create_data_file(dataname):
         shpfile.write({'geometry': mapping(polygon), 'properties': properties})
 
 
-def create_csv(fname):
+def create_csv(fname: str) -> None:
     with open(fname, 'w') as f:
         writer = csv.DictWriter(f, fieldnames=['HCAT2_code'])
         writer.writeheader()

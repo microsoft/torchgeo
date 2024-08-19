@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -54,7 +55,7 @@ class XView2(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    metadata = {
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'filename': 'train_images_labels_targets.tar.gz',
             'md5': 'a20ebbfb7eb3452785b63ad02ffd1e16',
@@ -66,8 +67,8 @@ class XView2(NonGeoDataset):
             'directory': 'test',
         },
     }
-    classes = ['background', 'no-damage', 'minor-damage', 'major-damage', 'destroyed']
-    colormap = ['green', 'blue', 'orange', 'red']
+    classes = ('background', 'no-damage', 'minor-damage', 'major-damage', 'destroyed')
+    colormap = ('green', 'blue', 'orange', 'red')
 
     def __init__(
         self,
@@ -242,10 +243,16 @@ class XView2(NonGeoDataset):
         """
         ncols = 2
         image1 = draw_semantic_segmentation_masks(
-            sample['image'][0], sample['mask'][0], alpha=alpha, colors=self.colormap
+            sample['image'][0],
+            sample['mask'][0],
+            alpha=alpha,
+            colors=list(self.colormap),
         )
         image2 = draw_semantic_segmentation_masks(
-            sample['image'][1], sample['mask'][1], alpha=alpha, colors=self.colormap
+            sample['image'][1],
+            sample['mask'][1],
+            alpha=alpha,
+            colors=list(self.colormap),
         )
         if 'prediction' in sample:  # NOTE: this assumes predictions are made for post
             ncols += 1
@@ -253,7 +260,7 @@ class XView2(NonGeoDataset):
                 sample['image'][1],
                 sample['prediction'],
                 alpha=alpha,
-                colors=self.colormap,
+                colors=list(self.colormap),
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))

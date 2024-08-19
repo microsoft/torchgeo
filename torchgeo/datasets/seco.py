@@ -5,7 +5,8 @@
 
 import os
 import random
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -37,7 +38,7 @@ class SeasonalContrastS2(NonGeoDataset):
     * https://arxiv.org/pdf/2103.16607.pdf
     """
 
-    all_bands = [
+    all_bands = (
         'B1',
         'B2',
         'B3',
@@ -50,10 +51,10 @@ class SeasonalContrastS2(NonGeoDataset):
         'B9',
         'B11',
         'B12',
-    ]
-    rgb_bands = ['B4', 'B3', 'B2']
+    )
+    rgb_bands = ('B4', 'B3', 'B2')
 
-    metadata = {
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
         '100k': {
             'url': 'https://zenodo.org/record/4728033/files/seco_100k.zip?download=1',
             'md5': 'ebf2d5e03adc6e657f9a69a20ad863e0',
@@ -73,7 +74,7 @@ class SeasonalContrastS2(NonGeoDataset):
         root: Path = 'data',
         version: str = '100k',
         seasons: int = 1,
-        bands: list[str] = rgb_bands,
+        bands: Sequence[str] = rgb_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,

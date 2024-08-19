@@ -7,7 +7,7 @@ import glob
 import os
 import pathlib
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -53,7 +53,7 @@ class EUDEM(RasterDataset):
     zipfile_glob = 'eu_dem_v11_*[A-Z0-9].zip'
     filename_regex = '(?P<name>[eudem_v11]{10})_(?P<id>[A-Z0-9]{6})'
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'eu_dem_v11_E00N20.zip': '96edc7e11bc299b994e848050d6be591',
         'eu_dem_v11_E10N00.zip': 'e14be147ac83eddf655f4833d55c1571',
         'eu_dem_v11_E10N10.zip': '2eb5187e4d827245b33768404529c709',

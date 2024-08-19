@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -75,9 +76,9 @@ class DFC2022(NonGeoDataset):
     * https://doi.org/10.1007/s10994-020-05943-y
 
     .. versionadded:: 0.3
-    """  # noqa: E501
+    """
 
-    classes = [
+    classes = (
         'No information',
         'Urban fabric',
         'Industrial, commercial, public, military, private and transport units',
@@ -94,8 +95,8 @@ class DFC2022(NonGeoDataset):
         'Wetlands',
         'Water',
         'Clouds and Shadows',
-    ]
-    colormap = [
+    )
+    colormap = (
         '#231F20',
         '#DB5F57',
         '#DB9757',
@@ -112,8 +113,8 @@ class DFC2022(NonGeoDataset):
         '#579BDB',
         '#0062FF',
         '#231F20',
-    ]
-    metadata = {
+    )
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'filename': 'labeled_train.zip',
             'md5': '2e87d6a218e466dd0566797d7298c7a9',
@@ -306,7 +307,7 @@ class DFC2022(NonGeoDataset):
         ncols = 2
         image = sample['image'][:3]
         image = image.to(torch.uint8)
-        image = image.permute(1, 2, 0).numpy()
+        image_arr = image.permute(1, 2, 0).numpy()
 
         dem = sample['image'][-1].numpy()
         dem = percentile_normalization(dem, lower=0, upper=100, axis=(0, 1))
@@ -325,7 +326,7 @@ class DFC2022(NonGeoDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
 
-        axs[0].imshow(image)
+        axs[0].imshow(image_arr)
         axs[0].axis('off')
         axs[1].imshow(dem)
         axs[1].axis('off')
