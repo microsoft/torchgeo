@@ -21,7 +21,7 @@ _zhu_xlab_transforms = K.AugmentationSequential(
     data_keys=None,
 )
 
-_mean_s1 = torch.tensor([-12.59,  -20.26])
+_mean_s1 = torch.tensor([-12.59, -20.26])
 _std_s1 =  torch.tensor([5.26, 5.91])
 _zhu_xlab_transforms_s1 = K.AugmentationSequential(
     K.Resize(256),
