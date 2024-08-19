@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Pre-trained Scale-MAE Vision Transformer models."""
+"""Pre-trained Scale-MAE models."""
 
 from collections import OrderedDict
 from functools import partial
@@ -92,7 +92,7 @@ def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor) -> Tens
     return emb
 
 
-class ScaleMAEViT(VisionTransformer):  # type: ignore[misc]
+class ScaleMAE(VisionTransformer):  # type: ignore[misc]
     """Custom Vision Transformer for Scale-MAE with GSD positional embeddings.
 
     This is a ViT encoder only model of the Scale-MAE architecture with GSD positional embeddings.
@@ -103,7 +103,7 @@ class ScaleMAEViT(VisionTransformer):  # type: ignore[misc]
     """
 
     def __init__(self, res: float = 1.0, *args: Any, **kwargs: Any) -> None:
-        """Initialize a new ScaleMAEViT model.
+        """Initialize a new ScaleMAE model.
 
         Args:
             res: Spatial resolution of the image in meters.
@@ -141,12 +141,12 @@ class ScaleMAEViT(VisionTransformer):  # type: ignore[misc]
 
 
 def interpolate_pos_embed(
-    model: ScaleMAEViT, state_dict: OrderedDict[str, Tensor]
+    model: ScaleMAE, state_dict: OrderedDict[str, Tensor]
 ) -> OrderedDict[str, Tensor]:
     """Interpolate the positional embeddings if image size is different than pretrained image size.
 
     Args:
-        model: ScaleMAEViT model.
+        model: ScaleMAE model.
         state_dict: Pretrained model state dict.
 
     Returns:
@@ -188,14 +188,14 @@ def interpolate_pos_embed(
 Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 
-class ScaleMAE_ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
-    """Scale-MAE ViT Large patch size 16 weights.
+class ScaleMAELarge16_Weights(WeightsEnum):  # type: ignore[misc]
+    """Scale-MAE Large patch size 16 weights.
 
     .. versionadded:: 0.6
     """
 
     FMOW_RGB = Weights(
-        url='https://hf.co/torchgeo/vit_large_patch16_224_fmow_rgb_scalemae/resolve/9dc7f569424baeb780698352cf6e87638c882123/vit_large_patch16_224_fmow_rgb_scalemae-98ed9821.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/vit_large_patch16_224_fmow_rgb_scalemae/resolve/9dc7f569424baeb780698352cf6e87638c882123/vit_large_patch16_224_fmow_rgb_scalemae-98ed9821.pth',
         transforms=_scale_mae_transforms,
         meta={
             'dataset': 'fMoW',
@@ -208,10 +208,10 @@ class ScaleMAE_ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
-def scalemae_vit_large_patch16(
-    weights: ScaleMAE_ViTLarge16_Weights | None = None, *args: Any, **kwargs: Any
-) -> ScaleMAEViT:
-    """Scale-MAE ViT Large model.
+def scalemae_large_patch16(
+    weights: ScaleMAELarge16_Weights | None = None, *args: Any, **kwargs: Any
+) -> ScaleMAE:
+    """Scale-MAE Large model.
 
     If you use this model in your research, please cite the following paper:
 
@@ -222,14 +222,14 @@ def scalemae_vit_large_patch16(
     Args:
         weights: Pre-trained model weights to use.
         *args: Additional arguments to
-            pass to :class:`ScaleMAEViT`.
+            pass to :class:`ScaleMAE`.
         **kwargs: Additional keyword arguments to
-            pass to :class:`ScaleMAEViT`.
+            pass to :class:`ScaleMAE`.
 
     Returns:
-        A Scale-MAE ViT Large patch16 model.
+        A Scale-MAE Large patch16 model.
     """
-    model = ScaleMAEViT(
+    model = ScaleMAE(
         patch_size=16,
         embed_dim=1024,
         depth=24,

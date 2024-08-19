@@ -12,7 +12,7 @@ from torchgeo.models import (
     dofa_large_patch16_224,
     resnet18,
     resnet50,
-    scalemae_vit_large_patch16,
+    scalemae_large_patch16,
     swin_v2_b,
     vit_small_patch16_224,
 )
@@ -23,7 +23,7 @@ __all__ = (
     'resnet18',
     'resnet50',
     'swin_v2_b',
-    'scalemae_vit_large_patch16',
+    'scalemae_large_patch16',
     'vit_small_patch16_224',
 )
 
