@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -63,9 +64,9 @@ class SEN12MS(NonGeoDataset):
        or manually downloaded from https://dataserv.ub.tum.de/s/m1474000
        and https://github.com/schmitt-muc/SEN12MS/tree/master/splits.
        This download will likely take several hours.
-    """  # noqa: E501
+    """
 
-    BAND_SETS: dict[str, tuple[str, ...]] = {
+    BAND_SETS: ClassVar[dict[str, tuple[str, ...]]] = {
         'all': (
             'VV',
             'VH',
@@ -120,9 +121,9 @@ class SEN12MS(NonGeoDataset):
         'B12',
     )
 
-    rgb_bands = ['B04', 'B03', 'B02']
+    rgb_bands = ('B04', 'B03', 'B02')
 
-    filenames = [
+    filenames = (
         'ROIs1158_spring_lc.tar.gz',
         'ROIs1158_spring_s1.tar.gz',
         'ROIs1158_spring_s2.tar.gz',
@@ -137,16 +138,16 @@ class SEN12MS(NonGeoDataset):
         'ROIs2017_winter_s2.tar.gz',
         'train_list.txt',
         'test_list.txt',
-    ]
-    light_filenames = [
+    )
+    light_filenames = (
         'ROIs1158_spring',
         'ROIs1868_summer',
         'ROIs1970_fall',
         'ROIs2017_winter',
         'train_list.txt',
         'test_list.txt',
-    ]
-    md5s = [
+    )
+    md5s = (
         '6e2e8fa8b8cba77ddab49fd20ff5c37b',
         'fba019bb27a08c1db96b31f718c34d79',
         'd58af2c15a16f376eb3308dc9b685af2',
@@ -161,7 +162,7 @@ class SEN12MS(NonGeoDataset):
         '3807545661288dcca312c9c538537b63',
         '0a68d4e1eb24f128fccdb930000b2546',
         'c7faad064001e646445c4c634169484d',
-    ]
+    )
 
     def __init__(
         self,

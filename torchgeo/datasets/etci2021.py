@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -56,9 +57,9 @@ class ETCI2021(NonGeoDataset):
         the ETCI competition.
     """
 
-    bands = ['VV', 'VH']
-    masks = ['flood', 'water_body']
-    metadata = {
+    bands = ('VV', 'VH')
+    masks = ('flood', 'water_body')
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'filename': 'train.zip',
             'md5': '1e95792fe0f6e3c9000abdeab2a8ab0f',

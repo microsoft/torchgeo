@@ -8,7 +8,7 @@ import os
 import pathlib
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -43,8 +43,8 @@ class L7IrishImage(RasterDataset):
     """
     date_format = '%Y%m%d'
     is_image = True
-    rgb_bands = ['B30', 'B20', 'B10']
-    all_bands = ['B10', 'B20', 'B30', 'B40', 'B50', 'B61', 'B62', 'B70', 'B80']
+    rgb_bands = ('B30', 'B20', 'B10')
+    all_bands = ('B10', 'B20', 'B30', 'B40', 'B50', 'B61', 'B62', 'B70', 'B80')
 
 
 class L7IrishMask(RasterDataset):
@@ -59,7 +59,7 @@ class L7IrishMask(RasterDataset):
         _newmask2015\.TIF$
     """
     is_image = False
-    classes = ['Fill', 'Cloud Shadow', 'Clear', 'Thin Cloud', 'Cloud']
+    classes = ('Fill', 'Cloud Shadow', 'Clear', 'Thin Cloud', 'Cloud')
     ordinal_map = torch.zeros(256, dtype=torch.long)
     ordinal_map[64] = 1
     ordinal_map[128] = 2
@@ -158,11 +158,11 @@ class L7Irish(IntersectionDataset):
     * https://www.sciencebase.gov/catalog/item/573ccf18e4b0dae0d5e4b109
 
     .. versionadded:: 0.5
-    """  # noqa: E501
+    """
 
-    url = 'https://hf.co/datasets/torchgeo/l7irish/resolve/6807e0b22eca7f9a8a3903ea673b31a115837464/{}.tar.gz'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/l7irish/resolve/6807e0b22eca7f9a8a3903ea673b31a115837464/{}.tar.gz'
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'austral': '0a34770b992a62abeb88819feb192436',
         'boreal': 'b7cfdd689a3c2fd2a8d572e1c10ed082',
         'mid_latitude_north': 'c40abe5ad2487f8ab021cfb954982faa',

@@ -14,12 +14,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, MapInWild
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestMapInWild:
@@ -27,8 +22,6 @@ class TestMapInWild:
     def dataset(
         self, tmp_path: Path, monkeypatch: MonkeyPatch, request: SubRequest
     ) -> MapInWild:
-        monkeypatch.setattr(torchgeo.datasets.mapinwild, 'download_url', download_url)
-
         md5s = {
             'ESA_WC.zip': '3a1e696353d238c50996958855da02fc',
             'VIIRS.zip': 'e8b0e230edb1183c02092357af83bd52',

@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -48,7 +48,7 @@ class MillionAID(NonGeoDataset):
     .. versionadded:: 0.3
     """
 
-    multi_label_categories = [
+    multi_label_categories = (
         'agriculture_land',
         'airport_area',
         'apartment',
@@ -122,9 +122,9 @@ class MillionAID(NonGeoDataset):
         'wind_turbine',
         'woodland',
         'works',
-    ]
+    )
 
-    multi_class_categories = [
+    multi_class_categories = (
         'apartment',
         'apron',
         'bare_land',
@@ -176,17 +176,17 @@ class MillionAID(NonGeoDataset):
         'wastewater_plant',
         'wind_turbine',
         'works',
-    ]
+    )
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'train': '1b40503cafa9b0601653ca36cd788852',
         'test': '51a63ee3eeb1351889eacff349a983d8',
     }
 
-    filenames = {'train': 'train.zip', 'test': 'test.zip'}
+    filenames: ClassVar[dict[str, str]] = {'train': 'train.zip', 'test': 'test.zip'}
 
-    tasks = ['multi-class', 'multi-label']
-    splits = ['train', 'test']
+    tasks = ('multi-class', 'multi-label')
+    splits = ('train', 'test')
 
     def __init__(
         self,

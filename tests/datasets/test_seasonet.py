@@ -14,17 +14,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, RGBBandsMissingError, SeasoNet
-
-
-def download_url(
-    url: str, root: str | Path, md5: str, *args: str, **kwargs: str
-) -> None:
-    shutil.copy(url, root)
-    torchgeo.datasets.utils.check_integrity(
-        os.path.join(root, os.path.basename(url)), md5
-    )
 
 
 class TestSeasoNet:
@@ -40,7 +30,6 @@ class TestSeasoNet:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SeasoNet:
-        monkeypatch.setattr(torchgeo.datasets.seasonet, 'download_url', download_url)
         monkeypatch.setitem(
             SeasoNet.metadata[0], 'md5', '836a0896eba0e3005208f3fd180e429d'
         )

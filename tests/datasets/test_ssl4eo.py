@@ -14,12 +14,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo
 from torchgeo.datasets import SSL4EOL, SSL4EOS12, DatasetNotFoundError
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestSSL4EOL:
@@ -27,8 +22,6 @@ class TestSSL4EOL:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SSL4EOL:
-        monkeypatch.setattr(torchgeo.datasets.ssl4eo, 'download_url', download_url)
-
         url = os.path.join('tests', 'data', 'ssl4eo', 'l', 'ssl4eo_l_{0}.tar.gz{1}')
         monkeypatch.setattr(SSL4EOL, 'url', url)
 

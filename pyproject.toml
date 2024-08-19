@@ -91,16 +91,10 @@ datasets = [
     "pycocotools>=2.0.7",
     # pyvista 0.34.2+ required to avoid ImportError in CI
     "pyvista>=0.34.2",
-    # radiant-mlhub 0.3+ required for newer tqdm support required by lightning
-    "radiant-mlhub>=0.3",
-    # rarfile 4+ required for wheels
-    "rarfile>=4",
     # scikit-image 0.19+ required for Python 3.10 wheels
     "scikit-image>=0.19",
     # scipy 1.7.2+ required for Python 3.10 wheels
     "scipy>=1.7.2",
-    # zipfile-deflate64 0.2+ required for Python 3.10 wheels
-    "zipfile-deflate64>=0.2",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx
@@ -274,7 +268,7 @@ quote-style = "single"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-extend-select = ["ANN", "D", "I", "NPY201", "UP"]
+extend-select = ["ANN", "D", "I", "NPY201", "RUF", "UP"]
 ignore = ["ANN101", "ANN102", "ANN401"]
 
 [tool.ruff.lint.per-file-ignores]

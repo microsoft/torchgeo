@@ -13,14 +13,9 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import SKIPPD, DatasetNotFoundError
 
 pytest.importorskip('h5py', minversion='3.6')
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestSKIPPD:
@@ -29,9 +24,6 @@ class TestSKIPPD:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SKIPPD:
         task, split = request.param
-
-        monkeypatch.setattr(torchgeo.datasets.skippd, 'download_url', download_url)
-
         md5 = {
             'nowcast': '6f5e54906927278b189f9281a2f54f39',
             'forecast': 'f3b5d7d5c28ba238144fa1e726c46969',
