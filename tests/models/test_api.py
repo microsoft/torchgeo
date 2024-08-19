@@ -34,8 +34,8 @@ builders = [
     dofa_large_patch16_224,
     resnet18,
     resnet50,
-    swin_v2_b,
     scalemae_large_patch16,
+    swin_v2_b,
     vit_small_patch16_224,
 ]
 enums = [
@@ -43,8 +43,8 @@ enums = [
     DOFALarge16_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
-    Swin_V2_B_Weights,
     ScaleMAELarge16_Weights,
+    Swin_V2_B_Weights,
     ViTSmall16_Weights,
 ]
 

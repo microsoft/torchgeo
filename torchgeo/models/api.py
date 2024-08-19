@@ -32,8 +32,8 @@ _model = {
     'dofa_large_patch16_224': dofa_large_patch16_224,
     'resnet18': resnet18,
     'resnet50': resnet50,
-    'swin_v2_b': swin_v2_b,
     'scalemae_large_patch16': scalemae_large_patch16,
+    'swin_v2_b': swin_v2_b,
     'vit_small_patch16_224': vit_small_patch16_224,
 }
 
@@ -42,15 +42,15 @@ _model_weights = {
     dofa_large_patch16_224: DOFALarge16_Weights,
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
-    swin_v2_b: Swin_V2_B_Weights,
     scalemae_large_patch16: ScaleMAELarge16_Weights,
+    swin_v2_b: Swin_V2_B_Weights,
     vit_small_patch16_224: ViTSmall16_Weights,
     'dofa_base_patch16_224': DOFABase16_Weights,
     'dofa_large_patch16_224': DOFALarge16_Weights,
     'resnet18': ResNet18_Weights,
     'resnet50': ResNet50_Weights,
-    'swin_v2_b': Swin_V2_B_Weights,
     'scalemae_large_patch16': ScaleMAELarge16_Weights,
+    'swin_v2_b': Swin_V2_B_Weights,
     'vit_small_patch16_224': ViTSmall16_Weights,
 }
 

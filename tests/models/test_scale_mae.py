@@ -2,21 +2,14 @@
 # Licensed under the MIT License.
 
 from pathlib import Path
-from typing import Any
 
 import pytest
 import torch
-import torchvision
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import ScaleMAELarge16_Weights, scalemae_large_patch16
-
-
-def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
-    state_dict: dict[str, Any] = torch.load(url)
-    return state_dict
 
 
 class TestScaleMAE:
@@ -26,7 +19,11 @@ class TestScaleMAE:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = scalemae_large_patch16()
@@ -35,7 +32,6 @@ class TestScaleMAE:
             monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
             monkeypatch.setattr(weights, 'url', str(path))
-        monkeypatch.setattr(torchvision.models._api, 'load_state_dict_from_url', load)
         return weights
 
     def test_scalemae(self) -> None:
