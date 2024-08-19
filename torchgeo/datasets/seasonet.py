@@ -6,6 +6,7 @@
 import os
 import random
 from collections.abc import Callable, Collection, Iterable
+from typing import ClassVar
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -85,7 +86,7 @@ class SeasoNet(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    metadata = [
+    metadata = (
         {
             'name': 'spring',
             'ext': '.zip',
@@ -128,8 +129,8 @@ class SeasoNet(NonGeoDataset):
             'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/meta.csv',
             'md5': '43ea07974936a6bf47d989c32e16afe7',
         },
-    ]
-    classes = [
+    )
+    classes = (
         'Continuous urban fabric',
         'Discontinuous urban fabric',
         'Industrial or commercial units',
@@ -163,12 +164,17 @@ class SeasoNet(NonGeoDataset):
         'Coastal lagoons',
         'Estuaries',
         'Sea and ocean',
-    ]
-    all_seasons = {'Spring', 'Summer', 'Fall', 'Winter', 'Snow'}
+    )
+    all_seasons = frozenset({'Spring', 'Summer', 'Fall', 'Winter', 'Snow'})
     all_bands = ('10m_RGB', '10m_IR', '20m', '60m')
-    band_nums = {'10m_RGB': 3, '10m_IR': 1, '20m': 6, '60m': 2}
-    splits = ['train', 'val', 'test']
-    cmap = {
+    band_nums: ClassVar[dict[str, int]] = {
+        '10m_RGB': 3,
+        '10m_IR': 1,
+        '20m': 6,
+        '60m': 2,
+    }
+    splits = ('train', 'val', 'test')
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (230, 000, 77, 255),
         1: (255, 000, 000, 255),
         2: (204, 77, 242, 255),

@@ -55,8 +55,8 @@ class FireRisk(NonGeoClassificationDataset):
     md5 = 'a77b9a100d51167992ae8c51d26198a6'
     filename = 'FireRisk.zip'
     directory = 'FireRisk'
-    splits = ['train', 'val']
-    classes = [
+    splits = ('train', 'val')
+    classes = (
         'High',
         'Low',
         'Moderate',
@@ -64,7 +64,7 @@ class FireRisk(NonGeoClassificationDataset):
         'Very_High',
         'Very_Low',
         'Water',
-    ]
+    )
 
     def __init__(
         self,

@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -63,7 +63,7 @@ class SKIPPD(NonGeoDataset):
     """
 
     url = 'https://hf.co/datasets/torchgeo/skippd/resolve/a16c7e200b4618cd93be3143cdb973e3f21498fa/{}'
-    md5 = {
+    md5: ClassVar[dict[str, str]] = {
         'forecast': 'f4f3509ddcc83a55c433be9db2e51077',
         'nowcast': '0000761d403e45bb5f86c21d3c69aa80',
     }
@@ -71,9 +71,9 @@ class SKIPPD(NonGeoDataset):
     data_file_name = '2017_2019_images_pv_processed_{}.hdf5'
     zipfile_name = '2017_2019_images_pv_processed_{}.zip'
 
-    valid_splits = ['trainval', 'test']
+    valid_splits = ('trainval', 'test')
 
-    valid_tasks = ['nowcast', 'forecast']
+    valid_tasks = ('nowcast', 'forecast')
 
     dateformat = '%m/%d/%Y, %H:%M:%S'
 

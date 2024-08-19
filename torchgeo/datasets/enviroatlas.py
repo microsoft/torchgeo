@@ -6,7 +6,7 @@
 import os
 import sys
 from collections.abc import Callable, Sequence
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -54,9 +54,9 @@ class EnviroAtlas(GeoDataset):
     crs = CRS.from_epsg(3857)
     res = 1
 
-    valid_prior_layers = ['prior', 'prior_no_osm_no_buildings']
+    valid_prior_layers = ('prior', 'prior_no_osm_no_buildings')
 
-    valid_layers = [
+    valid_layers = (
         'naip',
         'nlcd',
         'roads',
@@ -66,14 +66,14 @@ class EnviroAtlas(GeoDataset):
         'buildings',
         'lc',
         *valid_prior_layers,
-    ]
+    )
 
-    cities = [
+    cities = (
         'pittsburgh_pa-2010_1m',
         'durham_nc-2012_1m',
         'austin_tx-2012_1m',
         'phoenix_az-2010_1m',
-    ]
+    )
     splits = (
         [f'{state}-train' for state in cities[:1]]
         + [f'{state}-val' for state in cities[:1]]
@@ -82,7 +82,7 @@ class EnviroAtlas(GeoDataset):
     )
 
     # these are used to check the integrity of the dataset
-    _files = [
+    _files = (
         'austin_tx-2012_1m-test_tiles-debuffered',
         'austin_tx-2012_1m-val5_tiles-debuffered',
         'durham_nc-2012_1m-test_tiles-debuffered',
@@ -104,10 +104,10 @@ class EnviroAtlas(GeoDataset):
         'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_prior_from_cooccurrences_101_31.tif',
         'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
         'spatial_index.geojson',
-    ]
+    )
 
     p_src_crs = pyproj.CRS('epsg:3857')
-    p_transformers = {
+    p_transformers: ClassVar[dict[str, CRS]] = {
         'epsg:26917': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26917'), always_xy=True
         ).transform,
@@ -223,7 +223,7 @@ class EnviroAtlas(GeoDataset):
         dtype=np.uint8,
     )
 
-    highres_classes = [
+    highres_classes = (
         'Unclassified',
         'Water',
         'Impervious Surface',
@@ -235,7 +235,7 @@ class EnviroAtlas(GeoDataset):
         'Orchards',
         'Woody Wetlands',
         'Emergent Wetlands',
-    ]
+    )
     highres_cmap = ListedColormap(
         [
             [1.00000000, 1.00000000, 1.00000000],

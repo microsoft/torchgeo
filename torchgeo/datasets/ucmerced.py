@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import cast
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -72,13 +72,13 @@ class UCMerced(NonGeoClassificationDataset):
 
     base_dir = os.path.join('UCMerced_LandUse', 'Images')
 
-    splits = ['train', 'val', 'test']
-    split_urls = {
+    splits = ('train', 'val', 'test')
+    split_urls: ClassVar[dict[str, str]] = {
         'train': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-train.txt',
         'val': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-val.txt',
         'test': 'https://storage.googleapis.com/remote_sensing_representations/uc_merced-test.txt',
     }
-    split_md5s = {
+    split_md5s: ClassVar[dict[str, str]] = {
         'train': 'f2fb12eb2210cfb53f93f063a35ff374',
         'val': '11ecabfc52782e5ea6a9c7c0d263aca0',
         'test': '046aff88472d8fc07c4678d03749e28d',

@@ -7,6 +7,7 @@ import os
 import shutil
 from collections import defaultdict
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -56,7 +57,7 @@ class MapInWild(NonGeoDataset):
 
     url = 'https://hf.co/datasets/burakekim/mapinwild/resolve/d963778e31e7e0ed2329c0f4cbe493be532f0e71/'
 
-    modality_urls = {
+    modality_urls: ClassVar[dict[str, set[str]]] = {
         'esa_wc': {'esa_wc/ESA_WC.zip'},
         'viirs': {'viirs/VIIRS.zip'},
         'mask': {'mask/mask.zip'},
@@ -72,7 +73,7 @@ class MapInWild(NonGeoDataset):
         'split_IDs': {'split_IDs/split_IDs.csv'},
     }
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'ESA_WC.zip': '72b2ee578fe10f0df85bdb7f19311c92',
         'VIIRS.zip': '4eff014bae127fe536f8a5f17d89ecb4',
         'mask.zip': '87c83a23a73998ad60d448d240b66225',
@@ -91,9 +92,12 @@ class MapInWild(NonGeoDataset):
         'split_IDs.csv': 'cb5c6c073702acee23544e1e6fe5856f',
     }
 
-    mask_cmap = {1: (0, 153, 0), 0: (255, 255, 255)}
+    mask_cmap: ClassVar[dict[int, tuple[int, int, int]]] = {
+        1: (0, 153, 0),
+        0: (255, 255, 255),
+    }
 
-    wc_cmap = {
+    wc_cmap: ClassVar[dict[int, tuple[int, int, int]]] = {
         10: (0, 160, 0),
         20: (150, 100, 0),
         30: (255, 180, 0),

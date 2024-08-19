@@ -8,7 +8,7 @@ import os
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 import fiona
 import matplotlib.pyplot as plt
@@ -55,9 +55,9 @@ class SpaceNet(NonGeoDataset, ABC):
     image_glob = '*.tif'
     mask_glob = '*.geojson'
     file_regex = r'_img(\d+)\.'
-    chip_size: dict[str, tuple[int, int]] = {}
+    chip_size: ClassVar[dict[str, tuple[int, int]]] = {}
 
-    cities = {
+    cities: ClassVar[dict[int, str]] = {
         1: 'Rio',
         2: 'Vegas',
         3: 'Paris',
@@ -98,7 +98,7 @@ class SpaceNet(NonGeoDataset, ABC):
 
     @property
     @abstractmethod
-    def valid_masks(self) -> list[str]:
+    def valid_masks(self) -> tuple[str, ...]:
         """List of valid masks."""
 
     def __init__(
@@ -426,7 +426,7 @@ class SpaceNet1(SpaceNet):
 
     directory_glob = '{product}'
     dataset_id = 'SN1_buildings'
-    tarballs = {
+    tarballs: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {
             1: [
                 'SN1_buildings_train_AOI_1_Rio_3band.tar.gz',
@@ -441,7 +441,7 @@ class SpaceNet1(SpaceNet):
             ]
         },
     }
-    md5s = {
+    md5s: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {
             1: [
                 '279e334a2120ecac70439ea246174516',
@@ -453,10 +453,16 @@ class SpaceNet1(SpaceNet):
             1: ['18283d78b21c239bc1831f3bf1d2c996', '732b3a40603b76e80aac84e002e2b3e8']
         },
     }
-    valid_aois = {'train': [1], 'test': [1]}
-    valid_images = {'train': ['3band', '8band'], 'test': ['3band', '8band']}
-    valid_masks = ['geojson']
-    chip_size = {'3band': (406, 439), '8band': (102, 110)}
+    valid_aois: ClassVar[dict[str, list[int]]] = {'train': [1], 'test': [1]}
+    valid_images: ClassVar[dict[str, list[str]]] = {
+        'train': ['3band', '8band'],
+        'test': ['3band', '8band'],
+    }
+    valid_masks = ('geojson',)
+    chip_size: ClassVar[dict[str, tuple[int, int]]] = {
+        '3band': (406, 439),
+        '8band': (102, 110),
+    }
 
 
 class SpaceNet2(SpaceNet):
@@ -522,7 +528,7 @@ class SpaceNet2(SpaceNet):
     """
 
     dataset_id = 'SN2_buildings'
-    tarballs = {
+    tarballs: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {
             2: ['SN2_buildings_train_AOI_2_Vegas.tar.gz'],
             3: ['SN2_buildings_train_AOI_3_Paris.tar.gz'],
@@ -536,7 +542,7 @@ class SpaceNet2(SpaceNet):
             5: ['AOI_5_Khartoum_Test_public.tar.gz'],
         },
     }
-    md5s = {
+    md5s: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {
             2: ['307da318bc43aaf9481828f92eda9126'],
             3: ['4db469e3e4e7bf025368ad730aec0888'],
@@ -550,13 +556,16 @@ class SpaceNet2(SpaceNet):
             5: ['037d7be10530f0dd1c43d4ef79f3236e'],
         },
     }
-    valid_aois = {'train': [2, 3, 4, 5], 'test': [2, 3, 4, 5]}
-    valid_images = {
+    valid_aois: ClassVar[dict[str, list[int]]] = {
+        'train': [2, 3, 4, 5],
+        'test': [2, 3, 4, 5],
+    }
+    valid_images: ClassVar[dict[str, list[str]]] = {
         'train': ['MUL', 'MUL-PanSharpen', 'PAN', 'RGB-PanSharpen'],
         'test': ['MUL', 'MUL-PanSharpen', 'PAN', 'RGB-PanSharpen'],
     }
-    valid_masks = [os.path.join('geojson', 'buildings')]
-    chip_size = {'MUL': (163, 163)}
+    valid_masks = (os.path.join('geojson', 'buildings'),)
+    chip_size: ClassVar[dict[str, tuple[int, int]]] = {'MUL': (163, 163)}
 
 
 class SpaceNet3(SpaceNet):
@@ -624,7 +633,7 @@ class SpaceNet3(SpaceNet):
     """
 
     dataset_id = 'SN3_roads'
-    tarballs = {
+    tarballs: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {
             2: [
                 'SN3_roads_train_AOI_2_Vegas.tar.gz',
@@ -650,7 +659,7 @@ class SpaceNet3(SpaceNet):
             5: ['SN3_roads_test_public_AOI_5_Khartoum.tar.gz'],
         },
     }
-    md5s = {
+    md5s: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {
             2: ['06317255b5e0c6df2643efd8a50f22ae', '4acf7846ed8121db1319345cfe9fdca9'],
             3: ['c13baf88ee10fe47870c303223cabf82', 'abc8199d4c522d3a14328f4f514702ad'],
@@ -664,12 +673,15 @@ class SpaceNet3(SpaceNet):
             5: ['f367c79fa0fc1d38e63a0fdd065ed957'],
         },
     }
-    valid_aois = {'train': [2, 3, 4, 5], 'test': [2, 3, 4, 5]}
-    valid_images = {
+    valid_aois: ClassVar[dict[str, list[int]]] = {
+        'train': [2, 3, 4, 5],
+        'test': [2, 3, 4, 5],
+    }
+    valid_images: ClassVar[dict[str, list[str]]] = {
         'train': ['MS', 'PS-MS', 'PAN', 'PS-RGB'],
         'test': ['MUL', 'MUL-PanSharpen', 'PAN', 'RGB-PanSharpen'],
     }
-    valid_masks = ['geojson_roads', 'geojson_roads_speed']
+    valid_masks: tuple[str, ...] = ('geojson_roads', 'geojson_roads_speed')
 
 
 class SpaceNet4(SpaceNet):
@@ -708,7 +720,7 @@ class SpaceNet4(SpaceNet):
     directory_glob = os.path.join('**', '{product}')
     file_regex = r'_(\d+_\d+)\.'
     dataset_id = 'SN4_buildings'
-    tarballs = {
+    tarballs: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {
             6: [
                 'Atlanta_nadir7_catid_1030010003D22F00.tar.gz',
@@ -743,7 +755,7 @@ class SpaceNet4(SpaceNet):
         },
         'test': {6: ['SN4_buildings_AOI_6_Atlanta_test_public.tar.gz']},
     }
-    md5s = {
+    md5s: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {
             6: [
                 'd41ab6ec087b07e1e046c55d1fa5754b',
@@ -778,12 +790,12 @@ class SpaceNet4(SpaceNet):
         },
         'test': {6: ['0ec3874bfc19aed63b33ac47b039aace']},
     }
-    valid_aois = {'train': [6], 'test': [6]}
-    valid_images = {
+    valid_aois: ClassVar[dict[str, list[int]]] = {'train': [6], 'test': [6]}
+    valid_images: ClassVar[dict[str, list[str]]] = {
         'train': ['MS', 'PAN', 'Pan-Sharpen'],
         'test': ['MS', 'PAN', 'Pan-Sharpen'],
     }
-    valid_masks = [os.path.join('geojson', 'spacenet-buildings')]
+    valid_masks = (os.path.join('geojson', 'spacenet-buildings'),)
 
 
 class SpaceNet5(SpaceNet3):
@@ -850,26 +862,26 @@ class SpaceNet5(SpaceNet3):
 
     file_regex = r'_chip(\d+)\.'
     dataset_id = 'SN5_roads'
-    tarballs = {
+    tarballs: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {
             7: ['SN5_roads_train_AOI_7_Moscow.tar.gz'],
             8: ['SN5_roads_train_AOI_8_Mumbai.tar.gz'],
         },
         'test': {9: ['SN5_roads_test_public_AOI_9_San_Juan.tar.gz']},
     }
-    md5s = {
+    md5s: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {
             7: ['03082d01081a6d8df2bc5a9645148d2a'],
             8: ['1ee20ba781da6cb7696eef9a95a5bdcc'],
         },
         'test': {9: ['fc45afef219dfd3a20f2d4fc597f6882']},
     }
-    valid_aois = {'train': [7, 8], 'test': [9]}
-    valid_images = {
+    valid_aois: ClassVar[dict[str, list[int]]] = {'train': [7, 8], 'test': [9]}
+    valid_images: ClassVar[dict[str, list[str]]] = {
         'train': ['MS', 'PAN', 'PS-MS', 'PS-RGB'],
         'test': ['MS', 'PAN', 'PS-MS', 'PS-RGB'],
     }
-    valid_masks = ['geojson_roads_speed']
+    valid_masks = ('geojson_roads_speed',)
 
 
 class SpaceNet6(SpaceNet):
@@ -937,20 +949,20 @@ class SpaceNet6(SpaceNet):
 
     file_regex = r'_tile_(\d+)\.'
     dataset_id = 'SN6_buildings'
-    tarballs = {
+    tarballs: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {11: ['SN6_buildings_AOI_11_Rotterdam_train.tar.gz']},
         'test': {11: ['SN6_buildings_AOI_11_Rotterdam_test_public.tar.gz']},
     }
-    md5s = {
+    md5s: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {11: ['10ca26d2287716e3b6ef0cf0ad9f946e']},
         'test': {11: ['a07823a5e536feeb8bb6b6f0cb43cf05']},
     }
-    valid_aois = {'train': [11], 'test': [11]}
-    valid_images = {
+    valid_aois: ClassVar[dict[str, list[int]]] = {'train': [11], 'test': [11]}
+    valid_images: ClassVar[dict[str, list[str]]] = {
         'train': ['PAN', 'PS-RGB', 'PS-RGBNIR', 'RGBNIR', 'SAR-Intensity'],
         'test': ['SAR-Intensity'],
     }
-    valid_masks = ['geojson_buildings']
+    valid_masks = ('geojson_buildings',)
 
 
 class SpaceNet7(SpaceNet):
@@ -993,18 +1005,24 @@ class SpaceNet7(SpaceNet):
     mask_glob = '*_Buildings.geojson'
     file_regex = r'global_monthly_(\d+.*\d+)'
     dataset_id = 'SN7_buildings'
-    tarballs = {
+    tarballs: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {0: ['SN7_buildings_train.tar.gz']},
         'test': {0: ['SN7_buildings_test_public.tar.gz']},
     }
-    md5s = {
+    md5s: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {0: ['6eda13b9c28f6f5cdf00a7e8e218c1b1']},
         'test': {0: ['b3bde95a0f8f32f3bfeba49464b9bc97']},
     }
-    valid_aois = {'train': [0], 'test': [0]}
-    valid_images = {'train': ['images', 'images_masked'], 'test': ['images_masked']}
-    valid_masks = ['labels', 'labels_match', 'labels_match_pix']
-    chip_size = {'images': (1024, 1024), 'images_masked': (1024, 1024)}
+    valid_aois: ClassVar[dict[str, list[int]]] = {'train': [0], 'test': [0]}
+    valid_images: ClassVar[dict[str, list[str]]] = {
+        'train': ['images', 'images_masked'],
+        'test': ['images_masked'],
+    }
+    valid_masks = ('labels', 'labels_match', 'labels_match_pix')
+    chip_size: ClassVar[dict[str, tuple[int, int]]] = {
+        'images': (1024, 1024),
+        'images_masked': (1024, 1024),
+    }
 
 
 class SpaceNet8(SpaceNet):
@@ -1024,7 +1042,7 @@ class SpaceNet8(SpaceNet):
     directory_glob = '{product}'
     file_regex = r'(\d+_\d+_\d+)\.'
     dataset_id = 'SN8_floods'
-    tarballs = {
+    tarballs: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {
             0: [
                 'Germany_Training_Public.tar.gz',
@@ -1033,16 +1051,19 @@ class SpaceNet8(SpaceNet):
         },
         'test': {0: ['Louisiana-West_Test_Public.tar.gz']},
     }
-    md5s = {
+    md5s: ClassVar[dict[str, dict[int, list[str]]]] = {
         'train': {
             0: ['81383a9050b93e8f70c8557d4568e8a2', 'fa40ae3cf6ac212c90073bf93d70bd95']
         },
         'test': {0: ['d41d8cd98f00b204e9800998ecf8427e']},
     }
-    valid_aois = {'train': [0], 'test': [0]}
-    valid_images = {
+    valid_aois: ClassVar[dict[str, list[int]]] = {'train': [0], 'test': [0]}
+    valid_images: ClassVar[dict[str, list[str]]] = {
         'train': ['PRE-event', 'POST-event'],
         'test': ['PRE-event', 'POST-event'],
     }
-    valid_masks = ['annotations']
-    chip_size = {'PRE-event': (1300, 1300), 'POST-event': (1300, 1300)}
+    valid_masks = ('annotations',)
+    chip_size: ClassVar[dict[str, tuple[int, int]]] = {
+        'PRE-event': (1300, 1300),
+        'POST-event': (1300, 1300),
+    }

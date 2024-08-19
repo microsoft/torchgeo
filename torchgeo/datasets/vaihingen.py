@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -57,13 +58,13 @@ class Vaihingen2D(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    filenames = [
+    filenames = (
         'ISPRS_semantic_labeling_Vaihingen.zip',
         'ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip',
-    ]
-    md5s = ['462b8dca7b6fa9eaf729840f0cdfc7f3', '4802dd6326e2727a352fb735be450277']
+    )
+    md5s = ('462b8dca7b6fa9eaf729840f0cdfc7f3', '4802dd6326e2727a352fb735be450277')
     image_root = 'top'
-    splits = {
+    splits: ClassVar[dict[str, list[str]]] = {
         'train': [
             'top_mosaic_09cm_area1.tif',
             'top_mosaic_09cm_area11.tif',
@@ -102,22 +103,22 @@ class Vaihingen2D(NonGeoDataset):
             'top_mosaic_09cm_area29.tif',
         ],
     }
-    classes = [
+    classes = (
         'Clutter/background',
         'Impervious surfaces',
         'Building',
         'Low Vegetation',
         'Tree',
         'Car',
-    ]
-    colormap = [
+    )
+    colormap = (
         (255, 0, 0),
         (255, 255, 255),
         (0, 0, 255),
         (0, 255, 255),
         (0, 255, 0),
         (255, 255, 0),
-    ]
+    )
 
     def __init__(
         self,

@@ -6,7 +6,7 @@
 import glob
 import json
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from typing import Any
 
 import pandas as pd
@@ -53,7 +53,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
     label_name = 'percent(t)'
 
-    all_variable_names = [
+    all_variable_names = (
         # "date",
         'slope(t)',
         'elevation(t)',
@@ -193,12 +193,12 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         'vh_vv(t-3)',
         'lat',
         'lon',
-    ]
+    )
 
     def __init__(
         self,
         root: Path = 'data',
-        input_features: list[str] = all_variable_names,
+        input_features: Iterable[str] = all_variable_names,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
     ) -> None:

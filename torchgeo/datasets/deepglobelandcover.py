@@ -79,8 +79,8 @@ class DeepGlobeLandCover(NonGeoDataset):
     filename = 'data.zip'
     data_root = 'data'
     md5 = 'f32684b0b2bf6f8d604cd359a399c061'
-    splits = ['train', 'test']
-    classes = [
+    splits = ('train', 'test')
+    classes = (
         'Urban land',
         'Agriculture land',
         'Rangeland',
@@ -88,8 +88,8 @@ class DeepGlobeLandCover(NonGeoDataset):
         'Water',
         'Barren land',
         'Unknown',
-    ]
-    colormap = [
+    )
+    colormap = (
         (0, 255, 255),
         (255, 255, 0),
         (255, 0, 255),
@@ -97,7 +97,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         (0, 0, 255),
         (255, 255, 255),
         (0, 0, 0),
-    ]
+    )
 
     def __init__(
         self,

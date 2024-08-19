@@ -7,7 +7,7 @@ import glob
 import os
 import random
 from collections.abc import Callable
-from typing import TypedDict
+from typing import ClassVar, TypedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -99,7 +99,7 @@ class SSL4EOL(NonGeoDataset):
         num_bands: int
         rgb_bands: list[int]
 
-    metadata: dict[str, _Metadata] = {
+    metadata: ClassVar[dict[str, _Metadata]] = {
         'tm_toa': {'num_bands': 7, 'rgb_bands': [2, 1, 0]},
         'etm_toa': {'num_bands': 9, 'rgb_bands': [2, 1, 0]},
         'etm_sr': {'num_bands': 6, 'rgb_bands': [2, 1, 0]},
@@ -108,7 +108,7 @@ class SSL4EOL(NonGeoDataset):
     }
 
     url = 'https://hf.co/datasets/torchgeo/ssl4eo_l/resolve/e2467887e6a6bcd7547d9d5999f8d9bc3323dc31/{0}/ssl4eo_l_{0}.tar.gz{1}'
-    checksums = {
+    checksums: ClassVar[dict[str, dict[str, str]]] = {
         'tm_toa': {
             'aa': '553795b8d73aa253445b1e67c5b81f11',
             'ab': 'e9e0739b5171b37d16086cb89ab370e8',
@@ -357,7 +357,7 @@ class SSL4EOS12(NonGeoDataset):
         md5: str
         bands: list[str]
 
-    metadata: dict[str, _Metadata] = {
+    metadata: ClassVar[dict[str, _Metadata]] = {
         's1': {
             'filename': 's1.tar.gz',
             'md5': '51ee23b33eb0a2f920bda25225072f3a',

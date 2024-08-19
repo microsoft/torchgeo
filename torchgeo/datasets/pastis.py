@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import fiona
 import matplotlib.pyplot as plt
@@ -70,7 +71,7 @@ class PASTIS(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    classes = [
+    classes = (
         'background',  # all non-agricultural land
         'meadow',
         'soft_winter_wheat',
@@ -91,8 +92,8 @@ class PASTIS(NonGeoDataset):
         'mixed_cereal',
         'sorghum',
         'void_label',  # for parcels mostly outside their patch
-    ]
-    cmap = {
+    )
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 255),
         1: (174, 199, 232, 255),
         2: (255, 127, 14, 255),
@@ -118,7 +119,7 @@ class PASTIS(NonGeoDataset):
     filename = 'PASTIS-R.zip'
     url = 'https://zenodo.org/record/5735646/files/PASTIS-R.zip?download=1'
     md5 = '4887513d6c2d2b07fa935d325bd53e09'
-    prefix = {
+    prefix: ClassVar[dict[str, str]] = {
         's2': os.path.join('DATA_S2', 'S2_'),
         's1a': os.path.join('DATA_S1A', 'S1A_'),
         's1d': os.path.join('DATA_S1D', 'S1D_'),

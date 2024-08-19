@@ -147,7 +147,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
     )
     rgb_bands = ('B04', 'B03', 'B02')
 
-    classes = [
+    classes = (
         'No data',
         'Well-managed planatation',
         'Poorly-managed planatation',
@@ -155,7 +155,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         'Residential',
         'Background',
         'Uncertain',
-    ]
+    )
 
     # Same for all tiles
     tile_height = 1186

@@ -47,7 +47,7 @@ class SustainBenchCropYield(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    valid_countries = ['usa', 'brazil', 'argentina']
+    valid_countries = ('usa', 'brazil', 'argentina')
 
     md5 = '362bad07b51a1264172b8376b39d1fc9'
 
@@ -55,7 +55,7 @@ class SustainBenchCropYield(NonGeoDataset):
 
     dir = 'soybeans'
 
-    valid_splits = ['train', 'dev', 'test']
+    valid_splits = ('train', 'dev', 'test')
 
     def __init__(
         self,

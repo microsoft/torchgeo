@@ -7,6 +7,7 @@ import glob
 import json
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -126,7 +127,7 @@ class BigEarthNet(NonGeoDataset):
 
     """
 
-    class_sets = {
+    class_sets: ClassVar[dict[int, list[str]]] = {
         19: [
             'Urban fabric',
             'Industrial or commercial units',
@@ -197,7 +198,7 @@ class BigEarthNet(NonGeoDataset):
         ],
     }
 
-    label_converter = {
+    label_converter: ClassVar[dict[int, int]] = {
         0: 0,
         1: 0,
         2: 1,
@@ -232,7 +233,7 @@ class BigEarthNet(NonGeoDataset):
         42: 18,
     }
 
-    splits_metadata = {
+    splits_metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/train.csv?inline=false',
             'filename': 'bigearthnet-train.csv',
@@ -249,7 +250,7 @@ class BigEarthNet(NonGeoDataset):
             'md5': '697fb90677e30571b9ac7699b7e5b432',
         },
     }
-    metadata = {
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
         's1': {
             'url': 'https://zenodo.org/records/12687186/files/BigEarthNet-S1-v1.0.tar.gz',
             'md5': '94ced73440dea8c7b9645ee738c5a172',

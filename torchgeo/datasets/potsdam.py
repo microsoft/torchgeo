@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -56,10 +57,10 @@ class Potsdam2D(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    filenames = ['4_Ortho_RGBIR.zip', '5_Labels_all.zip']
-    md5s = ['c4a8f7d8c7196dd4eba4addd0aae10c1', 'cf7403c1a97c0d279414db']
+    filenames = ('4_Ortho_RGBIR.zip', '5_Labels_all.zip')
+    md5s = ('c4a8f7d8c7196dd4eba4addd0aae10c1', 'cf7403c1a97c0d279414db')
     image_root = '4_Ortho_RGBIR'
-    splits = {
+    splits: ClassVar[dict[str, list[str]]] = {
         'train': [
             'top_potsdam_2_10',
             'top_potsdam_2_11',
@@ -103,22 +104,22 @@ class Potsdam2D(NonGeoDataset):
             'top_potsdam_7_13',
         ],
     }
-    classes = [
+    classes = (
         'Clutter/background',
         'Impervious surfaces',
         'Building',
         'Low Vegetation',
         'Tree',
         'Car',
-    ]
-    colormap = [
+    )
+    colormap = (
         (255, 0, 0),
         (255, 255, 255),
         (0, 0, 255),
         (0, 255, 255),
         (0, 255, 0),
         (255, 255, 0),
-    ]
+    )
 
     def __init__(
         self,

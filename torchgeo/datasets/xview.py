@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -54,7 +55,7 @@ class XView2(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    metadata = {
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'filename': 'train_images_labels_targets.tar.gz',
             'md5': 'a20ebbfb7eb3452785b63ad02ffd1e16',
@@ -66,8 +67,8 @@ class XView2(NonGeoDataset):
             'directory': 'test',
         },
     }
-    classes = ['background', 'no-damage', 'minor-damage', 'major-damage', 'destroyed']
-    colormap = ['green', 'blue', 'orange', 'red']
+    classes = ('background', 'no-damage', 'minor-damage', 'major-damage', 'destroyed')
+    colormap = ('green', 'blue', 'orange', 'red')
 
     def __init__(
         self,
