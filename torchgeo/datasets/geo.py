@@ -312,7 +312,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
                 pathname = os.path.join(path, '**', self.filename_glob)
                 files |= set(glob.iglob(pathname, recursive=True))
             elif (os.path.isfile(path) or path_is_vsi(path)) and fnmatch.fnmatch(
-                str(path), os.path.join('*', self.filename_glob)
+                str(path), f'*{self.filename_glob}'
             ):
                 files.add(path)
             elif not hasattr(self, 'download'):
