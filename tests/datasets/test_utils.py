@@ -416,6 +416,12 @@ class TestBoundingBox:
             datetime(2021, 9, 13, 17, 21, 53, 123).timestamp(),
             datetime(2021, 9, 13, 17, 21, 53, 123).timestamp(),
         ),
+        (
+            '2021-09-13%2017:21:53:000123',
+            '%Y-%m-%d%%20%H:%M:%S:%f',
+            datetime(2021, 9, 13, 17, 21, 53, 123).timestamp(),
+            datetime(2021, 9, 13, 17, 21, 53, 123).timestamp(),
+        ),
     ],
 )
 def test_disambiguate_timestamp(
