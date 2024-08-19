@@ -13,20 +13,29 @@ from torchvision.models._api import Weights, WeightsEnum
 
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
-# Normalization either by 10K or channel-wise with band statistics
-_zhu_xlab_transforms = K.AugmentationSequential(
+# Normalization either by 10K (for S2 uint16 input) or channel-wise with band statistics
+_mean_s1 = torch.tensor([-12.59, -20.26])
+_std_s1 = torch.tensor([5.26, 5.91])
+_ssl4eo_s12_transforms_s1 = K.AugmentationSequential(
+    K.Resize(256),
+    K.CenterCrop(224),
+    K.Normalize(mean=_mean_s1, std=_std_s1),
+    data_keys=None,
+)
+
+_ssl4eo_s12_transforms_s2_10k = K.AugmentationSequential(
     K.Resize(256),
     K.CenterCrop(224),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
     data_keys=None,
 )
 
-_mean_s1 = torch.tensor([-12.59, -20.26])
-_std_s1 = torch.tensor([5.26, 5.91])
-_zhu_xlab_transforms_s1 = K.AugmentationSequential(
+_mean_s2 = torch.tensor([1612.9, 1397.6, 1322.3, 1373.1, 1561.0, 2108.4, 2390.7, 2318.7, 2581.0, 837.7, 22.0, 2195.2, 1537.4])
+_std_s2 = torch.tensor([791.0, 854.3, 878.7, 1144.9, 1127.5, 1164.2, 1276.0, 1249.5, 1345.9, 577.5, 47.5, 1340.0, 1142.9])
+_ssl4eo_s12_transforms_s2_stats = K.AugmentationSequential(
     K.Resize(256),
     K.CenterCrop(224),
-    K.Normalize(mean=_mean_s1, std=_std_s1),
+    K.Normalize(mean=_mean_s2, std=_std_s2),
     data_keys=None,
 )
 
@@ -210,7 +219,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_ALL_MOCO = Weights(
         url='https://hf.co/torchgeo/resnet18_sentinel2_all_moco/resolve/5b8cddc9a14f3844350b7f40b85bcd32aed75918/resnet18_sentinel2_all_moco-59bfdff9.pth',
-        transforms=_zhu_xlab_transforms,
+        transforms=_ssl4eo_s12_transforms_s2_10k,
         meta={
             'dataset': 'SSL4EO-S12',
             'in_chans': 13,
@@ -223,7 +232,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_RGB_MOCO = Weights(
         url='https://hf.co/torchgeo/resnet18_sentinel2_rgb_moco/resolve/e1c032e7785fd0625224cdb6699aa138bb304eec/resnet18_sentinel2_rgb_moco-e3a335e3.pth',
-        transforms=_zhu_xlab_transforms,
+        transforms=_ssl4eo_s12_transforms_s2_10k,
         meta={
             'dataset': 'SSL4EO-S12',
             'in_chans': 3,
@@ -402,7 +411,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL1_ALL_DECUR = Weights(
         url='https://huggingface.co/torchgeo/decur/resolve/9328eeb90c686a88b30f8526ed757b4bc0f12027/rn50_ssl4eo-s12_sar_decur_ep100-f0e69ba2.pth',
-        transforms=_zhu_xlab_transforms_s1,
+        transforms=_ssl4eo_s12_transforms_s1,
         meta={
             'dataset': 'SSL4EO-S12',
             'in_chans': 2,
@@ -415,7 +424,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL1_ALL_MOCO = Weights(
         url='https://hf.co/torchgeo/resnet50_sentinel1_all_moco/resolve/e79862c667853c10a709bdd77ea8ffbad0e0f1cf/resnet50_sentinel1_all_moco-906e4356.pth',
-        transforms=_zhu_xlab_transforms_s1,
+        transforms=_ssl4eo_s12_transforms_s1,
         meta={
             'dataset': 'SSL4EO-S12',
             'in_chans': 2,
@@ -428,7 +437,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_ALL_DECUR = Weights(
         url='https://huggingface.co/torchgeo/decur/resolve/eba7ae5945d482a4319be046d34b552db5dd9950/rn50_ssl4eo-s12_ms_decur_ep100-fc6b09ff.pth',
-        transforms=_zhu_xlab_transforms,
+        transforms=_ssl4eo_s12_transforms_s2_10k,
         meta={
             'dataset': 'SSL4EO-S12',
             'in_chans': 13,
@@ -441,7 +450,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_ALL_DINO = Weights(
         url='https://hf.co/torchgeo/resnet50_sentinel2_all_dino/resolve/d7f14bf5530d70ac69d763e58e77e44dbecfec7c/resnet50_sentinel2_all_dino-d6c330e9.pth',
-        transforms=_zhu_xlab_transforms,
+        transforms=_ssl4eo_s12_transforms_s2_10k,
         meta={
             'dataset': 'SSL4EO-S12',
             'in_chans': 13,
@@ -454,7 +463,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_ALL_MOCO = Weights(
         url='https://hf.co/torchgeo/resnet50_sentinel2_all_moco/resolve/da4f3c9dbe09272eb902f3b37f46635fa4726879/resnet50_sentinel2_all_moco-df8b932e.pth',
-        transforms=_zhu_xlab_transforms,
+        transforms=_ssl4eo_s12_transforms_s2_10k,
         meta={
             'dataset': 'SSL4EO-S12',
             'in_chans': 13,
@@ -467,7 +476,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_RGB_MOCO = Weights(
         url='https://hf.co/torchgeo/resnet50_sentinel2_rgb_moco/resolve/efd9723b59a88e9dc1420dc1e96afb25b0630a3c/resnet50_sentinel2_rgb_moco-2b57ba8b.pth',
-        transforms=_zhu_xlab_transforms,
+        transforms=_ssl4eo_s12_transforms_s2_10k,
         meta={
             'dataset': 'SSL4EO-S12',
             'in_chans': 3,
