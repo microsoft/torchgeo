@@ -108,11 +108,11 @@ _ssl4eo_l_transforms = K.AugmentationSequential(
 )
 
 # Satlas uses the TCI product for Sentinel-2 RGB, which is in the range (0, 255).
-# See details:  https://github.com/allenai/satlas/blob/main/Normalization.md#sentinel-2-images.  # noqa: E501
-# Satlas Sentinel-2 multispectral imagery has first 3 bands divided by 255 and the following 6 bands by 8160, both clipped to (0, 1). # noqa: E501
+# See details:  https://github.com/allenai/satlas/blob/main/Normalization.md#sentinel-2-images.
+# Satlas Sentinel-2 multispectral imagery has first 3 bands divided by 255 and the following 6 bands by 8160, both clipped to (0, 1).
 _std = torch.tensor(
     [255.0, 255.0, 255.0, 8160.0, 8160.0, 8160.0, 8160.0, 8160.0, 8160.0]
-)  # noqa: E501
+)
 _mean = torch.zeros_like(_std)
 _sentinel2_ms_satlas_transforms = K.AugmentationSequential(
     K.Normalize(mean=_mean, std=_std),
@@ -523,28 +523,28 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_MS_MI_SATLAS = Weights(
-        url="https://huggingface.co/allenai/satlas-pretrain/resolve/main/sentinel2_resnet50_mi_ms.pth?download=true",  # noqa: E501
+        url='https://huggingface.co/allenai/satlas-pretrain/resolve/main/sentinel2_resnet50_mi_ms.pth?download=true',
         transforms=_sentinel2_ms_satlas_transforms,
         meta={
-            "dataset": "SATLASPretrain",
-            "in_chans": 9,
-            "model": "resnet50",
-            "publication": "https://arxiv.org/abs/2211.15660",
-            "repo": "https://github.com/allenai/satlaspretrain_models",
-            "ssl_method": "satlaspretrain",
+            'dataset': 'SATLASPretrain',
+            'in_chans': 9,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2211.15660',
+            'repo': 'https://github.com/allenai/satlaspretrain_models',
+            'ssl_method': 'satlaspretrain',
         },
     )
 
     SENTINEL2_MS_SI_SATLAS = Weights(
-        url="https://huggingface.co/allenai/satlas-pretrain/resolve/main/sentinel2_resnet50_si_ms.pth?download=true",  # noqa: E501
+        url='https://huggingface.co/allenai/satlas-pretrain/resolve/main/sentinel2_resnet50_si_ms.pth?download=true',
         transforms=_sentinel2_ms_satlas_transforms,
         meta={
-            "dataset": "SATLASPretrain",
-            "in_chans": 9,
-            "model": "resnet50",
-            "publication": "https://arxiv.org/abs/2211.15660",
-            "repo": "https://github.com/allenai/satlaspretrain_models",
-            "ssl_method": "satlaspretrain",
+            'dataset': 'SATLASPretrain',
+            'in_chans': 9,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2211.15660',
+            'repo': 'https://github.com/allenai/satlaspretrain_models',
+            'ssl_method': 'satlaspretrain',
         },
     )
 
