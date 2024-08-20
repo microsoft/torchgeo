@@ -6,6 +6,7 @@
 import os
 from collections.abc import Callable
 from glob import glob
+from typing import ClassVar
 
 import matplotlib
 import matplotlib.cm
@@ -61,9 +62,9 @@ class GeoNRW(NonGeoDataset):
     .. versionadded:: 0.6.0
     """
 
-    splits = ['train', 'test']
+    splits: ClassVar[list[str]] = ['train', 'test']
 
-    train_list = [
+    train_list: ClassVar[list[str]] = [
         'aachen',
         'bergisch',
         'bielefeld',
@@ -106,9 +107,9 @@ class GeoNRW(NonGeoDataset):
         'wuppertal',
     ]
 
-    test_list = ['duesseldorf', 'herne', 'neuss']
+    test_list: ClassVar[list[str]] = ['duesseldorf', 'herne', 'neuss']
 
-    classes = [
+    classes: ClassVar[list[str]] = [
         'background',
         'forest',
         'water',
@@ -122,7 +123,7 @@ class GeoNRW(NonGeoDataset):
         'buildings',
     ]
 
-    colormap = mcolors.ListedColormap(
+    colormap: ClassVar[mcolors.ListedColormap] = mcolors.ListedColormap(
         [
             '#000000',  # matplotlib black for background
             '#2ca02c',  # matplotlib green for forest
@@ -138,23 +139,25 @@ class GeoNRW(NonGeoDataset):
         ]
     )
 
-    readers: dict[str, Callable[[str], Image.Image]] = {
+    readers: ClassVar[dict[str, Callable[[str], Image.Image]]] = {
         'rgb': lambda path: Image.open(path).convert('RGB'),
         'dem': lambda path: Image.open(path).copy(),
         'seg': lambda path: Image.open(path).convert('I;16'),
     }
 
-    modality_filenames: dict[str, Callable[[list[str]], str]] = {
+    modality_filenames: ClassVar[dict[str, Callable[[list[str]], str]]] = {
         'rgb': lambda utm_coords: '{}_{}_rgb.jp2'.format(*utm_coords),
         'dem': lambda utm_coords: '{}_{}_dem.tif'.format(*utm_coords),
         'seg': lambda utm_coords: '{}_{}_seg.tif'.format(*utm_coords),
     }
 
-    modalities = ['rgb', 'dem', 'seg']
+    modalities: ClassVar[list[str]] = ['rgb', 'dem', 'seg']
 
-    url = 'https://huggingface.co/datasets/torchgeo/geonrw/resolve/main/{}'
-    filename = 'nrw_dataset.tar.gz'
-    md5 = 'd56ab50098d5452c33d08ff4e99ce281'
+    url: ClassVar[str] = (
+        'https://huggingface.co/datasets/torchgeo/geonrw/resolve/main/{}'
+    )
+    filename: ClassVar[str] = 'nrw_dataset.tar.gz'
+    md5: ClassVar[str] = 'd56ab50098d5452c33d08ff4e99ce281'
 
     def __init__(
         self,
@@ -163,7 +166,7 @@ class GeoNRW(NonGeoDataset):
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
-    ):
+    ) -> None:
         """Initialize the GeoNRW dataset.
 
         Args:
