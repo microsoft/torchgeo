@@ -4,7 +4,7 @@
 """Digital Typhoon Data Module."""
 
 import copy
-from typing import Any
+from typing import Any, ClassVar
 
 from torch.utils.data import Subset
 
@@ -17,11 +17,11 @@ from .utils import group_shuffle_split
 class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
     """Digital Typhoon Analysis Data Module."""
 
-    valid_split_types = ["time", "typhoon_id"]
+    valid_split_types: ClassVar[list[str]] = ['time', 'typhoon_id']
 
     def __init__(
         self,
-        split_by: str = "time",
+        split_by: str = 'time',
         batch_size: int = 64,
         num_workers: int = 0,
         **kwargs: Any,
@@ -41,7 +41,7 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
 
         assert (
             split_by in self.valid_split_types
-        ), f"Please choose from {self.valid_split_types}"
+        ), f'Please choose from {self.valid_split_types}'
         self.split_by = split_by
 
     def _split_dataset(
@@ -50,15 +50,15 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
         """Split dataset into two parts.
 
         Args:
-            dataset: Dataset to be split into train/test or train/val subsets
+            sample_sequences: List of sample sequence dictionaries to be split
 
         Returns:
             a tuple of the subset datasets
         """
-        if self.split_by == "time":
+        if self.split_by == 'time':
             sequences = list(enumerate(sample_sequences))
 
-            sorted_sequences = sorted(sequences, key=lambda x: x[1]["seq_id"])
+            sorted_sequences = sorted(sequences, key=lambda x: x[1]['seq_id'])
             selected_indices = [x[0] for x in sorted_sequences]
 
             split_idx = int(len(sorted_sequences) * 0.8)
@@ -68,7 +68,7 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
         else:
             sequences = list(enumerate(sample_sequences))
             train_indices, val_indices = group_shuffle_split(
-                [x[1]["id"] for x in sequences], train_size=0.8, random_state=0
+                [x[1]['id'] for x in sequences], train_size=0.8, random_state=0
             )
 
         return train_indices, val_indices
@@ -85,7 +85,7 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
 
         train_indices, test_indices = self._split_dataset(self.dataset.sample_sequences)
 
-        if stage in ["fit", "validate"]:
+        if stage in ['fit', 'validate']:
             # Randomly split train into train and validation sets
             index_mapping = {
                 new_index: original_index
@@ -100,5 +100,5 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
             self.train_dataset = Subset(self.dataset, train_indices)
             self.val_dataset = Subset(self.dataset, val_indices)
 
-        if stage in ["test"]:
+        if stage in ['test']:
             self.test_dataset = Subset(self.dataset, test_indices)
