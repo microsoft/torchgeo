@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+"""Test Digital Typhoon Datamodule."""
 
 import os
 
@@ -11,6 +12,8 @@ from torchgeo.datasets.digital_typhoon import (
     DigitalTyphoonAnalysis,
     _SampleSequenceDict,
 )
+
+pytest.importorskip('h5py', minversion='3.6')
 
 
 class TestDigitalTyphoonAnalysisDataModule:
