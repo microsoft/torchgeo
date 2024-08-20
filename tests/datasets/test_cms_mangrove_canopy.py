@@ -20,10 +20,6 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestCMSGlobalMangroveCanopy:
     @pytest.fixture
     def dataset(

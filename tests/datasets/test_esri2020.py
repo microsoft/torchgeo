@@ -12,7 +12,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
@@ -22,14 +21,9 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestEsri2020:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> Esri2020:
-        monkeypatch.setattr(torchgeo.datasets.esri2020, 'download_url', download_url)
         zipfile = 'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip'
         monkeypatch.setattr(Esri2020, 'zipfile', zipfile)
 

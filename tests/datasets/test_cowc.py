@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -13,12 +12,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import COWC, COWCCounting, COWCDetection, DatasetNotFoundError
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestCOWC:
@@ -32,7 +26,6 @@ class TestCOWCCounting:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> COWC:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         base_url = os.path.join('tests', 'data', 'cowc_counting') + os.sep
         monkeypatch.setattr(COWCCounting, 'base_url', base_url)
         md5s = [
@@ -96,7 +89,6 @@ class TestCOWCDetection:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> COWC:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         base_url = os.path.join('tests', 'data', 'cowc_detection') + os.sep
         monkeypatch.setattr(COWCDetection, 'base_url', base_url)
         md5s = [

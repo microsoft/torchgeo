@@ -91,16 +91,10 @@ datasets = [
     "pycocotools>=2.0.7",
     # pyvista 0.34.2+ required to avoid ImportError in CI
     "pyvista>=0.34.2",
-    # radiant-mlhub 0.3+ required for newer tqdm support required by lightning
-    "radiant-mlhub>=0.3",
-    # rarfile 4+ required for wheels
-    "rarfile>=4",
     # scikit-image 0.19+ required for Python 3.10 wheels
     "scikit-image>=0.19",
     # scipy 1.7.2+ required for Python 3.10 wheels
     "scipy>=1.7.2",
-    # zipfile-deflate64 0.2+ required for Python 3.10 wheels
-    "zipfile-deflate64>=0.2",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx
@@ -222,7 +216,13 @@ filterwarnings = [
     # https://github.com/rr-/docstring_parser/pull/82
     "ignore:ast.* is deprecated and will be removed in Python 3.14:DeprecationWarning:docstring_parser.attrdoc",
     # https://github.com/python/cpython/pull/102953
-    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:tarfile",
+    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchgeo.datasets.utils",
+    # https://github.com/kornia/kornia/pull/2967
+    "ignore:`torch.cuda.amp.custom_fwd\\(args...\\)` is deprecated.:FutureWarning:kornia.feature.lightglue",
+    # https://github.com/kornia/kornia/pull/2981
+    "ignore:torch.is_autocast_cpu_enabled\\(\\) is deprecated.:DeprecationWarning:kornia.utils.helpers",
+    # https://github.com/pytorch/pytorch/pull/129239
+    "ignore:You are using `torch.load` with `weights_only=False`:FutureWarning",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
@@ -268,10 +268,11 @@ quote-style = "single"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-extend-select = ["D", "I", "NPY201", "UP"]
+extend-select = ["ANN", "D", "I", "NPY201", "RUF", "UP"]
+ignore = ["ANN101", "ANN102", "ANN401"]
 
 [tool.ruff.lint.per-file-ignores]
-"docs/**" = ["D"]
+"docs/**" = ["ANN", "D"]
 "experiments/**" = ["D"]
 "tests/**" = ["D"]
 

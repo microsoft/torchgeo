@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -50,7 +51,7 @@ class OSCD(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    urls = {
+    urls: ClassVar[dict[str, str]] = {
         'Onera Satellite Change Detection dataset - Images.zip': (
             'https://partage.imt.fr/index.php/s/gKRaWgRnLMfwMGo/download'
         ),
@@ -61,7 +62,7 @@ class OSCD(NonGeoDataset):
             'https://partage.imt.fr/index.php/s/gpStKn4Mpgfnr63/download'
         ),
     }
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'Onera Satellite Change Detection dataset - Images.zip': (
             'c50d4a2941da64e03a47ac4dec63d915'
         ),
@@ -75,9 +76,9 @@ class OSCD(NonGeoDataset):
 
     zipfile_glob = '*Onera*.zip'
     filename_glob = '*Onera*'
-    splits = ['train', 'test']
+    splits = ('train', 'test')
 
-    colormap = ['blue']
+    colormap = ('blue',)
 
     all_bands = (
         'B01',
@@ -319,7 +320,7 @@ class OSCD(NonGeoDataset):
                 torch.from_numpy(rgb_img),
                 sample['mask'],
                 alpha=alpha,
-                colors=self.colormap,
+                colors=list(self.colormap),
             )
             return array
 

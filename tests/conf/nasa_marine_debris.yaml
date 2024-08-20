@@ -10,4 +10,3 @@ data:
     batch_size: 1
   dict_kwargs:
     root: "tests/data/nasa_marine_debris"
-    download: true

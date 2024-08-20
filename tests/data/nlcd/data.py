@@ -43,7 +43,7 @@ PROJCS["Albers Conical Equal Area",
 """
 
 
-def create_file(path: str, dtype: str):
+def create_file(path: str, dtype: str) -> None:
     """Create the testing file."""
     profile = {
         'driver': 'GTiff',

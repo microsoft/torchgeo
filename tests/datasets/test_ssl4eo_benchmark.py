@@ -15,7 +15,6 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     CDL,
     NLCD,
@@ -23,10 +22,6 @@ from torchgeo.datasets import (
     RasterDataset,
     SSL4EOLBenchmark,
 )
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestSSL4EOLBenchmark:
@@ -40,11 +35,7 @@ class TestSSL4EOLBenchmark:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SSL4EOLBenchmark:
-        monkeypatch.setattr(
-            torchgeo.datasets.ssl4eo_benchmark, 'download_url', download_url
-        )
         root = tmp_path
-
         url = os.path.join('tests', 'data', 'ssl4eo_benchmark_landsat', '{}.tar.gz')
         monkeypatch.setattr(SSL4EOLBenchmark, 'url', url)
 

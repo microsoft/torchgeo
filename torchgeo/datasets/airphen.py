@@ -40,8 +40,8 @@ class Airphen(RasterDataset):
 
     # Each camera measures a custom set of spectral bands chosen at purchase time.
     # Hiphen offers 8 bands to choose from, sorted from short to long wavelength.
-    all_bands = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8']
-    rgb_bands = ['B4', 'B3', 'B1']
+    all_bands = ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8')
+    rgb_bands = ('B4', 'B3', 'B1')
 
     def plot(
         self,

@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -13,7 +12,6 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
@@ -23,18 +21,12 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestEuroCrops:
     @pytest.fixture(params=[None, ['1000000010'], ['1000000000'], ['2000000000']])
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroCrops:
         classes = request.param
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
-        monkeypatch.setattr(torchgeo.datasets.eurocrops, 'download_url', download_url)
         monkeypatch.setattr(
             EuroCrops, 'zenodo_files', [('AA.zip', 'b2ef5cac231294731c1dfea47cba544d')]
         )
@@ -91,5 +83,5 @@ class TestEuroCrops:
             dataset[query]
 
     def test_integrity_error(self, dataset: EuroCrops) -> None:
-        dataset.zenodo_files = [('AA.zip', 'invalid')]
+        dataset.zenodo_files = (('AA.zip', 'invalid'),)
         assert not dataset._check_integrity()

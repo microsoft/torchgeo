@@ -137,7 +137,7 @@ class Sentinel1(Sentinel):
         \.
     """
     date_format = '%Y%m%dT%H%M%S'
-    all_bands = ['HH', 'HV', 'VV', 'VH']
+    all_bands = ('HH', 'HV', 'VV', 'VH')
     separate_files = True
 
     def __init__(
@@ -277,7 +277,7 @@ class Sentinel2(Sentinel):
     date_format = '%Y%m%dT%H%M%S'
 
     # https://gisgeography.com/sentinel-2-bands-combinations/
-    all_bands = [
+    all_bands: tuple[str, ...] = (
         'B01',
         'B02',
         'B03',
@@ -291,8 +291,8 @@ class Sentinel2(Sentinel):
         'B10',
         'B11',
         'B12',
-    ]
-    rgb_bands = ['B04', 'B03', 'B02']
+    )
+    rgb_bands = ('B04', 'B03', 'B02')
 
     separate_files = True
 

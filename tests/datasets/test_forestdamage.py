@@ -11,24 +11,15 @@ import torch
 import torch.nn as nn
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, ForestDamage
-
-
-def download_url(url: str, root: str | Path, *args: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestForestDamage:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ForestDamage:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'forestdamage')
-
         url = os.path.join(data_dir, 'Data_Set_Larch_Casebearer.zip')
-
         md5 = '52d82ac38899e6e6bb40aacda643ee15'
-
         monkeypatch.setattr(ForestDamage, 'url', url)
         monkeypatch.setattr(ForestDamage, 'md5', md5)
         root = tmp_path

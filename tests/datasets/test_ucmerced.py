@@ -13,12 +13,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, UCMerced
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestUCMerced:
@@ -26,7 +21,6 @@ class TestUCMerced:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> UCMerced:
-        monkeypatch.setattr(torchgeo.datasets.ucmerced, 'download_url', download_url)
         md5 = 'a42ef8779469d196d8f2971ee135f030'
         monkeypatch.setattr(UCMerced, 'md5', md5)
         url = os.path.join('tests', 'data', 'ucmerced', 'UCMerced_LandUse.zip')
@@ -77,7 +71,7 @@ class TestUCMerced:
         self, dataset: UCMerced, tmp_path: Path
     ) -> None:
         shutil.rmtree(dataset.root)
-        download_url(dataset.url, root=tmp_path)
+        shutil.copy(dataset.url, tmp_path)
         UCMerced(root=tmp_path, download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:

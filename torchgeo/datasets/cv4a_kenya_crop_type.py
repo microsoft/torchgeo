@@ -65,8 +65,8 @@ class CV4AKenyaCropType(NonGeoDataset):
     """
 
     url = 'https://radiantearth.blob.core.windows.net/mlhub/kenya-crop-challenge'
-    tiles = list(map(str, range(4)))
-    dates = [
+    tiles = tuple(map(str, range(4)))
+    dates = (
         '20190606',
         '20190701',
         '20190706',
@@ -80,7 +80,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         '20190924',
         '20191004',
         '20191103',
-    ]
+    )
     all_bands = (
         'B01',
         'B02',
@@ -96,7 +96,7 @@ class CV4AKenyaCropType(NonGeoDataset):
         'B12',
         'CLD',
     )
-    rgb_bands = ['B04', 'B03', 'B02']
+    rgb_bands = ('B04', 'B03', 'B02')
 
     # Same for all tiles
     tile_height = 3035
@@ -141,11 +141,13 @@ class CV4AKenyaCropType(NonGeoDataset):
         # Calculate the indices that we will use over all tiles
         self.chips_metadata = []
         for tile_index in range(len(self.tiles)):
-            for y in list(range(0, self.tile_height - self.chip_size, stride)) + [
-                self.tile_height - self.chip_size
+            for y in [
+                *list(range(0, self.tile_height - self.chip_size, stride)),
+                self.tile_height - self.chip_size,
             ]:
-                for x in list(range(0, self.tile_width - self.chip_size, stride)) + [
-                    self.tile_width - self.chip_size
+                for x in [
+                    *list(range(0, self.tile_width - self.chip_size, stride)),
+                    self.tile_width - self.chip_size,
                 ]:
                     self.chips_metadata.append((tile_index, y, x))
 

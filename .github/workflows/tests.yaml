@@ -8,6 +8,9 @@ on:
     branches:
       - main
       - release**
+defaults:
+  run:
+    shell: bash
 jobs:
   latest:
     name: latest
@@ -34,17 +37,6 @@ jobs:
         if: ${{ runner.os != 'macOS' }}
       - name: Setup headless display for pyvista
         uses: pyvista/setup-headless-display-action@v2
-      - name: Install apt dependencies (Linux)
-        run: |
-          sudo apt-get update
-          sudo apt-get install unrar
-        if: ${{ runner.os == 'Linux' }}
-      - name: Install brew dependencies (macOS)
-        run: brew install rar
-        if: ${{ runner.os == 'macOS' }}
-      - name: Install choco dependencies (Windows)
-        run: choco install 7zip
-        if: ${{ runner.os == 'Windows' }}
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -80,10 +72,6 @@ jobs:
           key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/min-reqs.old') }}-${{ hashFiles('requirements/mins-cons.old') }}
       - name: Setup headless display for pyvista
         uses: pyvista/setup-headless-display-action@v2
-      - name: Install apt dependencies (Linux)
-        run: |
-          sudo apt-get update
-          sudo apt-get install unrar
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |

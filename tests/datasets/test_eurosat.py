@@ -14,7 +14,6 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     DatasetNotFoundError,
     EuroSAT,
@@ -22,10 +21,6 @@ from torchgeo.datasets import (
     EuroSATSpatial,
     RGBBandsMissingError,
 )
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestEuroSAT:
@@ -37,7 +32,6 @@ class TestEuroSAT:
     ) -> EuroSAT:
         base_class: type[EuroSAT] = request.param[0]
         split: str = request.param[1]
-        monkeypatch.setattr(torchgeo.datasets.eurosat, 'download_url', download_url)
         md5 = 'aa051207b0547daba0ac6af57808d68e'
         monkeypatch.setattr(base_class, 'md5', md5)
         url = os.path.join('tests', 'data', 'eurosat', 'EuroSATallBands.zip')
@@ -96,7 +90,7 @@ class TestEuroSAT:
         self, dataset: EuroSAT, tmp_path: Path
     ) -> None:
         shutil.rmtree(dataset.root)
-        download_url(dataset.url, root=tmp_path)
+        shutil.copy(dataset.url, tmp_path)
         EuroSAT(root=tmp_path, download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
