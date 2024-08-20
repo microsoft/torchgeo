@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, percentile_normalization
+from .utils import Path, download_url, lazy_import, percentile_normalization
 
 
 class _SampleSequenceDict(TypedDict):
@@ -100,7 +100,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         task: str = 'regression',
         features: Sequence[str] = ['wind'],
         targets: list[str] = ['wind'],
@@ -130,12 +130,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             AssertionError: if ``task`` argument is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                'h5py is not installed and is required to use this dataset'
-            )
+        lazy_import('h5py')
         self.root = root
         self.transforms = transforms
         self.download = download
@@ -311,7 +306,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             Returns:
                 image tensor
             """
-            import h5py
+            h5py = lazy_import('h5py')
 
             full_path = os.path.join(self.root, self.data_root, 'image', id, filepath)
             with h5py.File(full_path, 'r') as h5f:
