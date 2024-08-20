@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,15 +56,15 @@ class Vaihingen2D(NonGeoDataset):
     * https://doi.org/10.5194/isprsannals-I-3-293-2012
 
     .. versionadded:: 0.2
-    """  # noqa: E501
+    """
 
-    filenames = [
+    filenames = (
         'ISPRS_semantic_labeling_Vaihingen.zip',
         'ISPRS_semantic_labeling_Vaihingen_ground_truth_COMPLETE.zip',
-    ]
-    md5s = ['462b8dca7b6fa9eaf729840f0cdfc7f3', '4802dd6326e2727a352fb735be450277']
+    )
+    md5s = ('462b8dca7b6fa9eaf729840f0cdfc7f3', '4802dd6326e2727a352fb735be450277')
     image_root = 'top'
-    splits = {
+    splits: ClassVar[dict[str, list[str]]] = {
         'train': [
             'top_mosaic_09cm_area1.tif',
             'top_mosaic_09cm_area11.tif',
@@ -102,22 +103,22 @@ class Vaihingen2D(NonGeoDataset):
             'top_mosaic_09cm_area29.tif',
         ],
     }
-    classes = [
+    classes = (
         'Clutter/background',
         'Impervious surfaces',
         'Building',
         'Low Vegetation',
         'Tree',
         'Car',
-    ]
-    colormap = [
+    )
+    colormap = (
         (255, 0, 0),
         (255, 255, 255),
         (0, 0, 255),
         (0, 255, 255),
         (0, 255, 0),
         (255, 255, 0),
-    ]
+    )
 
     def __init__(
         self,
@@ -258,7 +259,7 @@ class Vaihingen2D(NonGeoDataset):
         """
         ncols = 1
         image1 = draw_semantic_segmentation_masks(
-            sample['image'][:3], sample['mask'], alpha=alpha, colors=self.colormap
+            sample['image'][:3], sample['mask'], alpha=alpha, colors=list(self.colormap)
         )
         if 'prediction' in sample:
             ncols += 1
@@ -266,7 +267,7 @@ class Vaihingen2D(NonGeoDataset):
                 sample['image'][:3],
                 sample['prediction'],
                 alpha=alpha,
-                colors=self.colormap,
+                colors=list(self.colormap),
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))

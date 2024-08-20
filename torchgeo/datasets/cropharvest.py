@@ -7,6 +7,7 @@ import glob
 import json
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,7 +56,7 @@ class CropHarvest(NonGeoDataset):
     """
 
     # https://github.com/nasaharvest/cropharvest/blob/main/cropharvest/bands.py
-    all_bands = [
+    all_bands = (
         'VV',
         'VH',
         'B2',
@@ -74,12 +75,12 @@ class CropHarvest(NonGeoDataset):
         'elevation',
         'slope',
         'NDVI',
-    ]
-    rgb_bands = ['B4', 'B3', 'B2']
+    )
+    rgb_bands = ('B4', 'B3', 'B2')
 
     features_url = 'https://zenodo.org/records/7257688/files/features.tar.gz?download=1'
     labels_url = 'https://zenodo.org/records/7257688/files/labels.geojson?download=1'
-    file_dict = {
+    file_dict: ClassVar[dict[str, dict[str, str]]] = {
         'features': {
             'url': features_url,
             'filename': 'features.tar.gz',

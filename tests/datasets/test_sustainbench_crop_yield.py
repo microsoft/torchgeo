@@ -12,12 +12,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, SustainBenchCropYield
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestSustainBenchCropYield:
@@ -25,10 +20,6 @@ class TestSustainBenchCropYield:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SustainBenchCropYield:
-        monkeypatch.setattr(
-            torchgeo.datasets.sustainbench_crop_yield, 'download_url', download_url
-        )
-
         md5 = '7a5591794e14dd73d2b747cd2244acbc'
         monkeypatch.setattr(SustainBenchCropYield, 'md5', md5)
         url = os.path.join('tests', 'data', 'sustainbench_crop_yield', 'soybeans.zip')

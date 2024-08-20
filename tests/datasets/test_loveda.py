@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -12,12 +11,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, LoveDA
-
-
-def download_url(url: str, root: str | Path, *args: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestLoveDA:
@@ -25,7 +19,6 @@ class TestLoveDA:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LoveDA:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         md5 = '3d5b1373ef9a3084ec493b9b2056fe07'
 
         info_dict = {

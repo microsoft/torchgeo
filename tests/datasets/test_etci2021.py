@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -12,12 +11,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import ETCI2021, DatasetNotFoundError
-
-
-def download_url(url: str, root: str | Path, *args: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestETCI2021:
@@ -25,7 +19,6 @@ class TestETCI2021:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> ETCI2021:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'etci2021')
         metadata = {
             'train': {

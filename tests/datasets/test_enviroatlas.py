@@ -13,7 +13,6 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
@@ -22,10 +21,6 @@ from torchgeo.datasets import (
     UnionDataset,
 )
 from torchgeo.samplers import RandomGeoSampler
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestEnviroAtlas:
@@ -39,7 +34,6 @@ class TestEnviroAtlas:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> EnviroAtlas:
-        monkeypatch.setattr(torchgeo.datasets.enviroatlas, 'download_url', download_url)
         monkeypatch.setattr(EnviroAtlas, 'md5', '071ec65c611e1d4915a5247bffb5ad87')
         monkeypatch.setattr(
             EnviroAtlas,

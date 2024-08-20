@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -54,12 +55,12 @@ class Potsdam2D(NonGeoDataset):
     * https://doi.org/10.5194/isprsannals-I-3-293-2012
 
     .. versionadded:: 0.2
-    """  # noqa: E501
+    """
 
-    filenames = ['4_Ortho_RGBIR.zip', '5_Labels_all.zip']
-    md5s = ['c4a8f7d8c7196dd4eba4addd0aae10c1', 'cf7403c1a97c0d279414db']
+    filenames = ('4_Ortho_RGBIR.zip', '5_Labels_all.zip')
+    md5s = ('c4a8f7d8c7196dd4eba4addd0aae10c1', 'cf7403c1a97c0d279414db')
     image_root = '4_Ortho_RGBIR'
-    splits = {
+    splits: ClassVar[dict[str, list[str]]] = {
         'train': [
             'top_potsdam_2_10',
             'top_potsdam_2_11',
@@ -103,22 +104,22 @@ class Potsdam2D(NonGeoDataset):
             'top_potsdam_7_13',
         ],
     }
-    classes = [
+    classes = (
         'Clutter/background',
         'Impervious surfaces',
         'Building',
         'Low Vegetation',
         'Tree',
         'Car',
-    ]
-    colormap = [
+    )
+    colormap = (
         (255, 0, 0),
         (255, 255, 255),
         (0, 0, 255),
         (0, 255, 255),
         (0, 255, 0),
         (255, 255, 0),
-    ]
+    )
 
     def __init__(
         self,
@@ -257,7 +258,7 @@ class Potsdam2D(NonGeoDataset):
         """
         ncols = 1
         image1 = draw_semantic_segmentation_masks(
-            sample['image'][:3], sample['mask'], alpha=alpha, colors=self.colormap
+            sample['image'][:3], sample['mask'], alpha=alpha, colors=list(self.colormap)
         )
         if 'prediction' in sample:
             ncols += 1
@@ -265,7 +266,7 @@ class Potsdam2D(NonGeoDataset):
                 sample['image'][:3],
                 sample['prediction'],
                 alpha=alpha,
-                colors=self.colormap,
+                colors=list(self.colormap),
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))

@@ -33,7 +33,7 @@ class Landsat(RasterDataset, abc.ABC):
     * `Surface Temperature <https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature>`_
     * `Surface Reflectance <https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-reflectance>`_
     * `U.S. Analysis Ready Data <https://www.usgs.gov/landsat-missions/landsat-collection-2-us-analysis-ready-data>`_
-    """  # noqa: E501
+    """
 
     # https://www.usgs.gov/landsat-missions/landsat-collection-2
     filename_regex = r"""
@@ -55,7 +55,7 @@ class Landsat(RasterDataset, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def default_bands(self) -> list[str]:
+    def default_bands(self) -> tuple[str, ...]:
         """Bands to load by default."""
 
     def __init__(
@@ -145,8 +145,8 @@ class Landsat1(Landsat):
 
     filename_glob = 'LM01_*_{}.*'
 
-    default_bands = ['B4', 'B5', 'B6', 'B7']
-    rgb_bands = ['B6', 'B5', 'B4']
+    default_bands = ('B4', 'B5', 'B6', 'B7')
+    rgb_bands = ('B6', 'B5', 'B4')
 
 
 class Landsat2(Landsat1):
@@ -166,8 +166,8 @@ class Landsat4MSS(Landsat):
 
     filename_glob = 'LM04_*_{}.*'
 
-    default_bands = ['B1', 'B2', 'B3', 'B4']
-    rgb_bands = ['B3', 'B2', 'B1']
+    default_bands = ('B1', 'B2', 'B3', 'B4')
+    rgb_bands = ('B3', 'B2', 'B1')
 
 
 class Landsat4TM(Landsat):
@@ -175,8 +175,8 @@ class Landsat4TM(Landsat):
 
     filename_glob = 'LT04_*_{}.*'
 
-    default_bands = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7']
-    rgb_bands = ['SR_B3', 'SR_B2', 'SR_B1']
+    default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7')
+    rgb_bands = ('SR_B3', 'SR_B2', 'SR_B1')
 
 
 class Landsat5MSS(Landsat4MSS):
@@ -196,8 +196,8 @@ class Landsat7(Landsat):
 
     filename_glob = 'LE07_*_{}.*'
 
-    default_bands = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7']
-    rgb_bands = ['SR_B3', 'SR_B2', 'SR_B1']
+    default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7')
+    rgb_bands = ('SR_B3', 'SR_B2', 'SR_B1')
 
 
 class Landsat8(Landsat):
@@ -205,11 +205,11 @@ class Landsat8(Landsat):
 
     filename_glob = 'LC08_*_{}.*'
 
-    default_bands = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7']
-    rgb_bands = ['SR_B4', 'SR_B3', 'SR_B2']
+    default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7')
+    rgb_bands = ('SR_B4', 'SR_B3', 'SR_B2')
 
 
 class Landsat9(Landsat8):
-    """Landsat 9 Operational Land Imager (OLI-2) and Thermal Infrared Sensor (TIRS-2)."""  # noqa: E501
+    """Landsat 9 Operational Land Imager (OLI-2) and Thermal Infrared Sensor (TIRS-2)."""
 
     filename_glob = 'LC09_*_{}.*'

@@ -24,7 +24,7 @@ PATHS = [
 ]
 
 
-def create_geojson():
+def create_geojson() -> dict[object, object]:
     geojson = {
         'type': 'FeatureCollection',
         'crs': {},
