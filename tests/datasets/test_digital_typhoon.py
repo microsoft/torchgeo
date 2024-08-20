@@ -22,7 +22,7 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
     shutil.copy(url, root)
 
 
-class TestTropicalCyclone:
+class TestDigitalTyphoon:
     @pytest.fixture(
         params=[
             (3, {'wind': 0}, {'pressure': 1500}),
