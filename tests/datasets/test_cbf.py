@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -12,7 +11,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     CanadianBuildingFootprints,
@@ -22,16 +20,11 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str | Path, *args: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestCanadianBuildingFootprints:
     @pytest.fixture
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> CanadianBuildingFootprints:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         monkeypatch.setattr(
             CanadianBuildingFootprints, 'provinces_territories', ['Alberta']
         )

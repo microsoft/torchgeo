@@ -4,7 +4,7 @@ Dataset,Type,Source,License,Size (px),Resolution (m)
 `Airphen`_,Imagery,Airphen,-,"1,280x960",0.047--0.09
 `Aster Global DEM`_,DEM,Aster,"public domain","3,601x3,601",30
 `Canadian Building Footprints`_,Geometries,Bing Imagery,"ODbL-1.0",-,-
-`Chesapeake Land Cover`_,"Imagery, Masks",NAIP,"CC-BY-4.0",-,1
+`Chesapeake Land Cover`_,"Imagery, Masks",NAIP,"CC0-1.0",-,1
 `Global Mangrove Distribution`_,Masks,"Remote Sensing, In Situ Measurements","public domain",-,3
 `Cropland Data Layer`_,Masks,Landsat,"public domain",-,30
 `EDDMapS`_,Points,Citizen Scientists,-,-,-

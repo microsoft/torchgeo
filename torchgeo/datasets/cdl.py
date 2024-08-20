@@ -6,7 +6,7 @@
 import os
 import pathlib
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import torch
@@ -38,7 +38,7 @@ class CDL(RasterDataset):
     If you use this dataset in your research, please cite it using the following format:
 
     * https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php#Section1_14.0
-    """  # noqa: E501
+    """
 
     filename_glob = '*_30m_cdls.tif'
     filename_regex = r"""
@@ -49,8 +49,8 @@ class CDL(RasterDataset):
     date_format = '%Y'
     is_image = False
 
-    url = 'https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip'  # noqa: E501
-    md5s = {
+    url = 'https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip'
+    md5s: ClassVar[dict[int, str]] = {
         2023: '8c7685d6278d50c554f934b16a6076b7',
         2022: '754cf50670cdfee511937554785de3e6',
         2021: '27606eab08fe975aa138baad3e5dfcd8',
@@ -69,7 +69,7 @@ class CDL(RasterDataset):
         2008: '0610f2f17ab60a9fbb3baeb7543993a4',
     }
 
-    cmap = {
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 255),
         1: (255, 211, 0, 255),
         2: (255, 37, 37, 255),

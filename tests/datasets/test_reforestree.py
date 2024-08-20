@@ -11,24 +11,15 @@ import torch
 import torch.nn as nn
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, ReforesTree
-
-
-def download_url(url: str, root: str | Path, *args: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestReforesTree:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ReforesTree:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'reforestree')
-
         url = os.path.join(data_dir, 'reforesTree.zip')
-
         md5 = '387e04dbbb0aa803f72bd6d774409648'
-
         monkeypatch.setattr(ReforesTree, 'url', url)
         monkeypatch.setattr(ReforesTree, 'md5', md5)
         root = tmp_path

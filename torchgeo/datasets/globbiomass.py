@@ -7,7 +7,7 @@ import glob
 import os
 import pathlib
 from collections.abc import Callable, Iterable
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -73,9 +73,9 @@ class GlobBiomass(RasterDataset):
     is_image = False
     dtype = torch.float32  # pixelwise regression
 
-    measurements = ['agb', 'gsv']
+    measurements = ('agb', 'gsv')
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'N00E020_agb.zip': 'bd83a3a4c143885d1962bde549413be6',
         'N00E020_gsv.zip': 'da5ddb88e369df2d781a0c6be008ae79',
         'N00E060_agb.zip': '85eaca95b939086cc528e396b75bd097',
@@ -207,7 +207,7 @@ class GlobBiomass(RasterDataset):
 
         mask = torch.cat((mask, std_err_mask), dim=0)
 
-        sample = {'mask': mask, 'crs': self.crs, 'bbox': query}
+        sample = {'mask': mask, 'crs': self.crs, 'bounds': query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)

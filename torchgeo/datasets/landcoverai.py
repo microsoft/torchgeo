@@ -9,7 +9,7 @@ import hashlib
 import os
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -64,8 +64,8 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
     url = 'https://landcover.ai.linuxpolska.com/download/landcover.ai.v1.zip'
     filename = 'landcover.ai.v1.zip'
     md5 = '3268c89070e8734b4e91d531c0617e03'
-    classes = ['Background', 'Building', 'Woodland', 'Water', 'Road']
-    cmap = {
+    classes = ('Background', 'Building', 'Woodland', 'Water', 'Road')
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 0),
         1: (97, 74, 74, 255),
         2: (38, 115, 0, 255),
@@ -268,7 +268,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         mask = self._merge_files(mask_filepaths, query, self.band_indexes)
         sample = {
             'crs': self.crs,
-            'bbox': query,
+            'bounds': query,
             'image': img.float(),
             'mask': mask.long(),
         }

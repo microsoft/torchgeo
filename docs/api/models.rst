@@ -50,6 +50,12 @@ ResNet
 .. autoclass:: ResNet18_Weights
 .. autoclass:: ResNet50_Weights
 
+Scale-MAE
+^^^^^^^^^
+
+.. autofunction:: ScaleMAE
+.. autoclass:: ScaleMAELarge16_Weights
+
 Swin Transformer
 ^^^^^^^^^^^^^^^^^^
 

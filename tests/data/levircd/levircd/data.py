@@ -5,7 +5,6 @@
 
 import hashlib
 import os
-import shutil
 import zipfile
 
 import numpy as np
@@ -32,8 +31,11 @@ if __name__ == '__main__':
     directories = ['A', 'B', 'label']
 
     for split, filename in zip(splits, filenames):
+        if os.path.exists(filename):
+            os.remove(filename)
+
         for directory in directories:
-            os.mkdir(directory)
+            os.makedirs(directory, exist_ok=True)
 
         for i in range(2):
             path = os.path.join('A', f'{split}_{i}.png')
@@ -50,9 +52,6 @@ if __name__ == '__main__':
             for directory in directories:
                 for file in os.listdir(directory):
                     f.write(os.path.join(directory, file))
-
-        for directory in directories:
-            shutil.rmtree(directory)
 
         # compute checksum
         with open(filename, 'rb') as f:

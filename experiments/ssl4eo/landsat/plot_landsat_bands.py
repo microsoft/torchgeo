@@ -46,7 +46,7 @@ df = pd.read_csv('band_data.csv', skip_blank_lines=True)
 df = df.iloc[::-1]
 
 fig, ax = plt.subplots(figsize=(5.5, args.fig_height))
-ax1, ax2 = fig.subplots(nrows=1, ncols=2, gridspec_kw={'width_ratios': [3, 1]})  # type: ignore[misc]
+ax1, ax2 = fig.subplots(nrows=1, ncols=2, gridspec_kw={'width_ratios': [3, 1]})
 
 sensor_names: list[str] = []
 sensor_ylocs: list[float] = []
@@ -125,8 +125,8 @@ for (satellite, sensor), group1 in df.groupby(['Satellite', 'Sensor'], sort=Fals
 
 # Labels
 ax.set_xlabel(r'Wavelength (\textmu m)')
-ax.set_xticks([0], labels=[0])
-ax.set_yticks([0], labels=[0])
+ax.set_xticks([0], labels=['0'])
+ax.set_yticks([0], labels=['0'])
 ax.tick_params(colors='w')
 ax.spines[['bottom', 'left', 'top', 'right']].set_visible(False)
 

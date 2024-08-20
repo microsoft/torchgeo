@@ -2,22 +2,15 @@
 # Licensed under the MIT License.
 
 from pathlib import Path
-from typing import Any
 
 import pytest
 import timm
 import torch
-import torchvision
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import ViTSmall16_Weights, vit_small_patch16_224
-
-
-def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
-    state_dict: dict[str, Any] = torch.load(url)
-    return state_dict
 
 
 class TestViTSmall16:
@@ -27,7 +20,11 @@ class TestViTSmall16:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -38,7 +35,6 @@ class TestViTSmall16:
             monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
             monkeypatch.setattr(weights, 'url', str(path))
-        monkeypatch.setattr(torchvision.models._api, 'load_state_dict_from_url', load)
         return weights
 
     def test_vit(self) -> None:

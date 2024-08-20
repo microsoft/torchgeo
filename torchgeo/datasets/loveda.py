@@ -5,7 +5,8 @@
 
 import glob
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -57,10 +58,10 @@ class LoveDA(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    scenes = ['urban', 'rural']
-    splits = ['train', 'val', 'test']
+    scenes = ('urban', 'rural')
+    splits = ('train', 'val', 'test')
 
-    info_dict = {
+    info_dict: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'url': 'https://zenodo.org/record/5706578/files/Train.zip?download=1',
             'filename': 'Train.zip',
@@ -78,7 +79,7 @@ class LoveDA(NonGeoDataset):
         },
     }
 
-    classes = [
+    classes = (
         'background',
         'building',
         'road',
@@ -87,13 +88,13 @@ class LoveDA(NonGeoDataset):
         'forest',
         'agriculture',
         'no-data',
-    ]
+    )
 
     def __init__(
         self,
         root: Path = 'data',
         split: str = 'train',
-        scene: list[str] = ['urban', 'rural'],
+        scene: Sequence[str] = ['urban', 'rural'],
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
