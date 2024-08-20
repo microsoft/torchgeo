@@ -639,7 +639,7 @@ class ResNet152_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_SI_RGB_SATLAS = Weights(
         url='https://hf.co/torchgeo/satlas/resolve/081d6607431bf36bdb59c223777cbb267131b8f2/sentinel2_resnet152_si_rgb-f4d24c3c.pth',
-        transforms=_satlas_sentinel2_transforms,
+        transforms=_satlas_transforms,
         meta={
             'dataset': 'SatlasPretrain',
             'in_chans': 3,

@@ -51,7 +51,7 @@ class TestResNet18:
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta['in_chans']
         sample = {
-            'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
+            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
         }
         mocked_weights.transforms(sample)
 
@@ -91,7 +91,7 @@ class TestResNet50:
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta['in_chans']
         sample = {
-            'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
+            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
         }
         mocked_weights.transforms(sample)
 
@@ -131,7 +131,7 @@ class TestResNet152:
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta['in_chans']
         sample = {
-            'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
+            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
         }
         mocked_weights.transforms(sample)
 

@@ -299,7 +299,7 @@ def swin_v2_t(
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
-        assert set(missing_keys) <= {}
+        assert set(missing_keys) <= set()
         assert not unexpected_keys
 
     return model
@@ -332,7 +332,7 @@ def swin_v2_b(
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
-        assert set(missing_keys) <= {}
+        assert set(missing_keys) <= set()
         assert not unexpected_keys
 
     return model
