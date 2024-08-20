@@ -50,7 +50,7 @@ class TestGeoNRW:
             assert len(dataset) == 2
 
     def test_already_downloaded(self, dataset: GeoNRW) -> None:
-        GeoNRW(root=dataset.root, download=True)
+        GeoNRW(root=dataset.root)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
