@@ -72,7 +72,7 @@ class TestRegressionTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        if name == 'skippd':
+        if name in ['skippd', 'digital_typhoon_id', 'digital_typhoon_time']:
             pytest.importorskip('h5py', minversion='3.6')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
