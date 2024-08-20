@@ -8,9 +8,10 @@ from typing import Any
 import kornia.augmentation as K
 import timm
 import torch
-from kornia.contrib import Lambda
 from timm.models import ResNet
 from torchvision.models._api import Weights, WeightsEnum
+
+from .swin import _satlas_sentinel2_transforms, _satlas_transforms
 
 # https://github.com/zhu-xlab/DeCUR/blob/f190e9a3895ef645c005c8c2fce287ffa5a937e3/src/transfer_classification_BE/linear_BE_resnet.py#L286
 # Normalization by channel-wise band statistics
@@ -107,19 +108,6 @@ _ssl4eo_l_transforms = K.AugmentationSequential(
     data_keys=None,
 )
 
-# Satlas uses the TCI product for Sentinel-2 RGB, which is in the range (0, 255).
-# See details:  https://github.com/allenai/satlas/blob/main/Normalization.md#sentinel-2-images.
-# Satlas Sentinel-2 multispectral imagery has first 3 bands divided by 255 and the following 6 bands by 8160, both clipped to (0, 1).
-_std = torch.tensor(
-    [255.0, 255.0, 255.0, 8160.0, 8160.0, 8160.0, 8160.0, 8160.0, 8160.0]
-)
-_mean = torch.zeros_like(_std)
-_sentinel2_ms_satlas_transforms = K.AugmentationSequential(
-    K.Normalize(mean=_mean, std=_std),
-    K.ImageSequential(Lambda(lambda x: torch.clamp(x, min=0.0, max=1.0))),
-    data_keys=None,
-)
-
 # https://github.com/pytorch/vision/pull/6883
 # https://github.com/pytorch/vision/pull/7107
 # Can be removed once torchvision>=0.15 is required
@@ -127,7 +115,7 @@ Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 
 class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
-    """ResNet18 weights.
+    """ResNet-18 weights.
 
     For `timm <https://github.com/rwightman/pytorch-image-models>`_
     *resnet18* implementation.
@@ -306,7 +294,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
 
 
 class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
-    """ResNet50 weights.
+    """ResNet-50 weights.
 
     For `timm <https://github.com/rwightman/pytorch-image-models>`_
     *resnet50* implementation.
@@ -522,29 +510,29 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    SENTINEL2_MS_MI_SATLAS = Weights(
-        url='https://huggingface.co/allenai/satlas-pretrain/resolve/main/sentinel2_resnet50_mi_ms.pth?download=true',
-        transforms=_sentinel2_ms_satlas_transforms,
+    SENTINEL2_MI_MS_SATLAS = Weights(
+        url='https://hf.co/torchgeo/satlas/resolve/081d6607431bf36bdb59c223777cbb267131b8f2/sentinel2_resnet50_mi_ms-da5413d2.pth',
+        transforms=_satlas_sentinel2_transforms,
         meta={
-            'dataset': 'SATLASPretrain',
+            'dataset': 'SatlasPretrain',
             'in_chans': 9,
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
-            'ssl_method': 'satlaspretrain',
+            'bands': ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B11', 'B12'),
         },
     )
 
-    SENTINEL2_MS_SI_SATLAS = Weights(
-        url='https://huggingface.co/allenai/satlas-pretrain/resolve/main/sentinel2_resnet50_si_ms.pth?download=true',
-        transforms=_sentinel2_ms_satlas_transforms,
+    SENTINEL2_MI_RGB_SATLAS = Weights(
+        url='https://hf.co/torchgeo/satlas/resolve/081d6607431bf36bdb59c223777cbb267131b8f2/sentinel2_resnet50_mi_rgb-e79bb7fe.pth',
+        transforms=_satlas_transforms,
         meta={
-            'dataset': 'SATLASPretrain',
-            'in_chans': 9,
+            'dataset': 'SatlasPretrain',
+            'in_chans': 3,
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
-            'ssl_method': 'satlaspretrain',
+            'bands': ('B02', 'B03', 'B04'),
         },
     )
 
@@ -571,6 +559,94 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2103.16607',
             'repo': 'https://github.com/ServiceNow/seasonal-contrast',
             'ssl_method': 'seco',
+        },
+    )
+
+    SENTINEL2_SI_MS_SATLAS = Weights(
+        url='https://hf.co/torchgeo/satlas/resolve/081d6607431bf36bdb59c223777cbb267131b8f2/sentinel2_resnet50_si_ms-1f454cc6.pth',
+        transforms=_satlas_sentinel2_transforms,
+        meta={
+            'dataset': 'SatlasPretrain',
+            'in_chans': 9,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2211.15660',
+            'repo': 'https://github.com/allenai/satlaspretrain_models',
+            'bands': ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B11', 'B12'),
+        },
+    )
+
+    SENTINEL2_SI_RGB_SATLAS = Weights(
+        url='https://hf.co/torchgeo/satlas/resolve/081d6607431bf36bdb59c223777cbb267131b8f2/sentinel2_resnet50_si_rgb-45fc6972.pth',
+        transforms=_satlas_transforms,
+        meta={
+            'dataset': 'SatlasPretrain',
+            'in_chans': 3,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2211.15660',
+            'repo': 'https://github.com/allenai/satlaspretrain_models',
+            'bands': ('B02', 'B03', 'B04'),
+        },
+    )
+
+
+class ResNet152_Weights(WeightsEnum):  # type: ignore[misc]
+    """ResNet-152 weights.
+
+    For `timm <https://github.com/rwightman/pytorch-image-models>`_
+    *resnet152* implementation.
+
+    .. versionadded:: 0.6
+    """
+
+    SENTINEL2_MI_MS_SATLAS = Weights(
+        url='https://hf.co/torchgeo/satlas/resolve/081d6607431bf36bdb59c223777cbb267131b8f2/sentinel2_resnet152_mi_ms-fd35b4bb.pth',
+        transforms=_satlas_sentinel2_transforms,
+        meta={
+            'dataset': 'SatlasPretrain',
+            'in_chans': 9,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2211.15660',
+            'repo': 'https://github.com/allenai/satlaspretrain_models',
+            'bands': ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B11', 'B12'),
+        },
+    )
+
+    SENTINEL2_MI_RGB_SATLAS = Weights(
+        url='https://hf.co/torchgeo/satlas/resolve/081d6607431bf36bdb59c223777cbb267131b8f2/sentinel2_resnet152_mi_rgb-67563ac5.pth',
+        transforms=_satlas_transforms,
+        meta={
+            'dataset': 'SatlasPretrain',
+            'in_chans': 3,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2211.15660',
+            'repo': 'https://github.com/allenai/satlaspretrain_models',
+            'bands': ('B02', 'B03', 'B04'),
+        },
+    )
+
+    SENTINEL2_SI_MS_SATLAS = Weights(
+        url='https://hf.co/torchgeo/satlas/resolve/081d6607431bf36bdb59c223777cbb267131b8f2/sentinel2_resnet152_si_ms-4500c6cb.pth',
+        transforms=_satlas_sentinel2_transforms,
+        meta={
+            'dataset': 'SatlasPretrain',
+            'in_chans': 9,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2211.15660',
+            'repo': 'https://github.com/allenai/satlaspretrain_models',
+            'bands': ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B11', 'B12'),
+        },
+    )
+
+    SENTINEL2_SI_RGB_SATLAS = Weights(
+        url='https://hf.co/torchgeo/satlas/resolve/081d6607431bf36bdb59c223777cbb267131b8f2/sentinel2_resnet152_si_rgb-f4d24c3c.pth',
+        transforms=_satlas_sentinel2_transforms,
+        meta={
+            'dataset': 'SatlasPretrain',
+            'in_chans': 3,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2211.15660',
+            'repo': 'https://github.com/allenai/satlaspretrain_models',
+            'bands': ('B02', 'B03', 'B04'),
         },
     )
 
@@ -633,6 +709,40 @@ def resnet50(
         kwargs['in_chans'] = weights.meta['in_chans']
 
     model: ResNet = timm.create_model('resnet50', *args, **kwargs)
+
+    if weights:
+        missing_keys, unexpected_keys = model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
+        assert not unexpected_keys
+
+    return model
+
+
+def resnet152(
+    weights: ResNet152_Weights | None = None, *args: Any, **kwargs: Any
+) -> ResNet:
+    """ResNet-152 model.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://arxiv.org/pdf/1512.03385.pdf
+
+    .. versionadded:: 0.6
+
+    Args:
+        weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`.
+
+    Returns:
+        A ResNet-152 model.
+    """
+    if weights:
+        kwargs['in_chans'] = weights.meta['in_chans']
+
+    model: ResNet = timm.create_model('resnet152', *args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(

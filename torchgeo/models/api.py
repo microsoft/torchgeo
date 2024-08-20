@@ -24,7 +24,7 @@ from .dofa import (
 )
 from .resnet import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50
 from .scale_mae import ScaleMAELarge16_Weights, scalemae_large_patch16
-from .swin import Swin_V2_B_Weights, swin_v2_b
+from .swin import Swin_V2_B_Weights, Swin_V2_T_Weights, swin_v2_b, swin_v2_t
 from .vit import ViTSmall16_Weights, vit_small_patch16_224
 
 _model = {
@@ -33,6 +33,7 @@ _model = {
     'resnet18': resnet18,
     'resnet50': resnet50,
     'scalemae_large_patch16': scalemae_large_patch16,
+    'swin_v2_t': swin_v2_t,
     'swin_v2_b': swin_v2_b,
     'vit_small_patch16_224': vit_small_patch16_224,
 }
@@ -43,6 +44,7 @@ _model_weights = {
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
     scalemae_large_patch16: ScaleMAELarge16_Weights,
+    swin_v2_t: Swin_V2_T_Weights,
     swin_v2_b: Swin_V2_B_Weights,
     vit_small_patch16_224: ViTSmall16_Weights,
     'dofa_base_patch16_224': DOFABase16_Weights,
@@ -50,6 +52,7 @@ _model_weights = {
     'resnet18': ResNet18_Weights,
     'resnet50': ResNet50_Weights,
     'scalemae_large_patch16': ScaleMAELarge16_Weights,
+    'swin_v2_t': Swin_V2_T_Weights,
     'swin_v2_b': Swin_V2_B_Weights,
     'vit_small_patch16_224': ViTSmall16_Weights,
 }
