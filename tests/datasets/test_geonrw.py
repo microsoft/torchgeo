@@ -30,6 +30,8 @@ class TestGeoNRW:
         monkeypatch.setattr(GeoNRW, 'md5', md5)
         url = os.path.join('tests', 'data', 'geonrw', 'nrw_dataset.tar.gz')
         monkeypatch.setattr(GeoNRW, 'url', url)
+        monkeypatch.setattr(GeoNRW, 'train_list', ['aachen', 'bergisch', 'bielefeld'])
+        monkeypatch.setattr(GeoNRW, 'test_list', ['duesseldorf'])
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
@@ -51,6 +53,14 @@ class TestGeoNRW:
 
     def test_already_downloaded(self, dataset: GeoNRW) -> None:
         GeoNRW(root=dataset.root)
+
+    def test_not_yet_extracted(self, tmp_path: Path) -> None:
+        filename = 'nrw_dataset.tar.gz'
+        dir = os.path.join('tests', 'data', 'geonrw')
+        shutil.copyfile(
+            os.path.join(dir, filename), os.path.join(str(tmp_path), filename)
+        )
+        GeoNRW(root=str(tmp_path))
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
