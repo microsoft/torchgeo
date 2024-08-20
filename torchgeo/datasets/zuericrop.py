@@ -4,21 +4,16 @@
 """ZueriCrop dataset."""
 
 import os
-from collections.abc import Sequence
-from typing import Callable, Optional
+from collections.abc import Callable, Sequence
 
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    RGBBandsMissingError,
-    download_url,
-    percentile_normalization,
-)
+from .utils import Path, download_url, lazy_import, percentile_normalization
 
 
 class ZueriCrop(NonGeoDataset):
@@ -57,21 +52,21 @@ class ZueriCrop(NonGeoDataset):
        * `h5py <https://pypi.org/project/h5py/>`_ to load the dataset
     """
 
-    urls = [
-        "https://polybox.ethz.ch/index.php/s/uXfdr2AcXE3QNB6/download",
-        "https://raw.githubusercontent.com/0zgur0/multi-stage-convSTAR-network/fa92b5b3cb77f5171c5c3be740cd6e6395cc29b6/labels.csv",  # noqa: E501
-    ]
-    md5s = ["1635231df67f3d25f4f1e62c98e221a4", "5118398c7a5bbc246f5f6bb35d8d529b"]
-    filenames = ["ZueriCrop.hdf5", "labels.csv"]
+    urls = (
+        'https://polybox.ethz.ch/index.php/s/uXfdr2AcXE3QNB6/download',
+        'https://raw.githubusercontent.com/0zgur0/multi-stage-convSTAR-network/fa92b5b3cb77f5171c5c3be740cd6e6395cc29b6/labels.csv',
+    )
+    md5s = ('1635231df67f3d25f4f1e62c98e221a4', '5118398c7a5bbc246f5f6bb35d8d529b')
+    filenames = ('ZueriCrop.hdf5', 'labels.csv')
 
-    band_names = ("NIR", "B03", "B02", "B04", "B05", "B06", "B07", "B11", "B12")
-    rgb_bands = ["B04", "B03", "B02"]
+    band_names = ('NIR', 'B03', 'B02', 'B04', 'B05', 'B06', 'B07', 'B11', 'B12')
+    rgb_bands = ('B04', 'B03', 'B02')
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = 'data',
         bands: Sequence[str] = band_names,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -87,7 +82,10 @@ class ZueriCrop(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            DependencyNotFoundError: If h5py is not installed.
         """
+        lazy_import('h5py')
+
         self._validate_bands(bands)
         self.band_indices = torch.tensor(
             [self.band_names.index(b) for b in bands]
@@ -98,16 +96,9 @@ class ZueriCrop(NonGeoDataset):
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-        self.filepath = os.path.join(root, "ZueriCrop.hdf5")
+        self.filepath = os.path.join(root, 'ZueriCrop.hdf5')
 
         self._verify()
-
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "h5py is not installed and is required to use this dataset"
-            )
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -121,7 +112,7 @@ class ZueriCrop(NonGeoDataset):
         image = self._load_image(index)
         mask, boxes, label = self._load_target(index)
 
-        sample = {"image": image, "mask": mask, "boxes": boxes, "label": label}
+        sample = {'image': image, 'mask': mask, 'boxes': boxes, 'label': label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -134,10 +125,9 @@ class ZueriCrop(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        import h5py
-
-        with h5py.File(self.filepath, "r") as f:
-            length: int = f["data"].shape[0]
+        h5py = lazy_import('h5py')
+        with h5py.File(self.filepath, 'r') as f:
+            length: int = f['data'].shape[0]
         return length
 
     def _load_image(self, index: int) -> Tensor:
@@ -149,10 +139,9 @@ class ZueriCrop(NonGeoDataset):
         Returns:
             the image
         """
-        import h5py
-
-        with h5py.File(self.filepath, "r") as f:
-            array = f["data"][index, ...]
+        h5py = lazy_import('h5py')
+        with h5py.File(self.filepath, 'r') as f:
+            array = f['data'][index, ...]
 
         tensor = torch.from_numpy(array)
         # Convert from TxHxWxC to TxCxHxW
@@ -171,9 +160,9 @@ class ZueriCrop(NonGeoDataset):
         """
         import h5py
 
-        with h5py.File(self.filepath, "r") as f:
-            mask_array = f["gt"][index, ...]
-            instance_array = f["gt_instance"][index, ...]
+        with h5py.File(self.filepath, 'r') as f:
+            mask_array = f['gt'][index, ...]
+            instance_array = f['gt_instance'][index, ...]
 
         mask_tensor = torch.from_numpy(mask_array)
         instance_tensor = torch.from_numpy(instance_array)
@@ -264,7 +253,7 @@ class ZueriCrop(NonGeoDataset):
         sample: dict[str, Tensor],
         time_step: int = 0,
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -290,7 +279,7 @@ class ZueriCrop(NonGeoDataset):
                 raise RGBBandsMissingError()
 
         ncols = 2
-        image, mask = sample["image"][time_step, rgb_indices], sample["mask"]
+        image, mask = sample['image'][time_step, rgb_indices], sample['mask']
 
         image = torch.tensor(
             percentile_normalization(image.numpy()) * 255, dtype=torch.uint8
@@ -298,26 +287,26 @@ class ZueriCrop(NonGeoDataset):
 
         mask = torch.argmax(mask, dim=0)
 
-        if "prediction" in sample:
+        if 'prediction' in sample:
             ncols += 1
-            preds = torch.argmax(sample["prediction"], dim=0)
+            preds = torch.argmax(sample['prediction'], dim=0)
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(10, 10 * ncols))
 
         axs[0].imshow(image.permute(1, 2, 0))
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(mask)
-        axs[1].axis("off")
+        axs[1].axis('off')
 
         if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
+            axs[0].set_title('Image')
+            axs[1].set_title('Mask')
 
-        if "prediction" in sample:
+        if 'prediction' in sample:
             axs[2].imshow(preds)
-            axs[2].axis("off")
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Prediction")
+                axs[2].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

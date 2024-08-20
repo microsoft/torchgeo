@@ -11,4 +11,3 @@ data:
     batch_size: 1
   dict_kwargs:
     root: "tests/data/sustainbench_crop_yield"
-    download: true

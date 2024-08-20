@@ -3,7 +3,7 @@
 
 """L7 Irish datamodule."""
 
-from typing import Any, Optional, Union
+from typing import Any
 
 import kornia.augmentation as K
 import torch
@@ -25,8 +25,8 @@ class L7IrishDataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 1,
-        patch_size: Union[int, tuple[int, int]] = 224,
-        length: Optional[int] = None,
+        patch_size: int | tuple[int, int] = 224,
+        length: int | None = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
@@ -54,9 +54,9 @@ class L7IrishDataModule(GeoDataModule):
             K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
-            data_keys=["image", "mask"],
+            data_keys=['image', 'mask'],
             extra_args={
-                DataKey.MASK: {"resample": Resample.NEAREST, "align_corners": None}
+                DataKey.MASK: {'resample': Resample.NEAREST, 'align_corners': None}
             },
         )
 
@@ -72,15 +72,15 @@ class L7IrishDataModule(GeoDataModule):
             random_bbox_assignment(dataset, [0.6, 0.2, 0.2], generator)
         )
 
-        if stage in ["fit"]:
+        if stage in ['fit']:
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.train_dataset, self.patch_size, self.batch_size, self.length
             )
-        if stage in ["fit", "validate"]:
+        if stage in ['fit', 'validate']:
             self.val_sampler = GridGeoSampler(
                 self.val_dataset, self.patch_size, self.patch_size
             )
-        if stage in ["test"]:
+        if stage in ['test']:
             self.test_sampler = GridGeoSampler(
                 self.test_dataset, self.patch_size, self.patch_size
             )

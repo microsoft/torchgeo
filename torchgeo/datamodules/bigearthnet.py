@@ -76,11 +76,11 @@ class BigEarthNetDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.BigEarthNet`.
         """
-        bands = kwargs.get("bands", "all")
-        if bands == "all":
+        bands = kwargs.get('bands', 'all')
+        if bands == 'all':
             mins = self.mins
             maxs = self.maxs
-        elif bands == "s1":
+        elif bands == 's1':
             mins = self.mins[:2]
             maxs = self.maxs[:2]
         else:

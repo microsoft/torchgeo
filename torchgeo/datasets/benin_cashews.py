@@ -5,8 +5,8 @@
 
 import json
 import os
+from collections.abc import Callable, Sequence
 from functools import lru_cache
-from typing import Callable, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,17 +17,11 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    RGBBandsMissingError,
-    check_integrity,
-    download_radiant_mlhub_collection,
-    extract_archive,
-)
+from .utils import Path, which
 
 
-# TODO: read geospatial information from stac.json files
 class BeninSmallHolderCashews(NonGeoDataset):
     r"""Smallholder Cashew Plantations in Benin dataset.
 
@@ -35,8 +29,8 @@ class BeninSmallHolderCashews(NonGeoDataset):
     in the center of Benin. Each pixel is classified for Well-managed plantation,
     Poorly-managed plantation, No plantation and other classes. The labels are
     generated using a combination of ground data collection with a handheld GPS device,
-    and final corrections based on Airbus Pléiades imagery. See
-    `this website <https://doi.org/10.34911/rdnt.hfv20i>`__ for dataset details.
+    and final corrections based on Airbus Pléiades imagery. See `this website
+    <https://beta.source.coop/technoserve/cashews-benin/>`__ for dataset details.
 
     Specifically, the data consists of Sentinel 2 imagery from a 120 km\ :sup:`2`\  area
     in the center of Benin over 71 points in time from 11/05/2019 to 10/30/2020
@@ -52,125 +46,116 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following:
 
-    * https://doi.org/10.34911/rdnt.hfv20i
+    * https://beta.source.coop/technoserve/cashews-benin/
 
     .. note::
 
        This dataset requires the following additional library to be installed:
 
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
+       * `azcopy <https://github.com/Azure/azure-storage-azcopy>`_: to download the
+         dataset from Source Cooperative.
     """
 
-    dataset_id = "ts_cashew_benin"
-    collection_ids = ["ts_cashew_benin_source", "ts_cashew_benin_labels"]
-    image_meta = {
-        "filename": "ts_cashew_benin_source.tar.gz",
-        "md5": "957272c86e518a925a4e0d90dab4f92d",
-    }
-    target_meta = {
-        "filename": "ts_cashew_benin_labels.tar.gz",
-        "md5": "f9d3f0c671427d852fae9b52a0ae0051",
-    }
+    url = 'https://radiantearth.blob.core.windows.net/mlhub/technoserve-cashew-benin'
     dates = (
-        "2019_11_05",
-        "2019_11_10",
-        "2019_11_15",
-        "2019_11_20",
-        "2019_11_30",
-        "2019_12_05",
-        "2019_12_10",
-        "2019_12_15",
-        "2019_12_20",
-        "2019_12_25",
-        "2019_12_30",
-        "2020_01_04",
-        "2020_01_09",
-        "2020_01_14",
-        "2020_01_19",
-        "2020_01_24",
-        "2020_01_29",
-        "2020_02_08",
-        "2020_02_13",
-        "2020_02_18",
-        "2020_02_23",
-        "2020_02_28",
-        "2020_03_04",
-        "2020_03_09",
-        "2020_03_14",
-        "2020_03_19",
-        "2020_03_24",
-        "2020_03_29",
-        "2020_04_03",
-        "2020_04_08",
-        "2020_04_13",
-        "2020_04_18",
-        "2020_04_23",
-        "2020_04_28",
-        "2020_05_03",
-        "2020_05_08",
-        "2020_05_13",
-        "2020_05_18",
-        "2020_05_23",
-        "2020_05_28",
-        "2020_06_02",
-        "2020_06_07",
-        "2020_06_12",
-        "2020_06_17",
-        "2020_06_22",
-        "2020_06_27",
-        "2020_07_02",
-        "2020_07_07",
-        "2020_07_12",
-        "2020_07_17",
-        "2020_07_22",
-        "2020_07_27",
-        "2020_08_01",
-        "2020_08_06",
-        "2020_08_11",
-        "2020_08_16",
-        "2020_08_21",
-        "2020_08_26",
-        "2020_08_31",
-        "2020_09_05",
-        "2020_09_10",
-        "2020_09_15",
-        "2020_09_20",
-        "2020_09_25",
-        "2020_09_30",
-        "2020_10_10",
-        "2020_10_15",
-        "2020_10_20",
-        "2020_10_25",
-        "2020_10_30",
+        '20191105',
+        '20191110',
+        '20191115',
+        '20191120',
+        '20191130',
+        '20191205',
+        '20191210',
+        '20191215',
+        '20191220',
+        '20191225',
+        '20191230',
+        '20200104',
+        '20200109',
+        '20200114',
+        '20200119',
+        '20200124',
+        '20200129',
+        '20200208',
+        '20200213',
+        '20200218',
+        '20200223',
+        '20200228',
+        '20200304',
+        '20200309',
+        '20200314',
+        '20200319',
+        '20200324',
+        '20200329',
+        '20200403',
+        '20200408',
+        '20200413',
+        '20200418',
+        '20200423',
+        '20200428',
+        '20200503',
+        '20200508',
+        '20200513',
+        '20200518',
+        '20200523',
+        '20200528',
+        '20200602',
+        '20200607',
+        '20200612',
+        '20200617',
+        '20200622',
+        '20200627',
+        '20200702',
+        '20200707',
+        '20200712',
+        '20200717',
+        '20200722',
+        '20200727',
+        '20200801',
+        '20200806',
+        '20200811',
+        '20200816',
+        '20200821',
+        '20200826',
+        '20200831',
+        '20200905',
+        '20200910',
+        '20200915',
+        '20200920',
+        '20200925',
+        '20200930',
+        '20201010',
+        '20201015',
+        '20201020',
+        '20201025',
+        '20201030',
     )
 
     all_bands = (
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06",
-        "B07",
-        "B08",
-        "B8A",
-        "B09",
-        "B11",
-        "B12",
-        "CLD",
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B09',
+        'B11',
+        'B12',
+        'CLD',
     )
-    rgb_bands = ("B04", "B03", "B02")
+    rgb_bands = ('B04', 'B03', 'B02')
 
-    classes = [
-        "No data",
-        "Well-managed planatation",
-        "Poorly-managed planatation",
-        "Non-planatation",
-        "Residential",
-        "Background",
-        "Uncertain",
-    ]
+    classes = (
+        'No data',
+        'Well-managed planatation',
+        'Poorly-managed planatation',
+        'Non-planatation',
+        'Residential',
+        'Background',
+        'Uncertain',
+    )
 
     # Same for all tiles
     tile_height = 1186
@@ -178,15 +163,12 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
+        root: Path = 'data',
         chip_size: int = 256,
         stride: int = 128,
-        bands: tuple[str, ...] = all_bands,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        bands: Sequence[str] = all_bands,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
-        checksum: bool = False,
-        verbose: bool = False,
     ) -> None:
         """Initialize a new Benin Smallholder Cashew Plantations Dataset instance.
 
@@ -199,36 +181,31 @@ class BeninSmallHolderCashews(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
-            verbose: if True, print messages when new tiles are loaded
 
         Raises:
+            AssertionError: If *bands* is invalid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        self._validate_bands(bands)
+        assert set(bands) <= set(self.all_bands)
 
         self.root = root
         self.chip_size = chip_size
         self.stride = stride
         self.bands = bands
         self.transforms = transforms
-        self.checksum = checksum
-        self.verbose = verbose
+        self.download = download
 
-        if download:
-            self._download(api_key)
-
-        if not self._check_integrity():
-            raise DatasetNotFoundError(self)
+        self._verify()
 
         # Calculate the indices that we will use over all tiles
         self.chips_metadata = []
-        for y in list(range(0, self.tile_height - self.chip_size, stride)) + [
-            self.tile_height - self.chip_size
+        for y in [
+            *list(range(0, self.tile_height - self.chip_size, stride)),
+            self.tile_height - self.chip_size,
         ]:
-            for x in list(range(0, self.tile_width - self.chip_size, stride)) + [
-                self.tile_width - self.chip_size
+            for x in [
+                *list(range(0, self.tile_width - self.chip_size, stride)),
+                self.tile_width - self.chip_size,
             ]:
                 self.chips_metadata.append((y, x))
 
@@ -243,19 +220,19 @@ class BeninSmallHolderCashews(NonGeoDataset):
         """
         y, x = self.chips_metadata[index]
 
-        img, transform, crs = self._load_all_imagery(self.bands)
+        img, transform, crs = self._load_all_imagery()
         labels = self._load_mask(transform)
 
         img = img[:, :, y : y + self.chip_size, x : x + self.chip_size]
         labels = labels[y : y + self.chip_size, x : x + self.chip_size]
 
         sample = {
-            "image": img,
-            "mask": labels,
-            "x": torch.tensor(x),
-            "y": torch.tensor(y),
-            "transform": transform,
-            "crs": crs,
+            'image': img,
+            'mask': labels,
+            'x': torch.tensor(x),
+            'y': torch.tensor(y),
+            'transform': transform,
+            'crs': crs,
         }
 
         if self.transforms is not None:
@@ -271,31 +248,9 @@ class BeninSmallHolderCashews(NonGeoDataset):
         """
         return len(self.chips_metadata)
 
-    def _validate_bands(self, bands: tuple[str, ...]) -> None:
-        """Validate list of bands.
-
-        Args:
-            bands: user-provided tuple of bands to load
-
-        Raises:
-            AssertionError: if ``bands`` is not a tuple
-            ValueError: if an invalid band name is provided
-        """
-        assert isinstance(bands, tuple), "The list of bands must be a tuple"
-        for band in bands:
-            if band not in self.all_bands:
-                raise ValueError(f"'{band}' is an invalid band name.")
-
     @lru_cache(maxsize=128)
-    def _load_all_imagery(
-        self, bands: tuple[str, ...] = all_bands
-    ) -> tuple[Tensor, rasterio.Affine, CRS]:
+    def _load_all_imagery(self) -> tuple[Tensor, rasterio.Affine, CRS]:
         """Load all the imagery (across time) for the dataset.
-
-        Optionally allows for subsetting of the bands that are loaded.
-
-        Args:
-            bands: tuple of bands to load
 
         Returns:
             imagery of shape (70, number of bands, 1186, 1122) where 70 is the number
@@ -303,60 +258,45 @@ class BeninSmallHolderCashews(NonGeoDataset):
             rasterio affine transform, mapping pixel coordinates to geo coordinates
             coordinate reference system of transform
         """
-        if self.verbose:
-            print("Loading all imagery")
-
         img = torch.zeros(
             len(self.dates),
-            len(bands),
+            len(self.bands),
             self.tile_height,
             self.tile_width,
             dtype=torch.float32,
         )
 
         for date_index, date in enumerate(self.dates):
-            single_scene, transform, crs = self._load_single_scene(date, self.bands)
+            single_scene, transform, crs = self._load_single_scene(date)
             img[date_index] = single_scene
 
         return img, transform, crs
 
     @lru_cache(maxsize=128)
-    def _load_single_scene(
-        self, date: str, bands: tuple[str, ...]
-    ) -> tuple[Tensor, rasterio.Affine, CRS]:
+    def _load_single_scene(self, date: str) -> tuple[Tensor, rasterio.Affine, CRS]:
         """Load the imagery for a single date.
-
-        Optionally allows for subsetting of the bands that are loaded.
 
         Args:
             date: date of the imagery to load
-            bands: bands to load
 
         Returns:
             Tensor containing a single image tile, rasterio affine transform,
             mapping pixel coordinates to geo coordinates, and coordinate
             reference system of transform.
-
-        Raises:
-            AssertionError: if  ``date`` is invalid
         """
-        assert date in self.dates
-
-        if self.verbose:
-            print(f"Loading imagery at {date}")
-
         img = torch.zeros(
-            len(bands), self.tile_height, self.tile_width, dtype=torch.float32
+            len(self.bands), self.tile_height, self.tile_width, dtype=torch.float32
         )
         for band_index, band_name in enumerate(self.bands):
             filepath = os.path.join(
                 self.root,
-                "ts_cashew_benin_source",
-                f"ts_cashew_benin_source_00_{date}",
-                f"{band_name}.tif",
+                'imagery',
+                '00',
+                f'00_{date}',
+                f'00_{date}_{band_name}_10m.tif',
             )
             with rasterio.open(filepath) as src:
-                transform = src.transform  # same transform for every bands
+                transform = src.transform  # same transform for every band
                 crs = src.crs
                 array = src.read().astype(np.float32)
                 img[band_index] = torch.from_numpy(array)
@@ -367,15 +307,12 @@ class BeninSmallHolderCashews(NonGeoDataset):
     def _load_mask(self, transform: rasterio.Affine) -> Tensor:
         """Rasterizes the dataset's labels (in geojson format)."""
         # Create a mask layer out of the geojson
-        mask_geojson_fn = os.path.join(
-            self.root, "ts_cashew_benin_labels", "_common", "labels.geojson"
-        )
-        with open(mask_geojson_fn) as f:
+        with open(os.path.join(self.root, 'labels', '00.geojson')) as f:
             geojson = json.load(f)
 
         labels = [
-            (feature["geometry"], feature["properties"]["class"])
-            for feature in geojson["features"]
+            (feature['geometry'], feature['properties']['class'])
+            for feature in geojson['features']
         ]
 
         mask_data = rasterio.features.rasterize(
@@ -390,51 +327,31 @@ class BeninSmallHolderCashews(NonGeoDataset):
         mask = torch.from_numpy(mask_data).long()
         return mask
 
-    def _check_integrity(self) -> bool:
-        """Check integrity of dataset.
-
-        Returns:
-            True if dataset files are found and/or MD5s match, else False
-        """
-        images: bool = check_integrity(
-            os.path.join(self.root, self.image_meta["filename"]),
-            self.image_meta["md5"] if self.checksum else None,
-        )
-
-        targets: bool = check_integrity(
-            os.path.join(self.root, self.target_meta["filename"]),
-            self.target_meta["md5"] if self.checksum else None,
-        )
-
-        return images and targets
-
-    def _download(self, api_key: Optional[str] = None) -> None:
-        """Download the dataset and extract it.
-
-        Args:
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-
-        Raises:
-            RuntimeError: if download doesn't work correctly or checksums don't match
-        """
-        if self._check_integrity():
-            print("Files already downloaded and verified")
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset."""
+        # Check if the files already exist
+        if os.path.exists(os.path.join(self.root, 'labels', '00.geojson')):
             return
 
-        for collection_id in self.collection_ids:
-            download_radiant_mlhub_collection(collection_id, self.root, api_key)
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise DatasetNotFoundError(self)
 
-        image_archive_path = os.path.join(self.root, self.image_meta["filename"])
-        target_archive_path = os.path.join(self.root, self.target_meta["filename"])
-        for fn in [image_archive_path, target_archive_path]:
-            extract_archive(fn, self.root)
+        # Download the dataset
+        self._download()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        os.makedirs(self.root, exist_ok=True)
+        azcopy = which('azcopy')
+        azcopy('sync', self.url, self.root, '--recursive=true')
 
     def plot(
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
         time_step: int = 0,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -459,36 +376,33 @@ class BeninSmallHolderCashews(NonGeoDataset):
             else:
                 raise RGBBandsMissingError()
 
-        num_time_points = sample["image"].shape[0]
-        assert time_step < num_time_points
-
-        image = np.rollaxis(sample["image"][time_step, rgb_indices].numpy(), 0, 3)
+        image = np.rollaxis(sample['image'][time_step, rgb_indices].numpy(), 0, 3)
         image = np.clip(image / 3000, 0, 1)
-        mask = sample["mask"].numpy()
+        mask = sample['mask'].numpy()
 
         num_panels = 2
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            predictions = sample["prediction"].numpy()
+            predictions = sample['prediction'].numpy()
             num_panels += 1
 
         fig, axs = plt.subplots(ncols=num_panels, figsize=(4 * num_panels, 4))
 
         axs[0].imshow(image)
-        axs[0].axis("off")
+        axs[0].axis('off')
         if show_titles:
-            axs[0].set_title(f"t={time_step}")
+            axs[0].set_title(f't={time_step}')
 
-        axs[1].imshow(mask, vmin=0, vmax=6, interpolation="none")
-        axs[1].axis("off")
+        axs[1].imshow(mask, vmin=0, vmax=6, interpolation='none')
+        axs[1].axis('off')
         if show_titles:
-            axs[1].set_title("Mask")
+            axs[1].set_title('Mask')
 
         if showing_predictions:
-            axs[2].imshow(predictions, vmin=0, vmax=6, interpolation="none")
-            axs[2].axis("off")
+            axs[2].imshow(predictions, vmin=0, vmax=6, interpolation='none')
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Predictions")
+                axs[2].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

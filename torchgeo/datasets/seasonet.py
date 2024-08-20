@@ -6,7 +6,7 @@
 import os
 import random
 from collections.abc import Callable, Collection, Iterable
-from typing import Optional
+from typing import ClassVar
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -19,14 +19,9 @@ from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    RGBBandsMissingError,
-    download_url,
-    extract_archive,
-    percentile_normalization,
-)
+from .utils import Path, download_url, extract_archive, percentile_normalization
 
 
 class SeasoNet(NonGeoDataset):
@@ -91,90 +86,95 @@ class SeasoNet(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    metadata = [
+    metadata = (
         {
-            "name": "spring",
-            "ext": ".zip",
-            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/spring.zip",  # noqa: E501
-            "md5": "de4cdba7b6196aff624073991b187561",
+            'name': 'spring',
+            'ext': '.zip',
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/spring.zip',
+            'md5': 'de4cdba7b6196aff624073991b187561',
         },
         {
-            "name": "summer",
-            "ext": ".zip",
-            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/summer.zip",  # noqa: E501
-            "md5": "6a54d4e134d27ae4eb03f180ee100550",
+            'name': 'summer',
+            'ext': '.zip',
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/summer.zip',
+            'md5': '6a54d4e134d27ae4eb03f180ee100550',
         },
         {
-            "name": "fall",
-            "ext": ".zip",
-            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/fall.zip",  # noqa: E501
-            "md5": "5f94920fe41a63c6bfbab7295f7d6b95",
+            'name': 'fall',
+            'ext': '.zip',
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/fall.zip',
+            'md5': '5f94920fe41a63c6bfbab7295f7d6b95',
         },
         {
-            "name": "winter",
-            "ext": ".zip",
-            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/winter.zip",  # noqa: E501
-            "md5": "dc5e3e09e52ab5c72421b1e3186c9a48",
+            'name': 'winter',
+            'ext': '.zip',
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/winter.zip',
+            'md5': 'dc5e3e09e52ab5c72421b1e3186c9a48',
         },
         {
-            "name": "snow",
-            "ext": ".zip",
-            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/snow.zip",  # noqa: E501
-            "md5": "e1b300994143f99ebb03f51d6ab1cbe6",
+            'name': 'snow',
+            'ext': '.zip',
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/snow.zip',
+            'md5': 'e1b300994143f99ebb03f51d6ab1cbe6',
         },
         {
-            "name": "splits",
-            "ext": ".zip",
-            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/splits.zip",  # noqa: E501
-            "md5": "e4ec4a18bc4efc828f0944a7cf4d5fed",
+            'name': 'splits',
+            'ext': '.zip',
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/splits.zip',
+            'md5': 'e4ec4a18bc4efc828f0944a7cf4d5fed',
         },
         {
-            "name": "meta.csv",
-            "ext": "",
-            "url": "https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/meta.csv",  # noqa: E501
-            "md5": "43ea07974936a6bf47d989c32e16afe7",
+            'name': 'meta.csv',
+            'ext': '',
+            'url': 'https://zenodo.org/api/files/e2288446-9ee8-4b2e-ae76-cd80366a40e1/meta.csv',
+            'md5': '43ea07974936a6bf47d989c32e16afe7',
         },
-    ]
-    classes = [
-        "Continuous urban fabric",
-        "Discontinuous urban fabric",
-        "Industrial or commercial units",
-        "Road and rail networks and associated land",
-        "Port areas",
-        "Airports",
-        "Mineral extraction sites",
-        "Dump sites",
-        "Construction sites",
-        "Green urban areas",
-        "Sport and leisure facilities",
-        "Non-irrigated arable land",
-        "Vineyards",
-        "Fruit trees and berry plantations",
-        "Pastures",
-        "Broad-leaved forest",
-        "Coniferous forest",
-        "Mixed forest",
-        "Natural grasslands",
-        "Moors and heathland",
-        "Transitional woodland/shrub",
-        "Beaches, dunes, sands",
-        "Bare rock",
-        "Sparsely vegetated areas",
-        "Inland marshes",
-        "Peat bogs",
-        "Salt marshes",
-        "Intertidal flats",
-        "Water courses",
-        "Water bodies",
-        "Coastal lagoons",
-        "Estuaries",
-        "Sea and ocean",
-    ]
-    all_seasons = {"Spring", "Summer", "Fall", "Winter", "Snow"}
-    all_bands = ("10m_RGB", "10m_IR", "20m", "60m")
-    band_nums = {"10m_RGB": 3, "10m_IR": 1, "20m": 6, "60m": 2}
-    splits = ["train", "val", "test"]
-    cmap = {
+    )
+    classes = (
+        'Continuous urban fabric',
+        'Discontinuous urban fabric',
+        'Industrial or commercial units',
+        'Road and rail networks and associated land',
+        'Port areas',
+        'Airports',
+        'Mineral extraction sites',
+        'Dump sites',
+        'Construction sites',
+        'Green urban areas',
+        'Sport and leisure facilities',
+        'Non-irrigated arable land',
+        'Vineyards',
+        'Fruit trees and berry plantations',
+        'Pastures',
+        'Broad-leaved forest',
+        'Coniferous forest',
+        'Mixed forest',
+        'Natural grasslands',
+        'Moors and heathland',
+        'Transitional woodland/shrub',
+        'Beaches, dunes, sands',
+        'Bare rock',
+        'Sparsely vegetated areas',
+        'Inland marshes',
+        'Peat bogs',
+        'Salt marshes',
+        'Intertidal flats',
+        'Water courses',
+        'Water bodies',
+        'Coastal lagoons',
+        'Estuaries',
+        'Sea and ocean',
+    )
+    all_seasons = frozenset({'Spring', 'Summer', 'Fall', 'Winter', 'Snow'})
+    all_bands = ('10m_RGB', '10m_IR', '20m', '60m')
+    band_nums: ClassVar[dict[str, int]] = {
+        '10m_RGB': 3,
+        '10m_IR': 1,
+        '20m': 6,
+        '60m': 2,
+    }
+    splits = ('train', 'val', 'test')
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (230, 000, 77, 255),
         1: (255, 000, 000, 255),
         2: (204, 77, 242, 255),
@@ -213,13 +213,13 @@ class SeasoNet(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: Path = 'data',
+        split: str = 'train',
         seasons: Collection[str] = all_seasons,
         bands: Iterable[str] = all_bands,
         grids: Iterable[int] = [1, 2],
         concat_seasons: int = 1,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -262,35 +262,35 @@ class SeasoNet(NonGeoDataset):
         for b in bands:
             self.channels += self.band_nums[b]
 
-        csv = pd.read_csv(os.path.join(self.root, "meta.csv"), index_col="Index")
+        csv = pd.read_csv(os.path.join(self.root, 'meta.csv'), index_col='Index')
 
         if split is not None:
             # Filter entries by split
             split_csv = pd.read_csv(
-                os.path.join(self.root, f"splits/{split}.csv"), header=None
+                os.path.join(self.root, f'splits/{split}.csv'), header=None
             )[0]
             csv = csv.iloc[split_csv]
 
         # Filter entries by grids and seasons
-        csv = csv[csv["Grid"].isin(grids)]
-        csv = csv[csv["Season"].isin(seasons)]
+        csv = csv[csv['Grid'].isin(grids)]
+        csv = csv[csv['Season'].isin(seasons)]
 
         # Replace relative data paths with absolute paths
-        csv["Path"] = csv["Path"].apply(
+        csv['Path'] = csv['Path'].apply(
             lambda p: [os.path.join(self.root, p, os.path.basename(p))]
         )
 
         if self.concat_seasons > 1:
             # Group entries by location
-            self.files = csv.groupby(["Latitude", "Longitude"])
-            self.files = self.files["Path"].agg("sum")
+            self.files = csv.groupby(['Latitude', 'Longitude'])
+            self.files = self.files['Path'].agg('sum')
 
             # Remove entries with less than concat_seasons available seasons
             self.files = self.files[
                 self.files.apply(lambda d: len(d) >= self.concat_seasons)
             ]
         else:
-            self.files = csv["Path"]
+            self.files = csv['Path']
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -304,7 +304,7 @@ class SeasoNet(NonGeoDataset):
         """
         image = self._load_image(index)
         mask = self._load_target(index)
-        sample = {"image": image, "mask": mask}
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -335,10 +335,10 @@ class SeasoNet(NonGeoDataset):
         for img_idx, path in enumerate(paths):
             bnd_idx = 0
             for band in self.bands:
-                with rasterio.open(f"{path}_{band}.tif") as f:
+                with rasterio.open(f'{path}_{band}.tif') as f:
                     array = f.read(
-                        out_shape=[f.count] + list(self.image_size),
-                        out_dtype="int32",
+                        out_shape=[f.count, *list(self.image_size)],
+                        out_dtype='int32',
                         resampling=Resampling.bilinear,
                     )
                 image = torch.from_numpy(array).float()
@@ -357,7 +357,7 @@ class SeasoNet(NonGeoDataset):
             the target mask
         """
         path = self.files.iloc[index][0]
-        with rasterio.open(f"{path}_labels.tif") as f:
+        with rasterio.open(f'{path}_labels.tif') as f:
             array = f.read() - 1
         tensor = torch.from_numpy(array).squeeze().long()
         return tensor
@@ -366,7 +366,7 @@ class SeasoNet(NonGeoDataset):
         """Verify the integrity of the dataset."""
         # Check if all files already exist
         if all(
-            os.path.exists(os.path.join(self.root, file_info["name"]))
+            os.path.exists(os.path.join(self.root, file_info['name']))
             for file_info in self.metadata
         ):
             return
@@ -375,10 +375,10 @@ class SeasoNet(NonGeoDataset):
         missing = []
         extractable = []
         for file_info in self.metadata:
-            file_path = os.path.join(self.root, file_info["name"] + file_info["ext"])
+            file_path = os.path.join(self.root, file_info['name'] + file_info['ext'])
             if not os.path.exists(file_path):
                 missing.append(file_info)
-            elif file_info["ext"] == ".zip":
+            elif file_info['ext'] == '.zip':
                 extractable.append(file_path)
 
         # Check if the user requested to download the dataset
@@ -388,13 +388,13 @@ class SeasoNet(NonGeoDataset):
         # Download missing files
         for file_info in missing:
             download_url(
-                file_info["url"],
+                file_info['url'],
                 self.root,
-                filename=file_info["name"] + file_info["ext"],
-                md5=file_info["md5"] if self.checksum else None,
+                filename=file_info['name'] + file_info['ext'],
+                md5=file_info['md5'] if self.checksum else None,
             )
-            if file_info["ext"] == ".zip":
-                extractable.append(os.path.join(self.root, file_info["name"] + ".zip"))
+            if file_info['ext'] == '.zip':
+                extractable.append(os.path.join(self.root, file_info['name'] + '.zip'))
 
         # Extract downloaded files
         for file_path in extractable:
@@ -405,7 +405,7 @@ class SeasoNet(NonGeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         show_legend: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -422,22 +422,22 @@ class SeasoNet(NonGeoDataset):
         Raises:
             RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
-        if "10m_RGB" not in self.bands:
+        if '10m_RGB' not in self.bands:
             raise RGBBandsMissingError()
 
         ncols = self.concat_seasons + 1
 
-        images, mask = sample["image"], sample["mask"]
-        show_predictions = "prediction" in sample
+        images, mask = sample['image'], sample['mask']
+        show_predictions = 'prediction' in sample
         if show_predictions:
-            prediction = sample["prediction"]
+            prediction = sample['prediction']
             ncols += 1
 
         plt_cmap = ListedColormap(np.array(list(self.cmap.values())) / 255)
 
         start = 0
         for b in self.bands:
-            if b == "10m_RGB":
+            if b == '10m_RGB':
                 break
             start += self.band_nums[b]
         rgb_indices = [start + s * self.channels for s in range(self.concat_seasons)]
@@ -448,22 +448,22 @@ class SeasoNet(NonGeoDataset):
             image = images[index : index + 3].permute(1, 2, 0).numpy()
             image = percentile_normalization(image)
             axs[ax].imshow(image)
-            axs[ax].axis("off")
+            axs[ax].axis('off')
             if show_titles:
-                axs[ax].set_title(f"Image {ax+1}")
+                axs[ax].set_title(f'Image {ax+1}')
 
-        axs[ax + 1].imshow(mask, vmin=0, vmax=32, cmap=plt_cmap, interpolation="none")
-        axs[ax + 1].axis("off")
+        axs[ax + 1].imshow(mask, vmin=0, vmax=32, cmap=plt_cmap, interpolation='none')
+        axs[ax + 1].axis('off')
         if show_titles:
-            axs[ax + 1].set_title("Mask")
+            axs[ax + 1].set_title('Mask')
 
         if show_predictions:
             axs[ax + 2].imshow(
-                prediction, vmin=0, vmax=32, cmap=plt_cmap, interpolation="none"
+                prediction, vmin=0, vmax=32, cmap=plt_cmap, interpolation='none'
             )
-            axs[ax + 2].axis("off")
+            axs[ax + 2].axis('off')
             if show_titles:
-                axs[ax + 2].set_title("Prediction")
+                axs[ax + 2].set_title('Prediction')
 
         if show_legend:
             lgd = np.unique(mask)
@@ -478,6 +478,6 @@ class SeasoNet(NonGeoDataset):
             )
 
         if suptitle is not None:
-            plt.suptitle(suptitle, size="xx-large")
+            plt.suptitle(suptitle, size='xx-large')
 
         return fig

@@ -3,13 +3,14 @@
 
 """Airphen dataset."""
 
-from typing import Any, Optional
+from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
+from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import RGBBandsMissingError, percentile_normalization
+from .utils import percentile_normalization
 
 
 class Airphen(RasterDataset):
@@ -39,14 +40,14 @@ class Airphen(RasterDataset):
 
     # Each camera measures a custom set of spectral bands chosen at purchase time.
     # Hiphen offers 8 bands to choose from, sorted from short to long wavelength.
-    all_bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8"]
-    rgb_bands = ["B4", "B3", "B1"]
+    all_bands = ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8')
+    rgb_bands = ('B4', 'B3', 'B1')
 
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -68,15 +69,15 @@ class Airphen(RasterDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image = sample["image"][rgb_indices].permute(1, 2, 0).float()
+        image = sample['image'][rgb_indices].permute(1, 2, 0).float()
         image = percentile_normalization(image, axis=(0, 1))
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
 
         if show_titles:
-            ax.set_title("Image")
+            ax.set_title('Image')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

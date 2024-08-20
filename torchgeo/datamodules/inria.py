@@ -3,7 +3,7 @@
 
 """InriaAerialImageLabeling datamodule."""
 
-from typing import Any, Union
+from typing import Any
 
 import kornia.augmentation as K
 
@@ -26,7 +26,7 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[tuple[int, int], int] = 64,
+        patch_size: tuple[int, int] | int = 64,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
@@ -49,17 +49,17 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=["image", "mask"],
+            data_keys=['image', 'mask'],
         )
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=["image", "mask"],
+            data_keys=['image', 'mask'],
         )
         self.predict_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=["image"],
+            data_keys=['image'],
         )
 
     def setup(self, stage: str) -> None:
@@ -68,10 +68,10 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit"]:
-            self.train_dataset = InriaAerialImageLabeling(split="train", **self.kwargs)
-        if stage in ["fit", "validate"]:
-            self.val_dataset = InriaAerialImageLabeling(split="val", **self.kwargs)
-        if stage in ["predict"]:
+        if stage in ['fit']:
+            self.train_dataset = InriaAerialImageLabeling(split='train', **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.val_dataset = InriaAerialImageLabeling(split='val', **self.kwargs)
+        if stage in ['predict']:
             # Test set masks are not public, use for prediction instead
-            self.predict_dataset = InriaAerialImageLabeling(split="test", **self.kwargs)
+            self.predict_dataset = InriaAerialImageLabeling(split='test', **self.kwargs)

@@ -3,18 +3,17 @@
 
 """Northeastern China Crop Map Dataset."""
 
-import glob
-import os
-from collections.abc import Iterable
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable, Iterable
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
+from .utils import BoundingBox, Path, download_url
 
 
 class NCCM(RasterDataset):
@@ -53,16 +52,28 @@ class NCCM(RasterDataset):
     .. versionadded:: 0.6
     """
 
-    filename_regex = r"CDL(?P<year>\d{4})_clip"
-    filename_glob = "CDL*.*"
-    zipfile_glob = "13090442.zip"
+    filename_regex = r'CDL(?P<date>\d{4})_clip'
+    filename_glob = 'CDL*.*'
 
-    date_format = "%Y"
+    date_format = '%Y'
     is_image = False
-    url = "https://figshare.com/ndownloader/articles/13090442/versions/1"
-    md5 = "eae952f1b346d7e649d027e8139a76f5"
+    urls: ClassVar[dict[int, str]] = {
+        2019: 'https://figshare.com/ndownloader/files/25070540',
+        2018: 'https://figshare.com/ndownloader/files/25070624',
+        2017: 'https://figshare.com/ndownloader/files/25070582',
+    }
+    md5s: ClassVar[dict[int, str]] = {
+        2019: '0d062bbd42e483fdc8239d22dba7020f',
+        2018: 'b3bb4894478d10786aa798fb11693ec1',
+        2017: 'd047fbe4a85341fa6248fd7e0badab6c',
+    }
+    fnames: ClassVar[dict[int, str]] = {
+        2019: 'CDL2019_clip.tif',
+        2018: 'CDL2018_clip1.tif',
+        2017: 'CDL2017_clip.tif',
+    }
 
-    cmap = {
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 255, 0, 255),
         1: (255, 0, 0, 255),
         2: (255, 255, 0, 255),
@@ -72,10 +83,11 @@ class NCCM(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        paths: Path | Iterable[Path] = 'data',
+        crs: CRS | None = None,
+        res: float | None = None,
+        years: list[int] = [2019],
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -88,6 +100,7 @@ class NCCM(RasterDataset):
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
                 (defaults to the resolution of the first file found)
+            years: list of years for which to use nccm layers
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
@@ -97,7 +110,12 @@ class NCCM(RasterDataset):
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
+        assert set(years) <= self.md5s.keys(), (
+            'NCCM data product only exists for the following years: '
+            f'{list(self.md5s.keys())}.'
+        )
         self.paths = paths
+        self.years = years
         self.download = download
         self.checksum = checksum
         self.ordinal_map = torch.full((max(self.cmap.keys()) + 1,), 4, dtype=self.dtype)
@@ -123,20 +141,13 @@ class NCCM(RasterDataset):
             IndexError: if query is not found in the index
         """
         sample = super().__getitem__(query)
-        sample["mask"] = self.ordinal_map[sample["mask"]]
+        sample['mask'] = self.ordinal_map[sample['mask']]
         return sample
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        # Check if the extracted files already exist
+        # Check if the files already exist
         if self.files:
-            return
-
-        # Check if the zip file has already been downloaded
-        assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, "**", self.zipfile_glob)
-        if glob.glob(pathname, recursive=True):
-            self._extract()
             return
 
         # Check if the user requested to download the dataset
@@ -145,26 +156,22 @@ class NCCM(RasterDataset):
 
         # Download the dataset
         self._download()
-        self._extract()
 
     def _download(self) -> None:
         """Download the dataset."""
-        filename = "13090442.zip"
-        download_url(
-            self.url, self.paths, filename, md5=self.md5 if self.checksum else None
-        )
-
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        assert isinstance(self.paths, str)
-        pathname = os.path.join(self.paths, "**", self.zipfile_glob)
-        extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
+        for year in self.years:
+            download_url(
+                self.urls[year],
+                self.paths,
+                filename=self.fnames[year],
+                md5=self.md5s[year] if self.checksum else None,
+            )
 
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -176,29 +183,29 @@ class NCCM(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze()
+            pred = sample['prediction'].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(
             nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
         )
 
-        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation="none")
-        axs[0, 0].axis("off")
+        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[0, 0].axis('off')
 
         if show_titles:
-            axs[0, 0].set_title("Mask")
+            axs[0, 0].set_title('Mask')
 
         if showing_predictions:
-            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation="none")
-            axs[0, 1].axis("off")
+            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[0, 1].axis('off')
             if show_titles:
-                axs[0, 1].set_title("Prediction")
+                axs[0, 1].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

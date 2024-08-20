@@ -3,16 +3,17 @@
 
 """Potsdam datamodule."""
 
-from typing import Any, Union
+from typing import Any
 
 import kornia.augmentation as K
+import torch
+from torch.utils.data import random_split
 
 from ..datasets import Potsdam2D
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
-from .utils import dataset_split
 
 
 class Potsdam2DDataModule(NonGeoDataModule):
@@ -26,7 +27,7 @@ class Potsdam2DDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[tuple[int, int], int] = 64,
+        patch_size: tuple[int, int] | int = 64,
         val_split_pct: float = 0.2,
         num_workers: int = 0,
         **kwargs: Any,
@@ -50,7 +51,7 @@ class Potsdam2DDataModule(NonGeoDataModule):
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=["image", "mask"],
+            data_keys=['image', 'mask'],
         )
 
     def setup(self, stage: str) -> None:
@@ -59,10 +60,11 @@ class Potsdam2DDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit", "validate"]:
-            self.dataset = Potsdam2D(split="train", **self.kwargs)
-            self.train_dataset, self.val_dataset = dataset_split(
-                self.dataset, self.val_split_pct
+        if stage in ['fit', 'validate']:
+            self.dataset = Potsdam2D(split='train', **self.kwargs)
+            generator = torch.Generator().manual_seed(0)
+            self.train_dataset, self.val_dataset = random_split(
+                self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
             )
-        if stage in ["test"]:
-            self.test_dataset = Potsdam2D(split="test", **self.kwargs)
+        if stage in ['test']:
+            self.test_dataset = Potsdam2D(split='test', **self.kwargs)

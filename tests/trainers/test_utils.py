@@ -9,6 +9,7 @@ import pytest
 import timm
 import torch
 import torch.nn as nn
+from pytest import MonkeyPatch
 from torch.nn.modules import Module
 
 from torchgeo.trainers.utils import (
@@ -24,17 +25,17 @@ def test_extract_backbone(checkpoint: str) -> None:
 
 
 def test_extract_backbone_unsupported_model(tmp_path: Path) -> None:
-    checkpoint = {"hyper_parameters": {"some_unsupported_model": "resnet18"}}
-    path = os.path.join(str(tmp_path), "dummy.ckpt")
+    checkpoint = {'hyper_parameters': {'some_unsupported_model': 'resnet18'}}
+    path = os.path.join(str(tmp_path), 'dummy.ckpt')
     torch.save(checkpoint, path)
-    err = "Unknown checkpoint task. Only backbone or model extraction is supported"
+    err = 'Unknown checkpoint task. Only backbone or model extraction is supported'
     with pytest.raises(ValueError, match=err):
         extract_backbone(path)
 
 
 def test_get_input_layer_name_and_module() -> None:
-    key, module = _get_input_layer_name_and_module(timm.create_model("resnet18"))
-    assert key == "conv1"
+    key, module = _get_input_layer_name_and_module(timm.create_model('resnet18'))
+    assert key == 'conv1'
     assert isinstance(module, nn.Conv2d)
     assert module.in_channels == 3
 
@@ -44,34 +45,40 @@ def test_load_state_dict(checkpoint: str, model: Module) -> None:
     load_state_dict(model, state_dict)
 
 
-def test_load_state_dict_unequal_input_channels(checkpoint: str, model: Module) -> None:
+def test_load_state_dict_unequal_input_channels(
+    monkeypatch: MonkeyPatch, checkpoint: str, model: Module
+) -> None:
     _, state_dict = extract_backbone(checkpoint)
-    expected_in_channels = state_dict["conv1.weight"].shape[1]
+    expected_in_channels = state_dict['conv1.weight'].shape[1]
 
     in_channels = 7
-    model.conv1 = nn.Conv2d(
+    conv1 = nn.Conv2d(
         in_channels, out_channels=64, kernel_size=7, stride=1, padding=2, bias=False
     )
+    monkeypatch.setattr(model, 'conv1', conv1)
 
     warning = (
-        f"input channels {in_channels} != input channels in pretrained"
-        f" model {expected_in_channels}. Overriding with new input channels"
+        f'input channels {in_channels} != input channels in pretrained'
+        f' model {expected_in_channels}. Overriding with new input channels'
     )
     with pytest.warns(UserWarning, match=warning):
         load_state_dict(model, state_dict)
 
 
-def test_load_state_dict_unequal_classes(checkpoint: str, model: Module) -> None:
+def test_load_state_dict_unequal_classes(
+    monkeypatch: MonkeyPatch, checkpoint: str, model: Module
+) -> None:
     _, state_dict = extract_backbone(checkpoint)
-    expected_num_classes = state_dict["fc.weight"].shape[0]
+    expected_num_classes = state_dict['fc.weight'].shape[0]
 
     num_classes = 10
     in_features = cast(int, cast(nn.Module, model.fc).in_features)
-    model.fc = nn.Linear(in_features, out_features=num_classes)
+    fc = nn.Linear(in_features, out_features=num_classes)
+    monkeypatch.setattr(model, 'fc', fc)
 
     warning = (
-        f"num classes {num_classes} != num classes in pretrained model"
-        f" {expected_num_classes}. Overriding with new num classes"
+        f'num classes {num_classes} != num classes in pretrained model'
+        f' {expected_num_classes}. Overriding with new num classes'
     )
     with pytest.warns(UserWarning, match=warning):
         load_state_dict(model, state_dict)

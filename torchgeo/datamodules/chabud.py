@@ -52,14 +52,14 @@ class ChaBuDDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.ChaBuD`.
         """
-        bands = kwargs.get("bands", ChaBuD.all_bands)
+        bands = kwargs.get('bands', ChaBuD.all_bands)
         band_indices = [ChaBuD.all_bands.index(b) for b in bands]
         mins = self.min[band_indices]
         maxs = self.max[band_indices]
 
         # Change detection, 2 images from different times
-        mins = repeat(mins, "c -> (t c)", t=2)
-        maxs = repeat(maxs, "c -> (t c)", t=2)
+        mins = repeat(mins, 'c -> (t c)', t=2)
+        maxs = repeat(maxs, 'c -> (t c)', t=2)
 
         self.mean = mins
         self.std = maxs - mins
@@ -72,6 +72,6 @@ class ChaBuDDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit", "validate"]:
-            self.train_dataset = ChaBuD(split="train", **self.kwargs)
-            self.val_dataset = ChaBuD(split="val", **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.train_dataset = ChaBuD(split='train', **self.kwargs)
+            self.val_dataset = ChaBuD(split='val', **self.kwargs)

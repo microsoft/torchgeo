@@ -17,6 +17,6 @@ data:
     seasons: 1
     # https://github.com/Lightning-AI/lightning/issues/18616
     bands:
-    - "B4"
-    - "B3"
-    - "B2"
+      - "B4"
+      - "B3"
+      - "B2"

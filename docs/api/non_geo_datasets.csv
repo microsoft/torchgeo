@@ -28,10 +28,11 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `NASA Marine Debris`_,OD,PlanetScope,"Apache-2.0",707,1,256x256,3,RGB
 `OSCD`_,CD,Sentinel-2,"CC-BY-4.0",24,2,"40--1,180",60,MSI
 `PASTIS`_,I,Sentinel-1/2,"CC-BY-4.0","2,433",19,128x128xT,10,MSI
-`PatternNet`_,C,Google Earth,-,"30,400",38,256x256,0.06--5,RGB
+`PatternNet`_,C,Google Earth,"CC-BY-4.0","30,400",38,256x256,0.06--5,RGB
 `Potsdam`_,S,Aerial,-,38,6,"6,000x6,000",0.05,MSI
+`QuakeSet`_,"C, R",Sentinel-1,"OpenRAIL","3,327",2,512x512,10,SAR
 `ReforesTree`_,"OD, R",Aerial,"CC-BY-4.0",100,6,"4,000x4,000",0.02,RGB
-`RESISC45`_,C,Google Earth,"CC-BY-NC-4.0","31,500",45,256x256,0.2--30,RGB
+`RESISC45`_,C,Google Earth,-,"31,500",45,256x256,0.2--30,RGB
 `Rwanda Field Boundary`_,S,Planetscope,"NICFI AND CC-BY-4.0",70,2,256x256,4.7,RGB + NIR
 `Seasonal Contrast`_,T,Sentinel-2,"CC-BY-4.0",100K--1M,-,264x264,10,MSI
 `SeasoNet`_,S,Sentinel-2,"CC-BY-4.0","1,759,830",33,120x120,10,MSI

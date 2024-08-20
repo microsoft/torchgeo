@@ -20,35 +20,35 @@ import json
 # * outside the dataset bounding box
 
 geojson = {
-    "type": "FeatureCollection",
-    "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"}},
-    "features": [
+    'type': 'FeatureCollection',
+    'crs': {'type': 'name', 'properties': {'name': 'urn:ogc:def:crs:OGC:1.3:CRS84'}},
+    'features': [
         {
-            "type": "Feature",
-            "properties": {"label_id": 1},
-            "geometry": {
-                "type": "Polygon",
-                "coordinates": [
+            'type': 'Feature',
+            'properties': {'label_id': 1},
+            'geometry': {
+                'type': 'Polygon',
+                'coordinates': [
                     [[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]]
                 ],
             },
         },
         {
-            "type": "Feature",
-            "properties": {"label_id": 2},
-            "geometry": {
-                "type": "Polygon",
-                "coordinates": [
+            'type': 'Feature',
+            'properties': {'label_id': 2},
+            'geometry': {
+                'type': 'Polygon',
+                'coordinates': [
                     [[1.0, 0.0], [1.0, 1.0], [2.0, 1.0], [2.0, 0.0], [1.0, 0.0]]
                 ],
             },
         },
         {
-            "type": "Feature",
-            "properties": {"label_id": 3},
-            "geometry": {
-                "type": "Polygon",
-                "coordinates": [
+            'type': 'Feature',
+            'properties': {'label_id': 3},
+            'geometry': {
+                'type': 'Polygon',
+                'coordinates': [
                     [[0.0, 1.0], [0.0, 2.0], [1.0, 2.0], [1.0, 1.0], [0.0, 1.0]]
                 ],
             },
@@ -56,5 +56,5 @@ geojson = {
     ],
 }
 
-with open("vector_2024.geojson", "w") as f:
+with open('vector_2024.geojson', 'w') as f:
     json.dump(geojson, f)

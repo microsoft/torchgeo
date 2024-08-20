@@ -3,8 +3,6 @@
 
 """TorchGeo color transforms."""
 
-from typing import Optional
-
 from kornia.augmentation import IntensityAugmentationBase2D
 from torch import Tensor
 
@@ -50,14 +48,14 @@ class RandomGrayscale(IntensityAugmentationBase2D):
         # Rescale to sum to 1
         weights /= weights.sum()
 
-        self.flags = {"weights": weights}
+        self.flags = {'weights': weights}
 
     def apply_transform(
         self,
         input: Tensor,
         params: dict[str, Tensor],
         flags: dict[str, Tensor],
-        transform: Optional[Tensor] = None,
+        transform: Tensor | None = None,
     ) -> Tensor:
         """Apply the transform.
 
@@ -70,7 +68,7 @@ class RandomGrayscale(IntensityAugmentationBase2D):
         Returns:
             The augmented input.
         """
-        weights = flags["weights"][..., :, None, None].to(input.device)
+        weights = flags['weights'][..., :, None, None].to(input.device)
         out = input * weights
         out = out.sum(dim=-3)
         out = out.unsqueeze(-3).expand(input.shape)

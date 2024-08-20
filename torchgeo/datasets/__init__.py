@@ -5,6 +5,7 @@
 
 from .advance import ADVANCE
 from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
+from .agrifieldnet import AgriFieldNet
 from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
@@ -15,8 +16,6 @@ from .cdl import CDL
 from .chabud import ChaBuD
 from .chesapeake import (
     Chesapeake,
-    Chesapeake7,
-    Chesapeake13,
     ChesapeakeCVPR,
     ChesapeakeDC,
     ChesapeakeDE,
@@ -37,11 +36,12 @@ from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoonAnalysis
 from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
+from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
 from .esri2020 import Esri2020
 from .etci2021 import ETCI2021
 from .eudem import EUDEM
 from .eurocrops import EuroCrops
-from .eurosat import EuroSAT, EuroSAT100
+from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
@@ -60,6 +60,7 @@ from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
 from .inria import InriaAerialImageLabeling
+from .iobench import IOBench
 from .l7irish import L7Irish
 from .l8biome import L8Biome
 from .landcoverai import LandCoverAI, LandCoverAIBase, LandCoverAIGeo
@@ -90,6 +91,7 @@ from .pastis import PASTIS
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .prisma import PRISMA
+from .quakeset import QuakeSet
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
@@ -99,6 +101,7 @@ from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
 from .so2sat import So2Sat
+from .south_africa_crop_type import SouthAfricaCropType
 from .south_america_soybean import SouthAmericaSoybean
 from .spacenet import (
     SpaceNet,
@@ -109,6 +112,7 @@ from .spacenet import (
     SpaceNet5,
     SpaceNet6,
     SpaceNet7,
+    SpaceNet8,
 )
 from .splits import (
     random_bbox_assignment,
@@ -124,8 +128,6 @@ from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
     BoundingBox,
-    DatasetNotFoundError,
-    RGBBandsMissingError,
     concat_samples,
     merge_samples,
     stack_samples,
@@ -139,55 +141,58 @@ from .zuericrop import ZueriCrop
 
 __all__ = (
     # GeoDataset
-    "AbovegroundLiveWoodyBiomassDensity",
-    "Airphen",
-    "AsterGDEM",
-    "CanadianBuildingFootprints",
-    "CDL",
-    "Chesapeake",
-    "Chesapeake7",
-    "Chesapeake13",
-    "ChesapeakeDC",
-    "ChesapeakeDE",
-    "ChesapeakeMD",
-    "ChesapeakeNY",
-    "ChesapeakePA",
-    "ChesapeakeVA",
-    "ChesapeakeWV",
-    "ChesapeakeCVPR",
-    "CMSGlobalMangroveCanopy",
-    "CropHarvest",
-    "EDDMapS",
-    "Esri2020",
-    "EuroCrops",
-    "EUDEM",
-    "GBIF",
-    "GlobBiomass",
-    "INaturalist",
-    "L7Irish",
-    "L8Biome",
-    "LandCoverAIBase",
-    "LandCoverAIGeo",
-    "Landsat",
-    "Landsat1",
-    "Landsat2",
-    "Landsat3",
-    "Landsat4MSS",
-    "Landsat4TM",
-    "Landsat5MSS",
-    "Landsat5TM",
-    "Landsat7",
-    "Landsat8",
-    "Landsat9",
-    "NAIP",
-    "NCCM",
-    "NLCD",
-    "OpenBuildings",
-    "PRISMA",
-    "Sentinel",
-    "Sentinel1",
-    "Sentinel2",
-    "SouthAmericaSoybean",
+    'AbovegroundLiveWoodyBiomassDensity',
+    'AgriFieldNet',
+    'Airphen',
+    'AsterGDEM',
+    'CanadianBuildingFootprints',
+    'CDL',
+    'Chesapeake',
+    'Chesapeake7',
+    'Chesapeake13',
+    'ChesapeakeDC',
+    'ChesapeakeDE',
+    'ChesapeakeMD',
+    'ChesapeakeNY',
+    'ChesapeakePA',
+    'ChesapeakeVA',
+    'ChesapeakeWV',
+    'ChesapeakeCVPR',
+    'CMSGlobalMangroveCanopy',
+    'CropHarvest',
+    'EDDMapS',
+    'Esri2020',
+    'EuroCrops',
+    'EUDEM',
+    'GBIF',
+    'GlobBiomass',
+    'INaturalist',
+    'IOBench',
+    'L7Irish',
+    'L8Biome',
+    'LandCoverAIBase',
+    'LandCoverAIGeo',
+    'Landsat',
+    'Landsat1',
+    'Landsat2',
+    'Landsat3',
+    'Landsat4MSS',
+    'Landsat4TM',
+    'Landsat5MSS',
+    'Landsat5TM',
+    'Landsat7',
+    'Landsat8',
+    'Landsat9',
+    'NAIP',
+    'NCCM',
+    'NLCD',
+    'OpenBuildings',
+    'PRISMA',
+    'Sentinel',
+    'Sentinel1',
+    'Sentinel2',
+    'SouthAfricaCropType',
+    'SouthAmericaSoybean',
     # NonGeoDataset
     "ADVANCE",
     "BeninSmallHolderCashews",
@@ -254,26 +259,27 @@ __all__ = (
     "XView2",
     "ZueriCrop",
     # Base classes
-    "GeoDataset",
-    "IntersectionDataset",
-    "NonGeoClassificationDataset",
-    "NonGeoDataset",
-    "RasterDataset",
-    "UnionDataset",
-    "VectorDataset",
+    'GeoDataset',
+    'IntersectionDataset',
+    'NonGeoClassificationDataset',
+    'NonGeoDataset',
+    'RasterDataset',
+    'UnionDataset',
+    'VectorDataset',
     # Utilities
-    "BoundingBox",
-    "concat_samples",
-    "merge_samples",
-    "stack_samples",
-    "unbind_samples",
+    'BoundingBox',
+    'concat_samples',
+    'merge_samples',
+    'stack_samples',
+    'unbind_samples',
     # Splits
-    "random_bbox_assignment",
-    "random_bbox_splitting",
-    "random_grid_cell_assignment",
-    "roi_split",
-    "time_series_split",
+    'random_bbox_assignment',
+    'random_bbox_splitting',
+    'random_grid_cell_assignment',
+    'roi_split',
+    'time_series_split',
     # Errors
-    "DatasetNotFoundError",
-    "RGBBandsMissingError",
+    'DatasetNotFoundError',
+    'DependencyNotFoundError',
+    'RGBBandsMissingError',
 )

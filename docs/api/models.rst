@@ -10,6 +10,17 @@ Change Star
 .. autoclass:: ChangeStarFarSeg
 .. autoclass:: ChangeMixin
 
+DOFA
+^^^^
+
+.. autoclass:: DOFA
+.. autofunction:: dofa_small_patch16_224
+.. autofunction:: dofa_base_patch16_224
+.. autofunction:: dofa_large_patch16_224
+.. autofunction:: dofa_huge_patch16_224
+.. autoclass:: DOFABase16_Weights
+.. autoclass:: DOFALarge16_Weights
+
 FarSeg
 ^^^^^^
 
@@ -39,6 +50,12 @@ ResNet
 .. autoclass:: ResNet18_Weights
 .. autoclass:: ResNet50_Weights
 
+Scale-MAE
+^^^^^^^^^
+
+.. autofunction:: ScaleMAE
+.. autoclass:: ScaleMAELarge16_Weights
+
 Swin Transformer
 ^^^^^^^^^^^^^^^^^^
 
@@ -62,6 +79,18 @@ Utility Functions
 
 Pretrained Weights
 ^^^^^^^^^^^^^^^^^^
+
+Sensor-Agnostic
+---------------
+
+These weights can be used with imagery from any satellite/sensor.
+
+.. csv-table::
+   :widths: 45 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: agnostic_pretrained_weights.csv
+
 
 NAIP
 ----

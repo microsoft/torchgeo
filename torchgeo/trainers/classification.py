@@ -4,7 +4,7 @@
 """Trainers for image classification."""
 
 import os
-from typing import Any, Optional, Union
+from typing import Any
 
 import matplotlib.pyplot as plt
 import timm
@@ -34,12 +34,12 @@ class ClassificationTask(BaseTask):
 
     def __init__(
         self,
-        model: str = "resnet50",
-        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        model: str = 'resnet50',
+        weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
-        loss: str = "ce",
-        class_weights: Optional[Tensor] = None,
+        loss: str = 'ce',
+        class_weights: Tensor | None = None,
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
@@ -73,49 +73,7 @@ class ClassificationTask(BaseTask):
            *lr* and *patience*.
         """
         self.weights = weights
-        super().__init__(ignore="weights")
-
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion.
-
-        Raises:
-            ValueError: If *loss* is invalid.
-        """
-        loss: str = self.hparams["loss"]
-        if loss == "ce":
-            self.criterion: nn.Module = nn.CrossEntropyLoss(
-                weight=self.hparams["class_weights"]
-            )
-        elif loss == "bce":
-            self.criterion = nn.BCEWithLogitsLoss()
-        elif loss == "jaccard":
-            self.criterion = JaccardLoss(mode="multiclass")
-        elif loss == "focal":
-            self.criterion = FocalLoss(mode="multiclass", normalized=True)
-        else:
-            raise ValueError(f"Loss type '{loss}' is not valid.")
-
-    def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
-        metrics = MetricCollection(
-            {
-                "OverallAccuracy": MulticlassAccuracy(
-                    num_classes=self.hparams["num_classes"], average="micro"
-                ),
-                "AverageAccuracy": MulticlassAccuracy(
-                    num_classes=self.hparams["num_classes"], average="macro"
-                ),
-                "JaccardIndex": MulticlassJaccardIndex(
-                    num_classes=self.hparams["num_classes"]
-                ),
-                "F1Score": MulticlassFBetaScore(
-                    num_classes=self.hparams["num_classes"], beta=1.0, average="micro"
-                ),
-            }
-        )
-        self.train_metrics = metrics.clone(prefix="train_")
-        self.val_metrics = metrics.clone(prefix="val_")
-        self.test_metrics = metrics.clone(prefix="test_")
+        super().__init__(ignore='weights')
 
     def configure_models(self) -> None:
         """Initialize the model."""
@@ -123,9 +81,9 @@ class ClassificationTask(BaseTask):
 
         # Create model
         self.model = timm.create_model(
-            self.hparams["model"],
-            num_classes=self.hparams["num_classes"],
-            in_chans=self.hparams["in_channels"],
+            self.hparams['model'],
+            num_classes=self.hparams['num_classes'],
+            in_chans=self.hparams['in_channels'],
             pretrained=weights is True,
         )
 
@@ -140,11 +98,70 @@ class ClassificationTask(BaseTask):
             utils.load_state_dict(self.model, state_dict)
 
         # Freeze backbone and unfreeze classifier head
-        if self.hparams["freeze_backbone"]:
+        if self.hparams['freeze_backbone']:
             for param in self.model.parameters():
                 param.requires_grad = False
             for param in self.model.get_classifier().parameters():
                 param.requires_grad = True
+
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion.
+
+        Raises:
+            ValueError: If *loss* is invalid.
+        """
+        loss: str = self.hparams['loss']
+        if loss == 'ce':
+            self.criterion: nn.Module = nn.CrossEntropyLoss(
+                weight=self.hparams['class_weights']
+            )
+        elif loss == 'bce':
+            self.criterion = nn.BCEWithLogitsLoss()
+        elif loss == 'jaccard':
+            self.criterion = JaccardLoss(mode='multiclass')
+        elif loss == 'focal':
+            self.criterion = FocalLoss(mode='multiclass', normalized=True)
+        else:
+            raise ValueError(f"Loss type '{loss}' is not valid.")
+
+    def configure_metrics(self) -> None:
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.classification.MulticlassAccuracy`: The number of
+          true positives divided by the dataset size. Both overall accuracy (OA)
+          using 'micro' averaging and average accuracy (AA) using 'macro' averaging
+          are reported. Higher values are better.
+        * :class:`~torchmetrics.classification.MulticlassJaccardIndex`: Intersection
+          over union (IoU). Uses 'macro' averaging. Higher valuers are better.
+        * :class:`~torchmetrics.classification.MulticlassFBetaScore`: F1 score.
+          The harmonic mean of precision and recall. Uses 'micro' averaging.
+          Higher values are better.
+
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not reflect
+             minority class accuracy.
+           * 'Macro' averaging gives equal weight to each class, and is useful for
+             balanced performance assessment across imbalanced classes.
+        """
+        metrics = MetricCollection(
+            {
+                'OverallAccuracy': MulticlassAccuracy(
+                    num_classes=self.hparams['num_classes'], average='micro'
+                ),
+                'AverageAccuracy': MulticlassAccuracy(
+                    num_classes=self.hparams['num_classes'], average='macro'
+                ),
+                'JaccardIndex': MulticlassJaccardIndex(
+                    num_classes=self.hparams['num_classes']
+                ),
+                'F1Score': MulticlassFBetaScore(
+                    num_classes=self.hparams['num_classes'], beta=1.0, average='micro'
+                ),
+            }
+        )
+        self.train_metrics = metrics.clone(prefix='train_')
+        self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -159,13 +176,14 @@ class ClassificationTask(BaseTask):
         Returns:
             The loss tensor.
         """
-        x = batch["image"]
-        y = batch["label"]
+        x = batch['image']
+        y = batch['label']
+        batch_size = x.shape[0]
         y_hat = self(x)
         loss: Tensor = self.criterion(y_hat, y)
-        self.log("train_loss", loss)
+        self.log('train_loss', loss, batch_size=batch_size)
         self.train_metrics(y_hat, y)
-        self.log_dict(self.train_metrics)
+        self.log_dict(self.train_metrics, batch_size=batch_size)
 
         return loss
 
@@ -179,29 +197,30 @@ class ClassificationTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        x = batch["image"]
-        y = batch["label"]
+        x = batch['image']
+        y = batch['label']
+        batch_size = x.shape[0]
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log("val_loss", loss)
+        self.log('val_loss', loss, batch_size=batch_size)
         self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics)
+        self.log_dict(self.val_metrics, batch_size=batch_size)
 
         if (
             batch_idx < 10
-            and hasattr(self.trainer, "datamodule")
-            and hasattr(self.trainer.datamodule, "plot")
+            and hasattr(self.trainer, 'datamodule')
+            and hasattr(self.trainer.datamodule, 'plot')
             and self.logger
-            and hasattr(self.logger, "experiment")
-            and hasattr(self.logger.experiment, "add_figure")
+            and hasattr(self.logger, 'experiment')
+            and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
-            batch["prediction"] = y_hat.argmax(dim=-1)
-            for key in ["image", "label", "prediction"]:
+            batch['prediction'] = y_hat.argmax(dim=-1)
+            for key in ['image', 'label', 'prediction']:
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
 
-            fig: Optional[Figure] = None
+            fig: Figure | None = None
             try:
                 fig = datamodule.plot(sample)
             except RGBBandsMissingError:
@@ -210,7 +229,7 @@ class ClassificationTask(BaseTask):
             if fig:
                 summary_writer = self.logger.experiment
                 summary_writer.add_figure(
-                    f"image/{batch_idx}", fig, global_step=self.global_step
+                    f'image/{batch_idx}', fig, global_step=self.global_step
                 )
                 plt.close()
 
@@ -222,13 +241,14 @@ class ClassificationTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        x = batch["image"]
-        y = batch["label"]
+        x = batch['image']
+        y = batch['label']
+        batch_size = x.shape[0]
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log("test_loss", loss)
+        self.log('test_loss', loss, batch_size=batch_size)
         self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics)
+        self.log_dict(self.test_metrics, batch_size=batch_size)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -243,7 +263,7 @@ class ClassificationTask(BaseTask):
         Returns:
             Output predicted probabilities.
         """
-        x = batch["image"]
+        x = batch['image']
         y_hat: Tensor = self(x).softmax(dim=-1)
         return y_hat
 
@@ -252,23 +272,38 @@ class MultiLabelClassificationTask(ClassificationTask):
     """Multi-label image classification."""
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.classification.MultilabelAccuracy`: The number of
+          true positives divided by the dataset size. Both overall accuracy (OA)
+          using 'micro' averaging and average accuracy (AA) using 'macro' averaging
+          are reported. Higher values are better.
+        * :class:`~torchmetrics.classification.MultilabelFBetaScore`: F1 score.
+          The harmonic mean of precision and recall. Uses 'micro' averaging.
+          Higher values are better.
+
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not
+             reflect minority class accuracy.
+           * 'Macro' averaging gives equal weight to each class, and is useful for
+             balanced performance assessment across imbalanced classes.
+        """
         metrics = MetricCollection(
             {
-                "OverallAccuracy": MultilabelAccuracy(
-                    num_labels=self.hparams["num_classes"], average="micro"
+                'OverallAccuracy': MultilabelAccuracy(
+                    num_labels=self.hparams['num_classes'], average='micro'
                 ),
-                "AverageAccuracy": MultilabelAccuracy(
-                    num_labels=self.hparams["num_classes"], average="macro"
+                'AverageAccuracy': MultilabelAccuracy(
+                    num_labels=self.hparams['num_classes'], average='macro'
                 ),
-                "F1Score": MultilabelFBetaScore(
-                    num_labels=self.hparams["num_classes"], beta=1.0, average="micro"
+                'F1Score': MultilabelFBetaScore(
+                    num_labels=self.hparams['num_classes'], beta=1.0, average='micro'
                 ),
             }
         )
-        self.train_metrics = metrics.clone(prefix="train_")
-        self.val_metrics = metrics.clone(prefix="val_")
-        self.test_metrics = metrics.clone(prefix="test_")
+        self.train_metrics = metrics.clone(prefix='train_')
+        self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -283,12 +318,13 @@ class MultiLabelClassificationTask(ClassificationTask):
         Returns:
             The loss tensor.
         """
-        x = batch["image"]
-        y = batch["label"]
+        x = batch['image']
+        y = batch['label']
+        batch_size = x.shape[0]
         y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
         loss: Tensor = self.criterion(y_hat, y.to(torch.float))
-        self.log("train_loss", loss)
+        self.log('train_loss', loss, batch_size=batch_size)
         self.train_metrics(y_hat_hard, y)
         self.log_dict(self.train_metrics)
 
@@ -304,30 +340,31 @@ class MultiLabelClassificationTask(ClassificationTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        x = batch["image"]
-        y = batch["label"]
+        x = batch['image']
+        y = batch['label']
+        batch_size = x.shape[0]
         y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
         loss = self.criterion(y_hat, y.to(torch.float))
-        self.log("val_loss", loss)
+        self.log('val_loss', loss, batch_size=batch_size)
         self.val_metrics(y_hat_hard, y)
-        self.log_dict(self.val_metrics)
+        self.log_dict(self.val_metrics, batch_size=batch_size)
 
         if (
             batch_idx < 10
-            and hasattr(self.trainer, "datamodule")
-            and hasattr(self.trainer.datamodule, "plot")
+            and hasattr(self.trainer, 'datamodule')
+            and hasattr(self.trainer.datamodule, 'plot')
             and self.logger
-            and hasattr(self.logger, "experiment")
-            and hasattr(self.logger.experiment, "add_figure")
+            and hasattr(self.logger, 'experiment')
+            and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
-            batch["prediction"] = y_hat_hard
-            for key in ["image", "label", "prediction"]:
+            batch['prediction'] = y_hat_hard
+            for key in ['image', 'label', 'prediction']:
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
 
-            fig: Optional[Figure] = None
+            fig: Figure | None = None
             try:
                 fig = datamodule.plot(sample)
             except RGBBandsMissingError:
@@ -336,7 +373,7 @@ class MultiLabelClassificationTask(ClassificationTask):
             if fig:
                 summary_writer = self.logger.experiment
                 summary_writer.add_figure(
-                    f"image/{batch_idx}", fig, global_step=self.global_step
+                    f'image/{batch_idx}', fig, global_step=self.global_step
                 )
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
@@ -347,14 +384,15 @@ class MultiLabelClassificationTask(ClassificationTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        x = batch["image"]
-        y = batch["label"]
+        x = batch['image']
+        y = batch['label']
+        batch_size = x.shape[0]
         y_hat = self(x)
         y_hat_hard = torch.sigmoid(y_hat)
         loss = self.criterion(y_hat, y.to(torch.float))
-        self.log("test_loss", loss)
+        self.log('test_loss', loss, batch_size=batch_size)
         self.test_metrics(y_hat_hard, y)
-        self.log_dict(self.test_metrics)
+        self.log_dict(self.test_metrics, batch_size=batch_size)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -369,6 +407,6 @@ class MultiLabelClassificationTask(ClassificationTask):
         Returns:
             Output predicted probabilities.
         """
-        x = batch["image"]
+        x = batch['image']
         y_hat = torch.sigmoid(self(x))
         return y_hat

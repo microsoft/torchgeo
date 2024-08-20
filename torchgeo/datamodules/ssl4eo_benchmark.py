@@ -3,7 +3,7 @@
 
 """SSL4EO datamodule."""
 
-from typing import Any, Union
+from typing import Any
 
 import kornia.augmentation as K
 from kornia.constants import DataKey, Resample
@@ -23,7 +23,7 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[int, tuple[int, int]] = 224,
+        patch_size: int | tuple[int, int] = 224,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
@@ -45,18 +45,18 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
             K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
-            data_keys=["image", "mask"],
+            data_keys=['image', 'mask'],
             extra_args={
-                DataKey.MASK: {"resample": Resample.NEAREST, "align_corners": None}
+                DataKey.MASK: {'resample': Resample.NEAREST, 'align_corners': None}
             },
         )
         self.val_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.CenterCrop(self.patch_size),
-            data_keys=["image", "mask"],
+            data_keys=['image', 'mask'],
         )
         self.test_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.CenterCrop(self.patch_size),
-            data_keys=["image", "mask"],
+            data_keys=['image', 'mask'],
         )

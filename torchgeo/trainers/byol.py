@@ -4,7 +4,7 @@
 """BYOL trainer for self-supervised learning (SSL)."""
 
 import os
-from typing import Any, Optional, Union
+from typing import Any
 
 import timm
 import torch
@@ -148,8 +148,8 @@ class BackboneWrapper(nn.Module):
         self.hidden_size = hidden_size
         self.layer = layer
 
-        self._projector: Optional[nn.Module] = None
-        self._projector_dim: Optional[int] = None
+        self._projector: nn.Module | None = None
+        self._projector_dim: int | None = None
         self._encoded = torch.empty(0)
         self._register_hook()
 
@@ -223,7 +223,7 @@ class BYOL(nn.Module):
         in_channels: int = 4,
         projection_size: int = 256,
         hidden_size: int = 4096,
-        augment_fn: Optional[nn.Module] = None,
+        augment_fn: nn.Module | None = None,
         beta: float = 0.99,
         **kwargs: Any,
     ) -> None:
@@ -240,6 +240,7 @@ class BYOL(nn.Module):
             augment_fn: an instance of a module that performs data augmentation
             beta: the speed at which the target backbone is updated using the main
                 backbone
+            **kwargs: Additional keyword arguments passed to :class:`nn.Module`
         """
         super().__init__()
 
@@ -292,12 +293,12 @@ class BYOLTask(BaseTask):
     * https://arxiv.org/abs/2006.07733
     """
 
-    monitor = "train_loss"
+    monitor = 'train_loss'
 
     def __init__(
         self,
-        model: str = "resnet50",
-        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        model: str = 'resnet50',
+        weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         lr: float = 1e-3,
         patience: int = 10,
@@ -323,16 +324,16 @@ class BYOLTask(BaseTask):
            renamed to *model*, *lr*, and *patience*.
         """
         self.weights = weights
-        super().__init__(ignore="weights")
+        super().__init__(ignore='weights')
 
     def configure_models(self) -> None:
         """Initialize the model."""
         weights = self.weights
-        in_channels: int = self.hparams["in_channels"]
+        in_channels: int = self.hparams['in_channels']
 
         # Create backbone
         backbone = timm.create_model(
-            self.hparams["model"], in_chans=in_channels, pretrained=weights is True
+            self.hparams['model'], in_chans=in_channels, pretrained=weights is True
         )
 
         # Load weights
@@ -363,9 +364,10 @@ class BYOLTask(BaseTask):
         Raises:
             AssertionError: If channel dimensions are incorrect.
         """
-        x = batch["image"]
+        x = batch['image']
+        batch_size = x.shape[0]
 
-        in_channels = self.hparams["in_channels"]
+        in_channels = self.hparams['in_channels']
         assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
 
         if x.size(1) == in_channels:
@@ -387,7 +389,7 @@ class BYOLTask(BaseTask):
 
         loss = torch.mean(normalized_mse(pred1, targ2) + normalized_mse(pred2, targ1))
 
-        self.log("train_loss", loss)
+        self.log('train_loss', loss, batch_size=batch_size)
         self.model.update_target()
 
         return loss

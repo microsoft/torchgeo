@@ -36,10 +36,10 @@ class LoveDADataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit"]:
-            self.train_dataset = LoveDA(split="train", **self.kwargs)
-        if stage in ["fit", "validate"]:
-            self.val_dataset = LoveDA(split="val", **self.kwargs)
-        if stage in ["predict"]:
+        if stage in ['fit']:
+            self.train_dataset = LoveDA(split='train', **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.val_dataset = LoveDA(split='val', **self.kwargs)
+        if stage in ['predict']:
             # Test set masks are not public, use for prediction instead
-            self.predict_dataset = LoveDA(split="test", **self.kwargs)
+            self.predict_dataset = LoveDA(split='test', **self.kwargs)

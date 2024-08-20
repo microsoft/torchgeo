@@ -3,12 +3,22 @@
 
 """National Agriculture Imagery Program (NAIP) datamodule."""
 
-from typing import Any, Optional, Union
+from typing import Any
 
 import kornia.augmentation as K
 from matplotlib.figure import Figure
 
-from ..datasets import NAIP, BoundingBox, Chesapeake13
+from ..datasets import (
+    NAIP,
+    BoundingBox,
+    ChesapeakeDC,
+    ChesapeakeDE,
+    ChesapeakeMD,
+    ChesapeakeNY,
+    ChesapeakePA,
+    ChesapeakeVA,
+    ChesapeakeWV,
+)
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
@@ -23,8 +33,8 @@ class NAIPChesapeakeDataModule(GeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[int, tuple[int, int]] = 256,
-        length: Optional[int] = None,
+        patch_size: int | tuple[int, int] = 256,
+        length: int | None = None,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
@@ -37,28 +47,23 @@ class NAIPChesapeakeDataModule(GeoDataModule):
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.NAIP` (prefix keys with ``naip_``) and
-                :class:`~torchgeo.datasets.Chesapeake13`
+                :class:`~torchgeo.datasets.Chesapeake`
                 (prefix keys with ``chesapeake_``).
         """
         self.naip_kwargs = {}
         self.chesapeake_kwargs = {}
         for key, val in kwargs.items():
-            if key.startswith("naip_"):
+            if key.startswith('naip_'):
                 self.naip_kwargs[key[5:]] = val
-            elif key.startswith("chesapeake_"):
+            elif key.startswith('chesapeake_'):
                 self.chesapeake_kwargs[key[11:]] = val
 
         super().__init__(
-            Chesapeake13,
-            batch_size,
-            patch_size,
-            length,
-            num_workers,
-            **self.chesapeake_kwargs,
+            NAIP, batch_size, patch_size, length, num_workers, **self.naip_kwargs
         )
 
         self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "mask"]
+            K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
         )
 
     def setup(self, stage: str) -> None:
@@ -67,27 +72,34 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.chesapeake = Chesapeake13(**self.chesapeake_kwargs)
         self.naip = NAIP(**self.naip_kwargs)
-        self.dataset = self.chesapeake & self.naip
+        dc = ChesapeakeDC(**self.chesapeake_kwargs)
+        de = ChesapeakeDE(**self.chesapeake_kwargs)
+        md = ChesapeakeMD(**self.chesapeake_kwargs)
+        ny = ChesapeakeNY(**self.chesapeake_kwargs)
+        pa = ChesapeakePA(**self.chesapeake_kwargs)
+        va = ChesapeakeVA(**self.chesapeake_kwargs)
+        wv = ChesapeakeWV(**self.chesapeake_kwargs)
+        self.chesapeake = dc | de | md | ny | pa | va | wv
+        self.dataset = self.naip & self.chesapeake
 
         roi = self.dataset.bounds
         midx = roi.minx + (roi.maxx - roi.minx) / 2
         midy = roi.miny + (roi.maxy - roi.miny) / 2
 
-        if stage in ["fit"]:
+        if stage in ['fit']:
             train_roi = BoundingBox(
                 roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt
             )
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.dataset, self.patch_size, self.batch_size, self.length, train_roi
             )
-        if stage in ["fit", "validate"]:
+        if stage in ['fit', 'validate']:
             val_roi = BoundingBox(midx, roi.maxx, roi.miny, midy, roi.mint, roi.maxt)
             self.val_sampler = GridGeoSampler(
                 self.dataset, self.patch_size, self.patch_size, val_roi
             )
-        if stage in ["test"]:
+        if stage in ['test']:
             test_roi = BoundingBox(
                 roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt
             )

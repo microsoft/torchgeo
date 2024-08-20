@@ -23,6 +23,11 @@ Aboveground Woody Biomass
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
 
+AgriFieldNet
+^^^^^^^^^^^^
+
+.. autoclass:: AgriFieldNet
+
 Airphen
 ^^^^^^^
 
@@ -42,8 +47,6 @@ Chesapeake Land Cover
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: Chesapeake
-.. autoclass:: Chesapeake7
-.. autoclass:: Chesapeake13
 .. autoclass:: ChesapeakeDC
 .. autoclass:: ChesapeakeDE
 .. autoclass:: ChesapeakeMD
@@ -102,6 +105,11 @@ iNaturalist
 ^^^^^^^^^^^
 
 .. autoclass:: INaturalist
+
+I/O Bench
+^^^^^^^^^
+
+.. autoclass:: IOBench
 
 L7 Irish
 ^^^^^^^^
@@ -166,12 +174,15 @@ Sentinel
 .. autoclass:: Sentinel1
 .. autoclass:: Sentinel2
 
+South Africa Crop Type
+^^^^^^^^^^^^^^^^^^^^^^
 
-South America Soybean 
+.. autoclass:: SouthAfricaCropType
+
+South America Soybean
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SouthAmericaSoybean
-
 
 .. _Non-geospatial Datasets:
 
@@ -258,6 +269,7 @@ EuroSAT
 ^^^^^^^
 
 .. autoclass:: EuroSAT
+.. autoclass:: EuroSATSpatial
 .. autoclass:: EuroSAT100
 
 FAIR1M
@@ -346,6 +358,11 @@ Potsdam
 
 .. autoclass:: Potsdam2D
 
+QuakeSet
+^^^^^^^^
+
+.. autoclass:: QuakeSet
+
 ReforesTree
 ^^^^^^^^^^^
 
@@ -397,6 +414,7 @@ SpaceNet
 .. autoclass:: SpaceNet5
 .. autoclass:: SpaceNet6
 .. autoclass:: SpaceNet7
+.. autoclass:: SpaceNet8
 
 SSL4EO
 ^^^^^^
@@ -523,4 +541,5 @@ Errors
 ------
 
 .. autoclass:: DatasetNotFoundError
+.. autoclass:: DependencyNotFoundError
 .. autoclass:: RGBBandsMissingError

@@ -3,16 +3,17 @@
 
 """NWPU VHR-10 datamodule."""
 
-from typing import Any, Union
+from typing import Any
 
 import kornia.augmentation as K
 import torch
+from torch.utils.data import random_split
 
 from ..datasets import VHR10
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
-from .utils import AugPipe, collate_fn_detection, dataset_split
+from .utils import AugPipe, collate_fn_detection
 
 
 class VHR10DataModule(NonGeoDataModule):
@@ -26,7 +27,7 @@ class VHR10DataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[tuple[int, int], int] = 512,
+        patch_size: tuple[int, int] | int = 512,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
         test_split_pct: float = 0.2,
@@ -58,7 +59,7 @@ class VHR10DataModule(NonGeoDataModule):
                 K.RandomHorizontalFlip(),
                 K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=0.7),
                 K.RandomVerticalFlip(),
-                data_keys=["image", "boxes", "masks"],
+                data_keys=['image', 'boxes', 'masks'],
             ),
             batch_size,
         )
@@ -66,7 +67,7 @@ class VHR10DataModule(NonGeoDataModule):
             AugmentationSequential(
                 K.Normalize(mean=self.mean, std=self.std),
                 K.Resize(self.patch_size),
-                data_keys=["image", "boxes", "masks"],
+                data_keys=['image', 'boxes', 'masks'],
             ),
             batch_size,
         )
@@ -78,6 +79,13 @@ class VHR10DataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         self.dataset = VHR10(**self.kwargs)
-        self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            self.dataset, self.val_split_pct, self.test_split_pct
+        generator = torch.Generator().manual_seed(0)
+        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
+            self.dataset,
+            [
+                1 - self.val_split_pct - self.test_split_pct,
+                self.val_split_pct,
+                self.test_split_pct,
+            ],
+            generator,
         )

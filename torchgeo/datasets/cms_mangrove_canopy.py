@@ -4,14 +4,17 @@
 """CMS Global Mangrove Canopy dataset."""
 
 import os
-from typing import Any, Callable, Optional, Union
+import pathlib
+from collections.abc import Callable
+from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import DatasetNotFoundError, check_integrity, extract_archive
+from .utils import Path, check_integrity, extract_archive
 
 
 class CMSGlobalMangroveCanopy(RasterDataset):
@@ -36,143 +39,143 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         _(?P<country>[A-Za-z][^.]*)
     """
 
-    zipfile = "CMS_Global_Map_Mangrove_Canopy_1665.zip"
-    md5 = "3e7f9f23bf971c25e828b36e6c5496e3"
+    zipfile = 'CMS_Global_Map_Mangrove_Canopy_1665.zip'
+    md5 = '3e7f9f23bf971c25e828b36e6c5496e3'
 
-    all_countries = [
-        "AndamanAndNicobar",
-        "Angola",
-        "Anguilla",
-        "AntiguaAndBarbuda",
-        "Aruba",
-        "Australia",
-        "Bahamas",
-        "Bahrain",
-        "Bangladesh",
-        "Barbados",
-        "Belize",
-        "Benin",
-        "Brazil",
-        "BritishVirginIslands",
-        "Brunei",
-        "Cambodia",
-        "Cameroon",
-        "CarribeanCaymanIslands",
-        "China",
-        "Colombia",
-        "Comoros",
-        "CostaRica",
-        "Cote",
-        "CoteDivoire",
-        "CotedIvoire",
-        "Cuba",
-        "DemocraticRepublicOfCongo",
-        "Djibouti",
-        "DominicanRepublic",
-        "EcuadorWithGalapagos",
-        "Egypt",
-        "ElSalvador",
-        "EquatorialGuinea",
-        "Eritrea",
-        "EuropaIsland",
-        "Fiji",
-        "Fiji2",
-        "FrenchGuiana",
-        "FrenchGuyana",
-        "FrenchPolynesia",
-        "Gabon",
-        "Gambia",
-        "Ghana",
-        "Grenada",
-        "Guadeloupe",
-        "Guam",
-        "Guatemala",
-        "Guinea",
-        "GuineaBissau",
-        "Guyana",
-        "Haiti",
-        "Hawaii",
-        "Honduras",
-        "HongKong",
-        "India",
-        "Indonesia",
-        "Iran",
-        "Jamaica",
-        "Japan",
-        "Kenya",
-        "Liberia",
-        "Macau",
-        "Madagascar",
-        "Malaysia",
-        "Martinique",
-        "Mauritania",
-        "Mayotte",
-        "Mexico",
-        "Micronesia",
-        "Mozambique",
-        "Myanmar",
-        "NewCaledonia",
-        "NewZealand",
-        "Newzealand",
-        "Nicaragua",
-        "Nigeria",
-        "NorthernMarianaIslands",
-        "Oman",
-        "Pakistan",
-        "Palau",
-        "Panama",
-        "PapuaNewGuinea",
-        "Peru",
-        "Philipines",
-        "PuertoRico",
-        "Qatar",
-        "ReunionAndMauritius",
-        "SaintKittsAndNevis",
-        "SaintLucia",
-        "SaintVincentAndTheGrenadines",
-        "Samoa",
-        "SaudiArabia",
-        "Senegal",
-        "Seychelles",
-        "SierraLeone",
-        "Singapore",
-        "SolomonIslands",
-        "Somalia",
-        "Somalia2",
-        "Soudan",
-        "SouthAfrica",
-        "SriLanka",
-        "Sudan",
-        "Suriname",
-        "Taiwan",
-        "Tanzania",
-        "Thailand",
-        "TimorLeste",
-        "Togo",
-        "Tonga",
-        "TrinidadAndTobago",
-        "TurksAndCaicosIslands",
-        "Tuvalu",
-        "UnitedArabEmirates",
-        "UnitedStates",
-        "Vanuatu",
-        "Venezuela",
-        "Vietnam",
-        "VirginIslandsUs",
-        "WallisAndFutuna",
-        "Yemen",
-    ]
+    all_countries = (
+        'AndamanAndNicobar',
+        'Angola',
+        'Anguilla',
+        'AntiguaAndBarbuda',
+        'Aruba',
+        'Australia',
+        'Bahamas',
+        'Bahrain',
+        'Bangladesh',
+        'Barbados',
+        'Belize',
+        'Benin',
+        'Brazil',
+        'BritishVirginIslands',
+        'Brunei',
+        'Cambodia',
+        'Cameroon',
+        'CarribeanCaymanIslands',
+        'China',
+        'Colombia',
+        'Comoros',
+        'CostaRica',
+        'Cote',
+        'CoteDivoire',
+        'CotedIvoire',
+        'Cuba',
+        'DemocraticRepublicOfCongo',
+        'Djibouti',
+        'DominicanRepublic',
+        'EcuadorWithGalapagos',
+        'Egypt',
+        'ElSalvador',
+        'EquatorialGuinea',
+        'Eritrea',
+        'EuropaIsland',
+        'Fiji',
+        'Fiji2',
+        'FrenchGuiana',
+        'FrenchGuyana',
+        'FrenchPolynesia',
+        'Gabon',
+        'Gambia',
+        'Ghana',
+        'Grenada',
+        'Guadeloupe',
+        'Guam',
+        'Guatemala',
+        'Guinea',
+        'GuineaBissau',
+        'Guyana',
+        'Haiti',
+        'Hawaii',
+        'Honduras',
+        'HongKong',
+        'India',
+        'Indonesia',
+        'Iran',
+        'Jamaica',
+        'Japan',
+        'Kenya',
+        'Liberia',
+        'Macau',
+        'Madagascar',
+        'Malaysia',
+        'Martinique',
+        'Mauritania',
+        'Mayotte',
+        'Mexico',
+        'Micronesia',
+        'Mozambique',
+        'Myanmar',
+        'NewCaledonia',
+        'NewZealand',
+        'Newzealand',
+        'Nicaragua',
+        'Nigeria',
+        'NorthernMarianaIslands',
+        'Oman',
+        'Pakistan',
+        'Palau',
+        'Panama',
+        'PapuaNewGuinea',
+        'Peru',
+        'Philipines',
+        'PuertoRico',
+        'Qatar',
+        'ReunionAndMauritius',
+        'SaintKittsAndNevis',
+        'SaintLucia',
+        'SaintVincentAndTheGrenadines',
+        'Samoa',
+        'SaudiArabia',
+        'Senegal',
+        'Seychelles',
+        'SierraLeone',
+        'Singapore',
+        'SolomonIslands',
+        'Somalia',
+        'Somalia2',
+        'Soudan',
+        'SouthAfrica',
+        'SriLanka',
+        'Sudan',
+        'Suriname',
+        'Taiwan',
+        'Tanzania',
+        'Thailand',
+        'TimorLeste',
+        'Togo',
+        'Tonga',
+        'TrinidadAndTobago',
+        'TurksAndCaicosIslands',
+        'Tuvalu',
+        'UnitedArabEmirates',
+        'UnitedStates',
+        'Vanuatu',
+        'Venezuela',
+        'Vietnam',
+        'VirginIslandsUs',
+        'WallisAndFutuna',
+        'Yemen',
+    )
 
-    measurements = ["agb", "hba95", "hmax95"]
+    measurements = ('agb', 'hba95', 'hmax95')
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        measurement: str = "agb",
+        paths: Path | list[Path] = 'data',
+        crs: CRS | None = None,
+        res: float | None = None,
+        measurement: str = 'agb',
         country: str = all_countries[0],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         checksum: bool = False,
     ) -> None:
@@ -201,23 +204,19 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         self.paths = paths
         self.checksum = checksum
 
-        assert isinstance(country, str), "Country argument must be a str."
+        assert isinstance(country, str), 'Country argument must be a str.'
         assert (
             country in self.all_countries
-        ), "You have selected an invalid country, please choose one of {}".format(
-            self.all_countries
-        )
+        ), f'You have selected an invalid country, please choose one of {self.all_countries}'
         self.country = country
 
-        assert isinstance(measurement, str), "Measurement must be a string."
+        assert isinstance(measurement, str), 'Measurement must be a string.'
         assert (
             measurement in self.measurements
-        ), "You have entered an invalid measurement, please choose one of {}.".format(
-            self.measurements
-        )
+        ), f'You have entered an invalid measurement, please choose one of {self.measurements}.'
         self.measurement = measurement
 
-        self.filename_glob = f"**/Mangrove_{self.measurement}_{self.country}*"
+        self.filename_glob = f'**/Mangrove_{self.measurement}_{self.country}*'
 
         self._verify()
 
@@ -230,11 +229,11 @@ class CMSGlobalMangroveCanopy(RasterDataset):
             return
 
         # Check if the zip file has already been downloaded
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         pathname = os.path.join(self.paths, self.zipfile)
         if os.path.exists(pathname):
             if self.checksum and not check_integrity(pathname, self.md5):
-                raise RuntimeError("Dataset found, but corrupted.")
+                raise RuntimeError('Dataset found, but corrupted.')
             self._extract()
             return
 
@@ -242,7 +241,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         pathname = os.path.join(self.paths, self.zipfile)
         extract_archive(pathname)
 
@@ -250,7 +249,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -262,29 +261,29 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze()
+            pred = sample['prediction'].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
 
         if showing_predictions:
             axs[0].imshow(mask)
-            axs[0].axis("off")
+            axs[0].axis('off')
             axs[1].imshow(pred)
-            axs[1].axis("off")
+            axs[1].axis('off')
             if show_titles:
-                axs[0].set_title("Mask")
-                axs[1].set_title("Prediction")
+                axs[0].set_title('Mask')
+                axs[1].set_title('Prediction')
         else:
             axs.imshow(mask)
-            axs.axis("off")
+            axs.axis('off')
             if show_titles:
-                axs.set_title("Mask")
+                axs.set_title('Mask')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

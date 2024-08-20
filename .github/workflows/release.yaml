@@ -2,92 +2,67 @@ name: release
 on:
   push:
     branches:
-    - release**
+      - release**
   pull_request:
     branches:
-    - release**
+      - release**
+defaults:
+  run:
+    shell: bash
 jobs:
-  datasets:
-    name: datasets
-    runs-on: ubuntu-latest
-    steps:
-    - name: Clone repo
-      uses: actions/checkout@v4.1.1
-    - name: Set up python
-      uses: actions/setup-python@v5.0.0
-      with:
-        python-version: '3.12'
-    - name: Cache dependencies
-      uses: actions/cache@v4.0.0
-      id: cache
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-datasets
-    - name: Install pip dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install .[tests]
-        pip cache purge
-    - name: List pip dependencies
-      run: pip list
-    - name: Run pytest checks
-      run: |
-        pytest --cov=torchgeo --cov-report=xml --durations=10
-        python -m torchgeo --help
-        torchgeo --help
   integration:
     name: integration
     runs-on: ubuntu-latest
     steps:
-    - name: Clone repo
-      uses: actions/checkout@v4.1.1
-    - name: Set up python
-      uses: actions/setup-python@v5.0.0
-      with:
-        python-version: '3.12'
-    - name: Cache dependencies
-      uses: actions/cache@v4.0.0
-      id: cache
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-integration
-    - name: Install pip dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install .[datasets,tests]
-        pip cache purge
-    - name: List pip dependencies
-      run: pip list
-    - name: Run integration checks
-      run: |
-        pytest -m slow --durations=10
-        python -m torchgeo --help
-        torchgeo --help
+      - name: Clone repo
+        uses: actions/checkout@v4.1.7
+      - name: Set up python
+        uses: actions/setup-python@v5.1.1
+        with:
+          python-version: "3.12"
+      - name: Cache dependencies
+        uses: actions/cache@v4.0.2
+        id: cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-integration
+      - name: Install pip dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          pip install .[datasets,tests]
+          pip cache purge
+      - name: List pip dependencies
+        run: pip list
+      - name: Run integration checks
+        run: |
+          pytest -m slow --durations=10
+          python -m torchgeo --help
+          torchgeo --help
   notebooks:
     name: notebooks
     runs-on: ubuntu-latest
     steps:
-    - name: Clone repo
-      uses: actions/checkout@v4.1.1
-    - name: Set up python
-      uses: actions/setup-python@v5.0.0
-      with:
-        python-version: '3.12'
-    - name: Cache dependencies
-      uses: actions/cache@v4.0.0
-      id: cache
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-tutorials
-    - name: Install pip dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install .[docs,tests] planetary_computer pystac
-        pip cache purge
-    - name: List pip dependencies
-      run: pip list
-    - name: Run notebook checks
-      run: pytest --nbmake --durations=10 docs/tutorials
+      - name: Clone repo
+        uses: actions/checkout@v4.1.7
+      - name: Set up python
+        uses: actions/setup-python@v5.1.1
+        with:
+          python-version: "3.12"
+      - name: Cache dependencies
+        uses: actions/cache@v4.0.2
+        id: cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-tutorials
+      - name: Install pip dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          pip install .[docs,tests] planetary_computer pystac
+          pip cache purge
+      - name: List pip dependencies
+        run: pip list
+      - name: Run notebook checks
+        run: pytest --nbmake --durations=10 docs/tutorials
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true

@@ -6,7 +6,7 @@
 import os
 import warnings
 from collections.abc import Sequence
-from typing import Any, Optional, Union
+from typing import Any
 
 import kornia.augmentation as K
 import lightning
@@ -19,7 +19,7 @@ from lightly.models.modules import MoCoProjectionHead
 from lightly.models.utils import deactivate_requires_grad, update_momentum
 from lightly.utils.scheduler import cosine_schedule
 from torch import Tensor
-from torch.optim import SGD, AdamW, Optimizer
+from torch.optim import SGD, AdamW, Optimizer  # type: ignore[attr-defined]
 from torch.optim.lr_scheduler import (
     CosineAnnealingLR,
     LinearLR,
@@ -67,7 +67,7 @@ def moco_augmentations(
             K.RandomContrast(contrast=(0.6, 1.4), p=1.0),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),  # added
-            data_keys=["input"],
+            data_keys=['input'],
         )
     elif version == 2:
         # Similar to SimCLR: https://arxiv.org/abs/2002.05709
@@ -83,7 +83,7 @@ def moco_augmentations(
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=0.5),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),  # added
-            data_keys=["input"],
+            data_keys=['input'],
         )
     else:
         # Same as BYOL: https://arxiv.org/abs/2006.07733
@@ -99,7 +99,7 @@ def moco_augmentations(
             K.RandomGaussianBlur(kernel_size=(ks, ks), sigma=(0.1, 2), p=1),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),  # added
-            data_keys=["input"],
+            data_keys=['input'],
         )
         aug2 = K.AugmentationSequential(
             K.RandomResizedCrop(size=(size, size), scale=(0.08, 1)),
@@ -114,7 +114,7 @@ def moco_augmentations(
             K.RandomSolarize(p=0.2),
             K.RandomHorizontalFlip(),
             K.RandomVerticalFlip(),  # added
-            data_keys=["input"],
+            data_keys=['input'],
         )
     return aug1, aug2
 
@@ -136,12 +136,12 @@ class MoCoTask(BaseTask):
     .. versionadded:: 0.5
     """
 
-    monitor = "train_loss"
+    monitor = 'train_loss'
 
     def __init__(
         self,
-        model: str = "resnet50",
-        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        model: str = 'resnet50',
+        weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         version: int = 3,
         layers: int = 3,
@@ -156,9 +156,9 @@ class MoCoTask(BaseTask):
         moco_momentum: float = 0.99,
         gather_distributed: bool = False,
         size: int = 224,
-        grayscale_weights: Optional[Tensor] = None,
-        augmentation1: Optional[nn.Module] = None,
-        augmentation2: Optional[nn.Module] = None,
+        grayscale_weights: Tensor | None = None,
+        augmentation1: nn.Module | None = None,
+        augmentation2: nn.Module | None = None,
     ) -> None:
         """Initialize a new MoCoTask instance.
 
@@ -206,43 +206,35 @@ class MoCoTask(BaseTask):
         assert version in range(1, 4)
         if version == 1:
             if memory_bank_size == 0:
-                warnings.warn("MoCo v1 uses a memory bank")
+                warnings.warn('MoCo v1 uses a memory bank')
         elif version == 2:
             if layers > 2:
-                warnings.warn("MoCo v2 only uses 2 layers in its projection head")
+                warnings.warn('MoCo v2 only uses 2 layers in its projection head')
             if memory_bank_size == 0:
-                warnings.warn("MoCo v2 uses a memory bank")
+                warnings.warn('MoCo v2 uses a memory bank')
         elif version == 3:
             if layers == 2:
-                warnings.warn("MoCo v3 uses 3 layers in its projection head")
+                warnings.warn('MoCo v3 uses 3 layers in its projection head')
             if memory_bank_size > 0:
-                warnings.warn("MoCo v3 does not use a memory bank")
+                warnings.warn('MoCo v3 does not use a memory bank')
 
         self.weights = weights
-        super().__init__(ignore=["weights", "augmentation1", "augmentation2"])
+        super().__init__(ignore=['weights', 'augmentation1', 'augmentation2'])
 
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
         aug1, aug2 = moco_augmentations(version, size, grayscale_weights)
         self.augmentation1 = augmentation1 or aug1
         self.augmentation2 = augmentation2 or aug2
 
-    def configure_losses(self) -> None:
-        """Initialize the loss criterion."""
-        self.criterion = NTXentLoss(
-            self.hparams["temperature"],
-            self.hparams["memory_bank_size"],
-            self.hparams["gather_distributed"],
-        )
-
     def configure_models(self) -> None:
         """Initialize the model."""
-        model: str = self.hparams["model"]
+        model: str = self.hparams['model']
         weights = self.weights
-        in_channels: int = self.hparams["in_channels"]
-        version: int = self.hparams["version"]
-        layers: int = self.hparams["layers"]
-        hidden_dim: int = self.hparams["hidden_dim"]
-        output_dim: int = self.hparams["output_dim"]
+        in_channels: int = self.hparams['in_channels']
+        version: int = self.hparams['version']
+        layers: int = self.hparams['layers']
+        hidden_dim: int = self.hparams['hidden_dim']
+        output_dim: int = self.hparams['output_dim']
 
         # Create backbone
         self.backbone = timm.create_model(
@@ -282,19 +274,35 @@ class MoCoTask(BaseTask):
         # Initialize moving average of output
         self.avg_output_std = 0.0
 
+    def configure_losses(self) -> None:
+        """Initialize the loss criterion."""
+        try:
+            self.criterion = NTXentLoss(
+                self.hparams['temperature'],
+                (self.hparams['memory_bank_size'], self.hparams['output_dim']),
+                self.hparams['gather_distributed'],
+            )
+        except TypeError:
+            # lightly 1.4.24 and older
+            self.criterion = NTXentLoss(
+                self.hparams['temperature'],
+                self.hparams['memory_bank_size'],
+                self.hparams['gather_distributed'],
+            )
+
     def configure_optimizers(
         self,
-    ) -> "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig":
+    ) -> 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig':
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
             Optimizer and learning rate scheduler.
         """
-        if self.hparams["version"] == 3:
+        if self.hparams['version'] == 3:
             optimizer: Optimizer = AdamW(
                 params=self.parameters(),
-                lr=self.hparams["lr"],
-                weight_decay=self.hparams["weight_decay"],
+                lr=self.hparams['lr'],
+                weight_decay=self.hparams['weight_decay'],
             )
             warmup_epochs = 40
             max_epochs = 200
@@ -315,16 +323,16 @@ class MoCoTask(BaseTask):
         else:
             optimizer = SGD(
                 params=self.parameters(),
-                lr=self.hparams["lr"],
-                momentum=self.hparams["momentum"],
-                weight_decay=self.hparams["weight_decay"],
+                lr=self.hparams['lr'],
+                momentum=self.hparams['momentum'],
+                weight_decay=self.hparams['weight_decay'],
             )
             scheduler = MultiStepLR(
-                optimizer=optimizer, milestones=self.hparams["schedule"]
+                optimizer=optimizer, milestones=self.hparams['schedule']
             )
         return {
-            "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},
+            'optimizer': optimizer,
+            'lr_scheduler': {'scheduler': scheduler, 'monitor': self.monitor},
         }
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
@@ -338,9 +346,9 @@ class MoCoTask(BaseTask):
         """
         h: Tensor = self.backbone(x)
         q = h
-        if self.hparams["version"] > 1:
+        if self.hparams['version'] > 1:
             q = self.projection_head(q)
-        if self.hparams["version"] == 3:
+        if self.hparams['version'] == 3:
             q = self.prediction_head(q)
         return q, h
 
@@ -354,7 +362,7 @@ class MoCoTask(BaseTask):
             Output from the momentum model.
         """
         k: Tensor = self.backbone_momentum(x)
-        if self.hparams["version"] > 1:
+        if self.hparams['version'] > 1:
             k = self.projection_head_momentum(k)
         return k
 
@@ -371,9 +379,10 @@ class MoCoTask(BaseTask):
         Returns:
             The loss tensor.
         """
-        x = batch["image"]
+        x = batch['image']
+        batch_size = x.shape[0]
 
-        in_channels = self.hparams["in_channels"]
+        in_channels = self.hparams['in_channels']
         assert x.size(1) == in_channels or x.size(1) == 2 * in_channels
 
         if x.size(1) == in_channels:
@@ -387,21 +396,21 @@ class MoCoTask(BaseTask):
             x1 = self.augmentation1(x1)
             x2 = self.augmentation2(x2)
 
-        m = self.hparams["moco_momentum"]
-        if self.hparams["version"] == 1:
+        m = self.hparams['moco_momentum']
+        if self.hparams['version'] == 1:
             q, h1 = self.forward(x1)
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 k = self.forward_momentum(x2)
             loss: Tensor = self.criterion(q, k)
-        elif self.hparams["version"] == 2:
+        elif self.hparams['version'] == 2:
             q, h1 = self.forward(x1)
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 update_momentum(self.projection_head, self.projection_head_momentum, m)
                 k = self.forward_momentum(x2)
             loss = self.criterion(q, k)
-        if self.hparams["version"] == 3:
+        if self.hparams['version'] == 3:
             m = cosine_schedule(self.current_epoch, self.trainer.max_epochs, m, 1)
             q1, h1 = self.forward(x1)
             q2, h2 = self.forward(x2)
@@ -420,8 +429,8 @@ class MoCoTask(BaseTask):
         output_std = torch.mean(output_std, dim=0)
         self.avg_output_std = 0.9 * self.avg_output_std + (1 - 0.9) * output_std.item()
 
-        self.log("train_ssl_std", self.avg_output_std)
-        self.log("train_loss", loss)
+        self.log('train_ssl_std', self.avg_output_std, batch_size=batch_size)
+        self.log('train_loss', loss, batch_size=batch_size)
 
         return loss
 

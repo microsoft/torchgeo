@@ -42,47 +42,47 @@ PROJCS["Projection: Transverse Mercator; Datum: WGS84; Ellipsoid: WGS84",
 
 dtype = np.uint8
 kwargs = {
-    "driver": "GTiff",
-    "dtype": "uint8",
-    "crs": CRS.from_wkt(wkt),
-    "transform": Affine(0.25, 0.0, 280307.7499987148, 0.0, -0.25, 394546.9999900842),
-    "height": SIZE,
-    "width": SIZE,
+    'driver': 'GTiff',
+    'dtype': 'uint8',
+    'crs': CRS.from_wkt(wkt),
+    'transform': Affine(0.25, 0.0, 280307.7499987148, 0.0, -0.25, 394546.9999900842),
+    'height': SIZE,
+    'width': SIZE,
 }
-filename = "M-33-20-D-c-4-2"
+filename = 'M-33-20-D-c-4-2'
 
 # Remove old data
-zipfilename = "landcover.ai.v1.zip"
-for fn in ["train.txt", "val.txt", "test.txt", "split.py", zipfilename]:
+zipfilename = 'landcover.ai.v1.zip'
+for fn in ['train.txt', 'val.txt', 'test.txt', 'split.py', zipfilename]:
     if os.path.exists(fn):
         os.remove(fn)
-for directory in ["images", "masks", "output"]:
+for directory in ['images', 'masks', 'output']:
     if os.path.exists(directory):
         shutil.rmtree(directory)
 
 # Create images
-os.makedirs("images")
+os.makedirs('images')
 Z = np.random.randint(np.iinfo(dtype).max, size=(SIZE, SIZE), dtype=dtype)
 with rasterio.open(
-    os.path.join("images", f"{filename}.tif"), "w", count=3, **kwargs
+    os.path.join('images', f'{filename}.tif'), 'w', count=3, **kwargs
 ) as f:
     for i in range(1, 4):
         f.write(Z, i)
 
 # Create masks
-os.makedirs("masks")
+os.makedirs('masks')
 Z = np.random.randint(4, size=(SIZE, SIZE), dtype=dtype)
 with rasterio.open(
-    os.path.join("masks", f"{filename}.tif"), "w", count=1, **kwargs
+    os.path.join('masks', f'{filename}.tif'), 'w', count=1, **kwargs
 ) as f:
     f.write(Z, 1)
 
 # Create train/val/test splits
-files = ["M-33-20-D-c-4-2_0", "M-33-20-D-c-4-2_1"]
-for split in ["train", "val", "test"]:
-    with open(f"{split}.txt", "w") as f:
+files = ['M-33-20-D-c-4-2_0', 'M-33-20-D-c-4-2_1']
+for split in ['train', 'val', 'test']:
+    with open(f'{split}.txt', 'w') as f:
         for file in files:
-            f.write(f"{file}\n")
+            f.write(f'{file}\n')
 
 # Create split.py
 code = f"""\
@@ -98,28 +98,28 @@ for i in range(2):
     cv2.imwrite(os.path.join("output", f"{filename}_{{i}}.jpg"), image)
     cv2.imwrite(os.path.join("output", f"{filename}_{{i}}_m.png"), mask)
 """
-with open("split.py", "w") as f:
+with open('split.py', 'w') as f:
     f.write(code)
 
 # Create output
-with open("split.py") as f:
-    split = f.read().encode("utf-8")
+with open('split.py') as f:
+    split = f.read().encode('utf-8')
     exec(split)
 
 # Compress data
-with zipfile.ZipFile(zipfilename, "w") as f:
+with zipfile.ZipFile(zipfilename, 'w') as f:
     for file in [
-        "images/M-33-20-D-c-4-2.tif",
-        "masks/M-33-20-D-c-4-2.tif",
-        "train.txt",
-        "val.txt",
-        "test.txt",
-        "split.py",
+        'images/M-33-20-D-c-4-2.tif',
+        'masks/M-33-20-D-c-4-2.tif',
+        'train.txt',
+        'val.txt',
+        'test.txt',
+        'split.py',
     ]:
         f.write(file, arcname=file)
 
 # Compute checksums
-with open(zipfilename, "rb") as f:
+with open(zipfilename, 'rb') as f:
     print(zipfilename, hashlib.md5(f.read()).hexdigest())
-with open("split.py", "rb") as f:
-    print("split.py", hashlib.sha256(f.read()).hexdigest())
+with open('split.py', 'rb') as f:
+    print('split.py', hashlib.sha256(f.read()).hexdigest())

@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Callable, Optional, cast
+from collections.abc import Callable
+from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,8 +15,9 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_and_extract_archive
+from .utils import Path, download_and_extract_archive, lazy_import
 
 
 class ADVANCE(NonGeoDataset):
@@ -61,33 +63,33 @@ class ADVANCE(NonGeoDataset):
         * `scipy <https://pypi.org/project/scipy/>`_ to load the audio files to tensors
     """
 
-    urls = [
-        "https://zenodo.org/record/3828124/files/ADVANCE_vision.zip?download=1",
-        "https://zenodo.org/record/3828124/files/ADVANCE_sound.zip?download=1",
-    ]
-    filenames = ["ADVANCE_vision.zip", "ADVANCE_sound.zip"]
-    md5s = ["a9e8748219ef5864d3b5a8979a67b471", "a2d12f2d2a64f5c3d3a9d8c09aaf1c31"]
-    directories = ["vision", "sound"]
-    classes = [
-        "airport",
-        "beach",
-        "bridge",
-        "farmland",
-        "forest",
-        "grassland",
-        "harbour",
-        "lake",
-        "orchard",
-        "residential",
-        "sparse shrub land",
-        "sports land",
-        "train station",
-    ]
+    urls = (
+        'https://zenodo.org/record/3828124/files/ADVANCE_vision.zip?download=1',
+        'https://zenodo.org/record/3828124/files/ADVANCE_sound.zip?download=1',
+    )
+    filenames = ('ADVANCE_vision.zip', 'ADVANCE_sound.zip')
+    md5s = ('a9e8748219ef5864d3b5a8979a67b471', 'a2d12f2d2a64f5c3d3a9d8c09aaf1c31')
+    directories = ('vision', 'sound')
+    classes: tuple[str, ...] = (
+        'airport',
+        'beach',
+        'bridge',
+        'farmland',
+        'forest',
+        'grassland',
+        'harbour',
+        'lake',
+        'orchard',
+        'residential',
+        'sparse shrub land',
+        'sports land',
+        'train station',
+    )
 
     def __init__(
         self,
-        root: str = "data",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -102,7 +104,10 @@ class ADVANCE(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            DependencyNotFoundError: If scipy is not installed.
         """
+        lazy_import('scipy.io.wavfile')
+
         self.root = root
         self.transforms = transforms
         self.checksum = checksum
@@ -114,7 +119,7 @@ class ADVANCE(NonGeoDataset):
             raise DatasetNotFoundError(self)
 
         self.files = self._load_files(self.root)
-        self.classes = sorted({f["cls"] for f in self.files})
+        self.classes = tuple(sorted({f['cls'] for f in self.files}))
         self.class_to_idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -127,11 +132,11 @@ class ADVANCE(NonGeoDataset):
             data and label at that index
         """
         files = self.files[index]
-        image = self._load_image(files["image"])
-        audio = self._load_target(files["audio"])
-        cls_label = self.class_to_idx[files["cls"]]
+        image = self._load_image(files['image'])
+        audio = self._load_target(files['audio'])
+        cls_label = self.class_to_idx[files['cls']]
         label = torch.tensor(cls_label, dtype=torch.long)
-        sample = {"image": image, "audio": audio, "label": label}
+        sample = {'image': image, 'audio': audio, 'label': label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -146,7 +151,7 @@ class ADVANCE(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -155,8 +160,8 @@ class ADVANCE(NonGeoDataset):
         Returns:
             list of dicts containing paths for each pair of image, audio, label
         """
-        images = sorted(glob.glob(os.path.join(root, "vision", "**", "*.jpg")))
-        wavs = sorted(glob.glob(os.path.join(root, "sound", "**", "*.wav")))
+        images = sorted(glob.glob(os.path.join(root, 'vision', '**', '*.jpg')))
+        wavs = sorted(glob.glob(os.path.join(root, 'sound', '**', '*.wav')))
         labels = [image.split(os.sep)[-2] for image in images]
         files = [
             dict(image=image, audio=wav, cls=label)
@@ -164,7 +169,7 @@ class ADVANCE(NonGeoDataset):
         ]
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -174,13 +179,13 @@ class ADVANCE(NonGeoDataset):
             the image
         """
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target audio for a single image.
 
         Args:
@@ -189,14 +194,8 @@ class ADVANCE(NonGeoDataset):
         Returns:
             the target audio
         """
-        try:
-            from scipy.io import wavfile
-        except ImportError:
-            raise ImportError(
-                "scipy is not installed and is required to use this dataset"
-            )
-
-        array = wavfile.read(path, mmap=True)[1]
+        siw = lazy_import('scipy.io.wavfile')
+        array = siw.read(path, mmap=True)[1]
         tensor = torch.from_numpy(array)
         tensor = tensor.unsqueeze(0)
         return tensor
@@ -216,7 +215,7 @@ class ADVANCE(NonGeoDataset):
     def _download(self) -> None:
         """Download the dataset and extract it."""
         if self._check_integrity():
-            print("Files already downloaded and verified")
+            print('Files already downloaded and verified')
             return
 
         for filename, url, md5 in zip(self.filenames, self.urls, self.md5s):
@@ -228,7 +227,7 @@ class ADVANCE(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -242,22 +241,22 @@ class ADVANCE(NonGeoDataset):
 
         .. versionadded:: 0.2
         """
-        image = np.rollaxis(sample["image"].numpy(), 0, 3)
-        label = cast(int, sample["label"].item())
+        image = np.rollaxis(sample['image'].numpy(), 0, 3)
+        label = cast(int, sample['label'].item())
         label_class = self.classes[label]
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = cast(int, sample["prediction"].item())
+            prediction = cast(int, sample['prediction'].item())
             prediction_class = self.classes[prediction]
 
         fig, ax = plt.subplots(figsize=(4, 4))
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
         if show_titles:
-            title = f"Label: {label_class}"
+            title = f'Label: {label_class}'
             if showing_predictions:
-                title += f"\nPrediction: {prediction_class}"
+                title += f'\nPrediction: {prediction_class}'
             ax.set_title(title)
 
         if suptitle is not None:

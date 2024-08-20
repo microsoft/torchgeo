@@ -16,7 +16,7 @@ SIZE = 32
 
 np.random.seed(0)
 
-dir = "nlcd_{}_land_cover_l48_20210604"
+dir = 'nlcd_{}_land_cover_l48_20210604'
 
 years = [2011, 2019]
 
@@ -43,29 +43,29 @@ PROJCS["Albers Conical Equal Area",
 """
 
 
-def create_file(path: str, dtype: str):
+def create_file(path: str, dtype: str) -> None:
     """Create the testing file."""
     profile = {
-        "driver": "GTiff",
-        "dtype": dtype,
-        "count": 1,
-        "crs": CRS.from_wkt(wkt),
-        "transform": Affine(30.0, 0.0, -2493045.0, 0.0, -30.0, 3310005.0),
-        "height": SIZE,
-        "width": SIZE,
-        "compress": "lzw",
-        "predictor": 2,
+        'driver': 'GTiff',
+        'dtype': dtype,
+        'count': 1,
+        'crs': CRS.from_wkt(wkt),
+        'transform': Affine(30.0, 0.0, -2493045.0, 0.0, -30.0, 3310005.0),
+        'height': SIZE,
+        'width': SIZE,
+        'compress': 'lzw',
+        'predictor': 2,
     }
 
     allowed_values = [0, 11, 12, 21, 22, 23, 24, 31, 41, 42, 43, 52, 71, 81, 82, 90, 95]
 
     Z = np.random.choice(allowed_values, size=(SIZE, SIZE))
 
-    with rasterio.open(path, "w", **profile) as src:
+    with rasterio.open(path, 'w', **profile) as src:
         src.write(Z, 1)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     for year in years:
         year_dir = dir.format(year)
         # Remove old data
@@ -74,14 +74,14 @@ if __name__ == "__main__":
 
         os.makedirs(os.path.join(os.getcwd(), year_dir))
 
-        zip_filename = year_dir + ".zip"
-        filename = year_dir + ".img"
-        create_file(os.path.join(year_dir, filename), dtype="int8")
+        zip_filename = year_dir + '.zip'
+        filename = year_dir + '.img'
+        create_file(os.path.join(year_dir, filename), dtype='int8')
 
         # Compress data
-        shutil.make_archive(year_dir, "zip", ".", year_dir)
+        shutil.make_archive(year_dir, 'zip', '.', year_dir)
 
         # Compute checksums
-        with open(zip_filename, "rb") as f:
+        with open(zip_filename, 'rb') as f:
             md5 = hashlib.md5(f.read()).hexdigest()
-            print(f"{zip_filename}: {md5}")
+            print(f'{zip_filename}: {md5}')

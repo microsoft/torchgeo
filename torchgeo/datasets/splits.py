@@ -7,21 +7,13 @@ from collections.abc import Sequence
 from copy import deepcopy
 from itertools import accumulate
 from math import floor, isclose
-from typing import Optional, Union, cast
+from typing import cast
 
 from rtree.index import Index, Property
 from torch import Generator, default_generator, randint, randperm
 
 from ..datasets import GeoDataset
 from .utils import BoundingBox
-
-__all__ = (
-    "random_bbox_assignment",
-    "random_bbox_splitting",
-    "random_grid_cell_assignment",
-    "roi_split",
-    "time_series_split",
-)
 
 
 def _fractions_to_lengths(fractions: Sequence[float], total: int) -> Sequence[int]:
@@ -50,7 +42,7 @@ def _fractions_to_lengths(fractions: Sequence[float], total: int) -> Sequence[in
 def random_bbox_assignment(
     dataset: GeoDataset,
     lengths: Sequence[float],
-    generator: Optional[Generator] = default_generator,
+    generator: Generator | None = default_generator,
 ) -> list[GeoDataset]:
     """Split a GeoDataset randomly assigning its index's BoundingBoxes.
 
@@ -62,7 +54,7 @@ def random_bbox_assignment(
         lengths: lengths or fractions of splits to be produced
         generator: (optional) generator used for the random permutation
 
-    Returns
+    Returns:
         A list of the subset datasets.
 
     .. versionadded:: 0.5
@@ -73,7 +65,7 @@ def random_bbox_assignment(
         )
 
     if any(n <= 0 for n in lengths):
-        raise ValueError("All items in input lengths must be greater than 0.")
+        raise ValueError('All items in input lengths must be greater than 0.')
 
     if isclose(sum(lengths), 1):
         lengths = _fractions_to_lengths(lengths, len(dataset))
@@ -104,7 +96,7 @@ def random_bbox_assignment(
 def random_bbox_splitting(
     dataset: GeoDataset,
     fractions: Sequence[float],
-    generator: Optional[Generator] = default_generator,
+    generator: Generator | None = default_generator,
 ) -> list[GeoDataset]:
     """Split a GeoDataset randomly splitting its index's BoundingBoxes.
 
@@ -117,16 +109,16 @@ def random_bbox_splitting(
         fractions: fractions of splits to be produced
         generator: generator used for the random permutation
 
-    Returns
+    Returns:
         A list of the subset datasets.
 
     .. versionadded:: 0.5
     """
     if not isclose(sum(fractions), 1):
-        raise ValueError("Sum of input fractions must equal 1.")
+        raise ValueError('Sum of input fractions must equal 1.')
 
     if any(n <= 0 for n in fractions):
-        raise ValueError("All items in input fractions must be greater than 0.")
+        raise ValueError('All items in input fractions must be greater than 0.')
 
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in fractions
@@ -172,7 +164,7 @@ def random_grid_cell_assignment(
     dataset: GeoDataset,
     fractions: Sequence[float],
     grid_size: int = 6,
-    generator: Optional[Generator] = default_generator,
+    generator: Generator | None = default_generator,
 ) -> list[GeoDataset]:
     """Overlays a grid over a GeoDataset and randomly assigns cells to new GeoDatasets.
 
@@ -185,19 +177,19 @@ def random_grid_cell_assignment(
         grid_size: number of rows and columns for the grid
         generator: generator used for the random permutation
 
-    Returns
+    Returns:
         A list of the subset datasets.
 
     .. versionadded:: 0.5
     """
     if not isclose(sum(fractions), 1):
-        raise ValueError("Sum of input fractions must equal 1.")
+        raise ValueError('Sum of input fractions must equal 1.')
 
     if any(n <= 0 for n in fractions):
-        raise ValueError("All items in input fractions must be greater than 0.")
+        raise ValueError('All items in input fractions must be greater than 0.')
 
     if grid_size < 2:
-        raise ValueError("Input grid_size must be greater than 1.")
+        raise ValueError('Input grid_size must be greater than 1.')
 
     new_indexes = [
         Index(interleaved=False, properties=Property(dimension=3)) for _ in fractions
@@ -258,7 +250,7 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> list[GeoDatas
         dataset: dataset to be split
         rois: regions of interest of splits to be produced
 
-    Returns
+    Returns:
         A list of the subset datasets.
 
     .. versionadded:: 0.5
@@ -289,7 +281,7 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> list[GeoDatas
 
 
 def time_series_split(
-    dataset: GeoDataset, lengths: Sequence[Union[float, tuple[float, float]]]
+    dataset: GeoDataset, lengths: Sequence[float | tuple[float, float]]
 ) -> list[GeoDataset]:
     """Split a GeoDataset on its time dimension to create non-overlapping GeoDatasets.
 
@@ -298,7 +290,7 @@ def time_series_split(
         lengths: lengths, fractions or pairs of timestamps (start, end) of splits
             to be produced
 
-    Returns
+    Returns:
         A list of the subset datasets.
 
     .. versionadded:: 0.5
@@ -316,7 +308,7 @@ def time_series_split(
             )
 
         if any(n <= 0 for n in lengths):
-            raise ValueError("All items in input lengths must be greater than 0.")
+            raise ValueError('All items in input lengths must be greater than 0.')
 
         if isclose(sum(lengths), 1):
             lengths = [totalt * f for f in lengths]
@@ -336,7 +328,7 @@ def time_series_split(
     for i, (start, end) in enumerate(lengths):
         if start >= end:
             raise ValueError(
-                "Pairs of timestamps in lengths must have end greater than start."
+                'Pairs of timestamps in lengths must have end greater than start.'
             )
 
         if start < mint or end > maxt:

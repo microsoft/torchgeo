@@ -10,7 +10,6 @@ import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
-import torchvision
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
@@ -38,11 +37,6 @@ def create_model(**kwargs: Any) -> Module:
     return SegmentationTestModel(**kwargs)
 
 
-def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
-    state_dict: dict[str, Any] = torch.load(url)
-    return state_dict
-
-
 def plot(*args: Any, **kwargs: Any) -> None:
     return None
 
@@ -53,66 +47,74 @@ def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
 
 class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
-        "name",
+        'name',
         [
-            "chabud",
-            "chesapeake_cvpr_5",
-            "chesapeake_cvpr_7",
-            "deepglobelandcover",
-            "etci2021",
-            "gid15",
-            "inria",
-            "l7irish",
-            "l8biome",
-            "landcoverai",
-            "loveda",
-            "naipchesapeake",
-            "potsdam2d",
-            "sen12ms_all",
-            "sen12ms_s1",
-            "sen12ms_s2_all",
-            "sen12ms_s2_reduced",
-            "spacenet1",
-            "ssl4eo_l_benchmark_cdl",
-            "ssl4eo_l_benchmark_nlcd",
-            "vaihingen2d",
+            'agrifieldnet',
+            'chabud',
+            'chesapeake_cvpr_5',
+            'chesapeake_cvpr_7',
+            'deepglobelandcover',
+            'etci2021',
+            'gid15',
+            'inria',
+            'l7irish',
+            'l8biome',
+            'landcoverai',
+            'loveda',
+            'naipchesapeake',
+            'potsdam2d',
+            'sen12ms_all',
+            'sen12ms_s1',
+            'sen12ms_s2_all',
+            'sen12ms_s2_reduced',
+            'sentinel2_cdl',
+            'sentinel2_eurocrops',
+            'sentinel2_nccm',
+            'sentinel2_south_america_soybean',
+            'southafricacroptype',
+            'spacenet1',
+            'ssl4eo_l_benchmark_cdl',
+            'ssl4eo_l_benchmark_nlcd',
+            'vaihingen2d',
         ],
     )
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        if name == "naipchesapeake":
-            pytest.importorskip("zipfile_deflate64")
+        match name:
+            case 'chabud':
+                pytest.importorskip('h5py', minversion='3.6')
+            case 'landcoverai':
+                sha256 = (
+                    'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
+                )
+                monkeypatch.setattr(LandCoverAI, 'sha256', sha256)
 
-        if name == "landcoverai":
-            sha256 = "ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b"
-            monkeypatch.setattr(LandCoverAI, "sha256", sha256)
+        config = os.path.join('tests', 'conf', name + '.yaml')
 
-        config = os.path.join("tests", "conf", name + ".yaml")
-
-        monkeypatch.setattr(smp, "Unet", create_model)
-        monkeypatch.setattr(smp, "DeepLabV3Plus", create_model)
+        monkeypatch.setattr(smp, 'Unet', create_model)
+        monkeypatch.setattr(smp, 'DeepLabV3Plus', create_model)
 
         args = [
-            "--config",
+            '--config',
             config,
-            "--trainer.accelerator",
-            "cpu",
-            "--trainer.fast_dev_run",
+            '--trainer.accelerator',
+            'cpu',
+            '--trainer.fast_dev_run',
             str(fast_dev_run),
-            "--trainer.max_epochs",
-            "1",
-            "--trainer.log_every_n_steps",
-            "1",
+            '--trainer.max_epochs',
+            '1',
+            '--trainer.log_every_n_steps',
+            '1',
         ]
 
-        main(["fit"] + args)
+        main(['fit', *args])
         try:
-            main(["test"] + args)
+            main(['test', *args])
         except MisconfigurationException:
             pass
         try:
-            main(["predict"] + args)
+            main(['predict', *args])
         except MisconfigurationException:
             pass
 
@@ -122,78 +124,76 @@ class TestSemanticSegmentationTask:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
-        path = tmp_path / f"{weights}.pth"
+        path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta["model"], in_chans=weights.meta["in_chans"]
+            weights.meta['model'], in_chans=weights.meta['in_chans']
         )
         torch.save(model.state_dict(), path)
         try:
-            monkeypatch.setattr(weights.value, "url", str(path))
+            monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
-            monkeypatch.setattr(weights, "url", str(path))
-        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
+            monkeypatch.setattr(weights, 'url', str(path))
         return weights
 
     def test_weight_file(self, checkpoint: str) -> None:
-        SemanticSegmentationTask(backbone="resnet18", weights=checkpoint, num_classes=6)
+        SemanticSegmentationTask(backbone='resnet18', weights=checkpoint, num_classes=6)
 
     def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
         SemanticSegmentationTask(
-            backbone=mocked_weights.meta["model"],
+            backbone=mocked_weights.meta['model'],
             weights=mocked_weights,
-            in_channels=mocked_weights.meta["in_chans"],
+            in_channels=mocked_weights.meta['in_chans'],
         )
 
     def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
         SemanticSegmentationTask(
-            backbone=mocked_weights.meta["model"],
+            backbone=mocked_weights.meta['model'],
             weights=str(mocked_weights),
-            in_channels=mocked_weights.meta["in_chans"],
+            in_channels=mocked_weights.meta['in_chans'],
         )
 
     @pytest.mark.slow
     def test_weight_enum_download(self, weights: WeightsEnum) -> None:
         SemanticSegmentationTask(
-            backbone=weights.meta["model"],
+            backbone=weights.meta['model'],
             weights=weights,
-            in_channels=weights.meta["in_chans"],
+            in_channels=weights.meta['in_chans'],
         )
 
     @pytest.mark.slow
     def test_weight_str_download(self, weights: WeightsEnum) -> None:
         SemanticSegmentationTask(
-            backbone=weights.meta["model"],
+            backbone=weights.meta['model'],
             weights=str(weights),
-            in_channels=weights.meta["in_chans"],
+            in_channels=weights.meta['in_chans'],
         )
 
     def test_invalid_model(self) -> None:
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):
-            SemanticSegmentationTask(model="invalid_model")
+            SemanticSegmentationTask(model='invalid_model')
 
     def test_invalid_loss(self) -> None:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
-            SemanticSegmentationTask(loss="invalid_loss")
-
-    def test_ignoreindex_with_jaccard(self) -> None:
-        match = "ignore_index has no effect on training when loss='jaccard'"
-        with pytest.warns(UserWarning, match=match):
-            SemanticSegmentationTask(loss="jaccard", ignore_index=0)
+            SemanticSegmentationTask(loss='invalid_loss')
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(SEN12MSDataModule, "plot", plot)
+        monkeypatch.setattr(SEN12MSDataModule, 'plot', plot)
         datamodule = SEN12MSDataModule(
-            root="tests/data/sen12ms", batch_size=1, num_workers=0
+            root='tests/data/sen12ms', batch_size=1, num_workers=0
         )
         model = SemanticSegmentationTask(
-            backbone="resnet18", in_channels=15, num_classes=6
+            backbone='resnet18', in_channels=15, num_classes=6
         )
         trainer = Trainer(
-            accelerator="cpu",
+            accelerator='cpu',
             fast_dev_run=fast_dev_run,
             log_every_n_steps=1,
             max_epochs=1,
@@ -201,24 +201,24 @@ class TestSemanticSegmentationTask:
         trainer.validate(model=model, datamodule=datamodule)
 
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(SEN12MSDataModule, "plot", plot_missing_bands)
+        monkeypatch.setattr(SEN12MSDataModule, 'plot', plot_missing_bands)
         datamodule = SEN12MSDataModule(
-            root="tests/data/sen12ms", batch_size=1, num_workers=0
+            root='tests/data/sen12ms', batch_size=1, num_workers=0
         )
         model = SemanticSegmentationTask(
-            backbone="resnet18", in_channels=15, num_classes=6
+            backbone='resnet18', in_channels=15, num_classes=6
         )
         trainer = Trainer(
-            accelerator="cpu",
+            accelerator='cpu',
             fast_dev_run=fast_dev_run,
             log_every_n_steps=1,
             max_epochs=1,
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    @pytest.mark.parametrize("model_name", ["unet", "deeplabv3+"])
+    @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
     @pytest.mark.parametrize(
-        "backbone", ["resnet18", "mobilenet_v2", "efficientnet-b0"]
+        'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
     )
     def test_freeze_backbone(self, model_name: str, backbone: str) -> None:
         model = SemanticSegmentationTask(
@@ -235,7 +235,7 @@ class TestSemanticSegmentationTask:
             ]
         )
 
-    @pytest.mark.parametrize("model_name", ["unet", "deeplabv3+"])
+    @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
     def test_freeze_decoder(self, model_name: str) -> None:
         model = SemanticSegmentationTask(model=model_name, freeze_decoder=True)
         assert all(

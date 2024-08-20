@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 name = "torchgeo"
 description = "TorchGeo: datasets, samplers, transforms, and pre-trained models for geospatial data"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {file = "LICENSE"}
 authors = [
     {name = "Adam J. Stewart", email = "ajstewart426@gmail.com"},
@@ -29,7 +29,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -39,35 +38,36 @@ classifiers = [
 dependencies = [
     # einops 0.3+ required for einops.repeat
     "einops>=0.3",
-    # fiona 1.8.19+ required to fix erroneous warning
-    # https://github.com/Toblerity/Fiona/issues/986
-    "fiona>=1.8.19",
-    # kornia 0.6.9+ required for kornia.augmentation.RandomBrightness
-    "kornia>=0.6.9",
-    # lightly 1.4.4+ required for MoCo v3 support
+    # fiona 1.8.21+ required for Python 3.10 wheels
+    "fiona>=1.8.21",
+    # kornia 0.7.3+ required for instance segmentation support in AugmentationSequential
+    "kornia>=0.7.3",
+    # lightly 1.4.5+ required for LARS optimizer
     # lightly 1.4.26 is incompatible with the version of timm required by smp
     # https://github.com/microsoft/torchgeo/issues/1824
-    "lightly>=1.4.4,!=1.4.26",
+    "lightly>=1.4.5,!=1.4.26",
     # lightning 2+ required for LightningCLI args + sys.argv support
-    "lightning[pytorch-extra]>=2",
-    # matplotlib 3.3.3+ required for Python 3.9 wheels
-    "matplotlib>=3.3.3",
-    # numpy 1.19.3+ required by Python 3.9 wheels
-    "numpy>=1.19.3",
-    # pandas 1.1.3+ required for Python 3.9 wheels
-    "pandas>=1.1.3",
-    # pillow 8+ required for Python 3.9 wheels
-    "pillow>=8",
-    # pyproj 3+ required for Python 3.9 wheels
-    "pyproj>=3",
-    # rasterio 1.2+ required for Python 3.9 wheels
-    "rasterio>=1.2",
-    # rtree 1+ required for len(index), index & index, index | index
+    # lightning 2.3 contains known bugs related to YAML parsing
+    # https://github.com/Lightning-AI/pytorch-lightning/issues/19977
+    "lightning[pytorch-extra]>=2,!=2.3.*",
+    # matplotlib 3.5+ required for Python 3.10 wheels
+    "matplotlib>=3.5",
+    # numpy 1.21.2+ required by Python 3.10 wheels
+    "numpy>=1.21.2",
+    # pandas 1.3.3+ required for Python 3.10 wheels
+    "pandas>=1.3.3",
+    # pillow 8.4+ required for Python 3.10 wheels
+    "pillow>=8.4",
+    # pyproj 3.3+ required for Python 3.10 wheels
+    "pyproj>=3.3",
+    # rasterio 1.3+ required for Python 3.10 wheels
+    "rasterio>=1.3",
+    # rtree 1+ required for Python 3.10 wheels
     "rtree>=1",
     # segmentation-models-pytorch 0.2+ required for smp.losses module
     "segmentation-models-pytorch>=0.2",
-    # shapely 1.7.1+ required for Python 3.9 wheels
-    "shapely>=1.7.1",
+    # shapely 1.8+ required for Python 3.10 wheels
+    "shapely>=1.8",
     # timm 0.4.12 required by segmentation-models-pytorch
     "timm>=0.4.12",
     # torch 1.13+ required by torchvision
@@ -81,28 +81,20 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 datasets = [
-    # h5py 3+ required for Python 3.9 wheels
-    "h5py>=3",
+    # h5py 3.6+ required for Python 3.10 wheels
+    "h5py>=3.6",
     # laspy 2+ required for laspy.read
     "laspy>=2",
-    # opencv-python 4.4.0.46+ required for Python 3.9 wheels
-    "opencv-python>=4.4.0.46",
-    # pycocotools 2.0.5+ required for cython 3+ support
-    "pycocotools>=2.0.5",
+    # opencv-python 4.5.4+ required for Python 3.10 wheels
+    "opencv-python>=4.5.4",
+    # pycocotools 2.0.7+ required for wheels
+    "pycocotools>=2.0.7",
     # pyvista 0.34.2+ required to avoid ImportError in CI
     "pyvista>=0.34.2",
-    # radiant-mlhub 0.3+ required for newer tqdm support required by lightning
-    "radiant-mlhub>=0.3",
-    # rarfile 4+ required for wheels
-    "rarfile>=4",
-    # scikit-image 0.18+ required for numpy 1.17+ compatibility
-    # https://github.com/scikit-image/scikit-image/issues/3655
-    "scikit-image>=0.18",
-    # scipy 1.6.2+ required for scikit-image 0.18+ compatibility
-    "scipy>=1.6.2",
-    # zipfile-deflate64 0.2+ required for extraction bugfix:
-    # https://github.com/brianhelba/zipfile-deflate64/issues/19
-    "zipfile-deflate64>=0.2",
+    # scikit-image 0.19+ required for Python 3.10 wheels
+    "scikit-image>=0.19",
+    # scipy 1.7.2+ required for Python 3.10 wheels
+    "scipy>=1.7.2",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx
@@ -117,21 +109,12 @@ docs = [
     "sphinx>=4,<6",
 ]
 style = [
-    # black 21.8+ required for Jupyter support
-    "black[jupyter]>=21.8",
-    # flake8 3.8+ depends on pyflakes 2.2+, which fixes a bug with mypy error code ignores:
-    # https://github.com/PyCQA/pyflakes/pull/455
-    "flake8>=3.8",
-    # isort 5.8+ required for extend_skip option
-    "isort[colors]>=5.8",
-    # pydocstyle 6.1+ required for pyproject.toml support
-    "pydocstyle[toml]>=6.1",
-    # pyupgrade 2.8+ required for --py39-plus flag
-    "pyupgrade>=2.8",
-]
-tests = [
     # mypy 0.900+ required for pyproject.toml support
     "mypy>=0.900",
+    # ruff 0.2+ required for [ruff.lint]
+    "ruff>=0.2",
+]
+tests = [
     # nbmake 1.3.3+ required for variable mocking
     "nbmake>=1.3.3",
     # pytest 7.3+ required for tmp_path_retention_policy
@@ -150,11 +133,6 @@ torchgeo = "torchgeo.main:main"
 Homepage = "https://github.com/microsoft/torchgeo"
 Documentation = "https://torchgeo.readthedocs.io"
 
-[tool.black]
-target-version = ["py39", "py310"]
-color = true
-skip_magic_trailing_comma = true
-
 [tool.coverage.report]
 # Ignore warnings for overloads
 # https://github.com/nedbat/coveragepy/issues/970#issuecomment-612602180
@@ -163,14 +141,8 @@ exclude_lines = [
     "@overload",
 ]
 
-[tool.isort]
-profile = "black"
-known_first_party = ["docs", "tests", "torchgeo", "train"]
-skip_gitignore = true
-color_output = true
-
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 ignore_missing_imports = true
 show_error_codes = true
 exclude = "(build|data|dist|docs/src|images|logo|logs|output)/"
@@ -190,10 +162,6 @@ warn_unused_ignores = true
 warn_return_any = true
 no_implicit_reexport = true
 strict_equality = true
-
-[tool.pydocstyle]
-convention = "google"
-match_dir = "(datamodules|datasets|losses|models|samplers|torchgeo|trainers|transforms)"
 
 [tool.pytest.ini_options]
 # Skip slow tests by default
@@ -232,8 +200,6 @@ filterwarnings = [
     "ignore:Call to deprecated create function:DeprecationWarning:tensorboard.compat.proto",
     # https://github.com/treebeardtech/nbmake/issues/68
     'ignore:The \(fspath. py.path.local\) argument to NotebookFile is deprecated:pytest.PytestDeprecationWarning:nbmake.pytest_plugin',
-    # https://github.com/kornia/kornia/issues/777
-    "ignore:Default upsampling behavior when mode=bilinear is changed to align_corners=False since 0.4.0:UserWarning:torch.nn.functional",
     # https://github.com/pytorch/pytorch/pull/24929
     "ignore:Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0:UserWarning:torch.nn.functional",
     # https://github.com/scikit-image/scikit-image/issues/6663
@@ -247,6 +213,16 @@ filterwarnings = [
     "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:jsonargparse",
     # https://github.com/pytorch/pytorch/issues/110549
     "ignore:allow_ops_in_compiled_graph failed to import torch:ImportWarning:einops",
+    # https://github.com/rr-/docstring_parser/pull/82
+    "ignore:ast.* is deprecated and will be removed in Python 3.14:DeprecationWarning:docstring_parser.attrdoc",
+    # https://github.com/python/cpython/pull/102953
+    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchgeo.datasets.utils",
+    # https://github.com/kornia/kornia/pull/2967
+    "ignore:`torch.cuda.amp.custom_fwd\\(args...\\)` is deprecated.:FutureWarning:kornia.feature.lightglue",
+    # https://github.com/kornia/kornia/pull/2981
+    "ignore:torch.is_autocast_cpu_enabled\\(\\) is deprecated.:DeprecationWarning:kornia.utils.helpers",
+    # https://github.com/pytorch/pytorch/pull/129239
+    "ignore:You are using `torch.load` with `weights_only=False`:FutureWarning",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
@@ -259,16 +235,12 @@ filterwarnings = [
     "ignore:Starting from v1.9.0, `tensorboardX` has been removed as a dependency of the `lightning.pytorch` package:UserWarning",
     # https://github.com/Lightning-AI/lightning/issues/18545
     "ignore:LightningCLI's args parameter is intended to run from within Python like if it were from the command line.:UserWarning",
-    # https://github.com/kornia/kornia/pull/1611
-    "ignore:`ColorJitter` is now following Torchvision implementation.:DeprecationWarning:kornia.augmentation._2d.intensity.color_jitter",
     # https://github.com/kornia/kornia/pull/1663
-    "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning:kornia.augmentation._2d.intensity.gaussian_blur",
+    "ignore:`RandomGaussianBlur` has changed its behavior and now randomly sample sigma for both axes.:DeprecationWarning",
     # https://github.com/pytorch/pytorch/pull/111576
     "ignore:Skipping device Apple Paravirtual device that does not support Metal 2.0:UserWarning",
 
     # Unexpected warnings, worth investigating
-    # Lightning is having trouble inferring the batch size for ChesapeakeCVPRDataModule and CycloneDataModule for some reason
-    "ignore:Trying to infer the `batch_size` from an ambiguous collection:UserWarning",
     # https://github.com/pytest-dev/pytest/issues/11461
     "ignore::pytest.PytestUnraisableExceptionWarning",
 ]
@@ -285,6 +257,30 @@ testpaths = [
     "docs/tutorials",
 ]
 tmp_path_retention_policy = "failed"
+
+# https://docs.astral.sh/ruff/settings/
+[tool.ruff]
+extend-include = ["*.ipynb"]
+fix = true
+
+[tool.ruff.format]
+quote-style = "single"
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+extend-select = ["ANN", "D", "I", "NPY201", "RUF", "UP"]
+ignore = ["ANN101", "ANN102", "ANN401"]
+
+[tool.ruff.lint.per-file-ignores]
+"docs/**" = ["ANN", "D"]
+"experiments/**" = ["D"]
+"tests/**" = ["D"]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 # https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [tool.setuptools.dynamic]
