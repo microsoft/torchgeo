@@ -25,8 +25,8 @@ def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
 class TestTropicalCyclone:
     @pytest.fixture(
         params=[
-            (3, {"wind": 0}, {"pressure": 1500}),
-            (3, {"pressure": 0}, {"wind": 100}),
+            (3, {'wind': 0}, {'pressure': 1500}),
+            (3, {'pressure': 0}, {'wind': 100}),
         ]
     )
     def dataset(
@@ -34,17 +34,17 @@ class TestTropicalCyclone:
     ) -> DigitalTyphoonAnalysis:
         sequence_length, min_features, max_features = request.param
         monkeypatch.setattr(
-            torchgeo.datasets.digital_typhoon, "download_url", download_url
+            torchgeo.datasets.digital_typhoon, 'download_url', download_url
         )
 
-        url = os.path.join("tests", "data", "digital_typhoon", "WP.tar.gz{0}")
-        monkeypatch.setattr(DigitalTyphoonAnalysis, "url", url)
+        url = os.path.join('tests', 'data', 'digital_typhoon', 'WP.tar.gz{0}')
+        monkeypatch.setattr(DigitalTyphoonAnalysis, 'url', url)
 
         md5sums = {
-            "aa": "5b2fed45d9719e77a482ccd4ae1b02e5",
-            "ab": "5b2fed45d9719e77a482ccd4ae1b02e5",
+            'aa': '5b2fed45d9719e77a482ccd4ae1b02e5',
+            'ab': '5b2fed45d9719e77a482ccd4ae1b02e5',
         }
-        monkeypatch.setattr(DigitalTyphoonAnalysis, "md5sums", md5sums)
+        monkeypatch.setattr(DigitalTyphoonAnalysis, 'md5sums', md5sums)
         root = str(tmp_path)
 
         transforms = nn.Identity()
@@ -63,29 +63,29 @@ class TestTropicalCyclone:
         import_orig = builtins.__import__
 
         def mocked_import(name: str, *args: Any, **kwargs: Any) -> Any:
-            if name == "h5py":
+            if name == 'h5py':
                 raise ImportError()
             return import_orig(name, *args, **kwargs)
 
-        monkeypatch.setattr(builtins, "__import__", mocked_import)
+        monkeypatch.setattr(builtins, '__import__', mocked_import)
 
     def test_len(self, dataset: DigitalTyphoonAnalysis) -> None:
         assert len(dataset) == 10
 
-    @pytest.mark.parametrize("index", [0, 1])
+    @pytest.mark.parametrize('index', [0, 1])
     def test_getitem(self, dataset: DigitalTyphoonAnalysis, index: int) -> None:
         x = dataset[index]
         assert isinstance(x, dict)
-        assert isinstance(x["image"], torch.Tensor)
-        assert x["image"].min() >= 0 and x["image"].max() <= 1
-        assert isinstance(x["label"], torch.Tensor)
+        assert isinstance(x['image'], torch.Tensor)
+        assert x['image'].min() >= 0 and x['image'].max() <= 1
+        assert isinstance(x['label'], torch.Tensor)
 
     def test_already_downloaded(self, dataset: DigitalTyphoonAnalysis) -> None:
         DigitalTyphoonAnalysis(root=dataset.root)
 
     def test_not_yet_extracted(self, tmp_path: Path) -> None:
-        root = os.path.join("tests", "data", "digital_typhoon")
-        filenames = ["WP.tar.gzaa", "WP.tar.gzab"]
+        root = os.path.join('tests', 'data', 'digital_typhoon')
+        filenames = ['WP.tar.gzaa', 'WP.tar.gzab']
         for filename in filenames:
             shutil.copyfile(
                 os.path.join(root, filename), os.path.join(str(tmp_path), filename)
@@ -93,15 +93,15 @@ class TestTropicalCyclone:
         DigitalTyphoonAnalysis(root=str(tmp_path))
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             DigitalTyphoonAnalysis(root=str(tmp_path))
 
     def test_plot(self, dataset: DigitalTyphoonAnalysis) -> None:
-        dataset.plot(dataset[0], suptitle="Test")
+        dataset.plot(dataset[0], suptitle='Test')
         plt.close()
 
         sample = dataset[0]
-        sample["prediction"] = sample["label"]
+        sample['prediction'] = sample['label']
         dataset.plot(sample)
         plt.close()
 
@@ -110,6 +110,6 @@ class TestTropicalCyclone:
     ) -> None:
         with pytest.raises(
             ImportError,
-            match="h5py is not installed and is required to use this dataset",
+            match='h5py is not installed and is required to use this dataset',
         ):
             DigitalTyphoonAnalysis(dataset.root)
