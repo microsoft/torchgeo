@@ -28,6 +28,11 @@ class TestSwin_V2_T:
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = torchvision.models.swin_v2_t()
+        num_channels = weights.meta['in_chans']
+        out_channels = model.features[0][0].out_channels
+        model.features[0][0] = torch.nn.Conv2d(
+            num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
+        )
         torch.save(model.state_dict(), path)
         try:
             monkeypatch.setattr(weights.value, 'url', str(path))
@@ -68,6 +73,11 @@ class TestSwin_V2_B:
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = torchvision.models.swin_v2_b()
+        num_channels = weights.meta['in_chans']
+        out_channels = model.features[0][0].out_channels
+        model.features[0][0] = torch.nn.Conv2d(
+            num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
+        )
         torch.save(model.state_dict(), path)
         try:
             monkeypatch.setattr(weights.value, 'url', str(path))
