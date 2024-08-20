@@ -6,7 +6,7 @@
 import json
 import os
 from collections.abc import Callable, Sequence
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import numpy as np
 import torch
@@ -72,16 +72,16 @@ class MMEarth(NonGeoDataset):
     .. versionadded:: 0.6
     """
 
-    ds_versions = ['MMEarth', 'MMEarth64', 'MMEarth100k']
+    ds_versions: ClassVar[list[str]] = ['MMEarth', 'MMEarth64', 'MMEarth100k']
 
-    filenames = {
+    filenames: ClassVar[dict[str, str]] = {
         'MMEarth': 'data_1M_v001',
         'MMEarth64': 'data_1M_v001_64',
         'MMEarth100k': 'data_100k_v001',
     }
-    splits = ['train', 'val', 'test']
+    splits: ClassVar[list[str]] = ['train', 'val', 'test']
 
-    all_modalities = (
+    all_modalities: ClassVar[Sequence[str]] = (
         'aster',
         'biome',
         'canopy_height_eth',
@@ -97,7 +97,7 @@ class MMEarth(NonGeoDataset):
     )
 
     # See https://github.com/vishalned/MMEarth-train/blob/8d6114e8e3ccb5ca5d98858e742dac24350b64fd/MODALITIES.py#L108C1-L160C2
-    all_modality_bands = {
+    all_modality_bands: ClassVar[dict[str, list[str]]] = {
         'sentinel2': [
             'B1',
             'B2',
@@ -152,7 +152,7 @@ class MMEarth(NonGeoDataset):
     }
 
     # See https://github.com/vishalned/MMEarth-train/blob/8d6114e8e3ccb5ca5d98858e742dac24350b64fd/MODALITIES.py#L36
-    no_data_vals = {
+    no_data_vals: dict[str, int | float] = {
         'sentinel2': 0,
         'sentinel2_cloudmask': 65535,
         'sentinel2_cloudprod': 65535,
@@ -170,7 +170,7 @@ class MMEarth(NonGeoDataset):
         'eco_region': 65535,
     }
 
-    norm_modes = ['z-score', 'min-max']
+    norm_modes: ClassVar[list[str]] = ['z-score', 'min-max']
 
     def __init__(
         self,
