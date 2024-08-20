@@ -10,7 +10,6 @@ import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
-import torchvision
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
@@ -43,12 +42,7 @@ class RegressionTestModel(ClassificationTestModel):
 
 class PredictRegressionDataModule(TropicalCycloneDataModule):
     def setup(self, stage: str) -> None:
-        self.predict_dataset = TropicalCyclone(split="test", **self.kwargs)
-
-
-def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
-    state_dict: dict[str, Any] = torch.load(url)
-    return state_dict
+        self.predict_dataset = TropicalCyclone(split='test', **self.kwargs)
 
 
 def plot(*args: Any, **kwargs: Any) -> None:
@@ -65,38 +59,38 @@ class TestRegressionTask:
         return RegressionTestModel(**kwargs)
 
     @pytest.mark.parametrize(
-        "name", ["cowc_counting", "cyclone", "sustainbench_crop_yield", "skippd"]
+        'name', ['cowc_counting', 'cyclone', 'sustainbench_crop_yield', 'skippd']
     )
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        if name == "skippd":
-            pytest.importorskip("h5py", minversion="3")
+        if name == 'skippd':
+            pytest.importorskip('h5py', minversion='3.6')
 
-        config = os.path.join("tests", "conf", name + ".yaml")
+        config = os.path.join('tests', 'conf', name + '.yaml')
 
-        monkeypatch.setattr(timm, "create_model", self.create_model)
+        monkeypatch.setattr(timm, 'create_model', self.create_model)
 
         args = [
-            "--config",
+            '--config',
             config,
-            "--trainer.accelerator",
-            "cpu",
-            "--trainer.fast_dev_run",
+            '--trainer.accelerator',
+            'cpu',
+            '--trainer.fast_dev_run',
             str(fast_dev_run),
-            "--trainer.max_epochs",
-            "1",
-            "--trainer.log_every_n_steps",
-            "1",
+            '--trainer.max_epochs',
+            '1',
+            '--trainer.log_every_n_steps',
+            '1',
         ]
 
-        main(["fit"] + args)
+        main(['fit', *args])
         try:
-            main(["test"] + args)
+            main(['test', *args])
         except MisconfigurationException:
             pass
         try:
-            main(["predict"] + args)
+            main(['predict', *args])
         except MisconfigurationException:
             pass
 
@@ -106,64 +100,67 @@ class TestRegressionTask:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
-        path = tmp_path / f"{weights}.pth"
+        path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta["model"], in_chans=weights.meta["in_chans"]
+            weights.meta['model'], in_chans=weights.meta['in_chans']
         )
         torch.save(model.state_dict(), path)
         try:
-            monkeypatch.setattr(weights.value, "url", str(path))
+            monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
-            monkeypatch.setattr(weights, "url", str(path))
-        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
+            monkeypatch.setattr(weights, 'url', str(path))
         return weights
 
     def test_weight_file(self, checkpoint: str) -> None:
         with pytest.warns(UserWarning):
-            RegressionTask(model="resnet18", weights=checkpoint)
+            RegressionTask(model='resnet18', weights=checkpoint)
 
     def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
         with pytest.warns(UserWarning):
             RegressionTask(
-                model=mocked_weights.meta["model"],
+                model=mocked_weights.meta['model'],
                 weights=mocked_weights,
-                in_channels=mocked_weights.meta["in_chans"],
+                in_channels=mocked_weights.meta['in_chans'],
             )
 
     def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
         with pytest.warns(UserWarning):
             RegressionTask(
-                model=mocked_weights.meta["model"],
+                model=mocked_weights.meta['model'],
                 weights=str(mocked_weights),
-                in_channels=mocked_weights.meta["in_chans"],
+                in_channels=mocked_weights.meta['in_chans'],
             )
 
     @pytest.mark.slow
     def test_weight_enum_download(self, weights: WeightsEnum) -> None:
         RegressionTask(
-            model=weights.meta["model"],
+            model=weights.meta['model'],
             weights=weights,
-            in_channels=weights.meta["in_chans"],
+            in_channels=weights.meta['in_chans'],
         )
 
     @pytest.mark.slow
     def test_weight_str_download(self, weights: WeightsEnum) -> None:
         RegressionTask(
-            model=weights.meta["model"],
+            model=weights.meta['model'],
             weights=str(weights),
-            in_channels=weights.meta["in_chans"],
+            in_channels=weights.meta['in_chans'],
         )
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(TropicalCycloneDataModule, "plot", plot)
+        monkeypatch.setattr(TropicalCycloneDataModule, 'plot', plot)
         datamodule = TropicalCycloneDataModule(
-            root="tests/data/cyclone", batch_size=1, num_workers=0
+            root='tests/data/cyclone', batch_size=1, num_workers=0
         )
-        model = RegressionTask(model="resnet18")
+        model = RegressionTask(model='resnet18')
         trainer = Trainer(
-            accelerator="cpu",
+            accelerator='cpu',
             fast_dev_run=fast_dev_run,
             log_every_n_steps=1,
             max_epochs=1,
@@ -171,13 +168,13 @@ class TestRegressionTask:
         trainer.validate(model=model, datamodule=datamodule)
 
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(TropicalCycloneDataModule, "plot", plot_missing_bands)
+        monkeypatch.setattr(TropicalCycloneDataModule, 'plot', plot_missing_bands)
         datamodule = TropicalCycloneDataModule(
-            root="tests/data/cyclone", batch_size=1, num_workers=0
+            root='tests/data/cyclone', batch_size=1, num_workers=0
         )
-        model = RegressionTask(model="resnet18")
+        model = RegressionTask(model='resnet18')
         trainer = Trainer(
-            accelerator="cpu",
+            accelerator='cpu',
             fast_dev_run=fast_dev_run,
             log_every_n_steps=1,
             max_epochs=1,
@@ -186,11 +183,11 @@ class TestRegressionTask:
 
     def test_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictRegressionDataModule(
-            root="tests/data/cyclone", batch_size=1, num_workers=0
+            root='tests/data/cyclone', batch_size=1, num_workers=0
         )
-        model = RegressionTask(model="resnet18")
+        model = RegressionTask(model='resnet18')
         trainer = Trainer(
-            accelerator="cpu",
+            accelerator='cpu',
             fast_dev_run=fast_dev_run,
             log_every_n_steps=1,
             max_epochs=1,
@@ -200,10 +197,10 @@ class TestRegressionTask:
     def test_invalid_loss(self) -> None:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
-            RegressionTask(model="resnet18", loss="invalid_loss")
+            RegressionTask(model='resnet18', loss='invalid_loss')
 
     @pytest.mark.parametrize(
-        "model_name", ["resnet18", "efficientnetv2_s", "vit_base_patch16_384"]
+        'model_name', ['resnet18', 'efficientnetv2_s', 'vit_base_patch16_384']
     )
     def test_freeze_backbone(self, model_name: str) -> None:
         model = RegressionTask(model=model_name, freeze_backbone=True)
@@ -218,42 +215,42 @@ class TestPixelwiseRegressionTask:
     def create_model(*args: Any, **kwargs: Any) -> Module:
         return PixelwiseRegressionTestModel(**kwargs)
 
-    @pytest.mark.parametrize("name", ["inria_unet", "inria_deeplab", "inria_fcn"])
+    @pytest.mark.parametrize('name', ['inria_unet', 'inria_deeplab', 'inria_fcn'])
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        config = os.path.join("tests", "conf", name + ".yaml")
+        config = os.path.join('tests', 'conf', name + '.yaml')
 
-        monkeypatch.setattr(smp, "Unet", self.create_model)
-        monkeypatch.setattr(smp, "DeepLabV3Plus", self.create_model)
+        monkeypatch.setattr(smp, 'Unet', self.create_model)
+        monkeypatch.setattr(smp, 'DeepLabV3Plus', self.create_model)
 
         args = [
-            "--config",
+            '--config',
             config,
-            "--trainer.accelerator",
-            "cpu",
-            "--trainer.fast_dev_run",
+            '--trainer.accelerator',
+            'cpu',
+            '--trainer.fast_dev_run',
             str(fast_dev_run),
-            "--trainer.max_epochs",
-            "1",
-            "--trainer.log_every_n_steps",
-            "1",
+            '--trainer.max_epochs',
+            '1',
+            '--trainer.log_every_n_steps',
+            '1',
         ]
 
-        main(["fit"] + args)
+        main(['fit', *args])
         try:
-            main(["test"] + args)
+            main(['test', *args])
         except MisconfigurationException:
             pass
         try:
-            main(["predict"] + args)
+            main(['predict', *args])
         except MisconfigurationException:
             pass
 
     def test_invalid_model(self) -> None:
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):
-            PixelwiseRegressionTask(model="invalid_model")
+            PixelwiseRegressionTask(model='invalid_model')
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:
@@ -261,60 +258,63 @@ class TestPixelwiseRegressionTask:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
-        path = tmp_path / f"{weights}.pth"
+        path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta["model"], in_chans=weights.meta["in_chans"]
+            weights.meta['model'], in_chans=weights.meta['in_chans']
         )
         torch.save(model.state_dict(), path)
         try:
-            monkeypatch.setattr(weights.value, "url", str(path))
+            monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
-            monkeypatch.setattr(weights, "url", str(path))
-        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
+            monkeypatch.setattr(weights, 'url', str(path))
         return weights
 
     def test_weight_file(self, checkpoint: str) -> None:
-        PixelwiseRegressionTask(model="unet", backbone="resnet18", weights=checkpoint)
+        PixelwiseRegressionTask(model='unet', backbone='resnet18', weights=checkpoint)
 
     def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
         PixelwiseRegressionTask(
-            model="unet",
-            backbone=mocked_weights.meta["model"],
+            model='unet',
+            backbone=mocked_weights.meta['model'],
             weights=mocked_weights,
-            in_channels=mocked_weights.meta["in_chans"],
+            in_channels=mocked_weights.meta['in_chans'],
         )
 
     def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
         PixelwiseRegressionTask(
-            model="unet",
-            backbone=mocked_weights.meta["model"],
+            model='unet',
+            backbone=mocked_weights.meta['model'],
             weights=str(mocked_weights),
-            in_channels=mocked_weights.meta["in_chans"],
+            in_channels=mocked_weights.meta['in_chans'],
         )
 
     @pytest.mark.slow
     def test_weight_enum_download(self, weights: WeightsEnum) -> None:
         PixelwiseRegressionTask(
-            model="unet",
-            backbone=weights.meta["model"],
+            model='unet',
+            backbone=weights.meta['model'],
             weights=weights,
-            in_channels=weights.meta["in_chans"],
+            in_channels=weights.meta['in_chans'],
         )
 
     @pytest.mark.slow
     def test_weight_str_download(self, weights: WeightsEnum) -> None:
         PixelwiseRegressionTask(
-            model="unet",
-            backbone=weights.meta["model"],
+            model='unet',
+            backbone=weights.meta['model'],
             weights=str(weights),
-            in_channels=weights.meta["in_chans"],
+            in_channels=weights.meta['in_chans'],
         )
 
-    @pytest.mark.parametrize("model_name", ["unet", "deeplabv3+"])
+    @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
     @pytest.mark.parametrize(
-        "backbone", ["resnet18", "mobilenet_v2", "efficientnet-b0"]
+        'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
     )
     def test_freeze_backbone(self, model_name: str, backbone: str) -> None:
         model = PixelwiseRegressionTask(
@@ -331,10 +331,10 @@ class TestPixelwiseRegressionTask:
             ]
         )
 
-    @pytest.mark.parametrize("model_name", ["unet", "deeplabv3+"])
+    @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
     def test_freeze_decoder(self, model_name: str) -> None:
         model = PixelwiseRegressionTask(
-            model=model_name, backbone="resnet18", freeze_decoder=True
+            model=model_name, backbone='resnet18', freeze_decoder=True
         )
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]

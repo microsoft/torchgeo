@@ -22,4 +22,18 @@ data:
     root: "data/ssl4eo_benchmark"
     sensor: "oli_tirs_toa"
     product: "nlcd"
-    classes: [0, 11, 21, 22, 31, 41, 42, 43, 52, 71, 81, 82, 90, 95]
+    classes:
+      - 0
+      - 11
+      - 21
+      - 22
+      - 31
+      - 41
+      - 42
+      - 43
+      - 52
+      - 71
+      - 81
+      - 82
+      - 90
+      - 95

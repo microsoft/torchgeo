@@ -15,8 +15,6 @@ from timm.models.vision_transformer import Block
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
 
-__all__ = ["DOFABase16_Weights", "DOFALarge16_Weights"]
-
 
 def position_embedding(embed_dim: int, pos: Tensor) -> Tensor:
     """Compute the 1D sine/cosine position embedding.
@@ -37,7 +35,7 @@ def position_embedding(embed_dim: int, pos: Tensor) -> Tensor:
     omega = 1.0 / 10000**omega  # (D/2,)
 
     pos = pos.reshape(-1)  # (M,)
-    out = torch.einsum("m,d->md", pos, omega)  # (M, D/2), outer product
+    out = torch.einsum('m,d->md', pos, omega)  # (M, D/2), outer product
 
     emb_sin = torch.sin(out)  # (M, D/2)
     emb_cos = torch.cos(out)  # (M, D/2)
@@ -70,7 +68,7 @@ class TransformerWeightGenerator(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=input_dim,
             nhead=num_heads,
-            activation="gelu",
+            activation='gelu',
             norm_first=False,
             batch_first=False,
             dropout=False,
@@ -386,14 +384,14 @@ class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DOFA_MAE = Weights(
-        url="https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_base_patch16_224-7cc0f413.pth",  # noqa: E501
+        url='https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_base_patch16_224-7cc0f413.pth',
         transforms=_dofa_transforms,
         meta={
-            "dataset": "SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k",
-            "model": "dofa_base_patch16_224",
-            "publication": "https://arxiv.org/abs/2403.15356",
-            "repo": "https://github.com/zhu-xlab/DOFA",
-            "ssl_method": "mae",
+            'dataset': 'SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k',
+            'model': 'dofa_base_patch16_224',
+            'publication': 'https://arxiv.org/abs/2403.15356',
+            'repo': 'https://github.com/zhu-xlab/DOFA',
+            'ssl_method': 'mae',
         },
     )
 
@@ -405,19 +403,19 @@ class DOFALarge16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DOFA_MAE = Weights(
-        url="https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_large_patch16_224-fbd47fa9.pth",  # noqa: E501
+        url='https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_large_patch16_224-fbd47fa9.pth',
         transforms=_dofa_transforms,
         meta={
-            "dataset": "SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k",
-            "model": "dofa_large_patch16_224",
-            "publication": "https://arxiv.org/abs/2403.15356",
-            "repo": "https://github.com/zhu-xlab/DOFA",
-            "ssl_method": "mae",
+            'dataset': 'SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k',
+            'model': 'dofa_large_patch16_224',
+            'publication': 'https://arxiv.org/abs/2403.15356',
+            'repo': 'https://github.com/zhu-xlab/DOFA',
+            'ssl_method': 'mae',
         },
     )
 
 
-def dofa_small_patch16_224(**kwargs: Any) -> DOFA:
+def dofa_small_patch16_224(*args: Any, **kwargs: Any) -> DOFA:
     """Dynamic One-For-All (DOFA) small patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -427,17 +425,19 @@ def dofa_small_patch16_224(**kwargs: Any) -> DOFA:
     .. versionadded:: 0.6
 
     Args:
+        *args: Additional arguments to pass to :class:`DOFA`.
         **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA small 16 model.
     """
-    model = DOFA(patch_size=16, embed_dim=384, depth=12, num_heads=6, **kwargs)
+    kwargs |= {'patch_size': 16, 'embed_dim': 384, 'depth': 12, 'num_heads': 6}
+    model = DOFA(*args, **kwargs)
     return model
 
 
 def dofa_base_patch16_224(
-    weights: DOFABase16_Weights | None = None, **kwargs: Any
+    weights: DOFABase16_Weights | None = None, *args: Any, **kwargs: Any
 ) -> DOFA:
     """Dynamic One-For-All (DOFA) base patch size 16 model.
 
@@ -449,12 +449,14 @@ def dofa_base_patch16_224(
 
     Args:
         weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :class:`DOFA`.
         **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA base 16 model.
     """
-    model = DOFA(patch_size=16, embed_dim=768, depth=12, num_heads=12, **kwargs)
+    kwargs |= {'patch_size': 16, 'embed_dim': 768, 'depth': 12, 'num_heads': 12}
+    model = DOFA(*args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -462,10 +464,10 @@ def dofa_base_patch16_224(
         )
         # Both fc_norm and head are generated dynamically
         assert set(missing_keys) <= {
-            "fc_norm.weight",
-            "fc_norm.bias",
-            "head.weight",
-            "head.bias",
+            'fc_norm.weight',
+            'fc_norm.bias',
+            'head.weight',
+            'head.bias',
         }
         assert not unexpected_keys
 
@@ -473,7 +475,7 @@ def dofa_base_patch16_224(
 
 
 def dofa_large_patch16_224(
-    weights: DOFALarge16_Weights | None = None, **kwargs: Any
+    weights: DOFALarge16_Weights | None = None, *args: Any, **kwargs: Any
 ) -> DOFA:
     """Dynamic One-For-All (DOFA) large patch size 16 model.
 
@@ -485,12 +487,14 @@ def dofa_large_patch16_224(
 
     Args:
         weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :class:`DOFA`.
         **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA large 16 model.
     """
-    model = DOFA(patch_size=16, embed_dim=1024, depth=24, num_heads=16, **kwargs)
+    kwargs |= {'patch_size': 16, 'embed_dim': 1024, 'depth': 24, 'num_heads': 16}
+    model = DOFA(*args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -498,17 +502,17 @@ def dofa_large_patch16_224(
         )
         # Both fc_norm and head are generated dynamically
         assert set(missing_keys) <= {
-            "fc_norm.weight",
-            "fc_norm.bias",
-            "head.weight",
-            "head.bias",
+            'fc_norm.weight',
+            'fc_norm.bias',
+            'head.weight',
+            'head.bias',
         }
         assert not unexpected_keys
 
     return model
 
 
-def dofa_huge_patch16_224(**kwargs: Any) -> DOFA:
+def dofa_huge_patch16_224(*args: Any, **kwargs: Any) -> DOFA:
     """Dynamic One-For-All (DOFA) huge patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -518,10 +522,12 @@ def dofa_huge_patch16_224(**kwargs: Any) -> DOFA:
     .. versionadded:: 0.6
 
     Args:
+        *args: Additional arguments to pass to :class:`DOFA`.
         **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA huge 16 model.
     """
-    model = DOFA(patch_size=14, embed_dim=1280, depth=32, num_heads=16, **kwargs)
+    kwargs |= {'patch_size': 14, 'embed_dim': 1280, 'depth': 32, 'num_heads': 16}
+    model = DOFA(*args, **kwargs)
     return model

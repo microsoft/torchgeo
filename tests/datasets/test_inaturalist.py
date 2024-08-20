@@ -16,9 +16,9 @@ from torchgeo.datasets import (
 
 
 class TestINaturalist:
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope='class')
     def dataset(self) -> INaturalist:
-        root = os.path.join("tests", "data", "inaturalist")
+        root = os.path.join('tests', 'data', 'inaturalist')
         return INaturalist(root)
 
     def test_getitem(self, dataset: INaturalist) -> None:
@@ -37,12 +37,12 @@ class TestINaturalist:
         assert isinstance(ds, UnionDataset)
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
-            INaturalist(str(tmp_path))
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            INaturalist(tmp_path)
 
     def test_invalid_query(self, dataset: INaturalist) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
-            IndexError, match="query: .* not found in index with bounds:"
+            IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]

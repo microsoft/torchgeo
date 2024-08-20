@@ -11,8 +11,9 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import RGBBandsMissingError
+from .utils import Path
 
 
 class Landsat(RasterDataset, abc.ABC):
@@ -32,7 +33,7 @@ class Landsat(RasterDataset, abc.ABC):
     * `Surface Temperature <https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-temperature>`_
     * `Surface Reflectance <https://www.usgs.gov/landsat-missions/landsat-collection-2-surface-reflectance>`_
     * `U.S. Analysis Ready Data <https://www.usgs.gov/landsat-missions/landsat-collection-2-us-analysis-ready-data>`_
-    """  # noqa: E501
+    """
 
     # https://www.usgs.gov/landsat-missions/landsat-collection-2
     filename_regex = r"""
@@ -54,12 +55,12 @@ class Landsat(RasterDataset, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def default_bands(self) -> list[str]:
+    def default_bands(self) -> tuple[str, ...]:
         """Bands to load by default."""
 
     def __init__(
         self,
-        paths: str | Iterable[str] = "data",
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         bands: Sequence[str] | None = None,
@@ -120,7 +121,7 @@ class Landsat(RasterDataset, abc.ABC):
             else:
                 raise RGBBandsMissingError()
 
-        image = sample["image"][rgb_indices].permute(1, 2, 0).float()
+        image = sample['image'][rgb_indices].permute(1, 2, 0).float()
 
         # Stretch to the full range
         image = (image - image.min()) / (image.max() - image.min())
@@ -128,10 +129,10 @@ class Landsat(RasterDataset, abc.ABC):
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
 
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
 
         if show_titles:
-            ax.set_title("Image")
+            ax.set_title('Image')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
@@ -142,73 +143,73 @@ class Landsat(RasterDataset, abc.ABC):
 class Landsat1(Landsat):
     """Landsat 1 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM01_*_{}.*"
+    filename_glob = 'LM01_*_{}.*'
 
-    default_bands = ["B4", "B5", "B6", "B7"]
-    rgb_bands = ["B6", "B5", "B4"]
+    default_bands = ('B4', 'B5', 'B6', 'B7')
+    rgb_bands = ('B6', 'B5', 'B4')
 
 
 class Landsat2(Landsat1):
     """Landsat 2 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM02_*_{}.*"
+    filename_glob = 'LM02_*_{}.*'
 
 
 class Landsat3(Landsat1):
     """Landsat 3 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM03_*_{}.*"
+    filename_glob = 'LM03_*_{}.*'
 
 
 class Landsat4MSS(Landsat):
     """Landsat 4 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM04_*_{}.*"
+    filename_glob = 'LM04_*_{}.*'
 
-    default_bands = ["B1", "B2", "B3", "B4"]
-    rgb_bands = ["B3", "B2", "B1"]
+    default_bands = ('B1', 'B2', 'B3', 'B4')
+    rgb_bands = ('B3', 'B2', 'B1')
 
 
 class Landsat4TM(Landsat):
     """Landsat 4 Thematic Mapper (TM)."""
 
-    filename_glob = "LT04_*_{}.*"
+    filename_glob = 'LT04_*_{}.*'
 
-    default_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
-    rgb_bands = ["SR_B3", "SR_B2", "SR_B1"]
+    default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7')
+    rgb_bands = ('SR_B3', 'SR_B2', 'SR_B1')
 
 
 class Landsat5MSS(Landsat4MSS):
     """Landsat 4 Multispectral Scanner (MSS)."""
 
-    filename_glob = "LM04_*_{}.*"
+    filename_glob = 'LM04_*_{}.*'
 
 
 class Landsat5TM(Landsat4TM):
     """Landsat 5 Thematic Mapper (TM)."""
 
-    filename_glob = "LT05_*_{}.*"
+    filename_glob = 'LT05_*_{}.*'
 
 
 class Landsat7(Landsat):
     """Landsat 7 Enhanced Thematic Mapper Plus (ETM+)."""
 
-    filename_glob = "LE07_*_{}.*"
+    filename_glob = 'LE07_*_{}.*'
 
-    default_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
-    rgb_bands = ["SR_B3", "SR_B2", "SR_B1"]
+    default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7')
+    rgb_bands = ('SR_B3', 'SR_B2', 'SR_B1')
 
 
 class Landsat8(Landsat):
     """Landsat 8 Operational Land Imager (OLI) and Thermal Infrared Sensor (TIRS)."""
 
-    filename_glob = "LC08_*_{}.*"
+    filename_glob = 'LC08_*_{}.*'
 
-    default_bands = ["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B6", "SR_B7"]
-    rgb_bands = ["SR_B4", "SR_B3", "SR_B2"]
+    default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7')
+    rgb_bands = ('SR_B4', 'SR_B3', 'SR_B2')
 
 
 class Landsat9(Landsat8):
-    """Landsat 9 Operational Land Imager (OLI-2) and Thermal Infrared Sensor (TIRS-2)."""  # noqa: E501
+    """Landsat 9 Operational Land Imager (OLI-2) and Thermal Infrared Sensor (TIRS-2)."""
 
-    filename_glob = "LC09_*_{}.*"
+    filename_glob = 'LC09_*_{}.*'

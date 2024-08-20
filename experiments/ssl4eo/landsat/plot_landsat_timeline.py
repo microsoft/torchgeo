@@ -11,20 +11,20 @@ import matplotlib.pyplot as plt
 # Match NeurIPS template
 plt.rcParams.update(
     {
-        "font.family": "Times New Roman",
-        "font.size": 10,
-        "axes.labelsize": 10,
-        "text.usetex": True,
-        "hatch.linewidth": 0.5,
+        'font.family': 'Times New Roman',
+        'font.size': 10,
+        'axes.labelsize': 10,
+        'text.usetex': True,
+        'hatch.linewidth': 0.5,
     }
 )
 
 parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=__doc__
 )
-parser.add_argument("--bar-start", default=1, type=float, help="height of first bar")
-parser.add_argument("--bar-height", default=3, type=float, help="height of each bar")
-parser.add_argument("--bar-sep", default=2, type=float, help="separation between bars")
+parser.add_argument('--bar-start', default=1, type=float, help='height of first bar')
+parser.add_argument('--bar-height', default=3, type=float, help='height of each bar')
+parser.add_argument('--bar-sep', default=2, type=float, help='separation between bars')
 args = parser.parse_args()
 
 working: dict[int, list[tuple[date, date]]] = {
@@ -80,18 +80,18 @@ yticks = []
 for satellite in range(9, 0, -1):
     # Bar plot
     kwargs = {
-        "yrange": (ymin, args.bar_height),
-        "alpha": 0.8,
-        "color": next(cmap),
-        "edgecolor": (0, 0, 0, 0.8),
-        "linewidth": 0.5,
+        'yrange': (ymin, args.bar_height),
+        'alpha': 0.8,
+        'color': next(cmap),
+        'edgecolor': (0, 0, 0, 0.8),
+        'linewidth': 0.5,
     }
 
     xranges = [(start, end - start) for start, end in working[satellite]]
-    ax.broken_barh(xranges, hatch=None, **kwargs)
+    ax.broken_barh(xranges, hatch=None, **kwargs)  # type: ignore[arg-type]
 
     xranges = [(start, end - start) for start, end in failing[satellite]]
-    ax.broken_barh(xranges, hatch="////", **kwargs)
+    ax.broken_barh(xranges, hatch='////', **kwargs)  # type: ignore[arg-type]
 
     # Label
     xmin = global_xmax
@@ -106,39 +106,39 @@ for satellite in range(9, 0, -1):
     if (xmin - global_xmin) > (global_xmax - xmax):
         # Left side label
         x = xmin - timedelta(weeks=52)
-        horizontalalignment = "right"
+        horizontalalignment = 'right'
     else:
         # Right side label
         x = xmax + timedelta(weeks=52)
-        horizontalalignment = "left"
+        horizontalalignment = 'left'
 
-    start = f"{xmin:%b %Y}"
-    end = f"{xmax:%b %Y}"
+    start = f'{xmin:%b %Y}'
+    end = f'{xmax:%b %Y}'
     if xmax == date.today():
-        end = "Present"
+        end = 'Present'
     if start == end:
         s = start
     else:
-        s = f"{start}--{end}"
+        s = f'{start}--{end}'
 
     kwargs = {
-        "y": ymin + args.bar_height / 2,
-        "s": s,
-        "verticalalignment": "center_baseline",
+        'y': ymin + args.bar_height / 2,
+        's': s,
+        'verticalalignment': 'center_baseline',
     }
 
-    ax.text(x, horizontalalignment=horizontalalignment, **kwargs)
+    ax.text(x, horizontalalignment=horizontalalignment, **kwargs)  # type: ignore[arg-type]
 
     yticks.append(ymin + args.bar_height / 2)
     ymin += args.bar_height + args.bar_sep
 
 ax.xaxis_date()
-ax.set_xlim(global_xmin, global_xmax)
-ax.set_ylabel("Landsat Mission")
+ax.set_xlim(global_xmin, global_xmax)  # type: ignore[arg-type]
+ax.set_ylabel('Landsat Mission')
 ax.set_yticks(yticks)
-ax.set_yticklabels(range(9, 0, -1))
-ax.tick_params(axis="both", which="both", top=False, right=False)
-ax.spines[["top", "right"]].set_visible(False)
+ax.set_yticklabels(map(str, range(9, 0, -1)))
+ax.tick_params(axis='both', which='both', top=False, right=False)
+ax.spines[['top', 'right']].set_visible(False)
 
 plt.tight_layout()
 plt.show()

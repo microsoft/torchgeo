@@ -5,15 +5,16 @@
 
 import os
 from collections.abc import Callable
-from typing import cast
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoClassificationDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class RESISC45(NonGeoClassificationDataset):
@@ -92,27 +93,27 @@ class RESISC45(NonGeoClassificationDataset):
     * https://doi.org/10.1109/jproc.2017.2675998
     """
 
-    url = "https://drive.google.com/file/d/1DnPSU5nVSN7xv95bpZ3XQ0JhKXZOKgIv"
-    md5 = "d824acb73957502b00efd559fc6cfbbb"
-    filename = "NWPU-RESISC45.rar"
-    directory = "NWPU-RESISC45"
+    url = 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/NWPU-RESISC45.zip'
+    md5 = '75206b2e16446591afa88e2628744886'
+    filename = 'NWPU-RESISC45.zip'
+    directory = 'NWPU-RESISC45'
 
-    splits = ["train", "val", "test"]
-    split_urls = {
-        "train": "https://storage.googleapis.com/remote_sensing_representations/resisc45-train.txt",  # noqa: E501
-        "val": "https://storage.googleapis.com/remote_sensing_representations/resisc45-val.txt",  # noqa: E501
-        "test": "https://storage.googleapis.com/remote_sensing_representations/resisc45-test.txt",  # noqa: E501
+    splits = ('train', 'val', 'test')
+    split_urls: ClassVar[dict[str, str]] = {
+        'train': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-train.txt',
+        'val': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-val.txt',
+        'test': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-test.txt',
     }
-    split_md5s = {
-        "train": "b5a4c05a37de15e4ca886696a85c403e",
-        "val": "a0770cee4c5ca20b8c32bbd61e114805",
-        "test": "3dda9e4988b47eb1de9f07993653eb08",
+    split_md5s: ClassVar[dict[str, str]] = {
+        'train': 'b5a4c05a37de15e4ca886696a85c403e',
+        'val': 'a0770cee4c5ca20b8c32bbd61e114805',
+        'test': '3dda9e4988b47eb1de9f07993653eb08',
     }
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: Path = 'data',
+        split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -137,11 +138,11 @@ class RESISC45(NonGeoClassificationDataset):
         self._verify()
 
         valid_fns = set()
-        with open(os.path.join(self.root, f"resisc45-{split}.txt")) as f:
+        with open(os.path.join(self.root, f'resisc45-{split}.txt')) as f:
             for fn in f:
                 valid_fns.add(fn.strip())
 
-        def is_in_split(x: str) -> bool:
+        def is_in_split(x: Path) -> bool:
             return os.path.basename(x) in valid_fns
 
         super().__init__(
@@ -183,7 +184,7 @@ class RESISC45(NonGeoClassificationDataset):
             download_url(
                 self.split_urls[split],
                 self.root,
-                filename=f"resisc45-{split}.txt",
+                filename=f'resisc45-{split}.txt',
                 md5=self.split_md5s[split] if self.checksum else None,
             )
 
@@ -210,22 +211,22 @@ class RESISC45(NonGeoClassificationDataset):
 
         .. versionadded:: 0.2
         """
-        image = np.rollaxis(sample["image"].numpy(), 0, 3)
-        label = cast(int, sample["label"].item())
+        image = np.rollaxis(sample['image'].numpy(), 0, 3)
+        label = cast(int, sample['label'].item())
         label_class = self.classes[label]
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = cast(int, sample["prediction"].item())
+            prediction = cast(int, sample['prediction'].item())
             prediction_class = self.classes[prediction]
 
         fig, ax = plt.subplots(figsize=(4, 4))
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
         if show_titles:
-            title = f"Label: {label_class}"
+            title = f'Label: {label_class}'
             if showing_predictions:
-                title += f"\nPrediction: {prediction_class}"
+                title += f'\nPrediction: {prediction_class}'
             ax.set_title(title)
 
         if suptitle is not None:

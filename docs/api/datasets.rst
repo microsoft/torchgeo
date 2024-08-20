@@ -47,8 +47,6 @@ Chesapeake Land Cover
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: Chesapeake
-.. autoclass:: Chesapeake7
-.. autoclass:: Chesapeake13
 .. autoclass:: ChesapeakeDC
 .. autoclass:: ChesapeakeDE
 .. autoclass:: ChesapeakeMD
@@ -265,6 +263,7 @@ EuroSAT
 ^^^^^^^
 
 .. autoclass:: EuroSAT
+.. autoclass:: EuroSATSpatial
 .. autoclass:: EuroSAT100
 
 FAIR1M
@@ -409,6 +408,7 @@ SpaceNet
 .. autoclass:: SpaceNet5
 .. autoclass:: SpaceNet6
 .. autoclass:: SpaceNet7
+.. autoclass:: SpaceNet8
 
 SSL4EO
 ^^^^^^
@@ -535,4 +535,5 @@ Errors
 ------
 
 .. autoclass:: DatasetNotFoundError
+.. autoclass:: DependencyNotFoundError
 .. autoclass:: RGBBandsMissingError

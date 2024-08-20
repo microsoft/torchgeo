@@ -20,15 +20,15 @@ random.seed(0)
 
 def create_file(path: str, dtype: str, num_channels: int) -> None:
     profile = {}
-    profile["driver"] = "GTiff"
-    profile["dtype"] = dtype
-    profile["count"] = num_channels
-    profile["crs"] = "epsg:32616"
-    profile["transform"] = Affine(30, 0.0, 399960.0, 0.0, -30, 4500000.0)
-    profile["height"] = SIZE
-    profile["width"] = SIZE
-    profile["compress"] = "lzw"
-    profile["predictor"] = 2
+    profile['driver'] = 'GTiff'
+    profile['dtype'] = dtype
+    profile['count'] = num_channels
+    profile['crs'] = 'epsg:32616'
+    profile['transform'] = Affine(30, 0.0, 399960.0, 0.0, -30, 4500000.0)
+    profile['height'] = SIZE
+    profile['width'] = SIZE
+    profile['compress'] = 'lzw'
+    profile['predictor'] = 2
     cmap = {
         0: (0, 0, 0, 0),
         1: (255, 211, 0, 255),
@@ -43,20 +43,20 @@ def create_file(path: str, dtype: str, num_channels: int) -> None:
 
     Z = np.random.randint(size=(SIZE, SIZE), low=0, high=8)
 
-    with rasterio.open(path, "w", **profile) as src:
-        for i in range(1, profile["count"] + 1):
+    with rasterio.open(path, 'w', **profile) as src:
+        for i in range(1, profile['count'] + 1):
             src.write(Z, i)
 
         src.write_colormap(1, cmap)
 
 
-directories = ["2023_30m_cdls", "2022_30m_cdls"]
-raster_extensions = [".tif", ".tif.ovr"]
+directories = ['2023_30m_cdls', '2022_30m_cdls']
+raster_extensions = ['.tif', '.tif.ovr']
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     for dir in directories:
-        filename = dir + ".zip"
+        filename = dir + '.zip'
 
         # Remove old data
         if os.path.isdir(dir):
@@ -66,15 +66,15 @@ if __name__ == "__main__":
 
         for e in raster_extensions:
             create_file(
-                os.path.join(dir, filename.replace(".zip", e)),
-                dtype="int8",
+                os.path.join(dir, filename.replace('.zip', e)),
+                dtype='int8',
                 num_channels=1,
             )
 
         # Compress data
-        shutil.make_archive(filename.replace(".zip", ""), "zip", ".", dir)
+        shutil.make_archive(filename.replace('.zip', ''), 'zip', '.', dir)
 
         # Compute checksums
-        with open(filename, "rb") as f:
+        with open(filename, 'rb') as f:
             md5 = hashlib.md5(f.read()).hexdigest()
-            print(f"{filename}: {md5}")
+            print(f'{filename}: {md5}')

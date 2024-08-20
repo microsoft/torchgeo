@@ -5,6 +5,7 @@
 
 import glob
 import os
+import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -12,8 +13,9 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class Esri2020(RasterDataset):
@@ -51,24 +53,24 @@ class Esri2020(RasterDataset):
     """
 
     is_image = False
-    filename_glob = "*_20200101-20210101.*"
+    filename_glob = '*_20200101-20210101.*'
     filename_regex = r"""^
         (?P<id>[0-9][0-9][A-Z])
         _(?P<date>\d{8})
         -(?P<processing_date>\d{8})
     """
 
-    zipfile = "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
-    md5 = "4932855fcd00735a34b74b1f87db3df0"
+    zipfile = 'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip'
+    md5 = '4932855fcd00735a34b74b1f87db3df0'
 
     url = (
-        "https://ai4edataeuwest.blob.core.windows.net/io-lulc/"
-        "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
+        'https://ai4edataeuwest.blob.core.windows.net/io-lulc/'
+        'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip'
     )
 
     def __init__(
         self,
-        paths: str | Iterable[str] = "data",
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -111,7 +113,7 @@ class Esri2020(RasterDataset):
             return
 
         # Check if the zip files have already been downloaded
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         pathname = os.path.join(self.paths, self.zipfile)
         if glob.glob(pathname):
             self._extract()
@@ -131,7 +133,7 @@ class Esri2020(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
         extract_archive(os.path.join(self.paths, self.zipfile))
 
     def plot(
@@ -150,29 +152,29 @@ class Esri2020(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = sample["prediction"].squeeze()
+            prediction = sample['prediction'].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4 * ncols, 4))
 
         if showing_predictions:
             axs[0].imshow(mask)
-            axs[0].axis("off")
+            axs[0].axis('off')
             axs[1].imshow(prediction)
-            axs[1].axis("off")
+            axs[1].axis('off')
             if show_titles:
-                axs[0].set_title("Mask")
-                axs[1].set_title("Prediction")
+                axs[0].set_title('Mask')
+                axs[1].set_title('Prediction')
         else:
             axs.imshow(mask)
-            axs.axis("off")
+            axs.axis('off')
             if show_titles:
-                axs.set_title("Mask")
+                axs.set_title('Mask')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

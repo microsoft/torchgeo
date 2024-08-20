@@ -14,7 +14,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     CDL,
     BoundingBox,
@@ -24,24 +23,18 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestCDL:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CDL:
-        monkeypatch.setattr(torchgeo.datasets.cdl, "download_url", download_url)
-
         md5s = {
-            2023: "3fbd3eecf92b8ce1ae35060ada463c6d",
-            2022: "826c6fd639d9cdd94a44302fbc5b76c3",
+            2023: '3fbd3eecf92b8ce1ae35060ada463c6d',
+            2022: '826c6fd639d9cdd94a44302fbc5b76c3',
         }
-        monkeypatch.setattr(CDL, "md5s", md5s)
-        url = os.path.join("tests", "data", "cdl", "{}_30m_cdls.zip")
-        monkeypatch.setattr(CDL, "url", url)
-        monkeypatch.setattr(plt, "show", lambda *args: None)
-        root = str(tmp_path)
+        monkeypatch.setattr(CDL, 'md5s', md5s)
+        url = os.path.join('tests', 'data', 'cdl', '{}_30m_cdls.zip')
+        monkeypatch.setattr(CDL, 'url', url)
+        monkeypatch.setattr(plt, 'show', lambda *args: None)
+        root = tmp_path
         transforms = nn.Identity()
         return CDL(
             root,
@@ -54,15 +47,18 @@ class TestCDL:
     def test_getitem(self, dataset: CDL) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x["crs"], CRS)
-        assert isinstance(x["mask"], torch.Tensor)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['mask'], torch.Tensor)
+
+    def test_len(self, dataset: CDL) -> None:
+        assert len(dataset) == 2
 
     def test_classes(self) -> None:
-        root = os.path.join("tests", "data", "cdl")
+        root = os.path.join('tests', 'data', 'cdl')
         classes = list(CDL.cmap.keys())[:5]
         ds = CDL(root, years=[2023], classes=classes)
         sample = ds[ds.bounds]
-        mask = sample["mask"]
+        mask = sample['mask']
         assert mask.max() < len(classes)
 
     def test_and(self, dataset: CDL) -> None:
@@ -83,8 +79,8 @@ class TestCDL:
         CDL(dataset.paths, years=[2023, 2022])
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        pathname = os.path.join("tests", "data", "cdl", "*_30m_cdls.zip")
-        root = str(tmp_path)
+        pathname = os.path.join('tests', 'data', 'cdl', '*_30m_cdls.zip')
+        root = tmp_path
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)
         CDL(root, years=[2023, 2022])
@@ -92,9 +88,9 @@ class TestCDL:
     def test_invalid_year(self, tmp_path: Path) -> None:
         with pytest.raises(
             AssertionError,
-            match="CDL data product only exists for the following years:",
+            match='CDL data product only exists for the following years:',
         ):
-            CDL(str(tmp_path), years=[1996])
+            CDL(tmp_path, years=[1996])
 
     def test_invalid_classes(self) -> None:
         with pytest.raises(AssertionError):
@@ -106,23 +102,23 @@ class TestCDL:
     def test_plot(self, dataset: CDL) -> None:
         query = dataset.bounds
         x = dataset[query]
-        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: CDL) -> None:
         query = dataset.bounds
         x = dataset[query]
-        x["prediction"] = x["mask"].clone()
-        dataset.plot(x, suptitle="Prediction")
+        x['prediction'] = x['mask'].clone()
+        dataset.plot(x, suptitle='Prediction')
         plt.close()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
-            CDL(str(tmp_path))
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            CDL(tmp_path)
 
     def test_invalid_query(self, dataset: CDL) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
-            IndexError, match="query: .* not found in index with bounds:"
+            IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]

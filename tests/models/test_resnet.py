@@ -2,22 +2,15 @@
 # Licensed under the MIT License.
 
 from pathlib import Path
-from typing import Any
 
 import pytest
 import timm
 import torch
-import torchvision
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50
-
-
-def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
-    state_dict: dict[str, Any] = torch.load(url)
-    return state_dict
 
 
 class TestResNet18:
@@ -27,16 +20,19 @@ class TestResNet18:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
-        path = tmp_path / f"{weights}.pth"
-        model = timm.create_model("resnet18", in_chans=weights.meta["in_chans"])
+        path = tmp_path / f'{weights}.pth'
+        model = timm.create_model('resnet18', in_chans=weights.meta['in_chans'])
         torch.save(model.state_dict(), path)
         try:
-            monkeypatch.setattr(weights.value, "url", str(path))
+            monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
-            monkeypatch.setattr(weights, "url", str(path))
-        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
+            monkeypatch.setattr(weights, 'url', str(path))
         return weights
 
     def test_resnet(self) -> None:
@@ -46,9 +42,9 @@ class TestResNet18:
         resnet18(weights=mocked_weights)
 
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta["in_chans"]
+        c = mocked_weights.meta['in_chans']
         sample = {
-            "image": torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
+            'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         mocked_weights.transforms(sample)
 
@@ -64,16 +60,19 @@ class TestResNet50:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
-        path = tmp_path / f"{weights}.pth"
-        model = timm.create_model("resnet50", in_chans=weights.meta["in_chans"])
+        path = tmp_path / f'{weights}.pth'
+        model = timm.create_model('resnet50', in_chans=weights.meta['in_chans'])
         torch.save(model.state_dict(), path)
         try:
-            monkeypatch.setattr(weights.value, "url", str(path))
+            monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
-            monkeypatch.setattr(weights, "url", str(path))
-        monkeypatch.setattr(torchvision.models._api, "load_state_dict_from_url", load)
+            monkeypatch.setattr(weights, 'url', str(path))
         return weights
 
     def test_resnet(self) -> None:
@@ -83,9 +82,9 @@ class TestResNet50:
         resnet50(weights=mocked_weights)
 
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta["in_chans"]
+        c = mocked_weights.meta['in_chans']
         sample = {
-            "image": torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
+            'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
         mocked_weights.transforms(sample)
 

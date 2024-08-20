@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,9 +16,10 @@ from matplotlib.figure import Figure
 from torch import Tensor
 
 from .cdl import CDL
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .nlcd import NLCD
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class SSL4EOLBenchmark(NonGeoDataset):
@@ -45,71 +47,74 @@ class SSL4EOLBenchmark(NonGeoDataset):
     * https://proceedings.neurips.cc/paper_files/paper/2023/hash/bbf7ee04e2aefec136ecf60e346c2e61-Abstract-Datasets_and_Benchmarks.html
 
     .. versionadded:: 0.5
-    """  # noqa: E501
+    """
 
-    url = "https://hf.co/datasets/torchgeo/ssl4eo-l-benchmark/resolve/da96ae2b04cb509710b72fce9131c2a3d5c211c2/{}.tar.gz"  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/ssl4eo-l-benchmark/resolve/da96ae2b04cb509710b72fce9131c2a3d5c211c2/{}.tar.gz'
 
-    valid_sensors = ["tm_toa", "etm_toa", "etm_sr", "oli_tirs_toa", "oli_sr"]
-    valid_products = ["cdl", "nlcd"]
-    valid_splits = ["train", "val", "test"]
+    valid_sensors = ('tm_toa', 'etm_toa', 'etm_sr', 'oli_tirs_toa', 'oli_sr')
+    valid_products = ('cdl', 'nlcd')
+    valid_splits = ('train', 'val', 'test')
 
-    image_root = "ssl4eo_l_{}_benchmark"
-    img_md5s = {
-        "tm_toa": "8e3c5bcd56d3780a442f1332013b8d15",
-        "etm_toa": "1b051c7fe4d61c581b341370c9e76f1f",
-        "etm_sr": "34a24fa89a801654f8d01e054662c8cd",
-        "oli_tirs_toa": "6e9d7cf0392e1de2cbdb39962ba591aa",
-        "oli_sr": "0700cd15cc2366fe68c2f8c02fa09a15",
+    image_root = 'ssl4eo_l_{}_benchmark'
+    img_md5s: ClassVar[dict[str, str]] = {
+        'tm_toa': '8e3c5bcd56d3780a442f1332013b8d15',
+        'etm_toa': '1b051c7fe4d61c581b341370c9e76f1f',
+        'etm_sr': '34a24fa89a801654f8d01e054662c8cd',
+        'oli_tirs_toa': '6e9d7cf0392e1de2cbdb39962ba591aa',
+        'oli_sr': '0700cd15cc2366fe68c2f8c02fa09a15',
     }
 
-    mask_dir_dict = {
-        "tm_toa": "ssl4eo_l_tm_{}",
-        "etm_toa": "ssl4eo_l_etm_{}",
-        "etm_sr": "ssl4eo_l_etm_{}",
-        "oli_tirs_toa": "ssl4eo_l_oli_{}",
-        "oli_sr": "ssl4eo_l_oli_{}",
+    mask_dir_dict: ClassVar[dict[str, str]] = {
+        'tm_toa': 'ssl4eo_l_tm_{}',
+        'etm_toa': 'ssl4eo_l_etm_{}',
+        'etm_sr': 'ssl4eo_l_etm_{}',
+        'oli_tirs_toa': 'ssl4eo_l_oli_{}',
+        'oli_sr': 'ssl4eo_l_oli_{}',
     }
-    mask_md5s = {
-        "tm": {
-            "cdl": "3d676770ffb56c7e222a7192a652a846",
-            "nlcd": "261149d7614fcfdcb3be368eefa825c7",
+    mask_md5s: ClassVar[dict[str, dict[str, str]]] = {
+        'tm': {
+            'cdl': '3d676770ffb56c7e222a7192a652a846',
+            'nlcd': '261149d7614fcfdcb3be368eefa825c7',
         },
-        "etm": {
-            "cdl": "008098c968544049eaf7b307e14241de",
-            "nlcd": "9c031049d665202ba42ac1d89b687999",
+        'etm': {
+            'cdl': '008098c968544049eaf7b307e14241de',
+            'nlcd': '9c031049d665202ba42ac1d89b687999',
         },
-        "oli": {
-            "cdl": "1cb057de6eafeca975deb35cb9fb036f",
-            "nlcd": "9de0d6d4d0b94313b80450f650813922",
+        'oli': {
+            'cdl': '1cb057de6eafeca975deb35cb9fb036f',
+            'nlcd': '9de0d6d4d0b94313b80450f650813922',
         },
     }
 
-    year_dict = {
-        "tm_toa": 2011,
-        "etm_toa": 2019,
-        "etm_sr": 2019,
-        "oli_tirs_toa": 2019,
-        "oli_sr": 2019,
+    year_dict: ClassVar[dict[str, int]] = {
+        'tm_toa': 2011,
+        'etm_toa': 2019,
+        'etm_sr': 2019,
+        'oli_tirs_toa': 2019,
+        'oli_sr': 2019,
     }
 
-    rgb_indices = {
-        "tm_toa": [2, 1, 0],
-        "etm_toa": [2, 1, 0],
-        "etm_sr": [2, 1, 0],
-        "oli_tirs_toa": [3, 2, 1],
-        "oli_sr": [3, 2, 1],
+    rgb_indices: ClassVar[dict[str, list[int]]] = {
+        'tm_toa': [2, 1, 0],
+        'etm_toa': [2, 1, 0],
+        'etm_sr': [2, 1, 0],
+        'oli_tirs_toa': [3, 2, 1],
+        'oli_sr': [3, 2, 1],
     }
 
-    split_percentages = [0.7, 0.15, 0.15]
+    split_percentages = (0.7, 0.15, 0.15)
 
-    cmaps = {"nlcd": NLCD.cmap, "cdl": CDL.cmap}
+    cmaps: ClassVar[dict[str, dict[int, tuple[int, int, int, int]]]] = {
+        'nlcd': NLCD.cmap,
+        'cdl': CDL.cmap,
+    }
 
     def __init__(
         self,
-        root: str = "data",
-        sensor: str = "oli_sr",
-        product: str = "cdl",
-        split: str = "train",
+        root: Path = 'data',
+        sensor: str = 'oli_sr',
+        product: str = 'cdl',
+        split: str = 'train',
         classes: list[int] | None = None,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -135,15 +140,15 @@ class SSL4EOLBenchmark(NonGeoDataset):
         """
         assert (
             sensor in self.valid_sensors
-        ), f"Only supports one of {self.valid_sensors}, but found {sensor}."
+        ), f'Only supports one of {self.valid_sensors}, but found {sensor}.'
         self.sensor = sensor
         assert (
             product in self.valid_products
-        ), f"Only supports one of {self.valid_products}, but found {product}."
+        ), f'Only supports one of {self.valid_products}, but found {product}.'
         self.product = product
         assert (
             split in self.valid_splits
-        ), f"Only supports one of {self.valid_splits}, but found {split}."
+        ), f'Only supports one of {self.valid_splits}, but found {split}.'
         self.split = split
 
         self.cmap = self.cmaps[product]
@@ -152,8 +157,8 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
         assert (
             set(classes) <= self.cmap.keys()
-        ), f"Only the following classes are valid: {list(self.cmap.keys())}."
-        assert 0 in classes, "Classes must include the background class: 0"
+        ), f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert 0 in classes, 'Classes must include the background class: 0'
 
         self.root = root
         self.classes = classes
@@ -178,7 +183,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         sample_indices = np.arange(len(self.sample_collection))
         np.random.shuffle(sample_indices)
         groups = np.split(sample_indices, cutoffs)
-        split_indices = {"train": groups[0], "val": groups[1], "test": groups[2]}[
+        split_indices = {'train': groups[0], 'val': groups[1], 'test': groups[2]}[
             self.split
         ]
 
@@ -192,14 +197,14 @@ class SSL4EOLBenchmark(NonGeoDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        img_pathname = os.path.join(self.root, self.img_dir_name, "**", "all_bands.tif")
+        img_pathname = os.path.join(self.root, self.img_dir_name, '**', 'all_bands.tif')
         exists = []
         exists.append(bool(glob.glob(img_pathname, recursive=True)))
         mask_pathname = os.path.join(
             self.root,
             self.mask_dir_name,
-            "**",
-            f"{self.product}_{self.year_dict[self.sensor]}.tif",
+            '**',
+            f'{self.product}_{self.year_dict[self.sensor]}.tif',
         )
         exists.append(bool(glob.glob(mask_pathname, recursive=True)))
 
@@ -207,10 +212,10 @@ class SSL4EOLBenchmark(NonGeoDataset):
             return
         # Check if the tar.gz files have already been downloaded
         exists = []
-        img_pathname = os.path.join(self.root, f"{self.img_dir_name}.tar.gz")
+        img_pathname = os.path.join(self.root, f'{self.img_dir_name}.tar.gz')
         exists.append(os.path.exists(img_pathname))
 
-        mask_pathname = os.path.join(self.root, f"{self.mask_dir_name}.tar.gz")
+        mask_pathname = os.path.join(self.root, f'{self.mask_dir_name}.tar.gz')
         exists.append(os.path.exists(mask_pathname))
 
         if all(exists):
@@ -238,7 +243,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
             self.url.format(self.mask_dir_name),
             self.root,
             md5=(
-                self.mask_md5s[self.sensor.split("_")[0]][self.product]
+                self.mask_md5s[self.sensor.split('_')[0]][self.product]
                 if self.checksum
                 else None
             ),
@@ -246,10 +251,10 @@ class SSL4EOLBenchmark(NonGeoDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        img_pathname = os.path.join(self.root, f"{self.img_dir_name}.tar.gz")
+        img_pathname = os.path.join(self.root, f'{self.img_dir_name}.tar.gz')
         extract_archive(img_pathname)
 
-        mask_pathname = os.path.join(self.root, f"{self.mask_dir_name}.tar.gz")
+        mask_pathname = os.path.join(self.root, f'{self.mask_dir_name}.tar.gz')
         extract_archive(mask_pathname)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -264,8 +269,8 @@ class SSL4EOLBenchmark(NonGeoDataset):
         img_path, mask_path = self.sample_collection[index]
 
         sample = {
-            "image": self._load_image(img_path),
-            "mask": self._load_mask(mask_path),
+            'image': self._load_image(img_path),
+            'mask': self._load_mask(mask_path),
         }
 
         if self.transforms is not None:
@@ -284,19 +289,19 @@ class SSL4EOLBenchmark(NonGeoDataset):
     def retrieve_sample_collection(self) -> list[tuple[str, str]]:
         """Retrieve paths to samples in data directory."""
         img_paths = glob.glob(
-            os.path.join(self.root, self.img_dir_name, "**", "all_bands.tif"),
+            os.path.join(self.root, self.img_dir_name, '**', 'all_bands.tif'),
             recursive=True,
         )
         img_paths = sorted(img_paths)
         sample_collection: list[tuple[str, str]] = []
         for img_path in img_paths:
             mask_path = img_path.replace(self.img_dir_name, self.mask_dir_name).replace(
-                "all_bands.tif", f"{self.product}_{self.year_dict[self.sensor]}.tif"
+                'all_bands.tif', f'{self.product}_{self.year_dict[self.sensor]}.tif'
             )
             sample_collection.append((img_path, mask_path))
         return sample_collection
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load the input image.
 
         Args:
@@ -309,7 +314,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
             image = torch.from_numpy(src.read()).float()
         return image
 
-    def _load_mask(self, path: str) -> Tensor:
+    def _load_mask(self, path: Path) -> Tensor:
         """Load the mask.
 
         Args:
@@ -340,29 +345,29 @@ class SSL4EOLBenchmark(NonGeoDataset):
             a matplotlib Figure with the rendered sample
         """
         ncols = 2
-        image = sample["image"][self.rgb_indices[self.sensor]].permute(1, 2, 0)
+        image = sample['image'][self.rgb_indices[self.sensor]].permute(1, 2, 0)
         image = image / 255
 
-        mask = sample["mask"].squeeze(0)
+        mask = sample['mask'].squeeze(0)
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze(0)
+            pred = sample['prediction'].squeeze(0)
             ncols = 3
 
         fig, ax = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
         ax[0].imshow(image)
-        ax[0].axis("off")
-        ax[1].imshow(self.ordinal_cmap[mask], interpolation="none")
-        ax[1].axis("off")
+        ax[0].axis('off')
+        ax[1].imshow(self.ordinal_cmap[mask], interpolation='none')
+        ax[1].axis('off')
         if show_titles:
-            ax[0].set_title("Image")
-            ax[1].set_title("Mask")
+            ax[0].set_title('Image')
+            ax[1].set_title('Mask')
 
         if showing_predictions:
-            ax[2].imshow(self.ordinal_cmap[pred], interpolation="none")
+            ax[2].imshow(self.ordinal_cmap[pred], interpolation='none')
             if show_titles:
-                ax[2].set_title("Prediction")
+                ax[2].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

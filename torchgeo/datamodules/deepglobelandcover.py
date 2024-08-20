@@ -49,7 +49,7 @@ class DeepGlobeLandCoverDataModule(NonGeoDataModule):
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=["image", "mask"],
+            data_keys=['image', 'mask'],
         )
 
     def setup(self, stage: str) -> None:
@@ -58,11 +58,11 @@ class DeepGlobeLandCoverDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit", "validate"]:
-            self.dataset = DeepGlobeLandCover(split="train", **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.dataset = DeepGlobeLandCover(split='train', **self.kwargs)
             generator = torch.Generator().manual_seed(0)
             self.train_dataset, self.val_dataset = random_split(
                 self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
             )
-        if stage in ["test"]:
-            self.test_dataset = DeepGlobeLandCover(split="test", **self.kwargs)
+        if stage in ['test']:
+            self.test_dataset = DeepGlobeLandCover(split='test', **self.kwargs)

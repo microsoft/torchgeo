@@ -71,7 +71,7 @@ class BaseDataModule(LightningDataModule):
         # Data augmentation
         Transform = Callable[[dict[str, Tensor]], dict[str, Tensor]]
         self.aug: Transform = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=["image"]
+            K.Normalize(mean=self.mean, std=self.std), data_keys=['image']
         )
         self.train_aug: Transform | None = None
         self.val_aug: Transform | None = None
@@ -85,7 +85,7 @@ class BaseDataModule(LightningDataModule):
         to avoid corrupted data. This method should not set state since it is not called
         on every device, use ``setup`` instead.
         """
-        if self.kwargs.get("download", False):
+        if self.kwargs.get('download', False):
             self.dataset_class(**self.kwargs)
 
     def _valid_attribute(self, *args: str) -> Any:
@@ -107,12 +107,12 @@ class BaseDataModule(LightningDataModule):
                 continue
 
             if not obj:
-                msg = f"{self.__class__.__name__}.{arg} has length 0."
+                msg = f'{self.__class__.__name__}.{arg} has length 0.'
                 raise MisconfigurationException(msg)
 
             return obj
 
-        msg = f"{self.__class__.__name__}.setup must define one of {args}."
+        msg = f'{self.__class__.__name__}.setup must define one of {args}.'
         raise MisconfigurationException(msg)
 
     def on_after_batch_transfer(
@@ -129,15 +129,15 @@ class BaseDataModule(LightningDataModule):
         """
         if self.trainer:
             if self.trainer.training:
-                split = "train"
+                split = 'train'
             elif self.trainer.validating or self.trainer.sanity_checking:
-                split = "val"
+                split = 'val'
             elif self.trainer.testing:
-                split = "test"
+                split = 'test'
             elif self.trainer.predicting:
-                split = "predict"
+                split = 'predict'
 
-            aug = self._valid_attribute(f"{split}_aug", "aug")
+            aug = self._valid_attribute(f'{split}_aug', 'aug')
             batch = aug(batch)
 
         return batch
@@ -160,7 +160,7 @@ class BaseDataModule(LightningDataModule):
         if isinstance(dataset, Subset):
             dataset = dataset.dataset
         if dataset is not None:
-            if hasattr(dataset, "plot"):
+            if hasattr(dataset, 'plot'):
                 fig = dataset.plot(*args, **kwargs)
         return fig
 
@@ -222,31 +222,31 @@ class GeoDataModule(BaseDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit"]:
+        if stage in ['fit']:
             self.train_dataset = cast(
                 GeoDataset,
                 self.dataset_class(  # type: ignore[call-arg]
-                    split="train", **self.kwargs
+                    split='train', **self.kwargs
                 ),
             )
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.train_dataset, self.patch_size, self.batch_size, self.length
             )
-        if stage in ["fit", "validate"]:
+        if stage in ['fit', 'validate']:
             self.val_dataset = cast(
                 GeoDataset,
                 self.dataset_class(  # type: ignore[call-arg]
-                    split="val", **self.kwargs
+                    split='val', **self.kwargs
                 ),
             )
             self.val_sampler = GridGeoSampler(
                 self.val_dataset, self.patch_size, self.patch_size
             )
-        if stage in ["test"]:
+        if stage in ['test']:
             self.test_dataset = cast(
                 GeoDataset,
                 self.dataset_class(  # type: ignore[call-arg]
-                    split="test", **self.kwargs
+                    split='test', **self.kwargs
                 ),
             )
             self.test_sampler = GridGeoSampler(
@@ -266,11 +266,11 @@ class GeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset or sampler, or if the dataset or sampler has length 0.
         """
-        dataset = self._valid_attribute(f"{split}_dataset", "dataset")
+        dataset = self._valid_attribute(f'{split}_dataset', 'dataset')
         sampler = self._valid_attribute(
-            f"{split}_batch_sampler", f"{split}_sampler", "batch_sampler", "sampler"
+            f'{split}_batch_sampler', f'{split}_sampler', 'batch_sampler', 'sampler'
         )
-        batch_size = self._valid_attribute(f"{split}_batch_size", "batch_size")
+        batch_size = self._valid_attribute(f'{split}_batch_size', 'batch_size')
 
         if isinstance(sampler, BatchGeoSampler):
             batch_size = 1
@@ -298,7 +298,7 @@ class GeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset or sampler, or if the dataset or sampler has length 0.
         """
-        return self._dataloader_factory("train")
+        return self._dataloader_factory('train')
 
     def val_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for validation.
@@ -310,7 +310,7 @@ class GeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset or sampler, or if the dataset or sampler has length 0.
         """
-        return self._dataloader_factory("val")
+        return self._dataloader_factory('val')
 
     def test_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for testing.
@@ -322,7 +322,7 @@ class GeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset or sampler, or if the dataset or sampler has length 0.
         """
-        return self._dataloader_factory("test")
+        return self._dataloader_factory('test')
 
     def predict_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for prediction.
@@ -334,7 +334,7 @@ class GeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset or sampler, or if the dataset or sampler has length 0.
         """
-        return self._dataloader_factory("predict")
+        return self._dataloader_factory('predict')
 
     def transfer_batch_to_device(
         self, batch: dict[str, Tensor], device: torch.device, dataloader_idx: int
@@ -352,8 +352,8 @@ class GeoDataModule(BaseDataModule):
             A reference to the data on the new device.
         """
         # Non-Tensor values cannot be moved to a device
-        del batch["crs"]
-        del batch["bbox"]
+        del batch['crs']
+        del batch['bounds']
 
         batch = super().transfer_batch_to_device(batch, device, dataloader_idx)
         return batch
@@ -395,17 +395,17 @@ class NonGeoDataModule(BaseDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit"]:
+        if stage in ['fit']:
             self.train_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split="train", **self.kwargs
+                split='train', **self.kwargs
             )
-        if stage in ["fit", "validate"]:
+        if stage in ['fit', 'validate']:
             self.val_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split="val", **self.kwargs
+                split='val', **self.kwargs
             )
-        if stage in ["test"]:
+        if stage in ['test']:
             self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split="test", **self.kwargs
+                split='test', **self.kwargs
             )
 
     def _dataloader_factory(self, split: str) -> DataLoader[dict[str, Tensor]]:
@@ -421,12 +421,12 @@ class NonGeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset or sampler, or if the dataset or sampler has length 0.
         """
-        dataset = self._valid_attribute(f"{split}_dataset", "dataset")
-        batch_size = self._valid_attribute(f"{split}_batch_size", "batch_size")
+        dataset = self._valid_attribute(f'{split}_dataset', 'dataset')
+        batch_size = self._valid_attribute(f'{split}_batch_size', 'batch_size')
         return DataLoader(
             dataset=dataset,
             batch_size=batch_size,
-            shuffle=split == "train",
+            shuffle=split == 'train',
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
         )
@@ -441,7 +441,7 @@ class NonGeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset, or if the dataset has length 0.
         """
-        return self._dataloader_factory("train")
+        return self._dataloader_factory('train')
 
     def val_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for validation.
@@ -453,7 +453,7 @@ class NonGeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset, or if the dataset has length 0.
         """
-        return self._dataloader_factory("val")
+        return self._dataloader_factory('val')
 
     def test_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for testing.
@@ -465,7 +465,7 @@ class NonGeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset, or if the dataset has length 0.
         """
-        return self._dataloader_factory("test")
+        return self._dataloader_factory('test')
 
     def predict_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for prediction.
@@ -477,4 +477,4 @@ class NonGeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset, or if the dataset has length 0.
         """
-        return self._dataloader_factory("predict")
+        return self._dataloader_factory('predict')

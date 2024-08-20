@@ -16,4 +16,3 @@ data:
     val_split_pct: 0.5
   dict_kwargs:
     root: "tests/data/gid15"
-    download: true

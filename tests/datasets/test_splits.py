@@ -39,7 +39,7 @@ def no_overlap(ds1: GeoDataset, ds2: GeoDataset) -> bool:
 class CustomGeoDataset(GeoDataset):
     def __init__(
         self,
-        items: list[tuple[BoundingBox, str]] = [(BoundingBox(0, 1, 0, 1, 0, 40), "")],
+        items: list[tuple[BoundingBox, str]] = [(BoundingBox(0, 1, 0, 1, 0, 40), '')],
         crs: CRS = CRS.from_epsg(3005),
         res: float = 1,
     ) -> None:
@@ -52,11 +52,11 @@ class CustomGeoDataset(GeoDataset):
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         hits = self.index.intersection(tuple(query), objects=True)
         hit = next(iter(hits))
-        return {"content": hit.object}
+        return {'content': hit.object}
 
 
 @pytest.mark.parametrize(
-    "lengths,expected_lengths",
+    'lengths,expected_lengths',
     [
         # List of lengths
         ([2, 1, 1], [2, 1, 1]),
@@ -69,10 +69,10 @@ def test_random_bbox_assignment(
 ) -> None:
     ds = CustomGeoDataset(
         [
-            (BoundingBox(0, 1, 0, 1, 0, 0), "a"),
-            (BoundingBox(1, 2, 0, 1, 0, 0), "b"),
-            (BoundingBox(2, 3, 0, 1, 0, 0), "c"),
-            (BoundingBox(3, 4, 0, 1, 0, 0), "d"),
+            (BoundingBox(0, 1, 0, 1, 0, 0), 'a'),
+            (BoundingBox(1, 2, 0, 1, 0, 0), 'b'),
+            (BoundingBox(2, 3, 0, 1, 0, 0), 'c'),
+            (BoundingBox(3, 4, 0, 1, 0, 0), 'd'),
         ]
     )
 
@@ -94,7 +94,7 @@ def test_random_bbox_assignment(
     # Test __getitem__
     x = train_ds[train_ds.bounds]
     assert isinstance(x, dict)
-    assert isinstance(x["content"], str)
+    assert isinstance(x['content'], str)
 
 
 def test_random_bbox_assignment_invalid_inputs() -> None:
@@ -104,7 +104,7 @@ def test_random_bbox_assignment_invalid_inputs() -> None:
     ):
         random_bbox_assignment(CustomGeoDataset(), lengths=[2, 2, 1])
     with pytest.raises(
-        ValueError, match="All items in input lengths must be greater than 0."
+        ValueError, match='All items in input lengths must be greater than 0.'
     ):
         random_bbox_assignment(CustomGeoDataset(), lengths=[1 / 2, 3 / 4, -1 / 4])
 
@@ -112,10 +112,10 @@ def test_random_bbox_assignment_invalid_inputs() -> None:
 def test_random_bbox_splitting() -> None:
     ds = CustomGeoDataset(
         [
-            (BoundingBox(0, 1, 0, 1, 0, 0), "a"),
-            (BoundingBox(1, 2, 0, 1, 0, 0), "b"),
-            (BoundingBox(2, 3, 0, 1, 0, 0), "c"),
-            (BoundingBox(3, 4, 0, 1, 0, 0), "d"),
+            (BoundingBox(0, 1, 0, 1, 0, 0), 'a'),
+            (BoundingBox(1, 2, 0, 1, 0, 0), 'b'),
+            (BoundingBox(2, 3, 0, 1, 0, 0), 'c'),
+            (BoundingBox(3, 4, 0, 1, 0, 0), 'd'),
         ]
     )
 
@@ -145,13 +145,13 @@ def test_random_bbox_splitting() -> None:
     # Test __get_item__
     x = train_ds[train_ds.bounds]
     assert isinstance(x, dict)
-    assert isinstance(x["content"], str)
+    assert isinstance(x['content'], str)
 
     # Test invalid input fractions
-    with pytest.raises(ValueError, match="Sum of input fractions must equal 1."):
+    with pytest.raises(ValueError, match='Sum of input fractions must equal 1.'):
         random_bbox_splitting(ds, fractions=[1 / 2, 1 / 3, 1 / 4])
     with pytest.raises(
-        ValueError, match="All items in input fractions must be greater than 0."
+        ValueError, match='All items in input fractions must be greater than 0.'
     ):
         random_bbox_splitting(ds, fractions=[1 / 2, 3 / 4, -1 / 4])
 
@@ -159,8 +159,8 @@ def test_random_bbox_splitting() -> None:
 def test_random_grid_cell_assignment() -> None:
     ds = CustomGeoDataset(
         [
-            (BoundingBox(0, 12, 0, 12, 0, 0), "a"),
-            (BoundingBox(12, 24, 0, 12, 0, 0), "b"),
+            (BoundingBox(0, 12, 0, 12, 0, 0), 'a'),
+            (BoundingBox(12, 24, 0, 12, 0, 0), 'b'),
         ]
     )
 
@@ -185,26 +185,26 @@ def test_random_grid_cell_assignment() -> None:
     # Test __get_item__
     x = train_ds[train_ds.bounds]
     assert isinstance(x, dict)
-    assert isinstance(x["content"], str)
+    assert isinstance(x['content'], str)
 
     # Test invalid input fractions
-    with pytest.raises(ValueError, match="Sum of input fractions must equal 1."):
+    with pytest.raises(ValueError, match='Sum of input fractions must equal 1.'):
         random_grid_cell_assignment(ds, fractions=[1 / 2, 1 / 3, 1 / 4])
     with pytest.raises(
-        ValueError, match="All items in input fractions must be greater than 0."
+        ValueError, match='All items in input fractions must be greater than 0.'
     ):
         random_grid_cell_assignment(ds, fractions=[1 / 2, 3 / 4, -1 / 4])
-    with pytest.raises(ValueError, match="Input grid_size must be greater than 1."):
+    with pytest.raises(ValueError, match='Input grid_size must be greater than 1.'):
         random_grid_cell_assignment(ds, fractions=[1 / 2, 1 / 4, 1 / 4], grid_size=1)
 
 
 def test_roi_split() -> None:
     ds = CustomGeoDataset(
         [
-            (BoundingBox(0, 1, 0, 1, 0, 0), "a"),
-            (BoundingBox(1, 2, 0, 1, 0, 0), "b"),
-            (BoundingBox(2, 3, 0, 1, 0, 0), "c"),
-            (BoundingBox(3, 4, 0, 1, 0, 0), "d"),
+            (BoundingBox(0, 1, 0, 1, 0, 0), 'a'),
+            (BoundingBox(1, 2, 0, 1, 0, 0), 'b'),
+            (BoundingBox(2, 3, 0, 1, 0, 0), 'c'),
+            (BoundingBox(3, 4, 0, 1, 0, 0), 'd'),
         ]
     )
 
@@ -234,7 +234,7 @@ def test_roi_split() -> None:
     # Test __get_item__
     x = train_ds[train_ds.bounds]
     assert isinstance(x, dict)
-    assert isinstance(x["content"], str)
+    assert isinstance(x['content'], str)
 
     # Test invalid input rois
     with pytest.raises(ValueError, match="ROIs in input rois can't overlap."):
@@ -244,7 +244,7 @@ def test_roi_split() -> None:
 
 
 @pytest.mark.parametrize(
-    "lengths,expected_lengths",
+    'lengths,expected_lengths',
     [
         # List of timestamps
         ([(0, 20), (20, 35), (35, 40)], [2, 2, 1]),
@@ -259,10 +259,10 @@ def test_time_series_split(
 ) -> None:
     ds = CustomGeoDataset(
         [
-            (BoundingBox(0, 1, 0, 1, 0, 10), "a"),
-            (BoundingBox(0, 1, 0, 1, 10, 20), "b"),
-            (BoundingBox(0, 1, 0, 1, 20, 30), "c"),
-            (BoundingBox(0, 1, 0, 1, 30, 40), "d"),
+            (BoundingBox(0, 1, 0, 1, 0, 10), 'a'),
+            (BoundingBox(0, 1, 0, 1, 10, 20), 'b'),
+            (BoundingBox(0, 1, 0, 1, 20, 30), 'c'),
+            (BoundingBox(0, 1, 0, 1, 30, 40), 'd'),
         ]
     )
 
@@ -284,13 +284,13 @@ def test_time_series_split(
     # Test __get_item__
     x = train_ds[train_ds.bounds]
     assert isinstance(x, dict)
-    assert isinstance(x["content"], str)
+    assert isinstance(x['content'], str)
 
 
 def test_time_series_split_invalid_input() -> None:
     with pytest.raises(
         ValueError,
-        match="Pairs of timestamps in lengths must have end greater than start.",
+        match='Pairs of timestamps in lengths must have end greater than start.',
     ):
         time_series_split(CustomGeoDataset(), lengths=[(0, 20), (35, 20), (35, 40)])
 
@@ -318,6 +318,6 @@ def test_time_series_split_invalid_input() -> None:
         time_series_split(CustomGeoDataset(), lengths=[1 / 2, 1 / 2, 1 / 2])
 
     with pytest.raises(
-        ValueError, match="All items in input lengths must be greater than 0."
+        ValueError, match='All items in input lengths must be greater than 0.'
     ):
         time_series_split(CustomGeoDataset(), lengths=[20, 25, -5])

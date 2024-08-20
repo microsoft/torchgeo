@@ -23,16 +23,16 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
 
     def __init__(
         self,
-        encoder_name: str = "resnet34",
+        encoder_name: str = 'resnet34',
         encoder_depth: int = 5,
-        encoder_weights: str | None = "imagenet",
+        encoder_weights: str | None = 'imagenet',
         decoder_use_batchnorm: bool = True,
         decoder_channels: Sequence[int] = (256, 128, 64, 32, 16),
         decoder_attention_type: str | None = None,
         in_channels: int = 3,
         classes: int = 1,
         activation: str | Callable[[Tensor], Tensor] | None = None,
-    ):
+    ) -> None:
         """Initialize a new FCSiamConc model.
 
         Args:
@@ -86,7 +86,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
             decoder_channels=decoder_channels,
             n_blocks=encoder_depth,
             use_batchnorm=decoder_use_batchnorm,
-            center=True if encoder_name.startswith("vgg") else False,
+            center=True if encoder_name.startswith('vgg') else False,
             attention_type=decoder_attention_type,
         )
 
@@ -97,7 +97,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
             kernel_size=3,
         )
         self.classification_head = None
-        self.name = f"u-{encoder_name}"
+        self.name = f'u-{encoder_name}'
         self.initialize()
 
     def forward(self, x: Tensor) -> Tensor:
@@ -139,7 +139,7 @@ class FCSiamDiff(Unet):  # type: ignore[misc]
             **kwargs: Additional keyword arguments passed to
                 :class:`~segmentation_models_pytorch.Unet`
         """
-        kwargs["aux_params"] = None
+        kwargs['aux_params'] = None
         super().__init__(*args, **kwargs)
 
     def forward(self, x: Tensor) -> Tensor:

@@ -63,7 +63,7 @@ class PRISMA(RasterDataset):
     # * 6.3.6: L0A Product Naming Convention
     # * 7.5:   L1 Product Naming Convention
     # * 7.8.5: FKDP, GKDP, ICU-KDP and CDP Products Naming Convention
-    filename_glob = "PRS_*"
+    filename_glob = 'PRS_*'
     filename_regex = r"""
         ^PRS
         _(?P<level>[A-Z\d]+)
@@ -75,7 +75,7 @@ class PRISMA(RasterDataset):
         (_(?P<valid>\d))?
         \.
     """
-    date_format = "%Y%m%d%H%M%S"
+    date_format = '%Y%m%d%H%M%S'
 
     def plot(
         self,
@@ -95,15 +95,15 @@ class PRISMA(RasterDataset):
         """
         # RGB band indices based on https://doi.org/10.3390/rs14164080
         rgb_indices = [34, 23, 11]
-        image = sample["image"][rgb_indices].permute(1, 2, 0).float()
+        image = sample['image'][rgb_indices].permute(1, 2, 0).float()
         image = percentile_normalization(image, axis=(0, 1))
 
         fig, ax = plt.subplots(1, 1, figsize=(4, 4))
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
 
         if show_titles:
-            ax.set_title("Image")
+            ax.set_title('Image')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

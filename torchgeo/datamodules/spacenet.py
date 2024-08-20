@@ -54,12 +54,12 @@ class SpaceNet1DataModule(NonGeoDataModule):
             K.RandomVerticalFlip(p=0.5),
             K.RandomSharpness(p=0.5),
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
-            data_keys=["image", "mask"],
+            data_keys=['image', 'mask'],
         )
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
-            data_keys=["image", "mask"],
+            data_keys=['image', 'mask'],
         )
 
     def setup(self, stage: str) -> None:
@@ -95,6 +95,6 @@ class SpaceNet1DataModule(NonGeoDataModule):
         # We add 1 to the mask to map the current {background, building} labels to
         # the values {1, 2}. This is necessary because we add 0 padding to the
         # mask that we want to ignore in the loss function.
-        batch["mask"] += 1
+        batch['mask'] += 1
 
         return super().on_after_batch_transfer(batch, dataloader_idx)

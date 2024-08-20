@@ -23,8 +23,8 @@ from torchgeo.datasets import (
 class TestAirphen:
     @pytest.fixture
     def dataset(self) -> Airphen:
-        paths = os.path.join("tests", "data", "airphen")
-        bands = ["B1", "B3", "B4"]
+        paths = os.path.join('tests', 'data', 'airphen')
+        bands = ['B1', 'B3', 'B4']
         transforms = nn.Identity()
         return Airphen(paths, bands=bands, transforms=transforms)
 
@@ -34,8 +34,8 @@ class TestAirphen:
     def test_getitem(self, dataset: Airphen) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
-        assert isinstance(x["crs"], CRS)
-        assert isinstance(x["image"], torch.Tensor)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['image'], torch.Tensor)
 
     def test_and(self, dataset: Airphen) -> None:
         ds = dataset & dataset
@@ -47,25 +47,25 @@ class TestAirphen:
 
     def test_plot(self, dataset: Airphen) -> None:
         x = dataset[dataset.bounds]
-        dataset.plot(x, suptitle="Test")
+        dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
-            Airphen(str(tmp_path))
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            Airphen(tmp_path)
 
     def test_invalid_query(self, dataset: Airphen) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
-            IndexError, match="query: .* not found in index with bounds:"
+            IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]
 
     def test_plot_wrong_bands(self, dataset: Airphen) -> None:
-        bands = ("B1", "B2", "B3")
+        bands = ('B1', 'B2', 'B3')
         ds = Airphen(dataset.paths, bands=bands)
         x = dataset[dataset.bounds]
         with pytest.raises(
-            RGBBandsMissingError, match="Dataset does not contain some of the RGB bands"
+            RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):
             ds.plot(x)

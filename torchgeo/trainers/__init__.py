@@ -15,18 +15,18 @@ from .simclr import SimCLRTask
 
 __all__ = (
     # Supervised
-    "ClassificationTask",
-    "MultiLabelClassificationTask",
-    "ObjectDetectionTask",
-    "PixelwiseRegressionTask",
-    "RegressionTask",
-    "SemanticSegmentationTask",
+    'ClassificationTask',
+    'MultiLabelClassificationTask',
+    'ObjectDetectionTask',
+    'PixelwiseRegressionTask',
+    'RegressionTask',
+    'SemanticSegmentationTask',
     # Self-supervised
-    "BYOLTask",
-    "MoCoTask",
-    "SimCLRTask",
+    'BYOLTask',
+    'MoCoTask',
+    'SimCLRTask',
     # Base classes
-    "BaseTask",
+    'BaseTask',
     # Other
-    "IOBenchTask",
+    'IOBenchTask',
 )

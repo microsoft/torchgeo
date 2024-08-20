@@ -48,7 +48,7 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
 
         self.aug = AugPipe(
             AugmentationSequential(
-                K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "boxes"]
+                K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'boxes']
             ),
             batch_size,
         )

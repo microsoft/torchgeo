@@ -6,264 +6,43 @@
 # https://github.com/sphinx-doc/sphinx/issues/11327
 from __future__ import annotations
 
-import bz2
 import collections
 import contextlib
-import gzip
-import lzma
+import importlib
 import os
+import pathlib
+import shutil
+import subprocess
 import sys
-import tarfile
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast, overload
+from typing import Any, TypeAlias, cast, overload
 
 import numpy as np
 import rasterio
 import torch
 from torch import Tensor
-from torch.utils.data import Dataset
-from torchvision.datasets.utils import check_integrity, download_url
+from torchvision.datasets.utils import (
+    check_integrity,
+    download_and_extract_archive,
+    download_url,
+    extract_archive,
+)
 from torchvision.utils import draw_segmentation_masks
 
+from .errors import DependencyNotFoundError
+
+# Only include import redirects
 __all__ = (
-    "check_integrity",
-    "DatasetNotFoundError",
-    "RGBBandsMissingError",
-    "download_url",
-    "download_and_extract_archive",
-    "extract_archive",
-    "BoundingBox",
-    "disambiguate_timestamp",
-    "working_dir",
-    "stack_samples",
-    "concat_samples",
-    "merge_samples",
-    "unbind_samples",
-    "rasterio_loader",
-    "sort_sentinel2_bands",
-    "draw_semantic_segmentation_masks",
-    "rgb_to_mask",
-    "percentile_normalization",
+    'check_integrity',
+    'download_and_extract_archive',
+    'download_url',
+    'extract_archive',
 )
 
 
-class DatasetNotFoundError(FileNotFoundError):
-    """Raised when a dataset is requested but doesn't exist.
-
-    .. versionadded:: 0.6
-    """
-
-    def __init__(self, dataset: Dataset[object]) -> None:
-        """Intstantiate a new DatasetNotFoundError instance.
-
-        Args:
-            dataset: The dataset that was requested.
-        """
-        msg = "Dataset not found"
-
-        if hasattr(dataset, "root"):
-            var = "root"
-            val = dataset.root
-        elif hasattr(dataset, "paths"):
-            var = "paths"
-            val = dataset.paths
-        else:
-            super().__init__(f"{msg}.")
-            return
-
-        msg += f" in `{var}={val!r}` and "
-
-        if hasattr(dataset, "download") and not dataset.download:
-            msg += "`download=False`"
-        else:
-            msg += "cannot be automatically downloaded"
-
-        msg += f", either specify a different `{var}` or "
-
-        if hasattr(dataset, "download") and not dataset.download:
-            msg += "use `download=True` to automatically"
-        else:
-            msg += "manually"
-
-        msg += " download the dataset."
-
-        super().__init__(msg)
-
-
-class RGBBandsMissingError(ValueError):
-    """Raised when a dataset is missing RGB bands for plotting.
-
-    .. versionadded:: 0.6
-    """
-
-    def __init__(self) -> None:
-        """Instantiate a new RGBBandsMissingError instance."""
-        msg = "Dataset does not contain some of the RGB bands"
-        super().__init__(msg)
-
-
-class _rarfile:
-    class RarFile:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            self.args = args
-            self.kwargs = kwargs
-
-        def __enter__(self) -> Any:
-            try:
-                import rarfile
-            except ImportError:
-                raise ImportError(
-                    "rarfile is not installed and is required to extract this dataset"
-                )
-
-            # TODO: catch exception for when rarfile is installed but not
-            # unrar/unar/bsdtar
-            return rarfile.RarFile(*self.args, **self.kwargs)
-
-        def __exit__(self, exc_type: None, exc_value: None, traceback: None) -> None:
-            pass
-
-
-class _zipfile:
-    class ZipFile:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            self.args = args
-            self.kwargs = kwargs
-
-        def __enter__(self) -> Any:
-            try:
-                # Supports normal zip files, proprietary deflate64 compression algorithm
-                import zipfile_deflate64 as zipfile
-            except ImportError:
-                # Only supports normal zip files
-                # https://github.com/python/mypy/issues/1153
-                import zipfile
-
-            return zipfile.ZipFile(*self.args, **self.kwargs)
-
-        def __exit__(self, exc_type: None, exc_value: None, traceback: None) -> None:
-            pass
-
-
-def extract_archive(src: str, dst: str | None = None) -> None:
-    """Extract an archive.
-
-    Args:
-        src: file to be extracted
-        dst: directory to extract to (defaults to dirname of ``src``)
-
-    Raises:
-        RuntimeError: if src file has unknown archival/compression scheme
-    """
-    if dst is None:
-        dst = os.path.dirname(src)
-
-    suffix_and_extractor: list[tuple[str | tuple[str, ...], Any]] = [
-        (".rar", _rarfile.RarFile),
-        (
-            (".tar", ".tar.gz", ".tar.bz2", ".tar.xz", ".tgz", ".tbz2", ".tbz", ".txz"),
-            tarfile.open,
-        ),
-        (".zip", _zipfile.ZipFile),
-    ]
-
-    for suffix, extractor in suffix_and_extractor:
-        if src.endswith(suffix):
-            with extractor(src, "r") as f:
-                f.extractall(dst)
-            return
-
-    suffix_and_decompressor: list[tuple[str, Any]] = [
-        (".bz2", bz2.open),
-        (".gz", gzip.open),
-        (".xz", lzma.open),
-    ]
-
-    for suffix, decompressor in suffix_and_decompressor:
-        if src.endswith(suffix):
-            dst = os.path.join(dst, os.path.basename(src).replace(suffix, ""))
-            with decompressor(src, "rb") as sf, open(dst, "wb") as df:
-                df.write(sf.read())
-            return
-
-    raise RuntimeError("src file has unknown archival/compression scheme")
-
-
-def download_and_extract_archive(
-    url: str,
-    download_root: str,
-    extract_root: str | None = None,
-    filename: str | None = None,
-    md5: str | None = None,
-) -> None:
-    """Download and extract an archive.
-
-    Args:
-        url: URL to download
-        download_root: directory to download to
-        extract_root: directory to extract to (defaults to ``download_root``)
-        filename: download filename (defaults to basename of ``url``)
-        md5: checksum for download verification
-    """
-    download_root = os.path.expanduser(download_root)
-    if extract_root is None:
-        extract_root = download_root
-    if not filename:
-        filename = os.path.basename(url)
-
-    download_url(url, download_root, filename, md5)
-
-    archive = os.path.join(download_root, filename)
-    print(f"Extracting {archive} to {extract_root}")
-    extract_archive(archive, extract_root)
-
-
-def download_radiant_mlhub_dataset(
-    dataset_id: str, download_root: str, api_key: str | None = None
-) -> None:
-    """Download a dataset from Radiant Earth.
-
-    Args:
-        dataset_id: the ID of the dataset to fetch
-        download_root: directory to download to
-        api_key: the API key to use for all requests from the session. Can also be
-            passed in via the ``MLHUB_API_KEY`` environment variable, or configured in
-            ``~/.mlhub/profiles``.
-    """
-    try:
-        import radiant_mlhub
-    except ImportError:
-        raise ImportError(
-            "radiant_mlhub is not installed and is required to download this dataset"
-        )
-
-    dataset = radiant_mlhub.Dataset.fetch(dataset_id, api_key=api_key)
-    dataset.download(output_dir=download_root, api_key=api_key)
-
-
-def download_radiant_mlhub_collection(
-    collection_id: str, download_root: str, api_key: str | None = None
-) -> None:
-    """Download a collection from Radiant Earth.
-
-    Args:
-        collection_id: the ID of the collection to fetch
-        download_root: directory to download to
-        api_key: the API key to use for all requests from the session. Can also be
-            passed in via the ``MLHUB_API_KEY`` environment variable, or configured in
-            ``~/.mlhub/profiles``.
-    """
-    try:
-        import radiant_mlhub
-    except ImportError:
-        raise ImportError(
-            "radiant_mlhub is not installed and is required to download this collection"
-        )
-
-    collection = radiant_mlhub.Collection.fetch(collection_id, api_key=api_key)
-    collection.download(output_dir=download_root, api_key=api_key)
+Path: TypeAlias = str | pathlib.Path
 
 
 @dataclass(frozen=True)
@@ -307,11 +86,11 @@ class BoundingBox:
 
     # https://github.com/PyCQA/pydocstyle/issues/525
     @overload
-    def __getitem__(self, key: int) -> float:  # noqa: D105
+    def __getitem__(self, key: int) -> float:
         pass
 
     @overload
-    def __getitem__(self, key: slice) -> list[float]:  # noqa: D105
+    def __getitem__(self, key: slice) -> list[float]:
         pass
 
     def __getitem__(self, key: int | slice) -> float | list[float]:
@@ -400,7 +179,7 @@ class BoundingBox:
                 min(self.maxt, other.maxt),
             )
         except ValueError:
-            raise ValueError(f"Bounding boxes {self} and {other} do not overlap")
+            raise ValueError(f'Bounding boxes {self} and {other} do not overlap')
 
     @property
     def area(self) -> float:
@@ -461,7 +240,7 @@ class BoundingBox:
         .. versionadded:: 0.5
         """
         if not (0.0 < proportion < 1.0):
-            raise ValueError("Input proportion must be between 0 and 1.")
+            raise ValueError('Input proportion must be between 0 and 1.')
 
         if horizontal:
             w = self.maxx - self.minx
@@ -483,6 +262,34 @@ class BoundingBox:
             )
 
         return bbox1, bbox2
+
+
+class Executable:
+    """Command-line executable.
+
+    .. versionadded:: 0.6
+    """
+
+    def __init__(self, name: Path) -> None:
+        """Initialize a new Executable instance.
+
+        Args:
+            name: Command name.
+        """
+        self.name = name
+
+    def __call__(self, *args: Any, **kwargs: Any) -> subprocess.CompletedProcess[bytes]:
+        """Run the command.
+
+        Args:
+            args: Arguments to pass to the command.
+            kwargs: Keyword arguments to pass to :func:`subprocess.run`.
+
+        Returns:
+            The completed process.
+        """
+        kwargs['check'] = True
+        return subprocess.run((self.name, *args), **kwargs)
 
 
 def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
@@ -507,28 +314,28 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
     # TODO: May have issues with time zones, UTC vs. local time, and DST
     # TODO: This is really tedious, is there a better way to do this?
 
-    if not any([f"%{c}" in format for c in "yYcxG"]):
+    if not any([f'%{c}' in format for c in 'yYcxG']):
         # No temporal info
         return 0, sys.maxsize
-    elif not any([f"%{c}" in format for c in "bBmjUWcxV"]):
+    elif not any([f'%{c}' in format for c in 'bBmjUWcxV']):
         # Year resolution
         maxt = datetime(mint.year + 1, 1, 1)
-    elif not any([f"%{c}" in format for c in "aAwdjcxV"]):
+    elif not any([f'%{c}' in format for c in 'aAwdjcxV']):
         # Month resolution
         if mint.month == 12:
             maxt = datetime(mint.year + 1, 1, 1)
         else:
             maxt = datetime(mint.year, mint.month + 1, 1)
-    elif not any([f"%{c}" in format for c in "HIcX"]):
+    elif not any([f'%{c}' in format for c in 'HIcX']):
         # Day resolution
         maxt = mint + timedelta(days=1)
-    elif not any([f"%{c}" in format for c in "McX"]):
+    elif not any([f'%{c}' in format for c in 'McX']):
         # Hour resolution
         maxt = mint + timedelta(hours=1)
-    elif not any([f"%{c}" in format for c in "ScX"]):
+    elif not any([f'%{c}' in format for c in 'ScX']):
         # Minute resolution
         maxt = mint + timedelta(minutes=1)
-    elif not any([f"%{c}" in format for c in "f"]):
+    elif not any([f'%{c}' in format for c in 'f']):
         # Second resolution
         maxt = mint + timedelta(seconds=1)
     else:
@@ -541,7 +348,7 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
 
 
 @contextlib.contextmanager
-def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
+def working_dir(dirname: Path, create: bool = False) -> Iterator[None]:
     """Context manager for changing directories.
 
     Args:
@@ -686,7 +493,7 @@ def unbind_samples(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
     return _dict_list_to_list_dict(sample)
 
 
-def rasterio_loader(path: str) -> np.typing.NDArray[np.int_]:
+def rasterio_loader(path: Path) -> np.typing.NDArray[np.int_]:
     """Load an image file using rasterio.
 
     Args:
@@ -702,12 +509,12 @@ def rasterio_loader(path: str) -> np.typing.NDArray[np.int_]:
     return array
 
 
-def sort_sentinel2_bands(x: str) -> str:
+def sort_sentinel2_bands(x: Path) -> str:
     """Sort Sentinel-2 band files in the correct order."""
-    x = os.path.basename(x).split("_")[-1]
+    x = os.path.basename(x).split('_')[-1]
     x = os.path.splitext(x)[0]
-    if x == "B8A":
-        x = "B08A"
+    if x == 'B8A':
+        x = 'B08A'
     return x
 
 
@@ -736,11 +543,11 @@ def draw_semantic_segmentation_masks(
         image=image.byte(), masks=class_masks, alpha=alpha, colors=colors
     )
     img = img.permute((1, 2, 0)).numpy().astype(np.uint8)
-    return cast("np.typing.NDArray[np.uint8]", img)
+    return cast('np.typing.NDArray[np.uint8]', img)
 
 
 def rgb_to_mask(
-    rgb: np.typing.NDArray[np.uint8], colors: list[tuple[int, int, int]]
+    rgb: np.typing.NDArray[np.uint8], colors: Sequence[tuple[int, int, int]]
 ) -> np.typing.NDArray[np.uint8]:
     """Converts an RGB colormap mask to a integer mask.
 
@@ -797,7 +604,7 @@ def percentile_normalization(
     return img_normalized
 
 
-def path_is_vsi(path: str) -> bool:
+def path_is_vsi(path: Path) -> bool:
     """Checks if the given path is pointing to a Virtual File System.
 
     .. note::
@@ -811,14 +618,14 @@ def path_is_vsi(path: str) -> bool:
     * https://rasterio.readthedocs.io/en/latest/topics/datasets.html
 
     Args:
-        path: string representing a directory or file
+        path: a directory or file
 
     Returns:
         True if path is on a virtual file system, else False
 
     .. versionadded:: 0.6
     """
-    return "://" in path or path.startswith("/vsi")
+    return '://' in str(path) or str(path).startswith('/vsi')
 
 
 def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:
@@ -847,3 +654,59 @@ def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:
     elif array.dtype == np.uint32:
         array = array.astype(np.int64)
     return torch.tensor(array)
+
+
+def lazy_import(name: str) -> Any:
+    """Lazy import of *name*.
+
+    Args:
+        name: Name of module to import.
+
+    Returns:
+        Module import.
+
+    Raises:
+        DependencyNotFoundError: If *name* is not installed.
+
+    .. versionadded:: 0.6
+    """
+    try:
+        return importlib.import_module(name)
+    except ModuleNotFoundError:
+        # Map from import name to package name on PyPI
+        name = name.split('.')[0].replace('_', '-')
+        module_to_pypi: dict[str, str] = collections.defaultdict(lambda: name)
+        module_to_pypi |= {'cv2': 'opencv-python', 'skimage': 'scikit-image'}
+        name = module_to_pypi[name]
+        msg = f"""\
+{name} is not installed and is required to use this dataset. Either run:
+
+$ pip install {name}
+
+to install just this dependency, or:
+
+$ pip install torchgeo[datasets]
+
+to install all optional dataset dependencies."""
+        raise DependencyNotFoundError(msg) from None
+
+
+def which(name: Path) -> Executable:
+    """Search for executable *name*.
+
+    Args:
+        name: Name of executable to search for.
+
+    Returns:
+        Callable executable instance.
+
+    Raises:
+        DependencyNotFoundError: If *name* is not installed.
+
+    .. versionadded:: 0.6
+    """
+    if cmd := shutil.which(name):
+        return Executable(cmd)
+    else:
+        msg = f'{name} is not installed and is required to use this dataset.'
+        raise DependencyNotFoundError(msg) from None

@@ -13,9 +13,10 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
-    DatasetNotFoundError,
+    Path,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -73,22 +74,22 @@ class DeepGlobeLandCover(NonGeoDataset):
           $ unzip deepglobe2018-landcover-segmentation-traindataset.zip
 
     .. versionadded:: 0.3
-    """  # noqa: E501
+    """
 
-    filename = "data.zip"
-    data_root = "data"
-    md5 = "f32684b0b2bf6f8d604cd359a399c061"
-    splits = ["train", "test"]
-    classes = [
-        "Urban land",
-        "Agriculture land",
-        "Rangeland",
-        "Forest land",
-        "Water",
-        "Barren land",
-        "Unknown",
-    ]
-    colormap = [
+    filename = 'data.zip'
+    data_root = 'data'
+    md5 = 'f32684b0b2bf6f8d604cd359a399c061'
+    splits = ('train', 'test')
+    classes = (
+        'Urban land',
+        'Agriculture land',
+        'Rangeland',
+        'Forest land',
+        'Water',
+        'Barren land',
+        'Unknown',
+    )
+    colormap = (
         (0, 255, 255),
         (255, 255, 0),
         (255, 0, 255),
@@ -96,12 +97,12 @@ class DeepGlobeLandCover(NonGeoDataset):
         (0, 0, 255),
         (255, 255, 255),
         (0, 0, 0),
-    ]
+    )
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: Path = 'data',
+        split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
@@ -124,23 +125,23 @@ class DeepGlobeLandCover(NonGeoDataset):
         self.checksum = checksum
 
         self._verify()
-        if split == "train":
-            split_folder = "training_data"
+        if split == 'train':
+            split_folder = 'training_data'
         else:
-            split_folder = "test_data"
+            split_folder = 'test_data'
 
         self.image_fns = []
         self.mask_fns = []
         for image in sorted(
-            os.listdir(os.path.join(root, self.data_root, split_folder, "images"))
+            os.listdir(os.path.join(root, self.data_root, split_folder, 'images'))
         ):
-            if image.endswith(".jpg"):
+            if image.endswith('.jpg'):
                 id = image[:-8]
                 image_path = os.path.join(
-                    root, self.data_root, split_folder, "images", image
+                    root, self.data_root, split_folder, 'images', image
                 )
                 mask_path = os.path.join(
-                    root, self.data_root, split_folder, "masks", str(id) + "_mask.png"
+                    root, self.data_root, split_folder, 'masks', str(id) + '_mask.png'
                 )
 
                 self.image_fns.append(image_path)
@@ -157,7 +158,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         """
         image = self._load_image(index)
         mask = self._load_target(index)
-        sample = {"image": image, "mask": mask}
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -184,7 +185,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         path = self.image_fns[index]
 
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img)
+            array: np.typing.NDArray[np.int_] = np.array(img)
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1)).to(torch.float32)
@@ -201,7 +202,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         """
         path = self.mask_fns[index]
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.uint8]" = np.array(img)
+            array: np.typing.NDArray[np.uint8] = np.array(img)
             array = rgb_to_mask(array, self.colormap)
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
@@ -219,7 +220,7 @@ class DeepGlobeLandCover(NonGeoDataset):
 
         if os.path.isfile(filepath):
             if self.checksum and not check_integrity(filepath, self.md5):
-                raise RuntimeError("Dataset found, but corrupted.")
+                raise RuntimeError('Dataset found, but corrupted.')
             extract_archive(filepath)
             return
 
@@ -245,12 +246,15 @@ class DeepGlobeLandCover(NonGeoDataset):
         """
         ncols = 1
         image1 = draw_semantic_segmentation_masks(
-            sample["image"], sample["mask"], alpha=alpha, colors=self.colormap
+            sample['image'], sample['mask'], alpha=alpha, colors=list(self.colormap)
         )
-        if "prediction" in sample:
+        if 'prediction' in sample:
             ncols += 1
             image2 = draw_semantic_segmentation_masks(
-                sample["image"], sample["prediction"], alpha=alpha, colors=self.colormap
+                sample['image'],
+                sample['prediction'],
+                alpha=alpha,
+                colors=list(self.colormap),
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
@@ -260,15 +264,15 @@ class DeepGlobeLandCover(NonGeoDataset):
             ax0 = axs
 
         ax0.imshow(image1)
-        ax0.axis("off")
+        ax0.axis('off')
         if ncols > 1:
             ax1.imshow(image2)
-            ax1.axis("off")
+            ax1.axis('off')
 
         if show_titles:
-            ax0.set_title("Ground Truth")
+            ax0.set_title('Ground Truth')
             if ncols > 1:
-                ax1.set_title("Predictions")
+                ax1.set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

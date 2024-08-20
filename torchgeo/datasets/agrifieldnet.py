@@ -4,9 +4,10 @@
 """AgriFieldNet India Challenge dataset."""
 
 import os
+import pathlib
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -14,8 +15,9 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import BoundingBox, RGBBandsMissingError
+from .utils import BoundingBox, Path, which
 
 
 class AgriFieldNet(RasterDataset):
@@ -50,51 +52,61 @@ class AgriFieldNet(RasterDataset):
 
     Dataset classes:
 
-    0 - No-Data
-    1 - Wheat
-    2 - Mustard
-    3 - Lentil
-    4 - No Crop/Fallow
-    5 - Green pea
-    6 - Sugarcane
-    8 - Garlic
-    9 - Maize
-    13 - Gram
-    14 - Coriander
-    15 - Potato
-    16 - Berseem
-    36 - Rice
+    * 0. No-Data
+    * 1. Wheat
+    * 2. Mustard
+    * 3. Lentil
+    * 4. No Crop/Fallow
+    * 5. Green pea
+    * 6. Sugarcane
+    * 8. Garlic
+    * 9. Maize
+    * 13. Gram
+    * 14. Coriander
+    * 15. Potato
+    * 16. Berseem
+    * 36. Rice
 
     If you use this dataset in your research, please cite the following dataset:
 
     * https://doi.org/10.34911/rdnt.wu92p1
 
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `azcopy <https://github.com/Azure/azure-storage-azcopy>`_: to download the
+         dataset from Source Cooperative.
+
     .. versionadded:: 0.6
     """
 
+    url = 'https://radiantearth.blob.core.windows.net/mlhub/ref_agrifieldnet_competition_v1'
+
+    filename_glob = 'ref_agrifieldnet_competition_v1_source_*_{}_10m.*'
     filename_regex = r"""
         ^ref_agrifieldnet_competition_v1_source_
         (?P<unique_folder_id>[a-z0-9]{5})
         _(?P<band>B[0-9A-Z]{2})_10m
     """
 
-    rgb_bands = ["B04", "B03", "B02"]
-    all_bands = [
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06",
-        "B07",
-        "B08",
-        "B8A",
-        "B09",
-        "B11",
-        "B12",
-    ]
+    rgb_bands = ('B04', 'B03', 'B02')
+    all_bands = (
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B09',
+        'B11',
+        'B12',
+    )
 
-    cmap = {
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 255),
         1: (255, 211, 0, 255),
         2: (255, 37, 37, 255),
@@ -113,12 +125,13 @@ class AgriFieldNet(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = "data",
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         classes: list[int] = list(cmap.keys()),
         bands: Sequence[str] = all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         cache: bool = True,
+        download: bool = False,
     ) -> None:
         """Initialize a new AgriFieldNet dataset instance.
 
@@ -132,26 +145,30 @@ class AgriFieldNet(RasterDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             cache: if True, cache the dataset in memory
+            download: if True, download dataset and store it in the root directory
 
         Raises:
-            DatasetNotFoundError: If dataset is not found.
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert (
             set(classes) <= self.cmap.keys()
-        ), f"Only the following classes are valid: {list(self.cmap.keys())}."
-        assert 0 in classes, "Classes must include the background class: 0"
+        ), f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert 0 in classes, 'Classes must include the background class: 0'
 
         self.paths = paths
-        self.classes = classes
-        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
-        self.ordinal_cmap = torch.zeros((len(self.classes), 4), dtype=torch.uint8)
+        self.download = download
+        self.filename_glob = self.filename_glob.format(bands[0])
+
+        self._verify()
 
         super().__init__(
             paths=paths, crs=crs, bands=bands, transforms=transforms, cache=cache
         )
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
-        for v, k in enumerate(self.classes):
+        self.ordinal_map = torch.zeros(max(self.cmap.keys()) + 1, dtype=self.dtype)
+        self.ordinal_cmap = torch.zeros((len(classes), 4), dtype=torch.uint8)
+        for v, k in enumerate(classes):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
@@ -164,14 +181,14 @@ class AgriFieldNet(RasterDataset):
         Returns:
             data, label, and field ids at that index
         """
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
 
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        filepaths = cast(list[Path], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
         data_list: list[Tensor] = []
@@ -183,9 +200,9 @@ class AgriFieldNet(RasterDataset):
                 directory = os.path.dirname(filepath)
                 match = re.match(filename_regex, filename)
                 if match:
-                    if "band" in match.groupdict():
-                        start = match.start("band")
-                        end = match.end("band")
+                    if 'band' in match.groupdict():
+                        start = match.start('band')
+                        end = match.end('band')
                         filename = filename[:start] + band + filename[end:]
                 filepath = os.path.join(directory, filename)
                 band_filepaths.append(filepath)
@@ -193,9 +210,9 @@ class AgriFieldNet(RasterDataset):
         image = torch.cat(data_list)
 
         mask_filepaths = []
-        for root, dirs, files in os.walk(os.path.join(self.paths, "train_labels")):
+        for root, dirs, files in os.walk(os.path.join(self.paths, 'train_labels')):
             for file in files:
-                if not file.endswith("_field_ids.tif") and file.endswith(".tif"):
+                if not file.endswith('_field_ids.tif') and file.endswith('.tif'):
                     file_path = os.path.join(root, file)
                     mask_filepaths.append(file_path)
 
@@ -203,16 +220,36 @@ class AgriFieldNet(RasterDataset):
         mask = self.ordinal_map[mask.squeeze().long()]
 
         sample = {
-            "crs": self.crs,
-            "bbox": query,
-            "image": image.float(),
-            "mask": mask.long(),
+            'crs': self.crs,
+            'bounds': query,
+            'image': image.float(),
+            'mask': mask.long(),
         }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
+
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset."""
+        # Check if the files already exist
+        if self.files:
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise DatasetNotFoundError(self)
+
+        # Download the dataset
+        self._download()
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        assert isinstance(self.paths, str | pathlib.Path)
+        os.makedirs(self.paths, exist_ok=True)
+        azcopy = which('azcopy')
+        azcopy('sync', f'{self.url}', self.paths, '--recursive=true')
 
     def plot(
         self,
@@ -240,31 +277,31 @@ class AgriFieldNet(RasterDataset):
             else:
                 raise RGBBandsMissingError()
 
-        image = sample["image"][rgb_indices].permute(1, 2, 0)
+        image = sample['image'][rgb_indices].permute(1, 2, 0)
         image = (image - image.min()) / (image.max() - image.min())
 
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 2
 
-        showing_prediction = "prediction" in sample
+        showing_prediction = 'prediction' in sample
         if showing_prediction:
-            pred = sample["prediction"].squeeze()
+            pred = sample['prediction'].squeeze()
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 4, 4))
         axs[0].imshow(image)
-        axs[0].axis("off")
-        axs[1].imshow(self.ordinal_cmap[mask], interpolation="none")
-        axs[1].axis("off")
+        axs[0].axis('off')
+        axs[1].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[1].axis('off')
         if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
+            axs[0].set_title('Image')
+            axs[1].set_title('Mask')
 
         if showing_prediction:
-            axs[2].imshow(self.ordinal_cmap[pred], interpolation="none")
-            axs[2].axis("off")
+            axs[2].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Prediction")
+                axs[2].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

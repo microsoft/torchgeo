@@ -10,29 +10,29 @@ from torchgeo.main import main
 
 
 class TestClassificationTask:
-    @pytest.mark.parametrize("name", ["iobench"])
+    @pytest.mark.parametrize('name', ['iobench'])
     def test_trainer(self, name: str, fast_dev_run: bool) -> None:
-        config = os.path.join("tests", "conf", name + ".yaml")
+        config = os.path.join('tests', 'conf', name + '.yaml')
 
         args = [
-            "--config",
+            '--config',
             config,
-            "--trainer.accelerator",
-            "cpu",
-            "--trainer.fast_dev_run",
+            '--trainer.accelerator',
+            'cpu',
+            '--trainer.fast_dev_run',
             str(fast_dev_run),
-            "--trainer.max_epochs",
-            "1",
-            "--trainer.log_every_n_steps",
-            "1",
+            '--trainer.max_epochs',
+            '1',
+            '--trainer.log_every_n_steps',
+            '1',
         ]
 
-        main(["fit"] + args)
+        main(['fit', *args])
         try:
-            main(["test"] + args)
+            main(['test', *args])
         except MisconfigurationException:
             pass
         try:
-            main(["predict"] + args)
+            main(['predict', *args])
         except MisconfigurationException:
             pass

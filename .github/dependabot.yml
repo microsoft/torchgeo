@@ -29,3 +29,7 @@ updates:
         versions: ">=6"
       # segmentation-models-pytorch pins timm, must update in unison
       - dependency-name: "timm"
+  - package-ecosystem: "npm"
+    directory: "/requirements"
+    schedule:
+      interval: "weekly"

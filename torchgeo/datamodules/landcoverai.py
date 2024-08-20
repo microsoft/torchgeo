@@ -38,8 +38,8 @@ class LandCoverAIDataModule(NonGeoDataModule):
             K.RandomVerticalFlip(p=0.5),
             K.RandomSharpness(p=0.5),
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
-            data_keys=["image", "mask"],
+            data_keys=['image', 'mask'],
         )
         self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=["image", "mask"]
+            K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
         )

@@ -3,15 +3,17 @@
 
 """South America Soybean Dataset."""
 
+import pathlib
 from collections.abc import Callable, Iterable
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import DatasetNotFoundError, download_url
+from .utils import Path, download_url
 
 
 class SouthAmericaSoybean(RasterDataset):
@@ -38,40 +40,40 @@ class SouthAmericaSoybean(RasterDataset):
     .. versionadded:: 0.6
     """
 
-    filename_glob = "South_America_Soybean_*.*"
-    filename_regex = r"South_America_Soybean_(?P<year>\d{4})"
+    filename_glob = 'SouthAmerica_Soybean_*.*'
+    filename_regex = r'SouthAmerica_Soybean_(?P<year>\d{4})'
 
-    date_format = "%Y"
+    date_format = '%Y'
     is_image = False
-    url = "https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_{}.tif"
+    url = 'https://glad.umd.edu/projects/AnnualClassMapsV1/SouthAmerica_Soybean_{}.tif'
 
-    md5s = {
-        2021: "edff3ada13a1a9910d1fe844d28ae4f",
-        2020: "0709dec807f576c9707c8c7e183db31",
-        2019: "441836493bbcd5e123cff579a58f5a4f",
-        2018: "503c2d0a803c2a2629ebbbd9558a3013",
-        2017: "4d0487ac1105d171e5f506f1766ea777",
-        2016: "770c558f6ac40550d0e264da5e44b3e",
-        2015: "6beb96a61fe0e9ce8c06263e500dde8f",
-        2014: "824ff91c62a4ba9f4ccfd281729830e5",
-        2013: "0263e19b3cae6fdaba4e3b450cef985e",
-        2012: "9f3a71097c9836fcff18a13b9ba608b2",
-        2011: "b73352ebea3d5658959e9044ec526143",
-        2010: "9264532d36ffa93493735a6e44caef0d",
-        2009: "341387c1bb42a15140c80702e4cca02d",
-        2008: "96fc3f737ab3ce9bcd16cbf7761427e2",
-        2007: "bb8549b6674163fe20ffd47ec4ce8903",
-        2006: "eabaa525414ecbff89301d3d5c706f0b",
-        2005: "89faae27f9b5afbd06935a465e5fe414",
-        2004: "f9882ca9c70e054e50172835cb75a8c3",
-        2003: "cad5ed461ff4ab45c90177841aaecad2",
-        2002: "8a4a9dcea54b3ec7de07657b9f2c0893",
-        2001: "2914b0af7590a0ca4dfa9ccefc99020f",
+    md5s: ClassVar[dict[int, str]] = {
+        2021: 'edff3ada13a1a9910d1fe844d28ae4f',
+        2020: '0709dec807f576c9707c8c7e183db31',
+        2019: '441836493bbcd5e123cff579a58f5a4f',
+        2018: '503c2d0a803c2a2629ebbbd9558a3013',
+        2017: '4d0487ac1105d171e5f506f1766ea777',
+        2016: '770c558f6ac40550d0e264da5e44b3e',
+        2015: '6beb96a61fe0e9ce8c06263e500dde8f',
+        2014: '824ff91c62a4ba9f4ccfd281729830e5',
+        2013: '0263e19b3cae6fdaba4e3b450cef985e',
+        2012: '9f3a71097c9836fcff18a13b9ba608b2',
+        2011: 'b73352ebea3d5658959e9044ec526143',
+        2010: '9264532d36ffa93493735a6e44caef0d',
+        2009: '341387c1bb42a15140c80702e4cca02d',
+        2008: '96fc3f737ab3ce9bcd16cbf7761427e2',
+        2007: 'bb8549b6674163fe20ffd47ec4ce8903',
+        2006: 'eabaa525414ecbff89301d3d5c706f0b',
+        2005: '89faae27f9b5afbd06935a465e5fe414',
+        2004: 'f9882ca9c70e054e50172835cb75a8c3',
+        2003: 'cad5ed461ff4ab45c90177841aaecad2',
+        2002: '8a4a9dcea54b3ec7de07657b9f2c0893',
+        2001: '2914b0af7590a0ca4dfa9ccefc99020f',
     }
 
     def __init__(
         self,
-        paths: str | Iterable[str] = "data",
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         years: list[int] = [2021],
@@ -111,7 +113,7 @@ class SouthAmericaSoybean(RasterDataset):
         # Check if the extracted files already exist
         if self.files:
             return
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | pathlib.Path)
 
         # Check if the user requested to download the dataset
         if not self.download:
@@ -145,29 +147,29 @@ class SouthAmericaSoybean(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze()
+            pred = sample['prediction'].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(
             nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
         )
 
-        axs[0, 0].imshow(mask, interpolation="none")
-        axs[0, 0].axis("off")
+        axs[0, 0].imshow(mask, interpolation='none')
+        axs[0, 0].axis('off')
 
         if show_titles:
-            axs[0, 0].set_title("Mask")
+            axs[0, 0].set_title('Mask')
 
         if showing_predictions:
-            axs[0, 1].imshow(pred, interpolation="none")
-            axs[0, 1].axis("off")
+            axs[0, 1].imshow(pred, interpolation='none')
+            axs[0, 1].axis('off')
             if show_titles:
-                axs[0, 1].set_title("Prediction")
+                axs[0, 1].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

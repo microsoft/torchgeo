@@ -16,13 +16,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    check_integrity,
-    extract_archive,
-    percentile_normalization,
-)
+from .utils import Path, check_integrity, extract_archive, percentile_normalization
 
 
 class InriaAerialImageLabeling(NonGeoDataset):
@@ -57,14 +53,14 @@ class InriaAerialImageLabeling(NonGeoDataset):
        Added support for a *val* split.
     """
 
-    directory = "AerialImageDataset"
-    filename = "NEW2-AerialImageDataset.zip"
-    md5 = "4b1acfe84ae9961edc1a6049f940380f"
+    directory = 'AerialImageDataset'
+    filename = 'NEW2-AerialImageDataset.zip'
+    md5 = '4b1acfe84ae9961edc1a6049f940380f'
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: Path = 'data',
+        split: str = 'train',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         checksum: bool = False,
     ) -> None:
@@ -82,7 +78,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
             DatasetNotFoundError: If dataset is not found.
         """
         self.root = root
-        assert split in {"train", "val", "test"}
+        assert split in {'train', 'val', 'test'}
         self.split = split
         self.transforms = transforms
         self.checksum = checksum
@@ -90,7 +86,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
         self._verify()
         self.files = self._load_files(root)
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -100,32 +96,32 @@ class InriaAerialImageLabeling(NonGeoDataset):
             list of dicts containing paths for each pair of image and label
         """
         files = []
-        split = "train" if self.split in ["train", "val"] else "test"
+        split = 'train' if self.split in ['train', 'val'] else 'test'
         root_dir = os.path.join(root, self.directory, split)
-        pattern = re.compile(r"([A-Za-z]+)(\d+)")
+        pattern = re.compile(r'([A-Za-z]+)(\d+)')
 
-        images = glob.glob(os.path.join(root_dir, "images", "*.tif"))
+        images = glob.glob(os.path.join(root_dir, 'images', '*.tif'))
         images = sorted(images)
 
-        if split == "train":
-            labels = glob.glob(os.path.join(root_dir, "gt", "*.tif"))
+        if split == 'train':
+            labels = glob.glob(os.path.join(root_dir, 'gt', '*.tif'))
             labels = sorted(labels)
 
             for img, lbl in zip(images, labels):
                 if match := pattern.search(img):
                     idx = int(match.group(2))
                     # For validation, use the first 5 images of every location
-                    if self.split == "train" and idx > 5:
-                        files.append({"image": img, "label": lbl})
-                    elif self.split == "val" and idx < 6:
-                        files.append({"image": img, "label": lbl})
+                    if self.split == 'train' and idx > 5:
+                        files.append({'image': img, 'label': lbl})
+                    elif self.split == 'val' and idx < 6:
+                        files.append({'image': img, 'label': lbl})
         else:
             for img in images:
-                files.append({"image": img})
+                files.append({'image': img})
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -139,7 +135,7 @@ class InriaAerialImageLabeling(NonGeoDataset):
             tensor = torch.from_numpy(array).float()
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Loads the target mask.
 
         Args:
@@ -172,11 +168,11 @@ class InriaAerialImageLabeling(NonGeoDataset):
             data and label at that index
         """
         files = self.files[index]
-        img = self._load_image(files["image"])
-        sample = {"image": img}
-        if files.get("label"):
-            mask = self._load_target(files["label"])
-            sample["mask"] = mask
+        img = self._load_image(files['image'])
+        sample = {'image': img}
+        if files.get('label'):
+            mask = self._load_target(files['label'])
+            sample['mask'] = mask
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -193,8 +189,8 @@ class InriaAerialImageLabeling(NonGeoDataset):
         if not os.path.isfile(archive_path):
             raise DatasetNotFoundError(self)
         if not check_integrity(archive_path, md5_hash):
-            raise RuntimeError("Dataset corrupted")
-        print("Extracting...")
+            raise RuntimeError('Dataset corrupted')
+        print('Extracting...')
         extract_archive(archive_path)
 
     def plot(
@@ -213,40 +209,40 @@ class InriaAerialImageLabeling(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
+        image = np.rollaxis(sample['image'][:3].numpy(), 0, 3)
         image = percentile_normalization(image, axis=(0, 1))
 
         ncols = 1
-        show_mask = "mask" in sample
-        show_predictions = "prediction" in sample
+        show_mask = 'mask' in sample
+        show_predictions = 'prediction' in sample
 
         if show_mask:
-            mask = sample["mask"].numpy()
+            mask = sample['mask'].numpy()
             ncols += 1
 
         if show_predictions:
-            prediction = sample["prediction"].numpy()
+            prediction = sample['prediction'].numpy()
             ncols += 1
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 8, 8))
         if not isinstance(axs, np.ndarray):
             axs = [axs]
         axs[0].imshow(image)
-        axs[0].axis("off")
+        axs[0].axis('off')
         if show_titles:
-            axs[0].set_title("Image")
+            axs[0].set_title('Image')
 
         if show_mask:
-            axs[1].imshow(mask, interpolation="none")
-            axs[1].axis("off")
+            axs[1].imshow(mask, interpolation='none')
+            axs[1].axis('off')
             if show_titles:
-                axs[1].set_title("Label")
+                axs[1].set_title('Label')
 
         if show_predictions:
-            axs[2].imshow(prediction, interpolation="none")
-            axs[2].axis("off")
+            axs[2].imshow(prediction, interpolation='none')
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Prediction")
+                axs[2].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
