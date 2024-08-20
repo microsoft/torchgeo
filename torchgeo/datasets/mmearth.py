@@ -152,7 +152,7 @@ class MMEarth(NonGeoDataset):
     }
 
     # See https://github.com/vishalned/MMEarth-train/blob/8d6114e8e3ccb5ca5d98858e742dac24350b64fd/MODALITIES.py#L36
-    no_data_vals: dict[str, int | float] = {
+    no_data_vals: ClassVar[dict[str, int | float]] = {
         'sentinel2': 0,
         'sentinel2_cloudmask': 65535,
         'sentinel2_cloudprod': 65535,
