@@ -59,14 +59,14 @@ class TestRegressionTask:
         return RegressionTestModel(**kwargs)
 
     @pytest.mark.parametrize(
-        "name",
+        'name',
         [
-            "cowc_counting",
-            "cyclone",
-            "sustainbench_crop_yield",
-            "skippd",
-            "digital_typhoon_id",
-            "digital_typhoon_time",
+            'cowc_counting',
+            'cyclone',
+            'digital_typhoon_id',
+            'digital_typhoon_time',
+            'sustainbench_crop_yield',
+            'skippd',
         ],
     )
     def test_trainer(
