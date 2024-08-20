@@ -1,13 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-'''Digital Typhoon dataset.'''
+"""Digital Typhoon dataset."""
 
 import glob
 import os
 import tarfile
-from collections.abc import Sequence
-from typing import Any, Callable, Optional, TypedDict
+from collections.abc import Callable, Sequence
+from typing import Any, ClassVar, TypedDict
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -15,20 +15,20 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import download_url, percentile_normalization
-from .errors import DatasetNotFoundError
 
 
 class _SampleSequenceDict(TypedDict):
-    '''Sample sequence dictionary.'''
+    """Sample sequence dictionary."""
 
     id: str
     seq_id: list[int]
 
 
 class DigitalTyphoonAnalysis(NonGeoDataset):
-    '''Digital Typhoon Dataset for Analysis Task.
+    """Digital Typhoon Dataset for Analysis Task.
 
     This dataset contains typhoon-centered images, derived from hourly infrared channel
     images captured by meteorological satellites. It incorporates data from multiple
@@ -59,12 +59,12 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
     * https://doi.org/10.20783/DIAS.664
 
     .. versionadded:: 0.6
-    '''
+    """
 
-    valid_tasks: list[str] = ['classification', 'regression']
-    aux_file_name = 'aux_data.csv'
+    valid_tasks: ClassVar[list[str]] = ['classification', 'regression']
+    aux_file_name: ClassVar[str] = 'aux_data.csv'
 
-    valid_features: list[str] = [
+    valid_features: ClassVar[list[str]] = [
         'year',
         'month',
         'day',
@@ -84,9 +84,11 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         'intp',
     ]
 
-    url = 'https://huggingface.co/datasets/torchgeo/digital_typhoon/resolve/main/WP.tar.gz{0}'  # noqa: E501
+    url: ClassVar[str] = (
+        'https://huggingface.co/datasets/torchgeo/digital_typhoon/resolve/main/WP.tar.gz{0}'
+    )
 
-    md5sums = {
+    md5sums: ClassVar[dict[str, str]] = {
         'aa': '3af98052aed17e0ddb1e94caca2582e2',
         'ab': '2c5d25455ac8aef1de33fe6456ab2c8d',
     }
@@ -103,13 +105,13 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         features: Sequence[str] = ['wind'],
         targets: list[str] = ['wind'],
         sequence_length: int = 3,
-        min_feature_value: Optional[dict[str, float]] = None,
-        max_feature_value: Optional[dict[str, float]] = None,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        min_feature_value: dict[str, float] | None = None,
+        max_feature_value: dict[str, float] | None = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        '''Initialize a new Digital Typhoon Analysis dataset instance.
+        """Initialize a new Digital Typhoon Analysis dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -127,7 +129,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         Raises:
             AssertionError: if ``task`` argument is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
-        '''
+        """
         try:
             import h5py  # noqa: F401
         except ImportError:
@@ -212,7 +214,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         self.target_std: dict[str, float] = self.aux_df[self.targets].std().to_dict()
 
         def _get_subsequences(df: pd.DataFrame, k: int) -> list[dict[str, list[int]]]:
-            '''Generate all possible subsequences of length k for a given group.
+            """Generate all possible subsequences of length k for a given group.
 
             Args:
                 df: grouped dataframe of a single typhoon
@@ -220,7 +222,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
             Returns:
                 list of all possible subsequences of length k for a given typhoon id
-            '''
+            """
             min_seq_id = df['seq_id'].min()
             max_seq_id = df['seq_id'].max()
 
@@ -244,14 +246,14 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         ]
 
     def __getitem__(self, index: int) -> dict[str, Any]:
-        '''Return an index within the dataset.
+        """Return an index within the dataset.
 
         Args:
             index: index to return
 
         Returns:
             data, labels, and metadata at that index
-        '''
+        """
         sample_entry = self.sample_sequences[index]
         sample_df = self.aux_df[
             (self.aux_df['id'] == sample_entry['id'])
@@ -281,15 +283,15 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         return sample
 
     def __len__(self) -> int:
-        '''Return the number of data points in the dataset.
+        """Return the number of data points in the dataset.
 
         Returns:
             length of the dataset
-        '''
+        """
         return len(self.sample_sequences)
 
     def _load_image(self, sample_df: pd.DataFrame) -> Tensor:
-        '''Load a single image.
+        """Load a single image.
 
         Args:
             sample_df: df holding all information necessary to load the
@@ -297,10 +299,10 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
         Returns:
             concatenation of all images in the sequence over channel dimension
-        '''
+        """
 
         def load_image_tensor(id: str, filepath: str) -> Tensor:
-            '''Load a single image tensor from a h5 file.
+            """Load a single image tensor from a h5 file.
 
             Args:
                 id: typhoon id
@@ -308,7 +310,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
             Returns:
                 image tensor
-            '''
+            """
             import h5py
 
             full_path = os.path.join(self.root, self.data_root, 'image', id, filepath)
@@ -317,7 +319,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
                 tensor = torch.from_numpy(h5f['Infrared'][:]).unsqueeze(0)
 
                 # follow normalization procedure
-                # https://github.com/kitamoto-lab/benchmarks/blob/1bdbefd7c570cb1bdbdf9e09f9b63f7c22bbdb27/analysis/regression/FrameDatamodule.py#L94 # noqa: E501
+                # https://github.com/kitamoto-lab/benchmarks/blob/1bdbefd7c570cb1bdbdf9e09f9b63f7c22bbdb27/analysis/regression/FrameDatamodule.py#L94
                 tensor = torch.clamp(tensor, self.min_input_clamp, self.max_input_clamp)
                 tensor = (tensor - self.min_input_clamp) / (
                     self.max_input_clamp - self.min_input_clamp
@@ -334,7 +336,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         return tensor
 
     def _load_features(self, filepath: str, image_path: str) -> dict[str, Any]:
-        '''Load features for the corresponding image.
+        """Load features for the corresponding image.
 
         Args:
             filepath: path of the feature file to load
@@ -342,7 +344,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
         Returns:
             features for image
-        '''
+        """
         feature_df = pd.read_csv(filepath)
         feature_df = feature_df[feature_df['file_1'] == image_path]
         feature_dict = {
@@ -358,7 +360,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         return feature_dict
 
     def _verify(self) -> None:
-        '''Verify the integrity of the dataset.'''
+        """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
         exists = []
         path = os.path.join(self.root, self.data_root, 'image', '*', '*.h5')
@@ -393,14 +395,14 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         self._extract()
 
     def _download(self) -> None:
-        '''Download the dataset.'''
+        """Download the dataset."""
         for suffix, md5 in self.md5sums.items():
             download_url(
                 self.url.format(suffix), self.root, md5=md5 if self.checksum else None
             )
 
     def _extract(self) -> None:
-        '''Extract the dataset.'''
+        """Extract the dataset."""
         # Extract tarball
         for suffix in self.md5sums.keys():
             with tarfile.open(
@@ -412,9 +414,9 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
-        '''Plot a sample from the dataset.
+        """Plot a sample from the dataset.
 
         Args:
             sample: a sample return by :meth:`__getitem__`
@@ -423,7 +425,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
-        '''
+        """
         image, label = sample['image'], sample['label']
 
         image = percentile_normalization(image)
