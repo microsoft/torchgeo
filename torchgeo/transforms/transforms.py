@@ -99,7 +99,7 @@ class AugmentationSequential(Module):
 
         # Convert boxes to default [N, 4]
         if 'boxes' in batch:
-            batch['boxes'] = Boxes(batch['boxes']).to_tensor(mode='xyxy')  # type:ignore[assignment]
+            batch['boxes'] = Boxes(batch['boxes']).to_tensor(mode='xyxy')
 
         # Torchmetrics does not support masks with a channel dimension
         if 'mask' in batch and batch['mask'].shape[1] == 1:
