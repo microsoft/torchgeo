@@ -192,10 +192,7 @@ class GeoNRW(NonGeoDataset):
         self.download = download
         self.checksum = checksum
 
-        if split == 'test':
-            self.city_names = self.test_list
-        elif split == 'train':
-            self.city_names = self.train_list
+        self.city_names = self.test_list if split == 'test' else self.train_list
 
         self._verify()
 
