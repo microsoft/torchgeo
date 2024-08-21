@@ -7,7 +7,6 @@ import abc
 from collections.abc import Iterator
 
 import torch
-from rtree.index import Index, Property
 from torch.utils.data import Sampler
 
 from ..datasets import BoundingBox, GeoDataset
