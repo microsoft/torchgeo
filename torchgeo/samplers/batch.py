@@ -32,18 +32,9 @@ class BatchGeoSampler(Sampler[list[BoundingBox]], abc.ABC):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
         """
-        if roi is None:
-            self.index = dataset.index
-            roi = BoundingBox(*self.index.bounds)
-        else:
-            self.index = Index(interleaved=False, properties=Property(dimension=3))
-            hits = dataset.index.intersection(tuple(roi), objects=True)
-            for hit in hits:
-                bbox = BoundingBox(*hit.bounds) & roi
-                self.index.insert(hit.id, tuple(bbox), hit.object)
-
+        self.index = dataset.index
         self.res = dataset.res
-        self.roi = roi
+        self.roi = roi or BoundingBox(*self.index.bounds)
 
     @abc.abstractmethod
     def __iter__(self) -> Iterator[list[BoundingBox]]:
