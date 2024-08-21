@@ -33,8 +33,8 @@ class TestDigitalTyphoon:
         monkeypatch.setattr(DigitalTyphoonAnalysis, 'url', url)
 
         md5sums = {
-            'aa': '5b2fed45d9719e77a482ccd4ae1b02e5',
-            'ab': '5b2fed45d9719e77a482ccd4ae1b02e5',
+            'aa': '692ea3796c9bc9ef1e0ab6f2b8bc51ad',
+            'ab': '692ea3796c9bc9ef1e0ab6f2b8bc51ad',
         }
         monkeypatch.setattr(DigitalTyphoonAnalysis, 'md5sums', md5sums)
         root = tmp_path

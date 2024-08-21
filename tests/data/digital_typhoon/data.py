@@ -15,7 +15,7 @@ from torchvision.datasets.utils import calculate_md5
 root = 'WP'
 IMAGE_SIZE = 32
 NUM_TYHOON_IDS = 5
-NUM_IMAGES_PER_ID = 4
+NUM_IMAGES_PER_ID = 5
 CHUNK_SIZE = 2**12
 
 # If the root directory exists, remove it
