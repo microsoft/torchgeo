@@ -54,7 +54,7 @@ class GeoNRW(NonGeoDataset):
     9. roads
     10. buildings
 
-    Additional information about the dataset can be found `here <https://ieee-dataport.org/open-access/geonrw>`_.
+    Additional information about the dataset can be found `on this site <https://ieee-dataport.org/open-access/geonrw>`_.
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -68,7 +68,7 @@ class GeoNRW(NonGeoDataset):
 
     splits = ('train', 'test')
 
-    train_list = (
+    train_list: ClassVar[list[str]] = [
         'aachen',
         'bergisch',
         'bielefeld',
@@ -109,9 +109,9 @@ class GeoNRW(NonGeoDataset):
         'siegen',
         'solingen',
         'wuppertal',
-    )
+    ]
 
-    test_list = ('duesseldorf', 'herne', 'neuss')
+    test_list: ClassVar[list[str]] = ['duesseldorf', 'herne', 'neuss']
 
     classes = (
         'background',
@@ -155,7 +155,7 @@ class GeoNRW(NonGeoDataset):
         'seg': lambda utm_coords: '{}_{}_seg.tif'.format(*utm_coords),
     }
 
-    modalities = ('rgb', 'dem', 'seg')
+    modalities: tuple[str, ...] = ('rgb', 'dem', 'seg')
 
     url = 'https://hf.co/datasets/torchgeo/geonrw/resolve/3cb6bdf2a615b9e526c7dcff85fd1f20728081b7/{}'
 
