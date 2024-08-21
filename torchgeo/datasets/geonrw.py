@@ -68,7 +68,7 @@ class GeoNRW(NonGeoDataset):
 
     splits = ('train', 'test')
 
-    train_list: ClassVar[list[str]] = [
+    train_list: tuple[str, ...] = (
         'aachen',
         'bergisch',
         'bielefeld',
@@ -109,9 +109,9 @@ class GeoNRW(NonGeoDataset):
         'siegen',
         'solingen',
         'wuppertal',
-    ]
+    )
 
-    test_list: ClassVar[list[str]] = ['duesseldorf', 'herne', 'neuss']
+    test_list: tuple[str, ...] = ('duesseldorf', 'herne', 'neuss')
 
     classes = (
         'background',
