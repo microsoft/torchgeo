@@ -54,7 +54,7 @@ class GeoNRW(NonGeoDataset):
     9. roads
     10. buildings
 
-    Additional information about the dataset can be found `on this site <https://ieee-dataport.org/open-access/geonrw>`_.
+    Additional information about the dataset can be found `on this site <https://ieee-dataport.org/open-access/geonrw>`__.
 
     If you use this dataset in your research, please cite the following paper:
 
