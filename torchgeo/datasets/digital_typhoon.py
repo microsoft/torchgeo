@@ -61,8 +61,8 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
     .. versionadded:: 0.6
     """
 
-    valid_tasks: ClassVar[list[str]] = ['classification', 'regression']
-    aux_file_name: ClassVar[str] = 'aux_data.csv'
+    valid_tasks = ('classification', 'regression')
+    aux_file_name = 'aux_data.csv'
 
     valid_features: ClassVar[list[str]] = [
         'year',
@@ -84,9 +84,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         'intp',
     ]
 
-    url: ClassVar[str] = (
-        'https://huggingface.co/datasets/torchgeo/digital_typhoon/resolve/main/WP.tar.gz{0}'
-    )
+    url = 'https://hf.co/datasets/torchgeo/digital_typhoon/resolve/cf2f9ef89168d31cb09e42993d35b068688fe0df/WP.tar.gz{0}'
 
     md5sums: ClassVar[dict[str, str]] = {
         'aa': '3af98052aed17e0ddb1e94caca2582e2',
@@ -103,7 +101,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         root: Path = 'data',
         task: str = 'regression',
         features: Sequence[str] = ['wind'],
-        targets: list[str] = ['wind'],
+        targets: Sequence[str] = ['wind'],
         sequence_length: int = 3,
         min_feature_value: dict[str, float] | None = None,
         max_feature_value: dict[str, float] | None = None,
@@ -127,8 +125,9 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``task`` argument is invalid
+            AssertionError: If any arguments are invalid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            DependencyNotFoundError: If h5py is not installed.
         """
         lazy_import('h5py')
         self.root = root

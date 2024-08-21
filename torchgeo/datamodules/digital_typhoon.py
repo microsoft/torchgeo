@@ -4,7 +4,8 @@
 """Digital Typhoon Data Module."""
 
 import copy
-from typing import Any, ClassVar
+from collections import defaultdict
+from typing import Any
 
 from torch.utils.data import Subset
 
@@ -17,7 +18,7 @@ from .utils import group_shuffle_split
 class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
     """Digital Typhoon Analysis Data Module."""
 
-    valid_split_types: ClassVar[list[str]] = ['time', 'typhoon_id']
+    valid_split_types = ('time', 'typhoon_id')
 
     def __init__(
         self,
@@ -56,16 +57,24 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
             a tuple of the subset datasets
         """
         if self.split_by == 'time':
-            sequences = list(enumerate(sample_sequences))
+            # split dataset such that only unseen future time steps of storms
+            # are contained in validation
+            grouped_sequences = defaultdict(list)
+            for idx, seq in enumerate(sample_sequences):
+                grouped_sequences[seq['id']].append((idx, seq['seq_id']))
 
-            sorted_sequences = sorted(sequences, key=lambda x: x[1]['seq_id'])
-            selected_indices = [x[0] for x in sorted_sequences]
+            train_indices = []
+            val_indices = []
 
-            split_idx = int(len(sorted_sequences) * 0.8)
-            train_indices = selected_indices[:split_idx]
-            val_indices = selected_indices[split_idx:]
+            for id, sequences in grouped_sequences.items():
+                split_idx = int(len(sequences) * 0.8)
+                train_sequences = sequences[:split_idx]
+                val_sequences = sequences[split_idx:]
+                train_indices.extend([idx for idx, _ in train_sequences])
+                val_indices.extend([idx for idx, _ in val_sequences])
 
         else:
+            # split dataset such that the id of storms is mutually exclusive
             sequences = list(enumerate(sample_sequences))
             train_indices, val_indices = group_shuffle_split(
                 [x[1]['id'] for x in sequences], train_size=0.8, random_state=0

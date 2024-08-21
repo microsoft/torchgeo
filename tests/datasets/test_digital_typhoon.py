@@ -12,14 +12,9 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo
 from torchgeo.datasets import DatasetNotFoundError, DigitalTyphoonAnalysis
 
 pytest.importorskip('h5py', minversion='3.6')
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestDigitalTyphoon:
@@ -33,9 +28,6 @@ class TestDigitalTyphoon:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> DigitalTyphoonAnalysis:
         sequence_length, min_features, max_features = request.param
-        monkeypatch.setattr(
-            torchgeo.datasets.digital_typhoon, 'download_url', download_url
-        )
 
         url = os.path.join('tests', 'data', 'digital_typhoon', 'WP.tar.gz{0}')
         monkeypatch.setattr(DigitalTyphoonAnalysis, 'url', url)
@@ -45,7 +37,7 @@ class TestDigitalTyphoon:
             'ab': '5b2fed45d9719e77a482ccd4ae1b02e5',
         }
         monkeypatch.setattr(DigitalTyphoonAnalysis, 'md5sums', md5sums)
-        root = str(tmp_path)
+        root = tmp_path
 
         transforms = nn.Identity()
         return DigitalTyphoonAnalysis(
@@ -76,9 +68,7 @@ class TestDigitalTyphoon:
         root = os.path.join('tests', 'data', 'digital_typhoon')
         filenames = ['WP.tar.gzaa', 'WP.tar.gzab']
         for filename in filenames:
-            shutil.copyfile(
-                os.path.join(root, filename), os.path.join(str(tmp_path), filename)
-            )
+            shutil.copyfile(os.path.join(root, filename), tmp_path / filename)
         DigitalTyphoonAnalysis(root=str(tmp_path))
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
