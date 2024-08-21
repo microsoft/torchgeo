@@ -12,12 +12,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, GeoNRW
-
-
-def download_url(url: str, root: str | Path, *args: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestGeoNRW:
@@ -25,7 +20,6 @@ class TestGeoNRW:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> GeoNRW:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         md5 = '6ffc014d4b345bba3076e8d76ab481fa'
         monkeypatch.setattr(GeoNRW, 'md5', md5)
         url = os.path.join('tests', 'data', 'geonrw', 'nrw_dataset.tar.gz')
