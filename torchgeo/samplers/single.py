@@ -99,18 +99,18 @@ class RandomGeoSampler(GeoSampler):
         self.hits = []
         areas = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
-            bounds = BoundingBox(*hit.bounds)
+            hit.bounds = BoundingBox(*hit.bounds) & self.roi
             if (
-                bounds.maxx - bounds.minx >= self.size[1]
-                and bounds.maxy - bounds.miny >= self.size[0]
+                hit.bounds.maxx - hit.bounds.minx >= self.size[1]
+                and hit.bounds.maxy - hit.bounds.miny >= self.size[0]
             ):
-                if bounds.area > 0:
-                    rows, cols = tile_to_chips(bounds, self.size)
+                if hit.bounds.area > 0:
+                    rows, cols = tile_to_chips(hit.bounds, self.size)
                     self.length += rows * cols
                 else:
                     self.length += 1
                 self.hits.append(hit)
-                areas.append(bounds.area)
+                areas.append(hit.bounds.area)
         if length is not None:
             self.length = length
 
@@ -196,20 +196,17 @@ class GridGeoSampler(GeoSampler):
             self.size = (self.size[0] * self.res, self.size[1] * self.res)
             self.stride = (self.stride[0] * self.res, self.stride[1] * self.res)
 
+        self.length = 0
         self.hits = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
-            bounds = BoundingBox(*hit.bounds)
+            hit.bounds = BoundingBox(*hit.bounds) & self.roi
             if (
-                bounds.maxx - bounds.minx >= self.size[1]
-                and bounds.maxy - bounds.miny >= self.size[0]
+                hit.bounds.maxx - hit.bounds.minx >= self.size[1]
+                and hit.bounds.maxy - hit.bounds.miny >= self.size[0]
             ):
                 self.hits.append(hit)
-
-        self.length = 0
-        for hit in self.hits:
-            bounds = BoundingBox(*hit.bounds)
-            rows, cols = tile_to_chips(bounds, self.size, self.stride)
-            self.length += rows * cols
+                rows, cols = tile_to_chips(hit.bounds, self.size, self.stride)
+                self.length += rows * cols
 
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
@@ -277,6 +274,7 @@ class PreChippedGeoSampler(GeoSampler):
 
         self.hits = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
+            hit.bounds = BoundingBox(*hit.bounds) & self.roi
             self.hits.append(hit)
 
     def __iter__(self) -> Iterator[BoundingBox]:
