@@ -29,7 +29,7 @@ from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
 from rtree.index import Index, Property
 from rtree.index import Item as IndexItem
-from shapely import MultiPolygon, Polygon
+from shapely.geometry import MultiPolygon, Polygon
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
