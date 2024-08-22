@@ -45,7 +45,7 @@ class SSL4EOS12DataModule(NonGeoDataModule):
     .. versionadded:: 0.5
     """
 
-    # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97  # noqa: E501
+    # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
     mean = torch.tensor(0)
     std = torch.tensor(10000)
 

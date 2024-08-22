@@ -14,7 +14,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
@@ -25,14 +24,9 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestL7Irish:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L7Irish:
-        monkeypatch.setattr(torchgeo.datasets.l7irish, 'download_url', download_url)
         md5s = {
             'austral': '0485d6045f6b508068ef8daf9e5a5326',
             'boreal': '5798f32545d7166564c4c4429357b840',

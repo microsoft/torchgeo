@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,9 +56,9 @@ class CloudCoverDetection(NonGeoDataset):
     """
 
     url = 'https://radiantearth.blob.core.windows.net/mlhub/ref_cloud_cover_detection_challenge_v1/final'
-    all_bands = ['B02', 'B03', 'B04', 'B08']
-    rgb_bands = ['B04', 'B03', 'B02']
-    splits = {'train': 'public', 'test': 'private'}
+    all_bands = ('B02', 'B03', 'B04', 'B08')
+    rgb_bands = ('B04', 'B03', 'B02')
+    splits: ClassVar[dict[str, str]] = {'train': 'public', 'test': 'private'}
 
     def __init__(
         self,

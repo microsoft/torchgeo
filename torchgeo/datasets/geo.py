@@ -4,6 +4,7 @@
 """Base classes for all :mod:`torchgeo` datasets."""
 
 import abc
+import fnmatch
 import functools
 import glob
 import os
@@ -12,7 +13,7 @@ import re
 import sys
 import warnings
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import fiona
 import fiona.transform
@@ -315,7 +316,9 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             if os.path.isdir(path):
                 pathname = os.path.join(path, '**', self.filename_glob)
                 files |= set(glob.iglob(pathname, recursive=True))
-            elif os.path.isfile(path) or path_is_vsi(path):
+            elif (os.path.isfile(path) or path_is_vsi(path)) and fnmatch.fnmatch(
+                str(path), f'*{self.filename_glob}'
+            ):
                 files.add(path)
             elif not hasattr(self, 'download'):
                 warnings.warn(
@@ -397,13 +400,13 @@ class RasterDataset(GeoDataset):
     separate_files = False
 
     #: Names of all available bands in the dataset
-    all_bands: list[str] = []
+    all_bands: tuple[str, ...] = ()
 
     #: Names of RGB bands in the dataset, used for plotting
-    rgb_bands: list[str] = []
+    rgb_bands: tuple[str, ...] = ()
 
     #: Color map for the dataset, used for plotting
-    cmap: dict[int, tuple[int, int, int, int]] = {}
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {}
 
     @property
     def dtype(self) -> torch.dtype:
@@ -485,7 +488,7 @@ class RasterDataset(GeoDataset):
                         # See if file has a color map
                         if len(self.cmap) == 0:
                             try:
-                                self.cmap = src.colormap(1)
+                                self.cmap = src.colormap(1)  # type: ignore[misc]
                             except ValueError:
                                 pass
 

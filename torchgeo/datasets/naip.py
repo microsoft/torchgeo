@@ -45,8 +45,8 @@ class NAIP(RasterDataset):
     """
 
     # Plotting
-    all_bands = ['R', 'G', 'B', 'NIR']
-    rgb_bands = ['R', 'G', 'B']
+    all_bands = ('R', 'G', 'B', 'NIR')
+    rgb_bands = ('R', 'G', 'B')
 
     def plot(
         self,

@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -49,12 +50,12 @@ class USAVars(NonGeoDataset):
     .. versionadded:: 0.3
     """
 
-    data_url = 'https://hf.co/datasets/torchgeo/usavars/resolve/01377abfaf50c0cc8548aaafb79533666bbf288f/{}'  # noqa: E501
+    data_url = 'https://hf.co/datasets/torchgeo/usavars/resolve/01377abfaf50c0cc8548aaafb79533666bbf288f/{}'
     dirname = 'uar'
 
     md5 = '677e89fd20e5dd0fe4d29b61827c2456'
 
-    label_urls = {
+    label_urls: ClassVar[dict[str, str]] = {
         'housing': data_url.format('housing.csv'),
         'income': data_url.format('income.csv'),
         'roads': data_url.format('roads.csv'),
@@ -64,7 +65,7 @@ class USAVars(NonGeoDataset):
         'treecover': data_url.format('treecover.csv'),
     }
 
-    split_metadata = {
+    split_metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'url': data_url.format('train_split.txt'),
             'filename': 'train_split.txt',
@@ -82,7 +83,7 @@ class USAVars(NonGeoDataset):
         },
     }
 
-    ALL_LABELS = ['treecover', 'elevation', 'population']
+    ALL_LABELS = ('treecover', 'elevation', 'population')
 
     def __init__(
         self,

@@ -14,7 +14,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     CDL,
     BoundingBox,
@@ -24,15 +23,9 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestCDL:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CDL:
-        monkeypatch.setattr(torchgeo.datasets.cdl, 'download_url', download_url)
-
         md5s = {
             2023: '3fbd3eecf92b8ce1ae35060ada463c6d',
             2022: '826c6fd639d9cdd94a44302fbc5b76c3',

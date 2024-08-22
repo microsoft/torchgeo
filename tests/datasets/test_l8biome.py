@@ -14,7 +14,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
@@ -25,14 +24,9 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestL8Biome:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> L8Biome:
-        monkeypatch.setattr(torchgeo.datasets.l8biome, 'download_url', download_url)
         md5s = {
             'barren': '29c9910adbc89677389f210226fb163d',
             'forest': 'b7dbb82fb2c22cbb03389d8828d73713',

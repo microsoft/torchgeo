@@ -7,7 +7,7 @@ import os
 import pathlib
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import torch
@@ -90,8 +90,8 @@ class AgriFieldNet(RasterDataset):
         _(?P<band>B[0-9A-Z]{2})_10m
     """
 
-    rgb_bands = ['B04', 'B03', 'B02']
-    all_bands = [
+    rgb_bands = ('B04', 'B03', 'B02')
+    all_bands = (
         'B01',
         'B02',
         'B03',
@@ -104,9 +104,9 @@ class AgriFieldNet(RasterDataset):
         'B09',
         'B11',
         'B12',
-    ]
+    )
 
-    cmap = {
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 255),
         1: (255, 211, 0, 255),
         2: (255, 37, 37, 255),

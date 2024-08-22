@@ -12,20 +12,20 @@ from kornia.contrib import Lambda
 from torchvision.models import SwinTransformer
 from torchvision.models._api import Weights, WeightsEnum
 
-# https://github.com/allenai/satlas/blob/bcaa968da5395f675d067613e02613a344e81415/satlas/cmd/model/train.py#L42 # noqa: E501
+# https://github.com/allenai/satlas/blob/bcaa968da5395f675d067613e02613a344e81415/satlas/cmd/model/train.py#L42
 # Satlas uses the TCI product for Sentinel-2 RGB, which is in the range (0, 255).
-# See details:  https://github.com/allenai/satlas/blob/main/Normalization.md#sentinel-2-images.  # noqa: E501
-# Satlas Sentinel-1 and RGB Sentinel-2 and NAIP imagery is uint8 and is normalized to (0, 1) by dividing by 255. # noqa: E501
+# See details:  https://github.com/allenai/satlas/blob/main/Normalization.md#sentinel-2-images.
+# Satlas Sentinel-1 and RGB Sentinel-2 and NAIP imagery is uint8 and is normalized to (0, 1) by dividing by 255.
 _satlas_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)), data_keys=None
 )
 
 # Satlas uses the TCI product for Sentinel-2 RGB, which is in the range (0, 255).
-# See details:  https://github.com/allenai/satlas/blob/main/Normalization.md#sentinel-2-images.  # noqa: E501
-# Satlas Sentinel-2 multispectral imagery has first 3 bands divided by 255 and the following 6 bands by 8160, both clipped to (0, 1). # noqa: E501
+# See details:  https://github.com/allenai/satlas/blob/main/Normalization.md#sentinel-2-images.
+# Satlas Sentinel-2 multispectral imagery has first 3 bands divided by 255 and the following 6 bands by 8160, both clipped to (0, 1).
 _std = torch.tensor(
     [255.0, 255.0, 255.0, 8160.0, 8160.0, 8160.0, 8160.0, 8160.0, 8160.0]
-)  # noqa: E501
+)
 _mean = torch.zeros_like(_std)
 _sentinel2_ms_satlas_transforms = K.AugmentationSequential(
     K.Normalize(mean=_mean, std=_std),
@@ -33,7 +33,7 @@ _sentinel2_ms_satlas_transforms = K.AugmentationSequential(
     data_keys=None,
 )
 
-# Satlas Landsat imagery is 16-bit, normalized by clipping some pixel N with (N-4000)/16320 to (0, 1). # noqa: E501
+# Satlas Landsat imagery is 16-bit, normalized by clipping some pixel N with (N-4000)/16320 to (0, 1).
 _landsat_satlas_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(4000), std=torch.tensor(16320)),
     K.ImageSequential(Lambda(lambda x: torch.clamp(x, min=0.0, max=1.0))),
@@ -56,7 +56,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     NAIP_RGB_SI_SATLAS = Weights(
-        url='https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/aerial_swinb_si.pth',  # noqa: E501
+        url='https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/aerial_swinb_si.pth',
         transforms=_satlas_transforms,
         meta={
             'dataset': 'Satlas',
@@ -68,7 +68,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_RGB_SI_SATLAS = Weights(
-        url='https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/sentinel2_swinb_si_rgb.pth',  # noqa: E501
+        url='https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/sentinel2_swinb_si_rgb.pth',
         transforms=_satlas_transforms,
         meta={
             'dataset': 'Satlas',
@@ -80,7 +80,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL2_MS_SI_SATLAS = Weights(
-        url='https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/sentinel2_swinb_si_ms.pth',  # noqa: E501
+        url='https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/sentinel2_swinb_si_ms.pth',
         transforms=_sentinel2_ms_satlas_transforms,
         meta={
             'dataset': 'Satlas',
@@ -93,7 +93,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     SENTINEL1_SI_SATLAS = Weights(
-        url='https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/sentinel1_swinb_si.pth',  # noqa: E501
+        url='https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/sentinel1_swinb_si.pth',
         transforms=_satlas_transforms,
         meta={
             'dataset': 'Satlas',
@@ -106,7 +106,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
     LANDSAT_SI_SATLAS = Weights(
-        url='https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/landsat_swinb_si.pth',  # noqa: E501
+        url='https://hf.co/allenai/satlas-pretrain/resolve/daa578a4be36573d9791bf51dcd0420b8dc75732/landsat_swinb_si.pth',
         transforms=_landsat_satlas_transforms,
         meta={
             'dataset': 'Satlas',
@@ -126,7 +126,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
                 'B09',
                 'B10',
                 'B11',
-            ],  # noqa: E501
+            ],
         },
     )
 

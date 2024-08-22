@@ -12,7 +12,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     NLCD,
     BoundingBox,
@@ -22,15 +21,9 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestNLCD:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NLCD:
-        monkeypatch.setattr(torchgeo.datasets.nlcd, 'download_url', download_url)
-
         md5s = {
             2011: '99546a3b89a0dddbe4e28e661c79984e',
             2019: 'a4008746f15720b8908ddd357a75fded',

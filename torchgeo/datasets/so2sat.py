@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import cast
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -103,10 +103,10 @@ class So2Sat(NonGeoDataset):
        This dataset requires the following additional library to be installed:
 
        * `<https://pypi.org/project/h5py/>`_ to load the dataset
-    """  # noqa: E501
+    """
 
-    versions = ['2', '3_random', '3_block', '3_culture_10']
-    filenames_by_version = {
+    versions = ('2', '3_random', '3_block', '3_culture_10')
+    filenames_by_version: ClassVar[dict[str, dict[str, str]]] = {
         '2': {
             'train': 'training.h5',
             'validation': 'validation.h5',
@@ -119,7 +119,7 @@ class So2Sat(NonGeoDataset):
             'test': 'culture_10/testing.h5',
         },
     }
-    md5s_by_version = {
+    md5s_by_version: ClassVar[dict[str, dict[str, str]]] = {
         '2': {
             'train': '702bc6a9368ebff4542d791e53469244',
             'validation': '71cfa6795de3e22207229d06d6f8775d',
@@ -139,7 +139,7 @@ class So2Sat(NonGeoDataset):
         },
     }
 
-    classes = [
+    classes = (
         'Compact high rise',
         'Compact mid rise',
         'Compact low rise',
@@ -157,7 +157,7 @@ class So2Sat(NonGeoDataset):
         'Bare rock or paved',
         'Bare soil or sand',
         'Water',
-    ]
+    )
 
     all_s1_band_names = (
         'S1_B1',
@@ -183,9 +183,9 @@ class So2Sat(NonGeoDataset):
     )
     all_band_names = all_s1_band_names + all_s2_band_names
 
-    rgb_bands = ['S2_B04', 'S2_B03', 'S2_B02']
+    rgb_bands = ('S2_B04', 'S2_B03', 'S2_B02')
 
-    BAND_SETS = {
+    BAND_SETS: ClassVar[dict[str, tuple[str, ...]]] = {
         'all': all_band_names,
         's1': all_s1_band_names,
         's2': all_s2_band_names,
