@@ -11,7 +11,12 @@ import torch
 from timm.models import ResNet
 from torchvision.models._api import Weights, WeightsEnum
 
-from .swin import _satlas_sentinel2_transforms, _satlas_transforms
+from .swin import (
+    _satlas_bands,
+    _satlas_sentinel2_bands,
+    _satlas_sentinel2_transforms,
+    _satlas_transforms,
+)
 
 # https://github.com/zhu-xlab/DeCUR/blob/f190e9a3895ef645c005c8c2fce287ffa5a937e3/src/transfer_classification_BE/linear_BE_resnet.py#L286
 # Normalization by channel-wise band statistics
@@ -519,7 +524,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
-            'bands': ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B11', 'B12'),
+            'bands': _satlas_sentinel2_bands,
         },
     )
 
@@ -532,7 +537,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
-            'bands': ('B02', 'B03', 'B04'),
+            'bands': _satlas_bands,
         },
     )
 
@@ -571,7 +576,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
-            'bands': ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B11', 'B12'),
+            'bands': _satlas_sentinel2_bands,
         },
     )
 
@@ -584,7 +589,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
-            'bands': ('B02', 'B03', 'B04'),
+            'bands': _satlas_bands,
         },
     )
 
@@ -607,7 +612,7 @@ class ResNet152_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
-            'bands': ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B11', 'B12'),
+            'bands': _satlas_sentinel2_bands,
         },
     )
 
@@ -620,7 +625,7 @@ class ResNet152_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
-            'bands': ('B02', 'B03', 'B04'),
+            'bands': _satlas_bands,
         },
     )
 
@@ -633,7 +638,7 @@ class ResNet152_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
-            'bands': ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B11', 'B12'),
+            'bands': _satlas_sentinel2_bands,
         },
     )
 
@@ -646,7 +651,7 @@ class ResNet152_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlaspretrain_models',
-            'bands': ('B02', 'B03', 'B04'),
+            'bands': _satlas_bands,
         },
     )
 

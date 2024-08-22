@@ -19,12 +19,14 @@ import torchgeo.transforms.transforms as T
 # Information about sensor-specific normalization can be found at:
 # https://github.com/allenai/satlas/blob/main/Normalization.md
 
+_satlas_bands = ('B04', 'B03', 'B02')
 _satlas_transforms = K.AugmentationSequential(
     K.CenterCrop(256),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
     data_keys=None,
 )
 
+_satlas_sentinel2_bands = (*_satlas_bands, 'B05', 'B06', 'B07', 'B08', 'B11', 'B12')
 _std = torch.tensor([255, 255, 255, 8160, 8160, 8160, 8160, 8160, 8160])
 _satlas_sentinel2_transforms = K.AugmentationSequential(
     K.CenterCrop(256),
@@ -33,6 +35,7 @@ _satlas_sentinel2_transforms = K.AugmentationSequential(
     data_keys=None,
 )
 
+_satlas_landsat_bands = tuple(f'B{i:02}' for i in range(1, 12))
 _satlas_landsat_transforms = K.AugmentationSequential(
     K.CenterCrop(256),
     K.Normalize(mean=torch.tensor(4000), std=torch.tensor(16320)),
@@ -64,7 +67,7 @@ class Swin_V2_T_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'swin_v2_t',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlas',
-            'bands': ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B11', 'B12'),
+            'bands': _satlas_sentinel2_bands,
         },
     )
 
@@ -77,7 +80,7 @@ class Swin_V2_T_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'swin_v2_t',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlas',
-            'bands': ('B02', 'B03', 'B04'),
+            'bands': _satlas_bands,
         },
     )
 
@@ -90,7 +93,7 @@ class Swin_V2_T_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'swin_v2_t',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlas',
-            'bands': ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B11', 'B12'),
+            'bands': _satlas_sentinel2_bands,
         },
     )
 
@@ -103,7 +106,7 @@ class Swin_V2_T_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'swin_v2_t',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlas',
-            'bands': ('B02', 'B03', 'B04'),
+            'bands': _satlas_bands,
         },
     )
 
@@ -152,19 +155,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'swin_v2_b',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlas',
-            'bands': (
-                'B01',
-                'B02',
-                'B03',
-                'B04',
-                'B05',
-                'B06',
-                'B07',
-                'B08',
-                'B09',
-                'B10',
-                'B11',
-            ),
+            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -177,19 +168,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'swin_v2_b',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlas',
-            'bands': (
-                'B01',
-                'B02',
-                'B03',
-                'B04',
-                'B05',
-                'B06',
-                'B07',
-                'B08',
-                'B09',
-                'B10',
-                'B11',
-            ),
+            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -228,7 +207,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'swin_v2_b',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlas',
-            'bands': ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B11', 'B12'),
+            'bands': _satlas_sentinel2_bands,
         },
     )
 
@@ -241,7 +220,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'swin_v2_b',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlas',
-            'bands': ('B02', 'B03', 'B04'),
+            'bands': _satlas_bands,
         },
     )
 
@@ -254,7 +233,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'swin_v2_b',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlas',
-            'bands': ('B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B11', 'B12'),
+            'bands': _satlas_sentinel2_bands,
         },
     )
 
@@ -267,7 +246,7 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'swin_v2_b',
             'publication': 'https://arxiv.org/abs/2211.15660',
             'repo': 'https://github.com/allenai/satlas',
-            'bands': ('B02', 'B03', 'B04'),
+            'bands': _satlas_bands,
         },
     )
 
