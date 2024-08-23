@@ -18,8 +18,3 @@ data:
   dict_kwargs:
     root: "tests/data/seco"
     seasons: 2
-    # https://github.com/Lightning-AI/lightning/issues/18616
-    bands:
-      - "B4"
-      - "B3"
-      - "B2"

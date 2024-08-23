@@ -84,7 +84,6 @@ class BoundingBox:
                 f"Bounding box is invalid: 'mint={self.mint}' > 'maxt={self.maxt}'"
             )
 
-    # https://github.com/PyCQA/pydocstyle/issues/525
     @overload
     def __getitem__(self, key: int) -> float:
         pass
