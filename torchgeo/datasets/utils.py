@@ -14,7 +14,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, TypeAlias, cast, overload
@@ -366,7 +366,9 @@ def working_dir(dirname: Path, create: bool = False) -> Iterator[None]:
         os.chdir(cwd)
 
 
-def _list_dict_to_dict_list(samples: Iterable[dict[Any, Any]]) -> dict[Any, list[Any]]:
+def _list_dict_to_dict_list(
+    samples: Iterable[Mapping[Any, Any]],
+) -> dict[Any, list[Any]]:
     """Convert a list of dictionaries to a dictionary of lists.
 
     Args:
@@ -384,7 +386,9 @@ def _list_dict_to_dict_list(samples: Iterable[dict[Any, Any]]) -> dict[Any, list
     return collated
 
 
-def _dict_list_to_list_dict(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
+def _dict_list_to_list_dict(
+    sample: Mapping[Any, Sequence[Any]],
+) -> list[dict[Any, Any]]:
     """Convert a dictionary of lists to a list of dictionaries.
 
     Args:
@@ -404,7 +408,7 @@ def _dict_list_to_list_dict(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, 
     return uncollated
 
 
-def stack_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
+def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     """Stack a list of samples along a new axis.
 
     Useful for forming a mini-batch of samples to pass to
@@ -425,7 +429,7 @@ def stack_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
     return collated
 
 
-def concat_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
+def concat_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     """Concatenate a list of samples along an existing axis.
 
     Useful for joining samples in a :class:`torchgeo.datasets.IntersectionDataset`.
@@ -447,7 +451,7 @@ def concat_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
     return collated
 
 
-def merge_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
+def merge_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     """Merge a list of samples.
 
     Useful for joining samples in a :class:`torchgeo.datasets.UnionDataset`.
@@ -472,7 +476,7 @@ def merge_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
     return collated
 
 
-def unbind_samples(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
+def unbind_samples(sample: MutableMapping[Any, Any]) -> list[dict[Any, Any]]:
     """Reverse of :func:`stack_samples`.
 
     Useful for turning a mini-batch of samples into a list of samples. These individual
