@@ -3,14 +3,12 @@
 
 """Airphen dataset."""
 
-from typing import Any
-
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import percentile_normalization
+from .utils import Sample, percentile_normalization
 
 
 class Airphen(RasterDataset):
@@ -44,10 +42,7 @@ class Airphen(RasterDataset):
     rgb_bands = ('B4', 'B3', 'B1')
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

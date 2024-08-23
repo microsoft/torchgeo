@@ -19,7 +19,7 @@ from .cdl import CDL
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .nlcd import NLCD
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class SSL4EOLBenchmark(NonGeoDataset):
@@ -116,7 +116,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         product: str = 'cdl',
         split: str = 'train',
         classes: list[int] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -257,7 +257,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         mask_pathname = os.path.join(self.root, f'{self.mask_dir_name}.tar.gz')
         extract_archive(mask_pathname)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -268,7 +268,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         """
         img_path, mask_path = self.sample_collection[index]
 
-        sample = {
+        sample: Sample = {
             'image': self._load_image(img_path),
             'mask': self._load_mask(mask_path),
         }
@@ -329,10 +329,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         return mask
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

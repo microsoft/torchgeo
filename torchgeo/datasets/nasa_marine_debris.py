@@ -12,12 +12,11 @@ import numpy as np
 import rasterio
 import torch
 from matplotlib.figure import Figure
-from torch import Tensor
 from torchvision.utils import draw_bounding_boxes
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, which
+from .utils import Path, Sample, which
 
 
 class NASAMarineDebris(NonGeoDataset):
@@ -59,7 +58,7 @@ class NASAMarineDebris(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new NASA Marine Debris Dataset instance.
@@ -82,7 +81,7 @@ class NASAMarineDebris(NonGeoDataset):
         self.source = sorted(glob.glob(os.path.join(self.root, 'source', '*.tif')))
         self.labels = sorted(glob.glob(os.path.join(self.root, 'labels', '*.npy')))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -105,7 +104,7 @@ class NASAMarineDebris(NonGeoDataset):
         indices = w_check & h_check
         boxes = boxes[indices]
 
-        sample = {'image': image, 'boxes': boxes}
+        sample: Sample = {'image': image, 'boxes': boxes}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -142,10 +141,7 @@ class NASAMarineDebris(NonGeoDataset):
         azcopy('sync', self.url, self.root, '--recursive=true')
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

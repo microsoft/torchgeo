@@ -19,7 +19,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, extract_archive, percentile_normalization
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class DFC2022(NonGeoDataset):
@@ -140,7 +146,7 @@ class DFC2022(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new DFC2022 dataset instance.
@@ -167,7 +173,7 @@ class DFC2022(NonGeoDataset):
         self.class2idx = {c: i for i, c in enumerate(self.classes)}
         self.files = self._load_files()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -181,7 +187,7 @@ class DFC2022(NonGeoDataset):
         dem = self._load_image(files['dem'], shape=image.shape[1:])
         image = torch.cat(tensors=[image, dem], dim=0)
 
-        sample = {'image': image}
+        sample: Sample = {'image': image}
 
         if self.split == 'train':
             mask = self._load_target(files['target'])
@@ -289,10 +295,7 @@ class DFC2022(NonGeoDataset):
         raise DatasetNotFoundError(self)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

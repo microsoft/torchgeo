@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar, cast
+from typing import ClassVar, cast
 from xml.etree.ElementTree import Element, parse
 
 import matplotlib.patches as patches
@@ -19,10 +19,10 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, download_url, extract_archive
+from .utils import Path, Sample, check_integrity, download_url, extract_archive
 
 
-def parse_pascal_voc(path: Path) -> dict[str, Any]:
+def parse_pascal_voc(path: Path) -> Sample:
     """Read a PASCAL VOC annotation file.
 
     Args:
@@ -119,7 +119,7 @@ class FAIR1M(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    classes: ClassVar[dict[str, dict[str, Any]]] = {
+    classes: ClassVar[dict[str, Sample]] = {
         'Passenger Ship': {'id': 0, 'category': 'Ship'},
         'Motorboat': {'id': 1, 'category': 'Ship'},
         'Fishing Boat': {'id': 2, 'category': 'Ship'},
@@ -232,7 +232,7 @@ class FAIR1M(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -264,7 +264,7 @@ class FAIR1M(NonGeoDataset):
             glob.glob(os.path.join(self.root, self.filename_glob[split]))
         )
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -276,14 +276,14 @@ class FAIR1M(NonGeoDataset):
         path = self.files[index]
 
         image = self._load_image(path)
-        sample = {'image': image}
+        sample: Sample = {'image': image}
 
         if self.split != 'test':
             label_path = str(path).replace(self.image_root, self.label_root)
             label_path = label_path.replace('.tif', '.xml')
             voc = parse_pascal_voc(label_path)
             boxes, labels = self._load_target(voc['points'], voc['labels'])
-            sample = {'image': image, 'boxes': boxes, 'label': labels}
+            sample: Sample = {'image': image, 'boxes': boxes, 'label': labels}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -383,10 +383,7 @@ class FAIR1M(NonGeoDataset):
                 extract_archive(filepath)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

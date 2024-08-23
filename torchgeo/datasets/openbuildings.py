@@ -9,7 +9,7 @@ import os
 import pathlib
 import sys
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar, cast
+from typing import ClassVar, cast
 
 import fiona
 import fiona.transform
@@ -25,7 +25,7 @@ from rtree.index import Index, Property
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import BoundingBox, Path, check_integrity
+from .utils import BoundingBox, Path, Sample, check_integrity
 
 
 class OpenBuildings(VectorDataset):
@@ -211,7 +211,7 @@ class OpenBuildings(VectorDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float = 0.0001,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -291,7 +291,7 @@ class OpenBuildings(VectorDataset):
         self._crs = crs
         self._source_crs = source_crs
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -328,7 +328,7 @@ class OpenBuildings(VectorDataset):
         else:
             masks = torch.zeros(size=(1, round(height), round(width)))
 
-        sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
+        sample: Sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -337,7 +337,7 @@ class OpenBuildings(VectorDataset):
 
     def _filter_geometries(
         self, query: BoundingBox, filepaths: list[Path]
-    ) -> list[dict[str, Any]]:
+    ) -> list[Sample]:
         """Filters a df read from the polygon csv file based on query and conf thresh.
 
         Args:
@@ -370,7 +370,7 @@ class OpenBuildings(VectorDataset):
 
         return shapes
 
-    def _wkt_fiona_geom_transform(self, x: str) -> dict[str, Any]:
+    def _wkt_fiona_geom_transform(self, x: str) -> Sample:
         """Function to transform a geometry string into new crs.
 
         Args:
@@ -390,7 +390,7 @@ class OpenBuildings(VectorDataset):
             geom = fiona.model.Geometry(**x)
         else:
             geom = x
-        transformed: dict[str, Any] = fiona.transform.transform_geom(
+        transformed: Sample = fiona.transform.transform_geom(
             self._source_crs.to_dict(), self._crs.to_dict(), geom
         )
         return transformed
@@ -413,10 +413,7 @@ class OpenBuildings(VectorDataset):
         raise DatasetNotFoundError(self)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
