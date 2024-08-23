@@ -389,6 +389,11 @@ Rwanda Field Boundary
 
 .. autoclass:: RwandaFieldBoundary
 
+SatlasPretrain
+^^^^^^^^^^^^^^
+
+.. autoclass:: SatlasPretrain
+
 Seasonal Contrast
 ^^^^^^^^^^^^^^^^^
 
