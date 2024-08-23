@@ -5,17 +5,15 @@
 
 import os
 from collections.abc import Callable
-from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class SustainBenchCropYield(NonGeoDataset):
@@ -62,7 +60,7 @@ class SustainBenchCropYield(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         countries: list[str] = ['usa'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -139,7 +137,7 @@ class SustainBenchCropYield(NonGeoDataset):
         """
         return len(self.images)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -148,7 +146,7 @@ class SustainBenchCropYield(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        sample: dict[str, Tensor] = {'image': self.images[index]}
+        sample: Sample = {'image': self.images[index]}
         sample.update(self.features[index])
 
         if self.transforms is not None:
@@ -194,7 +192,7 @@ class SustainBenchCropYield(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Any],
+        sample: Sample,
         band_idx: int = 0,
         show_titles: bool = True,
         suptitle: str | None = None,

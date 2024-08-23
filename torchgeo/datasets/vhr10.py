@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,6 +19,7 @@ from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     check_integrity,
     download_and_extract_archive,
     download_url,
@@ -62,7 +63,7 @@ class ConvertCocoAnnotations:
     https://github.com/pytorch/vision/blob/v0.14.0/references/detection/coco_utils.py
     """
 
-    def __call__(self, sample: dict[str, Any]) -> dict[str, Any]:
+    def __call__(self, sample: Sample) -> Sample:
         """Converts MS COCO fields (boxes, masks & labels) from list of ints to tensors.
 
         Args:
@@ -187,7 +188,7 @@ class VHR10(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'positive',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -230,7 +231,7 @@ class VHR10(NonGeoDataset):
             self.coco_convert = ConvertCocoAnnotations()
             self.ids = list(sorted(self.coco.imgs.keys()))
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -241,7 +242,7 @@ class VHR10(NonGeoDataset):
         """
         id_ = index % len(self) + 1
 
-        sample: dict[str, Any] = {
+        sample: Sample = {
             'image': self._load_image(id_),
             'label': self._load_target(id_),
         }
@@ -292,7 +293,7 @@ class VHR10(NonGeoDataset):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, id_: int) -> dict[str, Any]:
+    def _load_target(self, id_: int) -> Sample:
         """Load the annotations for a single image.
 
         Args:
@@ -359,7 +360,7 @@ class VHR10(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         show_feats: str | None = 'both',

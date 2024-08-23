@@ -7,20 +7,20 @@ import glob
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar, cast
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from rtree.index import Index, Property
-from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset, RasterDataset
 from .utils import (
     BoundingBox,
     Path,
+    Sample,
     disambiguate_timestamp,
     download_url,
     extract_archive,
@@ -71,7 +71,7 @@ class L7IrishMask(RasterDataset):
         crs: CRS | None = None,
         res: float | None = None,
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new L7IrishMask instance.
@@ -102,7 +102,7 @@ class L7IrishMask(RasterDataset):
             index.insert(hit.id, (minx, maxx, miny, maxy, mint, maxt), hit.object)
         self.index = index
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -179,7 +179,7 @@ class L7Irish(IntersectionDataset):
         crs: CRS | None = CRS.from_epsg(3857),
         res: float | None = None,
         bands: Sequence[str] = L7IrishImage.all_bands,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -267,10 +267,7 @@ class L7Irish(IntersectionDataset):
             extract_archive(tarfile)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

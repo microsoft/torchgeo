@@ -14,6 +14,8 @@ from kornia.geometry.boxes import Boxes
 from torch import Tensor
 from torch.nn.modules import Module
 
+from ..datasets import Batch
+
 
 # TODO: contribute these to Kornia and delete this file
 class AugmentationSequential(Module):
@@ -55,7 +57,7 @@ class AugmentationSequential(Module):
 
         self.augs = K.AugmentationSequential(*args, data_keys=keys, **kwargs)
 
-    def forward(self, batch: dict[str, Any]) -> dict[str, Any]:
+    def forward(self, batch: Batch) -> Batch:
         """Perform augmentations and update data dict.
 
         Args:
@@ -88,9 +90,7 @@ class AugmentationSequential(Module):
         outputs_list = (
             outputs_list if isinstance(outputs_list, list) else [outputs_list]
         )
-        outputs: dict[str, Tensor] = {
-            k: v for k, v in zip(self.data_keys, outputs_list)
-        }
+        outputs: Batch = {k: v for k, v in zip(self.data_keys, outputs_list)}
         batch.update(outputs)
 
         # Convert all inputs back to their previous dtype
@@ -179,7 +179,7 @@ class _NCropGenerator(K.random_generator.CropGenerator):
 
     def forward(
         self, batch_shape: tuple[int, ...], same_on_batch: bool = False
-    ) -> dict[str, Tensor]:
+    ) -> Batch:
         """Generate the crops.
 
         Args:

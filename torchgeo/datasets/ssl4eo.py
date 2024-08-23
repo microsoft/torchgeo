@@ -14,11 +14,10 @@ import numpy as np
 import rasterio
 import torch
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, download_url, extract_archive
+from .utils import Path, Sample, check_integrity, download_url, extract_archive
 
 
 class SSL4EO(NonGeoDataset):
@@ -165,7 +164,7 @@ class SSL4EOL(NonGeoDataset):
         root: Path = 'data',
         split: str = 'oli_sr',
         seasons: int = 1,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -199,7 +198,7 @@ class SSL4EOL(NonGeoDataset):
 
         self.scenes = sorted(os.listdir(self.subdir))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -220,7 +219,7 @@ class SSL4EOL(NonGeoDataset):
                 image = f.read()
                 images.append(torch.from_numpy(image.astype(np.float32)))
 
-        sample = {'image': torch.cat(images)}
+        sample: Sample = {'image': torch.cat(images)}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -284,10 +283,7 @@ class SSL4EOL(NonGeoDataset):
         extract_archive(path)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -407,7 +403,7 @@ class SSL4EOS12(NonGeoDataset):
         root: Path = 'data',
         split: str = 's2c',
         seasons: int = 1,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SSL4EOS12 instance.
@@ -439,7 +435,7 @@ class SSL4EOS12(NonGeoDataset):
 
         self._verify()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -461,7 +457,7 @@ class SSL4EOS12(NonGeoDataset):
                     image = f.read(out_shape=(1, self.size, self.size))
                     images.append(torch.from_numpy(image.astype(np.float32)))
 
-        sample = {'image': torch.cat(images)}
+        sample: Sample = {'image': torch.cat(images)}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -499,10 +495,7 @@ class SSL4EOS12(NonGeoDataset):
         extract_archive(os.path.join(self.root, filename))
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

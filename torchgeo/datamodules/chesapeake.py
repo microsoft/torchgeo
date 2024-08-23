@@ -7,9 +7,8 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch.nn.functional as F
-from torch import Tensor
 
-from ..datasets import ChesapeakeCVPR
+from ..datasets import ChesapeakeCVPR, Sample
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
 from .geo import GeoDataModule
 
@@ -124,9 +123,7 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
                 self.test_dataset, self.original_patch_size, self.original_patch_size
             )
 
-    def on_after_batch_transfer(
-        self, batch: dict[str, Tensor], dataloader_idx: int
-    ) -> dict[str, Tensor]:
+    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
         """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:

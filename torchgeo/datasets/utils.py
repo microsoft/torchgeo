@@ -13,14 +13,15 @@ import os
 import shutil
 import subprocess
 import sys
-from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, TypeAlias, cast, overload
+from typing import Any, TypeAlias, TypedDict, cast, overload
 
 import numpy as np
 import rasterio
 import torch
+from rasterio.crs import CRS
 from torch import Tensor
 from torchvision.datasets.utils import (
     check_integrity,
@@ -42,6 +43,39 @@ __all__ = (
 
 
 Path: TypeAlias = str | os.PathLike[str]
+
+
+class Sample(TypedDict, total=False):
+    """A single dataset sample.
+
+    .. versionadded:: 0.6
+    """
+
+    # Designed to match kornia.constants.DataKey
+    image: Tensor
+    mask: Tensor
+    bbox: Tensor
+    bbox_xyxy: Tensor
+    bbox_xywh: Tensor
+    keypoints: Tensor
+    label: Tensor
+
+    # Additional common keys for TorchGeo datasets
+    prediction: Tensor
+    bounds: BoundingBox
+    crs: CRS
+
+    # TODO: remove
+    boxes: Tensor
+
+
+class Batch(Sample):
+    """A batch of samples.
+
+    .. versionadded:: 0.6
+    """
+
+    # For now, identical to Sample until we can type check tensor shapes
 
 
 @dataclass(frozen=True)
@@ -407,7 +441,7 @@ def _dict_list_to_list_dict(
     return uncollated
 
 
-def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
+def stack_samples(samples: Iterable[Sample]) -> Batch:
     """Stack a list of samples along a new axis.
 
     Useful for forming a mini-batch of samples to pass to
@@ -428,7 +462,7 @@ def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     return collated
 
 
-def concat_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
+def concat_samples(samples: Iterable[Sample]) -> Batch:
     """Concatenate a list of samples along an existing axis.
 
     Useful for joining samples in a :class:`torchgeo.datasets.IntersectionDataset`.
@@ -450,7 +484,7 @@ def concat_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     return collated
 
 
-def merge_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
+def merge_samples(samples: Iterable[Sample]) -> Batch:
     """Merge a list of samples.
 
     Useful for joining samples in a :class:`torchgeo.datasets.UnionDataset`.
@@ -475,24 +509,24 @@ def merge_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     return collated
 
 
-def unbind_samples(sample: MutableMapping[Any, Any]) -> list[dict[Any, Any]]:
+def unbind_samples(batch: Batch) -> list[Sample]:
     """Reverse of :func:`stack_samples`.
 
     Useful for turning a mini-batch of samples into a list of samples. These individual
     samples can then be plotted using a dataset's ``plot`` method.
 
     Args:
-        sample: a mini-batch of samples
+        batch: a mini-batch of samples
 
     Returns:
          list of samples
 
     .. versionadded:: 0.2
     """
-    for key, values in sample.items():
+    for key, values in batch.items():
         if isinstance(values, Tensor):
-            sample[key] = torch.unbind(values)
-    return _dict_list_to_list_dict(sample)
+            batch[key] = torch.unbind(values)
+    return _dict_list_to_list_dict(batch)
 
 
 def rasterio_loader(path: Path) -> np.typing.NDArray[np.int_]:

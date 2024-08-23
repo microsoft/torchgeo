@@ -19,6 +19,7 @@ from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -74,7 +75,7 @@ class XView2(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new xView2 dataset instance.
@@ -101,7 +102,7 @@ class XView2(NonGeoDataset):
         self.class2idx = {c: i for i, c in enumerate(self.classes)}
         self.files = self._load_files(root, split)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -118,7 +119,7 @@ class XView2(NonGeoDataset):
 
         image = torch.stack(tensors=[image1, image2], dim=0)
         mask = torch.stack(tensors=[mask1, mask2], dim=0)
-        sample = {'image': image, 'mask': mask}
+        sample: Sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -225,7 +226,7 @@ class XView2(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         alpha: float = 0.5,

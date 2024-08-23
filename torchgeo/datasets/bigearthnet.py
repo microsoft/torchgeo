@@ -19,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, sort_sentinel2_bands
+from .utils import Path, Sample, download_url, extract_archive, sort_sentinel2_bands
 
 
 class BigEarthNet(NonGeoDataset):
@@ -272,7 +272,7 @@ class BigEarthNet(NonGeoDataset):
         split: str = 'train',
         bands: str = 'all',
         num_classes: int = 19,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -305,7 +305,7 @@ class BigEarthNet(NonGeoDataset):
         self._verify()
         self.folders = self._load_folders()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -316,7 +316,7 @@ class BigEarthNet(NonGeoDataset):
         """
         image = self._load_image(index)
         label = self._load_target(index)
-        sample: dict[str, Tensor] = {'image': image, 'label': label}
+        sample: Sample = {'image': image, 'label': label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -527,10 +527,7 @@ class BigEarthNet(NonGeoDataset):
         return labels
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

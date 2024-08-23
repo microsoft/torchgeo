@@ -6,7 +6,6 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import Any
 from xml.etree import ElementTree
 
 import matplotlib.patches as patches
@@ -19,10 +18,16 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, download_and_extract_archive, extract_archive
+from .utils import (
+    Path,
+    Sample,
+    check_integrity,
+    download_and_extract_archive,
+    extract_archive,
+)
 
 
-def parse_pascal_voc(path: Path) -> dict[str, Any]:
+def parse_pascal_voc(path: Path) -> Sample:
     """Read a PASCAL VOC annotation file.
 
     Args:
@@ -104,7 +109,7 @@ class ForestDamage(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -131,7 +136,7 @@ class ForestDamage(NonGeoDataset):
 
         self.class_to_idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -146,7 +151,7 @@ class ForestDamage(NonGeoDataset):
 
         boxes, labels = self._load_target(parsed['bboxes'], parsed['labels'])
 
-        sample = {'image': image, 'boxes': boxes, 'label': labels}
+        sample: Sample = {'image': image, 'boxes': boxes, 'label': labels}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -250,10 +255,7 @@ class ForestDamage(NonGeoDataset):
         )
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive
+from .utils import Path, Sample, download_and_extract_archive
 
 
 class GID15(NonGeoDataset):
@@ -90,7 +90,7 @@ class GID15(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -123,7 +123,7 @@ class GID15(NonGeoDataset):
 
         self.files = self._load_files(self.root, self.split)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -137,9 +137,9 @@ class GID15(NonGeoDataset):
 
         if self.split != 'test':
             mask = self._load_target(files['mask'])
-            sample = {'image': image, 'mask': mask}
+            sample: Sample = {'image': image, 'mask': mask}
         else:
-            sample = {'image': image}
+            sample: Sample = {'image': image}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -235,7 +235,7 @@ class GID15(NonGeoDataset):
             md5=self.md5 if self.checksum else None,
         )
 
-    def plot(self, sample: dict[str, Tensor], suptitle: str | None = None) -> Figure:
+    def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

@@ -3,12 +3,11 @@
 
 """National Agriculture Imagery Program (NAIP) dataset."""
 
-from typing import Any
-
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
 from .geo import RasterDataset
+from .utils import Sample
 
 
 class NAIP(RasterDataset):
@@ -49,10 +48,7 @@ class NAIP(RasterDataset):
     rgb_bands = ('R', 'G', 'B')
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

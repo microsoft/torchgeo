@@ -22,7 +22,7 @@ from torchvision.utils import draw_bounding_boxes
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, lazy_import
+from .utils import Path, Sample, download_url, extract_archive, lazy_import
 
 
 class IDTReeS(NonGeoDataset):
@@ -158,7 +158,7 @@ class IDTReeS(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         task: str = 'task1',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -195,7 +195,7 @@ class IDTReeS(NonGeoDataset):
         self._verify()
         self.images, self.geometries, self.labels = self._load(root)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -209,7 +209,7 @@ class IDTReeS(NonGeoDataset):
         hsi = self._load_image(path.replace('RGB', 'HSI'))
         chm = self._load_image(path.replace('RGB', 'CHM'))
         las = self._load_las(path.replace('RGB', 'LAS').replace('.tif', '.las'))
-        sample = {'image': image, 'hsi': hsi, 'chm': chm, 'las': las}
+        sample: Sample = {'image': image, 'hsi': hsi, 'chm': chm, 'las': las}
 
         if self.split == 'test':
             if self.task == 'task2':
@@ -282,7 +282,7 @@ class IDTReeS(NonGeoDataset):
             the bounding boxes
         """
         base_path = os.path.basename(path)
-        geometries = cast(dict[int, dict[str, Any]], self.geometries)
+        geometries = cast(dict[int, Sample], self.geometries)
 
         # Find object ids and geometries
         # The train set geometry->image mapping is contained
@@ -335,9 +335,7 @@ class IDTReeS(NonGeoDataset):
         tensor = torch.tensor(labels)
         return tensor
 
-    def _load(
-        self, root: Path
-    ) -> tuple[list[str], dict[int, dict[str, Any]] | None, Any]:
+    def _load(self, root: Path) -> tuple[list[str], dict[int, Sample] | None, Any]:
         """Load files, geometries, and labels.
 
         Args:
@@ -383,7 +381,7 @@ class IDTReeS(NonGeoDataset):
         df.reset_index()
         return df
 
-    def _load_geometries(self, directory: Path) -> dict[int, dict[str, Any]]:
+    def _load_geometries(self, directory: Path) -> dict[int, Sample]:
         """Load the shape files containing the geometries.
 
         Args:
@@ -395,7 +393,7 @@ class IDTReeS(NonGeoDataset):
         filepaths = glob.glob(os.path.join(directory, 'ITC', '*.shp'))
 
         i = 0
-        features: dict[int, dict[str, Any]] = {}
+        features: dict[int, Sample] = {}
         for path in filepaths:
             with fiona.open(path) as src:
                 for feature in src:
@@ -479,7 +477,7 @@ class IDTReeS(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         hsi_indices: tuple[int, int, int] = (0, 1, 2),

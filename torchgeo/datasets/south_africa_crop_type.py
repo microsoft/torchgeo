@@ -6,7 +6,7 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar, cast
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import BoundingBox, Path, which
+from .utils import BoundingBox, Path, Sample, which
 
 
 class SouthAfricaCropType(RasterDataset):
@@ -114,7 +114,7 @@ class SouthAfricaCropType(RasterDataset):
         crs: CRS | None = None,
         classes: Sequence[int] = list(cmap.keys()),
         bands: Sequence[str] = s2_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new South Africa Crop Type dataset instance.
@@ -151,7 +151,7 @@ class SouthAfricaCropType(RasterDataset):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -225,7 +225,7 @@ class SouthAfricaCropType(RasterDataset):
 
         mask = self._merge_files(mask_filepaths, query).squeeze(0)
 
-        sample = {
+        sample: Sample = {
             'crs': self.crs,
             'bounds': query,
             'image': image.float(),
@@ -258,10 +258,7 @@ class SouthAfricaCropType(RasterDataset):
         azcopy('sync', f'{self.url}', self.paths, '--recursive=true')
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
