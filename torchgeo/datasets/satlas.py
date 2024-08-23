@@ -465,6 +465,8 @@ class SatlasPretrain(NonGeoDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.48550/arXiv.2211.15660
+
+    .. versionadded:: 0.6
     """
 
     # https://github.com/allenai/satlas/blob/main/satlaspretrain_urls.txt
