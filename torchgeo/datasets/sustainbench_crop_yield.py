@@ -98,7 +98,7 @@ class SustainBenchCropYield(NonGeoDataset):
         self._verify()
 
         self.images = []
-        self.features = []
+        self.features: list[Sample] = []
 
         for country in self.countries:
             image_file_path = os.path.join(
@@ -122,7 +122,7 @@ class SustainBenchCropYield(NonGeoDataset):
                 year = year_npz_file[idx]
                 ndvi = ndvi_npz_file[idx]
 
-                features = {
+                features: Sample = {
                     'label': torch.tensor(target).to(torch.float32),
                     'year': torch.tensor(int(year)),
                     'ndvi': torch.from_numpy(ndvi).to(dtype=torch.float32),
