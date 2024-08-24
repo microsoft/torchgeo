@@ -3,7 +3,6 @@
 
 from collections.abc import Sequence
 from math import floor, isclose
-from typing import Any
 
 import pytest
 from rasterio.crs import CRS
@@ -11,6 +10,7 @@ from rasterio.crs import CRS
 from torchgeo.datasets import (
     BoundingBox,
     GeoDataset,
+    Sample,
     random_bbox_assignment,
     random_bbox_splitting,
     random_grid_cell_assignment,
@@ -49,7 +49,7 @@ class CustomGeoDataset(GeoDataset):
         self._crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         hits = self.index.intersection(tuple(query), objects=True)
         hit = next(iter(hits))
         return {'content': hit.object}

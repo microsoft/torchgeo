@@ -139,7 +139,7 @@ class GID15(NonGeoDataset):
             mask = self._load_target(files['mask'])
             sample: Sample = {'image': image, 'mask': mask}
         else:
-            sample: Sample = {'image': image}
+            sample = {'image': image}
 
         if self.transforms is not None:
             sample = self.transforms(sample)

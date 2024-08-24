@@ -6,7 +6,7 @@
 import os
 import sys
 from collections.abc import Callable, Sequence
-from typing import ClassVar, cast
+from typing import Any, ClassVar, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -347,8 +347,8 @@ class EnviroAtlas(GeoDataset):
         """
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = cast(list[dict[str, str]], [hit.object for hit in hits])
-
-        sample: Sample = {'image': [], 'mask': [], 'crs': self.crs, 'bounds': query}
+        images: list[np.typing.NDArray[Any]] = []
+        masks: list[np.typing.NDArray[Any]] = []
 
         if len(filepaths) == 0:
             raise IndexError(
@@ -389,23 +389,27 @@ class EnviroAtlas(GeoDataset):
                     'waterbodies',
                     'water',
                 ]:
-                    sample['image'].append(data)
+                    images.append(data)
                 elif layer in ['prior', 'prior_no_osm_no_buildings']:
                     if self.prior_as_input:
-                        sample['image'].append(data)
+                        images.append(data)
                     else:
-                        sample['mask'].append(data)
+                        masks.append(data)
                 elif layer in ['lc']:
                     data = self.raw_enviroatlas_to_idx_map[data]
-                    sample['mask'].append(data)
+                    masks.append(data)
         else:
             raise IndexError(f'query: {query} spans multiple tiles which is not valid')
 
-        sample['image'] = np.concatenate(sample['image'], axis=0)
-        sample['mask'] = np.concatenate(sample['mask'], axis=0)
+        image = torch.from_numpy(np.concatenate(images, axis=0))
+        mask = torch.from_numpy(np.concatenate(masks, axis=0))
 
-        sample['image'] = torch.from_numpy(sample['image'])
-        sample['mask'] = torch.from_numpy(sample['mask'])
+        sample: Sample = {
+            'image': image,
+            'mask': mask,
+            'crs': self.crs,
+            'bounds': query,
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)

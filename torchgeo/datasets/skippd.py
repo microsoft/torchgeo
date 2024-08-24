@@ -134,7 +134,7 @@ class SKIPPD(NonGeoDataset):
 
         return num_datapoints
 
-    def __getitem__(self, index: int) -> dict[str, str | Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -143,7 +143,7 @@ class SKIPPD(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        sample: dict[str, str | Tensor] = {'image': self._load_image(index)}
+        sample: Sample = {'image': self._load_image(index)}
         sample.update(self._load_features(index))
 
         if self.transforms is not None:
@@ -176,7 +176,7 @@ class SKIPPD(NonGeoDataset):
         tensor = torch.from_numpy(arr).to(torch.float32)
         return tensor
 
-    def _load_features(self, index: int) -> dict[str, str | Tensor]:
+    def _load_features(self, index: int) -> Sample:
         """Load label.
 
         Args:
@@ -194,7 +194,7 @@ class SKIPPD(NonGeoDataset):
         path = os.path.join(self.root, f'times_{self.split}_{self.task}.npy')
         datestring = np.load(path, allow_pickle=True)[index].strftime(self.dateformat)
 
-        features: dict[str, str | Tensor] = {
+        features: Sample = {
             'label': torch.tensor(label, dtype=torch.float32),
             'date': datestring,
         }

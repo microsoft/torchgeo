@@ -65,8 +65,54 @@ class Sample(TypedDict, total=False):
     bounds: BoundingBox
     crs: CRS
 
-    # TODO: remove
+    # TODO: Additional dataset-specific keys that should be subclasses
+    images: Tensor
+    input: Tensor
     boxes: Tensor
+    bboxes: Tensor
+    masks: Tensor
+    labels: Tensor
+    prediction_masks: Tensor
+    prediction_boxes: Tensor
+    prediction_labels: Tensor
+    prediction_label: Tensor
+    prediction_scores: Tensor
+    audio: Tensor
+    points: Tensor
+    x: Tensor
+    y: Tensor
+    relative_time: Tensor
+    ocean: Tensor
+    array: Tensor
+    chm: Tensor
+    hsi: Tensor
+    las: Tensor
+    image1: Tensor
+    image2: Tensor
+    crs1: Tensor
+    crs2: Tensor
+    magnitude: Tensor
+    agb: Tensor
+    key: Tensor
+    patch: Tensor
+    geometry: Tensor
+    properties: Tensor
+    id: int
+    centroid_lat: Tensor
+    centroid_lon: Tensor
+    content: Tensor
+    year: Tensor
+    ndvi: Tensor
+    filename: str
+    category: str
+    field_ids: Tensor
+    tile_index: Tensor
+    transform: Tensor
+    src: Tensor
+    dst: Tensor
+    input_size: Tensor
+    output_size: Tensor
+    index: BoundingBox
 
 
 class Batch(Sample):
@@ -455,7 +501,7 @@ def stack_samples(samples: Iterable[Sample]) -> Batch:
 
     .. versionadded:: 0.2
     """
-    collated: dict[Any, Any] = _list_dict_to_dict_list(samples)
+    collated: Batch = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.stack(value)
@@ -475,7 +521,7 @@ def concat_samples(samples: Iterable[Sample]) -> Batch:
 
     .. versionadded:: 0.2
     """
-    collated: dict[Any, Any] = _list_dict_to_dict_list(samples)
+    collated: Batch = _list_dict_to_dict_list(samples)
     for key, value in collated.items():
         if isinstance(value[0], Tensor):
             collated[key] = torch.cat(value)
@@ -497,7 +543,7 @@ def merge_samples(samples: Iterable[Sample]) -> Batch:
 
     .. versionadded:: 0.2
     """
-    collated: dict[Any, Any] = {}
+    collated: Batch = {}
     for sample in samples:
         for key, value in sample.items():
             if key in collated and isinstance(value, Tensor):
