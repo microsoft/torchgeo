@@ -555,6 +555,8 @@ Utilities
 ---------
 
 .. autoclass:: BoundingBox
+.. autoclass:: Sample
+.. autoclass:: Batch
 
 Collation Functions
 ^^^^^^^^^^^^^^^^^^^
