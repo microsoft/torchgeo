@@ -38,7 +38,7 @@ class SkyScript(NonGeoDataset):
 
     url = 'https://opendatasharing.s3.us-west-2.amazonaws.com/SkyScript/{}'
 
-    image_dirs = (f'images{i}' for i in range(2, 8))
+    image_dirs = tuple(f'images{i}' for i in range(2, 8))
     image_md5s = (
         'fbfb5f7aa1731f4106fc3ffbd608100a',
         'ad4fd9fdb9622d1ea360210cb222f2bd',
