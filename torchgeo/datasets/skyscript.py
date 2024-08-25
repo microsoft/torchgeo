@@ -87,9 +87,7 @@ class SkyScript(NonGeoDataset):
         self.root = root
         self.split = split
         self.transforms = transforms
-        print(download)
         self.download = download
-        print(self.download)
         self.checksum = checksum
 
         self._verify()
@@ -133,23 +131,18 @@ class SkyScript(NonGeoDataset):
         for directory, md5 in zip(self.image_dirs, self.image_md5s):
             # Check if the extracted files already exist
             if os.path.isdir(os.path.join(self.root, directory)):
-                print('Already extracted')
                 continue
 
             # Check if the zip files have already been downloaded
             if os.path.isfile(os.path.join(self.root, f'{directory}.zip')):
-                print('Extract')
                 extract_archive(os.path.join(self.root, f'{directory}.zip'))
                 continue
 
             # Check if the user requested to download the dataset
-            print(self.download)
             if not self.download:
-                print('Raise')
                 raise DatasetNotFoundError(self)
 
             # Download the dataset
-            print('Download')
             url = self.url.format(f'{directory}.zip')
             md5 = md5 if self.checksum else None
             download_and_extract_archive(url, self.root, md5=md5)

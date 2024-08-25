@@ -4,11 +4,11 @@
 import os
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import pytest
-import torch
 import torch.nn as nn
+from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
+from torch import Tensor
 
 from torchgeo.datasets import DatasetNotFoundError, SkyScript
 
@@ -24,7 +24,7 @@ class TestSkyScript:
     def test_getitem(self, dataset: SkyScript) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['image'], Tensor)
         assert isinstance(x['text'], str)
 
     def test_len(self, dataset: SkyScript) -> None:
