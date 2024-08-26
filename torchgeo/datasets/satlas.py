@@ -506,10 +506,10 @@ class SatlasPretrain(NonGeoDataset):
     }
     # TODO
     md5s: ClassVar[dict[str, tuple[str, ...]]] = {
-        'landsat': (),
-        'naip': (),
-        'sentinel1': (),
-        'sentinel2': (),
+        'landsat': ('foo',),
+        'naip': ('foo',),
+        'sentinel1': ('foo',),
+        'sentinel2': ('foo',),
         'static': ('4e38c2573bc78cf1f0d7267e432cb42c',),
         'dynamic': ('4503ae687948e7d2cb7ade0083f77a8a',),
         'metadata': ('6b9ac5a4f9a1ee88a271d28f12854607',),
@@ -610,11 +610,10 @@ class SatlasPretrain(NonGeoDataset):
         """
         bands = self.bands[image]
         fname_glob = os.path.join(self.root, image, '*', bands[0], f'{col}_{row}.png')
-        path_parts = glob.glob(fname_glob)[0].split(os.sep)
+        path = os.path.dirname(os.path.dirname(glob.glob(fname_glob)[0]))
         channels = []
         for band in bands:
-            path_parts[-2] = band
-            with Image.open(os.path.join(*path_parts)) as img:
+            with Image.open(os.path.join(path, band, f'{col}_{row}.png')) as img:
                 array = np.atleast_3d(np.array(img, dtype=np.float32))
                 channels.append(torch.tensor(array))
         return rearrange(torch.cat(channels, dim=-1), 'h w c -> c h w')
@@ -655,6 +654,7 @@ class SatlasPretrain(NonGeoDataset):
                 path = os.path.join(self.root, url.split('/')[-1])
                 if os.path.isfile(path):
                     extract_archive(path)
+                    continue
 
                 # Check if the user requested to download the dataset
                 if not self.download:
