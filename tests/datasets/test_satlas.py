@@ -41,9 +41,7 @@ class TestSatlasPretrain:
 
     def test_already_downloaded(self, monkeypatch: MonkeyPatch, dataset: SatlasPretrain) -> None:
         shutil.rmtree(os.path.join(dataset.root, 'landsat'))
-        url = SatlasPretrain.urls['landsat'][0].replace(os.sep, '/')
-        monkeypatch.setitem(SatlasPretrain.urls, 'landsat', (url,))
-        SatlasPretrain(root=dataset.root)
+        SatlasPretrain(root=dataset.root, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
