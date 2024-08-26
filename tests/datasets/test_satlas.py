@@ -39,8 +39,10 @@ class TestSatlasPretrain:
     def test_len(self, dataset: SatlasPretrain) -> None:
         assert len(dataset) == 2
 
-    def test_already_downloaded(self, dataset: SatlasPretrain) -> None:
+    def test_already_downloaded(self, monkeypatch: MonkeyPatch, dataset: SatlasPretrain) -> None:
         shutil.rmtree(os.path.join(dataset.root, 'landsat'))
+        url = SatlasPretrain.urls['landsat'][0].replace(os.sep, '/')
+        monkeypatch.setitem(SatlasPretrain.urls, 'landsat', (url,))
         SatlasPretrain(root=dataset.root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
