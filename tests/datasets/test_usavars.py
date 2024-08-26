@@ -13,12 +13,7 @@ from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, USAVars
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestUSAVars:
@@ -35,8 +30,6 @@ class TestUSAVars:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> USAVars:
-        monkeypatch.setattr(torchgeo.datasets.usavars, 'download_url', download_url)
-
         md5 = 'b504580a00bdc27097d5421dec50481b'
         monkeypatch.setattr(USAVars, 'md5', md5)
 

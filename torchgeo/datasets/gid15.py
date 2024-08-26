@@ -66,8 +66,8 @@ class GID15(NonGeoDataset):
     md5 = '615682bf659c3ed981826c6122c10c83'
     filename = 'gid-15.zip'
     directory = 'GID'
-    splits = ['train', 'val', 'test']
-    classes = [
+    splits = ('train', 'val', 'test')
+    classes = (
         'background',
         'industrial_land',
         'urban_residential',
@@ -84,7 +84,7 @@ class GID15(NonGeoDataset):
         'river',
         'lake',
         'pond',
-    ]
+    )
 
     def __init__(
         self,

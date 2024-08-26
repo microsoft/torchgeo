@@ -14,16 +14,11 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     DatasetNotFoundError,
     RGBBandsMissingError,
     SeasonalContrastS2,
 )
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestSeasonalContrastS2:
@@ -37,7 +32,6 @@ class TestSeasonalContrastS2:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SeasonalContrastS2:
-        monkeypatch.setattr(torchgeo.datasets.seco, 'download_url', download_url)
         monkeypatch.setitem(
             SeasonalContrastS2.metadata['100k'],
             'url',

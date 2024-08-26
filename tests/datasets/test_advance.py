@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -11,20 +10,14 @@ import torch
 import torch.nn as nn
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import ADVANCE, DatasetNotFoundError
 
 pytest.importorskip('scipy', minversion='1.7.2')
 
 
-def download_url(url: str, root: str | Path, *args: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestADVANCE:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ADVANCE:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'advance')
         urls = [
             os.path.join(data_dir, 'ADVANCE_vision.zip'),

@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -12,7 +11,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     NCCM,
     BoundingBox,
@@ -22,14 +20,9 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestNCCM:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NCCM:
-        monkeypatch.setattr(torchgeo.datasets.nccm, 'download_url', download_url)
         md5s = {
             2017: 'ae5c390d0ffb8970d544b8a09142759f',
             2018: '0d453bdb8ea5b7318c33e62513760580',

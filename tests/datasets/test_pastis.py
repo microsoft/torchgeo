@@ -13,12 +13,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import PASTIS, DatasetNotFoundError
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestPASTIS:
@@ -32,8 +27,6 @@ class TestPASTIS:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> PASTIS:
-        monkeypatch.setattr(torchgeo.datasets.pastis, 'download_url', download_url)
-
         md5 = '135a29fb8221241dde14f31579c07f45'
         monkeypatch.setattr(PASTIS, 'md5', md5)
         url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')

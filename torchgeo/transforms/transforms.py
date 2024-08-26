@@ -53,9 +53,9 @@ class AugmentationSequential(Module):
             else:
                 keys.append(key)
 
-        self.augs = K.AugmentationSequential(*args, data_keys=keys, **kwargs)  # type: ignore[arg-type] # noqa: E501
+        self.augs = K.AugmentationSequential(*args, data_keys=keys, **kwargs)  # type: ignore[arg-type]
 
-    def forward(self, batch: dict[str, Tensor]) -> dict[str, Tensor]:
+    def forward(self, batch: dict[str, Any]) -> dict[str, Any]:
         """Perform augmentations and update data dict.
 
         Args:
@@ -99,7 +99,7 @@ class AugmentationSequential(Module):
 
         # Convert boxes to default [N, 4]
         if 'boxes' in batch:
-            batch['boxes'] = Boxes(batch['boxes']).to_tensor(mode='xyxy')  # type:ignore[assignment]
+            batch['boxes'] = Boxes(batch['boxes']).to_tensor(mode='xyxy')
 
         # Torchmetrics does not support masks with a channel dimension
         if 'mask' in batch and batch['mask'].shape[1] == 1:

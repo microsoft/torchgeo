@@ -11,7 +11,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
@@ -21,16 +20,9 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestSouthAmericaSoybean:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> SouthAmericaSoybean:
-        monkeypatch.setattr(
-            torchgeo.datasets.south_america_soybean, 'download_url', download_url
-        )
         transforms = nn.Identity()
         url = os.path.join(
             'tests', 'data', 'south_america_soybean', 'SouthAmerica_Soybean_{}.tif'

@@ -1,12 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import glob
 import math
 import os
 import pickle
 import re
-import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -15,20 +13,14 @@ from typing import Any
 import numpy as np
 import pytest
 import torch
-from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
     Executable,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
-    download_and_extract_archive,
-    download_radiant_mlhub_collection,
-    download_radiant_mlhub_dataset,
-    extract_archive,
     lazy_import,
     merge_samples,
     percentile_normalization,
@@ -37,85 +29,6 @@ from torchgeo.datasets.utils import (
     which,
     working_dir,
 )
-
-
-class MLHubDataset:
-    def download(self, output_dir: str, **kwargs: str) -> None:
-        glob_path = os.path.join(
-            'tests', 'data', 'ref_african_crops_kenya_02', '*.tar.gz'
-        )
-        for tarball in glob.iglob(glob_path):
-            shutil.copy(tarball, output_dir)
-
-
-class Collection:
-    def download(self, output_dir: str, **kwargs: str) -> None:
-        glob_path = os.path.join(
-            'tests', 'data', 'ref_african_crops_kenya_02', '*.tar.gz'
-        )
-        for tarball in glob.iglob(glob_path):
-            shutil.copy(tarball, output_dir)
-
-
-def fetch_dataset(dataset_id: str, **kwargs: str) -> MLHubDataset:
-    return MLHubDataset()
-
-
-def fetch_collection(collection_id: str, **kwargs: str) -> Collection:
-    return Collection()
-
-
-def download_url(url: str, root: str | Path, *args: str) -> None:
-    shutil.copy(url, root)
-
-
-@pytest.mark.parametrize(
-    'src',
-    [
-        os.path.join('cowc_detection', 'COWC_Detection_Columbus_CSUAV_AFRL.tbz'),
-        os.path.join('cowc_detection', 'COWC_test_list_detection.txt.bz2'),
-        os.path.join('vhr10', 'NWPU VHR-10 dataset.rar'),
-        os.path.join('landcoverai', 'landcover.ai.v1.zip'),
-        os.path.join('chesapeake', 'BAYWIDE', 'Baywide_13Class_20132014.zip'),
-        os.path.join('sen12ms', 'ROIs1158_spring_lc.tar.gz'),
-    ],
-)
-def test_extract_archive(src: str, tmp_path: Path) -> None:
-    if src.endswith('.rar'):
-        pytest.importorskip('rarfile', minversion='4')
-    if src.startswith('chesapeake'):
-        pytest.importorskip('zipfile_deflate64')
-    extract_archive(os.path.join('tests', 'data', src), tmp_path)
-
-
-def test_unsupported_scheme() -> None:
-    with pytest.raises(
-        RuntimeError, match='src file has unknown archival/compression scheme'
-    ):
-        extract_archive('foo.bar')
-
-
-def test_download_and_extract_archive(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
-    download_and_extract_archive(
-        os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip'), tmp_path
-    )
-
-
-def test_download_radiant_mlhub_dataset(
-    tmp_path: Path, monkeypatch: MonkeyPatch
-) -> None:
-    radiant_mlhub = pytest.importorskip('radiant_mlhub', minversion='0.3')
-    monkeypatch.setattr(radiant_mlhub.Dataset, 'fetch', fetch_dataset)
-    download_radiant_mlhub_dataset('', tmp_path)
-
-
-def test_download_radiant_mlhub_collection(
-    tmp_path: Path, monkeypatch: MonkeyPatch
-) -> None:
-    radiant_mlhub = pytest.importorskip('radiant_mlhub', minversion='0.3')
-    monkeypatch.setattr(radiant_mlhub.Collection, 'fetch', fetch_collection)
-    download_radiant_mlhub_collection('', tmp_path)
 
 
 class TestBoundingBox:

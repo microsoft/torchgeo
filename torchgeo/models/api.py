@@ -8,7 +8,7 @@ See the following references for design details:
 * https://pytorch.org/blog/easily-list-and-initialize-models-with-new-apis-in-torchvision/
 * https://pytorch.org/vision/stable/models.html
 * https://github.com/pytorch/vision/blob/main/torchvision/models/_api.py
-"""  # noqa: E501
+"""
 
 from collections.abc import Callable
 from typing import Any
@@ -23,6 +23,7 @@ from .dofa import (
     dofa_large_patch16_224,
 )
 from .resnet import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50
+from .scale_mae import ScaleMAELarge16_Weights, scalemae_large_patch16
 from .swin import Swin_V2_B_Weights, swin_v2_b
 from .vit import ViTSmall16_Weights, vit_small_patch16_224
 
@@ -31,6 +32,7 @@ _model = {
     'dofa_large_patch16_224': dofa_large_patch16_224,
     'resnet18': resnet18,
     'resnet50': resnet50,
+    'scalemae_large_patch16': scalemae_large_patch16,
     'swin_v2_b': swin_v2_b,
     'vit_small_patch16_224': vit_small_patch16_224,
 }
@@ -40,12 +42,14 @@ _model_weights = {
     dofa_large_patch16_224: DOFALarge16_Weights,
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
+    scalemae_large_patch16: ScaleMAELarge16_Weights,
     swin_v2_b: Swin_V2_B_Weights,
     vit_small_patch16_224: ViTSmall16_Weights,
     'dofa_base_patch16_224': DOFABase16_Weights,
     'dofa_large_patch16_224': DOFALarge16_Weights,
     'resnet18': ResNet18_Weights,
     'resnet50': ResNet50_Weights,
+    'scalemae_large_patch16': ScaleMAELarge16_Weights,
     'swin_v2_b': Swin_V2_B_Weights,
     'vit_small_patch16_224': ViTSmall16_Weights,
 }
