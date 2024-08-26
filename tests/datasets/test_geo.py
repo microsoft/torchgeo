@@ -385,12 +385,15 @@ class TestVirtualFilesystems:
         _, dir_zipped = temp_archive
         filename = 'vector_2024.geojson'
 
-        # Cannot use os.path.join here, as dir_zipped has .zip extension.
         # Using '!' as separator between archive and file as per Apache Commons VFS
         # https://rasterio.readthedocs.io/en/latest/topics/vsi.html
         specific_file_zipped = f'{dir_zipped}!{filename}'
 
-        files_found = CustomGeoDataset(paths=f'zip://{specific_file_zipped}').files
+        vsi_path = f'zip://{specific_file_zipped}'
+        if sys.platform == 'win32':
+            vsi_path = os.path.join('zip://D:', specific_file_zipped)
+
+        files_found = CustomGeoDataset(paths=vsi_path).files
         assert len(files_found) == 1
         file = str(files_found[0])
         assert file.endswith(filename)
@@ -418,6 +421,10 @@ class TestVirtualFilesystems:
         filepath_within_dir = specific_file_not_zipped.replace(dir_not_zipped, '')
 
         specific_file_zipped = f'zip://{dir_zipped}!{filepath_within_dir}'
+        if sys.platform == 'win32':
+            specific_file_zipped = os.path.join(
+                'zip://D:', '{dir_zipped}!{filepath_within_dir}'
+            )
 
         files_found = CustomGeoDataset(paths=specific_file_zipped).files
         assert len(files_found) == 1
@@ -467,8 +474,12 @@ class TestVirtualFilesystems:
             paths=dir_not_zipped, bands=bands, transforms=transforms, cache=cache
         ).files
 
+        vsi_path = f'zip://{dir_zipped}'
+        if sys.platform == 'win32':
+            vsi_path = os.path.join('zip://D:', dir_zipped)
+
         files_zipped = Sentinel2(
-            paths=f'zip://{dir_zipped}', bands=bands, transforms=transforms, cache=cache
+            paths=vsi_path, bands=bands, transforms=transforms, cache=cache
         ).files
 
         basenames_not_zipped = [Path(path).stem for path in files_not_zipped]
