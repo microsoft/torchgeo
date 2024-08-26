@@ -9,11 +9,11 @@ from collections.abc import Callable, Sequence
 from typing import ClassVar
 
 import matplotlib.pyplot as plt
-from einops import rearrange
 import numpy as np
 import rasterio
 import rasterio.features
 import torch
+from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
 
