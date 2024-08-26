@@ -608,12 +608,19 @@ class SatlasPretrain(NonGeoDataset):
         Returns:
             An image tensor.
         """
+        # Moved in PIL 9.1.0
+        try:
+            resample = Image.Resampling.BILINEAR
+        except AttributeError:
+            resample = Image.BILINEAR  # type: ignore[attr-defined]
+
         bands = self.bands[image]
         fname_glob = os.path.join(self.root, image, '*', bands[0], f'{col}_{row}.png')
         path = os.path.dirname(os.path.dirname(glob.glob(fname_glob)[0]))
         channels = []
         for band in bands:
             with Image.open(os.path.join(path, band, f'{col}_{row}.png')) as img:
+                img = img.resize((self.chip_size, self.chip_size), resample=resample)
                 array = np.atleast_3d(np.array(img, dtype=np.float32))
                 channels.append(torch.tensor(array))
         return rearrange(torch.cat(channels, dim=-1), 'h w c -> c h w')

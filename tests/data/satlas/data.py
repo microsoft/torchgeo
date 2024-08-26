@@ -10,6 +10,20 @@ import shutil
 from PIL import Image
 
 SIZE = 32
+landsat_size = {
+    'b1': SIZE // 2,
+    'b2': SIZE // 2,
+    'b3': SIZE // 2,
+    'b4': SIZE // 2,
+    'b5': SIZE // 2,
+    'b6': SIZE // 2,
+    'b7': SIZE // 2,
+    'b8': SIZE,
+    'b9': SIZE // 2,
+    'b10': SIZE // 2,
+    'b11': SIZE // 4,
+    'b12': SIZE // 4,
+}
 
 index = [[7149, 3246], [1234, 5678]]
 
@@ -35,8 +49,12 @@ filenames: FILENAME_HIERARCHY = {
 def create_files(path: str) -> None:
     os.makedirs(path, exist_ok=True)
     for col, row in index:
-        mode = 'RGB' if path.endswith('tci') else 'L'
-        img = Image.new(mode, (SIZE, SIZE))
+        band = os.path.basename(path)
+        mode = 'RGB' if band == 'tci' else 'L'
+        size = SIZE
+        if 'landsat' in path:
+            size = landsat_size[band]
+        img = Image.new(mode, (size, size))
         img.save(os.path.join(path, f'{col}_{row}.png'))
 
 
