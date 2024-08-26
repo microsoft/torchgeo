@@ -11,6 +11,7 @@ from typing import ClassVar, TypedDict
 
 import numpy as np
 import torch
+from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from PIL import Image
@@ -493,9 +494,11 @@ class SatlasPretrain(NonGeoDataset):
             'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-sentinel2-a.tar',
             'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-sentinel2-b.tar',
         ),
-        'labels': (
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-labels-dynamic.tar',
+        'static': (
             'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-labels-static.tar',
+        ),
+        'dynamic': (
+            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-labels-dynamic.tar',
         ),
         'metadata': (
             'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-metadata.tar',
@@ -507,8 +510,9 @@ class SatlasPretrain(NonGeoDataset):
         'naip': (),
         'sentinel1': (),
         'sentinel2': (),
-        'labels': (),
-        'metadata': (),
+        'static': ('4e38c2573bc78cf1f0d7267e432cb42c',),
+        'dynamic': ('4503ae687948e7d2cb7ade0083f77a8a',),
+        'metadata': ('6b9ac5a4f9a1ee88a271d28f12854607',),
     }
 
     # NOTE: 'tci' is RGB (b04-02), not BGR (b02-04)
@@ -518,6 +522,8 @@ class SatlasPretrain(NonGeoDataset):
         'sentinel1': ('vh', 'vv'),
         'sentinel2': ('tci', 'b05', 'b06', 'b07', 'b08', 'b11', 'b12'),
     }
+
+    chip_size = 512
 
     def __init__(
         self,
@@ -604,13 +610,14 @@ class SatlasPretrain(NonGeoDataset):
         """
         bands = self.bands[image]
         fname_glob = os.path.join(self.root, image, '*', bands[0], f'{col}_{row}.png')
-        path_parts = list(os.path.split(glob.glob(fname_glob)[0]))
+        path_parts = glob.glob(fname_glob)[0].split(os.sep)
         channels = []
         for band in bands:
-            path_parts[-3] = band
+            path_parts[-2] = band
             with Image.open(os.path.join(*path_parts)) as img:
-                channels.append(torch.tensor(np.array(img, dtype=np.float32)))
-        return torch.cat(channels)
+                array = np.atleast_3d(np.array(img, dtype=np.float32))
+                channels.append(torch.tensor(array))
+        return rearrange(torch.cat(channels, dim=-1), 'h w c -> c h w')
 
     def _load_label(self, label: str, col: int, row: int) -> Tensor:
         """Load a single label.
@@ -624,14 +631,17 @@ class SatlasPretrain(NonGeoDataset):
             A label tensor.
         """
         path = os.path.join(self.root, 'static', f'{col}_{row}', f'{label}.png')
-        with Image.open(path) as img:
-            return torch.tensor(np.array(img, dtype=np.int64))
+        if os.path.isfile(path):
+            with Image.open(path) as img:
+                return torch.tensor(np.array(img, dtype=np.int64))
+        else:
+            return torch.zeros(self.chip_size, self.chip_size, dtype=torch.long)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         products = [*self.images, 'metadata']
         if self.labels:
-            products.append('labels')
+            products.append('static')
 
         for product in products:
             # Check if the extracted directory already exists
@@ -676,16 +686,16 @@ class SatlasPretrain(NonGeoDataset):
         for key, value in sample.items():
             match key.split('_', 1):
                 case ['image', 'landsat']:
-                    images.append(value[[3, 2, 1]])
+                    images.append(rearrange(value[[3, 2, 1]], 'c h w -> h w c') / 255)
                     titles.append('Landsat 8/9')
                 case ['image', 'naip']:
-                    images.append(value[:3])
+                    images.append(rearrange(value[:3], 'c h w -> h w c') / 255)
                     titles.append('NAIP')
                 case ['image', 'sentinel1']:
-                    images.extend([value[0], value[1]])
+                    images.extend([value[0] / 255, value[1] / 255])
                     titles.extend(['Sentinel-1 VH', 'Sentinel-1 VV'])
                 case ['image', 'sentinel2']:
-                    images.append(value[:3])
+                    images.append(rearrange(value[:3], 'c h w -> h w c') / 255)
                     titles.append('Sentinel-2')
                 case ['mask' | 'prediction', label]:
                     cmap = torch.tensor(TASKS[label]['colors'])
@@ -695,6 +705,12 @@ class SatlasPretrain(NonGeoDataset):
         fig, ax = plt.subplots(ncols=len(images), squeeze=False)
         for i, (image, title) in enumerate(zip(images, titles)):
             ax[0, i].imshow(image)
-            ax[0, i].set_title(title)
+            ax[0, i].axis('off')
+
+            if show_titles:
+                ax[0, i].set_title(title)
+
+        if suptitle is not None:
+            fig.suptitle(suptitle)
 
         return fig
