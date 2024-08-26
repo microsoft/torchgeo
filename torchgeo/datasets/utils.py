@@ -308,8 +308,8 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
         (mint, maxt) tuple for indexing
     """
     mint = datetime.strptime(date_str, format)
+    format = format.replace('%%', '')
 
-    # TODO: This doesn't correctly handle literal `%%` characters in format
     # TODO: May have issues with time zones, UTC vs. local time, and DST
     # TODO: This is really tedious, is there a better way to do this?
 
