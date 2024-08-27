@@ -203,8 +203,10 @@ class DOFAEmbedding(nn.Module):
         weight, bias = self.weight_generator(waves)  # 3x3x3
 
         dynamic_weight = weight.view(
-            self.embed_dim, inplanes, self.kernel_size, self.kernel_size
-        )  # 3xoutdx16x16
+            inplanes, self.kernel_size, self.kernel_size, self.embed_dim
+        )
+        dynamic_weight = dynamic_weight.permute([3, 0, 1, 2])
+
         if bias is not None:
             bias = bias.view([self.embed_dim]) * self.scaler
 
