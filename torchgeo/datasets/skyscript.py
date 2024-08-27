@@ -169,9 +169,9 @@ class SkyScript(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image = rearrange(sample['image'], 'c h w -> h w c') / 255
-
         fig, ax = plt.subplots()
+
+        image = rearrange(sample['image'], 'c h w -> h w c') / 255
         ax.imshow(image)
         ax.axis('off')
 
