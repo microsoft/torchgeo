@@ -54,6 +54,7 @@ from .geo import (
     UnionDataset,
     VectorDataset,
 )
+from .geonrw import GeoNRW
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
@@ -213,6 +214,7 @@ __all__ = (
     'FAIR1M',
     'FireRisk',
     'ForestDamage',
+    'GeoNRW',
     'GID15',
     'IDTReeS',
     'InriaAerialImageLabeling',

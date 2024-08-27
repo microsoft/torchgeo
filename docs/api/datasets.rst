@@ -281,6 +281,11 @@ Forest Damage
 
 .. autoclass:: ForestDamage
 
+GeoNRW
+^^^^^^^
+
+.. autoclass:: GeoNRW
+
 GID-15
 ^^^^^^
 
