@@ -90,7 +90,7 @@ class CaBuAr(NonGeoDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new ChaBuD dataset instance.
+        """Initialize a new CaBuAr dataset instance.
 
         Args:
             root: root directory where dataset can be found

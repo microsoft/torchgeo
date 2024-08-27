@@ -65,15 +65,3 @@ class CaBuArDataModule(NonGeoDataModule):
         self.std = maxs - mins
 
         super().__init__(CaBuAr, batch_size, num_workers, **kwargs)
-
-    def setup(self, stage: str) -> None:
-        """Set up datasets.
-
-        Args:
-            stage: Either 'fit', 'validate', 'test'.
-        """
-        if stage in ['fit', 'validate']:
-            self.train_dataset = CaBuAr(split='train', **self.kwargs)
-            self.val_dataset = CaBuAr(split='val', **self.kwargs)
-        elif stage == 'test':
-            self.test_dataset = CaBuAr(split='test', **self.kwargs)

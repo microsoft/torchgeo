@@ -37,18 +37,8 @@ uris = [
     '29413474-04b8-4bb1-8b89-fd640023d4a6_0',
     '43f2e60a-73b4-4f33-b99e-319d892fcab4_0',
 ]
-folds = (
-    [
-        random.sample(fold_mapping['train'], 1)[0],
-        random.sample(fold_mapping['train'], 1)[0],
-        random.sample(fold_mapping['train'], 1)[0],
-        random.sample(fold_mapping['train'], 1)[0],
-    ]
-    + [0] * 4
-    + ['chabud'] * 4
-)
+folds = random.choices(fold_mapping['train'], k=4) + [0] * 4 + ['chabud'] * 4
 files = ['512x512.hdf5'] * 8 + ['chabud_test.h5'] * 4
-
 
 # Remove old data
 for filename in filenames:
@@ -59,7 +49,6 @@ for filename in filenames:
 data = np.random.randint(
     SENTINEL2_MAX, size=(SIZE, SIZE, NUM_CHANNELS), dtype=np.uint16
 )
-data = data.astype(np.uint16)
 gt = np.random.randint(NUM_CLASSES, size=(SIZE, SIZE, 1), dtype=np.uint16)
 
 for filename, uri, fold in zip(files, uris, folds):
