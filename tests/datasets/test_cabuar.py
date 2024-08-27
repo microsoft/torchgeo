@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
+from itertools import product
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -12,34 +12,24 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import CaBuAr, DatasetNotFoundError
 
 pytest.importorskip('h5py', minversion='3.6')
 
 
-def download_url(
-    url: str, root: str | Path, filename: str, *args: str, **kwargs: str
-) -> None:
-    shutil.copy(url, os.path.join(root, filename))
-
-
 class TestCaBuAr:
     @pytest.fixture(
-        params=zip([CaBuAr.all_bands, CaBuAr.rgb_bands], ['train', 'val', 'test'])
+        params=product([CaBuAr.all_bands, CaBuAr.rgb_bands], ['train', 'val', 'test'])
     )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> CaBuAr:
-        monkeypatch.setattr(torchgeo.datasets.cabuar, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'cabuar')
         urls = (
             os.path.join(data_dir, '512x512.hdf5'),
             os.path.join(data_dir, 'chabud_test.h5'),
         )
-        md5s = ('fd7d2f800562a5bb2c9f101ebb9104b2', '41ba3903e7d9db2d549c72261d6a6d53')
         monkeypatch.setattr(CaBuAr, 'urls', urls)
-        monkeypatch.setattr(CaBuAr, 'md5s', md5s)
         bands, split = request.param
         root = tmp_path
         transforms = nn.Identity()
