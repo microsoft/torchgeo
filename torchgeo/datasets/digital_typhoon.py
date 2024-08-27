@@ -64,7 +64,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
     valid_tasks = ('classification', 'regression')
     aux_file_name = 'aux_data.csv'
 
-    valid_features: ClassVar[list[str]] = [
+    valid_features = (
         'year',
         'month',
         'day',
@@ -82,7 +82,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         'short30',
         'landfall',
         'intp',
-    ]
+    )
 
     url = 'https://hf.co/datasets/torchgeo/digital_typhoon/resolve/cf2f9ef89168d31cb09e42993d35b068688fe0df/WP.tar.gz{0}'
 
