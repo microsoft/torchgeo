@@ -377,6 +377,11 @@ class TestRasterDataset:
             CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith('win'),
+    reason='Have not been able to work this out on windows. '
+    'Try again when fiona version 1.10 arrives.',
+)
 class TestVirtualFilesystems:
     @pytest.mark.parametrize(
         'temp_archive', [os.path.join('tests', 'data', 'vector')], indirect=True
