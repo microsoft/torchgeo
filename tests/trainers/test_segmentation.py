@@ -55,6 +55,7 @@ class TestSemanticSegmentationTask:
             'chesapeake_cvpr_7',
             'deepglobelandcover',
             'etci2021',
+            'geonrw',
             'gid15',
             'inria',
             'l7irish',
