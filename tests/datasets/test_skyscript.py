@@ -26,7 +26,7 @@ class TestSkyScript:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], Tensor)
-        assert isinstance(x['text'], str)
+        assert isinstance(x['caption'], str)
 
     def test_len(self, dataset: SkyScript) -> None:
         assert len(dataset) == 2
@@ -44,6 +44,6 @@ class TestSkyScript:
 
     def test_plot(self, dataset: SkyScript) -> None:
         x = dataset[0]
-        x['prediction'] = x['text']
+        x['prediction'] = x['caption']
         dataset.plot(x, suptitle='Test')
         plt.close()

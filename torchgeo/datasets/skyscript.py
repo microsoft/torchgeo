@@ -118,7 +118,7 @@ class SkyScript(NonGeoDataset):
             array = rearrange(array, 'h w c -> c h w')
             image = torch.from_numpy(array)
 
-        sample = {'image': image, 'text': title}
+        sample = {'image': image, 'caption': title}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -176,7 +176,7 @@ class SkyScript(NonGeoDataset):
         ax.axis('off')
 
         if show_titles:
-            title = sample['text']
+            title = sample['caption']
             if 'prediction' in sample:
                 title += '\n' + sample['prediction']
             ax.set_title(title)
