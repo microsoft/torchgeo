@@ -100,6 +100,7 @@ from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
+from .skyscript import SkyScript
 from .so2sat import So2Sat
 from .south_africa_crop_type import SouthAfricaCropType
 from .south_america_soybean import SouthAmericaSoybean
@@ -238,6 +239,7 @@ __all__ = (
     'SeasoNet',
     'SEN12MS',
     'SKIPPD',
+    'SkyScript',
     'So2Sat',
     'SpaceNet',
     'SpaceNet1',
