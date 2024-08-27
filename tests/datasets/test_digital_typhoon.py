@@ -51,7 +51,7 @@ class TestDigitalTyphoon:
         )
 
     def test_len(self, dataset: DigitalTyphoonAnalysis) -> None:
-        assert len(dataset) == 10
+        assert len(dataset) == 15
 
     @pytest.mark.parametrize('index', [0, 1])
     def test_getitem(self, dataset: DigitalTyphoonAnalysis, index: int) -> None:

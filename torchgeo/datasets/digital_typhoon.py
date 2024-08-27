@@ -174,8 +174,13 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
         # Compute the hour difference between the first and second entry
         self.aux_df['hour_diff_to_next'] = (
             self.aux_df.sort_values(['id', 'datetime'])
-            .groupby('id', group_keys=False)['datetime']
-            .apply(lambda x: (x - x.shift(-1)).abs().dt.total_seconds() / 3600)
+            .groupby('id', group_keys=False)[['id', 'datetime']]
+            .apply(
+                lambda x: (x['datetime'] - x['datetime'].shift(-1))
+                .abs()
+                .dt.total_seconds()
+                / 3600
+            )
         )
 
         self.aux_df['hour_diff'] = self.aux_df['hour_diff_consecutive'].combine_first(
@@ -233,7 +238,7 @@ class DigitalTyphoonAnalysis(NonGeoDataset):
 
         self.sample_sequences: list[_SampleSequenceDict] = [
             item
-            for sublist in self.aux_df.groupby('id')
+            for sublist in self.aux_df.groupby('id')[['seq_id', 'id']]
             .apply(_get_subsequences, k=self.sequence_length)
             .tolist()
             for item in sublist
