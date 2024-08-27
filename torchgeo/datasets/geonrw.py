@@ -308,11 +308,23 @@ class GeoNRW(NonGeoDataset):
         axs[0].axis('off')
         axs[1].imshow(sample['dem'].squeeze(0), cmap='gray')
         axs[1].axis('off')
-        axs[2].imshow(sample['mask'].squeeze(0), cmap=self.colormap)
+        axs[2].imshow(
+            sample['mask'].squeeze(0),
+            self.colormap,
+            vmin=0,
+            vmax=10,
+            interpolation='none',
+        )
         axs[2].axis('off')
 
         if showing_predictions:
-            axs[3].imshow(prediction.squeeze(0), cmap=self.colormap)
+            axs[3].imshow(
+                prediction.squeeze(0),
+                self.colormap,
+                vmin=0,
+                vmax=10,
+                interpolation='none',
+            )
 
         # show classes in legend
         if show_titles:
