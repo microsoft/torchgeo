@@ -31,11 +31,8 @@ class TestSkyScript:
     def test_len(self, dataset: SkyScript) -> None:
         assert len(dataset) == 2
 
-    def test_not_extracted(self, dataset: SkyScript) -> None:
-        shutil.rmtree(os.path.join(dataset.root, 'images2'))
-        SkyScript(dataset.root)
-
     def test_already_downloaded(self, dataset: SkyScript) -> None:
+        shutil.rmtree(os.path.join(dataset.root, 'images2'))
         SkyScript(dataset.root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
