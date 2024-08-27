@@ -75,9 +75,8 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
 
         else:
             # split dataset such that the id of storms is mutually exclusive
-            sequences = list(enumerate(sample_sequences))
             train_indices, val_indices = group_shuffle_split(
-                [x[1]['id'] for x in sequences], train_size=0.8, random_state=0
+                [x['id'] for x in sample_sequences], train_size=0.8, random_state=0
             )
 
         return train_indices, val_indices
