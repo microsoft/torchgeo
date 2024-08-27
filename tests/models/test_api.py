@@ -13,8 +13,10 @@ from torchgeo.models import (
     DOFALarge16_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
+    ResNet152_Weights,
     ScaleMAELarge16_Weights,
     Swin_V2_B_Weights,
+    Swin_V2_T_Weights,
     ViTSmall16_Weights,
     dofa_base_patch16_224,
     dofa_large_patch16_224,
@@ -24,8 +26,10 @@ from torchgeo.models import (
     list_models,
     resnet18,
     resnet50,
+    resnet152,
     scalemae_large_patch16,
     swin_v2_b,
+    swin_v2_t,
     vit_small_patch16_224,
 )
 
@@ -34,7 +38,9 @@ builders = [
     dofa_large_patch16_224,
     resnet18,
     resnet50,
+    resnet152,
     scalemae_large_patch16,
+    swin_v2_t,
     swin_v2_b,
     vit_small_patch16_224,
 ]
@@ -43,7 +49,9 @@ enums = [
     DOFALarge16_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
+    ResNet152_Weights,
     ScaleMAELarge16_Weights,
+    Swin_V2_T_Weights,
     Swin_V2_B_Weights,
     ViTSmall16_Weights,
 ]
