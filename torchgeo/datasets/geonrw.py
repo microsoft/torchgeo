@@ -127,7 +127,7 @@ class GeoNRW(NonGeoDataset):
         'buildings',
     )
 
-    colormap: ClassVar[mcolors.ListedColormap] = mcolors.ListedColormap(
+    colormap = mcolors.ListedColormap(
         [
             '#000000',  # matplotlib black for background
             '#2ca02c',  # matplotlib green for forest
