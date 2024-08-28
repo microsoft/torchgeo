@@ -16,7 +16,7 @@ from .utils import group_shuffle_split
 
 
 class DigitalTyphoonDataModule(NonGeoDataModule):
-    """Digital Typhoon Analysis Data Module."""
+    """Digital Typhoon Data Module."""
 
     valid_split_types = ('time', 'typhoon_id')
 

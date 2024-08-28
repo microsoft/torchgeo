@@ -109,7 +109,7 @@ class DigitalTyphoon(NonGeoDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new Digital Typhoon Analysis dataset instance.
+        """Initialize a new Digital Typhoon dataset instance.
 
         Args:
             root: root directory where dataset can be found
