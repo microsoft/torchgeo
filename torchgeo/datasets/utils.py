@@ -700,7 +700,7 @@ def list_directory_recursive(root: Path, filename_glob: str) -> list[str]:
             # for non-existing root.
             pass
         # Prefix glob with wildcard to ignore directories
-        files = fnmatch.filter(all_files, os.path.join('*', filename_glob))
+        files = fnmatch.filter(all_files, f'*{filename_glob}')
     else:
         pathname = os.path.join(root, '**', filename_glob)
         files = glob.glob(pathname, recursive=True)
