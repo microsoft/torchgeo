@@ -651,7 +651,7 @@ def listdir_vfs_recursive(root: Path) -> list[str]:
         A list of all file paths matching filename_glob in the root VFS directory or its
         subdirectories.
 
-    .. versionadded:: #0.6
+    .. versionadded:: 0.6
     """
     dirs = [str(root)]
     files = []
