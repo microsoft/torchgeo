@@ -4,5 +4,6 @@ Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weight
 `Raster Vision`_,"PyTorch, TensorFlow*","GDAL, OpenCV, pandas, pillow, scipy, xarray",STAC,Albumentations,0,6,✅,✅,✅,✅
 `PaddleRS`_,PaddlePaddle,"GDAL, OpenCV",shapely,numpy,7,14,🚧,✅,❌,🚧
 `segment-geospatial`_,PyTorch,"GDAL, OpenCV, pandas",geopandas,numpy,0,0,❌,✅,❌,❌
-`DeepForest`_,PyTorch,"GDAL, OpenCV, pandas, pillow, scipy",R-tree,Albumentations,0,2,❌,❌,❌,❌
+`DeepForest`_,PyTorch,"GDAL, OpenCV, pandas, pillow, scipy",R-tree,Albumentations,0,3,❌,❌,❌,❌
 `SITS`_,R Torch,GDAL,-,tidyverse,22,0,❌,✅,✅,✅
+`TerraTorch`_,PyTorch,"GDAL, h5py, pandas, xarray",R-tree,Albumentations,16,1,✅,✅,❌,🚧

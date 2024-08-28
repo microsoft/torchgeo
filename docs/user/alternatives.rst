@@ -113,3 +113,4 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _DeepForest: https://github.com/weecology/DeepForest
 .. _SITS: https://github.com/e-sensing/sits
 .. _segment-geospatial: https://github.com/opengeos/segment-geospatial
+.. _TerraTorch: https://github.com/IBM/terratorch
