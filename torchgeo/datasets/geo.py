@@ -307,14 +307,13 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         # Using set to remove any duplicates if directories are overlapping
         files: set[Path] = set()
         for path in paths:
-            file_not_found = True
             if os.path.isfile(path) and fnmatch.fnmatch(
                 str(path), os.path.join('*', self.filename_glob)
             ):
                 files.add(path)
             elif files_found := set(list_directory_recursive(path, self.filename_glob)):
                 files |= files_found
-            elif file_not_found and not hasattr(self, 'download'):
+            elif not hasattr(self, 'download'):
                 warnings.warn(
                     f"Could not find any relevant files for provided path '{path}'. "
                     f'Path was ignored.',
