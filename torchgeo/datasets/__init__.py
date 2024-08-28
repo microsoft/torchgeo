@@ -55,6 +55,7 @@ from .geo import (
     UnionDataset,
     VectorDataset,
 )
+from .geonrw import GeoNRW
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
@@ -100,6 +101,7 @@ from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
+from .skyscript import SkyScript
 from .so2sat import So2Sat
 from .south_africa_crop_type import SouthAfricaCropType
 from .south_america_soybean import SouthAmericaSoybean
@@ -215,6 +217,7 @@ __all__ = (
     'FAIR1M',
     'FireRisk',
     'ForestDamage',
+    'GeoNRW',
     'GID15',
     'IDTReeS',
     'InriaAerialImageLabeling',
@@ -238,6 +241,7 @@ __all__ = (
     'SeasoNet',
     'SEN12MS',
     'SKIPPD',
+    'SkyScript',
     'So2Sat',
     'SpaceNet',
     'SpaceNet1',

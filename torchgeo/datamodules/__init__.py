@@ -16,6 +16,7 @@ from .eurosat import EuroSAT100DataModule, EuroSATDataModule, EuroSATSpatialData
 from .fair1m import FAIR1MDataModule
 from .fire_risk import FireRiskDataModule
 from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
+from .geonrw import GeoNRWDataModule
 from .gid15 import GID15DataModule
 from .inria import InriaAerialImageLabelingDataModule
 from .iobench import IOBenchDataModule
@@ -75,6 +76,7 @@ __all__ = (
     'EuroSAT100DataModule',
     'FAIR1MDataModule',
     'FireRiskDataModule',
+    'GeoNRWDataModule',
     'GID15DataModule',
     'InriaAerialImageLabelingDataModule',
     'LandCoverAIDataModule',

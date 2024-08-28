@@ -69,13 +69,13 @@ jobs:
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/min-reqs.old') }}-${{ hashFiles('requirements/mins-cons.old') }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/min-reqs.old') }}
       - name: Setup headless display for pyvista
         uses: pyvista/setup-headless-display-action@v2
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install -r requirements/min-reqs.old -c requirements/min-cons.old
+          pip install -r requirements/min-reqs.old
           pip cache purge
       - name: List pip dependencies
         run: pip list

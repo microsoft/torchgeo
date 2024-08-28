@@ -141,27 +141,42 @@ exclude_lines = [
     "@overload",
 ]
 
+# https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
-python_version = "3.10"
+# Import discovery
 ignore_missing_imports = true
-show_error_codes = true
-exclude = "(build|data|dist|docs/src|images|logo|logs|output)/"
+exclude = "(build|data|dist|docs/.*|images|logo|.*logs|output|requirements)/"
 
-# Strict
-warn_unused_configs = true
+# Disallow dynamic typing (TODO: work in progress)
+disallow_any_unimported = false
+disallow_any_expr = false
+disallow_any_decorated = false
+disallow_any_explicit = false
 disallow_any_generics = true
 disallow_subclassing_any = true
+
+# Untyped definitions and calls
 disallow_untyped_calls = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
-check_untyped_defs = true
 disallow_untyped_decorators = true
-no_implicit_optional = true
+
+# Configuring warnings
 warn_redundant_casts = true
 warn_unused_ignores = true
+warn_no_return = true
 warn_return_any = true
-no_implicit_reexport = true
+warn_unreachable = true
+
+# Miscellaneous strictness flags
 strict_equality = true
+strict = true
+
+# Configuring error messages
+pretty = true
+
+# Miscellaneous
+warn_unused_configs = true
 
 [tool.pytest.ini_options]
 # Skip slow tests by default

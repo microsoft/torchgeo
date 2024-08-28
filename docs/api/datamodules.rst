@@ -99,6 +99,11 @@ FireRisk
 
 .. autoclass:: FireRiskDataModule
 
+GeoNRW
+^^^^^^
+
+.. autoclass:: GeoNRWDataModule
+
 GID-15
 ^^^^^^
 
