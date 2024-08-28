@@ -651,6 +651,9 @@ def listdir_vfs_recursive(root: Path) -> list[str]:
         A list of all file paths matching filename_glob in the root VFS directory or its
         subdirectories.
 
+    Raises:
+        FileNotFoundError: If root does not exist.
+
     .. versionadded:: 0.6
     """
     dirs = [str(root)]
@@ -659,17 +662,14 @@ def listdir_vfs_recursive(root: Path) -> list[str]:
         dir = dirs.pop()
         try:
             subdirs = fiona.listdir(dir)
+            # Don't use os.path.join here because vsi uri's require forward-slash,
+            # even on windows.
             dirs.extend([f'{dir}/{subdir}' for subdir in subdirs])
         except FionaValueError as e:
             if 'is not a directory' in str(e):
-                # Assuming dir is a file as it is not a directory
-                # fiona.listdir can throw FionaValueError for only two reasons
                 files.append(dir)
             else:
-                # fiona.listdir can throw FionaValueError for only two reasons
-                # 1. 'is not a directory'
-                # 2. 'does not exist'
-                raise
+                raise FileNotFoundError(f'No such file or directory: {dir}')
     return files
 
 
