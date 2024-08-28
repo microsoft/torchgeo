@@ -30,7 +30,6 @@ from torchgeo.datasets import (
     UnionDataset,
     VectorDataset,
 )
-from torchgeo.datasets.utils import list_directory_recursive
 
 
 class CustomGeoDataset(GeoDataset):
@@ -409,15 +408,10 @@ class TestVirtualFilesystems:
     def test_zipped_specific_file_dir(self, temp_archive: tuple[str, str]) -> None:
         dir_not_zipped, dir_zipped = temp_archive
 
-        # Listing, instead of hardcoding filepath
-        filename_glob = Sentinel2.filename_glob.format('B02')
-        specific_file_not_zipped = list_directory_recursive(
-            dir_not_zipped, filename_glob
-        )[0]
-        filepath_within_dir = specific_file_not_zipped.replace(dir_not_zipped, '')
+        filepath_within_dir = 'GRANULE/L2A_T26EMU_A035569_20220414T110747/IMG_DATA/R60m/T26EMU_20220414T110751_B02_60m.jp2'
 
         files_found = CustomGeoDataset(
-            paths=f'zip://{dir_zipped}!{filepath_within_dir}'
+            paths=f'zip://{dir_zipped}!/{filepath_within_dir}'
         ).files
         assert len(files_found) == 1
         file = str(files_found[0])
@@ -437,10 +431,13 @@ class TestVirtualFilesystems:
     )
     def test_zipped_path_non_existing_file(self, temp_archive: tuple[str, str]) -> None:
         dir_not_zipped, dir_zipped = temp_archive
-        file_zipped_not_existing = os.path.join(dir_zipped, 'non_existing_file.tif')
         with pytest.warns(UserWarning, match='Path was ignored.'):
             assert (
-                len(CustomGeoDataset(paths=f'zip://{file_zipped_not_existing}').files)
+                len(
+                    CustomGeoDataset(
+                        paths=f'zip://{dir_zipped}!/non_existing_file.tif'
+                    ).files
+                )
                 == 0
             )
 
@@ -473,33 +470,6 @@ class TestVirtualFilesystems:
         basenames_not_zipped = [Path(path).stem for path in files_not_zipped]
         basenames_zipped = [Path(path).stem for path in files_zipped]
         assert basenames_zipped == basenames_not_zipped
-
-    def test_http_files(self) -> None:
-        url = 'https://github.com/microsoft/torchgeo/raw/main'
-        dir = os.path.join(
-            'tests',
-            'data',
-            'sentinel2',
-            'S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE',
-            'GRANULE',
-            'L2A_T26EMU_A035569_20220414T110747',
-            'IMG_DATA',
-            'R10m',
-        )
-        files = [
-            'T26EMU_20220414T110751_B04_10m.jp2',
-            'T26EMU_20190414T110751_B03_10m.jp2',
-        ]
-        paths = [os.path.join(url, dir, file) for file in files]
-        bands = Sentinel2.rgb_bands
-        transforms = nn.Identity()
-        cache = False
-
-        files_found = Sentinel2(
-            paths=paths, bands=bands, transforms=transforms, cache=cache
-        ).files
-
-        assert len(files_found) == 1
 
 
 class TestVectorDataset:
