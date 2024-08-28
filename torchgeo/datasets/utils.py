@@ -611,18 +611,22 @@ def percentile_normalization(
     return img_normalized
 
 
-def path_is_vsi(path: Path) -> bool:
-    """Checks if the given path is pointing to a Virtual File System.
+def path_is_gdal_vsi(path: Path) -> bool:
+    """Checks if the given path has a GDAL Virtual File System Interface (VSI) prefix.
+
+    This is a path within an Apache Virtual File System (VFS) supported by GDAL and
+    related libraries (rasterio and fiona).
 
     .. note::
        Does not check if the path exists, or if it is a dir or file.
 
-    VSI can for instance be Cloud Storage Blobs or zip-archives.
+    VFS can for instance be Cloud Storage Blobs or zip-archives.
     They will start with a prefix indicating this.
     For examples of these, see references for the two accepted syntaxes.
 
     * https://gdal.org/user/virtual_file_systems.html
     * https://rasterio.readthedocs.io/en/latest/topics/datasets.html
+    * https://commons.apache.org/proper/commons-vfs/filesystems.html
 
     Args:
         path: a directory or file
@@ -635,16 +639,16 @@ def path_is_vsi(path: Path) -> bool:
     return '://' in str(path) or str(path).startswith('/vsi')
 
 
-def listdir_vsi_recursive(root: Path) -> list[str]:
-    """Lists all files in Virtual File Systems (VSI) recursively.
+def listdir_vfs_recursive(root: Path) -> list[str]:
+    """Lists all files in Virtual File Systems (VFS) recursively.
 
     Args:
-        root: directory to list. These must contain the prefix for the VSI
+        root: directory to list. These must contain the prefix for the VFS
             e.g. '/vsiaz/' or 'az://' for azure blob storage
                  '/vsizip/' or 'zip://' for zipped archives
 
     Returns:
-        A list of all file paths matching filename_glob in the root VSI directory or its
+        A list of all file paths matching filename_glob in the root VFS directory or its
         subdirectories.
 
     .. versionadded:: #0.6
@@ -672,10 +676,10 @@ def listdir_vsi_recursive(root: Path) -> list[str]:
 def list_directory_recursive(root: Path, filename_glob: str) -> list[str]:
     """Lists files in directory recursively matching the given glob expression.
 
-    Also supports GDAL Virtual File Systems (VSI).
+    Also supports GDAL Virtual File Systems (VFS).
 
     Args:
-        root: directory to list. For VSI these will have prefix
+        root: directory to list. For VFS these will have prefix
             e.g. /vsiaz/ or az:// for azure blob storage
         filename_glob: filename pattern to filter filenames
 
@@ -686,11 +690,11 @@ def list_directory_recursive(root: Path, filename_glob: str) -> list[str]:
     .. versionadded:: #0.6
     """
     files: list[str]
-    if path_is_vsi(root):
+    if path_is_gdal_vsi(root):
         # Change type to match expected input to filter
         all_files: list[str] = []
         try:
-            all_files = listdir_vsi_recursive(root)
+            all_files = listdir_vfs_recursive(root)
         except FionaValueError:
             # To match the behaviour of glob.iglob we silently return empty list
             # for non-existing root.
