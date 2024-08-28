@@ -695,7 +695,7 @@ def list_directory_recursive(root: Path, filename_glob: str) -> list[str]:
         all_files: list[str] = []
         try:
             all_files = listdir_vfs_recursive(root)
-        except FionaValueError:
+        except FileNotFoundError:
             # To match the behaviour of glob.iglob we silently return empty list
             # for non-existing root.
             pass
