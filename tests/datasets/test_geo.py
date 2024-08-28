@@ -384,14 +384,22 @@ class TestVirtualFilesystems:
         _, dir_zipped = temp_archive
         filename = 'vector_2024.geojson'
 
-        # Using '!' as separator between archive and file as per Apache Commons VFS
-        # https://rasterio.readthedocs.io/en/latest/topics/vsi.html
         specific_file_zipped = f'{dir_zipped}!{filename}'
 
         files_found = CustomGeoDataset(paths=f'zip://{specific_file_zipped}').files
         assert len(files_found) == 1
-        file = str(files_found[0])
-        assert file.endswith(filename)
+        assert str(files_found[0]).endswith(filename)
+
+    @pytest.mark.parametrize(
+        'temp_archive', [os.path.join('tests', 'data', 'vector')], indirect=True
+    )
+    def test_zipped_file_non_existing(self, temp_archive: tuple[str, str]) -> None:
+        _, dir_zipped = temp_archive
+        with pytest.warns(UserWarning, match='Path was ignored.'):
+            files = CustomGeoDataset(
+                paths=f'zip://{dir_zipped}!/non_existing_file.tif'
+            ).files
+            assert len(files) == 0
 
     @pytest.mark.parametrize(
         'temp_archive',
@@ -408,14 +416,16 @@ class TestVirtualFilesystems:
     def test_zipped_specific_file_dir(self, temp_archive: tuple[str, str]) -> None:
         dir_not_zipped, dir_zipped = temp_archive
 
-        filepath_within_dir = 'GRANULE/L2A_T26EMU_A035569_20220414T110747/IMG_DATA/R60m/T26EMU_20220414T110751_B02_60m.jp2'
+        filepath_within_dir = (
+            'GRANULE/L2A_T26EMU_A035569_20220414T110747'
+            '/IMG_DATA/R60m/T26EMU_20220414T110751_B02_60m.jp2'
+        )
 
         files_found = CustomGeoDataset(
             paths=f'zip://{dir_zipped}!/{filepath_within_dir}'
         ).files
         assert len(files_found) == 1
-        file = str(files_found[0])
-        assert file.endswith(filepath_within_dir)
+        assert str(files_found[0]).endswith(filepath_within_dir)
 
     @pytest.mark.parametrize(
         'temp_archive',
