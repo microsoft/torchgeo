@@ -703,7 +703,7 @@ def list_directory_recursive(root: Path, filename_glob: str) -> list[str]:
         files = fnmatch.filter(all_files, os.path.join('*', filename_glob))
     else:
         pathname = os.path.join(root, '**', filename_glob)
-        files = list(glob.iglob(pathname, recursive=True))
+        files = glob.glob(pathname, recursive=True)
     return files
 
 
