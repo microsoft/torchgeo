@@ -659,7 +659,7 @@ def listdir_vfs_recursive(root: Path) -> list[str]:
         dir = dirs.pop()
         try:
             subdirs = fiona.listdir(dir)
-            dirs.extend([os.path.join(dir, subdir) for subdir in subdirs])
+            dirs.extend([f'{dir}/{subdir}' for subdir in subdirs])
         except FionaValueError as e:
             if 'is not a directory' in str(e):
                 # Assuming dir is a file as it is not a directory
