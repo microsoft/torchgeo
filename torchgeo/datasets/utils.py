@@ -644,8 +644,8 @@ def listdir_vfs_recursive(root: Path) -> list[str]:
 
     Args:
         root: directory to list. These must contain the prefix for the VFS
-            e.g. '/vsiaz/' or 'az://' for azure blob storage
-                 '/vsizip/' or 'zip://' for zipped archives
+            (e.g., '/vsiaz/' or 'az://' for azure blob storage, or
+            '/vsizip/' or 'zip://' for zipped archives).
 
     Returns:
         A list of all file paths matching filename_glob in the root VFS directory or its
