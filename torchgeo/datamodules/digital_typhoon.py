@@ -9,13 +9,13 @@ from typing import Any
 
 from torch.utils.data import Subset
 
-from ..datasets import DigitalTyphoonAnalysis
+from ..datasets import DigitalTyphoon
 from ..datasets.digital_typhoon import _SampleSequenceDict
 from .geo import NonGeoDataModule
 from .utils import group_shuffle_split
 
 
-class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
+class DigitalTyphoonDataModule(NonGeoDataModule):
     """Digital Typhoon Analysis Data Module."""
 
     valid_split_types = ('time', 'typhoon_id')
@@ -27,7 +27,7 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new DigitalTyphoonAnalysisDataModule instance.
+        """Initialize a new DigitalTyphoonDataModule instance.
 
         Args:
             split_by: Either 'time' or 'typhoon_id', which decides how to split
@@ -35,10 +35,10 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.DigitalTyphoonAnalysis`.
+                :class:`~torchgeo.datasets.DigitalTyphoon`.
 
         """
-        super().__init__(DigitalTyphoonAnalysis, batch_size, num_workers, **kwargs)
+        super().__init__(DigitalTyphoon, batch_size, num_workers, **kwargs)
 
         assert (
             split_by in self.valid_split_types
@@ -87,7 +87,7 @@ class DigitalTyphoonAnalysisDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        self.dataset = DigitalTyphoonAnalysis(**self.kwargs)
+        self.dataset = DigitalTyphoon(**self.kwargs)
 
         all_sample_sequences = copy.deepcopy(self.dataset.sample_sequences)
 

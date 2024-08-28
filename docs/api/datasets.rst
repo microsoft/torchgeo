@@ -255,10 +255,10 @@ DFC2022
 .. autoclass:: DFC2022
 
 
-Digital Typhoon Analysis
-^^^^^^^^^^^^^^^^^^^^^^^^
+Digital Typhoon
+^^^^^^^^^^^^^^^
 
-.. autoclass:: DigitalTyphoonAnalysis
+.. autoclass:: DigitalTyphoon
 
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^

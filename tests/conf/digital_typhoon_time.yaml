@@ -6,7 +6,7 @@ model:
     in_channels: 3
     loss: "mse"
 data:
-  class_path: DigitalTyphoonAnalysisDataModule
+  class_path: DigitalTyphoonDataModule
   init_args:
     batch_size: 1
     split_by: "time"

@@ -27,7 +27,7 @@ class _SampleSequenceDict(TypedDict):
     seq_id: list[int]
 
 
-class DigitalTyphoonAnalysis(NonGeoDataset):
+class DigitalTyphoon(NonGeoDataset):
     """Digital Typhoon Dataset for Analysis Task.
 
     This dataset contains typhoon-centered images, derived from hourly infrared channel
