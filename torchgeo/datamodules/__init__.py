@@ -5,6 +5,7 @@
 
 from .agrifieldnet import AgriFieldNetDataModule
 from .bigearthnet import BigEarthNetDataModule
+from .cabuar import CaBuArDataModule
 from .chabud import ChaBuDDataModule
 from .chesapeake import ChesapeakeCVPRDataModule
 from .cowc import COWCCountingDataModule
@@ -65,6 +66,7 @@ __all__ = (
     'SouthAfricaCropTypeDataModule',
     # NonGeoDataset
     'BigEarthNetDataModule',
+    'CaBuArDataModule',
     'ChaBuDDataModule',
     'COWCCountingDataModule',
     'DeepGlobeLandCoverDataModule',
