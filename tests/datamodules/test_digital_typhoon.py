@@ -7,19 +7,16 @@ import os
 
 import pytest
 
-from torchgeo.datamodules import DigitalTyphoonAnalysisDataModule
-from torchgeo.datasets.digital_typhoon import (
-    DigitalTyphoonAnalysis,
-    _SampleSequenceDict,
-)
+from torchgeo.datamodules import DigitalTyphoonDataModule
+from torchgeo.datasets.digital_typhoon import DigitalTyphoon, _SampleSequenceDict
 
 pytest.importorskip('h5py', minversion='3.6')
 
 
-class TestDigitalTyphoonAnalysisDataModule:
+class TestDigitalTyphoonDataModule:
     def test_invalid_param_config(self) -> None:
         with pytest.raises(AssertionError, match='Please choose from'):
-            DigitalTyphoonAnalysisDataModule(
+            DigitalTyphoonDataModule(
                 root=os.path.join('tests', 'data', 'digital_typhoon'),
                 split_by='invalid',
                 batch_size=2,
@@ -28,15 +25,13 @@ class TestDigitalTyphoonAnalysisDataModule:
 
     @pytest.mark.parametrize('split_by', ['time', 'typhoon_id'])
     def test_split_dataset(self, split_by: str) -> None:
-        dm = DigitalTyphoonAnalysisDataModule(
+        dm = DigitalTyphoonDataModule(
             root=os.path.join('tests', 'data', 'digital_typhoon'),
             split_by=split_by,
             batch_size=2,
             num_workers=0,
         )
-        dataset = DigitalTyphoonAnalysis(
-            root=os.path.join('tests', 'data', 'digital_typhoon')
-        )
+        dataset = DigitalTyphoon(root=os.path.join('tests', 'data', 'digital_typhoon'))
         train_indices, val_indices = dm._split_dataset(dataset.sample_sequences)
         train_sequences, val_sequences = (
             [dataset.sample_sequences[i] for i in train_indices],
