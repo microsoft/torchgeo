@@ -88,6 +88,8 @@ class TestLandCoverAI:
         monkeypatch.setattr(base_class, 'url', url)
         sha256 = 'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
         monkeypatch.setattr(base_class, 'sha256', sha256)
+        if base_class == LandCoverAI100:
+            monkeypatch.setattr(base_class, 'filename', 'landcover.ai.v1.zip')
         root = tmp_path
         transforms = nn.Identity()
         return base_class(root, split, transforms, download=True, checksum=True)

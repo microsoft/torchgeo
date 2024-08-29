@@ -401,13 +401,14 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         super()._extract()
 
         # Generate train/val/test splits
-        # Always check the sha256 of this file before executing
-        # to avoid malicious code injection
-        with working_dir(self.root):
-            with open('split.py') as f:
-                split = f.read().encode('utf-8')
-                assert hashlib.sha256(split).hexdigest() == self.sha256
-                exec(split)
+        # Always check the sha256 of this file before executing to avoid malicious code injection
+        # The LandCoverAI100 dataset doesn't contain split.py, so only run if split.py exists
+        if os.path.exists(os.path.join(self.root, 'split.py')):
+            with working_dir(self.root):
+                with open('split.py') as f:
+                    split = f.read().encode('utf-8')
+                    assert hashlib.sha256(split).hexdigest() == self.sha256
+                    exec(split)
 
 
 class LandCoverAI100(LandCoverAI):
@@ -423,7 +424,3 @@ class LandCoverAI100(LandCoverAI):
     url = 'https://huggingface.co/datasets/torchgeo/landcoverai100/resolve/main/landcoverai100.zip'
     filename = 'landcoverai100.zip'
     md5 = '66eb33b5a0cabb631836ce0a4eafb7cd'
-
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        extract_archive(os.path.join(self.root, self.filename))
