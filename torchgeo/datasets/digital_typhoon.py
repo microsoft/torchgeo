@@ -162,6 +162,8 @@ class DigitalTyphoon(NonGeoDataset):
         self.aux_df = self.aux_df.sort_values(['year', 'month', 'day', 'hour'])
         self.aux_df['seq_id'] = self.aux_df.groupby(['id']).cumcount()
 
+        self.aux_df.columns = [str(col) for col in self.aux_df.columns]
+
         # Compute the hour difference between consecutive images per typhoon id
         self.aux_df['hour_diff_consecutive'] = (
             self.aux_df.sort_values(['id', 'datetime'])
@@ -173,14 +175,12 @@ class DigitalTyphoon(NonGeoDataset):
 
         # Compute the hour difference between the first and second entry
         self.aux_df['hour_diff_to_next'] = (
-            self.aux_df.sort_values(['id', 'datetime'])
-            .groupby('id', group_keys=False)[['id', 'datetime']]
-            .apply(
-                lambda x: (x['datetime'] - x['datetime'].shift(-1))
-                .abs()
-                .dt.total_seconds()
-                / 3600
-            )
+            self.aux_df.groupby('id')['datetime']
+            .shift(-1)
+            .sub(self.aux_df['datetime'])
+            .abs()
+            .dt.total_seconds()
+            / 3600
         )
 
         self.aux_df['hour_diff'] = self.aux_df['hour_diff_consecutive'].combine_first(
