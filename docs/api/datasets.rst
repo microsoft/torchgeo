@@ -217,6 +217,11 @@ BioMassters
 
 .. autoclass:: BioMassters
 
+CaBuAr
+^^^^^^
+
+.. autoclass:: CaBuAr
+
 ChaBuD
 ^^^^^^
 

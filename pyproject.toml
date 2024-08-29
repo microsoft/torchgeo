@@ -133,11 +133,11 @@ torchgeo = "torchgeo.main:main"
 Homepage = "https://github.com/microsoft/torchgeo"
 Documentation = "https://torchgeo.readthedocs.io"
 
+# https://coverage.readthedocs.io/en/latest/config.html
 [tool.coverage.report]
 # Ignore warnings for overloads
 # https://github.com/nedbat/coveragepy/issues/970#issuecomment-612602180
-exclude_lines = [
-    "pragma: no cover",
+exclude_also = [
     "@overload",
 ]
 

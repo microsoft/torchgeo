@@ -57,6 +57,11 @@ BigEarthNet
 
 .. autoclass:: BigEarthNetDataModule
 
+CaBuAr
+^^^^^^
+
+.. autoclass:: CaBuArDataModule
+
 ChaBuD
 ^^^^^^
 

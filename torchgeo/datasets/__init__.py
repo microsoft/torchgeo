@@ -11,6 +11,7 @@ from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
+from .cabuar import CaBuAr
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chabud import ChaBuD
@@ -200,6 +201,7 @@ __all__ = (
     'BeninSmallHolderCashews',
     'BigEarthNet',
     'BioMassters',
+    'CaBuAr',
     'ChaBuD',
     'CloudCoverDetection',
     'COWC',
