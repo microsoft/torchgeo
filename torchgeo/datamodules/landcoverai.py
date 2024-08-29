@@ -49,6 +49,8 @@ class LandCoverAI100DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the LandCoverAI100 dataset.
 
     Uses the train/val/test splits from the dataset.
+
+    .. versionadded:: 0.7
     """
 
     def __init__(
