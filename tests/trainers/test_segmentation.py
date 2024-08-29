@@ -62,6 +62,7 @@ class TestSemanticSegmentationTask:
             'l7irish',
             'l8biome',
             'landcoverai',
+            'landcoverai100',
             'loveda',
             'naipchesapeake',
             'potsdam2d',
