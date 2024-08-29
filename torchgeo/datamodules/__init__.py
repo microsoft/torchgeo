@@ -23,7 +23,7 @@ from .inria import InriaAerialImageLabelingDataModule
 from .iobench import IOBenchDataModule
 from .l7irish import L7IrishDataModule
 from .l8biome import L8BiomeDataModule
-from .landcoverai import LandCoverAIDataModule
+from .landcoverai import LandCoverAIDataModule, LandCoverAI100DataModule
 from .levircd import LEVIRCDDataModule, LEVIRCDPlusDataModule
 from .loveda import LoveDADataModule
 from .naip import NAIPChesapeakeDataModule
@@ -82,6 +82,7 @@ __all__ = (
     'GID15DataModule',
     'InriaAerialImageLabelingDataModule',
     'LandCoverAIDataModule',
+    'LandCoverAI100DataModule',
     'LEVIRCDDataModule',
     'LEVIRCDPlusDataModule',
     'LoveDADataModule',

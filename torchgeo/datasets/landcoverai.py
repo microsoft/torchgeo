@@ -408,3 +408,22 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
                 split = f.read().encode('utf-8')
                 assert hashlib.sha256(split).hexdigest() == self.sha256
                 exec(split)
+
+
+class LandCoverAI100(LandCoverAI):
+    """Subset of LandCoverAI containing only 100 images.
+
+    Intended for tutorials and demonstrations, not for benchmarking.
+
+    Maintains the same file structure, classes, and train-val-test split.
+
+    .. versionadded:: 0.7
+    """
+
+    url = 'https://huggingface.co/datasets/torchgeo/landcoverai100/resolve/main/landcoverai100.zip'
+    filename = 'landcoverai100.zip'
+    md5 = '66eb33b5a0cabb631836ce0a4eafb7cd'
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        extract_archive(os.path.join(self.root, self.filename))
