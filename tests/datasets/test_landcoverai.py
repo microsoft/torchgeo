@@ -18,8 +18,8 @@ from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
     LandCoverAI,
-    LandCoverAIGeo,
     LandCoverAI100,
+    LandCoverAIGeo,
 )
 
 
