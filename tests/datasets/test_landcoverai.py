@@ -74,7 +74,9 @@ class TestLandCoverAIGeo:
 class TestLandCoverAI:
     pytest.importorskip('cv2', minversion='4.5.4')
 
-    @pytest.fixture(product([LandCoverAI100, LandCoverAI], ['train', 'val', 'test']))
+    @pytest.fixture(
+        params=product([LandCoverAI100, LandCoverAI], ['train', 'val', 'test'])
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LandCoverAI:
