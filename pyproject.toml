@@ -226,12 +226,14 @@ filterwarnings = [
     "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning",
     "ignore:pkg_resources is deprecated as an API.:DeprecationWarning:lightning_utilities.core.imports",
     "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:jsonargparse",
+    "ignore:`ModuleAvailableCache` is a special case of `RequirementCache`.:DeprecationWarning:lightning.fabric.plugins.environments.xla",
     # https://github.com/pytorch/pytorch/issues/110549
     "ignore:allow_ops_in_compiled_graph failed to import torch:ImportWarning:einops",
     # https://github.com/rr-/docstring_parser/pull/82
     "ignore:ast.* is deprecated and will be removed in Python 3.14:DeprecationWarning:docstring_parser.attrdoc",
     # https://github.com/python/cpython/pull/102953
     "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchgeo.datasets.utils",
+    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchvision.datasets.utils",
     # https://github.com/kornia/kornia/pull/2967
     "ignore:`torch.cuda.amp.custom_fwd\\(args...\\)` is deprecated.:FutureWarning:kornia.feature.lightglue",
     # https://github.com/kornia/kornia/pull/2981
