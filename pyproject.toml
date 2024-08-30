@@ -103,10 +103,10 @@ docs = [
     "nbsphinx>=0.8.5",
     # release versions missing files, must install from master
     "pytorch-sphinx-theme",
-    # sphinx 4+ required for autodoc_typehints_description_target = documented
+    # sphinx 4.4+ required for autodoc_typehints_format
     # sphinx 6+ is incompatible with pytorch-sphinx-theme
     # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
-    "sphinx>=4,<6",
+    "sphinx>=4.4,<6",
 ]
 style = [
     # mypy 0.900+ required for pyproject.toml support
