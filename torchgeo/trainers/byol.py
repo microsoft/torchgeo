@@ -122,8 +122,8 @@ class BackboneWrapper(nn.Module):
     * The output of the encoding layer is passed through the projection head
     * The forward call returns the output of the projection head
 
-    .. versionchanged 0.4: Name changed from *EncoderWrapper* to
-       *BackboneWrapper*.
+    .. versionchanged:: 0.4
+       Name changed from *EncoderWrapper* to *BackboneWrapper*.
     """
 
     def __init__(
