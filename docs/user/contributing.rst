@@ -88,7 +88,7 @@ These tests require `pytest <https://docs.pytest.org/en/stable/>`_ and `pytest-c
 Linters
 -------
 
-In order to remain `PEP-8 <https://peps.python.org/pep-0008/>`_ compliant and maintain a high-quality codebase, we use a couple of linting tools:
+In order to remain `PEP-8 <https://peps.python.org/pep-0008/>`_ compliant and maintain a high-quality codebase, we use a few linting tools:
 
 * `ruff <https://docs.astral.sh/ruff/>`_ for code formatting
 * `mypy <https://mypy.readthedocs.io/en/stable/>`_ for static type analysis
@@ -98,8 +98,8 @@ These tools should be used from the root of the project to ensure that our confi
 
 .. code-block:: console
 
-   $ ruff check
    $ ruff format
+   $ ruff check
 
 
 Mypy won't fix your code for you, but will warn you about potential issues with your code:
@@ -164,7 +164,7 @@ The resulting HTML files can be found in ``_build/html``. Open ``index.html`` in
 Tutorials
 ---------
 
-TorchGeo has a number of tutorials included in the documentation that can be run in `Google Colab <https://colab.research.google.com/>`_. These Jupyter notebooks are tested before each release to make sure that they still run properly. To test these locally, install `pytest <https://docs.pytest.org/en/stable/>`_ and `nbmake <https://github.com/treebeardtech/nbmake>`_ and run:
+TorchGeo has a number of tutorials included in the documentation that can be run in `Lightning Studios <https://lightning.ai/studios>`_ and `Google Colab <https://colab.research.google.com/>`_. These Jupyter notebooks are tested before each release to make sure that they still run properly. To test these locally, install `pytest <https://docs.pytest.org/en/stable/>`_ and `nbmake <https://github.com/treebeardtech/nbmake>`_ and run:
 
 .. code-block:: console
 
