@@ -5,6 +5,7 @@
 
 import glob
 import os
+import tarfile
 from collections.abc import Callable, Sequence
 from typing import Any, ClassVar, TypedDict
 
@@ -16,13 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    Path,
-    download_url,
-    extract_archive,
-    lazy_import,
-    percentile_normalization,
-)
+from .utils import Path, download_url, lazy_import, percentile_normalization
 
 
 class _SampleSequenceDict(TypedDict):
@@ -409,7 +404,10 @@ class DigitalTyphoon(NonGeoDataset):
         """Extract the dataset."""
         # Extract tarball
         for suffix in self.md5sums.keys():
-            extract_archive(os.path.join(self.root, f'{self.data_root}.tar.gz{suffix}'))
+            with tarfile.open(
+                os.path.join(self.root, f'{self.data_root}.tar.gz{suffix}')
+            ) as tar:
+                tar.extractall(path=self.root)
 
     def plot(
         self,
