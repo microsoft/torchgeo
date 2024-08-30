@@ -13,7 +13,7 @@ When deciding which library is most useful to you, it is worth considering the f
 
    Software is a living, breathing organism and is constantly undergoing change. If any of the above information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
 
-   *Last updated: 25 December 2023*
+   *Last updated: 28 August 2024*
 
 Features
 --------
@@ -22,7 +22,7 @@ Features
 
 .. csv-table::
    :align: center
-   :file: features.csv
+   :file: metrics/features.csv
    :header-rows: 1
    :widths: auto
 
@@ -55,7 +55,7 @@ These are metrics that can be scraped from GitHub.
 
 .. csv-table::
    :align: right
-   :file: github.csv
+   :file: metrics/github.csv
    :header-rows: 1
    :widths: auto
 
@@ -75,7 +75,7 @@ These are metrics that can be scraped from GitHub.
 
 **Commits**: The number of commits on the main development branch. This is another metric for how active development has been. However, this can vary a lot depending on whether PRs are merged with or without squashing first.
 
-**Core SLOCs**: The number of source lines of code in the core library, excluding empty lines and comments. This tells you how large the library is, and how long it would take someone to write something like it themselves. We use `scc <https://github.com/boyter/scc>`_ to compute SLOCs.
+**Core SLOCs**: The number of source lines of code in the core library, excluding empty lines and comments. This tells you how large the library is, and how long it would take someone to write something like it themselves. We use `scc <https://github.com/boyter/scc>`_ to compute SLOCs and exclude markdown languages from the count.
 
 **Test SLOCs**: The number of source lines of code in the testing suite, excluding empty lines and comments. This tells you how well tested the project is. A good goal to strive for is a similar amount of code for testing as there is in the core library itself.
 
@@ -86,17 +86,17 @@ These are metrics that can be scraped from GitHub.
 Downloads
 ---------
 
-These are download metrics for the project. Note that these numbers can be artificially inflated by installs during continuous integration. They give you a better idea of the number of projects that depend on a library than the number of users of that library.
+These are download metrics for the project. Note that these numbers can be artificially inflated by mirrors and installs during continuous integration. They give you a better idea of the number of projects that depend on a library than the number of users of that library.
 
 .. csv-table::
    :align: right
-   :file: downloads.csv
+   :file: metrics/downloads.csv
    :header-rows: 1
    :widths: auto
 
-**PyPI Downloads**: The number of downloads from the Python Packaging Index. PyPI download metrics are computed by `PePy <https://www.pepy.tech/>`_.
+**PyPI Downloads**: The number of downloads from the Python Packaging Index. PyPI download metrics are computed by `PyPI Stats <https://pypistats.org/>`_ and `PePy <https://www.pepy.tech/>`_.
 
-**CRAN Downloads**: The number of downloads from the Comprehensive R Archive Network. CRAN download metrics are computed by `Meta CRAN <https://cranlogs.r-pkg.org/>`_.
+**CRAN Downloads**: The number of downloads from the Comprehensive R Archive Network. CRAN download metrics are computed by `Meta CRAN <https://cranlogs.r-pkg.org/>`_ and `DataScienceMeta <https://www.datasciencemeta.com/rpackages>`_.
 
 **Conda Downloads**: The number of downloads from Conda Forge. Conda download metrics are computed by `Conda Forge <https://anaconda.org/conda-forge/>`_.
 
@@ -113,5 +113,4 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _DeepForest: https://github.com/weecology/DeepForest
 .. _SITS: https://github.com/e-sensing/sits
 .. _segment-geospatial: https://github.com/opengeos/segment-geospatial
-.. _GeoTorchAI: https://github.com/wherobots/GeoTorchAI
-.. _Moonshine: https://github.com/moonshinelabs-ai/moonshine
+.. _TerraTorch: https://github.com/IBM/terratorch
