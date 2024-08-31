@@ -122,7 +122,7 @@ Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
     """ResNet-18 weights.
 
-    For `timm <https://github.com/rwightman/pytorch-image-models>`_
+    For `timm <https://github.com/huggingface/pytorch-image-models>`_
     *resnet18* implementation.
 
     .. versionadded:: 0.4
@@ -301,7 +301,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
 class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     """ResNet-50 weights.
 
-    For `timm <https://github.com/rwightman/pytorch-image-models>`_
+    For `timm <https://github.com/huggingface/pytorch-image-models>`_
     *resnet50* implementation.
 
     .. versionadded:: 0.4
@@ -597,7 +597,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
 class ResNet152_Weights(WeightsEnum):  # type: ignore[misc]
     """ResNet-152 weights.
 
-    For `timm <https://github.com/rwightman/pytorch-image-models>`_
+    For `timm <https://github.com/huggingface/pytorch-image-models>`_
     *resnet152* implementation.
 
     .. versionadded:: 0.6
@@ -663,7 +663,7 @@ def resnet18(
 
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/pdf/1512.03385.pdf
+    * https://arxiv.org/pdf/1512.03385
 
     .. versionadded:: 0.4
 
@@ -697,7 +697,7 @@ def resnet50(
 
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/pdf/1512.03385.pdf
+    * https://arxiv.org/pdf/1512.03385
 
     .. versionchanged:: 0.4
        Switched to multi-weight support API.
@@ -732,7 +732,7 @@ def resnet152(
 
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/pdf/1512.03385.pdf
+    * https://arxiv.org/pdf/1512.03385
 
     .. versionadded:: 0.6
 

@@ -26,7 +26,7 @@ class INaturalist(GeoDataset):
 
     If you use an iNaturalist dataset in your research, please cite it according to:
 
-    * https://www.inaturalist.org/pages/help#cite
+    * https://help.inaturalist.org/en/support/solutions/articles/151000170344-how-should-i-cite-inaturalist-
 
     .. versionadded:: 0.3
     """

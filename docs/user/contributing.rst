@@ -52,7 +52,7 @@ Tests
 
 TorchGeo uses `GitHub Actions <https://docs.github.com/en/actions>`_ for Continuous Integration. We run a suite of unit tests on every commit to ensure that pull requests don't break anything. If you submit a pull request that adds or modifies any Python code, we require unit tests for that code before the pull request can be merged.
 
-For example, if you add a new dataset in ``torchgeo/datasets/foo.py``, you'll need to create corresponding unit tests in ``tests/datasets/test_foo.py``. The easiest way to do this is to find unit tests for similar datasets and modify them for your dataset. These tests can then be run with `pytest <https://docs.pytest.org/>`_:
+For example, if you add a new dataset in ``torchgeo/datasets/foo.py``, you'll need to create corresponding unit tests in ``tests/datasets/test_foo.py``. The easiest way to do this is to find unit tests for similar datasets and modify them for your dataset. These tests can then be run with `pytest <https://docs.pytest.org/en/stable/>`_:
 
 .. code-block:: console
 
@@ -79,7 +79,7 @@ For example, if you add a new dataset in ``torchgeo/datasets/foo.py``, you'll ne
 
 From this output, you can see that all tests pass, but many lines of code in ``torchgeo/datasets/foo.py`` are not being tested, including 376--403, 429--496, etc. In order for this pull request to be merged, additional tests will need to be added until there is 100% test coverage.
 
-These tests require `pytest <https://docs.pytest.org/>`_ and `pytest-cov <https://pytest-cov.readthedocs.io/>`_ to be installed.
+These tests require `pytest <https://docs.pytest.org/en/stable/>`_ and `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_ to be installed.
 
 .. note:: If you add a new dataset, the tests will require some form of data to run. This data should be stored in ``tests/data/<dataset>``. Please don't include real data, as this may violate the license the data is distributed under, and can involve very large file sizes. Instead, create fake data examples using the instructions found `here <https://github.com/microsoft/torchgeo/blob/main/tests/data/README.md>`__.
 
@@ -91,7 +91,7 @@ Linters
 In order to remain `PEP-8 <https://peps.python.org/pep-0008/>`_ compliant and maintain a high-quality codebase, we use a couple of linting tools:
 
 * `ruff <https://docs.astral.sh/ruff/>`_ for code formatting
-* `mypy <https://mypy.readthedocs.io/>`_ for static type analysis
+* `mypy <https://mypy.readthedocs.io/en/stable/>`_ for static type analysis
 * `prettier <https://prettier.io/docs/en/>`_ for code formatting
 
 These tools should be used from the root of the project to ensure that our configuration files are found. Ruff is relatively easy to use, and will automatically fix most issues it encounters:
@@ -142,7 +142,7 @@ Now, every time you run ``git commit``, pre-commit will run and let you know if 
 Documentation
 -------------
 
-All of our documentation is hosted on `Read the Docs <https://readthedocs.org/>`_. If you make non-trivial changes to the documentation, it helps to build the documentation yourself locally. To do this, make sure the dependencies are installed:
+All of our documentation is hosted on `Read the Docs <https://about.readthedocs.com/>`_. If you make non-trivial changes to the documentation, it helps to build the documentation yourself locally. To do this, make sure the dependencies are installed:
 
 .. code-block:: console
 
@@ -164,7 +164,7 @@ The resulting HTML files can be found in ``_build/html``. Open ``index.html`` in
 Tutorials
 ---------
 
-TorchGeo has a number of tutorials included in the documentation that can be run in `Google Colab <https://colab.research.google.com/>`_. These Jupyter notebooks are tested before each release to make sure that they still run properly. To test these locally, install `pytest <https://docs.pytest.org/>`_ and `nbmake <https://github.com/treebeardtech/nbmake>`_ and run:
+TorchGeo has a number of tutorials included in the documentation that can be run in `Google Colab <https://colab.research.google.com/>`_. These Jupyter notebooks are tested before each release to make sure that they still run properly. To test these locally, install `pytest <https://docs.pytest.org/en/stable/>`_ and `nbmake <https://github.com/treebeardtech/nbmake>`_ and run:
 
 .. code-block:: console
 

@@ -137,12 +137,12 @@ class IDTReeS(NonGeoDataset):
     }
     metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
-            'url': 'https://zenodo.org/record/3934932/files/IDTREES_competition_train_v2.zip?download=1',
+            'url': 'https://zenodo.org/records/3934932/files/IDTREES_competition_train_v2.zip?download=1',
             'md5': '5ddfa76240b4bb6b4a7861d1d31c299c',
             'filename': 'IDTREES_competition_train_v2.zip',
         },
         'test': {
-            'url': 'https://zenodo.org/record/3934932/files/IDTREES_competition_test_v2.zip?download=1',
+            'url': 'https://zenodo.org/records/3934932/files/IDTREES_competition_test_v2.zip?download=1',
             'md5': 'b108931c84a70f2a38a8234290131c9b',
             'filename': 'IDTREES_competition_test_v2.zip',
         },

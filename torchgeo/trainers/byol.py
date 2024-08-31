@@ -286,7 +286,7 @@ class BYOLTask(BaseTask):
 
     Reference implementation:
 
-    * https://github.com/deepmind/deepmind-research/tree/master/byol
+    * https://github.com/google-deepmind/deepmind-research/tree/master/byol
 
     If you use this trainer in your research, please cite the following paper:
 
