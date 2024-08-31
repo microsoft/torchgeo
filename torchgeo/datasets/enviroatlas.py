@@ -47,7 +47,7 @@ class EnviroAtlas(GeoDataset):
     .. versionadded:: 0.3
     """
 
-    url = 'https://zenodo.org/record/5778193/files/enviroatlas_lotp.zip?download=1'
+    url = 'https://zenodo.org/records/5778193/files/enviroatlas_lotp.zip?download=1'
     filename = 'enviroatlas_lotp.zip'
     md5 = 'bfe601be21c7c001315fc6154be8ef14'
 

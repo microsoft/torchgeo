@@ -117,7 +117,7 @@ class PASTIS(NonGeoDataset):
     }
     directory = 'PASTIS-R'
     filename = 'PASTIS-R.zip'
-    url = 'https://zenodo.org/record/5735646/files/PASTIS-R.zip?download=1'
+    url = 'https://zenodo.org/records/5735646/files/PASTIS-R.zip?download=1'
     md5 = '4887513d6c2d2b07fa935d325bd53e09'
     prefix: ClassVar[dict[str, str]] = {
         's2': os.path.join('DATA_S2', 'S2_'),

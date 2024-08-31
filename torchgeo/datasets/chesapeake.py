@@ -330,7 +330,7 @@ class ChesapeakeCVPR(GeoDataset):
     additional layer of data to this dataset containing a prior over the Chesapeake Bay
     land cover classes generated from the NLCD land cover labels. For more information
     about this layer see `the dataset documentation
-    <https://zenodo.org/record/5866525>`_.
+    <https://zenodo.org/records/5866525>`_.
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -340,7 +340,7 @@ class ChesapeakeCVPR(GeoDataset):
     subdatasets = ('base', 'prior_extension')
     urls: ClassVar[dict[str, str]] = {
         'base': 'https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip',
-        'prior_extension': 'https://zenodo.org/record/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1',
+        'prior_extension': 'https://zenodo.org/records/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1',
     }
     filenames: ClassVar[dict[str, str]] = {
         'base': 'cvpr_chesapeake_landcover.zip',

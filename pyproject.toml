@@ -189,7 +189,7 @@ filterwarnings = [
     # https://github.com/pytorch/vision/pull/5898
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms.functional_pil",
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms._functional_pil",
-    # https://github.com/rwightman/pytorch-image-models/pull/1256
+    # https://github.com/huggingface/pytorch-image-models/pull/1256
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:timm.data",
     # https://github.com/pytorch/pytorch/issues/72906
     # https://github.com/pytorch/pytorch/pull/69823

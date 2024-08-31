@@ -22,7 +22,7 @@ class CDL(RasterDataset):
     """Cropland Data Layer (CDL) dataset.
 
     The `Cropland Data Layer
-    <https://data.nal.usda.gov/dataset/cropscape-cropland-data-layer>`__, hosted on
+    <https://www.nass.usda.gov/Research_and_Science/Cropland/SARS1a.php>`__, hosted on
     `CropScape <https://nassgeodata.gmu.edu/CropScape/>`_, provides a raster,
     geo-referenced, crop-specific land cover map for the continental United States. The
     CDL also includes a crop mask layer and planting frequency layers, as well as
@@ -37,7 +37,7 @@ class CDL(RasterDataset):
 
     If you use this dataset in your research, please cite it using the following format:
 
-    * https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php#Section1_14.0
+    * https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php#what.1
     """
 
     filename_glob = '*_30m_cdls.tif'

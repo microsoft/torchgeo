@@ -64,8 +64,8 @@ class ADVANCE(NonGeoDataset):
     """
 
     urls = (
-        'https://zenodo.org/record/3828124/files/ADVANCE_vision.zip?download=1',
-        'https://zenodo.org/record/3828124/files/ADVANCE_sound.zip?download=1',
+        'https://zenodo.org/records/3828124/files/ADVANCE_vision.zip?download=1',
+        'https://zenodo.org/records/3828124/files/ADVANCE_sound.zip?download=1',
     )
     filenames = ('ADVANCE_vision.zip', 'ADVANCE_sound.zip')
     md5s = ('a9e8748219ef5864d3b5a8979a67b471', 'a2d12f2d2a64f5c3d3a9d8c09aaf1c31')
