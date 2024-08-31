@@ -50,8 +50,8 @@ extensions = [
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build']
 
-# Sphinx 4.4+ required for autodoc_typehints_format
-needs_sphinx = '4.4'
+# Sphinx 4.0+ required for autodoc_typehints_description_traget
+needs_sphinx = '4.0'
 
 nitpicky = True
 nitpick_ignore = [
@@ -105,7 +105,6 @@ autodoc_default_options = {
 autodoc_member_order = 'bysource'
 autodoc_typehints = 'description'
 autodoc_typehints_description_target = 'documented'
-autodoc_typehints_format = 'short'
 
 # sphinx.ext.intersphinx
 intersphinx_mapping = {

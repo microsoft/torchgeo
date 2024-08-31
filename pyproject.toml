@@ -103,10 +103,10 @@ docs = [
     "nbsphinx>=0.8.5",
     # release versions missing files, must install from master
     "pytorch-sphinx-theme",
-    # sphinx 4.4+ required for autodoc_typehints_format
+    # sphinx 4+ required for autodoc_typehints_description_target
     # sphinx 6+ is incompatible with pytorch-sphinx-theme
     # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
-    "sphinx>=4.4,<6",
+    "sphinx>=4,<6",
 ]
 style = [
     # mypy 0.900+ required for pyproject.toml support
@@ -233,6 +233,7 @@ filterwarnings = [
     "ignore:ast.* is deprecated and will be removed in Python 3.14:DeprecationWarning:docstring_parser.attrdoc",
     # https://github.com/python/cpython/pull/102953
     "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchgeo.datasets.utils",
+    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchgeo.datasets.digital_typhoon",
     "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchvision.datasets.utils",
     # https://github.com/kornia/kornia/pull/2967
     "ignore:`torch.cuda.amp.custom_fwd\\(args...\\)` is deprecated.:FutureWarning:kornia.feature.lightglue",
