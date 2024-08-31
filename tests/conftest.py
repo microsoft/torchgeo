@@ -21,4 +21,4 @@ def load_state_dict_from_url(monkeypatch: MonkeyPatch) -> None:
 
 @pytest.fixture(autouse=True)
 def torch_hub(tmp_path: Path) -> None:
-    torch.hub.set_dir(tmp_path)
+    torch.hub.set_dir(tmp_path)  # type: ignore[no-untyped-call]
