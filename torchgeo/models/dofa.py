@@ -203,8 +203,10 @@ class DOFAEmbedding(nn.Module):
         weight, bias = self.weight_generator(waves)  # 3x3x3
 
         dynamic_weight = weight.view(
-            self.embed_dim, inplanes, self.kernel_size, self.kernel_size
-        )  # 3xoutdx16x16
+            inplanes, self.kernel_size, self.kernel_size, self.embed_dim
+        )
+        dynamic_weight = dynamic_weight.permute([3, 0, 1, 2])
+
         if bias is not None:
             bias = bias.view([self.embed_dim]) * self.scaler
 
@@ -384,7 +386,7 @@ class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DOFA_MAE = Weights(
-        url='https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_base_patch16_224-7cc0f413.pth',
+        url='https://hf.co/torchgeo/dofa/resolve/b8db318b64a90b9e085ec04ba8851233c5893666/dofa_base_patch16_224-a0275954.pth',
         transforms=_dofa_transforms,
         meta={
             'dataset': 'SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k',
@@ -403,7 +405,7 @@ class DOFALarge16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DOFA_MAE = Weights(
-        url='https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_large_patch16_224-fbd47fa9.pth',
+        url='https://hf.co/torchgeo/dofa/resolve/b8db318b64a90b9e085ec04ba8851233c5893666/dofa_large_patch16_224-0ff904d3.pth',
         transforms=_dofa_transforms,
         meta={
             'dataset': 'SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k',
