@@ -291,7 +291,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self._res = new_res
 
     @property
-    def files(self) -> list[Path]:
+    def files(self) -> list[str]:
         """A list of all files in the dataset.
 
         Returns:
