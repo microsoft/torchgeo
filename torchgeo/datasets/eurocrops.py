@@ -31,8 +31,9 @@ class EuroCrops(VectorDataset):
     is tagged with a "EC_hcat_n" attribute indicating the harmonized crop name grown
     within the polygon in the year associated with the shapefile.
 
-    If you use this dataset in your research, please follow the citation guidelines at
-    https://github.com/maja601/EuroCrops#reference.
+    If you use this dataset in your research, please follow the citation guidelines at:
+
+    * https://github.com/maja601/EuroCrops#reference.
 
     .. versionadded:: 0.6
     """
