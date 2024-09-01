@@ -323,7 +323,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
                 )
 
         # Sort the output to enforce deterministic behavior.
-        return sorted(files)
+        return sorted(map(str, files))
 
 
 class RasterDataset(GeoDataset):
