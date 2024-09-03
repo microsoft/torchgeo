@@ -205,6 +205,14 @@ class TestGeoDataset:
             CustomGeoDataset(paths=paths1).files == CustomGeoDataset(paths=paths2).files
         )
 
+    def test_files_property_mix_str_and_pathlib(self, tmp_path: Path) -> None:
+        foo = tmp_path / 'foo.txt'
+        bar = tmp_path / 'bar.txt'
+        foo.touch()
+        bar.touch()
+        ds = CustomGeoDataset(paths=[str(foo), bar])
+        assert ds.files == [str(bar), str(foo)]
+
 
 class TestRasterDataset:
     naip_dir = os.path.join('tests', 'data', 'naip')
