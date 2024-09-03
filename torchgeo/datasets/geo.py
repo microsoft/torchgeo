@@ -291,7 +291,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self._res = new_res
 
     @property
-    def files(self) -> list[Path]:
+    def files(self) -> list[str]:
         """A list of all files in the dataset.
 
         Returns:
@@ -306,7 +306,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             paths = self.paths
 
         # Using set to remove any duplicates if directories are overlapping
-        files: set[Path] = set()
+        files: set[str] = set()
         for path in paths:
             if os.path.isdir(path):
                 pathname = os.path.join(path, '**', self.filename_glob)
@@ -314,7 +314,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             elif (os.path.isfile(path) or path_is_vsi(path)) and fnmatch.fnmatch(
                 str(path), f'*{self.filename_glob}'
             ):
-                files.add(path)
+                files.add(str(path))
             elif not hasattr(self, 'download'):
                 warnings.warn(
                     f"Could not find any relevant files for provided path '{path}'. "
