@@ -5,7 +5,6 @@
 
 import csv
 import os
-import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -140,7 +139,7 @@ class EuroCrops(VectorDataset):
         if self.files and not self.checksum:
             return True
 
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
 
         filepath = os.path.join(self.paths, self.hcat_fname)
         if not check_integrity(filepath, self.hcat_md5 if self.checksum else None):
@@ -157,7 +156,7 @@ class EuroCrops(VectorDataset):
         if self._check_integrity():
             print('Files already downloaded and verified')
             return
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         download_url(
             self.base_url + self.hcat_fname,
             self.paths,
@@ -179,7 +178,7 @@ class EuroCrops(VectorDataset):
                 (defaults to all classes)
         """
         if not classes:
-            assert isinstance(self.paths, str | pathlib.Path)
+            assert isinstance(self.paths, str | os.PathLike)
             classes = []
             filepath = os.path.join(self.paths, self.hcat_fname)
             with open(filepath) as f:

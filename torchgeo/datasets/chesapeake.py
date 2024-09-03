@@ -5,7 +5,6 @@
 
 import glob
 import os
-import pathlib
 import sys
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
@@ -173,7 +172,7 @@ class Chesapeake(RasterDataset, ABC):
             return
 
         # Check if the zip file has already been downloaded
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         if glob.glob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
             self._extract()
             return
@@ -195,7 +194,7 @@ class Chesapeake(RasterDataset, ABC):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         for file in glob.iglob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
             extract_archive(file)
 

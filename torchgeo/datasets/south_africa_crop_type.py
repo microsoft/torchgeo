@@ -4,7 +4,6 @@
 """South Africa Crop Type Competition Dataset."""
 
 import os
-import pathlib
 import re
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, ClassVar, cast
@@ -161,11 +160,11 @@ class SouthAfricaCropType(RasterDataset):
         Returns:
             data and labels at that index
         """
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
 
         # Get all files matching the given query
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[Path], [hit.object for hit in hits])
+        filepaths = cast(list[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -253,7 +252,7 @@ class SouthAfricaCropType(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         os.makedirs(self.paths, exist_ok=True)
         azcopy = which('azcopy')
         azcopy('sync', f'{self.url}', self.paths, '--recursive=true')
