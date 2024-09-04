@@ -141,6 +141,9 @@ exclude_also = [
     "@overload",
 ]
 
+[tool.coverage.run]
+branch = true
+
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
 # Import discovery
