@@ -140,6 +140,10 @@ Documentation = "https://torchgeo.readthedocs.io"
 exclude_also = [
     "@overload",
 ]
+show_missing = true
+
+[tool.coverage.run]
+source = ["torchgeo"]
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
