@@ -2,6 +2,6 @@
   "name": "torchgeo",
   "private": "true",
   "dependencies": {
-    "prettier": ">=3.3.3"
+    "prettier": ">=3"
   }
 }
