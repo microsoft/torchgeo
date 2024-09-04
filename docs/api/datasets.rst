@@ -16,7 +16,7 @@ Geospatial Datasets
    :widths: 30 15 20 36 20 15
    :header-rows: 1
    :align: center
-   :file: geo_datasets.csv
+   :file: datasets/geo_datasets.csv
 
 Aboveground Woody Biomass
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -195,7 +195,7 @@ Non-geospatial Datasets
    :widths: 15 7 15 20 12 11 12 15 13
    :header-rows: 1
    :align: center
-   :file: non_geo_datasets.csv
+   :file: datasets/non_geo_datasets.csv
 
 ADVANCE
 ^^^^^^^
