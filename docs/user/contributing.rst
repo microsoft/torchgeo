@@ -111,21 +111,11 @@ Mypy won't fix your code for you, but will warn you about potential issues with 
 
 If you've never used mypy before or aren't familiar with `Python type hints <https://docs.python.org/3/library/typing.html>`_, this check can be particularly daunting. Don't hesitate to ask for help with resolving any of these warnings on your pull request.
 
-Prettier is a code formatter that helps to ensure consistent code style across a project. It supports various languages. Follow these steps to install Prettier:
-
-1. Install Node.js: Prettier is a Node.js module, so you need to have Node.js installed on your system. You can download and install Node.js from the `Node.js official website <https://nodejs.org/en>`_.
-2. Install Prettier: Use the following command to install the Prettier module in your project:
+Prettier is a code formatter that helps to ensure consistent code style across a project. It supports various languages.
 
 .. code-block:: console
 
-   $ npm install prettier --no-save
-
-
-3. Run Prettier: Use the following command to run Prettier formating:
-
-.. code-block:: console
-
-   $ npx prettier . --write
+   $ prettier --write .
 
 
 You can also use `git pre-commit hooks <https://pre-commit.com/>`_ to automatically run these checks before each commit. pre-commit is a tool that automatically runs linters locally, so that you don't have to remember to run them manually and then have your code flagged by CI. You can set up pre-commit with:
