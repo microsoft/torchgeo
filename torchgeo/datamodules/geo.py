@@ -10,10 +10,9 @@ import kornia.augmentation as K
 import torch
 from lightning.pytorch import LightningDataModule
 from matplotlib.figure import Figure
-from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, Subset, default_collate
 
-from ..datasets import GeoDataset, NonGeoDataset, stack_samples
+from ..datasets import GeoDataset, NonGeoDataset, Sample, stack_samples
 from ..samplers import (
     BatchGeoSampler,
     GeoSampler,
@@ -35,7 +34,7 @@ class BaseDataModule(LightningDataModule):
 
     def __init__(
         self,
-        dataset_class: type[Dataset[dict[str, Tensor]]],
+        dataset_class: type[Dataset[Sample]],
         batch_size: int = 1,
         num_workers: int = 0,
         **kwargs: Any,
@@ -56,11 +55,11 @@ class BaseDataModule(LightningDataModule):
         self.kwargs = kwargs
 
         # Datasets
-        self.dataset: Dataset[dict[str, Tensor]] | None = None
-        self.train_dataset: Dataset[dict[str, Tensor]] | None = None
-        self.val_dataset: Dataset[dict[str, Tensor]] | None = None
-        self.test_dataset: Dataset[dict[str, Tensor]] | None = None
-        self.predict_dataset: Dataset[dict[str, Tensor]] | None = None
+        self.dataset: Dataset[Sample] | None = None
+        self.train_dataset: Dataset[Sample] | None = None
+        self.val_dataset: Dataset[Sample] | None = None
+        self.test_dataset: Dataset[Sample] | None = None
+        self.predict_dataset: Dataset[Sample] | None = None
 
         # Data loaders
         self.train_batch_size: int | None = None
@@ -69,7 +68,7 @@ class BaseDataModule(LightningDataModule):
         self.predict_batch_size: int | None = None
 
         # Data augmentation
-        Transform = Callable[[dict[str, Tensor]], dict[str, Tensor]]
+        Transform = Callable[[Sample], Sample]
         self.aug: Transform = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std), data_keys=['image']
         )
@@ -115,9 +114,7 @@ class BaseDataModule(LightningDataModule):
         msg = f'{self.__class__.__name__}.setup must define one of {args}.'
         raise MisconfigurationException(msg)
 
-    def on_after_batch_transfer(
-        self, batch: dict[str, Tensor], dataloader_idx: int
-    ) -> dict[str, Tensor]:
+    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
         """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:
@@ -253,7 +250,7 @@ class GeoDataModule(BaseDataModule):
                 self.test_dataset, self.patch_size, self.patch_size
             )
 
-    def _dataloader_factory(self, split: str) -> DataLoader[dict[str, Tensor]]:
+    def _dataloader_factory(self, split: str) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders.
 
         Args:
@@ -288,7 +285,7 @@ class GeoDataModule(BaseDataModule):
             collate_fn=self.collate_fn,
         )
 
-    def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def train_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for training.
 
         Returns:
@@ -300,7 +297,7 @@ class GeoDataModule(BaseDataModule):
         """
         return self._dataloader_factory('train')
 
-    def val_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def val_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for validation.
 
         Returns:
@@ -312,7 +309,7 @@ class GeoDataModule(BaseDataModule):
         """
         return self._dataloader_factory('val')
 
-    def test_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def test_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for testing.
 
         Returns:
@@ -324,7 +321,7 @@ class GeoDataModule(BaseDataModule):
         """
         return self._dataloader_factory('test')
 
-    def predict_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def predict_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for prediction.
 
         Returns:
@@ -337,8 +334,8 @@ class GeoDataModule(BaseDataModule):
         return self._dataloader_factory('predict')
 
     def transfer_batch_to_device(
-        self, batch: dict[str, Tensor], device: torch.device, dataloader_idx: int
-    ) -> dict[str, Tensor]:
+        self, batch: Sample, device: torch.device, dataloader_idx: int
+    ) -> Sample:
         """Transfer batch to device.
 
         Defines how custom data types are moved to the target device.
@@ -408,7 +405,7 @@ class NonGeoDataModule(BaseDataModule):
                 split='test', **self.kwargs
             )
 
-    def _dataloader_factory(self, split: str) -> DataLoader[dict[str, Tensor]]:
+    def _dataloader_factory(self, split: str) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders.
 
         Args:
@@ -431,7 +428,7 @@ class NonGeoDataModule(BaseDataModule):
             collate_fn=self.collate_fn,
         )
 
-    def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def train_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for training.
 
         Returns:
@@ -443,7 +440,7 @@ class NonGeoDataModule(BaseDataModule):
         """
         return self._dataloader_factory('train')
 
-    def val_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def val_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for validation.
 
         Returns:
@@ -455,7 +452,7 @@ class NonGeoDataModule(BaseDataModule):
         """
         return self._dataloader_factory('val')
 
-    def test_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def test_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for testing.
 
         Returns:
@@ -467,7 +464,7 @@ class NonGeoDataModule(BaseDataModule):
         """
         return self._dataloader_factory('test')
 
-    def predict_dataloader(self) -> DataLoader[dict[str, Tensor]]:
+    def predict_dataloader(self) -> DataLoader[Sample]:
         """Implement one or more PyTorch DataLoaders for prediction.
 
         Returns:

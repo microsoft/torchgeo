@@ -26,6 +26,7 @@ from torchgeo.datasets import (
     NonGeoClassificationDataset,
     NonGeoDataset,
     RasterDataset,
+    Sample,
     Sentinel2,
     UnionDataset,
     VectorDataset,
@@ -46,7 +47,7 @@ class CustomGeoDataset(GeoDataset):
         self.res = res
         self.paths = paths or []
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         hits = self.index.intersection(tuple(query), objects=True)
         hit = next(iter(hits))
         bounds = BoundingBox(*hit.bounds)
@@ -77,7 +78,7 @@ class CustomSentinelDataset(Sentinel2):
 
 
 class CustomNonGeoDataset(NonGeoDataset):
-    def __getitem__(self, index: int) -> dict[str, int]:
+    def __getitem__(self, index: int) -> Sample:
         return {'index': index}
 
     def __len__(self) -> int:

@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, percentile_normalization
+from .utils import Path, Sample, check_integrity, percentile_normalization
 
 
 class SEN12MS(NonGeoDataset):
@@ -169,7 +169,7 @@ class SEN12MS(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = BAND_SETS['all'],
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SEN12MS dataset instance.
@@ -213,7 +213,7 @@ class SEN12MS(NonGeoDataset):
         with open(os.path.join(self.root, split + '_list.txt')) as f:
             self.ids = [line.rstrip() for line in f.readlines()]
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -231,7 +231,7 @@ class SEN12MS(NonGeoDataset):
         image = torch.cat(tensors=[s1, s2], dim=0)
         image = torch.index_select(image, dim=0, index=self.band_indices)
 
-        sample: dict[str, Tensor] = {'image': image, 'mask': lc[0]}
+        sample: Sample = {'image': image, 'mask': lc[0]}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -313,10 +313,7 @@ class SEN12MS(NonGeoDataset):
         return True
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -16,7 +16,7 @@ from .cdl import CDL
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset
 from .landsat import Landsat9
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class IOBench(IntersectionDataset):
@@ -56,7 +56,7 @@ class IOBench(IntersectionDataset):
         res: float | None = None,
         bands: Sequence[str] | None = [*Landsat9.default_bands, 'SR_QA_AEROSOL'],
         classes: list[int] = [0],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -134,10 +134,7 @@ class IOBench(IntersectionDataset):
         extract_archive(os.path.join(self.root, f'{self.split}.tar.gz'), self.root)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

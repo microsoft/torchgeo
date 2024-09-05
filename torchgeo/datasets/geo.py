@@ -37,6 +37,7 @@ from .errors import DatasetNotFoundError
 from .utils import (
     BoundingBox,
     Path,
+    Sample,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
@@ -45,7 +46,7 @@ from .utils import (
 )
 
 
-class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
+class GeoDataset(Dataset[Sample], abc.ABC):
     """Abstract base class for datasets containing geospatial information.
 
     Geospatial information includes things like:
@@ -111,9 +112,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     #: Users should instead use the intersection or union operator.
     __add__ = None  # type: ignore[assignment]
 
-    def __init__(
-        self, transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None
-    ) -> None:
+    def __init__(self, transforms: Callable[[Sample], Sample] | None = None) -> None:
         """Initialize a new GeoDataset instance.
 
         Args:
@@ -126,7 +125,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self.index = Index(interleaved=False, properties=Property(dimension=3))
 
     @abc.abstractmethod
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -419,7 +418,7 @@ class RasterDataset(GeoDataset):
         crs: CRS | None = None,
         res: float | None = None,
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new RasterDataset instance.
@@ -508,7 +507,7 @@ class RasterDataset(GeoDataset):
         self._crs = cast(CRS, crs)
         self._res = cast(float, res)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -549,7 +548,7 @@ class RasterDataset(GeoDataset):
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)
 
-        sample = {'crs': self.crs, 'bounds': query}
+        sample: Sample = {'crs': self.crs, 'bounds': query}
 
         data = data.to(self.dtype)
         if self.is_image:
@@ -657,7 +656,7 @@ class VectorDataset(GeoDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float = 0.0001,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         label_name: str | None = None,
     ) -> None:
         """Initialize a new VectorDataset instance.
@@ -720,7 +719,7 @@ class VectorDataset(GeoDataset):
         self._crs = crs
         self._res = res
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -779,7 +778,7 @@ class VectorDataset(GeoDataset):
         masks = array_to_tensor(masks)
 
         masks = masks.to(self.dtype)
-        sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
+        sample: Sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -802,14 +801,14 @@ class VectorDataset(GeoDataset):
         return 1
 
 
-class NonGeoDataset(Dataset[dict[str, Any]], abc.ABC):
+class NonGeoDataset(Dataset[Sample], abc.ABC):
     """Abstract base class for datasets lacking geospatial information.
 
     This base class is designed for datasets with pre-defined image chips.
     """
 
     @abc.abstractmethod
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -852,7 +851,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
     def __init__(
         self,
         root: Path = 'data',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         loader: Callable[[Path], Any] | None = pil_loader,
         is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
@@ -880,7 +879,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         # Must be set after calling super().__init__()
         self.transforms = transforms
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -890,7 +889,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
             data and label at that index
         """
         image, label = self._load_image(index)
-        sample = {'image': image, 'label': label}
+        sample: Sample = {'image': image, 'label': label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -949,10 +948,8 @@ class IntersectionDataset(GeoDataset):
         self,
         dataset1: GeoDataset,
         dataset2: GeoDataset,
-        collate_fn: Callable[
-            [Sequence[dict[str, Any]]], dict[str, Any]
-        ] = concat_samples,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        collate_fn: Callable[[Sequence[Sample]], Sample] = concat_samples,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new IntersectionDataset instance.
 
@@ -1006,7 +1003,7 @@ class IntersectionDataset(GeoDataset):
         if i == 0:
             raise RuntimeError('Datasets have no spatiotemporal intersection')
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Retrieve image and metadata indexed by query.
 
         Args:
@@ -1110,10 +1107,8 @@ class UnionDataset(GeoDataset):
         self,
         dataset1: GeoDataset,
         dataset2: GeoDataset,
-        collate_fn: Callable[
-            [Sequence[dict[str, Any]]], dict[str, Any]
-        ] = merge_samples,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        collate_fn: Callable[[Sequence[Sample]], Sample] = merge_samples,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize a new UnionDataset instance.
 
@@ -1158,7 +1153,7 @@ class UnionDataset(GeoDataset):
                 self.index.insert(i, hit.bounds)
                 i += 1
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Retrieve image and metadata indexed by query.
 
         Args:

@@ -7,7 +7,7 @@ import glob
 import os
 import pathlib
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar, cast
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -19,6 +19,7 @@ from .geo import RasterDataset
 from .utils import (
     BoundingBox,
     Path,
+    Sample,
     check_integrity,
     disambiguate_timestamp,
     extract_archive,
@@ -142,7 +143,7 @@ class GlobBiomass(RasterDataset):
         crs: CRS | None = None,
         res: float | None = None,
         measurement: str = 'agb',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         checksum: bool = False,
     ) -> None:
@@ -179,7 +180,7 @@ class GlobBiomass(RasterDataset):
 
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -207,7 +208,7 @@ class GlobBiomass(RasterDataset):
 
         mask = torch.cat((mask, std_err_mask), dim=0)
 
-        sample = {'mask': mask, 'crs': self.crs, 'bounds': query}
+        sample: Sample = {'mask': mask, 'crs': self.crs, 'bounds': query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -234,10 +235,7 @@ class GlobBiomass(RasterDataset):
         raise DatasetNotFoundError(self)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

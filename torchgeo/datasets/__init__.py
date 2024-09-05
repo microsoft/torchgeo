@@ -130,7 +130,9 @@ from .sustainbench_crop_yield import SustainBenchCropYield
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
+    Batch,
     BoundingBox,
+    Sample,
     concat_samples,
     merge_samples,
     stack_samples,
@@ -276,6 +278,8 @@ __all__ = (
     'UnionDataset',
     'VectorDataset',
     # Utilities
+    'Sample',
+    'Batch',
     'BoundingBox',
     'concat_samples',
     'merge_samples',
