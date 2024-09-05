@@ -286,7 +286,7 @@ quote-style = "single"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-extend-select = ["ANN", "D", "I", "NPY201", "RUF", "UP"]
+extend-select = ["ANN", "D", "I", "RUF", "UP"]
 ignore = ["ANN101", "ANN102", "ANN401"]
 
 [tool.ruff.lint.per-file-ignores]
