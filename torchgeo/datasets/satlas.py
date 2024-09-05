@@ -509,7 +509,10 @@ class SatlasPretrain(NonGeoDataset):
         'landsat': ('foo',),
         'naip': ('523736842994861054f04b97c4d90bfb',),
         'sentinel1': ('foo',),
-        'sentinel2': ('7e1c6a1e322807fb11df8c0c062545ca', '6636b8ecf2fff1d6723ecfef55a4876d'),
+        'sentinel2': (
+            '7e1c6a1e322807fb11df8c0c062545ca',
+            '6636b8ecf2fff1d6723ecfef55a4876d',
+        ),
         'static': ('4e38c2573bc78cf1f0d7267e432cb42c',),
         'dynamic': ('4503ae687948e7d2cb7ade0083f77a8a',),
         'metadata': ('6b9ac5a4f9a1ee88a271d28f12854607',),
