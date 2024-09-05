@@ -11,18 +11,12 @@ import torch
 import torch.nn as nn
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, PatternNet
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestPatternNet:
     @pytest.fixture(params=['train', 'test'])
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> PatternNet:
-        monkeypatch.setattr(torchgeo.datasets.patternnet, 'download_url', download_url)
         md5 = '5649754c78219a2c19074ff93666cc61'
         monkeypatch.setattr(PatternNet, 'md5', md5)
         url = os.path.join('tests', 'data', 'patternnet', 'PatternNet.zip')
@@ -48,7 +42,7 @@ class TestPatternNet:
         self, dataset: PatternNet, tmp_path: Path
     ) -> None:
         shutil.rmtree(dataset.root)
-        download_url(dataset.url, root=tmp_path)
+        shutil.copy(dataset.url, tmp_path)
         PatternNet(root=tmp_path, download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:

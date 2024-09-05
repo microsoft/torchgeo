@@ -9,7 +9,7 @@ import os
 import pathlib
 import sys
 from collections.abc import Callable, Iterable
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import fiona
 import fiona.transform
@@ -32,7 +32,7 @@ class OpenBuildings(VectorDataset):
     r"""Open Buildings dataset.
 
     The `Open Buildings
-    <https://sites.research.google/open-buildings/#download>`__ dataset
+    <https://sites.research.google/open-buildings/>`__ dataset
     consists of computer generated building detections across the African continent.
 
     Dataset features:
@@ -48,10 +48,10 @@ class OpenBuildings(VectorDataset):
     * meta data geojson file
 
     The data can be downloaded from `here
-    <https://sites.research.google/open-buildings/#download>`__. Additionally, the
-    `meta data geometry file
-    <https://sites.research.google/open-buildings/tiles.geojson>`_ also needs to be
-    placed in `root` as `tiles.geojson`.
+    <https://sites.research.google/open-buildings/#open-buildings-download>`__.
+    Additionally, the `meta data geometry file
+    <https://openbuildings-public-dot-gweb-research.uw.r.appspot.com/public/tiles.geojson>`_
+    also needs to be placed in `root` as `tiles.geojson`.
 
     If you use this dataset in your research, please cite the following technical
     report:
@@ -61,7 +61,7 @@ class OpenBuildings(VectorDataset):
     .. versionadded:: 0.3
     """
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         '025_buildings.csv.gz': '41db2572bfd08628d01475a2ee1a2f17',
         '04f_buildings.csv.gz': '3232c1c6d45c1543260b77e5689fc8b1',
         '05b_buildings.csv.gz': '4fc57c63bbbf9a21a3902da7adc3a670',

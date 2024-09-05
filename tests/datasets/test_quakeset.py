@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -12,14 +11,9 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, QuakeSet
 
 pytest.importorskip('h5py', minversion='3.6')
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestQuakeSet:
@@ -27,7 +21,6 @@ class TestQuakeSet:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> QuakeSet:
-        monkeypatch.setattr(torchgeo.datasets.quakeset, 'download_url', download_url)
         url = os.path.join('tests', 'data', 'quakeset', 'earthquakes.h5')
         md5 = '127d0d6a1f82d517129535f50053a4c9'
         monkeypatch.setattr(QuakeSet, 'md5', md5)

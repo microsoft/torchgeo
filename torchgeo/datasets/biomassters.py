@@ -50,7 +50,7 @@ class BioMassters(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    valid_splits = ['train', 'test']
+    valid_splits = ('train', 'test')
     valid_sensors = ('S1', 'S2')
 
     metadata_filename = 'The_BioMassters_-_features_metadata.csv.csv'

@@ -31,8 +31,9 @@ class EuroCrops(VectorDataset):
     is tagged with a "EC_hcat_n" attribute indicating the harmonized crop name grown
     within the polygon in the year associated with the shapefile.
 
-    If you use this dataset in your research, please follow the citation guidelines at
-    https://github.com/maja601/EuroCrops#reference.
+    If you use this dataset in your research, please follow the citation guidelines at:
+
+    * https://github.com/maja601/EuroCrops#reference.
 
     .. versionadded:: 0.6
     """
@@ -61,7 +62,7 @@ class EuroCrops(VectorDataset):
     date_format = '%Y'
 
     # Filename and md5 of files in this dataset on zenodo.
-    zenodo_files = [
+    zenodo_files: tuple[tuple[str, str], ...] = (
         ('AT_2021.zip', '490241df2e3d62812e572049fc0c36c5'),
         ('BE_VLG_2021.zip', 'ac4b9e12ad39b1cba47fdff1a786c2d7'),
         ('DE_LS_2021.zip', '6d94e663a3ff7988b32cb36ea24a724f'),
@@ -81,7 +82,7 @@ class EuroCrops(VectorDataset):
         # Year is unknown for Romania portion (ny = no year).
         # We skip since it is inconsistent with the rest of the data.
         # ("RO_ny.zip", "648e1504097765b4b7f825decc838882"),
-    ]
+    )
 
     def __init__(
         self,

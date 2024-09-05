@@ -91,16 +91,10 @@ datasets = [
     "pycocotools>=2.0.7",
     # pyvista 0.34.2+ required to avoid ImportError in CI
     "pyvista>=0.34.2",
-    # radiant-mlhub 0.3+ required for newer tqdm support required by lightning
-    "radiant-mlhub>=0.3",
-    # rarfile 4+ required for wheels
-    "rarfile>=4",
     # scikit-image 0.19+ required for Python 3.10 wheels
     "scikit-image>=0.19",
     # scipy 1.7.2+ required for Python 3.10 wheels
     "scipy>=1.7.2",
-    # zipfile-deflate64 0.2+ required for Python 3.10 wheels
-    "zipfile-deflate64>=0.2",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx
@@ -109,7 +103,7 @@ docs = [
     "nbsphinx>=0.8.5",
     # release versions missing files, must install from master
     "pytorch-sphinx-theme",
-    # sphinx 4+ required for autodoc_typehints_description_target = documented
+    # sphinx 4+ required for autodoc_typehints_description_target
     # sphinx 6+ is incompatible with pytorch-sphinx-theme
     # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
     "sphinx>=4,<6",
@@ -139,35 +133,50 @@ torchgeo = "torchgeo.main:main"
 Homepage = "https://github.com/microsoft/torchgeo"
 Documentation = "https://torchgeo.readthedocs.io"
 
+# https://coverage.readthedocs.io/en/latest/config.html
 [tool.coverage.report]
 # Ignore warnings for overloads
 # https://github.com/nedbat/coveragepy/issues/970#issuecomment-612602180
-exclude_lines = [
-    "pragma: no cover",
+exclude_also = [
     "@overload",
 ]
 
+# https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
-python_version = "3.10"
+# Import discovery
 ignore_missing_imports = true
-show_error_codes = true
-exclude = "(build|data|dist|docs/src|images|logo|logs|output)/"
+exclude = "(build|data|dist|docs/.*|images|logo|.*logs|output|requirements)/"
 
-# Strict
-warn_unused_configs = true
+# Disallow dynamic typing (TODO: work in progress)
+disallow_any_unimported = false
+disallow_any_expr = false
+disallow_any_decorated = false
+disallow_any_explicit = false
 disallow_any_generics = true
 disallow_subclassing_any = true
+
+# Untyped definitions and calls
 disallow_untyped_calls = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
-check_untyped_defs = true
 disallow_untyped_decorators = true
-no_implicit_optional = true
+
+# Configuring warnings
 warn_redundant_casts = true
 warn_unused_ignores = true
+warn_no_return = true
 warn_return_any = true
-no_implicit_reexport = true
+warn_unreachable = true
+
+# Miscellaneous strictness flags
 strict_equality = true
+strict = true
+
+# Configuring error messages
+pretty = true
+
+# Miscellaneous
+warn_unused_configs = true
 
 [tool.pytest.ini_options]
 # Skip slow tests by default
@@ -180,7 +189,7 @@ filterwarnings = [
     # https://github.com/pytorch/vision/pull/5898
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms.functional_pil",
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:torchvision.transforms._functional_pil",
-    # https://github.com/rwightman/pytorch-image-models/pull/1256
+    # https://github.com/huggingface/pytorch-image-models/pull/1256
     "ignore:.* is deprecated and will be removed in Pillow 10:DeprecationWarning:timm.data",
     # https://github.com/pytorch/pytorch/issues/72906
     # https://github.com/pytorch/pytorch/pull/69823
@@ -217,12 +226,21 @@ filterwarnings = [
     "ignore:Deprecated call to `pkg_resources.declare_namespace:DeprecationWarning",
     "ignore:pkg_resources is deprecated as an API.:DeprecationWarning:lightning_utilities.core.imports",
     "ignore:Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated:DeprecationWarning:jsonargparse",
+    "ignore:`ModuleAvailableCache` is a special case of `RequirementCache`.:DeprecationWarning:lightning.fabric.plugins.environments.xla",
     # https://github.com/pytorch/pytorch/issues/110549
     "ignore:allow_ops_in_compiled_graph failed to import torch:ImportWarning:einops",
     # https://github.com/rr-/docstring_parser/pull/82
     "ignore:ast.* is deprecated and will be removed in Python 3.14:DeprecationWarning:docstring_parser.attrdoc",
     # https://github.com/python/cpython/pull/102953
-    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:tarfile",
+    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchgeo.datasets.utils",
+    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchgeo.datasets.digital_typhoon",
+    "ignore:Python 3.14 will, by default, filter extracted tar archives and reject files or modify their metadata:DeprecationWarning:torchvision.datasets.utils",
+    # https://github.com/kornia/kornia/pull/2967
+    "ignore:`torch.cuda.amp.custom_fwd\\(args...\\)` is deprecated.:FutureWarning:kornia.feature.lightglue",
+    # https://github.com/kornia/kornia/pull/2981
+    "ignore:torch.is_autocast_cpu_enabled\\(\\) is deprecated.:DeprecationWarning:kornia.utils.helpers",
+    # https://github.com/pytorch/pytorch/pull/129239
+    "ignore:You are using `torch.load` with `weights_only=False`:FutureWarning",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
@@ -268,10 +286,11 @@ quote-style = "single"
 skip-magic-trailing-comma = true
 
 [tool.ruff.lint]
-extend-select = ["D", "I", "NPY201", "UP"]
+extend-select = ["ANN", "D", "I", "NPY201", "RUF", "UP"]
+ignore = ["ANN101", "ANN102", "ANN401"]
 
 [tool.ruff.lint.per-file-ignores]
-"docs/**" = ["D"]
+"docs/**" = ["ANN", "D"]
 "experiments/**" = ["D"]
 "tests/**" = ["D"]
 

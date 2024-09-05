@@ -8,7 +8,7 @@ from typing import Any
 import kornia.augmentation as K
 import torch
 from einops import rearrange
-from kornia.contrib import Lambda, extract_tensor_patches
+from kornia.contrib import extract_tensor_patches
 from kornia.geometry import crop_by_indices
 from kornia.geometry.boxes import Boxes
 from torch import Tensor
@@ -25,7 +25,7 @@ class AugmentationSequential(Module):
 
     def __init__(
         self,
-        *args: K.base._AugmentationBase | K.ImageSequential | Lambda,
+        *args: K.base._AugmentationBase | K.ImageSequential,
         data_keys: list[str],
         **kwargs: Any,
     ) -> None:
@@ -53,9 +53,9 @@ class AugmentationSequential(Module):
             else:
                 keys.append(key)
 
-        self.augs = K.AugmentationSequential(*args, data_keys=keys, **kwargs)  # type: ignore[arg-type] # noqa: E501
+        self.augs = K.AugmentationSequential(*args, data_keys=keys, **kwargs)
 
-    def forward(self, batch: dict[str, Tensor]) -> dict[str, Tensor]:
+    def forward(self, batch: dict[str, Any]) -> dict[str, Any]:
         """Perform augmentations and update data dict.
 
         Args:
@@ -99,7 +99,7 @@ class AugmentationSequential(Module):
 
         # Convert boxes to default [N, 4]
         if 'boxes' in batch:
-            batch['boxes'] = Boxes(batch['boxes']).to_tensor(mode='xyxy')  # type:ignore[assignment]
+            batch['boxes'] = Boxes(batch['boxes']).to_tensor(mode='xyxy')
 
         # Torchmetrics does not support masks with a channel dimension
         if 'mask' in batch and batch['mask'].shape[1] == 1:
@@ -272,3 +272,54 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
             out = rearrange(out, 'b t c h w -> (b t) c h w')
 
         return out
+
+
+class _Clamp(K.IntensityAugmentationBase2D):
+    """Clamp images to a specific range."""
+
+    def __init__(
+        self,
+        p: float = 0.5,
+        p_batch: float = 1,
+        min: float = 0,
+        max: float = 1,
+        same_on_batch: bool = False,
+        keepdim: bool = False,
+    ) -> None:
+        """Initialize a new _Clamp instance.
+
+        Args:
+            p: Probability for applying an augmentation. This param controls the
+                augmentation probabilities element-wise for a batch.
+            p_batch: Probability for applying an augmentation to a batch. This param
+                controls the augmentation probabilities batch-wise.
+            min: Minimum value to clamp to.
+            max: Maximum value to clamp to.
+            same_on_batch: Apply the same transformation across the batch.
+            keepdim: Whether to keep the output shape the same as input ``True``
+                or broadcast it to the batch form ``False``.
+        """
+        super().__init__(
+            p=p, p_batch=p_batch, same_on_batch=same_on_batch, keepdim=keepdim
+        )
+        self.flags = {'min': min, 'max': max}
+
+    def apply_transform(
+        self,
+        input: Tensor,
+        params: dict[str, Tensor],
+        flags: dict[str, Any],
+        transform: Tensor | None = None,
+    ) -> Tensor:
+        """Apply the transform.
+
+        Args:
+            input: the input tensor
+            params: generated parameters
+            flags: static parameters
+            transform: the geometric transformation tensor
+
+        Returns:
+            the augmented input
+        """
+        return torch.clamp(input, self.flags['min'], self.flags['max'])

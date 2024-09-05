@@ -13,7 +13,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
@@ -24,14 +23,9 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestIOBench:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> IOBench:
-        monkeypatch.setattr(torchgeo.datasets.iobench, 'download_url', download_url)
         md5 = 'e82398add7c35896a31c4398c608ef83'
         url = os.path.join('tests', 'data', 'iobench', '{}.tar.gz')
         monkeypatch.setattr(IOBench, 'url', url)

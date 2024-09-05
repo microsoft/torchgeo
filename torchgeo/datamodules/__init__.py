@@ -5,16 +5,19 @@
 
 from .agrifieldnet import AgriFieldNetDataModule
 from .bigearthnet import BigEarthNetDataModule
+from .cabuar import CaBuArDataModule
 from .chabud import ChaBuDDataModule
 from .chesapeake import ChesapeakeCVPRDataModule
 from .cowc import COWCCountingDataModule
 from .cyclone import TropicalCycloneDataModule
 from .deepglobelandcover import DeepGlobeLandCoverDataModule
+from .digital_typhoon import DigitalTyphoonDataModule
 from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSAT100DataModule, EuroSATDataModule, EuroSATSpatialDataModule
 from .fair1m import FAIR1MDataModule
 from .fire_risk import FireRiskDataModule
 from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
+from .geonrw import GeoNRWDataModule
 from .gid15 import GID15DataModule
 from .inria import InriaAerialImageLabelingDataModule
 from .iobench import IOBenchDataModule
@@ -64,15 +67,18 @@ __all__ = (
     'SouthAfricaCropTypeDataModule',
     # NonGeoDataset
     'BigEarthNetDataModule',
+    'CaBuArDataModule',
     'ChaBuDDataModule',
     'COWCCountingDataModule',
     'DeepGlobeLandCoverDataModule',
+    'DigitalTyphoonDataModule',
     'ETCI2021DataModule',
     'EuroSATDataModule',
     'EuroSATSpatialDataModule',
     'EuroSAT100DataModule',
     'FAIR1MDataModule',
     'FireRiskDataModule',
+    'GeoNRWDataModule',
     'GID15DataModule',
     'InriaAerialImageLabelingDataModule',
     'LandCoverAIDataModule',

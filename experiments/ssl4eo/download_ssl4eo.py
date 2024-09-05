@@ -125,7 +125,7 @@ def filter_collection(
 
     if filtered.size().getInfo() == 0:
         raise ee.EEException(
-            f'ImageCollection.filter: No suitable images found in ({coords[1]:.4f}, {coords[0]:.4f}) between {period[0]} and {period[1]}.'  # noqa: E501
+            f'ImageCollection.filter: No suitable images found in ({coords[1]:.4f}, {coords[0]:.4f}) between {period[0]} and {period[1]}.'
         )
     return filtered
 

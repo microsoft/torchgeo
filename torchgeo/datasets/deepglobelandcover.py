@@ -61,7 +61,7 @@ class DeepGlobeLandCover(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/pdf/1805.06561.pdf
+    * https://arxiv.org/pdf/1805.06561
 
     .. note::
 
@@ -74,13 +74,13 @@ class DeepGlobeLandCover(NonGeoDataset):
           $ unzip deepglobe2018-landcover-segmentation-traindataset.zip
 
     .. versionadded:: 0.3
-    """  # noqa: E501
+    """
 
     filename = 'data.zip'
     data_root = 'data'
     md5 = 'f32684b0b2bf6f8d604cd359a399c061'
-    splits = ['train', 'test']
-    classes = [
+    splits = ('train', 'test')
+    classes = (
         'Urban land',
         'Agriculture land',
         'Rangeland',
@@ -88,8 +88,8 @@ class DeepGlobeLandCover(NonGeoDataset):
         'Water',
         'Barren land',
         'Unknown',
-    ]
-    colormap = [
+    )
+    colormap = (
         (0, 255, 255),
         (255, 255, 0),
         (255, 0, 255),
@@ -97,7 +97,7 @@ class DeepGlobeLandCover(NonGeoDataset):
         (0, 0, 255),
         (255, 255, 255),
         (0, 0, 0),
-    ]
+    )
 
     def __init__(
         self,
@@ -246,12 +246,15 @@ class DeepGlobeLandCover(NonGeoDataset):
         """
         ncols = 1
         image1 = draw_semantic_segmentation_masks(
-            sample['image'], sample['mask'], alpha=alpha, colors=self.colormap
+            sample['image'], sample['mask'], alpha=alpha, colors=list(self.colormap)
         )
         if 'prediction' in sample:
             ncols += 1
             image2 = draw_semantic_segmentation_masks(
-                sample['image'], sample['prediction'], alpha=alpha, colors=self.colormap
+                sample['image'],
+                sample['prediction'],
+                alpha=alpha,
+                colors=list(self.colormap),
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))

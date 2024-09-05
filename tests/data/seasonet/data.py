@@ -112,7 +112,7 @@ for season in seasons:
     # Compute checksums
     with open(archive, 'rb') as f:
         md5 = hashlib.md5(f.read()).hexdigest()
-        print(f'{season}: {repr(md5)}')
+        print(f'{season}: {md5!r}')
 
 # Write meta.csv
 with open('meta.csv', 'w') as f:
@@ -121,7 +121,7 @@ with open('meta.csv', 'w') as f:
 # Compute checksums
 with open('meta.csv', 'rb') as f:
     md5 = hashlib.md5(f.read()).hexdigest()
-    print(f'meta.csv: {repr(md5)}')
+    print(f'meta.csv: {md5!r}')
 
 os.makedirs('splits', exist_ok=True)
 
@@ -138,4 +138,4 @@ shutil.make_archive('splits', 'zip', '.', 'splits')
 # Compute checksums
 with open('splits.zip', 'rb') as f:
     md5 = hashlib.md5(f.read()).hexdigest()
-    print(f'splits: {repr(md5)}')
+    print(f'splits: {md5!r}')

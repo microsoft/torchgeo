@@ -5,7 +5,8 @@
 
 import glob
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -57,28 +58,28 @@ class LoveDA(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    scenes = ['urban', 'rural']
-    splits = ['train', 'val', 'test']
+    scenes = ('urban', 'rural')
+    splits = ('train', 'val', 'test')
 
-    info_dict = {
+    info_dict: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
-            'url': 'https://zenodo.org/record/5706578/files/Train.zip?download=1',
+            'url': 'https://zenodo.org/records/5706578/files/Train.zip?download=1',
             'filename': 'Train.zip',
             'md5': 'de2b196043ed9b4af1690b3f9a7d558f',
         },
         'val': {
-            'url': 'https://zenodo.org/record/5706578/files/Val.zip?download=1',
+            'url': 'https://zenodo.org/records/5706578/files/Val.zip?download=1',
             'filename': 'Val.zip',
             'md5': '84cae2577468ff0b5386758bb386d31d',
         },
         'test': {
-            'url': 'https://zenodo.org/record/5706578/files/Test.zip?download=1',
+            'url': 'https://zenodo.org/records/5706578/files/Test.zip?download=1',
             'filename': 'Test.zip',
             'md5': 'a489be0090465e01fb067795d24e6b47',
         },
     }
 
-    classes = [
+    classes = (
         'background',
         'building',
         'road',
@@ -87,13 +88,13 @@ class LoveDA(NonGeoDataset):
         'forest',
         'agriculture',
         'no-data',
-    ]
+    )
 
     def __init__(
         self,
         root: Path = 'data',
         split: str = 'train',
-        scene: list[str] = ['urban', 'rural'],
+        scene: Sequence[str] = ['urban', 'rural'],
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,

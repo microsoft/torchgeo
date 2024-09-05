@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import cast
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -54,7 +54,7 @@ class EuroSAT(NonGeoClassificationDataset):
     * https://ieeexplore.ieee.org/document/8519248
     """
 
-    url = 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/EuroSATallBands.zip'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/EuroSATallBands.zip'
     filename = 'EuroSATallBands.zip'
     md5 = '5ac12b3b2557aa56e1826e981e8e200e'
 
@@ -63,13 +63,13 @@ class EuroSAT(NonGeoClassificationDataset):
         'ds', 'images', 'remote_sensing', 'otherDatasets', 'sentinel_2', 'tif'
     )
 
-    splits = ['train', 'val', 'test']
-    split_urls = {
-        'train': 'https://storage.googleapis.com/remote_sensing_representations/eurosat-train.txt',  # noqa: E501
-        'val': 'https://storage.googleapis.com/remote_sensing_representations/eurosat-val.txt',  # noqa: E501
-        'test': 'https://storage.googleapis.com/remote_sensing_representations/eurosat-test.txt',  # noqa: E501
+    splits = ('train', 'val', 'test')
+    split_urls: ClassVar[dict[str, str]] = {
+        'train': 'https://storage.googleapis.com/remote_sensing_representations/eurosat-train.txt',
+        'val': 'https://storage.googleapis.com/remote_sensing_representations/eurosat-val.txt',
+        'test': 'https://storage.googleapis.com/remote_sensing_representations/eurosat-test.txt',
     }
-    split_md5s = {
+    split_md5s: ClassVar[dict[str, str]] = {
         'train': '908f142e73d6acdf3f482c5e80d851b1',
         'val': '95de90f2aa998f70a3b2416bfe0687b4',
         'test': '7ae5ab94471417b6e315763121e67c5f',
@@ -93,7 +93,10 @@ class EuroSAT(NonGeoClassificationDataset):
 
     rgb_bands = ('B04', 'B03', 'B02')
 
-    BAND_SETS = {'all': all_band_names, 'rgb': rgb_bands}
+    BAND_SETS: ClassVar[dict[str, tuple[str, ...]]] = {
+        'all': all_band_names,
+        'rgb': rgb_bands,
+    }
 
     def __init__(
         self,
@@ -302,12 +305,12 @@ class EuroSATSpatial(EuroSAT):
     .. versionadded:: 0.6
     """
 
-    split_urls = {
+    split_urls: ClassVar[dict[str, str]] = {
         'train': 'https://hf.co/datasets/torchgeo/eurosat/resolve/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-train.txt',
         'val': 'https://hf.co/datasets/torchgeo/eurosat/resolve/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-val.txt',
         'test': 'https://hf.co/datasets/torchgeo/eurosat/resolve/1c11c73a87b40b0485d103231a97829991b8e22f/eurosat-spatial-test.txt',
     }
-    split_md5s = {
+    split_md5s: ClassVar[dict[str, str]] = {
         'train': '7be3254be39f23ce4d4d144290c93292',
         'val': 'acf392290050bb3df790dc8fc0ebf193',
         'test': '5ec1733f9c16116bf0aa2d921fc613ef',
@@ -325,16 +328,16 @@ class EuroSAT100(EuroSAT):
     .. versionadded:: 0.5
     """
 
-    url = 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/EuroSAT100.zip'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/EuroSAT100.zip'
     filename = 'EuroSAT100.zip'
     md5 = 'c21c649ba747e86eda813407ef17d596'
 
-    split_urls = {
-        'train': 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-train.txt',  # noqa: E501
-        'val': 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-val.txt',  # noqa: E501
-        'test': 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-test.txt',  # noqa: E501
+    split_urls: ClassVar[dict[str, str]] = {
+        'train': 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-train.txt',
+        'val': 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-val.txt',
+        'test': 'https://hf.co/datasets/torchgeo/eurosat/resolve/06fd1b090bceecc0ce724cd21578ba7a6664fe8d/eurosat-test.txt',
     }
-    split_md5s = {
+    split_md5s: ClassVar[dict[str, str]] = {
         'train': '033d0c23e3a75e3fa79618b0e35fe1c7',
         'val': '3e3f8b3c344182b8d126c4cc88f3f215',
         'test': 'f908f151b950f270ad18e61153579794',

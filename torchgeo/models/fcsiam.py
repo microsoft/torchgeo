@@ -32,7 +32,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
         in_channels: int = 3,
         classes: int = 1,
         activation: str | Callable[[Tensor], Tensor] | None = None,
-    ):
+    ) -> None:
         """Initialize a new FCSiamConc model.
 
         Args:

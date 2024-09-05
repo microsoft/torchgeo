@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -40,9 +40,9 @@ class IOBench(IntersectionDataset):
     .. versionadded:: 0.6
     """
 
-    url = 'https://hf.co/datasets/torchgeo/io/resolve/c9d9d268cf0b61335941bdc2b6963bf16fc3a6cf/{}.tar.gz'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/io/resolve/c9d9d268cf0b61335941bdc2b6963bf16fc3a6cf/{}.tar.gz'
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'original': 'e3a908a0fd1c05c1af2f4c65724d59b3',
         'raw': 'e9603990441007ce7bba73bb8ba7d217',
         'preprocessed': '9801f1240b238cb17525c865e413d1fd',
@@ -54,7 +54,7 @@ class IOBench(IntersectionDataset):
         split: str = 'preprocessed',
         crs: CRS | None = None,
         res: float | None = None,
-        bands: Sequence[str] | None = Landsat9.default_bands + ['SR_QA_AEROSOL'],
+        bands: Sequence[str] | None = [*Landsat9.default_bands, 'SR_QA_AEROSOL'],
         classes: list[int] = [0],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,

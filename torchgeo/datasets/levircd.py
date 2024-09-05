@@ -7,6 +7,7 @@ import abc
 import glob
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,8 +27,8 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
     .. versionadded:: 0.6
     """
 
-    splits: list[str] | dict[str, dict[str, str]]
-    directories = ['A', 'B', 'label']
+    splits: ClassVar[tuple[str, ...] | dict[str, dict[str, str]]]
+    directories = ('A', 'B', 'label')
 
     def __init__(
         self,
@@ -237,7 +238,7 @@ class LEVIRCD(LEVIRCDBase):
     .. versionadded:: 0.6
     """
 
-    splits = {
+    splits: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'url': 'https://drive.google.com/file/d/18GuoCuBn48oZKAlEo-LrNwABrFhVALU-',
             'filename': 'train.zip',
@@ -328,15 +329,13 @@ class LEVIRCDPlus(LEVIRCDBase):
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2107.09244
-
-    .. versionchanged:: 0.6
     """
 
     url = 'https://drive.google.com/file/d/1JamSsxiytXdzAIk6VDVWfc-OsX-81U81'
     md5 = '1adf156f628aa32fb2e8fe6cada16c04'
     filename = 'LEVIR-CD+.zip'
     directory = 'LEVIR-CD+'
-    splits = ['train', 'test']
+    splits = ('train', 'test')
 
     def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.

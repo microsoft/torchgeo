@@ -11,13 +11,12 @@ from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
+from .cabuar import CaBuAr
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chabud import ChaBuD
 from .chesapeake import (
     Chesapeake,
-    Chesapeake7,
-    Chesapeake13,
     ChesapeakeCVPR,
     ChesapeakeDC,
     ChesapeakeDE,
@@ -35,6 +34,7 @@ from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
+from .digital_typhoon import DigitalTyphoon
 from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
 from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
@@ -56,6 +56,7 @@ from .geo import (
     UnionDataset,
     VectorDataset,
 )
+from .geonrw import GeoNRW
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
@@ -101,6 +102,7 @@ from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
+from .skyscript import SkyScript
 from .so2sat import So2Sat
 from .south_africa_crop_type import SouthAfricaCropType
 from .south_america_soybean import SouthAmericaSoybean
@@ -113,6 +115,7 @@ from .spacenet import (
     SpaceNet5,
     SpaceNet6,
     SpaceNet7,
+    SpaceNet8,
 )
 from .splits import (
     random_bbox_assignment,
@@ -198,6 +201,7 @@ __all__ = (
     'BeninSmallHolderCashews',
     'BigEarthNet',
     'BioMassters',
+    'CaBuAr',
     'ChaBuD',
     'CloudCoverDetection',
     'COWC',
@@ -206,6 +210,7 @@ __all__ = (
     'CV4AKenyaCropType',
     'DeepGlobeLandCover',
     'DFC2022',
+    'DigitalTyphoon',
     'EnviroAtlas',
     'ETCI2021',
     'EuroSAT',
@@ -214,6 +219,7 @@ __all__ = (
     'FAIR1M',
     'FireRisk',
     'ForestDamage',
+    'GeoNRW',
     'GID15',
     'IDTReeS',
     'InriaAerialImageLabeling',
@@ -237,6 +243,7 @@ __all__ = (
     'SeasoNet',
     'SEN12MS',
     'SKIPPD',
+    'SkyScript',
     'So2Sat',
     'SpaceNet',
     'SpaceNet1',
@@ -246,6 +253,7 @@ __all__ = (
     'SpaceNet5',
     'SpaceNet6',
     'SpaceNet7',
+    'SpaceNet8',
     'SSL4EO',
     'SSL4EOLBenchmark',
     'SSL4EOL',

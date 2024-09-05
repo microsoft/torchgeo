@@ -11,20 +11,14 @@ import torch
 import torch.nn as nn
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import CropHarvest, DatasetNotFoundError
 
 pytest.importorskip('h5py', minversion='3.6')
 
 
-def download_url(url: str, root: str | Path, filename: str, md5: str) -> None:
-    shutil.copy(url, os.path.join(root, filename))
-
-
 class TestCropHarvest:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CropHarvest:
-        monkeypatch.setattr(torchgeo.datasets.cropharvest, 'download_url', download_url)
         monkeypatch.setitem(
             CropHarvest.file_dict['features'], 'md5', 'ef6f4f00c0b3b50ed8380b0044928572'
         )

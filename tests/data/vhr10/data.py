@@ -4,13 +4,13 @@
 import json
 import os
 import shutil
-import subprocess
 
 import numpy as np
 from PIL import Image
 from torchvision.datasets.utils import calculate_md5
 
 ANNOTATION_FILE = {'images': [], 'annotations': []}
+DIRECTORY = 'NWPU VHR-10 dataset'
 
 
 def write_data(path: str, img: np.ndarray) -> None:
@@ -20,7 +20,7 @@ def write_data(path: str, img: np.ndarray) -> None:
 
 
 def generate_test_data(root: str, n_imgs: int = 3) -> str:
-    folder_path = os.path.join(root, 'NWPU VHR-10 dataset')
+    folder_path = os.path.join(root, DIRECTORY)
     pos_img_dir = os.path.join(folder_path, 'positive image set')
     neg_img_dir = os.path.join(folder_path, 'negative image set')
     ann_file = os.path.join(folder_path, 'annotations.json')
@@ -65,16 +65,9 @@ def generate_test_data(root: str, n_imgs: int = 3) -> str:
     with open(ann_file2, 'w') as j:
         json.dump(ANNOTATION_FILE, j)
 
-    # Create rar file
-    subprocess.run(
-        ['rar', 'a', 'NWPU VHR-10 dataset.rar', '-m5', 'NWPU VHR-10 dataset'],
-        capture_output=True,
-        check=True,
-    )
-
+    shutil.make_archive(DIRECTORY, 'zip', '.', DIRECTORY)
     annotations_md5 = calculate_md5(ann_file)
-    archive_md5 = calculate_md5('NWPU VHR-10 dataset.rar')
-    shutil.rmtree(folder_path)
+    archive_md5 = calculate_md5(f'{DIRECTORY}.zip')
 
     return f'archive md5: {archive_md5}, annotation md5: {annotations_md5}'
 

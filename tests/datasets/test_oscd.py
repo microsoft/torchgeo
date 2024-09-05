@@ -14,12 +14,7 @@ from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import OSCD, DatasetNotFoundError, RGBBandsMissingError
-
-
-def download_url(url: str, root: str | Path, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestOSCD:
@@ -27,7 +22,6 @@ class TestOSCD:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> OSCD:
-        monkeypatch.setattr(torchgeo.datasets.oscd, 'download_url', download_url)
         md5s = {
             'Onera Satellite Change Detection dataset - Images.zip': (
                 'fb4e3f54c3a31fd3f21f98cad4ddfb74'

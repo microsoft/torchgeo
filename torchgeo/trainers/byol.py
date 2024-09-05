@@ -122,8 +122,8 @@ class BackboneWrapper(nn.Module):
     * The output of the encoding layer is passed through the projection head
     * The forward call returns the output of the projection head
 
-    .. versionchanged 0.4: Name changed from *EncoderWrapper* to
-       *BackboneWrapper*.
+    .. versionchanged:: 0.4
+       Name changed from *EncoderWrapper* to *BackboneWrapper*.
     """
 
     def __init__(
@@ -286,7 +286,7 @@ class BYOLTask(BaseTask):
 
     Reference implementation:
 
-    * https://github.com/deepmind/deepmind-research/tree/master/byol
+    * https://github.com/google-deepmind/deepmind-research/tree/master/byol
 
     If you use this trainer in your research, please cite the following paper:
 

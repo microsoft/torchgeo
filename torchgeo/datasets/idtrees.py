@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import Any, cast, overload
+from typing import Any, ClassVar, cast, overload
 
 import fiona
 import matplotlib.pyplot as plt
@@ -100,7 +100,7 @@ class IDTReeS(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    classes = {
+    classes: ClassVar[dict[str, str]] = {
         'ACPE': 'Acer pensylvanicum L.',
         'ACRU': 'Acer rubrum L.',
         'ACSA3': 'Acer saccharum Marshall',
@@ -135,19 +135,22 @@ class IDTReeS(NonGeoDataset):
         'ROPS': 'Robinia pseudoacacia L.',
         'TSCA': 'Tsuga canadensis (L.) Carriere',
     }
-    metadata = {
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
-            'url': 'https://zenodo.org/record/3934932/files/IDTREES_competition_train_v2.zip?download=1',  # noqa: E501
+            'url': 'https://zenodo.org/records/3934932/files/IDTREES_competition_train_v2.zip?download=1',
             'md5': '5ddfa76240b4bb6b4a7861d1d31c299c',
             'filename': 'IDTREES_competition_train_v2.zip',
         },
         'test': {
-            'url': 'https://zenodo.org/record/3934932/files/IDTREES_competition_test_v2.zip?download=1',  # noqa: E501
+            'url': 'https://zenodo.org/records/3934932/files/IDTREES_competition_test_v2.zip?download=1',
             'md5': 'b108931c84a70f2a38a8234290131c9b',
             'filename': 'IDTREES_competition_test_v2.zip',
         },
     }
-    directories = {'train': ['train'], 'test': ['task1', 'task2']}
+    directories: ClassVar[dict[str, list[str]]] = {
+        'train': ['train'],
+        'test': ['task1', 'task2'],
+    }
     image_size = (200, 200)
 
     def __init__(

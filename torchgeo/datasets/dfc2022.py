@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,7 +43,7 @@ class DFC2022(NonGeoDataset):
     * DEMs collected from the
       `IGN RGE ALTI database <https://geoservices.ign.fr/documentation/donnees/alti/rgealti/>`_
     * Labels collected from the
-      `UrbanAtlas 2012 database <https://land.copernicus.eu/local/urban-atlas/urban-atlas-2012/view/>`_
+      `UrbanAtlas 2012 database <https://land.copernicus.eu/en/products/urban-atlas/urban-atlas-2012>`_
     * Data collected from 19 regions in France
 
     Dataset format:
@@ -75,9 +76,9 @@ class DFC2022(NonGeoDataset):
     * https://doi.org/10.1007/s10994-020-05943-y
 
     .. versionadded:: 0.3
-    """  # noqa: E501
+    """
 
-    classes = [
+    classes = (
         'No information',
         'Urban fabric',
         'Industrial, commercial, public, military, private and transport units',
@@ -94,8 +95,8 @@ class DFC2022(NonGeoDataset):
         'Wetlands',
         'Water',
         'Clouds and Shadows',
-    ]
-    colormap = [
+    )
+    colormap = (
         '#231F20',
         '#DB5F57',
         '#DB9757',
@@ -112,8 +113,8 @@ class DFC2022(NonGeoDataset):
         '#579BDB',
         '#0062FF',
         '#231F20',
-    ]
-    metadata = {
+    )
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
             'filename': 'labeled_train.zip',
             'md5': '2e87d6a218e466dd0566797d7298c7a9',
