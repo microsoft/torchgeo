@@ -230,6 +230,86 @@ class TestGeoDataset:
         ds = CustomGeoDataset(paths=[str(foo), bar])
         assert ds.files == [str(bar), str(foo)]
 
+    @pytest.mark.parametrize(
+        'temp_archive', [os.path.join('tests', 'data', 'vector')], indirect=True
+    )
+    def test_zipped_file(self, temp_archive: tuple[str, str]) -> None:
+        _, dir_zipped = temp_archive
+        filename = 'vector_2024.geojson'
+
+        specific_file_zipped = f'{dir_zipped}!{filename}'
+
+        files_found = CustomGeoDataset(paths=f'zip://{specific_file_zipped}').files
+        assert len(files_found) == 1
+        assert str(files_found[0]).endswith(filename)
+
+    @pytest.mark.parametrize(
+        'temp_archive', [os.path.join('tests', 'data', 'vector')], indirect=True
+    )
+    def test_zipped_file_non_existing(self, temp_archive: tuple[str, str]) -> None:
+        _, dir_zipped = temp_archive
+        with pytest.warns(UserWarning, match='Path was ignored.'):
+            files = CustomGeoDataset(
+                paths=f'zip://{dir_zipped}!/non_existing_file.tif'
+            ).files
+            assert len(files) == 0
+
+    @pytest.mark.parametrize(
+        'temp_archive',
+        [
+            os.path.join(
+                'tests',
+                'data',
+                'sentinel2',
+                'S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE',
+            )
+        ],
+        indirect=True,
+    )
+    def test_zipped_specific_file_dir(self, temp_archive: tuple[str, str]) -> None:
+        dir_not_zipped, dir_zipped = temp_archive
+
+        filepath_within_dir = (
+            'GRANULE/L2A_T26EMU_A035569_20220414T110747'
+            '/IMG_DATA/R60m/T26EMU_20220414T110751_B02_60m.jp2'
+        )
+
+        files_found = CustomGeoDataset(
+            paths=f'zip://{dir_zipped}!/{filepath_within_dir}'
+        ).files
+        assert len(files_found) == 1
+        assert str(files_found[0]).endswith(filepath_within_dir)
+
+    @pytest.mark.parametrize(
+        'temp_archive',
+        [
+            os.path.join(
+                'tests',
+                'data',
+                'sentinel2',
+                'S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE',
+            )
+        ],
+        indirect=True,
+    )
+    def test_zipped_directory(self, temp_archive: tuple[str, str]) -> None:
+        dir_not_zipped, dir_zipped = temp_archive
+        bands = Sentinel2.rgb_bands
+        transforms = nn.Identity()
+        cache = False
+
+        files_not_zipped = Sentinel2(
+            paths=dir_not_zipped, bands=bands, transforms=transforms, cache=cache
+        ).files
+
+        files_zipped = Sentinel2(
+            paths=f'zip://{dir_zipped}', bands=bands, transforms=transforms, cache=cache
+        ).files
+
+        basenames_not_zipped = [Path(path).stem for path in files_not_zipped]
+        basenames_zipped = [Path(path).stem for path in files_zipped]
+        assert basenames_zipped == basenames_not_zipped
+
 
 class TestRasterDataset:
     naip_dir = os.path.join('tests', 'data', 'naip')
@@ -391,88 +471,6 @@ class TestRasterDataset:
 
         with pytest.raises(AssertionError, match=msg):
             CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
-
-
-class TestVirtualFilesystems:
-    @pytest.mark.parametrize(
-        'temp_archive', [os.path.join('tests', 'data', 'vector')], indirect=True
-    )
-    def test_zipped_file(self, temp_archive: tuple[str, str]) -> None:
-        _, dir_zipped = temp_archive
-        filename = 'vector_2024.geojson'
-
-        specific_file_zipped = f'{dir_zipped}!{filename}'
-
-        files_found = CustomGeoDataset(paths=f'zip://{specific_file_zipped}').files
-        assert len(files_found) == 1
-        assert str(files_found[0]).endswith(filename)
-
-    @pytest.mark.parametrize(
-        'temp_archive', [os.path.join('tests', 'data', 'vector')], indirect=True
-    )
-    def test_zipped_file_non_existing(self, temp_archive: tuple[str, str]) -> None:
-        _, dir_zipped = temp_archive
-        with pytest.warns(UserWarning, match='Path was ignored.'):
-            files = CustomGeoDataset(
-                paths=f'zip://{dir_zipped}!/non_existing_file.tif'
-            ).files
-            assert len(files) == 0
-
-    @pytest.mark.parametrize(
-        'temp_archive',
-        [
-            os.path.join(
-                'tests',
-                'data',
-                'sentinel2',
-                'S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE',
-            )
-        ],
-        indirect=True,
-    )
-    def test_zipped_specific_file_dir(self, temp_archive: tuple[str, str]) -> None:
-        dir_not_zipped, dir_zipped = temp_archive
-
-        filepath_within_dir = (
-            'GRANULE/L2A_T26EMU_A035569_20220414T110747'
-            '/IMG_DATA/R60m/T26EMU_20220414T110751_B02_60m.jp2'
-        )
-
-        files_found = CustomGeoDataset(
-            paths=f'zip://{dir_zipped}!/{filepath_within_dir}'
-        ).files
-        assert len(files_found) == 1
-        assert str(files_found[0]).endswith(filepath_within_dir)
-
-    @pytest.mark.parametrize(
-        'temp_archive',
-        [
-            os.path.join(
-                'tests',
-                'data',
-                'sentinel2',
-                'S2A_MSIL2A_20220414T110751_N0400_R108_T26EMU_20220414T165533.SAFE',
-            )
-        ],
-        indirect=True,
-    )
-    def test_zipped_directory(self, temp_archive: tuple[str, str]) -> None:
-        dir_not_zipped, dir_zipped = temp_archive
-        bands = Sentinel2.rgb_bands
-        transforms = nn.Identity()
-        cache = False
-
-        files_not_zipped = Sentinel2(
-            paths=dir_not_zipped, bands=bands, transforms=transforms, cache=cache
-        ).files
-
-        files_zipped = Sentinel2(
-            paths=f'zip://{dir_zipped}', bands=bands, transforms=transforms, cache=cache
-        ).files
-
-        basenames_not_zipped = [Path(path).stem for path in files_not_zipped]
-        basenames_zipped = [Path(path).stem for path in files_zipped]
-        assert basenames_zipped == basenames_not_zipped
 
 
 class TestVectorDataset:
