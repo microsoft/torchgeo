@@ -13,6 +13,7 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
+from _pytest.tmpdir import TempPathFactory
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from torch.utils.data import ConcatDataset
@@ -85,13 +86,20 @@ class CustomNonGeoDataset(NonGeoDataset):
 
 
 @pytest.fixture(scope='module')
-def temp_archive(request: SubRequest) -> Generator[tuple[str, str], None, None]:
+def module_tmp_path(tmp_path_factory: TempPathFactory) -> Path:
+    # The default fixture is scoped per funciton
+    return tmp_path_factory.mktemp('module_tmp')
+
+
+@pytest.fixture(scope='module')
+def temp_archive(
+    request: SubRequest, module_tmp_path: Path
+) -> Generator[tuple[str, str], None, None]:
     # Runs before tests
     dir_not_zipped = request.param
-    dir_zipped = f'{dir_not_zipped}.zip'
-    _ = shutil.make_archive(dir_not_zipped, 'zip', dir_not_zipped)
-    # make_archive returns absolute path, while input may be relative path.
-    # we opt to return the (relative) path as provided.
+    dir_zipped = shutil.make_archive(
+        module_tmp_path / dir_not_zipped, 'zip', root_dir=dir_not_zipped
+    )
     yield dir_not_zipped, dir_zipped
     # Runs after tests
     os.remove(dir_zipped)
