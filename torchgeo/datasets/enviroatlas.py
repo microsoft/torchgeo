@@ -6,7 +6,7 @@
 import os
 import sys
 from collections.abc import Callable, Sequence
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import fiona
 import matplotlib.pyplot as plt
@@ -345,8 +345,7 @@ class EnviroAtlas(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[dict[str, str]], [hit.object for hit in hits])
+        filepaths = self.filespaths_intersecting_query(query)
 
         sample = {'image': [], 'mask': [], 'crs': self.crs, 'bounds': query}
 

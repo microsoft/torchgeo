@@ -9,7 +9,7 @@ import os
 import pathlib
 import sys
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import fiona
 import fiona.transform
@@ -304,8 +304,7 @@ class OpenBuildings(VectorDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[Path], [hit.object for hit in hits])
+        filepaths = self.filespaths_intersecting_query(query)
 
         if not filepaths:
             raise IndexError(

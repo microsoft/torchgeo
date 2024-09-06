@@ -17,11 +17,18 @@ import sys
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, TypeAlias, cast, overload
+from typing import Any, TypeAlias, TypedDict, cast, overload
 
 import numpy as np
+import pyproj
 import rasterio
+import shapely
 import torch
+from affine import Affine
+from rasterio.features import shapes, sieve
+from rasterio.warp import transform_geom
+from rtree.index import Index
+from shapely.geometry import MultiPolygon, Polygon
 from torch import Tensor
 from torchvision.datasets.utils import (
     check_integrity,
@@ -30,6 +37,7 @@ from torchvision.datasets.utils import (
     extract_archive,
 )
 from torchvision.utils import draw_segmentation_masks
+from typing_extensions import NotRequired
 
 from .errors import DependencyNotFoundError
 
@@ -43,6 +51,13 @@ __all__ = (
 
 
 Path: TypeAlias = str | pathlib.Path
+
+
+class IndexData(TypedDict):
+    """Used for static typing of rtree index object for RasterDataset."""
+
+    filepath: Path
+    valid_footprint: NotRequired[Polygon | MultiPolygon]
 
 
 @dataclass(frozen=True)
@@ -713,3 +728,109 @@ def which(name: Path) -> Executable:
     else:
         msg = f'{name} is not installed and is required to use this dataset.'
         raise DependencyNotFoundError(msg) from None
+
+
+def calc_valid_data_footprint_from_datasource(
+    masks: np.typing.NDArray[np.uint8],
+    src_crs: pyproj.crs.crs.CRS,
+    src_transform: Affine,
+    raster_width: int,
+    raster_resolution_x: float,
+    dst_crs: pyproj.crs.crs.CRS,
+) -> Polygon | MultiPolygon:
+    """Calculates valid data footprint from a raster's masks.
+
+    This means the parts of the raster that is not no-data pixels.
+
+    Args:
+        masks: raster mask, like rasterio.io.DatasetReader.read_masks()
+        src_crs: coordinate reference system of the raster
+        src_transform: affine transform for the raster
+        raster_width: width of the raster
+        raster_resolution_x: resolution of the raster in the x direction (meters)
+        dst_crs: desired coordinate reference system of the output
+
+    Returns:
+        Polygon representing the valid data footprint of the raster
+    """
+    # Read valid/nodata-mask. Could choose only the first bands mask for peed-up.
+    # Currently, supports spatial shifts between the bands, and include all of this
+    # as one combined mask.
+    mask = masks
+    if len(mask) > 1:
+        mask = np.logical_or.reduce(mask, axis=0).astype('uint8')
+    # Close eventual holes within the raster that have area smaller than 500 pixels.
+    # Yields two bands, one all-zero representing nodata pixels,
+    # the other representing valid data
+    # To ensure hole size is smaller than raster size cap them at 0.2%.
+    # This value was found empirically as per
+    # https://rasterio.readthedocs.io/en/stable/topics/masks.html#writing-masks
+    max_hole_size = min(int(mask.size * 0.002), 800) or 1  # failsafe for 0
+    sieved_mask = sieve(mask, max_hole_size)
+    # Extract polygon for valid data values. Only interested in the valid-band.
+    # To support complex footprints we allow multiple such polygons and merge them
+    # to one multipolygon later
+    geoms = [g for g, v in shapes(sieved_mask, transform=src_transform) if v > 0]
+    # Transform to the common CRS chosen in RasterDataset
+    features = transform_geom(src_crs=src_crs, dst_crs=dst_crs, geom=geoms)
+    # Create a Shapely Polygon object(s)
+    vector_footprint = MultiPolygon(
+        [Polygon(feature['coordinates'][0]) for feature in features]
+    )
+    # The resulting polygon(s) is very staggered/pixelated,
+    # which could result in thousands of corners.
+    # The valid data footprints are usually very simple (3-5 corners)
+    # Simplifying each side to length 1/5 of the raster size (assumes crs is meters)
+    max_distance_of_polygon_length = raster_width // raster_resolution_x / 5
+    return vector_footprint.simplify(max_distance_of_polygon_length)
+
+
+def union_valid_footprint_from_dataset(
+    dataset_index: Index, box: BoundingBox
+) -> Polygon | MultiPolygon:
+    """Union and crop all valid footprints for a RasterDataset across overlapping files.
+
+    Args:
+        dataset_index: Index of RasterDataset for which to collect valid footprint.
+        box: bounds to crop to, typically the intersection between raster and vector
+            datasets
+
+    Returns:
+        Polygon for union of valid footprints within the box.
+    """
+    # assuming hit1 is the rasterfile.
+    # It might have nodata-regions covered by other files,
+    # which RasterData will read from.
+    # we merge the footprint from all files covering this bounds
+    all_footprints_overlapping = [
+        cast(IndexData, hit.object)['valid_footprint']
+        for hit in dataset_index.intersection(dataset_index.bounds, objects=True)
+    ]
+    all_footprints_cropped_to_bounds = shapely.intersection(
+        shapely.ops.unary_union(all_footprints_overlapping),
+        shapely.geometry.box(box.minx, box.miny, box.maxx, box.maxy),
+    )
+    return all_footprints_cropped_to_bounds
+
+
+def get_valid_footprint_between_datasets(
+    ds1_index: Index | None, ds2_index: Index | None, box: BoundingBox
+) -> Polygon | MultiPolygon | None:
+    valid_footprint_ds1: Polygon | MultiPolygon | None = None
+    valid_footprint_ds2: Polygon | MultiPolygon | None = None
+    if ds1_index is not None:
+        valid_footprint_ds1 = union_valid_footprint_from_dataset(
+            dataset_index=ds1_index, box=box
+        )
+    if ds2_index is not None:
+        valid_footprint_ds2 = union_valid_footprint_from_dataset(
+            dataset_index=ds2_index, box=box
+        )
+    valid_footprint: Polygon | MultiPolygon | None = None
+    if valid_footprint_ds1 is not None and valid_footprint_ds2 is not None:
+        valid_footprint = valid_footprint_ds1.intersection(valid_footprint_ds2)
+    elif valid_footprint_ds1 is not None:
+        valid_footprint = valid_footprint_ds1
+    elif valid_footprint_ds2 is not None:
+        valid_footprint = valid_footprint_ds2
+    return valid_footprint
