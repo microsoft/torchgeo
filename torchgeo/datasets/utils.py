@@ -611,7 +611,7 @@ def percentile_normalization(
     return img_normalized
 
 
-def path_is_gdal_vsi(path: Path) -> bool:
+def _path_is_gdal_vsi(path: Path) -> bool:
     """Checks if the given path has a GDAL Virtual File System Interface (VSI) prefix.
 
     This is a path within an Apache Virtual File System (VFS) supported by GDAL and
@@ -639,7 +639,7 @@ def path_is_gdal_vsi(path: Path) -> bool:
     return '://' in str(path) or str(path).startswith('/vsi')
 
 
-def listdir_vfs_recursive(root: Path) -> list[str]:
+def _listdir_vfs_recursive(root: Path) -> list[str]:
     """Lists all files in Virtual File Systems (VFS) recursively.
 
     Args:
@@ -654,7 +654,7 @@ def listdir_vfs_recursive(root: Path) -> list[str]:
     Raises:
         FileNotFoundError: If root does not exist.
 
-    .. versionadded:: 0.6
+    .. versionadded:: 0.7
     """
     dirs = [str(root)]
     files = []
@@ -673,7 +673,7 @@ def listdir_vfs_recursive(root: Path) -> list[str]:
     return files
 
 
-def list_directory_recursive(root: Path, filename_glob: str) -> list[str]:
+def _list_directory_recursive(root: Path, filename_glob: str) -> list[str]:
     """Lists files in directory recursively matching the given glob expression.
 
     Also supports GDAL Virtual File Systems (VFS).
@@ -687,14 +687,14 @@ def list_directory_recursive(root: Path, filename_glob: str) -> list[str]:
         A list of all file paths matching filename_glob in the root directory or its
         subdirectories.
 
-    .. versionadded:: 0.6
+    .. versionadded:: 0.7
     """
     files: list[str]
-    if path_is_gdal_vsi(root):
+    if _path_is_gdal_vsi(root):
         # Change type to match expected input to filter
         all_files: list[str] = []
         try:
-            all_files = listdir_vfs_recursive(root)
+            all_files = _listdir_vfs_recursive(root)
         except FileNotFoundError:
             # To match the behaviour of glob.iglob we silently return empty list
             # for non-existing root.

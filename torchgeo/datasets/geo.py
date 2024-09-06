@@ -36,10 +36,10 @@ from .errors import DatasetNotFoundError
 from .utils import (
     BoundingBox,
     Path,
+    _list_directory_recursive,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
-    list_directory_recursive,
     merge_samples,
 )
 
@@ -311,7 +311,9 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
                 str(path), os.path.join('*', self.filename_glob)
             ):
                 files.add(str(path))
-            elif files_found := set(list_directory_recursive(path, self.filename_glob)):
+            elif files_found := set(
+                _list_directory_recursive(path, self.filename_glob)
+            ):
                 files |= files_found
             elif not hasattr(self, 'download'):
                 warnings.warn(
