@@ -329,8 +329,6 @@ class LEVIRCDPlus(LEVIRCDBase):
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2107.09244
-
-    .. versionchanged:: 0.6
     """
 
     url = 'https://drive.google.com/file/d/1JamSsxiytXdzAIk6VDVWfc-OsX-81U81'

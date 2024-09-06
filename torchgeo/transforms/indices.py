@@ -74,7 +74,7 @@ class AppendNBR(AppendNormalizedDifferenceIndex):
 
     If you use this index in your research, please cite the following paper:
 
-    * https://www.sciencebase.gov/catalog/item/4f4e4b20e4b07f02db6abb36
+    * https://www.yumpu.com/en/document/view/24226870/the-normalized-burn-ratio-and-relationships-to-burn-severity-/7
 
     .. versionadded:: 0.2
     """

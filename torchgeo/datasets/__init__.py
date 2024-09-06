@@ -11,6 +11,7 @@ from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
+from .cabuar import CaBuAr
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chabud import ChaBuD
@@ -33,6 +34,7 @@ from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
+from .digital_typhoon import DigitalTyphoon
 from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
 from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
@@ -199,6 +201,7 @@ __all__ = (
     'BeninSmallHolderCashews',
     'BigEarthNet',
     'BioMassters',
+    'CaBuAr',
     'ChaBuD',
     'CloudCoverDetection',
     'COWC',
@@ -207,6 +210,7 @@ __all__ = (
     'CV4AKenyaCropType',
     'DeepGlobeLandCover',
     'DFC2022',
+    'DigitalTyphoon',
     'EnviroAtlas',
     'ETCI2021',
     'EuroSAT',

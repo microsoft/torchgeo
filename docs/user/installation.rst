@@ -1,7 +1,7 @@
 Installation
 ============
 
-TorchGeo is simple and easy to install. We support installation using the `pip <https://pip.pypa.io/>`_, `conda <https://docs.conda.io/>`_, and `spack <https://spack.io/>`_ package managers.
+TorchGeo is simple and easy to install. We support installation using the `pip <https://pip.pypa.io/en/stable/>`_, `conda <https://docs.conda.io/en/latest/>`_, and `spack <https://spack.io/>`_ package managers.
 
 pip
 ---
@@ -34,7 +34,7 @@ By default, only required dependencies are installed. TorchGeo has a number of o
    $ pip install torchgeo[style,tests]
    $ pip install torchgeo[all]
 
-See the ``pyproject.toml`` for a complete list of options. See the `pip documentation <https://pip.pypa.io/>`_ for more details.
+See the ``pyproject.toml`` for a complete list of options. See the `pip documentation <https://pip.pypa.io/en/stable/>`_ for more details.
 
 conda
 -----
@@ -82,4 +82,4 @@ Optional dependencies can be installed by enabling build variants:
    $ spack install py-torchgeo+datasets
    $ spack install py-torchgeo+style+tests
 
-Run ``spack info py-torchgeo`` for a complete list of variants. See the `spack documentation <https://spack.readthedocs.io/>`_ for more details.
+Run ``spack info py-torchgeo`` for a complete list of variants. See the `spack documentation <https://spack.readthedocs.io/en/latest/>`_ for more details.

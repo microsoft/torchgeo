@@ -1,0 +1,18 @@
+model:
+  class_path: RegressionTask
+  init_args:
+    model: "resnet18"
+    num_outputs: 1
+    in_channels: 3
+    loss: "mse"
+data:
+  class_path: DigitalTyphoonDataModule
+  init_args:
+    batch_size: 1
+    split_by: "typhoon_id"
+  dict_kwargs:
+    root: "tests/data/digital_typhoon"
+    download: true
+    min_feature_value:
+      wind: 10
+    sequence_length: 3

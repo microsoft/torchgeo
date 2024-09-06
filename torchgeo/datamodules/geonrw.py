@@ -21,7 +21,7 @@ class GeoNRWDataModule(NonGeoDataModule):
     Implements 80/20 train/val splits based on city locations.
     See :func:`setup` for more details.
 
-    .. versionadded: 0.6
+    .. versionadded:: 0.6
     """
 
     def __init__(

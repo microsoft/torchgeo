@@ -36,7 +36,7 @@ class FarSeg(Module):
 
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/pdf/2011.09766.pdf
+    * https://arxiv.org/pdf/2011.09766
     """
 
     def __init__(

@@ -198,7 +198,8 @@ class TestGeoDataset:
         paths = [tmp_path / fake_file for fake_file in files]
         for fake_file in paths:
             fake_file.touch()
-        assert CustomGeoDataset(paths=paths).files == sorted(paths)
+        str_paths = [str(fake_file) for fake_file in paths]
+        assert CustomGeoDataset(paths=paths).files == sorted(str_paths)
 
     def test_files_property_deterministic(self, tmp_path: Path) -> None:
         """Ensure that the list of files is consistent regardless of their original
@@ -212,6 +213,14 @@ class TestGeoDataset:
         assert (
             CustomGeoDataset(paths=paths1).files == CustomGeoDataset(paths=paths2).files
         )
+
+    def test_files_property_mix_str_and_pathlib(self, tmp_path: Path) -> None:
+        foo = tmp_path / 'foo.txt'
+        bar = tmp_path / 'bar.txt'
+        foo.touch()
+        bar.touch()
+        ds = CustomGeoDataset(paths=[str(foo), bar])
+        assert ds.files == [str(bar), str(foo)]
 
 
 class TestRasterDataset:

@@ -50,8 +50,7 @@ extensions = [
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build']
 
-# Sphinx 3.0+ required for:
-# autodoc_typehints_description_target = "documented"
+# Sphinx 4.0+ required for autodoc_typehints_description_traget
 needs_sphinx = '4.0'
 
 nitpicky = True

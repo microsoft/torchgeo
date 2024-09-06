@@ -61,7 +61,7 @@ class DeepGlobeLandCover(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/pdf/1805.06561.pdf
+    * https://arxiv.org/pdf/1805.06561
 
     .. note::
 
