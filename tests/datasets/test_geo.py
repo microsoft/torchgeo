@@ -87,7 +87,7 @@ class CustomNonGeoDataset(NonGeoDataset):
 
 @pytest.fixture(scope='module')
 def module_tmp_path(tmp_path_factory: TempPathFactory) -> Path:
-    # The default fixture is scoped per funciton
+    # The default fixture is scoped per function
     return tmp_path_factory.mktemp('module_tmp')
 
 
