@@ -421,6 +421,6 @@ class LandCoverAI100(LandCoverAI):
     .. versionadded:: 0.7
     """
 
-    url = 'https://huggingface.co/datasets/torchgeo/landcoverai/resolve/705267660888d50cd23d2ca21ae30e5c30a53ae9/landcoverai100.zip'
+    url = 'https://huggingface.co/datasets/torchgeo/landcoverai/resolve/5cdf9299bd6c1232506cf79373df01f6e6596b50/landcoverai100.zip'
     filename = 'landcoverai100.zip'
     md5 = '66eb33b5a0cabb631836ce0a4eafb7cd'
