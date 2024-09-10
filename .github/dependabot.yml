@@ -33,3 +33,4 @@ updates:
     directory: "/requirements"
     schedule:
       interval: "weekly"
+    versioning-strategy: "lockfile-only"
