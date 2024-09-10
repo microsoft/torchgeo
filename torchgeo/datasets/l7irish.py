@@ -5,7 +5,6 @@
 
 import glob
 import os
-import pathlib
 import re
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, ClassVar, cast
@@ -94,7 +93,7 @@ class L7IrishMask(RasterDataset):
         filename_regex = re.compile(L7IrishImage.filename_regex, re.VERBOSE)
         index = Index(interleaved=False, properties=Property(dimension=3))
         for hit in self.index.intersection(self.index.bounds, objects=True):
-            dirname = os.path.dirname(cast(Path, hit.object))
+            dirname = os.path.dirname(cast(str, hit.object))
             image = glob.glob(os.path.join(dirname, L7IrishImage.filename_glob))[0]
             minx, maxx, miny, maxy, mint, maxt = hit.bounds
             if match := re.match(filename_regex, os.path.basename(image)):
@@ -229,7 +228,7 @@ class L7Irish(IntersectionDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        if not isinstance(self.paths, str | pathlib.Path):
+        if not isinstance(self.paths, str | os.PathLike):
             return
 
         for classname in [L7IrishImage, L7IrishMask]:
@@ -262,7 +261,7 @@ class L7Irish(IntersectionDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         pathname = os.path.join(self.paths, '*.tar.gz')
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)

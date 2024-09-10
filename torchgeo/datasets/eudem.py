@@ -5,7 +5,6 @@
 
 import glob
 import os
-import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any, ClassVar
 
@@ -117,7 +116,7 @@ class EUDEM(RasterDataset):
             return
 
         # Check if the zip files have already been downloaded
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         pathname = os.path.join(self.paths, self.zipfile_glob)
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):

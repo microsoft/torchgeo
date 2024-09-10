@@ -38,7 +38,7 @@ class CustomGeoDataset(GeoDataset):
         bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
         crs: CRS = CRS.from_epsg(4087),
         res: float = 1,
-        paths: str | Path | Iterable[str | Path] | None = None,
+        paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
     ) -> None:
         super().__init__()
         self.index.insert(0, tuple(bounds))

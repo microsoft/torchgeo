@@ -8,7 +8,6 @@ import fnmatch
 import functools
 import glob
 import os
-import pathlib
 import re
 import sys
 import warnings
@@ -300,7 +299,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, str | pathlib.Path):
+        if isinstance(self.paths, str | os.PathLike):
             paths: Iterable[Path] = [self.paths]
         else:
             paths = self.paths
@@ -521,7 +520,7 @@ class RasterDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[Path], [hit.object for hit in hits])
+        filepaths = cast(list[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -564,7 +563,7 @@ class RasterDataset(GeoDataset):
 
     def _merge_files(
         self,
-        filepaths: Sequence[Path],
+        filepaths: Sequence[str],
         query: BoundingBox,
         band_indexes: Sequence[int] | None = None,
     ) -> Tensor:
