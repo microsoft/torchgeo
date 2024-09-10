@@ -10,7 +10,6 @@ import collections
 import contextlib
 import importlib
 import os
-import pathlib
 import shutil
 import subprocess
 import sys
@@ -42,7 +41,7 @@ __all__ = (
 )
 
 
-Path: TypeAlias = str | pathlib.Path
+Path: TypeAlias = str | os.PathLike[str]
 
 
 @dataclass(frozen=True)

@@ -5,7 +5,6 @@
 
 import glob
 import os
-import pathlib
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, ClassVar
 
@@ -174,7 +173,7 @@ class L8Biome(IntersectionDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        if not isinstance(self.paths, str | pathlib.Path):
+        if not isinstance(self.paths, str | os.PathLike):
             return
 
         for classname in [L8BiomeImage, L8BiomeMask]:
@@ -207,7 +206,7 @@ class L8Biome(IntersectionDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         pathname = os.path.join(self.paths, '*.tar.gz')
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)
