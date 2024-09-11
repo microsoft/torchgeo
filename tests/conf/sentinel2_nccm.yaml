@@ -1,9 +1,9 @@
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    loss: "ce"
-    model: "unet"
-    backbone: "resnet18"
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
     in_channels: 13
     num_classes: 5
     num_filters: 1
@@ -14,5 +14,5 @@ data:
     batch_size: 2
     patch_size: 16
   dict_kwargs:
-    nccm_paths: "tests/data/nccm"
-    sentinel2_paths: "tests/data/sentinel2"
+    nccm_paths: 'tests/data/nccm'
+    sentinel2_paths: 'tests/data/sentinel2'

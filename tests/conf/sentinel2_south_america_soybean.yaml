@@ -1,9 +1,9 @@
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    loss: "ce"
-    model: "deeplabv3+"
-    backbone: "resnet18"
+    loss: 'ce'
+    model: 'deeplabv3+'
+    backbone: 'resnet18'
     in_channels: 13
     num_classes: 2
     num_filters: 1
@@ -13,5 +13,5 @@ data:
     batch_size: 2
     patch_size: 16
   dict_kwargs:
-    south_america_soybean_paths: "tests/data/south_america_soybean"
-    sentinel2_paths: "tests/data/sentinel2"
+    south_america_soybean_paths: 'tests/data/south_america_soybean'
+    sentinel2_paths: 'tests/data/sentinel2'

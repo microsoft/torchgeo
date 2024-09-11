@@ -1,10 +1,10 @@
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    loss: "focal"
-    model: "fcn"
+    loss: 'focal'
+    model: 'fcn'
     num_filters: 1
-    backbone: "resnet18"
+    backbone: 'resnet18'
     in_channels: 2
     num_classes: 11
     ignore_index: null
@@ -12,6 +12,6 @@ data:
   class_path: SEN12MSDataModule
   init_args:
     batch_size: 1
-    band_set: "s1"
+    band_set: 's1'
   dict_kwargs:
-    root: "tests/data/sen12ms"
+    root: 'tests/data/sen12ms'

@@ -4,9 +4,9 @@ trainer:
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    loss: "ce"
-    model: "unet"
-    backbone: "resnet18"
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
     weights: null
     lr: 1e-3
     patience: 6
@@ -18,15 +18,15 @@ data:
   class_path: ChesapeakeCVPRDataModule
   init_args:
     train_splits:
-      - "de-train"
+      - 'de-train'
     val_splits:
-      - "de-val"
+      - 'de-val'
     test_splits:
-      - "de-test"
+      - 'de-test'
     batch_size: 200
     patch_size: 256
     num_workers: 4
     class_set: ${model.init_args.num_classes}
     use_prior_labels: False
   dict_kwargs:
-    root: "data/chesapeake/cvpr"
+    root: 'data/chesapeake/cvpr'

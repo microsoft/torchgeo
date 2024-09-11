@@ -4,10 +4,10 @@ model:
     model: resnet18
     num_outputs: 1
     in_channels: 3
-    loss: "mse"
+    loss: 'mse'
 data:
   class_path: COWCCountingDataModule
   init_args:
     batch_size: 1
   dict_kwargs:
-    root: "tests/data/cowc_counting"
+    root: 'tests/data/cowc_counting'

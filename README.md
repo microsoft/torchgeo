@@ -220,7 +220,7 @@ trainer:
 model:
   class_path: ClassificationTask
   init_args:
-    model: "resnet18"
+    model: 'resnet18'
     in_channels: 13
     num_classes: 10
 data:
