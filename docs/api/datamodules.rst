@@ -123,6 +123,7 @@ LandCover.ai
 ^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAIDataModule
+.. autoclass:: LandCoverAI100DataModule
 
 LEVIR-CD
 ^^^^^^^^

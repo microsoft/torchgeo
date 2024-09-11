@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from itertools import product
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,6 +18,7 @@ from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
     LandCoverAI,
+    LandCoverAI100,
     LandCoverAIGeo,
 )
 
@@ -72,20 +74,25 @@ class TestLandCoverAIGeo:
 class TestLandCoverAI:
     pytest.importorskip('cv2', minversion='4.5.4')
 
-    @pytest.fixture(params=['train', 'val', 'test'])
+    @pytest.fixture(
+        params=product([LandCoverAI100, LandCoverAI], ['train', 'val', 'test'])
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LandCoverAI:
+        base_class: type[LandCoverAI] = request.param[0]
+        split: str = request.param[1]
         md5 = 'ff8998857cc8511f644d3f7d0f3688d0'
-        monkeypatch.setattr(LandCoverAI, 'md5', md5)
+        monkeypatch.setattr(base_class, 'md5', md5)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
-        monkeypatch.setattr(LandCoverAI, 'url', url)
+        monkeypatch.setattr(base_class, 'url', url)
         sha256 = 'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
-        monkeypatch.setattr(LandCoverAI, 'sha256', sha256)
+        monkeypatch.setattr(base_class, 'sha256', sha256)
+        if base_class == LandCoverAI100:
+            monkeypatch.setattr(base_class, 'filename', 'landcover.ai.v1.zip')
         root = tmp_path
-        split = request.param
         transforms = nn.Identity()
-        return LandCoverAI(root, split, transforms, download=True, checksum=True)
+        return base_class(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: LandCoverAI) -> None:
         x = dataset[0]

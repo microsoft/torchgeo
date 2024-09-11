@@ -316,6 +316,7 @@ LandCover.ai
 ^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAI
+.. autoclass:: LandCoverAI100
 
 LEVIR-CD
 ^^^^^^^^
