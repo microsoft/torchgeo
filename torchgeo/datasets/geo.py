@@ -361,8 +361,8 @@ class RasterDataset(GeoDataset):
     #: The sample returned by the dataset/data loader will use the "image" key if
     #: *is_image* is True, otherwise it will use the "mask" key.
     #:
-    #: For datasets with both model inputs and outputs, a custom
-    #: :func:`~RasterDataset.__getitem__` method must be implemented.
+    #: For datasets with both model inputs and outputs, the recommended approach is
+    #: to use 2 `RasterDataset` instances and combine them using a `IntersectionDataset`.
     is_image = True
 
     #: True if data is stored in a separate file for each band, else False.
