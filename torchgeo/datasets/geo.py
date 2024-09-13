@@ -362,7 +362,7 @@ class RasterDataset(GeoDataset):
     #: *is_image* is True, otherwise it will use the "mask" key.
     #:
     #: For datasets with both model inputs and outputs, the recommended approach is
-    #: to use 2 `RasterDataset` instances and combine them using a `IntersectionDataset`.
+    #: to use 2 `RasterDataset` instances and combine them using an `IntersectionDataset`.
     is_image = True
 
     #: True if data is stored in a separate file for each band, else False.
