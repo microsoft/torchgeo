@@ -172,9 +172,9 @@ class FieldsOfTheWorld(NonGeoDataset):
             image and mask at that index with image of dimension 3x1024x1024
             and mask of dimension 1024x1024
         """
-        win_a_fn = self.files['win_a'][index]
-        win_b_fn = self.files['win_b'][index]
-        mask_fn = self.files['mask'][index]
+        win_a_fn = self.files[index]['win_a']
+        win_b_fn = self.files[index]['win_b']
+        mask_fn = self.files[index]['mask']
 
         win_a = self._load_image(win_a_fn)
         win_b = self._load_image(win_b_fn)
@@ -194,7 +194,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         Returns:
             length of dataset
         """
-        return len(self.files['win_a'])
+        return len(self.files)
 
     def _load_files(self) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
@@ -203,33 +203,30 @@ class FieldsOfTheWorld(NonGeoDataset):
             a dictionary with "win_a", "win_b", and "mask" keys containing lists of
             file paths
         """
-        files = {'win_a': [], 'win_b': [], 'mask': []}
+        files = []
         for country in self.countries:
             with open(os.path.join(self.root, country, f'{self.split}.txt')) as f:
                 aois = f.read().strip().split('\n')
             for aoi in aois:
-                files['win_a'].append(
-                    os.path.join(
-                        self.root, country, 's2_images', 'window_a', f'{aoi}.tif'
-                    )
-                )
-                files['win_b'].append(
-                    os.path.join(
-                        self.root, country, 's2_images', 'window_b', f'{aoi}.tif'
-                    )
-                )
-
                 if self.target == 'instance':
                     subdir = 'instance'
                 elif self.target == '2-class':
                     subdir = 'semantic_2class'
                 elif self.target == '3-class':
                     subdir = 'semantic_3class'
-                files['mask'].append(
-                    os.path.join(
+
+                sample = {
+                    'win_a': os.path.join(
+                        self.root, country, 's2_images', 'window_a', f'{aoi}.tif'
+                    ),
+                    'win_b': os.path.join(
+                        self.root, country, 's2_images', 'window_b', f'{aoi}.tif'
+                    ),
+                    'mask': os.path.join(
                         self.root, country, 'label_masks', subdir, f'{aoi}.tif'
-                    )
-                )
+                    ),
+                }
+                files.append(sample)
 
         return files
 
