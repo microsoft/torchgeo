@@ -3,18 +3,16 @@
 
 """Fields Of The World dataset."""
 
-import glob
 import os
 from collections.abc import Callable, Sequence
 from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
+import rasterio
 import torch
 from matplotlib.figure import Figure
-from PIL import Image
 from torch import Tensor
-import rasterio
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -125,7 +123,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new Fields of The World dataset instance.
+        """Initialize a new Fields Of The World dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -265,7 +263,7 @@ class FieldsOfTheWorld(NonGeoDataset):
             tensor = torch.from_numpy(array).long()
         return tensor
 
-    def _check_integrity(self, country) -> bool:
+    def _check_integrity(self, country: str) -> bool:
         """Check the integrity of the dataset structure.
 
         Args:
