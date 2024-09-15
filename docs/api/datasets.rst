@@ -282,6 +282,11 @@ FAIR1M
 
 .. autoclass:: FAIR1M
 
+Fields Of The World
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: FieldsOfTheWorld
+
 FireRisk
 ^^^^^^^^
 
