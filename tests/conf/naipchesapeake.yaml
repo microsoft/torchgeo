@@ -1,9 +1,9 @@
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    loss: "ce"
-    model: "deeplabv3+"
-    backbone: "resnet18"
+    loss: 'ce'
+    model: 'deeplabv3+'
+    backbone: 'resnet18'
     in_channels: 4
     num_classes: 128
     num_filters: 1
@@ -14,5 +14,5 @@ data:
     batch_size: 2
     patch_size: 32
   dict_kwargs:
-    naip_paths: "tests/data/naip"
-    chesapeake_paths: "tests/data/chesapeake/lulc"
+    naip_paths: 'tests/data/naip'
+    chesapeake_paths: 'tests/data/chesapeake/lulc'

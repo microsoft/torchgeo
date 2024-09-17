@@ -1,14 +1,14 @@
 model:
   class_path: PixelwiseRegressionTask
   init_args:
-    model: "unet"
-    backbone: "resnet18"
+    model: 'unet'
+    backbone: 'resnet18'
     in_channels: 3
-    loss: "mae"
+    loss: 'mae'
 data:
   class_path: InriaAerialImageLabelingDataModule
   init_args:
     batch_size: 1
     patch_size: 2
   dict_kwargs:
-    root: "tests/data/inria"
+    root: 'tests/data/inria'

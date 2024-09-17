@@ -1,7 +1,7 @@
 model:
   class_path: MoCoTask
   init_args:
-    model: "resnet18"
+    model: 'resnet18'
     in_channels: 2
     version: 2
     layers: 2
@@ -16,6 +16,6 @@ data:
   init_args:
     batch_size: 2
   dict_kwargs:
-    root: "tests/data/ssl4eo/s12"
-    split: "s1"
+    root: 'tests/data/ssl4eo/s12'
+    split: 's1'
     seasons: 2
