@@ -4,8 +4,8 @@ trainer:
 model:
   class_path: ClassificationTask
   init_args:
-    loss: "ce"
-    model: "resnet18"
+    loss: 'ce'
+    model: 'resnet18'
     lr: 1e-3
     patience: 6
     weights: null
@@ -17,4 +17,4 @@ data:
     batch_size: 128
     num_workers: 4
   dict_kwargs:
-    root: "data/eurosat"
+    root: 'data/eurosat'

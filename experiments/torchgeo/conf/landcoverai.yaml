@@ -4,9 +4,9 @@ trainer:
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    loss: "ce"
-    model: "unet"
-    backbone: "resnet18"
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
     weights: true
     lr: 1e-3
     patience: 6
@@ -20,4 +20,4 @@ data:
     batch_size: 32
     num_workers: 4
   dict_kwargs:
-    root: "data/landcoverai"
+    root: 'data/landcoverai'
