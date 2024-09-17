@@ -2,12 +2,15 @@
 # Licensed under the MIT License.
 
 import math
-from collections.abc import Iterator
+import os
 from itertools import product
 
+import geopandas as gpd
 import pytest
 from _pytest.fixtures import SubRequest
+from geopandas import GeoDataFrame
 from rasterio.crs import CRS
+from shapely.geometry import box
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
@@ -23,14 +26,23 @@ from torchgeo.samplers import (
 
 class CustomGeoSampler(GeoSampler):
     def __init__(self) -> None:
-        pass
+        self.chips = self.get_chips()
 
-    def __iter__(self) -> Iterator[BoundingBox]:
-        for i in range(len(self)):
-            yield BoundingBox(i, i, i, i, i, i)
-
-    def __len__(self) -> int:
-        return 2
+    def get_chips(self) -> GeoDataFrame:
+        chips = []
+        for i in range(2):
+            chips.append(
+                {
+                    'geometry': box(i, i, i, i),
+                    'minx': i,
+                    'miny': i,
+                    'maxx': i,
+                    'maxy': i,
+                    'mint': i,
+                    'maxt': i,
+                }
+            )
+        return GeoDataFrame(chips, crs=CRS.from_epsg(3005))
 
 
 class CustomGeoDataset(GeoDataset):
@@ -63,6 +75,64 @@ class TestGeoSampler:
     def test_abstract(self, dataset: CustomGeoDataset) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
             GeoSampler(dataset)  # type: ignore[abstract]
+
+    @pytest.mark.parametrize(
+        'filtering_file', ['filtering_4x4', 'filtering_4x4.feather']
+    )
+    def test_filtering_from_path(self, filtering_file: str) -> None:
+        datadir = os.path.join('tests', 'data', 'samplers')
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        sampler = GridGeoSampler(
+            ds, 5, 5, units=Units.CRS, roi=BoundingBox(0, 10, 0, 10, 0, 10)
+        )
+        iterator = iter(sampler)
+
+        assert len(sampler) == 4
+        filtering_path = os.path.join(datadir, filtering_file)
+        sampler.filter_chips(filtering_path, 'intersects', 'drop')
+        assert len(sampler) == 3
+        assert next(iterator) == BoundingBox(5, 10, 0, 5, 0, 10)
+
+    def test_filtering_from_gdf(self) -> None:
+        datadir = os.path.join('tests', 'data', 'samplers')
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        sampler = GridGeoSampler(
+            ds, 5, 5, units=Units.CRS, roi=BoundingBox(0, 10, 0, 10, 0, 10)
+        )
+        iterator = iter(sampler)
+
+        # Dropping first chip
+        assert len(sampler) == 4
+        filtering_gdf = gpd.read_file(os.path.join(datadir, 'filtering_4x4'))
+        sampler.filter_chips(filtering_gdf, 'intersects', 'drop')
+        assert len(sampler) == 3
+        assert next(iterator) == BoundingBox(5, 10, 0, 5, 0, 10)
+
+        # Keeping only first chip
+        sampler = GridGeoSampler(ds, 5, 5, units=Units.CRS)
+        iterator = iter(sampler)
+        sampler.filter_chips(filtering_gdf, 'intersects', 'keep')
+        assert len(sampler) == 1
+        assert next(iterator) == BoundingBox(0, 5, 0, 5, 0, 10)
+
+    def test_set_worker_split(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        sampler = GridGeoSampler(
+            ds, 5, 5, units=Units.CRS, roi=BoundingBox(0, 10, 0, 10, 0, 10)
+        )
+        assert len(sampler) == 4
+        sampler.set_worker_split(total_workers=4, worker_num=1)
+        assert len(sampler) == 1
+
+    def test_save_chips(self, tmpdir_factory: pytest.TempdirFactory) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        sampler = GridGeoSampler(ds, 5, 5, units=Units.CRS)
+        sampler.save(str(tmpdir_factory.mktemp('out').join('chips')))
+        sampler.save(str(tmpdir_factory.mktemp('out').join('chips.feather')))
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
@@ -114,6 +184,10 @@ class TestRandomGeoSampler:
         sampler = RandomGeoSampler(dataset, 2, 10, roi=roi)
         for query in sampler:
             assert query in roi
+
+    def test_empty(self, dataset: CustomGeoDataset) -> None:
+        sampler = RandomGeoSampler(dataset, 5, length=0)
+        assert len(sampler) == 0
 
     def test_small_area(self) -> None:
         ds = CustomGeoDataset(res=1)
@@ -267,11 +341,11 @@ class TestPreChippedGeoSampler:
     def sampler(self, dataset: CustomGeoDataset) -> PreChippedGeoSampler:
         return PreChippedGeoSampler(dataset, shuffle=True)
 
-    def test_iter(self, sampler: GridGeoSampler) -> None:
+    def test_iter(self, sampler: PreChippedGeoSampler) -> None:
         for _ in sampler:
             continue
 
-    def test_len(self, sampler: GridGeoSampler) -> None:
+    def test_len(self, sampler: PreChippedGeoSampler) -> None:
         assert len(sampler) == 2
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
