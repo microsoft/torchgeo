@@ -338,15 +338,7 @@ class GridGeoSampler(GeoSampler):
             & (df_path.maxy - df_path.miny >= self.size[0])
         ]
 
-        # Filter out hits in the index that share the same extent
-        if self.dataset.return_as_ts:
-            self.df_path.drop_duplicates(
-                subset=["minx", "maxx", "miny", "maxy"], inplace=True
-            )
-        else:
-            self.df_path.drop_duplicates(
-                subset=["minx", "maxx", "miny", "maxy", "mint", "maxt"], inplace=True
-            )
+
         
         self.chips = self.get_chips()
 
@@ -371,13 +363,6 @@ class GridGeoSampler(GeoSampler):
                 for j in range(cols):
                     minx = bounds.minx + j * self.stride[1]
                     maxx = minx + self.size[1]
-
-                    if self.dataset.return_as_ts:
-                        mint = self.dataset.bounds.mint
-                        maxt = self.dataset.bounds.maxt
-                    else:
-                        mint = bounds.mint
-                        maxt = bounds.maxt
 
                     chip = {
                         "geometry": box(minx, miny, maxx, maxy),

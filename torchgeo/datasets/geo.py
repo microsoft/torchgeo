@@ -982,7 +982,6 @@ class IntersectionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError('IntersectionDataset only supports GeoDatasets')
 
-        self.return_as_ts = dataset1.return_as_ts or dataset2.return_as_ts
         self.crs = dataset1.crs
         self.res = dataset1.res
 
@@ -1143,7 +1142,6 @@ class UnionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError('UnionDataset only supports GeoDatasets')
 
-        self.return_as_ts = dataset1.return_as_ts and dataset2.return_as_ts
         self.crs = dataset1.crs
         self.res = dataset1.res
 
