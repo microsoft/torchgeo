@@ -33,7 +33,7 @@ jobs:
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install -r requirements/required.txt -r requirements/docs.txt -r requirements/tests.txt planetary_computer pystac
+          pip install -r requirements/required.txt -r requirements/docs.txt -r requirements/tests.txt planetary_computer pystac -e .
           pip cache purge
       - name: List pip dependencies
         run: pip list
