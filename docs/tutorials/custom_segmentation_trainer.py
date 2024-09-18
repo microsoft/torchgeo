@@ -40,7 +40,7 @@
 # UserWarning: Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0. Please specify align_corners=True if the old behavior is desired. See the documentation of grid_sample for details.
 import warnings
 from collections.abc import Sequence
-from typing import Any, Union
+from typing import Any
 
 import lightning
 import lightning.pytorch as pl
@@ -62,7 +62,7 @@ from torchgeo.datamodules import LandCoverAIDataModule
 # +
 from torchgeo.trainers import SemanticSegmentationTask
 
-warnings.filterwarnings("ignore", category=UserWarning, module="torch.nn.functional")
+warnings.filterwarnings('ignore', category=UserWarning, module='torch.nn.functional')
 
 
 # -
@@ -80,7 +80,6 @@ warnings.filterwarnings("ignore", category=UserWarning, module="torch.nn.functio
 
 
 class CustomSemanticSegmentationTask(SemanticSegmentationTask):
-
     # any keywords we add here between *args and **kwargs will be found in self.hparams
     def __init__(
         self, *args: Any, tmax: int = 50, eta_min: float = 1e-6, **kwargs: Any
@@ -89,53 +88,53 @@ class CustomSemanticSegmentationTask(SemanticSegmentationTask):
 
     def configure_optimizers(
         self,
-    ) -> "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig":
+    ) -> 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig':
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
             Optimizer and learning rate scheduler.
         """
-        tmax: int = self.hparams["tmax"]
-        eta_min: float = self.hparams["eta_min"]
+        tmax: int = self.hparams['tmax']
+        eta_min: float = self.hparams['eta_min']
 
-        optimizer = AdamW(self.parameters(), lr=self.hparams["lr"])
+        optimizer = AdamW(self.parameters(), lr=self.hparams['lr'])
         scheduler = CosineAnnealingLR(optimizer, T_max=tmax, eta_min=eta_min)
         return {
-            "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},
+            'optimizer': optimizer,
+            'lr_scheduler': {'scheduler': scheduler, 'monitor': self.monitor},
         }
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
-        num_classes: int = self.hparams["num_classes"]
+        num_classes: int = self.hparams['num_classes']
 
         self.train_metrics = MetricCollection(
             {
-                "OverallAccuracy": Accuracy(
-                    task="multiclass", num_classes=num_classes, average="micro"
+                'OverallAccuracy': Accuracy(
+                    task='multiclass', num_classes=num_classes, average='micro'
                 ),
-                "OverallPrecision": Precision(
-                    task="multiclass", num_classes=num_classes, average="micro"
+                'OverallPrecision': Precision(
+                    task='multiclass', num_classes=num_classes, average='micro'
                 ),
-                "OverallRecall": Recall(
-                    task="multiclass", num_classes=num_classes, average="micro"
+                'OverallRecall': Recall(
+                    task='multiclass', num_classes=num_classes, average='micro'
                 ),
-                "OverallF1Score": FBetaScore(
-                    task="multiclass",
+                'OverallF1Score': FBetaScore(
+                    task='multiclass',
                     num_classes=num_classes,
                     beta=1.0,
-                    average="micro",
+                    average='micro',
                 ),
-                "MeanIoU": JaccardIndex(
-                    num_classes=num_classes, task="multiclass", average="macro"
+                'MeanIoU': JaccardIndex(
+                    num_classes=num_classes, task='multiclass', average='macro'
                 ),
             },
-            prefix="train_",
+            prefix='train_',
         )
-        self.val_metrics = self.train_metrics.clone(prefix="val_")
-        self.test_metrics = self.train_metrics.clone(prefix="test_")
+        self.val_metrics = self.train_metrics.clone(prefix='val_')
+        self.test_metrics = self.train_metrics.clone(prefix='test_')
 
-    def configure_callbacks(self) -> Union[Sequence[Callback], Callback]:
+    def configure_callbacks(self) -> Sequence[Callback] | Callback:
         """Initialize callbacks for saving the best and latest models.
 
         Returns:
@@ -150,25 +149,25 @@ class CustomSemanticSegmentationTask(SemanticSegmentationTask):
         """Log the learning rate at the start of each training epoch."""
         optimizers = self.optimizers()
         if isinstance(optimizers, list):
-            lr = optimizers[0].param_groups[0]["lr"]
+            lr = optimizers[0].param_groups[0]['lr']
         else:
-            lr = optimizers.param_groups[0]["lr"]
-        self.logger.experiment.add_scalar("lr", lr, self.current_epoch)  # type: ignore
+            lr = optimizers.param_groups[0]['lr']
+        self.logger.experiment.add_scalar('lr', lr, self.current_epoch)  # type: ignore
 
 
 # ## Train model
 #
 # The remainder of the turial is straightforward and follows the typical [PyTorch Lightning](https://lightning.ai/) training routine. We instantiate a `DataModule` for the LandCover.AI dataset, instantiate a `CustomSemanticSegmentationTask` with a U-Net and ResNet-50 backbone, then train the model using a Lightning trainer.
 
-dm = LandCoverAIDataModule(root="data/", batch_size=64, num_workers=8, download=True)
+dm = LandCoverAIDataModule(root='data/', batch_size=64, num_workers=8, download=True)
 
 task = CustomSemanticSegmentationTask(
-    model="unet",
-    backbone="resnet50",
+    model='unet',
+    backbone='resnet50',
     weights=True,
     in_channels=3,
     num_classes=6,
-    loss="ce",
+    loss='ce',
     lr=1e-3,
     tmax=50,
 )
@@ -191,7 +190,7 @@ trainer.fit(task, dm)
 
 # You can load directly from a saved checkpoint with `.load_from_checkpoint(...)`
 task = CustomSemanticSegmentationTask.load_from_checkpoint(
-    "lightning_logs/version_0/checkpoints/epoch=0-step=1.ckpt"
+    'lightning_logs/version_0/checkpoints/epoch=0-step=1.ckpt'
 )
 
 trainer.test(task, dm)
