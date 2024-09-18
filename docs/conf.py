@@ -122,6 +122,7 @@ intersphinx_mapping = {
     'torch': ('https://pytorch.org/docs/stable', None),
     'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
     'torchvision': ('https://pytorch.org/vision/stable', None),
+    'geopandas': ('https://geopandas.org/en/stable/', None),
 }
 
 # nbsphinx
