@@ -269,6 +269,18 @@ class RandomGeoSampler(GeoSampler):
 
         self.chips = self.get_chips()
 
+    def __iter__(self) -> Iterator[BoundingBox]:
+        """Return the index of a dataset.
+
+        Returns:
+            (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+        """
+        self.refresh_samples()
+        for _, chip in self.chips.iterrows():
+            yield BoundingBox(
+                chip.minx, chip.maxx, chip.miny, chip.maxy, chip.mint, chip.maxt
+            )
+
     def refresh_samples(self) -> None:
         """Refresh the samples in the sampler.
 
@@ -284,6 +296,7 @@ class RandomGeoSampler(GeoSampler):
             A GeoDataFrame containing the generated chips.
         """
         chips = []
+        print('generating samples... ')
         for _ in tqdm(range(self.length)):
             # Choose a random tile, weighted by area
             idx = torch.multinomial(self.areas, 1)
@@ -305,7 +318,6 @@ class RandomGeoSampler(GeoSampler):
             chips.append(chip)
 
         if chips:
-            print('creating geodataframe... ')
             chips_gdf = GeoDataFrame(chips, crs=self.dataset.crs)
             chips_gdf['fid'] = chips_gdf.index
 
@@ -412,7 +424,6 @@ class GridGeoSampler(GeoSampler):
                     chips.append(chip)
 
         if chips:
-            print('creating geodataframe... ')
             chips_gdf = GeoDataFrame(chips, crs=self.dataset.crs)
             chips_gdf['fid'] = chips_gdf.index
 
@@ -468,6 +479,7 @@ class PreChippedGeoSampler(GeoSampler):
         if self.shuffle:
             generator = torch.randperm
 
+        print('generating samples... ')
         chips = []
         for idx in generator(self.length):
             minx, maxx, miny, maxy, mint, maxt = self.hits[idx].bounds
@@ -480,11 +492,9 @@ class PreChippedGeoSampler(GeoSampler):
                 'mint': mint,
                 'maxt': maxt,
             }
-            print('generating chip')
             self.length += 1
             chips.append(chip)
 
-        print('creating geodataframe... ')
         chips_gdf = GeoDataFrame(chips, crs=self.dataset.crs)
         chips_gdf['fid'] = chips_gdf.index
         return chips_gdf
