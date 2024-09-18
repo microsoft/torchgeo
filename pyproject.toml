@@ -247,6 +247,7 @@ filterwarnings = [
     "ignore:You are using `torch.load` with `weights_only=False`:FutureWarning",
     # https://github.com/pytorch/pytorch/issues/136264
     "ignore:__array__ implementation doesn't accept a copy keyword:DeprecationWarning",
+    "ignore:__array_wrap__ must accept context and return_scalar arguments:DeprecationWarning",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
