@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 from _pytest.fixtures import SubRequest
+from geopandas import GeoDataFrame
 from lightning.pytorch import Trainer
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
-from geopandas import GeoDataFrame
 
 from torchgeo.datamodules import (
     GeoDataModule,
