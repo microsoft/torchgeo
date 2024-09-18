@@ -24,10 +24,10 @@ def load_file(path: str | GeoDataFrame) -> GeoDataFrame:
     """Load a file from the given path.
 
     Parameters:
-    path (str or :class:`GeoDataFrame`): The path to the file or a :class:`GeoDataFrame` object.
+    path (str or GeoDataFrame): The path to the file or a GeoDataFrame object.
 
     Returns:
-    :class:`GeoDataFrame`: The loaded file as a :class:`GeoDataFrame`.
+    GeoDataFrame: The loaded file as a GeoDataFrame.
 
     Raises:
     None
@@ -79,11 +79,11 @@ class GeoSampler(Sampler[BoundingBox], abc.ABC):
     def __save_as_gpd_or_feather(
         path: str, gdf: GeoDataFrame, driver: str = 'ESRI Shapefile'
     ) -> None:
-        """Save a :class:`GeoDataFrame` as a file supported by any geopandas driver or as a feather file.
+        """Save a GeoDataFrame as a file supported by any geopandas driver or as a feather file.
 
         Parameters:
             path (str): The path to save the file.
-            gdf (:class:`GeoDataFrame`): The :class:`GeoDataFrame` to be saved.
+            gdf (GeoDataFrame): The GeoDataFrame to be saved.
             driver (str, optional): The driver to be used for saving the file. Defaults to 'ESRI Shapefile'.
 
         Returns:
@@ -98,10 +98,10 @@ class GeoSampler(Sampler[BoundingBox], abc.ABC):
     def get_chips(self) -> GeoDataFrame:
         """Determines the way to get the extent of the chips (samples) of the dataset.
 
-        Should return a :class:`GeoDataFrame` with the extend of the chips with the columns
+        Should return a GeoDataFrame with the extend of the chips with the columns
         geometry, minx, miny, maxx, maxy, mint, maxt, fid. Each row is a chip. It is
         expected that every sampler calls this method to get the chips as one of the
-        last steps in the `__init__` method.
+        last steps in the ``__init__`` method.
         """
 
     def filter_chips(
@@ -113,10 +113,10 @@ class GeoSampler(Sampler[BoundingBox], abc.ABC):
         """Filter the default set of chips in the sampler down to a specific subset.
 
         Args:
-            filter_by: The file or :class:`GeoDataFrame` for which the geometries will be used during filtering
+            filter_by: The file or geodataframe for which the geometries will be used during filtering
             predicate: Predicate as used in Geopandas sindex.query_bulk
             action: What to do with the chips that satisfy the condition by the predicacte.
-            Can either be ``'drop'``or ``'keep'``.
+                    Can either be ``'drop'`` or ``'keep'``.
         """
         prefilter_leng = len(self.chips)
         filtering_gdf = load_file(filter_by).to_crs(self.dataset.crs)
@@ -272,7 +272,7 @@ class RandomGeoSampler(GeoSampler):
     def refresh_samples(self) -> None:
         """Refresh the samples in the sampler.
 
-        This method is useful when you want to refresh the random samples in the sampler
+        This method is useful when you want to refresh the samples in the sampler
         without creating a new sampler instance.
         """
         self.chips = self.get_chips()
@@ -281,7 +281,7 @@ class RandomGeoSampler(GeoSampler):
         """Generate chips from the dataset.
 
         Returns:
-            :class:`GeoDataFrame`: A :class:`GeoDataFrame` containing the generated chips.
+            GeoDataFrame: A GeoDataFrame containing the generated chips.
         """
         chips = []
         for _ in tqdm(range(self.length)):
@@ -380,7 +380,7 @@ class GridGeoSampler(GeoSampler):
         """Generates chips from the given hits.
 
         Returns:
-            :class:`GeoDataFrame`: A :class:`GeoDataFrame` containing the generated chips.
+            GeoDataFrame: A GeoDataFrame containing the generated chips.
         """
         print('generating samples... ')
         self.length = 0
@@ -459,10 +459,10 @@ class PreChippedGeoSampler(GeoSampler):
         self.chips = self.get_chips()
 
     def get_chips(self) -> GeoDataFrame:
-        """Generate chips from the hits and return them as a :class:`GeoDataFrame`.
+        """Generate chips from the hits and return them as a GeoDataFrame.
 
         Returns:
-            :class:`GeoDataFrame`: A :class:`GeoDataFrame` containing the generated chips.
+            GeoDataFrame: A GeoDataFrame containing the generated chips.
         """
         generator: Callable[[int], Iterable[int]] = range
         if self.shuffle:
