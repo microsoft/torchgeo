@@ -269,6 +269,14 @@ class RandomGeoSampler(GeoSampler):
 
         self.chips = self.get_chips()
 
+    def refresh_samples(self) -> None:
+        """Refresh the samples in the sampler.
+
+        This method is useful when you want to refresh the random samples in the sampler
+        without creating a new sampler instance.
+        """
+        self.chips = self.get_chips()
+
     def get_chips(self) -> GeoDataFrame:
         """Generate chips from the dataset.
 
