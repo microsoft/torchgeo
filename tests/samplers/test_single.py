@@ -189,6 +189,14 @@ class TestRandomGeoSampler:
         sampler = RandomGeoSampler(dataset, 5, length=0)
         assert len(sampler) == 0
 
+    def test_refresh_samples(self, dataset: CustomGeoDataset) -> None:
+        sampler = RandomGeoSampler(dataset, 5, length=1)
+        samples = list(sampler)
+        assert len(sampler) == 1
+        sampler.refresh_samples()
+        assert list(sampler) != samples
+        assert len(sampler) == 1
+
     def test_small_area(self) -> None:
         ds = CustomGeoDataset(res=1)
         ds.index.insert(0, (0, 10, 0, 10, 0, 10))
