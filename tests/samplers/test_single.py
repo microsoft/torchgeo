@@ -190,6 +190,7 @@ class TestRandomGeoSampler:
         assert len(sampler) == 0
 
     def test_refresh_samples(self, dataset: CustomGeoDataset) -> None:
+        dataset.index.insert(0, (0, 100, 200, 300, 400, 500))
         sampler = RandomGeoSampler(dataset, 5, length=1)
         samples = list(sampler)
         assert len(sampler) == 1

@@ -11,6 +11,7 @@ from lightning.pytorch import Trainer
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
+from geopandas import GeoDataFrame
 
 from torchgeo.datamodules import (
     GeoDataModule,
@@ -182,7 +183,7 @@ class TestGeoDataModule:
         dm = CustomGeoDataModule()
         dm.dataset = CustomGeoDataset()
         dm.sampler = RandomGeoSampler(dm.dataset, 1, 1)
-        dm.sampler.length = 0
+        dm.sampler.chips = GeoDataFrame()
         msg = r'CustomGeoDataModule\.sampler has length 0.'
         with pytest.raises(MisconfigurationException, match=msg):
             dm.train_dataloader()
