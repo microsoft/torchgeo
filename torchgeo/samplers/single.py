@@ -281,7 +281,7 @@ class RandomGeoSampler(GeoSampler):
         """Generate chips from the dataset.
 
         Returns:
-            GeoDataFrame: A GeoDataFrame containing the generated chips.
+            A GeoDataFrame containing the generated chips.
         """
         chips = []
         for _ in tqdm(range(self.length)):
@@ -380,7 +380,7 @@ class GridGeoSampler(GeoSampler):
         """Generates chips from the given hits.
 
         Returns:
-            GeoDataFrame: A GeoDataFrame containing the generated chips.
+            A GeoDataFrame containing the generated chips.
         """
         print('generating samples... ')
         self.length = 0
@@ -462,7 +462,7 @@ class PreChippedGeoSampler(GeoSampler):
         """Generate chips from the hits and return them as a GeoDataFrame.
 
         Returns:
-            GeoDataFrame: A GeoDataFrame containing the generated chips.
+            A GeoDataFrame containing the generated chips.
         """
         generator: Callable[[int], Iterable[int]] = range
         if self.shuffle:
