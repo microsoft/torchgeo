@@ -41,7 +41,7 @@ dependencies = [
     # fiona 1.8.21+ required for Python 3.10 wheels
     "fiona>=1.8.21",
     # geopandas 0.13.2 is the last version to support pandas 1.3, but has feather support
-    "geopandas==0.13.2",
+    "geopandas>=0.13.2",
     # kornia 0.7.3+ required for instance segmentation support in AugmentationSequential
     "kornia>=0.7.3",
     # lightly 1.4.5+ required for LARS optimizer
