@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+import pandas as pd
 from matplotlib.figure import Figure
 from torch import Tensor
 
@@ -83,7 +84,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         'vietnam',
     ]
 
-    base_url: ClassVar[str] = 'https://beta.source.coop/kerner-lab/fields-of-the-world/'
+    base_url: ClassVar[str] = 'https://data.source.coop/kerner-lab/fields-of-the-world-archive/'
 
     country_to_md5: ClassVar[dict[str, str]] = {
         'austria': '35604e3e3e78b4469e443bc756e19d26',
@@ -205,8 +206,9 @@ class FieldsOfTheWorld(NonGeoDataset):
         """
         files = []
         for country in self.countries:
-            with open(os.path.join(self.root, country, f'{self.split}.txt')) as f:
-                aois = f.read().strip().split('\n')
+            df = pd.read_parquet(os.path.join(self.root, country, f'chips_{country}.parquet'))
+            aois = df[df['split'] == self.split]["aoi_id"].values
+
             for aoi in aois:
                 if self.target == 'instance':
                     subdir = 'instance'
@@ -215,13 +217,20 @@ class FieldsOfTheWorld(NonGeoDataset):
                 elif self.target == '3-class':
                     subdir = 'semantic_3class'
 
+                win_a_fn = os.path.join(
+                    self.root, country, 's2_images', 'window_a', f'{aoi}.tif'
+                )
+                win_b_fn = os.path.join(
+                    self.root, country, 's2_images', 'window_b', f'{aoi}.tif'
+                )
+
+                # there are 333 AOIs that are missing imagery across the dataset
+                if not (os.path.exists(win_a_fn) and os.path.exists(win_b_fn)):
+                    continue
+
                 sample = {
-                    'win_a': os.path.join(
-                        self.root, country, 's2_images', 'window_a', f'{aoi}.tif'
-                    ),
-                    'win_b': os.path.join(
-                        self.root, country, 's2_images', 'window_b', f'{aoi}.tif'
-                    ),
+                    'win_a': win_a_fn,
+                    'win_b': win_b_fn,
                     'mask': os.path.join(
                         self.root, country, 'label_masks', subdir, f'{aoi}.tif'
                     ),
@@ -269,7 +278,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         Returns:
             True if the dataset directories and split files are found, else False
         """
-        for entry in ['label_masks', 's2_images', 'train.txt', 'val.txt', 'test.txt']:
+        for entry in ['label_masks', 's2_images', f"chips_{country}.parquet"]:
             if not os.path.exists(os.path.join(self.root, country, entry)):
                 return False
 
