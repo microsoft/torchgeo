@@ -308,15 +308,18 @@ class TestPreChippedGeoSampler:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 10, 0, 10, 0, 10))
         ds.index.insert(1, (0, 11, 0, 11, 0, 11))
-        generator = torch.manual_seed(0)
-        sampler = PreChippedGeoSampler(ds, shuffle=True, generator=generator)
-        for bbox in sampler:
+        generator = torch.manual_seed(2)
+        sampler1 = PreChippedGeoSampler(ds, shuffle=True, generator=generator)
+        for bbox in sampler1:
             sample1 = bbox
+            print(sample1)
             break
 
-        sampler = PreChippedGeoSampler(ds, shuffle=True, generator=generator)
-        for bbox in sampler:
+        generator = torch.manual_seed(2)
+        sampler2 = PreChippedGeoSampler(ds, shuffle=True, generator=generator)
+        for bbox in sampler2:
             sample2 = bbox
+            print(sample2)
             break
         assert sample1 == sample2
 

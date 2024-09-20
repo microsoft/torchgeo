@@ -148,13 +148,12 @@ class TestRandomBatchGeoSampler:
     def test_random_seed(self) -> None:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 10, 0, 10, 0, 10))
-        generator = torch.manual_seed(0)
-        sampler = RandomBatchGeoSampler(ds, 1, 1, generator=generator)
+        sampler = RandomBatchGeoSampler(ds, 1, 1, generator=torch.manual_seed(0))
         for bbox in sampler:
             sample1 = bbox
             break
 
-        sampler = RandomBatchGeoSampler(ds, 1, 1, generator=generator)
+        sampler = RandomBatchGeoSampler(ds, 1, 1, generator=torch.manual_seed(0))
         for bbox in sampler:
             sample2 = bbox
             break
