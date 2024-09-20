@@ -286,6 +286,7 @@ class GeoDataModule(BaseDataModule):
             batch_sampler=batch_sampler,
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
+            persistent_workers=self.num_workers > 0,
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
@@ -429,6 +430,7 @@ class NonGeoDataModule(BaseDataModule):
             shuffle=split == 'train',
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
+            persistent_workers=self.num_workers > 0,
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
