@@ -32,6 +32,7 @@ class GeoSampler(Sampler[BoundingBox], abc.ABC):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
         """
+        self.dataset = dataset
         if roi is None:
             self.index = dataset.index
             roi = BoundingBox(*self.index.bounds)
@@ -144,6 +145,16 @@ class RandomGeoSampler(GeoSampler):
             # Choose a random index within that tile
             bounding_box = get_random_bounding_box(bounds, self.size, self.res)
 
+            if self.dataset.return_as_ts:
+                mint = self.dataset.bounds.mint
+                maxt = self.dataset.bounds.maxt
+            else:
+                mint = bounds.mint
+                maxt = bounds.maxt
+
+            bounding_box.mint = mint
+            bounding_box.maxt = maxt
+
             yield bounding_box
 
     def __len__(self) -> int:
@@ -231,8 +242,13 @@ class GridGeoSampler(GeoSampler):
         for hit in self.hits:
             bounds = BoundingBox(*hit.bounds)
             rows, cols = tile_to_chips(bounds, self.size, self.stride)
-            mint = bounds.mint
-            maxt = bounds.maxt
+
+            if self.dataset.return_as_ts:
+                mint = self.dataset.bounds.mint
+                maxt = self.dataset.bounds.maxt
+            else:
+                mint = bounds.mint
+                maxt = bounds.maxt
 
             # For each row...
             for i in range(rows):
@@ -300,7 +316,18 @@ class PreChippedGeoSampler(GeoSampler):
             generator = torch.randperm
 
         for idx in generator(len(self)):
-            yield BoundingBox(*self.hits[idx].bounds)
+            bounding_box = self.hits[idx].bounds
+
+            if self.dataset.return_as_ts:
+                mint = self.dataset.bounds.mint
+                maxt = self.dataset.bounds.maxt
+            else:
+                mint = bounding_box.mint
+                maxt = bounding_box.maxt
+
+            bounding_box.mint = mint
+            bounding_box.maxt = maxt
+            yield BoundingBox(*bounding_box)
 
     def __len__(self) -> int:
         """Return the number of samples over the ROI.
