@@ -9,9 +9,9 @@ from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
-import pandas as pd
 from matplotlib.figure import Figure
 from torch import Tensor
 
