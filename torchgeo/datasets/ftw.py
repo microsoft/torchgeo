@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive, extract_archive
+from .utils import Path, download_and_extract_archive, extract_archive, array_to_tensor
 
 
 class FieldsOfTheWorld(NonGeoDataset):
@@ -251,7 +251,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         filename = os.path.join(path)
         with rasterio.open(filename) as f:
             array: np.typing.NDArray[np.int_] = f.read()
-            tensor = torch.from_numpy(array).float()
+            tensor = array_to_tensor(array).float()
         return tensor
 
     def _load_target(self, path: Path) -> Tensor:
