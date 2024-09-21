@@ -165,13 +165,14 @@ Datasets
 A major component of TorchGeo is the large collection of :mod:`torchgeo.datasets` that have been implemented. Adding new datasets to this list is a great way to contribute to the library. A brief checklist to follow when implementing a new dataset:
 
 * Implement the dataset extending either :class:`~torchgeo.datasets.GeoDataset` or :class:`~torchgeo.datasets.NonGeoDataset`
-* Add the dataset definition to ``torchgeo/datasets/__init__.py``
-* Add a ``data.py`` script to ``tests/data/<new dataset>/`` that generates test data with the same directory structure/file naming conventions as the new dataset
-* Add appropriate tests with 100% test coverage to ``tests/datasets/``
+* Add the dataset definition to ``torchgeo/datasets/foo.py``, where *foo* is the name of the dataset
+* Add an import alias to this dataset in ``torchgeo/datasets/__init__.py``
+* Add a ``tests/data/foo/data.py`` script that generates fake test data with the same directory structure/file naming conventions as the real dataset
+* Add appropriate tests with 100% test coverage to ``tests/datasets/test_foo.py``
 * Add the dataset to ``docs/api/datasets.rst``
-* Add the dataset metadata to either ``docs/api/geo_datasets.csv`` or ``docs/api/non_geo_datasets.csv``
+* Add the dataset metadata to either ``docs/api/datasets/geo_datasets.csv`` or ``docs/api/datasets/non_geo_datasets.csv``
 
-A good way to get started is by looking at some of the existing implementations that are most closely related to the dataset that you are implementing (e.g. if you are implementing a semantic segmentation dataset, looking at the LandCover.ai dataset implementation would be a good starting point).
+A good way to get started is by looking at some of the existing implementations that are most closely related to the dataset that you are implementing (e.g., if you are implementing a semantic segmentation dataset, looking at the LandCover.ai dataset implementation would be a good starting point).
 
 I/O Benchmarking
 ----------------
