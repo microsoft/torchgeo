@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive
+from .utils import Path, download_and_extract_archive, extract_archive
 
 
 class FieldsOfTheWorld(NonGeoDataset):
@@ -84,7 +84,9 @@ class FieldsOfTheWorld(NonGeoDataset):
         'vietnam',
     ]
 
-    base_url: ClassVar[str] = 'https://data.source.coop/kerner-lab/fields-of-the-world-archive/'
+    base_url: ClassVar[str] = (
+        'https://data.source.coop/kerner-lab/fields-of-the-world-archive/'
+    )
 
     country_to_md5: ClassVar[dict[str, str]] = {
         'austria': '35604e3e3e78b4469e443bc756e19d26',
@@ -152,14 +154,10 @@ class FieldsOfTheWorld(NonGeoDataset):
         self.target = target
         self.countries = countries
         self.transforms = transforms
+        self.download = download
         self.checksum = checksum
 
-        if download:
-            self._download()
-
-        for country in self.countries:
-            if not self._check_integrity(country):
-                raise DatasetNotFoundError(self)
+        self._verify()
 
         self.files = self._load_files()
 
@@ -206,8 +204,10 @@ class FieldsOfTheWorld(NonGeoDataset):
         """
         files = []
         for country in self.countries:
-            df = pd.read_parquet(os.path.join(self.root, country, f'chips_{country}.parquet'))
-            aois = df[df['split'] == self.split]["aoi_id"].values
+            df = pd.read_parquet(
+                os.path.join(self.root, country, f'chips_{country}.parquet')
+            )
+            aois = df[df['split'] == self.split]['aoi_id'].values
 
             for aoi in aois:
                 if self.target == 'instance':
@@ -269,8 +269,30 @@ class FieldsOfTheWorld(NonGeoDataset):
             tensor = torch.from_numpy(array).long()
         return tensor
 
-    def _check_integrity(self, country: str) -> bool:
-        """Check the integrity of the dataset structure.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset."""
+        for country in self.countries:
+            if self._verify_data(country):
+                continue
+
+            filename = f'{country}.zip'
+            pathname = os.path.join(self.root, filename)
+            if os.path.exists(pathname):
+                extract_archive(pathname, os.path.join(self.root, country))
+                continue
+
+            if not self.download:
+                raise DatasetNotFoundError(self)
+
+            download_and_extract_archive(
+                self.base_url + filename,
+                os.path.join(self.root, country),
+                filename=filename,
+                md5=self.country_to_md5[country] if self.checksum else None,
+            )
+
+    def _verify_data(self, country: str) -> bool:
+        """Verify that data for a country is extracted.
 
         Args:
             country: the country to check
@@ -278,31 +300,23 @@ class FieldsOfTheWorld(NonGeoDataset):
         Returns:
             True if the dataset directories and split files are found, else False
         """
-        for entry in ['label_masks', 's2_images', f"chips_{country}.parquet"]:
+        for entry in ['label_masks', 's2_images', f'chips_{country}.parquet']:
             if not os.path.exists(os.path.join(self.root, country, entry)):
                 return False
 
         return True
 
-    def _download(self) -> None:
-        """Download the dataset and extract it."""
-        for country in self.countries:
-            if self._check_integrity(country):
-                print(f'Files for {country} already downloaded and verified')
-            else:
-                filename = f'{country}.zip'
-                download_and_extract_archive(
-                    self.base_url + filename,
-                    os.path.join(self.root, country),
-                    filename=filename,
-                    md5=self.country_to_md5[country] if self.checksum else None,
-                )
-
-    def plot(self, sample: dict[str, Tensor], suptitle: str | None = None) -> Figure:
+    def plot(
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: str | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample return by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
             suptitle: optional suptitle to use for figure
 
         Returns:
@@ -338,6 +352,10 @@ class FieldsOfTheWorld(NonGeoDataset):
             axs[2].set_title('3-class mask')
         for ax in axs:
             ax.axis('off')
+
+        if not show_titles:
+            for ax in axs:
+                ax.set_title('')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
