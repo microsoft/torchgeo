@@ -51,7 +51,7 @@ def get_random_bounding_box(
           height dimension, and the second *float* for the width dimension
 
     .. versionadded:: 0.7
-    The *generator* parameter.
+        The *generator* parameter.
 
     Args:
         bounds: the larger bounding box to sample from

@@ -89,7 +89,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
            ``length`` parameter is now optional, a reasonable default will be used
 
         .. versionadded:: 0.7
-        The *generator* parameter.
+            The *generator* parameter.
 
         Args:
             dataset: dataset to index from

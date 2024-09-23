@@ -92,7 +92,7 @@ class RandomGeoSampler(GeoSampler):
            ``length`` parameter is now optional, a reasonable default will be used
 
         .. versionadded:: 0.7
-        The *generator* parameter.
+            The *generator* parameter.
 
         Args:
             dataset: dataset to index from
@@ -105,7 +105,6 @@ class RandomGeoSampler(GeoSampler):
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
             generator: pseudo-random number generator (PRNG).
-
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
