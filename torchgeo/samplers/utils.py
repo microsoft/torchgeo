@@ -35,10 +35,7 @@ def _to_tuple(value: tuple[float, float] | float) -> tuple[float, float]:
 
 
 def get_random_bounding_box(
-    bounds: BoundingBox,
-    size: tuple[float, float] | float,
-    res: float,
-    generator: torch.Generator | None = None,
+    bounds: BoundingBox, size: tuple[float, float] | float, res: float
 ) -> BoundingBox:
     """Returns a random bounding box within a given bounding box.
 
@@ -53,7 +50,6 @@ def get_random_bounding_box(
         bounds: the larger bounding box to sample from
         size: the size of the bounding box to sample
         res: the resolution of the image
-        generator: random number generator
 
     Returns:
         randomly sampled bounding box from the extent of the input
@@ -68,8 +64,8 @@ def get_random_bounding_box(
     miny = bounds.miny
 
     # Use an integer multiple of res to avoid resampling
-    minx += int(torch.rand(1, generator=generator).item() * width) * res
-    miny += int(torch.rand(1, generator=generator).item() * height) * res
+    minx += int(torch.rand(1).item() * width) * res
+    miny += int(torch.rand(1).item() * height) * res
 
     maxx = minx + t_size[1]
     maxy = miny + t_size[0]
