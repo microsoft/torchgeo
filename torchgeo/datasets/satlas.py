@@ -19,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, which
+from .utils import Path, check_integrity, download_url, extract_archive, which
 
 
 class _Task(TypedDict, total=False):
