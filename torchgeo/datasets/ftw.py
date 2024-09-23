@@ -140,7 +140,7 @@ class FieldsOfTheWorld(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``split`` or ``scene`` arguments are invalid
+            AssertionError: If any arguments are invalid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
