@@ -74,7 +74,11 @@ class AgriFieldNetDataModule(GeoDataModule):
 
         if stage in ['fit']:
             self.train_batch_sampler = RandomBatchGeoSampler(
-                self.train_dataset, self.patch_size, self.batch_size, self.length
+                self.train_dataset,
+                self.patch_size,
+                self.batch_size,
+                self.length,
+                generator=generator,
             )
         if stage in ['fit', 'validate']:
             self.val_sampler = GridGeoSampler(
