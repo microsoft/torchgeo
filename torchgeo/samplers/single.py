@@ -290,12 +290,15 @@ class PreChippedGeoSampler(GeoSampler):
 
         .. versionadded:: 0.3
 
+        .. versionadded:: 0.7
+            The *generator* parameter.
+
         Args:
             dataset: dataset to index from
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             shuffle: if True, reshuffle data at every epoch
-            generator: The random number generator used in combination with shuffle.
+            generator: pseudo-random number generator (PRNG) used in combination with shuffle.
 
         """
         super().__init__(dataset, roi)
