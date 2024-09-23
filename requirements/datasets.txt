@@ -2,7 +2,7 @@
 h5py==3.12.1
 laspy==2.5.4
 opencv-python==4.10.0.84
-pyarrow==17.0.0
+pandas[parquet]==2.2.2
 pycocotools==2.0.8
 pyvista==0.44.1
 scikit-image==0.24.0

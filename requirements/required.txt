@@ -9,9 +9,8 @@ lightly==1.5.13
 lightning[pytorch-extra]==2.4.0
 matplotlib==3.9.2
 numpy==2.1.1
-pandas==2.2.3
+pandas[parquet]==2.2.3
 pillow==10.4.0
-pyarrow==17.0.0
 pyproj==3.6.1
 rasterio==1.3.11
 rtree==1.3.0
