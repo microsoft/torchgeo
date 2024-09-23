@@ -7,6 +7,7 @@ import os
 from collections.abc import Callable, Sequence
 from typing import ClassVar
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -324,8 +325,8 @@ class FieldsOfTheWorld(NonGeoDataset):
         """
         fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
 
-        win_a = sample['image'][0:3].permute(1, 2, 0)
-        win_b = sample['image'][4:7].permute(1, 2, 0)
+        win_a = einops.rearrange(sample['image'][0:3], 'c h w -> h w c')
+        win_b = einops.rearrange(sample['image'][4:7], 'c h w -> h w c')
         mask = sample['mask']
 
         win_a = torch.clip(win_a / 3000, 0, 1)
