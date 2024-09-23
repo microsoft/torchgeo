@@ -43,8 +43,8 @@ class FieldsOfTheWorld(NonGeoDataset):
     Dataset classes:
 
     1. background
-    2. field (two-class)
-    3. field-boundary (three-class)
+    2. field
+    3. field-boundary (three-class only)
 
     If you use this dataset in your research, please cite the following paper:
 
