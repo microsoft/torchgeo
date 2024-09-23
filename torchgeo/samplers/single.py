@@ -5,6 +5,7 @@
 
 import abc
 from collections.abc import Callable, Iterable, Iterator
+from functools import partial
 
 import torch
 from rtree.index import Index, Property
@@ -32,6 +33,7 @@ class GeoSampler(Sampler[BoundingBox], abc.ABC):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
         """
+        self.dataset = dataset
         if roi is None:
             self.index = dataset.index
             roi = BoundingBox(*self.index.bounds)
@@ -72,6 +74,7 @@ class RandomGeoSampler(GeoSampler):
         length: int | None = None,
         roi: BoundingBox | None = None,
         units: Units = Units.PIXELS,
+        generator: torch.Generator | None = None,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -98,6 +101,8 @@ class RandomGeoSampler(GeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
+            generator: The random generator used for sampling.
+
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
@@ -105,6 +110,7 @@ class RandomGeoSampler(GeoSampler):
         if units == Units.PIXELS:
             self.size = (self.size[0] * self.res, self.size[1] * self.res)
 
+        self.generator = generator
         self.length = 0
         self.hits = []
         areas = []
@@ -139,10 +145,20 @@ class RandomGeoSampler(GeoSampler):
             # Choose a random tile, weighted by area
             idx = torch.multinomial(self.areas, 1)
             hit = self.hits[idx]
-            bounds = BoundingBox(*hit.bounds)
+
+            bounds = hit.bounds
+            if self.dataset.return_as_ts:
+                mint = self.index.bounds.mint
+                maxt = self.index.bounds.maxt
+                bounds[-2] = mint
+                bounds[-1] = maxt
+
+            bounds = BoundingBox(*bounds)
 
             # Choose a random index within that tile
-            bounding_box = get_random_bounding_box(bounds, self.size, self.res)
+            bounding_box = get_random_bounding_box(
+                bounds, self.size, self.res, self.generator
+            )
 
             yield bounding_box
 
@@ -231,8 +247,13 @@ class GridGeoSampler(GeoSampler):
         for hit in self.hits:
             bounds = BoundingBox(*hit.bounds)
             rows, cols = tile_to_chips(bounds, self.size, self.stride)
-            mint = bounds.mint
-            maxt = bounds.maxt
+
+            if self.dataset.return_as_ts:
+                mint = self.index.bounds.mint
+                maxt = self.index.bounds.maxt
+            else:
+                mint = bounds.mint
+                maxt = bounds.maxt
 
             # For each row...
             for i in range(rows):
@@ -270,7 +291,11 @@ class PreChippedGeoSampler(GeoSampler):
     """
 
     def __init__(
-        self, dataset: GeoDataset, roi: BoundingBox | None = None, shuffle: bool = False
+        self,
+        dataset: GeoDataset,
+        roi: BoundingBox | None = None,
+        shuffle: bool = False,
+        generator: torch.Generator | None = None,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -281,9 +306,12 @@ class PreChippedGeoSampler(GeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             shuffle: if True, reshuffle data at every epoch
+            generator: The random number generator used in combination with shuffle.
+
         """
         super().__init__(dataset, roi)
         self.shuffle = shuffle
+        self.generator = generator
 
         self.hits = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
@@ -297,10 +325,21 @@ class PreChippedGeoSampler(GeoSampler):
         """
         generator: Callable[[int], Iterable[int]] = range
         if self.shuffle:
-            generator = torch.randperm
+            generator = partial(torch.randperm, generator=self.generator)
 
         for idx in generator(len(self)):
-            yield BoundingBox(*self.hits[idx].bounds)
+            bounding_box = self.hits[idx].bounds
+
+            if self.dataset.return_as_ts:
+                mint = self.index.bounds.mint
+                maxt = self.index.bounds.maxt
+            else:
+                mint = bounding_box.mint
+                maxt = bounding_box.maxt
+
+            bounding_box[-2] = mint
+            bounding_box[-1] = maxt
+            yield BoundingBox(*bounding_box)
 
     def __len__(self) -> int:
         """Return the number of samples over the ROI.

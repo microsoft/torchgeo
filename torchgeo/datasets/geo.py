@@ -12,11 +12,13 @@ import re
 import sys
 import warnings
 from collections.abc import Callable, Iterable, Sequence
+from datetime import datetime
 from typing import Any, ClassVar, cast
 
 import fiona
 import fiona.transform
 import numpy as np
+import pandas as pd
 import pyproj
 import rasterio
 import rasterio.merge
@@ -96,6 +98,9 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     #: other datasets. It should not include a file extension, as the dataset may be in
     #: a different file format than what it was originally downloaded as.
     filename_glob = '*'
+
+    # Whether to return the dataset as a Timeseries, this will add another dimension to the dataset
+    return_as_ts = False
 
     # NOTE: according to the Python docs:
     #
@@ -368,6 +373,9 @@ class RasterDataset(GeoDataset):
     #: True if data is stored in a separate file for each band, else False.
     separate_files = False
 
+    # Whether to return imagery as SITS or not
+    return_as_ts: bool = False
+
     #: Names of all available bands in the dataset
     all_bands: tuple[str, ...] = ()
 
@@ -482,6 +490,10 @@ class RasterDataset(GeoDataset):
                         stop = match.group('stop')
                         mint, _ = disambiguate_timestamp(start, self.date_format)
                         _, maxt = disambiguate_timestamp(stop, self.date_format)
+                    elif self.return_as_ts:
+                        warnings.warn(
+                            'return_as_ts = True, but no date could be found from filename_regex'
+                        )
 
                     coords = (minx, maxx, miny, maxy, mint, maxt)
                     self.index.insert(i, coords, filepath)
@@ -507,6 +519,26 @@ class RasterDataset(GeoDataset):
         self._crs = cast(CRS, crs)
         self._res = cast(float, res)
 
+    def _get_regex_groups_as_df(self, filepaths: list[str]) -> pd.DataFrame:
+        """Extracts the regex metadata from a list of filepaths.
+
+        Args:
+            filepaths (list): A list of filepaths.
+
+        Returns:
+            pandas.DataFrame: A DataFrame containing the extracted file metadata.
+        """
+        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+        file_metadata = []
+        for filepath in filepaths:
+            match = re.match(filename_regex, filepath)
+            if match:
+                meta = match.groupdict()
+                meta.update({'filepath': filepath})
+                file_metadata.append(meta)
+
+        return pd.DataFrame(file_metadata)
+
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
@@ -527,28 +559,56 @@ class RasterDataset(GeoDataset):
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
+        self.file_df = self._get_regex_groups_as_df(filepaths)
+
+        res = []
         if self.separate_files:
-            data_list: list[Tensor] = []
-            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-            for band in self.bands:
-                band_filepaths = []
-                for filepath in filepaths:
-                    filename = os.path.basename(filepath)
-                    directory = os.path.dirname(filepath)
-                    match = re.match(filename_regex, filename)
-                    if match:
-                        if 'band' in match.groupdict():
-                            start = match.start('band')
-                            end = match.end('band')
-                            filename = filename[:start] + band + filename[end:]
-                    filepath = os.path.join(directory, filename)
-                    band_filepaths.append(filepath)
-                data_list.append(self._merge_files(band_filepaths, query))
-            data = torch.cat(data_list)
+            if self.return_as_ts:
+                grouped = self.file_df.groupby(['date', 'band']).agg(list)
+                all_dates = np.sort(self.file_df.date.unique())
+                for date in all_dates:
+                    res_per_date = [
+                        self._merge_files(filepaths, query)
+                        for band, filepaths in grouped.sort_values('band')
+                        .loc[date, 'filepath']
+                        .items()
+                    ]
+                    res.append(
+                        torch.cat(res_per_date).unsqueeze(0)
+                        if len(res_per_date) > 0
+                        else torch.tensor([])
+                    )
+                data = torch.cat(res) if len(res) > 0 else torch.tensor([])
+            else:
+                res_per_band = [
+                    self._merge_files(filepaths, query)
+                    for band, filepaths in self.file_df.groupby(['band'])
+                    .agg(list)
+                    .loc[:, 'filepath']
+                    .items()
+                ]
+                data = (
+                    torch.cat(res_per_band)
+                    if len(res_per_band) > 0
+                    else torch.tensor([])
+                )
         else:
-            data = self._merge_files(filepaths, query, self.band_indexes)
+            if self.return_as_ts:
+                all_dates = self.file_df.date.unique()
+                grouped = self.file_df.groupby(['date']).agg(list)
+                res = [
+                    self._merge_files(grouped.loc[date, 'filepath'], query).unsqueeze(0)
+                    for date in all_dates
+                ]
+                data = torch.cat(res) if len(res) > 0 else torch.tensor([])
+            else:
+                data = self._merge_files(filepaths, query, self.band_indexes)
 
         sample = {'crs': self.crs, 'bounds': query}
+        if self.return_as_ts:
+            sample['dates'] = [
+                datetime.strptime(date, self.date_format) for date in all_dates
+            ]
 
         data = data.to(self.dtype)
         if self.is_image:
@@ -982,6 +1042,7 @@ class IntersectionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError('IntersectionDataset only supports GeoDatasets')
 
+        self.return_as_ts = dataset1.return_as_ts or dataset2.return_as_ts
         self.crs = dataset1.crs
         self.res = dataset1.res
 
@@ -1142,6 +1203,7 @@ class UnionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError('UnionDataset only supports GeoDatasets')
 
+        self.return_as_ts = dataset1.return_as_ts and dataset2.return_as_ts
         self.crs = dataset1.crs
         self.res = dataset1.res
 
