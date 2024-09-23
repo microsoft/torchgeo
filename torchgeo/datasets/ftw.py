@@ -147,7 +147,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         assert target in self.targets
         if isinstance(countries, str):
             countries = [countries]
-        assert set(countries).intersection(self.valid_countries) == set(countries)
+        assert set(countries) <= set(self.valid_countries)
 
         self.root = root
         self.split = split
