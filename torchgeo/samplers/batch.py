@@ -8,6 +8,7 @@ from collections.abc import Iterator
 
 import torch
 from rtree.index import Index, Property
+from torch import Generator
 from torch.utils.data import Sampler
 
 from ..datasets import BoundingBox, GeoDataset
@@ -70,7 +71,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         length: int | None = None,
         roi: BoundingBox | None = None,
         units: Units = Units.PIXELS,
-        generator: torch.Generator | None = None,
+        generator: Generator | None = None,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -87,6 +88,9 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         .. versionchanged:: 0.4
            ``length`` parameter is now optional, a reasonable default will be used
 
+        .. versionadded:: 0.7
+        The *generator* parameter.
+
         Args:
             dataset: dataset to index from
             size: dimensions of each :term:`patch`
@@ -98,7 +102,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
-            generator: random number generator
+            generator: pseudo-random number generator (PRNG).
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
