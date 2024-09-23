@@ -19,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive, extract_archive
+from .utils import Path, download_url, extract_archive, which
 
 
 class _Task(TypedDict, total=False):
@@ -467,7 +467,12 @@ class SatlasPretrain(NonGeoDataset):
 
     * https://doi.org/10.48550/arXiv.2211.15660
 
-    .. versionadded:: 0.6
+    .. versionadded:: 0.7
+
+    .. note::
+       This dataset requires the following additional library to be installed:
+
+       * `AWS CLI <https://aws.amazon.com/cli/>`_: to download the dataset from AWS.
     """
 
     # https://github.com/allenai/satlas/blob/main/satlaspretrain_urls.txt
@@ -476,32 +481,32 @@ class SatlasPretrain(NonGeoDataset):
             'https://pub-956f3eb0f5974f37b9228e0a62f449bf.r2.dev/satlaspretrain/satlas-dataset-v1-landsat.tar',
         ),
         'naip': (
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-naip-2011.tar',
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-naip-2012.tar',
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-naip-2013.tar',
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-naip-2014.tar',
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-naip-2015.tar',
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-naip-2016.tar',
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-naip-2017.tar',
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-naip-2018.tar',
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-naip-2019.tar',
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-naip-2020.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2011.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2012.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2013.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2014.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2015.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2016.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2017.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2018.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2019.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2020.tar',
         ),
         'sentinel1': (
             'https://pub-956f3eb0f5974f37b9228e0a62f449bf.r2.dev/satlaspretrain/satlas-dataset-v1-sentinel1.tar',
         ),
         'sentinel2': (
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-sentinel2-a.tar',
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-sentinel2-b.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-sentinel2-a.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-sentinel2-b.tar',
         ),
         'static': (
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-labels-static.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-labels-static.tar',
         ),
         'dynamic': (
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-labels-dynamic.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-labels-dynamic.tar',
         ),
         'metadata': (
-            'https://ai2-public-datasets.s3.amazonaws.com/satlas/satlas-dataset-v1-metadata.tar',
+            's3://ai2-public-datasets/satlas/satlas-dataset-v1-metadata.tar',
         ),
     }
     # TODO
@@ -661,9 +666,9 @@ class SatlasPretrain(NonGeoDataset):
             md5s = self.md5s[product]
             for url, md5 in zip(urls, md5s):
                 # Check if the tarball has already been downloaded
-                path = os.path.join(self.root, url.split('/')[-1])
-                if os.path.isfile(path):
-                    extract_archive(path)
+                tarball = os.path.join(self.root, url.split('/')[-1])
+                if os.path.isfile(tarball):
+                    extract_archive(tarball)
                     continue
 
                 # Check if the user requested to download the dataset
@@ -671,9 +676,13 @@ class SatlasPretrain(NonGeoDataset):
                     raise DatasetNotFoundError(self)
 
                 # Download and extract the tarball
-                download_and_extract_archive(
-                    url, self.root, md5=md5 if self.checksum else None
-                )
+                if url.startswith('s3://'):
+                    aws = which('aws')
+                    aws('s3', 'cp', url, self.root)
+                else:
+                    download_url(url, self.root)
+                check_integrity(tarball, md5 if self.checksum else None)
+                extract_archive(tarball)
 
     def plot(
         self,
