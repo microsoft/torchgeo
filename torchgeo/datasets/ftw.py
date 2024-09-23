@@ -57,7 +57,7 @@ class FieldsOfTheWorld(NonGeoDataset):
     splits = ('train', 'val', 'test')
     targets = ('2-class', '3-class', 'instance')
 
-    valid_countries: ClassVar[Sequence[str]] = [
+    valid_countries = (
         'austria',
         'belgium',
         'brazil',
@@ -83,7 +83,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         'spain',
         'sweden',
         'vietnam',
-    ]
+    )
 
     base_url: ClassVar[str] = (
         'https://data.source.coop/kerner-lab/fields-of-the-world-archive/'
