@@ -57,7 +57,7 @@ jobs:
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install .[docs,tests] planetary_computer pystac
+          pip install .[docs,tests] planetary_computer pystac tensorboard
           pip cache purge
       - name: List pip dependencies
         run: pip list
