@@ -12,11 +12,14 @@ from pytest import MonkeyPatch
 from torch import Tensor
 
 from torchgeo.datasets import DatasetNotFoundError, SatlasPretrain
+from torchgeo.datasets.utils import Executable
 
 
 class TestSatlasPretrain:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> SatlasPretrain:
+    def dataset(
+        self, aws: Executable, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> SatlasPretrain:
         root = os.path.join('tests', 'data', 'satlas')
         images = ('landsat', 'naip', 'sentinel1', 'sentinel2')
         products = (*images, 'static', 'metadata')
