@@ -148,8 +148,12 @@ class TestRandomBatchGeoSampler:
     def test_random_seed(self) -> None:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 10, 0, 10, 0, 10))
-        sampler1 = RandomBatchGeoSampler(ds, 1, 1, generator=torch.Generator().manual_seed(0))
-        sampler2 = RandomBatchGeoSampler(ds, 1, 1, generator=torch.Generator().manual_seed(0))
+        sampler1 = RandomBatchGeoSampler(
+            ds, 1, 1, generator=torch.Generator().manual_seed(0)
+        )
+        sampler2 = RandomBatchGeoSampler(
+            ds, 1, 1, generator=torch.Generator().manual_seed(0)
+        )
         sample1 = next(iter(sampler1))
         sample2 = next(iter(sampler2))
         assert sample1 == sample2
