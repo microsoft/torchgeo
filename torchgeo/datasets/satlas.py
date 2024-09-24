@@ -511,7 +511,7 @@ class SatlasPretrain(NonGeoDataset):
     }
     # TODO
     md5s: ClassVar[dict[str, tuple[str, ...]]] = {
-        'landsat': ('foo',),
+        'landsat': ('89ea5e8974826c071908392827780a06',),
         'naip': (
             '523736842994861054f04b97c4d90bfb',
             '636b9a3b08be0e40d098cb7b5e655b57',
@@ -524,7 +524,7 @@ class SatlasPretrain(NonGeoDataset):
             '55b110cc6f734bf88793306d49f1c415',
             '97fc8414334987c59593d574f112a77e',
         ),
-        'sentinel1': ('foo',),
+        'sentinel1': ('b0edc6b7af5995b04b8d780eec1246bf',),
         'sentinel2': (
             '7e1c6a1e322807fb11df8c0c062545ca',
             '6636b8ecf2fff1d6723ecfef55a4876d',
