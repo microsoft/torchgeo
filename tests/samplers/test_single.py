@@ -310,7 +310,7 @@ class TestPreChippedGeoSampler:
         )
         sample1 = next(iter(sampler1))
         sample2 = next(iter(sampler2))
-        assert sample1 != sample2
+        assert sample1 == sample2
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
