@@ -143,8 +143,10 @@ class TestRandomGeoSampler:
     def test_random_seed(self) -> None:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 10, 0, 10, 0, 10))
-        sampler1 = RandomGeoSampler(ds, 1, 1, generator=torch.manual_seed(0))
-        sampler2 = RandomGeoSampler(ds, 1, 1, generator=torch.manual_seed(0))
+        generator1 = torch.Generator().manual_seed(0)
+        generator2 = torch.Generator().manual_seed(0)
+        sampler1 = RandomGeoSampler(ds, 1, 1, generator=generator1)
+        sampler2 = RandomGeoSampler(ds, 1, 1, generator=generator2)
         sample1 = next(iter(sampler1))
         sample2 = next(iter(sampler2))
         assert sample1 == sample2
@@ -302,15 +304,13 @@ class TestPreChippedGeoSampler:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 10, 0, 10, 0, 10))
         ds.index.insert(1, (0, 11, 0, 11, 0, 11))
-        sampler1 = PreChippedGeoSampler(
-            ds, shuffle=True, generator=torch.manual_seed(2)
-        )
-        sampler2 = PreChippedGeoSampler(
-            ds, shuffle=True, generator=torch.manual_seed(2)
-        )
+        generator1 = torch.Generator().manual_seed(0)
+        generator2 = torch.Generator().manual_seed(0)
+        sampler1 = PreChippedGeoSampler(ds, shuffle=True, generator=generator1)
+        sampler2 = PreChippedGeoSampler(ds, shuffle=True, generator=generator2)
         sample1 = next(iter(sampler1))
         sample2 = next(iter(sampler2))
-        assert sample1 != sample2
+        assert sample1 == sample2
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
