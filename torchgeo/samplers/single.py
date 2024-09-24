@@ -320,6 +320,7 @@ class PreChippedGeoSampler(GeoSampler):
             generator = partial(torch.randperm, generator=self.generator)
 
         for idx in generator(len(self)):
+            print(idx)
             yield BoundingBox(*self.hits[idx].bounds)
 
     def __len__(self) -> int:
