@@ -7,6 +7,7 @@ from itertools import product
 
 import geopandas as gpd
 import pytest
+import torch
 from _pytest.fixtures import SubRequest
 from geopandas import GeoDataFrame
 from rasterio.crs import CRS
@@ -222,6 +223,15 @@ class TestRandomGeoSampler:
         for bbox in sampler:
             assert bbox == BoundingBox(0, 10, 0, 10, 0, 10)
 
+    def test_random_seed(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        sampler1 = RandomGeoSampler(ds, 1, 1, generator=torch.manual_seed(0))
+        sampler2 = RandomGeoSampler(ds, 1, 1, generator=torch.manual_seed(0))
+        sample1 = next(iter(sampler1))
+        sample2 = next(iter(sampler2))
+        assert sample1 == sample2
+
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
     def test_dataloader(
@@ -370,6 +380,20 @@ class TestPreChippedGeoSampler:
         sampler = PreChippedGeoSampler(ds)
         for _ in sampler:
             continue
+
+    def test_shuffle_seed(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        ds.index.insert(1, (0, 11, 0, 11, 0, 11))
+        sampler1 = PreChippedGeoSampler(
+            ds, shuffle=True, generator=torch.manual_seed(2)
+        )
+        sampler2 = PreChippedGeoSampler(
+            ds, shuffle=True, generator=torch.manual_seed(2)
+        )
+        sample1 = next(iter(sampler1))
+        sample2 = next(iter(sampler2))
+        assert sample1 != sample2
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])

@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from itertools import product
 
 import pytest
+import torch
 from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
 from torch.utils.data import DataLoader
@@ -143,6 +144,15 @@ class TestRandomBatchGeoSampler:
         for batch in sampler:
             for bbox in batch:
                 assert bbox == BoundingBox(0, 10, 0, 10, 0, 10)
+
+    def test_random_seed(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        sampler1 = RandomBatchGeoSampler(ds, 1, 1, generator=torch.manual_seed(0))
+        sampler2 = RandomBatchGeoSampler(ds, 1, 1, generator=torch.manual_seed(0))
+        sample1 = next(iter(sampler1))
+        sample2 = next(iter(sampler2))
+        assert sample1 == sample2
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])

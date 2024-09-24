@@ -5,6 +5,7 @@
 
 import abc
 from collections.abc import Callable, Iterable, Iterator
+from functools import partial
 
 import geopandas as gpd
 import numpy as np
@@ -12,6 +13,7 @@ import torch
 from geopandas import GeoDataFrame
 from rtree.index import Index, Property
 from shapely.geometry import box
+from torch import Generator
 from torch.utils.data import Sampler
 from tqdm import tqdm
 
@@ -210,6 +212,7 @@ class RandomGeoSampler(GeoSampler):
         length: int | None = None,
         roi: BoundingBox | None = None,
         units: Units = Units.PIXELS,
+        generator: Generator | None = None,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -226,6 +229,9 @@ class RandomGeoSampler(GeoSampler):
         .. versionchanged:: 0.4
            ``length`` parameter is now optional, a reasonable default will be used
 
+        .. versionadded:: 0.7
+            The *generator* parameter.
+
         Args:
             dataset: dataset to index from
             size: dimensions of each :term:`patch`
@@ -236,6 +242,7 @@ class RandomGeoSampler(GeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
+            generator: pseudo-random number generator (PRNG).
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
@@ -243,6 +250,7 @@ class RandomGeoSampler(GeoSampler):
         if units == Units.PIXELS:
             self.size = (self.size[0] * self.res, self.size[1] * self.res)
 
+        self.generator = generator
         self.length = 0
         self.hits = []
         areas = []
@@ -304,7 +312,7 @@ class RandomGeoSampler(GeoSampler):
             bounds = BoundingBox(*hit.bounds)
 
             # Choose a random index within that tile
-            bbox = get_random_bounding_box(bounds, self.size, self.res)
+            bbox = get_random_bounding_box(bounds, self.size, self.res, self.generator)
             minx, maxx, miny, maxy, mint, maxt = tuple(bbox)
             chip = {
                 'geometry': box(minx, miny, maxx, maxy),
@@ -447,20 +455,30 @@ class PreChippedGeoSampler(GeoSampler):
     """
 
     def __init__(
-        self, dataset: GeoDataset, roi: BoundingBox | None = None, shuffle: bool = False
+        self,
+        dataset: GeoDataset,
+        roi: BoundingBox | None = None,
+        shuffle: bool = False,
+        generator: torch.Generator | None = None,
     ) -> None:
         """Initialize a new Sampler instance.
 
         .. versionadded:: 0.3
+
+        .. versionadded:: 0.7
+            The *generator* parameter.
 
         Args:
             dataset: dataset to index from
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             shuffle: if True, reshuffle data at every epoch
+            generator: pseudo-random number generator (PRNG) used in combination with shuffle.
+
         """
         super().__init__(dataset, roi)
         self.shuffle = shuffle
+        self.generator = generator
 
         self.hits = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
@@ -477,7 +495,7 @@ class PreChippedGeoSampler(GeoSampler):
         """
         generator: Callable[[int], Iterable[int]] = range
         if self.shuffle:
-            generator = torch.randperm
+            generator = partial(torch.randperm, generator=self.generator)
 
         print('generating samples... ')
         chips = []
