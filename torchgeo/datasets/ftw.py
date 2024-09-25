@@ -30,7 +30,7 @@ class FieldsOfTheWorld(NonGeoDataset):
 
     Dataset features:
 
-    * 70795 patches across 24 countries
+    * 70462 patches across 24 countries
     * Each country has a train, val, and test split
     * Semantic segmentations masks with and without the field boundary class
     * Instance segmentation masks
@@ -49,7 +49,7 @@ class FieldsOfTheWorld(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * TBD
+    * https://doi.org/10.48550/arXiv.2409.16252
 
     .. versionadded:: 0.7
     """
