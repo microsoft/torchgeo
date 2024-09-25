@@ -476,36 +476,30 @@ class SatlasPretrain(NonGeoDataset):
     """
 
     # https://github.com/allenai/satlas/blob/main/satlaspretrain_urls.txt
-    urls: ClassVar[dict[str, tuple[str, ...]]] = {
-        'landsat': ('s3://ai2-public-datasets/satlas/satlas-dataset-v1-landsat.tar',),
+    url = 's3://ai2-public-datasets/satlas/'
+    tarballs: ClassVar[dict[str, tuple[str, ...]]] = {
+        'landsat': ('satlas-dataset-v1-landsat.tar',),
         'naip': (
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2011.tar',
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2012.tar',
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2013.tar',
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2014.tar',
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2015.tar',
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2016.tar',
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2017.tar',
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2018.tar',
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2019.tar',
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-naip-2020.tar',
+            'satlas-dataset-v1-naip-2011.tar',
+            'satlas-dataset-v1-naip-2012.tar',
+            'satlas-dataset-v1-naip-2013.tar',
+            'satlas-dataset-v1-naip-2014.tar',
+            'satlas-dataset-v1-naip-2015.tar',
+            'satlas-dataset-v1-naip-2016.tar',
+            'satlas-dataset-v1-naip-2017.tar',
+            'satlas-dataset-v1-naip-2018.tar',
+            'satlas-dataset-v1-naip-2019.tar',
+            'satlas-dataset-v1-naip-2020.tar',
         ),
-        'sentinel1': (
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-sentinel1-new.tar',
-        ),
+        'sentinel1': ('satlas-dataset-v1-sentinel1-new.tar',),
         'sentinel2': (
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-sentinel2-a.tar',
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-sentinel2-b.tar',
+            'satlas-dataset-v1-sentinel2-a.tar',
+            'satlas-dataset-v1-sentinel2-b.tar',
         ),
-        'static': (
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-labels-static.tar',
-        ),
-        'dynamic': (
-            's3://ai2-public-datasets/satlas/satlas-dataset-v1-labels-dynamic.tar',
-        ),
-        'metadata': ('s3://ai2-public-datasets/satlas/satlas-dataset-v1-metadata.tar',),
+        'static': ('satlas-dataset-v1-labels-static.tar',),
+        'dynamic': ('satlas-dataset-v1-labels-dynamic.tar',),
+        'metadata': ('satlas-dataset-v1-metadata.tar',),
     }
-    # TODO
     md5s: ClassVar[dict[str, tuple[str, ...]]] = {
         'landsat': ('89ea5e8974826c071908392827780a06',),
         'naip': (
@@ -669,13 +663,14 @@ class SatlasPretrain(NonGeoDataset):
             if os.path.isdir(os.path.join(self.root, product)):
                 continue
 
-            urls = self.urls[product]
+            tarballs = self.tarballs[product]
             md5s = self.md5s[product]
-            for url, md5 in zip(urls, md5s):
+            for tarball, md5 in zip(tarballs, md5s):
+                path = os.path.join(self.root, tarball)
+
                 # Check if the tarball has already been downloaded
-                tarball = os.path.join(self.root, url.split('/')[-1])
-                if os.path.isfile(tarball):
-                    extract_archive(tarball)
+                if os.path.isfile(path):
+                    extract_archive(path)
                     continue
 
                 # Check if the user requested to download the dataset
@@ -684,9 +679,9 @@ class SatlasPretrain(NonGeoDataset):
 
                 # Download and extract the tarball
                 aws = which('aws')
-                aws('s3', 'cp', url, self.root)
-                check_integrity(tarball, md5 if self.checksum else None)
-                extract_archive(tarball)
+                aws('s3', 'cp', self.url + tarball, self.root)
+                check_integrity(path, md5 if self.checksum else None)
+                extract_archive(path)
 
     def plot(
         self,

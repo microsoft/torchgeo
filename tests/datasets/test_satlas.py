@@ -20,11 +20,12 @@ class TestSatlasPretrain:
     def dataset(
         self, aws: Executable, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SatlasPretrain:
-        root = os.path.join('tests', 'data', 'satlas')
+        url = os.path.join('tests', 'data', 'satlas', '')
+        monkeypatch.setattr(SatlasPretrain, 'url', url)
         images = ('landsat', 'naip', 'sentinel1', 'sentinel2')
         products = (*images, 'static', 'metadata')
-        urls = {prod: (os.path.join(root, f'{prod}.tar'),) for prod in products}
-        monkeypatch.setattr(SatlasPretrain, 'urls', urls)
+        tarballs = {product: (f'{product}.tar',) for product in products}
+        monkeypatch.setattr(SatlasPretrain, 'tarballs', tarballs)
         transforms = nn.Identity()
         return SatlasPretrain(
             tmp_path, images=images, transforms=transforms, download=True
