@@ -1,5 +1,5 @@
 # datasets
-h5py==3.11.0
+h5py==3.12.0
 laspy==2.5.4
 opencv-python==4.10.0.84
 pycocotools==2.0.8
