@@ -17,6 +17,7 @@ from .swin import (
     _satlas_sentinel2_transforms,
     _satlas_transforms,
 )
+from .utils import load_pretrained
 
 # https://github.com/zhu-xlab/DeCUR/blob/f190e9a3895ef645c005c8c2fce287ffa5a937e3/src/transfer_classification_BE/linear_BE_resnet.py#L286
 # Normalization by channel-wise band statistics
@@ -710,14 +711,19 @@ def resnet50(
     Returns:
         A ResNet-50 model.
     """
-    if weights:
-        kwargs['in_chans'] = weights.meta['in_chans']
-
     model: ResNet = timm.create_model('resnet50', *args, **kwargs)
 
     if weights:
-        missing_keys, unexpected_keys = model.load_state_dict(
-            weights.get_state_dict(progress=True), strict=False
+        pretrained_cfg = {}
+        pretrained_cfg['url'] = weights.url
+        pretrained_cfg['first_conv'] = 'conv1'
+        in_chans = kwargs.get('in_chans', 3)
+        missing_keys, unexpected_keys = load_pretrained(
+            model,
+            weights=weights,
+            pretrained_cfg=pretrained_cfg,
+            in_chans=in_chans,
+            strict=False,
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
         assert not unexpected_keys
