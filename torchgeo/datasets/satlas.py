@@ -4,12 +4,12 @@
 """SatlasPretrain dataset."""
 
 import glob
-import json
 import os
 from collections.abc import Callable, Iterable
 from typing import ClassVar, TypedDict
 
 import numpy as np
+import pandas as pd
 import torch
 from einops import rearrange
 from matplotlib import pyplot as plt
@@ -524,7 +524,7 @@ class SatlasPretrain(NonGeoDataset):
         'metadata': ('6b9ac5a4f9a1ee88a271d28f12854607',),
     }
 
-    # NOTE: 'tci' is RGB (b04-02), not BGR (b02-04)
+    # NOTE: 'tci' is RGB (b04-b02), not BGR (b02-b04)
     bands: ClassVar[dict[str, tuple[str, ...]]] = {
         'landsat': tuple(f'b{i}' for i in range(1, 12)),
         'naip': ('tci', 'ir'),
@@ -563,7 +563,6 @@ class SatlasPretrain(NonGeoDataset):
         assert set(images) <= set(self.bands.keys())
 
         self.root = root
-        self.split = split
         self.images = images
         self.labels = labels
         self.transforms = transforms
@@ -572,8 +571,7 @@ class SatlasPretrain(NonGeoDataset):
 
         self._verify()
 
-        with open(os.path.join(root, 'metadata', f'{split}.json')) as f:
-            self.data = torch.tensor(json.load(f))
+        self.split = pd.read_json(os.path.join(root, 'metadata', f'{split}.json'))
 
     def __len__(self) -> int:
         """Return the number of images in the dataset.
@@ -581,7 +579,7 @@ class SatlasPretrain(NonGeoDataset):
         Returns:
             Length of the dataset
         """
-        return len(self.data)
+        return len(self.split)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -592,7 +590,7 @@ class SatlasPretrain(NonGeoDataset):
         Returns:
             Data and label at that index.
         """
-        col, row = self.data[index]
+        col, row = self.split.iloc[index]
         sample: dict[str, Tensor] = {}
 
         for image in self.images:
