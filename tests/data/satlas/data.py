@@ -26,6 +26,16 @@ landsat_size = {
 }
 
 index = [[7149, 3246], [1234, 5678]]
+good_images = [
+    [7149, 3246, '2022-03'],
+    [1234, 5678, '2022-03'],
+    [7149, 3246, 'm_3808245_se_17_1_20110801'],
+    [1234, 5678, 'm_3808245_se_17_1_20110801'],
+    [7149, 3246, '2022-01'],
+    [1234, 5678, '2022-01'],
+    [7149, 3246, 'S2A_MSIL1C_20220309T032601_N0400_R018_T48RYR_20220309T060235'],
+    [1234, 5678, 'S2A_MSIL1C_20220309T032601_N0400_R018_T48RYR_20220309T060235'],
+]
 
 FILENAME_HIERARCHY = dict[str, 'FILENAME_HIERARCHY'] | list[str]
 filenames: FILENAME_HIERARCHY = {
@@ -83,6 +93,9 @@ if __name__ == '__main__':
     os.makedirs('metadata', exist_ok=True)
     with open(os.path.join('metadata', 'train_lowres.json'), 'w') as f:
         json.dump(index, f)
+
+    with open(os.path.join('metadata', 'good_images_lowres_all.json'), 'w') as f:
+        json.dump(good_images, f)
 
     for path in os.listdir('.'):
         if os.path.isdir(path):

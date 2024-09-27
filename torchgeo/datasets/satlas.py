@@ -3,7 +3,6 @@
 
 """SatlasPretrain dataset."""
 
-import glob
 import os
 from collections.abc import Callable, Iterable
 from typing import ClassVar, TypedDict
@@ -538,6 +537,7 @@ class SatlasPretrain(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train_lowres',
+        good_images: str = 'good_images_lowres_all',
         images: Iterable[str] = ('sentinel1', 'sentinel2', 'landsat'),
         labels: Iterable[str] = ('land_cover',),
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -549,6 +549,7 @@ class SatlasPretrain(NonGeoDataset):
         Args:
             root: Root directory where dataset can be found.
             split: Metadata split to load.
+            good_images: Metadata mapping between col/row and directory.
             images: List of image products.
             labels: List of label products.
             transforms: A function/transform that takes input sample and its target as
@@ -572,9 +573,15 @@ class SatlasPretrain(NonGeoDataset):
         self._verify()
 
         self.split = pd.read_json(os.path.join(root, 'metadata', f'{split}.json'))
+        self.good_images = pd.read_json(
+            os.path.join(root, 'metadata', f'{good_images}.json')
+        )
+        self.split.columns = ['col', 'row']
+        self.good_images.columns = ['col', 'row', 'directory']
+        self.good_images = self.good_images.groupby(['col', 'row'])
 
     def __len__(self) -> int:
-        """Return the number of images in the dataset.
+        """Return the number of locations in the dataset.
 
         Returns:
             Length of the dataset
@@ -591,29 +598,37 @@ class SatlasPretrain(NonGeoDataset):
             Data and label at that index.
         """
         col, row = self.split.iloc[index]
+        directories = self.good_images.get_group((col, row))['directory']
+
         sample: dict[str, Tensor] = {}
 
         for image in self.images:
-            sample[f'image_{image}'] = self._load_image(image, col, row)
+            self._load_image(sample, image, col, row, directories)
 
         for label in self.labels:
-            sample[f'mask_{label}'] = self._load_label(label, col, row)
+            self._load_label(sample, label, col, row)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
 
-    def _load_image(self, image: str, col: int, row: int) -> Tensor:
+    def _load_image(
+        self,
+        sample: dict[str, Tensor],
+        image: str,
+        col: int,
+        row: int,
+        directories: pd.Series,
+    ) -> None:
         """Load a single image.
 
         Args:
+            sample: Dataset sample to populate.
             image: Image product.
             col: Web Mercator column.
             row: Web Mercator row.
-
-        Returns:
-            An image tensor.
+            directories: Directories that may contain the image.
         """
         # Moved in PIL 9.1.0
         try:
@@ -621,34 +636,46 @@ class SatlasPretrain(NonGeoDataset):
         except AttributeError:
             resample = Image.BILINEAR  # type: ignore[attr-defined]
 
-        bands = self.bands[image]
-        fname_glob = os.path.join(self.root, image, '*', bands[0], f'{col}_{row}.png')
-        path = os.path.dirname(os.path.dirname(glob.glob(fname_glob)[0]))
+        # Find directories that match image product
+        good_directories: list[str] = []
+        for directory in directories:
+            path = os.path.join(self.root, image, directory)
+            if os.path.isdir(path):
+                good_directories.append(directory)
+
+        # Choose a random timestamp
+        idx = torch.randint(len(good_directories), (1,))
+        directory = good_directories[idx]
+
+        # Load all bands
         channels = []
-        for band in bands:
-            with Image.open(os.path.join(path, band, f'{col}_{row}.png')) as img:
+        for band in self.bands[image]:
+            path = os.path.join(self.root, image, directory, band, f'{col}_{row}.png')
+            with Image.open(path) as img:
                 img = img.resize((self.chip_size, self.chip_size), resample=resample)
                 array = np.atleast_3d(np.array(img, dtype=np.float32))
                 channels.append(torch.tensor(array))
-        return rearrange(torch.cat(channels, dim=-1), 'h w c -> c h w')
+        raster = rearrange(torch.cat(channels, dim=-1), 'h w c -> c h w')
+        sample[f'image_{image}'] = raster
 
-    def _load_label(self, label: str, col: int, row: int) -> Tensor:
+    def _load_label(
+        self, sample: dict[str, Tensor], label: str, col: int, row: int
+    ) -> None:
         """Load a single label.
 
         Args:
+            sample: Dataset sample to populate.
             label: Label product.
             col: Web Mercator column.
             row: Web Mercator row.
-
-        Returns:
-            A label tensor.
         """
         path = os.path.join(self.root, 'static', f'{col}_{row}', f'{label}.png')
         if os.path.isfile(path):
             with Image.open(path) as img:
-                return torch.tensor(np.array(img, dtype=np.int64))
+                raster = torch.tensor(np.array(img, dtype=np.int64))
         else:
-            return torch.zeros(self.chip_size, self.chip_size, dtype=torch.long)
+            raster = torch.zeros(self.chip_size, self.chip_size, dtype=torch.long)
+        sample[f'mask_{label}'] = raster
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
