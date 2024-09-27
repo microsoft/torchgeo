@@ -113,16 +113,13 @@ def get_weight(name: str) -> WeightsEnum:
     Raises:
         ValueError: if `name` doesn't point to a valid WeightsEnum
     """
-    if name in _model_weights:
-        return _model_weights[name]
-    else:
-        for weight_name, weight_enum in _model_weights.items():
-            if isinstance(weight_name, str):
-                for sub_weight_enum in weight_enum:
-                    if name == str(sub_weight_enum):
-                        return sub_weight_enum
+    for weight_name, weight_enum in _model_weights.items():
+        if isinstance(weight_name, str):
+            for sub_weight_enum in weight_enum:
+                if name == str(sub_weight_enum):
+                    return sub_weight_enum
 
-        raise ValueError(f"{name} isn't a valid WeightsEnum")
+    raise ValueError(f'{name} is not a valid WeightsEnum')
 
 
 def list_models() -> list[str]:
