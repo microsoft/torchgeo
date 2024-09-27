@@ -110,7 +110,7 @@ def get_weight(name: str) -> WeightsEnum:
     Returns:
         The requested weight enum.
     """
-    return eval(name)
+    return _model_weights[name]
 
 
 def list_models() -> list[str]:
