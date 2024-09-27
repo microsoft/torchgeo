@@ -46,7 +46,7 @@ _model = {
     'vit_small_patch16_224': vit_small_patch16_224,
 }
 
-_model_weights = {
+_model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     dofa_base_patch16_224: DOFABase16_Weights,
     dofa_large_patch16_224: DOFALarge16_Weights,
     resnet18: ResNet18_Weights,
@@ -116,8 +116,8 @@ def get_weight(name: str) -> WeightsEnum:
     if name in _model_weights:
         return _model_weights[name]
     else:
-        for name, weight_enum in _model_weights.items():
-            if isinstance(name, str):
+        for weight_name, weight_enum in _model_weights.items():
+            if isinstance(weight_name, str):
                 for sub_weight_enum in weight_enum:
                     if name == str(sub_weight_enum):
                         return sub_weight_enum
