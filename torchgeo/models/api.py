@@ -67,11 +67,6 @@ _model_weights = {
     'vit_small_patch16_224': ViTSmall16_Weights,
 }
 
-for name, weight_enum in _model_weights.items():
-    if isinstance(name, str):
-        for sub_weight_enum in weight_enum:
-            _model_weights[str(sub_weight_enum)] = sub_weight_enum
-
 
 def get_model(name: str, *args: Any, **kwargs: Any) -> nn.Module:
     """Get an instantiated model from its name.
@@ -114,8 +109,21 @@ def get_weight(name: str) -> WeightsEnum:
 
     Returns:
         The requested weight enum.
+
+    Raises:
+        ValueError: if `name` doesn't point to a valid WeightsEnum 
     """
-    return _model_weights[name]
+    if name in _model_weights:
+        return _model_weights[name]
+    else:
+        sub_weights = {}
+        for name, weight_enum in _model_weights.items():
+            if isinstance(name, str):
+                for sub_weight_enum in weight_enum:
+                    if name == str(sub_weight_enum):
+                        return sub_weight_enum
+
+        raise ValueError(f"{name} isn't a valid WeightsEnum")
 
 
 def list_models() -> list[str]:
