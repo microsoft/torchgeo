@@ -37,6 +37,7 @@ class TestSatlasPretrain:
         assert isinstance(x, dict)
         for image in dataset.images:
             assert isinstance(x[f'image_{image}'], Tensor)
+            assert isinstance(x[f'time_{image}'], Tensor)
         for label in dataset.labels:
             assert isinstance(x[f'mask_{label}'], Tensor)
 

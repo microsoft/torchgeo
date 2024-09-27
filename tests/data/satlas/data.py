@@ -36,6 +36,12 @@ good_images = [
     [7149, 3246, 'S2A_MSIL1C_20220309T032601_N0400_R018_T48RYR_20220309T060235'],
     [1234, 5678, 'S2A_MSIL1C_20220309T032601_N0400_R018_T48RYR_20220309T060235'],
 ]
+times = {
+    '2022-03': '2022-03-01T00:00:00+00:00',
+    'm_3808245_se_17_1_20110801': '2011-08-01T12:00:00+00:00',
+    '2022-01': '2022-01-01T00:00:00+00:00',
+    'S2A_MSIL1C_20220309T032601_N0400_R018_T48RYR_20220309T060235': '2022-03-09T06:02:35+00:00',
+}
 
 FILENAME_HIERARCHY = dict[str, 'FILENAME_HIERARCHY'] | list[str]
 filenames: FILENAME_HIERARCHY = {
@@ -96,6 +102,9 @@ if __name__ == '__main__':
 
     with open(os.path.join('metadata', 'good_images_lowres_all.json'), 'w') as f:
         json.dump(good_images, f)
+
+    with open(os.path.join('metadata', 'image_times.json'), 'w') as f:
+        json.dump(times, f)
 
     for path in os.listdir('.'):
         if os.path.isdir(path):

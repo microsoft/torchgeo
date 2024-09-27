@@ -538,6 +538,7 @@ class SatlasPretrain(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train_lowres',
         good_images: str = 'good_images_lowres_all',
+        image_times: str = 'image_times',
         images: Iterable[str] = ('sentinel1', 'sentinel2', 'landsat'),
         labels: Iterable[str] = ('land_cover',),
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -550,6 +551,7 @@ class SatlasPretrain(NonGeoDataset):
             root: Root directory where dataset can be found.
             split: Metadata split to load.
             good_images: Metadata mapping between col/row and directory.
+            image_times: Metadata mapping between directory and ISO time.
             images: List of image products.
             labels: List of label products.
             transforms: A function/transform that takes input sample and its target as
@@ -572,10 +574,17 @@ class SatlasPretrain(NonGeoDataset):
 
         self._verify()
 
-        self.split = pd.read_json(os.path.join(root, 'metadata', f'{split}.json'))
-        self.good_images = pd.read_json(
-            os.path.join(root, 'metadata', f'{good_images}.json')
+        # Read metadata files
+        self.split = pd.read_json(
+            os.path.join(root, 'metadata', f'{split}.json'), typ='frame'
         )
+        self.good_images = pd.read_json(
+            os.path.join(root, 'metadata', f'{good_images}.json'), typ='frame'
+        )
+        self.image_times = pd.read_json(
+            os.path.join(root, 'metadata', f'{image_times}.json'), typ='series'
+        )
+
         self.split.columns = ['col', 'row']
         self.good_images.columns = ['col', 'row', 'directory']
         self.good_images = self.good_images.groupby(['col', 'row'])
@@ -646,6 +655,8 @@ class SatlasPretrain(NonGeoDataset):
         # Choose a random timestamp
         idx = torch.randint(len(good_directories), (1,))
         directory = good_directories[idx]
+        time = self.image_times[directory].timestamp()
+        sample[f'time_{image}'] = torch.tensor(time)
 
         # Load all bands
         channels = []
