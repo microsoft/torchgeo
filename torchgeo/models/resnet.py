@@ -715,7 +715,6 @@ def resnet50(
 
     if weights:
         pretrained_cfg = {}
-        pretrained_cfg['url'] = weights.url
         pretrained_cfg['first_conv'] = 'conv1'
         in_chans = kwargs.get('in_chans', 3)
         missing_keys, unexpected_keys = load_pretrained(
