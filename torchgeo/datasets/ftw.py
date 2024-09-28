@@ -85,9 +85,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         'vietnam',
     )
 
-    base_url: ClassVar[str] = (
-        'https://data.source.coop/kerner-lab/fields-of-the-world-archive/'
-    )
+    base_url = 'https://data.source.coop/kerner-lab/fields-of-the-world-archive/'
 
     country_to_md5: ClassVar[dict[str, str]] = {
         'austria': '35604e3e3e78b4469e443bc756e19d26',
