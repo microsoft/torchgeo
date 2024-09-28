@@ -111,7 +111,7 @@ def get_weight(name: str) -> WeightsEnum:
         The requested weight enum.
 
     Raises:
-        ValueError: if `name` doesn't point to a valid WeightsEnum
+        ValueError: If *name* is not a valid WeightsEnum.
     """
     for weight_name, weight_enum in _model_weights.items():
         if isinstance(weight_name, str):
