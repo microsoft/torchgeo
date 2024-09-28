@@ -136,6 +136,7 @@ class MoCoTask(BaseTask):
     .. versionadded:: 0.5
     """
 
+    ignore = ('weights', 'augmentation1', 'augmentation2')
     monitor = 'train_loss'
 
     def __init__(
@@ -219,7 +220,7 @@ class MoCoTask(BaseTask):
                 warnings.warn('MoCo v3 does not use a memory bank')
 
         self.weights = weights
-        super().__init__(ignore=['weights', 'augmentation1', 'augmentation2'])
+        super().__init__()
 
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
         aug1, aug2 = moco_augmentations(version, size, grayscale_weights)

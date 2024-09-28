@@ -88,7 +88,7 @@ class SemanticSegmentationTask(BaseTask):
            The *ignore_index* parameter now works for jaccard loss.
         """
         self.weights = weights
-        super().__init__(ignore='weights')
+        super().__init__()
 
     def configure_models(self) -> None:
         """Initialize the model.
