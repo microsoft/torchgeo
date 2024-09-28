@@ -15,8 +15,6 @@ jobs:
   latest:
     name: latest
     runs-on: ${{ matrix.os }}
-    env:
-      MPLBACKEND: Agg
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
@@ -55,8 +53,6 @@ jobs:
   minimum:
     name: minimum
     runs-on: ubuntu-latest
-    env:
-      MPLBACKEND: Agg
     steps:
       - name: Clone repo
         uses: actions/checkout@v4.1.7
@@ -90,8 +86,6 @@ jobs:
   datasets:
     name: datasets
     runs-on: ubuntu-latest
-    env:
-      MPLBACKEND: Agg
     steps:
       - name: Clone repo
         uses: actions/checkout@v4.1.7
