@@ -16,6 +16,8 @@ from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import DatasetNotFoundError, FieldsOfTheWorld
 
+pytest.importorskip('pyarrow', minversion='15.0.0')
+
 
 class TestFieldsOfTheWorld:
     @pytest.fixture(
