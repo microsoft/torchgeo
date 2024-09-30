@@ -91,6 +91,8 @@ datasets = [
     "laspy>=2",
     # opencv-python 4.5.4+ required for Python 3.10 wheels
     "opencv-python>=4.5.4",
+    # pandas 2+ required for parquet extra
+    "pandas[parquet]>=2",
     # pycocotools 2.0.7+ required for wheels
     "pycocotools>=2.0.7",
     # pyvista 0.34.2+ required to avoid ImportError in CI

@@ -1,7 +1,8 @@
 # datasets
-h5py==3.11.0
+h5py==3.12.1
 laspy==2.5.4
 opencv-python==4.10.0.84
+pandas[parquet]==2.2.3
 pycocotools==2.0.8
 pyvista==0.44.1
 scikit-image==0.24.0
