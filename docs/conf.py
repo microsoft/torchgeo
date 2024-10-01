@@ -67,6 +67,7 @@ nitpick_ignore = [
     ('py:class', 'torchvision.models._api.WeightsEnum'),
     ('py:class', 'torchvision.models.resnet.ResNet'),
     ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
+    ('py:class', 'geopandas.GeoDataFrame'),
 ]
 
 
@@ -122,6 +123,7 @@ intersphinx_mapping = {
     'torch': ('https://pytorch.org/docs/stable', None),
     'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
     'torchvision': ('https://pytorch.org/vision/stable', None),
+    'geopandas': ('https://geopandas.org/en/stable/', None),
 }
 
 # nbsphinx

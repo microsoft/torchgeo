@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 from _pytest.fixtures import SubRequest
+from geopandas import GeoDataFrame
 from lightning.pytorch import Trainer
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
@@ -182,7 +183,7 @@ class TestGeoDataModule:
         dm = CustomGeoDataModule()
         dm.dataset = CustomGeoDataset()
         dm.sampler = RandomGeoSampler(dm.dataset, 1, 1)
-        dm.sampler.length = 0
+        dm.sampler.chips = GeoDataFrame()
         msg = r'CustomGeoDataModule\.sampler has length 0.'
         with pytest.raises(MisconfigurationException, match=msg):
             dm.train_dataloader()

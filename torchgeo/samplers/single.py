@@ -7,14 +7,42 @@ import abc
 from collections.abc import Callable, Iterable, Iterator
 from functools import partial
 
+import geopandas as gpd
+import numpy as np
 import torch
+from geopandas import GeoDataFrame
 from rtree.index import Index, Property
+from shapely.geometry import box
 from torch import Generator
 from torch.utils.data import Sampler
+from tqdm import tqdm
 
 from ..datasets import BoundingBox, GeoDataset
 from .constants import Units
 from .utils import _to_tuple, get_random_bounding_box, tile_to_chips
+
+
+def load_file(path: str | GeoDataFrame) -> GeoDataFrame:
+    """Load a file from the given path.
+
+    Parameters:
+    path (str or GeoDataFrame): The path to the file or a GeoDataFrame object.
+
+    Returns:
+    GeoDataFrame: The loaded file as a GeoDataFrame.
+
+    Raises:
+    None
+
+    """
+    if isinstance(path, GeoDataFrame):
+        return path
+    if path.endswith('.feather'):
+        print(f'Reading feather file: {path}')
+        return gpd.read_feather(path)
+    else:
+        print(f'Reading shapefile: {path}')
+        return gpd.read_file(path)
 
 
 class GeoSampler(Sampler[BoundingBox], abc.ABC):
@@ -46,14 +74,124 @@ class GeoSampler(Sampler[BoundingBox], abc.ABC):
 
         self.res = dataset.res
         self.roi = roi
+        self.dataset = dataset
+        self.chips: GeoDataFrame = GeoDataFrame()
+
+    @staticmethod
+    def __save_as_gpd_or_feather(
+        path: str, gdf: GeoDataFrame, driver: str = 'ESRI Shapefile'
+    ) -> None:
+        """Save a GeoDataFrame as a file supported by any geopandas driver or as a feather file.
+
+        Parameters:
+            path (str): The path to save the file.
+            gdf (GeoDataFrame): The GeoDataFrame to be saved.
+            driver (str, optional): The driver to be used for saving the file. Defaults to 'ESRI Shapefile'.
+
+        Returns:
+            None
+        """
+        if path.endswith('.feather'):
+            gdf.to_feather(path)
+        else:
+            gdf.to_file(path, driver=driver)
 
     @abc.abstractmethod
+    def get_chips(self) -> GeoDataFrame:
+        """Determines the way to get the extent of the chips (samples) of the dataset.
+
+        Should return a GeoDataFrame with the extend of the chips with the columns
+        geometry, minx, miny, maxx, maxy, mint, maxt, fid. Each row is a chip. It is
+        expected that every sampler calls this method to get the chips as one of the
+        last steps in the ``__init__`` method.
+        """
+
+    def filter_chips(
+        self,
+        filter_by: str | GeoDataFrame,
+        predicate: str = 'intersects',
+        action: str = 'keep',
+    ) -> None:
+        """Filter the default set of chips in the sampler down to a specific subset.
+
+        Args:
+            filter_by: The file or geodataframe for which the geometries will be used during filtering
+            predicate: Predicate as used in Geopandas sindex.query_bulk
+            action: What to do with the chips that satisfy the condition by the predicacte.
+                    Can either be ``'drop'`` or ``'keep'``.
+        """
+        prefilter_leng = len(self.chips)
+        filtering_gdf = load_file(filter_by).to_crs(self.dataset.crs)
+
+        if action == 'keep':
+            self.chips = self.chips.iloc[
+                list(
+                    set(
+                        self.chips.sindex.query_bulk(
+                            filtering_gdf.geometry, predicate=predicate
+                        )[1]
+                    )
+                )
+            ].reset_index(drop=True)
+        elif action == 'drop':
+            self.chips = self.chips.drop(
+                index=list(
+                    set(
+                        self.chips.sindex.query_bulk(
+                            filtering_gdf.geometry, predicate=predicate
+                        )[1]
+                    )
+                )
+            ).reset_index(drop=True)
+
+        self.chips.fid = self.chips.index
+        print(f'Filter step reduced chips from {prefilter_leng} to {len(self.chips)}')
+        assert not self.chips.empty, 'No chips left after filtering!'
+
+    def set_worker_split(self, total_workers: int, worker_num: int) -> None:
+        """Split the chips for multi-worker inference.
+
+        Splits the chips in n equal parts for the number of workers and keeps the set of
+        chips for the specific worker id, convenient if you want to split the chips across
+        multiple dataloaders for multi-worker inference.
+
+        Args:
+            total_workers (int): The total number of parts to split the chips
+            worker_num (int): The id of the worker (which part to keep), starts from 0
+
+        """
+        self.chips = np.array_split(self.chips, total_workers)[worker_num]
+
+    def save(self, path: str, driver: str = 'ESRI Shapefile') -> None:
+        """Save the chips as a file format supported by GeoPandas or feather file.
+
+        Parameters:
+        - path (str): The path to save the file.
+        - driver (str): The driver to use for saving the file. Defaults to 'ESRI Shapefile'.
+
+        Returns:
+        - None
+        """
+        self.__save_as_gpd_or_feather(path, self.chips, driver)
+
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
 
         Returns:
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
+        for _, chip in self.chips.iterrows():
+            yield BoundingBox(
+                chip.minx, chip.maxx, chip.miny, chip.maxy, chip.mint, chip.maxt
+            )
+
+    def __len__(self) -> int:
+        """Return the number of samples over the ROI.
+
+        Returns:
+            number of patches that will be sampled
+        """
+        return len(self.chips)
 
 
 class RandomGeoSampler(GeoSampler):
@@ -137,32 +275,63 @@ class RandomGeoSampler(GeoSampler):
         if torch.sum(self.areas) == 0:
             self.areas += 1
 
+        self.chips = self.get_chips()
+
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
 
         Returns:
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
-        for _ in range(len(self)):
+        self.refresh_samples()
+        for _, chip in self.chips.iterrows():
+            yield BoundingBox(
+                chip.minx, chip.maxx, chip.miny, chip.maxy, chip.mint, chip.maxt
+            )
+
+    def refresh_samples(self) -> None:
+        """Refresh the samples in the sampler.
+
+        This method is useful when you want to refresh the samples in the sampler
+        without creating a new sampler instance.
+        """
+        self.chips = self.get_chips()
+
+    def get_chips(self) -> GeoDataFrame:
+        """Generate chips from the dataset.
+
+        Returns:
+            A GeoDataFrame containing the generated chips.
+        """
+        chips = []
+        print('generating samples... ')
+        for _ in tqdm(range(self.length)):
             # Choose a random tile, weighted by area
             idx = torch.multinomial(self.areas, 1)
             hit = self.hits[idx]
             bounds = BoundingBox(*hit.bounds)
 
             # Choose a random index within that tile
-            bounding_box = get_random_bounding_box(
-                bounds, self.size, self.res, self.generator
-            )
+            bbox = get_random_bounding_box(bounds, self.size, self.res, self.generator)
+            minx, maxx, miny, maxy, mint, maxt = tuple(bbox)
+            chip = {
+                'geometry': box(minx, miny, maxx, maxy),
+                'minx': minx,
+                'miny': miny,
+                'maxx': maxx,
+                'maxy': maxy,
+                'mint': mint,
+                'maxt': maxt,
+            }
+            chips.append(chip)
 
-            yield bounding_box
+        if chips:
+            chips_gdf = GeoDataFrame(chips, crs=self.dataset.crs)
+            chips_gdf['fid'] = chips_gdf.index
 
-    def __len__(self) -> int:
-        """Return the number of samples in a single epoch.
-
-        Returns:
-            length of the epoch
-        """
-        return self.length
+        else:
+            chips_gdf = GeoDataFrame()
+        return chips_gdf
 
 
 class GridGeoSampler(GeoSampler):
@@ -225,24 +394,20 @@ class GridGeoSampler(GeoSampler):
             ):
                 self.hits.append(hit)
 
-        self.length = 0
-        for hit in self.hits:
-            bounds = BoundingBox(*hit.bounds)
-            rows, cols = tile_to_chips(bounds, self.size, self.stride)
-            self.length += rows * cols
+        self.chips = self.get_chips()
 
-    def __iter__(self) -> Iterator[BoundingBox]:
-        """Return the index of a dataset.
+    def get_chips(self) -> GeoDataFrame:
+        """Generates chips from the given hits.
 
         Returns:
-            (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+            A GeoDataFrame containing the generated chips.
         """
-        # For each tile...
+        print('generating samples... ')
+        self.length = 0
+        chips = []
         for hit in self.hits:
             bounds = BoundingBox(*hit.bounds)
             rows, cols = tile_to_chips(bounds, self.size, self.stride)
-            mint = bounds.mint
-            maxt = bounds.maxt
 
             # For each row...
             for i in range(rows):
@@ -254,15 +419,25 @@ class GridGeoSampler(GeoSampler):
                     minx = bounds.minx + j * self.stride[1]
                     maxx = minx + self.size[1]
 
-                    yield BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+                    chip = {
+                        'geometry': box(minx, miny, maxx, maxy),
+                        'minx': minx,
+                        'miny': miny,
+                        'maxx': maxx,
+                        'maxy': maxy,
+                        'mint': bounds.mint,
+                        'maxt': bounds.maxt,
+                    }
+                    self.length += 1
+                    chips.append(chip)
 
-    def __len__(self) -> int:
-        """Return the number of samples over the ROI.
+        if chips:
+            chips_gdf = GeoDataFrame(chips, crs=self.dataset.crs)
+            chips_gdf['fid'] = chips_gdf.index
 
-        Returns:
-            number of patches that will be sampled
-        """
-        return self.length
+        else:
+            chips_gdf = GeoDataFrame()
+        return chips_gdf
 
 
 class PreChippedGeoSampler(GeoSampler):
@@ -309,23 +484,35 @@ class PreChippedGeoSampler(GeoSampler):
         for hit in self.index.intersection(tuple(self.roi), objects=True):
             self.hits.append(hit)
 
-    def __iter__(self) -> Iterator[BoundingBox]:
-        """Return the index of a dataset.
+        self.length = len(self.hits)
+        self.chips = self.get_chips()
+
+    def get_chips(self) -> GeoDataFrame:
+        """Generate chips from the hits and return them as a GeoDataFrame.
 
         Returns:
-            (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+            A GeoDataFrame containing the generated chips.
         """
         generator: Callable[[int], Iterable[int]] = range
         if self.shuffle:
             generator = partial(torch.randperm, generator=self.generator)
 
-        for idx in generator(len(self)):
-            yield BoundingBox(*self.hits[idx].bounds)
+        print('generating samples... ')
+        chips = []
+        for idx in generator(self.length):
+            minx, maxx, miny, maxy, mint, maxt = self.hits[idx].bounds
+            chip = {
+                'geometry': box(minx, miny, maxx, maxy),
+                'minx': minx,
+                'miny': miny,
+                'maxx': maxx,
+                'maxy': maxy,
+                'mint': mint,
+                'maxt': maxt,
+            }
+            self.length += 1
+            chips.append(chip)
 
-    def __len__(self) -> int:
-        """Return the number of samples over the ROI.
-
-        Returns:
-            number of patches that will be sampled
-        """
-        return len(self.hits)
+        chips_gdf = GeoDataFrame(chips, crs=self.dataset.crs)
+        chips_gdf['fid'] = chips_gdf.index
+        return chips_gdf
