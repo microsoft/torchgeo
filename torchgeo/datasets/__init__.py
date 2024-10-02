@@ -11,6 +11,7 @@ from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
+from .cabuar import CaBuAr
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chabud import ChaBuD
@@ -33,6 +34,7 @@ from .cv4a_kenya_crop_type import CV4AKenyaCropType
 from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
+from .digital_typhoon import DigitalTyphoon
 from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
 from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
@@ -44,6 +46,7 @@ from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
+from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
 from .geo import (
     GeoDataset,
@@ -54,6 +57,7 @@ from .geo import (
     UnionDataset,
     VectorDataset,
 )
+from .geonrw import GeoNRW
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
@@ -62,7 +66,7 @@ from .inria import InriaAerialImageLabeling
 from .iobench import IOBench
 from .l7irish import L7Irish
 from .l8biome import L8Biome
-from .landcoverai import LandCoverAI, LandCoverAIBase, LandCoverAIGeo
+from .landcoverai import LandCoverAI, LandCoverAI100, LandCoverAIBase, LandCoverAIGeo
 from .landsat import (
     Landsat,
     Landsat1,
@@ -100,6 +104,7 @@ from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
+from .skyscript import SkyScript
 from .so2sat import So2Sat
 from .south_africa_crop_type import SouthAfricaCropType
 from .south_america_soybean import SouthAmericaSoybean
@@ -198,6 +203,7 @@ __all__ = (
     'BeninSmallHolderCashews',
     'BigEarthNet',
     'BioMassters',
+    'CaBuAr',
     'ChaBuD',
     'CloudCoverDetection',
     'COWC',
@@ -206,18 +212,22 @@ __all__ = (
     'CV4AKenyaCropType',
     'DeepGlobeLandCover',
     'DFC2022',
+    'DigitalTyphoon',
     'EnviroAtlas',
     'ETCI2021',
     'EuroSAT',
     'EuroSATSpatial',
     'EuroSAT100',
     'FAIR1M',
+    'FieldsOfTheWorld',
     'FireRisk',
     'ForestDamage',
+    'GeoNRW',
     'GID15',
     'IDTReeS',
     'InriaAerialImageLabeling',
     'LandCoverAI',
+    'LandCoverAI100',
     'LEVIRCD',
     'LEVIRCDBase',
     'LEVIRCDPlus',
@@ -238,6 +248,7 @@ __all__ = (
     'SeasoNet',
     'SEN12MS',
     'SKIPPD',
+    'SkyScript',
     'So2Sat',
     'SpaceNet',
     'SpaceNet1',

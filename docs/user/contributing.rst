@@ -52,11 +52,11 @@ Tests
 
 TorchGeo uses `GitHub Actions <https://docs.github.com/en/actions>`_ for Continuous Integration. We run a suite of unit tests on every commit to ensure that pull requests don't break anything. If you submit a pull request that adds or modifies any Python code, we require unit tests for that code before the pull request can be merged.
 
-For example, if you add a new dataset in ``torchgeo/datasets/foo.py``, you'll need to create corresponding unit tests in ``tests/datasets/test_foo.py``. The easiest way to do this is to find unit tests for similar datasets and modify them for your dataset. These tests can then be run with `pytest <https://docs.pytest.org/>`_:
+For example, if you add a new dataset in ``torchgeo/datasets/foo.py``, you'll need to create corresponding unit tests in ``tests/datasets/test_foo.py``. The easiest way to do this is to find unit tests for similar datasets and modify them for your dataset. These tests can then be run with `pytest <https://docs.pytest.org/en/stable/>`_:
 
 .. code-block:: console
 
-   $ pytest --cov=torchgeo/datasets --cov-report=term-missing tests/datasets/test_foo.py
+   $ pytest --cov=torchgeo.datasets.foo tests/datasets/test_foo.py
    ========================= test session starts =========================
    platform darwin -- Python 3.10.11, pytest-6.2.4, py-1.9.0, pluggy-0.13.0
    rootdir: ~/torchgeo, configfile: pyproject.toml
@@ -65,21 +65,19 @@ For example, if you add a new dataset in ``torchgeo/datasets/foo.py``, you'll ne
 
    tests/datasets/test_foo.py .......                              [100%]
 
-   ---------- coverage: platform darwin, python 3.10.11-final-0 -----------
+   --------- coverage: platform darwin, python 3.10.11-final-0 -----------
    Name                                      Stmts   Miss  Cover   Missing
    -----------------------------------------------------------------------
-   torchgeo/datasets/__init__.py                26      0   100%
    torchgeo/datasets/foo.py                    177     62    65%   376-403, 429-496, 504-509
-   ...
    -----------------------------------------------------------------------
-   TOTAL                                      1709    920    46%
+   TOTAL                                       177     62    65%
 
    ========================== 7 passed in 6.20s ==========================
 
 
 From this output, you can see that all tests pass, but many lines of code in ``torchgeo/datasets/foo.py`` are not being tested, including 376--403, 429--496, etc. In order for this pull request to be merged, additional tests will need to be added until there is 100% test coverage.
 
-These tests require `pytest <https://docs.pytest.org/>`_ and `pytest-cov <https://pytest-cov.readthedocs.io/>`_ to be installed.
+These tests require `pytest <https://docs.pytest.org/en/stable/>`_ and `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_ to be installed.
 
 .. note:: If you add a new dataset, the tests will require some form of data to run. This data should be stored in ``tests/data/<dataset>``. Please don't include real data, as this may violate the license the data is distributed under, and can involve very large file sizes. Instead, create fake data examples using the instructions found `here <https://github.com/microsoft/torchgeo/blob/main/tests/data/README.md>`__.
 
@@ -88,18 +86,18 @@ These tests require `pytest <https://docs.pytest.org/>`_ and `pytest-cov <https:
 Linters
 -------
 
-In order to remain `PEP-8 <https://peps.python.org/pep-0008/>`_ compliant and maintain a high-quality codebase, we use a couple of linting tools:
+In order to remain `PEP-8 <https://peps.python.org/pep-0008/>`_ compliant and maintain a high-quality codebase, we use a few linting tools:
 
 * `ruff <https://docs.astral.sh/ruff/>`_ for code formatting
-* `mypy <https://mypy.readthedocs.io/>`_ for static type analysis
+* `mypy <https://mypy.readthedocs.io/en/stable/>`_ for static type analysis
 * `prettier <https://prettier.io/docs/en/>`_ for code formatting
 
 These tools should be used from the root of the project to ensure that our configuration files are found. Ruff is relatively easy to use, and will automatically fix most issues it encounters:
 
 .. code-block:: console
 
-   $ ruff check
    $ ruff format
+   $ ruff check
 
 
 Mypy won't fix your code for you, but will warn you about potential issues with your code:
@@ -111,21 +109,11 @@ Mypy won't fix your code for you, but will warn you about potential issues with 
 
 If you've never used mypy before or aren't familiar with `Python type hints <https://docs.python.org/3/library/typing.html>`_, this check can be particularly daunting. Don't hesitate to ask for help with resolving any of these warnings on your pull request.
 
-Prettier is a code formatter that helps to ensure consistent code style across a project. It supports various languages. Follow these steps to install Prettier:
-
-1. Install Node.js: Prettier is a Node.js module, so you need to have Node.js installed on your system. You can download and install Node.js from the `Node.js official website <https://nodejs.org/en>`_.
-2. Install Prettier: Use the following command to install the Prettier module in your project:
+Prettier is a code formatter that helps to ensure consistent code style across a project. It supports various languages.
 
 .. code-block:: console
 
-   $ npm install prettier --no-save
-
-
-3. Run Prettier: Use the following command to run Prettier formating:
-
-.. code-block:: console
-
-   $ npx prettier . --write
+   $ prettier --write .
 
 
 You can also use `git pre-commit hooks <https://pre-commit.com/>`_ to automatically run these checks before each commit. pre-commit is a tool that automatically runs linters locally, so that you don't have to remember to run them manually and then have your code flagged by CI. You can set up pre-commit with:
@@ -142,7 +130,7 @@ Now, every time you run ``git commit``, pre-commit will run and let you know if 
 Documentation
 -------------
 
-All of our documentation is hosted on `Read the Docs <https://readthedocs.org/>`_. If you make non-trivial changes to the documentation, it helps to build the documentation yourself locally. To do this, make sure the dependencies are installed:
+All of our documentation is hosted on `Read the Docs <https://about.readthedocs.com/>`_. If you make non-trivial changes to the documentation, it helps to build the documentation yourself locally. To do this, make sure the dependencies are installed:
 
 .. code-block:: console
 
@@ -164,7 +152,7 @@ The resulting HTML files can be found in ``_build/html``. Open ``index.html`` in
 Tutorials
 ---------
 
-TorchGeo has a number of tutorials included in the documentation that can be run in `Google Colab <https://colab.research.google.com/>`_. These Jupyter notebooks are tested before each release to make sure that they still run properly. To test these locally, install `pytest <https://docs.pytest.org/>`_ and `nbmake <https://github.com/treebeardtech/nbmake>`_ and run:
+TorchGeo has a number of tutorials included in the documentation that can be run in `Lightning Studios <https://lightning.ai/studios>`_ and `Google Colab <https://colab.research.google.com/>`_. These Jupyter notebooks are tested before each release to make sure that they still run properly. To test these locally, install `pytest <https://docs.pytest.org/en/stable/>`_ and `nbmake <https://github.com/treebeardtech/nbmake>`_ and run:
 
 .. code-block:: console
 
@@ -177,13 +165,14 @@ Datasets
 A major component of TorchGeo is the large collection of :mod:`torchgeo.datasets` that have been implemented. Adding new datasets to this list is a great way to contribute to the library. A brief checklist to follow when implementing a new dataset:
 
 * Implement the dataset extending either :class:`~torchgeo.datasets.GeoDataset` or :class:`~torchgeo.datasets.NonGeoDataset`
-* Add the dataset definition to ``torchgeo/datasets/__init__.py``
-* Add a ``data.py`` script to ``tests/data/<new dataset>/`` that generates test data with the same directory structure/file naming conventions as the new dataset
-* Add appropriate tests with 100% test coverage to ``tests/datasets/``
+* Add the dataset definition to ``torchgeo/datasets/foo.py``, where *foo* is the name of the dataset
+* Add an import alias to this dataset in ``torchgeo/datasets/__init__.py``
+* Add a ``tests/data/foo/data.py`` script that generates fake test data with the same directory structure/file naming conventions as the real dataset
+* Add appropriate tests with 100% test coverage to ``tests/datasets/test_foo.py``
 * Add the dataset to ``docs/api/datasets.rst``
-* Add the dataset metadata to either ``docs/api/geo_datasets.csv`` or ``docs/api/non_geo_datasets.csv``
+* Add the dataset metadata to either ``docs/api/datasets/geo_datasets.csv`` or ``docs/api/datasets/non_geo_datasets.csv``
 
-A good way to get started is by looking at some of the existing implementations that are most closely related to the dataset that you are implementing (e.g. if you are implementing a semantic segmentation dataset, looking at the LandCover.ai dataset implementation would be a good starting point).
+A good way to get started is by looking at some of the existing implementations that are most closely related to the dataset that you are implementing (e.g., if you are implementing a semantic segmentation dataset, looking at the LandCover.ai dataset implementation would be a good starting point).
 
 I/O Benchmarking
 ----------------

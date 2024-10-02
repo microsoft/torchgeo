@@ -15,17 +15,15 @@ jobs:
   latest:
     name: latest
     runs-on: ${{ matrix.os }}
-    env:
-      MPLBACKEND: Agg
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ['3.10', '3.11', '3.12']
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache dependencies
@@ -46,7 +44,7 @@ jobs:
         run: pip list
       - name: Run pytest checks
         run: |
-          pytest --cov=torchgeo --cov-report=xml --durations=10
+          pytest --cov --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v4.5.0
@@ -55,33 +53,31 @@ jobs:
   minimum:
     name: minimum
     runs-on: ubuntu-latest
-    env:
-      MPLBACKEND: Agg
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
-          python-version: "3.10"
+          python-version: '3.10'
       - name: Cache dependencies
         uses: actions/cache@v4.0.2
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/min-reqs.old') }}-${{ hashFiles('requirements/mins-cons.old') }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/min-reqs.old') }}
       - name: Setup headless display for pyvista
         uses: pyvista/setup-headless-display-action@v2
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install -r requirements/min-reqs.old -c requirements/min-cons.old
+          pip install -r requirements/min-reqs.old
           pip cache purge
       - name: List pip dependencies
         run: pip list
       - name: Run pytest checks
         run: |
-          pytest --cov=torchgeo --cov-report=xml --durations=10
+          pytest --cov --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v4.5.0
@@ -90,15 +86,13 @@ jobs:
   datasets:
     name: datasets
     runs-on: ubuntu-latest
-    env:
-      MPLBACKEND: Agg
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
-          python-version: "3.12"
+          python-version: '3.12'
       - name: Cache dependencies
         uses: actions/cache@v4.0.2
         id: cache
@@ -114,7 +108,7 @@ jobs:
         run: pip list
       - name: Run pytest checks
         run: |
-          pytest --cov=torchgeo --cov-report=xml --durations=10
+          pytest --cov --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v4.5.0

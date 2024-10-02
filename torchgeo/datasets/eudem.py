@@ -5,7 +5,6 @@
 
 import glob
 import os
-import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any, ClassVar
 
@@ -21,13 +20,8 @@ from .utils import Path, check_integrity, extract_archive
 class EUDEM(RasterDataset):
     """European Digital Elevation Model (EU-DEM) Dataset.
 
-    The `EU-DEM
-    <https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1?tab=mapview>`__
-    dataset is a Digital Elevation Model of reference for the entire European region.
-    The dataset can be downloaded from this `website
-    <https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1?tab=mapview>`_
-    after making an account. A dataset factsheet is available
-    `here <https://land.copernicus.eu/user-corner/publications/eu-dem-flyer/view>`__.
+    `EU-DEM <https://www.eea.europa.eu/en/datahub/datahubitem-view/d08852bc-7b5f-4835-a776-08362e2fbf4b>`__
+    is a Digital Elevation Model of reference for the entire European region.
 
     Dataset features:
 
@@ -40,10 +34,6 @@ class EUDEM(RasterDataset):
     Dataset format:
 
     * DEMs are single-channel tif files
-
-    If you use this dataset in your research, please give credit to:
-
-    * `Copernicus <https://land.copernicus.eu/imagery-in-situ/eu-dem/eu-dem-v1.1>`_
 
     .. versionadded:: 0.3
     """
@@ -126,7 +116,7 @@ class EUDEM(RasterDataset):
             return
 
         # Check if the zip files have already been downloaded
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         pathname = os.path.join(self.paths, self.zipfile_glob)
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):

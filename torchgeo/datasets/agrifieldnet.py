@@ -4,7 +4,6 @@
 """AgriFieldNet India Challenge dataset."""
 
 import os
-import pathlib
 import re
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, ClassVar, cast
@@ -181,10 +180,10 @@ class AgriFieldNet(RasterDataset):
         Returns:
             data, label, and field ids at that index
         """
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
 
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[Path], [hit.object for hit in hits])
+        filepaths = cast(list[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -246,7 +245,7 @@ class AgriFieldNet(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         os.makedirs(self.paths, exist_ok=True)
         azcopy = which('azcopy')
         azcopy('sync', f'{self.url}', self.paths, '--recursive=true')

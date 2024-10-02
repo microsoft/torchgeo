@@ -59,12 +59,20 @@ class TestRegressionTask:
         return RegressionTestModel(**kwargs)
 
     @pytest.mark.parametrize(
-        'name', ['cowc_counting', 'cyclone', 'sustainbench_crop_yield', 'skippd']
+        'name',
+        [
+            'cowc_counting',
+            'cyclone',
+            'digital_typhoon_id',
+            'digital_typhoon_time',
+            'sustainbench_crop_yield',
+            'skippd',
+        ],
     )
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        if name == 'skippd':
+        if name in ['skippd', 'digital_typhoon_id', 'digital_typhoon_time']:
             pytest.importorskip('h5py', minversion='3.6')
 
         config = os.path.join('tests', 'conf', name + '.yaml')

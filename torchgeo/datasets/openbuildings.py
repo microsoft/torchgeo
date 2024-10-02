@@ -6,7 +6,6 @@
 import glob
 import json
 import os
-import pathlib
 import sys
 from collections.abc import Callable, Iterable
 from typing import Any, ClassVar, cast
@@ -32,7 +31,7 @@ class OpenBuildings(VectorDataset):
     r"""Open Buildings dataset.
 
     The `Open Buildings
-    <https://sites.research.google/open-buildings/#download>`__ dataset
+    <https://sites.research.google/open-buildings/>`__ dataset
     consists of computer generated building detections across the African continent.
 
     Dataset features:
@@ -48,10 +47,10 @@ class OpenBuildings(VectorDataset):
     * meta data geojson file
 
     The data can be downloaded from `here
-    <https://sites.research.google/open-buildings/#download>`__. Additionally, the
-    `meta data geometry file
-    <https://sites.research.google/open-buildings/tiles.geojson>`_ also needs to be
-    placed in `root` as `tiles.geojson`.
+    <https://sites.research.google/open-buildings/#open-buildings-download>`__.
+    Additionally, the `meta data geometry file
+    <https://openbuildings-public-dot-gweb-research.uw.r.appspot.com/public/tiles.geojson>`_
+    also needs to be placed in `root` as `tiles.geojson`.
 
     If you use this dataset in your research, please cite the following technical
     report:
@@ -242,7 +241,7 @@ class OpenBuildings(VectorDataset):
         # Create an R-tree to index the dataset using the polygon centroid as bounds
         self.index = Index(interleaved=False, properties=Property(dimension=3))
 
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         with open(os.path.join(self.paths, 'tiles.geojson')) as f:
             data = json.load(f)
 
@@ -305,7 +304,7 @@ class OpenBuildings(VectorDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[Path], [hit.object for hit in hits])
+        filepaths = cast(list[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -336,7 +335,7 @@ class OpenBuildings(VectorDataset):
         return sample
 
     def _filter_geometries(
-        self, query: BoundingBox, filepaths: list[Path]
+        self, query: BoundingBox, filepaths: list[str]
     ) -> list[dict[str, Any]]:
         """Filters a df read from the polygon csv file based on query and conf thresh.
 
@@ -398,7 +397,7 @@ class OpenBuildings(VectorDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the zip files have already been downloaded and checksum
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         pathname = os.path.join(self.paths, self.zipfile_glob)
         i = 0
         for zipfile in glob.iglob(pathname):

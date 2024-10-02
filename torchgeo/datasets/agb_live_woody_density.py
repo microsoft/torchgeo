@@ -5,7 +5,6 @@
 
 import json
 import os
-import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -106,7 +105,7 @@ class AbovegroundLiveWoodyBiomassDensity(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         download_url(self.url, self.paths, self.base_filename)
 
         with open(os.path.join(self.paths, self.base_filename)) as f:

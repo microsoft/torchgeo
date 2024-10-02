@@ -3,10 +3,10 @@ model:
 data:
   class_path: IOBenchDataModule
   dict_kwargs:
-    root: "data/io"
-    split: "raw"
+    root: 'data/io'
+    split: 'raw'
     checksum: true
 trainer:
   max_epochs: 1
   num_sanity_val_steps: 0
-  profiler: "simple"
+  profiler: 'simple'

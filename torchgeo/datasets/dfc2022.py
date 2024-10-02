@@ -43,7 +43,7 @@ class DFC2022(NonGeoDataset):
     * DEMs collected from the
       `IGN RGE ALTI database <https://geoservices.ign.fr/documentation/donnees/alti/rgealti/>`_
     * Labels collected from the
-      `UrbanAtlas 2012 database <https://land.copernicus.eu/local/urban-atlas/urban-atlas-2012/view/>`_
+      `UrbanAtlas 2012 database <https://land.copernicus.eu/en/products/urban-atlas/urban-atlas-2012>`_
     * Data collected from 19 regions in France
 
     Dataset format:

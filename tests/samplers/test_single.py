@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from itertools import product
 
 import pytest
+import torch
 from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
 from torch.utils.data import DataLoader
@@ -138,6 +139,17 @@ class TestRandomGeoSampler:
         sampler = RandomGeoSampler(ds, 1, 10)
         for bbox in sampler:
             assert bbox == BoundingBox(0, 10, 0, 10, 0, 10)
+
+    def test_random_seed(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        generator1 = torch.Generator().manual_seed(0)
+        generator2 = torch.Generator().manual_seed(0)
+        sampler1 = RandomGeoSampler(ds, 1, 1, generator=generator1)
+        sampler2 = RandomGeoSampler(ds, 1, 1, generator=generator2)
+        sample1 = next(iter(sampler1))
+        sample2 = next(iter(sampler2))
+        assert sample1 == sample2
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
@@ -287,6 +299,18 @@ class TestPreChippedGeoSampler:
         sampler = PreChippedGeoSampler(ds)
         for _ in sampler:
             continue
+
+    def test_shuffle_seed(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        ds.index.insert(1, (0, 11, 0, 11, 0, 11))
+        generator1 = torch.Generator().manual_seed(0)
+        generator2 = torch.Generator().manual_seed(0)
+        sampler1 = PreChippedGeoSampler(ds, shuffle=True, generator=generator1)
+        sampler2 = PreChippedGeoSampler(ds, shuffle=True, generator=generator2)
+        sample1 = next(iter(sampler1))
+        sample2 = next(iter(sampler2))
+        assert sample1 == sample2
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])

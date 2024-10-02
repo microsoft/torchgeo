@@ -4,7 +4,6 @@
 """CDL dataset."""
 
 import os
-import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any, ClassVar
 
@@ -22,7 +21,7 @@ class CDL(RasterDataset):
     """Cropland Data Layer (CDL) dataset.
 
     The `Cropland Data Layer
-    <https://data.nal.usda.gov/dataset/cropscape-cropland-data-layer>`__, hosted on
+    <https://www.nass.usda.gov/Research_and_Science/Cropland/SARS1a.php>`__, hosted on
     `CropScape <https://nassgeodata.gmu.edu/CropScape/>`_, provides a raster,
     geo-referenced, crop-specific land cover map for the continental United States. The
     CDL also includes a crop mask layer and planting frequency layers, as well as
@@ -37,7 +36,7 @@ class CDL(RasterDataset):
 
     If you use this dataset in your research, please cite it using the following format:
 
-    * https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php#Section1_14.0
+    * https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php#what.1
     """
 
     filename_glob = '*_30m_cdls.tif'
@@ -295,7 +294,7 @@ class CDL(RasterDataset):
 
         # Check if the zip files have already been downloaded
         exists = []
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         for year in self.years:
             pathname = os.path.join(
                 self.paths, self.zipfile_glob.replace('*', str(year))
@@ -328,7 +327,7 @@ class CDL(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         for year in self.years:
             zipfile_name = self.zipfile_glob.replace('*', str(year))
             pathname = os.path.join(self.paths, zipfile_name)

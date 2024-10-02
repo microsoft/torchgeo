@@ -38,7 +38,7 @@ class CustomGeoDataset(GeoDataset):
         bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
         crs: CRS = CRS.from_epsg(4087),
         res: float = 1,
-        paths: str | Path | Iterable[str | Path] | None = None,
+        paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
     ) -> None:
         super().__init__()
         self.index.insert(0, tuple(bounds))
@@ -204,6 +204,14 @@ class TestGeoDataset:
         assert (
             CustomGeoDataset(paths=paths1).files == CustomGeoDataset(paths=paths2).files
         )
+
+    def test_files_property_mix_str_and_pathlib(self, tmp_path: Path) -> None:
+        foo = tmp_path / 'foo.txt'
+        bar = tmp_path / 'bar.txt'
+        foo.touch()
+        bar.touch()
+        ds = CustomGeoDataset(paths=[str(foo), bar])
+        assert ds.files == [str(bar), str(foo)]
 
 
 class TestRasterDataset:

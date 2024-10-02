@@ -57,6 +57,11 @@ BigEarthNet
 
 .. autoclass:: BigEarthNetDataModule
 
+CaBuAr
+^^^^^^
+
+.. autoclass:: CaBuArDataModule
+
 ChaBuD
 ^^^^^^
 
@@ -71,6 +76,11 @@ Deep Globe Land Cover Challenge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: DeepGlobeLandCoverDataModule
+
+Digital Typhoon
+^^^^^^^^^^^^^^^
+
+.. autoclass:: DigitalTyphoonDataModule
 
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -94,6 +104,11 @@ FireRisk
 
 .. autoclass:: FireRiskDataModule
 
+GeoNRW
+^^^^^^
+
+.. autoclass:: GeoNRWDataModule
+
 GID-15
 ^^^^^^
 
@@ -108,6 +123,7 @@ LandCover.ai
 ^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAIDataModule
+.. autoclass:: LandCoverAI100DataModule
 
 LEVIR-CD
 ^^^^^^^^

@@ -35,7 +35,7 @@ class SeasonalContrastS2(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/pdf/2103.16607.pdf
+    * https://arxiv.org/pdf/2103.16607
     """
 
     all_bands = (
@@ -56,13 +56,13 @@ class SeasonalContrastS2(NonGeoDataset):
 
     metadata: ClassVar[dict[str, dict[str, str]]] = {
         '100k': {
-            'url': 'https://zenodo.org/record/4728033/files/seco_100k.zip?download=1',
+            'url': 'https://zenodo.org/records/4728033/files/seco_100k.zip?download=1',
             'md5': 'ebf2d5e03adc6e657f9a69a20ad863e0',
             'filename': 'seco_100k.zip',
             'directory': 'seasonal_contrast_100k',
         },
         '1m': {
-            'url': 'https://zenodo.org/record/4728033/files/seco_1m.zip?download=1',
+            'url': 'https://zenodo.org/records/4728033/files/seco_1m.zip?download=1',
             'md5': '187963d852d4d3ce6637743ec3a4bd9e',
             'filename': 'seco_1m.zip',
             'directory': 'seasonal_contrast_1m',

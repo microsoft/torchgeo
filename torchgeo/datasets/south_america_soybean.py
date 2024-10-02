@@ -3,7 +3,7 @@
 
 """South America Soybean Dataset."""
 
-import pathlib
+import os
 from collections.abc import Callable, Iterable
 from typing import Any, ClassVar
 
@@ -113,7 +113,7 @@ class SouthAmericaSoybean(RasterDataset):
         # Check if the extracted files already exist
         if self.files:
             return
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
 
         # Check if the user requested to download the dataset
         if not self.download:

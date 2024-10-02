@@ -50,16 +50,19 @@ class TestSemanticSegmentationTask:
         'name',
         [
             'agrifieldnet',
+            'cabuar',
             'chabud',
             'chesapeake_cvpr_5',
             'chesapeake_cvpr_7',
             'deepglobelandcover',
             'etci2021',
+            'geonrw',
             'gid15',
             'inria',
             'l7irish',
             'l8biome',
             'landcoverai',
+            'landcoverai100',
             'loveda',
             'naipchesapeake',
             'potsdam2d',
@@ -82,7 +85,7 @@ class TestSemanticSegmentationTask:
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         match name:
-            case 'chabud':
+            case 'chabud' | 'cabuar':
                 pytest.importorskip('h5py', minversion='3.6')
             case 'landcoverai':
                 sha256 = (

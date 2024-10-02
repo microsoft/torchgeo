@@ -57,7 +57,7 @@ class ReforesTree(NonGeoDataset):
     """
 
     classes = ('other', 'banana', 'cacao', 'citrus', 'fruit', 'timber')
-    url = 'https://zenodo.org/record/6813783/files/reforesTree.zip?download=1'
+    url = 'https://zenodo.org/records/6813783/files/reforesTree.zip?download=1'
 
     md5 = 'f6a4a1d8207aeaa5fbab7b21b683a302'
     zipfilename = 'reforesTree.zip'

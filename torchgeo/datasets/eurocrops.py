@@ -5,7 +5,6 @@
 
 import csv
 import os
-import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -31,8 +30,9 @@ class EuroCrops(VectorDataset):
     is tagged with a "EC_hcat_n" attribute indicating the harmonized crop name grown
     within the polygon in the year associated with the shapefile.
 
-    If you use this dataset in your research, please follow the citation guidelines at
-    https://github.com/maja601/EuroCrops#reference.
+    If you use this dataset in your research, please follow the citation guidelines at:
+
+    * https://github.com/maja601/EuroCrops#reference.
 
     .. versionadded:: 0.6
     """
@@ -139,7 +139,7 @@ class EuroCrops(VectorDataset):
         if self.files and not self.checksum:
             return True
 
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
 
         filepath = os.path.join(self.paths, self.hcat_fname)
         if not check_integrity(filepath, self.hcat_md5 if self.checksum else None):
@@ -156,7 +156,7 @@ class EuroCrops(VectorDataset):
         if self._check_integrity():
             print('Files already downloaded and verified')
             return
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         download_url(
             self.base_url + self.hcat_fname,
             self.paths,
@@ -178,7 +178,7 @@ class EuroCrops(VectorDataset):
                 (defaults to all classes)
         """
         if not classes:
-            assert isinstance(self.paths, str | pathlib.Path)
+            assert isinstance(self.paths, str | os.PathLike)
             classes = []
             filepath = os.path.join(self.paths, self.hcat_fname)
             with open(filepath) as f:

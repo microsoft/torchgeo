@@ -8,7 +8,6 @@ import fnmatch
 import functools
 import glob
 import os
-import pathlib
 import re
 import sys
 import warnings
@@ -291,7 +290,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self._res = new_res
 
     @property
-    def files(self) -> list[Path]:
+    def files(self) -> list[str]:
         """A list of all files in the dataset.
 
         Returns:
@@ -300,13 +299,13 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, str | pathlib.Path):
+        if isinstance(self.paths, str | os.PathLike):
             paths: Iterable[Path] = [self.paths]
         else:
             paths = self.paths
 
         # Using set to remove any duplicates if directories are overlapping
-        files: set[Path] = set()
+        files: set[str] = set()
         for path in paths:
             if os.path.isdir(path):
                 pathname = os.path.join(path, '**', self.filename_glob)
@@ -314,7 +313,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             elif (os.path.isfile(path) or path_is_vsi(path)) and fnmatch.fnmatch(
                 str(path), f'*{self.filename_glob}'
             ):
-                files.add(path)
+                files.add(str(path))
             elif not hasattr(self, 'download'):
                 warnings.warn(
                     f"Could not find any relevant files for provided path '{path}'. "
@@ -362,8 +361,8 @@ class RasterDataset(GeoDataset):
     #: The sample returned by the dataset/data loader will use the "image" key if
     #: *is_image* is True, otherwise it will use the "mask" key.
     #:
-    #: For datasets with both model inputs and outputs, a custom
-    #: :func:`~RasterDataset.__getitem__` method must be implemented.
+    #: For datasets with both model inputs and outputs, the recommended approach is
+    #: to use 2 `RasterDataset` instances and combine them using an `IntersectionDataset`.
     is_image = True
 
     #: True if data is stored in a separate file for each band, else False.
@@ -521,7 +520,7 @@ class RasterDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[Path], [hit.object for hit in hits])
+        filepaths = cast(list[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -564,7 +563,7 @@ class RasterDataset(GeoDataset):
 
     def _merge_files(
         self,
-        filepaths: Sequence[Path],
+        filepaths: Sequence[str],
         query: BoundingBox,
         band_indexes: Sequence[int] | None = None,
     ) -> Tensor:

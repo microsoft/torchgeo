@@ -16,7 +16,7 @@ Geospatial Datasets
    :widths: 30 15 20 36 20 15
    :header-rows: 1
    :align: center
-   :file: geo_datasets.csv
+   :file: datasets/geo_datasets.csv
 
 Aboveground Woody Biomass
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -191,11 +191,11 @@ Non-geospatial Datasets
 
 :class:`NonGeoDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
 
-.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
    :widths: 15 7 15 20 12 11 12 15 13
    :header-rows: 1
    :align: center
-   :file: non_geo_datasets.csv
+   :file: datasets/non_geo_datasets.csv
 
 ADVANCE
 ^^^^^^^
@@ -216,6 +216,11 @@ BioMassters
 ^^^^^^^^^^^
 
 .. autoclass:: BioMassters
+
+CaBuAr
+^^^^^^
+
+.. autoclass:: CaBuAr
 
 ChaBuD
 ^^^^^^
@@ -254,6 +259,12 @@ DFC2022
 
 .. autoclass:: DFC2022
 
+
+Digital Typhoon
+^^^^^^^^^^^^^^^
+
+.. autoclass:: DigitalTyphoon
+
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -271,6 +282,11 @@ FAIR1M
 
 .. autoclass:: FAIR1M
 
+Fields Of The World
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: FieldsOfTheWorld
+
 FireRisk
 ^^^^^^^^
 
@@ -280,6 +296,11 @@ Forest Damage
 ^^^^^^^^^^^^^
 
 .. autoclass:: ForestDamage
+
+GeoNRW
+^^^^^^^
+
+.. autoclass:: GeoNRW
 
 GID-15
 ^^^^^^
@@ -300,6 +321,7 @@ LandCover.ai
 ^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAI
+.. autoclass:: LandCoverAI100
 
 LEVIR-CD
 ^^^^^^^^
@@ -396,6 +418,11 @@ SKIPP'D
 ^^^^^^^
 
 .. autoclass:: SKIPPD
+
+SkyScript
+^^^^^^^^^
+
+.. autoclass:: SkyScript
 
 So2Sat
 ^^^^^^

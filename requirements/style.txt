@@ -1,3 +1,3 @@
 # style
-mypy==1.11.1
-ruff==0.6.1
+mypy==1.11.2
+ruff==0.6.8

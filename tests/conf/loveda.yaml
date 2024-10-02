@@ -1,9 +1,9 @@
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    loss: "ce"
-    model: "unet"
-    backbone: "resnet18"
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
     in_channels: 3
     num_classes: 8
     num_filters: 1
@@ -13,4 +13,4 @@ data:
   init_args:
     batch_size: 1
   dict_kwargs:
-    root: "tests/data/loveda"
+    root: 'tests/data/loveda'

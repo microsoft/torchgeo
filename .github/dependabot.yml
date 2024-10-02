@@ -1,35 +1,36 @@
 # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 version: 2
 updates:
-  - package-ecosystem: "devcontainers"
-    directory: "/.devcontainer"
+  - package-ecosystem: 'devcontainers'
+    directory: '/.devcontainer'
     schedule:
-      interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
+      interval: 'weekly'
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-  - package-ecosystem: "pip"
-    directory: "/requirements"
+      interval: 'weekly'
+  - package-ecosystem: 'pip'
+    directory: '/requirements'
     schedule:
-      interval: "daily"
+      interval: 'daily'
     groups:
       # torchvision pins torch, must update in unison
       torch:
         patterns:
-          - "torch"
-          - "torchvision"
+          - 'torch'
+          - 'torchvision'
     ignore:
       # setuptools releases new versions almost daily
-      - dependency-name: "setuptools"
-        update-types: ["version-update:semver-patch"]
+      - dependency-name: 'setuptools'
+        update-types: ['version-update:semver-patch']
       # sphinx 6 is incompatible with pytorch-sphinx-theme
       # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
-      - dependency-name: "sphinx"
-        versions: ">=6"
+      - dependency-name: 'sphinx'
+        versions: '>=6'
       # segmentation-models-pytorch pins timm, must update in unison
-      - dependency-name: "timm"
-  - package-ecosystem: "npm"
-    directory: "/requirements"
+      - dependency-name: 'timm'
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
+    versioning-strategy: 'lockfile-only'

@@ -17,11 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
-          python-version: "3.12"
+          python-version: '3.12'
       - name: Cache dependencies
         uses: actions/cache@v4.0.2
         id: cache
@@ -42,11 +42,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
-          python-version: "3.12"
+          python-version: '3.12'
       - name: Cache dependencies
         uses: actions/cache@v4.0.2
         id: cache
@@ -69,21 +69,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.0
       - name: Set up nodejs
-        uses: actions/setup-node@v4.0.3
+        uses: actions/setup-node@v4.0.4
         with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: "requirements/package-lock.json"
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
       - name: Installing prettier
         run: |
-          npm install requirements/
+          npm install
           npm cache clean --force
       - name: List npm dependencies
         run: npm ls --all
       - name: Run prettier formatting
-        run: npx prettier . --check
+        run: npx prettier --check .
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true

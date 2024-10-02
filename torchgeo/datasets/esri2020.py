@@ -5,7 +5,6 @@
 
 import glob
 import os
-import pathlib
 from collections.abc import Callable, Iterable
 from typing import Any
 
@@ -113,7 +112,7 @@ class Esri2020(RasterDataset):
             return
 
         # Check if the zip files have already been downloaded
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         pathname = os.path.join(self.paths, self.zipfile)
         if glob.glob(pathname):
             self._extract()
@@ -133,7 +132,7 @@ class Esri2020(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         extract_archive(os.path.join(self.paths, self.zipfile))
 
     def plot(

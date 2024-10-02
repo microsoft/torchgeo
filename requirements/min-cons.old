@@ -1,8 +1,0 @@
-# https://github.com/Lightning-AI/utilities/pull/147
-lightning-utilities<0.10
-# https://github.com/pypa/pip/issues/11760
-nbconvert<6
-# https://github.com/fatiando/pooch/issues/252
-pooch<1.5
-# https://github.com/jquast/wcwidth/issues/36
-wcwidth!=0.2.1

@@ -1,8 +1,8 @@
 model:
   class_path: MultiLabelClassificationTask
   init_args:
-    loss: "bce"
-    model: "resnet18"
+    loss: 'bce'
+    model: 'resnet18'
     in_channels: 14
     num_classes: 19
 data:
@@ -10,6 +10,6 @@ data:
   init_args:
     batch_size: 1
   dict_kwargs:
-    root: "tests/data/bigearthnet"
-    bands: "all"
+    root: 'tests/data/bigearthnet'
+    bands: 'all'
     num_classes: 19
