@@ -140,11 +140,6 @@ LoveDA
 
 .. autoclass:: LoveDADataModule
 
-MMEarth
-^^^^^^^
-
-.. autoclass:: MMEarthDataModule
-
 NASA Marine Debris
 ^^^^^^^^^^^^^^^^^^
 
