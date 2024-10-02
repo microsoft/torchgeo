@@ -72,7 +72,7 @@ class MMEarth(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    ds_versions: ClassVar[tuple[str, ...]] = ('MMEarth', 'MMEarth64', 'MMEarth100k')
+    subsets: ClassVar[tuple[str, ...]] = ('MMEarth', 'MMEarth64', 'MMEarth100k')
 
     filenames: ClassVar[dict[str, str]] = {
         'MMEarth': 'data_1M_v001',
@@ -188,7 +188,7 @@ class MMEarth(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        ds_version: str = 'MMEarth',
+        subset: str = 'MMEarth',
         modalities: Sequence[str] = all_modalities,
         modality_bands: dict[str, list[str]] | None = None,
         split: str = 'train',
@@ -199,7 +199,7 @@ class MMEarth(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            ds_version: one of "MMEarth", "MMEarth64", or "MMEarth100k"
+            subset: one of "MMEarth", "MMEarth64", or "MMEarth100k"
             modalities: list of modalities to load
             modality_bands: dictionary of modality bands, see `all_modality_bands`
             split: one of "train", "val", or "test"
@@ -208,7 +208,7 @@ class MMEarth(NonGeoDataset):
                 and returns a transformed version
 
         Raises:
-            AssertionError: if ``normalization_mode``, ``ds_version``, or ``split`` is invalid
+            AssertionError: if ``normalization_mode``, ``subset``, or ``split`` is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         lazy_import('h5py')
@@ -217,8 +217,8 @@ class MMEarth(NonGeoDataset):
             normalization_mode in self.norm_modes
         ), f'Invalid normalization mode: {normalization_mode}, please choose from {self.norm_modes}'
         assert (
-            ds_version in self.ds_versions
-        ), f'Invalid dataset version: {ds_version}, please choose from {self.ds_versions}'
+            subset in self.subsets
+        ), f'Invalid dataset version: {subset}, please choose from {self.subsets}'
         assert (
             split in self.splits
         ), f'Invalid split: {split}, please choose from {self.splits}'
@@ -234,15 +234,15 @@ class MMEarth(NonGeoDataset):
         self.modality_bands = modality_bands
 
         self.root = root
-        self.ds_version = ds_version
+        self.subset = subset
         self.normalization_mode = normalization_mode
         self.split = split
         self.transforms = transforms
 
-        self.dataset_filename = f'{self.filenames[ds_version]}.h5'
-        self.band_stats_filename = f'{self.filenames[ds_version]}_band_stats.json'
-        self.splits_filename = f'{self.filenames[ds_version]}_splits.json'
-        self.tile_info_filename = f'{self.filenames[ds_version]}_tile_info.json'
+        self.dataset_filename = f'{self.filenames[subset]}.h5'
+        self.band_stats_filename = f'{self.filenames[subset]}_band_stats.json'
+        self.splits_filename = f'{self.filenames[subset]}_splits.json'
+        self.tile_info_filename = f'{self.filenames[subset]}_tile_info.json'
 
         self._verify()
 
@@ -252,7 +252,7 @@ class MMEarth(NonGeoDataset):
 
     def _verify(self) -> None:
         """Verify the dataset."""
-        data_dir = os.path.join(self.root, self.filenames[self.ds_version])
+        data_dir = os.path.join(self.root, self.filenames[self.subset])
 
         exists = [
             os.path.exists(os.path.join(data_dir, f))
@@ -273,9 +273,7 @@ class MMEarth(NonGeoDataset):
             list of indices
         """
         with open(
-            os.path.join(
-                self.root, self.filenames[self.ds_version], self.splits_filename
-            )
+            os.path.join(self.root, self.filenames[self.subset], self.splits_filename)
         ) as f:
             split_indices: dict[str, list[int]] = json.load(f)
 
@@ -289,7 +287,7 @@ class MMEarth(NonGeoDataset):
         """
         with open(
             os.path.join(
-                self.root, self.filenames[self.ds_version], self.band_stats_filename
+                self.root, self.filenames[self.subset], self.band_stats_filename
             )
         ) as f:
             band_stats = json.load(f)
@@ -304,7 +302,7 @@ class MMEarth(NonGeoDataset):
         """
         with open(
             os.path.join(
-                self.root, self.filenames[self.ds_version], self.tile_info_filename
+                self.root, self.filenames[self.subset], self.tile_info_filename
             )
         ) as f:
             tile_info = json.load(f)
@@ -323,9 +321,10 @@ class MMEarth(NonGeoDataset):
         """
         # validate modalities
         assert isinstance(modalities, Sequence), "'modalities' must be a sequence"
-        assert set(modalities) <= set(
-            self.all_modalities
-        ), f'Invalid modality name(s): {set(modalities) - set(self.all_modalities)}'
+        if not set(modalities) <= set(self.all_modalities):
+            raise ValueError(
+                f'{set(modalities) - set(self.all_modalities)} is an invalid modality.'
+            )
 
     def _validate_modality_bands(self, modality_bands: dict[str, list[str]]) -> None:
         """Validate modality bands.
@@ -373,9 +372,7 @@ class MMEarth(NonGeoDataset):
         ds_index = self.indices[index]
 
         with h5py.File(
-            os.path.join(
-                self.root, self.filenames[self.ds_version], self.dataset_filename
-            ),
+            os.path.join(self.root, self.filenames[self.subset], self.dataset_filename),
             'r',
         ) as f:
             name = f['metadata'][ds_index][0].decode('utf-8')

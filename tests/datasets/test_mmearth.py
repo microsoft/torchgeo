@@ -30,47 +30,47 @@ class TestMMEarth:
     )
     def dataset(self, tmp_path: Path, request: SubRequest) -> MMEarth:
         root = tmp_path
-        split, version = request.param
-        shutil.copytree(
-            data_dir_dict[version], root / Path(data_dir_dict[version]).name
-        )
+        split, subset = request.param
+        shutil.copytree(data_dir_dict[subset], root / Path(data_dir_dict[subset]).name)
         transforms = nn.Identity()
-        return MMEarth(root, split=split, ds_version=version, transforms=transforms)
+        return MMEarth(root, split=split, subset=subset, transforms=transforms)
 
     def test_getitem(self, dataset: MMEarth) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         for modality in dataset.modalities:
-            assert modality in x
-            assert isinstance(x[modality], torch.Tensor)
+            modality_name = dataset.modality_category_name.get(modality, '') + modality
+            assert modality_name in x
+            assert isinstance(x[modality_name], torch.Tensor)
 
     def test_subset_modalities(self, dataset: MMEarth) -> None:
         specified_modalities = ['sentinel2', 'dynamic_world']
         dataset = MMEarth(
             dataset.root,
             split=dataset.split,
-            ds_version=dataset.ds_version,
+            subset=dataset.subset,
             modalities=specified_modalities,
         )
         x = dataset[0]
         assert isinstance(x, dict)
 
         for modality in dataset.modalities:
+            modality_name = dataset.modality_category_name.get(modality, '') + modality
             if modality in specified_modalities:
-                assert modality in x
+                assert modality_name in x
             else:
-                assert modality not in x
+                assert modality_name not in x
 
     def test_dataset_not_found(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             MMEarth(tmp_path)
 
     def test_invalid_modalities(self, dataset: MMEarth) -> None:
-        with pytest.raises(ValueError, match='is an invalid modality name'):
+        with pytest.raises(ValueError, match='is an invalid modality'):
             MMEarth(
                 dataset.root,
                 split=dataset.split,
-                ds_version=dataset.ds_version,
+                subset=dataset.subset,
                 modalities=['invalid'],
             )
 
@@ -79,7 +79,7 @@ class TestMMEarth:
             MMEarth(
                 dataset.root,
                 split=dataset.split,
-                ds_version=dataset.ds_version,
+                subset=dataset.subset,
                 modality_bands={'invalid': ['invalid']},
             )
 
@@ -88,7 +88,7 @@ class TestMMEarth:
             MMEarth(
                 dataset.root,
                 split=dataset.split,
-                ds_version=dataset.ds_version,
+                subset=dataset.subset,
                 modality_bands={'sentinel2': ['invalid']},
             )
 
@@ -97,7 +97,7 @@ class TestMMEarth:
         dataset = MMEarth(
             dataset.root,
             split=dataset.split,
-            ds_version=dataset.ds_version,
+            subset=dataset.subset,
             modalities=['sentinel2'],
             modality_bands=modality_bands,
         )
@@ -105,11 +105,12 @@ class TestMMEarth:
         assert isinstance(x, dict)
 
         for modality in dataset.modalities:
+            modality_name = dataset.modality_category_name.get(modality, '') + modality
             if modality in modality_bands:
-                assert modality in x
-                assert x[modality].shape[0] == len(modality_bands[modality])
+                assert modality_name in x
+                assert x[modality_name].shape[0] == len(modality_bands[modality])
             else:
-                assert modality not in x
+                assert modality_name not in x
 
     @pytest.mark.parametrize('normalization_mode', ['z-score', 'min-max'])
     def test_normalization_mode(
@@ -118,7 +119,7 @@ class TestMMEarth:
         dataset = MMEarth(
             dataset.root,
             split=dataset.split,
-            ds_version=dataset.ds_version,
+            subset=dataset.subset,
             normalization_mode=normalization_mode,
         )
         x = dataset[0]
