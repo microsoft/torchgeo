@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""MM-Earth Dataset."""
+"""MMEarth Dataset."""
 
 import json
 import os
@@ -18,14 +18,14 @@ from .utils import Path, lazy_import
 
 
 class MMEarth(NonGeoDataset):
-    """MM-Earth dataset.
+    """MMEarth dataset.
 
     There are three different versions of the dataset, that vary in image size
     and the number of tiles:
 
-    * MMEarth: 128x128 px, 1.2 M tiles, 579 GB
-    * MMEarth64: 64x64 px, 1.2 M tiles, 162 GB
-    * MMEarth100k: 128x128 px, 100 K tiles, 48 GB
+    * MMEarth: 128x128 px, 1.2M tiles, 579 GB
+    * MMEarth64: 64x64 px, 1.2M tiles, 162 GB
+    * MMEarth100k: 128x128 px, 100K tiles, 48 GB
 
     The dataset consists of 12 modalities:
 
@@ -34,7 +34,7 @@ class MMEarth(NonGeoDataset):
     * ETH Canopy Height: Canopy height and standard deviation
     * Dynamic World: 9 landcover categories
     * Ecoregion: 846 ecoregion categories
-    * era5: Climate reanalysis data for temperature mean, min, and max of [year, month, previous month]
+    * ERA5: Climate reanalysis data for temperature mean, min, and max of [year, month, previous month]
         and precipitation total of [year, month, previous month] (counted as separate modalities)
     * ESA World Cover: 11 landcover categories
     * Sentinel-1: VV, VH, HV, HH for ascending/descending orbit
@@ -53,7 +53,7 @@ class MMEarth(NonGeoDataset):
     Dataset format:
 
     * Dataset in single HDF5 file
-    * Json files for band statistics, splits, and tile information
+    * JSON files for band statistics, splits, and tile information
 
     For additional information, as well as bash scripts to
     download the data, please refer to the
@@ -69,19 +69,19 @@ class MMEarth(NonGeoDataset):
 
        * `h5py <https://pypi.org/project/h5py/>`_ to load the dataset
 
-    .. versionadded:: 0.6
+    .. versionadded:: 0.7
     """
 
-    ds_versions: ClassVar[list[str]] = ['MMEarth', 'MMEarth64', 'MMEarth100k']
+    ds_versions: ClassVar[tuple[str, ...]] = ('MMEarth', 'MMEarth64', 'MMEarth100k')
 
     filenames: ClassVar[dict[str, str]] = {
         'MMEarth': 'data_1M_v001',
         'MMEarth64': 'data_1M_v001_64',
         'MMEarth100k': 'data_100k_v001',
     }
-    splits: ClassVar[list[str]] = ['train', 'val', 'test']
+    splits: ClassVar[tuple[str, ...]] = ('train', 'val', 'test')
 
-    all_modalities: ClassVar[Sequence[str]] = (
+    all_modalities: ClassVar[tuple[str, ...]] = (
         'aster',
         'biome',
         'canopy_height_eth',
@@ -172,6 +172,19 @@ class MMEarth(NonGeoDataset):
 
     norm_modes: ClassVar[list[str]] = ['z-score', 'min-max']
 
+    modality_category_name: ClassVar[dict[str, str]] = {
+        'sentinel1': 'image_',
+        'sentinel2': 'image_',
+        'sentinel2_cloudmask': 'mask_',
+        'sentinel2_cloudprod': 'mask_',
+        'sentinel2_scl': 'mask_',
+        'aster': 'image_',
+        'era5': 'image_',
+        'canopy_height_eth': 'image_',
+        'dynamic_world': 'mask_',
+        'esa_worldcover': 'mask_',
+    }
+
     def __init__(
         self,
         root: Path = 'data',
@@ -182,7 +195,7 @@ class MMEarth(NonGeoDataset):
         normalization_mode: str = 'z-score',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
     ) -> None:
-        """Initialize the MM-Earth dataset.
+        """Initialize the MMEarth dataset.
 
         Args:
             root: root directory where dataset can be found
@@ -194,6 +207,9 @@ class MMEarth(NonGeoDataset):
             transforms: a function/transform that takes input sample dictionary
                 and returns a transformed version
 
+        Raises:
+            AssertionError: if ``normalization_mode``, ``ds_version``, or ``split`` is invalid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         lazy_import('h5py')
 
@@ -235,11 +251,7 @@ class MMEarth(NonGeoDataset):
         self.tile_info = self._load_tile_info()
 
     def _verify(self) -> None:
-        """Verify the dataset.
-
-        Raises:
-            AssertionError: if dataset files are not found
-        """
+        """Verify the dataset."""
         data_dir = os.path.join(self.root, self.filenames[self.ds_version])
 
         exists = [
@@ -285,7 +297,11 @@ class MMEarth(NonGeoDataset):
         return cast(dict[str, dict[str, float]], band_stats)
 
     def _load_tile_info(self) -> dict[str, dict[str, str]]:
-        """Load tile information."""
+        """Load tile information.
+
+        Returns:
+            dictionary containing tile information
+        """
         with open(
             os.path.join(
                 self.root, self.filenames[self.ds_version], self.tile_info_filename
@@ -302,14 +318,14 @@ class MMEarth(NonGeoDataset):
             modalities: user-provided sequence of modalities to load
 
         Raises:
-            AssertionError: if ``modalities`` is not a sequence
-            ValueError: if an invalid modality name is provided
+            AssertionError: if ``modalities`` is not a sequence or an
+                invalid modality name is provided
         """
         # validate modalities
         assert isinstance(modalities, Sequence), "'modalities' must be a sequence"
-        for modality in modalities:
-            if modality not in self.all_modalities:
-                raise ValueError(f"'{modality}' is an invalid modality name.")
+        assert set(modalities) <= set(
+            self.all_modalities
+        ), f'Invalid modality name(s): {set(modalities) - set(self.all_modalities)}'
 
     def _validate_modality_bands(self, modality_bands: dict[str, list[str]]) -> None:
         """Validate modality bands.
@@ -367,7 +383,8 @@ class MMEarth(NonGeoDataset):
             l2a = tile_info['S2_type'] == 'l2a'
             for modality in self.modalities:
                 data = f[modality][ds_index][:]
-                sample[modality] = self._process_modality(data, modality, l2a)
+                modality_name = self.modality_category_name.get(modality, '') + modality
+                sample[modality_name] = self._preprocess_modality(data, modality, l2a)
 
             # add additional metadata to the sample
             sample['lat'] = tile_info['lat']
@@ -381,10 +398,10 @@ class MMEarth(NonGeoDataset):
 
         return sample
 
-    def _process_modality(
+    def _preprocess_modality(
         self, data: 'np.typing.NDArray[Any]', modality: str, l2a: bool
     ) -> Tensor:
-        """Process a single modality.
+        """Preprocess a single modality.
 
         Args:
             data: data to process
@@ -501,5 +518,9 @@ class MMEarth(NonGeoDataset):
         return data
 
     def __len__(self) -> int:
-        """Return the length of the dataset."""
+        """Return the length of the dataset.
+
+        Returns:
+            length of the dataset
+        """
         return len(self.indices)

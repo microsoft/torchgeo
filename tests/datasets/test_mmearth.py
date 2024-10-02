@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
 import shutil
 from itertools import product
 from pathlib import Path
@@ -15,9 +16,9 @@ from torchgeo.datasets import DatasetNotFoundError, MMEarth
 pytest.importorskip('h5py', minversion='3.6')
 
 data_dir_dict = {
-    'MMEarth': 'tests/data/mmearth/data_1M_v001/',
-    'MMEarth64': 'tests/data/mmearth/data_1M_v001_64/',
-    'MMEarth100k': 'tests/data/mmearth/data_100k_v001/',
+    'MMEarth': os.path.join('tests', 'data', 'mmearth', 'data_1M_v001'),
+    'MMEarth64': os.path.join('tests', 'data', 'mmearth', 'data_1M_v001_64'),
+    'MMEarth100k': os.path.join('tests', 'data', 'mmearth', 'data_100k_v001'),
 }
 
 

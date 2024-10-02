@@ -26,7 +26,6 @@ from .l8biome import L8BiomeDataModule
 from .landcoverai import LandCoverAI100DataModule, LandCoverAIDataModule
 from .levircd import LEVIRCDDataModule, LEVIRCDPlusDataModule
 from .loveda import LoveDADataModule
-from .mmearth import MMEarthDataModule
 from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
 from .oscd import OSCDDataModule
@@ -87,7 +86,6 @@ __all__ = (
     'LEVIRCDDataModule',
     'LEVIRCDPlusDataModule',
     'LoveDADataModule',
-    'MMEarthDataModule',
     'NASAMarineDebrisDataModule',
     'OSCDDataModule',
     'Potsdam2DDataModule',
