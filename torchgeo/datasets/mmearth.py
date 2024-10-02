@@ -89,7 +89,8 @@ class MMEarth(NonGeoDataset):
         'eco_region',
         'era5',
         'esa_worldcover',
-        'sentinel1',
+        'sentinel1_asc',
+        'sentinel1_desc',
         'sentinel2',
         'sentinel2_cloudmask',
         'sentinel2_cloudprod',
@@ -116,16 +117,8 @@ class MMEarth(NonGeoDataset):
         'sentinel2_cloudmask': ['QA60'],
         'sentinel2_cloudprod': ['MSK_CLDPRB'],
         'sentinel2_scl': ['SCL'],
-        'sentinel1': [
-            'asc_VV',
-            'asc_VH',
-            'asc_HH',
-            'asc_HV',
-            'desc_VV',
-            'desc_VH',
-            'desc_HH',
-            'desc_HV',
-        ],
+        'sentinel1_asc': ['asc_VV', 'asc_VH', 'asc_HH', 'asc_HV'],
+        'sentinel1_desc': ['desc_VV', 'desc_VH', 'desc_HH', 'desc_HV'],
         'aster': ['elevation', 'slope'],
         'era5': [
             'prev_month_avg_temp',
@@ -157,7 +150,8 @@ class MMEarth(NonGeoDataset):
         'sentinel2_cloudmask': 65535,
         'sentinel2_cloudprod': 65535,
         'sentinel2_scl': 255,
-        'sentinel1': float('-inf'),
+        'sentinel1_asc': float('-inf'),
+        'sentinel1_desc': float('-inf'),
         'aster': float('-inf'),
         'canopy_height_eth': 255,
         'dynamic_world': 0,
@@ -379,9 +373,25 @@ class MMEarth(NonGeoDataset):
             tile_info = self.tile_info[name]
             l2a = tile_info['S2_type'] == 'l2a'
             for modality in self.modalities:
-                data = f[modality][ds_index][:]
+                if 'sentinel1' in modality:
+                    data = f['sentinel1'][ds_index][:]
+                else:
+                    data = f[modality][ds_index][:]
+
+                tensor = self._preprocess_modality(data, modality, l2a)
                 modality_name = self.modality_category_name.get(modality, '') + modality
-                sample[modality_name] = self._preprocess_modality(data, modality, l2a)
+                sample[modality_name] = tensor
+                # # separate asc and desc
+                # # get indices for asc and desc in self.modality_bands[modality]
+                # def _select_sentinel1_bands(asc_or_desc: str, tensor) -> bool:
+                #     indices = [
+                #         self.all_modality_bands[modality].index(band)
+                #         for band in self.modality_bands[modality]
+                #         if asc_or_desc in band
+                #     ]
+                #     return tensor[indices, ...]
+                # sample[self.modality_category_name.get('sentinel1') + 'sentinel1_asc'] = _select_sentinel1_bands('asc', tensor)
+                # sample[self.modality_category_name.get('sentinel1') + 'sentinel1_desc'] = _select_sentinel1_bands('desc', tensor)
 
             # add additional metadata to the sample
             sample['lat'] = tile_info['lat']
@@ -394,6 +404,36 @@ class MMEarth(NonGeoDataset):
             sample = self.transforms(sample)
 
         return sample
+
+    def _select_indices_for_modality(self, modality: str) -> list[int]:
+        """Select bands for a modality.
+
+        Args:
+            modality: modality name
+
+        Returns:
+            list of band indices
+        """
+        # need to handle sentinel1 descending separately, because ascending
+        # and descending are stored under the same modality
+        if modality == 'sentinel1_desc':
+            indices = [
+                self.all_modality_bands['sentinel1_desc'].index(band) + 4
+                for band in self.modality_bands['sentinel1_desc']
+            ]
+        # the modality is called sentinel2 but has different bands stats for l1c and l2a
+        # but common indices
+        elif modality in ['sentinel2_l1c', 'sentinel2_l2a']:
+            indices = [
+                self.all_modality_bands['sentinel2'].index(band)
+                for band in self.modality_bands['sentinel2']
+            ]
+        else:
+            indices = [
+                self.all_modality_bands[modality].index(band)
+                for band in self.modality_bands[modality]
+            ]
+        return indices
 
     def _preprocess_modality(
         self, data: 'np.typing.NDArray[Any]', modality: str, l2a: bool
@@ -409,10 +449,7 @@ class MMEarth(NonGeoDataset):
             processed data
         """
         # band selection for modality
-        indices = [
-            self.all_modality_bands[modality].index(band)
-            for band in self.modality_bands[modality]
-        ]
+        indices = self._select_indices_for_modality(modality)
         data = data[indices, ...]
 
         # See https://github.com/vishalned/MMEarth-train/blob/8d6114e8e3ccb5ca5d98858e742dac24350b64fd/mmearth_dataset.py#L69
@@ -440,7 +477,8 @@ class MMEarth(NonGeoDataset):
         elif modality in [
             'aster',
             'canopy_height_eth',
-            'sentinel1',
+            'sentinel1_asc',
+            'sentinel1_desc',
             'sentinel2',
             'era5',
             'lat',
@@ -483,17 +521,10 @@ class MMEarth(NonGeoDataset):
         Returns:
             normalized data
         """
-        # the modality is called sentinel2 but has different bands stats for l1c and l2a
-        if 'sentinel2' in modality:
-            indices = [
-                self.all_modality_bands['sentinel2'].index(band)
-                for band in self.modality_bands['sentinel2']
-            ]
-        else:
-            indices = [
-                self.all_modality_bands[modality].index(band)
-                for band in self.modality_bands[modality]
-            ]
+        indices = self._select_indices_for_modality(modality)
+
+        if 'sentinel1' in modality:
+            modality = 'sentinel1'
 
         if self.normalization_mode == 'z-score':
             mean = np.array(self.band_stats[modality]['mean'])[indices, ...]

@@ -92,13 +92,47 @@ class TestMMEarth:
                 modality_bands={'sentinel2': ['invalid']},
             )
 
-    def test_subset_modaliy_bands(self, dataset: MMEarth) -> None:
-        modality_bands = {'sentinel2': ['B2', 'B3']}
+    @pytest.mark.parametrize(
+        'modality_bands, modalities',
+        [
+            ({'sentinel2': ['B2', 'B3']}, ['sentinel2']),
+            (
+                {'sentinel1_asc': ['asc_VV'], 'sentinel1_desc': ['desc_VH']},
+                ['sentinel1_asc', 'sentinel1_desc'],
+            ),
+        ],
+    )
+    def test_subset_modaliy_bands(
+        self,
+        dataset: MMEarth,
+        modality_bands: dict[str, list[str]],
+        modalities: list[str],
+    ) -> None:
         dataset = MMEarth(
             dataset.root,
             split=dataset.split,
             subset=dataset.subset,
-            modalities=['sentinel2'],
+            modalities=modalities,
+            modality_bands=modality_bands,
+        )
+        x = dataset[0]
+        assert isinstance(x, dict)
+
+        for modality in dataset.modalities:
+            modality_name = dataset.modality_category_name.get(modality, '') + modality
+            if modality in modality_bands:
+                assert modality_name in x
+                assert x[modality_name].shape[0] == len(modality_bands[modality])
+            else:
+                assert modality_name not in x
+
+    def test_sentinel1_asc_desc(self, dataset: MMEarth) -> None:
+        modality_bands = {'sentinel1_asc': ['asc_VV'], 'sentinel1_desc': ['desc_VH']}
+        dataset = MMEarth(
+            dataset.root,
+            split=dataset.split,
+            subset=dataset.subset,
+            modalities=['sentinel1_asc', 'sentinel1_desc'],
             modality_bands=modality_bands,
         )
         x = dataset[0]
