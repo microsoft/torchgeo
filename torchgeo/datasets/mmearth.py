@@ -117,8 +117,8 @@ class MMEarth(NonGeoDataset):
         'sentinel2_cloudmask': ['QA60'],
         'sentinel2_cloudprod': ['MSK_CLDPRB'],
         'sentinel2_scl': ['SCL'],
-        'sentinel1_asc': ['asc_VV', 'asc_VH', 'asc_HH', 'asc_HV'],
-        'sentinel1_desc': ['desc_VV', 'desc_VH', 'desc_HH', 'desc_HV'],
+        'sentinel1_asc': ['VV', 'VH', 'HH', 'HV'],
+        'sentinel1_desc': ['VV', 'VH', 'HH', 'HV'],
         'aster': ['elevation', 'slope'],
         'era5': [
             'prev_month_avg_temp',
@@ -365,7 +365,34 @@ class MMEarth(NonGeoDataset):
         if self.transforms is not None:
             sample = self.transforms(sample)
 
+        # TODO return the actually found bands
+
         return sample
+
+    def get_intersection_dict(
+        self, avail_bands_per_modality: dict[str, list[str]]
+    ) -> dict[str, list[str]]:
+        """Get intersection of requested and available bands.
+
+        Args:
+            avail_bands_per_modality: available modality and bands
+
+        Returns:
+            Dictionary with intersected keys and lists.
+        """
+        intersection_dict = {}
+
+        for modality in self.modality_bands:
+            if modality in avail_bands_per_modality:
+                intersected_list = list(
+                    set(self.modality_bands[modality]).intersection(
+                        avail_bands_per_modality[modality]
+                    )
+                )
+                if intersected_list:
+                    intersection_dict[modality] = intersected_list
+
+        return intersection_dict
 
     def _retrieve_sample(self, ds_index: int) -> dict[str, Any]:
         """Retrieve a sample from the dataset.
@@ -384,17 +411,24 @@ class MMEarth(NonGeoDataset):
             'r',
         ) as f:
             name = f['metadata'][ds_index][0].decode('utf-8')
-            tile_info = self.tile_info[name]
-            l2a = tile_info['S2_type'] == 'l2a'
-            for modality in self.modalities:
+            tile_info: dict[str, Any] = self.tile_info[name]
+            avail_bands_per_modality = {
+                k: v for k, v in tile_info['BANDS'].items() if v is not None
+            }
+            # need to find the intersection of requested and available bands
+            intersection_dict = self.get_intersection_dict(avail_bands_per_modality)
+            for modality, bands in intersection_dict.items():
                 if 'sentinel1' in modality:
                     data = f['sentinel1'][ds_index][:]
                 else:
                     data = f[modality][ds_index][:]
 
-                tensor = self._preprocess_modality(data, modality, l2a)
+                tensor = self._preprocess_modality(data, modality, tile_info, bands)
                 modality_name = self.modality_category_name.get(modality, '') + modality
                 sample[modality_name] = tensor
+
+            # add the sensor and bands actually available
+            sample['avail_bands'] = intersection_dict
 
             # add additional metadata to the sample
             sample['lat'] = tile_info['lat']
@@ -405,11 +439,14 @@ class MMEarth(NonGeoDataset):
 
         return sample
 
-    def _select_indices_for_modality(self, modality: str) -> list[int]:
+    def _select_indices_for_modality(
+        self, modality: str, bands: list[str]
+    ) -> list[int]:
         """Select bands for a modality.
 
         Args:
             modality: modality name
+            bands: bands aviailable for the modality
 
         Returns:
             list of band indices
@@ -419,37 +456,38 @@ class MMEarth(NonGeoDataset):
         if modality == 'sentinel1_desc':
             indices = [
                 self.all_modality_bands['sentinel1_desc'].index(band) + 4
-                for band in self.modality_bands['sentinel1_desc']
+                for band in bands
             ]
         # the modality is called sentinel2 but has different bands stats for l1c and l2a
         # but common indices
         elif modality in ['sentinel2_l1c', 'sentinel2_l2a']:
             indices = [
-                self.all_modality_bands['sentinel2'].index(band)
-                for band in self.modality_bands['sentinel2']
+                self.all_modality_bands['sentinel2'].index(band) for band in bands
             ]
         else:
-            indices = [
-                self.all_modality_bands[modality].index(band)
-                for band in self.modality_bands[modality]
-            ]
+            indices = [self.all_modality_bands[modality].index(band) for band in bands]
         return indices
 
     def _preprocess_modality(
-        self, data: 'np.typing.NDArray[Any]', modality: str, l2a: bool
+        self,
+        data: 'np.typing.NDArray[Any]',
+        modality: str,
+        tile_info: dict[str, Any],
+        bands: list[str],
     ) -> Tensor:
         """Preprocess a single modality.
 
         Args:
             data: data to process
             modality: modality name
-            l2a: whether the data is from Sentinel-2 L2A
+            tile_info: tile information
+            bands: available bands for the modality
 
         Returns:
             processed data
         """
         # band selection for modality
-        indices = self._select_indices_for_modality(modality)
+        indices = self._select_indices_for_modality(modality, bands)
         data = data[indices, ...]
 
         # See https://github.com/vishalned/MMEarth-train/blob/8d6114e8e3ccb5ca5d98858e742dac24350b64fd/mmearth_dataset.py#L69
@@ -489,10 +527,14 @@ class MMEarth(NonGeoDataset):
             # See https://github.com/vishalned/MMEarth-train/blob/8d6114e8e3ccb5ca5d98858e742dac24350b64fd/mmearth_dataset.py#L88
             # the modality is called sentinel2 but has different bands stats for l1c and l2a
             if modality == 'sentinel2':
-                modality_ = 'sentinel2_l2a' if l2a else 'sentinel2_l1c'
+                modality_ = (
+                    'sentinel2_l2a'
+                    if tile_info['S2_type'] == 'l2a'
+                    else 'sentinel2_l1c'
+                )
             else:
                 modality_ = modality
-            data = self._normalize_modality(data, modality_)
+            data = self._normalize_modality(data, modality_, bands)
             data = np.where(data == self.no_data_vals[modality], np.nan, data)
             tensor = torch.from_numpy(data).float()
         elif modality in ['biome', 'eco_region']:
@@ -510,18 +552,19 @@ class MMEarth(NonGeoDataset):
         return tensor
 
     def _normalize_modality(
-        self, data: 'np.typing.NDArray[Any]', modality: str
+        self, data: 'np.typing.NDArray[Any]', modality: str, bands: list[str]
     ) -> 'np.typing.NDArray[np.float64]':
         """Normalize a single modality.
 
         Args:
             data: data to normalize
             modality: modality name
+            bands: available bands for the modality
 
         Returns:
             normalized data
         """
-        indices = self._select_indices_for_modality(modality)
+        indices = self._select_indices_for_modality(modality, bands)
 
         if 'sentinel1' in modality:
             modality = 'sentinel1'
