@@ -1,72 +1,912 @@
 {
     "0": {
         "S2_DATE": "2018-07-16",
-        "S2_type": "l1c",
+        "S2_type": "l2a",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
-        "lon": -56.98355999998649
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "elevation",
+                "slope"
+            ],
+            "era5": [
+                "prev_month_avg_temp",
+                "prev_month_min_temp",
+                "prev_month_max_temp",
+                "prev_month_total_precip",
+                "curr_month_avg_temp",
+                "curr_month_min_temp",
+                "curr_month_max_temp",
+                "curr_month_total_precip",
+                "year_avg_temp",
+                "year_min_temp",
+                "year_max_temp",
+                "year_total_precip"
+            ],
+            "dynamic_world": [
+                "landcover"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "map"
+            ]
+        }
     },
     "1": {
         "S2_DATE": "2018-07-16",
-        "S2_type": "l1c",
+        "S2_type": "l2a",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
-        "lon": -56.98355999998649
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "elevation",
+                "slope"
+            ],
+            "era5": [
+                "prev_month_avg_temp",
+                "prev_month_min_temp",
+                "prev_month_max_temp",
+                "prev_month_total_precip",
+                "curr_month_avg_temp",
+                "curr_month_min_temp",
+                "curr_month_max_temp",
+                "curr_month_total_precip",
+                "year_avg_temp",
+                "year_min_temp",
+                "year_max_temp",
+                "year_total_precip"
+            ],
+            "dynamic_world": [
+                "landcover"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "map"
+            ]
+        }
     },
     "2": {
         "S2_DATE": "2018-07-16",
         "S2_type": "l2a",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
-        "lon": -56.98355999998649
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "elevation",
+                "slope"
+            ],
+            "era5": [
+                "prev_month_avg_temp",
+                "prev_month_min_temp",
+                "prev_month_max_temp",
+                "prev_month_total_precip",
+                "curr_month_avg_temp",
+                "curr_month_min_temp",
+                "curr_month_max_temp",
+                "curr_month_total_precip",
+                "year_avg_temp",
+                "year_min_temp",
+                "year_max_temp",
+                "year_total_precip"
+            ],
+            "dynamic_world": [
+                "landcover"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "map"
+            ]
+        }
     },
     "3": {
         "S2_DATE": "2018-07-16",
-        "S2_type": "l2a",
+        "S2_type": "l1c",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
-        "lon": -56.98355999998649
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "elevation",
+                "slope"
+            ],
+            "era5": [
+                "prev_month_avg_temp",
+                "prev_month_min_temp",
+                "prev_month_max_temp",
+                "prev_month_total_precip",
+                "curr_month_avg_temp",
+                "curr_month_min_temp",
+                "curr_month_max_temp",
+                "curr_month_total_precip",
+                "year_avg_temp",
+                "year_min_temp",
+                "year_max_temp",
+                "year_total_precip"
+            ],
+            "dynamic_world": [
+                "landcover"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "map"
+            ]
+        }
     },
     "4": {
         "S2_DATE": "2018-07-16",
         "S2_type": "l2a",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
-        "lon": -56.98355999998649
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "elevation",
+                "slope"
+            ],
+            "era5": [
+                "prev_month_avg_temp",
+                "prev_month_min_temp",
+                "prev_month_max_temp",
+                "prev_month_total_precip",
+                "curr_month_avg_temp",
+                "curr_month_min_temp",
+                "curr_month_max_temp",
+                "curr_month_total_precip",
+                "year_avg_temp",
+                "year_min_temp",
+                "year_max_temp",
+                "year_total_precip"
+            ],
+            "dynamic_world": [
+                "landcover"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "map"
+            ]
+        }
     },
     "5": {
         "S2_DATE": "2018-07-16",
-        "S2_type": "l2a",
+        "S2_type": "l1c",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
-        "lon": -56.98355999998649
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "elevation",
+                "slope"
+            ],
+            "era5": [
+                "prev_month_avg_temp",
+                "prev_month_min_temp",
+                "prev_month_max_temp",
+                "prev_month_total_precip",
+                "curr_month_avg_temp",
+                "curr_month_min_temp",
+                "curr_month_max_temp",
+                "curr_month_total_precip",
+                "year_avg_temp",
+                "year_min_temp",
+                "year_max_temp",
+                "year_total_precip"
+            ],
+            "dynamic_world": [
+                "landcover"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "map"
+            ]
+        }
     },
     "6": {
         "S2_DATE": "2018-07-16",
         "S2_type": "l1c",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
-        "lon": -56.98355999998649
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "elevation",
+                "slope"
+            ],
+            "era5": [
+                "prev_month_avg_temp",
+                "prev_month_min_temp",
+                "prev_month_max_temp",
+                "prev_month_total_precip",
+                "curr_month_avg_temp",
+                "curr_month_min_temp",
+                "curr_month_max_temp",
+                "curr_month_total_precip",
+                "year_avg_temp",
+                "year_min_temp",
+                "year_max_temp",
+                "year_total_precip"
+            ],
+            "dynamic_world": [
+                "landcover"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "map"
+            ]
+        }
     },
     "7": {
         "S2_DATE": "2018-07-16",
-        "S2_type": "l2a",
+        "S2_type": "l1c",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
-        "lon": -56.98355999998649
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "elevation",
+                "slope"
+            ],
+            "era5": [
+                "prev_month_avg_temp",
+                "prev_month_min_temp",
+                "prev_month_max_temp",
+                "prev_month_total_precip",
+                "curr_month_avg_temp",
+                "curr_month_min_temp",
+                "curr_month_max_temp",
+                "curr_month_total_precip",
+                "year_avg_temp",
+                "year_min_temp",
+                "year_max_temp",
+                "year_total_precip"
+            ],
+            "dynamic_world": [
+                "landcover"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "map"
+            ]
+        }
     },
     "8": {
         "S2_DATE": "2018-07-16",
         "S2_type": "l2a",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
-        "lon": -56.98355999998649
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "elevation",
+                "slope"
+            ],
+            "era5": [
+                "prev_month_avg_temp",
+                "prev_month_min_temp",
+                "prev_month_max_temp",
+                "prev_month_total_precip",
+                "curr_month_avg_temp",
+                "curr_month_min_temp",
+                "curr_month_max_temp",
+                "curr_month_total_precip",
+                "year_avg_temp",
+                "year_min_temp",
+                "year_max_temp",
+                "year_total_precip"
+            ],
+            "dynamic_world": [
+                "landcover"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "map"
+            ]
+        }
     },
     "9": {
         "S2_DATE": "2018-07-16",
         "S2_type": "l2a",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
-        "lon": -56.98355999998649
+        "lon": -56.98355999998649,
+        "BANDS": {
+            "sentinel2": [
+                "B1",
+                "B2",
+                "B3",
+                "B4",
+                "B5",
+                "B6",
+                "B7",
+                "B8A",
+                "B8",
+                "B9",
+                "B10",
+                "B11",
+                "B12"
+            ],
+            "sentinel2_cloudmask": [
+                "QA60"
+            ],
+            "sentinel2_cloudprod": [
+                "MSK_CLDPRB"
+            ],
+            "sentinel2_scl": [
+                "SCL"
+            ],
+            "sentinel1_asc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "sentinel1_desc": [
+                "VV",
+                "VH",
+                "HH",
+                "HV"
+            ],
+            "aster": [
+                "elevation",
+                "slope"
+            ],
+            "era5": [
+                "prev_month_avg_temp",
+                "prev_month_min_temp",
+                "prev_month_max_temp",
+                "prev_month_total_precip",
+                "curr_month_avg_temp",
+                "curr_month_min_temp",
+                "curr_month_max_temp",
+                "curr_month_total_precip",
+                "year_avg_temp",
+                "year_min_temp",
+                "year_max_temp",
+                "year_total_precip"
+            ],
+            "dynamic_world": [
+                "landcover"
+            ],
+            "canopy_height_eth": [
+                "height",
+                "std"
+            ],
+            "lat": [
+                "sin",
+                "cos"
+            ],
+            "lon": [
+                "sin",
+                "cos"
+            ],
+            "biome": [
+                "biome"
+            ],
+            "eco_region": [
+                "eco_region"
+            ],
+            "month": [
+                "sin_month",
+                "cos_month"
+            ],
+            "esa_worldcover": [
+                "map"
+            ]
+        }
     }
 }

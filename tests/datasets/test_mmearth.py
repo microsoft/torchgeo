@@ -82,7 +82,7 @@ class TestMMEarth:
         [
             ({'sentinel2': ['B2', 'B3']}, ['sentinel2']),
             (
-                {'sentinel1_asc': ['asc_VV'], 'sentinel1_desc': ['desc_VH']},
+                {'sentinel1_asc': ['VV'], 'sentinel1_desc': ['VH']},
                 ['sentinel1_asc', 'sentinel1_desc'],
             ),
         ],
@@ -111,7 +111,7 @@ class TestMMEarth:
                 assert modality_name not in x
 
     def test_sentinel1_asc_desc(self, dataset: MMEarth) -> None:
-        modality_bands = {'sentinel1_asc': ['asc_VV'], 'sentinel1_desc': ['desc_VH']}
+        modality_bands = {'sentinel1_asc': ['VV'], 'sentinel1_desc': ['VH']}
         dataset = MMEarth(
             dataset.root,
             subset=dataset.subset,

@@ -37,6 +37,52 @@ modalities = {
     'sentinel2_scl': {'bands': 1, 'dtype': np.uint16},
 }
 
+all_modality_bands = {
+    'sentinel2': [
+        'B1',
+        'B2',
+        'B3',
+        'B4',
+        'B5',
+        'B6',
+        'B7',
+        'B8A',
+        'B8',
+        'B9',
+        'B10',
+        'B11',
+        'B12',
+    ],
+    'sentinel2_cloudmask': ['QA60'],
+    'sentinel2_cloudprod': ['MSK_CLDPRB'],
+    'sentinel2_scl': ['SCL'],
+    'sentinel1_asc': ['VV', 'VH', 'HH', 'HV'],
+    'sentinel1_desc': ['VV', 'VH', 'HH', 'HV'],
+    'aster': ['elevation', 'slope'],
+    'era5': [
+        'prev_month_avg_temp',
+        'prev_month_min_temp',
+        'prev_month_max_temp',
+        'prev_month_total_precip',
+        'curr_month_avg_temp',
+        'curr_month_min_temp',
+        'curr_month_max_temp',
+        'curr_month_total_precip',
+        'year_avg_temp',
+        'year_min_temp',
+        'year_max_temp',
+        'year_total_precip',
+    ],
+    'dynamic_world': ['landcover'],
+    'canopy_height_eth': ['height', 'std'],
+    'lat': ['sin', 'cos'],
+    'lon': ['sin', 'cos'],
+    'biome': ['biome'],
+    'eco_region': ['eco_region'],
+    'month': ['sin_month', 'cos_month'],
+    'esa_worldcover': ['map'],
+}
+
 
 def create_hd5f(dataset_name: str, px_dim: tuple[int]) -> list[dict[str, str]]:
     # Create the HDF5 file
@@ -105,6 +151,7 @@ def create_hd5f(dataset_name: str, px_dim: tuple[int]) -> list[dict[str, str]]:
             # Collect tile info for JSON file
             tile_meta = meta_dummy_dict.copy()
             tile_meta['S2_type'] = S2_type.decode('utf-8')
+            tile_meta['BANDS'] = all_modality_bands
             tile_info[str(i)] = tile_meta
 
     return tile_info
@@ -136,9 +183,9 @@ band_stats = {
     for modality, mod_info in band_modalities.items()
 }
 
-train_split = int(0.6 * num_tiles)
-val_split = int(0.2 * num_tiles)
-test_split = num_tiles - train_split - val_split
+train_split = num_tiles
+val_split = 0
+test_split = 0
 
 splits = {
     'train': list(range(train_split)),
