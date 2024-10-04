@@ -79,7 +79,6 @@ class MMEarth(NonGeoDataset):
         'MMEarth64': 'data_1M_v001_64',
         'MMEarth100k': 'data_100k_v001',
     }
-    splits: ClassVar[tuple[str, ...]] = ('train', 'val', 'test')
 
     all_modalities: ClassVar[tuple[str, ...]] = (
         'aster',
@@ -195,7 +194,6 @@ class MMEarth(NonGeoDataset):
             subset: one of "MMEarth", "MMEarth64", or "MMEarth100k"
             modalities: list of modalities to load
             modality_bands: dictionary of modality bands, see `all_modality_bands`
-            split: one of "train", "val", or "test"
             normalization_mode: one of "z-score" or "min-max"
             transforms: a function/transform that takes input sample dictionary
                 and returns a transformed version

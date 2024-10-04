@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from itertools import product
 from pathlib import Path
 
 import pytest
@@ -23,17 +22,13 @@ data_dir_dict = {
 
 
 class TestMMEarth:
-    @pytest.fixture(
-        params=list(
-            product(['train', 'val', 'test'], ['MMEarth', 'MMEarth64', 'MMEarth100k'])
-        )
-    )
+    @pytest.fixture(params=['MMEarth', 'MMEarth64', 'MMEarth100k'])
     def dataset(self, tmp_path: Path, request: SubRequest) -> MMEarth:
         root = tmp_path
-        split, subset = request.param
+        subset = request.param
         shutil.copytree(data_dir_dict[subset], root / Path(data_dir_dict[subset]).name)
         transforms = nn.Identity()
-        return MMEarth(root, split=split, subset=subset, transforms=transforms)
+        return MMEarth(root, subset=subset, transforms=transforms)
 
     def test_getitem(self, dataset: MMEarth) -> None:
         x = dataset[0]
@@ -46,10 +41,7 @@ class TestMMEarth:
     def test_subset_modalities(self, dataset: MMEarth) -> None:
         specified_modalities = ['sentinel2', 'dynamic_world']
         dataset = MMEarth(
-            dataset.root,
-            split=dataset.split,
-            subset=dataset.subset,
-            modalities=specified_modalities,
+            dataset.root, subset=dataset.subset, modalities=specified_modalities
         )
         x = dataset[0]
         assert isinstance(x, dict)
@@ -67,18 +59,12 @@ class TestMMEarth:
 
     def test_invalid_modalities(self, dataset: MMEarth) -> None:
         with pytest.raises(ValueError, match='is an invalid modality'):
-            MMEarth(
-                dataset.root,
-                split=dataset.split,
-                subset=dataset.subset,
-                modalities=['invalid'],
-            )
+            MMEarth(dataset.root, subset=dataset.subset, modalities=['invalid'])
 
     def test_invalid_modality_bands_modality_name(self, dataset: MMEarth) -> None:
         with pytest.raises(ValueError, match='is an invalid modality name'):
             MMEarth(
                 dataset.root,
-                split=dataset.split,
                 subset=dataset.subset,
                 modality_bands={'invalid': ['invalid']},
             )
@@ -87,7 +73,6 @@ class TestMMEarth:
         with pytest.raises(ValueError, match='is an invalid band name for modality'):
             MMEarth(
                 dataset.root,
-                split=dataset.split,
                 subset=dataset.subset,
                 modality_bands={'sentinel2': ['invalid']},
             )
@@ -110,7 +95,6 @@ class TestMMEarth:
     ) -> None:
         dataset = MMEarth(
             dataset.root,
-            split=dataset.split,
             subset=dataset.subset,
             modalities=modalities,
             modality_bands=modality_bands,
@@ -130,7 +114,6 @@ class TestMMEarth:
         modality_bands = {'sentinel1_asc': ['asc_VV'], 'sentinel1_desc': ['desc_VH']}
         dataset = MMEarth(
             dataset.root,
-            split=dataset.split,
             subset=dataset.subset,
             modalities=['sentinel1_asc', 'sentinel1_desc'],
             modality_bands=modality_bands,
@@ -151,10 +134,7 @@ class TestMMEarth:
         self, dataset: MMEarth, normalization_mode: str
     ) -> None:
         dataset = MMEarth(
-            dataset.root,
-            split=dataset.split,
-            subset=dataset.subset,
-            normalization_mode=normalization_mode,
+            dataset.root, subset=dataset.subset, normalization_mode=normalization_mode
         )
         x = dataset[0]
         assert isinstance(x, dict)
