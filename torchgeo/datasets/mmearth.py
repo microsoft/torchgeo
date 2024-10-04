@@ -185,7 +185,6 @@ class MMEarth(NonGeoDataset):
         subset: str = 'MMEarth',
         modalities: Sequence[str] = all_modalities,
         modality_bands: dict[str, list[str]] | None = None,
-        split: str = 'train',
         normalization_mode: str = 'z-score',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
     ) -> None:
@@ -213,9 +212,6 @@ class MMEarth(NonGeoDataset):
         assert (
             subset in self.subsets
         ), f'Invalid dataset version: {subset}, please choose from {self.subsets}'
-        assert (
-            split in self.splits
-        ), f'Invalid split: {split}, please choose from {self.splits}'
 
         self._validate_modalities(modalities)
         if modality_bands is None:
@@ -230,7 +226,7 @@ class MMEarth(NonGeoDataset):
         self.root = root
         self.subset = subset
         self.normalization_mode = normalization_mode
-        self.split = split
+        self.split = 'train'
         self.transforms = transforms
 
         self.dataset_filename = f'{self.filenames[subset]}.h5'
@@ -360,11 +356,29 @@ class MMEarth(NonGeoDataset):
             dictionary containing the modalities and metadata
             of the sample
         """
-        h5py = lazy_import('h5py')
-
-        sample: dict[str, Any] = {}
         ds_index = self.indices[index]
 
+        # expose sample retrieval to separate function to allow for different index sampling strategies
+        # in subclasses
+        sample = self._retrieve_sample(ds_index)
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def _retrieve_sample(self, ds_index: int) -> dict[str, Any]:
+        """Retrieve a sample from the dataset.
+
+        Args:
+            ds_index: index inside the hdf5 dataset file
+
+        Returns:
+            dictionary containing the modalities and metadata
+            of the sample
+        """
+        h5py = lazy_import('h5py')
+        sample: dict[str, Any] = {}
         with h5py.File(
             os.path.join(self.root, self.filenames[self.subset], self.dataset_filename),
             'r',
@@ -381,17 +395,6 @@ class MMEarth(NonGeoDataset):
                 tensor = self._preprocess_modality(data, modality, l2a)
                 modality_name = self.modality_category_name.get(modality, '') + modality
                 sample[modality_name] = tensor
-                # # separate asc and desc
-                # # get indices for asc and desc in self.modality_bands[modality]
-                # def _select_sentinel1_bands(asc_or_desc: str, tensor) -> bool:
-                #     indices = [
-                #         self.all_modality_bands[modality].index(band)
-                #         for band in self.modality_bands[modality]
-                #         if asc_or_desc in band
-                #     ]
-                #     return tensor[indices, ...]
-                # sample[self.modality_category_name.get('sentinel1') + 'sentinel1_asc'] = _select_sentinel1_bands('asc', tensor)
-                # sample[self.modality_category_name.get('sentinel1') + 'sentinel1_desc'] = _select_sentinel1_bands('desc', tensor)
 
             # add additional metadata to the sample
             sample['lat'] = tile_info['lat']
@@ -399,9 +402,6 @@ class MMEarth(NonGeoDataset):
             sample['date'] = tile_info['S2_DATE']
             sample['crs'] = tile_info['CRS']
             sample['tile_id'] = name
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
 
         return sample
 
