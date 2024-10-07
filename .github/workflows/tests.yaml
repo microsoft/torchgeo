@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache dependencies
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4.1.0
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -61,7 +61,7 @@ jobs:
         with:
           python-version: '3.10'
       - name: Cache dependencies
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4.1.0
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -94,7 +94,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Cache dependencies
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4.1.0
         id: cache
         with:
           path: ${{ env.pythonLocation }}
