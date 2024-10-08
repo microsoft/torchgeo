@@ -364,8 +364,6 @@ class MMEarth(NonGeoDataset):
         if self.transforms is not None:
             sample = self.transforms(sample)
 
-        # TODO return the actually found bands
-
         return sample
 
     def get_intersection_dict(
