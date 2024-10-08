@@ -21,7 +21,7 @@ from ..samplers import (
     RandomBatchGeoSampler,
 )
 from ..transforms import AugmentationSequential
-from .utils import MisconfigurationException
+from .utils import MisconfigurationException, get_prefixed_kwargs
 
 
 class BaseDataModule(LightningDataModule):
@@ -38,8 +38,6 @@ class BaseDataModule(LightningDataModule):
         dataset_class: type[Dataset[dict[str, Tensor]]],
         batch_size: int = 1,
         num_workers: int = 0,
-        pin_memory: bool = False,
-        prefetch_factor: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize a new BaseDataModule instance.
@@ -48,8 +46,6 @@ class BaseDataModule(LightningDataModule):
             dataset_class: Class used to instantiate a new dataset.
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
-            pin_memory: Whether to pin memory in data loaders.
-            prefetch_factor: Number of samples to prefetch.
             **kwargs: Additional keyword arguments passed to ``dataset_class``
         """
         super().__init__()
@@ -57,8 +53,6 @@ class BaseDataModule(LightningDataModule):
         self.dataset_class = dataset_class
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.pin_memory = pin_memory
-        self.prefetch_factor = prefetch_factor
         self.kwargs = kwargs
 
         # Datasets
@@ -184,8 +178,6 @@ class GeoDataModule(BaseDataModule):
         patch_size: int | tuple[int, int] = 64,
         length: int | None = None,
         num_workers: int = 0,
-        pin_memory: bool = False,
-        prefetch_factor: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize a new GeoDataModule instance.
@@ -196,8 +188,6 @@ class GeoDataModule(BaseDataModule):
             patch_size: Size of each patch, either ``size`` or ``(height, width)``.
             length: Length of each training epoch.
             num_workers: Number of workers for parallel data loading.
-            pin_memory: Whether to pin memory in data loaders.
-            prefetch_factor: Number of samples to prefetch.
             **kwargs: Additional keyword arguments passed to ``dataset_class``
         """
         super().__init__(dataset_class, batch_size, num_workers, **kwargs)
@@ -297,8 +287,7 @@ class GeoDataModule(BaseDataModule):
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
             persistent_workers=self.num_workers > 0,
-            pin_memory=self.pin_memory,
-            prefetch_factor=self.prefetch_factor,
+            **get_prefixed_kwargs('dataloader_', **self.kwargs),
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
@@ -383,8 +372,6 @@ class NonGeoDataModule(BaseDataModule):
         dataset_class: type[NonGeoDataset],
         batch_size: int = 1,
         num_workers: int = 0,
-        pin_memory: bool = False,
-        prefetch_factor: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize a new NonGeoDataModule instance.
@@ -393,8 +380,6 @@ class NonGeoDataModule(BaseDataModule):
             dataset_class: Class used to instantiate a new dataset.
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
-            pin_memory: Whether to pin memory in data loaders.
-            prefetch_factor: Number of samples to prefetch.
             **kwargs: Additional keyword arguments passed to ``dataset_class``
         """
         super().__init__(dataset_class, batch_size, num_workers, **kwargs)
@@ -447,8 +432,7 @@ class NonGeoDataModule(BaseDataModule):
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
             persistent_workers=self.num_workers > 0,
-            pin_memory=self.pin_memory,
-            prefetch_factor=self.prefetch_factor,
+            **get_prefixed_kwargs('dataloader_', **self.kwargs),
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:

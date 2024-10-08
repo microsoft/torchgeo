@@ -169,3 +169,16 @@ def group_shuffle_split(
             test_idxs.append(i)
 
     return train_idxs, test_idxs
+
+
+def get_prefixed_kwargs(prefix: str, **kwargs: dict[str, Any]) -> dict[str, Any]:
+    """Get kwargs with a specific prefix.
+
+    Args:
+        prefix: Prefix to filter kwargs by.
+        **kwargs: Keyword arguments to filter.
+
+    Returns:
+        Dictionary of kwargs with the specified prefix.
+    """
+    return {k.replace(prefix, ''): v for k, v in kwargs.items() if k.startswith(prefix)}
