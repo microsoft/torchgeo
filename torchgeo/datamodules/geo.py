@@ -21,7 +21,7 @@ from ..samplers import (
     RandomBatchGeoSampler,
 )
 from ..transforms import AugmentationSequential
-from .utils import MisconfigurationException, get_prefixed_kwargs
+from .utils import MisconfigurationException, split_kwargs
 
 
 class BaseDataModule(LightningDataModule):
@@ -53,7 +53,7 @@ class BaseDataModule(LightningDataModule):
         self.dataset_class = dataset_class
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.kwargs = kwargs
+        self.dataloader_kwargs, self.kwargs = split_kwargs('dataloader_', **kwargs)
 
         # Datasets
         self.dataset: Dataset[dict[str, Tensor]] | None = None
@@ -287,7 +287,7 @@ class GeoDataModule(BaseDataModule):
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
             persistent_workers=self.num_workers > 0,
-            **get_prefixed_kwargs('dataloader_', **self.kwargs),
+            **self.dataloader_kwargs,
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
@@ -432,7 +432,7 @@ class NonGeoDataModule(BaseDataModule):
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
             persistent_workers=self.num_workers > 0,
-            **get_prefixed_kwargs('dataloader_', **self.kwargs),
+            **self.dataloader_kwargs,
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
