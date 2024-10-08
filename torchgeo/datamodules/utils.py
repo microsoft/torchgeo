@@ -171,7 +171,7 @@ def group_shuffle_split(
     return train_idxs, test_idxs
 
 
-def get_prefixed_kwargs(prefix: str, **kwargs: dict[str, Any]) -> dict[str, Any]:
+def get_prefixed_kwargs(prefix: str, **kwargs: Any) -> dict[str, Any]:
     """Get kwargs with a specific prefix.
 
     Args:
