@@ -72,7 +72,7 @@ class MMEarth(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    subsets: ClassVar[tuple[str, ...]] = ('MMEarth', 'MMEarth64', 'MMEarth100k')
+    subsets = ('MMEarth', 'MMEarth64', 'MMEarth100k')
 
     filenames: ClassVar[dict[str, str]] = {
         'MMEarth': 'data_1M_v001',
@@ -80,7 +80,7 @@ class MMEarth(NonGeoDataset):
         'MMEarth100k': 'data_100k_v001',
     }
 
-    all_modalities: ClassVar[tuple[str, ...]] = (
+    all_modalities = (
         'aster',
         'biome',
         'canopy_height_eth',
@@ -339,6 +339,7 @@ class MMEarth(NonGeoDataset):
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return a sample from the dataset.
 
+        Normalization is applied to the data with chosen ``normalization_mode``.
         In addition to the modalities, the sample contains the following raw metadata:
 
         * lat: latitude
@@ -490,7 +491,7 @@ class MMEarth(NonGeoDataset):
 
         # See https://github.com/vishalned/MMEarth-train/blob/8d6114e8e3ccb5ca5d98858e742dac24350b64fd/mmearth_dataset.py#L69
         if modality == 'dynamic_world':
-            # first replacs 0 with nan then assign new labels to have 0-index classes
+            # first replace 0 with nan then assign new labels to have 0-index classes
             data = np.where(data == self.no_data_vals[modality], np.nan, data)
             old_values = [1, 2, 3, 4, 5, 6, 7, 8, 9, np.nan]
             new_values = [0, 1, 2, 3, 4, 5, 6, 7, 8, np.nan]
