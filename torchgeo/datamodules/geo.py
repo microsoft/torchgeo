@@ -46,7 +46,8 @@ class BaseDataModule(LightningDataModule):
             dataset_class: Class used to instantiate a new dataset.
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
-            **kwargs: Additional keyword arguments passed to ``dataset_class``
+            **kwargs: Additional keyword arguments passed to the ``DataLoader``
+                if prefixed with 'dataloader_', else passed to ``dataset_class``.
         """
         super().__init__()
 
