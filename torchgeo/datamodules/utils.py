@@ -171,7 +171,7 @@ def group_shuffle_split(
     return train_idxs, test_idxs
 
 
-def split_kwargs(*prefixes: str, **kwargs: Any) -> tuple[dict[str, Any], ...]:
+def split_prefixed_kwargs(*prefixes: str, **kwargs: Any) -> tuple[dict[str, Any], ...]:
     """Split kwargs into prefixed and other kwargs.
 
     Args:
