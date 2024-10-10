@@ -201,7 +201,7 @@ class MMEarth(NonGeoDataset):
                 and returns a transformed version
 
         Raises:
-            AssertionError: if *normalization_mode*, *subset*, or *split* is invalid
+            AssertionError: if *normalization_mode* or *subset*
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         lazy_import('h5py')
