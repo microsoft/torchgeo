@@ -7,3 +7,4 @@ Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weight
 `DeepForest`_,PyTorch,"GDAL, OpenCV, pandas, pillow, scipy",R-tree,Albumentations,0,3,❌,❌,❌,❌
 `SITS`_,R Torch,GDAL,-,tidyverse,22,0,❌,✅,✅,✅
 `TerraTorch`_,PyTorch,"GDAL, h5py, pandas, xarray",R-tree,Albumentations,16,1,✅,✅,❌,🚧
+`scikit-eo`_,"scikit-learn, TensorFlow","pandas, scipy, numpy, rasterio","geopandas",numpy,0,0,❌,❌,❌,🚧
