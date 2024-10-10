@@ -6,6 +6,8 @@
 import json
 import os
 import shutil
+from copy import deepcopy
+from datetime import datetime, timedelta
 
 import h5py
 import numpy as np
@@ -58,29 +60,29 @@ all_modality_bands = {
     'sentinel2_scl': ['SCL'],
     'sentinel1_asc': ['VV', 'VH', 'HH', 'HV'],
     'sentinel1_desc': ['VV', 'VH', 'HH', 'HV'],
-    'aster': ['elevation', 'slope'],
+    'aster': ['b1', 'slope'],  # elevation and slope
     'era5': [
-        'prev_month_avg_temp',
-        'prev_month_min_temp',
-        'prev_month_max_temp',
-        'prev_month_total_precip',
-        'curr_month_avg_temp',
-        'curr_month_min_temp',
-        'curr_month_max_temp',
-        'curr_month_total_precip',
-        'year_avg_temp',
-        'year_min_temp',
-        'year_max_temp',
-        'year_total_precip',
+        'prev_temperature_2m',  # previous month avg temp
+        'prev_temperature_2m_min',  # previous month min temp
+        'prev_temperature_2m_max',  # previous month max temp
+        'prev_total_precipitation_sum',  # previous month total precip
+        'curr_temperature_2m',  # current month avg temp
+        'curr_temperature_2m_min',  # current month min temp
+        'curr_temperature_2m_max',  # current month max temp
+        'curr_total_precipitation_sum',  # current month total precip
+        '0_temperature_2m_mean',  # year avg temp
+        '1_temperature_2m_min_min',  # year min temp
+        '2_temperature_2m_max_max',  # year max temp
+        '3_total_precipitation_sum_sum',  # year total precip
     ],
-    'dynamic_world': ['landcover'],
+    'dynamic_world': ['label'],
     'canopy_height_eth': ['height', 'std'],
     'lat': ['sin', 'cos'],
     'lon': ['sin', 'cos'],
     'biome': ['biome'],
     'eco_region': ['eco_region'],
     'month': ['sin_month', 'cos_month'],
-    'esa_worldcover': ['map'],
+    'esa_worldcover': ['Map'],
 }
 
 
@@ -150,8 +152,20 @@ def create_hd5f(dataset_name: str, px_dim: tuple[int]) -> list[dict[str, str]]:
 
             # Collect tile info for JSON file
             tile_meta = meta_dummy_dict.copy()
+
             tile_meta['S2_type'] = S2_type.decode('utf-8')
-            tile_meta['BANDS'] = all_modality_bands
+            # in all_Modality_bands era5 contains the data instead `prev` and `curr` prefixes
+            date_str = tile_meta['S2_DATE']
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+            curr_month_str = date_obj.strftime('%Y%m')
+            prev_month_obj = date_obj.replace(day=1) - timedelta(days=1)
+            prev_month_str = prev_month_obj.strftime('%Y%m')
+            curr_sample_bands = deepcopy(all_modality_bands)
+            curr_sample_bands['era5'] = [
+                b.replace('curr', curr_month_str).replace('prev', prev_month_str)
+                for b in curr_sample_bands['era5']
+            ]
+            tile_meta['BANDS'] = curr_sample_bands
             tile_info[str(i)] = tile_meta
 
     return tile_info

@@ -1,7 +1,7 @@
 {
     "0": {
         "S2_DATE": "2018-07-16",
-        "S2_type": "l2a",
+        "S2_type": "l1c",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
         "lon": -56.98355999998649,
@@ -43,25 +43,25 @@
                 "HV"
             ],
             "aster": [
-                "elevation",
+                "b1",
                 "slope"
             ],
             "era5": [
-                "prev_month_avg_temp",
-                "prev_month_min_temp",
-                "prev_month_max_temp",
-                "prev_month_total_precip",
-                "curr_month_avg_temp",
-                "curr_month_min_temp",
-                "curr_month_max_temp",
-                "curr_month_total_precip",
-                "year_avg_temp",
-                "year_min_temp",
-                "year_max_temp",
-                "year_total_precip"
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
             ],
             "dynamic_world": [
-                "landcover"
+                "label"
             ],
             "canopy_height_eth": [
                 "height",
@@ -86,7 +86,7 @@
                 "cos_month"
             ],
             "esa_worldcover": [
-                "map"
+                "Map"
             ]
         }
     },
@@ -134,25 +134,25 @@
                 "HV"
             ],
             "aster": [
-                "elevation",
+                "b1",
                 "slope"
             ],
             "era5": [
-                "prev_month_avg_temp",
-                "prev_month_min_temp",
-                "prev_month_max_temp",
-                "prev_month_total_precip",
-                "curr_month_avg_temp",
-                "curr_month_min_temp",
-                "curr_month_max_temp",
-                "curr_month_total_precip",
-                "year_avg_temp",
-                "year_min_temp",
-                "year_max_temp",
-                "year_total_precip"
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
             ],
             "dynamic_world": [
-                "landcover"
+                "label"
             ],
             "canopy_height_eth": [
                 "height",
@@ -177,13 +177,13 @@
                 "cos_month"
             ],
             "esa_worldcover": [
-                "map"
+                "Map"
             ]
         }
     },
     "2": {
         "S2_DATE": "2018-07-16",
-        "S2_type": "l2a",
+        "S2_type": "l1c",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
         "lon": -56.98355999998649,
@@ -225,25 +225,25 @@
                 "HV"
             ],
             "aster": [
-                "elevation",
+                "b1",
                 "slope"
             ],
             "era5": [
-                "prev_month_avg_temp",
-                "prev_month_min_temp",
-                "prev_month_max_temp",
-                "prev_month_total_precip",
-                "curr_month_avg_temp",
-                "curr_month_min_temp",
-                "curr_month_max_temp",
-                "curr_month_total_precip",
-                "year_avg_temp",
-                "year_min_temp",
-                "year_max_temp",
-                "year_total_precip"
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
             ],
             "dynamic_world": [
-                "landcover"
+                "label"
             ],
             "canopy_height_eth": [
                 "height",
@@ -268,7 +268,7 @@
                 "cos_month"
             ],
             "esa_worldcover": [
-                "map"
+                "Map"
             ]
         }
     },
@@ -316,25 +316,25 @@
                 "HV"
             ],
             "aster": [
-                "elevation",
+                "b1",
                 "slope"
             ],
             "era5": [
-                "prev_month_avg_temp",
-                "prev_month_min_temp",
-                "prev_month_max_temp",
-                "prev_month_total_precip",
-                "curr_month_avg_temp",
-                "curr_month_min_temp",
-                "curr_month_max_temp",
-                "curr_month_total_precip",
-                "year_avg_temp",
-                "year_min_temp",
-                "year_max_temp",
-                "year_total_precip"
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
             ],
             "dynamic_world": [
-                "landcover"
+                "label"
             ],
             "canopy_height_eth": [
                 "height",
@@ -359,7 +359,7 @@
                 "cos_month"
             ],
             "esa_worldcover": [
-                "map"
+                "Map"
             ]
         }
     },
@@ -407,25 +407,25 @@
                 "HV"
             ],
             "aster": [
-                "elevation",
+                "b1",
                 "slope"
             ],
             "era5": [
-                "prev_month_avg_temp",
-                "prev_month_min_temp",
-                "prev_month_max_temp",
-                "prev_month_total_precip",
-                "curr_month_avg_temp",
-                "curr_month_min_temp",
-                "curr_month_max_temp",
-                "curr_month_total_precip",
-                "year_avg_temp",
-                "year_min_temp",
-                "year_max_temp",
-                "year_total_precip"
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
             ],
             "dynamic_world": [
-                "landcover"
+                "label"
             ],
             "canopy_height_eth": [
                 "height",
@@ -450,7 +450,7 @@
                 "cos_month"
             ],
             "esa_worldcover": [
-                "map"
+                "Map"
             ]
         }
     },
@@ -498,25 +498,25 @@
                 "HV"
             ],
             "aster": [
-                "elevation",
+                "b1",
                 "slope"
             ],
             "era5": [
-                "prev_month_avg_temp",
-                "prev_month_min_temp",
-                "prev_month_max_temp",
-                "prev_month_total_precip",
-                "curr_month_avg_temp",
-                "curr_month_min_temp",
-                "curr_month_max_temp",
-                "curr_month_total_precip",
-                "year_avg_temp",
-                "year_min_temp",
-                "year_max_temp",
-                "year_total_precip"
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
             ],
             "dynamic_world": [
-                "landcover"
+                "label"
             ],
             "canopy_height_eth": [
                 "height",
@@ -541,13 +541,13 @@
                 "cos_month"
             ],
             "esa_worldcover": [
-                "map"
+                "Map"
             ]
         }
     },
     "6": {
         "S2_DATE": "2018-07-16",
-        "S2_type": "l1c",
+        "S2_type": "l2a",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
         "lon": -56.98355999998649,
@@ -589,25 +589,25 @@
                 "HV"
             ],
             "aster": [
-                "elevation",
+                "b1",
                 "slope"
             ],
             "era5": [
-                "prev_month_avg_temp",
-                "prev_month_min_temp",
-                "prev_month_max_temp",
-                "prev_month_total_precip",
-                "curr_month_avg_temp",
-                "curr_month_min_temp",
-                "curr_month_max_temp",
-                "curr_month_total_precip",
-                "year_avg_temp",
-                "year_min_temp",
-                "year_max_temp",
-                "year_total_precip"
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
             ],
             "dynamic_world": [
-                "landcover"
+                "label"
             ],
             "canopy_height_eth": [
                 "height",
@@ -632,7 +632,7 @@
                 "cos_month"
             ],
             "esa_worldcover": [
-                "map"
+                "Map"
             ]
         }
     },
@@ -680,25 +680,25 @@
                 "HV"
             ],
             "aster": [
-                "elevation",
+                "b1",
                 "slope"
             ],
             "era5": [
-                "prev_month_avg_temp",
-                "prev_month_min_temp",
-                "prev_month_max_temp",
-                "prev_month_total_precip",
-                "curr_month_avg_temp",
-                "curr_month_min_temp",
-                "curr_month_max_temp",
-                "curr_month_total_precip",
-                "year_avg_temp",
-                "year_min_temp",
-                "year_max_temp",
-                "year_total_precip"
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
             ],
             "dynamic_world": [
-                "landcover"
+                "label"
             ],
             "canopy_height_eth": [
                 "height",
@@ -723,13 +723,13 @@
                 "cos_month"
             ],
             "esa_worldcover": [
-                "map"
+                "Map"
             ]
         }
     },
     "8": {
         "S2_DATE": "2018-07-16",
-        "S2_type": "l2a",
+        "S2_type": "l1c",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
         "lon": -56.98355999998649,
@@ -771,25 +771,25 @@
                 "HV"
             ],
             "aster": [
-                "elevation",
+                "b1",
                 "slope"
             ],
             "era5": [
-                "prev_month_avg_temp",
-                "prev_month_min_temp",
-                "prev_month_max_temp",
-                "prev_month_total_precip",
-                "curr_month_avg_temp",
-                "curr_month_min_temp",
-                "curr_month_max_temp",
-                "curr_month_total_precip",
-                "year_avg_temp",
-                "year_min_temp",
-                "year_max_temp",
-                "year_total_precip"
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
             ],
             "dynamic_world": [
-                "landcover"
+                "label"
             ],
             "canopy_height_eth": [
                 "height",
@@ -814,13 +814,13 @@
                 "cos_month"
             ],
             "esa_worldcover": [
-                "map"
+                "Map"
             ]
         }
     },
     "9": {
         "S2_DATE": "2018-07-16",
-        "S2_type": "l2a",
+        "S2_type": "l1c",
         "CRS": "EPSG:32721",
         "lat": -14.499441524746077,
         "lon": -56.98355999998649,
@@ -862,25 +862,25 @@
                 "HV"
             ],
             "aster": [
-                "elevation",
+                "b1",
                 "slope"
             ],
             "era5": [
-                "prev_month_avg_temp",
-                "prev_month_min_temp",
-                "prev_month_max_temp",
-                "prev_month_total_precip",
-                "curr_month_avg_temp",
-                "curr_month_min_temp",
-                "curr_month_max_temp",
-                "curr_month_total_precip",
-                "year_avg_temp",
-                "year_min_temp",
-                "year_max_temp",
-                "year_total_precip"
+                "201806_temperature_2m",
+                "201806_temperature_2m_min",
+                "201806_temperature_2m_max",
+                "201806_total_precipitation_sum",
+                "201807_temperature_2m",
+                "201807_temperature_2m_min",
+                "201807_temperature_2m_max",
+                "201807_total_precipitation_sum",
+                "0_temperature_2m_mean",
+                "1_temperature_2m_min_min",
+                "2_temperature_2m_max_max",
+                "3_total_precipitation_sum_sum"
             ],
             "dynamic_world": [
-                "landcover"
+                "label"
             ],
             "canopy_height_eth": [
                 "height",
@@ -905,7 +905,7 @@
                 "cos_month"
             ],
             "esa_worldcover": [
-                "map"
+                "Map"
             ]
         }
     }

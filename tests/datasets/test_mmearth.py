@@ -37,6 +37,7 @@ class TestMMEarth:
             modality_name = dataset.modality_category_name.get(modality, '') + modality
             assert modality_name in x
             assert isinstance(x[modality_name], torch.Tensor)
+            assert x[modality_name].shape[0] == len(dataset.modality_bands[modality])
 
     def test_subset_modalities(self, dataset: MMEarth) -> None:
         specified_modalities = ['sentinel2', 'dynamic_world']

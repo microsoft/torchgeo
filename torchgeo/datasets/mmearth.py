@@ -6,6 +6,7 @@
 import json
 import os
 from collections.abc import Callable, Sequence
+from datetime import datetime, timedelta
 from typing import Any, ClassVar, cast
 
 import numpy as np
@@ -118,29 +119,29 @@ class MMEarth(NonGeoDataset):
         'sentinel2_scl': ['SCL'],
         'sentinel1_asc': ['VV', 'VH', 'HH', 'HV'],
         'sentinel1_desc': ['VV', 'VH', 'HH', 'HV'],
-        'aster': ['elevation', 'slope'],
+        'aster': ['b1', 'slope'],  # elevation and slope
         'era5': [
-            'prev_month_avg_temp',
-            'prev_month_min_temp',
-            'prev_month_max_temp',
-            'prev_month_total_precip',
-            'curr_month_avg_temp',
-            'curr_month_min_temp',
-            'curr_month_max_temp',
-            'curr_month_total_precip',
-            'year_avg_temp',
-            'year_min_temp',
-            'year_max_temp',
-            'year_total_precip',
+            'prev_temperature_2m',  # previous month avg temp
+            'prev_temperature_2m_min',  # previous month min temp
+            'prev_temperature_2m_max',  # previous month max temp
+            'prev_total_precipitation_sum',  # previous month total precip
+            'curr_temperature_2m',  # current month avg temp
+            'curr_temperature_2m_min',  # current month min temp
+            'curr_temperature_2m_max',  # current month max temp
+            'curr_total_precipitation_sum',  # current month total precip
+            '0_temperature_2m_mean',  # year avg temp
+            '1_temperature_2m_min_min',  # year min temp
+            '2_temperature_2m_max_max',  # year max temp
+            '3_total_precipitation_sum_sum',  # year total precip
         ],
-        'dynamic_world': ['landcover'],
+        'dynamic_world': ['label'],
         'canopy_height_eth': ['height', 'std'],
         'lat': ['sin', 'cos'],
         'lon': ['sin', 'cos'],
         'biome': ['biome'],
         'eco_region': ['eco_region'],
         'month': ['sin_month', 'cos_month'],
-        'esa_worldcover': ['map'],
+        'esa_worldcover': ['Map'],
     }
 
     # See https://github.com/vishalned/MMEarth-train/blob/8d6114e8e3ccb5ca5d98858e742dac24350b64fd/MODALITIES.py#L36
@@ -166,13 +167,14 @@ class MMEarth(NonGeoDataset):
     norm_modes: ClassVar[list[str]] = ['z-score', 'min-max']
 
     modality_category_name: ClassVar[dict[str, str]] = {
-        'sentinel1': 'image_',
+        'sentinel1_asc': 'image_',
+        'sentinel1_desc': 'image_',
         'sentinel2': 'image_',
         'sentinel2_cloudmask': 'mask_',
         'sentinel2_cloudprod': 'mask_',
         'sentinel2_scl': 'mask_',
         'aster': 'image_',
-        'era5': 'image_',
+        'era5': '',
         'canopy_height_eth': 'image_',
         'dynamic_world': 'mask_',
         'esa_worldcover': 'mask_',
@@ -212,13 +214,12 @@ class MMEarth(NonGeoDataset):
         ), f'Invalid dataset version: {subset}, please choose from {self.subsets}'
 
         self._validate_modalities(modalities)
+        self.modalities = modalities
         if modality_bands is None:
             modality_bands = {
                 modality: self.all_modality_bands[modality] for modality in modalities
             }
         self._validate_modality_bands(modality_bands)
-
-        self.modalities = modalities
         self.modality_bands = modality_bands
 
         self.root = root
@@ -328,7 +329,8 @@ class MMEarth(NonGeoDataset):
         assert isinstance(modality_bands, dict), "'modality_bands' must be a dictionary"
         # validate modality bands
         for key, vals in modality_bands.items():
-            if key not in self.all_modalities:
+            # check that the modality name is also specified in modalities
+            if key not in self.modalities:
                 raise ValueError(f"'{key}' is an invalid modality name.")
             for val in vals:
                 if val not in self.all_modality_bands[key]:
@@ -366,26 +368,53 @@ class MMEarth(NonGeoDataset):
 
         return sample
 
-    def get_intersection_dict(
-        self, avail_bands_per_modality: dict[str, list[str]]
+    def get_sample_specific_band_names(
+        self, tile_info: dict[str, Any]
     ) -> dict[str, list[str]]:
+        """Retrieve the sample specific band names.
+
+        Args:
+            tile_info: tile information for a sample
+
+        Returns:
+            dictionary containing the specific band names for each modality
+        """
+        date_str = tile_info['S2_DATE']
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+        curr_month_str = date_obj.strftime('%Y%m')
+        # set to first day of month and subtract one day to get previous month
+        prev_month_obj = date_obj.replace(day=1) - timedelta(days=1)
+        prev_month_str = prev_month_obj.strftime('%Y%m')
+
+        specific_modality_bands = {}
+        for modality, bands in self.modality_bands.items():
+            if modality == 'era5':
+                # replace date with the 'prev' and 'curr' strings for generality
+                bands = [band.replace(prev_month_str, 'prev') for band in bands]
+                bands = [band.replace(curr_month_str, 'curr') for band in bands]
+            specific_modality_bands[modality] = bands
+
+        return specific_modality_bands
+
+    def get_intersection_dict(self, tile_info: dict[str, Any]) -> dict[str, list[str]]:
         """Get intersection of requested and available bands.
 
         Args:
-            avail_bands_per_modality: available modality and bands
+            tile_info: tile information for a sample
 
         Returns:
             Dictionary with intersected keys and lists.
         """
+        sample_specific_band_names = self.get_sample_specific_band_names(tile_info)
+        # used the chosen modality bands to get the intersection with available bands
         intersection_dict = {}
-
-        for modality in self.modality_bands:
-            if modality in avail_bands_per_modality:
-                intersected_list = list(
-                    set(self.modality_bands[modality]).intersection(
-                        avail_bands_per_modality[modality]
-                    )
-                )
+        for modality in self.all_modalities:
+            if modality in sample_specific_band_names:
+                intersected_list = [
+                    band
+                    for band in self.all_modality_bands[modality]
+                    if band in sample_specific_band_names[modality]
+                ]
                 if intersected_list:
                     intersection_dict[modality] = intersected_list
 
@@ -409,11 +438,8 @@ class MMEarth(NonGeoDataset):
         ) as f:
             name = f['metadata'][ds_index][0].decode('utf-8')
             tile_info: dict[str, Any] = self.tile_info[name]
-            avail_bands_per_modality = {
-                k: v for k, v in tile_info['BANDS'].items() if v is not None
-            }
             # need to find the intersection of requested and available bands
-            intersection_dict = self.get_intersection_dict(avail_bands_per_modality)
+            intersection_dict = self.get_intersection_dict(tile_info)
             for modality, bands in intersection_dict.items():
                 if 'sentinel1' in modality:
                     data = f['sentinel1'][ds_index][:]
