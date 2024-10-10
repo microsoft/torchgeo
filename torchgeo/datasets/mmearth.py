@@ -36,7 +36,7 @@ class MMEarth(NonGeoDataset):
     * Dynamic World: 9 landcover categories
     * Ecoregion: 846 ecoregion categories
     * ERA5: Climate reanalysis data for temperature mean, min, and max of [year, month, previous month]
-        and precipitation total of [year, month, previous month] (counted as separate modalities)
+      and precipitation total of [year, month, previous month] (counted as separate modalities)
     * ESA World Cover: 11 landcover categories
     * Sentinel-1: VV, VH, HV, HH for ascending/descending orbit
     * Sentinel-2: multi-spectral B1-B12 for L1C/L2A products
