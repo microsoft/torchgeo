@@ -164,7 +164,7 @@ class MMEarth(NonGeoDataset):
         'eco_region': 65535,
     }
 
-    norm_modes: ClassVar[list[str]] = ['z-score', 'min-max']
+    norm_modes = ('z-score', 'min-max')
 
     modality_category_name: ClassVar[dict[str, str]] = {
         'sentinel1_asc': 'image_',
@@ -195,13 +195,13 @@ class MMEarth(NonGeoDataset):
             root: root directory where dataset can be found
             subset: one of "MMEarth", "MMEarth64", or "MMEarth100k"
             modalities: list of modalities to load
-            modality_bands: dictionary of modality bands, see `all_modality_bands`
+            modality_bands: dictionary of modality bands, see *all_modality_bands*
             normalization_mode: one of "z-score" or "min-max"
             transforms: a function/transform that takes input sample dictionary
                 and returns a transformed version
 
         Raises:
-            AssertionError: if ``normalization_mode``, ``subset``, or ``split`` is invalid
+            AssertionError: if *normalization_mode*, *subset*, or *split* is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         lazy_import('h5py')
