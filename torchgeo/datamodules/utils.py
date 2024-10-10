@@ -169,3 +169,29 @@ def group_shuffle_split(
             test_idxs.append(i)
 
     return train_idxs, test_idxs
+
+
+def split_prefixed_kwargs(*prefixes: str, **kwargs: Any) -> tuple[dict[str, Any], ...]:
+    """Split kwargs into prefixed and other kwargs.
+
+    Args:
+        *prefixes: Prefixes to filter kwargs by.
+        **kwargs: Keyword arguments to filter.
+
+    Returns:
+        Tuple of prefixed kwargs and other kwargs.
+    """
+    prefixed_kwargs: list[dict[str, Any]] = [{} for _ in prefixes]
+    other_kwargs: dict[str, Any] = {}
+
+    for key, value in kwargs.items():
+        matched = False
+        for i, prefix in enumerate(prefixes):
+            if key.startswith(prefix):
+                prefixed_kwargs[i][key[len(prefix) :]] = value
+                matched = True
+                break
+        if not matched:
+            other_kwargs[key] = value
+
+    return *prefixed_kwargs, other_kwargs
