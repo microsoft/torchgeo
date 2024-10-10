@@ -84,6 +84,7 @@ from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
 from .mapinwild import MapInWild
 from .millionaid import MillionAID
+from .mmearth import MMEarth
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nccm import NCCM
@@ -233,6 +234,7 @@ __all__ = (
     'LoveDA',
     'MapInWild',
     'MillionAID',
+    'MMEarth',
     'NASAMarineDebris',
     'OSCD',
     'PASTIS',
