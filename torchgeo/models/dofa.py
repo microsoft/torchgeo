@@ -308,6 +308,7 @@ class DOFA(nn.Module):
         )
 
         self.embed_dim = embed_dim
+        self.depth = depth
 
     def forward_features(self, x: Tensor, wavelengths: list[float]) -> Tensor:
         """Forward pass of the feature embedding layer.
