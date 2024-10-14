@@ -324,7 +324,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
             mask
         """
         with rasterio.open(path) as src:
-            mask = torch.from_numpy(src.read()).long()
+            mask = torch.from_numpy(src.read(1)).long()
         mask = self.ordinal_map[mask]
         return mask
 

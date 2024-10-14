@@ -20,7 +20,6 @@ from ..datasets import (
     ChesapeakeWV,
 )
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
-from ..transforms import AugmentationSequential
 from .geo import GeoDataModule
 
 
@@ -62,9 +61,11 @@ class NAIPChesapeakeDataModule(GeoDataModule):
             NAIP, batch_size, patch_size, length, num_workers, **self.naip_kwargs
         )
 
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
+        self.aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
+        # https://github.com/kornia/kornia/issues/2848
+        self.aug.keepdim = True
 
     def setup(self, stage: str) -> None:
         """Set up datasets and samplers.
