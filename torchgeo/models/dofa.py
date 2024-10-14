@@ -65,6 +65,13 @@ class TransformerWeightGenerator(nn.Module):
             num_layers: Number of layers.
         """
         super().__init__()
+
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.num_layers = num_layers
+
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=input_dim,
             nhead=num_heads,
@@ -83,11 +90,6 @@ class TransformerWeightGenerator(nn.Module):
         self.wt_num = 128
         self.weight_tokens = nn.Parameter(torch.empty([self.wt_num, input_dim]))
         self.bias_token = nn.Parameter(torch.empty([1, input_dim]))
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.embed_dim = embed_dim
-        self.num_heads = num_heads
-        self.num_layers = num_layers
 
         # timm's trunc_normal_(std=.02) is effectively normal_(std=0.02) as cutoff is
         # too big (2.)
@@ -272,6 +274,15 @@ class DOFA(nn.Module):
         """
         super().__init__()
 
+        self.img_size = img_size
+        self.patch_size = patch_size
+        self.drop_rate = drop_rate
+        self.embed_dim = embed_dim
+        self.depth = depth
+        self.num_heads = num_heads
+        self.num_classes = num_classes
+        self.mlp_ratio = mlp_ratio
+
         self.dynamic_embed_dim = dynamic_embed_dim
         self.global_pool = global_pool
         if self.global_pool:
@@ -310,15 +321,6 @@ class DOFA(nn.Module):
         self.head = (
             nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
         )
-
-        self.img_size = img_size
-        self.patch_size = patch_size
-        self.drop_rate = drop_rate
-        self.embed_dim = embed_dim
-        self.depth = depth
-        self.num_heads = num_heads
-        self.num_classes = num_classes
-        self.mlp_ratio = mlp_ratio
 
     def forward_features(self, x: Tensor, wavelengths: list[float]) -> Tensor:
         """Forward pass of the feature embedding layer.
