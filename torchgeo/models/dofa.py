@@ -280,11 +280,11 @@ class DOFA(nn.Module):
         self.embed_dim = embed_dim
         self.depth = depth
         self.num_heads = num_heads
+        self.dynamic_embed_dim = dynamic_embed_dim
         self.num_classes = num_classes
+        self.global_pool = global_pool
         self.mlp_ratio = mlp_ratio
 
-        self.dynamic_embed_dim = dynamic_embed_dim
-        self.global_pool = global_pool
         if self.global_pool:
             norm_layer = norm_layer
             embed_dim = embed_dim
