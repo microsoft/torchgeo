@@ -81,7 +81,6 @@ class MMEarth(NonGeoDataset):
         'MMEarth100k': 'data_100k_v001',
     }
 
-    #: List of all available modalities
     all_modalities = (
         'aster',
         'biome',
@@ -99,7 +98,6 @@ class MMEarth(NonGeoDataset):
     )
 
     # See https://github.com/vishalned/MMEarth-train/blob/8d6114e8e3ccb5ca5d98858e742dac24350b64fd/MODALITIES.py#L108C1-L160C2
-    #: Dictionary of all available bands for each modality
     all_modality_bands: ClassVar[dict[str, list[str]]] = {
         'sentinel2': [
             'B1',
@@ -196,8 +194,8 @@ class MMEarth(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             subset: one of "MMEarth", "MMEarth64", or "MMEarth100k"
-            modalities: list of modalities to load, see :attr:`all_modalities`
-            modality_bands: dictionary of modality bands, see :attr:`all_modality_bands`
+            modalities: list of modalities to load
+            modality_bands: dictionary of modality bands, see
             normalization_mode: one of "z-score" or "min-max"
             transforms: a function/transform that takes input sample dictionary
                 and returns a transformed version
