@@ -81,6 +81,7 @@ class MMEarth(NonGeoDataset):
         'MMEarth100k': 'data_100k_v001',
     }
 
+    #: List of all available modalities
     all_modalities = (
         'aster',
         'biome',
@@ -98,6 +99,7 @@ class MMEarth(NonGeoDataset):
     )
 
     # See https://github.com/vishalned/MMEarth-train/blob/8d6114e8e3ccb5ca5d98858e742dac24350b64fd/MODALITIES.py#L108C1-L160C2
+    #: Dictionary of all available bands for each modality
     all_modality_bands: ClassVar[dict[str, list[str]]] = {
         'sentinel2': [
             'B1',
