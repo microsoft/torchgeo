@@ -194,8 +194,8 @@ class MMEarth(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             subset: one of "MMEarth", "MMEarth64", or "MMEarth100k"
-            modalities: list of modalities to load
-            modality_bands: dictionary of modality bands, see *all_modality_bands*
+            modalities: list of modalities to load, see :attr:`all_modalities`
+            modality_bands: dictionary of modality bands, see :attr:`all_modality_bands`
             normalization_mode: one of "z-score" or "min-max"
             transforms: a function/transform that takes input sample dictionary
                 and returns a transformed version
