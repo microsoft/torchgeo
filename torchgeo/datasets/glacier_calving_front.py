@@ -35,7 +35,7 @@ class GlacierCalvingFront(NonGeoDataset):
 
     Dataset format:
 
-    * images are three-channel pngs with dimension 256x256
+    * images are single-channel pngs with dimension 256x256
     * segmentation masks are single-channel pngs
 
     Dataset classes:
