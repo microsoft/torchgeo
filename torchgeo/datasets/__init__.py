@@ -59,6 +59,7 @@ from .geo import (
 )
 from .geonrw import GeoNRW
 from .gid15 import GID15
+from .glacier_calving_front import GlacierCalvingFront
 from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
@@ -223,6 +224,7 @@ __all__ = (
     'ForestDamage',
     'GeoNRW',
     'GID15',
+    'GlacierCalvingFront',
     'IDTReeS',
     'InriaAerialImageLabeling',
     'LandCoverAI',

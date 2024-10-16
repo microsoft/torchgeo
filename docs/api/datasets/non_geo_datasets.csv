@@ -20,6 +20,7 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `Forest Damage`_,OD,Drone imagery,"CDLA-Permissive-1.0","1,543",4,"1,500x1,500",,RGB
 `GeoNRW`_,S,Aerial,"CC-BY-4.0","7,783",11,"1,000x1,000",1,"RGB, DEM"
 `GID-15`_,S,Gaofen-2,-,150,15,"6,800x7,200",3,RGB
+`GlacierCalvingFront`_,S,"Sentinel-1, TerraSAR-X, TanDEM-X, ENVISAT, European Remote Sensing Satellite 1&2, ALOS PALSAR, and RADARSAT-1","CC-BY-4.0","93,820",4,"256x256",6-20,"SAR"
 `IDTReeS`_,"OD,C",Aerial,"CC-BY-4.0",591,33,200x200,0.1--1,RGB
 `Inria Aerial Image Labeling`_,S,Aerial,-,360,2,"5,000x5,000",0.3,RGB
 `LandCover.ai`_,S,Aerial,"CC-BY-NC-SA-4.0","10,674",5,512x512,0.25--0.5,RGB

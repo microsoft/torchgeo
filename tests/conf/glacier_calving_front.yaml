@@ -1,0 +1,16 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 3
+    num_classes: 11
+    num_filters: 1
+    ignore_index: null
+data:
+  class_path: GlacierCalvingFrontDataModule
+  init_args:
+    batch_size: 1
+  dict_kwargs:
+    root: 'tests/data/glacier_calving_front'
