@@ -53,15 +53,3 @@ class GlacierCalvingFrontDataModule(NonGeoDataModule):
         )
 
         self.size = size
-
-    def setup(self, stage: str) -> None:
-        """Set up datasets.
-
-        Args:
-            stage: Either 'fit', 'validate', 'test', or 'predict'.
-        """
-        if stage in ['fit', 'validate']:
-            self.train_dataset = GlacierCalvingFront(split='train', **self.kwargs)
-            self.val_dataset = GlacierCalvingFront(split='val', **self.kwargs)
-        if stage in ['test']:
-            self.test_dataset = GlacierCalvingFront(split='test', **self.kwargs)

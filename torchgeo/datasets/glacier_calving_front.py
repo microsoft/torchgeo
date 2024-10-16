@@ -62,7 +62,7 @@ class GlacierCalvingFront(NonGeoDataset):
 
     mask_dirs = ('fronts', 'zones')
 
-    url = 'https://huggingface.co/datasets/torchgeo/glacier_calving_front/resolve/main/glacier_calving_data.zip'
+    url = 'https://huggingface.co/datasets/torchgeo/glacier_calving_front/resolve/fbf246c432a909ef96d96811b1f1b8a1e8c06542/glacier_calving_data.zip'
 
     md5 = '56e39e33f88a9842f48c513083e3c50a'
 
