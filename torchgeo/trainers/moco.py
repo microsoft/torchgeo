@@ -19,7 +19,7 @@ from lightly.models.modules import MoCoProjectionHead
 from lightly.models.utils import deactivate_requires_grad, update_momentum
 from lightly.utils.scheduler import cosine_schedule
 from torch import Tensor
-from torch.optim import SGD, AdamW, Optimizer  # type: ignore[attr-defined]
+from torch.optim import SGD, AdamW, Optimizer
 from torch.optim.lr_scheduler import (
     CosineAnnealingLR,
     LinearLR,
