@@ -19,6 +19,7 @@ from .fire_risk import FireRiskDataModule
 from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
 from .geonrw import GeoNRWDataModule
 from .gid15 import GID15DataModule
+from .glacier_calving_front import GlacierCalvingFrontDataModule
 from .inria import InriaAerialImageLabelingDataModule
 from .iobench import IOBenchDataModule
 from .l7irish import L7IrishDataModule
@@ -80,6 +81,7 @@ __all__ = (
     'FireRiskDataModule',
     'GeoNRWDataModule',
     'GID15DataModule',
+    'GlacierCalvingFrontDataModule',
     'InriaAerialImageLabelingDataModule',
     'LandCoverAIDataModule',
     'LandCoverAI100DataModule',

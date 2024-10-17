@@ -58,6 +58,7 @@ class TestSemanticSegmentationTask:
             'etci2021',
             'geonrw',
             'gid15',
+            'glacier_calving_front',
             'inria',
             'l7irish',
             'l8biome',

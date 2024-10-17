@@ -114,6 +114,11 @@ GID-15
 
 .. autoclass:: GID15DataModule
 
+Glacier Calving Front
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: GlacierCalvingFrontDataModule
+
 Inria Aerial Image Labeling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

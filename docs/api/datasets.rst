@@ -307,6 +307,11 @@ GID-15
 
 .. autoclass:: GID15
 
+Glacier Calving Front
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: GlacierCalvingFront
+
 IDTReeS
 ^^^^^^^
 
