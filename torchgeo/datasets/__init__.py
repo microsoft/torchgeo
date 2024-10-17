@@ -14,7 +14,7 @@ from .biomassters import BioMassters
 from .cabuar import CaBuAr
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
-from .chabud import ChaBuD
+from .chabud import ChaBuDx
 from .chesapeake import (
     Chesapeake,
     ChesapeakeCVPR,
@@ -92,6 +92,7 @@ from .nlcd import NLCD
 from .openbuildings import OpenBuildings
 from .oscd import OSCD
 from .pastis import PASTIS
+from .substation_seg import SubstationDataset
 from .patternnet import PatternNet
 from .potsdam import Potsdam2D
 from .prisma import PRISMA
@@ -263,6 +264,7 @@ __all__ = (
     'SSL4EOLBenchmark',
     'SSL4EOL',
     'SSL4EOS12',
+    'SubstationDataset',
     'SustainBenchCropYield',
     'TropicalCyclone',
     'UCMerced',
