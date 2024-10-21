@@ -1,22 +1,29 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License.
-
-"""Substation Segmentation Dataset."""
-
 import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-
+from typing import NamedTuple, Any
 from .geo import NonGeoDataset
 from .utils import download_url, extract_archive
 
 
+class Args(NamedTuple):
+    data_dir: str
+    in_channels: int
+    use_timepoints: bool
+    normalizing_type: str
+    normalizing_factor: np.ndarray
+    means: np.ndarray
+    stds: np.ndarray
+    mask_2d: bool
+    model_type: str
+
+
 class SubstationDataset(NonGeoDataset):
-    """SubstationDataset is responsible for handling the loading and transformation of substation segmentation datasets.
-    
-    It extends NonGeoDataset, providing methods for dataset verification, downloading, and transformation.
+    """
+    SubstationDataset is responsible for handling the loading and transformation
+    of substation segmentation datasets. It extends NonGeoDataset, providing methods
+    for dataset verification, downloading, and transformation.
     """
     directory = 'Substation'
     filename_images = 'image_stack.tar.gz'
@@ -24,12 +31,12 @@ class SubstationDataset(NonGeoDataset):
     url_for_images = ''
     url_for_masks = ''
 
-    def __init__(self, args: object, image_files: list, geo_transforms: object = None, color_transforms: object = None,
-                 image_resize: object = None, mask_resize: object = None) -> None:
+    def __init__(self, args: Args, image_files: list[str], geo_transforms: Any = None, 
+                 color_transforms: Any = None, image_resize: Any = None, mask_resize: Any = None) -> None:
         """Initialize the dataset with the provided parameters.
 
         Args:
-            args: Arguments that contain configuration information such as data_dir, in_channels, and others.
+            args: Arguments that contain configuration information such as data_dir, in_channels, etc.
             image_files: List of image filenames for the dataset.
             geo_transforms: Geometric transformations to apply on the images and masks.
             color_transforms: Color transformations to apply on the images.
@@ -56,14 +63,14 @@ class SubstationDataset(NonGeoDataset):
         # Check if the dataset is available or needs to be downloaded
         self._verify()
 
-    def __getitem__(self, index: int) -> tuple:
+    def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
         """Get an item from the dataset by index.
 
         Args:
             index: Index of the item to retrieve.
 
         Returns:
-            A tuple containing the image and corresponding mask.
+            A dictionary containing the image and corresponding mask.
         """
         image_filename = self.image_filenames[index]
         image_path = os.path.join(self.image_dir, image_filename)
@@ -86,26 +93,27 @@ class SubstationDataset(NonGeoDataset):
         # Apply geo and color transformations
         image, mask = self._apply_transforms(image, mask)
 
-        return image, mask
+        return {"image": image, "mask": mask}
 
     def __len__(self) -> int:
         """Return the length of the dataset.
-        
+
         Returns:
-            Number of items in the dataset.
+            The number of items in the dataset.
         """
         return len(self.image_filenames)
 
     def plot(self) -> None:
         """Plot a random image and mask from the dataset."""
         index = np.random.randint(0, self.__len__())
-        image, mask = self.__getitem__(index)
+        data = self.__getitem__(index)
+        image, mask = data["image"], data["mask"]
         fig, axs = plt.subplots(1, 2, figsize=(15, 15))
         axs[0].imshow(image.permute(1, 2, 0))
         axs[1].imshow(image.permute(1, 2, 0))
         axs[1].imshow(mask.permute(1, 2, 0), alpha=0.5, cmap='gray')
 
-    def _normalize_image(self, image: np.ndarray) -> torch.Tensor:
+    def _normalize_image(self, image: np.ndarray[Any, Any]) -> torch.Tensor:
         """Normalize the image based on the selected normalizing type.
 
         Args:
@@ -123,7 +131,7 @@ class SubstationDataset(NonGeoDataset):
             image = np.clip(image, 0, 1)
         return torch.from_numpy(image)
 
-    def _handle_channels_and_timepoints(self, image: np.ndarray) -> torch.Tensor:
+    def _handle_channels_and_timepoints(self, image: np.ndarray[Any, Any]) -> torch.Tensor:
         """Handle channels and timepoints in the image.
 
         Args:
@@ -138,7 +146,7 @@ class SubstationDataset(NonGeoDataset):
             image = image[:4, :, :, :] if self.use_timepoints else image[0]
         return torch.from_numpy(image)
 
-    def _apply_transforms(self, image: torch.Tensor, mask: torch.Tensor) -> tuple:
+    def _apply_transforms(self, image: torch.Tensor, mask: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Apply transformations to the image and mask.
 
         Args:
@@ -156,7 +164,9 @@ class SubstationDataset(NonGeoDataset):
         if self.color_transforms and self.in_channels >= 3:
             num_timepoints = image.shape[0] // self.in_channels
             for i in range(num_timepoints):
-                image[i * self.in_channels:i * self.in_channels + 3, :, :] = self.color_transforms(image[i * self.in_channels:i * self.in_channels + 3, :, :])
+                image[i * self.in_channels:i * self.in_channels + 3, :, :] = self.color_transforms(
+                    image[i * self.in_channels:i * self.in_channels + 3, :, :]
+                )
 
         if self.image_resize:
             image = self.image_resize(image)
