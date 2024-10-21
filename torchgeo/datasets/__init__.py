@@ -14,7 +14,7 @@ from .biomassters import BioMassters
 from .cabuar import CaBuAr
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
-from .chabud import ChaBuDx
+from .chabud import ChaBuD
 from .chesapeake import (
     Chesapeake,
     ChesapeakeCVPR,
