@@ -8,6 +8,7 @@ import os
 from collections.abc import Callable
 from typing import ClassVar
 
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -28,22 +29,22 @@ class GlacierCalvingFront(NonGeoDataset):
 
     Dataset features:
 
-    * 46,700 train, 18,744 validation, and 28,376 test images
+    * 13,090 train, 2,241 validation, and 3,761 test images
     * varying spatial resolution of 6-20m
     * paired binary calving front segmentation masks
     * paired multi-class land cover segmentation masks
 
     Dataset format:
 
-    * images are single-channel pngs with dimension 256x256
+    * images are single-channel pngs with dimension 512x512
     * segmentation masks are single-channel pngs
 
     Dataset classes:
 
-    1. background
-    2. ocean
-    3. rock
-    4. glacier
+    1. N/A
+    2. rock
+    3. glacier
+    4. ocean/ice melange
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -62,15 +63,15 @@ class GlacierCalvingFront(NonGeoDataset):
 
     mask_dirs = ('fronts', 'zones')
 
-    url = 'https://huggingface.co/datasets/torchgeo/glacier_calving_front/resolve/fbf246c432a909ef96d96811b1f1b8a1e8c06542/glacier_calving_data.zip'
+    url = 'https://huggingface.co/datasets/torchgeo/glacier_calving_front/resolve/2cfbc4a5cbcdb195d80335cf384a847a02be516a/glacier_calving_data.zip'
 
-    md5 = '56e39e33f88a9842f48c513083e3c50a'
+    md5 = 'b40d747ff1d07f94d8b7ae54b93f0e70'
 
     px_class_values: ClassVar[dict[int, str]] = {
-        0: 'background',
-        64: 'ocean',
-        127: 'rock',
-        254: 'glacier',
+        0: 'N/A',
+        64: 'rock',
+        127: 'glacier',
+        255: 'ocean/ice melange',
     }
 
     def __init__(
@@ -109,11 +110,17 @@ class GlacierCalvingFront(NonGeoDataset):
             os.path.join(
                 self.root,
                 self.zipfilename.replace('.zip', ''),
-                self.mask_dirs[0],
+                self.mask_dirs[1],
                 self.split,
                 '*.png',
             )
         )
+
+        self.ordinal_map = torch.zeros(
+            max(self.px_class_values.keys()) + 1, dtype=torch.long
+        )
+        for ordinal, px_class in enumerate(self.px_class_values.keys()):
+            self.ordinal_map[px_class] = ordinal
 
     def __len__(self) -> int:
         """Return the number of images in the dataset."""
@@ -128,19 +135,36 @@ class GlacierCalvingFront(NonGeoDataset):
         Returns:
             dict: a dict containing the image and mask
         """
-        zones_path = self.fpaths[idx]
-        img_path = zones_path.replace('_zones_', '_')
-        front_path = zones_path.replace('_zones_', '_front_')
-        img = Image.open(img_path)
+        zones_filename = os.path.basename(self.fpaths[idx])
+        img_filename = zones_filename.replace('_zones_', '_')
+        front_filename = zones_filename.replace('_zones_', '_front_')
 
-        front_mask = Image.open(front_path)
-        zone_mask = Image.open(zones_path)
+        def read_tensor(path: str) -> Tensor:
+            return torch.from_numpy(np.array(Image.open(path)))
 
-        sample = {
-            'image': torch.from_numpy(np.array(img)).unsqueeze(0).float(),
-            'mask_front': torch.from_numpy(np.array(front_mask)).long(),
-            'mask_zone': torch.from_numpy(np.array(zone_mask)).long(),
-        }
+        img = (
+            read_tensor(
+                os.path.join(
+                    self.root, self.data_dir, self.image_dir, self.split, img_filename
+                )
+            )
+            .unsqueeze(0)
+            .float()
+        )
+        front_mask = read_tensor(
+            os.path.join(
+                self.root, self.data_dir, self.mask_dirs[0], self.split, front_filename
+            )
+        ).long()
+        zone_mask = read_tensor(
+            os.path.join(
+                self.root, self.data_dir, self.mask_dirs[1], self.split, zones_filename
+            )
+        ).long()
+
+        zone_mask = self.ordinal_map[zone_mask]
+
+        sample = {'image': img, 'mask_front': front_mask, 'mask_zones': zone_mask}
 
         if self.transforms:
             sample = self.transforms(sample)
@@ -229,8 +253,17 @@ class GlacierCalvingFront(NonGeoDataset):
         axs[1].imshow(sample['mask_front'].numpy(), cmap='gray')
         axs[1].axis('off')
 
-        axs[2].imshow(sample['mask_zone'].numpy(), cmap='gray')
+        unique_classes = np.unique(sample['mask_zones'].numpy())
+        cmap = plt.get_cmap('tab20', len(unique_classes))
+        axs[2].imshow(sample['mask_zones'].numpy(), cmap=cmap)
         axs[2].axis('off')
+
+        handles = [
+            mpatches.Patch(color=cmap(ordinal), label=self.px_class_values[px_class])
+            for ordinal, px_class in enumerate(self.px_class_values.keys())
+            if ordinal in unique_classes
+        ]
+        axs[2].legend(handles=handles, loc='upper right', bbox_to_anchor=(1.31, 1))
 
         if show_titles:
             axs[0].set_title('Image')

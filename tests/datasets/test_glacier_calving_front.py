@@ -38,8 +38,8 @@ class TestGlacierCalvingFront:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert x['image'].shape[0] == 1
-        assert isinstance(x['mask_zone'], torch.Tensor)
-        assert x['image'].shape[-2:] == x['mask_zone'].shape[-2:]
+        assert isinstance(x['mask_zones'], torch.Tensor)
+        assert x['image'].shape[-2:] == x['mask_zones'].shape[-2:]
 
     def test_len(self, dataset: GlacierCalvingFront) -> None:
         if dataset.split == 'train':
@@ -71,6 +71,6 @@ class TestGlacierCalvingFront:
         plt.close()
 
         sample = dataset[0]
-        sample['prediction'] = torch.clone(sample['mask_zone'])
+        sample['prediction'] = torch.clone(sample['mask_zones'])
         dataset.plot(sample, suptitle='Prediction')
         plt.close()

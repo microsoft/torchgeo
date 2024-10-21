@@ -43,13 +43,13 @@ class GlacierCalvingFrontDataModule(NonGeoDataModule):
             K.Resize(size),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
-            data_keys=['image', 'mask'],
+            data_keys=['image', 'mask_front', 'mask_zones'],
         )
 
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.Resize(size),
-            data_keys=['image', 'mask'],
+            data_keys=['image', 'mask_front', 'mask_zones'],
         )
 
         self.size = size
