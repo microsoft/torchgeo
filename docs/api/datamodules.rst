@@ -62,6 +62,11 @@ CaBuAr
 
 .. autoclass:: CaBuArDataModule
 
+CAlving Fronts and where to Find thEm (CaFFe)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: CaFFeDataModule
+
 ChaBuD
 ^^^^^^
 
@@ -113,11 +118,6 @@ GID-15
 ^^^^^^
 
 .. autoclass:: GID15DataModule
-
-Glacier Calving Front
-^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: GlacierCalvingFrontDataModule
 
 Inria Aerial Image Labeling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

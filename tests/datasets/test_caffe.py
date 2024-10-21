@@ -16,13 +16,13 @@ from torchgeo.datasets import CaFFe, DatasetNotFoundError
 
 
 class TestCaFFe:
-    @pytest.fixture(params=['train', 'test'])
+    @pytest.fixture(params=['train', 'val', 'test'])
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> CaFFe:
-        md5 = '0b5c05bea31ff666f8eba18b43d4a01f'
+        md5 = 'f06c155a3fea372e884c234115c169e1'
         monkeypatch.setattr(CaFFe, 'md5', md5)
-        url = os.path.join('tests', 'data', 'caffe', 'glacier_calving_data.zip')
+        url = os.path.join('tests', 'data', 'caffe', 'caffe.zip')
         monkeypatch.setattr(CaFFe, 'url', url)
         root = tmp_path
         split = request.param

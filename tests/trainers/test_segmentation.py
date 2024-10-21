@@ -51,6 +51,7 @@ class TestSemanticSegmentationTask:
         [
             'agrifieldnet',
             'cabuar',
+            'caffe',
             'chabud',
             'chesapeake_cvpr_5',
             'chesapeake_cvpr_7',
@@ -58,7 +59,6 @@ class TestSemanticSegmentationTask:
             'etci2021',
             'geonrw',
             'gid15',
-            'glacier_calving_front',
             'inria',
             'l7irish',
             'l8biome',

@@ -11,7 +11,7 @@ import numpy as np
 from PIL import Image
 
 # Define the root directory and subdirectories
-root_dir = 'glacier_calving_data'
+root_dir = 'caffe'
 sub_dirs = ['zones', 'sar_images', 'fronts']
 splits = ['train', 'val', 'test']
 
@@ -76,5 +76,5 @@ def md5(fname: str) -> str:
     return hash_md5.hexdigest()
 
 
-md5sum = md5('glacier_calving_data.zip')
+md5sum = md5('caffe.zip')
 print(f'MD5 checksum: {md5sum}')
