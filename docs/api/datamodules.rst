@@ -62,6 +62,11 @@ CaBuAr
 
 .. autoclass:: CaBuArDataModule
 
+CAlving Fronts and where to Find thEm (CaFFe)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: CaFFeDataModule
+
 ChaBuD
 ^^^^^^
 
