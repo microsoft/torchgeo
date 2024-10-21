@@ -6,8 +6,7 @@ import torch
 from pathlib import Path
 from pytest import MonkeyPatch
 
-from .datasets import SubstationDataset
-from .errors import DatasetNotFoundError
+from torchgeo.datasets import SubstationDataset, DatasetNotFoundError
 
 
 class TestSubstationDataset:
