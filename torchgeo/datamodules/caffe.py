@@ -32,7 +32,7 @@ class CaFFeDataModule(NonGeoDataModule):
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
-            size: resize images of input size 1000x1000 to size x size
+            size: resize images of input size 512x512 to size x size
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.CaFFe`.
         """

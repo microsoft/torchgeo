@@ -26,6 +26,10 @@ class TestCaFFeDataModule:
         datamodule.setup('validate')
         next(iter(datamodule.val_dataloader()))
 
+    def test_test_dataloader(self, datamodule: CaFFeDataModule) -> None:
+        datamodule.setup('test')
+        next(iter(datamodule.test_dataloader()))
+
     def test_plot(self, datamodule: CaFFeDataModule) -> None:
         datamodule.setup('validate')
         batch = next(iter(datamodule.val_dataloader()))
