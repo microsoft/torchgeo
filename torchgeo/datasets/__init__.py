@@ -14,6 +14,7 @@ from .biomassters import BioMassters
 from .cabuar import CaBuAr
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
+from .chabud import ChaBuDx
 from .chesapeake import (
     Chesapeake,
     ChesapeakeCVPR,
@@ -152,6 +153,7 @@ __all__ = (
     'AsterGDEM',
     'CanadianBuildingFootprints',
     'CDL',
+    'ChaBuDx',
     'Chesapeake',
     'Chesapeake7',
     'Chesapeake13',
