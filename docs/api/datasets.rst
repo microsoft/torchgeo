@@ -222,6 +222,11 @@ CaBuAr
 
 .. autoclass:: CaBuAr
 
+CAlving Fronts and where to Find thEm (CaFFe)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: CaFFe
+
 ChaBuD
 ^^^^^^
 
@@ -306,11 +311,6 @@ GID-15
 ^^^^^^
 
 .. autoclass:: GID15
-
-Glacier Calving Front
-^^^^^^^^^^^^^^^^^^^^^
-
-.. autoclass:: GlacierCalvingFront
 
 IDTReeS
 ^^^^^^^

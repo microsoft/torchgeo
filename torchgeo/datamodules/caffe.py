@@ -1,20 +1,20 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""GlacierCalvingFront datamodule."""
+"""CaFFe datamodule."""
 
 from typing import Any
 
 import kornia.augmentation as K
 import torch
 
-from ..datasets import GlacierCalvingFront
+from ..datasets import CaFFe
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
-class GlacierCalvingFrontDataModule(NonGeoDataModule):
-    """LightningDataModule implementation for the GlacierCalvingFront dataset.
+class CaFFeDataModule(NonGeoDataModule):
+    """LightningDataModule implementation for the CaFFe dataset.
 
     Implements the default splits that come with the dataset.
 
@@ -27,16 +27,16 @@ class GlacierCalvingFrontDataModule(NonGeoDataModule):
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, size: int = 256, **kwargs: Any
     ) -> None:
-        """Initialize a new GlacierCalvingFrontDataModule instance.
+        """Initialize a new CaFFeDataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
             size: resize images of input size 1000x1000 to size x size
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.GlacierCalvingFront`.
+                :class:`~torchgeo.datasets.CaFFe`.
         """
-        super().__init__(GlacierCalvingFront, batch_size, num_workers, **kwargs)
+        super().__init__(CaFFe, batch_size, num_workers, **kwargs)
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),

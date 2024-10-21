@@ -12,28 +12,24 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import DatasetNotFoundError, GlacierCalvingFront
+from torchgeo.datasets import CaFFe, DatasetNotFoundError
 
 
-class TestGlacierCalvingFront:
+class TestCaFFe:
     @pytest.fixture(params=['train', 'test'])
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
-    ) -> GlacierCalvingFront:
+    ) -> CaFFe:
         md5 = '0b5c05bea31ff666f8eba18b43d4a01f'
-        monkeypatch.setattr(GlacierCalvingFront, 'md5', md5)
-        url = os.path.join(
-            'tests', 'data', 'glacier_calving_front', 'glacier_calving_data.zip'
-        )
-        monkeypatch.setattr(GlacierCalvingFront, 'url', url)
+        monkeypatch.setattr(CaFFe, 'md5', md5)
+        url = os.path.join('tests', 'data', 'caffe', 'glacier_calving_data.zip')
+        monkeypatch.setattr(CaFFe, 'url', url)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return GlacierCalvingFront(
-            root, split, transforms, download=True, checksum=True
-        )
+        return CaFFe(root, split, transforms, download=True, checksum=True)
 
-    def test_getitem(self, dataset: GlacierCalvingFront) -> None:
+    def test_getitem(self, dataset: CaFFe) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
@@ -41,32 +37,32 @@ class TestGlacierCalvingFront:
         assert isinstance(x['mask_zones'], torch.Tensor)
         assert x['image'].shape[-2:] == x['mask_zones'].shape[-2:]
 
-    def test_len(self, dataset: GlacierCalvingFront) -> None:
+    def test_len(self, dataset: CaFFe) -> None:
         if dataset.split == 'train':
             assert len(dataset) == 3
         else:
             assert len(dataset) == 3
 
-    def test_already_downloaded(self, dataset: GlacierCalvingFront) -> None:
-        GlacierCalvingFront(root=dataset.root)
+    def test_already_downloaded(self, dataset: CaFFe) -> None:
+        CaFFe(root=dataset.root)
 
     def test_not_yet_extracted(self, tmp_path: Path) -> None:
         filename = 'glacier_calving_data.zip'
-        dir = os.path.join('tests', 'data', 'glacier_calving_front')
+        dir = os.path.join('tests', 'data', 'caffe')
         shutil.copyfile(
             os.path.join(dir, filename), os.path.join(str(tmp_path), filename)
         )
-        GlacierCalvingFront(root=str(tmp_path))
+        CaFFe(root=str(tmp_path))
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
-            GlacierCalvingFront(split='foo')
+            CaFFe(split='foo')
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            GlacierCalvingFront(tmp_path)
+            CaFFe(tmp_path)
 
-    def test_plot(self, dataset: GlacierCalvingFront) -> None:
+    def test_plot(self, dataset: CaFFe) -> None:
         dataset.plot(dataset[0], suptitle='Test')
         plt.close()
 

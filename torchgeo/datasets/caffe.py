@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Glacier Calving Front dataset."""
+"""CaFFe dataset."""
 
 import glob
 import os
@@ -21,10 +21,10 @@ from .geo import NonGeoDataset
 from .utils import Path, download_and_extract_archive, extract_archive
 
 
-class GlacierCalvingFront(NonGeoDataset):
-    """Glacier Calving Front dataset.
+class CaFFe(NonGeoDataset):
+    """CaFFe (CAlving Fronts and where to Find thEm) dataset.
 
-    The `Glacier Calving Front <https://doi.pangaea.de/10.1594/PANGAEA.940950>`__ dataset is a
+    The `CaFFe <https://doi.pangaea.de/10.1594/PANGAEA.940950>`__ dataset is a
     semantic segmentation dataset of marine-terminating glaciers.
 
     Dataset features:
@@ -55,17 +55,17 @@ class GlacierCalvingFront(NonGeoDataset):
 
     valid_splits = ('train', 'val', 'test')
 
-    zipfilename = 'glacier_calving_data.zip'
+    zipfilename = 'caffe.zip'
 
-    data_dir = 'glacier_calving_data'
+    data_dir = 'caffe'
 
     image_dir = 'sar_images'
 
     mask_dirs = ('fronts', 'zones')
 
-    url = 'https://huggingface.co/datasets/torchgeo/glacier_calving_front/resolve/2cfbc4a5cbcdb195d80335cf384a847a02be516a/glacier_calving_data.zip'
+    url = 'https://huggingface.co/datasets/torchgeo/caffe/resolve/cc96e8418981ce0f03afc9beace6422fdd7142c4/caffe.zip'
 
-    md5 = 'b40d747ff1d07f94d8b7ae54b93f0e70'
+    md5 = '9a92fd6f05af74fbc41602595a55df0d'
 
     px_class_values: ClassVar[dict[int, str]] = {
         0: 'N/A',
@@ -82,7 +82,7 @@ class GlacierCalvingFront(NonGeoDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new instance of GlacierCalvingFront dataset.
+        """Initialize a new instance of CaFFe dataset.
 
         Args:
             root: root directory where dataset can be found
@@ -234,7 +234,7 @@ class GlacierCalvingFront(NonGeoDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`GlacierCalvingFront.__getitem__`
+            sample: a sample returned by :meth:`CaFFe.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 

@@ -12,6 +12,7 @@ from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
 from .cabuar import CaBuAr
+from .caffe import CaFFe
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chabud import ChaBuD
@@ -59,7 +60,6 @@ from .geo import (
 )
 from .geonrw import GeoNRW
 from .gid15 import GID15
-from .glacier_calving_front import GlacierCalvingFront
 from .globbiomass import GlobBiomass
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
@@ -206,6 +206,7 @@ __all__ = (
     'BigEarthNet',
     'BioMassters',
     'CaBuAr',
+    'CaFFe',
     'ChaBuD',
     'CloudCoverDetection',
     'COWC',
@@ -226,7 +227,6 @@ __all__ = (
     'ForestDamage',
     'GeoNRW',
     'GID15',
-    'GlacierCalvingFront',
     'IDTReeS',
     'InriaAerialImageLabeling',
     'LandCoverAI',

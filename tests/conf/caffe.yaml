@@ -9,8 +9,8 @@ model:
     num_filters: 1
     ignore_index: null
 data:
-  class_path: GlacierCalvingFrontDataModule
+  class_path: CaFFeDataModule
   init_args:
     batch_size: 1
   dict_kwargs:
-    root: 'tests/data/glacier_calving_front'
+    root: 'tests/data/caffe'
