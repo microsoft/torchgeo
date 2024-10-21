@@ -47,7 +47,7 @@ class TestCaFFe:
         CaFFe(root=dataset.root)
 
     def test_not_yet_extracted(self, tmp_path: Path) -> None:
-        filename = 'glacier_calving_data.zip'
+        filename = 'caffe.zip'
         dir = os.path.join('tests', 'data', 'caffe')
         shutil.copyfile(
             os.path.join(dir, filename), os.path.join(str(tmp_path), filename)
