@@ -85,6 +85,7 @@ from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
 from .mapinwild import MapInWild
 from .millionaid import MillionAID
+from .mmearth import MMEarth
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nccm import NCCM
@@ -99,6 +100,7 @@ from .quakeset import QuakeSet
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
+from .satlas import SatlasPretrain
 from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
@@ -235,6 +237,7 @@ __all__ = (
     'LoveDA',
     'MapInWild',
     'MillionAID',
+    'MMEarth',
     'NASAMarineDebris',
     'OSCD',
     'PASTIS',
@@ -244,6 +247,7 @@ __all__ = (
     'RESISC45',
     'ReforesTree',
     'RwandaFieldBoundary',
+    'SatlasPretrain',
     'SeasonalContrastS2',
     'SeasoNet',
     'SEN12MS',

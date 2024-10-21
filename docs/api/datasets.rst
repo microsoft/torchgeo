@@ -354,6 +354,11 @@ Million-AID
 
 .. autoclass:: MillionAID
 
+MMEarth
+^^^^^^^^
+
+.. autoclass:: MMEarth
+
 NASA Marine Debris
 ^^^^^^^^^^^^^^^^^^
 
@@ -398,6 +403,11 @@ Rwanda Field Boundary
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: RwandaFieldBoundary
+
+SatlasPretrain
+^^^^^^^^^^^^^^
+
+.. autoclass:: SatlasPretrain
 
 Seasonal Contrast
 ^^^^^^^^^^^^^^^^^

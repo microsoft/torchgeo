@@ -9,7 +9,7 @@ from typing import Any
 
 import lightning
 from lightning.pytorch import LightningModule
-from torch.optim import AdamW  # type: ignore[attr-defined]
+from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
