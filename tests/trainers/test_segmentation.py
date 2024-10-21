@@ -51,7 +51,6 @@ class TestSemanticSegmentationTask:
         [
             'agrifieldnet',
             'cabuar',
-            'caffe',
             'chabud',
             'chesapeake_cvpr_5',
             'chesapeake_cvpr_7',

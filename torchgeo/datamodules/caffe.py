@@ -43,13 +43,13 @@ class CaFFeDataModule(NonGeoDataModule):
             K.Resize(size),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
-            data_keys=['image', 'mask_front', 'mask_zones'],
+            data_keys=['image', 'mask'],
         )
 
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.Resize(size),
-            data_keys=['image', 'mask_front', 'mask_zones'],
+            data_keys=['image', 'mask'],
         )
 
         self.size = size
