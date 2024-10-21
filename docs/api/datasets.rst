@@ -222,8 +222,8 @@ CaBuAr
 
 .. autoclass:: CaBuAr
 
-CAlving Fronts and where to Find thEm (CaFFe)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+CaFFe
+^^^^^
 
 .. autoclass:: CaFFe
 
