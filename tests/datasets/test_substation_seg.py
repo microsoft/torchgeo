@@ -1,12 +1,12 @@
 import os
-import shutil
-import pytest
-import numpy as np
-import torch
 from pathlib import Path
+
+import numpy as np
+import pytest
+import torch
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import SubstationDataset, DatasetNotFoundError
+from torchgeo.datasets import DatasetNotFoundError, SubstationDataset
 
 
 class TestSubstationDataset:
@@ -21,8 +21,14 @@ class TestSubstationDataset:
             }
         ]
     )
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path, request) -> SubstationDataset:
-        args = lambda: None
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path, request: pytest.FixtureRequest) -> SubstationDataset:
+        """
+        Fixture to create a mock dataset with specified parameters.
+        """
+        class Args:
+            pass
+
+        args = Args()
         args.data_dir = tmp_path
         args.in_channels = 4
         args.use_timepoints = False
@@ -35,6 +41,8 @@ class TestSubstationDataset:
 
         # Creating mock image and mask files
         for filename in request.param['image_files']:
+            os.makedirs(os.path.join(tmp_path, 'image_stack'), exist_ok=True)
+            os.makedirs(os.path.join(tmp_path, 'mask'), exist_ok=True)
             np.savez_compressed(os.path.join(tmp_path, 'image_stack', filename), arr_0=np.random.rand(4, 128, 128))
             np.savez_compressed(os.path.join(tmp_path, 'mask', filename), arr_0=np.random.randint(0, 4, (128, 128)))
 
@@ -65,7 +73,10 @@ class TestSubstationDataset:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         # Test to ensure dataset initialization doesn't download if data already exists
-        args = lambda: None
+        class Args:
+            pass
+
+        args = Args()
         args.data_dir = tmp_path
         args.in_channels = 4
         args.use_timepoints = False
@@ -79,12 +90,16 @@ class TestSubstationDataset:
         os.makedirs(os.path.join(tmp_path, 'image_stack'))
         os.makedirs(os.path.join(tmp_path, 'mask'))
 
-        dataset = SubstationDataset(args, image_files=[])
+        # No need to assign `dataset` variable, just assert
+        SubstationDataset(args, image_files=[])
         assert os.path.exists(os.path.join(tmp_path, 'image_stack'))
         assert os.path.exists(os.path.join(tmp_path, 'mask'))
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        args = lambda: None
+        class Args:
+            pass
+
+        args = Args()
         args.data_dir = tmp_path
         args.in_channels = 4
         args.use_timepoints = False
@@ -103,7 +118,10 @@ class TestSubstationDataset:
         # No assertion, just ensuring that the plotting does not throw any exceptions.
 
     def test_corrupted(self, tmp_path: Path) -> None:
-        args = lambda: None
+        class Args:
+            pass
+
+        args = Args()
         args.data_dir = tmp_path
         args.in_channels = 4
         args.use_timepoints = False

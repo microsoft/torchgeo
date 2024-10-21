@@ -1,28 +1,33 @@
+"""This module handles the Substation segmentation dataset."""
+
 import os
+from typing import Any, NamedTuple
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from typing import NamedTuple, Any
+
 from .geo import NonGeoDataset
 from .utils import download_url, extract_archive
 
 
 class Args(NamedTuple):
+    """NamedTuple containing configuration for the dataset."""
     data_dir: str
     in_channels: int
     use_timepoints: bool
     normalizing_type: str
-    normalizing_factor: np.ndarray
-    means: np.ndarray
-    stds: np.ndarray
+    normalizing_factor: np.ndarray[Any, np.float64]
+    means: np.ndarray[Any, np.float64]
+    stds: np.ndarray[Any, np.float64]
     mask_2d: bool
     model_type: str
 
 
 class SubstationDataset(NonGeoDataset):
-    """
-    SubstationDataset is responsible for handling the loading and transformation
-    of substation segmentation datasets. It extends NonGeoDataset, providing methods
+    """SubstationDataset is responsible for handling the loading and transformation of substation segmentation datasets.
+    
+    It extends NonGeoDataset, providing methods
     for dataset verification, downloading, and transformation.
     """
     directory = 'Substation'
@@ -54,7 +59,6 @@ class SubstationDataset(NonGeoDataset):
         self.normalizing_factor = args.normalizing_factor
         self.mask_2d = args.mask_2d
         self.model_type = args.model_type
-
         self.image_dir = os.path.join(self.data_dir, 'image_stack')
         self.mask_dir = os.path.join(self.data_dir, 'mask')
         self.image_filenames = image_files
@@ -113,7 +117,7 @@ class SubstationDataset(NonGeoDataset):
         axs[1].imshow(image.permute(1, 2, 0))
         axs[1].imshow(mask.permute(1, 2, 0), alpha=0.5, cmap='gray')
 
-    def _normalize_image(self, image: np.ndarray[Any, Any]) -> torch.Tensor:
+    def _normalize_image(self, image: np.ndarray[Any, np.float64]) -> torch.Tensor:
         """Normalize the image based on the selected normalizing type.
 
         Args:
@@ -131,7 +135,7 @@ class SubstationDataset(NonGeoDataset):
             image = np.clip(image, 0, 1)
         return torch.from_numpy(image)
 
-    def _handle_channels_and_timepoints(self, image: np.ndarray[Any, Any]) -> torch.Tensor:
+    def _handle_channels_and_timepoints(self, image: np.ndarray[Any, np.float64]) -> torch.Tensor:
         """Handle channels and timepoints in the image.
 
         Args:
