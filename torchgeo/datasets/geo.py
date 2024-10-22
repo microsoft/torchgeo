@@ -554,7 +554,7 @@ class RasterDataset(GeoDataset):
         if self.is_image:
             sample['image'] = data
         else:
-            sample['mask'] = data
+            sample['mask'] = data.squeeze(0)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
