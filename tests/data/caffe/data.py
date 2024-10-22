@@ -32,7 +32,7 @@ def create_dummy_image(path: str, shape: tuple[int], pixel_values: list[int]) ->
 
 
 def create_zone_images(split: str, filename: str) -> None:
-    zone_pixel_values = [0, 64, 127, 255]
+    zone_pixel_values = [0, 64, 127, 254]
     path = os.path.join(root_dir, 'zones', split, filename)
     create_dummy_image(path, (IMG_SIZE, IMG_SIZE), zone_pixel_values)
 
@@ -44,9 +44,9 @@ def create_sar_images(split: str, filename: str) -> None:
 
 
 def create_front_images(split: str, filename: str) -> None:
-    sar_pixel_values = range(256)
+    front_pixel_values = [0, 255]
     path = os.path.join(root_dir, 'fronts', split, filename)
-    create_dummy_image(path, (IMG_SIZE, IMG_SIZE), sar_pixel_values)
+    create_dummy_image(path, (IMG_SIZE, IMG_SIZE), front_pixel_values)
 
 
 if os.path.exists(root_dir):

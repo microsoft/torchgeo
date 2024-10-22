@@ -20,7 +20,7 @@ class TestCaFFe:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> CaFFe:
-        md5 = 'f06c155a3fea372e884c234115c169e1'
+        md5 = '73c0aba603c356b2cce9ebf952fb7be0'
         monkeypatch.setattr(CaFFe, 'md5', md5)
         url = os.path.join('tests', 'data', 'caffe', 'caffe.zip')
         monkeypatch.setattr(CaFFe, 'url', url)

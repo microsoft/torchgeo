@@ -67,12 +67,14 @@ class CaFFe(NonGeoDataset):
 
     md5 = '9a92fd6f05af74fbc41602595a55df0d'
 
-    px_class_values: ClassVar[dict[int, str]] = {
+    px_class_values_zones: ClassVar[dict[int, str]] = {
         0: 'N/A',
         64: 'rock',
         127: 'glacier',
-        255: 'ocean/ice melange',
+        254: 'ocean/ice melange',
     }
+
+    px_class_values_fronts: ClassVar[dict[int, str]] = {0: 'no front', 255: 'front'}
 
     def __init__(
         self,
@@ -116,11 +118,17 @@ class CaFFe(NonGeoDataset):
             )
         )
 
-        self.ordinal_map = torch.zeros(
-            max(self.px_class_values.keys()) + 1, dtype=torch.long
+        self.ordinal_map_zones = torch.zeros(
+            max(self.px_class_values_zones.keys()) + 1, dtype=torch.long
         )
-        for ordinal, px_class in enumerate(self.px_class_values.keys()):
-            self.ordinal_map[px_class] = ordinal
+        for ordinal, px_class in enumerate(self.px_class_values_zones.keys()):
+            self.ordinal_map_zones[px_class] = ordinal
+
+        self.ordinal_map_fronts = torch.zeros(
+            max(self.px_class_values_fronts.keys()) + 1, dtype=torch.long
+        )
+        for ordinal, px_class in enumerate(self.px_class_values_fronts.keys()):
+            self.ordinal_map_fronts[px_class] = ordinal
 
     def __len__(self) -> int:
         """Return the number of images in the dataset."""
@@ -162,7 +170,8 @@ class CaFFe(NonGeoDataset):
             )
         ).long()
 
-        zone_mask = self.ordinal_map[zone_mask]
+        zone_mask = self.ordinal_map_zones[zone_mask]
+        front_mask = self.ordinal_map_fronts[front_mask]
 
         sample = {'image': img, 'mask_front': front_mask, 'mask_zones': zone_mask}
 
@@ -259,8 +268,10 @@ class CaFFe(NonGeoDataset):
         axs[2].axis('off')
 
         handles = [
-            mpatches.Patch(color=cmap(ordinal), label=self.px_class_values[px_class])
-            for ordinal, px_class in enumerate(self.px_class_values.keys())
+            mpatches.Patch(
+                color=cmap(ordinal), label=self.px_class_values_zones[px_class]
+            )
+            for ordinal, px_class in enumerate(self.px_class_values_zones.keys())
             if ordinal in unique_classes
         ]
         axs[2].legend(handles=handles, loc='upper right', bbox_to_anchor=(1.31, 1))
