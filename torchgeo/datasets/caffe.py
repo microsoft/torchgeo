@@ -5,6 +5,7 @@
 
 import glob
 import os
+import textwrap
 from collections.abc import Callable
 from typing import ClassVar
 
@@ -12,6 +13,7 @@ import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
@@ -41,10 +43,10 @@ class CaFFe(NonGeoDataset):
 
     Dataset classes:
 
-    1. N/A
-    2. rock
-    3. glacier
-    4. ocean/ice melange
+    0. N/A
+    1. rock
+    2. glacier
+    3. ocean/ice melange
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -73,6 +75,9 @@ class CaFFe(NonGeoDataset):
         127: 'glacier',
         254: 'ocean/ice melange',
     }
+
+    zone_class_colors = ('black', 'brown', 'lightgray', 'blue')
+    zone_cmap = ListedColormap(zone_class_colors)
 
     px_class_values_fronts: ClassVar[dict[int, str]] = {0: 'no front', 255: 'front'}
 
@@ -150,20 +155,17 @@ class CaFFe(NonGeoDataset):
         def read_tensor(path: str) -> Tensor:
             return torch.from_numpy(np.array(Image.open(path)))
 
-        img = (
-            read_tensor(
-                os.path.join(
-                    self.root, self.data_dir, self.image_dir, self.split, img_filename
-                )
-            )
-            .unsqueeze(0)
-            .float()
+        img_path = os.path.join(
+            self.root, self.data_dir, self.image_dir, self.split, img_filename
         )
+        img = read_tensor(img_path).unsqueeze(0).float()
+
         front_mask = read_tensor(
             os.path.join(
                 self.root, self.data_dir, self.mask_dirs[0], self.split, front_filename
             )
         ).long()
+
         zone_mask = read_tensor(
             os.path.join(
                 self.root, self.data_dir, self.mask_dirs[1], self.split, zones_filename
@@ -263,18 +265,20 @@ class CaFFe(NonGeoDataset):
         axs[1].axis('off')
 
         unique_classes = np.unique(sample['mask_zones'].numpy())
-        cmap = plt.get_cmap('tab20', len(unique_classes))
-        axs[2].imshow(sample['mask_zones'].numpy(), cmap=cmap)
+        axs[2].imshow(sample['mask_zones'].numpy(), cmap=self.zone_cmap)
         axs[2].axis('off')
 
         handles = [
             mpatches.Patch(
-                color=cmap(ordinal), label=self.px_class_values_zones[px_class]
+                color=self.zone_cmap(ordinal),
+                label='\n'.join(
+                    textwrap.wrap(self.px_class_values_zones[px_class], width=10)
+                ),
             )
             for ordinal, px_class in enumerate(self.px_class_values_zones.keys())
             if ordinal in unique_classes
         ]
-        axs[2].legend(handles=handles, loc='upper right', bbox_to_anchor=(1.31, 1))
+        axs[2].legend(handles=handles, loc='upper right', bbox_to_anchor=(1.4, 1))
 
         if show_titles:
             axs[0].set_title('Image')

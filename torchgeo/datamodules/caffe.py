@@ -25,7 +25,7 @@ class CaFFeDataModule(NonGeoDataModule):
     std = torch.Tensor([11.8478])
 
     def __init__(
-        self, batch_size: int = 64, num_workers: int = 0, size: int = 256, **kwargs: Any
+        self, batch_size: int = 64, num_workers: int = 0, size: int = 512, **kwargs: Any
     ) -> None:
         """Initialize a new CaFFeDataModule instance.
 
@@ -37,6 +37,8 @@ class CaFFeDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.CaFFe`.
         """
         super().__init__(CaFFe, batch_size, num_workers, **kwargs)
+
+        self.size = size
 
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
@@ -51,5 +53,3 @@ class CaFFeDataModule(NonGeoDataModule):
             K.Resize(size),
             data_keys=['image', 'mask'],
         )
-
-        self.size = size
