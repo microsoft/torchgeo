@@ -62,6 +62,11 @@ CaBuAr
 
 .. autoclass:: CaBuArDataModule
 
+CaFFe
+^^^^^
+
+.. autoclass:: CaFFeDataModule
+
 ChaBuD
 ^^^^^^
 

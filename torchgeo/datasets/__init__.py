@@ -12,6 +12,7 @@ from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
 from .cabuar import CaBuAr
+from .caffe import CaFFe
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chabud import ChaBuD
@@ -205,6 +206,7 @@ __all__ = (
     'BigEarthNet',
     'BioMassters',
     'CaBuAr',
+    'CaFFe',
     'ChaBuD',
     'CloudCoverDetection',
     'COWC',
