@@ -189,6 +189,7 @@ SpaceNet
 ^^^^^^^^
 
 .. autoclass:: SpaceNet1DataModule
+.. autoclass:: SpaceNet6DataModule
 
 SSL4EO
 ^^^^^^

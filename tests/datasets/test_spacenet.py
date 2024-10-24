@@ -21,7 +21,13 @@ class TestSpaceNet:
         self, aws: Executable, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> SpaceNet1:
         url = os.path.join(
-            'tests', 'data', 'spacenet', '{dataset_id}', 'train', '{tarball}'
+            'tests',
+            'data',
+            'spacenet',
+            'spacenet1',
+            '{dataset_id}',
+            'train',
+            '{tarball}',
         )
         monkeypatch.setattr(SpaceNet1, 'url', url)
         transforms = nn.Identity()

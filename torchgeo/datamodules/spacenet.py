@@ -10,7 +10,7 @@ import torch
 from torch import Tensor
 from torch.utils.data import random_split
 
-from ..datasets import SpaceNet1
+from ..datasets import SpaceNet1, SpaceNet6
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
@@ -96,5 +96,70 @@ class SpaceNet1DataModule(NonGeoDataModule):
         # the values {1, 2}. This is necessary because we add 0 padding to the
         # mask that we want to ignore in the loss function.
         batch['mask'] += 1
+
+        return super().on_after_batch_transfer(batch, dataloader_idx)
+
+
+class SpaceNet6DataModule(NonGeoDataModule):
+    """LightningDataModule implementation for the SpaceNet6 dataset.
+
+    Randomly splits the training set into train/val and uses the designated test set.
+
+    .. versionadded:: 0.7
+    """
+
+    def __init__(
+        self,
+        batch_size: int = 64,
+        num_workers: int = 0,
+        val_split_pct: float = 0.2,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a new SpaceNet6DataModule instance.
+
+        Args:
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            val_split_pct: Percentage of the dataset to use as a validation set.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.SpaceNet6`.
+        """
+        super().__init__(SpaceNet6, batch_size, num_workers, **kwargs)
+
+        self.val_split_pct = val_split_pct
+
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
+
+        Args:
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
+        """
+        if stage in ['fit', 'validate']:
+            self.dataset = SpaceNet6(split='train', **self.kwargs)
+            generator = torch.Generator().manual_seed(0)
+            self.train_dataset, self.val_dataset = random_split(
+                self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
+            )
+
+        if stage in ['predict']:
+            self.predict_dataset = SpaceNet6(split='test', **self.kwargs)
+
+    def on_after_batch_transfer(
+        self, batch: dict[str, Tensor], dataloader_idx: int
+    ) -> dict[str, Tensor]:
+        """Apply batch augmentations to the batch after it is transferred to the device.
+
+        Args:
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
+
+        Returns:
+            A batch of data.
+        """
+        # We add 1 to the mask to map the current {background, building} labels to
+        # the values {1, 2}. This is necessary because we add 0 padding to the
+        # mask that we want to ignore in the loss function during training
+        if 'mask' in batch:
+            batch['mask'] += 1
 
         return super().on_after_batch_transfer(batch, dataloader_idx)
