@@ -86,6 +86,6 @@ class FieldsOfTheWorldDataModule(NonGeoDataModule):
                 split='val', countries=self.val_countries, **self.kwargs
             )
         if stage in ['test']:
-            self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
+            self.test_dataset = FieldsOfTheWorld(
                 split='test', countries=self.test_countries, **self.kwargs
             )
