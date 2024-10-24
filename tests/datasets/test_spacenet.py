@@ -41,7 +41,7 @@ class TestSpaceNet:
         assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: SpaceNet1) -> None:
-        assert len(dataset) == 3
+        assert len(dataset) == 4
 
     def test_already_extracted(self, dataset: SpaceNet1) -> None:
         SpaceNet1(root=dataset.root)

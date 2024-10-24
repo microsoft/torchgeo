@@ -16,6 +16,8 @@ from rasterio.transform import Affine
 
 SIZE = 2
 
+NUM_SAMPLES = 4
+
 dataset_id = 'SN1_buildings'
 
 profile = {
@@ -47,7 +49,7 @@ def generate_geotiff_files(
     base_path: str, band_counts: list[int], profile: dict[str, Any], Z: np.ndarray
 ) -> None:
     for count in band_counts:
-        for i in range(1, 5):
+        for i in range(1, NUM_SAMPLES + 1):
             path = os.path.join(
                 base_path, f'{count}band', f'{count}band_AOI_1_RIO_img{i}.tif'
             )
@@ -59,7 +61,7 @@ def generate_geotiff_files(
 
 def generate_geojson_files(base_path: str, geojson: dict[str, Any]) -> None:
     os.makedirs(os.path.join(base_path, 'geojson'), exist_ok=True)
-    for i in range(1, 4):
+    for i in range(1, NUM_SAMPLES + 1):
         path = os.path.join(base_path, 'geojson', f'Geo_AOI_1_RIO_img{i}.geojson')
         with open(path, 'w') as src:
             if i % 2 == 0:
@@ -114,26 +116,46 @@ create_directories(test_base_path, [3, 8])
 generate_geotiff_files(test_base_path, [3, 8], profile, Z)
 
 # Create tarballs for train and test datasets
-shutil.make_archive(
-    os.path.join(dataset_id, 'SN1_buildings_train_AOI_1_Rio'),
-    'gztar',
-    dataset_id,
-    'train',
-)
-shutil.make_archive(
-    os.path.join(dataset_id, 'SN1_buildings_test_AOI_1_Rio'),
-    'gztar',
-    dataset_id,
-    'test',
-)
+tarball_specs = {
+    'train': {
+        '3band': 'SN1_buildings_train_AOI_1_Rio_3band',
+        '8band': 'SN1_buildings_train_AOI_1_Rio_8band',
+        'geojson': 'SN1_buildings_train_AOI_1_Rio_geojson_buildings',
+    },
+    'test': {
+        '3band': 'SN1_buildings_test_AOI_1_Rio_3band',
+        '8band': 'SN1_buildings_test_AOI_1_Rio_8band',
+    },
+}
+
+for split, specs in tarball_specs.items():
+    for subdir, tarball_name in specs.items():
+        tarball_path = os.path.join(dataset_id, split, tarball_name)
+        shutil.make_archive(
+            tarball_path,
+            'gztar',
+            root_dir=os.path.join(dataset_id, split),
+            base_dir=subdir,
+        )
 
 # Compute and print MD5 checksums for the generated tarballs
 print('MD5 Checksums for Train Dataset:')
-train_tarball_path = os.path.join(dataset_id, 'SN1_buildings_train_AOI_1_Rio.tar.gz')
-if os.path.exists(train_tarball_path):
-    print(f'Train: {compute_md5(train_tarball_path)}')
+train_tarballs = [
+    'SN1_buildings_train_AOI_1_Rio_3band.tar.gz',
+    'SN1_buildings_train_AOI_1_Rio_8band.tar.gz',
+    'SN1_buildings_train_AOI_1_Rio_geojson_buildings.tar.gz',
+]
+for tarball in train_tarballs:
+    tarball_path = os.path.join(dataset_id, 'train', tarball)
+    if os.path.exists(tarball_path):
+        print(f'{tarball}: {compute_md5(tarball_path)}')
 
 print('\nMD5 Checksums for Test Dataset:')
-test_tarball_path = os.path.join(dataset_id, 'SN1_buildings_test_AOI_1_Rio.tar.gz')
-if os.path.exists(test_tarball_path):
-    print(f'Test: {compute_md5(test_tarball_path)}')
+test_tarballs = [
+    'SN1_buildings_test_AOI_1_Rio_3band.tar.gz',
+    'SN1_buildings_test_AOI_1_Rio_8band.tar.gz',
+]
+for tarball in test_tarballs:
+    tarball_path = os.path.join(dataset_id, 'test', tarball)
+    if os.path.exists(tarball_path):
+        print(f'{tarball}: {compute_md5(tarball_path)}')
