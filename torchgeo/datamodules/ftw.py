@@ -23,16 +23,33 @@ class FieldsOfTheWorldDataModule(NonGeoDataModule):
     std = torch.tensor([3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000])
 
     def __init__(
-        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self,
+        train_countries: list[str] = ['austria'],
+        val_countries: list[str] = ['austria'],
+        test_countries: list[str] = ['austria'],
+        batch_size: int = 64,
+        num_workers: int = 0,
+        **kwargs: Any,
     ) -> None:
         """Initialize a new FTWDataModule instance.
 
         Args:
+            train_countries: List of countries to use for training.
+            val_countries: List of countries to use for validation.
+            test_countries: List of countries to use for testing.
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.FieldsOfTheWorld`.
+
+        Raises:
+            ValueError: If 'countries' are specified in kwargs
         """
+        if 'countries' in kwargs:
+            raise ValueError(
+                'Please specify the selected countries for each split via train_countries, val_countries, and test_countries.'
+            )
+
         super().__init__(FieldsOfTheWorld, batch_size, num_workers, **kwargs)
 
         self.train_aug = AugmentationSequential(
@@ -46,3 +63,29 @@ class FieldsOfTheWorldDataModule(NonGeoDataModule):
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
         )
+
+        self.train_countries = train_countries
+        self.val_countries = val_countries
+        self.test_countries = test_countries
+
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
+
+        Called at the beginning of fit, validate, test, or predict. During distributed
+        training, this method is called from every process across all the nodes. Setting
+        state here is recommended.
+
+        Args:
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
+        """
+        if stage in ['fit', 'validate']:
+            self.train_dataset = FieldsOfTheWorld(
+                split='train', countries=self.train_countries, **self.kwargs
+            )
+            self.val_dataset = FieldsOfTheWorld(
+                split='val', countries=self.val_countries, **self.kwargs
+            )
+        if stage in ['test']:
+            self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
+                split='test', countries=self.test_countries, **self.kwargs
+            )
