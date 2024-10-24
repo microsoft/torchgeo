@@ -52,6 +52,10 @@ class FieldsOfTheWorldDataModule(NonGeoDataModule):
 
         super().__init__(FieldsOfTheWorld, batch_size, num_workers, **kwargs)
 
+        self.train_countries = train_countries
+        self.val_countries = val_countries
+        self.test_countries = test_countries
+
         self.train_aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomRotation(p=0.5, degrees=90),
@@ -63,10 +67,6 @@ class FieldsOfTheWorldDataModule(NonGeoDataModule):
         self.aug = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
         )
-
-        self.train_countries = train_countries
-        self.val_countries = val_countries
-        self.test_countries = test_countries
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
