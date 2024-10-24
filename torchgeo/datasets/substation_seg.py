@@ -1,52 +1,47 @@
 """This module handles the Substation segmentation dataset."""
 
 import os
-from typing import Any, NamedTuple
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from numpy.typing import NDArray
+from torch import Tensor
 
 from .geo import NonGeoDataset
 from .utils import download_url, extract_archive
 
 
-class Args(NamedTuple):
-    """NamedTuple containing configuration for the dataset."""
-    data_dir: str
-    in_channels: int
-    use_timepoints: bool
-    normalizing_type: str
-    normalizing_factor: np.ndarray[Any, np.float64]
-    means: np.ndarray[Any, np.float64]
-    stds: np.ndarray[Any, np.float64]
-    mask_2d: bool
-    model_type: str
-
-
 class SubstationDataset(NonGeoDataset):
     """SubstationDataset is responsible for handling the loading and transformation of substation segmentation datasets.
     
-    It extends NonGeoDataset, providing methods
-    for dataset verification, downloading, and transformation.
+    It extends NonGeoDataset, providing methods for dataset verification, downloading, and transformation.
     """
-    directory = 'Substation'
-    filename_images = 'image_stack.tar.gz'
-    filename_masks = 'mask.tar.gz'
-    url_for_images = ''
-    url_for_masks = ''
+    directory: str = 'Substation'
+    filename_images: str = 'image_stack.tar.gz'
+    filename_masks: str = 'mask.tar.gz'
+    url_for_images: str = 'https://urldefense.proofpoint.com/v2/url?u=https-3A__storage.googleapis.com_tz-2Dml-2Dpublic_substation-2Dover-2D10km2-2Dcsv-2Dmain-2D444e360fd2b6444b9018d509d0e4f36e_image-5Fstack.tar.gz&d=DwMFaQ&c=slrrB7dE8n7gBJbeO0g-IQ&r=ypwhORbsf5rB8FTl-SAxjfN_U0jrVqx6UDyBtJHbKQY&m=-2QXCp-gZof5HwBsLg7VwQD-pnLedAo09YCzdDCUTqCI-0t789z0-HhhgwVbYtX7&s=zMCjuqjPMHRz5jeEWLCEufHvWxRPdlHEbPnUE7kXPrc&e='
+    url_for_masks: str = 'https://urldefense.proofpoint.com/v2/url?u=https-3A__storage.googleapis.com_tz-2Dml-2Dpublic_substation-2Dover-2D10km2-2Dcsv-2Dmain-2D444e360fd2b6444b9018d509d0e4f36e_mask.tar.gz&d=DwMFaQ&c=slrrB7dE8n7gBJbeO0g-IQ&r=ypwhORbsf5rB8FTl-SAxjfN_U0jrVqx6UDyBtJHbKQY&m=-2QXCp-gZof5HwBsLg7VwQD-pnLedAo09YCzdDCUTqCI-0t789z0-HhhgwVbYtX7&s=nHMdYvxKmzwAdT2lOPoQ7-NEfjsOjAm00kHOcwC_AmU&e='
 
-    def __init__(self, args: Args, image_files: list[str], geo_transforms: Any = None, 
-                 color_transforms: Any = None, image_resize: Any = None, mask_resize: Any = None) -> None:
-        """Initialize the dataset with the provided parameters.
+    def __init__(
+    self,
+    args: Any,
+    image_files: list[str],
+    geo_transforms: Any | None = None,
+    color_transforms: Any | None = None,
+    image_resize: Any | None = None,
+    mask_resize: Any | None = None,
+    ) -> None:
+        """Initialize the SubstationDataset.
 
         Args:
-            args: Arguments that contain configuration information such as data_dir, in_channels, etc.
-            image_files: List of image filenames for the dataset.
-            geo_transforms: Geometric transformations to apply on the images and masks.
-            color_transforms: Color transformations to apply on the images.
-            image_resize: Resize transformation for images.
-            mask_resize: Resize transformation for masks.
+            args (Any): Arguments containing various dataset parameters such as `data_dir`, `in_channels`, etc.
+            image_files (list[str]): A list of image file names.
+            geo_transforms (Any | None): Geometric transformations to be applied to the images and masks. Defaults to None.
+            color_transforms (Any | None): Color transformations to be applied to the images. Defaults to None.
+            image_resize (Any | None): Transformation for resizing the images. Defaults to None.
+            mask_resize (Any | None): Transformation for resizing the masks. Defaults to None.
         """
         self.data_dir = args.data_dir
         self.geo_transforms = geo_transforms
@@ -59,15 +54,13 @@ class SubstationDataset(NonGeoDataset):
         self.normalizing_factor = args.normalizing_factor
         self.mask_2d = args.mask_2d
         self.model_type = args.model_type
-        self.image_dir = os.path.join(self.data_dir, 'image_stack')
-        self.mask_dir = os.path.join(self.data_dir, 'mask')
+        self.image_dir = os.path.join(args.data_dir, 'substation', 'image_stack')
+        self.mask_dir = os.path.join(args.data_dir, 'substation', 'mask')
         self.image_filenames = image_files
         self.args = args
 
-        # Check if the dataset is available or needs to be downloaded
-        self._verify()
 
-    def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Get an item from the dataset by index.
 
         Args:
@@ -79,115 +72,117 @@ class SubstationDataset(NonGeoDataset):
         image_filename = self.image_filenames[index]
         image_path = os.path.join(self.image_dir, image_filename)
         mask_path = os.path.join(self.mask_dir, image_filename)
-
+        
         image = np.load(image_path)['arr_0']
+        image = self._standardize_image(image)
+
+        if self.use_timepoints:
+            image = self._handle_timepoints(image)
+        else:
+            image = self._aggregate_timepoints(image)
+
         mask = np.load(mask_path)['arr_0']
-
-        # Standardize images
-        image = self._normalize_image(image)
-
-        # Handle multiple channels and timepoints
-        image = self._handle_channels_and_timepoints(image)
-
-        # Process mask
         mask[mask != 3] = 0
         mask[mask == 3] = 1
+        
+        image = torch.from_numpy(image)
         mask = torch.from_numpy(mask).float().unsqueeze(dim=0)
 
-        # Apply geo and color transformations
+        if self.mask_2d:
+            mask = self._convert_mask_to_2d(mask)
+        
         image, mask = self._apply_transforms(image, mask)
-
+        
         return {"image": image, "mask": mask}
 
     def __len__(self) -> int:
-        """Return the length of the dataset.
-
-        Returns:
-            The number of items in the dataset.
-        """
+        """Returns the number of items in the dataset."""
         return len(self.image_filenames)
 
     def plot(self) -> None:
-        """Plot a random image and mask from the dataset."""
+        """Plots a random image and mask from the dataset."""
         index = np.random.randint(0, self.__len__())
-        data = self.__getitem__(index)
-        image, mask = data["image"], data["mask"]
+        data = self.__getitem__(index)  # Get the dictionary returned by __getitem__
+        image = data['image']  # Extract the image tensor
+        mask = data['mask']  # Extract the mask tensor
+
         fig, axs = plt.subplots(1, 2, figsize=(15, 15))
-        axs[0].imshow(image.permute(1, 2, 0))
-        axs[1].imshow(image.permute(1, 2, 0))
-        axs[1].imshow(mask.permute(1, 2, 0), alpha=0.5, cmap='gray')
 
-    def _normalize_image(self, image: np.ndarray[Any, np.float64]) -> torch.Tensor:
-        """Normalize the image based on the selected normalizing type.
+        # Convert the image tensor to a format suitable for plotting
+        axs[0].imshow(image.permute(1, 2, 0).cpu().numpy())
+        axs[1].imshow(image.permute(1, 2, 0).cpu().numpy())
+        axs[1].imshow(mask.squeeze().cpu().numpy(), alpha=0.5, cmap='gray')
 
-        Args:
-            image: The image to normalize.
+    plt.show()
 
-        Returns:
-            Normalized image as a torch tensor.
-        """
+
+    def _standardize_image(self, image: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Standardizes the image according to the normalizing type."""
         if self.normalizing_type == 'percentile':
             image = (image - self.normalizing_factor[:, 0].reshape((-1, 1, 1))) / self.normalizing_factor[:, 2].reshape((-1, 1, 1))
         elif self.normalizing_type == 'zscore':
             image = (image - self.args.means) / self.args.stds
         else:
-            image = image / self.normalizing_factor
-            image = np.clip(image, 0, 1)
-        return torch.from_numpy(image)
+            image = np.clip(image / self.normalizing_factor, 0, 1)
+        return image
 
-    def _handle_channels_and_timepoints(self, image: np.ndarray[Any, np.float64]) -> torch.Tensor:
-        """Handle channels and timepoints in the image.
 
-        Args:
-            image: The image to process.
+    def _handle_timepoints(self, image: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Handles multiple images across timepoints."""
+        image = image[:4, :, :, :]
+        if self.args.timepoint_aggregation == 'concat':
+            image = np.reshape(image, (-1, image.shape[2], image.shape[3]))
+        elif self.args.timepoint_aggregation == 'median':
+            image = np.median(image, axis=0)
+        return image
 
-        Returns:
-            Processed image as a torch tensor.
-        """
-        if self.in_channels == 3:
-            image = image[:, [3, 2, 1], :, :]
-        else:
-            image = image[:4, :, :, :] if self.use_timepoints else image[0]
-        return torch.from_numpy(image)
+    def _aggregate_timepoints(self, image: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Aggregates images based on the provided timepoint aggregation method."""
+        if self.args.timepoint_aggregation == 'first':
+            image = image[0]
+        elif self.args.timepoint_aggregation == 'random':
+            image = image[np.random.randint(image.shape[0])]
+        return image
 
-    def _apply_transforms(self, image: torch.Tensor, mask: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        """Apply transformations to the image and mask.
+    def _convert_mask_to_2d(self, mask: Tensor) -> Tensor:
+        """Converts the mask to 2D format if specified."""
+        mask_0 = 1.0 - mask
+        return torch.cat([mask_0, mask], dim=0)
 
-        Args:
-            image: The image tensor.
-            mask: The mask tensor.
-
-        Returns:
-            A tuple containing the transformed image and mask.
-        """
+    def _apply_transforms(self, image: Tensor, mask: Tensor) -> tuple[Tensor, Tensor]:
+        """Applies geometric and color transforms to the image and mask."""
         if self.geo_transforms:
             combined = torch.cat((image, mask), 0)
             combined = self.geo_transforms(combined)
             image, mask = torch.split(combined, [image.shape[0], mask.shape[0]], 0)
-
-        if self.color_transforms and self.in_channels >= 3:
+        
+        if self.color_transforms:
             num_timepoints = image.shape[0] // self.in_channels
             for i in range(num_timepoints):
-                image[i * self.in_channels:i * self.in_channels + 3, :, :] = self.color_transforms(
-                    image[i * self.in_channels:i * self.in_channels + 3, :, :]
-                )
+                if self.in_channels >= 3:
+                    image[i * self.in_channels:i * self.in_channels + 3, :, :] = self.color_transforms(
+                        image[i * self.in_channels:i * self.in_channels + 3, :, :]
+                    )
+                else:
+                    raise ValueError("Color transformation requires at least 3 input channels.")
 
         if self.image_resize:
             image = self.image_resize(image)
+        
         if self.mask_resize:
             mask = self.mask_resize(mask)
 
         return image, mask
 
     def _verify(self) -> None:
-        """Check if dataset exists, otherwise download it."""
+        """Checks if dataset exists, otherwise download it."""
         image_dir_exists = os.path.exists(self.image_dir)
         mask_dir_exists = os.path.exists(self.mask_dir)
         if not (image_dir_exists and mask_dir_exists):
             self._download()
 
     def _download(self) -> None:
-        """Download images and masks if not already present."""
+        """Downloads images and masks if not already present."""
         print("Downloading images and masks...")
         download_url(self.url_for_images, self.data_dir, filename=self.filename_images)
         extract_archive(os.path.join(self.data_dir, self.filename_images), self.data_dir)
