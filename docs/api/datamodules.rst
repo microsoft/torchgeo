@@ -104,6 +104,11 @@ FAIR1M
 
 .. autoclass:: FAIR1MDataModule
 
+Fields Of The World
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: FieldsOfTheWorldDataModule
+
 FireRisk
 ^^^^^^^^
 
