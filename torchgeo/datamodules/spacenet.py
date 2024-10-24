@@ -10,7 +10,7 @@ import torch
 from torch import Tensor
 from torch.utils.data import random_split
 
-from ..datasets import SpaceNet1, SpaceNet6
+from ..datasets import SpaceNet, SpaceNet1, SpaceNet6
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
@@ -26,7 +26,7 @@ class SpaceNetBaseDataModule(NonGeoDataModule):
 
     def __init__(
         self,
-        spacenet_ds_class: SpaceNet1 | SpaceNet6,
+        spacenet_ds_class: type[SpaceNet],
         batch_size: int = 64,
         num_workers: int = 0,
         val_split_pct: float = 0.1,
