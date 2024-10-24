@@ -96,7 +96,8 @@ class SpaceNetBaseDataModule(NonGeoDataModule):
 class SpaceNet1DataModule(SpaceNetBaseDataModule):
     """LightningDataModule implementation for the SpaceNet1 dataset.
 
-    Randomly splits into train/val/test.
+    Randomly splits the train split into train/val/test. The test split does not have labels,
+    and is only used for prediction.
 
     .. versionadded:: 0.4
     """
@@ -139,11 +140,18 @@ class SpaceNet1DataModule(SpaceNetBaseDataModule):
             data_keys=['image', 'mask'],
         )
 
+        self.predict_aug = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            K.PadTo((448, 448)),
+            data_keys=['image'],
+        )
+
 
 class SpaceNet6DataModule(SpaceNetBaseDataModule):
     """LightningDataModule implementation for the SpaceNet6 dataset.
 
-    Randomly splits the training set into train/val and uses the designated test set.
+    Randomly splits the train split into train/val/test. The test split does not have labels,
+    and is only used for prediction.
 
     .. versionadded:: 0.7
     """
