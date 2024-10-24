@@ -43,12 +43,11 @@ class FieldsOfTheWorldDataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.FieldsOfTheWorld`.
 
         Raises:
-            ValueError: If 'countries' are specified in kwargs
+            AssertionError: If 'countries' are specified in kwargs
         """
-        if 'countries' in kwargs:
-            raise ValueError(
-                'Please specify the selected countries for each split via train_countries, val_countries, and test_countries.'
-            )
+        assert (
+            'countries' not in kwargs
+        ), "Please specify 'train_countries', 'val_countries', and 'test_countries' instead of 'countries' inside kwargs"
 
         super().__init__(FieldsOfTheWorld, batch_size, num_workers, **kwargs)
 
