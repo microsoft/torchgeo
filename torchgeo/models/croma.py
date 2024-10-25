@@ -45,7 +45,7 @@ class CROMA(nn.Module):
                 'sar', 'optical', or both.
             encoder_dim: Dimension of the encoder.
             encoder_depth: Depth of the encoder.
-            num_heads: Number of heads for the multi-head attention.
+            num_heads: Number of heads for the multi-head attention, should be power of 2.
             patch_size: Size of the patches.
             image_size: Size of the input images, CROMA was trained on 120x120 images,
                 must be a multiple of 8.
@@ -60,6 +60,7 @@ class CROMA(nn.Module):
             ), f'{modality} is not a valid modality'
 
         assert image_size % 8 == 0, 'image_size must be a multiple of 8'
+        assert num_heads % 2 == 0, 'num_heads must be a power of 2'
 
         self.modalities = modalities
         self.encoder_dim = encoder_dim
@@ -168,19 +169,9 @@ def get_2dalibi(num_heads: int, num_patches: int) -> Tensor:
     )
 
     def get_slopes(n: int) -> list[float]:
-        def get_slopes_power_of_2(n: int) -> list[float]:
-            start = 2 ** (-(2 ** -(math.log2(n) - 3)))
-            ratio = start
-            return [start * ratio**i for i in range(n)]
-
-        if math.log2(n).is_integer():
-            return get_slopes_power_of_2(n)
-        else:
-            closest_power_of_2 = 2 ** math.floor(math.log2(n))
-            return (
-                get_slopes_power_of_2(closest_power_of_2)
-                + get_slopes(2 * closest_power_of_2)[0::2][: n - closest_power_of_2]
-            )
+        start = 2 ** (-(2 ** -(math.log2(n) - 3)))
+        ratio = start
+        return [start * ratio**i for i in range(n)]
 
     slopes = torch.Tensor(get_slopes(num_heads)).unsqueeze(1)
     idxs = []
