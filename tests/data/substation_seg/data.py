@@ -6,13 +6,14 @@
 import hashlib
 import os
 import shutil
-
 import numpy as np
 
-SIZE = 228
-NUM_SAMPLES = 5
+# Parameters
+SIZE = 228  # Image dimensions
+NUM_SAMPLES = 5  # Number of samples
 np.random.seed(0)
 
+# Define directory hierarchy
 FILENAME_HIERARCHY = dict[str, 'FILENAME_HIERARCHY'] | list[str]
 
 filenames: FILENAME_HIERARCHY = {
@@ -21,16 +22,33 @@ filenames: FILENAME_HIERARCHY = {
 }
 
 def create_file(path: str) -> None:
+    """
+    Generates .npz files for images or masks based on the path.
+    
+    Args:
+    - path (str): Base path for saving files (either 'image' or 'mask').
+    """
     for i in range(NUM_SAMPLES):
         new_path = f'{path}_{i}.npz'
         fn = os.path.basename(new_path)
+        
         if fn.startswith('image'):
-            data = np.random.rand(4, SIZE, SIZE).astype(np.float32)  # 4 channels (RGB + NIR)
+            # Generate image data with shape (4, 13, SIZE, SIZE) for timepoints and channels
+            data = np.random.rand(4, 13, SIZE, SIZE).astype(np.float32)  # 4 timepoints, 13 channels
         elif fn.startswith('mask'):
-            data = np.random.randint(0, 4, size=(SIZE, SIZE)).astype(np.uint8)  # Mask with 4 classes
+            # Generate mask data with shape (SIZE, SIZE) with 4 classes
+            data = np.random.randint(0, 4, size=(SIZE, SIZE)).astype(np.uint8)
+        
         np.savez_compressed(new_path, arr_0=data)
 
 def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
+    """
+    Recursively creates directory structure based on hierarchy and populates with data files.
+    
+    Args:
+    - directory (str): Base directory for dataset.
+    - hierarchy (FILENAME_HIERARCHY): Directory and file structure.
+    """
     if isinstance(hierarchy, dict):
         # Recursive case
         for key, value in hierarchy.items():
@@ -44,15 +62,16 @@ def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
             create_file(path)
 
 if __name__ == '__main__':
+    # Generate directory structure and data
     create_directory('.', filenames)
 
-    # Create a zip archive of the generated dataset
+    # Create zip archives of dataset folders
     filename_images = 'image_stack.tar.gz'
     filename_masks = 'mask.tar.gz'
     shutil.make_archive('image_stack', 'gztar', '.', 'image_stack')
     shutil.make_archive('mask', 'gztar', '.', 'mask')
 
-    # Compute checksums
+    # Compute and print MD5 checksums for data validation
     with open(filename_images, 'rb') as f:
         md5_images = hashlib.md5(f.read()).hexdigest()
         print(f'{filename_images}: {md5_images}')

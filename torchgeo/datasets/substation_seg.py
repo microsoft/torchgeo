@@ -6,7 +6,6 @@ from typing import Any
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from numpy.typing import NDArray
 from torch import Tensor
 
 from .geo import NonGeoDataset
@@ -74,24 +73,73 @@ class SubstationDataset(NonGeoDataset):
         mask_path = os.path.join(self.mask_dir, image_filename)
         
         image = np.load(image_path)['arr_0']
-        image = self._standardize_image(image)
-
-        if self.use_timepoints:
-            image = self._handle_timepoints(image)
+        #standardizing image
+        if self.normalizing_type=='percentile':
+            image = (image- self.normalizing_factor[:,0].reshape((-1,1,1)))/self.normalizing_factor[:,2].reshape((-1,1,1))
+        elif self.normalizing_type == 'zscore':
+            # means = np.array([1431, 1233, 1209, 1192, 1448, 2238, 2609, 2537, 2828, 884, 20, 2226, 1537]).reshape(-1, 1, 1)
+            # stds = np.array([157, 254, 290, 420, 363, 457, 575, 606, 630, 156, 3, 554, 523]).reshape(-1, 1, 1)
+            image = (image-self.args.means)/self.args.stds
         else:
-            image = self._aggregate_timepoints(image)
+            image = image/self.normalizing_factor  
+            #clipping image to 0,1 range
+            image = np.clip(image, 0,1)
+        
+        #selecting channels
+        if self.in_channels==3:
+            image = image[:,[3,2,1],:,:]
+        else:
+            if self.model_type =='swin':
+                image = image[:,[3,2,1,4,5,6,7,10,11],:,:]  #swin only takes 9 channels
+            else: 
+                image = image[:,:self.in_channels,:,:]
 
+        #handling multiple images across timepoints
+        if self.use_timepoints: 
+            image = image[:4,:,:,:]
+            if self.args.timepoint_aggregation == 'concat':
+                image = np.reshape(image, (-1, image.shape[2], image.shape[3])) #(4*channels,h,w)
+            elif self.args.timepoint_aggregation == 'median':
+                image = np.median(image, axis=0)  
+        else: 
+            # image = np.median(image, axis=0)
+            # image = image[0]
+            if self.args.timepoint_aggregation == 'first':
+                image = image[0]
+            elif self.args.timepoint_aggregation == 'random':
+                image = image[np.random.randint(image.shape[0])]
+            
         mask = np.load(mask_path)['arr_0']
         mask[mask != 3] = 0
         mask[mask == 3] = 1
         
         image = torch.from_numpy(image)
-        mask = torch.from_numpy(mask).float().unsqueeze(dim=0)
-
-        if self.mask_2d:
-            mask = self._convert_mask_to_2d(mask)
+        mask = torch.from_numpy(mask).float()
+        mask = mask.unsqueeze(dim=0)
         
-        image, mask = self._apply_transforms(image, mask)
+        if self.mask_2d:
+            mask_0 = 1.0-mask
+            mask = torch.concat([mask_0, mask], dim = 0)
+            
+        # IMAGE AND MASK TRANSFORMATIONS
+        if self.geo_transforms:
+            combined = torch.cat((image,mask), 0)
+            combined = self.geo_transforms(combined)
+            image,mask = torch.split(combined, [image.shape[0],mask.shape[0]], 0)
+        
+        if self.color_transforms:
+            num_timepoints = image.shape[0]//self.in_channels
+            for i in range(num_timepoints):
+                if self.in_channels >= 3:    
+                    image[i*self.in_channels:i*self.in_channels+3,:,:] = self.color_transforms(image[i*self.in_channels:i*self.in_channels+3,:,:])    
+                else:
+                    raise Exception("Can't apply color transformation. Make sure the correct input dimenions are used")
+       
+        if self.image_resize:
+            image = self.image_resize(image)
+        
+        if self.mask_resize:
+            mask = self.mask_resize(mask)
         
         return {"image": image, "mask": mask}
 
@@ -113,66 +161,7 @@ class SubstationDataset(NonGeoDataset):
         axs[1].imshow(image.permute(1, 2, 0).cpu().numpy())
         axs[1].imshow(mask.squeeze().cpu().numpy(), alpha=0.5, cmap='gray')
 
-    plt.show()
 
-
-    def _standardize_image(self, image: NDArray[np.float64]) -> NDArray[np.float64]:
-        """Standardizes the image according to the normalizing type."""
-        if self.normalizing_type == 'percentile':
-            image = (image - self.normalizing_factor[:, 0].reshape((-1, 1, 1))) / self.normalizing_factor[:, 2].reshape((-1, 1, 1))
-        elif self.normalizing_type == 'zscore':
-            image = (image - self.args.means) / self.args.stds
-        else:
-            image = np.clip(image / self.normalizing_factor, 0, 1)
-        return image
-
-
-    def _handle_timepoints(self, image: NDArray[np.float64]) -> NDArray[np.float64]:
-        """Handles multiple images across timepoints."""
-        image = image[:4, :, :, :]
-        if self.args.timepoint_aggregation == 'concat':
-            image = np.reshape(image, (-1, image.shape[2], image.shape[3]))
-        elif self.args.timepoint_aggregation == 'median':
-            image = np.median(image, axis=0)
-        return image
-
-    def _aggregate_timepoints(self, image: NDArray[np.float64]) -> NDArray[np.float64]:
-        """Aggregates images based on the provided timepoint aggregation method."""
-        if self.args.timepoint_aggregation == 'first':
-            image = image[0]
-        elif self.args.timepoint_aggregation == 'random':
-            image = image[np.random.randint(image.shape[0])]
-        return image
-
-    def _convert_mask_to_2d(self, mask: Tensor) -> Tensor:
-        """Converts the mask to 2D format if specified."""
-        mask_0 = 1.0 - mask
-        return torch.cat([mask_0, mask], dim=0)
-
-    def _apply_transforms(self, image: Tensor, mask: Tensor) -> tuple[Tensor, Tensor]:
-        """Applies geometric and color transforms to the image and mask."""
-        if self.geo_transforms:
-            combined = torch.cat((image, mask), 0)
-            combined = self.geo_transforms(combined)
-            image, mask = torch.split(combined, [image.shape[0], mask.shape[0]], 0)
-        
-        if self.color_transforms:
-            num_timepoints = image.shape[0] // self.in_channels
-            for i in range(num_timepoints):
-                if self.in_channels >= 3:
-                    image[i * self.in_channels:i * self.in_channels + 3, :, :] = self.color_transforms(
-                        image[i * self.in_channels:i * self.in_channels + 3, :, :]
-                    )
-                else:
-                    raise ValueError("Color transformation requires at least 3 input channels.")
-
-        if self.image_resize:
-            image = self.image_resize(image)
-        
-        if self.mask_resize:
-            mask = self.mask_resize(mask)
-
-        return image, mask
 
     def _verify(self) -> None:
         """Checks if dataset exists, otherwise download it."""
