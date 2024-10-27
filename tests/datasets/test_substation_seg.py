@@ -20,12 +20,12 @@ class Args:
         self.in_channels: int = 3
         self.use_timepoints: bool = True
         self.normalizing_type: str = "percentile"
-        self.normalizing_factor: np.ndarray[Any, np.dtype[float]] = np.array([[0, 0.5, 1.0]])
         self.mask_2d: bool = True
         self.model_type: str = "swin"
         self.timepoint_aggregation: str = "concat"
-        self.means: np.ndarray[Any, np.dtype[float]] = np.array([0.485, 0.456, 0.406])
-        self.stds: np.ndarray[Any, np.dtype[float]] = np.array([0.229, 0.224, 0.225])
+        self.normalizing_factor: Any = np.array([[0, 0.5, 1.0]], dtype=np.float32)
+        self.means: Any = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+        self.stds: Any = np.array([0.229, 0.224, 0.225], dtype=np.float32)
 
 
 @pytest.fixture
