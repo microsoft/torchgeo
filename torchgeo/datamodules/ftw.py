@@ -19,8 +19,8 @@ class FieldsOfTheWorldDataModule(NonGeoDataModule):
     .. versionadded:: 0.7
     """
 
-    mean = torch.tensor([0, 0, 0, 0, 0, 0, 0, 0])
-    std = torch.tensor([3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000])
+    mean = torch.tensor([0])
+    std = torch.tensor([3000])
 
     def __init__(
         self,
@@ -70,12 +70,8 @@ class FieldsOfTheWorldDataModule(NonGeoDataModule):
     def setup(self, stage: str) -> None:
         """Set up datasets.
 
-        Called at the beginning of fit, validate, test, or predict. During distributed
-        training, this method is called from every process across all the nodes. Setting
-        state here is recommended.
-
         Args:
-            stage: Either 'fit', 'validate', 'test', or 'predict'.
+            stage: Either 'fit', 'validate', or 'test'.
         """
         if stage in ['fit', 'validate']:
             self.train_dataset = FieldsOfTheWorld(
