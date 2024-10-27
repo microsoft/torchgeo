@@ -6,7 +6,6 @@
 import hashlib
 import os
 import shutil
-
 import numpy as np
 
 # Parameters
@@ -17,35 +16,35 @@ np.random.seed(0)
 # Define directory hierarchy
 FILENAME_HIERARCHY = dict[str, 'FILENAME_HIERARCHY'] | list[str]
 
-filenames: FILENAME_HIERARCHY = {
-    'image_stack': ['image'],
-    'mask': ['mask'],
-}
+filenames: FILENAME_HIERARCHY = {'image_stack': ['image'], 'mask': ['mask']}
 
-def create_file(path: str) -> None:
+
+def create_file(path: str, value: str) -> None:
     """
     Generates .npz files for images or masks based on the path.
-    
+
     Args:
     - path (str): Base path for saving files (either 'image' or 'mask').
     """
     for i in range(NUM_SAMPLES):
         new_path = f'{path}_{i}.npz'
-        fn = os.path.basename(new_path)
-        
-        if fn.startswith('image'):
+
+        if value == 'image':
             # Generate image data with shape (4, 13, SIZE, SIZE) for timepoints and channels
-            data = np.random.rand(4, 13, SIZE, SIZE).astype(np.float32)  # 4 timepoints, 13 channels
-        elif fn.startswith('mask'):
+            data = np.random.rand(4, 13, SIZE, SIZE).astype(
+                np.float32
+            )  # 4 timepoints, 13 channels
+        elif value == 'mask':
             # Generate mask data with shape (SIZE, SIZE) with 4 classes
             data = np.random.randint(0, 4, size=(SIZE, SIZE)).astype(np.uint8)
-        
+
         np.savez_compressed(new_path, arr_0=data)
+
 
 def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
     """
     Recursively creates directory structure based on hierarchy and populates with data files.
-    
+
     Args:
     - directory (str): Base directory for dataset.
     - hierarchy (FILENAME_HIERARCHY): Directory and file structure.
@@ -59,8 +58,9 @@ def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
     else:
         # Base case
         for value in hierarchy:
-            path = os.path.join(directory, value)
-            create_file(path)
+            path = os.path.join(directory, 'image')
+            create_file(path, value)
+
 
 if __name__ == '__main__':
     # Generate directory structure and data
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     with open(filename_images, 'rb') as f:
         md5_images = hashlib.md5(f.read()).hexdigest()
         print(f'{filename_images}: {md5_images}')
-    
+
     with open(filename_masks, 'rb') as f:
         md5_masks = hashlib.md5(f.read()).hexdigest()
         print(f'{filename_masks}: {md5_masks}')
