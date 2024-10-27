@@ -16,6 +16,8 @@ from rasterio.transform import Affine
 
 SIZE = 2
 
+NUM_SAMPLES = 4
+
 dataset_id = 'SN6_buildings'
 
 profile = {
@@ -57,7 +59,7 @@ def generate_geotiff_files(
     test: bool = False,
 ) -> None:
     for imagery_type in imagery_types:
-        for i in range(1, 5):
+        for i in range(1, NUM_SAMPLES + 1):
             if test and imagery_type == 'SAR-Intensity':
                 path = os.path.join(
                     base_path,
@@ -77,7 +79,7 @@ def generate_geotiff_files(
 
 def generate_geojson_files(base_path: str, geojson: dict[str, Any]) -> None:
     os.makedirs(os.path.join(base_path, 'geojson_buildings'), exist_ok=True)
-    for i in range(1, 4):
+    for i in range(1, NUM_SAMPLES + 1):
         path = os.path.join(
             base_path,
             'geojson_buildings',
@@ -141,29 +143,29 @@ generate_geotiff_files(
 
 # Create tarballs for train and test datasets
 shutil.make_archive(
-    os.path.join(dataset_id, 'SN6_buildings_AOI_11_Rotterdam_train'),
+    os.path.join(dataset_id, 'train', 'SN6_buildings_AOI_11_Rotterdam_train'),
     'gztar',
-    dataset_id,
-    'train',
+    root_dir=os.path.join(dataset_id, 'train'),
+    base_dir='train',
 )
 shutil.make_archive(
-    os.path.join(dataset_id, 'SN6_buildings_AOI_11_Rotterdam_test'),
+    os.path.join(dataset_id, 'test', 'SN6_buildings_AOI_11_Rotterdam_test'),
     'gztar',
-    dataset_id,
-    'test',
+    root_dir=os.path.join(dataset_id, 'test'),
+    base_dir='test_public',
 )
 
 # Compute and print MD5 checksums for the generated tarballs
 print('MD5 Checksums for Train Dataset:')
 train_tarball_path = os.path.join(
-    dataset_id, 'SN6_buildings_AOI_11_Rotterdam_train.tar.gz'
+    dataset_id, 'train', 'SN6_buildings_AOI_11_Rotterdam_train.tar.gz'
 )
 if os.path.exists(train_tarball_path):
     print(f'Train: {compute_md5(train_tarball_path)}')
 
 print('\nMD5 Checksums for Test Dataset:')
 test_tarball_path = os.path.join(
-    dataset_id, 'SN6_buildings_AOI_11_Rotterdam_test.tar.gz'
+    dataset_id, 'test', 'SN6_buildings_AOI_11_Rotterdam_test.tar.gz'
 )
 if os.path.exists(test_tarball_path):
     print(f'Test: {compute_md5(test_tarball_path)}')

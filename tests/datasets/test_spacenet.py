@@ -9,54 +9,70 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import DatasetNotFoundError, SpaceNet1
+from torchgeo.datasets import DatasetNotFoundError, SpaceNet, SpaceNet1, SpaceNet6
 from torchgeo.datasets.utils import Executable
 
 
 class TestSpaceNet:
-    @pytest.fixture
+    @pytest.fixture(params=[SpaceNet1, SpaceNet6])
     def dataset(
-        self, aws: Executable, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> SpaceNet1:
+        self,
+        request: SubRequest,
+        aws: Executable,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+    ) -> type[SpaceNet]:
+        dataset_class = request.param
         url = os.path.join(
             'tests',
             'data',
             'spacenet',
-            'spacenet1',
+            dataset_class.__name__.lower(),
             '{dataset_id}',
             'train',
             '{tarball}',
         )
-        monkeypatch.setattr(SpaceNet1, 'url', url)
+        monkeypatch.setattr(dataset_class, 'url', url)
         transforms = nn.Identity()
-        return SpaceNet1(tmp_path, transforms=transforms, download=True)
+        return dataset_class(tmp_path, transforms=transforms, download=True)
 
     @pytest.mark.parametrize('index', [0, 1])
-    def test_getitem(self, dataset: SpaceNet1, index: int) -> None:
+    def test_getitem(self, dataset: type[SpaceNet], index: int) -> None:
         x = dataset[index]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
 
-    def test_len(self, dataset: SpaceNet1) -> None:
+    def test_len(self, dataset: type[SpaceNet]) -> None:
         assert len(dataset) == 4
 
-    def test_already_extracted(self, dataset: SpaceNet1) -> None:
-        SpaceNet1(root=dataset.root)
+    def test_already_extracted(self, dataset: type[SpaceNet]) -> None:
+        dataset.__class__(root=dataset.root)
 
-    def test_already_downloaded(self, dataset: SpaceNet1) -> None:
-        for product in ['3band', '8band', 'geojson']:
-            dir = os.path.join(dataset.root, dataset.dataset_id, dataset.split, product)
+    def test_already_downloaded(self, dataset: type[SpaceNet]) -> None:
+        if dataset.dataset_id == 'SN1_buildings':
+            base_dir = os.path.join(dataset.root, dataset.dataset_id, dataset.split)
+        elif dataset.dataset_id == 'SN6_buildings':
+            base_dir = os.path.join(
+                dataset.root,
+                dataset.dataset_id,
+                dataset.split,
+                dataset.split,
+                'AOI_11_Rotterdam',
+            )
+        for product in dataset.valid_images['train'] + list(dataset.valid_masks):
+            dir = os.path.join(base_dir, product)
             shutil.rmtree(dir)
-        SpaceNet1(root=dataset.root)
+        dataset.__class__(root=dataset.root)
 
-    def test_not_downloaded(self, tmp_path: Path) -> None:
+    def test_not_downloaded(self, tmp_path: Path, dataset: type[SpaceNet]) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SpaceNet1(tmp_path)
+            dataset.__class__(root=os.path.join(tmp_path, 'dummy'))
 
-    def test_plot(self, dataset: SpaceNet1) -> None:
+    def test_plot(self, dataset: type[SpaceNet]) -> None:
         x = dataset[0]
         dataset.plot(x, show_titles=False)
         plt.close()
@@ -64,12 +80,14 @@ class TestSpaceNet:
         dataset.plot(x, suptitle='Test')
         plt.close()
 
-    def test_image_id(self, monkeypatch: MonkeyPatch, dataset: SpaceNet1) -> None:
+    def test_image_id(self, monkeypatch: MonkeyPatch, dataset: type[SpaceNet]) -> None:
         file_regex = r'global_monthly_(\d+.*\d+)'
         monkeypatch.setattr(dataset, 'file_regex', file_regex)
         dataset._image_id('global_monthly_2018_01_mosaic_L15-0331E-1257N_1327_3160.tif')
 
-    def test_list_files(self, monkeypatch: MonkeyPatch, dataset: SpaceNet1) -> None:
+    def test_list_files(
+        self, monkeypatch: MonkeyPatch, dataset: type[SpaceNet]
+    ) -> None:
         directory_glob = os.path.join('**', 'AOI_{aoi}_*', '{product}')
         monkeypatch.setattr(dataset, 'directory_glob', directory_glob)
         dataset._list_files(aoi=1)
