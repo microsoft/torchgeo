@@ -77,6 +77,7 @@ class TestSemanticSegmentationTask:
             'sentinel2_south_america_soybean',
             'southafricacroptype',
             'spacenet1',
+            'spacenet6',
             'ssl4eo_l_benchmark_cdl',
             'ssl4eo_l_benchmark_nlcd',
             'vaihingen2d',

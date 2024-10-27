@@ -43,7 +43,7 @@ from .sentinel2_south_america_soybean import Sentinel2SouthAmericaSoybeanDataMod
 from .skippd import SKIPPDDataModule
 from .so2sat import So2SatDataModule
 from .southafricacroptype import SouthAfricaCropTypeDataModule
-from .spacenet import SpaceNet1DataModule
+from .spacenet import SpaceNet1DataModule, SpaceNet6DataModule, SpaceNetBaseDataModule
 from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
 from .ssl4eo_benchmark import SSL4EOLBenchmarkDataModule
 from .sustainbench_crop_yield import SustainBenchCropYieldDataModule
@@ -99,7 +99,9 @@ __all__ = (
     'SEN12MSDataModule',
     'SKIPPDDataModule',
     'So2SatDataModule',
+    'SpaceNetBaseDataModule',
     'SpaceNet1DataModule',
+    'SpaceNet6DataModule',
     'SSL4EOLBenchmarkDataModule',
     'SSL4EOLDataModule',
     'SSL4EOS12DataModule',
