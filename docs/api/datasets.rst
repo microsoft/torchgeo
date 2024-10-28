@@ -222,6 +222,11 @@ CaBuAr
 
 .. autoclass:: CaBuAr
 
+CaFFe
+^^^^^
+
+.. autoclass:: CaFFe
+
 ChaBuD
 ^^^^^^
 
