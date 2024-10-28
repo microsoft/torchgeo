@@ -378,10 +378,7 @@ class BaseTransformer(nn.Module):
             x = self_attn(x, relative_position_bias) + x
             x = ffn(x) + x
 
-        if self.final_norm:
-            return self.norm_out(x)
-        else:
-            return x
+        return self.norm_out(x) if self.final_norm else x
 
 
 class BaseTransformerCrossAttn(nn.Module):
