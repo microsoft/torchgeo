@@ -503,7 +503,7 @@ class CROMABase_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     CROMA_VIT = Weights(
-        url='https://hf.co/torchgeo/croma/resolve/17591bcf0711940cc71167d6618d74f60847b43b/CROMA_base- 0238d814.pt',
+        url='https://hf.co/torchgeo/croma/resolve/17591bcf0711940cc71167d6618d74f60847b43b/CROMA_base-0238d814.pt',
         transforms=None,
         meta={
             'dataset': 'SSL4EO',
