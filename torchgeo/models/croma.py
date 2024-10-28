@@ -123,17 +123,16 @@ class CROMA(nn.Module):
         """
         return_dict: dict[str, Tensor] = {}
 
-        device = x_sar.device if x_sar is not None else x_optical.device
-        attn_bias = self.attn_bias.to(device)
-
         if 'sar' in self.modalities and x_sar is not None:
-            sar_encodings = self.s1_encoder(imgs=x_sar, attn_bias=attn_bias)
+            sar_encodings = self.s1_encoder(imgs=x_sar, attn_bias=self.attn_bias)
             sar_GAP = self.s1_GAP_FFN(sar_encodings.mean(dim=1))
             return_dict['sar_encodings'] = sar_encodings
             return_dict['sar_GAP'] = sar_GAP
 
         if 'optical' in self.modalities and x_optical is not None:
-            optical_encodings = self.s2_encoder(imgs=x_optical, attn_bias=attn_bias)
+            optical_encodings = self.s2_encoder(
+                imgs=x_optical, attn_bias=self.attn_bias
+            )
             optical_GAP = self.s2_GAP_FFN(optical_encodings.mean(dim=1))
             return_dict['optical_encodings'] = optical_encodings
             return_dict['optical_GAP'] = optical_GAP
@@ -142,7 +141,7 @@ class CROMA(nn.Module):
             joint_encodings = self.joint_encoder(
                 x=sar_encodings,
                 context=optical_encodings,
-                relative_position_bias=attn_bias,
+                relative_position_bias=self.attn_bias,
             )
             joint_GAP = joint_encodings.mean(dim=1)
             return_dict['joint_encodings'] = joint_encodings
@@ -215,7 +214,8 @@ class FFN(nn.Module):
             Output tensor.
         """
         x = self.input_norm(x)
-        return self.net(x)
+        x = self.net(x)
+        return x
 
 
 class Attention(nn.Module):
@@ -264,7 +264,8 @@ class Attention(nn.Module):
 
         out = einsum('b h i j, b h j d -> b h i d', attn, v)
         out = rearrange(out, 'b h n d -> b n (h d)')
-        return self.to_out(out)
+        out = self.to_out(out)
+        return out
 
 
 class CrossAttention(nn.Module):
@@ -324,7 +325,8 @@ class CrossAttention(nn.Module):
 
         out = einsum('b h i j, b h j d -> b h i d', attn, v)
         out = rearrange(out, 'b h n d -> b n (h d)')
-        return self.to_out(out)
+        out = self.to_out(out)
+        return out
 
 
 class BaseTransformer(nn.Module):
@@ -378,7 +380,8 @@ class BaseTransformer(nn.Module):
             x = self_attn(x, relative_position_bias) + x
             x = ffn(x) + x
 
-        return self.norm_out(x) if self.final_norm else x
+        x = self.norm_out(x) if self.final_norm else x
+        return x
 
 
 class BaseTransformerCrossAttn(nn.Module):
