@@ -17,6 +17,7 @@ from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSAT100DataModule, EuroSATDataModule, EuroSATSpatialDataModule
 from .fair1m import FAIR1MDataModule
 from .fire_risk import FireRiskDataModule
+from .ftw import FieldsOfTheWorldDataModule
 from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
 from .geonrw import GeoNRWDataModule
 from .gid15 import GID15DataModule
@@ -42,7 +43,7 @@ from .sentinel2_south_america_soybean import Sentinel2SouthAmericaSoybeanDataMod
 from .skippd import SKIPPDDataModule
 from .so2sat import So2SatDataModule
 from .southafricacroptype import SouthAfricaCropTypeDataModule
-from .spacenet import SpaceNet1DataModule
+from .spacenet import SpaceNet1DataModule, SpaceNet6DataModule, SpaceNetBaseDataModule
 from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
 from .ssl4eo_benchmark import SSL4EOLBenchmarkDataModule
 from .sustainbench_crop_yield import SustainBenchCropYieldDataModule
@@ -79,6 +80,7 @@ __all__ = (
     'EuroSATSpatialDataModule',
     'EuroSAT100DataModule',
     'FAIR1MDataModule',
+    'FieldsOfTheWorldDataModule',
     'FireRiskDataModule',
     'GeoNRWDataModule',
     'GID15DataModule',
@@ -97,7 +99,9 @@ __all__ = (
     'SEN12MSDataModule',
     'SKIPPDDataModule',
     'So2SatDataModule',
+    'SpaceNetBaseDataModule',
     'SpaceNet1DataModule',
+    'SpaceNet6DataModule',
     'SSL4EOLBenchmarkDataModule',
     'SSL4EOLDataModule',
     'SSL4EOS12DataModule',
