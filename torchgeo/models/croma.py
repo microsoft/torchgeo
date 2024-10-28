@@ -7,6 +7,7 @@
 
 import itertools
 import math
+from collections.abc import Sequence
 from typing import Any
 
 import torch
@@ -18,7 +19,7 @@ from torchvision.models._api import Weights, WeightsEnum
 class CROMA(nn.Module):
     """Pretrained CROMA model.
 
-    Corresponds to the pretrained CROMA mdel found in the CROMA repository:
+    Corresponds to the pretrained CROMA model found in the CROMA repository:
 
     * https://github.com/antofuller/CROMA/blob/main/pretrain_croma.py
 
@@ -31,7 +32,7 @@ class CROMA(nn.Module):
 
     def __init__(
         self,
-        modalities: list[str] = ['sar', 'optical'],
+        modalities: Sequence[str] = ['sar', 'optical'],
         encoder_dim: int = 768,
         encoder_depth: int = 12,
         num_heads: int = 16,
@@ -51,7 +52,7 @@ class CROMA(nn.Module):
                 must be a multiple of 8.
 
         Raises:
-            AssertionError: If the modality is not valid.
+            AssertionError: If any arguments are not valid.
         """
         super().__init__()
         for modality in modalities:
@@ -278,6 +279,9 @@ class CrossAttention(nn.Module):
             dim: Dimension of the input.
             num_heads: Number of heads for the multi-head attention.
             dropout: Dropout probability.
+
+        Raises:
+            AssertionError: If the dimension is not evenly divisible by the number of heads.
         """
         super().__init__()
         self.num_heads = num_heads
@@ -499,7 +503,7 @@ class CROMABase_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     CROMA_VIT = Weights(
-        url='https://hf.co/antofuller/CROMA/resolve/0dd28e3d633bd6715856ae9890e8c49360040598/CROMA_base.pt',
+        url='https://hf.co/torchgeo/croma/resolve/17591bcf0711940cc71167d6618d74f60847b43b/CROMA_base- 0238d814.pt',
         transforms=None,
         meta={
             'dataset': 'SSL4EO',
@@ -518,7 +522,7 @@ class CROMALarge_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     CROMA_VIT = Weights(
-        url='https://huggingface.co/antofuller/CROMA/resolve/0dd28e3d633bd6715856ae9890e8c49360040598/CROMA_large.pt',
+        url='https://huggingface.co/torchgeo/croma/resolve/92cb1a0f4e34c6c01558baf070197c01255382f6/CROMA_large-921e69ad.pt',
         transforms=None,
         meta={
             'dataset': 'SSL4EO',
