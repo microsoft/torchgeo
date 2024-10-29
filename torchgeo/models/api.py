@@ -46,7 +46,7 @@ _model = {
     'vit_small_patch16_224': vit_small_patch16_224,
 }
 
-_model_weights = {
+_model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     dofa_base_patch16_224: DOFABase16_Weights,
     dofa_large_patch16_224: DOFALarge16_Weights,
     resnet18: ResNet18_Weights,
@@ -109,8 +109,17 @@ def get_weight(name: str) -> WeightsEnum:
 
     Returns:
         The requested weight enum.
+
+    Raises:
+        ValueError: If *name* is not a valid WeightsEnum.
     """
-    return eval(name)
+    for weight_name, weight_enum in _model_weights.items():
+        if isinstance(weight_name, str):
+            for sub_weight_enum in weight_enum:
+                if name == str(sub_weight_enum):
+                    return sub_weight_enum
+
+    raise ValueError(f'{name} is not a valid WeightsEnum')
 
 
 def list_models() -> list[str]:

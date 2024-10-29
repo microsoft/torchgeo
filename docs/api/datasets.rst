@@ -222,6 +222,11 @@ CaBuAr
 
 .. autoclass:: CaBuAr
 
+CaFFe
+^^^^^
+
+.. autoclass:: CaFFe
+
 ChaBuD
 ^^^^^^
 
@@ -281,6 +286,11 @@ FAIR1M
 ^^^^^^
 
 .. autoclass:: FAIR1M
+
+Fields Of The World
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: FieldsOfTheWorld
 
 FireRisk
 ^^^^^^^^
@@ -344,6 +354,11 @@ Million-AID
 
 .. autoclass:: MillionAID
 
+MMEarth
+^^^^^^^^
+
+.. autoclass:: MMEarth
+
 NASA Marine Debris
 ^^^^^^^^^^^^^^^^^^
 
@@ -388,6 +403,11 @@ Rwanda Field Boundary
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: RwandaFieldBoundary
+
+SatlasPretrain
+^^^^^^^^^^^^^^
+
+.. autoclass:: SatlasPretrain
 
 Seasonal Contrast
 ^^^^^^^^^^^^^^^^^

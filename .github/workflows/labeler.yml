@@ -1,4 +1,4 @@
-name: "labeler"
+name: 'labeler'
 on:
   - pull_request_target
 jobs:
@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.2
       - name: Add label
         uses: actions/labeler@v5.0.0
         with:

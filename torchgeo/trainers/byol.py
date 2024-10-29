@@ -324,7 +324,7 @@ class BYOLTask(BaseTask):
            renamed to *model*, *lr*, and *patience*.
         """
         self.weights = weights
-        super().__init__(ignore='weights')
+        super().__init__()
 
     def configure_models(self) -> None:
         """Initialize the model."""

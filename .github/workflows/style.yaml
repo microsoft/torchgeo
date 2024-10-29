@@ -17,13 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.2
       - name: Set up python
-        uses: actions/setup-python@v5.2.0
+        uses: actions/setup-python@v5.3.0
         with:
-          python-version: "3.12"
+          python-version: '3.12'
       - name: Cache dependencies
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4.1.2
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -42,13 +42,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.2
       - name: Set up python
-        uses: actions/setup-python@v5.2.0
+        uses: actions/setup-python@v5.3.0
         with:
-          python-version: "3.12"
+          python-version: '3.12'
       - name: Cache dependencies
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4.1.2
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -69,16 +69,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.2
       - name: Set up nodejs
-        uses: actions/setup-node@v4.0.3
+        uses: actions/setup-node@v4.1.0
         with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: "requirements/package-lock.json"
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
       - name: Installing prettier
         run: |
-          npm install requirements/
+          npm install
           npm cache clean --force
       - name: List npm dependencies
         run: npm ls --all

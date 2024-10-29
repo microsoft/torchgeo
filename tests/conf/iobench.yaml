@@ -6,4 +6,4 @@ data:
     batch_size: 2
     patch_size: 16
   dict_kwargs:
-    root: "tests/data/iobench"
+    root: 'tests/data/iobench'

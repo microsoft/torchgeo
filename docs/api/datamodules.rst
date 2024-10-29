@@ -62,6 +62,11 @@ CaBuAr
 
 .. autoclass:: CaBuArDataModule
 
+CaFFe
+^^^^^
+
+.. autoclass:: CaFFeDataModule
+
 ChaBuD
 ^^^^^^
 
@@ -98,6 +103,11 @@ FAIR1M
 ^^^^^^
 
 .. autoclass:: FAIR1MDataModule
+
+Fields Of The World
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: FieldsOfTheWorldDataModule
 
 FireRisk
 ^^^^^^^^
@@ -183,7 +193,9 @@ So2Sat
 SpaceNet
 ^^^^^^^^
 
+.. autoclass:: SpaceNetBaseDataModule
 .. autoclass:: SpaceNet1DataModule
+.. autoclass:: SpaceNet6DataModule
 
 SSL4EO
 ^^^^^^

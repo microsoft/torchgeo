@@ -15,21 +15,19 @@ jobs:
   latest:
     name: latest
     runs-on: ${{ matrix.os }}
-    env:
-      MPLBACKEND: Agg
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ['3.10', '3.11', '3.12']
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.2
       - name: Set up python
-        uses: actions/setup-python@v5.2.0
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache dependencies
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4.1.2
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -49,23 +47,21 @@ jobs:
           pytest --cov --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.5.0
+        uses: codecov/codecov-action@v4.6.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
     name: minimum
     runs-on: ubuntu-latest
-    env:
-      MPLBACKEND: Agg
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.2
       - name: Set up python
-        uses: actions/setup-python@v5.2.0
+        uses: actions/setup-python@v5.3.0
         with:
-          python-version: "3.10"
+          python-version: '3.10'
       - name: Cache dependencies
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4.1.2
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -84,23 +80,21 @@ jobs:
           pytest --cov --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.5.0
+        uses: codecov/codecov-action@v4.6.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   datasets:
     name: datasets
     runs-on: ubuntu-latest
-    env:
-      MPLBACKEND: Agg
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.2
       - name: Set up python
-        uses: actions/setup-python@v5.2.0
+        uses: actions/setup-python@v5.3.0
         with:
-          python-version: "3.12"
+          python-version: '3.12'
       - name: Cache dependencies
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4.1.2
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -117,7 +111,7 @@ jobs:
           pytest --cov --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.5.0
+        uses: codecov/codecov-action@v4.6.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:

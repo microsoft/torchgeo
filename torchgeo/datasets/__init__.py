@@ -12,6 +12,7 @@ from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
 from .cabuar import CaBuAr
+from .caffe import CaFFe
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chabud import ChaBuD
@@ -46,6 +47,7 @@ from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
+from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
 from .geo import (
     GeoDataset,
@@ -83,6 +85,7 @@ from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
 from .mapinwild import MapInWild
 from .millionaid import MillionAID
+from .mmearth import MMEarth
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nccm import NCCM
@@ -97,6 +100,7 @@ from .quakeset import QuakeSet
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
+from .satlas import SatlasPretrain
 from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
@@ -202,6 +206,7 @@ __all__ = (
     'BigEarthNet',
     'BioMassters',
     'CaBuAr',
+    'CaFFe',
     'ChaBuD',
     'CloudCoverDetection',
     'COWC',
@@ -217,6 +222,7 @@ __all__ = (
     'EuroSATSpatial',
     'EuroSAT100',
     'FAIR1M',
+    'FieldsOfTheWorld',
     'FireRisk',
     'ForestDamage',
     'GeoNRW',
@@ -231,6 +237,7 @@ __all__ = (
     'LoveDA',
     'MapInWild',
     'MillionAID',
+    'MMEarth',
     'NASAMarineDebris',
     'OSCD',
     'PASTIS',
@@ -240,6 +247,7 @@ __all__ = (
     'RESISC45',
     'ReforesTree',
     'RwandaFieldBoundary',
+    'SatlasPretrain',
     'SeasonalContrastS2',
     'SeasoNet',
     'SEN12MS',

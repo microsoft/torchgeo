@@ -53,6 +53,7 @@ class ObjectDetectionTask(BaseTask):
     .. versionadded:: 0.4
     """
 
+    ignore = None
     monitor = 'val_map'
     mode = 'max'
 

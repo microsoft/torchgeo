@@ -56,6 +56,7 @@ class TestSemanticSegmentationTask:
             'chesapeake_cvpr_7',
             'deepglobelandcover',
             'etci2021',
+            'ftw',
             'geonrw',
             'gid15',
             'inria',
@@ -76,6 +77,7 @@ class TestSemanticSegmentationTask:
             'sentinel2_south_america_soybean',
             'southafricacroptype',
             'spacenet1',
+            'spacenet6',
             'ssl4eo_l_benchmark_cdl',
             'ssl4eo_l_benchmark_nlcd',
             'vaihingen2d',
@@ -87,6 +89,8 @@ class TestSemanticSegmentationTask:
         match name:
             case 'chabud' | 'cabuar':
                 pytest.importorskip('h5py', minversion='3.6')
+            case 'ftw':
+                pytest.importorskip('pyarrow')
             case 'landcoverai':
                 sha256 = (
                     'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'

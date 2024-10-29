@@ -1,8 +1,8 @@
 model:
   class_path: ClassificationTask
   init_args:
-    loss: "ce"
-    model: "resnet18"
+    loss: 'ce'
+    model: 'resnet18'
     in_channels: 3
     num_classes: 3
 data:
@@ -10,4 +10,4 @@ data:
   init_args:
     batch_size: 1
   dict_kwargs:
-    root: "tests/data/resisc45"
+    root: 'tests/data/resisc45'

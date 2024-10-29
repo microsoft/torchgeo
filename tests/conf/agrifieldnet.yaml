@@ -1,9 +1,9 @@
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    loss: "ce"
-    model: "unet"
-    backbone: "resnet18"
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
     in_channels: 12
     num_classes: 14
     num_filters: 1
@@ -14,4 +14,4 @@ data:
     batch_size: 2
     patch_size: 16
   dict_kwargs:
-    paths: "tests/data/agrifieldnet"
+    paths: 'tests/data/agrifieldnet'

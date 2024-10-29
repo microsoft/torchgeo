@@ -8,7 +8,7 @@ from typing import Any
 import lightning
 import torch
 from torch import Tensor
-from torch.optim import SGD  # type: ignore[attr-defined]
+from torch.optim import SGD
 
 from .base import BaseTask
 

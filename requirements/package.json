@@ -1,7 +1,0 @@
-{
-  "name": "torchgeo",
-  "private": "true",
-  "dependencies": {
-    "prettier": ">=3"
-  }
-}
