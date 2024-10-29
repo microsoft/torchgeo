@@ -19,7 +19,7 @@ IMG_SIZE = 512
 DUMMY_DATA_SIZE = 10
 
 # Directory structure
-root_dir = f"{0}/FLAIR2"
+root_dir = "{0}/FLAIR2"
 splits: Sequence[str] = ("train", "test")
 dir_names: dict[dict[str, str]] = {
     "train": {
@@ -34,7 +34,7 @@ dir_names: dict[dict[str, str]] = {
     }
 }
 # Replace with random digits and letters
-sub_sub_dir_format = f"D{0}_{1}/Z{2}_{3}"
+sub_sub_dir_format = "D{0}_{1}/Z{2}_{3}"
 
 
 # Aerial specifics
@@ -69,11 +69,17 @@ labels_profile = {
 labels_format = ".tif"
 
 
-def populate_sub_sub_dirs(dir_path: str, rng: np.random.Generator) -> None:
+def populate_sub_sub_dirs(dir_path: str, rng: np.random.Generator, type: str) -> None:
     file_id = rng.integers(100, 1000)
-    create_aerial_image(dir_path, rng, file_id)
-    create_sentinel_arrays(dir_path, rng, file_id)
-    create_label_mask(dir_path, rng, file_id)
+    match type:
+        case "img":
+            create_aerial_image(dir_path, rng, file_id)
+        case "sen":
+            create_sentinel_arrays(dir_path, rng, file_id)
+        case "msk":
+            create_label_mask(dir_path, rng, file_id)
+        case _:
+            raise ValueError(f"Unknown type: {type}")
 
 
 def create_aerial_image(dir_path: str, rng: np.random.Generator, id: int) -> None:
@@ -90,7 +96,7 @@ def create_sentinel_arrays(dir_path: str, rng: np.random.Generator, id: int) -> 
 
 def create_label_mask(dir_path: str, rng: np.random.Generator, id: int) -> None:
     data = rng.choice(labels_pixel_values, size=(IMG_SIZE, IMG_SIZE), replace=True).astype(np.byte)
-    with rasterio.open(os.path.join(dir_path, f"IMG_000{id}{labels_format}"), 'w', **labels_profile) as src:
+    with rasterio.open(os.path.join(dir_path, f"MSK_000{id}{labels_format}"), 'w', **labels_profile) as src:
         src.write(data, 1)
 
 
@@ -111,7 +117,7 @@ if __name__ == "__main__":
                 random_domain = rng.integers(100, 999)
                 random_year = rng.integers(2010, 2022)
                 random_zone = rng.integers(10, 20)
-                random_area = rng.choice(list(string.ascii_uppercase), size=2)
+                random_area = "".join(rng.choice(list(string.ascii_uppercase), size=2))
                 
                 # E.g. D123_2021/Z1_UF
                 sub_sub_dir = sub_sub_dir_format.format(random_domain, random_year, random_zone, random_area)
@@ -120,7 +126,7 @@ if __name__ == "__main__":
                 dir_path = os.path.join(root_dir, sub_dir, sub_sub_dir, type)
                 os.makedirs(dir_path, exist_ok=True)
                 
-                populate_sub_sub_dirs(dir_path, rng)
+                populate_sub_sub_dirs(dir_path, rng, type)
 
     # zip and compute md5
     shutil.make_archive(root_dir, "zip", ".", root_dir)
