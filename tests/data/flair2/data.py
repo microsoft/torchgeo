@@ -12,6 +12,7 @@ import string
 import numpy as np
 from pyproj import CRS
 import rasterio
+import hashlib
 
 
 # General hyperparams
@@ -112,11 +113,11 @@ if __name__ == "__main__":
         for type, sub_dir in dir_names[split].items():
             for i in range(DUMMY_DATA_SIZE):
                 # Reproducible and the same for all types
-                rng: np.random.Generator = np.random.default_rng(seed=hash(f"{split}{i}")  % ((sys.maxsize + 1) * 2))
+                rng: np.random.Generator = np.random.default_rng(seed=int(hashlib.md5(f"{split}{i}".encode('utf-8')).hexdigest(), 16))
                 
-                random_domain = rng.integers(100, 999)
-                random_year = rng.integers(2010, 2022)
-                random_zone = rng.integers(10, 20)
+                random_domain = rng.integers(100, 1000)
+                random_year = rng.integers(2010, 2023)
+                random_zone = rng.integers(10, 23)
                 random_area = "".join(rng.choice(list(string.ascii_uppercase), size=2))
                 
                 # E.g. D123_2021/Z1_UF
