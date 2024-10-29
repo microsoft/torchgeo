@@ -484,6 +484,10 @@ Western USA Live Fuel Moisture
 
 .. autoclass:: WesternUSALiveFuelMoisture
 
+WorldStrat
+^^^^^^^^^^^
+.. autoclass:: WorldStrat
+
 xView2
 ^^^^^^
 

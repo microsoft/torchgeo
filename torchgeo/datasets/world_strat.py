@@ -12,7 +12,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path
+from .utils import Path, extract_archive
 
 
 class WorldStrat(NonGeoDataset):
@@ -93,17 +93,12 @@ class WorldStrat(NonGeoDataset):
                 self.root, self.file_info_dict['train_val_test_split']['filename']
             )
         )
+
         self.file_path_df = self.file_path_df[self.file_path_df['split'] == self.split]
         self.metadata_df = pd.read_csv(
             os.path.join(self.root, self.file_info_dict['metadata']['filename'])
         )
         self.metadata_df.rename(columns={'Unnamed: 0': 'tile'}, inplace=True)
-
-        import pdb
-
-        pdb.set_trace()
-
-        print(0)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """"""
@@ -143,6 +138,7 @@ class WorldStrat(NonGeoDataset):
 
         if all(exists):
             # extract files
+            self._extract()
             return
 
         if not self.download:
@@ -151,13 +147,26 @@ class WorldStrat(NonGeoDataset):
         # download
         self._download()
 
+    def _extract(self) -> None:
+        """Extract tar balls to root directory."""
+        for file in self.file_info_dict.values():
+            extract_archive(os.path.join(self.root, file['filename']), self.root)
+
     def _download(self) -> None:
         """Download the dataset and extract it."""
         # TODO: implement download
-
-        download_and_extract_archive(
-            self.url,
-            self.root,
-            filename=self.filename,
-            md5=self.md5 if self.checksum else None,
-        )
+        for filename, metadata in self.file_info_dict.items():
+            if metadata['filename'].contains('tar.gz'):
+                download_and_extract_archive(
+                    metadata['url'],
+                    self.root,
+                    filename=metadata['filename'],
+                    md5=metadata['md5'] if checksum else None,
+                )
+            else:
+                download_url(
+                    metadata['url'],
+                    self.root,
+                    filename=metadata['filename'],
+                    md5=metadata['md5'] if checksum else None,
+                )
