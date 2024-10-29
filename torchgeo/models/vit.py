@@ -10,7 +10,10 @@ import timm
 import torch
 from timm.models.vision_transformer import VisionTransformer
 from torchvision.models._api import Weights, WeightsEnum
-
+from .swin import (
+    _satlas_sentinel2_bands,
+    _satlas_landsat_bands,
+)
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
 # Normalization either by 10K or channel-wise with band statistics
@@ -53,6 +56,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
+            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -66,6 +70,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
+            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -79,6 +84,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
+            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -92,6 +98,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
+            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -105,6 +112,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
+            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -118,6 +126,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
+            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -131,6 +140,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
+            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -144,6 +154,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
+            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -157,6 +168,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
+            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -170,6 +182,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
+            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -183,6 +196,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'dino',
+            'bands': _satlas_sentinel2_bands,
         },
     )
 
@@ -196,6 +210,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
+            'bands': _satlas_sentinel2_bands,
         },
     )
 
