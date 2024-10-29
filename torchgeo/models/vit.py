@@ -56,7 +56,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
             'bands': _satlas_landsat_bands,
-            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -70,7 +69,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': _satlas_landsat_bands,
             'bands': _satlas_landsat_bands,
         },
     )
@@ -86,7 +84,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
             'bands': _satlas_landsat_bands,
-            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -100,7 +97,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': _satlas_landsat_bands,
             'bands': _satlas_landsat_bands,
         },
     )
@@ -116,7 +112,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
             'bands': _satlas_landsat_bands,
-            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -130,7 +125,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': _satlas_landsat_bands,
             'bands': _satlas_landsat_bands,
         },
     )
@@ -146,7 +140,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
             'bands': _satlas_landsat_bands,
-            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -160,7 +153,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': _satlas_landsat_bands,
             'bands': _satlas_landsat_bands,
         },
     )
@@ -176,7 +168,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
             'bands': _satlas_landsat_bands,
-            'bands': _satlas_landsat_bands,
         },
     )
 
@@ -190,7 +181,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': _satlas_landsat_bands,
             'bands': _satlas_landsat_bands,
         },
     )
@@ -206,7 +196,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'dino',
             'bands': _satlas_sentinel2_bands,
-            'bands': _satlas_sentinel2_bands,
         },
     )
 
@@ -220,7 +209,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
-            'bands': _satlas_sentinel2_bands,
             'bands': _satlas_sentinel2_bands,
         },
     )
