@@ -11,9 +11,8 @@ import torch
 from timm.models import ResNet
 from torchvision.models._api import Weights, WeightsEnum
 
-from .swin import (_satlas_bands, _satlas_landsat_bands,
-                   _satlas_sentinel2_bands, _satlas_sentinel2_transforms,
-                   _satlas_transforms)
+from .swin import (_satlas_bands, _satlas_landsat_bands, _satlas_sentinel2_bands, 
+                   _satlas_sentinel2_transforms, _satlas_transforms)
 
 # https://github.com/zhu-xlab/DeCUR/blob/f190e9a3895ef645c005c8c2fce287ffa5a937e3/src/transfer_classification_BE/linear_BE_resnet.py#L286
 # Normalization by channel-wise band statistics
