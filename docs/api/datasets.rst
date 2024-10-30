@@ -370,7 +370,7 @@ PASTIS
 .. autoclass:: PASTIS
 
 SubstationDataset
-^^^^^^
+^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SubstationDataset
 
