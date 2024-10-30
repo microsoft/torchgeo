@@ -152,10 +152,10 @@ def test_getitem_semantic(config: dict[str, Any]) -> None:
     # Setting mock paths and creating dataset instance
     image_files = ['image_0.npz', 'image_1.npz']
     image_resize = transforms.Compose(
-        [transforms.Resize(228, transforms.InterpolationMode.BICUBIC, antialias=True)]
+        [transforms.Resize(228, transforms.InterpolationMode.BICUBIC)]
     )
     mask_resize = transforms.Compose(
-        [transforms.Resize(228, transforms.InterpolationMode.NEAREST, antialias=True)]
+        [transforms.Resize(228, transforms.InterpolationMode.NEAREST)]
     )
     dataset = SubstationDataset(
         args, image_files, image_resize=image_resize, mask_resize=mask_resize

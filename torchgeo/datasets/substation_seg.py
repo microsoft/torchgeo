@@ -127,26 +127,6 @@ class SubstationDataset(NonGeoDataset):
             mask_0 = 1.0 - mask
             mask = torch.concat([mask_0, mask], dim=0)
 
-        # IMAGE AND MASK TRANSFORMATIONS
-        if self.geo_transforms:
-            combined = torch.cat((image, mask), 0)
-            combined = self.geo_transforms(combined)
-            image, mask = torch.split(combined, [image.shape[0], mask.shape[0]], 0)
-
-        if self.color_transforms:
-            num_timepoints = image.shape[0] // self.in_channels
-            for i in range(num_timepoints):
-                if self.in_channels >= 3:
-                    image[i * self.in_channels : i * self.in_channels + 3, :, :] = (
-                        self.color_transforms(
-                            image[i * self.in_channels : i * self.in_channels + 3, :, :]
-                        )
-                    )
-                else:
-                    raise Exception(
-                        "Can't apply color transformation. Make sure the correct input dimenions are used"
-                    )
-
         if self.image_resize:
             image = self.image_resize(image)
 
