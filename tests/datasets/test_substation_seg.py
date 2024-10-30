@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import torch
+import torchvision.transforms as transforms
 
 from torchgeo.datasets import SubstationDataset
 
@@ -24,6 +25,8 @@ class Args:
         self.mask_2d: bool = True
         self.model_type: str = 'vanilla_unet'
         self.timepoint_aggregation: str = 'median'
+        self.color_transforms: bool = False
+        self.geo_transforms: bool = False
         self.normalizing_factor: Any = np.array([[0, 0.5, 1.0]], dtype=np.float32)
         self.means: Any = np.array(
             [
@@ -121,6 +124,23 @@ def dataset(
             'use_timepoints': False,
             'mask_2d': False,
             'color_transforms': True,
+            'geo_transforms': True,
+        },
+        {
+            'normalizing_type': None,
+            'in_channels': 5,
+            'use_timepoints': False,
+            'timepoint_aggregation': 'first',
+            'mask_2d': False,
+            'normalizing_factor': 1.0,
+        },
+        {
+            'normalizing_type': None,
+            'in_channels': 4,
+            'use_timepoints': False,
+            'timepoint_aggregation': 'random',
+            'mask_2d': True,
+            'normalizing_factor': 1.0,
         },
     ],
 )
@@ -131,7 +151,9 @@ def test_getitem_semantic(config: dict[str, Any]) -> None:
 
     # Setting mock paths and creating dataset instance
     image_files = ['image_0.npz', 'image_1.npz']
-    dataset = SubstationDataset(args, image_files)
+    image_resize = transforms.Compose([transforms.Resize(228,transforms.InterpolationMode.BICUBIC, antialias=True)])
+    mask_resize = transforms.Compose([transforms.Resize(228,transforms.InterpolationMode.NEAREST, antialias=True)])
+    dataset = SubstationDataset(args, image_files, image_resize=image_resize, mask_resize=mask_resize)
 
     x = dataset[0]
     assert isinstance(x, dict), f'Expected dict, got {type(x)}'
