@@ -25,8 +25,8 @@ class Args:
         self.model_type: str = 'vanilla_unet'
         self.timepoint_aggregation: str = 'median'
         self.normalizing_factor: Any = np.array([[0, 0.5, 1.0]], dtype=np.float32)
-        self.means: Any = np.array([0.485, 0.456, 0.406], dtype=np.float32)
-        self.stds: Any = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+        self.means: Any = np.array([[[1431]], [[1233]], [[1209]], [[1192]], [[1448]], [[2238]], [[2609]], [[2537]], [[2828]], [[ 884]], [[  20]], [[2226]], [[1537]]], dtype=np.float32)
+        self.stds: Any = np.array([[[157]], [[254]], [[290]], [[420]], [[363]], [[457]], [[575]], [[606]], [[630]], [[156]], [[  3]], [[554]], [[523]]], dtype=np.float32)
 
 
 @pytest.fixture
@@ -39,18 +39,33 @@ def dataset(
 
     yield SubstationDataset(args, image_files)
 
+@pytest.mark.parametrize("config", [
+    {'normalizing_type': 'percentile', 'in_channels': 3, 'use_timepoints': False, 'mask_2d': True},
+    {'normalizing_type': 'zscore', 'in_channels': 9, 'model_type': 'swin', 'use_timepoints': True, 'timepoint_aggregation': 'concat', 'mask_2d': False},
+    {'normalizing_type': None, 'in_channels': 12, 'use_timepoints': True, 'timepoint_aggregation': 'median', 'mask_2d': True, 'normalizing_factor': 1.0},
+    {'normalizing_type': None, 'in_channels': 5, 'use_timepoints': True, 'timepoint_aggregation': 'first', 'mask_2d': False, 'normalizing_factor': 1.0},
+    {'normalizing_type': None, 'in_channels': 4, 'use_timepoints': True, 'timepoint_aggregation': 'random', 'mask_2d': True, 'normalizing_factor': 1.0},
+    {'normalizing_type': 'zscore', 'in_channels': 2, 'use_timepoints': False, 'mask_2d': False, 'color_transforms': True},  
+])
 
+def test_getitem_semantic(config: dict[str, Any]) -> None:
+    args = Args()
+    for key, value in config.items():
+        setattr(args, key, value)  # Dynamically set arguments for each config
+    
+    # Setting mock paths and creating dataset instance
+    image_files = ['image_0.npz', 'image_1.npz']
+    dataset = SubstationDataset(args, image_files)
+    
+    x = dataset[0]
+    assert isinstance(x, dict), f"Expected dict, got {type(x)}"
+    assert isinstance(x['image'], torch.Tensor), "Expected image to be a torch.Tensor"
+    assert isinstance(x['mask'], torch.Tensor), "Expected mask to be a torch.Tensor"
+    
+        
 def test_len(dataset: SubstationDataset) -> None:
     """Test the length of the dataset."""
     assert len(dataset) == 2
-
-
-def test_getitem_semantic(dataset: SubstationDataset) -> None:
-    x = dataset[0]
-    assert isinstance(x, dict)
-    assert isinstance(x['image'], torch.Tensor)
-    assert isinstance(x['mask'], torch.Tensor)
-
 
 def test_output_shape(dataset: SubstationDataset) -> None:
     """Test the output shape of the dataset."""
@@ -99,3 +114,40 @@ def test_already_downloaded(
     # Mock the _download method to simulate the behavior
     monkeypatch.setattr(dataset, '_download', MagicMock())
     dataset._download()  # This will now call the mocked method
+
+def test_verify(dataset: SubstationDataset, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test the _verify method of the dataset."""
+    # Mock os.path.exists to return False for the image and mask directories
+    monkeypatch.setattr(os.path, 'exists', lambda path: False)
+
+    # Mock the _download method to avoid actually downloading the dataset
+    mock_download = MagicMock()
+    monkeypatch.setattr(dataset, '_download', mock_download)
+
+    # Call the _verify method
+    dataset._verify()
+
+    # Check that the _download method was called
+    mock_download.assert_called_once()
+
+def test_download(dataset: SubstationDataset, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test the _download method of the dataset."""
+    # Mock the download_url and extract_archive functions
+    mock_download_url = MagicMock()
+    mock_extract_archive = MagicMock()
+    monkeypatch.setattr('torchgeo.datasets.substation_seg.download_url', mock_download_url)
+    monkeypatch.setattr('torchgeo.datasets.substation_seg.extract_archive', mock_extract_archive)
+
+    # Call the _download method
+    dataset._download()
+
+    # Check that download_url was called twice
+    mock_download_url.assert_called()
+    assert mock_download_url.call_count == 2
+
+    # Check that extract_archive was called twice
+    mock_extract_archive.assert_called()
+    assert mock_extract_archive.call_count == 2
+
+if __name__ == '__main__':
+    pytest.main([__file__])
