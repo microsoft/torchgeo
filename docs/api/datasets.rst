@@ -297,6 +297,11 @@ FireRisk
 
 .. autoclass:: FireRisk
 
+FLAIR2
+^^^^^^
+
+.. autoclass:: FLAIR2
+
 Forest Damage
 ^^^^^^^^^^^^^
 
