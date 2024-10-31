@@ -102,7 +102,7 @@ bands_3_channels_rgb = ['B2', 'B3', 'B4']
 bands_3_channels_rgb_fmow = ['B2', 'B3', 'B4']
 
 # Sentinel-1 bands (2 channels: VH and VV)
-bands_2_channels_sentinel1 = ['VH','VV']
+bands_2_channels_sentinel1 = ['VH', 'VV']
 
 # https://github.com/zhu-xlab/DeCUR/blob/f190e9a3895ef645c005c8c2fce287ffa5a937e3/src/transfer_classification_BE/linear_BE_resnet.py#L286
 # Normalization by channel-wise band statistics
