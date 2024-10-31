@@ -19,7 +19,7 @@ from .swin import (
 )
 
 # Landsat TM-toa 7 channels
-_bands_7_channels_tm_toa = ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7')
+bands_7_channels_tm_toa = ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7')
 #https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT05_C02_T1_TOA
 
 #Landsat ETM-toa 9 channels
@@ -170,7 +170,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': _bands_7_channels_tm_toa,
+            'bands': bands_7_channels_tm_toa,
         },
     )
 
@@ -184,7 +184,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': _bands_7_channels_tm_toa,
+            'bands': bands_7_channels_tm_toa,
         },
     )
 
@@ -376,7 +376,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': _bands_7_channels_tm_toa,
+            'bands': bands_7_channels_tm_toa,
         },
     )
 
@@ -390,7 +390,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': _bands_7_channels_tm_toa,
+            'bands': bands_7_channels_tm_toa,
         },
     )
 

@@ -11,14 +11,7 @@ import torch
 from timm.models.vision_transformer import VisionTransformer
 from torchvision.models._api import Weights, WeightsEnum
 
-from .resnet import (
-    _bands_7_channels_tm_toa, 
-    bands_9_channels_etm_toa, 
-    bands_6_channels_etm_sr, 
-    bands_11_channels_oli_tirs, 
-    bands_7_channels_oli_sr, 
-    bands_13_channels_sentinel2
-)
+from .resnet import bands_7_channels_tm_toa, bands_9_channels_etm_toa, bands_6_channels_etm_sr, bands_11_channels_oli_tirs, bands_7_channels_oli_sr, bands_13_channels_sentinel2
 
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
@@ -62,7 +55,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': _bands_7_channels_tm_toa,
+            'bands': bands_7_channels_tm_toa,
         },
     )
 
@@ -76,7 +69,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': _bands_7_channels_tm_toa,
+            'bands': bands_7_channels_tm_toa,
         },
     )
 
