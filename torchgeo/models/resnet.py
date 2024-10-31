@@ -19,7 +19,7 @@ from .swin import (
 )
 
 # Landsat TM-TOA 7 channels
-## https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT05_C02_T1_TOA
+# https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT05_C02_T1_TOA
 _landsat_tm_toa_bands = [
     'B1',
     'B2',
