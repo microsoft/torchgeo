@@ -3,20 +3,20 @@
 
 """Pre-trained Vision Transformer models."""
 
-from typing import Any  # Standard library imports
+from typing import Any
 
-import kornia.augmentation as K  # Third-party imports
+import kornia.augmentation as K
 import timm
 import torch
 from timm.models.vision_transformer import VisionTransformer
 from torchvision.models._api import Weights, WeightsEnum
 
-from .resnet import (  # Local module imports
+from .resnet import (
+    bands_6_channels_etm_sr,
+    bands_7_channels_oli_sr,
     bands_7_channels_tm_toa,
     bands_9_channels_etm_toa,
-    bands_6_channels_etm_sr,
     bands_11_channels_oli_tirs,
-    bands_7_channels_oli_sr,
     bands_13_channels_sentinel2,
 )
 
