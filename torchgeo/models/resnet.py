@@ -20,15 +20,7 @@ from .swin import (
 
 # Landsat TM-TOA 7 channels
 # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT05_C02_T1_TOA
-_landsat_tm_toa_bands = [
-    'B1',
-    'B2',
-    'B3',
-    'B4',
-    'B5',
-    'B6',
-    'B7',
-]
+_landsat_tm_toa_bands = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7']
 
 # Landsat ETM-TOA 9 channels
 # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LE07_C02_T1_TOA
@@ -46,14 +38,7 @@ _landsat_etm_toa_bands = [
 
 # Landsat ETM-SR 6 channels
 # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LE07_C02_T1_L2
-_landsat_etm_sr_bands = [
-    'SR_B1',
-    'SR_B2',
-    'SR_B3',
-    'SR_B4',
-    'SR_B5',
-    'SR_B7',
-]
+_landsat_etm_sr_bands = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B7']
 
 # Landsat OLI_TIRS-TOA 11 channels
 # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_TOA
@@ -73,15 +58,7 @@ _landsat_oli_tirs_toa_bands = [
 
 # Landsat OLI-SR 7 channels
 # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_L2
-_landsat_oli_sr_bands = [
-    'SR_B1',
-    'SR_B2',
-    'SR_B3',
-    'SR_B4',
-    'SR_B5',
-    'SR_B6',
-    'SR_B7',
-]
+_landsat_oli_sr_bands = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7']
 
 # All Sentinel-2 bands (13 channels)
 _sentinel2_all_bands = [
