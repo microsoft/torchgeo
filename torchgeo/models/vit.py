@@ -12,12 +12,12 @@ from timm.models.vision_transformer import VisionTransformer
 from torchvision.models._api import Weights, WeightsEnum
 
 from .resnet import (
-    bands_6_channels_etm_sr,
-    bands_7_channels_oli_sr,
-    bands_7_channels_tm_toa,
-    bands_9_channels_etm_toa,
-    bands_11_channels_oli_tirs,
-    bands_13_channels_sentinel2,
+    _landsat_etm_sr_bands,
+    _landsat_oli_sr_bands,
+    _landsat_tm_toa_bands,
+    _landsat_etm_toa_bands,
+    _landsat_oli_tirs_toa_bands,
+    _sentinel2_all_bands,
 )
 
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167
@@ -62,7 +62,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_7_channels_tm_toa,
+            'bands': _landsat_tm_toa_bands,
         },
     )
 
@@ -76,7 +76,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_7_channels_tm_toa,
+            'bands': _landsat_tm_toa_bands,
         },
     )
 
@@ -90,7 +90,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_9_channels_etm_toa,
+            'bands': _landsat_etm_toa_bands,
         },
     )
 
@@ -104,7 +104,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_9_channels_etm_toa,
+            'bands': _landsat_etm_toa_bands,
         },
     )
 
@@ -118,7 +118,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_6_channels_etm_sr,
+            'bands': _landsat_etm_sr_bands,
         },
     )
 
@@ -132,7 +132,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_6_channels_etm_sr,
+            'bands': _landsat_etm_sr_bands,
         },
     )
 
@@ -146,7 +146,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_11_channels_oli_tirs,
+            'bands': _landsat_oli_tirs_toa_bands,
         },
     )
 
@@ -160,7 +160,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_11_channels_oli_tirs,
+            'bands': _landsat_oli_tirs_toa_bands,
         },
     )
 
@@ -174,7 +174,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_7_channels_oli_sr,
+            'bands': _landsat_oli_sr_bands,
         },
     )
 
@@ -188,7 +188,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_7_channels_oli_sr,
+            'bands': _landsat_oli_sr_bands,
         },
     )
 
@@ -202,7 +202,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'dino',
-            'bands': bands_13_channels_sentinel2,
+            'bands': _sentinel2_all_bands,
         },
     )
 
@@ -216,7 +216,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
-            'bands': bands_13_channels_sentinel2,
+            'bands': _sentinel2_all_bands,
         },
     )
 

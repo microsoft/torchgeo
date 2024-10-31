@@ -18,8 +18,9 @@ from .swin import (
     _satlas_transforms,
 )
 
-# Landsat TM-toa 7 channels
-bands_7_channels_tm_toa = [
+# Landsat TM-TOA 7 channels
+## https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT05_C02_T1_TOA
+_landsat_tm_toa_bands = [
     'B1',
     'B2',
     'B3',
@@ -27,10 +28,11 @@ bands_7_channels_tm_toa = [
     'B5',
     'B6',
     'B7',
-]  # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT05_C02_T1_TOA
+]
 
-# Landsat ETM-toa 9 channels
-bands_9_channels_etm_toa = [
+# Landsat ETM-TOA 9 channels
+# https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LE07_C02_T1_TOA
+_landsat_etm_toa_bands = [
     'B1',
     'B2',
     'B3',
@@ -40,20 +42,22 @@ bands_9_channels_etm_toa = [
     'B6_VCID_2',
     'B7',
     'B8',
-]  # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LE07_C02_T1_TOA
+]
 
-# Landsat ETM-sr 6 channels
-bands_6_channels_etm_sr = [
+# Landsat ETM-SR 6 channels
+# https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LE07_C02_T1_L2
+_landsat_etm_sr_bands = [
     'SR_B1',
     'SR_B2',
     'SR_B3',
     'SR_B4',
     'SR_B5',
     'SR_B7',
-]  # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LE07_C02_T1_L2
+]
 
-# Landsat OLI_TIRS-toa 11 channels
-bands_11_channels_oli_tirs = [
+# Landsat OLI_TIRS-TOA 11 channels
+# https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_TOA
+_landsat_oli_tirs_toa_bands = [
     'B1',
     'B2',
     'B3',
@@ -65,10 +69,11 @@ bands_11_channels_oli_tirs = [
     'B9',
     'B10',
     'B11',
-]  # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_TOA
+]
 
-# Landsat OLI-sr 7 channels
-bands_7_channels_oli_sr = [
+# Landsat OLI-SR 7 channels
+# https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_L2
+_landsat_oli_sr_bands = [
     'SR_B1',
     'SR_B2',
     'SR_B3',
@@ -76,10 +81,10 @@ bands_7_channels_oli_sr = [
     'SR_B5',
     'SR_B6',
     'SR_B7',
-]  # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_L2
+]
 
 # All Sentinel-2 bands (13 channels)
-bands_13_channels_sentinel2 = [
+_sentinel2_all_bands = [
     'B1',
     'B2',
     'B3',
@@ -96,13 +101,13 @@ bands_13_channels_sentinel2 = [
 ]
 
 # RGB Sentinel-2 bands (3 channels)
-bands_3_channels_rgb = ['B2', 'B3', 'B4']
+_sentinel2_rgb_bands = ['B4', 'B3', 'B2']
 
 # RGB bands for fMoW dataset (3 channels)
-bands_3_channels_rgb_fmow = ['B2', 'B3', 'B4']
+_fmow_rgb_bands = ['B4', 'B3', 'B2']
 
 # Sentinel-1 bands (2 channels: VH and VV)
-bands_2_channels_sentinel1 = ['VH', 'VV']
+_sentinel1_bands = ['VH', 'VV']
 
 # https://github.com/zhu-xlab/DeCUR/blob/f190e9a3895ef645c005c8c2fce287ffa5a937e3/src/transfer_classification_BE/linear_BE_resnet.py#L286
 # Normalization by channel-wise band statistics
@@ -224,7 +229,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_7_channels_tm_toa,
+            'bands': _landsat_tm_toa_bands,
         },
     )
 
@@ -238,7 +243,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_7_channels_tm_toa,
+            'bands': _landsat_tm_toa_bands,
         },
     )
 
@@ -252,7 +257,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_9_channels_etm_toa,
+            'bands': _landsat_etm_toa_bands,
         },
     )
 
@@ -266,7 +271,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_9_channels_etm_toa,
+            'bands': _landsat_etm_toa_bands,
         },
     )
 
@@ -280,7 +285,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_6_channels_etm_sr,
+            'bands': _landsat_etm_sr_bands,
         },
     )
 
@@ -294,7 +299,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_6_channels_etm_sr,
+            'bands': _landsat_etm_sr_bands,
         },
     )
 
@@ -308,7 +313,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_11_channels_oli_tirs,
+            'bands': _landsat_oli_tirs_toa_bands,
         },
     )
 
@@ -322,7 +327,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_11_channels_oli_tirs,
+            'bands': _landsat_oli_tirs_toa_bands,
         },
     )
 
@@ -336,7 +341,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_7_channels_oli_sr,
+            'bands': _landsat_oli_sr_bands,
         },
     )
 
@@ -350,7 +355,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_7_channels_oli_sr,
+            'bands': _landsat_oli_sr_bands,
         },
     )
 
@@ -364,7 +369,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
-            'bands': bands_13_channels_sentinel2,
+            'bands': _sentinel2_all_bands,
         },
     )
 
@@ -378,7 +383,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
-            'bands': bands_3_channels_rgb,
+            'bands': _sentinel2_rgb_bands,
         },
     )
 
@@ -392,7 +397,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2103.16607',
             'repo': 'https://github.com/ServiceNow/seasonal-contrast',
             'ssl_method': 'seco',
-            'bands': bands_3_channels_rgb,
+            'bands': _sentinel2_rgb_bands,
         },
     )
 
@@ -416,7 +421,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2011.09980',
             'repo': 'https://github.com/sustainlab-group/geography-aware-ssl',
             'ssl_method': 'gassl',
-            'bands': bands_3_channels_rgb_fmow,
+            'bands': _fmow_rgb_bands,
         },
     )
 
@@ -430,7 +435,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_7_channels_tm_toa,
+            'bands': _landsat_tm_toa_bands,
         },
     )
 
@@ -444,7 +449,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_7_channels_tm_toa,
+            'bands': _landsat_tm_toa_bands,
         },
     )
 
@@ -458,7 +463,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_9_channels_etm_toa,
+            'bands': _landsat_etm_toa_bands,
         },
     )
 
@@ -472,7 +477,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_9_channels_etm_toa,
+            'bands': _landsat_etm_toa_bands,
         },
     )
 
@@ -486,7 +491,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_6_channels_etm_sr,
+            'bands': _landsat_etm_sr_bands,
         },
     )
 
@@ -500,7 +505,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_6_channels_etm_sr,
+            'bands': _landsat_etm_sr_bands,
         },
     )
 
@@ -514,7 +519,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_11_channels_oli_tirs,
+            'bands': _landsat_oli_tirs_toa_bands,
         },
     )
 
@@ -528,7 +533,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_11_channels_oli_tirs,
+            'bands': _landsat_oli_tirs_toa_bands,
         },
     )
 
@@ -542,7 +547,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'moco',
-            'bands': bands_7_channels_oli_sr,
+            'bands': _landsat_oli_sr_bands,
         },
     )
 
@@ -556,7 +561,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2306.09424',
             'repo': 'https://github.com/microsoft/torchgeo',
             'ssl_method': 'simclr',
-            'bands': bands_7_channels_oli_sr,
+            'bands': _landsat_oli_sr_bands,
         },
     )
 
@@ -570,7 +575,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2309.05300',
             'repo': 'https://github.com/zhu-xlab/DeCUR',
             'ssl_method': 'decur',
-            'bands': bands_2_channels_sentinel1,
+            'bands': _sentinel1_bands,
         },
     )
 
@@ -584,7 +589,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
-            'bands': bands_2_channels_sentinel1,
+            'bands': _sentinel1_bands,
         },
     )
 
@@ -598,7 +603,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2309.05300',
             'repo': 'https://github.com/zhu-xlab/DeCUR',
             'ssl_method': 'decur',
-            'bands': bands_13_channels_sentinel2,
+            'bands': _sentinel2_all_bands,
         },
     )
 
@@ -612,7 +617,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'dino',
-            'bands': bands_13_channels_sentinel2,
+            'bands': _sentinel2_all_bands,
         },
     )
 
@@ -626,7 +631,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
-            'bands': bands_13_channels_sentinel2,
+            'bands': _sentinel2_all_bands,
         },
     )
 
@@ -666,7 +671,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
-            'bands': bands_3_channels_rgb,
+            'bands': _sentinel2_rgb_bands,
         },
     )
 
@@ -680,7 +685,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2103.16607',
             'repo': 'https://github.com/ServiceNow/seasonal-contrast',
             'ssl_method': 'seco',
-            'bands': bands_3_channels_rgb,
+            'bands': _sentinel2_rgb_bands,
         },
     )
 
