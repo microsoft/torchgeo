@@ -12,7 +12,7 @@ from timm.models.vision_transformer import VisionTransformer
 from torchvision.models._api import Weights, WeightsEnum
 
 from .resnet import (  # Local module imports
-    _bands_7_channels_tm_toa,
+    bands_7_channels_tm_toa,
     bands_9_channels_etm_toa,
     bands_6_channels_etm_sr,
     bands_11_channels_oli_tirs,
