@@ -3,15 +3,22 @@
 
 """Pre-trained Vision Transformer models."""
 
-from typing import Any
+from typing import Any  # Standard library imports
 
-import kornia.augmentation as K
+import kornia.augmentation as K  # Third-party imports
 import timm
 import torch
 from timm.models.vision_transformer import VisionTransformer
 from torchvision.models._api import Weights, WeightsEnum
 
-from .resnet import bands_7_channels_tm_toa, bands_9_channels_etm_toa, bands_6_channels_etm_sr, bands_11_channels_oli_tirs, bands_7_channels_oli_sr, bands_13_channels_sentinel2
+from .resnet import (  # Local module imports
+    _bands_7_channels_tm_toa,
+    bands_9_channels_etm_toa,
+    bands_6_channels_etm_sr,
+    bands_11_channels_oli_tirs,
+    bands_7_channels_oli_sr,
+    bands_13_channels_sentinel2,
+)
 
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
