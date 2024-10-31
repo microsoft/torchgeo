@@ -17,6 +17,7 @@ from .swin import (
     _satlas_sentinel2_transforms,
     _satlas_transforms,
 )
+
 # Landsat TM-toa 7 channels
 _bands_7_channels_tm_toa = ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7')
 #https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT05_C02_T1_TOA
@@ -48,7 +49,6 @@ bands_3_channels_rgb_fmow = ['B2', 'B3', 'B4']
 
 # Sentinel-1 bands (2 channels: VH and VV)
 bands_2_channels_sentinel1 = ['VH', 'VV']
-
 
 # https://github.com/zhu-xlab/DeCUR/blob/f190e9a3895ef645c005c8c2fce287ffa5a937e3/src/transfer_classification_BE/linear_BE_resnet.py#L286
 # Normalization by channel-wise band statistics
