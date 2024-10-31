@@ -5,6 +5,7 @@
 
 from .api import get_model, get_model_weights, get_weight, list_models
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
+from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
 from .dofa import (
     DOFA,
     DOFABase16_Weights,
@@ -35,6 +36,11 @@ __all__ = (
     'ChangeMixin',
     'ChangeStar',
     'ChangeStarFarSeg',
+    'CROMA',
+    'CROMABase_Weights',
+    'CROMALarge_Weights',
+    'croma_base',
+    'croma_large',
     'DOFA',
     'dofa_small_patch16_224',
     'dofa_base_patch16_224',
