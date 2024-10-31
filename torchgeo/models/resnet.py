@@ -19,27 +19,34 @@ from .swin import (
 )
 
 # Landsat TM-toa 7 channels
-bands_7_channels_tm_toa = ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7')
-#https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT05_C02_T1_TOA
+bands_7_channels_tm_toa = [
+    'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7'
+]  # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LT05_C02_T1_TOA
 
-#Landsat ETM-toa 9 channels
-bands_9_channels_etm_toa = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6_VCID_1', 'B6_VCID_2', 'B7', 'B8']
-#https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LE07_C02_T1_TOA
+# Landsat ETM-toa 9 channels
+bands_9_channels_etm_toa = [
+    'B1', 'B2', 'B3', 'B4', 'B5', 'B6_VCID_1', 'B6_VCID_2', 'B7', 'B8'
+]  # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LE07_C02_T1_TOA
 
-#Landsat ETM-sr 6 channels
-bands_6_channels_etm_sr = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B7']
-#https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LE07_C02_T1_L2
+# Landsat ETM-sr 6 channels
+bands_6_channels_etm_sr = [
+    'SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B7'
+]  # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LE07_C02_T1_L2
 
-#Landsat OLI_TIRS-toa 11 channels
-bands_11_channels_oli_tirs = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10', 'B11']
-#https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_TOA
+# Landsat OLI_TIRS-toa 11 channels
+bands_11_channels_oli_tirs = [
+    'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10', 'B11'
+]  # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_TOA
 
-#Landsat OLI-sr 7 channels
-bands_7_channels_oli_sr = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7']
-#https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_L2
+# Landsat OLI-sr 7 channels
+bands_7_channels_oli_sr = [
+    'SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7'
+]  # https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_L2
 
 # All Sentinel-2 bands (13 channels)
-bands_13_channels_sentinel2 = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8a', 'B9', 'B10', 'B11', 'B12']
+bands_13_channels_sentinel2 = [
+    'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8a', 'B9', 'B10', 'B11', 'B12'
+]
 
 # RGB Sentinel-2 bands (3 channels)
 bands_3_channels_rgb = ['B2', 'B3', 'B4']
