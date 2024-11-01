@@ -86,9 +86,6 @@ _sentinel2_rgb_bands = ['B4', 'B3', 'B2']
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/main/src/download_data/convert_rgb.py
 _sentinel1_bands = ['VV', 'VH']
 
-# RGB bands for fMoW dataset (3 channels)
-_fmow_rgb_bands = ['B1', 'B2', 'B3']
-
 # https://github.com/zhu-xlab/DeCUR/blob/f190e9a3895ef645c005c8c2fce287ffa5a937e3/src/transfer_classification_BE/linear_BE_resnet.py#L286
 # Normalization by channel-wise band statistics
 _mean_s1 = torch.tensor([-12.59, -20.26])
@@ -401,7 +398,6 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2011.09980',
             'repo': 'https://github.com/sustainlab-group/geography-aware-ssl',
             'ssl_method': 'gassl',
-            'bands': _fmow_rgb_bands,
         },
     )
 
