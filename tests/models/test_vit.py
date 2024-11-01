@@ -43,6 +43,10 @@ class TestViTSmall16:
     def test_vit_weights(self, mocked_weights: WeightsEnum) -> None:
         vit_small_patch16_224(weights=mocked_weights)
 
+    def test_bands(self, mocked_weights: WeightsEnum) -> None:
+        if 'bands' in mocked_weights.meta:
+            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta['in_chans']
         sample = {
