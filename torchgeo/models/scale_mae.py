@@ -14,6 +14,8 @@ from timm.models.vision_transformer import VisionTransformer
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
 
+from .resnet import _fmow_rgb_bands
+
 _mean = torch.tensor([0.485, 0.456, 0.406])
 _std = torch.tensor([0.229, 0.224, 0.225])
 _scale_mae_transforms = K.AugmentationSequential(
@@ -204,6 +206,7 @@ class ScaleMAELarge16_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'vit_large_patch16',
             'publication': 'https://arxiv.org/abs/2212.14532',
             'repo': 'https://github.com/bair-climate-initiative/scale-mae',
+            'bands': _fmow_rgb_bands,
         },
     )
 

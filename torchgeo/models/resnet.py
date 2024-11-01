@@ -61,7 +61,8 @@ _landsat_oli_tirs_toa_bands = [
 _landsat_oli_sr_bands = ['SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7']
 
 # All Sentinel-2 bands (13 channels)
-_sentinel2_all_bands = [
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/main/src/download_data/convert_rgb.py
+_sentinel2_toa_all_bands = [
     'B1',
     'B2',
     'B3',
@@ -78,13 +79,15 @@ _sentinel2_all_bands = [
 ]
 
 # RGB Sentinel-2 bands (3 channels)
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/main/src/download_data/convert_rgb.py
 _sentinel2_rgb_bands = ['B4', 'B3', 'B2']
 
-# RGB bands for fMoW dataset (3 channels)
-_fmow_rgb_bands = ['B4', 'B3', 'B2']
-
 # Sentinel-1 bands (2 channels: VH and VV)
-_sentinel1_bands = ['VH', 'VV']
+# https://github.com/zhu-xlab/SSL4EO-S12/blob/main/src/download_data/convert_rgb.py
+_sentinel1_bands = ['VV', 'VH']
+
+# RGB bands for fMoW dataset (3 channels)
+_fmow_rgb_bands = ['B1', 'B2', 'B3']
 
 # https://github.com/zhu-xlab/DeCUR/blob/f190e9a3895ef645c005c8c2fce287ffa5a937e3/src/transfer_classification_BE/linear_BE_resnet.py#L286
 # Normalization by channel-wise band statistics
@@ -346,7 +349,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
-            'bands': _sentinel2_all_bands,
+            'bands': _sentinel2_toa_all_bands,
         },
     )
 
@@ -580,7 +583,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2309.05300',
             'repo': 'https://github.com/zhu-xlab/DeCUR',
             'ssl_method': 'decur',
-            'bands': _sentinel2_all_bands,
+            'bands': _sentinel2_toa_all_bands,
         },
     )
 
@@ -594,7 +597,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'dino',
-            'bands': _sentinel2_all_bands,
+            'bands': _sentinel2_toa_all_bands,
         },
     )
 
@@ -608,7 +611,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
-            'bands': _sentinel2_all_bands,
+            'bands': _sentinel2_toa_all_bands,
         },
     )
 
