@@ -30,9 +30,7 @@ class TestNLCD:
         }
         monkeypatch.setattr(NLCD, 'md5s', md5s)
 
-        url = os.path.join(
-            'tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_{}_CU_C1V0.tif'
-        )
+        url = os.path.join('tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_{}_CU_C1V0.tif')
         monkeypatch.setattr(NLCD, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
         root = tmp_path

@@ -67,53 +67,53 @@ class NLCD(RasterDataset):
     .. versionadded:: 0.5
     """
 
-    filename_glob = "Annual_NLCD_LndCov_*.tif"
-    filename_regex = r"Annual_NLCD_LndCov_(?P<date>\d{4})_CU_C1V0\.tif"
-    date_format = "%Y"
+    filename_glob = 'Annual_NLCD_LndCov_*.tif'
+    filename_regex = r'Annual_NLCD_LndCov_(?P<date>\d{4})_CU_C1V0\.tif'
+    date_format = '%Y'
     is_image = False
 
-    url = "https://s3-us-west-2.amazonaws.com/mrlc/Annual_NLCD_LndCov_{}_CU_C1V0.tif"
+    url = 'https://s3-us-west-2.amazonaws.com/mrlc/Annual_NLCD_LndCov_{}_CU_C1V0.tif'
 
     md5s: ClassVar[dict[int, str]] = {
-        1985: "a2e1c5f0b34e9b15a63a9dc10e8d3ec2",
-        1986: "da1d08ca51ac43abc14711c8d6139f1d",
-        1987: "2cb85e8f077c227605cd7bac62a72a75",
-        1988: "b20fb987cc30926d2d125d045e02626d",
-        1989: "dbe851cbea34d0a57c2a94eb745a1267",
-        1990: "1927e0e040b9ff513ff039749b64919b",
-        1991: "eca73474843d6c58693eba62d70e507c",
-        1992: "8beda41ba79000f55a8e9358ba3fa5a4",
-        1993: "1a023552967cdac1111e9968ea62c879",
-        1994: "acc30ce4f6cdd78af5f7887d17ac4de3",
-        1995: "f728e8fc231b2e8e74a14201f500543a",
-        1996: "d2580904244f89b20d6258150fbf4161",
-        1997: "fec4e08032e162f2cc7dbe019d042609",
-        1998: "87ea19434de96ea99cd5d7991042816c",
-        1999: "d4133737f20e75f3bd3a5baa32a668da",
-        2000: "e20b61bb2e7f4034a33c9fd536798a01",
-        2001: "b1f46ace9aedd17a89efab489cb67bc3",
-        2002: "57bf60d7cd473096af3bb125391bde63",
-        2003: "5e346854da9abf739152e85fee4c7aff",
-        2004: "13136f271f53a454358eb7ec12bda686",
-        2005: "f00b66b57a23eb49a077e88704964a91",
-        2006: "074ba90de5e62a37a5f001b7572f6baa",
-        2007: "cdef29a191cf165baaae80857ce5a980",
-        2008: "da907c76a1f12739333148504fd111c9",
-        2009: "47890b306b875e681990b3db0c709da3",
-        2010: "9a81f405f9e2f45d581078afd53c2d4b",
-        2011: "13f4ef40b204aa1108dc0599d9546701",
-        2012: "66b33146f9a9d9491be10c59c51e3e33",
-        2013: "f8d230f7dea493c47fbc74984ff856cc",
-        2014: "68eb07ce86c1f7c2546ec43c2f9f7029",
-        2015: "f5a1b59fe54a70752f544c06cb965be4",
-        2016: "f0c2e74824fc281a57821e28e2c7fe6e",
-        2017: "a0aa8be0ed7d637f0f88f26d3742b20e",
-        2018: "a01f31547837ff1dfec1aba07b89bbec",
-        2019: "fa738201cddc1393dac4383b6ce2561a",
-        2020: "aa8f51690c7b01f3b3b413be9a7c36d6",
-        2021: "47fc1794a64704a918b6ad586df4267c",
-        2022: "11359748229e138cde971947864104a4",
-        2023: "498ff8a512d32fe905720796fdb7fd52",
+        1985: 'a2e1c5f0b34e9b15a63a9dc10e8d3ec2',
+        1986: 'da1d08ca51ac43abc14711c8d6139f1d',
+        1987: '2cb85e8f077c227605cd7bac62a72a75',
+        1988: 'b20fb987cc30926d2d125d045e02626d',
+        1989: 'dbe851cbea34d0a57c2a94eb745a1267',
+        1990: '1927e0e040b9ff513ff039749b64919b',
+        1991: 'eca73474843d6c58693eba62d70e507c',
+        1992: '8beda41ba79000f55a8e9358ba3fa5a4',
+        1993: '1a023552967cdac1111e9968ea62c879',
+        1994: 'acc30ce4f6cdd78af5f7887d17ac4de3',
+        1995: 'f728e8fc231b2e8e74a14201f500543a',
+        1996: 'd2580904244f89b20d6258150fbf4161',
+        1997: 'fec4e08032e162f2cc7dbe019d042609',
+        1998: '87ea19434de96ea99cd5d7991042816c',
+        1999: 'd4133737f20e75f3bd3a5baa32a668da',
+        2000: 'e20b61bb2e7f4034a33c9fd536798a01',
+        2001: 'b1f46ace9aedd17a89efab489cb67bc3',
+        2002: '57bf60d7cd473096af3bb125391bde63',
+        2003: '5e346854da9abf739152e85fee4c7aff',
+        2004: '13136f271f53a454358eb7ec12bda686',
+        2005: 'f00b66b57a23eb49a077e88704964a91',
+        2006: '074ba90de5e62a37a5f001b7572f6baa',
+        2007: 'cdef29a191cf165baaae80857ce5a980',
+        2008: 'da907c76a1f12739333148504fd111c9',
+        2009: '47890b306b875e681990b3db0c709da3',
+        2010: '9a81f405f9e2f45d581078afd53c2d4b',
+        2011: '13f4ef40b204aa1108dc0599d9546701',
+        2012: '66b33146f9a9d9491be10c59c51e3e33',
+        2013: 'f8d230f7dea493c47fbc74984ff856cc',
+        2014: '68eb07ce86c1f7c2546ec43c2f9f7029',
+        2015: 'f5a1b59fe54a70752f544c06cb965be4',
+        2016: 'f0c2e74824fc281a57821e28e2c7fe6e',
+        2017: 'a0aa8be0ed7d637f0f88f26d3742b20e',
+        2018: 'a01f31547837ff1dfec1aba07b89bbec',
+        2019: 'fa738201cddc1393dac4383b6ce2561a',
+        2020: 'aa8f51690c7b01f3b3b413be9a7c36d6',
+        2021: '47fc1794a64704a918b6ad586df4267c',
+        2022: '11359748229e138cde971947864104a4',
+        2023: '498ff8a512d32fe905720796fdb7fd52',
     }
 
     cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
@@ -138,7 +138,7 @@ class NLCD(RasterDataset):
 
     def __init__(
         self,
-        paths: Path | Iterable[Path] = "data",
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         years: list[int] = [2023],
@@ -170,13 +170,13 @@ class NLCD(RasterDataset):
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert set(years) <= self.md5s.keys(), (
-            "NLCD data product only exists for the following years: "
-            f"{list(self.md5s.keys())}."
+            'NLCD data product only exists for the following years: '
+            f'{list(self.md5s.keys())}.'
         )
         assert (
             set(classes) <= self.cmap.keys()
-        ), f"Only the following classes are valid: {list(self.cmap.keys())}."
-        assert 0 in classes, "Classes must include the background class: 0"
+        ), f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert 0 in classes, 'Classes must include the background class: 0'
 
         self.paths = paths
         self.years = years
@@ -208,7 +208,7 @@ class NLCD(RasterDataset):
             IndexError: if query is not found in the index
         """
         sample = super().__getitem__(query)
-        sample["mask"] = self.ordinal_map[sample["mask"]]
+        sample['mask'] = self.ordinal_map[sample['mask']]
         return sample
 
     def _verify(self) -> None:
@@ -220,9 +220,9 @@ class NLCD(RasterDataset):
         # Check if the TIFF files for the specified years have already been downloaded
         exists = []
         for year in self.years:
-            filename_year = self.filename_glob.replace("*", str(year), 1)
+            filename_year = self.filename_glob.replace('*', str(year), 1)
             assert isinstance(self.paths, str | os.PathLike)
-            pathname = os.path.join(self.paths, "**", filename_year)
+            pathname = os.path.join(self.paths, '**', filename_year)
             if glob.glob(pathname, recursive=True):
                 exists.append(True)
             else:
@@ -263,29 +263,29 @@ class NLCD(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze()
+            pred = sample['prediction'].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(
             nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
         )
 
-        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation="none")
-        axs[0, 0].axis("off")
+        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[0, 0].axis('off')
 
         if show_titles:
-            axs[0, 0].set_title("Mask")
+            axs[0, 0].set_title('Mask')
 
         if showing_predictions:
-            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation="none")
-            axs[0, 1].axis("off")
+            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[0, 1].axis('off')
             if show_titles:
-                axs[0, 1].set_title("Prediction")
+                axs[0, 1].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
