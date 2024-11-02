@@ -3,7 +3,6 @@
 
 """NLCD dataset."""
 
-import glob
 import os
 from collections.abc import Callable, Iterable
 from typing import Any, ClassVar
@@ -213,7 +212,6 @@ class NLCD(RasterDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-
         # Check if the TIFF files for the specified years have already been downloaded
         exists = []
         for year in self.years:
