@@ -25,13 +25,13 @@ class TestNLCD:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> NLCD:
         md5s = {
-            2011: '99546a3b89a0dddbe4e28e661c79984e',
-            2019: 'a4008746f15720b8908ddd357a75fded',
+            2011: '3346297a3cb53c9bd1c7e03b2e6e2d74',
+            2019: 'a307cdaa1add9dae05efe02fec4c33bb',
         }
         monkeypatch.setattr(NLCD, 'md5s', md5s)
 
         url = os.path.join(
-            'tests', 'data', 'nlcd', 'nlcd_{}_land_cover_l48_20210604.zip'
+            'tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_{}_CU_C1V0.tif'
         )
         monkeypatch.setattr(NLCD, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
@@ -75,7 +75,7 @@ class TestNLCD:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join(
-            'tests', 'data', 'nlcd', 'nlcd_2019_land_cover_l48_20210604.zip'
+            'tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_2019_CU_C1V0.tif'
         )
         root = tmp_path
         shutil.copy(pathname, root)
@@ -86,7 +86,7 @@ class TestNLCD:
             AssertionError,
             match='NLCD data product only exists for the following years:',
         ):
-            NLCD(tmp_path, years=[1996])
+            NLCD(tmp_path, years=[1984])
 
     def test_invalid_classes(self) -> None:
         with pytest.raises(AssertionError):

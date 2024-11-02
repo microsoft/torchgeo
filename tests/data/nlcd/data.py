@@ -16,8 +16,6 @@ SIZE = 32
 
 np.random.seed(0)
 
-dir = 'nlcd_{}_land_cover_l48_20210604'
-
 years = [2011, 2019]
 
 wkt = """
@@ -67,21 +65,12 @@ def create_file(path: str, dtype: str) -> None:
 
 if __name__ == '__main__':
     for year in years:
-        year_dir = dir.format(year)
-        # Remove old data
-        if os.path.isdir(year_dir):
-            shutil.rmtree(year_dir)
-
-        os.makedirs(os.path.join(os.getcwd(), year_dir))
-
-        zip_filename = year_dir + '.zip'
-        filename = year_dir + '.img'
-        create_file(os.path.join(year_dir, filename), dtype='int8')
-
-        # Compress data
-        shutil.make_archive(year_dir, 'zip', '.', year_dir)
+        filename = os.path.join(
+            'tests', 'data', 'nlcd', 'Annual_NLCD_LndCov_{}_CU_C1V0.tif'
+        ).format(year)
+        create_file(filename, dtype='int8')
 
         # Compute checksums
-        with open(zip_filename, 'rb') as f:
+        with open(filename, 'rb') as f:
             md5 = hashlib.md5(f.read()).hexdigest()
-            print(f'{zip_filename}: {md5}')
+            print(f'{filename}: {md5}')
