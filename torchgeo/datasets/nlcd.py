@@ -67,7 +67,7 @@ class NLCD(RasterDataset):
     .. versionadded:: 0.5
     """
 
-    filename_glob = 'Annual_NLCD_LndCov_*.tif'
+    filename_glob = 'Annual_NLCD_LndCov_*_CU_C1V0.tif'
     filename_regex = r'Annual_NLCD_LndCov_(?P<date>\d{4})_CU_C1V0\.tif'
     date_format = '%Y'
     is_image = False
@@ -213,17 +213,14 @@ class NLCD(RasterDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        # Check if the extracted files already exist
-        if self.files:
-            return
 
         # Check if the TIFF files for the specified years have already been downloaded
         exists = []
         for year in self.years:
             filename_year = self.filename_glob.replace('*', str(year), 1)
             assert isinstance(self.paths, str | os.PathLike)
-            pathname = os.path.join(self.paths, '**', filename_year)
-            if glob.glob(pathname, recursive=True):
+            pathname = os.path.join(self.paths, filename_year)
+            if os.path.exists(pathname):
                 exists.append(True)
             else:
                 exists.append(False)
