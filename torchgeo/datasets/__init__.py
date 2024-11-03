@@ -47,6 +47,7 @@ from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
+from .flair2 import FLAIR2
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
 from .geo import (
