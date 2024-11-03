@@ -8,60 +8,68 @@
 
 """
 FLAIR2 dataset.
+
+TODO: add description
+The FLAIR2 dataset is a dataset for semantic segmentation of aerial images. It contains aerial images, sentinel-2 images and masks for 13 classes. 
+The dataset is split into a training and test set.
 """
 
 import glob
+import json
 import os
-from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar, Optional
+from collections.abc import Callable, Sequence
+from typing import ClassVar, Tuple
 
-import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
 from torch import Tensor
 
-from torchgeo.samplers import RandomBatchGeoSampler, GridGeoSampler
-from torchgeo.datasets.errors import DatasetNotFoundError, RGBBandsMissingError
-from torchgeo.transforms.transforms import _RandomNCrop
-from torchgeo.samplers.utils import _to_tuple
-from torchgeo.datasets.geo import IntersectionDataset, RasterDataset, NonGeoDataset
-from torchgeo.datasets.utils import Path, download_url, extract_archive, BoundingBox
-from torchgeo.datamodules import NonGeoDataModule, GeoDataModule
-from kornia.augmentation.container import AugmentationSequential
-import kornia.augmentation as K
-from torch.utils.data import random_split
+from .errors import DatasetNotFoundError, RGBBandsMissingError
+from .geo import NonGeoDataset
+from .utils import Path, download_url, extract_archive
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import Patch
 
 
 class FLAIR2(NonGeoDataset):
     splits: ClassVar[Sequence[str]] = ('train', 'test')
     
-    url_prefix: ClassVar[str] = 'https://ign-public-data.s3.eu-west-2.amazonaws.com/FLAIR2/'
+    url_prefix: ClassVar[str] = "https://storage.gra.cloud.ovh.net/v1/AUTH_366279ce616242ebb14161b7991a8461/defi-ia/flair_data_2"
     # TODO: add checksums for safety
-    md5: str = ""
+    md5s: dict[str, str] = ""
     
     dir_names: dict[dict[str, str]] = {
         "train": {
             "images": "flair_aerial_train",
+            "sentinels": "flair_sen_train",
             "masks": 'flair_labels_train',
         },
         "test": {
             "images": "flair_2_aerial_test",
+            "sentinels": "flair_2_sen_test",
             "masks": 'flair_2_labels_test',
         }
     }
     globs: dict[str, str] = {
         "images": "IMG_*.tif",
+        "sentinels": {
+            "data": "SEN2_*_data.npy",
+            "snow_cloud_mask": "SEN2_*_masks.npy"
+        },
         "masks": "MSK_*.tif",
     }
+    centroids_file: str = "flair-2_centroids_sp_to_patch"
+    super_patch_size: int = 40
 
     # Band information
     rgb_bands: tuple = ("B01", "B02", "B03")
     all_bands: tuple = ("B01", "B02", "B03", "B04", "B05")
 
+    # Note: the original dataset contains 18 classes, but the dataset paper suggests 
+    # grouping all classes >13 into "other" class, due to underrepresentation
     classes: tuple[str] = (
         "building",
         "pervious surface",
@@ -78,7 +86,7 @@ class FLAIR2(NonGeoDataset):
         "other"
     )
 
-    statistics = {
+    statistics: dict = {
         "train":{
             "B01": {
                 "min": 0.0,
@@ -115,15 +123,14 @@ class FLAIR2(NonGeoDataset):
 
     @staticmethod
     def per_band_statistics(split: str, bands: Sequence[str] = all_bands) -> tuple[list[float]]:
-        # TODO: filter used bands
-        """Get statistics (min, max, means, stdvs) for each band
+        """Get statistics (min, max, means, stdvs) for each used band in order.
 
         Args:
             split (str): Split for which to get statistics (currently only for train)
-            bands (Sequence[str], optional): _description_. Defaults to all_bands.
+            bands (Sequence[str], optional): Bands of interest, will be returned in ordered manner. Defaults to all_bands.
 
         Returns:
-            tuple[list[float]]: _description_
+            tuple[list[float]]: Filtered, ordered statistics for each band
         """
         assert split in FLAIR2.statistics.keys(), f"Statistics for '{split}' not available; use: '{list(FLAIR2.statistics.keys())}'"
         ordered_bands_statistics = FLAIR2.statistics[split]
@@ -140,11 +147,9 @@ class FLAIR2(NonGeoDataset):
         split: str = 'train',
         bands: Sequence[str] = all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
-        # FLAIR multiplies height data by 5 for storage, argument for not doing this
-        remove_height_scaling: bool = True,
         download: bool = False,
         checksum: bool = False,
-    ) -> None:
+        use_toy: bool = False) -> None:
         """Initialize a new FLAIR2 dataset instance.
 
         Args:
@@ -154,8 +159,8 @@ class FLAIR2(NonGeoDataset):
             transforms: optional transforms to apply to sample
             download: whether to download the dataset if it is not found
             checksum: whether to verify the dataset using checksums
+            use_toy: whether to use the a small subset (toy) dataset. CAUTION: should only be used for testing purposes
             
-
         Raises:
             DatasetNotFoundError
         """
@@ -167,8 +172,10 @@ class FLAIR2(NonGeoDataset):
         self.download = download
         self.checksum = checksum
         self.bands = bands
+        self.use_toy = use_toy
 
         self._verify()
+        self.centroids = self._load_centroids(self.centroids_file)
 
         self.files = self._load_files()
     
@@ -181,24 +188,26 @@ class FLAIR2(NonGeoDataset):
         return len(self.bands)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
-        # TODO: add sentinel-2 bands
         """Return an index within the dataset.
 
         Args:
             index: index to return
 
         Returns:
-            image and mask at that index with image of dimension get_num_bands()x512x512
+            image and mask at that index with image of dimension `get_num_bands()`x512x512,
+            sentinel image of dimension 13x512x512 TODO: verify
             and mask of dimension 512x512
         """
         aerial_fn = self.files[index]["image"]
+        sentinel_fn = self.files[index]["sentinel"]
         mask_fn = self.files[index]["mask"]
 
         aerial = self._load_image(aerial_fn)
+        sentinel = self._load_sentinel(sentinel_fn, aerial_fn)
         mask = self._load_target(mask_fn)
 
         image = aerial 
-        sample = {'image': image, 'mask': mask}
+        sample = {'image': image, "sentinel": sentinel, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -213,6 +222,34 @@ class FLAIR2(NonGeoDataset):
         """
         return len(self.files)
 
+    def _load_centroids(self, filename: str) -> dict:
+        """Load centroids for mapping sentinel super-areas to aerial patches in `flair-2_centroids_sp_to_patch.json`.
+        For detailed information on super-patches, see p.4f of datapaper.
+
+        Args:
+            filename: name of the file containing centroids
+
+        Returns:
+            dict: centroids for super-patches
+        """
+        with open(os.path.join(self.root, f"{filename}.json"), "r") as f:
+            return json.load(f)
+    
+    def _crop_super_patch(self, data: np.ndarray, centroid: Tuple[int, int]) -> np.ndarray:
+        """Crop a super-patch from sentinel data based on the centroid coordinates in `flair-2_centroids_sp_to_patch.json`.
+        For detailed information on super-patches, see p.4f of datapaper.
+        
+        Args:
+            data: data to crop from
+            centroid: centroid coordinates
+        
+        Returns:
+            np.ndarray: cropped super-area
+        """
+        x, y = centroid
+        half_size = self.super_patch_size // 2
+        return data[:, :, y-half_size:y+half_size, x-half_size:x+half_size]
+    
     def _load_files(self) -> list[dict[str, str]]:
         # TODO: add loading of sentinel-2 files
         """Return the paths of the files in the dataset.
@@ -227,14 +264,28 @@ class FLAIR2(NonGeoDataset):
             self.root, 
             self.dir_names[self.split]["images"],
             "**", self.globs["images"]), recursive=True))
+        
+        sentinels_data = sorted(glob.glob(os.path.join(
+            self.root, 
+            self.dir_names[self.split]["sentinels"],
+            "**", self.globs["sentinels"]["data"]), recursive=True))
+        sentinels_mask = sorted(glob.glob(os.path.join(
+            self.root, 
+            self.dir_names[self.split]["sentinels"],
+            "**", self.globs["sentinels"]["snow_cloud_mask"]), recursive=True))
+        sentinels = [
+            {"data": data, "snow_cloud_mask": mask}
+            for data, mask in zip(sentinels_data, sentinels_mask)
+        ]
+        
         masks = sorted(glob.glob(os.path.join(
             self.root, 
             self.dir_names[self.split]["masks"],
             "**", self.globs["masks"]), recursive=True))
         
         files = [
-            dict(image=image, mask=mask)
-            for image, mask in zip(images, masks)
+            dict(image=image, sentinel=sentinel, mask=mask)
+            for image, sentinel, mask in zip(images, sentinels, masks)
         ]
         
         return files
@@ -247,10 +298,9 @@ class FLAIR2(NonGeoDataset):
             path: path to the image
 
         Returns:
-            the loaded image
+            Tensor: the loaded image
         """
-        filename = os.path.join(path)
-        with rasterio.open(filename) as f:
+        with rasterio.open(path) as f:
             array: np.typing.NDArray[np.int_] = f.read()
             tensor = torch.from_numpy(array).float()
             # TODO: handle storage optimized format for height data
@@ -260,6 +310,22 @@ class FLAIR2(NonGeoDataset):
             
         return tensor
 
+    def _load_sentinel(self, paths: list[Path], aerial_path: Path) -> Sequence[Tensor]:
+        """Load a sentinel array.
+
+        Args:
+            path (Path): path to sentinel directory
+
+        Returns:
+            Sequence[Tensor]: ground truth and snow cloud mask as tensors of shape TxCxHxW (time, channels, height, width)
+        """
+        data = torch.from_numpy(np.load(paths["data"])).float()
+        snow_cloud_mask = torch.from_numpy(np.load(paths["snow_cloud_mask"])).float()
+        
+        img_id = os.path.basename(aerial_path)
+        return [self._crop_super_patch(data, self.centroids[img_id]), 
+                self._crop_super_patch(snow_cloud_mask, self.centroids[img_id])]
+        
     def _load_target(self, path: Path) -> Tensor:
         """Load a single mask corresponding to image.
 
@@ -267,10 +333,9 @@ class FLAIR2(NonGeoDataset):
             path: path to the mask
 
         Returns:
-            the mask of the image
+            Tensor: the mask of the image
         """
-        filename = os.path.join(path)
-        with rasterio.open(filename) as f:
+        with rasterio.open(path) as f:
             array: np.typing.NDArray[np.int_] = f.read(1)
             tensor = torch.from_numpy(array).long()
             # TODO: check if rescaling is smart (i.e. datapaper explains differently -> confusion?)
@@ -283,7 +348,23 @@ class FLAIR2(NonGeoDataset):
         return tensor
 
     def _verify(self) -> None:
+        # TODO: download metadata and check checksums
         """Verify the integrity of the dataset."""
+        
+        # Change urls/paths/content/configs to toy dataset if requested
+        if self.use_toy:
+            self._verify_toy()
+            self.dir_names["train"] = {k: f.replace("flair", "flair_2_toy") for k, f in self.dir_names["train"].items()}
+            self.dir_names["test"] = {k: f.replace("flair_2", "flair_2_toy") for k, f in self.dir_names["test"].items()}
+            return
+        
+        # Check if centroids metadata file or zip is present
+        if not os.path.isfile(os.path.join(self.root, f"{self.centroids_file}.json")):
+            if not os.path.isfile(os.path.join(self.root, f"{self.centroids_file}.zip")):
+                if not self.download:
+                    raise DatasetNotFoundError(self)
+                self._download(self.centroids_file)
+            self._extract(self.centroids_file)
         
         # Files to be extracted
         to_extract: list = []
@@ -325,6 +406,33 @@ class FLAIR2(NonGeoDataset):
             self._download(candidate)
             self._extract(candidate)
 
+    def _verify_toy(self) -> None:
+        """Change urls/paths/content/configs to toy dataset."""
+        
+        print("-" * 80)
+        print("WARNING: Using toy dataset.")
+        print("This dataset should be used for testing purposes only.")
+        print("Disabling use_toy-flag when initializing the dataset will initialize the full dataset.")
+        print("-" * 80)
+                
+        if os.path.isdir(os.path.join(self.root, "flair_2_toy_dataset")):
+            print("Toy dataset downloaded and extracted already...")
+            self.root = os.path.join(self.root, "flair_2_toy_dataset")
+            return
+
+        if os.path.isfile(os.path.join(self.root, "flair_2_toy_dataset.zip")):
+            print("Extracting toy dataset...")
+            self._extract("flair_2_toy_dataset")
+            self.root = os.path.join(self.root, "flair_2_toy_dataset")
+            return
+        
+        if not self.download:
+            raise DatasetNotFoundError(self)
+        
+        self._download("flair_2_toy_dataset.zip")
+        self._extract("flair_2_toy_dataset")
+        self.root = os.path.join(self.root, "flair_2_toy_dataset")
+        
     def _download(self, url: str) -> None:
         """Download the dataset."""
         download_url(
@@ -343,7 +451,6 @@ class FLAIR2(NonGeoDataset):
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:
-        # TODO: plot sentinel image too
         """Plot a sample from the dataset.
 
         Args:
@@ -354,43 +461,78 @@ class FLAIR2(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        rgb_indices = []
-        for band in self.rgb_bands:
-            if band in self.bands:
-                rgb_indices.append(self.bands.index(band))
-            else:
-                raise RGBBandsMissingError()
-
-        image = sample['image'][rgb_indices].permute(1, 2, 0)
-
-        # Stretch to the full range
-        image = (image - image.min()) / (image.max() - image.min())
-
+        rgb_indices = [self.all_bands.index(band) for band in self.rgb_bands]
+        # Check if RGB bands are present in self.bands
+        if not all([band in self.bands for band in self.rgb_bands]):
+            raise RGBBandsMissingError()
+        
+        def normalize_plot(tensor: Tensor) -> Tensor:
+            """Normalize the plot."""
+            return (tensor - tensor.min()) / (tensor.max() - tensor.min())
+        
+        # Define a colormap for the classes
+        cmap = ListedColormap([
+            'gray',        # building
+            'lightgray',   # pervious surface
+            'darkgray',    # impervious surface
+            'saddlebrown', # bare soil
+            'blue',        # water
+            'darkgreen',   # coniferous
+            'forestgreen', # deciduous
+            'olive',       # brushwood
+            'purple',      # vineyard
+            'lime',        # herbaceous vegetation
+            'yellow',      # agricultural land
+            'orange',      # plowed land
+            'red'          # other
+        ])
+            
+        # Stretch to the full range of the image
+        image = normalize_plot(sample['image'][rgb_indices].permute(1, 2, 0))
+        
+        # Get elevation and NIR, R, G if available
+        if "B05" in self.bands:
+            elevation = sample['image'][self.bands.index("B05")]
+        if "B04" in self.bands:
+            nir_r_g_indices = [self.bands.index("B04"), rgb_indices[0], rgb_indices[1]]
+            nir_r_g = normalize_plot(sample['image'][nir_r_g_indices].permute(1, 2, 0))
+        
+        # Sentinel is a time-series, i.e. use [0]->data(not snow_cloud_mask), [0]->T=0
+        sentinel = normalize_plot(sample['sentinel'][0][0][[3, 2, 1], :, :].permute(1, 2, 0))
+        
+        # Obtain mask and predictions if available
         mask = sample['mask'].numpy().astype('uint8').squeeze()
-
-        num_panels = 2
+        
         showing_predictions = 'prediction' in sample
+        predictions = None
         if showing_predictions:
             predictions = sample['prediction'].numpy().astype('uint8').squeeze()
-            num_panels += 1
 
-        kwargs = {'cmap': 'gray', 'vmin': 0, 'vmax': 4, 'interpolation': 'none'}
+        # Remove none available plots
+        plots = zip(["image", "nir_r_g", "elevation", "sentinel", "predictions", "mask"], 
+                    [image, nir_r_g, elevation, sentinel, predictions, mask])
+        plots = [plot for plot in plots if plot[1] is not None]
+        
+        num_panels = len(plots)
+
+        kwargs = {"cmap": cmap, 'vmin': 0, 'vmax': len(self.classes), 'interpolation': 'none'}
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
-        axs[0].imshow(image)
-        axs[0].axis('off')
-        axs[1].imshow(mask, **kwargs)
-        axs[1].axis('off')
-        if show_titles:
-            axs[0].set_title('Image')
-            axs[1].set_title('Mask')
-
-        if showing_predictions:
-            axs[2].imshow(predictions, **kwargs)
-            axs[2].axis('off')
+        
+        for plot in plots:
+            im_kwargs = kwargs.copy() if plot[0] == "mask" or plot[0] == "predictions" else {}
+            axs[0].imshow(plot[1], **im_kwargs)
+            axs[0].axis('off')
             if show_titles:
-                axs[2].set_title('Predictions')
+                axs[0].set_title(plot[0])
+            axs = axs[1:]
 
         if suptitle is not None:
             plt.suptitle(suptitle)
+        
+        # Create a legend for the mask
+        if "mask" in [plot[0] for plot in plots]:
+            # Create a legend with class names
+            legend_elements = [Patch(facecolor=cmap(i), edgecolor='k', label=cls) for i, cls in enumerate(self.classes)]
+            fig.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(0.91, 0.91), fontsize='large')
 
         return fig
