@@ -8,8 +8,6 @@
 
 """
 FLAIR2 dataset.
-
-For full dataset refer to FLAIR2 dataset.
 """
 
 import glob
@@ -42,6 +40,8 @@ class FLAIR2(NonGeoDataset):
     splits: ClassVar[Sequence[str]] = ('train', 'test')
     
     url_prefix: ClassVar[str] = 'https://ign-public-data.s3.eu-west-2.amazonaws.com/FLAIR2/'
+    # TODO: add checksums for safety
+    md5: str = ""
     
     dir_names: dict[dict[str, str]] = {
         "train": {
@@ -115,6 +115,16 @@ class FLAIR2(NonGeoDataset):
 
     @staticmethod
     def per_band_statistics(split: str, bands: Sequence[str] = all_bands) -> tuple[list[float]]:
+        # TODO: filter used bands
+        """Get statistics (min, max, means, stdvs) for each band
+
+        Args:
+            split (str): Split for which to get statistics (currently only for train)
+            bands (Sequence[str], optional): _description_. Defaults to all_bands.
+
+        Returns:
+            tuple[list[float]]: _description_
+        """
         assert split in FLAIR2.statistics.keys(), f"Statistics for '{split}' not available; use: '{list(FLAIR2.statistics.keys())}'"
         ordered_bands_statistics = FLAIR2.statistics[split]
         ordered_bands_statistics = list(dict(filter(lambda keyval: keyval[0] in bands, ordered_bands_statistics.items())).values())
@@ -135,13 +145,19 @@ class FLAIR2(NonGeoDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new Fields Of The World dataset instance.
+        """Initialize a new FLAIR2 dataset instance.
 
         Args:
+            root: root directory where dataset can be found
+            split: which split to load, one of 'train' or 'test'
+            bands: which bands to load (B01, B02, B03, B04, B05)
+            transforms: optional transforms to apply to sample
+            download: whether to download the dataset if it is not found
+            checksum: whether to verify the dataset using checksums
             
 
         Raises:
-            
+            DatasetNotFoundError
         """
         assert split in self.splits, f"Split '{split}' not in supported splits: '{self.splits}'"
 
@@ -157,17 +173,23 @@ class FLAIR2(NonGeoDataset):
         self.files = self._load_files()
     
     def get_num_bands(self) -> int:
+        """Return the number of bands in the dataset.
+
+        Returns:
+            int: number of bands in the initialized dataset (might vary from all_bands)
+        """
         return len(self.bands)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
+        # TODO: add sentinel-2 bands
         """Return an index within the dataset.
 
         Args:
             index: index to return
 
         Returns:
-            image and mask at that index with image of dimension 3x1024x1024
-            and mask of dimension 1024x1024
+            image and mask at that index with image of dimension get_num_bands()x512x512
+            and mask of dimension 512x512
         """
         aerial_fn = self.files[index]["image"]
         mask_fn = self.files[index]["mask"]
@@ -192,13 +214,14 @@ class FLAIR2(NonGeoDataset):
         return len(self.files)
 
     def _load_files(self) -> list[dict[str, str]]:
+        # TODO: add loading of sentinel-2 files
         """Return the paths of the files in the dataset.
 
         Args:
             root: root dir of dataset
 
         Returns:
-            list of dicts containing paths for each pair of image, audio, label
+            list of dicts containing paths for each pair of image, masks
         """
         images = sorted(glob.glob(os.path.join(
             self.root, 
@@ -217,6 +240,7 @@ class FLAIR2(NonGeoDataset):
         return files
 
     def _load_image(self, path: Path) -> Tensor:
+        # TODO: add loading of sentinel-2 images if requested
         """Load a single image.
 
         Args:
@@ -229,6 +253,7 @@ class FLAIR2(NonGeoDataset):
         with rasterio.open(filename) as f:
             array: np.typing.NDArray[np.int_] = f.read()
             tensor = torch.from_numpy(array).float()
+            # TODO: handle storage optimized format for height data
             if "B05" in self.bands:
                 # Height channel will always be the last dimension
                 tensor[-1] = torch.div(tensor[-1], 5)
@@ -248,6 +273,7 @@ class FLAIR2(NonGeoDataset):
         with rasterio.open(filename) as f:
             array: np.typing.NDArray[np.int_] = f.read(1)
             tensor = torch.from_numpy(array).long()
+            # TODO: check if rescaling is smart (i.e. datapaper explains differently -> confusion?)
             # According to datapaper, the dataset contains classes beyond 13
             # however, those are grouped into a single "other" class
             # Rescale the classes to be in the range [0, 12] by subtracting 1
@@ -259,9 +285,10 @@ class FLAIR2(NonGeoDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         
+        # Files to be extracted
         to_extract: list = []
-        # Check if dataset path exists already
 
+        # Check if dataset files (by checking glob) are present already
         for train_or_test, dir_name in self.dir_names[self.split].items(): 
             downloaded_path = os.path.join(self.root, dir_name)
             if not os.path.isdir(downloaded_path):
@@ -271,22 +298,22 @@ class FLAIR2(NonGeoDataset):
             files_glob = os.path.join(downloaded_path, "**", self.globs[train_or_test])
             if not glob.glob(files_glob, recursive=True):
                 to_extract.append(dir_name)
-                        
+        
         if not to_extract:
-            print("Data downloaded and extracted already...") 
+            print("Data has been downloaded and extracted already...") 
             return
 
-        # Deepcopy download
+        # Deepcopy files to be extracted and check wether the zip is downloaded
         to_download = list(map(lambda x: x, to_extract))
-        # Check if the zip files have already been downloaded
         for candidate in to_extract:
             zipfile = os.path.join(self.root, f"{candidate}.zip")
             if glob.glob(zipfile):
+                print(f"Extracting: {candidate}")
                 self._extract(candidate)
                 to_download.remove(candidate)
         
+        # Check if there are still files to download
         if not to_download: 
-            print("Data downloaded already...") 
             return
 
         # Check if the user requested to download the dataset
@@ -294,7 +321,6 @@ class FLAIR2(NonGeoDataset):
             raise DatasetNotFoundError(self)
 
         print("Downloading: ", to_download)
-        # Download the dataset
         for candidate in to_download:
             self._download(candidate)
             self._extract(candidate)
@@ -317,6 +343,7 @@ class FLAIR2(NonGeoDataset):
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:
+        # TODO: plot sentinel image too
         """Plot a sample from the dataset.
 
         Args:
