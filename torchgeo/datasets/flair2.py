@@ -429,14 +429,14 @@ class FLAIR2(NonGeoDataset):
         if not self.download:
             raise DatasetNotFoundError(self)
         
-        self._download("flair_2_toy_dataset.zip")
+        self._download("flair_2_toy_dataset")
         self._extract("flair_2_toy_dataset")
         self.root = os.path.join(self.root, "flair_2_toy_dataset")
         
-    def _download(self, url: str) -> None:
+    def _download(self, url: str, suffix: str = ".zip") -> None:
         """Download the dataset."""
         download_url(
-            os.path.join(self.url_prefix, f"{url}.zip"), self.root
+            os.path.join(self.url_prefix, f"{url}{suffix}"), self.root
         )
 
     def _extract(self, file_path: str) -> None:
@@ -509,7 +509,7 @@ class FLAIR2(NonGeoDataset):
             predictions = sample['prediction'].numpy().astype('uint8').squeeze()
 
         # Remove none available plots
-        plots = zip(["image", "nir_r_g", "elevation", "sentinel", "predictions", "mask"], 
+        plots = zip(["image (R+G+B)", "NIR+R+G", "elevation", "sentinel", "predictions", "mask"], 
                     [image, nir_r_g, elevation, sentinel, predictions, mask])
         plots = [plot for plot in plots if plot[1] is not None]
         
@@ -533,6 +533,6 @@ class FLAIR2(NonGeoDataset):
         if "mask" in [plot[0] for plot in plots]:
             # Create a legend with class names
             legend_elements = [Patch(facecolor=cmap(i), edgecolor='k', label=cls) for i, cls in enumerate(self.classes)]
-            fig.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(0.91, 0.91), fontsize='large')
+            fig.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(0.92, 0.85), fontsize='large')
 
         return fig
