@@ -20,9 +20,10 @@ class TestFLAIR2:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> FLAIR2:
-        md5 = '73c0aba603c356b2cce9ebf952fb7be0'
-        monkeypatch.setattr(FLAIR2, "md5", md5)
-        url = os.path.join("tests", "data", "caffe", "caffe.zip")
+        # TODO: Update md5 checksums
+        md5s = {"test": '73c0aba603c356b2cce9ebf952fb7be0'}
+        monkeypatch.setattr(FLAIR2, "md5s", md5s)
+        url = os.path.join("tests", "data", "flair2", "FLAIR2.zip")
         monkeypatch.setattr(FLAIR2, "url", url)
         root = tmp_path
         split = request.param
@@ -42,14 +43,15 @@ class TestFLAIR2:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
-        assert x['image'].shape[0] == 1
-        assert isinstance(x['mask_zones'], torch.Tensor)
+        assert x['image'].shape == (len(dataset.all_bands), 512, 512)
+        assert isinstance(x['mask'], torch.Tensor)
         assert x['image'].shape[-2:] == x['mask_zones'].shape[-2:]
     
     def test_get_num_bands(self, dataset: FLAIR2) -> None:
         assert dataset.get_num_bands() == len(dataset.all_bands)
 
     def test_len(self, dataset: FLAIR2) -> None:
+        # TODO: find out how many samples are in the dataset
         if dataset.split == 'train':
             assert len(dataset) == 3
         else:
@@ -59,7 +61,7 @@ class TestFLAIR2:
         FLAIR2(root=dataset.root)
 
     def test_not_yet_extracted(self, tmp_path: Path) -> None:
-        filename = 'caffe.zip'
+        filename = 'FLAIR2.zip'
         dir = os.path.join('tests', 'data', 'caffe')
         shutil.copyfile(
             os.path.join(dir, filename), os.path.join(str(tmp_path), filename)
