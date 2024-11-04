@@ -226,6 +226,8 @@ class FLAIR2(NonGeoDataset):
         """Load centroids for mapping sentinel super-areas to aerial patches in `flair-2_centroids_sp_to_patch.json`.
         For detailed information on super-patches, see p.4f of datapaper.
 
+        CAUTION: centroids for some reason are stored as y, x
+
         Args:
             filename: name of the file containing centroids
 
@@ -235,8 +237,8 @@ class FLAIR2(NonGeoDataset):
         with open(os.path.join(self.root, f"{filename}.json"), "r") as f:
             return json.load(f)
     
-    def _crop_super_patch(self, data: np.ndarray, centroid: Tuple[int, int]) -> np.ndarray:
-        """Crop a super-patch from sentinel data based on the centroid coordinates in `flair-2_centroids_sp_to_patch.json`.
+    def _crop_super_patch(self, data: np.ndarray, centroid: Tuple[int, int]) -> Tuple[np.ndarray, Tuple[slice, slice]]:
+        """Return indices to crop a super-patch from sentinel data based on the centroid coordinates in `flair-2_centroids_sp_to_patch.json`.
         For detailed information on super-patches, see p.4f of datapaper.
         
         Args:
@@ -244,11 +246,14 @@ class FLAIR2(NonGeoDataset):
             centroid: centroid coordinates
         
         Returns:
-            np.ndarray: cropped super-area
+            Tuple[np.ndarray, Tuple[slice, slice]]: original data cropped super-area and the indices used for cropping
         """
-        x, y = centroid
-        half_size = self.super_patch_size // 2
-        return data[:, :, y-half_size:y+half_size, x-half_size:x+half_size]
+        y, x = centroid
+        eigth_size = self.super_patch_size // 8
+        quarter_size = self.super_patch_size // 4
+
+        indices = (slice(x-eigth_size, x+quarter_size), slice(y-eigth_size, y+quarter_size))
+        return data, indices
     
     def _load_files(self) -> list[dict[str, str]]:
         # TODO: add loading of sentinel-2 files
@@ -323,8 +328,10 @@ class FLAIR2(NonGeoDataset):
         snow_cloud_mask = torch.from_numpy(np.load(paths["snow_cloud_mask"])).float()
         
         img_id = os.path.basename(aerial_path)
-        return [self._crop_super_patch(data, self.centroids[img_id]), 
-                self._crop_super_patch(snow_cloud_mask, self.centroids[img_id])]
+        cropped_data, cropping_indices = self._crop_super_patch(data, self.centroids[img_id])
+        cropped_snow_cloud_mask, _ = self._crop_super_patch(snow_cloud_mask, self.centroids[img_id])
+        
+        return [cropped_data, cropped_snow_cloud_mask], cropping_indices
         
     def _load_target(self, path: Path) -> Tensor:
         """Load a single mask corresponding to image.
@@ -472,7 +479,7 @@ class FLAIR2(NonGeoDataset):
         
         # Define a colormap for the classes
         cmap = ListedColormap([
-            'gray',        # building
+            'cyan',        # building
             'lightgray',   # pervious surface
             'darkgray',    # impervious surface
             'saddlebrown', # bare soil
@@ -498,7 +505,9 @@ class FLAIR2(NonGeoDataset):
             nir_r_g = normalize_plot(sample['image'][nir_r_g_indices].permute(1, 2, 0))
         
         # Sentinel is a time-series, i.e. use [0]->data(not snow_cloud_mask), [0]->T=0
-        sentinel = normalize_plot(sample['sentinel'][0][0][[3, 2, 1], :, :].permute(1, 2, 0))
+        sentinel, cropping_indices = sample["sentinel"]
+        sentinel = sentinel[0][0]
+        sentinel = normalize_plot(sentinel[[0, 1, 2], :, :].permute(1, 2, 0))
         
         # Obtain mask and predictions if available
         mask = sample['mask'].numpy().astype('uint8').squeeze()
@@ -520,10 +529,20 @@ class FLAIR2(NonGeoDataset):
         
         for plot in plots:
             im_kwargs = kwargs.copy() if plot[0] == "mask" or plot[0] == "predictions" else {}
+            if plot[0] == "sentinel":
+                axs[0].add_patch(plt.Rectangle(
+                    (cropping_indices[0].start, cropping_indices[1].start),
+                    cropping_indices[0].stop - cropping_indices[0].start,
+                    cropping_indices[1].stop - cropping_indices[1].start,
+                    fill=False, edgecolor='red', lw=0.5))
+                #axs[0].add_patch(plt.Rectangle(cropping_indices, self.super_patch_size, self.super_patch_size, fill=False, edgecolor='red', lw=0.2))
+                #axs[0].add_patch(plt.Rectangle((x - eigth_size, y - eigth_size), quarter_size, quarter_size, fill=False, edgecolor='red', lw=0.2))
+
             axs[0].imshow(plot[1], **im_kwargs)
             axs[0].axis('off')
             if show_titles:
                 axs[0].set_title(plot[0])
+            
             axs = axs[1:]
 
         if suptitle is not None:
