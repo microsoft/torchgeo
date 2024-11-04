@@ -444,7 +444,7 @@ def dofa_small_patch16_224(*args: Any, **kwargs: Any) -> DOFA:
 
     Args:
         *args: Additional arguments to pass to :class:`DOFA`.
-        **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
+        **kwargs: Additional keyword arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA small 16 model.
@@ -468,7 +468,7 @@ def dofa_base_patch16_224(
     Args:
         weights: Pre-trained model weights to use.
         *args: Additional arguments to pass to :class:`DOFA`.
-        **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
+        **kwargs: Additional keyword arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA base 16 model.
@@ -506,7 +506,7 @@ def dofa_large_patch16_224(
     Args:
         weights: Pre-trained model weights to use.
         *args: Additional arguments to pass to :class:`DOFA`.
-        **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
+        **kwargs: Additional keyword arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA large 16 model.
@@ -541,7 +541,7 @@ def dofa_huge_patch16_224(*args: Any, **kwargs: Any) -> DOFA:
 
     Args:
         *args: Additional arguments to pass to :class:`DOFA`.
-        **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
+        **kwargs: Additional keyword arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA huge 16 model.
