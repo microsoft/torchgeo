@@ -91,7 +91,7 @@ class SKIPPD(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             split: one of "trainval", or "test"
-            task: one fo "nowcast", or "forecast"
+            task: one of "nowcast", or "forecast"
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory
