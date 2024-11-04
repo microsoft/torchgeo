@@ -6,7 +6,7 @@ import re
 import numpy as np
 import pytest
 
-from torchgeo.datamodules.utils import group_shuffle_split
+from torchgeo.datamodules.utils import group_shuffle_split, split_prefixed_kwargs
 
 
 def test_group_shuffle_split() -> None:
@@ -44,3 +44,20 @@ def test_group_shuffle_split() -> None:
 
         assert len(set(train_indices1) & set(test_indices1)) == 0
         assert len(set(groups[train_indices1])) == 2
+
+
+def test_split_prefixed_kwargs() -> None:
+    kwargs = {
+        'testprefix1_param1': 10,
+        'testprefix1_param2': 20,
+        'testprefix2_param3': 30,
+        'other_param': 40,
+    }
+
+    testprefix1_kwargs, testprefix2_kwargs, other_kwargs = split_prefixed_kwargs(
+        'testprefix1_', 'testprefix2_', **kwargs
+    )
+
+    assert testprefix1_kwargs == {'param1': 10, 'param2': 20}
+    assert testprefix2_kwargs == {'param3': 30}
+    assert other_kwargs == {'other_param': 40}
