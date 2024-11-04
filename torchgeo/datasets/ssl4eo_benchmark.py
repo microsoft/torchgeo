@@ -320,7 +320,7 @@ class SSL4EOLBenchmark(NonGeoDataset):
         Args:
             path: path to mask
 
-        Retuns:
+        Returns:
             mask
         """
         with rasterio.open(path) as src:
