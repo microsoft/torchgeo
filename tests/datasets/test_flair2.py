@@ -21,13 +21,13 @@ class TestFLAIR2:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> FLAIR2:
         md5s = {
-            "flair-2_centroids_sp_to_patch": "c308ca502fbe23ef6eaa2efc33e7b199",
-            "flair_aerial_train": "ace5712f03f799e9f3e0cc74c27d84c8",
-            "flair_sen_train": "7468da7cda8d0c0c1120dec8dd857a1f",
-            "flair_labels_train": "87bc5bbeb2d04b788fe733e353fa7112",
-            "flair_2_aerial_test": "e5a6d4f5c812edc6cf59bff656fd81b6",
-            "flair_2_sen_test": "ae230be3a50c02e62606632b7d72b48b",
-            "flair_2_labels_test": "644d81311d0ac2aaecfdc5721dcd03f1",
+            "flair-2_centroids_sp_to_patch": "af243a4c6ed95dd2b97d07261c7cc3dd",
+            "flair_aerial_train": "70c558a7000e3671f3a3ed2ba187d795",
+            "flair_sen_train": "661e20e39ffc7eca196b6cab8d1c9e27",
+            "flair_labels_train": "525011487e0c282d22a91d3798768e38",
+            "flair_2_aerial_test": "8b414c21e48e87331fed1d9835b17726",
+            "flair_2_sen_test": "6247e940974e247be1c8187aaf35281c",
+            "flair_2_labels_test": "9285086a7aa5085e3b8f2fc2f8618ad0",
         }
 
         monkeypatch.setattr(FLAIR2, "md5s", md5s)
