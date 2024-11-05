@@ -206,7 +206,7 @@ class ForestDamage(NonGeoDataset):
         """Load the target mask for a single image.
 
         Args:
-            bboxes: list of bbox coordinats [xmin, ymin, xmax, ymax]
+            bboxes: list of bbox coordinates [xmin, ymin, xmax, ymax]
             labels_list: list of class labels
 
         Returns:

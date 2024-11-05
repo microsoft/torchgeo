@@ -156,8 +156,6 @@ __all__ = (
     'CanadianBuildingFootprints',
     'CDL',
     'Chesapeake',
-    'Chesapeake7',
-    'Chesapeake13',
     'ChesapeakeDC',
     'ChesapeakeDE',
     'ChesapeakeMD',

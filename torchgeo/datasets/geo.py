@@ -352,7 +352,7 @@ class RasterDataset(GeoDataset):
     #: Minimum timestamp if not in filename
     mint: float = 0
 
-    #: Maximum timestmap if not in filename
+    #: Maximum timestamp if not in filename
     maxt: float = sys.maxsize
 
     #: True if the dataset only contains model inputs (such as images). False if the
