@@ -23,20 +23,26 @@ class TestFLAIR2:
         # TODO: Update md5 checksums
         md5s = {"test": '73c0aba603c356b2cce9ebf952fb7be0'}
         monkeypatch.setattr(FLAIR2, "md5s", md5s)
-        url = os.path.join("tests", "data", "flair2", "FLAIR2.zip")
-        monkeypatch.setattr(FLAIR2, "url", url)
+        url_prefix = os.path.join("tests", "data", "flair2", "FLAIR2")
+        monkeypatch.setattr(FLAIR2, "url_prefix", url_prefix)
+        
         root = tmp_path
         split = request.param
+        bands = ("B01", "B02", "B03", "B04", "B05")
         transforms = nn.Identity()
-        return FLAIR2(root, split, transforms, download=True, checksum=True)
+        
+        return FLAIR2(root, split, bands, transforms, download=True, checksum=True)
     
+    def test_get_num_bands(self, dataset: FLAIR2) -> None:
+        assert dataset.get_num_bands() == len(dataset.all_bands)
+        
     def test_per_band_statistics(self, dataset: FLAIR2) -> None:
         if dataset.split != 'train': return
         
-        mins, maxs, means, stdvs = dataset.per_band_statistics()
+        mins, maxs, means, stdvs = dataset.per_band_statistics(dataset.split)
         for stats in [mins, maxs, means, stdvs]:
             assert isinstance(stats, list)
-            assert len(stats) == dataset.get_num_bands()
+            assert stats.__len__() == dataset.get_num_bands()
             assert all(isinstance(stat, float) for stat in stats)
     
     def test_getitem(self, dataset: FLAIR2) -> None:
@@ -45,28 +51,28 @@ class TestFLAIR2:
         assert isinstance(x['image'], torch.Tensor)
         assert x['image'].shape == (len(dataset.all_bands), 512, 512)
         assert isinstance(x['mask'], torch.Tensor)
-        assert x['image'].shape[-2:] == x['mask_zones'].shape[-2:]
-    
-    def test_get_num_bands(self, dataset: FLAIR2) -> None:
-        assert dataset.get_num_bands() == len(dataset.all_bands)
+        assert x['image'].shape[-2:] == x['mask'].shape[-2:]
 
     def test_len(self, dataset: FLAIR2) -> None:
         # TODO: find out how many samples are in the dataset
         if dataset.split == 'train':
-            assert len(dataset) == 3
+            assert len(dataset) == 10
         else:
-            assert len(dataset) == 3
+            assert len(dataset) == 5
 
     def test_already_downloaded(self, dataset: FLAIR2) -> None:
-        FLAIR2(root=dataset.root)
+        FLAIR2(root=dataset.root, split=dataset.split)
 
-    def test_not_yet_extracted(self, tmp_path: Path) -> None:
-        filename = 'FLAIR2.zip'
-        dir = os.path.join('tests', 'data', 'caffe')
-        shutil.copyfile(
-            os.path.join(dir, filename), os.path.join(str(tmp_path), filename)
-        )
-        FLAIR2(root=str(tmp_path))
+    def test_not_yet_extracted(self, dataset: FLAIR2, tmp_path: Path) -> None:
+        filenames = list(dataset.dir_names[dataset.split].values())
+        filenames.append(dataset.centroids_file)
+        dir = os.path.join('tests', 'data', 'flair2', "FLAIR2")
+        for filename in filenames:
+            shutil.copyfile(
+                os.path.join(dir, f"{filename}.zip"), os.path.join(str(tmp_path), f"{filename}.zip")
+            )
+            
+        FLAIR2(root=str(tmp_path), split=dataset.split)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
@@ -81,6 +87,6 @@ class TestFLAIR2:
         plt.close()
 
         sample = dataset[0]
-        sample['prediction'] = torch.clone(sample['mask_zones'])
+        sample['prediction'] = torch.clone(sample['mask'])
         dataset.plot(sample, suptitle='Prediction')
         plt.close()
