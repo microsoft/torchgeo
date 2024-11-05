@@ -98,9 +98,9 @@ def create_aerial_image(dir_path: str, rng: np.random.Generator, id: str) -> Non
 
 def create_sentinel_arrays(dir_path: str, rng: np.random.Generator, domain_year_zone_location: Sequence[str]) -> None:
     # Create random numpy array of shape (T, 10, H, W) and save it as .npy
-    num_samples = rng.choice(10)
-    data = rng.choice(sentinel_pixel_values, size=(num_samples, 10, rng.choice(SENTINEL_IMG_SIZE), rng.choice(SENTINEL_IMG_SIZE)), replace=True).astype(np.uint8)
-    snow_cloud_mask = rng.choice([0, 100], size=(num_samples, rng.choice(SENTINEL_IMG_SIZE), rng.choice(SENTINEL_IMG_SIZE)), replace=True).astype(np.uint8)
+    time_num_samples = rng.integers(1, 10)
+    data = rng.choice(sentinel_pixel_values, size=(time_num_samples, 10, rng.choice(SENTINEL_IMG_SIZE), rng.choice(SENTINEL_IMG_SIZE)), replace=True).astype(np.uint8)
+    snow_cloud_mask = rng.choice([0, 100], size=(time_num_samples, rng.choice(SENTINEL_IMG_SIZE), rng.choice(SENTINEL_IMG_SIZE)), replace=True).astype(np.uint8)
     
     name = sentinel_name_format.format(*domain_year_zone_location)
     np.save(os.path.join(dir_path, f"{name}_data{sentinel_format[0]}"), data)
@@ -138,7 +138,8 @@ if __name__ == "__main__":
         for type, sub_dir in dir_names[split].items():
             for i in range(DUMMY_DATA_SIZE[split]):
                 # Reproducible and the same for all types
-                rng: np.random.Generator = np.random.default_rng(seed=int(hashlib.md5(f"{split}{i}".encode('utf-8')).hexdigest(), 16))
+                seed = int(hashlib.md5(f"{split}{i}{type}".encode()).hexdigest(), 16)
+                rng: np.random.Generator = np.random.default_rng(seed)
                 
                 random_domain = rng.integers(100, 1000)
                 random_year = rng.integers(2010, 2023)
