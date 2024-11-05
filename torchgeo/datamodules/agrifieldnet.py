@@ -59,8 +59,6 @@ class AgriFieldNetDataModule(GeoDataModule):
                 DataKey.MASK: {'resample': Resample.NEAREST, 'align_corners': None}
             },
         )
-        # https://github.com/kornia/kornia/issues/2848
-        self.train_aug.keepdim = True
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

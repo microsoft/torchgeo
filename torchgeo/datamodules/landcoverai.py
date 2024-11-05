@@ -44,10 +44,6 @@ class LandCoverAIDataModule(NonGeoDataModule):
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
 
-        # https://github.com/kornia/kornia/issues/2848
-        self.train_aug.keepdim = True
-        self.aug.keepdim = True
-
 
 class LandCoverAI100DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the LandCoverAI100 dataset.
@@ -73,6 +69,3 @@ class LandCoverAI100DataModule(NonGeoDataModule):
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
-
-        # https://github.com/kornia/kornia/issues/2848
-        self.aug.keepdim = True

@@ -62,8 +62,3 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
             data_keys=None,
             keepdim=True,
         )
-
-        # https://github.com/kornia/kornia/issues/2848
-        self.train_aug.keepdim = True
-        self.val_aug.keepdim = True
-        self.test_aug.keepdim = True

@@ -144,12 +144,10 @@ class SKIPPD(NonGeoDataset):
             data and label at that index
         """
         sample: dict[str, str | Tensor] = {'image': self._load_image(index)}
-        features = self._load_features(index)
-        sample['label'] = features['label']
+        sample.update(self._load_features(index))
 
         if self.transforms is not None:
             sample = self.transforms(sample)
-            sample.update({x: features[x] for x in features if x != 'label'})
 
         return sample
 

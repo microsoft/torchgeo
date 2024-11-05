@@ -62,8 +62,6 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         kwargs['transforms'] = K.AugmentationSequential(
             K.CenterCrop(patch_size), data_keys=None, keepdim=True
         )
-        # https://github.com/kornia/kornia/issues/2848
-        kwargs['transforms'].keepdim = True
 
         super().__init__(
             ChesapeakeCVPR, batch_size, patch_size, length, num_workers, **kwargs
@@ -94,8 +92,6 @@ class ChesapeakeCVPRDataModule(GeoDataModule):
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
-        # https://github.com/kornia/kornia/issues/2848
-        self.aug.keepdim = True
 
     def setup(self, stage: str) -> None:
         """Set up datasets and samplers.

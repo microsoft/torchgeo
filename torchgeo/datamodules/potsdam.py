@@ -53,8 +53,6 @@ class Potsdam2DDataModule(NonGeoDataModule):
             data_keys=None,
             keepdim=True,
         )
-        # https://github.com/kornia/kornia/issues/2848
-        self.aug.keepdim = True
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

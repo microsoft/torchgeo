@@ -46,5 +46,3 @@ class RESISC45DataModule(NonGeoDataModule):
             data_keys=None,
             keepdim=True,
         )
-        # https://github.com/kornia/kornia/issues/2848
-        self.train_aug.keepdim = True

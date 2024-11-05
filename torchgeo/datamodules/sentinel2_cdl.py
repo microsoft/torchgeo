@@ -78,10 +78,6 @@ class Sentinel2CDLDataModule(GeoDataModule):
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
 
-        # https://github.com/kornia/kornia/issues/2848
-        self.train_aug.keepdim = True
-        self.aug.keepdim = True
-
     def setup(self, stage: str) -> None:
         """Set up datasets and samplers.
 

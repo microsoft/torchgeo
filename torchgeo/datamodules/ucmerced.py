@@ -36,5 +36,3 @@ class UCMercedDataModule(NonGeoDataModule):
             data_keys=None,
             keepdim=True,
         )
-        # https://github.com/kornia/kornia/issues/2848
-        self.aug.keepdim = True

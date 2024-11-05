@@ -147,11 +147,6 @@ class SpaceNet1DataModule(SpaceNetBaseDataModule):
             data_keys=None,
         )
 
-        # https://github.com/kornia/kornia/issues/2848
-        self.train_aug.keepdim = True  # type: ignore[attr-defined]
-        self.predict_aug.keepdim = True  # type: ignore[attr-defined]
-        self.aug.keepdim = True  # type: ignore[attr-defined]
-
 
 class SpaceNet6DataModule(SpaceNetBaseDataModule):
     """LightningDataModule implementation for the SpaceNet6 dataset.

@@ -117,11 +117,10 @@ class QuakeSet(NonGeoDataset):
         label = torch.tensor(self.data[index]['label'])
         magnitude = torch.tensor(self.data[index]['magnitude'])
 
-        sample = {'image': image, 'label': label}
+        sample = {'image': image, 'label': label, 'magnitude': magnitude}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
-            sample['magnitude'] = magnitude
 
         return sample
 

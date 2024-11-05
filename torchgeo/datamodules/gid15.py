@@ -60,10 +60,6 @@ class GID15DataModule(NonGeoDataModule):
             keepdim=True,
         )
 
-        # https://github.com/kornia/kornia/issues/2848
-        self.train_aug.keepdim = True
-        self.predict_aug.keepdim = True
-
     def setup(self, stage: str) -> None:
         """Set up datasets.
 

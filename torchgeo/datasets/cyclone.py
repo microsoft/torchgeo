@@ -96,19 +96,17 @@ class TropicalCyclone(NonGeoDataset):
         Returns:
             data, labels, field ids, and metadata at that index
         """
-        features = {
+        sample = {
             'relative_time': torch.tensor(self.features.iat[index, 2]),
             'ocean': torch.tensor(self.features.iat[index, 3]),
             'label': torch.tensor(self.labels.iat[index, 1]),
         }
 
         image_id = self.labels.iat[index, 0]
-        sample = {'image': self._load_image(image_id)}
-        sample['label'] = features['label']
+        sample['image'] = self._load_image(image_id)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
-            sample.update({x: features[x] for x in features if x != 'label'})
 
         return sample
 

@@ -55,11 +55,6 @@ class LEVIRCDDataModule(NonGeoDataModule):
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
 
-        # https://github.com/kornia/kornia/issues/2848
-        self.train_aug.keepdim = True
-        self.val_aug.keepdim = True
-        self.test_aug.keepdim = True
-
 
 class LEVIRCDPlusDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the LEVIR-CD+ dataset.
@@ -106,11 +101,6 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         self.test_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
-
-        # https://github.com/kornia/kornia/issues/2848
-        self.train_aug.keepdim = True
-        self.val_aug.keepdim = True
-        self.test_aug.keepdim = True
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
