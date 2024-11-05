@@ -46,8 +46,8 @@ from .eurocrops import EuroCrops
 from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
-from .forestdamage import ForestDamage
 from .flair2 import FLAIR2
+from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
 from .geo import (
@@ -223,8 +223,8 @@ __all__ = (
     'FAIR1M',
     'FieldsOfTheWorld',
     'FireRisk',
-    'ForestDamage',
     'FLAIR2',
+    'ForestDamage',
     'GeoNRW',
     'GID15',
     'IDTReeS',
