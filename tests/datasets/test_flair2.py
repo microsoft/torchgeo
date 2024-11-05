@@ -39,7 +39,7 @@ class TestFLAIR2:
         bands = ("B01", "B02", "B03", "B04", "B05")
         transforms = nn.Identity()
         
-        return FLAIR2(root, split, bands, transforms, download=True, checksum=True)
+        return FLAIR2(root, split, bands, transforms, download=True, checksum=True, use_sentinel=True)
     
     def test_get_num_bands(self, dataset: FLAIR2) -> None:
         assert dataset.get_num_bands() == len(dataset.all_bands)
@@ -53,7 +53,9 @@ class TestFLAIR2:
             assert stats.__len__() == dataset.get_num_bands()
             assert all(isinstance(stat, float) for stat in stats)
     
-    def test_getitem(self, dataset: FLAIR2) -> None:
+    @pytest.mark.parametrize("use_sentinel", [True, False])
+    def test_getitem(self, dataset: FLAIR2, use_sentinel: bool) -> None:
+        dataset.use_sentinel = use_sentinel
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
@@ -89,7 +91,9 @@ class TestFLAIR2:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             FLAIR2(tmp_path)
 
-    def test_plot(self, dataset: FLAIR2) -> None:
+    @pytest.mark.parametrize("use_sentinel", [True, False])
+    def test_plot(self, dataset: FLAIR2, use_sentinel: bool) -> None:
+        dataset.use_sentinel = use_sentinel
         dataset.plot(dataset[0], suptitle='Test')
         plt.close()
 

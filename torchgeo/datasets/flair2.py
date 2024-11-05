@@ -193,7 +193,8 @@ class FLAIR2(NonGeoDataset):
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
-        use_toy: bool = False) -> None:
+        use_toy: bool = False,
+        use_sentinel: bool = False) -> None:
         """Initialize a new FLAIR2 dataset instance.
 
         Args:
@@ -204,6 +205,7 @@ class FLAIR2(NonGeoDataset):
             download: whether to download the dataset if it is not found
             checksum: whether to verify the dataset using checksums
             use_toy: whether to use the a small subset (toy) dataset. CAUTION: should only be used for testing purposes
+            use_sentinel: whether to use sentinel data in the dataset # FIXME: sentinel does not work with dataloader due to varying dimensions
             
         Raises:
             DatasetNotFoundError
@@ -217,6 +219,7 @@ class FLAIR2(NonGeoDataset):
         self.checksum = checksum
         self.bands = bands
         self.use_toy = use_toy
+        self.use_sentinel = use_sentinel
 
         self._verify()
         self.centroids = self._load_centroids(self.centroids_file)
@@ -246,11 +249,13 @@ class FLAIR2(NonGeoDataset):
         mask_fn = self.files[index]["mask"]
 
         aerial = self._load_image(aerial_fn)
-        sentinel = self._load_sentinel(sentinel_fn, aerial_fn)
         mask = self._load_target(mask_fn)
 
-        image = aerial 
-        sample = {'image': image, "sentinel": sentinel, 'mask': mask}
+        sample = {'image': aerial, 'mask': mask}
+
+        if self.use_sentinel:
+            sentinel = self._load_sentinel(sentinel_fn, aerial_fn)
+            sample['sentinel'] = sentinel
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -545,9 +550,11 @@ class FLAIR2(NonGeoDataset):
             nir_r_g = normalize_plot(sample['image'][nir_r_g_indices].permute(1, 2, 0))
         
         # Sentinel is a time-series, i.e. use [0]->data(not snow_cloud_mask), [0]->T=0
-        sentinel, cropping_indices = sample["sentinel"]
-        sentinel = sentinel[0][0]
-        sentinel = normalize_plot(sentinel[[0, 1, 2], :, :].permute(1, 2, 0))
+        sentinel = None
+        if self.use_sentinel:
+            sentinel, cropping_indices = sample["sentinel"]
+            sentinel = sentinel[0][0]
+            sentinel = normalize_plot(sentinel[[0, 1, 2], :, :].permute(1, 2, 0))
         
         # Obtain mask and predictions if available
         mask = sample['mask'].numpy().astype('uint8').squeeze()
