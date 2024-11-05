@@ -5,13 +5,22 @@
 # ..... https://ignf.github.io/FLAIR/#FLAIR2
 #
 
+from typing import Any, Optional
+
+import kornia.augmentation as K
+import torch
+from torch.utils.data import random_split
+
+from ..datasets import FLAIR2
+from ..samplers.utils import _to_tuple
+from ..transforms import AugmentationSequential
+from .geo import NonGeoDataModule
+
 
 class FLAIR2DataModule(NonGeoDataModule):
-    """LightningDataModule implementation for the Potsdam2D dataset.
+    """LightningDataModule implementation for the FLAIR2 dataset.
 
     Uses the train/test splits from the dataset.
-
-    .. versionadded:: 0.2
     """
 
     def __init__(
@@ -23,7 +32,7 @@ class FLAIR2DataModule(NonGeoDataModule):
         augs: Optional[AugmentationSequential] = None,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new Potsdam2DDataModule instance.
+        """Initialize a new FLAIR2DataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.
