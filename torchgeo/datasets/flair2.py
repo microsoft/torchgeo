@@ -55,10 +55,7 @@ class FLAIR2(NonGeoDataset):
     }
     globs: dict[str, str] = {
         "images": "IMG_*.tif",
-        "sentinels": {
-            "data": "SEN2_*_data.npy",
-            "snow_cloud_mask": "SEN2_*_masks.npy"
-        },
+        "sentinels": "SEN2_*{0}.npy",
         "masks": "MSK_*.tif",
     }
     centroids_file: str = "flair-2_centroids_sp_to_patch"
@@ -250,13 +247,11 @@ class FLAIR2(NonGeoDataset):
         """
         y, x = centroid
         eigth_size = self.super_patch_size // 8
-        quarter_size = self.super_patch_size // 4
 
-        indices = (slice(x-eigth_size, x+quarter_size), slice(y-eigth_size, y+quarter_size))
+        indices = (slice(x-eigth_size, x+eigth_size), slice(y-eigth_size, y+eigth_size))
         return data, indices
     
     def _load_files(self) -> list[dict[str, str]]:
-        # TODO: add loading of sentinel-2 files
         """Return the paths of the files in the dataset.
 
         Args:
@@ -273,11 +268,11 @@ class FLAIR2(NonGeoDataset):
         sentinels_data = sorted(glob.glob(os.path.join(
             self.root, 
             self.dir_names[self.split]["sentinels"],
-            "**", self.globs["sentinels"]["data"]), recursive=True))
+            "**", self.globs["sentinels"].format("_data")), recursive=True))
         sentinels_mask = sorted(glob.glob(os.path.join(
             self.root, 
             self.dir_names[self.split]["sentinels"],
-            "**", self.globs["sentinels"]["snow_cloud_mask"]), recursive=True))
+            "**", self.globs["sentinels"].format("_masks")), recursive=True))
         sentinels = [
             {"data": data, "snow_cloud_mask": mask}
             for data, mask in zip(sentinels_data, sentinels_mask)
@@ -296,7 +291,6 @@ class FLAIR2(NonGeoDataset):
         return files
 
     def _load_image(self, path: Path) -> Tensor:
-        # TODO: add loading of sentinel-2 images if requested
         """Load a single image.
 
         Args:
@@ -382,7 +376,7 @@ class FLAIR2(NonGeoDataset):
             if not os.path.isdir(downloaded_path):
                 to_extract.append(dir_name)
                 continue
-
+            
             files_glob = os.path.join(downloaded_path, "**", self.globs[train_or_test])
             if not glob.glob(files_glob, recursive=True):
                 to_extract.append(dir_name)
@@ -535,8 +529,6 @@ class FLAIR2(NonGeoDataset):
                     cropping_indices[0].stop - cropping_indices[0].start,
                     cropping_indices[1].stop - cropping_indices[1].start,
                     fill=False, edgecolor='red', lw=0.5))
-                #axs[0].add_patch(plt.Rectangle(cropping_indices, self.super_patch_size, self.super_patch_size, fill=False, edgecolor='red', lw=0.2))
-                #axs[0].add_patch(plt.Rectangle((x - eigth_size, y - eigth_size), quarter_size, quarter_size, fill=False, edgecolor='red', lw=0.2))
 
             axs[0].imshow(plot[1], **im_kwargs)
             axs[0].axis('off')
