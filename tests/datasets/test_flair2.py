@@ -45,7 +45,8 @@ class TestFLAIR2:
         assert dataset.get_num_bands() == len(dataset.all_bands)
         
     def test_per_band_statistics(self, dataset: FLAIR2) -> None:
-        if dataset.split != 'train': return
+        if dataset.split != 'train':
+            return
         
         mins, maxs, means, stdvs = dataset.per_band_statistics(dataset.split)
         for stats in [mins, maxs, means, stdvs]:

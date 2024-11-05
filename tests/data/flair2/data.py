@@ -3,19 +3,17 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import os
-import shutil
-import sys
-from typing import Sequence
-import string
-
-import numpy as np
-from pyproj import CRS
-import rasterio
+import glob
 import hashlib
 import json
-import glob
+import os
+import shutil
+import string
+from collections.abc import Sequence
 
+import numpy as np
+import rasterio
+from pyproj import CRS
 
 # General hyperparams
 IMG_SIZE = 512
@@ -24,7 +22,7 @@ DUMMY_DATA_SIZE = {"train": 10, "test": 5}
 # Directory structure
 root_dir = "{0}/FLAIR2"
 splits: Sequence[str] = ("train", "test")
-dir_names: dict[dict[str, str]] = {
+dir_names: dict[str, dict[str, str]] = {
     "train": {
         "img": "flair_aerial_train",
         "sen": "flair_sen_train",
@@ -41,7 +39,7 @@ sub_sub_dir_format = "D{0}_{1}/Z{2}_{3}"
 
 
 # Aerial specifics
-aerial_all_bands: tuple = ("B01", "B02", "B03", "B04", "B05")
+aerial_all_bands: Sequence[str] = ("B01", "B02", "B03", "B04", "B05")
 aerial_pixel_values: list[int] = list(range(256))
 aerial_profile = {
     "dtype": np.uint8,
@@ -74,7 +72,7 @@ labels_profile = {
 }
 labels_format = ".tif"
 
-used_ids: list = []
+used_ids: list[str] = []
 
 
 def populate_sub_sub_dirs(dir_path: str, rng: np.random.Generator, type: str, domain_year_zone_location: Sequence[str]) -> None:
@@ -110,8 +108,8 @@ def create_sentinel_arrays(dir_path: str, rng: np.random.Generator, domain_year_
     
     # Create products.txt
     with open(os.path.join(dir_path, f"{name}_products{sentinel_format[2]}"), 'w') as f:
-        for _ in range(num_samples):
-            f.write(f"S2A_MSIL2A_20210415T105021_N0300_R051_T31UDP_20210415T135921")
+        for _ in range(time_num_samples):
+            f.write("S2A_MSIL2A_20210415T105021_N0300_R051_T31UDP_20210415T135921")
         
 def create_label_mask(dir_path: str, rng: np.random.Generator, id: str) -> None:
     data = rng.choice(labels_pixel_values, size=(IMG_SIZE, IMG_SIZE), replace=True).astype(np.byte)

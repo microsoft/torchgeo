@@ -1,11 +1,13 @@
-# Code for loading dataset licensed under the MIT License.
-#
-# FLAIR dataset is realeasd under open license 2.0
-# ..... https://www.etalab.gouv.fr/wp-content/uploads/2018/11/open-licence.pdf
-# ..... https://ignf.github.io/FLAIR/#FLAIR2
-#
+"""This module contains the FLAIR2DataModule class for loading the FLAIR2 dataset.
 
-from typing import Any, Optional
+The FLAIR dataset is released under open license 2.0:
+- https://www.etalab.gouv.fr/wp-content/uploads/2018/11/open-licence.pdf
+- https://ignf.github.io/FLAIR/#FLAIR2
+
+Code for loading dataset licensed under the MIT License.
+"""
+
+from typing import Any
 
 import kornia.augmentation as K
 import torch
@@ -29,7 +31,7 @@ class FLAIR2DataModule(NonGeoDataModule):
         patch_size: tuple[int, int] | int = 64,
         val_split_pct: float = 0.2,
         num_workers: int = 0,
-        augs: Optional[AugmentationSequential] = None,
+        augs: AugmentationSequential | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize a new FLAIR2DataModule instance.
@@ -40,6 +42,7 @@ class FLAIR2DataModule(NonGeoDataModule):
                 Should be a multiple of 32 for most segmentation architectures.
             val_split_pct: Percentage of the dataset to use as a validation set.
             num_workers: Number of workers for parallel data loading.
+            augs: Optional augmentations to apply to the dataset.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.Potsdam2D`.
         """
@@ -48,13 +51,12 @@ class FLAIR2DataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
-        self.aug = AugmentationSequential(
+        self.aug: AugmentationSequential = AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             data_keys=['image', 'mask'],
         )
-        
-        if self.aug != None:
-            self.aug = augs
+
+        self.augs = augs if augs is not None else self.aug
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
