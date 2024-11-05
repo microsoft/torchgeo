@@ -5,14 +5,7 @@
 # ..... https://ignf.github.io/FLAIR/#FLAIR2
 #
 
-
-"""
-FLAIR2 dataset.
-
-TODO: add description
-The FLAIR2 dataset is a dataset for semantic segmentation of aerial images. It contains aerial images, sentinel-2 images and masks for 13 classes. 
-The dataset is split into a training and test set.
-"""
+"""FLAIR2 dataset."""
 
 import glob
 import json
@@ -35,7 +28,54 @@ from matplotlib.patches import Patch
 
 
 class FLAIR2(NonGeoDataset):
-    splits: ClassVar[Sequence[str]] = ('train', 'test')
+    """FLAIR #2 (The French Land cover from Aerospace ImageRy) dataset.
+
+    The `FLAIR #2 <https://github.com/IGNF/FLAIR-2>` dataset is an extensive dataset from the French National Institute 
+    of Geographical and Forest Information (IGN) that provides a unique and rich resource for large-scale geospatial analysis. 
+    The  dataset is sampled countrywide and is composed of over 20 billion annotated pixels of very high resolution aerial 
+    imagery at 0.2 m spatial resolution, acquired over three years and different months (spatio-temporal domains). 
+
+    The FLAIR2 dataset is a dataset for semantic segmentation of aerial images. It contains aerial images, sentinel-2 images and masks for 13 classes. 
+    The dataset is split into a training and test set.
+
+    Dataset features:
+
+    * over 20 billion annotated pixels
+    * aerial imagery
+        * 5x512x512
+        * 0.2m spatial resolution
+        * 5 channels (RGB-NIR-Elevation)
+    * Sentinel-2 imagery
+        * 10-20m spatial resolution
+        * 10 spectral bands
+        * snow/cloud masks (with 0-100 probability)
+        * multiple time steps (T)
+        * Tx10xWxH, T, W, H are variable
+    * label (masks)
+        * 512x512
+        * 13 classes
+
+    Dataset classes:
+
+    0: "building",
+    1: "pervious surface",
+    2: "impervious surface",
+    3: "bare soil",
+    4: "water",
+    5: "coniferous",
+    6: "deciduous",
+    7: "brushwood",
+    8: "vineyard",
+    9: "herbaceous vegetation",
+    10: "agricultural land",
+    11: "plowed land",
+    12: "other"  
+
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://doi.org/10.48550/arXiv.2310.13336
+    """
+    splits: ClassVar[Sequence[str]] = ("train", "test")
     
     url_prefix: ClassVar[str] = "https://storage.gra.cloud.ovh.net/v1/AUTH_366279ce616242ebb14161b7991a8461/defi-ia/flair_data_2"
     # TODO: add checksums for safety
@@ -192,8 +232,7 @@ class FLAIR2(NonGeoDataset):
 
         Returns:
             image and mask at that index with image of dimension `get_num_bands()`x512x512,
-            sentinel image of dimension 13x512x512 TODO: verify
-            and mask of dimension 512x512
+            sentinel image of dimension Tx10x512x512 and mask of dimension 512x512
         """
         aerial_fn = self.files[index]["image"]
         sentinel_fn = self.files[index]["sentinel"]
@@ -344,12 +383,10 @@ class FLAIR2(NonGeoDataset):
             # however, those are grouped into a single "other" class
             # Rescale the classes to be in the range [0, 12] by subtracting 1
             torch.clamp(tensor - 1, 0, len(self.classes) - 1, out=tensor)
-            #torch.clamp(tensor, 0, len(self.classes), out=tensor)
             
         return tensor
 
     def _verify(self) -> None:
-        # TODO: download metadata and check checksums
         """Verify the integrity of the dataset."""
         
         # Change urls/paths/content/configs to toy dataset if requested
