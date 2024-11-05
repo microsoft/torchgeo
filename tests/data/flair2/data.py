@@ -167,3 +167,11 @@ if __name__ == "__main__":
             shutil.make_archive(element, 'zip', os.path.dirname(element), os.path.basename(element))
         else:
             shutil.make_archive(element.removesuffix(".json"), 'zip', os.path.dirname(element), os.path.basename(element))
+    
+    # Compute md5 for each zip file and json file
+    with open(os.path.join(root_dir, "md5s.txt"), 'w') as md5_file:
+        for element in glob.glob(f"{root_dir}/**"):
+            if element.endswith(".zip") or element.endswith(".json"):
+                with open(element, 'rb') as f:
+                    md5 = hashlib.md5(f.read()).hexdigest()
+                    md5_file.write(f"{element}: {md5}\n")
