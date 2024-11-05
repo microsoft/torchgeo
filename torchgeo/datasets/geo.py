@@ -6,7 +6,6 @@
 import abc
 import fnmatch
 import functools
-import glob
 import os
 import re
 import sys
@@ -36,11 +35,11 @@ from .errors import DatasetNotFoundError
 from .utils import (
     BoundingBox,
     Path,
+    _list_directory_recursive,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
     merge_samples,
-    path_is_vsi,
 )
 
 
@@ -307,13 +306,14 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         # Using set to remove any duplicates if directories are overlapping
         files: set[str] = set()
         for path in paths:
-            if os.path.isdir(path):
-                pathname = os.path.join(path, '**', self.filename_glob)
-                files |= set(glob.iglob(pathname, recursive=True))
-            elif (os.path.isfile(path) or path_is_vsi(path)) and fnmatch.fnmatch(
-                str(path), f'*{self.filename_glob}'
+            if os.path.isfile(path) and fnmatch.fnmatch(
+                str(path), os.path.join('*', self.filename_glob)
             ):
                 files.add(str(path))
+            elif files_found := set(
+                _list_directory_recursive(path, self.filename_glob)
+            ):
+                files |= files_found
             elif not hasattr(self, 'download'):
                 warnings.warn(
                     f"Could not find any relevant files for provided path '{path}'. "

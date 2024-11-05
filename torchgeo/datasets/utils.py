@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import collections
 import contextlib
+import fnmatch
+import glob
 import importlib
 import os
 import shutil
@@ -18,9 +20,11 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, TypeAlias, cast, overload
 
+import fiona
 import numpy as np
 import rasterio
 import torch
+from fiona.errors import FionaValueError
 from torch import Tensor
 from torchvision.datasets.utils import (
     check_integrity,
@@ -606,18 +610,22 @@ def percentile_normalization(
     return img_normalized
 
 
-def path_is_vsi(path: Path) -> bool:
-    """Checks if the given path is pointing to a Virtual File System.
+def _path_is_gdal_vsi(path: Path) -> bool:
+    """Checks if the given path has a GDAL Virtual File System Interface (VSI) prefix.
+
+    This is a path within an Apache Virtual File System (VFS) supported by GDAL and
+    related libraries (rasterio and fiona).
 
     .. note::
        Does not check if the path exists, or if it is a dir or file.
 
-    VSI can for instance be Cloud Storage Blobs or zip-archives.
+    VFS can for instance be Cloud Storage Blobs or zip-archives.
     They will start with a prefix indicating this.
     For examples of these, see references for the two accepted syntaxes.
 
     * https://gdal.org/user/virtual_file_systems.html
     * https://rasterio.readthedocs.io/en/latest/topics/datasets.html
+    * https://commons.apache.org/proper/commons-vfs/filesystems.html
 
     Args:
         path: a directory or file
@@ -628,6 +636,74 @@ def path_is_vsi(path: Path) -> bool:
     .. versionadded:: 0.6
     """
     return '://' in str(path) or str(path).startswith('/vsi')
+
+
+def _listdir_vfs_recursive(root: Path) -> list[str]:
+    """Lists all files in Virtual File Systems (VFS) recursively.
+
+    Args:
+        root: directory to list. These must contain the prefix for the VFS
+            (e.g., '/vsiaz/' or 'az://' for azure blob storage, or
+            '/vsizip/' or 'zip://' for zipped archives).
+
+    Returns:
+        A list of all file paths matching filename_glob in the root VFS directory or its
+        subdirectories.
+
+    Raises:
+        FileNotFoundError: If root does not exist.
+
+    .. versionadded:: 0.7
+    """
+    dirs = [str(root)]
+    files = []
+    while dirs:
+        dir = dirs.pop()
+        try:
+            subdirs = fiona.listdir(dir)
+            # Don't use os.path.join here because vsi uri's require forward-slash,
+            # even on windows.
+            dirs.extend([f'{dir}/{subdir}' for subdir in subdirs])
+        except FionaValueError as e:
+            if 'is not a directory' in str(e):
+                files.append(dir)
+            else:
+                raise FileNotFoundError(f'No such file or directory: {dir}')
+    return files
+
+
+def _list_directory_recursive(root: Path, filename_glob: str) -> list[str]:
+    """Lists files in directory recursively matching the given glob expression.
+
+    Also supports GDAL Virtual File Systems (VFS).
+
+    Args:
+        root: directory to list. For VFS these will have prefix
+            e.g. /vsiaz/ or az:// for azure blob storage
+        filename_glob: filename pattern to filter filenames
+
+    Returns:
+        A list of all file paths matching filename_glob in the root directory or its
+        subdirectories.
+
+    .. versionadded:: 0.7
+    """
+    files: list[str]
+    if _path_is_gdal_vsi(root):
+        # Change type to match expected input to filter
+        all_files: list[str] = []
+        try:
+            all_files = _listdir_vfs_recursive(root)
+        except FileNotFoundError:
+            # To match the behaviour of glob.iglob we silently return empty list
+            # for non-existing root.
+            pass
+        # Prefix glob with wildcard to ignore directories
+        files = fnmatch.filter(all_files, f'*{filename_glob}')
+    else:
+        pathname = os.path.join(root, '**', filename_glob)
+        files = glob.glob(pathname, recursive=True)
+    return files
 
 
 def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:

@@ -39,7 +39,8 @@ dependencies = [
     # einops 0.3+ required for einops.repeat
     "einops>=0.3",
     # fiona 1.8.21+ required for Python 3.10 wheels
-    "fiona>=1.8.21",
+    # fiona 1.9+ required for fiona.listdir
+    "fiona>=1.9",
     # kornia 0.7.3+ required for instance segmentation support in AugmentationSequential
     "kornia>=0.7.3",
     # lightly 1.4.5+ required for LARS optimizer
