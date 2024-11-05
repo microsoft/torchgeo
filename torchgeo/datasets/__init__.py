@@ -226,6 +226,7 @@ __all__ = (
     'FieldsOfTheWorld',
     'FireRisk',
     'ForestDamage',
+    'FLAIR2',
     'GeoNRW',
     'GID15',
     'IDTReeS',
