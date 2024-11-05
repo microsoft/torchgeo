@@ -20,8 +20,16 @@ class TestFLAIR2:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> FLAIR2:
-        # TODO: Update md5 checksums
-        md5s = {"test": '73c0aba603c356b2cce9ebf952fb7be0'}
+        md5s = {
+            "flair-2_centroids_sp_to_patch": "c308ca502fbe23ef6eaa2efc33e7b199",
+            "flair_aerial_train": "ace5712f03f799e9f3e0cc74c27d84c8",
+            "flair_sen_train": "7468da7cda8d0c0c1120dec8dd857a1f",
+            "flair_labels_train": "87bc5bbeb2d04b788fe733e353fa7112",
+            "flair_2_aerial_test": "e5a6d4f5c812edc6cf59bff656fd81b6",
+            "flair_2_sen_test": "ae230be3a50c02e62606632b7d72b48b",
+            "flair_2_labels_test": "644d81311d0ac2aaecfdc5721dcd03f1",
+        }
+
         monkeypatch.setattr(FLAIR2, "md5s", md5s)
         url_prefix = os.path.join("tests", "data", "flair2", "FLAIR2")
         monkeypatch.setattr(FLAIR2, "url_prefix", url_prefix)
@@ -54,7 +62,6 @@ class TestFLAIR2:
         assert x['image'].shape[-2:] == x['mask'].shape[-2:]
 
     def test_len(self, dataset: FLAIR2) -> None:
-        # TODO: find out how many samples are in the dataset
         if dataset.split == 'train':
             assert len(dataset) == 10
         else:
@@ -90,3 +97,5 @@ class TestFLAIR2:
         sample['prediction'] = torch.clone(sample['mask'])
         dataset.plot(sample, suptitle='Prediction')
         plt.close()
+
+    # TODO: test toy option

@@ -22,7 +22,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive
+from .utils import Path, download_url, extract_archive, check_integrity
 from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
 
@@ -78,8 +78,15 @@ class FLAIR2(NonGeoDataset):
     splits: ClassVar[Sequence[str]] = ("train", "test")
     
     url_prefix: ClassVar[str] = "https://storage.gra.cloud.ovh.net/v1/AUTH_366279ce616242ebb14161b7991a8461/defi-ia/flair_data_2"
-    # TODO: add checksums for safety
-    md5s: dict[str, str] = ""
+    md5s: dict[str, str] = {
+        "flair-2_centroids_sp_to_patch": "f8ba3b176197c254b6c165c97e93c759",
+        "flair_aerial_train": "0f575b360800f58add19c08f05e18429",
+        "flair_sen_train": "56fbbd465726ea4dfeea02734edd7cc5",
+        "flair_labels_train": "80d3cd2ee117a61128faa08cbb842c0c",
+        "flair_2_aerial_test": "a647e0ba7e5345b28c48d7887ee79888",
+        "flair_2_sen_test": "aae8649dbe457620a76269d915d07624",
+        "flair_2_labels_test": "394a769ffcb4a783335eecd3f8baef57",
+    }
     
     dir_names: dict[dict[str, str]] = {
         "train": {
@@ -470,12 +477,14 @@ class FLAIR2(NonGeoDataset):
         self._download("flair_2_toy_dataset")
         self._extract("flair_2_toy_dataset")
         self.root = os.path.join(self.root, "flair_2_toy_dataset")
-        
+    
     def _download(self, url: str, suffix: str = ".zip") -> None:
         """Download the dataset."""
         download_url(
-            os.path.join(self.url_prefix, f"{url}{suffix}"), self.root
+            os.path.join(self.url_prefix, f"{url}{suffix}"), self.root, md5=self.md5s.get(url, None) if self.checksum else None,
         )
+        # FIXME: Why is download_url not checking integrity (tests run through)?
+        assert check_integrity(os.path.join(self.root, f"{url}{suffix}"), self.md5s.get(url, None) if self.checksum else None)
 
     def _extract(self, file_path: str) -> None:
         """Extract the dataset."""
