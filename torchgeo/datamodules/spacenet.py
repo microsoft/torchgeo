@@ -11,7 +11,6 @@ from torch import Tensor
 from torch.utils.data import random_split
 
 from ..datasets import SpaceNet, SpaceNet1, SpaceNet6
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -145,14 +144,13 @@ class SpaceNet1DataModule(SpaceNetBaseDataModule):
         self.predict_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
-            data_keys=['image'],
+            data_keys=None,
         )
 
         # https://github.com/kornia/kornia/issues/2848
         self.train_aug.keepdim = True  # type: ignore[attr-defined]
-        self.predict_aug.keepdim = True # type: ignore[attr-defined]
+        self.predict_aug.keepdim = True  # type: ignore[attr-defined]
         self.aug.keepdim = True  # type: ignore[attr-defined]
-
 
 
 class SpaceNet6DataModule(SpaceNetBaseDataModule):
