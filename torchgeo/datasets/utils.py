@@ -173,8 +173,8 @@ class BoundingBox:
                 min(self.maxx, other.maxx),
                 max(self.miny, other.miny),
                 min(self.maxy, other.maxy),
-                max(self.mint, other.mint),
-                min(self.maxt, other.maxt),
+                min(self.mint, other.mint),
+                max(self.maxt, other.maxt),
             )
         except ValueError:
             raise ValueError(f'Bounding boxes {self} and {other} do not overlap')
