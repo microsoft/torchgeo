@@ -40,7 +40,7 @@ dependencies = [
     "einops>=0.3",
     # fiona 1.8.21+ required for Python 3.10 wheels
     "fiona>=1.8.21",
-    # kornia 0.7.4+ required for using native AugmentationSequential, allowing us to replace our custom implementation
+    # kornia 0.7.4+ required for AugmentationSequential support for unknown keys
     "kornia>=0.7.4",
     # lightly 1.4.5+ required for LARS optimizer
     # lightly 1.4.26 is incompatible with the version of timm required by smp
