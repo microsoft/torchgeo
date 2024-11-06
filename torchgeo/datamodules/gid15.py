@@ -11,7 +11,6 @@ from torch.utils.data import random_split
 
 from ..datasets import GID15
 from ..samplers.utils import _to_tuple
-from ..transforms import AugmentationSequential
 from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
 
@@ -48,15 +47,17 @@ class GID15DataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
-        self.train_aug = self.val_aug = AugmentationSequential(
+        self.train_aug = self.val_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=['image', 'mask'],
+            data_keys=None,
+            keepdim=True,
         )
-        self.predict_aug = AugmentationSequential(
+        self.predict_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=['image'],
+            data_keys=None,
+            keepdim=True,
         )
 
     def setup(self, stage: str) -> None:

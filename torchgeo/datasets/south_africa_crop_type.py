@@ -223,7 +223,7 @@ class SouthAfricaCropType(RasterDataset):
             )
             mask_filepaths.append(file_path)
 
-        mask = self._merge_files(mask_filepaths, query)
+        mask = self._merge_files(mask_filepaths, query).squeeze(0)
 
         sample = {
             'crs': self.crs,

@@ -9,7 +9,6 @@ import kornia.augmentation as K
 import torch
 
 from ..datasets import FieldsOfTheWorld
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -55,16 +54,17 @@ class FieldsOfTheWorldDataModule(NonGeoDataModule):
         self.val_countries = val_countries
         self.test_countries = test_countries
 
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomRotation(p=0.5, degrees=90),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             K.RandomSharpness(p=0.5),
-            data_keys=['image', 'mask'],
+            data_keys=None,
+            keepdim=True,
         )
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
+        self.aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
 
     def setup(self, stage: str) -> None:

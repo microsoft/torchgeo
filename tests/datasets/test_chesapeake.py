@@ -212,6 +212,9 @@ class TestChesapeakeCVPR:
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        x['prediction'] = x['mask'][:, :, 0].clone().unsqueeze(2)
+        if x['mask'].ndim == 2:
+            x['prediction'] = x['mask'].clone()
+        else:
+            x['prediction'] = x['mask'][0, :, :].clone()
         dataset.plot(x)
         plt.close()
