@@ -59,13 +59,10 @@ class VHR10DataModule(NonGeoDataModule):
             data_keys=None,
             keepdim=True,
         )
-        self.train_aug.keepdim = True  # type: ignore[attr-defined]
 
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
-        # https://github.com/kornia/kornia/issues/2848
-        self.aug.keepdim = True  # type: ignore[attr-defined]
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -76,7 +73,6 @@ class VHR10DataModule(NonGeoDataModule):
         self.kwargs['transforms'] = K.AugmentationSequential(
             K.Resize(self.patch_size), data_keys=None, keepdim=True
         )
-        self.kwargs['transforms'].keepdim = True
         self.dataset = VHR10(**self.kwargs)
         generator = torch.Generator().manual_seed(0)
         self.train_dataset, self.val_dataset, self.test_dataset = random_split(
