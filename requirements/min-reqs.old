@@ -20,6 +20,7 @@ timm==0.4.12
 torch==1.13.0
 torchmetrics==0.10.0
 torchvision==0.14.0
+typing-extensions==4.5.0
 
 # datasets
 h5py==3.6.0

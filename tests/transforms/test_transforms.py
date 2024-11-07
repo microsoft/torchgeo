@@ -82,9 +82,10 @@ def test_augmentation_sequential_gray(batch_gray: dict[str, Tensor]) -> None:
         'boxes': torch.tensor([[1.0, 0.0, 3.0, 2.0]], dtype=torch.float),
         'labels': torch.tensor([[0, 1]]),
     }
-    augs = transforms.AugmentationSequential(
-        K.RandomHorizontalFlip(p=1.0), data_keys=['image', 'mask', 'boxes']
-    )
+    with pytest.deprecated_call():
+        augs = transforms.AugmentationSequential(
+            K.RandomHorizontalFlip(p=1.0), data_keys=['image', 'mask', 'boxes']
+        )
     output = augs(batch_gray)
     assert_matching(output, expected)
 
@@ -105,9 +106,10 @@ def test_augmentation_sequential_rgb(batch_rgb: dict[str, Tensor]) -> None:
         'boxes': torch.tensor([[1.0, 0.0, 3.0, 2.0]], dtype=torch.float),
         'labels': torch.tensor([[0, 1]]),
     }
-    augs = transforms.AugmentationSequential(
-        K.RandomHorizontalFlip(p=1.0), data_keys=['image', 'mask', 'boxes']
-    )
+    with pytest.deprecated_call():
+        augs = transforms.AugmentationSequential(
+            K.RandomHorizontalFlip(p=1.0), data_keys=['image', 'mask', 'boxes']
+        )
     output = augs(batch_rgb)
     assert_matching(output, expected)
 
@@ -132,9 +134,10 @@ def test_augmentation_sequential_multispectral(
         'boxes': torch.tensor([[1.0, 0.0, 3.0, 2.0]], dtype=torch.float),
         'labels': torch.tensor([[0, 1]]),
     }
-    augs = transforms.AugmentationSequential(
-        K.RandomHorizontalFlip(p=1.0), data_keys=['image', 'mask', 'boxes']
-    )
+    with pytest.deprecated_call():
+        augs = transforms.AugmentationSequential(
+            K.RandomHorizontalFlip(p=1.0), data_keys=['image', 'mask', 'boxes']
+        )
     output = augs(batch_multispectral)
     assert_matching(output, expected)
 
@@ -159,9 +162,10 @@ def test_augmentation_sequential_image_only(
         'boxes': torch.tensor([[0.0, 0.0, 2.0, 2.0]], dtype=torch.float),
         'labels': torch.tensor([[0, 1]]),
     }
-    augs = transforms.AugmentationSequential(
-        K.RandomHorizontalFlip(p=1.0), data_keys=['image']
-    )
+    with pytest.deprecated_call():
+        augs = transforms.AugmentationSequential(
+            K.RandomHorizontalFlip(p=1.0), data_keys=['image']
+        )
     output = augs(batch_multispectral)
     assert_matching(output, expected)
 
@@ -191,15 +195,16 @@ def test_sequential_transforms_augmentations(
         'boxes': torch.tensor([[1.0, 0.0, 3.0, 2.0]], dtype=torch.float),
         'labels': torch.tensor([[0, 1]]),
     }
-    train_transforms = transforms.AugmentationSequential(
-        indices.AppendNBR(index_nir=0, index_swir=0),
-        indices.AppendNDBI(index_swir=0, index_nir=0),
-        indices.AppendNDSI(index_green=0, index_swir=0),
-        indices.AppendNDVI(index_red=0, index_nir=0),
-        indices.AppendNDWI(index_green=0, index_nir=0),
-        K.RandomHorizontalFlip(p=1.0),
-        data_keys=['image', 'mask', 'boxes'],
-    )
+    with pytest.deprecated_call():
+        train_transforms = transforms.AugmentationSequential(
+            indices.AppendNBR(index_nir=0, index_swir=0),
+            indices.AppendNDBI(index_swir=0, index_nir=0),
+            indices.AppendNDSI(index_green=0, index_swir=0),
+            indices.AppendNDVI(index_red=0, index_nir=0),
+            indices.AppendNDWI(index_green=0, index_nir=0),
+            K.RandomHorizontalFlip(p=1.0),
+            data_keys=['image', 'mask', 'boxes'],
+        )
     output = train_transforms(batch_multispectral)
     assert_matching(output, expected)
 
@@ -215,9 +220,12 @@ def test_extract_patches() -> None:
         'image': torch.randn(size=(b, c, h, w)),
         'mask': torch.randint(low=0, high=2, size=(b, h, w)),
     }
-    train_transforms = transforms.AugmentationSequential(
-        _ExtractPatches(window_size=p), same_on_batch=True, data_keys=['image', 'mask']
-    )
+    with pytest.deprecated_call():
+        train_transforms = transforms.AugmentationSequential(
+            _ExtractPatches(window_size=p),
+            same_on_batch=True,
+            data_keys=['image', 'mask'],
+        )
     output = train_transforms(batch)
     assert batch['image'].shape == (b * num_patches, c, p, p)
     assert batch['mask'].shape == (b * num_patches, p, p)
@@ -229,11 +237,12 @@ def test_extract_patches() -> None:
         'image': torch.randn(size=(b, c, h, w)),
         'mask': torch.randint(low=0, high=2, size=(b, h, w)),
     }
-    train_transforms = transforms.AugmentationSequential(
-        _ExtractPatches(window_size=p, stride=s),
-        same_on_batch=True,
-        data_keys=['image', 'mask'],
-    )
+    with pytest.deprecated_call():
+        train_transforms = transforms.AugmentationSequential(
+            _ExtractPatches(window_size=p, stride=s),
+            same_on_batch=True,
+            data_keys=['image', 'mask'],
+        )
     output = train_transforms(batch)
     assert batch['image'].shape == (b * num_patches, c, p, p)
     assert batch['mask'].shape == (b * num_patches, p, p)
@@ -245,11 +254,12 @@ def test_extract_patches() -> None:
         'image': torch.randn(size=(b, c, h, w)),
         'mask': torch.randint(low=0, high=2, size=(b, h, w)),
     }
-    train_transforms = transforms.AugmentationSequential(
-        _ExtractPatches(window_size=p, stride=s, keepdim=False),
-        same_on_batch=True,
-        data_keys=['image', 'mask'],
-    )
+    with pytest.deprecated_call():
+        train_transforms = transforms.AugmentationSequential(
+            _ExtractPatches(window_size=p, stride=s, keepdim=False),
+            same_on_batch=True,
+            data_keys=['image', 'mask'],
+        )
     output = train_transforms(batch)
     for k, v in output.items():
         print(k, v.shape, v.dtype)
