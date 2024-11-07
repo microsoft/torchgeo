@@ -79,6 +79,9 @@ dependencies = [
     "torchmetrics>=0.10",
     # torchvision 0.14+ required for torchvision.models.swin_v2_b
     "torchvision>=0.14",
+    # typing-extensions 4.5+ required for typing_extensions.deprecated
+    # can be removed once Python 3.13 is minimum supported version
+    "typing-extensions>=4.5",
 ]
 dynamic = ["version"]
 
