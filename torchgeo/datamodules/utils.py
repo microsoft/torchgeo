@@ -10,8 +10,9 @@ from typing import Any
 import numpy as np
 import torch
 from einops import rearrange
-from torch import Tensor
 from torch.nn import Module
+
+from ..datasets import Sample
 
 
 # Based on lightning_lite.utilities.exceptions
@@ -25,9 +26,7 @@ class AugPipe(Module):
     .. versionadded:: 0.6
     """
 
-    def __init__(
-        self, augs: Callable[[dict[str, Any]], dict[str, Any]], batch_size: int
-    ) -> None:
+    def __init__(self, augs: Callable[[Sample], Sample], batch_size: int) -> None:
         """Initialize a new AugPipe instance.
 
         Args:
@@ -38,7 +37,7 @@ class AugPipe(Module):
         self.augs = augs
         self.batch_size = batch_size
 
-    def forward(self, batch: dict[str, Tensor]) -> dict[str, Tensor]:
+    def forward(self, batch: Sample) -> Sample:
         """Apply the augmentation.
 
         Args:
@@ -73,7 +72,7 @@ class AugPipe(Module):
         return batch
 
 
-def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
+def collate_fn_detection(batch: list[Sample]) -> Sample:
     """Custom collate fn for object detection and instance segmentation.
 
     Args:
@@ -84,7 +83,7 @@ def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
 
     .. versionadded:: 0.6
     """
-    output: dict[str, Any] = {}
+    output: Sample = {}
     output['image'] = [sample['image'] for sample in batch]
     output['boxes'] = [sample['boxes'].float() for sample in batch]
     if 'labels' in batch[0]:

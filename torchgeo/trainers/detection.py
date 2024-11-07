@@ -4,7 +4,6 @@
 """Trainers for object detection."""
 
 from functools import partial
-from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
@@ -19,7 +18,7 @@ from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
-from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets import Batch, RGBBandsMissingError, unbind_samples
 from .base import BaseTask
 
 BACKBONE_LAT_DIM_MAP = {
@@ -224,7 +223,7 @@ class ObjectDetectionTask(BaseTask):
         self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Batch, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss.
 
@@ -248,7 +247,7 @@ class ObjectDetectionTask(BaseTask):
         return train_loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Batch, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Compute the validation metrics.
 
@@ -303,7 +302,7 @@ class ObjectDetectionTask(BaseTask):
                 )
                 plt.close()
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Batch, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test metrics.
 
         Args:
@@ -326,8 +325,8 @@ class ObjectDetectionTask(BaseTask):
         self.log_dict(metrics, batch_size=batch_size)
 
     def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> list[dict[str, Tensor]]:
+        self, batch: Batch, batch_idx: int, dataloader_idx: int = 0
+    ) -> list[Batch]:
         """Compute the predicted bounding boxes.
 
         Args:
@@ -339,5 +338,5 @@ class ObjectDetectionTask(BaseTask):
             Output predicted probabilities.
         """
         x = batch['image']
-        y_hat: list[dict[str, Tensor]] = self(x)
+        y_hat: list[Batch] = self(x)
         return y_hat

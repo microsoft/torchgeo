@@ -6,17 +6,16 @@
 import glob
 import os
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
-from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import BoundingBox, Path, download_url, extract_archive
+from .utils import BoundingBox, Path, Sample, download_url, extract_archive
 
 
 class L8BiomeImage(RasterDataset):
@@ -63,7 +62,7 @@ class L8BiomeMask(RasterDataset):
     ordinal_map[192] = 3
     ordinal_map[255] = 4
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -136,7 +135,7 @@ class L8Biome(IntersectionDataset):
         crs: CRS | None = CRS.from_epsg(3857),
         res: float | None = None,
         bands: Sequence[str] = L8BiomeImage.all_bands,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -212,10 +211,7 @@ class L8Biome(IntersectionDataset):
             extract_archive(tarfile)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

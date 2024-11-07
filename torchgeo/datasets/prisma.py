@@ -3,13 +3,11 @@
 
 """PRISMA datasets."""
 
-from typing import Any
-
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
 from .geo import RasterDataset
-from .utils import percentile_normalization
+from .utils import Sample, percentile_normalization
 
 
 class PRISMA(RasterDataset):
@@ -78,10 +76,7 @@ class PRISMA(RasterDataset):
     date_format = '%Y%m%d%H%M%S'
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

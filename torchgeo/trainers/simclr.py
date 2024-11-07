@@ -5,7 +5,6 @@
 
 import os
 import warnings
-from typing import Any
 
 import kornia.augmentation as K
 import lightning
@@ -22,6 +21,7 @@ from torchvision.models._api import WeightsEnum
 
 import torchgeo.transforms as T
 
+from ..datasets import Batch
 from ..models import get_weight
 from . import utils
 from .base import BaseTask
@@ -221,7 +221,7 @@ class SimCLRTask(BaseTask):
         return z, h
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Batch, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss and additional metrics.
 
@@ -272,16 +272,18 @@ class SimCLRTask(BaseTask):
         return loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Batch, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """No-op, does nothing."""
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Batch, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op, does nothing."""
         # TODO
         # v2: add distillation step
 
-    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def predict_step(
+        self, batch: Batch, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
         """No-op, does nothing."""
 
     def configure_optimizers(

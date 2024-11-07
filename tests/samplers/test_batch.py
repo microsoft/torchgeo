@@ -11,7 +11,7 @@ from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
 from torch.utils.data import DataLoader
 
-from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
+from torchgeo.datasets import BoundingBox, GeoDataset, Sample, stack_samples
 from torchgeo.samplers import BatchGeoSampler, RandomBatchGeoSampler, Units
 
 
@@ -33,7 +33,7 @@ class CustomGeoDataset(GeoDataset):
         self._crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         return {'index': query}
 
 

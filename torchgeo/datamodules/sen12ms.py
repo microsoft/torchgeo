@@ -6,10 +6,9 @@
 from typing import Any
 
 import torch
-from torch import Tensor
 from torch.utils.data import Subset
 
-from ..datasets import SEN12MS
+from ..datasets import SEN12MS, Sample
 from .geo import NonGeoDataModule
 from .utils import group_shuffle_split
 
@@ -96,9 +95,7 @@ class SEN12MSDataModule(NonGeoDataModule):
         if stage in ['test']:
             self.test_dataset = SEN12MS(split='test', **self.kwargs)
 
-    def on_after_batch_transfer(
-        self, batch: dict[str, Tensor], dataloader_idx: int
-    ) -> dict[str, Tensor]:
+    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
         """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:

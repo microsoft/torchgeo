@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, lazy_import
+from .utils import Path, Sample, download_url, extract_archive, lazy_import
 
 
 class SKIPPD(NonGeoDataset):
@@ -82,7 +82,7 @@ class SKIPPD(NonGeoDataset):
         root: Path = 'data',
         split: str = 'trainval',
         task: str = 'nowcast',
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -134,7 +134,7 @@ class SKIPPD(NonGeoDataset):
 
         return num_datapoints
 
-    def __getitem__(self, index: int) -> dict[str, str | Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -143,7 +143,7 @@ class SKIPPD(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        sample: dict[str, str | Tensor] = {'image': self._load_image(index)}
+        sample: Sample = {'image': self._load_image(index)}
         sample.update(self._load_features(index))
 
         if self.transforms is not None:
@@ -176,7 +176,7 @@ class SKIPPD(NonGeoDataset):
         tensor = torch.from_numpy(arr).to(torch.float32)
         return tensor
 
-    def _load_features(self, index: int) -> dict[str, str | Tensor]:
+    def _load_features(self, index: int) -> Sample:
         """Load label.
 
         Args:
@@ -194,7 +194,7 @@ class SKIPPD(NonGeoDataset):
         path = os.path.join(self.root, f'times_{self.split}_{self.task}.npy')
         datestring = np.load(path, allow_pickle=True)[index].strftime(self.dateformat)
 
-        features: dict[str, str | Tensor] = {
+        features: Sample = {
             'label': torch.tensor(label, dtype=torch.float32),
             'date': datestring,
         }
@@ -237,10 +237,7 @@ class SKIPPD(NonGeoDataset):
         extract_archive(zipfile_path, self.root)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

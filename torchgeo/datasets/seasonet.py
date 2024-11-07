@@ -21,7 +21,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, percentile_normalization
+from .utils import Path, Sample, download_url, extract_archive, percentile_normalization
 
 
 class SeasoNet(NonGeoDataset):
@@ -219,7 +219,7 @@ class SeasoNet(NonGeoDataset):
         bands: Iterable[str] = all_bands,
         grids: Iterable[int] = [1, 2],
         concat_seasons: int = 1,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -292,7 +292,7 @@ class SeasoNet(NonGeoDataset):
         else:
             self.files = csv['Path']
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -304,7 +304,7 @@ class SeasoNet(NonGeoDataset):
         """
         image = self._load_image(index)
         mask = self._load_target(index)
-        sample = {'image': image, 'mask': mask}
+        sample: Sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -402,7 +402,7 @@ class SeasoNet(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         show_legend: bool = True,
         suptitle: str | None = None,

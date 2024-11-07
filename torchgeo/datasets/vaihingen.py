@@ -18,6 +18,7 @@ from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     check_integrity,
     draw_semantic_segmentation_masks,
     extract_archive,
@@ -124,7 +125,7 @@ class Vaihingen2D(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Vaihingen2D dataset instance.
@@ -155,7 +156,7 @@ class Vaihingen2D(NonGeoDataset):
             if os.path.exists(image) and os.path.exists(mask):
                 self.files.append(dict(image=image, mask=mask))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -166,7 +167,7 @@ class Vaihingen2D(NonGeoDataset):
         """
         image = self._load_image(index)
         mask = self._load_target(index)
-        sample = {'image': image, 'mask': mask}
+        sample: Sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -241,7 +242,7 @@ class Vaihingen2D(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         suptitle: str | None = None,
         alpha: float = 0.5,
