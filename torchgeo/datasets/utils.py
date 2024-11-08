@@ -378,7 +378,7 @@ def _list_dict_to_dict_list(
 
     .. versionadded:: 0.2
     """
-    collated = dict()
+    collated: dict[Any, list[Any]] = dict()
     for sample in samples:
         for key, value in sample.items():
             if key not in collated:
