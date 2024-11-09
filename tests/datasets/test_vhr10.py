@@ -85,7 +85,7 @@ class TestVHR10:
                 x['prediction_labels'] = x['class']
                 x['prediction_boxes'] = x['bbox_xyxy']
                 x['prediction_scores'] = torch.Tensor([scores[i]])
-                if 'masks' in x:
+                if 'mask' in x:
                     x['prediction_masks'] = x['mask']
                     dataset.plot(x, show_feats='masks')
                     plt.close()

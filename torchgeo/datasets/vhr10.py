@@ -459,7 +459,7 @@ class VHR10(NonGeoDataset):
             )
 
             # Add masks
-            if show_feats in {'masks', 'both'} and 'masks' in sample:
+            if show_feats in {'masks', 'both'} and 'mask' in sample:
                 mask = masks[i]
                 contours = skimage.measure.find_contours(mask, 0.5)
                 for verts in contours:
