@@ -99,10 +99,10 @@ class TreeSatAI(NonGeoDataset):
 
     # https://zenodo.org/records/6780578/files/220629_doc_TreeSatAI_benchmark_archive.pdf
     all_sensors = ('aerial', 's1', 's2')
-    all_bands: ClassVar[dict[str, tuple[str]]] = {
-        'aerial': ('IR', 'G', 'B', 'R'),
-        's1': ('VV', 'VH', 'VV/VH'),
-        's2': (
+    all_bands: ClassVar[dict[str, list[str]]] = {
+        'aerial': ['IR', 'G', 'B', 'R'],
+        's1': ['VV', 'VH', 'VV/VH'],
+        's2': [
             'B02',
             'B03',
             'B04',
@@ -115,12 +115,12 @@ class TreeSatAI(NonGeoDataset):
             'B12',
             'B01',
             'B09',
-        ),
+        ],
     }
-    rgb_bands: ClassVar[dict[str, tuple[str]]] = {
-        'aerial': ('R', 'G', 'B'),
-        's1': ('VV', 'VH', 'VV/VH'),
-        's2': ('B04', 'B03', 'B02'),
+    rgb_bands: ClassVar[dict[str, list[str]]] = {
+        'aerial': ['R', 'G', 'B'],
+        's1': ['VV', 'VH', 'VV/VH'],
+        's2': ['B04', 'B03', 'B02'],
     }
 
     def __init__(
