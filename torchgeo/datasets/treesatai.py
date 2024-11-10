@@ -6,7 +6,7 @@
 import json
 import os
 from collections.abc import Callable, Sequence
-from typing import ClassVar, cast
+from typing import ClassVar
 
 import rasterio as rio
 import torch
@@ -240,11 +240,7 @@ class TreeSatAI(NonGeoDataset):
 
         extract_archive(os.path.join(self.root, file), to_path)
 
-    def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-    ) -> Figure:
+    def plot(self, sample: dict[str, Tensor], show_titles: bool = True) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -254,7 +250,7 @@ class TreeSatAI(NonGeoDataset):
         Returns:
             A matplotlib Figure with the rendered sample.
         """
-        fig, ax = plt.subplots(ncols=len(self.sensors), squeeze=False, constrained_layout=True)
+        fig, ax = plt.subplots(ncols=len(self.sensors), squeeze=False)
 
         for i, sensor in enumerate(self.sensors):
             image = sample[f'image_{sensor}'].cpu().numpy()
