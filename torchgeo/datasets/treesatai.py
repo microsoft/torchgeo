@@ -44,6 +44,8 @@ class TreeSatAI(NonGeoDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.5194/essd-15-681-2023
+
+    .. versionadded:: 0.7
     """
 
     url = 'https://zenodo.org/records/6780578/files/'
