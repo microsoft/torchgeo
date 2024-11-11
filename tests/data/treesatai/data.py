@@ -3,9 +3,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import glob
 import json
 import os
 import random
+import shutil
+import zipfile
 
 import numpy as np
 import rasterio
@@ -33,6 +36,16 @@ classes = (
     'Pseudotsuga',
     'Quercus',
     'Tilia',
+)
+
+species = (
+    'Acer_pseudoplatanus',
+    'Alnus_spec',
+    'Fagus_sylvatica',
+    'Picea_abies',
+    'Pseudotsuga_menziesii',
+    'Quercus_petraea',
+    'Quercus_rubra',
 )
 
 profile = {
@@ -108,3 +121,13 @@ os.makedirs('labels', exist_ok=True)
 path = os.path.join('labels', 'TreeSatBA_v9_60m_multi_labels.json')
 with open(path, 'w') as f:
     json.dump(multi_labels, f)
+
+for sensor in ['s1', 's2']:
+    shutil.make_archive(sensor, 'zip', '.', sensor)
+
+for spec in species:
+    path = f'aerial_60m_{spec}.zip'.lower()
+    with zipfile.ZipFile(path, 'w') as f:
+        for path in glob.iglob(os.path.join('aerial', '60m', f'{spec}_*.tif')):
+            filename = os.path.split(path)[-1]
+            f.write(path, arcname=filename)
