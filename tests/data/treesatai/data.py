@@ -122,7 +122,7 @@ path = os.path.join('labels', 'TreeSatBA_v9_60m_multi_labels.json')
 with open(path, 'w') as f:
     json.dump(multi_labels, f)
 
-for sensor in ['s1', 's2']:
+for sensor in ['s1', 's2', 'labels']:
     shutil.make_archive(sensor, 'zip', '.', sensor)
 
 for spec in species:
