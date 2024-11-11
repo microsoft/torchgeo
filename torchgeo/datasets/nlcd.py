@@ -54,14 +54,9 @@ class NLCD(RasterDataset):
 
     * single channel .img file with integer class labels
 
-    If you use this dataset in your research, please use the corresponding citation:
+    If you use this dataset in your research, please cite the following paper:
 
-    * 2001: https://doi.org/10.5066/P9MZGHLF
-    * 2006: https://doi.org/10.5066/P9HBR9V3
-    * 2011: https://doi.org/10.5066/P97S2IID
-    * 2016: https://doi.org/10.5066/P96HHBIE
-    * 2019: https://doi.org/10.5066/P9KZCM54
-    * annual: https://doi.org/10.5066/P94UXNTS
+    * https://doi.org/10.5066/P94UXNTS
 
     .. versionadded:: 0.5
     """
