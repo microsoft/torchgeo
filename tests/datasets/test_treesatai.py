@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import glob
 import os
 import shutil
 from pathlib import Path
@@ -11,49 +12,51 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from torch import Tensor
 
-from torchgeo.datasets import DatasetNotFoundError, SatlasPretrain
-from torchgeo.datasets.utils import Executable
+from torchgeo.datasets import DatasetNotFoundError, TreeSatAI
+
+root = os.path.join('tests', 'data', 'treesatai')
+md5s = {
+    'aerial_60m_acer_pseudoplatanus.zip': '',
+    'labels.zip': '',
+    's1.zip': '',
+    's2.zip': '',
+    'test_filenames.lst': '',
+    'train_filenames.lst': '',
+}
 
 
-class TestSatlasPretrain:
+class TestTreeSatAI:
     @pytest.fixture
-    def dataset(
-        self, aws: Executable, monkeypatch: MonkeyPatch, tmp_path: Path
-    ) -> SatlasPretrain:
-        url = os.path.join('tests', 'data', 'satlas', '')
-        monkeypatch.setattr(SatlasPretrain, 'url', url)
-        images = ('landsat', 'naip', 'sentinel1', 'sentinel2')
-        products = (*images, 'static', 'metadata')
-        tarballs = {product: (f'{product}.tar',) for product in products}
-        monkeypatch.setattr(SatlasPretrain, 'tarballs', tarballs)
+    def dataset(self, monkeypatch: MonkeyPatch) -> TreeSatAI:
+        monkeypatch.setattr(TreeSatAI, 'url', root + os.sep)
+        monkeypatch.setattr(TreeSatAI, 'md5s', md5s)
         transforms = nn.Identity()
-        return SatlasPretrain(
-            tmp_path, images=images, transforms=transforms, download=True
-        )
+        return TreeSatAI(root, transforms=transforms)
 
-    @pytest.mark.parametrize('index', [0, 1])
-    def test_getitem(self, dataset: SatlasPretrain, index: int) -> None:
-        x = dataset[index]
+    def test_getitem(self, dataset: TreeSatAI) -> None:
+        x = dataset[0]
         assert isinstance(x, dict)
-        for image in dataset.images:
-            assert isinstance(x[f'image_{image}'], Tensor)
-            assert isinstance(x[f'time_{image}'], Tensor)
-        for label in dataset.labels:
-            assert isinstance(x[f'mask_{label}'], Tensor)
+        assert isinstance(x['label'], Tensor)
+        for sensor in dataset.sensors:
+            assert isinstance(x[f'image_{sensor}'], Tensor)
 
-    def test_len(self, dataset: SatlasPretrain) -> None:
-        assert len(dataset) == 2
+    def test_len(self, dataset: TreeSatAI) -> None:
+        assert len(dataset) == 9
 
-    def test_already_downloaded(self, dataset: SatlasPretrain) -> None:
-        shutil.rmtree(os.path.join(dataset.root, 'landsat'))
-        SatlasPretrain(root=dataset.root, download=True)
+    def test_download(self, dataset: TreeSatAI, tmp_path: Path) -> None:
+        TreeSatAI(tmp_path, download=True)
+
+    def test_extract(self, dataset: TreeSatAI, tmp_path: Path) -> None:
+        for file in glob.iglob(os.path.join(root, '*.*')):
+            shutil.copy(file, tmp_path)
+        TreeSatAI(tmp_path)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SatlasPretrain(tmp_path)
+            TreeSatAI(tmp_path)
 
-    def test_plot(self, dataset: SatlasPretrain) -> None:
+    def test_plot(self, dataset: TreeSatAI) -> None:
         x = dataset[0]
-        x['prediction_land_cover'] = x['mask_land_cover']
-        dataset.plot(x, suptitle='Test')
+        x['prediction'] = x['label']
+        dataset.plot(x)
         plt.close()
