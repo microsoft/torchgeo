@@ -67,6 +67,7 @@ class TestRegressionTask:
             'digital_typhoon_time',
             'sustainbench_crop_yield',
             'skippd',
+            'treesatai',
         ],
     )
     def test_trainer(

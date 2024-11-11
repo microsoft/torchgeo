@@ -47,6 +47,7 @@ from .spacenet import SpaceNet1DataModule, SpaceNet6DataModule, SpaceNetBaseData
 from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
 from .ssl4eo_benchmark import SSL4EOLBenchmarkDataModule
 from .sustainbench_crop_yield import SustainBenchCropYieldDataModule
+from .treesatai import TreeSatAIDataModule
 from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
 from .utils import MisconfigurationException
@@ -106,6 +107,7 @@ __all__ = (
     'SSL4EOLDataModule',
     'SSL4EOS12DataModule',
     'SustainBenchCropYieldDataModule',
+    'TreeSatAIDataModule',
     'TropicalCycloneDataModule',
     'UCMercedDataModule',
     'USAVarsDataModule',
