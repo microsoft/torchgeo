@@ -469,6 +469,11 @@ SustainBench Crop Yield
 
 .. autoclass:: SustainBenchCropYield
 
+TreeSatAI
+^^^^^^^^^
+
+.. autoclass:: TreeSatAI
+
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 
