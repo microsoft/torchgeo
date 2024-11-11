@@ -185,10 +185,9 @@ class TreeSatAI(NonGeoDataset):
         """
         file = self.files[index]
         label = torch.zeros(len(self.classes))
-        for i, genus in enumerate(self.classes):
-            for g, pct in self.labels[file]:
-                if g == genus:
-                    label[i] = pct
+        for genus, _ in self.labels[file]:
+            i = self.classes.index(genus)
+            label[i] = 1
 
         sample = {'label': label}
         for directory in self.sensors:
