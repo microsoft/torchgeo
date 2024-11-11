@@ -24,7 +24,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
     consists of a single band map at 30m resolution of either aboveground biomass (agb),
     basal area weighted height (hba95), or maximum canopy height (hmax95).
 
-    The dataset needs to be manually dowloaded from the above link, where you can make
+    The dataset needs to be manually downloaded from the above link, where you can make
     an account and subsequently download the dataset.
 
     .. versionadded:: 0.3
