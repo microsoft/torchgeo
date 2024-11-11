@@ -100,11 +100,7 @@ for split in ['train', 'test']:
                         dtype=kwargs['dtype'],
                     )
                 else:
-                    Z = np.random.uniform(
-                        np.finfo(kwargs['dtype']).min,
-                        np.finfo(kwargs['dtype']).max,
-                        size=(kwargs['height'], kwargs['width']),
-                    )
+                    Z = np.random.rand(kwargs['height'], kwargs['width'])
 
                 path = os.path.join(directory, filename)
                 with rasterio.open(path, 'w', **kwargs) as src:
