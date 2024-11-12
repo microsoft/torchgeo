@@ -225,14 +225,11 @@ class ChangeDetectionTask(BaseTask):
 
     def _shared_step(self, batch: Any, batch_idx: int, stage: str) -> Tensor:
         model: str = self.hparams["model"]
-        image1, image2, y = batch["image1"], batch["image2"], batch["mask"].float(
-        )
+        x = batch["image"]
+        y = batch["mask"]
         if model == "unet":
-            x = torch.cat([image1, image2], dim=1)
-        elif model in ["fcsiamdiff", "fcsiamconc"]:
-            x = torch.stack((image1, image2), dim=1)
+            x = x.flatten(start_dim=1, end_dim=2)
         y_hat = self(x)
-        y = y.long()
 
         loss: Tensor = self.criterion(y_hat, y)
         self.log(f"{stage}_loss", loss)
@@ -269,12 +266,9 @@ class ChangeDetectionTask(BaseTask):
             Output predicted class.
         """
         model: str = self.hparams["model"]
-        image1 = batch["image1"]
-        image2 = batch["image2"]
+        x = batch["image"]
         if model == "unet":
-            x = torch.cat([image1, image2], dim=1)
-        elif model in ["fcsiamdiff", "fcsiamconc"]:
-            x = torch.stack((image1, image2), dim=1)
+            x = x.flatten(start_dim=1, end_dim=2)
         y_hat: Tensor = self(x)
         y_hat_hard = y_hat.argmax(dim=1)
         return y_hat_hard
