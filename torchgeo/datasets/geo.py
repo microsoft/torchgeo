@@ -12,11 +12,15 @@ import re
 import sys
 import warnings
 from collections.abc import Callable, Iterable, Sequence
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
+from re import Pattern
 from typing import Any, ClassVar, cast
 
 import fiona
 import fiona.transform
 import numpy as np
+import pandas as pd
 import pyproj
 import rasterio
 import rasterio.merge
@@ -31,6 +35,7 @@ from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 from torchvision.datasets.folder import default_loader as pil_loader
+from tqdm import tqdm
 
 from .errors import DatasetNotFoundError
 from .utils import (
@@ -125,7 +130,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self.index = Index(interleaved=False, properties=Property(dimension=3))
 
     @abc.abstractmethod
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: Iterable[BoundingBox]) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -377,6 +382,9 @@ class RasterDataset(GeoDataset):
     #: Color map for the dataset, used for plotting
     cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {}
 
+    #: Nodata value for the dataset
+    nodata_value: int | None = None
+
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
@@ -420,6 +428,7 @@ class RasterDataset(GeoDataset):
         bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
+        drop_nodata: bool = True,
     ) -> None:
         """Initialize a new RasterDataset instance.
 
@@ -433,6 +442,7 @@ class RasterDataset(GeoDataset):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            drop_nodata: Drop the sample if any pixel contains nodata value.
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
@@ -445,50 +455,10 @@ class RasterDataset(GeoDataset):
         self.paths = paths
         self.bands = bands or self.all_bands
         self.cache = cache
+        self.drop_nodata = drop_nodata
 
-        # Populate the dataset index
-        i = 0
-        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-        for filepath in self.files:
-            match = re.match(filename_regex, os.path.basename(filepath))
-            if match is not None:
-                try:
-                    with rasterio.open(filepath) as src:
-                        # See if file has a color map
-                        if len(self.cmap) == 0:
-                            try:
-                                self.cmap = src.colormap(1)  # type: ignore[misc]
-                            except ValueError:
-                                pass
-
-                        if crs is None:
-                            crs = src.crs
-
-                        with WarpedVRT(src, crs=crs) as vrt:
-                            minx, miny, maxx, maxy = vrt.bounds
-                            if res is None:
-                                res = vrt.res[0]
-                except rasterio.errors.RasterioIOError:
-                    # Skip files that rasterio is unable to read
-                    continue
-                else:
-                    mint = self.mint
-                    maxt = self.maxt
-                    if 'date' in match.groupdict():
-                        date = match.group('date')
-                        mint, maxt = disambiguate_timestamp(date, self.date_format)
-                    elif 'start' in match.groupdict() and 'stop' in match.groupdict():
-                        start = match.group('start')
-                        stop = match.group('stop')
-                        mint, _ = disambiguate_timestamp(start, self.date_format)
-                        _, maxt = disambiguate_timestamp(stop, self.date_format)
-
-                    coords = (minx, maxx, miny, maxy, mint, maxt)
-                    self.index.insert(i, coords, filepath)
-                    i += 1
-
-        if i == 0:
-            raise DatasetNotFoundError(self)
+        crs, res = self.try_set_metadata(crs, res)
+        self._populate_index(crs)
 
         if not self.separate_files:
             self.band_indexes = None
@@ -505,9 +475,235 @@ class RasterDataset(GeoDataset):
                     raise AssertionError(msg)
 
         self._crs = cast(CRS, crs)
-        self._res = cast(float, res)
+        self._res = res
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def try_set_metadata(self, crs: CRS, res: float | None) -> tuple[CRS, float]:
+        """Try to set the CRS, resolution and cmap from the first file in the dataset.
+
+        Args:
+            crs: The coordinate reference system (CRS) to use.
+            res: The resolution of the dataset in units of CRS.
+
+        Returns:
+            tuple: The coordinate reference system (CRS) and resolution of the dataset.
+        """
+        with rasterio.open(self.files[0]) as src:
+            # See if file has a color map
+            if len(self.cmap) == 0:
+                try:
+                    self.cmap = src.colormap(1)  # type: ignore[misc]
+                except ValueError:
+                    pass
+
+            if crs is None:
+                crs = src.crs
+            if self.nodata_value is None:
+                src_nodata_value = src.nodata
+                if src_nodata_value is not None:
+                    self.nodata_value = src_nodata_value
+                elif self.drop_nodata:
+                    raise ValueError(
+                        'drop_nodata is True but nodata is not set in the dataset and could not be read from the file.'
+                    )
+
+            with WarpedVRT(src, crs=crs) as vrt:
+                if res is None:
+                    res = vrt.res[0]
+        return crs, res
+
+    def _get_bounds(self, filepath: str, crs: CRS) -> tuple[tuple[float], str]:
+        """Retrieves the bounds for a given file path and coordinate reference system (CRS).
+
+        Args:
+            filepath (str): The path to the file.
+            crs (str): The coordinate reference system (CRS) to use.
+
+        Returns:
+            tuple[tuple[float], str]: A tuple containing the bbox coordinates and the filepath.
+                The bbox coordinates are represented as a tuple of floats in the following order:
+                (minx, maxx, miny, maxy, mint, maxt).
+        """
+        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+
+        try:
+            with rasterio.open(filepath) as src:
+                with WarpedVRT(src, crs=crs) as vrt:
+                    minx, miny, maxx, maxy = vrt.bounds
+            match = re.match(filename_regex, os.path.basename(filepath))
+            if not match:
+                raise ValueError(f'No match found for {os.path.basename(filepath)}')
+        except rasterio.errors.RasterioIOError as e:
+            raise FileNotFoundError(f'Error reading {filepath}') from e
+        else:
+            mint = self.mint
+            maxt = self.maxt
+            if 'date' in match.groupdict():
+                date = match.group('date')
+                mint, maxt = disambiguate_timestamp(date, self.date_format)
+            elif 'start' in match.groupdict() and 'stop' in match.groupdict():
+                start = match.group('start')
+                stop = match.group('stop')
+                mint, _ = disambiguate_timestamp(start, self.date_format)
+                _, maxt = disambiguate_timestamp(stop, self.date_format)
+            else:
+                # TODO: Optionally, revert to no_date option if date is not found
+                pass
+
+            bbox = (
+                float(minx),
+                float(maxx),
+                float(miny),
+                float(maxy),
+                float(mint),
+                float(maxt),
+            )
+            return bbox, filepath
+
+    def _compile_and_check_filename_regex(self) -> Pattern:
+        """Compiles and checks the filename whether a valid regex pattern is supplied.
+
+        Returns:
+            Pattern: The compiled regex pattern.
+
+        """
+        if 'band' not in self.filename_regex and self.separate_files:
+            raise ValueError(
+                'The term `band` is not in the filename_regex, but separate_files=True. At least provide a regex pattern to distinguish bands.'
+            )
+        return re.compile(self.filename_regex, re.VERBOSE)
+
+    def _populate_index(self, crs: CRS) -> None:
+        """Populates the dataset index by retrieving index parameters for each filepath in the dataset paths.
+
+        This method uses a ThreadPoolExecutor to concurrently retrieve index parameters for each file that matches the
+        filename regex. The retrieved parameters are then inserted into the dataset index.
+
+        Args:
+            crs (str): The coordinate reference system used for warping while opening the file.
+
+        Returns:
+            None
+        """
+        print('Populating index')
+        filename_regex = self._compile_and_check_filename_regex()
+
+        # Populate the dataset index
+        def has_match(filepath: str) -> bool:
+            """Check if the given filepath matches the specified filename regex and its band is included in `self.bands`.
+
+            Args:
+                filepath (str): The path to the file to be checked.
+
+            Returns:
+                bool: True if the filepath matches the filename regex and conditions, False otherwise.
+            """
+            match = re.match(filename_regex, os.path.basename(filepath))
+            if match is not None:
+                if self.separate_files:
+                    return match.group('band') in self.bands
+                else:
+                    return True
+            else:
+                return False
+
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [
+                executor.submit(self._get_bounds, filepath, crs)
+                for filepath in self.files
+                if has_match(filepath)
+            ]
+            i = 0
+            for f in tqdm(as_completed(futures), total=len(futures)):
+                bbox, filepath = f.result()
+                self.index.insert(i, bbox, filepath)
+                i += 1
+
+        # TODO: Sequential version: choose which to use.
+        # i = 0
+        # for filepath in self.files:
+        #     if has_match(filepath):
+        #         bbox, filepath = self._get_bounds(filepath, crs)
+        #         self.index.insert(i, bbox, filepath)
+        #         i += 1
+
+        if i == 0:
+            raise DatasetNotFoundError(self)
+
+    def _get_regex_groups_as_df(self, filepaths: list[str]) -> pd.DataFrame:
+        """Extracts the regex metadata from a list of filepaths.
+
+        Args:
+            filepaths (list): A list of filepaths.
+
+        Returns:
+            pandas.DataFrame: A DataFrame containing the extracted file metadata.
+        """
+        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+        file_metadata = []
+        for filepath in filepaths:
+            match = re.match(filename_regex, os.path.basename(filepath))
+            if match:
+                meta = match.groupdict()
+                meta.update({'filepath': filepath})
+                file_metadata.append(meta)
+
+        return pd.DataFrame(file_metadata)
+
+    def __merge_single_bbox(self, query: BoundingBox) -> tuple[torch.Tensor | None, list[str]]:
+        """Merge all files that intersect with a single bounding box.
+
+        Args:
+            query: (BoundingBox) Bounds of the query
+
+        Returns:
+            tuple[torch.Tensor, list[str]]: A tuple containing the merged tensor and the list of dates that produced that tensor.
+        """
+        hits = self.index.intersection(tuple(query), objects=True)
+        filepaths = cast(list[str], [hit.object for hit in hits])
+        if not filepaths:
+            raise IndexError(
+                f'query: {query} not found in index with bounds: {self.bounds}'
+            )
+
+        file_df = self._get_regex_groups_as_df(filepaths)
+
+        if self.separate_files:
+            grouped = file_df.groupby(['band']).agg(list)
+            res_for_bbox = []
+            for band, filepaths in grouped.sort_values('band')['filepath'].items():
+                single_bbox_single_band = self._merge_files(filepaths, query)
+                res_for_bbox.append(single_bbox_single_band)
+
+            res_single_bbox = (
+                torch.cat(res_for_bbox).unsqueeze(0)
+                if len(res_for_bbox) == len(self.bands)
+                else None
+            )
+        else:
+            res_single_bbox = self._merge_files(filepaths, query, self.band_indexes)
+        # TODO ideally, we want feedback from rasterio.merge.merge to know which dates were merged
+        dates = file_df['date'].unique().tolist()  # TODO what if no dates?
+        dates = [datetime.strptime(date, self.date_format) for date in dates]
+
+        if res_single_bbox is not None:
+            # Check if res_single_date contains nodata values and only append if it doesn't
+            if not self.drop_nodata or not torch.any(res_single_bbox == self.nodata_value):
+                return res_single_bbox, dates
+        return None, []
+
+    def __merge_query(
+        self, query: Iterable[BoundingBox]
+    ) -> tuple[torch.Tensor, list[str]]:
+        res = []
+        valid_dates = []
+        for bbox in query:
+            res_single_bbox, dates = self.__merge_single_bbox(bbox)
+            if res_single_bbox is not None:
+                res.append(res_single_bbox)
+                valid_dates.append(dates)
+        return torch.cat(res), valid_dates
+
+    def __getitem__(self, query: BoundingBox | Iterable[BoundingBox]) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -519,36 +715,11 @@ class RasterDataset(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        if isinstance(query, BoundingBox):
+            query = [query]
+        data, valid_dates = self.__merge_query(query)
 
-        if not filepaths:
-            raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
-            )
-
-        if self.separate_files:
-            data_list: list[Tensor] = []
-            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-            for band in self.bands:
-                band_filepaths = []
-                for filepath in filepaths:
-                    filename = os.path.basename(filepath)
-                    directory = os.path.dirname(filepath)
-                    match = re.match(filename_regex, filename)
-                    if match:
-                        if 'band' in match.groupdict():
-                            start = match.start('band')
-                            end = match.end('band')
-                            filename = filename[:start] + band + filename[end:]
-                    filepath = os.path.join(directory, filename)
-                    band_filepaths.append(filepath)
-                data_list.append(self._merge_files(band_filepaths, query))
-            data = torch.cat(data_list)
-        else:
-            data = self._merge_files(filepaths, query, self.band_indexes)
-
-        sample = {'crs': self.crs, 'bounds': query}
+        sample = {'crs': self.crs, 'bounds': query, 'dates': valid_dates}
 
         data = data.to(self.dtype)
         if self.is_image:

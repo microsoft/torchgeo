@@ -266,7 +266,7 @@ class Sentinel2(Sentinel):
 
     # https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-2-msi/naming-convention
     # https://sentinel.esa.int/documents/247904/685211/Sentinel-2-MSI-L2A-Product-Format-Specifications.pdf
-    filename_glob = 'T*_*_{}*.*'
+    filename_glob = 'T*_*_*.*'
     filename_regex = r"""
         ^T(?P<tile>\d{{2}}[A-Z]{{3}})
         _(?P<date>\d{{8}}T\d{{6}})
@@ -295,6 +295,7 @@ class Sentinel2(Sentinel):
     rgb_bands = ('B04', 'B03', 'B02')
 
     separate_files = True
+    nodata_value = 0
 
     def __init__(
         self,
@@ -325,7 +326,7 @@ class Sentinel2(Sentinel):
             *root* was renamed to *paths*
         """
         bands = bands or self.all_bands
-        self.filename_glob = self.filename_glob.format(bands[0])
+        # self.filename_glob = self.filename_glob.format(bands[0])
         self.filename_regex = self.filename_regex.format(res)
 
         super().__init__(paths, crs, res, bands, transforms, cache)
