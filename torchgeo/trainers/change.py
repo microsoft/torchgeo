@@ -5,7 +5,7 @@
 
 import os
 import warnings
-from typing import Any, List, Optional, Union
+from typing import Any, Optional, Union, cast
 
 import segmentation_models_pytorch as smp
 import torch
@@ -26,24 +26,32 @@ from .base import BaseTask
 
 
 class FocalJaccardLoss(nn.Module):
-    def __init__(self):
+    """FocalJaccardLoss."""
+
+    def __init__(self) -> None:
+        """Initialize a FocalJaccardLoss instance."""
         super().__init__()
         self.focal_loss = smp.losses.FocalLoss(
             mode="multiclass", normalized=True)
         self.jaccard_loss = smp.losses.JaccardLoss(mode="multiclass")
 
     def forward(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        return self.focal_loss(preds, targets) + self.jaccard_loss(preds, targets)
+        """Compute the loss."""
+        return cast(torch.Tensor, self.focal_loss(preds, targets) + self.jaccard_loss(preds, targets))
 
 
 class XEntJaccardLoss(nn.Module):
-    def __init__(self):
+    """XEntJaccardLoss."""
+
+    def __init__(self) -> None:
+        """Initialize a XEntJaccardLoss instance."""
         super().__init__()
         self.ce_loss = nn.CrossEntropyLoss()
         self.jaccard_loss = smp.losses.JaccardLoss(mode="multiclass")
 
     def forward(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        return self.ce_loss(preds, targets) + self.jaccard_loss(preds, targets)
+        """Compute the loss."""
+        return cast(torch.Tensor, self.ce_loss(preds, targets) + self.jaccard_loss(preds, targets))
 
 
 class ChangeDetectionTask(BaseTask):
@@ -57,7 +65,7 @@ class ChangeDetectionTask(BaseTask):
         in_channels: int = 3,
         num_classes: int = 2,
         class_weights: Optional[Tensor] = None,
-        labels: Optional[List[str]] = None,
+        labels: Optional[list[str]] = None,
         loss: str = "ce-jaccard",
         ignore_index: Optional[int] = None,
         lr: float = 1e-3,
@@ -103,7 +111,7 @@ class ChangeDetectionTask(BaseTask):
             )
 
         self.weights = weights
-        super().__init__(ignore="weights")
+        super().__init__()
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion.
@@ -133,14 +141,14 @@ class ChangeDetectionTask(BaseTask):
         else:
             raise ValueError(
                 f"Loss type '{loss}' is not valid. "
-                "Currently, supports 'ce', 'jaccard' or 'focal' loss."
+                "Currently, supports 'ce', 'jaccard', 'focal', 'focal-jaccard, or 'ce-jaccard loss."
             )
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
         num_classes: int = self.hparams["num_classes"]
         ignore_index: Optional[int] = self.hparams["ignore_index"]
-        labels: Optional[List[str]] = self.hparams["labels"]
+        labels: Optional[list[str]] = self.hparams["labels"]
         metrics = MetricCollection(
             {
                 "accuracy": ClasswiseWrapper(
@@ -243,13 +251,34 @@ class ChangeDetectionTask(BaseTask):
         return loss
 
     def training_step(self, batch: Any, batch_idx: int) -> Tensor:
+        """Compute the training loss and additional metrics.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+
+        Returns:
+            The loss tensor.
+        """
         loss = self._shared_step(batch, batch_idx, "train")
         return loss
 
     def validation_step(self, batch: Any, batch_idx: int) -> None:
+        """Compute the validation loss and additional metrics.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+        """
         self._shared_step(batch, batch_idx, "val")
 
     def test_step(self, batch: Any, batch_idx: int) -> None:
+        """Compute the test loss and additional metrics.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+        """
         self._shared_step(batch, batch_idx, "test")
 
     def predict_step(
