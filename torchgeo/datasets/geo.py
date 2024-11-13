@@ -649,7 +649,9 @@ class RasterDataset(GeoDataset):
 
         return pd.DataFrame(file_metadata)
 
-    def __merge_single_bbox(self, query: BoundingBox) -> tuple[torch.Tensor | None, list[str]]:
+    def __merge_single_bbox(
+        self, query: BoundingBox
+    ) -> tuple[torch.Tensor | None, list[str]]:
         """Merge all files that intersect with a single bounding box.
 
         Args:
@@ -687,7 +689,9 @@ class RasterDataset(GeoDataset):
 
         if res_single_bbox is not None:
             # Check if res_single_date contains nodata values and only append if it doesn't
-            if not self.drop_nodata or not torch.any(res_single_bbox == self.nodata_value):
+            if not self.drop_nodata or not torch.any(
+                res_single_bbox == self.nodata_value
+            ):
                 return res_single_bbox, dates
         return None, []
 
