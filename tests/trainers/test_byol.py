@@ -41,6 +41,7 @@ class TestBYOLTask:
         'name',
         [
             'chesapeake_cvpr_prior_byol',
+            'hyspecnet_byol',
             'seco_byol_1',
             'seco_byol_2',
             'ssl4eo_l_byol_1',
