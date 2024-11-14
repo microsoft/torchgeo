@@ -213,6 +213,11 @@ SustainBench Crop Yield
 
 .. autoclass:: SustainBenchCropYieldDataModule
 
+TreeSatAI
+^^^^^^^^^
+
+.. autoclass:: TreeSatAIDataModule
+
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
 
