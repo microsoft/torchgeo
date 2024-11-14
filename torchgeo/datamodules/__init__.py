@@ -21,6 +21,7 @@ from .ftw import FieldsOfTheWorldDataModule
 from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
 from .geonrw import GeoNRWDataModule
 from .gid15 import GID15DataModule
+from .hyspecnet import HySpecNet11kDataModule
 from .inria import InriaAerialImageLabelingDataModule
 from .iobench import IOBenchDataModule
 from .l7irish import L7IrishDataModule
@@ -75,6 +76,7 @@ __all__ = (
     'GID15DataModule',
     'GeoDataModule',
     'GeoNRWDataModule',
+    'HySpecNet11kDataModule',
     'IOBenchDataModule',
     'InriaAerialImageLabelingDataModule',
     'L7IrishDataModule',
