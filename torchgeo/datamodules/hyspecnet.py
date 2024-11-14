@@ -5,6 +5,8 @@
 
 from typing import Any
 
+import torch
+
 from ..datasets import HySpecNet11k
 from .geo import NonGeoDataModule
 
@@ -16,8 +18,8 @@ class HySpecNet11kDataModule(NonGeoDataModule):
     """
 
     # https://git.tu-berlin.de/rsim/hyspecnet-tools/-/blob/main/tif_to_npy.ipynb
-    mean = 0
-    std = 10000
+    mean = torch.tensor(0)
+    std = torch.tensor(10000)
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
