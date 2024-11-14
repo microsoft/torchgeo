@@ -17,7 +17,7 @@ DTYPE = 'int16'
 np.random.seed(0)
 
 # Tile name purposefully shortened to avoid Windows git filename length limit.
-tiles = ['ENMAP01-____L2A-DT0000004950_20221103T162438Z']
+tiles = ['ENMAP01_20221103T162438Z']
 patches = ['Y01460273_X05670694', 'Y01460273_X06950822']
 
 profile = {
