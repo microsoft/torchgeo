@@ -1,5 +1,5 @@
 # setup
-setuptools==75.3.0
+setuptools==75.5.0
 
 # install
 einops==0.8.0
@@ -18,5 +18,5 @@ segmentation-models-pytorch==0.3.4
 shapely==2.0.6
 timm==0.9.7
 torch==2.5.1
-torchmetrics==1.5.2
+torchmetrics==1.6.0
 torchvision==0.20.1
