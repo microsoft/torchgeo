@@ -76,9 +76,7 @@ nitpick_ignore = [
 # a list of builtin themes.
 html_theme = 'furo'
 
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
+
 html_theme_options = {
     'sidebar_hide_name': True,  # Hides the "Furo" theme name in the sidebar
     'navigation_with_keys': True,  # Enables keyboard shortcuts for navigation
