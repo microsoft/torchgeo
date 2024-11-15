@@ -12,7 +12,7 @@
 import os
 import sys
 
-import pytorch_sphinx_theme
+# import pytorch_sphinx_theme
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -74,20 +74,19 @@ nitpick_ignore = [
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'pytorch_sphinx_theme'
-html_theme_path = [pytorch_sphinx_theme.get_html_theme_path()]
+html_theme = 'furo' 
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    'collapse_navigation': False,
-    'display_version': True,
-    'logo_only': True,
-    'pytorch_project': 'docs',
-    'navigation_with_keys': True,
-    'analytics_id': 'UA-209075005-1',
-}
+    'sidebar_hide_name': True,  # Hides the "Furo" theme name in the sidebar
+    'navigation_with_keys': True,  # Enables keyboard shortcuts for navigation
+} 
+
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
 
 html_favicon = os.path.join('..', 'logo', 'favicon.ico')
 
