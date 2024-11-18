@@ -14,7 +14,6 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, XView2, XView2DistShift
 
-
 class TestXView2:
     @pytest.fixture(params=['train', 'test'])
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> XView2:
@@ -27,6 +26,7 @@ class TestXView2:
                     'md5': '373e61d55c1b294aa76b94dbbd81332b',
                     'directory': 'train',
                 },
+
                 'test': {
                     'filename': 'test_images_labels_targets.tar.gz',
                     'md5': 'bc6de81c956a3bada38b5b4e246266a1',
