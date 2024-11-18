@@ -320,3 +320,4 @@ torchgeo = ["py.typed"]
 
 [tool.setuptools.packages.find]
 include = ["torchgeo*"]
+
