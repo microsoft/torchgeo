@@ -136,7 +136,7 @@ from .utils import (
 from .vaihingen import Vaihingen2D
 from .vhr10 import VHR10
 from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
-from .xview import XView2
+from .xview import XView2, XView2DistShift
 from .zuericrop import ZueriCrop
 
 __all__ = (
@@ -258,6 +258,7 @@ __all__ = (
     'VHR10',
     'WesternUSALiveFuelMoisture',
     'XView2',
+    'XView2DistShift'
     'ZueriCrop',
     # Base classes
     'GeoDataset',

@@ -462,6 +462,7 @@ xView2
 ^^^^^^
 
 .. autoclass:: XView2
+.. autoclass:: XView2DistShift
 
 ZueriCrop
 ^^^^^^^^^
