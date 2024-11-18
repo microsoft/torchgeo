@@ -12,7 +12,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import DatasetNotFoundError, XView2
+from torchgeo.datasets import DatasetNotFoundError, XView2, XView2DistShift
 
 
 class TestXView2:
