@@ -83,7 +83,7 @@ nitpick_ignore = [
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 # conf.py
-html_theme = "furo"
+html_theme = 'furo'
 
 html_theme_options = {'sidebar_hide_name': True, 'navigation_with_keys': True}
 
