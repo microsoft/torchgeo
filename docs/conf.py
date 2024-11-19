@@ -85,9 +85,7 @@ nitpick_ignore = [
 # conf.py
 html_theme = "furo"
 
-html_theme_options = {
-    'sidebar_hide_name': True, 'navigation_with_keys': True,
-}
+html_theme_options = {'sidebar_hide_name': True, 'navigation_with_keys': True}
 
 html_favicon = os.path.join('..', 'logo', 'favicon.ico')
 
