@@ -210,6 +210,8 @@ class FLAIR2(NonGeoDataset):
             
         Raises:
             DatasetNotFoundError
+        
+        ..versionadded:: 0.7
         """
         assert split in self.splits, f"Split '{split}' not in supported splits: '{self.splits}'"
 
