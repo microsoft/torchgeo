@@ -577,7 +577,7 @@ class FLAIR2(NonGeoDataset):
         
         num_panels = len(plots)
 
-        kwargs = {"cmap": cmap, 'vmin': 0, 'vmax': len(self.classes), 'interpolation': 'none'}
+        kwargs = {"cmap": self.cmap, 'vmin': 0, 'vmax': len(self.classes), 'interpolation': 'none'}
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
         
         for plot in plots:
