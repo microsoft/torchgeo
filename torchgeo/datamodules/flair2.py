@@ -44,7 +44,7 @@ class FLAIR2DataModule(NonGeoDataModule):
             num_workers: Number of workers for parallel data loading.
             augs: Optional augmentations to apply to the dataset.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.Potsdam2D`.
+                :class:`~torchgeo.datasets.FLAIR2`.
         """
         super().__init__(FLAIR2, batch_size, num_workers, **kwargs)
 
