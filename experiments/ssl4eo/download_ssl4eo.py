@@ -319,7 +319,10 @@ if __name__ == '__main__':
     )
     # collection properties
     parser.add_argument(
-        '--collection', type=str, default='COPERNICUS/S2_HARMONIZED', help='GEE collection name'
+        '--collection',
+        type=str,
+        default='COPERNICUS/S2_HARMONIZED',
+        help='GEE collection name',
     )
     parser.add_argument('--qa-band', type=str, default='QA60', help='qa band name')
     parser.add_argument(
