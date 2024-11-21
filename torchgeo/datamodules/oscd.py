@@ -86,9 +86,11 @@ class OSCDDataModule(NonGeoDataModule):
         self.std = torch.tensor([STD[b] for b in self.bands])
 
         self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            _RandomNCrop(self.patch_size, batch_size),
-            data_keys=['image1', 'image2', 'mask'],
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                _RandomNCrop(self.patch_size, batch_size),
+            ),
+            data_keys=['image', 'mask'],
         )
 
     def setup(self, stage: str) -> None:
