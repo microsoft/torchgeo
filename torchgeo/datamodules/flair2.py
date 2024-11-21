@@ -45,6 +45,8 @@ class FLAIR2DataModule(NonGeoDataModule):
             augs: Optional augmentations to apply to the dataset.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.FLAIR2`.
+            
+            ..versionadded:: 0.7
         """
         super().__init__(FLAIR2, batch_size, num_workers, **kwargs)
 
