@@ -15,8 +15,8 @@ import numpy as np
 import rasterio
 from pyproj import CRS
 
-# General hyperparams
-IMG_SIZE = 512
+# General hyperparams / speed up by choosing a small value (actual values will be 256)
+IMG_SIZE = 32
 DUMMY_DATA_SIZE = {"train": 10, "test": 5}
  
 # Directory structure
