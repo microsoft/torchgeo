@@ -86,14 +86,18 @@ class OSCDDataModule(NonGeoDataModule):
         self.std = torch.tensor([STD[b] for b in self.bands])
 
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            K.RandomCrop(self.patch_size, pad_if_needed=True),
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                K.RandomCrop(self.patch_size, pad_if_needed=True),
+            ),
             data_keys=None,
             keepdim=True,
         )
         self.aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            _ExtractPatches(window_size=self.patch_size),
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                _ExtractPatches(window_size=self.patch_size),
+            ),
             data_keys=None,
             keepdim=True,
             same_on_batch=True,
@@ -109,7 +113,8 @@ class OSCDDataModule(NonGeoDataModule):
             self.dataset = OSCD(split='train', **self.kwargs)
             generator = torch.Generator().manual_seed(0)
             self.train_dataset, self.val_dataset = random_split(
-                self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
+                self.dataset, [1 - self.val_split_pct,
+                               self.val_split_pct], generator
             )
         if stage in ['test']:
             self.test_dataset = OSCD(split='test', **self.kwargs)
