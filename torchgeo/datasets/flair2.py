@@ -130,6 +130,22 @@ class FLAIR2(NonGeoDataset):
         "plowed land",
         "other"
     )
+    # Define a colormap for the classes
+    cmap = ListedColormap([
+        'cyan',        # building
+        'lightgray',   # pervious surface
+        'darkgray',    # impervious surface
+        'saddlebrown', # bare soil
+        'blue',        # water
+        'darkgreen',   # coniferous
+        'forestgreen', # deciduous
+        'olive',       # brushwood
+        'purple',      # vineyard
+        'lime',        # herbaceous vegetation
+        'yellow',      # agricultural land
+        'orange',      # plowed land
+        'red'          # other
+    ])
 
     statistics: ClassVar[dict[str, dict[str, dict[str, float]]]] = {
         "train":{
@@ -520,31 +536,14 @@ class FLAIR2(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        rgb_indices = [self.all_bands.index(band) for band in self.rgb_bands]
-        # Check if RGB bands are present in self.bands
-        if not all([band in self.bands for band in self.rgb_bands]):
-            raise RGBBandsMissingError()
-        
         def normalize_plot(tensor: Tensor) -> Tensor:
             """Normalize the plot."""
             return (tensor - tensor.min()) / (tensor.max() - tensor.min())
         
-        # Define a colormap for the classes
-        cmap = ListedColormap([
-            'cyan',        # building
-            'lightgray',   # pervious surface
-            'darkgray',    # impervious surface
-            'saddlebrown', # bare soil
-            'blue',        # water
-            'darkgreen',   # coniferous
-            'forestgreen', # deciduous
-            'olive',       # brushwood
-            'purple',      # vineyard
-            'lime',        # herbaceous vegetation
-            'yellow',      # agricultural land
-            'orange',      # plowed land
-            'red'          # other
-        ])
+        rgb_indices = [self.all_bands.index(band) for band in self.rgb_bands]
+        # Check if RGB bands are present in self.bands
+        if not all([band in self.bands for band in self.rgb_bands]):
+            raise RGBBandsMissingError()
             
         # Stretch to the full range of the image
         image = normalize_plot(sample['image'][rgb_indices].permute(1, 2, 0))
@@ -603,7 +602,7 @@ class FLAIR2(NonGeoDataset):
         # Create a legend for the mask
         if "mask" in [plot[0] for plot in plots]:
             # Create a legend with class names
-            legend_elements = [Patch(facecolor=cmap(i), edgecolor='k', label=cls) for i, cls in enumerate(self.classes)]
+            legend_elements = [Patch(facecolor=self.cmap(i), edgecolor='k', label=cls) for i, cls in enumerate(self.classes)]
             fig.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(0.92, 0.85), fontsize='large')
 
         return fig
