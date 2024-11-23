@@ -520,7 +520,7 @@ if __name__ == '__main__':
                 print(f'Downloaded {count} images in {time.time() - start_time:.3f}s.')
         else:
             if args.debug:
-                print('no suitable image for location %d.' % (idx))
+                print(f'no suitable image for location {idx}.')
 
         # add to existing checked locations
         with open(ext_path, 'a') as f:
