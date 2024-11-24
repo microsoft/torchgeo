@@ -34,6 +34,18 @@ dir_names: dict[str, dict[str, str]] = {
         "msk": "flair_2_labels_test",
     }
 }
+dir_names_toy: dict[str, dict[str, str]] = {
+    "train": {
+        "img": "flair_2_toy_aerial_train",
+        "sen": "flair_2_toy_sen_train",
+        "msk": "flair_2_toy_labels_train",
+    },
+    "test": {
+        "img": "flair_2_toy_aerial_test",
+        "sen": "flair_2_toy_sen_test",
+        "msk": "flair_2_toy_labels_test",
+    }
+}
 # Replace with random digits and letters
 sub_sub_dir_format = "D{0}_{1}/Z{2}_{3}"
 
@@ -133,33 +145,39 @@ if __name__ == "__main__":
     if os.path.exists(root_dir):
         shutil.rmtree(root_dir)
 
-    # Create the directory structure
-    for split in splits:
-        for type, sub_dir in dir_names[split].items():
-            for i in range(DUMMY_DATA_SIZE[split]):
-                # Reproducible and the same for all types
-                seed = int(hashlib.md5(f"{split}{i}{type}".encode()).hexdigest(), 16)
-                rng: np.random.Generator = np.random.default_rng(seed)
-                
-                random_domain = rng.integers(100, 1000)
-                random_year = rng.integers(2010, 2023)
-                random_zone = rng.integers(10, 23)
-                random_area = "".join(rng.choice(list(string.ascii_uppercase), size=2))
-                
-                # E.g. D123_2021/Z1_UF
-                sub_sub_dir = sub_sub_dir_format.format(random_domain, random_year, random_zone, random_area)
-                
-                # type adds last directory, one of: img, sen, msk
-                dir_path = os.path.join(root_dir, sub_dir, sub_sub_dir, type)
-                os.makedirs(dir_path, exist_ok=True)
-                
-                # Required for sentinel data arrays (npy) and products.txt
-                domain_year_zone_location = [str(random_domain), str(random_year), str(random_zone), random_area]
-                populate_sub_sub_dirs(dir_path, rng, type, domain_year_zone_location)
+    def create_dir_structure(root_dir: str, dir_names: dict) -> None:
+        # Create the directory structure
+        for split in splits:
+            for type, sub_dir in dir_names[split].items():
+                for i in range(DUMMY_DATA_SIZE[split]):
+                    # Reproducible and the same for all types
+                    seed = int(hashlib.md5(f"{split}{i}{type}".encode()).hexdigest(), 16)
+                    rng: np.random.Generator = np.random.default_rng(seed)
+                    
+                    random_domain = rng.integers(100, 1000)
+                    random_year = rng.integers(2010, 2023)
+                    random_zone = rng.integers(10, 23)
+                    random_area = "".join(rng.choice(list(string.ascii_uppercase), size=2))
+                    
+                    # E.g. D123_2021/Z1_UF
+                    sub_sub_dir = sub_sub_dir_format.format(random_domain, random_year, random_zone, random_area)
+                    
+                    # type adds last directory, one of: img, sen, msk
+                    dir_path = os.path.join(root_dir, sub_dir, sub_sub_dir, type)
+                    os.makedirs(dir_path, exist_ok=True)
+                    
+                    # Required for sentinel data arrays (npy) and products.txt
+                    domain_year_zone_location = [str(random_domain), str(random_year), str(random_zone), random_area]
+                    populate_sub_sub_dirs(dir_path, rng, type, domain_year_zone_location)
+                    
+                    create_metadata(root_dir)
     
-    create_metadata(root_dir)
+    root_dir_toy = os.path.join(root_dir, "flair_2_toy_dataset")
+    os.makedirs(root_dir_toy, exist_ok=True)
+    create_dir_structure(root_dir, dir_names)
+    create_dir_structure(root_dir_toy, dir_names_toy)
 
-    # zip and compute md5 each directory/file in root_dir
+    # zip each directory/file in root_dir
     for element in glob.glob(f"{root_dir}/**"):
         print(element)
         if os.path.isdir(element):
@@ -168,10 +186,13 @@ if __name__ == "__main__":
         else:
             shutil.make_archive(element.removesuffix(".json"), 'zip', os.path.dirname(element), os.path.basename(element))
     
-    # Compute md5 for each zip file and json file
+    # for toy, zip the entire root_dir_toy
+    shutil.make_archive(root_dir_toy, 'zip', os.path.dirname(root_dir_toy), os.path.basename(root_dir_toy))
+    
+    # Compute md5 for each zip file
     with open(os.path.join(root_dir, "md5s.txt"), 'w') as md5_file:
         for element in glob.glob(f"{root_dir}/**"):
-            if element.endswith(".zip") or element.endswith(".json"):
+            if element.endswith(".zip"):
                 with open(element, 'rb') as f:
                     md5 = hashlib.md5(f.read()).hexdigest()
                     md5_file.write(f"{element}: {md5}\n")

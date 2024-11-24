@@ -1,8 +1,8 @@
-/home/landscapelab/Dev/torchgeo/tests/data/flair2/FLAIR2/flair-2_centroids_sp_to_patch.zip: af243a4c6ed95dd2b97d07261c7cc3dd
-/home/landscapelab/Dev/torchgeo/tests/data/flair2/FLAIR2/flair_sen_train.zip: 661e20e39ffc7eca196b6cab8d1c9e27
-/home/landscapelab/Dev/torchgeo/tests/data/flair2/FLAIR2/flair_2_sen_test.zip: 6247e940974e247be1c8187aaf35281c
-/home/landscapelab/Dev/torchgeo/tests/data/flair2/FLAIR2/flair_2_labels_test.zip: 9285086a7aa5085e3b8f2fc2f8618ad0
-/home/landscapelab/Dev/torchgeo/tests/data/flair2/FLAIR2/flair_2_aerial_test.zip: 8b414c21e48e87331fed1d9835b17726
-/home/landscapelab/Dev/torchgeo/tests/data/flair2/FLAIR2/flair_labels_train.zip: 525011487e0c282d22a91d3798768e38
-/home/landscapelab/Dev/torchgeo/tests/data/flair2/FLAIR2/flair_aerial_train.zip: 70c558a7000e3671f3a3ed2ba187d795
-/home/landscapelab/Dev/torchgeo/tests/data/flair2/FLAIR2/flair-2_centroids_sp_to_patch.json: d25e90af8a7bbe53df50ac3cb44c7600
+/home/mathias/Dev/forks/torchgeo/tests/data/flair2/FLAIR2/flair-2_centroids_sp_to_patch.zip: 20c7648f423b42a0a537d1871752aca7
+/home/mathias/Dev/forks/torchgeo/tests/data/flair2/FLAIR2/flair_2_labels_test.zip: b46050736699d2f16639a5951fb1e9f8
+/home/mathias/Dev/forks/torchgeo/tests/data/flair2/FLAIR2/flair_2_toy_dataset.zip: 9a058c40635d7a25f2ffbf39f59e668c
+/home/mathias/Dev/forks/torchgeo/tests/data/flair2/FLAIR2/flair_2_sen_test.zip: 5c5a7fc78097340bafcee7a01ef3bf48
+/home/mathias/Dev/forks/torchgeo/tests/data/flair2/FLAIR2/flair_2_aerial_test.zip: b7f971ef943e9c16e83c9849dd66309f
+/home/mathias/Dev/forks/torchgeo/tests/data/flair2/FLAIR2/flair_sen_train.zip: 5173c991c131ef5429bb195b785a4746
+/home/mathias/Dev/forks/torchgeo/tests/data/flair2/FLAIR2/flair_aerial_train.zip: 411d34d0f23204a9f8d4bf5c695c4e4a
+/home/mathias/Dev/forks/torchgeo/tests/data/flair2/FLAIR2/flair_labels_train.zip: 6b361d14c0ef491dd37267674a238edf
