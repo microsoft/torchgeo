@@ -521,7 +521,7 @@ class FLAIR2(NonGeoDataset):
         if self.use_sentinel:
             sentinel, cropping_indices = sample["sentinel"]
             sentinel = sentinel[0][0]
-            sentinel = normalize_plot(sentinel[[0, 1, 2], :, :].permute(1, 2, 0))
+            sentinel = normalize_plot(sentinel[[2, 1, 0], :, :].permute(1, 2, 0))
         
         # Obtain mask and predictions if available
         mask = sample['mask'].numpy().astype('uint8').squeeze()
