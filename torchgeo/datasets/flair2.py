@@ -87,7 +87,7 @@ class FLAIR2(NonGeoDataset):
         "flair_2_sen_test": "aae8649dbe457620a76269d915d07624",
         "flair_2_labels_test": "394a769ffcb4a783335eecd3f8baef57",
     }
-    
+
     dir_names: ClassVar[dict[str, dict[str, str]]] = {
         "train": {
             "images": "flair_aerial_train",
@@ -210,7 +210,6 @@ class FLAIR2(NonGeoDataset):
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
-        use_toy: bool = False,
         use_sentinel: bool = False) -> None:
         """Initialize a new FLAIR2 dataset instance.
 
@@ -221,7 +220,6 @@ class FLAIR2(NonGeoDataset):
             transforms: optional transforms to apply to sample
             download: whether to download the dataset if it is not found
             checksum: whether to verify the dataset using checksums
-            use_toy: whether to use the a small subset (toy) dataset. CAUTION: should only be used for testing purposes
             use_sentinel: whether to use sentinel data in the dataset # FIXME: sentinel does not work with dataloader due to varying dimensions
             
         Raises:
@@ -237,7 +235,6 @@ class FLAIR2(NonGeoDataset):
         self.download = download
         self.checksum = checksum
         self.bands = bands
-        self.use_toy = use_toy
         self.use_sentinel = use_sentinel
 
         self._verify()
@@ -424,13 +421,6 @@ class FLAIR2(NonGeoDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        # Change urls/paths/content/configs to toy dataset if requested
-        if self.use_toy:
-            self._verify_toy()
-            self.dir_names["train"] = {k: f.replace("flair", "flair_2_toy") for k, f in self.dir_names["train"].items()}
-            self.dir_names["test"] = {k: f.replace("flair_2", "flair_2_toy") for k, f in self.dir_names["test"].items()}
-            return
-        
         # Check if centroids metadata file or zip is present
         if not os.path.isfile(os.path.join(self.root, f"{self.centroids_file}.json")):
             if not os.path.isfile(os.path.join(self.root, f"{self.centroids_file}.zip")):
@@ -479,33 +469,6 @@ class FLAIR2(NonGeoDataset):
             self._download(candidate)
             self._extract(candidate)
 
-    def _verify_toy(self) -> None:
-        # TODO: change md5s to toy dataset
-        """Change urls/paths/content/configs to toy dataset."""
-        print("-" * 80)
-        print("WARNING: Using toy dataset.")
-        print("This dataset should be used for testing purposes only.")
-        print("Disabling use_toy-flag when initializing the dataset will initialize the full dataset.")
-        print("-" * 80)
-                
-        if os.path.isdir(os.path.join(self.root, "flair_2_toy_dataset")):
-            print("Toy dataset downloaded and extracted already...")
-            self.root = os.path.join(self.root, "flair_2_toy_dataset")
-            return
-
-        if os.path.isfile(os.path.join(self.root, "flair_2_toy_dataset.zip")):
-            print("Extracting toy dataset...")
-            self._extract("flair_2_toy_dataset")
-            self.root = os.path.join(self.root, "flair_2_toy_dataset")
-            return
-        
-        if not self.download:
-            raise DatasetNotFoundError(self)
-        
-        self._download("flair_2_toy_dataset")
-        self._extract("flair_2_toy_dataset")
-        self.root = os.path.join(self.root, "flair_2_toy_dataset")
-    
     def _download(self, url: str, suffix: str = ".zip") -> None:
         """Download the dataset."""
         download_url(
@@ -606,3 +569,94 @@ class FLAIR2(NonGeoDataset):
             fig.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(0.92, 0.85), fontsize='large')
 
         return fig
+
+
+class FLAIR2Toy(FLAIR2):
+    """FLAIR #2 (The French Land cover from Aerospace ImageRy) dataset.
+
+    Toy Version of the dataset. For further information refer to the FLAIR2 dataset.
+    """
+    md5s: ClassVar[dict[str, str]] = {
+        "flair_2_toy_dataset": "ffde17f275fc258dce19331b5e17e10a",
+    }
+    
+    dir_names: ClassVar[dict[str, dict[str, str]]] = {
+        "train": {
+            "images": "flair_2_toy_dataset/flair_2_toy_aerial_train",
+            "sentinels": "flair_2_toy_dataset/flair_2_toy_sen_train",
+            "masks": 'flair_2_toy_dataset/flair_2_toy_labels_train',
+        },
+        "test": {
+            "images": "flair_2_toy_dataset/flair_2_toy_aerial_test",
+            "sentinels": "flair_2_toy_dataset/flair_2_toy_sen_test",
+            "masks": 'flair_2_toy_dataset/flair_2_toy_labels_test',
+        }
+    }
+    centroids_file: str = "flair_2_toy_dataset/flair-2_centroids_sp_to_patch"
+    
+    def __init__(
+        self,
+        root: Path = 'data',
+        split: str = 'train',
+        bands: Sequence[str] = FLAIR2.all_bands,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        download: bool = False,
+        checksum: bool = False,
+        use_sentinel: bool = False) -> None:
+        """Initialize a new FLAIR2Toy dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            split: which split to load, one of 'train' or 'test'
+            bands: which bands to load (B01, B02, B03, B04, B05)
+            transforms: optional transforms to apply to sample
+            download: whether to download the dataset if it is not found
+            checksum: whether to verify the dataset using checksums
+            use_toy: whether to use the a small subset (toy) dataset. CAUTION: should only be used for testing purposes
+            use_sentinel: whether to use sentinel data in the dataset # FIXME: sentinel does not work with dataloader due to varying dimensions
+            
+        Raises:
+            DatasetNotFoundError
+        
+        ..versionadded:: 0.7
+        """        
+        print("-" * 80)
+        print("WARNING: Using toy dataset.")
+        print("This dataset should be used for testing purposes only.")
+        print("Disabling use_toy-flag when initializing the dataset will initialize the full dataset.")
+        print("-" * 80)
+        super().__init__(root, split, bands, transforms, download, checksum, use_sentinel)
+    
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset."""
+        
+        if os.path.isdir(os.path.join(self.root, "flair_2_toy_dataset")):
+            print(os.path.join(self.root, "flair_2_toy_dataset"))
+            print("Toy dataset downloaded and extracted already...")
+            return
+
+        if os.path.isfile(os.path.join(self.root, "flair_2_toy_dataset.zip")):
+            print("Extracting toy dataset...")
+            self._extract()
+            return
+        
+        if not self.download:
+            raise DatasetNotFoundError(self)
+        
+        self._download("flair_2_toy_dataset")
+        self._extract()
+    
+    def _download(self, url: str, suffix: str = ".zip") -> None:
+        """Download the dataset."""
+        download_url(
+            os.path.join(self.url_prefix, f"{url}{suffix}"), self.root, md5=self.md5s.get(url, None) if self.checksum else None,
+        )
+        # FIXME: Why is download_url not checking integrity (tests run through)?
+        #assert check_integrity(os.path.join(self.root, f"{url}{suffix}"), self.md5s.get(url, None) if self.checksum else None)
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        assert isinstance(self.root, str | os.PathLike)
+        assert os.path.isfile(os.path.join(self.root, "flair_2_toy_dataset.zip"))
+        zipfile = os.path.join(self.root, "flair_2_toy_dataset.zip")
+        extract_archive(zipfile)
