@@ -371,7 +371,6 @@ class FLAIR2(NonGeoDataset):
         with rasterio.open(path) as f:
             array: np.typing.NDArray[np.int_] = f.read()
             tensor = torch.from_numpy(array).float()
-            # TODO: handle storage optimized format for height data
             if "B05" in self.bands:
                 # Height channel will always be the last dimension
                 tensor[-1] = torch.div(tensor[-1], 5)
@@ -411,7 +410,6 @@ class FLAIR2(NonGeoDataset):
         with rasterio.open(path) as f:
             array: np.typing.NDArray[np.int_] = f.read(1)
             tensor = torch.from_numpy(array).long()
-            # TODO: check if rescaling is smart (i.e. datapaper explains differently -> confusion?)
             # According to datapaper, the dataset contains classes beyond 13
             # however, those are grouped into a single "other" class
             # Rescale the classes to be in the range [0, 12] by subtracting 1
@@ -612,7 +610,6 @@ class FLAIR2Toy(FLAIR2):
             transforms: optional transforms to apply to sample
             download: whether to download the dataset if it is not found
             checksum: whether to verify the dataset using checksums
-            use_toy: whether to use the a small subset (toy) dataset. CAUTION: should only be used for testing purposes
             use_sentinel: whether to use sentinel data in the dataset # FIXME: sentinel does not work with dataloader due to varying dimensions
             
         Raises:
