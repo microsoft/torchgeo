@@ -46,7 +46,7 @@ from .eurocrops import EuroCrops
 from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
-from .flair2 import FLAIR2
+from .flair2 import FLAIR2, FLAIR2Toy
 from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
