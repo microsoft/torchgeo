@@ -21,49 +21,8 @@ class Args:
         self.data_dir: str = os.path.join(os.getcwd(), 'tests', 'data')
         self.in_channels: int = 13
         self.use_timepoints: bool = True
-        self.normalizing_type: str = 'percentile'
         self.mask_2d: bool = True
-        self.model_type: str = 'vanilla_unet'
         self.timepoint_aggregation: str = 'median'
-        self.color_transforms: bool = False
-        self.geo_transforms: bool = False
-        self.normalizing_factor: Any = np.array([[0, 0.5, 1.0]], dtype=np.float32)
-        self.means: Any = np.array(
-            [
-                [[1431]],
-                [[1233]],
-                [[1209]],
-                [[1192]],
-                [[1448]],
-                [[2238]],
-                [[2609]],
-                [[2537]],
-                [[2828]],
-                [[884]],
-                [[20]],
-                [[2226]],
-                [[1537]],
-            ],
-            dtype=np.float32,
-        )
-        self.stds: Any = np.array(
-            [
-                [[157]],
-                [[254]],
-                [[290]],
-                [[420]],
-                [[363]],
-                [[457]],
-                [[575]],
-                [[606]],
-                [[630]],
-                [[156]],
-                [[3]],
-                [[554]],
-                [[523]],
-            ],
-            dtype=np.float32,
-        )
 
 
 @pytest.fixture
@@ -74,73 +33,57 @@ def dataset(
     args = Args()
     image_files = ['image_0.npz', 'image_1.npz']
 
-    yield SubstationDataset(args, image_files)
+    yield SubstationDataset(**vars(args), image_files=image_files)
 
 
 @pytest.mark.parametrize(
     'config',
     [
         {
-            'normalizing_type': 'percentile',
             'in_channels': 3,
             'use_timepoints': False,
             'mask_2d': True,
         },
         {
-            'normalizing_type': 'zscore',
             'in_channels': 9,
-            'model_type': 'swin',
             'use_timepoints': True,
             'timepoint_aggregation': 'concat',
             'mask_2d': False,
         },
         {
-            'normalizing_type': None,
             'in_channels': 12,
             'use_timepoints': True,
             'timepoint_aggregation': 'median',
             'mask_2d': True,
-            'normalizing_factor': 1.0,
         },
         {
-            'normalizing_type': None,
             'in_channels': 5,
             'use_timepoints': True,
             'timepoint_aggregation': 'first',
             'mask_2d': False,
-            'normalizing_factor': 1.0,
         },
         {
-            'normalizing_type': None,
             'in_channels': 4,
             'use_timepoints': True,
             'timepoint_aggregation': 'random',
             'mask_2d': True,
-            'normalizing_factor': 1.0,
         },
         {
-            'normalizing_type': 'zscore',
             'in_channels': 2,
             'use_timepoints': False,
             'mask_2d': False,
-            'color_transforms': True,
-            'geo_transforms': True,
         },
         {
-            'normalizing_type': None,
             'in_channels': 5,
             'use_timepoints': False,
             'timepoint_aggregation': 'first',
             'mask_2d': False,
-            'normalizing_factor': 1.0,
         },
         {
-            'normalizing_type': None,
             'in_channels': 4,
             'use_timepoints': False,
             'timepoint_aggregation': 'random',
             'mask_2d': True,
-            'normalizing_factor': 1.0,
         },
     ],
 )
@@ -151,15 +94,7 @@ def test_getitem_semantic(config: dict[str, Any]) -> None:
 
     # Setting mock paths and creating dataset instance
     image_files = ['image_0.npz', 'image_1.npz']
-    image_resize = transforms.Compose(
-        [transforms.Resize(228, transforms.InterpolationMode.BICUBIC)]
-    )
-    mask_resize = transforms.Compose(
-        [transforms.Resize(228, transforms.InterpolationMode.NEAREST)]
-    )
-    dataset = SubstationDataset(
-        args, image_files, image_resize=image_resize, mask_resize=mask_resize
-    )
+    dataset = SubstationDataset(**vars(args), image_files=image_files)
 
     x = dataset[0]
     assert isinstance(x, dict), f'Expected dict, got {type(x)}'
@@ -179,26 +114,15 @@ def test_output_shape(dataset: SubstationDataset) -> None:
     assert x['mask'].shape == torch.Size([2, 228, 228])
 
 
-def test_plot(dataset: SubstationDataset, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test the plot method of the dataset."""
-    # Mock plt.show to avoid showing the plot during the test
-    mock_show = MagicMock()
-    monkeypatch.setattr(plt, 'show', mock_show)
-
-    # Mock np.random.randint to return a fixed index (e.g., 0)
-    monkeypatch.setattr(
-        np.random, 'randint', lambda low, high: 0
-    )  # Correct the lambda to accept 2 arguments
-
-    # Mock __getitem__ to return a sample with an image (3 channels) and a mask
-    mock_image = torch.rand(3, 228, 228)  # Create a dummy 3-channel image (RGB)
-    mock_mask = torch.randint(0, 4, (228, 228))  # Create a dummy mask
-    monkeypatch.setattr(
-        dataset, '__getitem__', lambda idx: {'image': mock_image, 'mask': mock_mask}
-    )
-
-    # Call the plot method
-    dataset.plot()
+def test_plot(dataset: SubstationDataset) -> None:
+        sample = dataset[0]
+        dataset.plot(sample, suptitle='Test')
+        plt.close()
+        dataset.plot(sample, show_titles=False)
+        plt.close()
+        sample['prediction'] = sample['mask'].clone()
+        dataset.plot(sample)
+        plt.close()
 
 
 def test_already_downloaded(
@@ -220,21 +144,6 @@ def test_already_downloaded(
     monkeypatch.setattr(dataset, '_download', MagicMock())
     dataset._download()  # This will now call the mocked method
 
-
-def test_verify(dataset: SubstationDataset, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test the _verify method of the dataset."""
-    # Mock os.path.exists to return False for the image and mask directories
-    monkeypatch.setattr(os.path, 'exists', lambda path: False)
-
-    # Mock the _download method to avoid actually downloading the dataset
-    mock_download = MagicMock()
-    monkeypatch.setattr(dataset, '_download', mock_download)
-
-    # Call the _verify method
-    dataset._verify()
-
-    # Check that the _download method was called
-    mock_download.assert_called_once()
 
 
 def test_download(

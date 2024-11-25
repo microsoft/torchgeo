@@ -147,21 +147,28 @@ class SubstationDataset(NonGeoDataset):
             A matplotlib Figure containing the rendered sample.
         """
         ncols = 2
-        image = sample["image"].permute(1, 2, 0).cpu().numpy()
+        
+        image = sample["image"][:3].permute(1, 2, 0).cpu().numpy()
         image = image / 255.0  # Normalize image
 
-        mask = sample["mask"].squeeze(0).cpu().numpy()
+        mask = sample["mask"][0].squeeze(0).cpu().numpy()
 
+        
         showing_predictions = "prediction" in sample
         if showing_predictions:
-            prediction = sample["prediction"].squeeze(0).cpu().numpy()
+            prediction = sample["prediction"][0].squeeze(0).cpu().numpy()
             ncols = 3
-
+        
+        print("mask shape", mask.shape)
+        print("image shape", image.shape)
+        print("\n")
+    
         fig, axs = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
         axs[0].imshow(image)
         axs[0].axis("off")
         axs[1].imshow(mask, cmap="gray", interpolation="none")
         axs[1].axis("off")
+        
 
         if show_titles:
             axs[0].set_title("Image")
