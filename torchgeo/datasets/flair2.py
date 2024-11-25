@@ -420,12 +420,13 @@ class FLAIR2(NonGeoDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if centroids metadata file or zip is present
+        # Naming inconsistencies in download url and file name (flair_2_centroids_sp_to_patch.zip vs. flair-2_centroids_sp_to_patch.json)
         if not os.path.isfile(os.path.join(self.root, f"{self.centroids_file}.json")):
             if not os.path.isfile(os.path.join(self.root, f"{self.centroids_file}.zip")):
                 if not self.download:
                     raise DatasetNotFoundError(self)
-                self._download(self.centroids_file)
-            self._extract(self.centroids_file)
+                self._download(self.centroids_file.replace("-", "_"))
+            self._extract(self.centroids_file.replace("-", "_"))
         
         # Files to be extracted
         to_extract: list[str] = []
