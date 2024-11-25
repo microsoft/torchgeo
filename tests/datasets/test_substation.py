@@ -170,7 +170,3 @@ def test_download(
     # Check that extract_archive was called twice
     mock_extract_archive.assert_called()
     assert mock_extract_archive.call_count == 2
-
-
-if __name__ == '__main__':
-    pytest.main([__file__])
