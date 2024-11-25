@@ -68,8 +68,8 @@ class SubstationDataset(NonGeoDataset):
         self.normalizing_factor = args.normalizing_factor
         self.mask_2d = args.mask_2d
         self.model_type = args.model_type
-        self.image_dir = os.path.join(args.data_dir, 'substation_seg', 'image_stack')
-        self.mask_dir = os.path.join(args.data_dir, 'substation_seg', 'mask')
+        self.image_dir = os.path.join(args.data_dir, 'substation', 'image_stack')
+        self.mask_dir = os.path.join(args.data_dir, 'substation', 'mask')
         self.image_filenames = image_files
         self.args = args
 

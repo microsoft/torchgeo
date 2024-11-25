@@ -207,9 +207,9 @@ def test_already_downloaded(
     """Test that the dataset doesn't re-download if already present."""
     # Simulating that files are already present by copying them to the target directory
     url_for_images = os.path.join(
-        'tests', 'data', 'substation_seg', 'image_stack.tar.gz'
+        'tests', 'data', 'substation', 'image_stack.tar.gz'
     )
-    url_for_masks = os.path.join('tests', 'data', 'substation_seg', 'mask.tar.gz')
+    url_for_masks = os.path.join('tests', 'data', 'substation', 'mask.tar.gz')
 
     # Copy files to the temporary directory to simulate already downloaded files
     shutil.copy(url_for_images, tmp_path)
@@ -245,10 +245,10 @@ def test_download(
     mock_download_url = MagicMock()
     mock_extract_archive = MagicMock()
     monkeypatch.setattr(
-        'torchgeo.datasets.substation_seg.download_url', mock_download_url
+        'torchgeo.datasets.substation.download_url', mock_download_url
     )
     monkeypatch.setattr(
-        'torchgeo.datasets.substation_seg.extract_archive', mock_extract_archive
+        'torchgeo.datasets.substation.extract_archive', mock_extract_archive
     )
 
     # Call the _download method

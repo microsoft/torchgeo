@@ -128,7 +128,7 @@ from .splits import (
 )
 from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
 from .ssl4eo_benchmark import SSL4EOLBenchmark
-from .substation_seg import SubstationDataset
+from .substation import SubstationDataset
 from .sustainbench_crop_yield import SustainBenchCropYield
 from .ucmerced import UCMerced
 from .usavars import USAVars
