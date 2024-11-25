@@ -17,20 +17,20 @@ from .utils import download_url, extract_archive
 
 class SubstationDataset(NonGeoDataset):
     """Base class for Substation Dataset.
-    
+
     This dataset is responsible for handling the loading and transformation of
-    substation segmentation datasets. It extends NonGeoDataset, providing methods 
+    substation segmentation datasets. It extends NonGeoDataset, providing methods
     for dataset verification, downloading, and transformation.
     Dataset Format:
     * .npz file for each datapoint
-    
+
     Dataset Features:
-    
+
     * 26,522 image-mask pairs stored as numpy files.
     * Data from 5 revisits for most locations.
     * Multi-temporal, multi-spectral images (13 channels) paired with masks,
       with a spatial resolution of 228x228 pixels
-    
+
     If you use this dataset in your research, please cite the following:
     * https://doi.org/10.48550/arXiv.2409.17363
     """
@@ -131,11 +131,11 @@ class SubstationDataset(NonGeoDataset):
         return len(self.image_filenames)
 
     def plot(
-    self,
-    sample: dict[str, Tensor],
-    show_titles: bool = True,
-    suptitle: str | None = None,
-) -> plt.Figure:
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: str | None = None,
+    ) -> plt.Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -147,44 +147,41 @@ class SubstationDataset(NonGeoDataset):
             A matplotlib Figure containing the rendered sample.
         """
         ncols = 2
-        
-        image = sample["image"][:3].permute(1, 2, 0).cpu().numpy()
+
+        image = sample['image'][:3].permute(1, 2, 0).cpu().numpy()
         image = image / 255.0  # Normalize image
 
-        mask = sample["mask"][0].squeeze(0).cpu().numpy()
+        mask = sample['mask'][0].squeeze(0).cpu().numpy()
 
-        
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = sample["prediction"][0].squeeze(0).cpu().numpy()
+            prediction = sample['prediction'][0].squeeze(0).cpu().numpy()
             ncols = 3
-        
-        print("mask shape", mask.shape)
-        print("image shape", image.shape)
-        print("\n")
-    
+
+        print('mask shape', mask.shape)
+        print('image shape', image.shape)
+        print('\n')
+
         fig, axs = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
         axs[0].imshow(image)
-        axs[0].axis("off")
-        axs[1].imshow(mask, cmap="gray", interpolation="none")
-        axs[1].axis("off")
-        
+        axs[0].axis('off')
+        axs[1].imshow(mask, cmap='gray', interpolation='none')
+        axs[1].axis('off')
 
         if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
+            axs[0].set_title('Image')
+            axs[1].set_title('Mask')
 
         if showing_predictions:
-            axs[2].imshow(prediction, cmap="gray", interpolation="none")
-            axs[2].axis("off")
+            axs[2].imshow(prediction, cmap='gray', interpolation='none')
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Prediction")
+                axs[2].set_title('Prediction')
 
         if suptitle:
             fig.suptitle(suptitle)
 
         return fig
-
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -203,16 +200,14 @@ class SubstationDataset(NonGeoDataset):
             return
 
         # If dataset files are missing and download is not allowed, raise an error
-        if not getattr(self, "download", True):
+        if not getattr(self, 'download', True):
             raise FileNotFoundError(
-                f"Dataset files not found in {self.data_dir}. Enable downloading or provide the files."
+                f'Dataset files not found in {self.data_dir}. Enable downloading or provide the files.'
             )
 
         # Download and extract the dataset
         self._download()
         self._extract()
-
-
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
@@ -221,11 +216,10 @@ class SubstationDataset(NonGeoDataset):
             self.url_for_images,
             self.data_dir,
             filename=self.filename_images,
-            md5="INSERT_IMAGES_MD5_HASH" if self.checksum else None,
+            md5='INSERT_IMAGES_MD5_HASH' if self.checksum else None,
         )
         extract_archive(
-            os.path.join(self.data_dir, self.filename_images),
-            self.data_dir,
+            os.path.join(self.data_dir, self.filename_images), self.data_dir
         )
 
         # Download and verify masks
@@ -233,10 +227,6 @@ class SubstationDataset(NonGeoDataset):
             self.url_for_masks,
             self.data_dir,
             filename=self.filename_masks,
-            md5="INSERT_MASKS_MD5_HASH" if self.checksum else None,
+            md5='INSERT_MASKS_MD5_HASH' if self.checksum else None,
         )
-        extract_archive(
-            os.path.join(self.data_dir, self.filename_masks),
-            self.data_dir,
-        )
-
+        extract_archive(os.path.join(self.data_dir, self.filename_masks), self.data_dir)

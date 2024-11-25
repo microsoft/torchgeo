@@ -6,10 +6,8 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pytest
 import torch
-import torchvision.transforms as transforms
 
 from torchgeo.datasets import SubstationDataset
 
@@ -39,11 +37,7 @@ def dataset(
 @pytest.mark.parametrize(
     'config',
     [
-        {
-            'in_channels': 3,
-            'use_timepoints': False,
-            'mask_2d': True,
-        },
+        {'in_channels': 3, 'use_timepoints': False, 'mask_2d': True},
         {
             'in_channels': 9,
             'use_timepoints': True,
@@ -68,11 +62,7 @@ def dataset(
             'timepoint_aggregation': 'random',
             'mask_2d': True,
         },
-        {
-            'in_channels': 2,
-            'use_timepoints': False,
-            'mask_2d': False,
-        },
+        {'in_channels': 2, 'use_timepoints': False, 'mask_2d': False},
         {
             'in_channels': 5,
             'use_timepoints': False,
@@ -115,14 +105,14 @@ def test_output_shape(dataset: SubstationDataset) -> None:
 
 
 def test_plot(dataset: SubstationDataset) -> None:
-        sample = dataset[0]
-        dataset.plot(sample, suptitle='Test')
-        plt.close()
-        dataset.plot(sample, show_titles=False)
-        plt.close()
-        sample['prediction'] = sample['mask'].clone()
-        dataset.plot(sample)
-        plt.close()
+    sample = dataset[0]
+    dataset.plot(sample, suptitle='Test')
+    plt.close()
+    dataset.plot(sample, show_titles=False)
+    plt.close()
+    sample['prediction'] = sample['mask'].clone()
+    dataset.plot(sample)
+    plt.close()
 
 
 def test_already_downloaded(
@@ -130,9 +120,7 @@ def test_already_downloaded(
 ) -> None:
     """Test that the dataset doesn't re-download if already present."""
     # Simulating that files are already present by copying them to the target directory
-    url_for_images = os.path.join(
-        'tests', 'data', 'substation', 'image_stack.tar.gz'
-    )
+    url_for_images = os.path.join('tests', 'data', 'substation', 'image_stack.tar.gz')
     url_for_masks = os.path.join('tests', 'data', 'substation', 'mask.tar.gz')
 
     # Copy files to the temporary directory to simulate already downloaded files
@@ -145,7 +133,6 @@ def test_already_downloaded(
     dataset._download()  # This will now call the mocked method
 
 
-
 def test_download(
     dataset: SubstationDataset, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -153,9 +140,7 @@ def test_download(
     # Mock the download_url and extract_archive functions
     mock_download_url = MagicMock()
     mock_extract_archive = MagicMock()
-    monkeypatch.setattr(
-        'torchgeo.datasets.substation.download_url', mock_download_url
-    )
+    monkeypatch.setattr('torchgeo.datasets.substation.download_url', mock_download_url)
     monkeypatch.setattr(
         'torchgeo.datasets.substation.extract_archive', mock_extract_archive
     )
