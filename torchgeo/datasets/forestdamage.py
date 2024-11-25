@@ -217,11 +217,7 @@ class ForestDamage(NonGeoDataset):
         return boxes, labels
 
     def _verify(self) -> None:
-        """Checks the integrity of the dataset structure.
-
-        Returns:
-            True if the dataset directories are found, else False
-        """
+        """Verify the integrity of the dataset."""
         filepath = os.path.join(self.root, self.data_dir)
         if os.path.isdir(filepath):
             return
