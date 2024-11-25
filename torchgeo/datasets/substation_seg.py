@@ -13,16 +13,30 @@ from .utils import download_url, extract_archive
 
 
 class SubstationDataset(NonGeoDataset):
-    """SubstationDataset is responsible for handling the loading and transformation of substation segmentation datasets.
-
-    It extends NonGeoDataset, providing methods for dataset verification, downloading, and transformation.
+    """Base class for Substation Dataset.
+    
+    This dataset is responsible for handling the loading and transformation of
+    substation segmentation datasets. It extends NonGeoDataset, providing methods 
+    for dataset verification, downloading, and transformation.
+    Dataset Format:
+    * .npz file for each datapoint
+    
+    Dataset Features:
+    
+    * 26,522 image-mask pairs stored as numpy files.
+    * Data from 5 revisits for most locations.
+    * Multi-temporal, multi-spectral images (13 channels) paired with masks,
+      with a spatial resolution of 228x228 pixels
+    
+    If you use this dataset in your research, please cite the following:
+    * https://doi.org/10.48550/arXiv.2409.17363
     """
 
     directory: str = 'Substation'
     filename_images: str = 'image_stack.tar.gz'
     filename_masks: str = 'mask.tar.gz'
-    url_for_images: str = 'https://urldefense.proofpoint.com/v2/url?u=https-3A__storage.googleapis.com_tz-2Dml-2Dpublic_substation-2Dover-2D10km2-2Dcsv-2Dmain-2D444e360fd2b6444b9018d509d0e4f36e_image-5Fstack.tar.gz&d=DwMFaQ&c=slrrB7dE8n7gBJbeO0g-IQ&r=ypwhORbsf5rB8FTl-SAxjfN_U0jrVqx6UDyBtJHbKQY&m=-2QXCp-gZof5HwBsLg7VwQD-pnLedAo09YCzdDCUTqCI-0t789z0-HhhgwVbYtX7&s=zMCjuqjPMHRz5jeEWLCEufHvWxRPdlHEbPnUE7kXPrc&e='
-    url_for_masks: str = 'https://urldefense.proofpoint.com/v2/url?u=https-3A__storage.googleapis.com_tz-2Dml-2Dpublic_substation-2Dover-2D10km2-2Dcsv-2Dmain-2D444e360fd2b6444b9018d509d0e4f36e_mask.tar.gz&d=DwMFaQ&c=slrrB7dE8n7gBJbeO0g-IQ&r=ypwhORbsf5rB8FTl-SAxjfN_U0jrVqx6UDyBtJHbKQY&m=-2QXCp-gZof5HwBsLg7VwQD-pnLedAo09YCzdDCUTqCI-0t789z0-HhhgwVbYtX7&s=nHMdYvxKmzwAdT2lOPoQ7-NEfjsOjAm00kHOcwC_AmU&e='
+    url_for_images: str = 'https://storage.googleapis.com/tz-ml-public/substation-over-10km2-csv-main-444e360fd2b6444b9018d509d0e4f36e/image_stack.tar.gz'
+    url_for_masks: str = 'https://storage.googleapis.com/tz-ml-public/substation-over-10km2-csv-main-444e360fd2b6444b9018d509d0e4f36e/mask.tar.gz'
 
     def __init__(
         self,
