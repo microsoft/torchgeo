@@ -267,11 +267,17 @@ class FLAIR2(NonGeoDataset):
         aerial = self._load_image(cast(Path, aerial_fn))
         mask = self._load_target(cast(Path, mask_fn))
 
-        sample: dict[str, Any] = {'image': aerial, 'mask': mask}
+        sample: dict[str, Any] = {"image": aerial, "mask": mask}
 
         if self.use_sentinel:
-            sentinel = self._load_sentinel(cast(dict[str, Path], sentinel_fn), cast(Path, aerial_fn))
-            sample['sentinel'] = sentinel
+            img_id = os.path.basename(cast(Path, aerial_fn))
+            centroid_x_y = cast(tuple[int, int], self.centroids[img_id])
+            crop_indices = self._get_crop_indices(centroid_x_y)
+            sentinel_data = self._load_sentinel(cast(Path, sentinel_fn["data"]))
+            sentinel_mask = self._load_sentinel(cast(Path, sentinel_fn["snow_cloud_mask"]))
+            sample["sentinel_data"] = sentinel_data
+            sample["snow_cloud_mask"] = sentinel_mask
+            sample["crop_indices"] = crop_indices
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -302,23 +308,21 @@ class FLAIR2(NonGeoDataset):
             centroids = json.load(f)
             return cast(dict[str, list[int]], centroids)
     
-    def _crop_super_patch(self, data: Tensor, centroid: tuple[int, int]) -> tuple[Tensor, tuple[slice, slice]]:
+    def _get_crop_indices(self, centroid: tuple[int, int]) -> tuple[slice, slice]:
         """Return indices to crop a super-patch from sentinel data based centroid coordinates.
         
         For detailed information on super-patches, see p.4f of datapaper and `flair-2_centroids_sp_to_patch.json`.
         
         Args:
-            data: data to crop from
             centroid: centroid coordinates
-        
+
         Returns:
-            Tuple[np.ndarray, Tuple[slice, slice]]: original data cropped super-area and the indices used for cropping
+            tuple[slice, slice]: crop indices for sentinel data
         """
         y, x = centroid
         eigth_size = self.super_patch_size // 8
 
-        indices = (slice(x-eigth_size, x+eigth_size), slice(y-eigth_size, y+eigth_size))
-        return data, indices
+        return (slice(x-eigth_size, x+eigth_size), slice(y-eigth_size, y+eigth_size))
     
     def _load_files(self) -> list[dict[str, Collection[str]]]:
         """Return the paths of the files in the dataset.
@@ -377,26 +381,19 @@ class FLAIR2(NonGeoDataset):
             
         return tensor
 
-    def _load_sentinel(self, paths: dict[str, Path], aerial_path: Path) -> tuple[list[Tensor], tuple[slice, slice]]:
+    def _load_sentinel(self, path: Path) -> Tensor:
         # FIXME: should this really be returned as a tuple?
         """Load a sentinel array.
 
         Args:
-            paths (list[Path]): paths to sentinel data and snow cloud mask
-            aerial_path (Path): path to the corresponding aerial image, required for loading from centroids file
+            path (Path): path to sentinel img (data or snow cloud mask)
 
         Returns:
-            Sequence[Tensor]: ground truth and snow cloud mask as tensors of shape TxCxHxW (time, channels, height, width)
+            Tensor: image as tensors of shape TxCxHxW (time, channels, height, width)
         """
-        data = torch.from_numpy(np.load(paths["data"])).float()
-        snow_cloud_mask = torch.from_numpy(np.load(paths["snow_cloud_mask"])).float()
+        img = torch.from_numpy(np.load(path)).float()
         
-        img_id = os.path.basename(aerial_path)
-        centroid_x_y = cast(tuple[int, int], self.centroids[img_id])
-        img, cropping_indices = self._crop_super_patch(data, centroid_x_y)
-        masks, _ = self._crop_super_patch(snow_cloud_mask, centroid_x_y)
-        
-        return [img, masks], cropping_indices
+        return img
         
     def _load_target(self, path: Path) -> Tensor:
         """Load a single mask corresponding to image.
@@ -519,11 +516,12 @@ class FLAIR2(NonGeoDataset):
             nir_r_g_indices = [self.bands.index("B04"), rgb_indices[0], rgb_indices[1]]
             nir_r_g = normalize_plot(sample['image'][nir_r_g_indices].permute(1, 2, 0))
         
-        # Sentinel is a time-series, i.e. use [0]->data(not snow_cloud_mask), [0]->T=0
+        # Sentinel is a time-series, i.e. use [0]->T=0
         sentinel = None
         if self.use_sentinel:
-            sentinel, cropping_indices = sample["sentinel"]
-            sentinel = sentinel[0][0]
+            crop_indices = sample["crop_indices"]
+            sentinel = sample["sentinel_data"]
+            sentinel = sentinel[0]
             sentinel = normalize_plot(sentinel[[2, 1, 0], :, :].permute(1, 2, 0))
         
         # Obtain mask and predictions if available
@@ -548,9 +546,9 @@ class FLAIR2(NonGeoDataset):
             im_kwargs = kwargs.copy() if plot[0] == "mask" or plot[0] == "predictions" else {}
             if plot[0] == "sentinel":
                 axs[0].add_patch(Rectangle(
-                    (cropping_indices[0].start, cropping_indices[1].start),
-                    cropping_indices[0].stop - cropping_indices[0].start,
-                    cropping_indices[1].stop - cropping_indices[1].start,
+                    (crop_indices[0].start, crop_indices[1].start),
+                    crop_indices[0].stop - crop_indices[0].start,
+                    crop_indices[1].stop - crop_indices[1].start,
                     fill=False, edgecolor='red', lw=0.5))
 
             axs[0].imshow(plot[1], **im_kwargs)
@@ -629,7 +627,6 @@ class FLAIR2Toy(FLAIR2):
     
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        
         if os.path.isdir(os.path.join(self.root, "flair_2_toy_dataset")):
             print(os.path.join(self.root, "flair_2_toy_dataset"))
             print("Toy dataset downloaded and extracted already...")
