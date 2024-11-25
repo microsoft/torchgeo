@@ -439,7 +439,9 @@ class FLAIR2(NonGeoDataset):
                 continue
             
             files_glob = os.path.join(downloaded_path, "**", self.globs[train_or_test])
-            if not glob.glob(files_glob, recursive=True):
+            # Format the glob of sentinel `SEN_{0}.npy` to match the actual file name
+            # in other cases, where it is not a format string, the glob will be the same
+            if not glob.glob(files_glob.format(""), recursive=True):
                 to_extract.append(dir_name)
         
         if not to_extract:
