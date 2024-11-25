@@ -261,7 +261,7 @@ class FLAIR2(NonGeoDataset):
             sentinel image of dimension Tx10x512x512 and mask of dimension 512x512
         """
         aerial_fn = self.files[index]["image"]
-        sentinel_fn = self.files[index]["sentinel"]
+        sentinel_fn = cast(dict[str, str], self.files[index]["sentinel"])
         mask_fn = self.files[index]["mask"]
 
         aerial = self._load_image(cast(Path, aerial_fn))
@@ -519,7 +519,7 @@ class FLAIR2(NonGeoDataset):
         # Sentinel is a time-series, i.e. use [0]->T=0
         sentinel = None
         if self.use_sentinel:
-            crop_indices = sample["crop_indices"]
+            crop_indices = cast(Sequence[slice], sample["crop_indices"])
             sentinel = sample["sentinel_data"]
             sentinel = sentinel[0]
             sentinel = normalize_plot(sentinel[[2, 1, 0], :, :].permute(1, 2, 0))
@@ -651,9 +651,9 @@ class FLAIR2Toy(FLAIR2):
         # FIXME: Why is download_url not checking integrity (tests run through)?
         #assert check_integrity(os.path.join(self.root, f"{url}{suffix}"), self.md5s.get(url, None) if self.checksum else None)
 
-    def _extract(self) -> None:
+    def _extract(self, file_name: str = "flair_2_toy_dataset.zip") -> None:
         """Extract the dataset."""
         assert isinstance(self.root, str | os.PathLike)
-        assert os.path.isfile(os.path.join(self.root, "flair_2_toy_dataset.zip"))
-        zipfile = os.path.join(self.root, "flair_2_toy_dataset.zip")
+        assert os.path.isfile(os.path.join(self.root, file_name))
+        zipfile = os.path.join(self.root, file_name)
         extract_archive(zipfile)
