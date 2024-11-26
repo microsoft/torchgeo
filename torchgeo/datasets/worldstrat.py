@@ -5,18 +5,26 @@
 
 import os
 from collections.abc import Callable, Sequence
+from glob import glob
 from typing import ClassVar
 
 import pandas as pd
+import rasterio
+import torch
 from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, extract_archive
+from .utils import Path, array_to_tensor, extract_archive
 
 
 class WorldStrat(NonGeoDataset):
-    """WorldStrat dataset."""
+    """WorldStrat dataset.
+
+    Dataset format:
+
+    * varying pixel sizes across AOI tiles
+    """
 
     all_modalities = ('sentinel1', 'sentinel2')
 
@@ -94,15 +102,88 @@ class WorldStrat(NonGeoDataset):
             )
         )
 
-        self.file_path_df = self.file_path_df[self.file_path_df['split'] == self.split]
+        self.file_path_df = self.file_path_df[
+            self.file_path_df['split'] == self.split
+        ].reset_index(drop=True)
         self.metadata_df = pd.read_csv(
             os.path.join(self.root, self.file_info_dict['metadata']['filename'])
         )
         self.metadata_df.rename(columns={'Unnamed: 0': 'tile'}, inplace=True)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, idx: int) -> dict[str, Tensor]:
         """"""
-        pass
+        file_entry = self.file_path_df.iloc[idx]
+        aoi = file_entry['tile']
+
+        metadata = self.metadata_df[self.metadata_df['tile'] == aoi]
+
+        data_dir = os.path.join(self.root, aoi)
+
+        l1_data = self._load_sentinel_data(os.path.join(data_dir, 'L1C'))
+        l2_data = self._load_sentinel_data(os.path.join(data_dir, 'L2A'))
+
+        high_res_data_ps = self._load_tiff(os.path.join(data_dir, f'{aoi}_ps.tiff'))
+        high_res_data_pan = self._load_tiff(os.path.join(data_dir, f'{aoi}_pan.tiff'))
+        high_res_data_rgbn = self._load_tiff(os.path.join(data_dir, f'{aoi}_rgbn.tiff'))
+        import numpy as np
+        from matplotlib import pyplot as plt
+        from PIL import Image
+
+        high_res_png = np.array(Image.open(os.path.join(data_dir, f'{aoi}_rgb.png')))
+
+        # print shape for each
+        print('L1C shape: ', l1_data.shape)
+        print('L2A shape: ', l2_data.shape)
+        print('High res PS: ', high_res_data_ps.shape)
+        print('High res PAN: ', high_res_data_pan.shape)
+        print('High res RGBN: ', high_res_data_rgbn.shape)
+        print('High res PNG: ', high_res_png.shape)
+
+        fig, axs = plt.subplots(1, 6, figsize=(20, 5))
+
+        axs[0].imshow(high_res_png)
+        axs[1].imshow(high_res_data_ps[0].numpy() / 13000)
+        axs[2].imshow(high_res_data_pan[0].numpy() / 12000)
+        axs[3].imshow(high_res_data_rgbn[0:3].permute(1, 2, 0).numpy() / 6000)
+        axs[4].imshow(l1_data[-1, [4, 3, 2], :, :].permute(1, 2, 0).numpy())
+        axs[5].imshow(l2_data[-1, [4, 3, 2], :, :].permute(1, 2, 0).numpy())
+
+        fig.savefig('example.png')
+
+        import pdb
+
+        pdb.set_trace()
+
+        print(0)
+
+    def _load_sentinel_data(self, data_dir: str) -> Tensor:
+        """Load Sentinel data for a given AOI in a data directory.
+
+        Args:
+            data_dir: Directory containing the Sentinel data, in the dataset
+                this is either the L1C or L2A directory.
+
+        Returns:
+            Loaded Sentinel data stacked as tensor
+        """
+        tiff_paths = glob(
+            os.path.join(data_dir, f'*{os.path.basename(data_dir)}_data.tiff'),
+            recursive=True,
+        )
+
+        # load and stack the data
+        data = []
+        for tiff_path in tiff_paths:
+            data.append(self._load_tiff(tiff_path))
+
+        return torch.stack(data).float()
+
+    def _load_tiff(self, tiff_path: str) -> Tensor:
+        """Load a tiff file as a tensor."""
+        with rasterio.open(tiff_path) as src:
+            data = src.read()
+            tensor = array_to_tensor(data)
+        return tensor
 
     def __len__(self) -> int:
         """Return the number of samples in the dataset."""
