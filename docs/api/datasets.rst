@@ -349,6 +349,11 @@ MapInWild
 
 .. autoclass:: MapInWild
 
+MDAS
+^^^^
+
+.. autoclass:: MDAS
+
 Million-AID
 ^^^^^^^^^^^
 
