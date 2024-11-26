@@ -163,8 +163,7 @@ def interpolate_pos_embed(
     # class_token and dist_token are kept unchanged
     if orig_size != new_size:
         print(
-            'Interpolating positional embeddings from %dx%d to %dx%d'
-            % (orig_size, orig_size, new_size, new_size)
+            f'Interpolating positional embeddings from {orig_size}x{orig_size} to {new_size}x{new_size}'
         )
         extra_tokens = pos_embed_checkpoint[:, :num_extra_tokens]
         # only the position tokens are interpolated

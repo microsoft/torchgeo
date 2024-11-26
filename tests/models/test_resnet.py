@@ -48,6 +48,10 @@ class TestResNet18:
     def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet18(weights=mocked_weights)
 
+    def test_bands(self, mocked_weights: WeightsEnum) -> None:
+        if 'bands' in mocked_weights.meta:
+            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta['in_chans']
         sample = {
@@ -88,6 +92,10 @@ class TestResNet50:
     def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet50(weights=mocked_weights)
 
+    def test_bands(self, mocked_weights: WeightsEnum) -> None:
+        if 'bands' in mocked_weights.meta:
+            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta['in_chans']
         sample = {
@@ -127,6 +135,10 @@ class TestResNet152:
 
     def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet152(weights=mocked_weights)
+
+    def test_bands(self, mocked_weights: WeightsEnum) -> None:
+        if 'bands' in mocked_weights.meta:
+            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
 
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta['in_chans']

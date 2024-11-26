@@ -66,7 +66,7 @@ class SimCLRAugmentation(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        """Applys SimCLR augmentations to the input tensor.
+        """Applies SimCLR augmentations to the input tensor.
 
         Args:
             x: a batch of imagery
@@ -137,7 +137,7 @@ class BackboneWrapper(nn.Module):
 
         Args:
             model: model to encode
-            projection_size: size of the ouput layer of the projector MLP
+            projection_size: size of the output layer of the projector MLP
             hidden_size: size of hidden layer of the projector MLP
             layer: layer from model to project
         """
