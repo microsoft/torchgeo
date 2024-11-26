@@ -356,9 +356,14 @@ class FLAIR2(NonGeoDataset):
             self.dir_names[self.split]["masks"],
             "**", self.globs["masks"]), recursive=True))
         
+        # One sentinel image might contain multiple aerial images, thus we need to match them
+        # without assuming a 1:1 mapping
+        sentinel_lookup = {"/".join(s["data"].split("/")[-4:-2]): s for s in sentinels}
         files = [
-            dict(image=image, sentinel=sentinel, mask=mask)
-            for image, sentinel, mask in zip(images, sentinels, masks)
+            dict(image=image,
+                 sentinel=sentinel_lookup["/".join(image.split("/")[-4:-2])],
+                 mask=mask)
+            for image, mask in zip(images, masks)
         ]
         
         return files
