@@ -4,6 +4,7 @@
 import glob
 import os
 import shutil
+import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -96,6 +97,7 @@ class TestIDTReeS:
             dataset.plot(x, show_titles=False)
             plt.close()
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason='PyVista segfault on Windows')
     def test_plot_las(self, dataset: IDTReeS) -> None:
         pyvista = pytest.importorskip('pyvista', minversion='0.34.2')
         pyvista.OFF_SCREEN = True
