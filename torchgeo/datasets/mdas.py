@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -63,7 +63,7 @@ class MDAS(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    valid_modalities = [
+    valid_modalities = (
         '3K_DSM',
         '3K_RGB',
         'HySpex',
@@ -75,8 +75,8 @@ class MDAS(NonGeoDataset):
         'osm_buildings',
         'osm_landuse',
         'osm_water',
-    ]
-    landuse_class_names = {
+    )
+    landuse_class_names: ClassVar[dict[int, str]] = {
         0: 'no label',
         1: 'forest',
         2: 'park',
@@ -98,7 +98,7 @@ class MDAS(NonGeoDataset):
         18: 'heath',
     }
 
-    landuse_mapping = {
+    landuse_mapping: ClassVar[dict[int, int]] = {
         -2147483647: 0,
         7201: 1,
         7202: 2,
@@ -120,21 +120,21 @@ class MDAS(NonGeoDataset):
         7219: 18,
     }
 
-    cmap = ListedColormap([plt.cm.tab20(i) for i in range(20)])
+    cmap = ListedColormap([plt.cm.tab20(i) for i in range(20)])  # type: ignore[attr-defined]
 
     ds_root_name = 'Augsburg_data_4_publication'
 
     zipfilename = f'{ds_root_name}.zip'
 
-    valid_subareas = ['sub_area_1', 'sub_area_2', 'sub_area_3']
+    valid_subareas = ('sub_area_1', 'sub_area_2', 'sub_area_3')
 
     url = 'https://huggingface.co/datasets/torchgeo/mdas/resolve/860226b74269f1cf1bed8ea3c03f571ae701144c/Augsburg_data_4_publication.zip'
 
     md5 = '7b63c26e3717cb52c6ba47d215f18d5b'
 
-    enmap_rgb_band_idx = [43, 28, 10]
-    sentinel_2_rgb_band_idx = [3, 2, 1]
-    hyspex_rgb_band_idx = [100, 50, 10]
+    enmap_rgb_band_idx: ClassVar[list[int]] = [43, 28, 10]
+    sentinel_2_rgb_band_idx: ClassVar[list[int]] = [3, 2, 1]
+    hyspex_rgb_band_idx: ClassVar[list[int]] = [100, 50, 10]
 
     def __init__(
         self,
