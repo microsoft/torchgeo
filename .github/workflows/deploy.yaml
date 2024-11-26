@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.2.1
+        uses: actions/checkout@v4.2.2
       - name: Set up python
-        uses: actions/setup-python@v5.2.0
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: '3.12'
       - name: Install pip dependencies
@@ -42,4 +42,4 @@ jobs:
           name: pypi-dist
           path: dist/
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.10.3
+        uses: pypa/gh-action-pypi-publish@v1.12.2

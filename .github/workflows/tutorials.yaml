@@ -19,13 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.2.1
+        uses: actions/checkout@v4.2.2
       - name: Set up python
-        uses: actions/setup-python@v5.2.0
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: '3.12'
       - name: Cache dependencies
-        uses: actions/cache@v4.1.1
+        uses: actions/cache@v4.1.2
         id: cache
         with:
           path: ${{ env.pythonLocation }}

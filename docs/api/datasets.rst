@@ -222,6 +222,11 @@ CaBuAr
 
 .. autoclass:: CaBuAr
 
+CaFFe
+^^^^^
+
+.. autoclass:: CaFFe
+
 ChaBuD
 ^^^^^^
 
@@ -398,6 +403,11 @@ Rwanda Field Boundary
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: RwandaFieldBoundary
+
+SatlasPretrain
+^^^^^^^^^^^^^^
+
+.. autoclass:: SatlasPretrain
 
 Seasonal Contrast
 ^^^^^^^^^^^^^^^^^
