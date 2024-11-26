@@ -93,8 +93,6 @@ datasets = [
     "pandas[parquet]>=2",
     # pycocotools 2.0.7+ required for wheels
     "pycocotools>=2.0.7",
-    # pyvista 0.34.2+ required to avoid ImportError in CI
-    "pyvista>=0.34.2",
     # scikit-image 0.19+ required for Python 3.10 wheels
     "scikit-image>=0.19",
     # scipy 1.7.2+ required for Python 3.10 wheels

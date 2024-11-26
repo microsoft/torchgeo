@@ -28,7 +28,6 @@ repos:
           - numpy>=1.22
           - pillow>=10.4.0
           - pytest>=6.1.2
-          - pyvista>=0.34.2
           - scikit-image>=0.22.0
           - torch>=2.3
           - torchmetrics>=0.10
