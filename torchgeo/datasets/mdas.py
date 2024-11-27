@@ -342,13 +342,7 @@ class MDAS(NonGeoDataset):
             elif key == 'osm_water_mask':
                 img = data.numpy().squeeze(0)
                 axs[idx].imshow(img, cmap='Blues')
-            else:
-                # Plot the first band for other modalities
-                img = data[0].numpy()
-                axs[idx].imshow(img)
-                axs[idx].axis('off')
-                if show_titles:
-                    axs[idx].set_title(key)
+
             axs[idx].axis('off')
             if show_titles:
                 axs[idx].set_title(key)

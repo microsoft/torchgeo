@@ -18,7 +18,7 @@ from torchgeo.datasets import MDAS, DatasetNotFoundError
 class TestMDAS:
     @pytest.fixture(
         params=[
-            {'subareas': ['sub_area_1'], 'modalities': ['3K_RGB', 'osm_buildings']},
+            {'subareas': ['sub_area_1'], 'modalities': ['HySpex']},
             {
                 'subareas': ['sub_area_1', 'sub_area_2'],
                 'modalities': ['3K_DSM', 'HySpex', 'osm_water'],
@@ -106,4 +106,8 @@ class TestMDAS:
 
     def test_plot(self, dataset: MDAS) -> None:
         dataset.plot(dataset[0], suptitle='Test')
+        plt.close()
+
+    def test_plot_single_sample(self, dataset: MDAS) -> None:
+        dataset.plot(dataset[0], show_titles=False)
         plt.close()
