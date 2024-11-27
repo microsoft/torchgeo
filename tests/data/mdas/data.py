@@ -71,25 +71,20 @@ def create_dummy_geotiff(
     landuse: bool = False,
 ) -> None:
     """Create a dummy GeoTIFF file."""
-    crs = CRS.from_epsg(32632)  # WGS84 Coordinate System
-    transform = from_origin(0, 0, 1, 1)  # Arbitrary geotransform
+    crs = CRS.from_epsg(32632)
+    transform = from_origin(0, 0, 1, 1)
 
     if binary:
-        # Generate binary data: 0 or 1
         data = np.random.randint(0, 2, size=(num_bands, height, width)).astype(dtype)
     elif landuse:
-        # Generate landuse class codes
         num_pixels = num_bands * height * width
-        # Assign "no label" to a certain percentage of pixels
-        no_label_ratio = 0.1  # 10% no label
+        no_label_ratio = 0.1
         num_no_label = int(no_label_ratio * num_pixels)
         num_labels = num_pixels - num_no_label
-        # Create an array with the required number of labels and no labels
         landuse_values = np.random.choice(landuse_class_codes[1:], size=num_labels)
         no_label_values = np.full(num_no_label, landuse_class_codes[0], dtype=dtype)
         combined = np.concatenate([landuse_values, no_label_values])
         np.random.shuffle(combined)
-        # Reshape to (num_bands, height, width)
         data = combined.reshape((num_bands, height, width)).astype(dtype)
     else:
         # Generate random data for other modalities
@@ -117,42 +112,27 @@ for subarea in subareas:
     parts = subarea.split('_')
     subarea_formatted = parts[0] + '_' + parts[1] + parts[2]  # e.g., 'sub_area1'
 
-    # Directory for this subarea
     subarea_dir = os.path.join(root_dir, ds_root_name, subarea)
 
     for modality in modalities:
-        # Construct filename as per mdas.py
         filename = f'{modality}_{subarea_formatted}.tif'
         file_path = os.path.join(subarea_dir, filename)
 
         if modality in ['osm_buildings', 'osm_water']:
-            # Generate binary classes
             create_dummy_geotiff(file_path, num_bands=1, dtype=np.uint8, binary=True)
         elif modality == 'osm_landuse':
-            # Generate landuse class codes
-            create_dummy_geotiff(
-                file_path,
-                num_bands=1,
-                dtype=np.float64,  # As per mdas.py
-                landuse=True,
-            )
+            create_dummy_geotiff(file_path, num_bands=1, dtype=np.float64, landuse=True)
         elif modality == 'HySpex':
-            # HySpex imagery with 368 bands
             create_dummy_geotiff(file_path, num_bands=368, dtype=np.int16)
         elif modality in ['EeteS_EnMAP_10m', 'EeteS_EnMAP_30m']:
-            # EnMAP simulated data with 242 bands
             create_dummy_geotiff(file_path, num_bands=242, dtype=np.uint16)
         elif modality == 'Sentinel_1':
-            # Sentinel-1 data with 2 bands
             create_dummy_geotiff(file_path, num_bands=2, dtype=np.float32)
         elif modality in ['Sentinel_2', 'EeteS_Sentinel_2_10m']:
-            # Sentinel-2 data with 13 bands
             create_dummy_geotiff(file_path, num_bands=13, dtype=np.uint16)
         elif modality == '3K_DSM':
-            # DSM data, single-band float32
             create_dummy_geotiff(file_path, num_bands=1, dtype=np.float32)
         elif modality == '3K_RGB':
-            # High-resolution RGB image with 3 bands, uint8
             create_dummy_geotiff(file_path, num_bands=3, dtype=np.uint8)
 
 print(f'Dummy MDAS dataset created at {os.path.join(root_dir, ds_root_name)}')

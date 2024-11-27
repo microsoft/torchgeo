@@ -295,36 +295,30 @@ class MDAS(NonGeoDataset):
 
         for idx, (key, data) in enumerate(sample.items()):
             if key == '3K_RGB_image':
-                # Use the first three bands
                 img = data[:3].numpy().transpose(1, 2, 0) / 255.0
                 axs[idx].imshow(img)
             elif key == '3K_DSM_image':
                 img = data.numpy().squeeze(0)
                 axs[idx].imshow(img, cmap='gray')
             elif key in ['EeteS_EnMAP_10m_image', 'EeteS_EnMAP_30m_image']:
-                # Use specified EnMAP RGB bands
                 img = data[self.enmap_rgb_band_idx].numpy().transpose(1, 2, 0) / 10000.0
                 axs[idx].imshow(img)
             elif key == 'EeteS_Sentinel_2_10m_image':
-                # Use specified Sentinel-2 RGB bands
                 img = (
                     data[self.sentinel_2_rgb_band_idx].numpy().transpose(1, 2, 0)
                     / 10000.0
                 )
                 axs[idx].imshow(img)
             elif key == 'Sentinel_1_image':
-                # Use the first band
                 img = data[0].numpy().clip(0, 1)
                 axs[idx].imshow(img)
             elif key == 'Sentinel_2_image':
-                # Use specified Sentinel-2 RGB bands
                 img = (
                     data[self.sentinel_2_rgb_band_idx].numpy().transpose(1, 2, 0)
                     / 10000.0
                 )
                 axs[idx].imshow(img)
             elif key == 'HySpex_image':
-                # Use specified HySpex RGB bands
                 img = (
                     data[self.hyspex_rgb_band_idx].numpy().transpose(1, 2, 0) / 15000.0
                 )
