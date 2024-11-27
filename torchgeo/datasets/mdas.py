@@ -156,7 +156,7 @@ class MDAS(NonGeoDataset):
             checksum: If True, check the integrity of the dataset after download.
 
         Raises:
-            AssertianError: If the subareas or modalities are not valid.
+            AssertionError: If the subareas or modalities are not valid.
             DatasetNotFoundError: If the dataset is not found.
         """
         self.root = root
