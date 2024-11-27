@@ -30,6 +30,7 @@ pyarrow==15.0.0  # Remove when we upgrade min version of pandas to `pandas[parqu
 pyvista==0.34.2
 scikit-image==0.19.0
 scipy==1.7.2
+vtk==9.3.1  # PyVista is not yet compatible with VTK 9.4+
 
 # tests
 pytest==7.3.0
