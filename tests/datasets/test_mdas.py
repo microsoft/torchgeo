@@ -21,14 +21,18 @@ class TestMDAS:
             {'subareas': ['sub_area_1'], 'modalities': ['3K_RGB', 'osm_buildings']},
             {
                 'subareas': ['sub_area_1', 'sub_area_2'],
-                'modalities': ['3K_RGB', 'HySpex'],
+                'modalities': ['3K_DSM', 'HySpex', 'osm_water'],
             },
             {
                 'subareas': ['sub_area_2', 'sub_area_3'],
                 'modalities': [
+                    '3K_DSM',
                     '3K_RGB',
                     'HySpex',
                     'EeteS_EnMAP_10m',
+                    'EeteS_EnMAP_30m',
+                    'EeteS_Sentinel_2_10m',
+                    'Sentinel_2',
                     'Sentinel_1',
                     'osm_buildings',
                     'osm_landuse',
