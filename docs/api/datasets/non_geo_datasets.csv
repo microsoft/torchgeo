@@ -28,7 +28,7 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `LEVIR-CD+`_,CD,Google Earth,-,985,2,"1,024x1,024",0.5,RGB
 `LoveDA`_,S,Google Earth,"CC-BY-NC-SA-4.0","5,987",7,"1,024x1,024",0.3,RGB
 `MapInWild`_,S,"Sentinel-1/2, ESA WorldCover, NOAA VIIRS DNB","CC-BY-4.0",1018,1,1920x1920,10--463.83,"SAR, MSI, 2020_Map, avg_rad"
-`MDAS`_,S,"Sentinel-1/2,EnMAP,HySpex","CC-BY-SA-4.0",3,20,,"100x120, 300x360, 1364x1636, 10000x12000, 15000x18000",0.3--30,HSI
+`MDAS`_,S,"Sentinel-1/2,EnMAP,HySpex","CC-BY-SA-4.0",3,20,"100x120, 300x360, 1364x1636, 10000x12000, 15000x18000",0.3--30,HSI
 `Million-AID`_,C,Google Earth,-,1M,51--73,,0.5--153,RGB
 `MMEarth`_,"C, S","Aster, Sentinel, ERA5","CC-BY-4.0","100K--1M",,"128x128 or 64x64",10,MSI
 `NASA Marine Debris`_,OD,PlanetScope,"Apache-2.0",707,1,256x256,3,RGB
