@@ -1,4 +1,4 @@
-﻿Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
+Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `ADVANCE`_,C,"Google Earth, Freesound",CC-BY-4.0,"5,075",13,512x512,0.5,RGB
 `Benin Cashew Plantations`_,S,Airbus Pléiades,CC-BY-4.0,70,6,"1,122x1,186",10,MSI
 `BigEarthNet`_,C,Sentinel-1/2,CDLA-Permissive-1.0,"590,326",19--43,120x120,10,"SAR, MSI"
