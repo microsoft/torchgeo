@@ -1,278 +1,343 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Detection tasks."""
+"""Trainers for object detection."""
 
-from typing import Any, Dict, List, cast
+from functools import partial
+from typing import Any
 
 import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import torch
-import torchvision
-from packaging.version import parse
+import torchvision.models.detection
+from matplotlib.figure import Figure
 from torch import Tensor
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.data import DataLoader
+from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchvision.models.detection import FasterRCNN
+from torchvision.models import resnet as R
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
+from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
-from torchvision.ops import MultiScaleRoIAlign
+from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
-if parse(torchvision.__version__) >= parse("0.13"):
-    from torchvision.models import resnet as R
+from ..datasets import RGBBandsMissingError, unbind_samples
+from .base import BaseTask
 
-    BACKBONE_WEIGHT_MAP = {
-        "resnet18": R.ResNet18_Weights.DEFAULT,
-        "resnet34": R.ResNet34_Weights.DEFAULT,
-        "resnet50": R.ResNet50_Weights.DEFAULT,
-        "resnet101": R.ResNet101_Weights.DEFAULT,
-        "resnet152": R.ResNet152_Weights.DEFAULT,
-        "resnext50_32x4d": R.ResNeXt50_32X4D_Weights.DEFAULT,
-        "resnext101_32x8d": R.ResNeXt101_32X8D_Weights.DEFAULT,
-        "wide_resnet50_2": R.Wide_ResNet50_2_Weights.DEFAULT,
-        "wide_resnet101_2": R.Wide_ResNet101_2_Weights.DEFAULT,
-    }
+BACKBONE_LAT_DIM_MAP = {
+    'resnet18': 512,
+    'resnet34': 512,
+    'resnet50': 2048,
+    'resnet101': 2048,
+    'resnet152': 2048,
+    'resnext50_32x4d': 2048,
+    'resnext101_32x8d': 2048,
+    'wide_resnet50_2': 2048,
+    'wide_resnet101_2': 2048,
+}
 
-from ..datasets.utils import unbind_samples
+BACKBONE_WEIGHT_MAP = {
+    'resnet18': R.ResNet18_Weights.DEFAULT,
+    'resnet34': R.ResNet34_Weights.DEFAULT,
+    'resnet50': R.ResNet50_Weights.DEFAULT,
+    'resnet101': R.ResNet101_Weights.DEFAULT,
+    'resnet152': R.ResNet152_Weights.DEFAULT,
+    'resnext50_32x4d': R.ResNeXt50_32X4D_Weights.DEFAULT,
+    'resnext101_32x8d': R.ResNeXt101_32X8D_Weights.DEFAULT,
+    'wide_resnet50_2': R.Wide_ResNet50_2_Weights.DEFAULT,
+    'wide_resnet101_2': R.Wide_ResNet101_2_Weights.DEFAULT,
+}
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
 
-
-class ObjectDetectionTask(pl.LightningModule):
-    """LightningModule for object detection of images.
-
-    Currently, supports a Faster R-CNN model from
-    `torchvision
-    <https://pytorch.org/vision/stable/models/faster_rcnn.html>`_ with
-    one of the following *backbone* arguments:
-
-    .. code-block:: python
-
-        ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152',
-        'resnext50_32x4d','resnext101_32x8d', 'wide_resnet50_2',
-        'wide_resnet101_2']
+class ObjectDetectionTask(BaseTask):
+    """Object detection.
 
     .. versionadded:: 0.4
     """
 
-    def config_task(self) -> None:
-        """Configures the task based on kwargs parameters passed to the constructor."""
-        backbone_pretrained = self.hyperparams.get("pretrained", True)
-        if self.hyperparams["model"] == "faster-rcnn":
-            if "resnet" in self.hyperparams["backbone"]:
-                kwargs = {
-                    "backbone_name": self.hyperparams["backbone"],
-                    "trainable_layers": self.hyperparams.get("trainable_layers", 3),
-                }
-                if parse(torchvision.__version__) >= parse("0.13"):
-                    if backbone_pretrained:
-                        kwargs["weights"] = BACKBONE_WEIGHT_MAP[
-                            self.hyperparams["backbone"]
-                        ]
-                    else:
-                        kwargs["weights"] = None
-                else:
-                    kwargs["pretrained"] = backbone_pretrained
+    ignore = None
+    monitor = 'val_map'
+    mode = 'max'
 
-                backbone = resnet_fpn_backbone(**kwargs)
+    def __init__(
+        self,
+        model: str = 'faster-rcnn',
+        backbone: str = 'resnet50',
+        weights: bool | None = None,
+        in_channels: int = 3,
+        num_classes: int = 1000,
+        trainable_layers: int = 3,
+        lr: float = 1e-3,
+        patience: int = 10,
+        freeze_backbone: bool = False,
+    ) -> None:
+        """Initialize a new ObjectDetectionTask instance.
+
+        Args:
+            model: Name of the `torchvision
+                <https://pytorch.org/vision/stable/models.html#object-detection>`__
+                model to use. One of 'faster-rcnn', 'fcos', or 'retinanet'.
+            backbone: Name of the `torchvision
+                <https://pytorch.org/vision/stable/models.html#classification>`__
+                backbone to use. One of 'resnet18', 'resnet34', 'resnet50',
+                'resnet101', 'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
+                'wide_resnet50_2', or 'wide_resnet101_2'.
+            weights: Initial model weights. True for ImageNet weights, False or None
+                for random weights.
+            in_channels: Number of input channels to model.
+            num_classes: Number of prediction classes (including the background).
+            trainable_layers: Number of trainable layers.
+            lr: Learning rate for optimizer.
+            patience: Patience for learning rate scheduler.
+            freeze_backbone: Freeze the backbone network to fine-tune the detection
+                head.
+
+        .. versionchanged:: 0.4
+           *detection_model* was renamed to *model*.
+
+        .. versionadded:: 0.5
+           The *freeze_backbone* parameter.
+
+        .. versionchanged:: 0.5
+           *pretrained*, *learning_rate*, and *learning_rate_schedule_patience* were
+           renamed to *weights*, *lr*, and *patience*.
+        """
+        super().__init__()
+
+    def configure_models(self) -> None:
+        """Initialize the model.
+
+        Raises:
+            ValueError: If *model* or *backbone* are invalid.
+        """
+        backbone: str = self.hparams['backbone']
+        model: str = self.hparams['model']
+        weights: bool | None = self.hparams['weights']
+        num_classes: int = self.hparams['num_classes']
+        freeze_backbone: bool = self.hparams['freeze_backbone']
+
+        if backbone in BACKBONE_LAT_DIM_MAP:
+            kwargs = {
+                'backbone_name': backbone,
+                'trainable_layers': self.hparams['trainable_layers'],
+            }
+            if weights:
+                kwargs['weights'] = BACKBONE_WEIGHT_MAP[backbone]
             else:
-                raise ValueError(
-                    f"Backbone type '{self.hyperparams['backbone']}' is not valid."
-                )
+                kwargs['weights'] = None
 
+            latent_dim = BACKBONE_LAT_DIM_MAP[backbone]
+        else:
+            raise ValueError(f"Backbone type '{backbone}' is not valid.")
+
+        if model == 'faster-rcnn':
+            model_backbone = resnet_fpn_backbone(**kwargs)
             anchor_generator = AnchorGenerator(
                 sizes=((32), (64), (128), (256), (512)), aspect_ratios=((0.5, 1.0, 2.0))
             )
 
             roi_pooler = MultiScaleRoIAlign(
-                featmap_names=["0", "1", "2", "3"], output_size=7, sampling_ratio=2
+                featmap_names=['0', '1', '2', '3'], output_size=7, sampling_ratio=2
             )
-            num_classes = self.hyperparams["num_classes"]
-            self.model = FasterRCNN(
-                backbone,
+
+            if freeze_backbone:
+                for param in model_backbone.parameters():
+                    param.requires_grad = False
+
+            self.model = torchvision.models.detection.FasterRCNN(
+                model_backbone,
                 num_classes,
                 rpn_anchor_generator=anchor_generator,
                 box_roi_pool=roi_pooler,
             )
+        elif model == 'fcos':
+            kwargs['extra_blocks'] = feature_pyramid_network.LastLevelP6P7(256, 256)
+            kwargs['norm_layer'] = (
+                misc.FrozenBatchNorm2d if weights else torch.nn.BatchNorm2d
+            )
 
+            model_backbone = resnet_fpn_backbone(**kwargs)
+            anchor_generator = AnchorGenerator(
+                sizes=((8,), (16,), (32,), (64,), (128,), (256,)),
+                aspect_ratios=((1.0,), (1.0,), (1.0,), (1.0,), (1.0,), (1.0,)),
+            )
+
+            if freeze_backbone:
+                for param in model_backbone.parameters():
+                    param.requires_grad = False
+
+            self.model = torchvision.models.detection.FCOS(
+                model_backbone, num_classes, anchor_generator=anchor_generator
+            )
+        elif model == 'retinanet':
+            kwargs['extra_blocks'] = feature_pyramid_network.LastLevelP6P7(
+                latent_dim, 256
+            )
+            model_backbone = resnet_fpn_backbone(**kwargs)
+
+            anchor_sizes = (
+                (16, 20, 25),
+                (32, 40, 50),
+                (64, 80, 101),
+                (128, 161, 203),
+                (256, 322, 406),
+                (512, 645, 812),
+            )
+            aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
+            anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
+
+            head = RetinaNetHead(
+                model_backbone.out_channels,
+                anchor_generator.num_anchors_per_location()[0],
+                num_classes,
+                norm_layer=partial(torch.nn.GroupNorm, 32),
+            )
+
+            if freeze_backbone:
+                for param in model_backbone.parameters():
+                    param.requires_grad = False
+
+            self.model = torchvision.models.detection.RetinaNet(
+                model_backbone,
+                num_classes,
+                anchor_generator=anchor_generator,
+                head=head,
+            )
         else:
-            raise ValueError(f"Model type '{self.hyperparams['model']}' is not valid.")
+            raise ValueError(f"Model type '{model}' is not valid.")
 
-    def __init__(self, **kwargs: Any) -> None:
-        """Initialize the LightningModule with a model and loss function.
+    def configure_metrics(self) -> None:
+        """Initialize the performance metrics.
 
-        Keyword Args:
-            model: Name of the detection model type to use
-            backbone: Name of the model backbone to use
-            in_channels: Number of channels in input image
-            num_classes: Number of semantic classes to predict
-            learning_rate: Learning rate for optimizer
-            learning_rate_schedule_patience: Patience for learning rate scheduler
+        * :class:`~torchmetrics.detection.mean_ap.MeanAveragePrecision`: Mean average
+          precision (mAP) and mean average recall (mAR). Precision is the number of
+          true positives divided by the number of true positives + false positives.
+          Recall is the number of true positives divived by the number of true positives
+          + false negatives. Uses 'macro' averaging. Higher values are better.
 
-        Raises:
-            ValueError: if kwargs arguments are invalid
-
-        .. versionchanged:: 0.4
-           The *detection_model* parameter was renamed to *model*.
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not
+             reflect minority class accuracy.
+           * 'Macro' averaging gives equal weight to each class, and is useful for
+             balanced performance assessment across imbalanced classes.
         """
-        super().__init__()
-        # Creates `self.hparams` from kwargs
-        self.save_hyperparameters()  # type: ignore[operator]
-        self.hyperparams = cast(Dict[str, Any], self.hparams)
+        metrics = MetricCollection([MeanAveragePrecision(average='macro')])
+        self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
 
-        self.config_task()
-
-        self.val_metrics = MeanAveragePrecision()
-        self.test_metrics = MeanAveragePrecision()
-
-    def forward(self, *args: Any, **kwargs: Any) -> Any:
-        """Forward pass of the model.
+    def training_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the training loss.
 
         Args:
-            x: tensor of data to run through the model
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
 
         Returns:
-            output from the model
+            The loss tensor.
         """
-        return self.model(*args, **kwargs)
-
-    def training_step(self, *args: Any, **kwargs: Any) -> Tensor:
-        """Compute and return the training loss.
-
-        Args:
-            batch: the output of your DataLoader
-
-        Returns:
-            training loss
-        """
-        batch = args[0]
-        x = batch["image"]
+        x = batch['image']
         batch_size = x.shape[0]
         y = [
-            {"boxes": batch["boxes"][i], "labels": batch["labels"][i]}
+            {'boxes': batch['boxes'][i], 'labels': batch['labels'][i]}
             for i in range(batch_size)
         ]
         loss_dict = self(x, y)
-        train_loss = sum(loss_dict.values())
+        train_loss: Tensor = sum(loss_dict.values())
+        self.log_dict(loss_dict, batch_size=batch_size)
+        return train_loss
 
-        self.log_dict(loss_dict)
-
-        return cast(Tensor, train_loss)
-
-    def validation_step(self, *args: Any, **kwargs: Any) -> None:
-        """Compute validation loss and log example predictions.
+    def validation_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
+        """Compute the validation metrics.
 
         Args:
-            batch: the output of your DataLoader
-            batch_idx: the index of this batch
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
         """
-        batch = args[0]
-        batch_idx = args[1]
-        x = batch["image"]
+        x = batch['image']
         batch_size = x.shape[0]
         y = [
-            {"boxes": batch["boxes"][i], "labels": batch["labels"][i]}
+            {'boxes': batch['boxes'][i], 'labels': batch['labels'][i]}
             for i in range(batch_size)
         ]
         y_hat = self(x)
+        metrics = self.val_metrics(y_hat, y)
 
-        self.val_metrics.update(y_hat, y)
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        metrics.pop('val_classes', None)
 
-        if batch_idx < 10:
+        self.log_dict(metrics, batch_size=batch_size)
+
+        if (
+            batch_idx < 10
+            and hasattr(self.trainer, 'datamodule')
+            and hasattr(self.trainer.datamodule, 'plot')
+            and self.logger
+            and hasattr(self.logger, 'experiment')
+            and hasattr(self.logger.experiment, 'add_figure')
+        ):
+            datamodule = self.trainer.datamodule
+            batch['prediction_boxes'] = [b['boxes'].cpu() for b in y_hat]
+            batch['prediction_labels'] = [b['labels'].cpu() for b in y_hat]
+            batch['prediction_scores'] = [b['scores'].cpu() for b in y_hat]
+            batch['image'] = batch['image'].cpu()
+            sample = unbind_samples(batch)[0]
+            # Convert image to uint8 for plotting
+            if torch.is_floating_point(sample['image']):
+                sample['image'] *= 255
+                sample['image'] = sample['image'].to(torch.uint8)
+
+            fig: Figure | None = None
             try:
-                datamodule = self.trainer.datamodule  # type: ignore[attr-defined]
-                batch["prediction_boxes"] = [b["boxes"].cpu() for b in y_hat]
-                batch["prediction_labels"] = [b["labels"].cpu() for b in y_hat]
-                batch["prediction_scores"] = [b["scores"].cpu() for b in y_hat]
-                batch["image"] = batch["image"].cpu()
-                sample = unbind_samples(batch)[0]
-                # Convert image to uint8 for plotting
-                if torch.is_floating_point(sample["image"]):
-                    sample["image"] *= 255
-                    sample["image"] = sample["image"].to(torch.uint8)
                 fig = datamodule.plot(sample)
-                summary_writer = self.logger.experiment  # type: ignore[union-attr]
-                summary_writer.add_figure(
-                    f"image/{batch_idx}", fig, global_step=self.global_step
-                )
-                plt.close()
-            except AttributeError:
+            except RGBBandsMissingError:
                 pass
 
-    def validation_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level validation metrics.
+            if fig:
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f'image/{batch_idx}', fig, global_step=self.global_step
+                )
+                plt.close()
+
+    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+        """Compute the test metrics.
 
         Args:
-            outputs: list of items returned by validation_step
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
         """
-        metrics = self.val_metrics.compute()
-        renamed_metrics = {f"val_{i}": metrics[i] for i in metrics.keys()}
-        self.log_dict(renamed_metrics)
-        self.val_metrics.reset()
-
-    def test_step(self, *args: Any, **kwargs: Any) -> None:
-        """Compute test MAP.
-
-        Args:
-            batch: the output of your DataLoader
-        """
-        batch = args[0]
-        x = batch["image"]
+        x = batch['image']
         batch_size = x.shape[0]
         y = [
-            {"boxes": batch["boxes"][i], "labels": batch["labels"][i]}
+            {'boxes': batch['boxes'][i], 'labels': batch['labels'][i]}
             for i in range(batch_size)
         ]
         y_hat = self(x)
+        metrics = self.test_metrics(y_hat, y)
 
-        self.test_metrics.update(y_hat, y)
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        metrics.pop('test_classes', None)
 
-    def test_epoch_end(self, outputs: Any) -> None:
-        """Logs epoch level test metrics.
+        self.log_dict(metrics, batch_size=batch_size)
 
-        Args:
-            outputs: list of items returned by test_step
-        """
-        metrics = self.test_metrics.compute()
-        renamed_metrics = {f"test_{i}": metrics[i] for i in metrics.keys()}
-        self.log_dict(renamed_metrics)
-        self.test_metrics.reset()
-
-    def predict_step(self, *args: Any, **kwargs: Any) -> List[Dict[str, Tensor]]:
-        """Compute and return the predictions.
+    def predict_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> list[dict[str, Tensor]]:
+        """Compute the predicted bounding boxes.
 
         Args:
-            batch: the output of your DataLoader
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
 
         Returns:
-            list of predicted boxes, labels and scores
+            Output predicted probabilities.
         """
-        batch = args[0]
-        x = batch["image"]
-        y_hat: List[Dict[str, Tensor]] = self(x)
+        x = batch['image']
+        y_hat: list[dict[str, Tensor]] = self(x)
         return y_hat
-
-    def configure_optimizers(self) -> Dict[str, Any]:
-        """Initialize the optimizer and learning rate scheduler.
-
-        Returns:
-            a "lr dict" according to the pytorch lightning documentation --
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
-        """
-        optimizer = torch.optim.Adam(
-            self.model.parameters(), lr=self.hyperparams["learning_rate"]
-        )
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": ReduceLROnPlateau(
-                    optimizer,
-                    mode="max",
-                    patience=self.hyperparams["learning_rate_schedule_patience"],
-                ),
-                "monitor": "val_map",
-            },
-        }

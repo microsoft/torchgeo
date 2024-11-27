@@ -5,13 +5,15 @@
 
 import os
 import sys
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
+import pandas as pd
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, disambiguate_timestamp
+from .utils import BoundingBox, Path, disambiguate_timestamp
 
 
 class EDDMapS(GeoDataset):
@@ -34,45 +36,32 @@ class EDDMapS(GeoDataset):
       Georgia - Center for Invasive Species and Ecosystem Health. Available online at
       https://www.eddmaps.org/; last accessed *DATE*.
 
-    .. note::
-       This dataset requires the following additional library to be installed:
-
-       * `pandas <https://pypi.org/project/pandas/>`_ to load CSV files
-
     .. versionadded:: 0.3
     """
 
     res = 0
     _crs = CRS.from_epsg(4326)  # Lat/Lon
 
-    def __init__(self, root: str = "data") -> None:
+    def __init__(self, root: Path = 'data') -> None:
         """Initialize a new Dataset instance.
 
         Args:
             root: root directory where dataset can be found
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
-            ImportError: if pandas is not installed
+            DatasetNotFoundError: If dataset is not found.
         """
         super().__init__()
 
         self.root = root
 
-        filepath = os.path.join(root, "mappings.csv")
+        filepath = os.path.join(root, 'mappings.csv')
         if not os.path.exists(filepath):
-            raise FileNotFoundError(f"Dataset not found in `root={self.root}`")
-
-        try:
-            import pandas as pd  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pandas is not installed and is required to use this dataset"
-            )
+            raise DatasetNotFoundError(self)
 
         # Read CSV file
         data = pd.read_csv(
-            filepath, engine="c", usecols=["ObsDate", "Latitude", "Longitude"]
+            filepath, engine='c', usecols=['ObsDate', 'Latitude', 'Longitude']
         )
 
         # Convert from pandas DataFrame to rtree Index
@@ -83,7 +72,7 @@ class EDDMapS(GeoDataset):
                 continue
 
             if not pd.isna(date):
-                mint, maxt = disambiguate_timestamp(date, "%m-%d-%y")
+                mint, maxt = disambiguate_timestamp(date, '%m-%d-%y')
             else:
                 mint, maxt = 0, sys.maxsize
 
@@ -91,7 +80,7 @@ class EDDMapS(GeoDataset):
             self.index.insert(i, coords)
             i += 1
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve metadata indexed by query.
 
         Args:
@@ -108,9 +97,9 @@ class EDDMapS(GeoDataset):
 
         if not bboxes:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        sample = {"crs": self.crs, "bbox": bboxes}
+        sample = {'crs': self.crs, 'bounds': bboxes}
 
         return sample

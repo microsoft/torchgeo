@@ -10,12 +10,12 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
+    DatasetNotFoundError,
     EnviroAtlas,
     IntersectionDataset,
     UnionDataset,
@@ -23,34 +23,29 @@ from torchgeo.datasets import (
 from torchgeo.samplers import RandomGeoSampler
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestEnviroAtlas:
     @pytest.fixture(
         params=[
-            (("naip", "prior", "lc"), False),
-            (("naip", "prior", "buildings", "lc"), True),
-            (("naip", "prior"), False),
+            (('naip', 'prior', 'lc'), False),
+            (('naip', 'prior', 'buildings', 'lc'), True),
+            (('naip', 'prior'), False),
         ]
     )
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> EnviroAtlas:
-        monkeypatch.setattr(torchgeo.datasets.enviroatlas, "download_url", download_url)
-        monkeypatch.setattr(EnviroAtlas, "md5", "071ec65c611e1d4915a5247bffb5ad87")
+        monkeypatch.setattr(EnviroAtlas, 'md5', '071ec65c611e1d4915a5247bffb5ad87')
         monkeypatch.setattr(
             EnviroAtlas,
-            "url",
-            os.path.join("tests", "data", "enviroatlas", "enviroatlas_lotp.zip"),
+            'url',
+            os.path.join('tests', 'data', 'enviroatlas', 'enviroatlas_lotp.zip'),
         )
         monkeypatch.setattr(
             EnviroAtlas,
-            "files",
-            ["pittsburgh_pa-2010_1m-train_tiles-debuffered", "spatial_index.geojson"],
+            '_files',
+            ['pittsburgh_pa-2010_1m-train_tiles-debuffered', 'spatial_index.geojson'],
         )
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return EnviroAtlas(
             root,
@@ -66,8 +61,11 @@ class TestEnviroAtlas:
         bb = next(iter(sampler))
         x = dataset[bb]
         assert isinstance(x, dict)
-        assert isinstance(x["crs"], CRS)
-        assert isinstance(x["mask"], torch.Tensor)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['mask'], torch.Tensor)
+
+    def test_len(self, dataset: EnviroAtlas) -> None:
+        assert len(dataset) == 1
 
     def test_and(self, dataset: EnviroAtlas) -> None:
         ds = dataset & dataset
@@ -81,31 +79,31 @@ class TestEnviroAtlas:
         EnviroAtlas(root=dataset.root, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(
-            os.path.join("tests", "data", "enviroatlas", "enviroatlas_lotp.zip"), root
+            os.path.join('tests', 'data', 'enviroatlas', 'enviroatlas_lotp.zip'), root
         )
         EnviroAtlas(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
-        with pytest.raises(RuntimeError, match="Dataset not found"):
-            EnviroAtlas(str(tmp_path), checksum=True)
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            EnviroAtlas(tmp_path, checksum=True)
 
     def test_out_of_bounds_query(self, dataset: EnviroAtlas) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
-            IndexError, match="query: .* not found in index with bounds:"
+            IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]
 
     def test_multiple_hits_query(self, dataset: EnviroAtlas) -> None:
         ds = EnviroAtlas(
             root=dataset.root,
-            splits=["pittsburgh_pa-2010_1m-train", "austin_tx-2012_1m-test"],
+            splits=['pittsburgh_pa-2010_1m-train', 'austin_tx-2012_1m-test'],
             layers=dataset.layers,
         )
         with pytest.raises(
-            IndexError, match="query: .* spans multiple tiles which is not valid"
+            IndexError, match='query: .* spans multiple tiles which is not valid'
         ):
             ds[dataset.bounds]
 
@@ -113,14 +111,14 @@ class TestEnviroAtlas:
         sampler = RandomGeoSampler(dataset, size=16, length=1)
         bb = next(iter(sampler))
         x = dataset[bb]
-        if "naip" not in dataset.layers or "lc" not in dataset.layers:
+        if 'naip' not in dataset.layers or 'lc' not in dataset.layers:
             with pytest.raises(ValueError, match="The 'naip' and"):
                 dataset.plot(x)
         else:
-            dataset.plot(x, suptitle="Test")
+            dataset.plot(x, suptitle='Test')
             plt.close()
             dataset.plot(x, show_titles=False)
             plt.close()
-            x["prediction"] = x["mask"][0].clone()
+            x['prediction'] = x['mask'][0].clone()
             dataset.plot(x)
             plt.close()

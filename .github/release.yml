@@ -1,0 +1,41 @@
+changelog:
+  exclude:
+    authors:
+      - app/dependabot
+  categories:
+    - title: Backwards-incompatible changes
+      labels:
+        - backwards-incompatible
+    - title: Dependencies
+      labels:
+        - dependencies
+    - title: Datamodules
+      labels:
+        - datamodules
+    - title: Datasets
+      labels:
+        - datasets
+    - title: Losses
+      labels:
+        - losses
+    - title: Models
+      labels:
+        - models
+    - title: Samplers
+      labels:
+        - samplers
+    - title: Trainers
+      labels:
+        - trainers
+    - title: Transforms
+      labels:
+        - transforms
+    - title: Scripts
+      labels:
+        - scripts
+    - title: Documentation
+      labels:
+        - documentation
+    - title: Testing
+      labels:
+        - testing

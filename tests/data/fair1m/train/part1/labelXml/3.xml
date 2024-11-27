@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<annotation>
+	<source>
+		<filename>3.tif</filename>
+	</source>
+	<size>
+		<width>2</width>
+		<height>2</height>
+		<depth>3</depth>
+	</size>
+	<objects>
+		<object>
+			<coordinate>pixel</coordinate>
+			<type>rectangle</type>
+			<description>None</description>
+			<possibleresult>
+				<name>A220</name>
+			</possibleresult>
+			<points>
+				<point>0.000000,0.000000</point>
+				<point>1.000000,0.000000</point>
+				<point>1.000000,1.000000</point>
+				<point>0.000000,1.000000</point>
+				<point>0.000000,0.000000</point>
+			</points>
+		</object>
+	</objects>
+</annotation>

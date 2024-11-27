@@ -6,17 +6,20 @@
 import glob
 import json
 import os
-from typing import Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
+from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, sort_sentinel2_bands
+from .utils import Path, download_url, extract_archive, sort_sentinel2_bands
 
 
 class BigEarthNet(NonGeoDataset):
@@ -45,50 +48,50 @@ class BigEarthNet(NonGeoDataset):
 
     Dataset classes (43):
 
-    0. Agro-forestry areas
-    1. Airports
-    2. Annual crops associated with permanent crops
-    3. Bare rock
-    4. Beaches, dunes, sands
-    5. Broad-leaved forest
-    6. Burnt areas
-    7. Coastal lagoons
-    8. Complex cultivation patterns
-    9. Coniferous forest
-    10. Construction sites
-    11. Continuous urban fabric
-    12. Discontinuous urban fabric
-    13. Dump sites
-    14. Estuaries
+    0. Continuous urban fabric
+    1. Discontinuous urban fabric
+    2. Industrial or commercial units
+    3. Road and rail networks and associated land
+    4. Port areas
+    5. Airports
+    6. Mineral extraction sites
+    7. Dump sites
+    8. Construction sites
+    9. Green urban areas
+    10. Sport and leisure facilities
+    11. Non-irrigated arable land
+    12. Permanently irrigated land
+    13. Rice fields
+    14. Vineyards
     15. Fruit trees and berry plantations
-    16. Green urban areas
-    17. Industrial or commercial units
-    18. Inland marshes
-    19. Intertidal flats
+    16. Olive groves
+    17. Pastures
+    18. Annual crops associated with permanent crops
+    19. Complex cultivation patterns
     20. Land principally occupied by agriculture, with significant
         areas of natural vegetation
-    21. Mineral extraction sites
-    22. Mixed forest
-    23. Moors and heathland
-    24. Natural grassland
-    25. Non-irrigated arable land
-    26. Olive groves
-    27. Pastures
-    28. Peatbogs
-    29. Permanently irrigated land
-    30. Port areas
-    31. Rice fields
-    32. Road and rail networks and associated land
-    33. Salines
-    34. Salt marshes
-    35. Sclerophyllous vegetation
-    36. Sea and ocean
-    37. Sparsely vegetated areas
-    38. Sport and leisure facilities
-    39. Transitional woodland/shrub
-    40. Vineyards
-    41. Water bodies
-    42. Water courses
+    21. Agro-forestry areas
+    22. Broad-leaved forest
+    23. Coniferous forest
+    24. Mixed forest
+    25. Natural grassland
+    26. Moors and heathland
+    27. Sclerophyllous vegetation
+    28. Transitional woodland/shrub
+    29. Beaches, dunes, sands
+    30. Bare rock
+    31. Sparsely vegetated areas
+    32. Burnt areas
+    33. Inland marshes
+    34. Peatbogs
+    35. Salt marshes
+    36. Salines
+    37. Intertidal flats
+    38. Water courses
+    39. Water bodies
+    40. Coastal lagoons
+    41. Estuaries
+    42. Sea and ocean
 
     Dataset classes (19):
 
@@ -113,84 +116,89 @@ class BigEarthNet(NonGeoDataset):
     17. Inland waters
     18. Marine waters
 
+    The source for the above dataset classes, their respective ordering, and
+    43-to-19-class mappings can be found here:
+
+    * https://git.tu-berlin.de/rsim/BigEarthNet-S2_19-classes_models/-/blob/master/label_indices.json
+
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/IGARSS.2019.8900532
 
     """
 
-    class_sets = {
+    class_sets: ClassVar[dict[int, list[str]]] = {
         19: [
-            "Urban fabric",
-            "Industrial or commercial units",
-            "Arable land",
-            "Permanent crops",
-            "Pastures",
-            "Complex cultivation patterns",
-            "Land principally occupied by agriculture, with significant areas of"
-            " natural vegetation",
-            "Agro-forestry areas",
-            "Broad-leaved forest",
-            "Coniferous forest",
-            "Mixed forest",
-            "Natural grassland and sparsely vegetated areas",
-            "Moors, heathland and sclerophyllous vegetation",
-            "Transitional woodland, shrub",
-            "Beaches, dunes, sands",
-            "Inland wetlands",
-            "Coastal wetlands",
-            "Inland waters",
-            "Marine waters",
+            'Urban fabric',
+            'Industrial or commercial units',
+            'Arable land',
+            'Permanent crops',
+            'Pastures',
+            'Complex cultivation patterns',
+            'Land principally occupied by agriculture, with significant areas of'
+            ' natural vegetation',
+            'Agro-forestry areas',
+            'Broad-leaved forest',
+            'Coniferous forest',
+            'Mixed forest',
+            'Natural grassland and sparsely vegetated areas',
+            'Moors, heathland and sclerophyllous vegetation',
+            'Transitional woodland, shrub',
+            'Beaches, dunes, sands',
+            'Inland wetlands',
+            'Coastal wetlands',
+            'Inland waters',
+            'Marine waters',
         ],
         43: [
-            "Agro-forestry areas",
-            "Airports",
-            "Annual crops associated with permanent crops",
-            "Bare rock",
-            "Beaches, dunes, sands",
-            "Broad-leaved forest",
-            "Burnt areas",
-            "Coastal lagoons",
-            "Complex cultivation patterns",
-            "Coniferous forest",
-            "Construction sites",
-            "Continuous urban fabric",
-            "Discontinuous urban fabric",
-            "Dump sites",
-            "Estuaries",
-            "Fruit trees and berry plantations",
-            "Green urban areas",
-            "Industrial or commercial units",
-            "Inland marshes",
-            "Intertidal flats",
-            "Land principally occupied by agriculture, with significant areas of"
-            " natural vegetation",
-            "Mineral extraction sites",
-            "Mixed forest",
-            "Moors and heathland",
-            "Natural grassland",
-            "Non-irrigated arable land",
-            "Olive groves",
-            "Pastures",
-            "Peatbogs",
-            "Permanently irrigated land",
-            "Port areas",
-            "Rice fields",
-            "Road and rail networks and associated land",
-            "Salines",
-            "Salt marshes",
-            "Sclerophyllous vegetation",
-            "Sea and ocean",
-            "Sparsely vegetated areas",
-            "Sport and leisure facilities",
-            "Transitional woodland/shrub",
-            "Vineyards",
-            "Water bodies",
-            "Water courses",
+            'Continuous urban fabric',
+            'Discontinuous urban fabric',
+            'Industrial or commercial units',
+            'Road and rail networks and associated land',
+            'Port areas',
+            'Airports',
+            'Mineral extraction sites',
+            'Dump sites',
+            'Construction sites',
+            'Green urban areas',
+            'Sport and leisure facilities',
+            'Non-irrigated arable land',
+            'Permanently irrigated land',
+            'Rice fields',
+            'Vineyards',
+            'Fruit trees and berry plantations',
+            'Olive groves',
+            'Pastures',
+            'Annual crops associated with permanent crops',
+            'Complex cultivation patterns',
+            'Land principally occupied by agriculture, with significant areas of'
+            ' natural vegetation',
+            'Agro-forestry areas',
+            'Broad-leaved forest',
+            'Coniferous forest',
+            'Mixed forest',
+            'Natural grassland',
+            'Moors and heathland',
+            'Sclerophyllous vegetation',
+            'Transitional woodland/shrub',
+            'Beaches, dunes, sands',
+            'Bare rock',
+            'Sparsely vegetated areas',
+            'Burnt areas',
+            'Inland marshes',
+            'Peatbogs',
+            'Salt marshes',
+            'Salines',
+            'Intertidal flats',
+            'Water courses',
+            'Water bodies',
+            'Coastal lagoons',
+            'Estuaries',
+            'Sea and ocean',
         ],
     }
 
-    label_converter = {
+    label_converter: ClassVar[dict[int, int]] = {
         0: 0,
         1: 0,
         2: 1,
@@ -225,46 +233,46 @@ class BigEarthNet(NonGeoDataset):
         42: 18,
     }
 
-    splits_metadata = {
-        "train": {
-            "url": "https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/master/splits/train.csv?inline=false",  # noqa: E501
-            "filename": "bigearthnet-train.csv",
-            "md5": "623e501b38ab7b12fe44f0083c00986d",
+    splits_metadata: ClassVar[dict[str, dict[str, str]]] = {
+        'train': {
+            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/train.csv?inline=false',
+            'filename': 'bigearthnet-train.csv',
+            'md5': '623e501b38ab7b12fe44f0083c00986d',
         },
-        "val": {
-            "url": "https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/master/splits/val.csv?inline=false",  # noqa: E501
-            "filename": "bigearthnet-val.csv",
-            "md5": "22efe8ed9cbd71fa10742ff7df2b7978",
+        'val': {
+            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/val.csv?inline=false',
+            'filename': 'bigearthnet-val.csv',
+            'md5': '22efe8ed9cbd71fa10742ff7df2b7978',
         },
-        "test": {
-            "url": "https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/master/splits/test.csv?inline=false",  # noqa: E501
-            "filename": "bigearthnet-test.csv",
-            "md5": "697fb90677e30571b9ac7699b7e5b432",
+        'test': {
+            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/test.csv?inline=false',
+            'filename': 'bigearthnet-test.csv',
+            'md5': '697fb90677e30571b9ac7699b7e5b432',
         },
     }
-    metadata = {
-        "s1": {
-            "url": "https://bigearth.net/downloads/BigEarthNet-S1-v1.0.tar.gz",
-            "md5": "94ced73440dea8c7b9645ee738c5a172",
-            "filename": "BigEarthNet-S1-v1.0.tar.gz",
-            "directory": "BigEarthNet-S1-v1.0",
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
+        's1': {
+            'url': 'https://zenodo.org/records/12687186/files/BigEarthNet-S1-v1.0.tar.gz',
+            'md5': '94ced73440dea8c7b9645ee738c5a172',
+            'filename': 'BigEarthNet-S1-v1.0.tar.gz',
+            'directory': 'BigEarthNet-S1-v1.0',
         },
-        "s2": {
-            "url": "https://bigearth.net/downloads/BigEarthNet-S2-v1.0.tar.gz",
-            "md5": "5a64e9ce38deb036a435a7b59494924c",
-            "filename": "BigEarthNet-S2-v1.0.tar.gz",
-            "directory": "BigEarthNet-v1.0",
+        's2': {
+            'url': 'https://zenodo.org/records/12687186/files/BigEarthNet-S2-v1.0.tar.gz',
+            'md5': '5a64e9ce38deb036a435a7b59494924c',
+            'filename': 'BigEarthNet-S2-v1.0.tar.gz',
+            'directory': 'BigEarthNet-v1.0',
         },
     }
     image_size = (120, 120)
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        bands: str = "all",
+        root: Path = 'data',
+        split: str = 'train',
+        bands: str = 'all',
         num_classes: int = 19,
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -279,9 +287,12 @@ class BigEarthNet(NonGeoDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits_metadata
-        assert bands in ["s1", "s2", "all"]
+        assert bands in ['s1', 's2', 'all']
         assert num_classes in [43, 19]
         self.root = root
         self.split = split
@@ -294,7 +305,7 @@ class BigEarthNet(NonGeoDataset):
         self._verify()
         self.folders = self._load_folders()
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -305,7 +316,7 @@ class BigEarthNet(NonGeoDataset):
         """
         image = self._load_image(index)
         label = self._load_target(index)
-        sample: Dict[str, Tensor] = {"image": image, "label": label}
+        sample: dict[str, Tensor] = {'image': image, 'label': label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -320,30 +331,30 @@ class BigEarthNet(NonGeoDataset):
         """
         return len(self.folders)
 
-    def _load_folders(self) -> List[Dict[str, str]]:
+    def _load_folders(self) -> list[dict[str, str]]:
         """Load folder paths.
 
         Returns:
             list of dicts of s1 and s2 folder paths
         """
-        filename = self.splits_metadata[self.split]["filename"]
-        dir_s1 = self.metadata["s1"]["directory"]
-        dir_s2 = self.metadata["s2"]["directory"]
+        filename = self.splits_metadata[self.split]['filename']
+        dir_s1 = self.metadata['s1']['directory']
+        dir_s2 = self.metadata['s2']['directory']
 
         with open(os.path.join(self.root, filename)) as f:
             lines = f.read().strip().splitlines()
-            pairs = [line.split(",") for line in lines]
+            pairs = [line.split(',') for line in lines]
 
         folders = [
             {
-                "s1": os.path.join(self.root, dir_s1, pair[1]),
-                "s2": os.path.join(self.root, dir_s2, pair[0]),
+                's1': os.path.join(self.root, dir_s1, pair[1]),
+                's2': os.path.join(self.root, dir_s2, pair[0]),
             }
             for pair in pairs
         ]
         return folders
 
-    def _load_paths(self, index: int) -> List[str]:
+    def _load_paths(self, index: int) -> list[str]:
         """Load paths to band files.
 
         Args:
@@ -352,21 +363,21 @@ class BigEarthNet(NonGeoDataset):
         Returns:
             list of file paths
         """
-        if self.bands == "all":
-            folder_s1 = self.folders[index]["s1"]
-            folder_s2 = self.folders[index]["s2"]
-            paths_s1 = glob.glob(os.path.join(folder_s1, "*.tif"))
-            paths_s2 = glob.glob(os.path.join(folder_s2, "*.tif"))
+        if self.bands == 'all':
+            folder_s1 = self.folders[index]['s1']
+            folder_s2 = self.folders[index]['s2']
+            paths_s1 = glob.glob(os.path.join(folder_s1, '*.tif'))
+            paths_s2 = glob.glob(os.path.join(folder_s2, '*.tif'))
             paths_s1 = sorted(paths_s1)
             paths_s2 = sorted(paths_s2, key=sort_sentinel2_bands)
             paths = paths_s1 + paths_s2
-        elif self.bands == "s1":
-            folder = self.folders[index]["s1"]
-            paths = glob.glob(os.path.join(folder, "*.tif"))
+        elif self.bands == 's1':
+            folder = self.folders[index]['s1']
+            paths = glob.glob(os.path.join(folder, '*.tif'))
             paths = sorted(paths)
         else:
-            folder = self.folders[index]["s2"]
-            paths = glob.glob(os.path.join(folder, "*.tif"))
+            folder = self.folders[index]['s2']
+            paths = glob.glob(os.path.join(folder, '*.tif'))
             paths = sorted(paths, key=sort_sentinel2_bands)
 
         return paths
@@ -389,12 +400,12 @@ class BigEarthNet(NonGeoDataset):
                 array = dataset.read(
                     indexes=1,
                     out_shape=self.image_size,
-                    out_dtype="int32",
+                    out_dtype='int32',
                     resampling=Resampling.bilinear,
                 )
                 images.append(array)
-        arrays: "np.typing.NDArray[np.int_]" = np.stack(images, axis=0)
-        tensor = torch.from_numpy(arrays)
+        arrays: np.typing.NDArray[np.int_] = np.stack(images, axis=0)
+        tensor = torch.from_numpy(arrays).float()
         return tensor
 
     def _load_target(self, index: int) -> Tensor:
@@ -406,14 +417,14 @@ class BigEarthNet(NonGeoDataset):
         Returns:
             the target label
         """
-        if self.bands == "s2":
-            folder = self.folders[index]["s2"]
+        if self.bands == 's2':
+            folder = self.folders[index]['s2']
         else:
-            folder = self.folders[index]["s1"]
+            folder = self.folders[index]['s1']
 
-        path = glob.glob(os.path.join(folder, "*.json"))[0]
+        path = glob.glob(os.path.join(folder, '*.json'))[0]
         with open(path) as f:
-            labels = json.load(f)["labels"]
+            labels = json.load(f)['labels']
 
         # labels -> indices
         indices = [self.class2idx[label] for label in labels]
@@ -428,20 +439,16 @@ class BigEarthNet(NonGeoDataset):
         return target
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
-        keys = ["s1", "s2"] if self.bands == "all" else [self.bands]
-        urls = [self.metadata[k]["url"] for k in keys]
-        md5s = [self.metadata[k]["md5"] for k in keys]
-        filenames = [self.metadata[k]["filename"] for k in keys]
-        directories = [self.metadata[k]["directory"] for k in keys]
-        urls.extend([self.splits_metadata[k]["url"] for k in self.splits_metadata])
-        md5s.extend([self.splits_metadata[k]["md5"] for k in self.splits_metadata])
+        """Verify the integrity of the dataset."""
+        keys = ['s1', 's2'] if self.bands == 'all' else [self.bands]
+        urls = [self.metadata[k]['url'] for k in keys]
+        md5s = [self.metadata[k]['md5'] for k in keys]
+        filenames = [self.metadata[k]['filename'] for k in keys]
+        directories = [self.metadata[k]['directory'] for k in keys]
+        urls.extend([self.splits_metadata[k]['url'] for k in self.splits_metadata])
+        md5s.extend([self.splits_metadata[k]['md5'] for k in self.splits_metadata])
         filenames_splits = [
-            self.splits_metadata[k]["filename"] for k in self.splits_metadata
+            self.splits_metadata[k]['filename'] for k in self.splits_metadata
         ]
         filenames.extend(filenames_splits)
 
@@ -472,11 +479,7 @@ class BigEarthNet(NonGeoDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         for url, filename, md5 in zip(urls, filenames, md5s):
@@ -484,7 +487,7 @@ class BigEarthNet(NonGeoDataset):
             filepath = os.path.join(self.root, filename)
             self._extract(filepath)
 
-    def _download(self, url: str, filename: str, md5: str) -> None:
+    def _download(self, url: str, filename: Path, md5: str) -> None:
         """Download the dataset.
 
         Args:
@@ -497,24 +500,24 @@ class BigEarthNet(NonGeoDataset):
                 url, self.root, filename=filename, md5=md5 if self.checksum else None
             )
 
-    def _extract(self, filepath: str) -> None:
+    def _extract(self, filepath: Path) -> None:
         """Extract the dataset.
 
         Args:
             filepath: path to file to be extracted
         """
-        if not filepath.endswith(".csv"):
+        if not str(filepath).endswith('.csv'):
             extract_archive(filepath)
 
     def _onehot_labels_to_names(
-        self, label_mask: "np.typing.NDArray[np.bool_]"
-    ) -> List[str]:
+        self, label_mask: 'np.typing.NDArray[np.bool_]'
+    ) -> list[str]:
         """Gets a list of class names given a label mask.
 
         Args:
             label_mask: a boolean mask corresponding to a set of labels or predictions
 
-        Returns
+        Returns:
             a list of class names corresponding to the input mask
         """
         labels = []
@@ -525,10 +528,10 @@ class BigEarthNet(NonGeoDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+        suptitle: str | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -539,31 +542,28 @@ class BigEarthNet(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
 
-        Raises:
-            ValueError: if ``self.bands`` is "s1"
-
         .. versionadded:: 0.2
         """
-        if self.bands == "s2":
-            image = np.rollaxis(sample["image"][[3, 2, 1]].numpy(), 0, 3)
+        if self.bands == 's2':
+            image = np.rollaxis(sample['image'][[3, 2, 1]].numpy(), 0, 3)
             image = np.clip(image / 2000, 0, 1)
-        elif self.bands == "all":
-            image = np.rollaxis(sample["image"][[5, 4, 3]].numpy(), 0, 3)
+        elif self.bands == 'all':
+            image = np.rollaxis(sample['image'][[5, 4, 3]].numpy(), 0, 3)
             image = np.clip(image / 2000, 0, 1)
-        elif self.bands == "s1":
-            image = sample["image"][0].numpy()
+        elif self.bands == 's1':
+            image = sample['image'][0].numpy()
 
-        label_mask = sample["label"].numpy().astype(np.bool_)
+        label_mask = sample['label'].numpy().astype(np.bool_)
         labels = self._onehot_labels_to_names(label_mask)
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction_mask = sample["prediction"].numpy().astype(np.bool_)
+            prediction_mask = sample['prediction'].numpy().astype(np.bool_)
             predictions = self._onehot_labels_to_names(prediction_mask)
 
         fig, ax = plt.subplots(figsize=(4, 4))
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
         if show_titles:
             title = f"Labels: {', '.join(labels)}"
             if showing_predictions:

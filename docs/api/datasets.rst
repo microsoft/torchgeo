@@ -13,15 +13,25 @@ Geospatial Datasets
 :class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`IntersectionDataset` and :class:`UnionDataset`.
 
 .. csv-table::
-   :widths: 30 15 20 20 15
+   :widths: 30 15 20 36 20 15
    :header-rows: 1
    :align: center
-   :file: geo_datasets.csv
+   :file: datasets/geo_datasets.csv
 
 Aboveground Woody Biomass
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
+
+AgriFieldNet
+^^^^^^^^^^^^
+
+.. autoclass:: AgriFieldNet
+
+Airphen
+^^^^^^^
+
+.. autoclass:: Airphen
 
 Aster Global DEM
 ^^^^^^^^^^^^^^^^
@@ -37,8 +47,6 @@ Chesapeake Land Cover
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: Chesapeake
-.. autoclass:: Chesapeake7
-.. autoclass:: Chesapeake13
 .. autoclass:: ChesapeakeDC
 .. autoclass:: ChesapeakeDE
 .. autoclass:: ChesapeakeMD
@@ -78,6 +86,11 @@ EU-DEM
 
 .. autoclass:: EUDEM
 
+EuroCrops
+^^^^^^^^^
+
+.. autoclass:: EuroCrops
+
 GBIF
 ^^^^
 
@@ -92,6 +105,27 @@ iNaturalist
 ^^^^^^^^^^^
 
 .. autoclass:: INaturalist
+
+I/O Bench
+^^^^^^^^^
+
+.. autoclass:: IOBench
+
+L7 Irish
+^^^^^^^^
+
+.. autoclass:: L7Irish
+
+L8 Biome
+^^^^^^^^
+
+.. autoclass:: L8Biome
+
+LandCover.ai Geo
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: LandCoverAIBase
+.. autoclass:: LandCoverAIGeo
 
 Landsat
 ^^^^^^^
@@ -113,16 +147,42 @@ NAIP
 
 .. autoclass:: NAIP
 
+NCCM
+^^^^
+
+.. autoclass:: NCCM
+
+NLCD
+^^^^
+
+.. autoclass:: NLCD
+
 Open Buildings
 ^^^^^^^^^^^^^^
 
 .. autoclass:: OpenBuildings
 
+PRISMA
+^^^^^^
+
+.. autoclass:: PRISMA
+
 Sentinel
 ^^^^^^^^
 
 .. autoclass:: Sentinel
+.. autoclass:: Sentinel1
 .. autoclass:: Sentinel2
+
+South Africa Crop Type
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SouthAfricaCropType
+
+South America Soybean
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SouthAmericaSoybean
 
 .. _Non-geospatial Datasets:
 
@@ -131,11 +191,11 @@ Non-geospatial Datasets
 
 :class:`NonGeoDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
 
-.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection
-   :widths: 15 7 15 12 11 12 15 13
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
+   :widths: 15 7 15 20 12 11 12 15 13
    :header-rows: 1
    :align: center
-   :file: non_geo_datasets.csv
+   :file: datasets/non_geo_datasets.csv
 
 ADVANCE
 ^^^^^^^
@@ -152,6 +212,26 @@ BigEarthNet
 
 .. autoclass:: BigEarthNet
 
+BioMassters
+^^^^^^^^^^^
+
+.. autoclass:: BioMassters
+
+CaBuAr
+^^^^^^
+
+.. autoclass:: CaBuAr
+
+CaFFe
+^^^^^
+
+.. autoclass:: CaFFe
+
+ChaBuD
+^^^^^^
+
+.. autoclass:: ChaBuD
+
 Cloud Cover Detection
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -164,13 +244,18 @@ COWC
 .. autoclass:: COWCCounting
 .. autoclass:: COWCDetection
 
+CropHarvest
+^^^^^^^^^^^
+
+.. autoclass:: CropHarvest
+
 Kenya Crop Type
 ^^^^^^^^^^^^^^^
 
 .. autoclass:: CV4AKenyaCropType
 
-Deep Globe Land Cover
-^^^^^^^^^^^^^^^^^^^^^
+DeepGlobe Land Cover
+^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: DeepGlobeLandCover
 
@@ -178,6 +263,12 @@ DFC2022
 ^^^^^^^
 
 .. autoclass:: DFC2022
+
+
+Digital Typhoon
+^^^^^^^^^^^^^^^
+
+.. autoclass:: DigitalTyphoon
 
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -188,16 +279,33 @@ EuroSAT
 ^^^^^^^
 
 .. autoclass:: EuroSAT
+.. autoclass:: EuroSATSpatial
+.. autoclass:: EuroSAT100
 
 FAIR1M
 ^^^^^^
 
 .. autoclass:: FAIR1M
 
+Fields Of The World
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: FieldsOfTheWorld
+
+FireRisk
+^^^^^^^^
+
+.. autoclass:: FireRisk
+
 Forest Damage
 ^^^^^^^^^^^^^
 
 .. autoclass:: ForestDamage
+
+GeoNRW
+^^^^^^^
+
+.. autoclass:: GeoNRW
 
 GID-15
 ^^^^^^
@@ -218,6 +326,13 @@ LandCover.ai
 ^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAI
+.. autoclass:: LandCoverAI100
+
+LEVIR-CD
+^^^^^^^^
+
+.. autoclass:: LEVIRCDBase
+.. autoclass:: LEVIRCD
 
 LEVIR-CD+
 ^^^^^^^^^
@@ -229,10 +344,20 @@ LoveDA
 
 .. autoclass:: LoveDA
 
+MapInWild
+^^^^^^^^^
+
+.. autoclass:: MapInWild
+
 Million-AID
 ^^^^^^^^^^^
 
 .. autoclass:: MillionAID
+
+MMEarth
+^^^^^^^^
+
+.. autoclass:: MMEarth
 
 NASA Marine Debris
 ^^^^^^^^^^^^^^^^^^
@@ -244,6 +369,11 @@ OSCD
 
 .. autoclass:: OSCD
 
+PASTIS
+^^^^^^
+
+.. autoclass:: PASTIS
+
 PatternNet
 ^^^^^^^^^^
 
@@ -253,6 +383,11 @@ Potsdam
 ^^^^^^^
 
 .. autoclass:: Potsdam2D
+
+QuakeSet
+^^^^^^^^
+
+.. autoclass:: QuakeSet
 
 ReforesTree
 ^^^^^^^^^^^
@@ -264,15 +399,40 @@ RESISC45
 
 .. autoclass:: RESISC45
 
+Rwanda Field Boundary
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: RwandaFieldBoundary
+
+SatlasPretrain
+^^^^^^^^^^^^^^
+
+.. autoclass:: SatlasPretrain
+
 Seasonal Contrast
 ^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SeasonalContrastS2
 
+SeasoNet
+^^^^^^^^
+
+.. autoclass:: SeasoNet
+
 SEN12MS
 ^^^^^^^
 
 .. autoclass:: SEN12MS
+
+SKIPP'D
+^^^^^^^
+
+.. autoclass:: SKIPPD
+
+SkyScript
+^^^^^^^^^
+
+.. autoclass:: SkyScript
 
 So2Sat
 ^^^^^^
@@ -290,6 +450,24 @@ SpaceNet
 .. autoclass:: SpaceNet5
 .. autoclass:: SpaceNet6
 .. autoclass:: SpaceNet7
+.. autoclass:: SpaceNet8
+
+SSL4EO
+^^^^^^
+
+.. autoclass:: SSL4EO
+.. autoclass:: SSL4EOL
+.. autoclass:: SSL4EOS12
+
+SSL4EO-L Benchmark
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SSL4EOLBenchmark
+
+SustainBench Crop Yield
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SustainBenchCropYield
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
@@ -311,10 +489,15 @@ Vaihingen
 
 .. autoclass:: Vaihingen2D
 
-NWPU VHR-10
-^^^^^^^^^^^
+VHR-10
+^^^^^^
 
 .. autoclass:: VHR10
+
+Western USA Live Fuel Moisture
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: WesternUSALiveFuelMoisture
 
 xView2
 ^^^^^^
@@ -380,3 +563,19 @@ Collation Functions
 .. autofunction:: concat_samples
 .. autofunction:: merge_samples
 .. autofunction:: unbind_samples
+
+Splitting Functions
+^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: random_bbox_assignment
+.. autofunction:: random_bbox_splitting
+.. autofunction:: random_grid_cell_assignment
+.. autofunction:: roi_split
+.. autofunction:: time_series_split
+
+Errors
+------
+
+.. autoclass:: DatasetNotFoundError
+.. autoclass:: DependencyNotFoundError
+.. autoclass:: RGBBandsMissingError

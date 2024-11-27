@@ -1,0 +1,13 @@
+model:
+  class_path: ClassificationTask
+  init_args:
+    loss: 'ce'
+    model: 'resnet18'
+    in_channels: 3
+    num_classes: 5
+data:
+  class_path: FireRiskDataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: 'tests/data/fire_risk'

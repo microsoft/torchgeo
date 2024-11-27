@@ -1,16 +1,15 @@
-experiment:
-  task: "bigearthnet"
-  module:
-    loss: "bce"
-    model: "resnet18"
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
-    weights: "random"
+model:
+  class_path: MultiLabelClassificationTask
+  init_args:
+    loss: 'bce'
+    model: 'resnet18'
     in_channels: 12
     num_classes: 19
-  datamodule:
-    root: "tests/data/bigearthnet"
-    bands: "s2"
-    num_classes: ${experiment.module.num_classes}
+data:
+  class_path: BigEarthNetDataModule
+  init_args:
     batch_size: 1
-    num_workers: 0
+  dict_kwargs:
+    root: 'tests/data/bigearthnet'
+    bands: 's2'
+    num_classes: 19

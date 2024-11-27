@@ -3,191 +3,111 @@
 
 """SEN12MS datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any
 
-import pytorch_lightning as pl
 import torch
-from sklearn.model_selection import GroupShuffleSplit
-from torch.utils.data import DataLoader, Subset
+from torch import Tensor
+from torch.utils.data import Subset
 
 from ..datasets import SEN12MS
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
+from .geo import NonGeoDataModule
+from .utils import group_shuffle_split
 
 
-class SEN12MSDataModule(pl.LightningDataModule):
+class SEN12MSDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the SEN12MS dataset.
 
     Implements 80/20 geographic train/val splits and uses the test split from the
-    classification dataset definitions. See :func:`setup` for more details.
+    classification dataset definitions.
 
     Uses the Simplified IGBP scheme defined in the 2020 Data Fusion Competition. See
     https://arxiv.org/abs/2002.08254.
     """
 
     #: Mapping from the IGBP class definitions to the DFC2020, taken from the dataloader
-    #: here https://github.com/lukasliebel/dfc2020_baseline.
+    #: here: https://github.com/lukasliebel/dfc2020_baseline.
     DFC2020_CLASS_MAPPING = torch.tensor(
-        [
-            0,  # maps 0s to 0
-            1,  # maps 1s to 1
-            1,  # maps 2s to 1
-            1,  # ...
-            1,
-            1,
-            2,
-            2,
-            3,
-            3,
-            4,
-            5,
-            6,
-            7,
-            6,
-            8,
-            9,
-            10,
-        ]
+        [0, 1, 1, 1, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 6, 8, 9, 10]
+    )
+
+    std = torch.tensor(
+        [-25, -25, 1e4, 1e4, 1e4, 1e4, 1e4, 1e4, 1e4, 1e4, 1e4, 1e4, 1e4, 1e4, 1e4]
     )
 
     def __init__(
         self,
-        seed: int = 0,
-        band_set: str = "all",
         batch_size: int = 64,
         num_workers: int = 0,
+        band_set: str = 'all',
         **kwargs: Any,
     ) -> None:
-        """Initialize a LightningDataModule for SEN12MS based DataLoaders.
+        """Initialize a new SEN12MSDataModule instance.
 
         Args:
-            seed: The seed value to use when doing the sklearn based ShuffleSplit
-            band_set: The subset of S1/S2 bands to use. Options are: "all",
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
+            band_set: Subset of S1/S2 bands to use. Options are: "all",
                 "s1", "s2-all", and "s2-reduced" where the "s2-reduced" set includes:
                 B2, B3, B4, B8, B11, and B12.
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.SEN12MS`
+                :class:`~torchgeo.datasets.SEN12MS`.
         """
-        super().__init__()
-        assert band_set in SEN12MS.BAND_SETS.keys()
+        kwargs['bands'] = SEN12MS.BAND_SETS[band_set]
 
-        self.seed = seed
-        self.band_set = band_set
-        self.bands = SEN12MS.BAND_SETS[band_set]
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.kwargs = kwargs
+        if band_set == 's1':
+            self.std = self.std[:2]
+        elif band_set == 's2-all':
+            self.std = self.std[2:]
+        elif band_set == 's2-reduced':
+            self.std = self.std[torch.tensor([3, 4, 5, 9, 12, 13])]
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
+        super().__init__(SEN12MS, batch_size, num_workers, **kwargs)
+
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
 
         Args:
-            sample: dictionary containing image and mask
-
-        Returns:
-            preprocessed sample
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        sample["image"] = sample["image"].float()
+        if stage in ['fit', 'validate']:
+            season_to_int = {'winter': 0, 'spring': 1000, 'summer': 2000, 'fall': 3000}
 
-        if self.band_set == "all":
-            sample["image"][:2] = sample["image"][:2].clamp(-25, 0) / -25
-            sample["image"][2:] = sample["image"][2:].clamp(0, 10000) / 10000
-        elif self.band_set == "s1":
-            sample["image"][:2] = sample["image"][:2].clamp(-25, 0) / -25
-        else:
-            sample["image"][:] = sample["image"][:].clamp(0, 10000) / 10000
+            self.dataset = SEN12MS(split='train', **self.kwargs)
 
-        if "mask" in sample:
-            sample["mask"] = sample["mask"][0, :, :].long()
-            sample["mask"] = torch.take(self.DFC2020_CLASS_MAPPING, sample["mask"])
+            # A patch is a filename like:
+            #     "ROIs{num}_{season}_s2_{scene_id}_p{patch_id}.tif"
+            # This patch will belong to the scene that is uniquely identified by its
+            # (season, scene_id) tuple. Because the largest scene_id is 149, we can
+            # simply give each season a large number and representing a unique_scene_id
+            # as (season_id + scene_id).
+            scenes = []
+            for scene_fn in self.dataset.ids:
+                parts = scene_fn.split('_')
+                season_id = season_to_int[parts[1]]
+                scene_id = int(parts[3])
+                scenes.append(season_id + scene_id)
 
-        return sample
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Create the train/val/test splits based on the original Dataset objects.
-
-        The splits should be done here vs. in :func:`__init__` per the docs:
-        https://pytorch-lightning.readthedocs.io/en/latest/extensions/datamodules.html#setup.
-
-        We split samples between train and val geographically with proportions of 80/20.
-        This mimics the geographic test set split.
-
-        Args:
-            stage: stage to set up
-        """
-        season_to_int = {"winter": 0, "spring": 1000, "summer": 2000, "fall": 3000}
-
-        self.all_train_dataset = SEN12MS(
-            split="train", bands=self.bands, transforms=self.preprocess, **self.kwargs
-        )
-
-        self.all_test_dataset = SEN12MS(
-            split="test", bands=self.bands, transforms=self.preprocess, **self.kwargs
-        )
-
-        # A patch is a filename like: "ROIs{num}_{season}_s2_{scene_id}_p{patch_id}.tif"
-        # This patch will belong to the scene that is uniquelly identified by its
-        # (season, scene_id) tuple. Because the largest scene_id is 149, we can simply
-        # give each season a large number and representing a `unique_scene_id` as
-        # `season_id + scene_id`.
-        scenes = []
-        for scene_fn in self.all_train_dataset.ids:
-            parts = scene_fn.split("_")
-            season_id = season_to_int[parts[1]]
-            scene_id = int(parts[3])
-            scenes.append(season_id + scene_id)
-
-        train_indices, val_indices = next(
-            GroupShuffleSplit(test_size=0.2, n_splits=2, random_state=self.seed).split(
-                scenes, groups=scenes
+            train_indices, val_indices = group_shuffle_split(
+                scenes, test_size=0.2, random_state=0
             )
-        )
 
-        self.train_dataset = Subset(self.all_train_dataset, train_indices)
-        self.val_dataset = Subset(self.all_train_dataset, val_indices)
-        self.test_dataset = Subset(
-            self.all_test_dataset, range(len(self.all_test_dataset))
-        )
+            self.train_dataset = Subset(self.dataset, train_indices)
+            self.val_dataset = Subset(self.dataset, val_indices)
+        if stage in ['test']:
+            self.test_dataset = SEN12MS(split='test', **self.kwargs)
 
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
+    def on_after_batch_transfer(
+        self, batch: dict[str, Tensor], dataloader_idx: int
+    ) -> dict[str, Tensor]:
+        """Apply batch augmentations to the batch after it is transferred to the device.
 
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
+        Args:
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
 
         Returns:
-            validation data loader
+            A batch of data.
         """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
+        batch['mask'] = torch.take(self.DFC2020_CLASS_MAPPING, batch['mask'])
 
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
+        return super().on_after_batch_transfer(batch, dataloader_idx)

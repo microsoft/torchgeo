@@ -3,8 +3,6 @@
 
 """ChangeStar implementations."""
 
-from typing import Dict, List
-
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -12,10 +10,6 @@ from torch import Tensor
 from torch.nn.modules import Module
 
 from .farseg import FarSeg
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "torch.nn"
 
 
 class ChangeMixin(Module):
@@ -35,7 +29,7 @@ class ChangeMixin(Module):
         inner_channels: int = 16,
         num_convs: int = 4,
         scale_factor: float = 4.0,
-    ):
+    ) -> None:
         """Initializes a new ChangeMixin module.
 
         Args:
@@ -45,7 +39,7 @@ class ChangeMixin(Module):
             scale_factor: number of upsampling factor
         """
         super().__init__()
-        layers: List[Module] = [
+        layers: list[Module] = [
             nn.modules.Sequential(
                 nn.modules.Conv2d(in_channels, inner_channels, 3, 1, 1),
                 nn.modules.BatchNorm2d(inner_channels),
@@ -68,7 +62,7 @@ class ChangeMixin(Module):
 
         self.convs = nn.modules.Sequential(*layers)
 
-    def forward(self, bi_feature: Tensor) -> List[Tensor]:
+    def forward(self, bi_feature: Tensor) -> list[Tensor]:
         """Forward pass of the model.
 
         Args:
@@ -109,7 +103,7 @@ class ChangeStar(Module):
         dense_feature_extractor: Module,
         seg_classifier: Module,
         changemixin: ChangeMixin,
-        inference_mode: str = "t1t2",
+        inference_mode: str = 't1t2',
     ) -> None:
         """Initializes a new ChangeStar model.
 
@@ -129,11 +123,11 @@ class ChangeStar(Module):
         self.seg_classifier = seg_classifier
         self.changemixin = changemixin
 
-        if inference_mode not in ["t1t2", "t2t1", "mean"]:
-            raise ValueError(f"Unknown inference_mode: {inference_mode}")
+        if inference_mode not in ['t1t2', 't2t1', 'mean']:
+            raise ValueError(f'Unknown inference_mode: {inference_mode}')
         self.inference_mode = inference_mode
 
-    def forward(self, x: Tensor) -> Dict[str, Tensor]:
+    def forward(self, x: Tensor) -> dict[str, Tensor]:
         """Forward pass of the model.
 
         Args:
@@ -144,28 +138,28 @@ class ChangeStar(Module):
             change detection logit/probability
         """
         b, t, c, h, w = x.shape
-        x = rearrange(x, "b t c h w -> (b t) c h w")
+        x = rearrange(x, 'b t c h w -> (b t) c h w')
         # feature extraction
         bi_feature = self.dense_feature_extractor(x)
         # semantic segmentation
         bi_seg_logit = self.seg_classifier(bi_feature)
-        bi_seg_logit = rearrange(bi_seg_logit, "(b t) c h w -> b t c h w", t=t)
+        bi_seg_logit = rearrange(bi_seg_logit, '(b t) c h w -> b t c h w', t=t)
 
-        bi_feature = rearrange(bi_feature, "(b t) c h w -> b t c h w", t=t)
+        bi_feature = rearrange(bi_feature, '(b t) c h w -> b t c h w', t=t)
         # change detection
         c12, c21 = self.changemixin(bi_feature)
 
-        results: Dict[str, Tensor] = {}
+        results: dict[str, Tensor] = {}
         if not self.training:
-            results.update({"bi_seg_logit": bi_seg_logit})
-            if self.inference_mode == "t1t2":
-                results.update({"change_prob": c12.sigmoid()})
-            elif self.inference_mode == "t2t1":
-                results.update({"change_prob": c21.sigmoid()})
-            elif self.inference_mode == "mean":
+            results.update({'bi_seg_logit': bi_seg_logit})
+            if self.inference_mode == 't1t2':
+                results.update({'change_prob': c12.sigmoid()})
+            elif self.inference_mode == 't2t1':
+                results.update({'change_prob': c21.sigmoid()})
+            elif self.inference_mode == 'mean':
                 results.update(
                     {
-                        "change_prob": torch.stack([c12, c21], dim=0)
+                        'change_prob': torch.stack([c12, c21], dim=0)
                         .sigmoid_()
                         .mean(dim=0)
                     }
@@ -173,8 +167,8 @@ class ChangeStar(Module):
         else:
             results.update(
                 {
-                    "bi_seg_logit": bi_seg_logit,
-                    "bi_change_logit": torch.stack([c12, c21], dim=1),
+                    'bi_seg_logit': bi_seg_logit,
+                    'bi_change_logit': torch.stack([c12, c21], dim=1),
                 }
             )
         return results
@@ -192,7 +186,7 @@ class ChangeStarFarSeg(ChangeStar):
 
     def __init__(
         self,
-        backbone: str = "resnet50",
+        backbone: str = 'resnet50',
         classes: int = 1,
         backbone_pretrained: bool = True,
     ) -> None:
@@ -215,5 +209,5 @@ class ChangeStarFarSeg(ChangeStar):
             changemixin=ChangeMixin(
                 in_channels=128 * 2, inner_channels=16, num_convs=4, scale_factor=4.0
             ),
-            inference_mode="t1t2",
+            inference_mode='t1t2',
         )

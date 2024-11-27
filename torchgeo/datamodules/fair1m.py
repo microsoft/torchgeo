@@ -3,138 +3,70 @@
 
 """FAIR1M datamodule."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import torch
 from torch import Tensor
-from torch.utils.data import DataLoader
 
 from ..datasets import FAIR1M
-from .utils import dataset_split
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-DataLoader.__module__ = "torch.utils.data"
+from .geo import NonGeoDataModule
 
 
-def collate_fn(batch: List[Dict[str, Tensor]]) -> Dict[str, Any]:
-    """Custom object detection collate fn to handle variable number of boxes.
+def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
+    """Custom object detection collate fn to handle variable boxes.
 
     Args:
         batch: list of sample dicts return by dataset
+
     Returns:
         batch dict output
+
+    .. versionadded:: 0.5
     """
-    output: Dict[str, Any] = {}
-    output["image"] = torch.stack([sample["image"] for sample in batch])
-    output["boxes"] = [sample["boxes"] for sample in batch]
+    output: dict[str, Any] = {}
+    output['image'] = torch.stack([sample['image'] for sample in batch])
+
+    if 'boxes' in batch[0]:
+        output['boxes'] = [sample['boxes'] for sample in batch]
+    if 'label' in batch[0]:
+        output['label'] = [sample['label'] for sample in batch]
+
     return output
 
 
-class FAIR1MDataModule(pl.LightningDataModule):
+class FAIR1MDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the FAIR1M dataset.
 
     .. versionadded:: 0.2
     """
 
     def __init__(
-        self,
-        batch_size: int = 64,
-        num_workers: int = 0,
-        val_split_pct: float = 0.2,
-        test_split_pct: float = 0.2,
-        **kwargs: Any,
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
-        """Initialize a LightningDataModule for FAIR1M based DataLoaders.
+        """Initialize a new FAIR1MDataModule instance.
 
         Args:
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
-            val_split_pct: What percentage of the dataset to use as a validation set
-            test_split_pct: What percentage of the dataset to use as a test set
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.FAIR1M`
-        """
-        super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.val_split_pct = val_split_pct
-        self.test_split_pct = test_split_pct
-        self.kwargs = kwargs
+                :class:`~torchgeo.datasets.FAIR1M`.
 
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
+        .. versionchanged:: 0.5
+           Removed *val_split_pct* and *test_split_pct* parameters.
+        """
+        super().__init__(FAIR1M, batch_size, num_workers, **kwargs)
+        self.collate_fn = collate_fn
+
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
 
         Args:
-            sample: input image dictionary
-
-        Returns:
-            preprocessed sample
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        sample["image"] = sample["image"].float()
-        sample["image"] /= 255.0
-        return sample
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
-
-        Args:
-            stage: stage to set up
-        """
-        self.dataset = FAIR1M(transforms=self.preprocess, **self.kwargs)
-        self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
-        )
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
-
-        Returns:
-            training data loader
-        """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-            collate_fn=collate_fn,
-        )
-
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-            collate_fn=collate_fn,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-            collate_fn=collate_fn,
-        )
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.FAIR1M.plot`.
-
-        .. versionadded:: 0.4
-        """
-        return self.dataset.plot(*args, **kwargs)
+        if stage in ['fit']:
+            self.train_dataset = FAIR1M(split='train', **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.val_dataset = FAIR1M(split='val', **self.kwargs)
+        if stage in ['predict']:
+            # Test set labels are not publicly available
+            self.predict_dataset = FAIR1M(split='test', **self.kwargs)

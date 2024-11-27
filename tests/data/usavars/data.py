@@ -12,44 +12,44 @@ import numpy as np
 import pandas as pd
 import rasterio
 
-data_dir = "uar"
+data_dir = 'uar'
 labels = [
-    "elevation",
-    "population",
-    "treecover",
-    "income",
-    "nightlights",
-    "housing",
-    "roads",
+    'elevation',
+    'population',
+    'treecover',
+    'income',
+    'nightlights',
+    'housing',
+    'roads',
 ]
-splits = ["train", "val", "test"]
+splits = ['train', 'val', 'test']
 
 SIZE = 3
 
 
 def create_file(path: str, dtype: str, num_channels: int) -> None:
     profile = {}
-    profile["driver"] = "GTiff"
-    profile["dtype"] = dtype
-    profile["count"] = num_channels
-    profile["crs"] = "epsg:4326"
-    profile["transform"] = rasterio.transform.from_bounds(0, 0, 1, 1, 1, 1)
-    profile["height"] = SIZE
-    profile["width"] = SIZE
-    profile["compress"] = "lzw"
-    profile["predictor"] = 2
+    profile['driver'] = 'GTiff'
+    profile['dtype'] = dtype
+    profile['count'] = num_channels
+    profile['crs'] = 'epsg:4326'
+    profile['transform'] = rasterio.transform.from_bounds(0, 0, 1, 1, 1, 1)
+    profile['height'] = SIZE
+    profile['width'] = SIZE
+    profile['compress'] = 'lzw'
+    profile['predictor'] = 2
 
     Z = np.random.randint(
-        np.iinfo(profile["dtype"]).max, size=(4, SIZE, SIZE), dtype=profile["dtype"]
+        np.iinfo(profile['dtype']).max, size=(4, SIZE, SIZE), dtype=profile['dtype']
     )
-    with rasterio.open(path, "w", **profile) as src:
+    with rasterio.open(path, 'w', **profile) as src:
         src.write(Z)
 
 
 # Remove old data
-filename = f"{data_dir}.zip"
-csvs = glob.glob("*.csv")
-txts = glob.glob("*.txt")
+filename = f'{data_dir}.zip'
+csvs = glob.glob('*.csv')
+txts = glob.glob('*.txt')
 
 for csv in csvs:
     os.remove(csv)
@@ -62,32 +62,32 @@ if os.path.exists(data_dir):
 
 # Create tifs:
 os.makedirs(data_dir)
-create_file(os.path.join(data_dir, "tile_0,0.tif"), np.uint8, 4)
-create_file(os.path.join(data_dir, "tile_0,1.tif"), np.uint8, 4)
+create_file(os.path.join(data_dir, 'tile_0,0.tif'), np.uint8, 4)
+create_file(os.path.join(data_dir, 'tile_0,1.tif'), np.uint8, 4)
 
 # Create labels:
-columns = [["ID", "lon", "lat", lab] for lab in labels]
-fake_vals = [["0,0", 0.0, 0.0, 0.0], ["0,1", 0.1, 0.1, 1.0]]
+columns = [['ID', 'lon', 'lat', lab] for lab in labels]
+fake_vals = [['0,0', 0.0, 0.0, 0.0], ['0,1', 0.1, 0.1, 1.0]]
 for lab, cols in zip(labels, columns):
     df = pd.DataFrame(fake_vals, columns=cols)
-    df.to_csv(lab + ".csv")
+    df.to_csv(lab + '.csv')
 
 # Create splits:
-with open("train_split.txt", "w") as f:
-    f.write("tile_0,0.tif" + "\n")
-    f.write("tile_0,0.tif" + "\n")
-    f.write("tile_0,0.tif" + "\n")
-with open("val_split.txt", "w") as f:
-    f.write("tile_0,1.tif" + "\n")
-    f.write("tile_0,1.tif" + "\n")
-with open("test_split.txt", "w") as f:
-    f.write("tile_0,0.tif" + "\n")
+with open('train_split.txt', 'w') as f:
+    f.write('tile_0,0.tif' + '\n')
+    f.write('tile_0,0.tif' + '\n')
+    f.write('tile_0,0.tif' + '\n')
+with open('val_split.txt', 'w') as f:
+    f.write('tile_0,1.tif' + '\n')
+    f.write('tile_0,1.tif' + '\n')
+with open('test_split.txt', 'w') as f:
+    f.write('tile_0,0.tif' + '\n')
 
 # Compress data
-shutil.make_archive(data_dir, "zip", ".", data_dir)
+shutil.make_archive(data_dir, 'zip', '.', data_dir)
 
 # Compute checksums
-filename = f"{data_dir}.zip"
-with open(filename, "rb") as f:
+filename = f'{data_dir}.zip'
+with open(filename, 'rb') as f:
     md5 = hashlib.md5(f.read()).hexdigest()
-    print(repr(filename) + ": " + repr(md5) + ",")
+    print(repr(filename) + ': ' + repr(md5) + ',')

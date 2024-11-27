@@ -1,0 +1,17 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 13
+    num_classes: 3
+    num_filters: 1
+data:
+  class_path: Sentinel2EuroCropsDataModule
+  init_args:
+    batch_size: 2
+    patch_size: 16
+  dict_kwargs:
+    sentinel2_paths: 'tests/data/sentinel2'
+    eurocrops_paths: 'tests/data/eurocrops'

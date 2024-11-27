@@ -1,0 +1,18 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 13
+    num_classes: 134
+    num_filters: 1
+    ignore_index: 0
+data:
+  class_path: Sentinel2CDLDataModule
+  init_args:
+    batch_size: 2
+    patch_size: 16
+  dict_kwargs:
+    cdl_paths: 'tests/data/cdl'
+    sentinel2_paths: 'tests/data/sentinel2'

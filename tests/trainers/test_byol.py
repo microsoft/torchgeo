@@ -2,25 +2,27 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Type, cast
+from pathlib import Path
 
 import pytest
+import timm
+import torch
 import torch.nn as nn
-from omegaconf import OmegaConf
-from pytorch_lightning import LightningDataModule, Trainer
+from pytest import MonkeyPatch
 from torchvision.models import resnet18
+from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import ChesapeakeCVPRDataModule
+from torchgeo.datasets import SSL4EOS12, SeasonalContrastS2
+from torchgeo.main import main
+from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
-
-from .test_utils import SegmentationTestModel
 
 
 class TestBYOL:
     def test_custom_augment_fn(self) -> None:
-        backbone = resnet18()
-        layer = backbone.conv1
+        model = resnet18()
+        layer = model.conv1
         new_layer = nn.Conv2d(
             in_channels=4,
             out_channels=layer.out_channels,
@@ -29,65 +31,103 @@ class TestBYOL:
             padding=layer.padding,
             bias=layer.bias,
         ).requires_grad_()
-        backbone.conv1 = new_layer
+        model.conv1 = new_layer
         augment_fn = SimCLRAugmentation((2, 2))
-        BYOL(backbone, augment_fn=augment_fn)
+        BYOL(model, augment_fn=augment_fn)
 
 
 class TestBYOLTask:
     @pytest.mark.parametrize(
-        "name,classname",
+        'name',
         [
-            ("chesapeake_cvpr_7", ChesapeakeCVPRDataModule),
-            ("chesapeake_cvpr_prior", ChesapeakeCVPRDataModule),
+            'chesapeake_cvpr_prior_byol',
+            'seco_byol_1',
+            'seco_byol_2',
+            'ssl4eo_l_byol_1',
+            'ssl4eo_l_byol_2',
+            'ssl4eo_s12_byol_1',
+            'ssl4eo_s12_byol_2',
         ],
     )
-    def test_trainer(self, name: str, classname: Type[LightningDataModule]) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+    def test_trainer(
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
+    ) -> None:
+        config = os.path.join('tests', 'conf', name + '.yaml')
 
-        # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = classname(**datamodule_kwargs)
+        if name.startswith('seco'):
+            monkeypatch.setattr(SeasonalContrastS2, '__len__', lambda self: 2)
 
-        # Instantiate model
-        model_kwargs = conf_dict["module"]
-        model = BYOLTask(**model_kwargs)
+        if name.startswith('ssl4eo_s12'):
+            monkeypatch.setattr(SSL4EOS12, '__len__', lambda self: 2)
 
-        model.backbone = SegmentationTestModel(**model_kwargs)
+        args = [
+            '--config',
+            config,
+            '--trainer.accelerator',
+            'cpu',
+            '--trainer.fast_dev_run',
+            str(fast_dev_run),
+            '--trainer.max_epochs',
+            '1',
+            '--trainer.log_every_n_steps',
+            '1',
+        ]
 
-        # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
-        trainer.fit(model=model, datamodule=datamodule)
-        trainer.test(model=model, datamodule=datamodule)
-        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
+        main(['fit', *args])
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[Any, Any]:
-        return {"backbone": "resnet18", "weights": "random", "in_channels": 3}
+    def weights(self) -> WeightsEnum:
+        return ResNet18_Weights.SENTINEL2_ALL_MOCO
 
-    def test_invalid_pretrained(
-        self, model_kwargs: Dict[Any, Any], checkpoint: str
-    ) -> None:
-        model_kwargs["weights"] = checkpoint
-        model_kwargs["backbone"] = "resnet50"
-        match = "Trying to load resnet18 weights into a resnet50"
-        with pytest.raises(ValueError, match=match):
-            BYOLTask(**model_kwargs)
+    @pytest.fixture
+    def mocked_weights(
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
+    ) -> WeightsEnum:
+        path = tmp_path / f'{weights}.pth'
+        model = timm.create_model(
+            weights.meta['model'], in_chans=weights.meta['in_chans']
+        )
+        torch.save(model.state_dict(), path)
+        try:
+            monkeypatch.setattr(weights.value, 'url', str(path))
+        except AttributeError:
+            monkeypatch.setattr(weights, 'url', str(path))
+        return weights
 
-    def test_pretrained(self, model_kwargs: Dict[Any, Any], checkpoint: str) -> None:
-        model_kwargs["weights"] = checkpoint
-        BYOLTask(**model_kwargs)
+    def test_weight_file(self, checkpoint: str) -> None:
+        with pytest.warns(UserWarning):
+            BYOLTask(model='resnet18', in_channels=13, weights=checkpoint)
 
-    def test_invalid_backbone(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["backbone"] = "invalid_backbone"
-        match = "Model type 'invalid_backbone' is not a valid timm model."
-        with pytest.raises(ValueError, match=match):
-            BYOLTask(**model_kwargs)
+    def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
+        BYOLTask(
+            model=mocked_weights.meta['model'],
+            weights=mocked_weights,
+            in_channels=mocked_weights.meta['in_chans'],
+        )
 
-    def test_invalid_weights(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["weights"] = "invalid_weights"
-        match = "Weight type 'invalid_weights' is not valid."
-        with pytest.raises(ValueError, match=match):
-            BYOLTask(**model_kwargs)
+    def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
+        BYOLTask(
+            model=mocked_weights.meta['model'],
+            weights=str(mocked_weights),
+            in_channels=mocked_weights.meta['in_chans'],
+        )
+
+    @pytest.mark.slow
+    def test_weight_enum_download(self, weights: WeightsEnum) -> None:
+        BYOLTask(
+            model=weights.meta['model'],
+            weights=weights,
+            in_channels=weights.meta['in_chans'],
+        )
+
+    @pytest.mark.slow
+    def test_weight_str_download(self, weights: WeightsEnum) -> None:
+        BYOLTask(
+            model=weights.meta['model'],
+            weights=str(weights),
+            in_channels=weights.meta['in_chans'],
+        )

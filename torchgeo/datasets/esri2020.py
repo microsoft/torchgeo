@@ -5,13 +5,16 @@
 
 import glob
 import os
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Callable, Iterable
+from typing import Any
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class Esri2020(RasterDataset):
@@ -38,7 +41,7 @@ class Esri2020(RasterDataset):
     9. Snow/Ice
     10. Clouds
 
-    A more detailed explanation of the invidual classes can be found
+    A more detailed explanation of the individual classes can be found
     `here <https://www.arcgis.com/home/item.html?id=fc92d38533d440078f17678ebc20e8e2>`_.
 
     If you use this dataset please cite the following paper:
@@ -49,27 +52,27 @@ class Esri2020(RasterDataset):
     """
 
     is_image = False
-    filename_glob = "*_20200101-20210101.*"
+    filename_glob = '*_20200101-20210101.*'
     filename_regex = r"""^
         (?P<id>[0-9][0-9][A-Z])
         _(?P<date>\d{8})
         -(?P<processing_date>\d{8})
     """
 
-    zipfile = "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
-    md5 = "4932855fcd00735a34b74b1f87db3df0"
+    zipfile = 'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip'
+    md5 = '4932855fcd00735a34b74b1f87db3df0'
 
     url = (
-        "https://ai4edataeuwest.blob.core.windows.net/io-lulc/"
-        "io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip"
+        'https://ai4edataeuwest.blob.core.windows.net/io-lulc/'
+        'io-lulc-model-001-v01-composite-v03-supercell-v02-clip-v01.zip'
     )
 
     def __init__(
         self,
-        root: str = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        transforms: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
+        paths: Path | Iterable[Path] = 'data',
+        crs: CRS | None = None,
+        res: float | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -77,7 +80,7 @@ class Esri2020(RasterDataset):
         """Initialize a new Dataset instance.
 
         Args:
-            root: root directory where dataset can be found
+            paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
             res: resolution of the dataset in units of CRS
@@ -89,41 +92,35 @@ class Esri2020(RasterDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            FileNotFoundError: if no files are found in ``root``
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+
+        .. versionchanged:: 0.5
+           *root* was renamed to *paths*.
         """
-        self.root = root
+        self.paths = paths
         self.download = download
         self.checksum = checksum
 
         self._verify()
 
-        super().__init__(root, crs, res, transforms=transforms, cache=cache)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the extracted file already exists
-        pathname = os.path.join(self.root, "**", self.filename_glob)
-        if glob.glob(pathname):
+        if self.files:
             return
 
         # Check if the zip files have already been downloaded
-        pathname = os.path.join(self.root, self.zipfile)
+        assert isinstance(self.paths, str | os.PathLike)
+        pathname = os.path.join(self.paths, self.zipfile)
         if glob.glob(pathname):
             self._extract()
             return
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                f"Dataset not found in `root={self.root}` and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download the dataset
         self._download()
@@ -131,18 +128,19 @@ class Esri2020(RasterDataset):
 
     def _download(self) -> None:
         """Download the dataset."""
-        download_url(self.url, self.root, filename=self.zipfile, md5=self.md5)
+        download_url(self.url, self.paths, filename=self.zipfile, md5=self.md5)
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        extract_archive(os.path.join(self.root, self.zipfile))
+        assert isinstance(self.paths, str | os.PathLike)
+        extract_archive(os.path.join(self.paths, self.zipfile))
 
     def plot(
         self,
-        sample: Dict[str, Any],
+        sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+        suptitle: str | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -153,29 +151,29 @@ class Esri2020(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = sample["prediction"].squeeze()
+            prediction = sample['prediction'].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4 * ncols, 4))
 
         if showing_predictions:
             axs[0].imshow(mask)
-            axs[0].axis("off")
+            axs[0].axis('off')
             axs[1].imshow(prediction)
-            axs[1].axis("off")
+            axs[1].axis('off')
             if show_titles:
-                axs[0].set_title("Mask")
-                axs[1].set_title("Prediction")
+                axs[0].set_title('Mask')
+                axs[1].set_title('Prediction')
         else:
             axs.imshow(mask)
-            axs.axis("off")
+            axs.axis('off')
             if show_titles:
-                axs.set_title("Mask")
+                axs.set_title('Mask')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

@@ -6,16 +6,19 @@
 import abc
 import csv
 import os
-from typing import Callable, Dict, List, Optional, cast
+from collections.abc import Callable
+from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive
+from .utils import Path, check_integrity, download_and_extract_archive
 
 
 class COWC(NonGeoDataset, abc.ABC):
@@ -47,12 +50,12 @@ class COWC(NonGeoDataset, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def filenames(self) -> List[str]:
+    def filenames(self) -> tuple[str, ...]:
         """List of files to download."""
 
     @property
     @abc.abstractmethod
-    def md5s(self) -> List[str]:
+    def md5s(self) -> tuple[str, ...]:
         """List of MD5 checksums of files to download."""
 
     @property
@@ -62,9 +65,9 @@ class COWC(NonGeoDataset, abc.ABC):
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        split: str = 'train',
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -80,10 +83,9 @@ class COWC(NonGeoDataset, abc.ABC):
 
         Raises:
             AssertionError: if ``split`` argument is invalid
-            RuntimeError: if ``download=False`` and data is not found, or checksums
-                don't match
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert split in ["train", "test"]
+        assert split in ['train', 'test']
 
         self.root = root
         self.split = split
@@ -94,24 +96,21 @@ class COWC(NonGeoDataset, abc.ABC):
             self._download()
 
         if not self._check_integrity():
-            raise RuntimeError(
-                "Dataset not found or corrupted. "
-                + "You can use download=True to download it"
-            )
+            raise DatasetNotFoundError(self)
 
         self.images = []
         self.targets = []
         with open(
             os.path.join(self.root, self.filename.format(split)),
-            encoding="utf-8-sig",
-            newline="",
+            encoding='utf-8-sig',
+            newline='',
         ) as f:
-            reader = csv.reader(f, delimiter=" ")
+            reader = csv.reader(f, delimiter=' ')
             for row in reader:
                 self.images.append(row[0])
                 self.targets.append(row[1])
 
-    def __getitem__(self, index: int) -> Dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -120,7 +119,7 @@ class COWC(NonGeoDataset, abc.ABC):
         Returns:
             data and label at that index
         """
-        sample = {"image": self._load_image(index), "label": self._load_target(index)}
+        sample = {'image': self._load_image(index), 'label': self._load_target(index)}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -146,8 +145,8 @@ class COWC(NonGeoDataset, abc.ABC):
         """
         filename = os.path.join(self.root, self.images[index])
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img)
-            tensor = torch.from_numpy(array)
+            array: np.typing.NDArray[np.int_] = np.array(img)
+            tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -162,7 +161,7 @@ class COWC(NonGeoDataset, abc.ABC):
             the target
         """
         target = int(self.targets[index])
-        tensor = torch.tensor(target)
+        tensor = torch.tensor(target).float()
         return tensor
 
     def _check_integrity(self) -> bool:
@@ -180,7 +179,7 @@ class COWC(NonGeoDataset, abc.ABC):
     def _download(self) -> None:
         """Download the dataset and extract it."""
         if self._check_integrity():
-            print("Files already downloaded and verified")
+            print('Files already downloaded and verified')
             return
 
         for filename, md5 in zip(self.filenames, self.md5s):
@@ -193,10 +192,10 @@ class COWC(NonGeoDataset, abc.ABC):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+        suptitle: str | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -209,23 +208,23 @@ class COWC(NonGeoDataset, abc.ABC):
 
         .. versionadded:: 0.2
         """
-        image = sample["image"]
-        label = cast(str, sample["label"].item())
+        image = sample['image']
+        label = cast(str, sample['label'].item())
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = cast(str, sample["prediction"].item())
+            prediction = cast(str, sample['prediction'].item())
         else:
             prediction = None
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
         ax.imshow(image.permute(1, 2, 0))
-        ax.axis("off")
+        ax.axis('off')
 
         if show_titles:
-            title = f"Label: {label}"
+            title = f'Label: {label}'
             if prediction is not None:
-                title += f"\nPrediction: {prediction}"
+                title += f'\nPrediction: {prediction}'
             ax.set_title(title)
 
         if suptitle is not None:
@@ -238,58 +237,58 @@ class COWCCounting(COWC):
     """COWC Dataset for car counting."""
 
     base_url = (
-        "https://gdo152.llnl.gov/cowc/download/cowc/datasets/patch_sets/counting/"
+        'https://gdo152.llnl.gov/cowc/download/cowc/datasets/patch_sets/counting/'
     )
-    filenames = [
-        "COWC_train_list_64_class.txt.bz2",
-        "COWC_test_list_64_class.txt.bz2",
-        "COWC_Counting_Toronto_ISPRS.tbz",
-        "COWC_Counting_Selwyn_LINZ.tbz",
-        "COWC_Counting_Potsdam_ISPRS.tbz",
-        "COWC_Counting_Vaihingen_ISPRS.tbz",
-        "COWC_Counting_Columbus_CSUAV_AFRL.tbz",
-        "COWC_Counting_Utah_AGRC.tbz",
-    ]
-    md5s = [
-        "187543d20fa6d591b8da51136e8ef8fb",
-        "930cfd6e160a7b36db03146282178807",
-        "bc2613196dfa93e66d324ae43e7c1fdb",
-        "ea842ae055f5c74d0d933d2194764545",
-        "19a77ab9932b722ef52b197d70e68ce7",
-        "4009c1e420566390746f5b4db02afdb9",
-        "daf8033c4e8ceebbf2c3cac3fabb8b10",
-        "777ec107ed2a3d54597a739ce74f95ad",
-    ]
-    filename = "COWC_{}_list_64_class.txt"
+    filenames = (
+        'COWC_train_list_64_class.txt.bz2',
+        'COWC_test_list_64_class.txt.bz2',
+        'COWC_Counting_Toronto_ISPRS.tbz',
+        'COWC_Counting_Selwyn_LINZ.tbz',
+        'COWC_Counting_Potsdam_ISPRS.tbz',
+        'COWC_Counting_Vaihingen_ISPRS.tbz',
+        'COWC_Counting_Columbus_CSUAV_AFRL.tbz',
+        'COWC_Counting_Utah_AGRC.tbz',
+    )
+    md5s = (
+        '187543d20fa6d591b8da51136e8ef8fb',
+        '930cfd6e160a7b36db03146282178807',
+        'bc2613196dfa93e66d324ae43e7c1fdb',
+        'ea842ae055f5c74d0d933d2194764545',
+        '19a77ab9932b722ef52b197d70e68ce7',
+        '4009c1e420566390746f5b4db02afdb9',
+        'daf8033c4e8ceebbf2c3cac3fabb8b10',
+        '777ec107ed2a3d54597a739ce74f95ad',
+    )
+    filename = 'COWC_{}_list_64_class.txt'
 
 
 class COWCDetection(COWC):
     """COWC Dataset for car detection."""
 
     base_url = (
-        "https://gdo152.llnl.gov/cowc/download/cowc/datasets/patch_sets/detection/"
+        'https://gdo152.llnl.gov/cowc/download/cowc/datasets/patch_sets/detection/'
     )
-    filenames = [
-        "COWC_train_list_detection.txt.bz2",
-        "COWC_test_list_detection.txt.bz2",
-        "COWC_Detection_Toronto_ISPRS.tbz",
-        "COWC_Detection_Selwyn_LINZ.tbz",
-        "COWC_Detection_Potsdam_ISPRS.tbz",
-        "COWC_Detection_Vaihingen_ISPRS.tbz",
-        "COWC_Detection_Columbus_CSUAV_AFRL.tbz",
-        "COWC_Detection_Utah_AGRC.tbz",
-    ]
-    md5s = [
-        "c954a5a3dac08c220b10cfbeec83893c",
-        "c6c2d0a78f12a2ad88b286b724a57c1a",
-        "11af24f43b198b0f13c8e94814008a48",
-        "22fd37a86961010f5d519a7da0e1fc72",
-        "bf053545cc1915d8b6597415b746fe48",
-        "23945d5b22455450a938382ccc2a8b27",
-        "f40522dc97bea41b10117d4a5b946a6f",
-        "195da7c9443a939a468c9f232fd86ee3",
-    ]
-    filename = "COWC_{}_list_detection.txt"
+    filenames = (
+        'COWC_train_list_detection.txt.bz2',
+        'COWC_test_list_detection.txt.bz2',
+        'COWC_Detection_Toronto_ISPRS.tbz',
+        'COWC_Detection_Selwyn_LINZ.tbz',
+        'COWC_Detection_Potsdam_ISPRS.tbz',
+        'COWC_Detection_Vaihingen_ISPRS.tbz',
+        'COWC_Detection_Columbus_CSUAV_AFRL.tbz',
+        'COWC_Detection_Utah_AGRC.tbz',
+    )
+    md5s = (
+        'c954a5a3dac08c220b10cfbeec83893c',
+        'c6c2d0a78f12a2ad88b286b724a57c1a',
+        '11af24f43b198b0f13c8e94814008a48',
+        '22fd37a86961010f5d519a7da0e1fc72',
+        'bf053545cc1915d8b6597415b746fe48',
+        '23945d5b22455450a938382ccc2a8b27',
+        'f40522dc97bea41b10117d4a5b946a6f',
+        '195da7c9443a939a468c9f232fd86ee3',
+    )
+    filename = 'COWC_{}_list_detection.txt'
 
 
 # TODO: add COCW-M datasets:

@@ -1,0 +1,16 @@
+model:
+  class_path: ClassificationTask
+  init_args:
+    loss: 'ce'
+    model: 'resnet18'
+    lr: 1e-3
+    patience: 6
+    weights: null
+    in_channels: 13
+    num_classes: 2
+data:
+  class_path: EuroSAT100DataModule
+  init_args:
+    batch_size: 1
+  dict_kwargs:
+    root: 'tests/data/eurosat'

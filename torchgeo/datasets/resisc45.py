@@ -4,20 +4,23 @@
 """RESISC45 dataset."""
 
 import os
-from typing import Callable, Dict, Optional, cast
+from collections.abc import Callable
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoClassificationDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class RESISC45(NonGeoClassificationDataset):
-    """RESISC45 dataset.
+    """NWPU-RESISC45 dataset.
 
-    The `RESISC45 <http://www.escience.cn/people/JunweiHan/NWPU-RESISC45.html>`__
+    The `RESISC45 <https://doi.org/10.1109/jproc.2017.2675998>`__
     dataset is a dataset for remote sensing image scene classification.
 
     Dataset features:
@@ -88,78 +91,30 @@ class RESISC45(NonGeoClassificationDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/jproc.2017.2675998
-
     """
 
-    url = "https://drive.google.com/file/d/1DnPSU5nVSN7xv95bpZ3XQ0JhKXZOKgIv"
-    md5 = "d824acb73957502b00efd559fc6cfbbb"
-    filename = "NWPU-RESISC45.rar"
-    directory = "NWPU-RESISC45"
+    url = 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/NWPU-RESISC45.zip'
+    md5 = '75206b2e16446591afa88e2628744886'
+    filename = 'NWPU-RESISC45.zip'
+    directory = 'NWPU-RESISC45'
 
-    splits = ["train", "val", "test"]
-    split_urls = {
-        "train": "https://storage.googleapis.com/remote_sensing_representations/resisc45-train.txt",  # noqa: E501
-        "val": "https://storage.googleapis.com/remote_sensing_representations/resisc45-val.txt",  # noqa: E501
-        "test": "https://storage.googleapis.com/remote_sensing_representations/resisc45-test.txt",  # noqa: E501
+    splits = ('train', 'val', 'test')
+    split_urls: ClassVar[dict[str, str]] = {
+        'train': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-train.txt',
+        'val': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-val.txt',
+        'test': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-test.txt',
     }
-    split_md5s = {
-        "train": "b5a4c05a37de15e4ca886696a85c403e",
-        "val": "a0770cee4c5ca20b8c32bbd61e114805",
-        "test": "3dda9e4988b47eb1de9f07993653eb08",
+    split_md5s: ClassVar[dict[str, str]] = {
+        'train': 'b5a4c05a37de15e4ca886696a85c403e',
+        'val': 'a0770cee4c5ca20b8c32bbd61e114805',
+        'test': '3dda9e4988b47eb1de9f07993653eb08',
     }
-    classes = [
-        "airplane",
-        "airport",
-        "baseball_diamond",
-        "basketball_court",
-        "beach",
-        "bridge",
-        "chaparral",
-        "church",
-        "circular_farmland",
-        "cloud",
-        "commercial_area",
-        "dense_residential",
-        "desert",
-        "forest",
-        "freeway",
-        "golf_course",
-        "ground_track_field",
-        "harbor",
-        "industrial_area",
-        "intersection",
-        "island",
-        "lake",
-        "meadow",
-        "medium_residential",
-        "mobile_home_park",
-        "mountain",
-        "overpass",
-        "palace",
-        "parking_lot",
-        "railway",
-        "railway_station",
-        "rectangular_farmland",
-        "river",
-        "roundabout",
-        "runway",
-        "sea_ice",
-        "ship",
-        "snowberg",
-        "sparse_residential",
-        "stadium",
-        "storage_tank",
-        "tennis_court",
-        "terrace",
-        "thermal_power_station",
-        "wetland",
-    ]
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        split: str = 'train',
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -172,6 +127,9 @@ class RESISC45(NonGeoClassificationDataset):
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
         self.root = root
@@ -180,10 +138,12 @@ class RESISC45(NonGeoClassificationDataset):
         self._verify()
 
         valid_fns = set()
-        with open(os.path.join(self.root, f"resisc45-{split}.txt")) as f:
+        with open(os.path.join(self.root, f'resisc45-{split}.txt')) as f:
             for fn in f:
                 valid_fns.add(fn.strip())
-        is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
+
+        def is_in_split(x: Path) -> bool:
+            return os.path.basename(x) in valid_fns
 
         super().__init__(
             root=os.path.join(root, self.directory),
@@ -192,11 +152,7 @@ class RESISC45(NonGeoClassificationDataset):
         )
 
     def _verify(self) -> None:
-        """Verify the integrity of the dataset.
-
-        Raises:
-            RuntimeError: if ``download=False`` but dataset is missing or checksum fails
-        """
+        """Verify the integrity of the dataset."""
         # Check if the files already exist
         filepath = os.path.join(self.root, self.directory)
         if os.path.exists(filepath):
@@ -210,11 +166,7 @@ class RESISC45(NonGeoClassificationDataset):
 
         # Check if the user requested to download the dataset
         if not self.download:
-            raise RuntimeError(
-                "Dataset not found in `root` directory and `download=False`, "
-                "either specify a different `root` directory or use `download=True` "
-                "to automatically download the dataset."
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         self._download()
@@ -232,7 +184,7 @@ class RESISC45(NonGeoClassificationDataset):
             download_url(
                 self.split_urls[split],
                 self.root,
-                filename=f"resisc45-{split}.txt",
+                filename=f'resisc45-{split}.txt',
                 md5=self.split_md5s[split] if self.checksum else None,
             )
 
@@ -243,10 +195,10 @@ class RESISC45(NonGeoClassificationDataset):
 
     def plot(
         self,
-        sample: Dict[str, Tensor],
+        sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
-    ) -> plt.Figure:
+        suptitle: str | None = None,
+    ) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -259,22 +211,22 @@ class RESISC45(NonGeoClassificationDataset):
 
         .. versionadded:: 0.2
         """
-        image = np.rollaxis(sample["image"].numpy(), 0, 3)
-        label = cast(int, sample["label"].item())
+        image = np.rollaxis(sample['image'].numpy(), 0, 3)
+        label = cast(int, sample['label'].item())
         label_class = self.classes[label]
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = cast(int, sample["prediction"].item())
+            prediction = cast(int, sample['prediction'].item())
             prediction_class = self.classes[prediction]
 
         fig, ax = plt.subplots(figsize=(4, 4))
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
         if show_titles:
-            title = f"Label: {label_class}"
+            title = f'Label: {label_class}'
             if showing_predictions:
-                title += f"\nPrediction: {prediction_class}"
+                title += f'\nPrediction: {prediction_class}'
             ax.set_title(title)
 
         if suptitle is not None:

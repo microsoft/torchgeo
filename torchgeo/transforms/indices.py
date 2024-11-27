@@ -5,24 +5,17 @@
 
 For more information about indices see the following references:
 - https://www.indexdatabase.de/db/i.php
-- https://github.com/davemlz/awesome-spectral-indices
+- https://github.com/awesome-spectral-indices/awesome-spectral-indices
 """
 
-from typing import Dict
-
 import torch
+from kornia.augmentation import IntensityAugmentationBase2D
 from torch import Tensor
-from torch.nn.modules import Module
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "torch.nn"
-
 
 _EPSILON = 1e-10
 
 
-class AppendNormalizedDifferenceIndex(Module):
+class AppendNormalizedDifferenceIndex(IntensityAugmentationBase2D):
     r"""Append normalized difference index as channel to image tensor.
 
     Computes the following index:
@@ -41,42 +34,33 @@ class AppendNormalizedDifferenceIndex(Module):
             index_a: reference band channel index
             index_b: difference band channel index
         """
-        super().__init__()
-        self.dim = -3
-        self.index_a = index_a
-        self.index_b = index_b
+        super().__init__(p=1)
+        self.flags = {'index_a': index_a, 'index_b': index_b}
 
-    def _compute_index(self, band_a: Tensor, band_b: Tensor) -> Tensor:
-        """Compute normalized difference index.
-
-        Args:
-            band_a: reference band tensor
-            band_b: difference band tensor
-
-        Returns:
-            the index
-        """
-        return (band_a - band_b) / ((band_a + band_b) + _EPSILON)
-
-    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        """Compute and append normalized difference index to image.
+    def apply_transform(
+        self,
+        input: Tensor,
+        params: dict[str, Tensor],
+        flags: dict[str, int],
+        transform: Tensor | None = None,
+    ) -> Tensor:
+        """Apply the transform.
 
         Args:
-            sample: a sample or batch dict
+            input: the input tensor
+            params: generated parameters
+            flags: static parameters
+            transform: the geometric transformation tensor
 
         Returns:
-            the transformed sample
+            the augmented input
         """
-        if "image" in sample:
-            index = self._compute_index(
-                band_a=sample["image"][..., self.index_a, :, :],
-                band_b=sample["image"][..., self.index_b, :, :],
-            )
-            index = index.unsqueeze(self.dim)
-
-            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)
-
-        return sample
+        band_a = input[..., flags['index_a'], :, :]
+        band_b = input[..., flags['index_b'], :, :]
+        ndi = (band_a - band_b) / (band_a + band_b + _EPSILON)
+        ndi = torch.unsqueeze(ndi, -3)
+        input = torch.cat((input, ndi), dim=-3)
+        return input
 
 
 class AppendNBR(AppendNormalizedDifferenceIndex):
@@ -90,7 +74,7 @@ class AppendNBR(AppendNormalizedDifferenceIndex):
 
     If you use this index in your research, please cite the following paper:
 
-    * https://www.sciencebase.gov/catalog/item/4f4e4b20e4b07f02db6abb36
+    * https://www.yumpu.com/en/document/view/24226870/the-normalized-burn-ratio-and-relationships-to-burn-severity-/7
 
     .. versionadded:: 0.2
     """
@@ -305,14 +289,14 @@ class AppendNDRE(AppendNormalizedDifferenceIndex):
         super().__init__(index_a=index_nir, index_b=index_vre1)
 
 
-class AppendTriBandNormalizedDifferenceIndex(Module):
+class AppendTriBandNormalizedDifferenceIndex(IntensityAugmentationBase2D):
     r"""Append normalized difference index involving 3 bands as channel to image tensor.
 
     Computes the following index:
 
     .. math::
 
-       \text{NDI} = \frac{A - (B + C)}{A + (B + C)}
+       \text{TBNDI} = \frac{A - (B + C)}{A + (B + C)}
 
     .. versionadded:: 0.3
     """
@@ -325,45 +309,35 @@ class AppendTriBandNormalizedDifferenceIndex(Module):
             index_b: difference band channel index of component 1
             index_c: difference band channel index of component 2
         """
-        super().__init__()
-        self.dim = -3
-        self.index_a = index_a
-        self.index_b = index_b
-        self.index_c = index_c
+        super().__init__(p=1)
+        self.flags = {'index_a': index_a, 'index_b': index_b, 'index_c': index_c}
 
-    def _compute_index(self, band_a: Tensor, band_b: Tensor, band_c: Tensor) -> Tensor:
-        """Compute tri-band normalized difference index.
-
-        Args:
-            band_a: reference band tensor
-            band_b: difference band tensor component 1
-            band_c: difference band tensor component 2
-
-        Returns:
-            the index
-        """
-        return (band_a - (band_b + band_c)) / ((band_a + band_b + band_c) + _EPSILON)
-
-    def forward(self, sample: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        """Compute and append tri-band normalized difference index to image.
+    def apply_transform(
+        self,
+        input: Tensor,
+        params: dict[str, Tensor],
+        flags: dict[str, int],
+        transform: Tensor | None = None,
+    ) -> Tensor:
+        """Apply the transform.
 
         Args:
-            sample: a sample or batch dict
+            input: the input tensor
+            params: generated parameters
+            flags: static parameters
+            transform: the geometric transformation tensor
 
         Returns:
-            the transformed sample
+            the augmented input
         """
-        if "image" in sample:
-            index = self._compute_index(
-                band_a=sample["image"][..., self.index_a, :, :],
-                band_b=sample["image"][..., self.index_b, :, :],
-                band_c=sample["image"][..., self.index_c, :, :],
-            )
-            index = index.unsqueeze(self.dim)
-
-            sample["image"] = torch.cat([sample["image"], index], dim=self.dim)
-
-        return sample
+        band_a = input[..., flags['index_a'], :, :]
+        band_b = input[..., flags['index_b'], :, :]
+        band_c = input[..., flags['index_c'], :, :]
+        band_d = band_b + band_c
+        tbndi = (band_a - band_d) / (band_a + band_d + _EPSILON)
+        tbndi = torch.unsqueeze(tbndi, -3)
+        input = torch.cat((input, tbndi), dim=-3)
+        return input
 
 
 class AppendGRNDVI(AppendTriBandNormalizedDifferenceIndex):

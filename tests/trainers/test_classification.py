@@ -2,213 +2,321 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Any, Dict, Type, cast
+from pathlib import Path
+from typing import Any
 
 import pytest
 import timm
-from _pytest.monkeypatch import MonkeyPatch
-from omegaconf import OmegaConf
-from pytorch_lightning import LightningDataModule, Trainer
+import torch
+import torch.nn as nn
+from lightning.pytorch import Trainer
+from pytest import MonkeyPatch
 from torch.nn.modules import Module
+from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import (
     BigEarthNetDataModule,
     EuroSATDataModule,
-    RESISC45DataModule,
-    So2SatDataModule,
-    UCMercedDataModule,
+    MisconfigurationException,
 )
+from torchgeo.datasets import BigEarthNet, EuroSAT, RGBBandsMissingError
+from torchgeo.main import main
+from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
-from .test_utils import ClassificationTestModel
+
+class ClassificationTestModel(Module):
+    def __init__(self, in_chans: int = 3, num_classes: int = 10, **kwargs: Any) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channels=in_chans, out_channels=1, kernel_size=1)
+        self.pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(1, num_classes) if num_classes else nn.Identity()
+        self.num_features = 1
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.conv1(x)
+        x = self.pool(x)
+        x = torch.flatten(x, 1)
+        x = self.fc(x)
+        return x
+
+
+class PredictClassificationDataModule(EuroSATDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = EuroSAT(split='test', **self.kwargs)
+
+
+class PredictMultiLabelClassificationDataModule(BigEarthNetDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = BigEarthNet(split='test', **self.kwargs)
 
 
 def create_model(*args: Any, **kwargs: Any) -> Module:
     return ClassificationTestModel(**kwargs)
 
 
+def plot(*args: Any, **kwargs: Any) -> None:
+    return None
+
+
+def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
+    raise RGBBandsMissingError()
+
+
 class TestClassificationTask:
     @pytest.mark.parametrize(
-        "name,classname",
+        'name',
         [
-            ("eurosat", EuroSATDataModule),
-            ("resisc45", RESISC45DataModule),
-            ("so2sat_supervised", So2SatDataModule),
-            ("so2sat_unsupervised", So2SatDataModule),
-            ("ucmerced", UCMercedDataModule),
+            'eurosat',
+            'eurosat100',
+            'eurosatspatial',
+            'fire_risk',
+            'quakeset',
+            'resisc45',
+            'so2sat_all',
+            'so2sat_s1',
+            'so2sat_s2',
+            'so2sat_rgb',
+            'ucmerced',
         ],
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        if name.startswith("so2sat"):
-            pytest.importorskip("h5py", minversion="2.6")
+        if name.startswith('so2sat') or name == 'quakeset':
+            pytest.importorskip('h5py', minversion='3.6')
 
-        conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+        config = os.path.join('tests', 'conf', name + '.yaml')
 
-        # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = classname(**datamodule_kwargs)
+        monkeypatch.setattr(timm, 'create_model', create_model)
 
-        # Instantiate model
-        monkeypatch.setattr(timm, "create_model", create_model)
-        model_kwargs = conf_dict["module"]
-        model = ClassificationTask(**model_kwargs)
+        args = [
+            '--config',
+            config,
+            '--trainer.accelerator',
+            'cpu',
+            '--trainer.fast_dev_run',
+            str(fast_dev_run),
+            '--trainer.max_epochs',
+            '1',
+            '--trainer.log_every_n_steps',
+            '1',
+        ]
 
-        # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
-        trainer.fit(model=model, datamodule=datamodule)
-        trainer.test(model=model, datamodule=datamodule)
-        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
-
-    def test_no_logger(self) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", "ucmerced.yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
-
-        # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = UCMercedDataModule(**datamodule_kwargs)
-
-        # Instantiate model
-        model_kwargs = conf_dict["module"]
-        model = ClassificationTask(**model_kwargs)
-
-        # Instantiate trainer
-        trainer = Trainer(
-            logger=False, fast_dev_run=True, log_every_n_steps=1, max_epochs=1
-        )
-        trainer.fit(model=model, datamodule=datamodule)
+        main(['fit', *args])
+        try:
+            main(['test', *args])
+        except MisconfigurationException:
+            pass
+        try:
+            main(['predict', *args])
+        except MisconfigurationException:
+            pass
 
     @pytest.fixture
-    def model_kwargs(self) -> Dict[Any, Any]:
-        return {
-            "model": "resnet18",
-            "in_channels": 13,
-            "loss": "ce",
-            "num_classes": 10,
-            "weights": "random",
-        }
+    def weights(self) -> WeightsEnum:
+        return ResNet18_Weights.SENTINEL2_ALL_MOCO
 
-    def test_pretrained(self, model_kwargs: Dict[Any, Any], checkpoint: str) -> None:
-        model_kwargs["weights"] = checkpoint
+    @pytest.fixture
+    def mocked_weights(
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
+    ) -> WeightsEnum:
+        path = tmp_path / f'{weights}.pth'
+        model = timm.create_model(
+            weights.meta['model'], in_chans=weights.meta['in_chans']
+        )
+        torch.save(model.state_dict(), path)
+        try:
+            monkeypatch.setattr(weights.value, 'url', str(path))
+        except AttributeError:
+            monkeypatch.setattr(weights, 'url', str(path))
+        return weights
+
+    def test_weight_file(self, checkpoint: str) -> None:
         with pytest.warns(UserWarning):
-            ClassificationTask(**model_kwargs)
+            ClassificationTask(
+                model='resnet18', weights=checkpoint, in_channels=13, num_classes=10
+            )
 
-    def test_invalid_pretrained(
-        self, model_kwargs: Dict[Any, Any], checkpoint: str
-    ) -> None:
-        model_kwargs["weights"] = checkpoint
-        model_kwargs["model"] = "resnet50"
-        match = "Trying to load resnet18 weights into a resnet50"
-        with pytest.raises(ValueError, match=match):
-            ClassificationTask(**model_kwargs)
+    def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
+        with pytest.warns(UserWarning):
+            ClassificationTask(
+                model=mocked_weights.meta['model'],
+                weights=mocked_weights,
+                in_channels=mocked_weights.meta['in_chans'],
+                num_classes=10,
+            )
 
-    def test_invalid_loss(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["loss"] = "invalid_loss"
+    def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
+        with pytest.warns(UserWarning):
+            ClassificationTask(
+                model=mocked_weights.meta['model'],
+                weights=str(mocked_weights),
+                in_channels=mocked_weights.meta['in_chans'],
+                num_classes=10,
+            )
+
+    @pytest.mark.slow
+    def test_weight_enum_download(self, weights: WeightsEnum) -> None:
+        ClassificationTask(
+            model=weights.meta['model'],
+            weights=weights,
+            in_channels=weights.meta['in_chans'],
+            num_classes=10,
+        )
+
+    @pytest.mark.slow
+    def test_weight_str_download(self, weights: WeightsEnum) -> None:
+        ClassificationTask(
+            model=weights.meta['model'],
+            weights=str(weights),
+            in_channels=weights.meta['in_chans'],
+            num_classes=10,
+        )
+
+    def test_invalid_loss(self) -> None:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
-            ClassificationTask(**model_kwargs)
+            ClassificationTask(model='resnet18', loss='invalid_loss')
 
-    def test_invalid_model(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["model"] = "invalid_model"
-        match = "Model type 'invalid_model' is not a valid timm model."
-        with pytest.raises(ValueError, match=match):
-            ClassificationTask(**model_kwargs)
-
-    def test_invalid_weights(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["weights"] = "invalid_weights"
-        match = "Weight type 'invalid_weights' is not valid."
-        with pytest.raises(ValueError, match=match):
-            ClassificationTask(**model_kwargs)
-
-    def test_missing_attributes(
-        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
-    ) -> None:
-        monkeypatch.delattr(EuroSATDataModule, "plot")
+    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(EuroSATDataModule, 'plot', plot)
         datamodule = EuroSATDataModule(
-            root="tests/data/eurosat", batch_size=1, num_workers=0
+            root='tests/data/eurosat', batch_size=1, num_workers=0
         )
-        model = ClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        model = ClassificationTask(model='resnet18', in_channels=13, num_classes=10)
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.validate(model=model, datamodule=datamodule)
+
+    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(EuroSATDataModule, 'plot', plot_missing_bands)
+        datamodule = EuroSATDataModule(
+            root='tests/data/eurosat', batch_size=1, num_workers=0
+        )
+        model = ClassificationTask(model='resnet18', in_channels=13, num_classes=10)
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.validate(model=model, datamodule=datamodule)
+
+    def test_predict(self, fast_dev_run: bool) -> None:
+        datamodule = PredictClassificationDataModule(
+            root='tests/data/eurosat', batch_size=1, num_workers=0
+        )
+        model = ClassificationTask(model='resnet18', in_channels=13, num_classes=10)
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.predict(model=model, datamodule=datamodule)
+
+    @pytest.mark.parametrize(
+        'model_name', ['resnet18', 'efficientnetv2_s', 'vit_base_patch16_384']
+    )
+    def test_freeze_backbone(self, model_name: str) -> None:
+        model = ClassificationTask(model=model_name, freeze_backbone=True)
+        assert not all([param.requires_grad for param in model.model.parameters()])
+        assert all(
+            [param.requires_grad for param in model.model.get_classifier().parameters()]
+        )
 
 
 class TestMultiLabelClassificationTask:
     @pytest.mark.parametrize(
-        "name,classname",
-        [
-            ("bigearthnet_all", BigEarthNetDataModule),
-            ("bigearthnet_s1", BigEarthNetDataModule),
-            ("bigearthnet_s2", BigEarthNetDataModule),
-        ],
+        'name', ['bigearthnet_all', 'bigearthnet_s1', 'bigearthnet_s2']
     )
     def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, classname: Type[LightningDataModule]
+        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", name + ".yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
+        config = os.path.join('tests', 'conf', name + '.yaml')
 
-        # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = classname(**datamodule_kwargs)
+        monkeypatch.setattr(timm, 'create_model', create_model)
 
-        # Instantiate model
-        monkeypatch.setattr(timm, "create_model", create_model)
-        model_kwargs = conf_dict["module"]
-        model = MultiLabelClassificationTask(**model_kwargs)
+        args = [
+            '--config',
+            config,
+            '--trainer.accelerator',
+            'cpu',
+            '--trainer.fast_dev_run',
+            str(fast_dev_run),
+            '--trainer.max_epochs',
+            '1',
+            '--trainer.log_every_n_steps',
+            '1',
+        ]
 
-        # Instantiate trainer
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
-        trainer.fit(model=model, datamodule=datamodule)
-        trainer.test(model=model, datamodule=datamodule)
-        trainer.predict(model=model, dataloaders=datamodule.val_dataloader())
+        main(['fit', *args])
+        try:
+            main(['test', *args])
+        except MisconfigurationException:
+            pass
+        try:
+            main(['predict', *args])
+        except MisconfigurationException:
+            pass
 
-    def test_no_logger(self) -> None:
-        conf = OmegaConf.load(os.path.join("tests", "conf", "bigearthnet_s1.yaml"))
-        conf_dict = OmegaConf.to_object(conf.experiment)
-        conf_dict = cast(Dict[Any, Dict[Any, Any]], conf_dict)
-
-        # Instantiate datamodule
-        datamodule_kwargs = conf_dict["datamodule"]
-        datamodule = BigEarthNetDataModule(**datamodule_kwargs)
-
-        # Instantiate model
-        model_kwargs = conf_dict["module"]
-        model = MultiLabelClassificationTask(**model_kwargs)
-
-        # Instantiate trainer
-        trainer = Trainer(
-            logger=False, fast_dev_run=True, log_every_n_steps=1, max_epochs=1
-        )
-        trainer.fit(model=model, datamodule=datamodule)
-
-    @pytest.fixture
-    def model_kwargs(self) -> Dict[Any, Any]:
-        return {
-            "model": "resnet18",
-            "in_channels": 14,
-            "loss": "bce",
-            "num_classes": 19,
-            "weights": "random",
-        }
-
-    def test_invalid_loss(self, model_kwargs: Dict[Any, Any]) -> None:
-        model_kwargs["loss"] = "invalid_loss"
+    def test_invalid_loss(self) -> None:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
-            MultiLabelClassificationTask(**model_kwargs)
+            MultiLabelClassificationTask(model='resnet18', loss='invalid_loss')
 
-    def test_missing_attributes(
-        self, model_kwargs: Dict[Any, Any], monkeypatch: MonkeyPatch
-    ) -> None:
-        monkeypatch.delattr(BigEarthNetDataModule, "plot")
+    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(BigEarthNetDataModule, 'plot', plot)
         datamodule = BigEarthNetDataModule(
-            root="tests/data/bigearthnet", batch_size=1, num_workers=0
+            root='tests/data/bigearthnet', batch_size=1, num_workers=0
         )
-        model = MultiLabelClassificationTask(**model_kwargs)
-        trainer = Trainer(fast_dev_run=True, log_every_n_steps=1, max_epochs=1)
+        model = MultiLabelClassificationTask(
+            model='resnet18', in_channels=14, num_classes=19, loss='bce'
+        )
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
         trainer.validate(model=model, datamodule=datamodule)
+
+    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(BigEarthNetDataModule, 'plot', plot_missing_bands)
+        datamodule = BigEarthNetDataModule(
+            root='tests/data/bigearthnet', batch_size=1, num_workers=0
+        )
+        model = MultiLabelClassificationTask(
+            model='resnet18', in_channels=14, num_classes=19, loss='bce'
+        )
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.validate(model=model, datamodule=datamodule)
+
+    def test_predict(self, fast_dev_run: bool) -> None:
+        datamodule = PredictMultiLabelClassificationDataModule(
+            root='tests/data/bigearthnet', batch_size=1, num_workers=0
+        )
+        model = MultiLabelClassificationTask(
+            model='resnet18', in_channels=14, num_classes=19, loss='bce'
+        )
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.predict(model=model, datamodule=datamodule)

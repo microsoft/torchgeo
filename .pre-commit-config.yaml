@@ -1,38 +1,45 @@
 repos:
-    -   repo: https://github.com/asottile/pyupgrade
-        rev: v3.2.2
-        hooks:
-        -   id: pyupgrade
-            args: [--py37-plus]
-
-    -   repo: https://github.com/pycqa/isort
-        rev: 5.10.1
-        hooks:
-        -    id: isort
-             additional_dependencies: ["colorama>=0.4.3"]
-
-    -   repo: https://github.com/psf/black
-        rev: 22.10.0
-        hooks:
-        -   id: black
-            args: [--skip-magic-trailing-comma]
-
-    -   repo: https://github.com/pycqa/flake8.git
-        rev: 5.0.4
-        hooks:
-        -   id: flake8
-
-    -   repo: https://github.com/pycqa/pydocstyle
-        rev: 6.1.1
-        hooks:
-        -   id: pydocstyle
-            exclude: (tests|docs|experiments)
-            additional_dependencies: ["toml"]
-
-    -   repo: https://github.com/pre-commit/mirrors-mypy
-        rev: v0.991
-        hooks:
-        -   id: mypy
-            args: [--strict, --ignore-missing-imports, --show-error-codes]
-            additional_dependencies: [torch>=1.13, torchmetrics>=0.10, pytorch-lightning>=1.7, pytest>=6, omegaconf>=2.1, kornia>=0.6, numpy>=1.22.0]
-            exclude: (build|data|dist|logo|logs|output)/
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff
+        types_or:
+          - python
+          - jupyter
+        args:
+          - --fix
+      - id: ruff-format
+        types_or:
+          - python
+          - jupyter
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        args:
+          - --strict
+          - --ignore-missing-imports
+          - --show-error-codes
+        additional_dependencies:
+          - einops>=0.6.0
+          - kornia>=0.6.9
+          - lightning>=2.0.9
+          - matplotlib>=3.9.2
+          - numpy>=1.22
+          - pillow>=10.4.0
+          - pytest>=6.1.2
+          - pyvista>=0.34.2
+          - scikit-image>=0.22.0
+          - torch>=2.3
+          - torchmetrics>=0.10
+          - torchvision>=0.18
+        exclude: (build|data|dist|logo|logs|output)/
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        language: node
+        language_version: 22.0.0
+        args:
+          - --write
+        exclude: ^tests/data/[^/]+/$

@@ -5,11 +5,10 @@
 
 import math
 from collections import OrderedDict
-from typing import List, cast
+from typing import cast
 
 import torch.nn.functional as F
 import torchvision
-from packaging.version import parse
 from torch import Tensor
 from torch.nn.modules import (
     BatchNorm2d,
@@ -25,18 +24,6 @@ from torch.nn.modules import (
 from torchvision.models import resnet
 from torchvision.ops import FeaturePyramidNetwork as FPN
 
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "torch.nn"
-ModuleList.__module__ = "nn.ModuleList"
-Sequential.__module__ = "nn.Sequential"
-Conv2d.__module__ = "nn.Conv2d"
-BatchNorm2d.__module__ = "nn.BatchNorm2d"
-ReLU.__module__ = "nn.ReLU"
-UpsamplingBilinear2d.__module__ = "nn.UpsamplingBilinear2d"
-Sigmoid.__module__ = "nn.Sigmoid"
-Identity.__module__ = "nn.Identity"
-
 
 class FarSeg(Module):
     """Foreground-Aware Relation Network (FarSeg).
@@ -49,12 +36,12 @@ class FarSeg(Module):
 
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/pdf/2011.09766.pdf
+    * https://arxiv.org/pdf/2011.09766
     """
 
     def __init__(
         self,
-        backbone: str = "resnet50",
+        backbone: str = 'resnet50',
         classes: int = 16,
         backbone_pretrained: bool = True,
     ) -> None:
@@ -67,24 +54,21 @@ class FarSeg(Module):
             backbone_pretrained: whether to use pretrained weight for backbone
         """
         super().__init__()
-        if backbone in ["resnet18", "resnet34"]:
+        if backbone in ['resnet18', 'resnet34']:
             max_channels = 512
-        elif backbone in ["resnet50", "resnet101"]:
+        elif backbone in ['resnet50', 'resnet101']:
             max_channels = 2048
         else:
-            raise ValueError(f"unknown backbone: {backbone}.")
+            raise ValueError(f'unknown backbone: {backbone}.')
         kwargs = {}
-        if parse(torchvision.__version__) >= parse("0.13"):
-            if backbone_pretrained:
-                kwargs = {
-                    "weights": getattr(
-                        torchvision.models, f"ResNet{backbone[6:]}_Weights"
-                    ).DEFAULT
-                }
-            else:
-                kwargs = {"weights": None}
+        if backbone_pretrained:
+            kwargs = {
+                'weights': getattr(
+                    torchvision.models, f'ResNet{backbone[6:]}_Weights'
+                ).DEFAULT
+            }
         else:
-            kwargs = {"pretrained": backbone_pretrained}
+            kwargs = {'weights': None}
 
         self.backbone = getattr(resnet, backbone)(**kwargs)
 
@@ -118,7 +102,7 @@ class FarSeg(Module):
         coarsest_features = features[-1]
         scene_embedding = F.adaptive_avg_pool2d(coarsest_features, 1)
         fpn_features = self.fpn(
-            OrderedDict({f"c{i + 2}": features[i] for i in range(4)})
+            OrderedDict({f'c{i + 2}': features[i] for i in range(4)})
         )
         features = [v for k, v in fpn_features.items()]
         features = self.fsr(scene_embedding, features)
@@ -134,7 +118,7 @@ class _FSRelation(Module):
     def __init__(
         self,
         scene_embedding_channels: int,
-        in_channels_list: List[int],
+        in_channels_list: list[int],
         out_channels: int,
     ) -> None:
         """Initialize the _FSRelation module.
@@ -173,7 +157,7 @@ class _FSRelation(Module):
 
         self.normalizer = Sigmoid()
 
-    def forward(self, scene_feature: Tensor, features: List[Tensor]) -> List[Tensor]:
+    def forward(self, scene_feature: Tensor, features: list[Tensor]) -> list[Tensor]:
         """Forward pass of the model."""
         # [N, C, H, W]
         content_feats = [
@@ -200,7 +184,7 @@ class _LightWeightDecoder(Module):
         in_channels: int,
         out_channels: int,
         num_classes: int,
-        in_feature_output_strides: List[int] = [4, 8, 16, 32],
+        in_feature_output_strides: list[int] = [4, 8, 16, 32],
         out_feature_output_stride: int = 4,
     ) -> None:
         """Initialize the _LightWeightDecoder module.
@@ -235,9 +219,11 @@ class _LightWeightDecoder(Module):
                             ),
                             BatchNorm2d(out_channels),
                             ReLU(inplace=True),
-                            UpsamplingBilinear2d(scale_factor=2)
-                            if num_upsample != 0
-                            else Identity(),
+                            (
+                                UpsamplingBilinear2d(scale_factor=2)
+                                if num_upsample != 0
+                                else Identity()
+                            ),
                         )
                         for idx in range(num_layers)
                     ]
@@ -249,7 +235,7 @@ class _LightWeightDecoder(Module):
             UpsamplingBilinear2d(scale_factor=4),
         )
 
-    def forward(self, features: List[Tensor]) -> Tensor:
+    def forward(self, features: list[Tensor]) -> Tensor:
         """Forward pass of the model."""
         inner_feat_list = []
         for idx, block in enumerate(self.blocks):

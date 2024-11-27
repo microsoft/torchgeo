@@ -1,12 +1,11 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 """Loss functions for learing on the prior."""
 
 import torch
 import torch.nn.functional as F
 from torch.nn.modules import Module
-
-# https://github.com/pytorch/pytorch/issues/60979
-# https://github.com/pytorch/pytorch/pull/61045
-Module.__module__ = "torch.nn"
 
 
 class QRLoss(Module):
@@ -32,7 +31,7 @@ class QRLoss(Module):
         q_bar = q.mean(dim=(0, 2, 3))
         qbar_log_S = (q_bar * torch.log(q_bar)).sum()
 
-        q_log_p = torch.einsum("bcxy,bcxy->bxy", q, torch.log(target)).mean()
+        q_log_p = torch.einsum('bcxy,bcxy->bxy', q, torch.log(target)).mean()
 
         loss = qbar_log_S - q_log_p
         return loss
@@ -60,11 +59,9 @@ class RQLoss(Module):
         q = probs
 
         # manually normalize due to https://github.com/pytorch/pytorch/issues/70100
-        z = q / q.norm(  # type: ignore[no-untyped-call]
-            p=1, dim=(0, 2, 3), keepdim=True
-        ).clamp_min(1e-12).expand_as(q)
+        z = q / q.norm(p=1, dim=(0, 2, 3), keepdim=True).clamp_min(1e-12).expand_as(q)
         r = F.normalize(z * target, p=1, dim=1)
 
-        loss = torch.einsum("bcxy,bcxy->bxy", r, torch.log(r) - torch.log(q)).mean()
+        loss = torch.einsum('bcxy,bcxy->bxy', r, torch.log(r) - torch.log(q)).mean()
 
         return loss

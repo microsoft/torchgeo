@@ -4,14 +4,23 @@
 """Common sampler utilities."""
 
 import math
-from typing import Optional, Tuple, Union
+from typing import overload
 
 import torch
+from torch import Generator
 
 from ..datasets import BoundingBox
 
 
-def _to_tuple(value: Union[Tuple[float, float], float]) -> Tuple[float, float]:
+@overload
+def _to_tuple(value: tuple[int, int] | int) -> tuple[int, int]: ...
+
+
+@overload
+def _to_tuple(value: tuple[float, float] | float) -> tuple[float, float]: ...
+
+
+def _to_tuple(value: tuple[float, float] | float) -> tuple[float, float]:
     """Convert value to a tuple if it is not already a tuple.
 
     Args:
@@ -20,14 +29,17 @@ def _to_tuple(value: Union[Tuple[float, float], float]) -> Tuple[float, float]:
     Returns:
         value if value is a tuple, else (value, value)
     """
-    if isinstance(value, (float, int)):
+    if isinstance(value, float | int):
         return (value, value)
     else:
         return value
 
 
 def get_random_bounding_box(
-    bounds: BoundingBox, size: Union[Tuple[float, float], float], res: float
+    bounds: BoundingBox,
+    size: tuple[float, float] | float,
+    res: float,
+    generator: Generator | None = None,
 ) -> BoundingBox:
     """Returns a random bounding box within a given bounding box.
 
@@ -38,26 +50,30 @@ def get_random_bounding_box(
         * a ``tuple`` of two floats - in which case, the first *float* is used for the
           height dimension, and the second *float* for the width dimension
 
+    .. versionadded:: 0.7
+        The *generator* parameter.
+
     Args:
         bounds: the larger bounding box to sample from
         size: the size of the bounding box to sample
+        res: the resolution of the image
+        generator: pseudo-random number generator (PRNG).
 
     Returns:
         randomly sampled bounding box from the extent of the input
     """
     t_size = _to_tuple(size)
 
-    width = (bounds.maxx - bounds.minx - t_size[1]) // res
-    height = (bounds.maxy - bounds.miny - t_size[0]) // res
+    # May be negative if bounding box is smaller than patch size
+    width = (bounds.maxx - bounds.minx - t_size[1]) / res
+    height = (bounds.maxy - bounds.miny - t_size[0]) / res
 
     minx = bounds.minx
     miny = bounds.miny
 
-    # random.randrange crashes for inputs <= 0
-    if width > 0:
-        minx += torch.rand(1).item() * width * res
-    if height > 0:
-        miny += torch.rand(1).item() * height * res
+    # Use an integer multiple of res to avoid resampling
+    minx += int(torch.rand(1, generator=generator).item() * width) * res
+    miny += int(torch.rand(1, generator=generator).item() * height) * res
 
     maxx = minx + t_size[1]
     maxy = miny + t_size[0]
@@ -71,9 +87,9 @@ def get_random_bounding_box(
 
 def tile_to_chips(
     bounds: BoundingBox,
-    size: Tuple[float, float],
-    stride: Optional[Tuple[float, float]] = None,
-) -> Tuple[int, int]:
+    size: tuple[float, float],
+    stride: tuple[float, float] | None = None,
+) -> tuple[int, int]:
     r"""Compute number of :term:`chips <chip>` that can be sampled from a :term:`tile`.
 
     Let :math:`i` be the size of the input tile. Let :math:`k` be the requested size of

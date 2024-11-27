@@ -3,19 +3,16 @@
 
 """ETCI 2021 datamodule."""
 
-from typing import Any, Dict, Optional
+from typing import Any
 
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import torch
-from torch import Generator
-from torch.utils.data import DataLoader, random_split
-from torchvision.transforms import Normalize
+from torch import Tensor
 
 from ..datasets import ETCI2021
+from .geo import NonGeoDataModule
 
 
-class ETCI2021DataModule(pl.LightningDataModule):
+class ETCI2021DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the ETCI2021 dataset.
 
     Splits the existing train split from the dataset into train/val with 80/20
@@ -24,127 +21,62 @@ class ETCI2021DataModule(pl.LightningDataModule):
     .. versionadded:: 0.2
     """
 
-    band_means = torch.tensor(
-        [0.52253931, 0.52253931, 0.52253931, 0.61221701, 0.61221701, 0.61221701]
+    mean = torch.tensor(
+        [
+            128.02253931,
+            128.02253931,
+            128.02253931,
+            128.11221701,
+            128.11221701,
+            128.11221701,
+        ]
     )
-
-    band_stds = torch.tensor(
-        [0.35221376, 0.35221376, 0.35221376, 0.37364622, 0.37364622, 0.37364622]
+    std = torch.tensor(
+        [89.8145088, 89.8145088, 89.8145088, 95.2797861, 95.2797861, 95.2797861]
     )
 
     def __init__(
-        self, seed: int = 0, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
+        self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
     ) -> None:
-        """Initialize a LightningDataModule for ETCI2021 based DataLoaders.
+        """Initialize a new ETCI2021DataModule instance.
 
         Args:
-            seed: The seed value to use when doing the dataset random_split
-            batch_size: The batch size to use in all created DataLoaders
-            num_workers: The number of workers to use in all created DataLoaders
+            batch_size: Size of each mini-batch.
+            num_workers: Number of workers for parallel data loading.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.ETCI2021`
+                :class:`~torchgeo.datasets.ETCI2021`.
         """
-        super().__init__()
-        self.seed = seed
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.kwargs = kwargs
+        super().__init__(ETCI2021, batch_size, num_workers, **kwargs)
 
-        self.norm = Normalize(self.band_means, self.band_stds)
-
-    def preprocess(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform a single sample from the Dataset.
-
-        Notably, moves the given water mask to act as an input layer.
+    def setup(self, stage: str) -> None:
+        """Set up datasets.
 
         Args:
-            sample: input image dictionary
-
-        Returns:
-            preprocessed sample
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        sample["image"] = sample["image"].float()
-        sample["image"] /= 255.0
-        sample["image"] = self.norm(sample["image"])
+        if stage in ['fit']:
+            self.train_dataset = ETCI2021(split='train', **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.val_dataset = ETCI2021(split='val', **self.kwargs)
+        if stage in ['predict']:
+            # Test set masks are not public, use for prediction instead
+            self.predict_dataset = ETCI2021(split='test', **self.kwargs)
 
-        if "mask" in sample:
-            flood_mask = sample["mask"][1]
-            flood_mask = (flood_mask > 0).long()
-            sample["mask"] = flood_mask
-
-        return sample
-
-    def prepare_data(self) -> None:
-        """Make sure that the dataset is downloaded.
-
-        This method is only called once per run.
-        """
-        ETCI2021(**self.kwargs)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        """Initialize the main ``Dataset`` objects.
-
-        This method is called once per GPU per run.
+    def on_after_batch_transfer(
+        self, batch: dict[str, Tensor], dataloader_idx: int
+    ) -> dict[str, Tensor]:
+        """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:
-            stage: stage to set up
-        """
-        train_val_dataset = ETCI2021(
-            split="train", transforms=self.preprocess, **self.kwargs
-        )
-        self.test_dataset = ETCI2021(
-            split="val", transforms=self.preprocess, **self.kwargs
-        )
-
-        size_train_val = len(train_val_dataset)
-        size_train = round(0.8 * size_train_val)
-        size_val = size_train_val - size_train
-
-        self.train_dataset, self.val_dataset = random_split(
-            train_val_dataset,
-            [size_train, size_val],
-            generator=Generator().manual_seed(self.seed),
-        )
-
-    def train_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for training.
+            batch: A batch of data that needs to be altered or augmented.
+            dataloader_idx: The index of the dataloader to which the batch belongs.
 
         Returns:
-            training data loader
+            A batch of data.
         """
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=True,
-        )
+        if self.trainer:
+            if not self.trainer.predicting:
+                # Evaluate against flood mask, not water mask
+                batch['mask'] = (batch['mask'][:, 1] > 0).long()
 
-    def val_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for validation.
-
-        Returns:
-            validation data loader
-        """
-        return DataLoader(
-            self.val_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def test_dataloader(self) -> DataLoader[Any]:
-        """Return a DataLoader for testing.
-
-        Returns:
-            testing data loader
-        """
-        return DataLoader(
-            self.test_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=False,
-        )
-
-    def plot(self, *args: Any, **kwargs: Any) -> plt.Figure:
-        """Run :meth:`torchgeo.datasets.ETCI2021.plot`."""
-        return self.test_dataset.plot(*args, **kwargs)
+        return super().on_after_batch_transfer(batch, dataloader_idx)

@@ -1,15 +1,13 @@
-experiment:
-  task: cowc_counting
-  module:
+model:
+  class_path: RegressionTask
+  init_args:
     model: resnet18
-    weights: "random"
     num_outputs: 1
     in_channels: 3
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 2
-    pretrained: True
-  datamodule:
-    root: "tests/data/cowc_counting"
-    seed: 0
+    loss: 'mse'
+data:
+  class_path: COWCCountingDataModule
+  init_args:
     batch_size: 1
-    num_workers: 0
+  dict_kwargs:
+    root: 'tests/data/cowc_counting'

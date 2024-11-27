@@ -3,21 +3,26 @@
 
 """TorchGeo trainers."""
 
+from .base import BaseTask
 from .byol import BYOLTask
 from .classification import ClassificationTask, MultiLabelClassificationTask
 from .detection import ObjectDetectionTask
-from .regression import RegressionTask
+from .iobench import IOBenchTask
+from .moco import MoCoTask
+from .regression import PixelwiseRegressionTask, RegressionTask
 from .segmentation import SemanticSegmentationTask
+from .simclr import SimCLRTask
 
 __all__ = (
-    "BYOLTask",
-    "ClassificationTask",
-    "MultiLabelClassificationTask",
-    "ObjectDetectionTask",
-    "RegressionTask",
-    "SemanticSegmentationTask",
+    'BYOLTask',
+    'BaseTask',
+    'ClassificationTask',
+    'IOBenchTask',
+    'MoCoTask',
+    'MultiLabelClassificationTask',
+    'ObjectDetectionTask',
+    'PixelwiseRegressionTask',
+    'RegressionTask',
+    'SemanticSegmentationTask',
+    'SimCLRTask',
 )
-
-# https://stackoverflow.com/questions/40018681
-for module in __all__:
-    globals()[module].__module__ = "torchgeo.trainers"

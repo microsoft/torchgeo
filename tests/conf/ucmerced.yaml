@@ -1,14 +1,13 @@
-experiment:
-  task: "ucmerced"
-  module:
-    loss: "ce"
-    model: "resnet18"
-    weights: "random"
-    learning_rate: 1e-3
-    learning_rate_schedule_patience: 6
+model:
+  class_path: ClassificationTask
+  init_args:
+    loss: 'ce'
+    model: 'resnet18'
     in_channels: 3
     num_classes: 2
-  datamodule:
-    root: "tests/data/ucmerced"
-    batch_size: 1
-    num_workers: 0
+data:
+  class_path: UCMercedDataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: 'tests/data/ucmerced'

@@ -2,10 +2,11 @@
 # Licensed under the MIT License.
 
 import math
+from collections.abc import Iterator
 from itertools import product
-from typing import Dict, Iterator
 
 import pytest
+import torch
 from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
 from torch.utils.data import DataLoader
@@ -39,18 +40,18 @@ class CustomGeoDataset(GeoDataset):
         self._crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> Dict[str, BoundingBox]:
-        return {"index": query}
+    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
+        return {'index': query}
 
 
 class TestGeoSampler:
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 100, 200, 300, 400, 500))
         return ds
 
-    @pytest.fixture(scope="function")
+    @pytest.fixture(scope='function')
     def sampler(self) -> CustomGeoSampler:
         return CustomGeoSampler()
 
@@ -65,7 +66,7 @@ class TestGeoSampler:
             GeoSampler(dataset)  # type: ignore[abstract]
 
     @pytest.mark.slow
-    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    @pytest.mark.parametrize('num_workers', [0, 1, 2])
     def test_dataloader(
         self, dataset: CustomGeoDataset, sampler: CustomGeoSampler, num_workers: int
     ) -> None:
@@ -77,7 +78,7 @@ class TestGeoSampler:
 
 
 class TestRandomGeoSampler:
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 100, 200, 300, 400, 500))
@@ -85,7 +86,7 @@ class TestRandomGeoSampler:
         return ds
 
     @pytest.fixture(
-        scope="function",
+        scope='function',
         params=product([3, 4.5, (2, 2), (3, 4.5), (4.5, 3)], [Units.PIXELS, Units.CRS]),
     )
     def sampler(
@@ -139,8 +140,19 @@ class TestRandomGeoSampler:
         for bbox in sampler:
             assert bbox == BoundingBox(0, 10, 0, 10, 0, 10)
 
+    def test_random_seed(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        generator1 = torch.Generator().manual_seed(0)
+        generator2 = torch.Generator().manual_seed(0)
+        sampler1 = RandomGeoSampler(ds, 1, 1, generator=generator1)
+        sampler2 = RandomGeoSampler(ds, 1, 1, generator=generator2)
+        sample1 = next(iter(sampler1))
+        sample2 = next(iter(sampler2))
+        assert sample1 == sample2
+
     @pytest.mark.slow
-    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    @pytest.mark.parametrize('num_workers', [0, 1, 2])
     def test_dataloader(
         self, dataset: CustomGeoDataset, sampler: RandomGeoSampler, num_workers: int
     ) -> None:
@@ -152,7 +164,7 @@ class TestRandomGeoSampler:
 
 
 class TestGridGeoSampler:
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 100, 200, 300, 400, 500))
@@ -160,9 +172,18 @@ class TestGridGeoSampler:
         return ds
 
     @pytest.fixture(
-        scope="function",
+        scope='function',
         params=product(
-            [(8, 1), (6, 2), (4, 3), (2.5, 3), ((8, 6), (1, 2)), ((6, 4), (2, 3))],
+            [
+                (8, 1),
+                (6, 2),
+                (4, 3),
+                (4, 4),
+                (2, 4),
+                (2.5, 3),
+                ((8, 6), (1, 2)),
+                ((6, 4), (2, 3)),
+            ],
             [Units.PIXELS, Units.CRS],
         ),
     )
@@ -172,8 +193,18 @@ class TestGridGeoSampler:
 
     def test_iter(self, sampler: GridGeoSampler) -> None:
         for query in sampler:
-            assert sampler.roi.minx <= query.minx <= query.maxx <= sampler.roi.maxx
-            assert sampler.roi.miny <= query.miny <= query.miny <= sampler.roi.maxy
+            assert (
+                sampler.roi.minx
+                <= query.minx
+                <= query.maxx
+                < sampler.roi.maxx + sampler.stride[1]
+            )
+            assert (
+                sampler.roi.miny
+                <= query.miny
+                <= query.miny
+                < sampler.roi.maxy + sampler.stride[0]
+            )
             assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
 
             assert math.isclose(query.maxx - query.minx, sampler.size[1])
@@ -222,10 +253,10 @@ class TestGridGeoSampler:
         iterator = iter(sampler)
         assert len(sampler) == 2
         assert next(iterator) == BoundingBox(0, 5, 0, 5, 0, 10)
-        assert next(iterator) == BoundingBox(1, 6, 0, 5, 0, 10)
+        assert next(iterator) == BoundingBox(5, 10, 0, 5, 0, 10)
 
     @pytest.mark.slow
-    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    @pytest.mark.parametrize('num_workers', [0, 1, 2])
     def test_dataloader(
         self, dataset: CustomGeoDataset, sampler: GridGeoSampler, num_workers: int
     ) -> None:
@@ -237,14 +268,14 @@ class TestGridGeoSampler:
 
 
 class TestPreChippedGeoSampler:
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 20, 0, 20, 0, 20))
         ds.index.insert(1, (0, 30, 0, 30, 0, 30))
         return ds
 
-    @pytest.fixture(scope="function")
+    @pytest.fixture(scope='function')
     def sampler(self, dataset: CustomGeoDataset) -> PreChippedGeoSampler:
         return PreChippedGeoSampler(dataset, shuffle=True)
 
@@ -269,8 +300,20 @@ class TestPreChippedGeoSampler:
         for _ in sampler:
             continue
 
+    def test_shuffle_seed(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        ds.index.insert(1, (0, 11, 0, 11, 0, 11))
+        generator1 = torch.Generator().manual_seed(0)
+        generator2 = torch.Generator().manual_seed(0)
+        sampler1 = PreChippedGeoSampler(ds, shuffle=True, generator=generator1)
+        sampler2 = PreChippedGeoSampler(ds, shuffle=True, generator=generator2)
+        sample1 = next(iter(sampler1))
+        sample2 = next(iter(sampler2))
+        assert sample1 == sample2
+
     @pytest.mark.slow
-    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    @pytest.mark.parametrize('num_workers', [0, 1, 2])
     def test_dataloader(
         self, dataset: CustomGeoDataset, sampler: PreChippedGeoSampler, num_workers: int
     ) -> None:
