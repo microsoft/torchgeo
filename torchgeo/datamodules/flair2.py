@@ -13,7 +13,7 @@ import kornia.augmentation as K
 import torch
 from torch.utils.data import random_split
 
-from ..datasets import FLAIR2
+from ..datasets import FLAIR2, FLAIR2Toy
 from ..samplers.utils import _to_tuple
 from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
@@ -31,6 +31,7 @@ class FLAIR2DataModule(NonGeoDataModule):
         patch_size: tuple[int, int] | int = 64,
         val_split_pct: float = 0.2,
         num_workers: int = 0,
+        use_toy: bool = False,
         augs: AugmentationSequential | None = None,
         **kwargs: Any,
     ) -> None:
@@ -42,13 +43,16 @@ class FLAIR2DataModule(NonGeoDataModule):
                 Should be a multiple of 32 for most segmentation architectures.
             val_split_pct: Percentage of the dataset to use as a validation set.
             num_workers: Number of workers for parallel data loading.
+            use_toy: Whether to use the toy version of the dataset.
             augs: Optional augmentations to apply to the dataset.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.FLAIR2`.
             
             ..versionadded:: 0.7
         """
-        super().__init__(FLAIR2, batch_size, num_workers, **kwargs)
+        self.ds_class = FLAIR2 if not use_toy else FLAIR2Toy
+        
+        super().__init__(self.ds_class, batch_size, num_workers, **kwargs)
 
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
@@ -67,10 +71,10 @@ class FLAIR2DataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ['fit', 'validate']:
-            self.dataset = FLAIR2(split="train", **self.kwargs)
+            self.dataset = self.ds_class(split="train", **self.kwargs)
             generator = torch.Generator().manual_seed(0)
             self.train_dataset, self.val_dataset = random_split(
                 self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
             )
         if stage in ['test']:
-            self.test_dataset = FLAIR2(split="test", **self.kwargs)
+            self.test_dataset = self.ds_class(split="test", **self.kwargs)
