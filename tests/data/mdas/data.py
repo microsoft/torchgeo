@@ -62,7 +62,13 @@ if os.path.exists(dataset_path):
 
 
 def create_dummy_geotiff(
-    path, num_bands=3, width=32, height=32, dtype=np.uint16, binary=False, landuse=False
+    path: str,
+    num_bands: int = 3,
+    width: int = 32,
+    height: int = 32,
+    dtype: np.dtype = np.uint16,
+    binary: bool = False,
+    landuse: bool = False,
 ) -> None:
     """Create a dummy GeoTIFF file."""
     crs = CRS.from_epsg(32632)  # WGS84 Coordinate System

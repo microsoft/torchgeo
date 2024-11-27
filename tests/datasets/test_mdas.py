@@ -16,24 +16,27 @@ from torchgeo.datasets import MDAS, DatasetNotFoundError
 
 
 class TestMDAS:
-    dataset_params = [
-        {'subareas': ['sub_area_1'], 'modalities': ['3K_RGB', 'osm_buildings']},
-        {'subareas': ['sub_area_1', 'sub_area_2'], 'modalities': ['3K_RGB', 'HySpex']},
-        {
-            'subareas': ['sub_area_2', 'sub_area_3'],
-            'modalities': [
-                '3K_RGB',
-                'HySpex',
-                'EeteS_EnMAP_10m',
-                'Sentinel_1',
-                'osm_buildings',
-                'osm_landuse',
-                'osm_water',
-            ],
-        },
-    ]
-
-    @pytest.fixture(params=dataset_params)
+    @pytest.fixture(
+        params=[
+            {'subareas': ['sub_area_1'], 'modalities': ['3K_RGB', 'osm_buildings']},
+            {
+                'subareas': ['sub_area_1', 'sub_area_2'],
+                'modalities': ['3K_RGB', 'HySpex'],
+            },
+            {
+                'subareas': ['sub_area_2', 'sub_area_3'],
+                'modalities': [
+                    '3K_RGB',
+                    'HySpex',
+                    'EeteS_EnMAP_10m',
+                    'Sentinel_1',
+                    'osm_buildings',
+                    'osm_landuse',
+                    'osm_water',
+                ],
+            },
+        ]
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> MDAS:
