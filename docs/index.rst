@@ -34,6 +34,7 @@ torchgeo
    tutorials/indices
    tutorials/trainers
    tutorials/pretrained_weights
+   tutorials/earth_surface_water
 
 .. toctree::
    :maxdepth: 1
