@@ -15,7 +15,12 @@ class TestFLAIR2DataModule:
         root = os.path.join('tests', 'data', 'flair2', 'FLAIR2')
         batch_size = 2
         num_workers = 0
-        dm = FLAIR2DataModule(root=root, batch_size=batch_size, num_workers=num_workers, use_sentinel=False) # FIXME: use_sentinel=True does not work due to varying dimensions
+        dm = FLAIR2DataModule(
+            root=root,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            use_sentinel=False,
+        )  # FIXME: use_sentinel=True does not work due to varying dimensions
         return dm
 
     def test_train_dataloader(self, datamodule: FLAIR2DataModule) -> None:
@@ -33,9 +38,6 @@ class TestFLAIR2DataModule:
     def test_plot(self, datamodule: FLAIR2DataModule) -> None:
         datamodule.setup('validate')
         batch = next(iter(datamodule.val_dataloader()))
-        sample = {
-            'image': batch['image'][0],
-            'mask': batch['mask'][0],
-        }
+        sample = {'image': batch['image'][0], 'mask': batch['mask'][0]}
         datamodule.plot(sample)
         plt.close()

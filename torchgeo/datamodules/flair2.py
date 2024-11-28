@@ -47,19 +47,18 @@ class FLAIR2DataModule(NonGeoDataModule):
             augs: Optional augmentations to apply to the dataset.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.FLAIR2`.
-            
+
             ..versionadded:: 0.7
         """
         self.ds_class = FLAIR2 if not use_toy else FLAIR2Toy
-        
+
         super().__init__(self.ds_class, batch_size, num_workers, **kwargs)
 
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
         self.aug: AugmentationSequential = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            data_keys=['image', 'mask'],
+            K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
         )
 
         self.augs = augs if augs is not None else self.aug
@@ -71,10 +70,10 @@ class FLAIR2DataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ['fit', 'validate']:
-            self.dataset = self.ds_class(split="train", **self.kwargs)
+            self.dataset = self.ds_class(split='train', **self.kwargs)
             generator = torch.Generator().manual_seed(0)
             self.train_dataset, self.val_dataset = random_split(
                 self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
             )
         if stage in ['test']:
-            self.test_dataset = self.ds_class(split="test", **self.kwargs)
+            self.test_dataset = self.ds_class(split='test', **self.kwargs)
