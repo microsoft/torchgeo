@@ -84,25 +84,32 @@ labels_profile = {
 }
 labels_format = ".tif"
 
-used_ids: list[str] = []
+centroids_dict: dict[str, list[int]] = {}
 
 
-def populate_sub_sub_dirs(dir_path: str, rng: np.random.Generator, type: str, domain_year_zone_location: Sequence[str]) -> None:
+def populate_sub_sub_dirs(dir_path: str, seed: int, type: str, domain_year_zone_location: Sequence[str]) -> None:
     # Create random 6 digit number (might have leading zeros)
-    file_id = rng.integers(1000000)
-    id_str = f"{file_id:06}"
-    used_ids.append(id_str)
+    rng: np.random.Generator = np.random.default_rng(seed)
+    
+    # Mimic 1:n mapping of aerial/mask to sentinel data
+    file_id_0 = rng.integers(1000000)
+    file_id_1 = rng.integers(1000000)
+    id_str_0 = f"{file_id_0:06}"
+    id_str_1 = f"{file_id_1:06}"
     match type:
         case "img":
-            create_aerial_image(dir_path, rng, id_str)
+            create_aerial_image(dir_path, rng, id_str_0)
+            create_aerial_image(dir_path, rng, id_str_1)
         case "sen":
             create_sentinel_arrays(dir_path, rng, domain_year_zone_location)
         case "msk":
-            create_label_mask(dir_path, rng, id_str)
+            create_label_mask(dir_path, rng, id_str_0)
+            create_label_mask(dir_path, rng, id_str_1)
         case _:
             raise ValueError(f"Unknown type: {type}")
 
 def create_aerial_image(dir_path: str, rng: np.random.Generator, id: str) -> None:
+    centroids_dict[f"IMG_{id}.tif"] = [IMG_SIZE//2, IMG_SIZE//2]
     with rasterio.open(os.path.join(dir_path, f"IMG_{id}{aerial_format}"), 'w', **aerial_profile) as src:
         for i in range(len(aerial_all_bands)):
             data = rng.choice(aerial_pixel_values, size=(IMG_SIZE, IMG_SIZE), replace=True).astype(np.uint8)
@@ -129,13 +136,8 @@ def create_label_mask(dir_path: str, rng: np.random.Generator, id: str) -> None:
         src.write(data, 1)
 
 def create_metadata(root_dir: str) -> None:
-    # Create file flair-2_centroids_sp_to_patch.json#
-    
-    centroids_dict = {}
-    for id in used_ids:
-        centroids_dict[f"IMG_{id}.tif"] = [IMG_SIZE//2, IMG_SIZE//2]
-    
-    with open(os.path.join(root_dir, "flair-2_centroids_sp_to_patch.json"), 'w') as f:
+    # Create file flair-2_centroids_sp_to_patch.json
+   with open(os.path.join(root_dir, "flair-2_centroids_sp_to_patch.json"), 'w') as f:
         json.dump(centroids_dict, f)
         
 if __name__ == "__main__":
@@ -148,17 +150,16 @@ if __name__ == "__main__":
     def create_dir_structure(root_dir: str, dir_names: dict) -> None:
         # Create the directory structure
         for split in splits:
-            for type, sub_dir in dir_names[split].items():
-                for i in range(DUMMY_DATA_SIZE[split]):
-                    # Reproducible and the same for all types
-                    seed = int(hashlib.md5(f"{split}{i}{type}".encode()).hexdigest(), 16)
-                    rng: np.random.Generator = np.random.default_rng(seed)
-                    
-                    random_domain = rng.integers(100, 1000)
-                    random_year = rng.integers(2010, 2023)
-                    random_zone = rng.integers(10, 23)
-                    random_area = "".join(rng.choice(list(string.ascii_uppercase), size=2))
-                    
+            for i in range(DUMMY_DATA_SIZE[split]):  
+                # Reproducible and the same for all types
+                seed = int(hashlib.md5(f"{split}{i}".encode()).hexdigest(), 16)
+                rng: np.random.Generator = np.random.default_rng(seed)
+                
+                random_domain = rng.integers(100, 1000)
+                random_year = rng.integers(2010, 2023)
+                random_zone = rng.integers(10, 23)
+                random_area = "".join(rng.choice(list(string.ascii_uppercase), size=2))
+                for type, sub_dir in dir_names[split].items():        
                     # E.g. D123_2021/Z1_UF
                     sub_sub_dir = sub_sub_dir_format.format(random_domain, random_year, random_zone, random_area)
                     
@@ -168,7 +169,7 @@ if __name__ == "__main__":
                     
                     # Required for sentinel data arrays (npy) and products.txt
                     domain_year_zone_location = [str(random_domain), str(random_year), str(random_zone), random_area]
-                    populate_sub_sub_dirs(dir_path, rng, type, domain_year_zone_location)
+                    populate_sub_sub_dirs(dir_path, seed, type, domain_year_zone_location)
                     
                     create_metadata(root_dir)
     
@@ -188,6 +189,13 @@ if __name__ == "__main__":
     
     # for toy, zip the entire root_dir_toy
     shutil.make_archive(root_dir_toy, 'zip', os.path.dirname(root_dir_toy), os.path.basename(root_dir_toy))
+    
+    # Rename flair-2_centroids_sp_to_patch.json to flair_2_centroids_sp_to_patch.json to replicate 
+    # the inconsistency from the actual flair2 dataset
+    old_metadata_path = os.path.join(root_dir, "flair-2_centroids_sp_to_patch.zip")
+    new_metadata_path = os.path.join(root_dir, "flair_2_centroids_sp_to_patch.zip")
+    if os.path.exists(old_metadata_path):
+        os.rename(old_metadata_path, new_metadata_path)
     
     # Compute md5 for each zip file
     with open(os.path.join(root_dir, "md5s.txt"), 'w') as md5_file:
