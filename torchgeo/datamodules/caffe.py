@@ -9,7 +9,6 @@ import kornia.augmentation as K
 import torch
 
 from ..datasets import CaFFe
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -40,16 +39,18 @@ class CaFFeDataModule(NonGeoDataModule):
 
         self.size = size
 
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.Resize(size),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
-            data_keys=['image', 'mask'],
+            data_keys=None,
+            keepdim=True,
         )
 
-        self.aug = AugmentationSequential(
+        self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.Resize(size),
-            data_keys=['image', 'mask'],
+            data_keys=None,
+            keepdim=True,
         )

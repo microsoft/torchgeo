@@ -37,8 +37,6 @@ def test_random_grayscale_sample(weights: Tensor, sample: dict[str, Tensor]) -> 
     aug = K.AugmentationSequential(
         RandomGrayscale(weights, p=1), keepdim=True, data_keys=None
     )
-    # https://github.com/kornia/kornia/issues/2848
-    aug.keepdim = True
     output = aug(sample)
     assert output['image'].shape == sample['image'].shape
     for i in range(1, 3):

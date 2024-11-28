@@ -11,7 +11,6 @@ from torch import Tensor
 from torch.utils.data import random_split
 
 from ..datasets import SpaceNet, SpaceNet1, SpaceNet6
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -124,7 +123,7 @@ class SpaceNet1DataModule(SpaceNetBaseDataModule):
             SpaceNet1, batch_size, num_workers, val_split_pct, test_split_pct, **kwargs
         )
 
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
             K.RandomRotation(p=0.5, degrees=90),
@@ -132,18 +131,20 @@ class SpaceNet1DataModule(SpaceNetBaseDataModule):
             K.RandomVerticalFlip(p=0.5),
             K.RandomSharpness(p=0.5),
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
-            data_keys=['image', 'mask'],
+            data_keys=None,
+            keepdim=True,
         )
-        self.aug = AugmentationSequential(
+        self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
-            data_keys=['image', 'mask'],
+            data_keys=None,
+            keepdim=True,
         )
 
-        self.predict_aug = AugmentationSequential(
+        self.predict_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.PadTo((448, 448)),
-            data_keys=['image'],
+            data_keys=None,
         )
 
 

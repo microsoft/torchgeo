@@ -34,7 +34,7 @@ jobs:
           key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/tests.txt') }}
         if: ${{ runner.os != 'macOS' }}
       - name: Setup headless display for pyvista
-        uses: pyvista/setup-headless-display-action@v2
+        uses: pyvista/setup-headless-display-action@v3
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -47,7 +47,7 @@ jobs:
           pytest --cov --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.6.0
+        uses: codecov/codecov-action@v5.0.7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
@@ -67,7 +67,7 @@ jobs:
           path: ${{ env.pythonLocation }}
           key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/min-reqs.old') }}
       - name: Setup headless display for pyvista
-        uses: pyvista/setup-headless-display-action@v2
+        uses: pyvista/setup-headless-display-action@v3
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -80,7 +80,7 @@ jobs:
           pytest --cov --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.6.0
+        uses: codecov/codecov-action@v5.0.7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   datasets:
@@ -111,7 +111,7 @@ jobs:
           pytest --cov --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v4.6.0
+        uses: codecov/codecov-action@v5.0.7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:
