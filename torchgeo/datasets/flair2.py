@@ -424,7 +424,7 @@ class FLAIR2(NonGeoDataset):
         # Check if centroids metadata file or zip is present
         # Naming inconsistencies in download url and file name (flair_2_centroids_sp_to_patch.zip vs. flair-2_centroids_sp_to_patch.json)
         if not os.path.isfile(os.path.join(self.root, f"{self.centroids_file}.json")):
-            if not os.path.isfile(os.path.join(self.root, f"{self.centroids_file}.zip")):
+            if not os.path.isfile(os.path.join(self.root, f"{self.centroids_file}.zip".replace("-", "_"))):
                 if not self.download:
                     raise DatasetNotFoundError(self)
                 self._download(self.centroids_file.replace("-", "_"))
