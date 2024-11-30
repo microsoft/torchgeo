@@ -50,10 +50,10 @@ class HySpecNet11k(NonGeoDataset):
     """HySpecNet-11k dataset.
 
     `HySpecNet-11k <https://doi.org/10.5061/dryad.fttdz08zh>`__ is a large-scale
-    hyperspectral benchmark dataset made up of 11,483 nonoverlapping image patches
-    acquired by the `EnMAP satellite <https://www.enmap.org/>`_. Each patch is a
-    portion of 128 x 128 pixels with 224 spectral bands and with a ground sample
-    distance of 30 m.
+    benchmark dataset for hyperspectral image compression and self-supervised learning.
+    It is made up of 11,483 nonoverlapping image patches acquired by the
+    `EnMAP satellite <https://www.enmap.org/>`_. Each patch is a portion of 128 x 128
+    pixels with 224 spectral bands and with a ground sample distance of 30 m.
 
     To construct HySpecNet-11k, a total of 250 EnMAP tiles acquired during the routine
     operation phase between 2 November 2022 and 9 November 2022 were considered. The
