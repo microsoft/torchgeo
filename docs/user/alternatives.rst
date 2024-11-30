@@ -13,7 +13,7 @@ When deciding which library is most useful to you, it is worth considering the f
 
    Software is a living, breathing organism and is constantly undergoing change. If any of the above information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
 
-   *Last updated: 28 August 2024*
+   *Last updated: 30 November 2024*
 
 Features
 --------
