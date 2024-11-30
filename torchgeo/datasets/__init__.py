@@ -61,6 +61,7 @@ from .geo import (
 from .geonrw import GeoNRW
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
+from .hyspecnet import HySpecNet11k
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
 from .inria import InriaAerialImageLabeling
@@ -214,6 +215,7 @@ __all__ = (
     'GeoDataset',
     'GeoNRW',
     'GlobBiomass',
+    'HySpecNet11k',
     'IDTReeS',
     'INaturalist',
     'IOBench',
