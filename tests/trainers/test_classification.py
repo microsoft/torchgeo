@@ -237,7 +237,7 @@ class TestClassificationTask:
 
 class TestMultiLabelClassificationTask:
     @pytest.mark.parametrize(
-        'name', ['bigearthnet_all', 'bigearthnet_s1', 'bigearthnet_s2']
+        'name', ['bigearthnet_all', 'bigearthnet_s1', 'bigearthnet_s2', 'treesatai']
     )
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
