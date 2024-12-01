@@ -14,6 +14,15 @@ torchgeo
 
 .. toctree::
    :maxdepth: 2
+   :caption: Tutorials
+
+   tutorials/getting_started
+   tutorials/basic_usage
+   tutorials/case_studies
+   tutorials/customization
+
+.. toctree::
+   :maxdepth: 2
    :caption: Package Reference
 
    api/datamodules
@@ -23,23 +32,6 @@ torchgeo
    api/samplers
    api/trainers
    api/transforms
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Tutorials
-
-   tutorials/getting_started
-   tutorials/pytorch
-   tutorials/geospatial
-   tutorials/torchgeo
-   tutorials/contribute_non_geo_dataset
-   tutorials/custom_raster_dataset
-   tutorials/contribute_datamodule
-   tutorials/transforms
-   tutorials/indices
-   tutorials/trainers
-   tutorials/pretrained_weights
-   tutorials/earth_surface_water
 
 .. toctree::
    :maxdepth: 1
