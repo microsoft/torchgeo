@@ -9,12 +9,12 @@ The following tutorials will teach you how to customize TorchGeo to meet your ne
 * `Custom Raster Datasets <custom_raster_datasets>`_: How to create a new RasterDataset
 * `Custom Data Module <contribute_datamodule>`_: How to create and contribute a new DataModule
 
-TorchGeo is a community-driven open source library. If there is a feature missing that you would like to add, please open a pull request to add it. See the ref:`Contributing`_ guidelines to get started.
+TorchGeo is a community-driven open source library. If there is a feature missing that you would like to add, please open a pull request to add it. See the ref:`contributing` guidelines to get started.
 
 .. toctree::
    :hidden:
    :maxdepth: 1
 
    contribute_non_geo_dataset
-   custom_raster_datasets
+   custom_raster_dataset
    contribute_datamodule
