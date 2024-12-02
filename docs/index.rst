@@ -29,6 +29,7 @@ torchgeo
    :caption: Tutorials
 
    tutorials/getting_started
+   tutorials/pytorch
    tutorials/custom_raster_dataset
    tutorials/transforms
    tutorials/indices
