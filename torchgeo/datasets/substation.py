@@ -183,6 +183,14 @@ class SubstationDataset(NonGeoDataset):
 
         return fig
 
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        img_pathname = os.path.join(self.data_dir, self.filename_images)
+        extract_archive(img_pathname)
+
+        mask_pathname = os.path.join(self.data_dir, self.filename_masks)
+        extract_archive(mask_pathname)
+
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
