@@ -61,6 +61,7 @@ from .geo import (
 from .geonrw import GeoNRW
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
+from .hyspecnet import HySpecNet11k
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
 from .inria import InriaAerialImageLabeling
@@ -132,6 +133,7 @@ from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
 from .ssl4eo_benchmark import SSL4EOLBenchmark
 from .substation import SubstationDataset
 from .sustainbench_crop_yield import SustainBenchCropYield
+from .treesatai import TreeSatAI
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
@@ -215,6 +217,7 @@ __all__ = (
     'GeoDataset',
     'GeoNRW',
     'GlobBiomass',
+    'HySpecNet11k',
     'IDTReeS',
     'INaturalist',
     'IOBench',
@@ -276,6 +279,7 @@ __all__ = (
     'SpaceNet8',
     'SubstationDataset',
     'SustainBenchCropYield',
+    'TreeSatAI',
     'TropicalCyclone',
     'UCMerced',
     'USAVars',

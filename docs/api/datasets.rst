@@ -312,6 +312,11 @@ GID-15
 
 .. autoclass:: GID15
 
+HySpecNet-11k
+^^^^^^^^^^^^^
+
+.. autoclass:: HySpecNet11k
+
 IDTReeS
 ^^^^^^^
 
@@ -473,6 +478,11 @@ SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SustainBenchCropYield
+
+TreeSatAI
+^^^^^^^^^
+
+.. autoclass:: TreeSatAI
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
