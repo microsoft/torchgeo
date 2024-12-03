@@ -1,0 +1,13 @@
+model:
+  class_path: MultiLabelClassificationTask
+  init_args:
+    model: 'resnet18'
+    in_channels: 19
+    num_classes: 15
+    loss: 'bce'
+data:
+  class_path: TreeSatAIDataModule
+  init_args:
+    batch_size: 1
+  dict_kwargs:
+    root: 'tests/data/treesatai'
