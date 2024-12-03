@@ -23,7 +23,8 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.1
+        id: setup-python
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache dependencies
@@ -31,7 +32,7 @@ jobs:
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/tests.txt') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/tests.txt') }}
         if: ${{ runner.os != 'macOS' }}
       - name: Setup headless display for pyvista
         uses: pyvista/setup-headless-display-action@v3
@@ -57,7 +58,8 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.1
+        id: setup-python
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: '3.10'
       - name: Cache dependencies
@@ -65,7 +67,7 @@ jobs:
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/min-reqs.old') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/min-reqs.old') }}
       - name: Setup headless display for pyvista
         uses: pyvista/setup-headless-display-action@v3
       - name: Install pip dependencies
@@ -90,7 +92,8 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.1.7
       - name: Set up python
-        uses: actions/setup-python@v5.1.1
+        id: setup-python
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: '3.12'
       - name: Cache dependencies
@@ -98,7 +101,7 @@ jobs:
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/tests.txt') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/tests.txt') }}
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
