@@ -53,7 +53,6 @@ class TestChangeDetectionTask:
         config = os.path.join('tests', 'conf', name + '.yaml')
 
         monkeypatch.setattr(smp, 'Unet', create_model)
-        monkeypatch.setattr(smp, 'DeepLabV3Plus', create_model)
 
         args = [
             '--config',

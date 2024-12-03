@@ -1,12 +1,10 @@
 model:
   class_path: ChangeDetectionTask
   init_args:
-    loss: 'ce'
+    loss: 'bce'
     model: 'unet'
     backbone: 'resnet18'
     in_channels: 13
-    num_classes: 2
-    ignore_index: 0
 data:
   class_path: OSCDDataModule
   init_args:

@@ -4,70 +4,36 @@
 """Trainers for change detection."""
 
 import os
-import warnings
-from typing import Any, Optional, Union, cast
+from typing import Any
 
 import segmentation_models_pytorch as smp
-import torch
 import torch.nn as nn
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.classification import (
-    MulticlassAccuracy,
-    MulticlassF1Score,
-    MulticlassJaccardIndex,
+    BinaryAccuracy,
+    BinaryF1Score,
+    BinaryJaccardIndex,
 )
-from torchmetrics.wrappers import ClasswiseWrapper
 from torchvision.models._api import WeightsEnum
 
+from ..losses import BinaryFocalJaccardLoss, BinaryXEntJaccardLoss
 from ..models import FCSiamConc, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
 
 
-class FocalJaccardLoss(nn.Module):
-    """FocalJaccardLoss."""
-
-    def __init__(self) -> None:
-        """Initialize a FocalJaccardLoss instance."""
-        super().__init__()
-        self.focal_loss = smp.losses.FocalLoss(
-            mode="multiclass", normalized=True)
-        self.jaccard_loss = smp.losses.JaccardLoss(mode="multiclass")
-
-    def forward(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        """Compute the loss."""
-        return cast(torch.Tensor, self.focal_loss(preds, targets) + self.jaccard_loss(preds, targets))
-
-
-class XEntJaccardLoss(nn.Module):
-    """XEntJaccardLoss."""
-
-    def __init__(self) -> None:
-        """Initialize a XEntJaccardLoss instance."""
-        super().__init__()
-        self.ce_loss = nn.CrossEntropyLoss()
-        self.jaccard_loss = smp.losses.JaccardLoss(mode="multiclass")
-
-    def forward(self, preds: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        """Compute the loss."""
-        return cast(torch.Tensor, self.ce_loss(preds, targets) + self.jaccard_loss(preds, targets))
-
-
 class ChangeDetectionTask(BaseTask):
-    """Change Detection."""
+    """Change Detection. Currently supports binary change between two timesteps."""
 
     def __init__(
         self,
-        model: str = "unet",
-        backbone: str = "resnet50",
-        weights: Optional[Union[WeightsEnum, str, bool]] = None,
+        model: str = 'unet',
+        backbone: str = 'resnet50',
+        weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
-        num_classes: int = 2,
-        class_weights: Optional[Tensor] = None,
-        labels: Optional[list[str]] = None,
-        loss: str = "ce-jaccard",
-        ignore_index: Optional[int] = None,
+        pos_weight: Tensor | None = None,
+        loss: str = 'bce-jaccard',
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
@@ -86,15 +52,9 @@ class ChangeDetectionTask(BaseTask):
                 model does not support pretrained weights. Pretrained ViT weight enums
                 are not supported yet.
             in_channels: Number of input channels to model.
-            num_classes: Number of prediction classes.
-            class_weights: Optional rescaling weight given to each
-                class and used with 'ce' loss.
-            labels: Optional labels to use for classes in metrics
-                e.g. ["background", "change"]
+            pos_weight: A weight of positive examples and used with 'bce' loss.
             loss: Name of the loss function, currently supports
-                'ce', 'jaccard', 'focal' or 'focal-jaccard' loss.
-            ignore_index: Optional integer class index to ignore in the loss and
-                metrics.
+                'bce', 'jaccard', 'focal', 'focal-jaccard' or 'bce-jaccard' loss.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             freeze_backbone: Freeze the backbone network to fine-tune the
@@ -104,12 +64,6 @@ class ChangeDetectionTask(BaseTask):
 
         .. versionadded: 0.6
         """
-        if ignore_index is not None and loss == "jaccard":
-            warnings.warn(
-                "ignore_index has no effect on training when loss='jaccard'",
-                UserWarning,
-            )
-
         self.weights = weights
         super().__init__()
 
@@ -119,61 +73,35 @@ class ChangeDetectionTask(BaseTask):
         Raises:
             ValueError: If *loss* is invalid.
         """
-        loss: str = self.hparams["loss"]
-        ignore_index = self.hparams["ignore_index"]
-        if loss == "ce":
-            ignore_value = -1000 if ignore_index is None else ignore_index
-            self.criterion = nn.CrossEntropyLoss(
-                ignore_index=ignore_value, weight=self.hparams["class_weights"]
-            )
-        elif loss == "jaccard":
-            self.criterion = smp.losses.JaccardLoss(
-                mode="multiclass", classes=self.hparams["num_classes"]
-            )
-        elif loss == "focal":
-            self.criterion = smp.losses.FocalLoss(
-                "multiclass", ignore_index=ignore_index, normalized=True
-            )
-        elif loss == "focal-jaccard":
-            self.criterion = FocalJaccardLoss()
-        elif loss == "ce-jaccard":
-            self.criterion = XEntJaccardLoss()
+        loss: str = self.hparams['loss']
+        if loss == 'bce':
+            self.criterion = nn.BCEWithLogitsLoss(pos_weight=self.hparams['pos_weight'])
+        elif loss == 'jaccard':
+            self.criterion = smp.losses.JaccardLoss(mode='binary')
+        elif loss == 'focal':
+            self.criterion = smp.losses.FocalLoss(mode='binary', normalized=True)
+        elif loss == 'focal-jaccard':
+            self.criterion = BinaryFocalJaccardLoss()
+        elif loss == 'bce-jaccard':
+            self.criterion = BinaryXEntJaccardLoss()
         else:
             raise ValueError(
                 f"Loss type '{loss}' is not valid. "
-                "Currently, supports 'ce', 'jaccard', 'focal', 'focal-jaccard, or 'ce-jaccard loss."
+                "Currently, supports 'bce', 'jaccard', 'focal', 'focal-jaccard, or 'bce-jaccard loss."
             )
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
-        num_classes: int = self.hparams["num_classes"]
-        ignore_index: Optional[int] = self.hparams["ignore_index"]
-        labels: Optional[list[str]] = self.hparams["labels"]
         metrics = MetricCollection(
             {
-                "accuracy": ClasswiseWrapper(
-                    MulticlassAccuracy(
-                        num_classes=num_classes, ignore_index=ignore_index, average=None
-                    ),
-                    labels,
-                ),
-                "jaccard": ClasswiseWrapper(
-                    MulticlassJaccardIndex(
-                        num_classes=num_classes, ignore_index=ignore_index, average=None
-                    ),
-                    labels,
-                ),
-                "f1": ClasswiseWrapper(
-                    MulticlassF1Score(
-                        num_classes=num_classes, ignore_index=ignore_index, average=None
-                    ),
-                    labels,
-                ),
+                'accuracy': BinaryAccuracy(),
+                'jaccard': BinaryJaccardIndex(),
+                'f1': BinaryF1Score(),
             }
         )
-        self.train_metrics = metrics.clone(prefix="train_")
-        self.val_metrics = metrics.clone(prefix="val_")
-        self.test_metrics = metrics.clone(prefix="test_")
+        self.train_metrics = metrics.clone(prefix='train_')
+        self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
 
     def configure_models(self) -> None:
         """Initialize the model.
@@ -181,30 +109,30 @@ class ChangeDetectionTask(BaseTask):
         Raises:
             ValueError: If *model* is invalid.
         """
-        model: str = self.hparams["model"]
-        backbone: str = self.hparams["backbone"]
+        model: str = self.hparams['model']
+        backbone: str = self.hparams['backbone']
         weights = self.weights
-        in_channels: int = self.hparams["in_channels"]
-        num_classes: int = self.hparams["num_classes"]
+        in_channels: int = self.hparams['in_channels']
+        num_classes = 1
 
-        if model == "unet":
+        if model == 'unet':
             self.model = smp.Unet(
                 encoder_name=backbone,
-                encoder_weights="imagenet" if weights is True else None,
+                encoder_weights='imagenet' if weights is True else None,
                 in_channels=in_channels * 2,  # images are concatenated
                 classes=num_classes,
             )
-        elif model == "fcsiamdiff":
+        elif model == 'fcsiamdiff':
             self.model = FCSiamDiff(
                 in_channels=in_channels,
                 classes=num_classes,
-                encoder_weights="imagenet" if weights is True else None,
+                encoder_weights='imagenet' if weights is True else None,
             )
-        elif model == "fcsiamconc":
+        elif model == 'fcsiamconc':
             self.model = FCSiamConc(
                 in_channels=in_channels,
                 classes=num_classes,
-                encoder_weights="imagenet" if weights is True else None,
+                encoder_weights='imagenet' if weights is True else None,
             )
         else:
             raise ValueError(
@@ -222,31 +150,32 @@ class ChangeDetectionTask(BaseTask):
             self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
-        if self.hparams["freeze_backbone"] and model in ["unet"]:
+        if self.hparams['freeze_backbone'] and model in ['unet']:
             for param in self.model.encoder.parameters():
                 param.requires_grad = False
 
         # Freeze decoder
-        if self.hparams["freeze_decoder"] and model in ["unet"]:
+        if self.hparams['freeze_decoder'] and model in ['unet']:
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
 
     def _shared_step(self, batch: Any, batch_idx: int, stage: str) -> Tensor:
-        model: str = self.hparams["model"]
-        x = batch["image"]
-        y = batch["mask"]
-        if model == "unet":
+        model: str = self.hparams['model']
+        x = batch['image']
+        y = batch['mask']
+        y = y.unsqueeze(dim=1)  # channel dim for binary loss functions/metrics
+        if model == 'unet':
             x = x.flatten(start_dim=1, end_dim=2)
         y_hat = self(x)
 
         loss: Tensor = self.criterion(y_hat, y)
-        self.log(f"{stage}_loss", loss)
+        self.log(f'{stage}_loss', loss)
 
         # Retrieve the correct metrics based on the stage
-        metrics = getattr(self, f"{stage}_metrics", None)
+        metrics = getattr(self, f'{stage}_metrics', None)
         if metrics:
             metrics(y_hat, y)
-            self.log_dict({f"{k}": v for k, v in metrics.compute().items()})
+            self.log_dict({f'{k}': v for k, v in metrics.compute().items()})
 
         return loss
 
@@ -260,7 +189,7 @@ class ChangeDetectionTask(BaseTask):
         Returns:
             The loss tensor.
         """
-        loss = self._shared_step(batch, batch_idx, "train")
+        loss = self._shared_step(batch, batch_idx, 'train')
         return loss
 
     def validation_step(self, batch: Any, batch_idx: int) -> None:
@@ -270,7 +199,7 @@ class ChangeDetectionTask(BaseTask):
             batch: The output of your DataLoader.
             batch_idx: Integer displaying index of this batch.
         """
-        self._shared_step(batch, batch_idx, "val")
+        self._shared_step(batch, batch_idx, 'val')
 
     def test_step(self, batch: Any, batch_idx: int) -> None:
         """Compute the test loss and additional metrics.
@@ -279,7 +208,7 @@ class ChangeDetectionTask(BaseTask):
             batch: The output of your DataLoader.
             batch_idx: Integer displaying index of this batch.
         """
-        self._shared_step(batch, batch_idx, "test")
+        self._shared_step(batch, batch_idx, 'test')
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -294,10 +223,11 @@ class ChangeDetectionTask(BaseTask):
         Returns:
             Output predicted class.
         """
-        model: str = self.hparams["model"]
-        x = batch["image"]
-        if model == "unet":
+        model: str = self.hparams['model']
+        threshold = 0.5
+        x = batch['image']
+        if model == 'unet':
             x = x.flatten(start_dim=1, end_dim=2)
         y_hat: Tensor = self(x)
-        y_hat_hard = y_hat.argmax(dim=1)
+        y_hat_hard = (nn.functional.sigmoid(y_hat) > threshold).int()
         return y_hat_hard

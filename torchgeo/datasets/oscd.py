@@ -242,7 +242,7 @@ class OSCD(NonGeoDataset):
             array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
-            tensor = tensor.to(torch.long)
+            tensor = tensor.to(torch.float)
             return tensor
 
     def _verify(self) -> None:
