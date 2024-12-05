@@ -39,7 +39,7 @@ jobs:
       - name: List pip dependencies
         run: pip list
       - name: Run notebook checks
-        run: pytest --nbmake --durations=10 docs/tutorials --nbmake-timeout=3000
+        run: pytest --nbmake --durations=10 docs/tutorials
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true
