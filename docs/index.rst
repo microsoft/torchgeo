@@ -29,6 +29,7 @@ torchgeo
    :caption: Tutorials
 
    tutorials/getting_started
+   tutorials/contribute_non_geo_dataset.ipynb
    tutorials/custom_raster_dataset
    tutorials/transforms
    tutorials/indices
