@@ -21,6 +21,7 @@ from .ftw import FieldsOfTheWorldDataModule
 from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
 from .geonrw import GeoNRWDataModule
 from .gid15 import GID15DataModule
+from .hyspecnet import HySpecNet11kDataModule
 from .inria import InriaAerialImageLabelingDataModule
 from .iobench import IOBenchDataModule
 from .l7irish import L7IrishDataModule
@@ -47,6 +48,7 @@ from .spacenet import SpaceNet1DataModule, SpaceNet6DataModule, SpaceNetBaseData
 from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
 from .ssl4eo_benchmark import SSL4EOLBenchmarkDataModule
 from .sustainbench_crop_yield import SustainBenchCropYieldDataModule
+from .treesatai import TreeSatAIDataModule
 from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
 from .utils import MisconfigurationException
@@ -75,6 +77,7 @@ __all__ = (
     'GID15DataModule',
     'GeoDataModule',
     'GeoNRWDataModule',
+    'HySpecNet11kDataModule',
     'IOBenchDataModule',
     'InriaAerialImageLabelingDataModule',
     'L7IrishDataModule',
@@ -108,6 +111,7 @@ __all__ = (
     'SpaceNet6DataModule',
     'SpaceNetBaseDataModule',
     'SustainBenchCropYieldDataModule',
+    'TreeSatAIDataModule',
     'TropicalCycloneDataModule',
     'UCMercedDataModule',
     'USAVarsDataModule',
