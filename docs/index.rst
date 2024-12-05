@@ -30,6 +30,7 @@ torchgeo
 
    tutorials/getting_started
    tutorials/pytorch
+   tutorials/geospatial
    tutorials/custom_raster_dataset
    tutorials/transforms
    tutorials/indices
