@@ -10,13 +10,11 @@ import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
-from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
-from torchgeo.datasets import RGBBandsMissingError
+from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import ChangeDetectionTask
@@ -35,14 +33,6 @@ class ChangeDetectionTestModel(Module):
 
 def create_model(**kwargs: Any) -> Module:
     return ChangeDetectionTestModel(**kwargs)
-
-
-def plot(*args: Any, **kwargs: Any) -> None:
-    return None
-
-
-def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
-    raise RGBBandsMissingError()
 
 
 class TestChangeDetectionTask:
@@ -90,8 +80,9 @@ class TestChangeDetectionTask:
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
+        # multiply in_chans by 2 since images are concatenated
         model = timm.create_model(
-            weights.meta['model'], in_chans=weights.meta['in_chans']
+            weights.meta['model'], in_chans=weights.meta['in_chans'] * 2
         )
         torch.save(model.state_dict(), path)
         try:
@@ -100,8 +91,9 @@ class TestChangeDetectionTask:
             monkeypatch.setattr(weights, 'url', str(path))
         return weights
 
+    @pytest.mark.parametrize('model', [6], indirect=True)
     def test_weight_file(self, checkpoint: str) -> None:
-        ChangeDetectionTask(backbone='resnet18', weights=checkpoint, num_classes=6)
+        ChangeDetectionTask(backbone='resnet18', weights=checkpoint)
 
     def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
         ChangeDetectionTask(
@@ -142,34 +134,6 @@ class TestChangeDetectionTask:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
             ChangeDetectionTask(loss='invalid_loss')
-
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(SEN12MSDataModule, 'plot', plot)
-        datamodule = SEN12MSDataModule(
-            root='tests/data/sen12ms', batch_size=1, num_workers=0
-        )
-        model = ChangeDetectionTask(backbone='resnet18', in_channels=15, num_classes=6)
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
-
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(SEN12MSDataModule, 'plot', plot_missing_bands)
-        datamodule = SEN12MSDataModule(
-            root='tests/data/sen12ms', batch_size=1, num_workers=0
-        )
-        model = ChangeDetectionTask(backbone='resnet18', in_channels=15, num_classes=6)
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
 
     @pytest.mark.parametrize('model_name', ['unet'])
     @pytest.mark.parametrize(
