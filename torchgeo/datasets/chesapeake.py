@@ -338,7 +338,7 @@ class ChesapeakeCVPR(GeoDataset):
 
     subdatasets = ('base', 'prior_extension')
     urls: ClassVar[dict[str, str]] = {
-        'base': 'https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip',
+        'base': 'https://lilawildlife.blob.core.windows.net/lila-wildlife/lcmcvpr2019/cvpr_chesapeake_landcover.zip',
         'prior_extension': 'https://zenodo.org/records/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1',
     }
     filenames: ClassVar[dict[str, str]] = {
