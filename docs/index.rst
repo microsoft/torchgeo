@@ -34,6 +34,7 @@ torchgeo
    tutorials/indices
    tutorials/trainers
    tutorials/pretrained_weights
+   tutorials/datasets_samplers.ipynb
 
 .. toctree::
    :maxdepth: 1
