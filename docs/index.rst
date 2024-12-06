@@ -34,6 +34,7 @@ torchgeo
    tutorials/indices
    tutorials/trainers
    tutorials/pretrained_weights
+   tutorials/land_cover
 
 .. toctree::
    :maxdepth: 1
