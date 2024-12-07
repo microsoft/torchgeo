@@ -183,7 +183,7 @@ if __name__ == '__main__':
     if os.path.exists(root_dir):
         shutil.rmtree(root_dir)
 
-    def create_dir_structure(root_dir: str, dir_names: dict) -> None:
+    def create_dir_structure(root_dir: str, dir_names: dict[str, dict[str, str]]) -> None:
         # Create the directory structure
         for split in splits:
             for i in range(DUMMY_DATA_SIZE[split]):
@@ -258,6 +258,7 @@ if __name__ == '__main__':
     with open(os.path.join(root_dir, 'md5s.txt'), 'w') as md5_file:
         for element in glob.glob(f'{root_dir}/**'):
             if element.endswith('.zip'):
+                filename = os.path.basename(element)
                 with open(element, 'rb') as f:
                     md5 = hashlib.md5(f.read()).hexdigest()
-                    md5_file.write(f'{element}: {md5}\n')
+                    md5_file.write(f'{filename}: {md5}\n')
