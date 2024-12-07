@@ -183,7 +183,9 @@ if __name__ == '__main__':
     if os.path.exists(root_dir):
         shutil.rmtree(root_dir)
 
-    def create_dir_structure(root_dir: str, dir_names: dict[str, dict[str, str]]) -> None:
+    def create_dir_structure(
+        root_dir: str, dir_names: dict[str, dict[str, str]]
+    ) -> None:
         # Create the directory structure
         for split in splits:
             for i in range(DUMMY_DATA_SIZE[split]):

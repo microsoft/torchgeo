@@ -114,10 +114,28 @@ class FLAIR2(NonGeoDataset):
 
     # Band information
     aerial_rgb_bands: tuple[str, str, str] = ('B01', 'B02', 'B03')
-    aerial_all_bands: tuple[str, str, str, str, str] = ('B01', 'B02', 'B03', 'B04', 'B05')
+    aerial_all_bands: tuple[str, str, str, str, str] = (
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+    )
     sentinel_rgb_bands: tuple[str, str, str] = ('B03', 'B02', 'B01')
     # Order refers to 2, 3, 4, 5, 6, 7, 8, 8A, 11, 12 as described in the dataset paper
-    sentinel_all_bands: tuple[str, ...] = ('B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B08', 'B09', 'B10')
+    sentinel_all_bands: tuple[str, ...] = (
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B08',
+        'B09',
+        'B10',
+    )
 
     # Note: the original dataset contains 18 classes, but the dataset paper suggests
     # grouping all classes >13 into "other" class, due to underrepresentation
@@ -229,7 +247,7 @@ class FLAIR2(NonGeoDataset):
         download: bool = False,
         checksum: bool = False,
         use_sentinel: bool = False,
-        sentinel_bands: Sequence[str] = sentinel_all_bands
+        sentinel_bands: Sequence[str] = sentinel_all_bands,
     ) -> None:
         """Initialize a new FLAIR2 dataset instance.
 
@@ -272,7 +290,11 @@ class FLAIR2(NonGeoDataset):
         Returns:
             int: number of bands in the initialized dataset (might vary from all_bands)
         """
-        return len(self.aerial_bands) if not include_sentinel_bands else len(self.aerial_bands) + len(self.sentinel_bands)
+        return (
+            len(self.aerial_bands)
+            if not include_sentinel_bands
+            else len(self.aerial_bands) + len(self.sentinel_bands)
+        )
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -576,7 +598,9 @@ class FLAIR2(NonGeoDataset):
             """Normalize the plot."""
             return (tensor - tensor.min()) / (tensor.max() - tensor.min())
 
-        rgb_indices = [self.aerial_all_bands.index(band) for band in self.aerial_rgb_bands]
+        rgb_indices = [
+            self.aerial_all_bands.index(band) for band in self.aerial_rgb_bands
+        ]
         # Check if RGB bands are present in self.bands
         if not all([band in self.aerial_bands for band in self.aerial_rgb_bands]):
             raise RGBBandsMissingError()
@@ -588,7 +612,11 @@ class FLAIR2(NonGeoDataset):
         if 'B05' in self.aerial_bands:
             elevation = sample['image'][self.aerial_bands.index('B05')]
         if 'B04' in self.aerial_bands:
-            nir_r_g_indices = [self.aerial_bands.index('B04'), rgb_indices[0], rgb_indices[1]]
+            nir_r_g_indices = [
+                self.aerial_bands.index('B04'),
+                rgb_indices[0],
+                rgb_indices[1],
+            ]
             nir_r_g = normalize_plot(sample['image'][nir_r_g_indices].permute(1, 2, 0))
 
         # Sentinel is a time-series, i.e. use [0]->T=0
