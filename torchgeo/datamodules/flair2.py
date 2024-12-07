@@ -67,7 +67,7 @@ class FLAIR2DataModule(NonGeoDataModule):
             K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
         )
 
-        self.augs = augs if augs is not None else self.aug
+        self.aug = augs if augs is not None else self.aug
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
