@@ -113,8 +113,11 @@ class FLAIR2(NonGeoDataset):
     super_patch_size: int = 40
 
     # Band information
-    rgb_bands: tuple[str, str, str] = ('B01', 'B02', 'B03')
-    all_bands: tuple[str, str, str, str, str] = ('B01', 'B02', 'B03', 'B04', 'B05')
+    aerial_rgb_bands: tuple[str, str, str] = ('B01', 'B02', 'B03')
+    aerial_all_bands: tuple[str, str, str, str, str] = ('B01', 'B02', 'B03', 'B04', 'B05')
+    sentinel_rgb_bands: tuple[str, str, str] = ('B03', 'B02', 'B01')
+    # Order refers to 2, 3, 4, 5, 6, 7, 8, 8A, 11, 12 as described in the dataset paper
+    sentinel_all_bands: tuple[str, ...] = ('B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B08', 'B09', 'B10')
 
     # Note: the original dataset contains 18 classes, but the dataset paper suggests
     # grouping all classes >13 into "other" class, due to underrepresentation
@@ -189,16 +192,16 @@ class FLAIR2(NonGeoDataset):
 
     @staticmethod
     def per_band_statistics(
-        split: str, bands: Sequence[str] = all_bands
+        split: str, bands: Sequence[str] = aerial_all_bands
     ) -> tuple[list[float], ...]:
         """Get statistics (min, max, means, stdvs) for each used band in order.
 
         Args:
-            split (str): Split for which to get statistics (currently only for train)
-            bands (Sequence[str], optional): Bands of interest, will be returned in ordered manner. Defaults to all_bands.
+            split: Split for which to get statistics (currently only for train)
+            bands: Bands of interest, will be returned in ordered manner. Defaults to all_bands.
 
         Returns:
-            tuple[list[float]]: Filtered, ordered statistics for each band
+            tuple: Filtered, ordered statistics for each band
         """
         assert (
             split in FLAIR2.statistics.keys()
@@ -221,22 +224,24 @@ class FLAIR2(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        bands: Sequence[str] = all_bands,
+        aerial_bands: Sequence[str] = aerial_all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
         use_sentinel: bool = False,
+        sentinel_bands: Sequence[str] = sentinel_all_bands
     ) -> None:
         """Initialize a new FLAIR2 dataset instance.
 
         Args:
             root: root directory where dataset can be found
             split: which split to load, one of 'train' or 'test'
-            bands: which bands to load (B01, B02, B03, B04, B05)
+            aerial_bands: which bands to load (B01, B02, B03, B04, B05)
             transforms: optional transforms to apply to sample
             download: whether to download the dataset if it is not found
             checksum: whether to verify the dataset using checksums
             use_sentinel: whether to use sentinel data in the dataset # FIXME: sentinel does not work with dataloader due to varying dimensions
+            sentinel_bands: which bands to load from sentinel data (B01, B02, ..., B10)
 
         Raises:
             DatasetNotFoundError
@@ -252,21 +257,22 @@ class FLAIR2(NonGeoDataset):
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-        self.bands = bands
+        self.aerial_bands = aerial_bands
         self.use_sentinel = use_sentinel
+        self.sentinel_bands = sentinel_bands
 
         self._verify()
         self.centroids = self._load_centroids(self.centroids_file)
 
         self.files = self._load_files()
 
-    def get_num_bands(self) -> int:
+    def get_num_bands(self, include_sentinel_bands: bool = False) -> int:
         """Return the number of bands in the dataset.
 
         Returns:
             int: number of bands in the initialized dataset (might vary from all_bands)
         """
-        return len(self.bands)
+        return len(self.aerial_bands) if not include_sentinel_bands else len(self.aerial_bands) + len(self.sentinel_bands)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -428,30 +434,33 @@ class FLAIR2(NonGeoDataset):
             path: path to the image
 
         Returns:
-            Tensor: the loaded image
+            tensor: the loaded image
         """
         with rasterio.open(path) as f:
             array: np.typing.NDArray[np.int_] = f.read()
             tensor = torch.from_numpy(array).float()
-            if 'B05' in self.bands:
-                # Height channel will always be the last dimension
-                tensor[-1] = torch.div(tensor[-1], 5)
+
+        # Extract the bands of interest
+        tensor = tensor[[int(band[-2:]) - 1 for band in self.aerial_bands]]
+
+        if 'B05' in self.aerial_bands:
+            # Height channel will always be the last dimension
+            tensor[-1] = torch.div(tensor[-1], 5)
 
         return tensor
 
     def _load_sentinel(self, path: Path) -> Tensor:
-        # FIXME: should this really be returned as a tuple?
         """Load a sentinel array.
 
         Args:
-            path (Path): path to sentinel img (data or snow cloud mask)
+            path: path to sentinel img (data or snow cloud mask)
 
         Returns:
-            Tensor: image as tensors of shape TxCxHxW (time, channels, height, width)
+            tensor: image as tensors of shape TxCxHxW (time, channels, height, width)
         """
-        img = torch.from_numpy(np.load(path)).float()
-
-        return img
+        tensor = torch.from_numpy(np.load(path)).float()
+        # Extract sentinel bands of interest
+        return tensor[:, [int(band[-2:]) - 1 for band in self.sentinel_bands]]
 
     def _load_target(self, path: Path) -> Tensor:
         """Load a single mask corresponding to image.
@@ -460,7 +469,7 @@ class FLAIR2(NonGeoDataset):
             path: path to the mask
 
         Returns:
-            Tensor: the mask of the image
+            tensor: the mask of the image
         """
         with rasterio.open(path) as f:
             array: np.typing.NDArray[np.int_] = f.read(1)
@@ -567,19 +576,19 @@ class FLAIR2(NonGeoDataset):
             """Normalize the plot."""
             return (tensor - tensor.min()) / (tensor.max() - tensor.min())
 
-        rgb_indices = [self.all_bands.index(band) for band in self.rgb_bands]
+        rgb_indices = [self.aerial_all_bands.index(band) for band in self.aerial_rgb_bands]
         # Check if RGB bands are present in self.bands
-        if not all([band in self.bands for band in self.rgb_bands]):
+        if not all([band in self.aerial_bands for band in self.aerial_rgb_bands]):
             raise RGBBandsMissingError()
 
         # Stretch to the full range of the image
         image = normalize_plot(sample['image'][rgb_indices].permute(1, 2, 0))
 
         # Get elevation and NIR, R, G if available
-        if 'B05' in self.bands:
-            elevation = sample['image'][self.bands.index('B05')]
-        if 'B04' in self.bands:
-            nir_r_g_indices = [self.bands.index('B04'), rgb_indices[0], rgb_indices[1]]
+        if 'B05' in self.aerial_bands:
+            elevation = sample['image'][self.aerial_bands.index('B05')]
+        if 'B04' in self.aerial_bands:
+            nir_r_g_indices = [self.aerial_bands.index('B04'), rgb_indices[0], rgb_indices[1]]
             nir_r_g = normalize_plot(sample['image'][nir_r_g_indices].permute(1, 2, 0))
 
         # Sentinel is a time-series, i.e. use [0]->T=0
@@ -693,7 +702,7 @@ class FLAIR2Toy(FLAIR2):
         self,
         root: Path = 'data',
         split: str = 'train',
-        bands: Sequence[str] = FLAIR2.all_bands,
+        bands: Sequence[str] = FLAIR2.aerial_all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,

@@ -12,7 +12,12 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import FLAIR2, DatasetNotFoundError, FLAIR2Toy
+from torchgeo.datasets import (
+    FLAIR2,
+    DatasetNotFoundError,
+    FLAIR2Toy,
+    RGBBandsMissingError,
+)
 
 
 class TestFLAIR2:
@@ -60,7 +65,7 @@ class TestFLAIR2:
         return flair_class
 
     def test_get_num_bands(self, dataset: FLAIR2) -> None:
-        assert dataset.get_num_bands() == len(dataset.all_bands)
+        assert dataset.get_num_bands() == len(dataset.aerial_all_bands)
 
     def test_per_band_statistics(self, dataset: FLAIR2) -> None:
         if dataset.split != 'train':
@@ -78,7 +83,7 @@ class TestFLAIR2:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
-        assert x['image'].shape == (len(dataset.all_bands), 32, 32)
+        assert x['image'].shape == (len(dataset.aerial_all_bands), 32, 32)
         assert isinstance(x['mask'], torch.Tensor)
         assert x['image'].shape[-2:] == x['mask'].shape[-2:]
 
@@ -138,3 +143,8 @@ class TestFLAIR2:
         sample['prediction'] = torch.clone(sample['mask'])
         dataset.plot(sample, suptitle='Prediction')
         plt.close()
+
+    def test_plot_rgb_missing(self, dataset: FLAIR2) -> None:
+        dataset.aerial_bands = ('B02', 'B03', 'B04', 'B05')
+        with pytest.raises(RGBBandsMissingError):
+            dataset.plot(dataset[0], suptitle='Test')

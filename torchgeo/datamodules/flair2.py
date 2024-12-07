@@ -52,8 +52,7 @@ class FLAIR2DataModule(NonGeoDataModule):
             num_workers: Number of workers for parallel data loading.
             use_toy: Whether to use the toy version of the dataset.
             augs: Optional augmentations to apply to the dataset.
-            **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.FLAIR2`.
+            **kwargs: Additional keyword arguments passed to :class:`~torchgeo.datasets.FLAIR2`.
 
             ..versionadded:: 0.7
         """
