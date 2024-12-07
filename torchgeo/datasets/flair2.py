@@ -1,9 +1,9 @@
-# Code for loading dataset licensed under the MIT License.
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
 #
 # FLAIR dataset is realeasd under open license 2.0
 # ..... https://www.etalab.gouv.fr/wp-content/uploads/2018/11/open-licence.pdf
 # ..... https://ignf.github.io/FLAIR/#FLAIR2
-#
 
 """FLAIR2 dataset."""
 
