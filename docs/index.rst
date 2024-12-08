@@ -34,6 +34,7 @@ torchgeo
    tutorials/torchgeo
    tutorials/contribute_non_geo_dataset
    tutorials/custom_raster_dataset
+   tutorials/contribute_datamodule
    tutorials/transforms
    tutorials/indices
    tutorials/trainers
