@@ -31,6 +31,7 @@ torchgeo
    tutorials/getting_started
    tutorials/pytorch
    tutorials/geospatial
+   tutorials/torchgeo
    tutorials/contribute_non_geo_dataset
    tutorials/custom_raster_dataset
    tutorials/transforms
