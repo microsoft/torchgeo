@@ -469,6 +469,11 @@ SSL4EO-L Benchmark
 
 .. autoclass:: SSL4EOLBenchmark
 
+SubstationDataset
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SubstationDataset
+
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
 
