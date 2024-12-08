@@ -29,8 +29,11 @@ torchgeo
    :caption: Tutorials
 
    tutorials/getting_started
-   tutorials/contribute_datamodule
+   tutorials/pytorch
+   tutorials/geospatial
+   tutorials/contribute_non_geo_dataset
    tutorials/custom_raster_dataset
+   tutorials/contribute_datamodule
    tutorials/transforms
    tutorials/indices
    tutorials/trainers
