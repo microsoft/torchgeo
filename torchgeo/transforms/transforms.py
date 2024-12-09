@@ -13,9 +13,11 @@ from kornia.geometry import crop_by_indices
 from kornia.geometry.boxes import Boxes
 from torch import Tensor
 from torch.nn.modules import Module
+from typing_extensions import deprecated
 
 
 # TODO: contribute these to Kornia and delete this file
+@deprecated('Use kornia.augmentation.AugmentationSequential instead')
 class AugmentationSequential(Module):
     """Wrapper around kornia AugmentationSequential to handle input dicts.
 
