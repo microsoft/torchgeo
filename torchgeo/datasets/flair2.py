@@ -609,6 +609,7 @@ class FLAIR2(NonGeoDataset):
         image = normalize_plot(sample['image'][rgb_indices].permute(1, 2, 0))
 
         # Get elevation and NIR, R, G if available
+        elevation, nir_r_g = None, None
         if 'B05' in self.aerial_bands:
             elevation = sample['image'][self.aerial_bands.index('B05')]
         if 'B04' in self.aerial_bands:
