@@ -474,15 +474,13 @@ class ChesapeakeCVPR(GeoDataset):
 
         super().__init__(transforms)
 
-        lc_colors = np.zeros((max(self.lc_cmap.keys()) + 1, 4), dtype=float)
+        lc_colors = np.zeros((max(self.lc_cmap.keys()) + 1, 4))
         lc_colors[list(self.lc_cmap.keys())] = list(self.lc_cmap.values())
-        lc_colors = lc_colors[:, :3] / 255
-        self._lc_cmap = ListedColormap(lc_colors)
+        self._lc_cmap = ListedColormap(lc_colors[:, :3] / 255)
 
-        nlcd_colors = np.zeros((max(NLCD.cmap.keys()) + 1, 4), dtype=float)
+        nlcd_colors = np.zeros((max(NLCD.cmap.keys()) + 1, 4))
         nlcd_colors[list(NLCD.cmap.keys())] = list(NLCD.cmap.values())
-        nlcd_colors = nlcd_colors[:, :3] / 255
-        self._nlcd_cmap = ListedColormap(nlcd_colors)
+        self._nlcd_cmap = ListedColormap(nlcd_colors[:, :3] / 255)
 
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint: float = 0

@@ -93,10 +93,9 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
         self.download = download
         self.checksum = checksum
 
-        lc_colors = np.zeros((max(self.cmap.keys()) + 1, 4), dtype=float)
+        lc_colors = np.zeros((max(self.cmap.keys()) + 1, 4))
         lc_colors[list(self.cmap.keys())] = list(self.cmap.values())
-        lc_colors = lc_colors[:, :3] / 255
-        self._lc_cmap = ListedColormap(lc_colors)
+        self._lc_cmap = ListedColormap(lc_colors[:, :3] / 255)
 
         self._verify()
 
