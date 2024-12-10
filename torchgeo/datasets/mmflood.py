@@ -241,7 +241,7 @@ class MMFlood(RasterDataset):
         ), f'No images found, is the given path correct? ({self.root!s})'
         assert (
             len(paths['image']) == len(paths['mask'])
-        ), f'Length mismatch between tiles and masks: {len(paths['image'])} != {len(paths['mask'])}'
+        ), f'Length mismatch between tiles and masks: {len(paths["image"])} != {len(paths["mask"])}'
         assert len(paths['image']) == len(
             paths['dem']
         ), 'Length mismatch between tiles and DEMs'
