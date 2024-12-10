@@ -142,6 +142,10 @@ Landsat
 .. autoclass:: Landsat2
 .. autoclass:: Landsat1
 
+MMFlood
+^^^^^^^
+.. autoclass:: MMFlood
+
 NAIP
 ^^^^
 
