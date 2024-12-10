@@ -43,6 +43,8 @@ class MMFlood(RasterDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.1109/ACCESS.2022.3205419
+
+    .. versionadded:: 0.7
     """
 
     url = 'https://huggingface.co/datasets/links-ads/mmflood/resolve/24ca097306c9e50ad0711903c11e1ba13ea1bedc/'
@@ -122,12 +124,11 @@ class MMFlood(RasterDataset):
         # self.image_files, self.label_files, self.dem_files attributes
         self._verify()
         self.metadata_df = self._load_metadata()
-        self.folders = self._load_folders(check_folders=True)
+        self.folders = self._load_folders()
         paths = [x['s1_raw'] for x in self.folders]
 
         # Build the index
         super().__init__(paths=paths, crs=crs, transforms=transforms, cache=cache)
-        return
 
     def _merge_tar_files(self) -> None:
         """Merge part tar gz files."""
@@ -143,7 +144,6 @@ class MMFlood(RasterDataset):
 
                 with open(part_path, 'rb') as part_fp:
                     dst_fp.write(part_fp.read())
-        return
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Tensor]:
         """Retrieve image/mask and metadata indexed by query.
@@ -194,25 +194,35 @@ class MMFlood(RasterDataset):
         ).transpose()
         return df
 
-    def _load_folders(self, check_folders: bool = False) -> list[dict[str, str]]:
-        """Load folder paths.
+    def _load_tif_files(
+        self, check_folders: bool = False, load_all: bool = False
+    ) -> dict[str, list[str]]:
+        """Load paths of all tif files for Sentinel-1, DEM and masks.
 
         Args:
-            check_folders: if True, verify pairings of all s1, dem and mask data across all the folders
+            check_folders: if True, verifies pairings of all s1, dem and mask data across all the folders
+            load_all: if True, loads all tif files contained in the "activations" folder in the root folder specified. Otherwise, only acquisitions for the given split are loaded.
 
         Returns:
-            list of dicts of s1, dem and masks folder paths
+            dict containing list of paths, with 'image', 'dem' and 'mask' as keys
         """
+        paths = {}
+        dirpath = os.path.join(self.root, self.metadata['directory'])
         # initialize tif file lists containing masks, DEM and S1_raw data
-        folders = self.metadata_df[
-            self.metadata_df['subset'] == self.split
-        ].index.tolist()
+        if load_all:
+            # Get all directories
+            folders = os.listdir(dirpath)
+        else:
+            # Assemble regex for glob
+            folders = (
+                self.metadata_df[self.metadata_df['subset'] == self.split].index + '-*'
+            ).tolist()
 
         image_files = []
         mask_files = []
         dem_files = []
         for f in folders:
-            path = os.path.join(self.root, self.metadata['directory'], f'{f}-*')
+            path = os.path.join(self.root, self.metadata['directory'], f)
             image_files += glob(os.path.join(path, 's1_raw', '*.tif'))
             mask_files += glob(os.path.join(path, 'mask', '*.tif'))
             dem_files += glob(os.path.join(path, 'DEM', '*.tif'))
@@ -221,33 +231,41 @@ class MMFlood(RasterDataset):
         mask_files = sorted(mask_files)
         dem_files = sorted(dem_files)
 
+        paths['image'] = image_files
+        paths['mask'] = mask_files
+        paths['dem'] = dem_files
+
         # Verify image, dem and mask lengths
         assert (
-            len(image_files) > 0
+            len(paths['image']) > 0
         ), f'No images found, is the given path correct? ({self.root!s})'
         assert (
-            len(image_files) == len(mask_files)
-        ), f'Length mismatch between tiles and masks: {len(image_files)} != {len(mask_files)}'
-        assert len(image_files) == len(
-            dem_files
+            len(paths['image']) == len(paths['mask'])
+        ), f'Length mismatch between tiles and masks: {len(paths['image'])} != {len(paths['mask'])}'
+        assert len(paths['image']) == len(
+            paths['dem']
         ), 'Length mismatch between tiles and DEMs'
+
+        if check_folders:
+            # Verify image, dem and mask pairings
+            self._verify_pairings(paths['image'], paths['dem'], paths['mask'])
+
+        return paths
+
+    def _load_folders(self) -> list[dict[str, str]]:
+        """Load folder paths.
+
+        Returns:
+            list of dicts of s1, dem and masks folder paths
+        """
+        paths = self._load_tif_files(check_folders=False, load_all=False)
 
         res_folders = [
             {'s1_raw': img_path, 'mask': mask_path, 'dem': dem_path}
-            for img_path, mask_path, dem_path in zip(image_files, mask_files, dem_files)
+            for img_path, mask_path, dem_path in zip(
+                paths['image'], paths['mask'], paths['dem']
+            )
         ]
-
-        if not check_folders:
-            return res_folders
-
-        # Verify image, dem and mask pairings
-        for image, mask, dem in zip(image_files, mask_files, dem_files):
-            image_tile = pathlib.Path(image).stem
-            mask_tile = pathlib.Path(mask).stem
-            dem_tile = pathlib.Path(dem).stem
-            assert (
-                image_tile == mask_tile == dem_tile
-            ), f'Filenames not matching: image {image_tile}; mask {mask_tile}; dem {dem_tile}'
 
         return res_folders
 
@@ -299,7 +317,7 @@ class MMFlood(RasterDataset):
             the target mask
         """
         tensor = self._load_tif(index, modality='mask', query=query).type(torch.uint8)
-        return tensor.squeeze(dim=0)
+        return tensor.long().squeeze(dim=0)
 
     def _download(self) -> None:
         """Download the dataset."""
@@ -323,18 +341,12 @@ class MMFlood(RasterDataset):
         _check_and_download(
             self.metadata['metadata_file'], self.url + self.metadata['metadata_file']
         )
-        return
 
     def _extract(self) -> None:
-        """Extract the dataset.
-
-        Args:
-            filepath: path to file to be extracted
-        """
+        """Extract the dataset."""
         filepath = os.path.join(self.root, self.metadata['filename'])
         if str(filepath).endswith('.tar.gz'):
             extract_archive(filepath)
-        return
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -342,13 +354,36 @@ class MMFlood(RasterDataset):
         metadata_filepath = os.path.join(self.root, self.metadata['metadata_file'])
         # Check if both metadata file and directory exist
         if os.path.isdir(dirpath) and os.path.isfile(metadata_filepath):
+            # Check pairings of all files
+            _ = self._load_tif_files(check_folders=True, load_all=True)
             return
         if not self.download:
             raise DatasetNotFoundError(self)
         self._download()
         self._merge_tar_files()
         self._extract()
-        return
+
+    def _verify_pairings(
+        self, s1_paths: list[str], dem_paths: list[str], mask_paths: list[str]
+    ) -> None:
+        """Verify all pairings of Sentinel-1, DEM and mask tif files. All inputs must be sorted.
+
+        Args:
+            s1_paths: list of paths of Sentinel-1 tif files
+            dem_paths: list of paths of DEM tif files
+            mask_paths: list of paths of mask tif files
+        """
+        assert (
+            len(s1_paths) == len(dem_paths) == len(mask_paths)
+        ), f'Lengths of s1, dem and mask files do not match! ({len(s1_paths)}, {len(dem_paths)}, {len(mask_paths)})'
+
+        for image, mask, dem in zip(s1_paths, mask_paths, dem_paths):
+            image_tile = pathlib.Path(image).stem
+            mask_tile = pathlib.Path(mask).stem
+            dem_tile = pathlib.Path(dem).stem
+            assert (
+                image_tile == mask_tile == dem_tile
+            ), f'Filenames not matching: image {image_tile}; mask {mask_tile}; dem {dem_tile}'
 
     def plot(
         self,

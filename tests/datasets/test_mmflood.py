@@ -98,26 +98,3 @@ class TestMMFlood:
             IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]
-
-    def test_check_folders(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
-        class MockMMFlood(MMFlood):
-            def _load_folders(
-                self, check_folders: bool = False
-            ) -> list[dict[str, str]]:
-                return super()._load_folders(check_folders=False)
-
-        dataset_root = os.path.join('tests', 'data', 'mmflood/')
-        url = os.path.join(dataset_root)
-
-        monkeypatch.setattr(MMFlood, 'url', url)
-        monkeypatch.setattr(MMFlood, '_nparts', 2)
-
-        _ = MockMMFlood(
-            tmp_path,
-            split='train',
-            include_dem=True,
-            transforms=nn.Identity(),
-            download=True,
-            checksum=True,
-        )
-        return

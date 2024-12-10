@@ -3,7 +3,6 @@
 
 import json
 import os
-import shutil
 import tarfile
 
 import numpy as np
@@ -113,7 +112,6 @@ def generate_folders_and_metadata(datapath: str, metadatapath: str) -> None:
     generate_tar_gz(src='activations', dst='activations.tar.gz')
     split_tar(path='activations.tar.gz', dst='.', nparts=2)
     os.remove('activations.tar.gz')
-    shutil.rmtree('activations')
     with open(os.path.join(metadatapath, 'activations.json'), 'w') as fp:
         json.dump(metadata, fp)
 

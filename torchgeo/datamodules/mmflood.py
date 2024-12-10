@@ -16,7 +16,10 @@ from .geo import GeoDataModule
 
 
 class MMFloodDataModule(GeoDataModule):
-    """LightningDataModule implementation for the MMFlood dataset."""
+    """LightningDataModule implementation for the MMFlood dataset.
+
+    .. versionadded:: 0.7
+    """
 
     # Computed over train set
     mean = torch.tensor([0.1785585, 0.03574104, 168.45529])
@@ -75,8 +78,6 @@ class MMFloodDataModule(GeoDataModule):
             K.Normalize(avg, self.std), keepdim=True, data_keys=None
         )
 
-        return
-
     def setup(self, stage: str) -> None:
         """Set up datasets.
 
@@ -98,4 +99,3 @@ class MMFloodDataModule(GeoDataModule):
             self.test_sampler = GridGeoSampler(
                 self.test_dataset, self.patch_size, self.patch_size
             )
-        return
