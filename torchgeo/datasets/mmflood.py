@@ -29,10 +29,11 @@ class MMFlood(RasterDataset):
 
     Dataset features:
 
-    * 1,748 Sentinel-1 acquisitions
+    * 1,748 Sentinel-1 tiles of varying pixel dimensions
     * multimodal dataset
     * 95 flood events from 42 different countries
-    * hydrography maps (not available for all Sentinel-1 acquisitions)
+    * includes DEMs
+    * includes hydrography maps (not available for all areas of interest)
     * flood delineation maps (ground truth) is obtained from Copernicus EMS
 
     Dataset classes:
