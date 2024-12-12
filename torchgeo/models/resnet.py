@@ -760,7 +760,7 @@ def resnet18(
     Args:
         weights: Pre-trained model weights to use.
         *args: Additional arguments to pass to :func:`timm.create_model`
-        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`
+        **kwargs: Additional keyword arguments to pass to :func:`timm.create_model`
 
     Returns:
         A ResNet-18 model.
@@ -795,7 +795,7 @@ def resnet50(
     Args:
         weights: Pre-trained model weights to use.
         *args: Additional arguments to pass to :func:`timm.create_model`.
-        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keyword arguments to pass to :func:`timm.create_model`.
 
     Returns:
         A ResNet-50 model.
@@ -829,7 +829,7 @@ def resnet152(
     Args:
         weights: Pre-trained model weights to use.
         *args: Additional arguments to pass to :func:`timm.create_model`.
-        **kwargs: Additional keywork arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keyword arguments to pass to :func:`timm.create_model`.
 
     Returns:
         A ResNet-152 model.

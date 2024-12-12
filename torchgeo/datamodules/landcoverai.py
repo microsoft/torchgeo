@@ -8,7 +8,6 @@ from typing import Any
 import kornia.augmentation as K
 
 from ..datasets import LandCoverAI, LandCoverAI100
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -31,17 +30,18 @@ class LandCoverAIDataModule(NonGeoDataModule):
         """
         super().__init__(LandCoverAI, batch_size, num_workers, **kwargs)
 
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomRotation(p=0.5, degrees=90),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             K.RandomSharpness(p=0.5),
             K.ColorJitter(p=0.5, brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
-            data_keys=['image', 'mask'],
+            data_keys=None,
+            keepdim=True,
         )
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
+        self.aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
 
 
@@ -66,6 +66,6 @@ class LandCoverAI100DataModule(NonGeoDataModule):
         """
         super().__init__(LandCoverAI100, batch_size, num_workers, **kwargs)
 
-        self.aug = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'mask']
+        self.aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )

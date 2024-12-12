@@ -10,7 +10,6 @@ import kornia.augmentation as K
 from torch.utils.data import Subset
 
 from ..datasets import GeoNRW
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 from .utils import group_shuffle_split
 
@@ -38,14 +37,17 @@ class GeoNRWDataModule(NonGeoDataModule):
         """
         super().__init__(GeoNRW, batch_size, num_workers, **kwargs)
 
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Resize(size),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
-            data_keys=['image', 'mask'],
+            data_keys=None,
+            keepdim=True,
         )
 
-        self.aug = AugmentationSequential(K.Resize(size), data_keys=['image', 'mask'])
+        self.aug = K.AugmentationSequential(
+            K.Resize(size), data_keys=None, keepdim=True
+        )
 
         self.size = size
 

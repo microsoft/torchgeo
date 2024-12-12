@@ -378,9 +378,11 @@ def _list_dict_to_dict_list(
 
     .. versionadded:: 0.2
     """
-    collated = collections.defaultdict(list)
+    collated: dict[Any, list[Any]] = dict()
     for sample in samples:
         for key, value in sample.items():
+            if key not in collated:
+                collated[key] = []
             collated[key].append(value)
     return collated
 
@@ -536,7 +538,7 @@ def draw_semantic_segmentation_masks(
         colors: list of RGB int tuples, or color strings e.g. red, #FF00FF
 
     Returns:
-        a version of ``image`` overlayed with the colors given by ``mask`` and
+        a version of ``image`` overlaid with the colors given by ``mask`` and
             ``colors``
     """
     classes = torch.from_numpy(np.arange(len(colors) if colors else 0, dtype=np.uint8))

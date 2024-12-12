@@ -39,7 +39,7 @@ class SeasoNet(NonGeoDataset):
 
     Dataset format:
 
-    * images are 16-bit GeoTiffs, split into seperate files based on resolution
+    * images are 16-bit GeoTiffs, split into separate files based on resolution
     * images include 12 spectral bands with 10, 20 and 60 m per pixel resolutions
     * masks are single-channel 8-bit GeoTiffs
 

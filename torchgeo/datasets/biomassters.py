@@ -40,7 +40,7 @@ class BioMassters(NonGeoDataset):
     * Sentinel 1 and Sentinel 2 data for each location
     * Sentinel 1 available for every month
     * Sentinel 2 available for almost every month
-      (not available for every month due to ESA aquisition halt over the region
+      (not available for every month due to ESA acquisition halt over the region
       during particular periods)
 
     If you use this dataset in your research, please cite the following paper:

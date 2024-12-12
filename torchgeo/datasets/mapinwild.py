@@ -160,7 +160,7 @@ class MapInWild(NonGeoDataset):
             ):
                 self._merge_parts(mode)
 
-        # Masks will be loaded seperately in the :meth:`__getitem__`
+        # Masks will be loaded separately in the :meth:`__getitem__`
         if 'mask' in self.modality:
             self.modality.remove('mask')
 

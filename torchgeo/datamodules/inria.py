@@ -9,7 +9,6 @@ import kornia.augmentation as K
 
 from ..datasets import InriaAerialImageLabeling
 from ..samplers.utils import _to_tuple
-from ..transforms import AugmentationSequential
 from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
 
@@ -44,22 +43,25 @@ class InriaAerialImageLabelingDataModule(NonGeoDataModule):
 
         self.patch_size = _to_tuple(patch_size)
 
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=['image', 'mask'],
+            data_keys=None,
+            keepdim=True,
         )
-        self.aug = AugmentationSequential(
+        self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=['image', 'mask'],
+            data_keys=None,
+            keepdim=True,
         )
-        self.predict_aug = AugmentationSequential(
+        self.predict_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=['image'],
+            data_keys=None,
+            keepdim=True,
         )
 
     def setup(self, stage: str) -> None:

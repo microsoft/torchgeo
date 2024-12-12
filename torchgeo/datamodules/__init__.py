@@ -21,6 +21,7 @@ from .ftw import FieldsOfTheWorldDataModule
 from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
 from .geonrw import GeoNRWDataModule
 from .gid15 import GID15DataModule
+from .hyspecnet import HySpecNet11kDataModule
 from .inria import InriaAerialImageLabelingDataModule
 from .iobench import IOBenchDataModule
 from .l7irish import L7IrishDataModule
@@ -47,6 +48,7 @@ from .spacenet import SpaceNet1DataModule, SpaceNet6DataModule, SpaceNetBaseData
 from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
 from .ssl4eo_benchmark import SSL4EOLBenchmarkDataModule
 from .sustainbench_crop_yield import SustainBenchCropYieldDataModule
+from .treesatai import TreeSatAIDataModule
 from .ucmerced import UCMercedDataModule
 from .usavars import USAVarsDataModule
 from .utils import MisconfigurationException
@@ -55,67 +57,65 @@ from .vhr10 import VHR10DataModule
 from .xview import XView2DataModule
 
 __all__ = (
-    # GeoDataset
     'AgriFieldNetDataModule',
-    'ChesapeakeCVPRDataModule',
-    'IOBenchDataModule',
-    'L7IrishDataModule',
-    'L8BiomeDataModule',
-    'NAIPChesapeakeDataModule',
-    'Sentinel2CDLDataModule',
-    'Sentinel2EuroCropsDataModule',
-    'Sentinel2NCCMDataModule',
-    'Sentinel2SouthAmericaSoybeanDataModule',
-    'SouthAfricaCropTypeDataModule',
-    # NonGeoDataset
+    'BaseDataModule',
     'BigEarthNetDataModule',
-    'CaFFeDataModule',
-    'CaBuArDataModule',
-    'ChaBuDDataModule',
     'COWCCountingDataModule',
+    'CaBuArDataModule',
+    'CaFFeDataModule',
+    'ChaBuDDataModule',
+    'ChesapeakeCVPRDataModule',
     'DeepGlobeLandCoverDataModule',
     'DigitalTyphoonDataModule',
     'ETCI2021DataModule',
+    'EuroSAT100DataModule',
     'EuroSATDataModule',
     'EuroSATSpatialDataModule',
-    'EuroSAT100DataModule',
     'FAIR1MDataModule',
     'FieldsOfTheWorldDataModule',
     'FireRiskDataModule',
-    'GeoNRWDataModule',
     'GID15DataModule',
+    'GeoDataModule',
+    'GeoNRWDataModule',
+    'HySpecNet11kDataModule',
+    'IOBenchDataModule',
     'InriaAerialImageLabelingDataModule',
-    'LandCoverAIDataModule',
-    'LandCoverAI100DataModule',
+    'L7IrishDataModule',
+    'L8BiomeDataModule',
     'LEVIRCDDataModule',
     'LEVIRCDPlusDataModule',
+    'LandCoverAI100DataModule',
+    'LandCoverAIDataModule',
     'LoveDADataModule',
+    'MisconfigurationException',
+    'NAIPChesapeakeDataModule',
     'NASAMarineDebrisDataModule',
+    'NonGeoDataModule',
     'OSCDDataModule',
     'Potsdam2DDataModule',
     'QuakeSetDataModule',
     'RESISC45DataModule',
-    'SeasonalContrastS2DataModule',
     'SEN12MSDataModule',
     'SKIPPDDataModule',
-    'So2SatDataModule',
-    'SpaceNetBaseDataModule',
-    'SpaceNet1DataModule',
-    'SpaceNet6DataModule',
     'SSL4EOLBenchmarkDataModule',
     'SSL4EOLDataModule',
     'SSL4EOS12DataModule',
+    'SeasonalContrastS2DataModule',
+    'Sentinel2CDLDataModule',
+    'Sentinel2EuroCropsDataModule',
+    'Sentinel2NCCMDataModule',
+    'Sentinel2SouthAmericaSoybeanDataModule',
+    'So2SatDataModule',
+    'SouthAfricaCropTypeDataModule',
+    'SpaceNet1DataModule',
+    'SpaceNet6DataModule',
+    'SpaceNetBaseDataModule',
     'SustainBenchCropYieldDataModule',
+    'TreeSatAIDataModule',
     'TropicalCycloneDataModule',
     'UCMercedDataModule',
     'USAVarsDataModule',
-    'Vaihingen2DDataModule',
     'VHR10DataModule',
+    'Vaihingen2DDataModule',
     'XView2DataModule',
-    # Base classes
-    'BaseDataModule',
-    'GeoDataModule',
-    'NonGeoDataModule',
-    # Utilities
-    'MisconfigurationException',
 )

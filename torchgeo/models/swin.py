@@ -266,7 +266,7 @@ def swin_v2_t(
         weights: Pre-trained model weights to use.
         *args: Additional arguments to
             pass to :class:`torchvision.models.swin_transformer.SwinTransformer`.
-        **kwargs: Additional keywork arguments to
+        **kwargs: Additional keyword arguments to
             pass to :class:`torchvision.models.swin_transformer.SwinTransformer`.
 
     Returns:
@@ -305,7 +305,7 @@ def swin_v2_b(
         weights: Pre-trained model weights to use.
         *args: Additional arguments to
             pass to :class:`torchvision.models.swin_transformer.SwinTransformer`.
-        **kwargs: Additional keywork arguments to
+        **kwargs: Additional keyword arguments to
             pass to :class:`torchvision.models.swin_transformer.SwinTransformer`.
 
     Returns:

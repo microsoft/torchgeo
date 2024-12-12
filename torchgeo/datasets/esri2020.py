@@ -41,7 +41,7 @@ class Esri2020(RasterDataset):
     9. Snow/Ice
     10. Clouds
 
-    A more detailed explanation of the invidual classes can be found
+    A more detailed explanation of the individual classes can be found
     `here <https://www.arcgis.com/home/item.html?id=fc92d38533d440078f17678ebc20e8e2>`_.
 
     If you use this dataset please cite the following paper:

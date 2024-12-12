@@ -195,7 +195,7 @@ class VHR10(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: one of "postive" or "negative"
+            split: one of "positive" or "negative"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory

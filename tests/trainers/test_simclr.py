@@ -29,6 +29,7 @@ class TestSimCLRTask:
         'name',
         [
             'chesapeake_cvpr_prior_simclr',
+            'hyspecnet_simclr',
             'seco_simclr_1',
             'seco_simclr_2',
             'ssl4eo_l_simclr_1',

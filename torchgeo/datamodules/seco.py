@@ -10,7 +10,6 @@ import torch
 from einops import repeat
 
 from ..datasets import SeasonalContrastS2
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -49,11 +48,12 @@ class SeasonalContrastS2DataModule(NonGeoDataModule):
             _mean = repeat(_mean, 'c -> (t c)', t=seasons)
             _std = repeat(_std, 'c -> (t c)', t=seasons)
 
-            self.aug = AugmentationSequential(
+            self.aug = K.AugmentationSequential(
                 K.Normalize(mean=_min, std=_max - _min),
                 K.Normalize(mean=torch.tensor(0), std=1 / torch.tensor(255)),
                 K.Normalize(mean=_mean, std=_std),
-                data_keys=['image'],
+                data_keys=None,
+                keepdim=True,
             )
 
     def setup(self, stage: str) -> None:

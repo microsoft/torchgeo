@@ -78,7 +78,7 @@ class RCF(Module):
 
         # We register the weight and bias tensors as "buffers". This does two things:
         # makes them behave correctly when we call .to(...) on the module, and makes
-        # them explicitely _not_ Parameters of the model (which might get updated) if
+        # them explicitly _not_ Parameters of the model (which might get updated) if
         # a user tries to train with this model.
         self.register_buffer(
             'weights',

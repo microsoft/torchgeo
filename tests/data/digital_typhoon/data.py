@@ -78,7 +78,7 @@ for typhoon_id in range(NUM_TYHOON_IDS):
         }
     )
 
-    # Save the DataFrame to correspoding typhoon id as metadata
+    # Save the DataFrame to corresponding typhoon id as metadata
     df.to_csv(os.path.join(root, 'metadata', f'{typhoon_id}.csv'), index=False)
 
     all_dfs.append(df)
