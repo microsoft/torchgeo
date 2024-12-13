@@ -7,7 +7,7 @@ fiona==1.10.1
 kornia==0.7.4
 lightly==1.5.15
 lightning[pytorch-extra]==2.4.0
-matplotlib==3.9.3
+matplotlib==3.9.4
 numpy==2.2.0
 pandas==2.2.3
 pillow==11.0.0
