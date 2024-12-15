@@ -460,7 +460,7 @@ class FLAIR2(NonGeoDataset):
         """
         with rasterio.open(path) as f:
             array: np.typing.NDArray[np.int_] = f.read()
-            tensor = torch.from_numpy(array).float()
+            tensor = torch.from_numpy(array).float() / 255
 
         # Extract the bands of interest
         tensor = tensor[[int(band[-2:]) - 1 for band in self.aerial_bands]]
@@ -731,22 +731,24 @@ class FLAIR2Toy(FLAIR2):
         self,
         root: Path = 'data',
         split: str = 'train',
-        bands: Sequence[str] = FLAIR2.aerial_all_bands,
+        aerial_bands: Sequence[str] = FLAIR2.aerial_all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
         use_sentinel: bool = False,
+        sentinel_bands: Sequence[str] = FLAIR2.sentinel_all_bands
     ) -> None:
         """Initialize a new FLAIR2Toy dataset instance.
 
         Args:
             root: root directory where dataset can be found
             split: which split to load, one of 'train' or 'test'
-            bands: which bands to load (B01, B02, B03, B04, B05)
+            aerial_bands: which bands to load (B01, B02, B03, B04, B05)
             transforms: optional transforms to apply to sample
             download: whether to download the dataset if it is not found
             checksum: whether to verify the dataset using checksums
             use_sentinel: whether to use sentinel data in the dataset # FIXME: sentinel does not work with dataloader due to varying dimensions
+            sentinel_bands: which bands to load from sentinel data (B01, B02, ..., B10)
 
         Raises:
             DatasetNotFoundError
@@ -761,7 +763,7 @@ class FLAIR2Toy(FLAIR2):
         )
         print('-' * 80)
         super().__init__(
-            root, split, bands, transforms, download, checksum, use_sentinel
+            root, split, aerial_bands, transforms, download, checksum, use_sentinel, sentinel_bands
         )
 
     def _verify(self) -> None:
