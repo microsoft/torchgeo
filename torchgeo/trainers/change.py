@@ -62,7 +62,7 @@ class ChangeDetectionTask(BaseTask):
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
 
-        .. versionadded: 0.6
+        .. versionadded: 0.7
         """
         self.weights = weights
         super().__init__()
