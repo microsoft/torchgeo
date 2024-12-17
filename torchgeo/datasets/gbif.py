@@ -13,6 +13,9 @@ import numpy as np
 import pandas as pd
 from rasterio.crs import CRS
 
+import matplotlib.pyplot as plt
+
+
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
 from .utils import BoundingBox, Path
@@ -140,3 +143,28 @@ class GBIF(GeoDataset):
         sample = {'crs': self.crs, 'bounds': bboxes}
 
         return sample
+
+
+def plot(self) -> None:
+    """Represent in graphic any mentions as a map on a globe."""
+    # Extract latitude and longitude from the dataset
+    lat = self.data['decimalLatitude']
+    long = self.data['decimalLongitude']
+    
+    # Remove all other rows except those that have latitude and longitude data available
+    valid = self.data.dropna(subset=['decimalLatitude', 'decimalLongitude'])
+    
+    # Create a new figure
+    plt.figure(figsize=(10, 6))
+    plt.scatter(
+    valid['decimalLongitude'], 
+    valid['decimalLatitude'], 
+    c='b',  # Color choice can be made here
+    s=10,  # Change the size of the markers
+    alpha=0.5,  # Change the transparency of the points
+    ) 
+    plt.title('Spatial Occurrence Distribution of GBIF Records')
+    plt.xlabel('Longitude')
+    plt.ylabel('Latitude')
+    plt.grid(True)
+    plt.show()
