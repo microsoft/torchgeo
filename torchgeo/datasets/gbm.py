@@ -52,13 +52,13 @@ class GlobalBuildingMap(RasterDataset):
         ncols = 2 if 'prediction' in sample else 1
         fig, axs = plt.subplots(ncols=ncols, squeeze=False)
 
-        axs[0, 0].imshow(sample['mask'])
+        axs[0, 0].imshow(sample['mask'], cmap='gray')
         axs[0, 0].axis('off')
         if show_titles:
             axs[0, 0].set_title('Mask')
 
         if 'prediction' in sample:
-            axs[0, 1].imshow(sample['prediction'])
+            axs[0, 1].imshow(sample['prediction'], cmap='gray')
             axs[0, 1].axis('off')
             if show_titles:
                 axs[0, 1].set_title('Prediction')
