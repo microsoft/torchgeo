@@ -7,6 +7,7 @@ The following tutorials introduce the basic concepts and components of TorchGeo:
 * `Spectral Indices <indices.ipynb>`_: Visualizing and appending spectral indices
 * `Pretrained Weights <pretrained_weights.ipynb>`_: Models and pretrained weights
 * `Lightning Trainers <trainers.ipynb>`_: PyTorch Lightning data modules and trainers
+* `Command-Line Interface <cli.ipynb>`_: TorchGeo's command-line interface
 
 .. toctree::
    :hidden:
@@ -16,3 +17,4 @@ The following tutorials introduce the basic concepts and components of TorchGeo:
    indices
    pretrained_weights
    trainers
+   cli
