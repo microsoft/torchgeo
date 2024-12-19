@@ -155,6 +155,16 @@ class ChangeDetectionTask(BaseTask):
                 param.requires_grad = False
 
     def _shared_step(self, batch: Any, batch_idx: int, stage: str) -> Tensor:
+        """Compute the loss and additional metrics for the given stage.
+
+        Args:
+            batch: The output of your DataLoader._
+            batch_idx: Integer displaying index of this batch._
+            stage: The current stage.
+
+        Returns:
+            The loss tensor.
+        """
         model: str = self.hparams['model']
         x = batch['image']
         y = batch['mask']
