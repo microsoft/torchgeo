@@ -17,7 +17,6 @@ from torchmetrics.classification import (
 )
 from torchvision.models._api import WeightsEnum
 
-from ..losses import BinaryFocalJaccardLoss, BinaryXEntJaccardLoss
 from ..models import FCSiamConc, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
@@ -33,7 +32,7 @@ class ChangeDetectionTask(BaseTask):
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         pos_weight: Tensor | None = None,
-        loss: str = 'bce-jaccard',
+        loss: str = 'bce',
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
@@ -54,7 +53,7 @@ class ChangeDetectionTask(BaseTask):
             in_channels: Number of input channels to model.
             pos_weight: A weight of positive examples and used with 'bce' loss.
             loss: Name of the loss function, currently supports
-                'bce', 'jaccard', 'focal', 'focal-jaccard' or 'bce-jaccard' loss.
+                'bce', 'jaccard', or 'focal' loss.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             freeze_backbone: Freeze the backbone network to fine-tune the
@@ -80,14 +79,10 @@ class ChangeDetectionTask(BaseTask):
             self.criterion = smp.losses.JaccardLoss(mode='binary')
         elif loss == 'focal':
             self.criterion = smp.losses.FocalLoss(mode='binary', normalized=True)
-        elif loss == 'focal-jaccard':
-            self.criterion = BinaryFocalJaccardLoss()
-        elif loss == 'bce-jaccard':
-            self.criterion = BinaryXEntJaccardLoss()
         else:
             raise ValueError(
                 f"Loss type '{loss}' is not valid. "
-                "Currently, supports 'bce', 'jaccard', 'focal', 'focal-jaccard, or 'bce-jaccard loss."
+                "Currently, supports 'bce', 'jaccard', or 'focal' loss."
             )
 
     def configure_metrics(self) -> None:
