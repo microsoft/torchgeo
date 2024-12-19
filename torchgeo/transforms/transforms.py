@@ -102,7 +102,13 @@ class AugmentationSequential(Module):
             batch['boxes'] = Boxes(batch['boxes']).to_tensor(mode='xyxy')
 
         # Torchmetrics does not support masks with a channel dimension
-        if 'mask' in batch and batch['mask'].shape[1] == 1:
+        # Kornia adds a temporal dimension to mask when passed through VideoSequential.
+        if 'mask' in batch and batch['mask'].ndim == 5:
+            if batch['mask'].shape[1] == 1:
+                batch['mask'] = rearrange(batch['mask'], 'b () c h w -> b c h w')
+            if batch['mask'].shape[1] == 1:
+                batch['mask'] = rearrange(batch['mask'], 'b () h w -> b h w')
+        elif 'mask' in batch and batch['mask'].shape[1] == 1:
             batch['mask'] = rearrange(batch['mask'], 'b () h w -> b h w')
         if 'masks' in batch and batch['masks'].ndim == 4:
             batch['masks'] = rearrange(batch['masks'], '() c h w -> c h w')
