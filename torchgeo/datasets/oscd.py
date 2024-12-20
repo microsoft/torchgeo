@@ -150,7 +150,8 @@ class OSCD(NonGeoDataset):
         image1 = self._load_image(files['images1'])
         image2 = self._load_image(files['images2'])
         mask = self._load_target(str(files['mask']))
-        sample = {'image1': image1, 'image2': image2, 'mask': mask}
+        image = torch.stack(tensors=[image1, image2], dim=0)
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -169,7 +170,8 @@ class OSCD(NonGeoDataset):
         regions = []
         labels_root = os.path.join(
             self.root,
-            f'Onera Satellite Change Detection dataset - {self.split.capitalize()} '
+            f'Onera Satellite Change Detection dataset - {
+                self.split.capitalize()} '
             + 'Labels',
         )
         images_root = os.path.join(
@@ -240,7 +242,7 @@ class OSCD(NonGeoDataset):
             array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
-            tensor = tensor.to(torch.long)
+            tensor = tensor.to(torch.float)
             return tensor
 
     def _verify(self) -> None:
