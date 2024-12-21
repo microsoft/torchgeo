@@ -11,11 +11,13 @@ from rasterio.crs import CRS
 from rasterio.transform import Affine
 
 
-def generate_data(path: str, filename: str, height: int, width: int) -> None:
-    MAX_VALUE = 1000.0
-    MIN_VALUE = 0.0
-    RANGE = MAX_VALUE - MIN_VALUE
-    FOLDERS = ['s1_raw', 'DEM', 'mask']
+def generate_data(
+    path: str, filename: str, height: int, width: int, include_hydro: bool = False
+) -> None:
+    max_value = 1000.0
+    min_value = 0.0
+    interval = max_value - min_value
+    folders = ['s1_raw', 'DEM', 'mask', 'hydro']
     profile = {
         'driver': 'GTiff',
         'dtype': 'float32',
@@ -36,24 +38,29 @@ def generate_data(path: str, filename: str, height: int, width: int) -> None:
         'width': width,
     }
     data = {
-        's1_raw': np.random.rand(2, height, width).astype(np.float32) * RANGE
-        - MIN_VALUE,
-        'DEM': np.random.rand(1, height, width).astype(np.float32) * RANGE - MIN_VALUE,
+        's1_raw': np.random.rand(2, height, width).astype(np.float32) * interval
+        - min_value,
+        'DEM': np.random.rand(1, height, width).astype(np.float32) * interval
+        - min_value,
         'mask': np.random.randint(low=0, high=2, size=(1, height, width)).astype(
             np.uint8
         ),
     }
 
-    os.makedirs(os.path.join(path, 'hydro'), exist_ok=True)
+    if include_hydro:
+        data['hydro'] = (
+            np.random.rand(1, height, width).astype(np.float32) * interval - min_value
+        )
 
-    for folder in FOLDERS:
+    for folder in folders:
         folder_path = os.path.join(path, folder)
         os.makedirs(folder_path, exist_ok=True)
         filepath = os.path.join(folder_path, filename)
         profile2 = profile.copy()
         profile2['count'] = 2 if folder == 's1_raw' else 1
-        with rasterio.open(filepath, mode='w', **profile2) as src:
-            src.write(data[folder])
+        if folder in data:
+            with rasterio.open(filepath, mode='w', **profile2) as src:
+                src.write(data[folder])
 
     return
 
@@ -88,6 +95,7 @@ def generate_folders_and_metadata(datapath: str, metadatapath: str) -> None:
         ('EMSR004', 'test'),
     ]
     num_files = {'EMSR000': 3, 'EMSR001': 2, 'EMSR003': 2, 'EMSR004': 1}
+    num_hydro = {'EMSR001': 2, 'EMSR003': 1, 'EMSR004': 1}
     metadata = {}
     for folder, split in folders_splits:
         data = {}
@@ -101,11 +109,20 @@ def generate_folders_and_metadata(datapath: str, metadatapath: str) -> None:
         data['subset'] = split
         data['delineations'] = [f'{folder}_00']
 
+        count_hydro = 0
+
         dst_folder = os.path.join(datapath, f'{folder}-0')
         for idx in range(num_files[folder]):
+            include_hydro = count_hydro < num_hydro.get(folder, 0)
             generate_data(
-                dst_folder, filename=f'{folder}-{idx}.tif', height=16, width=16
+                dst_folder,
+                filename=f'{folder}-{idx}.tif',
+                height=16,
+                width=16,
+                include_hydro=include_hydro,
             )
+            if include_hydro:
+                count_hydro += 1
 
         metadata[folder] = data
 
