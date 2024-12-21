@@ -8,6 +8,7 @@ from typing import Any, Literal
 import kornia.augmentation as K
 import torch
 from kornia.constants import DataKey, Resample
+from torch import Tensor
 
 from ..datasets import MMFlood
 from ..samplers import GridGeoSampler, RandomBatchGeoSampler
@@ -22,9 +23,9 @@ class MMFloodDataModule(GeoDataModule):
     """
 
     # Computed over train set
-    mean = torch.tensor([0.1785585, 0.03574104, 168.45529])
-    median = torch.tensor([0.116051525, 0.025692634, 86.0])
-    std = torch.tensor([2.405442, 0.22719479, 242.74359])
+    mean = torch.tensor([0.1785585, 0.03574104, 168.45529, 0.02248373255133629])
+    median = torch.tensor([0.116051525, 0.025692634, 86.0, 0.0])
+    std = torch.tensor([2.405442, 0.22719479, 242.74359, 0.1482505053281784])
 
     def __init__(
         self,
@@ -57,11 +58,16 @@ class MMFloodDataModule(GeoDataModule):
         assert (
             normalization in {'mean', 'median'}
         ), f'Invalid normalization parameter specified {normalization}, must be either "mean" or "median".'
-        avg = self.mean if normalization == 'mean' else self.median
+        self.normalization = normalization
+        avg, std = self._get_mean_std(
+            dem=kwargs.get('include_dem', False),
+            hydro=kwargs.get('include_hydro', False),
+        )
+
         # Using median for normalization for better stability,
         # as stated by the original authors
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(avg, self.std),
+            K.Normalize(avg, std),
             K.RandomResizedCrop(_to_tuple(self.patch_size), p=0.8, scale=(0.5, 1.0)),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
@@ -75,8 +81,19 @@ class MMFloodDataModule(GeoDataModule):
         )
 
         self.aug = K.AugmentationSequential(
-            K.Normalize(avg, self.std), keepdim=True, data_keys=None
+            K.Normalize(avg, std), keepdim=True, data_keys=None
         )
+
+    def _get_mean_std(
+        self, dem: bool = False, hydro: bool = False
+    ) -> tuple[Tensor, Tensor]:
+        avg = self.mean if self.normalization == 'mean' else self.median
+        idxs = [0, 1]  # VV, VH
+        if dem:
+            idxs.append(2)
+        if hydro:
+            idxs.append(3)
+        return avg[idxs], self.std[idxs]
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

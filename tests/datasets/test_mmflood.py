@@ -20,10 +20,13 @@ from torchgeo.datasets import (
     MMFlood,
     UnionDataset,
 )
+from torchgeo.datasets.mmflood import MMFloodComponent, MMFloodIntersection
 
 
 class TestMMFlood:
-    @pytest.fixture(params=product([True, False], ['train', 'val', 'test']))
+    @pytest.fixture(
+        params=product([True, False], [True, False], ['train', 'val', 'test'])
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> MMFlood:
@@ -33,12 +36,13 @@ class TestMMFlood:
         monkeypatch.setattr(MMFlood, 'url', url)
         monkeypatch.setattr(MMFlood, '_nparts', 2)
 
-        include_dem, split = request.param
+        include_dem, include_hydro, split = request.param
         root = tmp_path
         return MMFlood(
             root,
             split=split,
             include_dem=include_dem,
+            include_hydro=include_hydro,
             transforms=nn.Identity(),
             download=True,
             checksum=True,
@@ -50,19 +54,66 @@ class TestMMFlood:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
+        nchannels = 2
 
-        # If DEM is included, check if 3 channels are present, 2 otherwise
+        # If DEM is included and hydro is included, check if 4 channels are present,
+        # If only one between DEM or hydro is included, check if 3 channels are present
+        # 2 otherwise
         if dataset.include_dem:
-            assert x['image'].size(0) == 3
-        else:
-            assert x['image'].size(0) == 2
-        return
+            nchannels += 1
+        if dataset.include_hydro:
+            nchannels += 1
+        assert x['image'].size(0) == nchannels
+
+    @pytest.fixture
+    def mock_intersection_dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> MMFlood:
+        class MockIntersection(MMFloodIntersection):
+            def __init__(
+                self,
+                dataset1: MMFloodIntersection | MMFloodComponent,
+                dataset2: MMFloodIntersection | MMFloodComponent,
+            ) -> None:
+                super().__init__(dataset2, dataset1)
+
+        monkeypatch.setattr(
+            'torchgeo.datasets.mmflood.MMFloodIntersection', MockIntersection
+        )
+        dataset_root = os.path.join('tests', 'data', 'mmflood/')
+        url = os.path.join(dataset_root)
+        monkeypatch.setattr(MMFlood, 'url', url)
+        monkeypatch.setattr(MMFlood, '_nparts', 2)
+        return MMFlood(
+            tmp_path,
+            split='train',
+            include_dem=True,
+            include_hydro=True,
+            transforms=nn.Identity(),
+            download=True,
+            checksum=True,
+        )
+
+    def test_swap_dataset(self, mock_intersection_dataset: MMFlood) -> None:
+        d = MMFlood(
+            mock_intersection_dataset.root,
+            split='train',
+            include_dem=True,
+            include_hydro=True,
+        )
+        assert len(d) == 2
 
     def test_len(self, dataset: MMFlood) -> None:
         if dataset.split == 'train':
-            assert len(dataset) == 5
+            if not dataset.include_hydro:
+                assert len(dataset) == 5
+            else:
+                assert len(dataset) == 2
         elif dataset.split == 'val':
-            assert len(dataset) == 2
+            if not dataset.include_hydro:
+                assert len(dataset) == 2
+            else:
+                assert len(dataset) == 1
         else:
             assert len(dataset) == 1
 

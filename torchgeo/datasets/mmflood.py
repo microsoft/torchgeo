@@ -3,8 +3,10 @@
 
 """MMFlood dataset."""
 
+from __future__ import annotations
+
 import os
-import pathlib
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from glob import glob
 from typing import ClassVar, Literal, cast
@@ -12,20 +14,163 @@ from typing import ClassVar, Literal, cast
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
 from .errors import DatasetNotFoundError
-from .geo import RasterDataset
+from .geo import IntersectionDataset, RasterDataset
 from .utils import BoundingBox, Path, download_url, extract_archive
 
 
-class MMFlood(RasterDataset):
+class MMFloodComponent(RasterDataset, ABC):
+    """Base component for MMFlood dataset."""
+
+    def __init__(
+        self,
+        subfolders: list[str],
+        root: Path = 'data',
+        crs: CRS | None = None,
+        res: float | None = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        cache: bool = False,
+    ) -> None:
+        """Initialize MMFloodComponent dataset instance."""
+        paths = []
+        for s in subfolders:
+            paths += glob(os.path.join(root, '*', f'{s}*-*', self.content, '*.tif'))
+        paths = sorted(paths)
+        super().__init__(paths, crs, res, transforms=transforms, cache=cache)
+        return
+
+    @property
+    @abstractmethod
+    def content(self) -> str:
+        """Returns the name of the folder containing the tif files to be read."""
+
+
+class MMFloodS1(MMFloodComponent):
+    """Sentinel-1 component for MMFlood dataset."""
+
+    @property
+    def content(self) -> str:
+        """The subfolder containing Sentinel-1 data."""
+        return 's1_raw'
+
+
+class MMFloodDEM(MMFloodComponent):
+    """DEM component for MMFlood dataset."""
+
+    @property
+    def content(self) -> str:
+        """The subfolder containing DEM data."""
+        return 'DEM'
+
+
+class MMFloodMask(MMFloodComponent):
+    """Mask component for MMFlood dataset."""
+
+    is_image = False
+
+    @property
+    def content(self) -> str:
+        """The subfolder containing mask data."""
+        return 'mask'
+
+
+class MMFloodHydro(MMFloodComponent):
+    """Hydrography map component for MMFlood dataset."""
+
+    @property
+    def content(self) -> str:
+        """The subfolder containing hydrography data."""
+        return 'hydro'
+
+
+class MMFloodIntersection(IntersectionDataset):
+    """Intersection dataset used to merge two or more MMFloodComponents."""
+
+    _ordering: ClassVar[dict[type[MMFloodComponent], int]] = {
+        MMFloodS1: 0,
+        MMFloodDEM: 1,
+        MMFloodHydro: 2,
+    }
+
+    def __init__(
+        self,
+        dataset1: MMFloodComponent | MMFloodIntersection,
+        dataset2: MMFloodComponent | MMFloodIntersection,
+    ) -> None:
+        """Initialize a new MMFloodIntersection instance.
+
+        Args:
+            dataset1: the first dataset to merge
+            dataset2: the second dataset to merge
+        """
+        dataset1, dataset2 = self._swap_datasets(dataset1, dataset2)
+        super().__init__(dataset1, dataset2)
+
+    @property
+    def contains_hydro(self) -> bool:
+        """A flag stating whether the Hydrography dataset is present."""
+        # If Hydro dataset is present, it is always the last dataset
+        return isinstance(self.datasets[1], MMFloodHydro)
+
+    def _swap_datasets(
+        self,
+        ds1: MMFloodComponent | MMFloodIntersection,
+        ds2: MMFloodComponent | MMFloodIntersection,
+    ) -> tuple[MMFloodComponent | MMFloodIntersection, MMFloodComponent]:
+        """Sort the datasets in the correct order (Sentinel-1, DEM, Hydrography).
+
+        Arguments:
+            ds1: first dataset. Must be either an instance of MMFloodComponent or MMFloodIntersection
+            ds2: second dataset. Must be either an instance of MMFloodComponent or MMFloodIntersection
+
+        Returns:
+            the two datasets in the correct order
+        """
+        assert not (
+            isinstance(ds1, MMFloodIntersection)
+            and isinstance(ds2, MMFloodIntersection)
+        ), 'Cannot intersect two Intersection datasets!'
+        # If one of the two datasets is an instance of MMFloodIntersection, return it first
+        if isinstance(ds1, MMFloodIntersection):
+            assert (
+                not ds1.contains_hydro
+            ), 'Instance of MMFloodHydro should be merged as last element!'
+            ds2 = cast(MMFloodComponent, ds2)
+            return ds1, ds2
+        elif isinstance(ds2, MMFloodIntersection):
+            assert (
+                not ds2.contains_hydro
+            ), 'Instance of MMFloodHydro should be merged as last element!'
+            return ds2, ds1
+        # Always intersect the datasets in this order:
+        # Sentinel-1, DEM, Hydro, if present
+        res = cast(
+            tuple[MMFloodComponent, MMFloodComponent],
+            sorted((ds1, ds2), key=lambda x: self._ordering[type(x)]),
+        )
+        return res
+
+    def _merge_dataset_indices(self) -> None:
+        """Create a new R-tree out of the individual indices from Sentinel-1, DEM and hydrography datasets."""
+        _, ds2 = self.datasets
+        # Always use index of ds2, since it either coincides with ds1 index
+        # or refers to hydro, which represents only a subset of the dataset
+        self.index = ds2.index
+
+
+class MMFlood(IntersectionDataset):
     """MMFlood dataset.
 
-    `MMFlood <https://huggingface.co/datasets/links-ads/mmflood>`__ dataset is a multimodal flood delineation dataset.
+    `MMFlood <https://huggingface.co/datasets/links-ads/mmflood>`__ dataset is a multimodal
+    flood delineation dataset. Sentinel-1 data is matched with masks and DEM data for all
+    available tiles. If hydrography maps are loaded, only a subset of the dataset is loaded,
+    since only 1,012 Sentinel-1 tiles have a corresponding hydrography map.
+    Some Sentinel-1 tiles have missing data, which are automatically set to 0.
+    Corresponding pixels in masks are set to 255 and should be ignored in performance computation.
 
     Dataset features:
 
@@ -33,7 +178,7 @@ class MMFlood(RasterDataset):
     * multimodal dataset
     * 95 flood events from 42 different countries
     * includes DEMs
-    * includes hydrography maps (not available for all areas of interest)
+    * includes hydrography maps (available for 1,012 tiles out of 1,748)
     * flood delineation maps (ground truth) is obtained from Copernicus EMS
 
     Dataset classes:
@@ -58,9 +203,10 @@ class MMFlood(RasterDataset):
     }
     _ignore_index = 255
     _nparts = 11
-    _mean = (0.1785585, 0.03574104, 168.45529)
-    _median = (0.116051525, 0.025692634, 86.0)
-    _std = (2.405442, 0.22719479, 242.74359)
+    # VV, VH, dem, hydro
+    _mean = (0.1785585, 0.03574104, 168.45529, 0.02248373255133629)
+    _median = (0.116051525, 0.025692634, 86.0, 0.0)
+    _std = (2.405442, 0.22719479, 242.74359, 0.1482505053281784)
 
     metadata: ClassVar[dict[str, str]] = {
         'part_file': 'activations.tar.{part}.gz.part',
@@ -89,8 +235,10 @@ class MMFlood(RasterDataset):
         self,
         root: Path = 'data',
         crs: CRS | None = None,
+        res: float | None = None,
         split: str = 'train',
         include_dem: bool = False,
+        include_hydro: bool = False,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -100,9 +248,14 @@ class MMFlood(RasterDataset):
 
         Args:
             root: root directory where dataset can be found
-            crs: coordinate reference system to be used
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
             split: train/val/test split to load
             include_dem: If True, DEM data is concatenated after Sentinel-1 bands.
+            include_hydro: If True, hydrography data is concatenated as last channel.
+                Only a smaller subset of the original dataset is loaded in this case.
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -118,18 +271,30 @@ class MMFlood(RasterDataset):
         self.root = root
         self.split = split
         self.include_dem = include_dem
+        self.include_hydro = include_hydro
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-        # Verify integrity of the dataset, initializing
-        # self.image_files, self.label_files, self.dem_files attributes
+        # Verify integrity of the dataset
         self._verify()
         self.metadata_df = self._load_metadata()
-        self.folders = self._load_folders()
-        paths = [x['s1_raw'] for x in self.folders]
 
-        # Build the index
-        super().__init__(paths=paths, crs=crs, transforms=transforms, cache=cache)
+        self.image: MMFloodComponent | MMFloodIntersection = MMFloodS1(
+            self._get_split_subfolders(), root, crs, res, cache=cache
+        )
+        if include_dem:
+            dem = MMFloodDEM(self._get_split_subfolders(), root, crs, res, cache=cache)
+            self.image = MMFloodIntersection(self.image, dem)
+        if include_hydro:
+            hydro = MMFloodHydro(
+                self._get_split_subfolders(), root, crs, res, cache=cache
+            )
+            self.image = MMFloodIntersection(self.image, hydro)
+        self.mask = MMFloodMask(
+            self._get_split_subfolders(), root, crs, res, cache=cache
+        )
+
+        super().__init__(self.image, self.mask, transforms=transforms)
 
     def _merge_tar_files(self) -> None:
         """Merge part tar gz files."""
@@ -146,44 +311,6 @@ class MMFlood(RasterDataset):
                 with open(part_path, 'rb') as part_fp:
                     dst_fp.write(part_fp.read())
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Tensor]:
-        """Retrieve image/mask and metadata indexed by query.
-
-        Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-
-        Returns:
-            sample containing image, mask and metadata at that index
-
-        Raises:
-            IndexError: if query is not found in the index
-        """
-        hits = self.index.intersection(tuple(query), objects=True)
-        indexes = cast(list[int], [hit.id for hit in hits])
-
-        if not indexes:
-            raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
-            )
-
-        image = self._load_image(indexes, query)
-        mask = self._load_target(indexes, query)
-
-        sample = {'image': image, 'mask': mask, 'crs': self.crs, 'bounds': query}
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
-
-    def __len__(self) -> int:
-        """Return the number of data points in the dataset.
-
-        Returns:
-            length of the dataset
-        """
-        return len(self.folders)
-
     def _load_metadata(self) -> pd.DataFrame:
         """Load metadata.
 
@@ -195,130 +322,84 @@ class MMFlood(RasterDataset):
         ).transpose()
         return df
 
-    def _load_tif_files(
-        self, check_folders: bool = False, load_all: bool = False
-    ) -> dict[str, list[str]]:
-        """Load paths of all tif files for Sentinel-1, DEM and masks.
-
-        Args:
-            check_folders: if True, verifies pairings of all s1, dem and mask data across all the folders
-            load_all: if True, loads all tif files contained in the "activations" folder in the root folder specified. Otherwise, only acquisitions for the given split are loaded.
+    def _get_split_subfolders(self) -> list[str]:
+        """Get list of EMSR data folders to load, depending on specified split.
 
         Returns:
-            dict containing list of paths, with 'image', 'dem' and 'mask' as keys
+            list of EMSR codes to be loaded
         """
-        paths = {}
-        dirpath = os.path.join(self.root, self.metadata['directory'])
-        # initialize tif file lists containing masks, DEM and S1_raw data
-        if load_all:
-            # Get all directories
-            folders = os.listdir(dirpath)
-        else:
-            # Assemble regex for glob
-            folders = (
-                self.metadata_df[self.metadata_df['subset'] == self.split].index + '-*'
-            ).tolist()
+        folders = self.metadata_df[
+            self.metadata_df['subset'] == self.split
+        ].index.tolist()
+        return cast(list[str], folders)
 
+    def _load_tif_files(self) -> dict[str, list[str | None]]:
+        """Load paths of all tif files for Sentinel-1, DEM, hydrography and masks.
+
+        Returns:
+            dict containing list of paths, with 'image', 'dem', 'hydro' and 'mask' as keys
+        """
+        paths: dict[str, list[str | None]] = {}
+        dirpath = os.path.join(self.root, self.metadata['directory'])
+        folders = os.listdir(dirpath)
+
+        # initialize tif file lists containing masks, DEM, hyd and S1_raw data
         image_files = []
         mask_files = []
         dem_files = []
-        for f in folders:
+        hydro_files = []
+
+        def _get_filename_to_path_mapping(
+            basepath: str, subfolder: Literal['s1_raw', 'mask', 'hydro', 'DEM']
+        ) -> dict[str, str]:
+            # Assemble path and return a mapping filename -> complete path
+            paths = glob(os.path.join(basepath, subfolder, '*.tif'))
+            return {os.path.basename(p): p for p in paths}
+
+        for f in sorted(folders):
             path = os.path.join(self.root, self.metadata['directory'], f)
-            image_files += glob(os.path.join(path, 's1_raw', '*.tif'))
-            mask_files += glob(os.path.join(path, 'mask', '*.tif'))
-            dem_files += glob(os.path.join(path, 'DEM', '*.tif'))
+            images = _get_filename_to_path_mapping(path, 's1_raw')
+            masks = _get_filename_to_path_mapping(path, 'mask')
+            dems = _get_filename_to_path_mapping(path, 'DEM')
+            hydros = _get_filename_to_path_mapping(path, 'hydro')
+            assert len(images) == len(masks) == len(dems)
+            for filename in sorted(images.keys()):
+                image_files.append(images[filename])
+                mask_files.append(masks[filename])
+                dem_files.append(dems[filename])
+                hydro_files.append(hydros.get(filename, None))
 
-        image_files = sorted(image_files)
-        mask_files = sorted(mask_files)
-        dem_files = sorted(dem_files)
-
-        paths['image'] = image_files
-        paths['mask'] = mask_files
-        paths['dem'] = dem_files
-
-        # Verify image, dem and mask lengths
-        assert (
-            len(paths['image']) > 0
-        ), f'No images found, is the given path correct? ({self.root!s})'
-        assert (
-            len(paths['image']) == len(paths['mask'])
-        ), f'Length mismatch between tiles and masks: {len(paths["image"])} != {len(paths["mask"])}'
-        assert len(paths['image']) == len(
-            paths['dem']
-        ), 'Length mismatch between tiles and DEMs'
-
-        if check_folders:
-            # Verify image, dem and mask pairings
-            self._verify_pairings(paths['image'], paths['dem'], paths['mask'])
+        paths['image'] = cast(list[str | None], image_files)
+        paths['mask'] = cast(list[str | None], mask_files)
+        paths['dem'] = cast(list[str | None], dem_files)
+        paths['hydro'] = hydro_files
 
         return paths
 
-    def _load_folders(self) -> list[dict[str, str]]:
-        """Load folder paths.
-
-        Returns:
-            list of dicts of s1, dem and masks folder paths
-        """
-        paths = self._load_tif_files(check_folders=False, load_all=False)
-
-        res_folders = [
-            {'s1_raw': img_path, 'mask': mask_path, 'dem': dem_path}
-            for img_path, mask_path, dem_path in zip(
-                paths['image'], paths['mask'], paths['dem']
-            )
-        ]
-
-        return res_folders
-
-    def _load_image(self, index: list[int], query: BoundingBox) -> Tensor:
-        """Load a either a single image or a set of images, merging them.
+    def __getitem__(self, query: BoundingBox) -> dict[str, Tensor]:
+        """Retrieve image/mask and metadata indexed by query.
 
         Args:
-            index: indexes to return
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
-            the merged image
+            sample of image, mask and metadata at that index
+
+        Raises:
+            IndexError: if query is not found in the index
         """
-        image = self._load_tif(index, modality='s1_raw', query=query).float()
-        if self.include_dem:
-            dem = self._load_tif(index, modality='dem', query=query).float()
-            image = torch.cat([image, dem], dim=0)
-        return image
+        data = super().__getitem__(query)
+        missing_data = data['image'].isnan().any(dim=0)
+        # Set all pixel values of invalid areas to 0, all mask values to 255
+        data['image'][:, missing_data] = 0
+        data['mask'][missing_data] = self._ignore_index
+        return data
 
-    def _load_tif(
-        self,
-        index: list[int],
-        modality: Literal['s1_raw', 'dem', 'mask'],
-        query: BoundingBox,
-    ) -> Tensor:
-        """Load either a single geotif or a set of geotifs, merging them.
-
-        Args:
-            index: indexes to return
-            modality: s1_raw, dem or mask
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-
-        Returns:
-            the merged image
-        """
-        assert query is not None, 'Query must be specified.'
-        paths = [self.folders[idx][modality] for idx in index]
-        tensor = self._merge_files(paths, query)
-        return tensor
-
-    def _load_target(self, index: list[int], query: BoundingBox) -> Tensor:
-        """Load the target mask for either a single image or a set of images, merging them.
-
-        Args:
-            index: indexes to return
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-
-        Returns:
-            the target mask
-        """
-        tensor = self._load_tif(index, modality='mask', query=query).type(torch.uint8)
-        return tensor.long().squeeze(dim=0)
+    def _merge_dataset_indices(self) -> None:
+        """Create a new R-tree out of the individual indices from Sentinel-1, DEM and hydrography datasets."""
+        ds1, _ = self.datasets
+        # Use ds1 index
+        self.index = ds1.index
 
     def _download(self) -> None:
         """Download the dataset."""
@@ -356,7 +437,7 @@ class MMFlood(RasterDataset):
         # Check if both metadata file and directory exist
         if os.path.isdir(dirpath) and os.path.isfile(metadata_filepath):
             # Check pairings of all files
-            _ = self._load_tif_files(check_folders=True, load_all=True)
+            self._verify_tif_pairings()
             return
         if not self.download:
             raise DatasetNotFoundError(self)
@@ -364,27 +445,36 @@ class MMFlood(RasterDataset):
         self._merge_tar_files()
         self._extract()
 
-    def _verify_pairings(
-        self, s1_paths: list[str], dem_paths: list[str], mask_paths: list[str]
-    ) -> None:
-        """Verify all pairings of Sentinel-1, DEM and mask tif files. All inputs must be sorted.
+    def _verify_tif_pairings(self) -> None:
+        """Verify all pairings of Sentinel-1, DEM, hydro and mask tif files. All inputs must be sorted."""
+        paths = self._load_tif_files()
+        s1_paths = cast(list[str], paths['image'])
+        dem_paths = cast(list[str], paths['dem'])
+        mask_paths = cast(list[str], paths['mask'])
+        hydro_paths = paths['hydro']
 
-        Args:
-            s1_paths: list of paths of Sentinel-1 tif files
-            dem_paths: list of paths of DEM tif files
-            mask_paths: list of paths of mask tif files
-        """
+        # Verify image, dem and mask lengths
+        assert (
+            len(s1_paths) > 0
+        ), f'No images found, is the given path correct? ({self.root!s})'
+
         assert (
             len(s1_paths) == len(dem_paths) == len(mask_paths)
         ), f'Lengths of s1, dem and mask files do not match! ({len(s1_paths)}, {len(dem_paths)}, {len(mask_paths)})'
 
-        for image, mask, dem in zip(s1_paths, mask_paths, dem_paths):
-            image_tile = pathlib.Path(image).stem
-            mask_tile = pathlib.Path(mask).stem
-            dem_tile = pathlib.Path(dem).stem
+        for image, mask, dem, hydro in zip(
+            s1_paths, mask_paths, dem_paths, hydro_paths
+        ):
+            image_tile = os.path.basename(image)
+            mask_tile = os.path.basename(mask)
+            dem_tile = os.path.basename(dem)
+            hydro_tile = os.path.basename(hydro) if hydro else None
             assert (
                 image_tile == mask_tile == dem_tile
             ), f'Filenames not matching: image {image_tile}; mask {mask_tile}; dem {dem_tile}'
+            assert (
+                (hydro_tile == image_tile) or (hydro_tile is None)
+            ), f'Hydrography file not matching image file: image {image_tile}; hydrography {hydro_tile}'
 
     def plot(
         self,
@@ -405,18 +495,22 @@ class MMFlood(RasterDataset):
         show_mask = 'mask' in sample
         image = sample['image'][[0, 1]].permute(1, 2, 0).numpy()
         ncols = 1
-        mask_offset = 1
         show_predictions = 'prediction' in sample
         if self.include_dem:
-            dem = sample['image'][-1].squeeze(0).numpy()
+            dem_idx = -2 if self.include_hydro else -1
+            dem = sample['image'][dem_idx].squeeze(0).numpy()
+            ncols += 1
+        if self.include_hydro:
+            hydro = sample['image'][-1].squeeze(0).numpy()
             ncols += 1
         if show_mask:
             mask = sample['mask'].numpy()
+            # Set ignore_index values to 0
+            mask[mask == self._ignore_index] = 0
             ncols += 1
         if show_predictions:
             pred = sample['prediction'].numpy()
             ncols += 1
-            mask_offset = 2
 
         # Compute False Color image, from biomassters plot function
         co_polarization = image[..., 0]  # transmit == receive
@@ -434,24 +528,37 @@ class MMFlood(RasterDataset):
         fig, axs = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
         axs[0].imshow(image)
         axs[0].axis('off')
+        axs_idx = 1
         if self.include_dem:
-            axs[1].imshow(dem, cmap='gray')
-            axs[1].axis('off')
+            axs[axs_idx].imshow(dem, cmap='gray')
+            axs[axs_idx].axis('off')
+            axs_idx += 1
+        if self.include_hydro:
+            axs[axs_idx].imshow(hydro, cmap='gray')
+            axs[axs_idx].axis('off')
+            axs_idx += 1
         if show_mask:
-            axs[ncols - mask_offset].imshow(mask, cmap='gray')
-            axs[ncols - mask_offset].axis('off')
+            axs[axs_idx].imshow(mask, cmap='gray')
+            axs[axs_idx].axis('off')
+            axs_idx += 1
         if show_predictions:
-            axs[ncols - 1].imshow(pred, cmap='gray')
-            axs[ncols - 1].axis('off')
+            axs[axs_idx].imshow(pred, cmap='gray')
+            axs[axs_idx].axis('off')
 
         if show_titles:
             axs[0].set_title('Image')
+            axs_idx = 1
             if self.include_dem:
-                axs[1].set_title('DEM')
+                axs[axs_idx].set_title('DEM')
+                axs_idx += 1
+            if self.include_hydro:
+                axs[axs_idx].set_title('Hydrography Map')
+                axs_idx += 1
             if show_mask:
-                axs[ncols - mask_offset].set_title('Mask')
+                axs[axs_idx].set_title('Mask')
+                axs_idx += 1
             if show_predictions:
-                axs[ncols - 1].set_title('Prediction')
+                axs[axs_idx].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
