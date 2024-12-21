@@ -20,7 +20,7 @@ Dataset,Type,Source,License,Size (px),Resolution (m)
 `L8 Biome`_,"Imagery, Masks",Landsat,"CC0-1.0","8,900x8,900","15, 30"
 `LandCover.ai Geo`_,"Imagery, Masks",Aerial,"CC-BY-NC-SA-4.0","4,200--9,500",0.25--0.5
 `Landsat`_,Imagery,Landsat,"public domain","8,900x8,900",30
-`MMFlood`_,"Imagery,DEM,Masks","Sentinel, MapZen/TileZen, OpenStreetMap",CC-BY-4.0,"2,147x2,313",20
+`MMFlood`_,"Imagery,DEM,Masks","Sentinel, MapZen/TileZen, OpenStreetMap",MIT,"2,147x2,313",20
 `NAIP`_,Imagery,Aerial,"public domain","6,100x7,600",0.3--2
 `NCCM`_,Masks,Sentinel-2,"CC-BY-4.0",-,10
 `NLCD`_,Masks,Landsat,"public domain",-,30
