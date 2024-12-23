@@ -24,7 +24,7 @@ class IOBenchTask(BaseTask):
 
     def configure_optimizers(
         self,
-    ) -> 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig':
+    ) -> 'lightning.pytorch.utilities.types.OptimizerLRScheduler':
         """Initialize the optimizer.
 
         Returns:
