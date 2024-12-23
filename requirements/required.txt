@@ -8,7 +8,7 @@ kornia==0.7.4
 lightly==1.5.15
 lightning[pytorch-extra]==2.4.0
 matplotlib==3.10.0
-numpy==2.2.0
+numpy==2.2.1
 pandas==2.2.3
 pillow==11.0.0
 pyproj==3.7.0
