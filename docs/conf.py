@@ -59,7 +59,7 @@ nitpick_ignore = [
     ('py:class', 'fiona.model.Feature'),
     ('py:class', 'kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D'),
     ('py:class', 'kornia.augmentation.base._AugmentationBase'),
-    ('py:class', 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig'),
+    ('py:class', 'lightning.pytorch.utilities.types.OptimizerLRScheduler'),
     ('py:class', 'segmentation_models_pytorch.base.model.SegmentationModel'),
     ('py:class', 'timm.models.resnet.ResNet'),
     ('py:class', 'timm.models.vision_transformer.VisionTransformer'),
