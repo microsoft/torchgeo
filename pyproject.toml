@@ -49,7 +49,7 @@ dependencies = [
     # lightning 2+ required for LightningCLI args + sys.argv support
     # lightning 2.3 contains known bugs related to YAML parsing
     # https://github.com/Lightning-AI/pytorch-lightning/issues/19977
-    "lightning[pytorch-extra]>=2,!=2.3.*",
+    "lightning[pytorch-extra]>=2,!=2.3.*,!=2.5.0",
     # matplotlib 3.5+ required for Python 3.10 wheels
     "matplotlib>=3.5",
     # numpy 1.21.2+ required by Python 3.10 wheels
