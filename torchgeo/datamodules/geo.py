@@ -9,9 +9,8 @@ from typing import Any, cast
 import kornia.augmentation as K
 import torch
 from lightning.pytorch import LightningDataModule
-from matplotlib.figure import Figure
 from torch import Tensor
-from torch.utils.data import DataLoader, Dataset, Subset, default_collate
+from torch.utils.data import DataLoader, Dataset, default_collate
 
 from ..datasets import GeoDataset, NonGeoDataset, stack_samples
 from ..samplers import (
@@ -20,6 +19,7 @@ from ..samplers import (
     GridGeoSampler,
     RandomBatchGeoSampler,
 )
+from ..transforms import AugmentationSequential
 from .utils import MisconfigurationException
 
 
@@ -69,10 +69,9 @@ class BaseDataModule(LightningDataModule):
 
         # Data augmentation
         Transform = Callable[[dict[str, Tensor]], dict[str, Tensor]]
-        self.aug: Transform = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
+        self.aug: Transform = AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=['image']
         )
-
         self.train_aug: Transform | None = None
         self.val_aug: Transform | None = None
         self.test_aug: Transform | None = None
@@ -141,28 +140,6 @@ class BaseDataModule(LightningDataModule):
             batch = aug(batch)
 
         return batch
-
-    def plot(self, *args: Any, **kwargs: Any) -> Figure | None:
-        """Run the plot method of the validation dataset if one exists.
-
-        Should only be called during 'fit' or 'validate' stages as ``val_dataset``
-        may not exist during other stages.
-
-        Args:
-            *args: Arguments passed to plot method.
-            **kwargs: Keyword arguments passed to plot method.
-
-        Returns:
-            A matplotlib Figure with the image, ground truth, and predictions.
-        """
-        fig: Figure | None = None
-        dataset = self.dataset or self.val_dataset
-        if isinstance(dataset, Subset):
-            dataset = dataset.dataset
-        if dataset is not None:
-            if hasattr(dataset, 'plot'):
-                fig = dataset.plot(*args, **kwargs)
-        return fig
 
 
 class GeoDataModule(BaseDataModule):
@@ -286,7 +263,6 @@ class GeoDataModule(BaseDataModule):
             batch_sampler=batch_sampler,
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
-            persistent_workers=self.num_workers > 0,
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
@@ -430,7 +406,6 @@ class NonGeoDataModule(BaseDataModule):
             shuffle=split == 'train',
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
-            persistent_workers=self.num_workers > 0,
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:

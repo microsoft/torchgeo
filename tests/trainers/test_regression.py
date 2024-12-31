@@ -10,13 +10,14 @@ import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
+import torchvision
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, TropicalCycloneDataModule
-from torchgeo.datasets import RGBBandsMissingError, TropicalCyclone
+from torchgeo.datasets import TropicalCyclone
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import PixelwiseRegressionTask, RegressionTask
@@ -45,12 +46,9 @@ class PredictRegressionDataModule(TropicalCycloneDataModule):
         self.predict_dataset = TropicalCyclone(split='test', **self.kwargs)
 
 
-def plot(*args: Any, **kwargs: Any) -> None:
-    return None
-
-
-def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
-    raise RGBBandsMissingError()
+def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
+    state_dict: dict[str, Any] = torch.load(url)
+    return state_dict
 
 
 class TestRegressionTask:
@@ -59,20 +57,12 @@ class TestRegressionTask:
         return RegressionTestModel(**kwargs)
 
     @pytest.mark.parametrize(
-        'name',
-        [
-            'cowc_counting',
-            'cyclone',
-            'digital_typhoon_id',
-            'digital_typhoon_time',
-            'sustainbench_crop_yield',
-            'skippd',
-        ],
+        'name', ['cowc_counting', 'cyclone', 'sustainbench_crop_yield', 'skippd']
     )
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        if name in ['skippd', 'digital_typhoon_id', 'digital_typhoon_time']:
+        if name == 'skippd':
             pytest.importorskip('h5py', minversion='3.6')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
@@ -92,13 +82,13 @@ class TestRegressionTask:
             '1',
         ]
 
-        main(['fit', *args])
+        main(['fit'] + args)
         try:
-            main(['test', *args])
+            main(['test'] + args)
         except MisconfigurationException:
             pass
         try:
-            main(['predict', *args])
+            main(['predict'] + args)
         except MisconfigurationException:
             pass
 
@@ -108,11 +98,7 @@ class TestRegressionTask:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -123,6 +109,7 @@ class TestRegressionTask:
             monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
             monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(torchvision.models._api, 'load_state_dict_from_url', load)
         return weights
 
     def test_weight_file(self, checkpoint: str) -> None:
@@ -160,34 +147,6 @@ class TestRegressionTask:
             weights=str(weights),
             in_channels=weights.meta['in_chans'],
         )
-
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(TropicalCycloneDataModule, 'plot', plot)
-        datamodule = TropicalCycloneDataModule(
-            root='tests/data/cyclone', batch_size=1, num_workers=0
-        )
-        model = RegressionTask(model='resnet18')
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
-
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(TropicalCycloneDataModule, 'plot', plot_missing_bands)
-        datamodule = TropicalCycloneDataModule(
-            root='tests/data/cyclone', batch_size=1, num_workers=0
-        )
-        model = RegressionTask(model='resnet18')
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
 
     def test_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictRegressionDataModule(
@@ -245,13 +204,13 @@ class TestPixelwiseRegressionTask:
             '1',
         ]
 
-        main(['fit', *args])
+        main(['fit'] + args)
         try:
-            main(['test', *args])
+            main(['test'] + args)
         except MisconfigurationException:
             pass
         try:
-            main(['predict', *args])
+            main(['predict'] + args)
         except MisconfigurationException:
             pass
 
@@ -266,11 +225,7 @@ class TestPixelwiseRegressionTask:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -281,6 +236,7 @@ class TestPixelwiseRegressionTask:
             monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
             monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(torchvision.models._api, 'load_state_dict_from_url', load)
         return weights
 
     def test_weight_file(self, checkpoint: str) -> None:

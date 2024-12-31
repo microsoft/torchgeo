@@ -9,6 +9,7 @@ import pytest
 import timm
 import torch
 import torch.nn as nn
+import torchvision
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
@@ -19,7 +20,7 @@ from torchgeo.datamodules import (
     EuroSATDataModule,
     MisconfigurationException,
 )
-from torchgeo.datasets import BigEarthNet, EuroSAT, RGBBandsMissingError
+from torchgeo.datasets import BigEarthNet, EuroSAT
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
@@ -55,12 +56,9 @@ def create_model(*args: Any, **kwargs: Any) -> Module:
     return ClassificationTestModel(**kwargs)
 
 
-def plot(*args: Any, **kwargs: Any) -> None:
-    return None
-
-
-def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
-    raise RGBBandsMissingError()
+def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
+    state_dict: dict[str, Any] = torch.load(url)
+    return state_dict
 
 
 class TestClassificationTask:
@@ -103,13 +101,13 @@ class TestClassificationTask:
             '1',
         ]
 
-        main(['fit', *args])
+        main(['fit'] + args)
         try:
-            main(['test', *args])
+            main(['test'] + args)
         except MisconfigurationException:
             pass
         try:
-            main(['predict', *args])
+            main(['predict'] + args)
         except MisconfigurationException:
             pass
 
@@ -119,11 +117,7 @@ class TestClassificationTask:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -134,6 +128,7 @@ class TestClassificationTask:
             monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
             monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(torchvision.models._api, 'load_state_dict_from_url', load)
         return weights
 
     def test_weight_file(self, checkpoint: str) -> None:
@@ -183,34 +178,6 @@ class TestClassificationTask:
         with pytest.raises(ValueError, match=match):
             ClassificationTask(model='resnet18', loss='invalid_loss')
 
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(EuroSATDataModule, 'plot', plot)
-        datamodule = EuroSATDataModule(
-            root='tests/data/eurosat', batch_size=1, num_workers=0
-        )
-        model = ClassificationTask(model='resnet18', in_channels=13, num_classes=10)
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
-
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(EuroSATDataModule, 'plot', plot_missing_bands)
-        datamodule = EuroSATDataModule(
-            root='tests/data/eurosat', batch_size=1, num_workers=0
-        )
-        model = ClassificationTask(model='resnet18', in_channels=13, num_classes=10)
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
-
     def test_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictClassificationDataModule(
             root='tests/data/eurosat', batch_size=1, num_workers=0
@@ -237,7 +204,7 @@ class TestClassificationTask:
 
 class TestMultiLabelClassificationTask:
     @pytest.mark.parametrize(
-        'name', ['bigearthnet_all', 'bigearthnet_s1', 'bigearthnet_s2', 'treesatai']
+        'name', ['bigearthnet_all', 'bigearthnet_s1', 'bigearthnet_s2']
     )
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
@@ -259,13 +226,13 @@ class TestMultiLabelClassificationTask:
             '1',
         ]
 
-        main(['fit', *args])
+        main(['fit'] + args)
         try:
-            main(['test', *args])
+            main(['test'] + args)
         except MisconfigurationException:
             pass
         try:
-            main(['predict', *args])
+            main(['predict'] + args)
         except MisconfigurationException:
             pass
 
@@ -273,38 +240,6 @@ class TestMultiLabelClassificationTask:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
             MultiLabelClassificationTask(model='resnet18', loss='invalid_loss')
-
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(BigEarthNetDataModule, 'plot', plot)
-        datamodule = BigEarthNetDataModule(
-            root='tests/data/bigearthnet', batch_size=1, num_workers=0
-        )
-        model = MultiLabelClassificationTask(
-            model='resnet18', in_channels=14, num_classes=19, loss='bce'
-        )
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
-
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(BigEarthNetDataModule, 'plot', plot_missing_bands)
-        datamodule = BigEarthNetDataModule(
-            root='tests/data/bigearthnet', batch_size=1, num_workers=0
-        )
-        model = MultiLabelClassificationTask(
-            model='resnet18', in_channels=14, num_classes=19, loss='bce'
-        )
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
 
     def test_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictMultiLabelClassificationDataModule(

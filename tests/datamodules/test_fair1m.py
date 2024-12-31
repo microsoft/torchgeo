@@ -3,7 +3,6 @@
 
 import os
 
-import matplotlib.pyplot as plt
 import pytest
 
 from torchgeo.datamodules import FAIR1MDataModule
@@ -26,17 +25,10 @@ class TestFAIR1MDataModule:
         datamodule.setup('validate')
         next(iter(datamodule.val_dataloader()))
 
+    def test_test_dataloader(self, datamodule: FAIR1MDataModule) -> None:
+        datamodule.setup('test')
+        next(iter(datamodule.test_dataloader()))
+
     def test_predict_dataloader(self, datamodule: FAIR1MDataModule) -> None:
         datamodule.setup('predict')
         next(iter(datamodule.predict_dataloader()))
-
-    def test_plot(self, datamodule: FAIR1MDataModule) -> None:
-        datamodule.setup('validate')
-        batch = next(iter(datamodule.val_dataloader()))
-        sample = {
-            'image': batch['image'][0],
-            'boxes': batch['boxes'][0],
-            'label': batch['label'][0],
-        }
-        datamodule.plot(sample)
-        plt.close()
