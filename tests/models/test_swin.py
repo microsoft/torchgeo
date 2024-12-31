@@ -46,6 +46,10 @@ class TestSwin_V2_T:
     def test_swin_v2_t_weights(self, mocked_weights: WeightsEnum) -> None:
         swin_v2_t(weights=mocked_weights)
 
+    def test_bands(self, mocked_weights: WeightsEnum) -> None:
+        if 'bands' in mocked_weights.meta:
+            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta['in_chans']
         sample = {
@@ -90,6 +94,10 @@ class TestSwin_V2_B:
 
     def test_swin_v2_b_weights(self, mocked_weights: WeightsEnum) -> None:
         swin_v2_b(weights=mocked_weights)
+
+    def test_bands(self, mocked_weights: WeightsEnum) -> None:
+        if 'bands' in mocked_weights.meta:
+            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
 
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta['in_chans']

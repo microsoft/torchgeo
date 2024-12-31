@@ -13,7 +13,7 @@ When deciding which library is most useful to you, it is worth considering the f
 
    Software is a living, breathing organism and is constantly undergoing change. If any of the above information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
 
-   *Last updated: 28 August 2024*
+   *Last updated: 30 November 2024*
 
 Features
 --------
@@ -75,7 +75,7 @@ These are metrics that can be scraped from GitHub.
 
 **Commits**: The number of commits on the main development branch. This is another metric for how active development has been. However, this can vary a lot depending on whether PRs are merged with or without squashing first.
 
-**Core SLOCs**: The number of source lines of code in the core library, excluding empty lines and comments. This tells you how large the library is, and how long it would take someone to write something like it themselves. We use `scc <https://github.com/boyter/scc>`_ to compute SLOCs and exclude markdown languages from the count.
+**Core SLOCs**: The number of source lines of code in the core library, excluding empty lines and comments. This tells you how large the library is, and how long it would take someone to write something like it themselves. We use `scc <https://github.com/boyter/scc>`_ to compute SLOCs and exclude markup languages from the count.
 
 **Test SLOCs**: The number of source lines of code in the testing suite, excluding empty lines and comments. This tells you how well tested the project is. A good goal to strive for is a similar amount of code for testing as there is in the core library itself.
 
@@ -114,3 +114,4 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _SITS: https://github.com/e-sensing/sits
 .. _segment-geospatial: https://github.com/opengeos/segment-geospatial
 .. _TerraTorch: https://github.com/IBM/terratorch
+.. _scikit-eo: https://github.com/yotarazona/scikit-eo

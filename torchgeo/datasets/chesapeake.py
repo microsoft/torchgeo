@@ -5,7 +5,6 @@
 
 import glob
 import os
-import pathlib
 import sys
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
@@ -173,7 +172,7 @@ class Chesapeake(RasterDataset, ABC):
             return
 
         # Check if the zip file has already been downloaded
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         if glob.glob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
             self._extract()
             return
@@ -195,7 +194,7 @@ class Chesapeake(RasterDataset, ABC):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str | pathlib.Path)
+        assert isinstance(self.paths, str | os.PathLike)
         for file in glob.iglob(os.path.join(self.paths, '**', '*.zip'), recursive=True):
             extract_archive(file)
 
@@ -339,7 +338,7 @@ class ChesapeakeCVPR(GeoDataset):
 
     subdatasets = ('base', 'prior_extension')
     urls: ClassVar[dict[str, str]] = {
-        'base': 'https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip',
+        'base': 'https://lilawildlife.blob.core.windows.net/lila-wildlife/lcmcvpr2019/cvpr_chesapeake_landcover.zip',
         'prior_extension': 'https://zenodo.org/records/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1',
     }
     filenames: ClassVar[dict[str, str]] = {
@@ -477,13 +476,11 @@ class ChesapeakeCVPR(GeoDataset):
 
         lc_colors = np.zeros((max(self.lc_cmap.keys()) + 1, 4))
         lc_colors[list(self.lc_cmap.keys())] = list(self.lc_cmap.values())
-        lc_colors = lc_colors[:, :3] / 255
-        self._lc_cmap = ListedColormap(lc_colors)
+        self._lc_cmap = ListedColormap(lc_colors[:, :3] / 255)
 
         nlcd_colors = np.zeros((max(NLCD.cmap.keys()) + 1, 4))
         nlcd_colors[list(NLCD.cmap.keys())] = list(NLCD.cmap.values())
-        nlcd_colors = nlcd_colors[:, :3] / 255
-        self._nlcd_cmap = ListedColormap(nlcd_colors)
+        self._nlcd_cmap = ListedColormap(nlcd_colors[:, :3] / 255)
 
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint: float = 0
@@ -582,7 +579,7 @@ class ChesapeakeCVPR(GeoDataset):
         sample['mask'] = np.concatenate(sample['mask'], axis=0)
 
         sample['image'] = torch.from_numpy(sample['image']).float()
-        sample['mask'] = torch.from_numpy(sample['mask']).long()
+        sample['mask'] = torch.from_numpy(sample['mask']).long().squeeze(0)
 
         if self.transforms is not None:
             sample = self.transforms(sample)

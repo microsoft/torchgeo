@@ -312,11 +312,7 @@ class MillionAID(NonGeoDataset):
             return tensor
 
     def _verify(self) -> None:
-        """Checks the integrity of the dataset structure.
-
-        Returns:
-            True if the dataset directories are found, else False
-        """
+        """Verify the integrity of the dataset."""
         filepath = os.path.join(self.root, self.split)
         if os.path.isdir(filepath):
             return

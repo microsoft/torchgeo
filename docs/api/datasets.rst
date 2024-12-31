@@ -222,6 +222,11 @@ CaBuAr
 
 .. autoclass:: CaBuAr
 
+CaFFe
+^^^^^
+
+.. autoclass:: CaFFe
+
 ChaBuD
 ^^^^^^
 
@@ -282,6 +287,11 @@ FAIR1M
 
 .. autoclass:: FAIR1M
 
+Fields Of The World
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: FieldsOfTheWorld
+
 FireRisk
 ^^^^^^^^
 
@@ -302,6 +312,11 @@ GID-15
 
 .. autoclass:: GID15
 
+HySpecNet-11k
+^^^^^^^^^^^^^
+
+.. autoclass:: HySpecNet11k
+
 IDTReeS
 ^^^^^^^
 
@@ -316,6 +331,7 @@ LandCover.ai
 ^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAI
+.. autoclass:: LandCoverAI100
 
 LEVIR-CD
 ^^^^^^^^
@@ -342,6 +358,11 @@ Million-AID
 ^^^^^^^^^^^
 
 .. autoclass:: MillionAID
+
+MMEarth
+^^^^^^^^
+
+.. autoclass:: MMEarth
 
 NASA Marine Debris
 ^^^^^^^^^^^^^^^^^^
@@ -387,6 +408,11 @@ Rwanda Field Boundary
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: RwandaFieldBoundary
+
+SatlasPretrain
+^^^^^^^^^^^^^^
+
+.. autoclass:: SatlasPretrain
 
 Seasonal Contrast
 ^^^^^^^^^^^^^^^^^
@@ -447,6 +473,11 @@ SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SustainBenchCropYield
+
+TreeSatAI
+^^^^^^^^^
+
+.. autoclass:: TreeSatAI
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^

@@ -242,7 +242,7 @@ class GeoNRW(NonGeoDataset):
 
         # rename to torchgeo standard keys
         sample['image'] = sample.pop('rgb').float()
-        sample['mask'] = sample.pop('seg').long()
+        sample['mask'] = sample.pop('seg').long().squeeze(0)
 
         if self.transforms:
             sample = self.transforms(sample)

@@ -1,7 +1,7 @@
 model:
   class_path: SimCLRTask
   init_args:
-    model: "resnet18"
+    model: 'resnet18'
     in_channels: 13
     version: 1
     layers: 2
@@ -14,6 +14,6 @@ data:
   init_args:
     batch_size: 2
   dict_kwargs:
-    root: "tests/data/ssl4eo/s12"
-    split: "s2c"
+    root: 'tests/data/ssl4eo/s12'
+    split: 's2c'
     seasons: 1

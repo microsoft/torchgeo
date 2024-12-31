@@ -9,7 +9,7 @@ from typing import Any
 
 import lightning
 from lightning.pytorch import LightningModule
-from torch.optim import AdamW  # type: ignore[attr-defined]
+from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
@@ -18,6 +18,9 @@ class BaseTask(LightningModule, ABC):
 
     .. versionadded:: 0.5
     """
+
+    #: Parameters to ignore when saving hyperparameters.
+    ignore: Sequence[str] | str | None = 'weights'
 
     #: Model to train.
     model: Any
@@ -28,14 +31,14 @@ class BaseTask(LightningModule, ABC):
     #: Whether the goal is to minimize or maximize the performance metric to monitor.
     mode = 'min'
 
-    def __init__(self, ignore: Sequence[str] | str | None = None) -> None:
+    def __init__(self) -> None:
         """Initialize a new BaseTask instance.
 
         Args:
             ignore: Arguments to skip when saving hyperparameters.
         """
         super().__init__()
-        self.save_hyperparameters(ignore=ignore)
+        self.save_hyperparameters(ignore=self.ignore)
         self.configure_models()
         self.configure_losses()
         self.configure_metrics()
@@ -52,7 +55,7 @@ class BaseTask(LightningModule, ABC):
 
     def configure_optimizers(
         self,
-    ) -> 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig':
+    ) -> 'lightning.pytorch.utilities.types.OptimizerLRScheduler':
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:

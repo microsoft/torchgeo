@@ -68,6 +68,7 @@ class SimCLRTask(BaseTask):
     .. versionadded:: 0.5
     """
 
+    ignore = ('weights', 'augmentations')
     monitor = 'train_loss'
 
     def __init__(
@@ -140,7 +141,7 @@ class SimCLRTask(BaseTask):
                 warnings.warn('SimCLR v2 uses a memory bank')
 
         self.weights = weights
-        super().__init__(ignore=['weights', 'augmentations'])
+        super().__init__()
 
         grayscale_weights = grayscale_weights or torch.ones(in_channels)
         self.augmentations = augmentations or simclr_augmentations(
@@ -285,7 +286,7 @@ class SimCLRTask(BaseTask):
 
     def configure_optimizers(
         self,
-    ) -> 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig':
+    ) -> 'lightning.pytorch.utilities.types.OptimizerLRScheduler':
         """Initialize the optimizer and learning rate scheduler.
 
         .. versionchanged:: 0.6

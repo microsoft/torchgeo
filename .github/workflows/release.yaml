@@ -15,17 +15,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.2
       - name: Set up python
-        uses: actions/setup-python@v5.2.0
+        id: setup-python
+        uses: actions/setup-python@v5.3.0
         with:
-          python-version: "3.12"
+          python-version: '3.12'
       - name: Cache dependencies
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4.2.0
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-integration
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('pyproject.toml') }}
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -43,21 +44,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.1.7
+        uses: actions/checkout@v4.2.2
       - name: Set up python
-        uses: actions/setup-python@v5.2.0
+        id: setup-python
+        uses: actions/setup-python@v5.3.0
         with:
-          python-version: "3.12"
+          python-version: '3.12'
       - name: Cache dependencies
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4.2.0
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-tutorials
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('pyproject.toml') }}-tutorials
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install .[docs,tests] planetary_computer pystac
+          pip install .[docs,tests] planetary_computer pystac tensorboard
           pip cache purge
       - name: List pip dependencies
         run: pip list

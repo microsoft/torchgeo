@@ -29,6 +29,7 @@ class TestMoCoTask:
         'name',
         [
             'chesapeake_cvpr_prior_moco',
+            'hyspecnet_moco',
             'seco_moco_1',
             'seco_moco_2',
             'ssl4eo_l_moco_1',

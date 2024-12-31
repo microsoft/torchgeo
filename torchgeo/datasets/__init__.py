@@ -12,6 +12,7 @@ from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
 from .cabuar import CaBuAr
+from .caffe import CaFFe
 from .cbf import CanadianBuildingFootprints
 from .cdl import CDL
 from .chabud import ChaBuD
@@ -46,6 +47,7 @@ from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
+from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
 from .geo import (
     GeoDataset,
@@ -59,13 +61,14 @@ from .geo import (
 from .geonrw import GeoNRW
 from .gid15 import GID15
 from .globbiomass import GlobBiomass
+from .hyspecnet import HySpecNet11k
 from .idtrees import IDTReeS
 from .inaturalist import INaturalist
 from .inria import InriaAerialImageLabeling
 from .iobench import IOBench
 from .l7irish import L7Irish
 from .l8biome import L8Biome
-from .landcoverai import LandCoverAI, LandCoverAIBase, LandCoverAIGeo
+from .landcoverai import LandCoverAI, LandCoverAI100, LandCoverAIBase, LandCoverAIGeo
 from .landsat import (
     Landsat,
     Landsat1,
@@ -83,6 +86,7 @@ from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
 from .mapinwild import MapInWild
 from .millionaid import MillionAID
+from .mmearth import MMEarth
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nccm import NCCM
@@ -97,6 +101,7 @@ from .quakeset import QuakeSet
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
 from .rwanda_field_boundary import RwandaFieldBoundary
+from .satlas import SatlasPretrain
 from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
@@ -127,6 +132,7 @@ from .splits import (
 from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
 from .ssl4eo_benchmark import SSL4EOLBenchmark
 from .sustainbench_crop_yield import SustainBenchCropYield
+from .treesatai import TreeSatAI
 from .ucmerced import UCMerced
 from .usavars import USAVars
 from .utils import (
@@ -143,16 +149,47 @@ from .xview import XView2
 from .zuericrop import ZueriCrop
 
 __all__ = (
-    # GeoDataset
+    'ADVANCE',
+    'CDL',
+    'COWC',
+    'DFC2022',
+    'ETCI2021',
+    'EUDEM',
+    'FAIR1M',
+    'GBIF',
+    'GID15',
+    'LEVIRCD',
+    'NAIP',
+    'NCCM',
+    'NLCD',
+    'OSCD',
+    'PASTIS',
+    'PRISMA',
+    'RESISC45',
+    'SEN12MS',
+    'SKIPPD',
+    'SSL4EO',
+    'SSL4EOL',
+    'SSL4EOS12',
+    'VHR10',
     'AbovegroundLiveWoodyBiomassDensity',
     'AgriFieldNet',
     'Airphen',
     'AsterGDEM',
+    'BeninSmallHolderCashews',
+    'BigEarthNet',
+    'BioMassters',
+    'BoundingBox',
+    'CMSGlobalMangroveCanopy',
+    'COWCCounting',
+    'COWCDetection',
+    'CV4AKenyaCropType',
+    'CaBuAr',
+    'CaFFe',
     'CanadianBuildingFootprints',
-    'CDL',
+    'ChaBuD',
     'Chesapeake',
-    'Chesapeake7',
-    'Chesapeake13',
+    'ChesapeakeCVPR',
     'ChesapeakeDC',
     'ChesapeakeDE',
     'ChesapeakeMD',
@@ -160,19 +197,37 @@ __all__ = (
     'ChesapeakePA',
     'ChesapeakeVA',
     'ChesapeakeWV',
-    'ChesapeakeCVPR',
-    'CMSGlobalMangroveCanopy',
+    'CloudCoverDetection',
     'CropHarvest',
+    'DatasetNotFoundError',
+    'DeepGlobeLandCover',
+    'DependencyNotFoundError',
+    'DigitalTyphoon',
     'EDDMapS',
+    'EnviroAtlas',
     'Esri2020',
     'EuroCrops',
-    'EUDEM',
-    'GBIF',
+    'EuroSAT',
+    'EuroSAT100',
+    'EuroSATSpatial',
+    'FieldsOfTheWorld',
+    'FireRisk',
+    'ForestDamage',
+    'GeoDataset',
+    'GeoNRW',
     'GlobBiomass',
+    'HySpecNet11k',
+    'IDTReeS',
     'INaturalist',
     'IOBench',
+    'InriaAerialImageLabeling',
+    'IntersectionDataset',
     'L7Irish',
     'L8Biome',
+    'LEVIRCDBase',
+    'LEVIRCDPlus',
+    'LandCoverAI',
+    'LandCoverAI100',
     'LandCoverAIBase',
     'LandCoverAIGeo',
     'Landsat',
@@ -186,65 +241,32 @@ __all__ = (
     'Landsat7',
     'Landsat8',
     'Landsat9',
-    'NAIP',
-    'NCCM',
-    'NLCD',
-    'OpenBuildings',
-    'PRISMA',
-    'Sentinel',
-    'Sentinel1',
-    'Sentinel2',
-    'SouthAfricaCropType',
-    'SouthAmericaSoybean',
-    # NonGeoDataset
-    'ADVANCE',
-    'BeninSmallHolderCashews',
-    'BigEarthNet',
-    'BioMassters',
-    'CaBuAr',
-    'ChaBuD',
-    'CloudCoverDetection',
-    'COWC',
-    'COWCCounting',
-    'COWCDetection',
-    'CV4AKenyaCropType',
-    'DeepGlobeLandCover',
-    'DFC2022',
-    'DigitalTyphoon',
-    'EnviroAtlas',
-    'ETCI2021',
-    'EuroSAT',
-    'EuroSATSpatial',
-    'EuroSAT100',
-    'FAIR1M',
-    'FireRisk',
-    'ForestDamage',
-    'GeoNRW',
-    'GID15',
-    'IDTReeS',
-    'InriaAerialImageLabeling',
-    'LandCoverAI',
-    'LEVIRCD',
-    'LEVIRCDBase',
-    'LEVIRCDPlus',
     'LoveDA',
+    'MMEarth',
     'MapInWild',
     'MillionAID',
     'NASAMarineDebris',
-    'OSCD',
-    'PASTIS',
+    'NonGeoClassificationDataset',
+    'NonGeoDataset',
+    'OpenBuildings',
     'PatternNet',
     'Potsdam2D',
     'QuakeSet',
-    'RESISC45',
+    'RGBBandsMissingError',
+    'RasterDataset',
     'ReforesTree',
     'RwandaFieldBoundary',
-    'SeasonalContrastS2',
+    'SSL4EOLBenchmark',
+    'SatlasPretrain',
     'SeasoNet',
-    'SEN12MS',
-    'SKIPPD',
+    'SeasonalContrastS2',
+    'Sentinel',
+    'Sentinel1',
+    'Sentinel2',
     'SkyScript',
     'So2Sat',
+    'SouthAfricaCropType',
+    'SouthAmericaSoybean',
     'SpaceNet',
     'SpaceNet1',
     'SpaceNet2',
@@ -254,41 +276,24 @@ __all__ = (
     'SpaceNet6',
     'SpaceNet7',
     'SpaceNet8',
-    'SSL4EO',
-    'SSL4EOLBenchmark',
-    'SSL4EOL',
-    'SSL4EOS12',
     'SustainBenchCropYield',
+    'TreeSatAI',
     'TropicalCyclone',
     'UCMerced',
     'USAVars',
+    'UnionDataset',
     'Vaihingen2D',
-    'VHR10',
+    'VectorDataset',
     'WesternUSALiveFuelMoisture',
     'XView2',
     'ZueriCrop',
-    # Base classes
-    'GeoDataset',
-    'IntersectionDataset',
-    'NonGeoClassificationDataset',
-    'NonGeoDataset',
-    'RasterDataset',
-    'UnionDataset',
-    'VectorDataset',
-    # Utilities
-    'BoundingBox',
     'concat_samples',
     'merge_samples',
-    'stack_samples',
-    'unbind_samples',
-    # Splits
     'random_bbox_assignment',
     'random_bbox_splitting',
     'random_grid_cell_assignment',
     'roi_split',
+    'stack_samples',
     'time_series_split',
-    # Errors
-    'DatasetNotFoundError',
-    'DependencyNotFoundError',
-    'RGBBandsMissingError',
+    'unbind_samples',
 )

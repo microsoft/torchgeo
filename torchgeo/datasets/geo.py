@@ -8,7 +8,6 @@ import fnmatch
 import functools
 import glob
 import os
-import pathlib
 import re
 import sys
 import warnings
@@ -300,7 +299,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, str | pathlib.Path):
+        if isinstance(self.paths, str | os.PathLike):
             paths: Iterable[Path] = [self.paths]
         else:
             paths = self.paths
@@ -353,7 +352,7 @@ class RasterDataset(GeoDataset):
     #: Minimum timestamp if not in filename
     mint: float = 0
 
-    #: Maximum timestmap if not in filename
+    #: Maximum timestamp if not in filename
     maxt: float = sys.maxsize
 
     #: True if the dataset only contains model inputs (such as images). False if the
@@ -362,8 +361,8 @@ class RasterDataset(GeoDataset):
     #: The sample returned by the dataset/data loader will use the "image" key if
     #: *is_image* is True, otherwise it will use the "mask" key.
     #:
-    #: For datasets with both model inputs and outputs, a custom
-    #: :func:`~RasterDataset.__getitem__` method must be implemented.
+    #: For datasets with both model inputs and outputs, the recommended approach is
+    #: to use 2 `RasterDataset` instances and combine them using an `IntersectionDataset`.
     is_image = True
 
     #: True if data is stored in a separate file for each band, else False.
@@ -521,7 +520,7 @@ class RasterDataset(GeoDataset):
             IndexError: if query is not found in the index
         """
         hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[Path], [hit.object for hit in hits])
+        filepaths = cast(list[str], [hit.object for hit in hits])
 
         if not filepaths:
             raise IndexError(
@@ -555,7 +554,7 @@ class RasterDataset(GeoDataset):
         if self.is_image:
             sample['image'] = data
         else:
-            sample['mask'] = data
+            sample['mask'] = data.squeeze(0)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -564,7 +563,7 @@ class RasterDataset(GeoDataset):
 
     def _merge_files(
         self,
-        filepaths: Sequence[Path],
+        filepaths: Sequence[str],
         query: BoundingBox,
         band_indexes: Sequence[int] | None = None,
     ) -> Tensor:

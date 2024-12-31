@@ -20,7 +20,6 @@ from ..samplers import (
     GridGeoSampler,
     RandomBatchGeoSampler,
 )
-from ..transforms import AugmentationSequential
 from .utils import MisconfigurationException
 
 
@@ -70,9 +69,10 @@ class BaseDataModule(LightningDataModule):
 
         # Data augmentation
         Transform = Callable[[dict[str, Tensor]], dict[str, Tensor]]
-        self.aug: Transform = AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std), data_keys=['image']
+        self.aug: Transform = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
+
         self.train_aug: Transform | None = None
         self.val_aug: Transform | None = None
         self.test_aug: Transform | None = None
@@ -286,6 +286,7 @@ class GeoDataModule(BaseDataModule):
             batch_sampler=batch_sampler,
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
+            persistent_workers=self.num_workers > 0,
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
@@ -429,6 +430,7 @@ class NonGeoDataModule(BaseDataModule):
             shuffle=split == 'train',
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
+            persistent_workers=self.num_workers > 0,
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:

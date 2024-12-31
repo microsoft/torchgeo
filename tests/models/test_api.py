@@ -80,3 +80,8 @@ def test_get_weight(enum: WeightsEnum) -> None:
 def test_list_models() -> None:
     models = [builder.__name__ for builder in builders]
     assert set(models) == set(list_models())
+
+
+def test_invalid_model() -> None:
+    with pytest.raises(ValueError, match='bad_model is not a valid WeightsEnum'):
+        get_weight('bad_model')
