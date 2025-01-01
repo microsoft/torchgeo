@@ -1,9 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License.
-
-"""Substation Data Module."""
-
-from typing import Any
+from typing import Any, List, Optional
 
 import numpy as np
 import torch
@@ -30,12 +25,12 @@ class SubstationDataModule:
         means: np.ndarray | None = None,
         stds: np.ndarray | None = None,
         bands: int = 13,
-        num_of_timepoints: int | None = None,
+        num_of_timepoints: int = 4,
         model_type: str = 'default',
-        geo_transforms: Any = None,
-        color_transforms: Any = None,
-        image_resize: Any = None,
-        mask_resize: Any = None,
+        geo_transforms: Any | None = None,
+        color_transforms: Any | None = None,
+        image_resize: Any | None = None,
+        mask_resize: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize a new SubstationDataModule instance.
@@ -58,13 +53,6 @@ class SubstationDataModule:
             mask_resize: Resizing function for the mask.
             **kwargs: Additional arguments passed to Substation.
         """
-        # super().__init__(
-        #     Substation,
-        #     root=root,
-        #     batch_size=batch_size,
-        #     num_workers=num_workers,
-        #     **kwargs,
-        # )
         self.root = root
         self.split_ratio = split_ratio
         self.normalizing_type = normalizing_type
@@ -79,10 +67,9 @@ class SubstationDataModule:
         self.mask_resize = mask_resize
         self.num_of_timepoints = num_of_timepoints
 
-        # Placeholder for datasets
-        self.train_dataset = None
-        self.val_dataset = None
-        self.test_dataset = None
+        self.train_dataset: Subset[Any] | None = None
+        self.val_dataset: Subset[Any] | None = None
+        self.test_dataset: Subset[Any] | None = None
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -101,35 +88,34 @@ class SubstationDataModule:
             checksum=False,
         )
 
-        # Train-test split
         total_size = len(dataset)
         train_size = int(total_size * self.split_ratio)
-        indices = list(range(total_size))
+        train_indices: Subset[Any]
+        test_indices: Subset[Any]
         train_indices, test_indices = torch.utils.data.random_split(
-            indices, [train_size, total_size - train_size]
+            dataset, [train_size, total_size - train_size]
         )
 
         if stage in ['fit', 'validate']:
-            # Further split train set into train imageand validation sets
             val_split_ratio = 0.2
             val_size = int(len(train_indices) * val_split_ratio)
             train_size = len(train_indices) - val_size
+            val_indices: Subset[Any]
             train_indices, val_indices = torch.utils.data.random_split(
                 train_indices, [train_size, val_size]
             )
 
-            self.train_dataset = Subset(dataset, train_indices)
-            self.val_dataset = Subset(dataset, val_indices)
+            self.train_dataset = Subset(dataset, train_indices.indices)
+            self.val_dataset = Subset(dataset, val_indices.indices)
 
-            # Apply preprocessing to train and validation datasets
             self.train_dataset = self._apply_transforms(self.train_dataset)
             self.val_dataset = self._apply_transforms(self.val_dataset)
 
         if stage == 'test':
-            self.test_dataset = Subset(dataset, test_indices)
+            self.test_dataset = Subset(dataset, test_indices.indices)
             self.test_dataset = self._apply_transforms(self.test_dataset)
 
-    def _apply_transforms(self, dataset: Subset) -> Subset:
+    def _apply_transforms(self, dataset: Subset[Any]) -> Subset[Any]:
         """Apply preprocessing and transformations to the dataset.
 
         Args:
@@ -141,22 +127,11 @@ class SubstationDataModule:
         for sample in tqdm(dataset, desc='Processing images', unit='sample'):
             image, mask = sample['image'], sample['mask']
 
-            # Standardizing image
-            # if self.normalizing_type == "percentile":
-            #     image = (image - self.normalizing_factor[:, 0].reshape((-1, 1, 1))) / self.normalizing_factor[:, 2].reshape((-1, 1, 1))
-            # elif self.normalizing_type == "zscore":
-            #     image = (image - self.means) / self.stds
-            # else:
-            #     image = image / self.normalizing_factor
-            #     image = torch.clamp(image, 0, 1)
-
-            # Applying geometric transformations
             if self.geo_transforms:
                 combined = torch.cat((image, mask), 0)
                 combined = self.geo_transforms(combined)
                 image, mask = torch.split(combined, [image.shape[0], mask.shape[0]], 0)
 
-            # Applying color transformations
             if self.color_transforms:
                 num_timepoints = image.shape[0] // self.bands
                 for i in range(num_timepoints):
@@ -171,7 +146,6 @@ class SubstationDataModule:
                             'Input dimensions must support color transformations.'
                         )
 
-            # Resizing image and mask
             if self.image_resize:
                 image = self.image_resize(image)
             if self.mask_resize:

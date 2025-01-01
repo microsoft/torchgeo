@@ -79,7 +79,7 @@ class Substation(NonGeoDataset):
         self._verify()
         self.load_image_filenames()
 
-    def load_image_filenames(self) -> list[str]:
+    def load_image_filenames(self) -> None:
         """Load image filenames from the image directory."""
         self.image_filenames = os.listdir(self.image_dir)
 

@@ -15,9 +15,10 @@ import torch
 from torchgeo.datasets import Substation
 
 
-class Substation:
+class TestSubstation:
     @pytest.fixture
     def dataset(
+        self,
         tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> Generator[Substation, None, None]:
         """Fixture for the Substation."""
@@ -29,6 +30,7 @@ class Substation:
             use_timepoints=True,
             mask_2d=True,
             timepoint_aggregation='median',
+            num_of_timepoints=4 
         )
 
     @pytest.mark.parametrize(
@@ -74,7 +76,7 @@ class Substation:
             },
         ],
     )
-    def test_getitem_semantic(config: dict[str, Any]) -> None:
+    def test_getitem_semantic(self, config: dict[str, Any]) -> None:
         root = os.path.join(os.getcwd(), 'tests', 'data')
         dataset = Substation(root=root, **config)
 
@@ -85,17 +87,17 @@ class Substation:
         ), 'Expected image to be a torch.Tensor'
         assert isinstance(x['mask'], torch.Tensor), 'Expected mask to be a torch.Tensor'
 
-    def test_len(dataset: Substation) -> None:
+    def test_len(self, dataset: Substation) -> None:
         """Test the length of the dataset."""
         assert len(dataset) == 2
 
-    def test_output_shape(dataset: Substation) -> None:
+    def test_output_shape(self, dataset: Substation) -> None:
         """Test the output shape of the dataset."""
         x = dataset[0]
         assert x['image'].shape == torch.Size([13, 32, 32])
         assert x['mask'].shape == torch.Size([2, 32, 32])
 
-    def test_plot(dataset: Substation) -> None:
+    def test_plot(self, dataset: Substation) -> None:
         sample = dataset[0]
         dataset.plot(sample, suptitle='Test')
         plt.close()
@@ -106,6 +108,7 @@ class Substation:
         plt.close()
 
     def test_already_downloaded(
+        self,
         dataset: Substation, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Test that the dataset doesn't re-download if already present."""
@@ -125,6 +128,7 @@ class Substation:
         dataset._download()  # This will now call the mocked method
 
     def test_download(
+        self,
         dataset: Substation, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Test the _download method of the dataset."""
