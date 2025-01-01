@@ -16,8 +16,8 @@ from .geo import NonGeoDataset
 from .utils import download_url, extract_archive
 
 
-class SubstationDataset(NonGeoDataset):
-    """Base class for Substation Dataset.
+class Substation(NonGeoDataset):
+    """Class for Substation Dataset.
 
     This dataset is responsible for handling the loading and transformation of
     substation segmentation datasets. It extends NonGeoDataset, providing methods
@@ -36,16 +36,17 @@ class SubstationDataset(NonGeoDataset):
     * https://doi.org/10.48550/arXiv.2409.17363
     """
 
-    directory: str = 'Substation'
-    filename_images: str = 'image_stack.tar.gz'
-    filename_masks: str = 'mask.tar.gz'
-    url_for_images: str = 'https://storage.googleapis.com/tz-ml-public/substation-over-10km2-csv-main-444e360fd2b6444b9018d509d0e4f36e/image_stack.tar.gz'
-    url_for_masks: str = 'https://storage.googleapis.com/tz-ml-public/substation-over-10km2-csv-main-444e360fd2b6444b9018d509d0e4f36e/mask.tar.gz'
+    directory = 'Substation'
+    filename_images = 'image_stack.tar.gz'
+    filename_masks = 'mask.tar.gz'
+    url_for_images = 'https://storage.googleapis.com/tz-ml-public/substation-over-10km2-csv-main-444e360fd2b6444b9018d509d0e4f36e/image_stack.tar.gz'
+    url_for_masks = 'https://storage.googleapis.com/tz-ml-public/substation-over-10km2-csv-main-444e360fd2b6444b9018d509d0e4f36e/mask.tar.gz'
 
     def __init__(
         self,
-        data_dir: str,
-        in_channels: int,
+        root: str,
+        bands: int,
+        num_of_timepoints: int,
         use_timepoints: bool,
         image_files: list[str],
         mask_2d: bool,
@@ -53,11 +54,11 @@ class SubstationDataset(NonGeoDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize the SubstationDataset.
+        """Initialize the Substation.
 
         Args:
-            data_dir: Path to the directory containing the dataset.
-            in_channels: Number of channels to use from the image.
+            root: Path to the directory containing the dataset.
+            bands: Number of channels to use from the image.
             use_timepoints: Whether to use multiple timepoints for each image.
             image_files: List of filenames for the images.
             mask_2d: Whether to use a 2D mask.
@@ -65,14 +66,15 @@ class SubstationDataset(NonGeoDataset):
             download: Whether to download the dataset if it is not found.
             checksum: Whether to verify the dataset after downloading.
         """
-        self.data_dir = data_dir
-        self.in_channels = in_channels
+        self.root = root
+        self.bands = bands
         self.use_timepoints = use_timepoints
         self.timepoint_aggregation = timepoint_aggregation
         self.mask_2d = mask_2d
-        self.image_dir = os.path.join(data_dir, 'substation', 'image_stack')
-        self.mask_dir = os.path.join(data_dir, 'substation', 'mask')
+        self.image_dir = os.path.join(root, 'substation', 'image_stack')
+        self.mask_dir = os.path.join(root, 'substation', 'mask')
         self.image_filenames = image_files
+        self.num_of_timepoints = num_of_timepoints
         self.download = download
         self.checksum = checksum
 
@@ -94,15 +96,15 @@ class SubstationDataset(NonGeoDataset):
         image = np.load(image_path)['arr_0']
 
         # selecting channels
-        image = image[:, : self.in_channels, :, :]
+        image = image[:, self.bands, :, :]
 
         # handling multiple images across timepoints
         if self.use_timepoints:
-            image = image[:4, :, :, :]
+            image = image[: self.num_of_timepoints, :, :, :]
             if self.timepoint_aggregation == 'concat':
                 image = np.reshape(
                     image, (-1, image.shape[2], image.shape[3])
-                )  # (4*channels,h,w)
+                )  # (num_of_timepoints*channels,h,w)
             elif self.timepoint_aggregation == 'median':
                 image = np.median(image, axis=0)
         else:
@@ -159,10 +161,6 @@ class SubstationDataset(NonGeoDataset):
             prediction = sample['prediction'][0].squeeze(0).cpu().numpy()
             ncols = 3
 
-        print('mask shape', mask.shape)
-        print('image shape', image.shape)
-        print('\n')
-
         fig, axs = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
         axs[0].imshow(image)
         axs[0].axis('off')
@@ -186,10 +184,10 @@ class SubstationDataset(NonGeoDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        img_pathname = os.path.join(self.data_dir, self.filename_images)
+        img_pathname = os.path.join(self.root, self.filename_images)
         extract_archive(img_pathname)
 
-        mask_pathname = os.path.join(self.data_dir, self.filename_masks)
+        mask_pathname = os.path.join(self.root, self.filename_masks)
         extract_archive(mask_pathname)
 
     def _verify(self) -> None:
@@ -201,8 +199,8 @@ class SubstationDataset(NonGeoDataset):
             return
 
         # Check if the tar.gz files for images and masks have already been downloaded
-        image_exists = os.path.exists(os.path.join(self.data_dir, self.filename_images))
-        mask_exists = os.path.exists(os.path.join(self.data_dir, self.filename_masks))
+        image_exists = os.path.exists(os.path.join(self.root, self.filename_images))
+        mask_exists = os.path.exists(os.path.join(self.root, self.filename_masks))
 
         if image_exists and mask_exists:
             self._extract()
@@ -211,7 +209,7 @@ class SubstationDataset(NonGeoDataset):
         # If dataset files are missing and download is not allowed, raise an error
         if not getattr(self, 'download', True):
             raise FileNotFoundError(
-                f'Dataset files not found in {self.data_dir}. Enable downloading or provide the files.'
+                f'Dataset files not found in {self.root}. Enable downloading or provide the files.'
             )
 
         # Download and extract the dataset
@@ -223,19 +221,19 @@ class SubstationDataset(NonGeoDataset):
         # Download and verify images
         download_url(
             self.url_for_images,
-            self.data_dir,
+            self.root,
             filename=self.filename_images,
             md5='INSERT_IMAGES_MD5_HASH' if self.checksum else None,
         )
         extract_archive(
-            os.path.join(self.data_dir, self.filename_images), self.data_dir
+            os.path.join(self.root, self.filename_images), self.root
         )
 
         # Download and verify masks
         download_url(
             self.url_for_masks,
-            self.data_dir,
+            self.root,
             filename=self.filename_masks,
             md5='INSERT_MASKS_MD5_HASH' if self.checksum else None,
         )
-        extract_archive(os.path.join(self.data_dir, self.filename_masks), self.data_dir)
+        extract_archive(os.path.join(self.root, self.filename_masks), self.root)
