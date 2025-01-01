@@ -19,7 +19,8 @@ from .utils import download_url, extract_archive
 class Substation(NonGeoDataset):
     """Class for Substation Dataset.
 
-    This dataset is responsible for handling the loading and transformation of
+    The `Substation <https://github.com/Lindsay-Lab/substation-seg/blob/main/README.md>`__ 
+    dataset is responsible for handling the loading and transformation of
     substation segmentation datasets. It extends NonGeoDataset, providing methods
     for dataset verification, downloading, and transformation.
     Dataset Format:
