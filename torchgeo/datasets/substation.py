@@ -19,7 +19,7 @@ from .utils import download_url, extract_archive
 class Substation(NonGeoDataset):
     """Class for Substation Dataset.
 
-    The `Substation <https://github.com/Lindsay-Lab/substation-seg/blob/main/README.md>`__ 
+    The `Substation <https://github.com/Lindsay-Lab/substation-seg/blob/main/README.md>`__
     dataset is responsible for handling the loading and transformation of
     substation segmentation datasets. It extends NonGeoDataset, providing methods
     for dataset verification, downloading, and transformation.
@@ -228,9 +228,7 @@ class Substation(NonGeoDataset):
             filename=self.filename_images,
             md5='INSERT_IMAGES_MD5_HASH' if self.checksum else None,
         )
-        extract_archive(
-            os.path.join(self.root, self.filename_images), self.root
-        )
+        extract_archive(os.path.join(self.root, self.filename_images), self.root)
 
         # Download and verify masks
         download_url(
