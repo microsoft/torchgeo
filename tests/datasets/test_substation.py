@@ -22,7 +22,6 @@ class Substation:
     ) -> Generator[Substation, None, None]:
         """Fixture for the Substation."""
         root = os.path.join(os.getcwd(), 'tests', 'data')
-        image_files = ['image_0.npz', 'image_1.npz']
 
         yield Substation(
             root=root,
@@ -30,7 +29,6 @@ class Substation:
             use_timepoints=True,
             mask_2d=True,
             timepoint_aggregation='median',
-            image_files=image_files,
         )
 
     @pytest.mark.parametrize(
@@ -78,8 +76,7 @@ class Substation:
     )
     def test_getitem_semantic(config: dict[str, Any]) -> None:
         root = os.path.join(os.getcwd(), 'tests', 'data')
-        image_files = ['image_0.npz', 'image_1.npz']
-        dataset = Substation(root=root, image_files=image_files, **config)
+        dataset = Substation(root=root, **config)
 
         x = dataset[0]
         assert isinstance(x, dict), f'Expected dict, got {type(x)}'

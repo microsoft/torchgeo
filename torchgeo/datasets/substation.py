@@ -48,7 +48,6 @@ class Substation(NonGeoDataset):
         bands: int,
         num_of_timepoints: int,
         use_timepoints: bool,
-        image_files: list[str],
         mask_2d: bool,
         timepoint_aggregation: str,
         download: bool = False,
@@ -60,7 +59,6 @@ class Substation(NonGeoDataset):
             root: Path to the directory containing the dataset.
             bands: Number of channels to use from the image.
             use_timepoints: Whether to use multiple timepoints for each image.
-            image_files: List of filenames for the images.
             mask_2d: Whether to use a 2D mask.
             timepoint_aggregation: How to aggregate multiple timepoints.
             download: Whether to download the dataset if it is not found.
@@ -73,12 +71,16 @@ class Substation(NonGeoDataset):
         self.mask_2d = mask_2d
         self.image_dir = os.path.join(root, 'substation', 'image_stack')
         self.mask_dir = os.path.join(root, 'substation', 'mask')
-        self.image_filenames = image_files
         self.num_of_timepoints = num_of_timepoints
         self.download = download
         self.checksum = checksum
 
         self._verify()
+        self.load_image_filenames()
+
+    def load_image_filenames(self) -> list[str]:
+        """Load image filenames from the image directory."""
+        self.image_filenames = os.listdir(self.image_dir)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Get an item from the dataset by index.

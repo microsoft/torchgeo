@@ -29,7 +29,6 @@ class SubstationDataModule:
         normalizing_factor: np.ndarray | None = None,
         means: np.ndarray | None = None,
         stds: np.ndarray | None = None,
-        image_files: list[str] | None = None,
         bands: int = 13,
         num_of_timepoints: int | None = None,
         model_type: str = 'default',
@@ -50,7 +49,6 @@ class SubstationDataModule:
             normalizing_factor: Normalization factor for percentile normalization.
             means: Mean values for z-score normalization.
             stds: Standard deviation values for z-score normalization.
-            image_files: List of image file paths.
             num_of_timepoints: Number of timepoints to use.
             bands: Number of input channels to use.
             model_type: Type of model being used (e.g., 'swin' for specific channel selection).
@@ -79,7 +77,6 @@ class SubstationDataModule:
         self.color_transforms = color_transforms
         self.image_resize = image_resize
         self.mask_resize = mask_resize
-        self.image_files = image_files
         self.num_of_timepoints = num_of_timepoints
 
         # Placeholder for datasets
@@ -97,7 +94,6 @@ class SubstationDataModule:
             root=self.root,
             bands=self.bands,
             use_timepoints=True,
-            image_files=self.image_files,
             mask_2d=False,
             num_of_timepoints=self.num_of_timepoints,
             timepoint_aggregation='concat',
