@@ -23,15 +23,16 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.2.2
       - name: Set up python
+        id: setup-python
         uses: actions/setup-python@v5.3.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache dependencies
-        uses: actions/cache@v4.1.2
+        uses: actions/cache@v4.2.0
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/tests.txt') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/tests.txt') }}
         if: ${{ runner.os != 'macOS' }}
       - name: Setup headless display for pyvista
         uses: pyvista/setup-headless-display-action@v3
@@ -47,7 +48,7 @@ jobs:
           pytest --cov --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.0.7
+        uses: codecov/codecov-action@v5.1.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
@@ -57,15 +58,16 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.2.2
       - name: Set up python
+        id: setup-python
         uses: actions/setup-python@v5.3.0
         with:
           python-version: '3.10'
       - name: Cache dependencies
-        uses: actions/cache@v4.1.2
+        uses: actions/cache@v4.2.0
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/min-reqs.old') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/min-reqs.old') }}
       - name: Setup headless display for pyvista
         uses: pyvista/setup-headless-display-action@v3
       - name: Install pip dependencies
@@ -80,7 +82,7 @@ jobs:
           pytest --cov --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.0.7
+        uses: codecov/codecov-action@v5.1.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   datasets:
@@ -90,15 +92,16 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.2.2
       - name: Set up python
+        id: setup-python
         uses: actions/setup-python@v5.3.0
         with:
           python-version: '3.12'
       - name: Cache dependencies
-        uses: actions/cache@v4.1.2
+        uses: actions/cache@v4.2.0
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/tests.txt') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/tests.txt') }}
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -111,7 +114,7 @@ jobs:
           pytest --cov --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.0.7
+        uses: codecov/codecov-action@v5.1.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:

@@ -338,7 +338,7 @@ class ChesapeakeCVPR(GeoDataset):
 
     subdatasets = ('base', 'prior_extension')
     urls: ClassVar[dict[str, str]] = {
-        'base': 'https://lilablobssc.blob.core.windows.net/lcmcvpr2019/cvpr_chesapeake_landcover.zip',
+        'base': 'https://lilawildlife.blob.core.windows.net/lila-wildlife/lcmcvpr2019/cvpr_chesapeake_landcover.zip',
         'prior_extension': 'https://zenodo.org/records/5866525/files/cvpr_chesapeake_landcover_prior_extension.zip?download=1',
     }
     filenames: ClassVar[dict[str, str]] = {
@@ -476,13 +476,11 @@ class ChesapeakeCVPR(GeoDataset):
 
         lc_colors = np.zeros((max(self.lc_cmap.keys()) + 1, 4))
         lc_colors[list(self.lc_cmap.keys())] = list(self.lc_cmap.values())
-        lc_colors = lc_colors[:, :3] / 255
-        self._lc_cmap = ListedColormap(lc_colors)
+        self._lc_cmap = ListedColormap(lc_colors[:, :3] / 255)
 
         nlcd_colors = np.zeros((max(NLCD.cmap.keys()) + 1, 4))
         nlcd_colors[list(NLCD.cmap.keys())] = list(NLCD.cmap.values())
-        nlcd_colors = nlcd_colors[:, :3] / 255
-        self._nlcd_cmap = ListedColormap(nlcd_colors)
+        self._nlcd_cmap = ListedColormap(nlcd_colors[:, :3] / 255)
 
         # Add all tiles into the index in epsg:3857 based on the included geojson
         mint: float = 0

@@ -21,34 +21,11 @@ class TestUCMerced:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> UCMerced:
-        md5 = 'a42ef8779469d196d8f2971ee135f030'
-        monkeypatch.setattr(UCMerced, 'md5', md5)
-        url = os.path.join('tests', 'data', 'ucmerced', 'UCMerced_LandUse.zip')
+        url = os.path.join('tests', 'data', 'ucmerced') + os.sep
         monkeypatch.setattr(UCMerced, 'url', url)
-        monkeypatch.setattr(
-            UCMerced,
-            'split_urls',
-            {
-                'train': os.path.join(
-                    'tests', 'data', 'ucmerced', 'uc_merced-train.txt'
-                ),
-                'val': os.path.join('tests', 'data', 'ucmerced', 'uc_merced-val.txt'),
-                'test': os.path.join('tests', 'data', 'ucmerced', 'uc_merced-test.txt'),
-            },
-        )
-        monkeypatch.setattr(
-            UCMerced,
-            'split_md5s',
-            {
-                'train': 'a01fa9f13333bb176fc1bfe26ff4c711',
-                'val': 'a01fa9f13333bb176fc1bfe26ff4c711',
-                'test': 'a01fa9f13333bb176fc1bfe26ff4c711',
-            },
-        )
-        root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return UCMerced(root, split, transforms, download=True, checksum=True)
+        return UCMerced(tmp_path, split, transforms, download=True)
 
     def test_getitem(self, dataset: UCMerced) -> None:
         x = dataset[0]
@@ -65,14 +42,14 @@ class TestUCMerced:
         assert len(ds) == 8
 
     def test_already_downloaded(self, dataset: UCMerced, tmp_path: Path) -> None:
-        UCMerced(root=tmp_path, download=True)
+        UCMerced(tmp_path)
 
     def test_already_downloaded_not_extracted(
         self, dataset: UCMerced, tmp_path: Path
     ) -> None:
         shutil.rmtree(dataset.root)
-        shutil.copy(dataset.url, tmp_path)
-        UCMerced(root=tmp_path, download=False)
+        shutil.copy(dataset.url + dataset.filename, tmp_path)
+        UCMerced(tmp_path)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
