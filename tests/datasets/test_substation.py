@@ -95,8 +95,8 @@ class Substation:
     def test_output_shape(dataset: Substation) -> None:
         """Test the output shape of the dataset."""
         x = dataset[0]
-        assert x['image'].shape == torch.Size([13, 228, 228])
-        assert x['mask'].shape == torch.Size([2, 228, 228])
+        assert x['image'].shape == torch.Size([13, 32, 32])
+        assert x['mask'].shape == torch.Size([2, 32, 32])
 
     def test_plot(dataset: Substation) -> None:
         sample = dataset[0]

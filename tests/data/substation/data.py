@@ -10,7 +10,7 @@ import shutil
 import numpy as np
 
 # Parameters
-SIZE = 228  # Image dimensions
+SIZE = 32  # Image dimensions
 NUM_SAMPLES = 5  # Number of samples
 np.random.seed(0)
 
