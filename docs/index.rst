@@ -35,8 +35,8 @@ torchgeo
 
 .. toctree::
    :maxdepth: 1
-
    :caption: Tutorials
+
    tutorials/getting_started
    tutorials/custom_raster_dataset
    tutorials/transforms
