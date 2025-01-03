@@ -61,13 +61,13 @@ class TestDFC2022:
             os.path.join('tests', 'data', 'dfc2022', 'val.zip'),
             os.path.join(tmp_path, 'val.zip'),
         )
-        DFC2022(root=str(tmp_path))
+        DFC2022(root=tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'labeled_train.zip'), 'w') as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            DFC2022(root=str(tmp_path), checksum=True)
+            DFC2022(root=tmp_path, checksum=True)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
@@ -75,7 +75,7 @@ class TestDFC2022:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            DFC2022(str(tmp_path))
+            DFC2022(tmp_path)
 
     def test_plot(self, dataset: DFC2022) -> None:
         x = dataset[0].copy()

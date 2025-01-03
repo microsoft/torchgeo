@@ -3,13 +3,11 @@
 
 import os
 from pathlib import Path
-from typing import Any
 
 import pytest
 import timm
 import torch
 import torch.nn as nn
-import torchvision
 from pytest import MonkeyPatch
 from torchvision.models import resnet18
 from torchvision.models._api import WeightsEnum
@@ -19,11 +17,6 @@ from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import BYOLTask
 from torchgeo.trainers.byol import BYOL, SimCLRAugmentation
-
-
-def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
-    state_dict: dict[str, Any] = torch.load(url)
-    return state_dict
 
 
 class TestBYOL:
@@ -48,6 +41,7 @@ class TestBYOLTask:
         'name',
         [
             'chesapeake_cvpr_prior_byol',
+            'hyspecnet_byol',
             'seco_byol_1',
             'seco_byol_2',
             'ssl4eo_l_byol_1',
@@ -80,7 +74,7 @@ class TestBYOLTask:
             '1',
         ]
 
-        main(['fit'] + args)
+        main(['fit', *args])
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:
@@ -88,7 +82,11 @@ class TestBYOLTask:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -99,7 +97,6 @@ class TestBYOLTask:
             monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
             monkeypatch.setattr(weights, 'url', str(path))
-        monkeypatch.setattr(torchvision.models._api, 'load_state_dict_from_url', load)
         return weights
 
     def test_weight_file(self, checkpoint: str) -> None:

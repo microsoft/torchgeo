@@ -54,7 +54,7 @@ class SemanticSegmentationTask(BaseTask):
                 model does not support pretrained weights. Pretrained ViT weight enums
                 are not supported yet.
             in_channels: Number of input channels to model.
-            num_classes: Number of prediction classes.
+            num_classes: Number of prediction classes (including the background).
             num_filters: Number of filters. Only applicable when model='fcn'.
             loss: Name of the loss function, currently supports
                 'ce', 'jaccard' or 'focal' loss.
@@ -77,7 +77,7 @@ class SemanticSegmentationTask(BaseTask):
            were renamed to *model*, *backbone*, and *weights*.
 
         .. versionadded:: 0.5
-            The *class_weights*, *freeze_backbone*, and *freeze_decoder* parameters.
+           The *class_weights*, *freeze_backbone*, and *freeze_decoder* parameters.
 
         .. versionchanged:: 0.5
            The *weights* parameter now supports WeightEnums and checkpoint paths.
@@ -85,10 +85,10 @@ class SemanticSegmentationTask(BaseTask):
            *lr* and *patience*.
 
         .. versionchanged:: 0.6
-            The *ignore_index* parameter now works for jaccard loss.
+           The *ignore_index* parameter now works for jaccard loss.
         """
         self.weights = weights
-        super().__init__(ignore='weights')
+        super().__init__()
 
     def configure_models(self) -> None:
         """Initialize the model.

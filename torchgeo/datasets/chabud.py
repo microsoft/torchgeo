@@ -4,7 +4,8 @@
 """ChaBuD dataset."""
 
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, lazy_import, percentile_normalization
+from .utils import Path, download_url, lazy_import, percentile_normalization
 
 
 class ChaBuD(NonGeoDataset):
@@ -53,7 +54,7 @@ class ChaBuD(NonGeoDataset):
     .. versionadded:: 0.6
     """
 
-    all_bands = [
+    all_bands = (
         'B01',
         'B02',
         'B03',
@@ -66,18 +67,18 @@ class ChaBuD(NonGeoDataset):
         'B09',
         'B11',
         'B12',
-    ]
-    rgb_bands = ['B04', 'B03', 'B02']
-    folds = {'train': [1, 2, 3, 4], 'val': [0]}
-    url = 'https://hf.co/datasets/chabud-team/chabud-ecml-pkdd2023/resolve/de222d434e26379aa3d4f3dd1b2caf502427a8b2/train_eval.hdf5'  # noqa: E501
+    )
+    rgb_bands = ('B04', 'B03', 'B02')
+    folds: ClassVar[dict[str, list[int]]] = {'train': [1, 2, 3, 4], 'val': [0]}
+    url = 'https://hf.co/datasets/chabud-team/chabud-ecml-pkdd2023/resolve/de222d434e26379aa3d4f3dd1b2caf502427a8b2/train_eval.hdf5'
     filename = 'train_eval.hdf5'
     md5 = '15d78fb825f9a81dad600db828d22c08'
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
-        bands: list[str] = all_bands,
+        bands: Sequence[str] = all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,

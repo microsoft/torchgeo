@@ -15,7 +15,7 @@ from shapely.geometry import Polygon
 SIZE = 0.05
 
 
-def create_meta_data_file(zipfilename):
+def create_meta_data_file(zipfilename: str) -> dict[object, object]:
     meta_data = {
         'type': 'FeatureCollection',
         'features': [
@@ -38,7 +38,7 @@ def create_meta_data_file(zipfilename):
     return meta_data
 
 
-def create_csv_data_row(lat, long):
+def create_csv_data_row(lat: float, long: float) -> dict[object, object]:
     width, height = SIZE / 10, SIZE / 10
     minx = long - 0.5 * width
     maxx = long + 0.5 * width
@@ -59,7 +59,7 @@ def create_csv_data_row(lat, long):
     return data_row
 
 
-def create_buildings_data():
+def create_buildings_data() -> list[dict[object, object]]:
     fourth = SIZE / 4
     # pandas df
     dict_data = [

@@ -1,9 +1,9 @@
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    loss: "ce"
-    model: "unet"
-    backbone: "resnet18"
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
     in_channels: 15
     num_classes: 11
     ignore_index: null
@@ -11,6 +11,6 @@ data:
   class_path: SEN12MSDataModule
   init_args:
     batch_size: 1
-    band_set: "all"
+    band_set: 'all'
   dict_kwargs:
-    root: "tests/data/sen12ms"
+    root: 'tests/data/sen12ms'

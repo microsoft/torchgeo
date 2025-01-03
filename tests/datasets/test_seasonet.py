@@ -14,15 +14,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, RGBBandsMissingError, SeasoNet
-
-
-def download_url(url: str, root: str, md5: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-    torchgeo.datasets.utils.check_integrity(
-        os.path.join(root, os.path.basename(url)), md5
-    )
 
 
 class TestSeasoNet:
@@ -38,7 +30,6 @@ class TestSeasoNet:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SeasoNet:
-        monkeypatch.setattr(torchgeo.datasets.seasonet, 'download_url', download_url)
         monkeypatch.setitem(
             SeasoNet.metadata[0], 'md5', '836a0896eba0e3005208f3fd180e429d'
         )
@@ -95,7 +86,7 @@ class TestSeasoNet:
             'url',
             os.path.join('tests', 'data', 'seasonet', 'meta.csv'),
         )
-        root = str(tmp_path)
+        root = tmp_path
         split, seasons, bands, grids, concat_seasons = request.param
         transforms = nn.Identity()
         return SeasoNet(
@@ -141,14 +132,14 @@ class TestSeasoNet:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         paths = os.path.join('tests', 'data', 'seasonet', '*.*')
-        root = str(tmp_path)
+        root = tmp_path
         for path in glob.iglob(paths):
             shutil.copy(path, root)
         SeasoNet(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SeasoNet(str(tmp_path), download=False)
+            SeasoNet(tmp_path, download=False)
 
     def test_out_of_bounds(self, dataset: SeasoNet) -> None:
         with pytest.raises(IndexError):

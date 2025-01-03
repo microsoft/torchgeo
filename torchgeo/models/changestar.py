@@ -29,7 +29,7 @@ class ChangeMixin(Module):
         inner_channels: int = 16,
         num_convs: int = 4,
         scale_factor: float = 4.0,
-    ):
+    ) -> None:
         """Initializes a new ChangeMixin module.
 
         Args:

@@ -66,7 +66,7 @@ class SimCLRAugmentation(nn.Module):
         )
 
     def forward(self, x: Tensor) -> Tensor:
-        """Applys SimCLR augmentations to the input tensor.
+        """Applies SimCLR augmentations to the input tensor.
 
         Args:
             x: a batch of imagery
@@ -122,8 +122,8 @@ class BackboneWrapper(nn.Module):
     * The output of the encoding layer is passed through the projection head
     * The forward call returns the output of the projection head
 
-    .. versionchanged 0.4: Name changed from *EncoderWrapper* to
-       *BackboneWrapper*.
+    .. versionchanged:: 0.4
+       Name changed from *EncoderWrapper* to *BackboneWrapper*.
     """
 
     def __init__(
@@ -137,7 +137,7 @@ class BackboneWrapper(nn.Module):
 
         Args:
             model: model to encode
-            projection_size: size of the ouput layer of the projector MLP
+            projection_size: size of the output layer of the projector MLP
             hidden_size: size of hidden layer of the projector MLP
             layer: layer from model to project
         """
@@ -286,7 +286,7 @@ class BYOLTask(BaseTask):
 
     Reference implementation:
 
-    * https://github.com/deepmind/deepmind-research/tree/master/byol
+    * https://github.com/google-deepmind/deepmind-research/tree/master/byol
 
     If you use this trainer in your research, please cite the following paper:
 
@@ -324,7 +324,7 @@ class BYOLTask(BaseTask):
            renamed to *model*, *lr*, and *patience*.
         """
         self.weights = weights
-        super().__init__(ignore='weights')
+        super().__init__()
 
     def configure_models(self) -> None:
         """Initialize the model."""

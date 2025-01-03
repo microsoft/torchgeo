@@ -13,14 +13,9 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, IDTReeS
 
 pytest.importorskip('laspy', minversion='2')
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestIDTReeS:
@@ -28,7 +23,6 @@ class TestIDTReeS:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> IDTReeS:
-        monkeypatch.setattr(torchgeo.datasets.idtrees, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'idtrees')
         metadata = {
             'train': {
@@ -44,7 +38,7 @@ class TestIDTReeS:
         }
         split, task = request.param
         monkeypatch.setattr(IDTReeS, 'metadata', metadata)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return IDTReeS(root, split, task, transforms, download=True, checksum=True)
 
@@ -77,11 +71,11 @@ class TestIDTReeS:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            IDTReeS(str(tmp_path))
+            IDTReeS(tmp_path)
 
     def test_not_extracted(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'idtrees', '*.zip')
-        root = str(tmp_path)
+        root = tmp_path
         for zipfile in glob.iglob(pathname):
             shutil.copy(zipfile, root)
         IDTReeS(root)

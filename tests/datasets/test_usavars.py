@@ -13,12 +13,7 @@ from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, USAVars
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestUSAVars:
@@ -35,8 +30,6 @@ class TestUSAVars:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> USAVars:
-        monkeypatch.setattr(torchgeo.datasets.usavars, 'download_url', download_url)
-
         md5 = 'b504580a00bdc27097d5421dec50481b'
         monkeypatch.setattr(USAVars, 'md5', md5)
 
@@ -73,7 +66,7 @@ class TestUSAVars:
         }
         monkeypatch.setattr(USAVars, 'split_metadata', split_metadata)
 
-        root = str(tmp_path)
+        root = tmp_path
         split, labels = request.param
         transforms = nn.Identity()
 
@@ -109,7 +102,7 @@ class TestUSAVars:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'usavars', 'uar.zip')
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(pathname, root)
         csvs = [
             'elevation.csv',
@@ -130,7 +123,7 @@ class TestUSAVars:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            USAVars(str(tmp_path))
+            USAVars(tmp_path)
 
     def test_plot(self, dataset: USAVars) -> None:
         dataset.plot(dataset[0], suptitle='Test')

@@ -19,7 +19,7 @@ import pytorch_sphinx_theme
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
 
-import torchgeo  # noqa: E402
+import torchgeo
 
 # -- Project information -----------------------------------------------------
 
@@ -50,8 +50,7 @@ extensions = [
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build']
 
-# Sphinx 3.0+ required for:
-# autodoc_typehints_description_target = "documented"
+# Sphinx 4.0+ required for autodoc_typehints_description_traget
 needs_sphinx = '4.0'
 
 nitpicky = True
@@ -60,6 +59,8 @@ nitpick_ignore = [
     ('py:class', 'fiona.model.Feature'),
     ('py:class', 'kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D'),
     ('py:class', 'kornia.augmentation.base._AugmentationBase'),
+    ('py:class', 'lightning.pytorch.utilities.types.LRSchedulerConfig'),
+    ('py:class', 'lightning.pytorch.utilities.types.OptimizerConfig'),
     ('py:class', 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig'),
     ('py:class', 'segmentation_models_pytorch.base.model.SegmentationModel'),
     ('py:class', 'timm.models.resnet.ResNet'),
@@ -93,7 +94,7 @@ html_theme_options = {
 html_favicon = os.path.join('..', 'logo', 'favicon.ico')
 
 html_static_path = ['_static']
-html_css_files = ['button-width.css', 'notebook-prompt.css', 'table-scroll.css']
+html_css_files = ['badge-height.css', 'notebook-prompt.css', 'table-scroll.css']
 
 # -- Extension configuration -------------------------------------------------
 
@@ -127,40 +128,8 @@ intersphinx_mapping = {
 
 # nbsphinx
 nbsphinx_execute = 'never'
-# TODO: branch/tag should change depending on which version of docs you look at
-# TODO: width option of image directive is broken, see:
-# https://github.com/pytorch/pytorch_sphinx_theme/issues/140
-nbsphinx_prolog = """
-{% set host = "https://colab.research.google.com" %}
-{% set repo = "microsoft/torchgeo" %}
-{% set urlpath = "docs/" ~ env.docname ~ ".ipynb" %}
-{% if "dev" in env.config.release %}
-    {% set branch = "main" %}
-{% else %}
-    {% set branch = "releases/v" ~ env.config.version %}
-{% endif %}
-
-.. image:: {{ host }}/assets/colab-badge.svg
-   :class: colabbadge
-   :alt: Open in Colab
-   :target: {{ host }}/github/{{ repo }}/blob/{{ branch }}/{{ urlpath }}
-
-{% set host = "https://pccompute.westeurope.cloudapp.azure.com" %}
-{% set host = host ~ "/compute/hub/user-redirect/git-pull" %}
-{% set repo = "https%3A%2F%2Fgithub.com%2Fmicrosoft%2Ftorchgeo" %}
-{% set urlpath = "tree%2Ftorchgeo%2Fdocs%2F" %}
-{% set urlpath = urlpath ~ env.docname | replace("/", "%2F") ~ ".ipynb" %}
-{% if "dev" in env.config.release %}
-    {% set branch = "main" %}
-{% else %}
-    {% set branch = "releases%2Fv" ~ env.config.version %}
-{% endif %}
-
-.. image:: https://img.shields.io/badge/-Open%20on%20Planetary%20Computer-blue
-   :class: colabbadge
-   :alt: Open on Planetary Computer
-   :target: {{ host }}?repo={{ repo }}&urlpath={{ urlpath }}&branch={{ branch }}
-"""
+with open(os.path.join('tutorials', 'prolog.rst.jinja')) as f:
+    nbsphinx_prolog = f.read()
 
 # Disables requirejs in nbsphinx to enable compatibility with the pytorch_sphinx_theme
 # See more information here https://github.com/spatialaudio/nbsphinx/issues/599

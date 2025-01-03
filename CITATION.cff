@@ -1,50 +1,50 @@
 # https://github.com/citation-file-format/citation-file-format/blob/main/schema-guide.md
 # Can be validated using `cffconvert --validate`
 authors:
-  - family-names: "Stewart"
-    given-names: "Adam J."
-  - family-names: "Robinson"
-    given-names: "Caleb"
-  - family-names: "Corley"
-    given-names: "Isaac A."
-  - family-names: "Ortiz"
-    given-names: "Anthony"
-  - family-names: "Lavista Ferres"
-    given-names: "Juan M."
-  - family-names: "Banerjee"
-    given-names: "Arindam"
-cff-version: "1.2.0"
-message: "If you use this software, please cite it using the metadata from this file."
+  - family-names: 'Stewart'
+    given-names: 'Adam J.'
+  - family-names: 'Robinson'
+    given-names: 'Caleb'
+  - family-names: 'Corley'
+    given-names: 'Isaac A.'
+  - family-names: 'Ortiz'
+    given-names: 'Anthony'
+  - family-names: 'Lavista Ferres'
+    given-names: 'Juan M.'
+  - family-names: 'Banerjee'
+    given-names: 'Arindam'
+cff-version: '1.2.0'
+message: 'If you use this software, please cite it using the metadata from this file.'
 preferred-citation:
   authors:
-    - family-names: "Stewart"
-      given-names: "Adam J."
-    - family-names: "Robinson"
-      given-names: "Caleb"
-    - family-names: "Corley"
-      given-names: "Isaac A."
-    - family-names: "Ortiz"
-      given-names: "Anthony"
-    - family-names: "Lavista Ferres"
-      given-names: "Juan M."
-    - family-names: "Banerjee"
-      given-names: "Arindam"
-  collection-title: "Proceedings of the 30th International Conference on Advances in Geographic Information Systems"
-  collection-type: "proceedings"
+    - family-names: 'Stewart'
+      given-names: 'Adam J.'
+    - family-names: 'Robinson'
+      given-names: 'Caleb'
+    - family-names: 'Corley'
+      given-names: 'Isaac A.'
+    - family-names: 'Ortiz'
+      given-names: 'Anthony'
+    - family-names: 'Lavista Ferres'
+      given-names: 'Juan M.'
+    - family-names: 'Banerjee'
+      given-names: 'Arindam'
+  collection-title: 'Proceedings of the 30th International Conference on Advances in Geographic Information Systems'
+  collection-type: 'proceedings'
   conference:
-    city: "Seattle"
+    city: 'Seattle'
     name: "SIGSPATIAL '22"
-    region: "Washington"
-  doi: "10.1145/3557915.3560953"
+    region: 'Washington'
+  doi: '10.1145/3557915.3560953'
   end: 12
-  isbn: "9781450395298"
+  isbn: '9781450395298'
   month: 11
   number: 19
   publisher:
-    name: "Association for Computing Machinery"
+    name: 'Association for Computing Machinery'
   start: 1
-  title: "TorchGeo: Deep Learning With Geospatial Data"
-  type: "conference-paper"
-  url: "https://dl.acm.org/doi/10.1145/3557915.3560953"
+  title: 'TorchGeo: Deep Learning With Geospatial Data'
+  type: 'conference-paper'
+  url: 'https://dl.acm.org/doi/10.1145/3557915.3560953'
   year: 2022
-title: "TorchGeo: Deep Learning With Geospatial Data"
+title: 'TorchGeo: Deep Learning With Geospatial Data'

@@ -1,9 +1,9 @@
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    loss: "ce"
-    model: "unet"
-    backbone: "resnet18"
+    loss: 'ce'
+    model: 'unet'
+    backbone: 'resnet18'
     in_channels: 3
     num_classes: 3
     num_filters: 1
@@ -12,8 +12,7 @@ data:
   class_path: SpaceNet1DataModule
   init_args:
     batch_size: 1
-    val_split_pct: 0.33
-    test_split_pct: 0.33
+    val_split_pct: 0.34
+    test_split_pct: 0.34
   dict_kwargs:
-    root: "tests/data/spacenet"
-    download: true
+    root: 'tests/data/spacenet/spacenet1'

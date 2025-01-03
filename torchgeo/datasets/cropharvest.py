@@ -7,6 +7,7 @@ import glob
 import json
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, lazy_import
+from .utils import Path, download_url, extract_archive, lazy_import
 
 
 class CropHarvest(NonGeoDataset):
@@ -55,7 +56,7 @@ class CropHarvest(NonGeoDataset):
     """
 
     # https://github.com/nasaharvest/cropharvest/blob/main/cropharvest/bands.py
-    all_bands = [
+    all_bands = (
         'VV',
         'VH',
         'B2',
@@ -74,12 +75,12 @@ class CropHarvest(NonGeoDataset):
         'elevation',
         'slope',
         'NDVI',
-    ]
-    rgb_bands = ['B4', 'B3', 'B2']
+    )
+    rgb_bands = ('B4', 'B3', 'B2')
 
     features_url = 'https://zenodo.org/records/7257688/files/features.tar.gz?download=1'
     labels_url = 'https://zenodo.org/records/7257688/files/labels.geojson?download=1'
-    file_dict = {
+    file_dict: ClassVar[dict[str, dict[str, str]]] = {
         'features': {
             'url': features_url,
             'filename': 'features.tar.gz',
@@ -96,7 +97,7 @@ class CropHarvest(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -157,7 +158,7 @@ class CropHarvest(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_features(self, root: str) -> list[dict[str, str]]:
+    def _load_features(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -181,7 +182,7 @@ class CropHarvest(NonGeoDataset):
             files.append(dict(chip=chip_path, index=index, dataset=dataset))
         return files
 
-    def _load_labels(self, root: str) -> pd.DataFrame:
+    def _load_labels(self, root: Path) -> pd.DataFrame:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -196,7 +197,7 @@ class CropHarvest(NonGeoDataset):
             df = pd.json_normalize(data['features'])
             return df
 
-    def _load_array(self, path: str) -> Tensor:
+    def _load_array(self, path: Path) -> Tensor:
         """Load an individual single pixel time series.
 
         Args:

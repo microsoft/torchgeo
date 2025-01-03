@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
+from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import (
@@ -18,14 +19,18 @@ from torchgeo.datasets import (
     RGBBandsMissingError,
     UnionDataset,
 )
+from torchgeo.datasets.utils import Executable
 
 
 class TestAgriFieldNet:
     @pytest.fixture
-    def dataset(self) -> AgriFieldNet:
-        path = os.path.join('tests', 'data', 'agrifieldnet')
+    def dataset(
+        self, azcopy: Executable, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> AgriFieldNet:
+        url = os.path.join('tests', 'data', 'agrifieldnet')
+        monkeypatch.setattr(AgriFieldNet, 'url', url)
         transforms = nn.Identity()
-        return AgriFieldNet(paths=path, transforms=transforms)
+        return AgriFieldNet(tmp_path, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: AgriFieldNet) -> None:
         x = dataset[dataset.bounds]
@@ -50,7 +55,7 @@ class TestAgriFieldNet:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            AgriFieldNet(str(tmp_path))
+            AgriFieldNet(tmp_path)
 
     def test_plot(self, dataset: AgriFieldNet) -> None:
         x = dataset[dataset.bounds]

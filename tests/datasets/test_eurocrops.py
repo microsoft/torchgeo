@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -13,7 +12,6 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
@@ -23,18 +21,12 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestEuroCrops:
     @pytest.fixture(params=[None, ['1000000010'], ['1000000000'], ['2000000000']])
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> EuroCrops:
         classes = request.param
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
-        monkeypatch.setattr(torchgeo.datasets.eurocrops, 'download_url', download_url)
         monkeypatch.setattr(
             EuroCrops, 'zenodo_files', [('AA.zip', 'b2ef5cac231294731c1dfea47cba544d')]
         )
@@ -42,7 +34,7 @@ class TestEuroCrops:
         base_url = os.path.join('tests', 'data', 'eurocrops') + os.sep
         monkeypatch.setattr(EuroCrops, 'base_url', base_url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return EuroCrops(
             root, classes=classes, transforms=transforms, download=True, checksum=True
@@ -81,7 +73,7 @@ class TestEuroCrops:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            EuroCrops(str(tmp_path))
+            EuroCrops(tmp_path)
 
     def test_invalid_query(self, dataset: EuroCrops) -> None:
         query = BoundingBox(200, 200, 200, 200, 2, 2)
@@ -91,5 +83,5 @@ class TestEuroCrops:
             dataset[query]
 
     def test_integrity_error(self, dataset: EuroCrops) -> None:
-        dataset.zenodo_files = [('AA.zip', 'invalid')]
+        dataset.zenodo_files = (('AA.zip', 'invalid'),)
         assert not dataset._check_integrity()

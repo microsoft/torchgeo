@@ -1,15 +1,14 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import glob
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
+from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
@@ -17,62 +16,30 @@ from torchgeo.datasets import (
     DatasetNotFoundError,
     RGBBandsMissingError,
 )
-
-
-class Collection:
-    def download(self, output_dir: str, **kwargs: str) -> None:
-        glob_path = os.path.join(
-            'tests', 'data', 'ref_cloud_cover_detection_challenge_v1', '*.tar.gz'
-        )
-        for tarball in glob.iglob(glob_path):
-            shutil.copy(tarball, output_dir)
-
-
-def fetch(dataset_id: str, **kwargs: str) -> Collection:
-    return Collection()
+from torchgeo.datasets.utils import Executable
 
 
 class TestCloudCoverDetection:
-    @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> CloudCoverDetection:
-        radiant_mlhub = pytest.importorskip('radiant_mlhub', minversion='0.3')
-        monkeypatch.setattr(radiant_mlhub.Collection, 'fetch', fetch)
-
-        test_image_meta = {
-            'filename': 'ref_cloud_cover_detection_challenge_v1_test_source.tar.gz',
-            'md5': '542e64a6e39b53c84c6462ec1b989e43',
-        }
-        monkeypatch.setitem(CloudCoverDetection.image_meta, 'test', test_image_meta)
-
-        test_target_meta = {
-            'filename': 'ref_cloud_cover_detection_challenge_v1_test_labels.tar.gz',
-            'md5': 'e8d41de08744a9845e74fca1eee3d1d3',
-        }
-        monkeypatch.setitem(CloudCoverDetection.target_meta, 'test', test_target_meta)
-
-        root = str(tmp_path)
-        split = 'test'
+    @pytest.fixture(params=['train', 'test'])
+    def dataset(
+        self,
+        azcopy: Executable,
+        monkeypatch: MonkeyPatch,
+        tmp_path: Path,
+        request: SubRequest,
+    ) -> CloudCoverDetection:
+        url = os.path.join('tests', 'data', 'ref_cloud_cover_detection_challenge_v1')
+        monkeypatch.setattr(CloudCoverDetection, 'url', url)
+        root = tmp_path
+        split = request.param
         transforms = nn.Identity()
-
         return CloudCoverDetection(
-            root=root,
-            transforms=transforms,
-            split=split,
-            download=True,
-            api_key='',
-            checksum=True,
+            root=root, split=split, transforms=transforms, download=True
         )
 
     def test_invalid_band(self, dataset: CloudCoverDetection) -> None:
-        invalid_bands = ['B09']
-        with pytest.raises(ValueError):
-            CloudCoverDetection(
-                root=dataset.root,
-                split='test',
-                download=False,
-                api_key='',
-                bands=invalid_bands,
-            )
+        with pytest.raises(AssertionError):
+            CloudCoverDetection(root=dataset.root, split=dataset.split, bands=['B09'])
 
     def test_getitem(self, dataset: CloudCoverDetection) -> None:
         x = dataset[0]
@@ -84,28 +51,23 @@ class TestCloudCoverDetection:
         assert len(dataset) == 1
 
     def test_already_downloaded(self, dataset: CloudCoverDetection) -> None:
-        CloudCoverDetection(root=dataset.root, split='test', download=True, api_key='')
+        CloudCoverDetection(root=dataset.root, split=dataset.split, download=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            CloudCoverDetection(str(tmp_path))
+            CloudCoverDetection(tmp_path)
 
     def test_plot(self, dataset: CloudCoverDetection) -> None:
-        dataset.plot(dataset[0], suptitle='Test')
-        plt.close()
-
         sample = dataset[0]
+        dataset.plot(sample, suptitle='Test')
+        plt.close()
         sample['prediction'] = sample['mask'].clone()
         dataset.plot(sample, suptitle='Pred')
         plt.close()
 
     def test_plot_rgb(self, dataset: CloudCoverDetection) -> None:
         dataset = CloudCoverDetection(
-            root=dataset.root,
-            split='test',
-            bands=list(['B08']),
-            download=True,
-            api_key='',
+            root=dataset.root, split=dataset.split, bands=['B08'], download=True
         )
         with pytest.raises(
             RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'

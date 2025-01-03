@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import torch
@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import BoundingBox, download_url, extract_archive
+from .utils import BoundingBox, Path, download_url, extract_archive
 
 
 class L8BiomeImage(RasterDataset):
@@ -35,8 +35,8 @@ class L8BiomeImage(RasterDataset):
     """
     date_format = '%Y%j'
     is_image = True
-    rgb_bands = ['B4', 'B3', 'B2']
-    all_bands = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10', 'B11']
+    rgb_bands = ('B4', 'B3', 'B2')
+    all_bands = ('B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10', 'B11')
 
 
 class L8BiomeMask(RasterDataset):
@@ -56,7 +56,7 @@ class L8BiomeMask(RasterDataset):
     """
     date_format = '%Y%j'
     is_image = False
-    classes = ['Fill', 'Cloud Shadow', 'Clear', 'Thin Cloud', 'Cloud']
+    classes = ('Fill', 'Cloud Shadow', 'Clear', 'Thin Cloud', 'Cloud')
     ordinal_map = torch.zeros(256, dtype=torch.long)
     ordinal_map[64] = 1
     ordinal_map[128] = 2
@@ -115,11 +115,11 @@ class L8Biome(IntersectionDataset):
     * https://doi.org/10.1016/j.rse.2017.03.026
 
     .. versionadded:: 0.5
-    """  # noqa: E501
+    """
 
-    url = 'https://hf.co/datasets/torchgeo/l8biome/resolve/f76df19accce34d2acc1878d88b9491bc81f94c8/{}.tar.gz'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/l8biome/resolve/f76df19accce34d2acc1878d88b9491bc81f94c8/{}.tar.gz'
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'barren': '0eb691822d03dabd4f5ea8aadd0b41c3',
         'forest': '4a5645596f6bb8cea44677f746ec676e',
         'grass_crops': 'a69ed5d6cb227c5783f026b9303cdd3c',
@@ -132,7 +132,7 @@ class L8Biome(IntersectionDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str],
+        paths: Path | Iterable[Path],
         crs: CRS | None = CRS.from_epsg(3857),
         res: float | None = None,
         bands: Sequence[str] = L8BiomeImage.all_bands,
@@ -173,7 +173,7 @@ class L8Biome(IntersectionDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        if not isinstance(self.paths, str):
+        if not isinstance(self.paths, str | os.PathLike):
             return
 
         for classname in [L8BiomeImage, L8BiomeMask]:
@@ -206,7 +206,7 @@ class L8Biome(IntersectionDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | os.PathLike)
         pathname = os.path.join(self.paths, '*.tar.gz')
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)

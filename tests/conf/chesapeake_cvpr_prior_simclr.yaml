@@ -1,7 +1,7 @@
 model:
   class_path: SimCLRTask
   init_args:
-    model: "resnet18"
+    model: 'resnet18'
     in_channels: 4
     version: 1
     layers: 2
@@ -10,15 +10,14 @@ data:
   class_path: ChesapeakeCVPRDataModule
   init_args:
     train_splits:
-      - "de-test"
+      - 'de-test'
     val_splits:
-      - "de-test"
+      - 'de-test'
     test_splits:
-      - "de-test"
+      - 'de-test'
     batch_size: 2
     patch_size: 64
     class_set: 5
     use_prior_labels: True
   dict_kwargs:
-    root: "tests/data/chesapeake/cvpr"
-    download: false
+    root: 'tests/data/chesapeake/cvpr'

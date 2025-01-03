@@ -51,7 +51,7 @@ class TestNAIP:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            NAIP(str(tmp_path))
+            NAIP(tmp_path)
 
     def test_invalid_query(self, dataset: NAIP) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

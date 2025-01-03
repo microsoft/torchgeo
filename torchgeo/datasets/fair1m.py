@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 from xml.etree.ElementTree import Element, parse
 
 import matplotlib.patches as patches
@@ -19,10 +19,10 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
-def parse_pascal_voc(path: str) -> dict[str, Any]:
+def parse_pascal_voc(path: Path) -> dict[str, Any]:
     """Read a PASCAL VOC annotation file.
 
     Args:
@@ -119,7 +119,7 @@ class FAIR1M(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    classes = {
+    classes: ClassVar[dict[str, dict[str, Any]]] = {
         'Passenger Ship': {'id': 0, 'category': 'Ship'},
         'Motorboat': {'id': 1, 'category': 'Ship'},
         'Fishing Boat': {'id': 2, 'category': 'Ship'},
@@ -159,12 +159,12 @@ class FAIR1M(NonGeoDataset):
         'Bridge': {'id': 36, 'category': 'Road'},
     }
 
-    filename_glob = {
+    filename_glob: ClassVar[dict[str, str]] = {
         'train': os.path.join('train', '**', 'images', '*.tif'),
         'val': os.path.join('validation', 'images', '*.tif'),
         'test': os.path.join('test', 'images', '*.tif'),
     }
-    directories = {
+    directories: ClassVar[dict[str, tuple[str, ...]]] = {
         'train': (
             os.path.join('train', 'part1', 'images'),
             os.path.join('train', 'part1', 'labelXml'),
@@ -175,9 +175,9 @@ class FAIR1M(NonGeoDataset):
             os.path.join('validation', 'images'),
             os.path.join('validation', 'labelXml'),
         ),
-        'test': (os.path.join('test', 'images')),
+        'test': (os.path.join('test', 'images'),),
     }
-    paths = {
+    paths: ClassVar[dict[str, tuple[str, ...]]] = {
         'train': (
             os.path.join('train', 'part1', 'images.zip'),
             os.path.join('train', 'part1', 'labelXml.zip'),
@@ -194,7 +194,7 @@ class FAIR1M(NonGeoDataset):
             os.path.join('test', 'images2.zip'),
         ),
     }
-    urls = {
+    urls: ClassVar[dict[str, tuple[str, ...]]] = {
         'train': (
             'https://drive.google.com/file/d/1LWT_ybL-s88Lzg9A9wHpj0h2rJHrqrVf',
             'https://drive.google.com/file/d/1CnOuS8oX6T9JMqQnfFsbmf7U38G6Vc8u',
@@ -211,7 +211,7 @@ class FAIR1M(NonGeoDataset):
             'https://drive.google.com/file/d/1oUc25FVf8Zcp4pzJ31A1j1sOLNHu63P0',
         ),
     }
-    md5s = {
+    md5s: ClassVar[dict[str, tuple[str, ...]]] = {
         'train': (
             'a460fe6b1b5b276bf856ce9ac72d6568',
             '80f833ff355f91445c92a0c0c1fa7414',
@@ -230,7 +230,7 @@ class FAIR1M(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -279,7 +279,7 @@ class FAIR1M(NonGeoDataset):
         sample = {'image': image}
 
         if self.split != 'test':
-            label_path = path.replace(self.image_root, self.label_root)
+            label_path = str(path).replace(self.image_root, self.label_root)
             label_path = label_path.replace('.tif', '.xml')
             voc = parse_pascal_voc(label_path)
             boxes, labels = self._load_target(voc['points'], voc['labels'])
@@ -298,7 +298,7 @@ class FAIR1M(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:

@@ -9,7 +9,6 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
 from torchgeo.datasets import (
@@ -29,7 +28,7 @@ class TestLandsat8:
             ['SR_B4', 'SR_B3', 'SR_B2', 'SR_QA_AEROSOL'],
         ]
     )
-    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> Landsat8:
+    def dataset(self, request: SubRequest) -> Landsat8:
         root = os.path.join('tests', 'data', 'landsat8')
         bands = request.param
         transforms = nn.Identity()
@@ -71,7 +70,7 @@ class TestLandsat8:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            Landsat8(str(tmp_path))
+            Landsat8(tmp_path)
 
     def test_invalid_query(self, dataset: Landsat8) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)

@@ -4,8 +4,8 @@ setuptools==61.0.0
 # install
 einops==0.3.0
 fiona==1.8.21
-kornia==0.7.2
-lightly==1.4.4
+kornia==0.7.4
+lightly==1.4.5
 lightning[pytorch-extra]==2.0.0
 matplotlib==3.5.0
 numpy==1.21.2
@@ -26,12 +26,11 @@ h5py==3.6.0
 laspy==2.0.0
 opencv-python==4.5.4.58
 pycocotools==2.0.7
+pyarrow==15.0.0  # Remove when we upgrade min version of pandas to `pandas[parquet]>=2`
 pyvista==0.34.2
-radiant-mlhub==0.3.0
-rarfile==4.0
 scikit-image==0.19.0
 scipy==1.7.2
-zipfile-deflate64==0.2.0
+vtk==9.3.1  # PyVista is not yet compatible with VTK 9.4+
 
 # tests
 pytest==7.3.0

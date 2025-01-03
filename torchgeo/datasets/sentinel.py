@@ -13,6 +13,7 @@ from rasterio.crs import CRS
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
+from .utils import Path
 
 
 class Sentinel(RasterDataset):
@@ -24,7 +25,7 @@ class Sentinel(RasterDataset):
 
     If you use this dataset in your research, please cite it using the following format:
 
-    * https://asf.alaska.edu/data-sets/sar-data-sets/sentinel-1/sentinel-1-how-to-cite/
+    * https://asf.alaska.edu/datasets/daac/sentinel-1/
     """
 
 
@@ -32,7 +33,7 @@ class Sentinel1(Sentinel):
     r"""Sentinel-1 dataset.
 
     The `Sentinel-1 mission
-    <https://sentinel.esa.int/web/sentinel/missions/sentinel-1>`_ comprises a
+    <https://sentiwiki.copernicus.eu/web/s1-mission>`_ comprises a
     constellation of two polar-orbiting satellites, operating day and night
     performing C-band synthetic aperture radar imaging, enabling them to
     acquire imagery regardless of the weather.
@@ -49,16 +50,16 @@ class Sentinel1(Sentinel):
     Product Types:
 
     * `Level-0
-      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/product-types-processing-levels/level-0>`_:
+      <https://sentinels.copernicus.eu/en/web/sentinel/user-guides/sentinel-1-sar/product-types-processing-levels/level-0>`_:
       Raw (RAW)
     * `Level-1
-      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/product-types-processing-levels/level-1>`_:
+      <https://sentinels.copernicus.eu/en/web/sentinel/user-guides/sentinel-1-sar/product-types-processing-levels/level-1>`_:
       Single Look Complex (SLC)
     * `Level-1
-      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/product-types-processing-levels/level-1>`_:
+      <https://sentinels.copernicus.eu/en/web/sentinel/user-guides/sentinel-1-sar/product-types-processing-levels/level-1>`_:
       Ground Range Detected (GRD)
     * `Level-2
-      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/product-types-processing-levels/level-2>`_:
+      <https://sentinels.copernicus.eu/en/web/sentinel/user-guides/sentinel-1-sar/product-types-processing-levels/level-2>`_:
       Ocean (OCN)
 
     Polarizations:
@@ -71,13 +72,13 @@ class Sentinel1(Sentinel):
     Acquisition Modes:
 
     * `Stripmap (SM)
-      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/stripmap>`_
+      <https://sentinels.copernicus.eu/en/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/stripmap>`_
     * `Interferometric Wide (IW) swath
-      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/interferometric-wide-swath>`_
+      <https://sentinels.copernicus.eu/en/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/interferometric-wide-swath>`_
     * `Extra Wide (EW) swatch
-      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/extra-wide-swath>`_
+      <https://sentinels.copernicus.eu/en/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/extra-wide-swath>`_
     * `Wave (WV)
-      <https://sentinels.copernicus.eu/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/wave>`_
+      <https://sentinels.copernicus.eu/en/web/sentinel/user-guides/sentinel-1-sar/acquisition-modes/wave>`_
 
     .. note::
        At the moment, this dataset only supports the GRD product type. Data must be
@@ -136,12 +137,12 @@ class Sentinel1(Sentinel):
         \.
     """
     date_format = '%Y%m%dT%H%M%S'
-    all_bands = ['HH', 'HV', 'VV', 'VH']
+    all_bands = ('HH', 'HV', 'VV', 'VH')
     separate_files = True
 
     def __init__(
         self,
-        paths: str | list[str] = 'data',
+        paths: Path | list[Path] = 'data',
         crs: CRS | None = None,
         res: float = 10,
         bands: Sequence[str] = ['VV', 'VH'],
@@ -254,7 +255,7 @@ class Sentinel2(Sentinel):
     """Sentinel-2 dataset.
 
     The `Copernicus Sentinel-2 mission
-    <https://sentinel.esa.int/web/sentinel/missions/sentinel-2>`_ comprises a
+    <https://sentiwiki.copernicus.eu/web/s2-mission>`_ comprises a
     constellation of two polar-orbiting satellites placed in the same sun-synchronous
     orbit, phased at 180° to each other. It aims at monitoring variability in land
     surface conditions, and its wide swath width (290 km) and high revisit time (10 days
@@ -276,7 +277,7 @@ class Sentinel2(Sentinel):
     date_format = '%Y%m%dT%H%M%S'
 
     # https://gisgeography.com/sentinel-2-bands-combinations/
-    all_bands = [
+    all_bands: tuple[str, ...] = (
         'B01',
         'B02',
         'B03',
@@ -290,14 +291,14 @@ class Sentinel2(Sentinel):
         'B10',
         'B11',
         'B12',
-    ]
-    rgb_bands = ['B04', 'B03', 'B02']
+    )
+    rgb_bands = ('B04', 'B03', 'B02')
 
     separate_files = True
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float = 10,
         bands: Sequence[str] | None = None,

@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, lazy_import
+from .utils import Path, download_url, extract_archive, lazy_import
 
 
 class SKIPPD(NonGeoDataset):
@@ -62,8 +62,8 @@ class SKIPPD(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    url = 'https://hf.co/datasets/torchgeo/skippd/resolve/a16c7e200b4618cd93be3143cdb973e3f21498fa/{}'  # noqa: E501
-    md5 = {
+    url = 'https://hf.co/datasets/torchgeo/skippd/resolve/a16c7e200b4618cd93be3143cdb973e3f21498fa/{}'
+    md5: ClassVar[dict[str, str]] = {
         'forecast': 'f4f3509ddcc83a55c433be9db2e51077',
         'nowcast': '0000761d403e45bb5f86c21d3c69aa80',
     }
@@ -71,15 +71,15 @@ class SKIPPD(NonGeoDataset):
     data_file_name = '2017_2019_images_pv_processed_{}.hdf5'
     zipfile_name = '2017_2019_images_pv_processed_{}.zip'
 
-    valid_splits = ['trainval', 'test']
+    valid_splits = ('trainval', 'test')
 
-    valid_tasks = ['nowcast', 'forecast']
+    valid_tasks = ('nowcast', 'forecast')
 
     dateformat = '%m/%d/%Y, %H:%M:%S'
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'trainval',
         task: str = 'nowcast',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -91,7 +91,7 @@ class SKIPPD(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             split: one of "trainval", or "test"
-            task: one fo "nowcast", or "forecast"
+            task: one of "nowcast", or "forecast"
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory

@@ -19,10 +19,10 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_and_extract_archive, extract_archive
+from .utils import Path, check_integrity, download_and_extract_archive, extract_archive
 
 
-def parse_pascal_voc(path: str) -> dict[str, Any]:
+def parse_pascal_voc(path: Path) -> dict[str, Any]:
     """Read a PASCAL VOC annotation file.
 
     Args:
@@ -96,17 +96,14 @@ class ForestDamage(NonGeoDataset):
     .. versionadded:: 0.3
     """
 
-    classes = ['other', 'H', 'LD', 'HD']
-    url = (
-        'https://lilablobssc.blob.core.windows.net/larch-casebearer/'
-        'Data_Set_Larch_Casebearer.zip'
-    )
+    classes = ('other', 'H', 'LD', 'HD')
+    url = 'https://lilablobssc.blob.core.windows.net/larch-casebearer/Data_Set_Larch_Casebearer.zip'
     data_dir = 'Data_Set_Larch_Casebearer'
     md5 = '907815bcc739bff89496fac8f8ce63d7'
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -164,7 +161,7 @@ class ForestDamage(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -187,7 +184,7 @@ class ForestDamage(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -209,7 +206,7 @@ class ForestDamage(NonGeoDataset):
         """Load the target mask for a single image.
 
         Args:
-            bboxes: list of bbox coordinats [xmin, ymin, xmax, ymax]
+            bboxes: list of bbox coordinates [xmin, ymin, xmax, ymax]
             labels_list: list of class labels
 
         Returns:
@@ -220,11 +217,7 @@ class ForestDamage(NonGeoDataset):
         return boxes, labels
 
     def _verify(self) -> None:
-        """Checks the integrity of the dataset structure.
-
-        Returns:
-            True if the dataset directories are found, else False
-        """
+        """Verify the integrity of the dataset."""
         filepath = os.path.join(self.root, self.data_dir)
         if os.path.isdir(filepath):
             return

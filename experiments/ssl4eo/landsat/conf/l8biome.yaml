@@ -4,12 +4,12 @@ trainer:
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    model: "unet"
-    backbone: "resnet18"
+    model: 'unet'
+    backbone: 'resnet18'
     weights: null
     in_channels: 11
     num_classes: 5
-    loss: "ce"
+    loss: 'ce'
     ignore_index: 0
     lr: 1e-3
     patience: 6
@@ -20,4 +20,4 @@ data:
     patch_size: 224
     num_workers: 16
   dict_kwargs:
-    paths: "data/l8biome"
+    paths: 'data/l8biome'

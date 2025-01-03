@@ -9,7 +9,7 @@ import hashlib
 import os
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,7 +23,7 @@ from torch.utils.data import Dataset
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset, RasterDataset
-from .utils import BoundingBox, download_url, extract_archive, working_dir
+from .utils import BoundingBox, Path, download_url, extract_archive, working_dir
 
 
 class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
@@ -64,8 +64,8 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
     url = 'https://landcover.ai.linuxpolska.com/download/landcover.ai.v1.zip'
     filename = 'landcover.ai.v1.zip'
     md5 = '3268c89070e8734b4e91d531c0617e03'
-    classes = ['Background', 'Building', 'Woodland', 'Water', 'Road']
-    cmap = {
+    classes = ('Background', 'Building', 'Woodland', 'Water', 'Road')
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 0),
         1: (97, 74, 74, 255),
         2: (38, 115, 0, 255),
@@ -74,7 +74,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
     }
 
     def __init__(
-        self, root: str = 'data', download: bool = False, checksum: bool = False
+        self, root: Path = 'data', download: bool = False, checksum: bool = False
     ) -> None:
         """Initialize a new LandCover.ai dataset instance.
 
@@ -95,8 +95,7 @@ class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
 
         lc_colors = np.zeros((max(self.cmap.keys()) + 1, 4))
         lc_colors[list(self.cmap.keys())] = list(self.cmap.values())
-        lc_colors = lc_colors[:, :3] / 255
-        self._lc_cmap = ListedColormap(lc_colors)
+        self._lc_cmap = ListedColormap(lc_colors[:, :3] / 255)
 
         self._verify()
 
@@ -205,7 +204,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -255,7 +254,9 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         """
         hits = self.index.intersection(tuple(query), objects=True)
         img_filepaths = cast(list[str], [hit.object for hit in hits])
-        mask_filepaths = [path.replace('images', 'masks') for path in img_filepaths]
+        mask_filepaths = [
+            str(path).replace('images', 'masks') for path in img_filepaths
+        ]
 
         if not img_filepaths:
             raise IndexError(
@@ -266,7 +267,7 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         mask = self._merge_files(mask_filepaths, query, self.band_indexes)
         sample = {
             'crs': self.crs,
-            'bbox': query,
+            'bounds': query,
             'image': img.float(),
             'mask': mask.long(),
         }
@@ -294,7 +295,7 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
@@ -399,10 +400,26 @@ class LandCoverAI(LandCoverAIBase, NonGeoDataset):
         super()._extract()
 
         # Generate train/val/test splits
-        # Always check the sha256 of this file before executing
-        # to avoid malicious code injection
-        with working_dir(self.root):
-            with open('split.py') as f:
-                split = f.read().encode('utf-8')
-                assert hashlib.sha256(split).hexdigest() == self.sha256
-                exec(split)
+        # Always check the sha256 of this file before executing to avoid malicious code injection
+        # The LandCoverAI100 dataset doesn't contain split.py, so only run if split.py exists
+        if os.path.exists(os.path.join(self.root, 'split.py')):
+            with working_dir(self.root):
+                with open('split.py') as f:
+                    split = f.read().encode('utf-8')
+                    assert hashlib.sha256(split).hexdigest() == self.sha256
+                    exec(split)
+
+
+class LandCoverAI100(LandCoverAI):
+    """Subset of LandCoverAI containing only 100 images.
+
+    Intended for tutorials and demonstrations, not for benchmarking.
+
+    Maintains the same file structure, classes, and train-val-test split.
+
+    .. versionadded:: 0.7
+    """
+
+    url = 'https://huggingface.co/datasets/torchgeo/landcoverai/resolve/5cdf9299bd6c1232506cf79373df01f6e6596b50/landcoverai100.zip'
+    filename = 'landcoverai100.zip'
+    md5 = '66eb33b5a0cabb631836ce0a4eafb7cd'

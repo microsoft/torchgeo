@@ -5,7 +5,8 @@
 
 import os
 import random
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, percentile_normalization
+from .utils import Path, download_url, extract_archive, percentile_normalization
 
 
 class SeasonalContrastS2(NonGeoDataset):
@@ -34,10 +35,10 @@ class SeasonalContrastS2(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://arxiv.org/pdf/2103.16607.pdf
+    * https://arxiv.org/pdf/2103.16607
     """
 
-    all_bands = [
+    all_bands = (
         'B1',
         'B2',
         'B3',
@@ -50,18 +51,18 @@ class SeasonalContrastS2(NonGeoDataset):
         'B9',
         'B11',
         'B12',
-    ]
-    rgb_bands = ['B4', 'B3', 'B2']
+    )
+    rgb_bands = ('B4', 'B3', 'B2')
 
-    metadata = {
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
         '100k': {
-            'url': 'https://zenodo.org/record/4728033/files/seco_100k.zip?download=1',
+            'url': 'https://zenodo.org/records/4728033/files/seco_100k.zip?download=1',
             'md5': 'ebf2d5e03adc6e657f9a69a20ad863e0',
             'filename': 'seco_100k.zip',
             'directory': 'seasonal_contrast_100k',
         },
         '1m': {
-            'url': 'https://zenodo.org/record/4728033/files/seco_1m.zip?download=1',
+            'url': 'https://zenodo.org/records/4728033/files/seco_1m.zip?download=1',
             'md5': '187963d852d4d3ce6637743ec3a4bd9e',
             'filename': 'seco_1m.zip',
             'directory': 'seasonal_contrast_1m',
@@ -70,10 +71,10 @@ class SeasonalContrastS2(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         version: str = '100k',
         seasons: int = 1,
-        bands: list[str] = rgb_bands,
+        bands: Sequence[str] = rgb_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -147,7 +148,7 @@ class SeasonalContrastS2(NonGeoDataset):
         """
         return (10**5 if self.version == '100k' else 10**6) // 5
 
-    def _load_patch(self, root: str, subdir: str) -> Tensor:
+    def _load_patch(self, root: Path, subdir: Path) -> Tensor:
         """Load a single image patch.
 
         Args:
@@ -169,7 +170,7 @@ class SeasonalContrastS2(NonGeoDataset):
                     # what could be sped up throughout later. There is also a potential
                     # slowdown here from converting to/from a PIL Image just to resize.
                     # https://gist.github.com/calebrob6/748045ac8d844154067b2eefa47de92f
-                    pil_image = Image.fromarray(band_data)  # type: ignore[no-untyped-call]
+                    pil_image = Image.fromarray(band_data)
                     # Moved in PIL 9.1.0
                     try:
                         resample = Image.Resampling.BILINEAR

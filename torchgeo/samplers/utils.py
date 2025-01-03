@@ -7,6 +7,7 @@ import math
 from typing import overload
 
 import torch
+from torch import Generator
 
 from ..datasets import BoundingBox
 
@@ -35,7 +36,10 @@ def _to_tuple(value: tuple[float, float] | float) -> tuple[float, float]:
 
 
 def get_random_bounding_box(
-    bounds: BoundingBox, size: tuple[float, float] | float, res: float
+    bounds: BoundingBox,
+    size: tuple[float, float] | float,
+    res: float,
+    generator: Generator | None = None,
 ) -> BoundingBox:
     """Returns a random bounding box within a given bounding box.
 
@@ -46,10 +50,14 @@ def get_random_bounding_box(
         * a ``tuple`` of two floats - in which case, the first *float* is used for the
           height dimension, and the second *float* for the width dimension
 
+    .. versionadded:: 0.7
+        The *generator* parameter.
+
     Args:
         bounds: the larger bounding box to sample from
         size: the size of the bounding box to sample
         res: the resolution of the image
+        generator: pseudo-random number generator (PRNG).
 
     Returns:
         randomly sampled bounding box from the extent of the input
@@ -64,8 +72,8 @@ def get_random_bounding_box(
     miny = bounds.miny
 
     # Use an integer multiple of res to avoid resampling
-    minx += int(torch.rand(1).item() * width) * res
-    miny += int(torch.rand(1).item() * height) * res
+    minx += int(torch.rand(1, generator=generator).item() * width) * res
+    miny += int(torch.rand(1, generator=generator).item() * height) * res
 
     maxx = minx + t_size[1]
     maxy = miny + t_size[0]

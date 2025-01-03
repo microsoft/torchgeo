@@ -1,0 +1,6 @@
+Weight,Source,Citation,License,Spatial,Temporal,Spectral,m-bigearthnet,m-forestnet,m-brick-kiln,m-pv4ger,m-so2sat,m-eurosat,m-pv4ger-seg,m-nz-cattle,m-NeonTree,m-cashew-plant,m-SA-crop,m-chesapeake
+CROMA,`link <https://github.com/antofuller/CROMA>`__,`link <https://arxiv.org/abs/2311.00566>`__,CC-BY-4.0,implicit,-,implicit,,,,,,,,,,,,
+DOFABase16_Weights.DOFA_MAE,`link <https://github.com/zhu-xlab/DOFA>`__,`link <https://arxiv.org/abs/2403.15356>`__,CC-BY-4.0,implicit,-,explicit,65.7,50.9,95.8,96.9,55.1,93.9,94.5,81.4,58.8,51.5,33.0,65.3
+DOFALarge16_Weights.DOFA_MAE,`link <https://github.com/zhu-xlab/DOFA>`__,`link <https://arxiv.org/abs/2403.15356>`__,CC-BY-4.0,implicit,-,explicit,67.5,54.6,96.9,97.3,60.1,97.1,95.0,81.8,59.4,56.9,32.1,66.3
+ResNet50_Weights.FMOW_RGB_GASSL,`link <https://github.com/sustainlab-group/geography-aware-ssl>`__,`link <https://arxiv.org/abs/2011.09980>`__,-,implicit,-,-,,,,,,,,,,,,
+ScaleMAE_ViTLarge16_Weights.FMOW_RGB_SCALEMAE,`link <https://github.com/bair-climate-initiative/scale-mae>`__,`link <https://arxiv.org/abs/2212.14532>`__,CC-BY-NC-4.0,explicit,-,-,,,,,,,,,,,

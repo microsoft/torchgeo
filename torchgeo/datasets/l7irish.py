@@ -7,7 +7,7 @@ import glob
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -18,7 +18,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import BoundingBox, disambiguate_timestamp, download_url, extract_archive
+from .utils import (
+    BoundingBox,
+    Path,
+    disambiguate_timestamp,
+    download_url,
+    extract_archive,
+)
 
 
 class L7IrishImage(RasterDataset):
@@ -36,8 +42,8 @@ class L7IrishImage(RasterDataset):
     """
     date_format = '%Y%m%d'
     is_image = True
-    rgb_bands = ['B30', 'B20', 'B10']
-    all_bands = ['B10', 'B20', 'B30', 'B40', 'B50', 'B61', 'B62', 'B70', 'B80']
+    rgb_bands = ('B30', 'B20', 'B10')
+    all_bands = ('B10', 'B20', 'B30', 'B40', 'B50', 'B61', 'B62', 'B70', 'B80')
 
 
 class L7IrishMask(RasterDataset):
@@ -52,7 +58,7 @@ class L7IrishMask(RasterDataset):
         _newmask2015\.TIF$
     """
     is_image = False
-    classes = ['Fill', 'Cloud Shadow', 'Clear', 'Thin Cloud', 'Cloud']
+    classes = ('Fill', 'Cloud Shadow', 'Clear', 'Thin Cloud', 'Cloud')
     ordinal_map = torch.zeros(256, dtype=torch.long)
     ordinal_map[64] = 1
     ordinal_map[128] = 2
@@ -61,7 +67,7 @@ class L7IrishMask(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         bands: Sequence[str] | None = None,
@@ -151,11 +157,11 @@ class L7Irish(IntersectionDataset):
     * https://www.sciencebase.gov/catalog/item/573ccf18e4b0dae0d5e4b109
 
     .. versionadded:: 0.5
-    """  # noqa: E501
+    """
 
-    url = 'https://hf.co/datasets/torchgeo/l7irish/resolve/6807e0b22eca7f9a8a3903ea673b31a115837464/{}.tar.gz'  # noqa: E501
+    url = 'https://hf.co/datasets/torchgeo/l7irish/resolve/6807e0b22eca7f9a8a3903ea673b31a115837464/{}.tar.gz'
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'austral': '0a34770b992a62abeb88819feb192436',
         'boreal': 'b7cfdd689a3c2fd2a8d572e1c10ed082',
         'mid_latitude_north': 'c40abe5ad2487f8ab021cfb954982faa',
@@ -169,7 +175,7 @@ class L7Irish(IntersectionDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = CRS.from_epsg(3857),
         res: float | None = None,
         bands: Sequence[str] = L7IrishImage.all_bands,
@@ -222,7 +228,7 @@ class L7Irish(IntersectionDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        if not isinstance(self.paths, str):
+        if not isinstance(self.paths, str | os.PathLike):
             return
 
         for classname in [L7IrishImage, L7IrishMask]:
@@ -255,7 +261,7 @@ class L7Irish(IntersectionDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | os.PathLike)
         pathname = os.path.join(self.paths, '*.tar.gz')
         for tarfile in glob.iglob(pathname):
             extract_archive(tarfile)

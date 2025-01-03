@@ -7,6 +7,7 @@ import glob
 import json
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive, sort_sentinel2_bands
+from .utils import Path, download_url, extract_archive, sort_sentinel2_bands
 
 
 class BigEarthNet(NonGeoDataset):
@@ -124,9 +125,9 @@ class BigEarthNet(NonGeoDataset):
 
     * https://doi.org/10.1109/IGARSS.2019.8900532
 
-    """  # noqa: E501
+    """
 
-    class_sets = {
+    class_sets: ClassVar[dict[int, list[str]]] = {
         19: [
             'Urban fabric',
             'Industrial or commercial units',
@@ -197,7 +198,7 @@ class BigEarthNet(NonGeoDataset):
         ],
     }
 
-    label_converter = {
+    label_converter: ClassVar[dict[int, int]] = {
         0: 0,
         1: 0,
         2: 1,
@@ -232,32 +233,32 @@ class BigEarthNet(NonGeoDataset):
         42: 18,
     }
 
-    splits_metadata = {
+    splits_metadata: ClassVar[dict[str, dict[str, str]]] = {
         'train': {
-            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/train.csv?inline=false',  # noqa: E501
+            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/train.csv?inline=false',
             'filename': 'bigearthnet-train.csv',
             'md5': '623e501b38ab7b12fe44f0083c00986d',
         },
         'val': {
-            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/val.csv?inline=false',  # noqa: E501
+            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/val.csv?inline=false',
             'filename': 'bigearthnet-val.csv',
             'md5': '22efe8ed9cbd71fa10742ff7df2b7978',
         },
         'test': {
-            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/test.csv?inline=false',  # noqa: E501
+            'url': 'https://git.tu-berlin.de/rsim/BigEarthNet-MM_19-classes_models/-/raw/9a5be07346ab0884b2d9517475c27ef9db9b5104/splits/test.csv?inline=false',
             'filename': 'bigearthnet-test.csv',
             'md5': '697fb90677e30571b9ac7699b7e5b432',
         },
     }
-    metadata = {
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
         's1': {
-            'url': 'https://bigearth.net/downloads/BigEarthNet-S1-v1.0.tar.gz',
+            'url': 'https://zenodo.org/records/12687186/files/BigEarthNet-S1-v1.0.tar.gz',
             'md5': '94ced73440dea8c7b9645ee738c5a172',
             'filename': 'BigEarthNet-S1-v1.0.tar.gz',
             'directory': 'BigEarthNet-S1-v1.0',
         },
         's2': {
-            'url': 'https://bigearth.net/downloads/BigEarthNet-S2-v1.0.tar.gz',
+            'url': 'https://zenodo.org/records/12687186/files/BigEarthNet-S2-v1.0.tar.gz',
             'md5': '5a64e9ce38deb036a435a7b59494924c',
             'filename': 'BigEarthNet-S2-v1.0.tar.gz',
             'directory': 'BigEarthNet-v1.0',
@@ -267,7 +268,7 @@ class BigEarthNet(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         bands: str = 'all',
         num_classes: int = 19,
@@ -486,7 +487,7 @@ class BigEarthNet(NonGeoDataset):
             filepath = os.path.join(self.root, filename)
             self._extract(filepath)
 
-    def _download(self, url: str, filename: str, md5: str) -> None:
+    def _download(self, url: str, filename: Path, md5: str) -> None:
         """Download the dataset.
 
         Args:
@@ -499,13 +500,13 @@ class BigEarthNet(NonGeoDataset):
                 url, self.root, filename=filename, md5=md5 if self.checksum else None
             )
 
-    def _extract(self, filepath: str) -> None:
+    def _extract(self, filepath: Path) -> None:
         """Extract the dataset.
 
         Args:
             filepath: path to file to be extracted
         """
-        if not filepath.endswith('.csv'):
+        if not str(filepath).endswith('.csv'):
             extract_archive(filepath)
 
     def _onehot_labels_to_names(

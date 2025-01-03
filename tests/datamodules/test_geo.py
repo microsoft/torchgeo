@@ -31,8 +31,8 @@ class CustomGeoDataset(GeoDataset):
         self.res = 1
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        image = torch.arange(3 * 2 * 2).view(3, 2, 2)
-        return {'image': image, 'crs': CRS.from_epsg(4326), 'bbox': query}
+        image = torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)
+        return {'image': image, 'crs': CRS.from_epsg(4326), 'bounds': query}
 
     def plot(self, *args: Any, **kwargs: Any) -> Figure:
         return plt.figure()
@@ -68,7 +68,7 @@ class CustomNonGeoDataset(NonGeoDataset):
         self.length = length
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
-        return {'image': torch.arange(3 * 2 * 2).view(3, 2, 2)}
+        return {'image': torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)}
 
     def __len__(self) -> int:
         return self.length
