@@ -36,11 +36,11 @@ class TestReforesTree:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
-        assert isinstance(x['boxes'], torch.Tensor)
+        assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['agb'], torch.Tensor)
         assert x['image'].shape[0] == 3
         assert x['image'].ndim == 3
-        assert len(x['boxes']) == 2
+        assert len(x['bbox_xyxy']) == 2
 
     def test_len(self, dataset: ReforesTree) -> None:
         assert len(dataset) == 2
@@ -67,6 +67,6 @@ class TestReforesTree:
 
     def test_plot_prediction(self, dataset: ReforesTree) -> None:
         x = dataset[0].copy()
-        x['prediction_boxes'] = x['boxes'].clone()
+        x['prediction_boxes'] = x['bbox_xyxy'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
