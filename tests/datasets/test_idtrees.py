@@ -57,11 +57,11 @@ class TestIDTReeS:
 
         if 'label' in x:
             assert isinstance(x['label'], torch.Tensor)
-        if 'boxes' in x:
-            assert isinstance(x['boxes'], torch.Tensor)
-            if x['boxes'].ndim != 1:
-                assert x['boxes'].ndim == 2
-                assert x['boxes'].shape[-1] == 4
+        if 'bbox_xyxy' in x:
+            assert isinstance(x['bbox_xyxy'], torch.Tensor)
+            if x['bbox_xyxy'].ndim != 1:
+                assert x['bbox_xyxy'].ndim == 2
+                assert x['bbox_xyxy'].shape[-1] == 4
 
     def test_len(self, dataset: IDTReeS) -> None:
         assert len(dataset) == 3
@@ -87,8 +87,8 @@ class TestIDTReeS:
         dataset.plot(x, show_titles=False)
         plt.close()
 
-        if 'boxes' in x:
-            x['prediction_boxes'] = x['boxes']
+        if 'bbox_xyxy' in x:
+            x['prediction_boxes'] = x['bbox_xyxy']
             dataset.plot(x, show_titles=True)
             plt.close()
         if 'label' in x:

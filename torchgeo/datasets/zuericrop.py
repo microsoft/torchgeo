@@ -11,9 +11,14 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from .errors import DatasetNotFoundError, RGBBandsMissingError
-from .geo import NonGeoDataset
-from .utils import Path, download_url, lazy_import, percentile_normalization
+from torchgeo.datasets.errors import DatasetNotFoundError, RGBBandsMissingError
+from torchgeo.datasets.geo import NonGeoDataset
+from torchgeo.datasets.utils import (
+    Path,
+    download_url,
+    lazy_import,
+    percentile_normalization,
+)
 
 
 class ZueriCrop(NonGeoDataset):
@@ -109,7 +114,7 @@ class ZueriCrop(NonGeoDataset):
         image = self._load_image(index)
         mask, boxes, label = self._load_target(index)
 
-        sample = {'image': image, 'mask': mask, 'boxes': boxes, 'label': label}
+        sample = {'image': image, 'mask': mask, 'bbox_xyxy': boxes, 'label': label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)

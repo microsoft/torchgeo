@@ -70,9 +70,9 @@ class TestFAIR1M:
         assert x['image'].shape[0] == 3
 
         if dataset.split != 'test':
-            assert isinstance(x['boxes'], torch.Tensor)
+            assert isinstance(x['bbox_xyxy'], torch.Tensor)
             assert isinstance(x['label'], torch.Tensor)
-            assert x['boxes'].shape[-2:] == (5, 2)
+            assert x['bbox_xyxy'].shape[-2:] == (5, 2)
             assert x['label'].ndim == 1
 
     def test_len(self, dataset: FAIR1M) -> None:
@@ -124,6 +124,6 @@ class TestFAIR1M:
         plt.close()
 
         if dataset.split != 'test':
-            x['prediction_boxes'] = x['boxes'].clone()
+            x['prediction_boxes'] = x['bbox_xyxy'].clone()
             dataset.plot(x)
             plt.close()

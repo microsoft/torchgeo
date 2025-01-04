@@ -109,7 +109,7 @@ class ReforesTree(NonGeoDataset):
 
         boxes, labels, agb = self._load_target(filepath)
 
-        sample = {'image': image, 'boxes': boxes, 'label': labels, 'agb': agb}
+        sample = {'image': image, 'bbox_xyxy': boxes, 'label': labels, 'agb': agb}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -239,7 +239,7 @@ class ReforesTree(NonGeoDataset):
                 edgecolor='r',
                 facecolor='none',
             )
-            for bbox in sample['boxes'].numpy()
+            for bbox in sample['bbox_xyxy'].numpy()
         ]
         for bbox in bboxes:
             axs[0].add_patch(bbox)

@@ -30,18 +30,12 @@ def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
     """
     output: dict[str, Any] = {}
     output['image'] = torch.stack([sample['image'] for sample in batch])
-    # Get bbox key as it can be one of {"bbox", "bbox_xyxy", "bbox_xywh"}
-    bbox_key = 'boxes'
-    for key in batch[0].keys():
-        if key in {'bbox', 'bbox_xyxy', 'bbox_xywh'}:
-            bbox_key = key
-
-    output[bbox_key] = [sample[bbox_key].float() for sample in batch]
+    output['bbox_xyxy'] = [sample['bbox_xyxy'].float() for sample in batch]
     if 'class' in batch[0].keys():
         output['class'] = [sample['class'] for sample in batch]
     else:
         output['class'] = [
-            torch.tensor([1] * len(sample[bbox_key])) for sample in batch
+            torch.tensor([1] * len(sample['bbox_xyxy'])) for sample in batch
         ]
 
     if 'mask' in batch[0]:

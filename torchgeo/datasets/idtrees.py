@@ -212,20 +212,23 @@ class IDTReeS(NonGeoDataset):
 
         if self.split == 'test':
             if self.task == 'task2':
-                sample['boxes'] = self._load_boxes(path)
+                sample['bbox_xyxy'] = self._load_boxes(path)
                 h, w = sample['image'].shape[1:]
-                sample['boxes'], _ = self._filter_boxes(
-                    image_size=(h, w), min_size=1, boxes=sample['boxes'], labels=None
+                sample['bbox_xyxy'], _ = self._filter_boxes(
+                    image_size=(h, w),
+                    min_size=1,
+                    boxes=sample['bbox_xyxy'],
+                    labels=None,
                 )
         else:
-            sample['boxes'] = self._load_boxes(path)
+            sample['bbox_xyxy'] = self._load_boxes(path)
             sample['label'] = self._load_target(path)
 
             h, w = sample['image'].shape[1:]
-            sample['boxes'], sample['label'] = self._filter_boxes(
+            sample['bbox_xyxy'], sample['label'] = self._filter_boxes(
                 image_size=(h, w),
                 min_size=1,
-                boxes=sample['boxes'],
+                boxes=sample['bbox_xyxy'],
                 labels=sample['label'],
             )
 
@@ -504,14 +507,14 @@ class IDTReeS(NonGeoDataset):
         hsi = normalize(sample['hsi'][hsi_indices, :, :]).permute((1, 2, 0)).numpy()
         chm = normalize(sample['chm']).permute((1, 2, 0)).numpy()
 
-        if 'boxes' in sample and len(sample['boxes']):
+        if 'bbox_xyxy' in sample and len(sample['bbox_xyxy']):
             labels = (
                 [self.idx2class[int(i)] for i in sample['label']]
                 if 'label' in sample
                 else None
             )
             image = draw_bounding_boxes(
-                image=sample['image'], boxes=sample['boxes'], labels=labels
+                image=sample['image'], boxes=sample['bbox_xyxy'], labels=labels
             )
             image = image.permute((1, 2, 0)).numpy()
         else:

@@ -283,7 +283,7 @@ class FAIR1M(NonGeoDataset):
             label_path = label_path.replace('.tif', '.xml')
             voc = parse_pascal_voc(label_path)
             boxes, labels = self._load_target(voc['points'], voc['labels'])
-            sample = {'image': image, 'boxes': boxes, 'label': labels}
+            sample = {'image': image, 'bbox_xyxy': boxes, 'label': labels}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -411,10 +411,10 @@ class FAIR1M(NonGeoDataset):
         axs[0].imshow(image)
         axs[0].axis('off')
 
-        if 'boxes' in sample:
+        if 'bbox_xyxy' in sample:
             polygons = [
                 patches.Polygon(points, color='r', fill=False)
-                for points in sample['boxes'].numpy()
+                for points in sample['bbox_xyxy'].numpy()
             ]
             for polygon in polygons:
                 axs[0].add_patch(polygon)
