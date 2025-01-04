@@ -1,12 +1,9 @@
 torchgeo
 ========
-
 .. automodule:: torchgeo
-
 .. toctree::
    :maxdepth: 2
    :caption: User Documentation
-
    user/installation
    user/contributing
    user/glossary
@@ -14,8 +11,16 @@ torchgeo
 
 .. toctree::
    :maxdepth: 2
-   :caption: Package Reference
+   :caption: Tutorials
 
+   tutorials/getting_started
+   tutorials/basic_usage
+   tutorials/case_studies
+   tutorials/customization
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Package Reference
    api/datamodules
    api/datasets
    api/losses
@@ -26,19 +31,7 @@ torchgeo
 
 .. toctree::
    :maxdepth: 1
-   :caption: Tutorials
-
-   tutorials/getting_started
-   tutorials/custom_raster_dataset
-   tutorials/transforms
-   tutorials/indices
-   tutorials/trainers
-   tutorials/pretrained_weights
-
-.. toctree::
-   :maxdepth: 1
    :caption: PyTorch Libraries
-
    PyTorch <https://pytorch.org/docs>
    torchaudio <https://pytorch.org/audio>
    torchtext <https://pytorch.org/text>
