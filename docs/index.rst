@@ -1,9 +1,12 @@
 torchgeo
 ========
+
 .. automodule:: torchgeo
+
 .. toctree::
    :maxdepth: 2
    :caption: User Documentation
+
    user/installation
    user/contributing
    user/glossary
@@ -21,6 +24,7 @@ torchgeo
 .. toctree::
    :maxdepth: 2
    :caption: Package Reference
+
    api/datamodules
    api/datasets
    api/losses
