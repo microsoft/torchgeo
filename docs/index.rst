@@ -14,15 +14,6 @@ torchgeo
 
 .. toctree::
    :maxdepth: 2
-   :caption: Tutorials
-
-   tutorials/getting_started
-   tutorials/basic_usage
-   tutorials/case_studies
-   tutorials/customization
-
-.. toctree::
-   :maxdepth: 2
    :caption: Package Reference
 
    api/datamodules
@@ -43,8 +34,9 @@ torchgeo
    tutorials/indices
    tutorials/trainers
    tutorials/pretrained_weights
-   tutorials/land_cover
 
+.. toctree::
+   :maxdepth: 1
    :caption: PyTorch Libraries
 
    PyTorch <https://pytorch.org/docs>
