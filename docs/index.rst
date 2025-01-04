@@ -35,6 +35,16 @@ torchgeo
 
 .. toctree::
    :maxdepth: 1
+   :caption: Tutorials
+
+   tutorials/getting_started
+   tutorials/custom_raster_dataset
+   tutorials/transforms
+   tutorials/indices
+   tutorials/trainers
+   tutorials/pretrained_weights
+   tutorials/land_cover
+
    :caption: PyTorch Libraries
 
    PyTorch <https://pytorch.org/docs>
