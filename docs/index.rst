@@ -36,6 +36,7 @@ torchgeo
 .. toctree::
    :maxdepth: 1
    :caption: PyTorch Libraries
+
    PyTorch <https://pytorch.org/docs>
    torchaudio <https://pytorch.org/audio>
    torchtext <https://pytorch.org/text>
