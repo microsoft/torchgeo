@@ -18,60 +18,65 @@ from torchgeo.datasets import Substation
 class TestSubstation:
     @pytest.fixture
     def dataset(
-        self,
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> Generator[Substation, None, None]:
         """Fixture for the Substation."""
         root = os.path.join(os.getcwd(), 'tests', 'data')
 
         yield Substation(
             root=root,
-            bands=13,
+            bands=[1,2,3],
             use_timepoints=True,
             mask_2d=True,
             timepoint_aggregation='median',
-            num_of_timepoints=4 
+            num_of_timepoints=4,
         )
 
     @pytest.mark.parametrize(
         'config',
         [
-            {'bands': 3, 'use_timepoints': False, 'mask_2d': True},
+            {'bands': [1,2,3], 'use_timepoints': False, 'mask_2d': True},
             {
-                'bands': 9,
+                'bands': [1,2,3],
                 'use_timepoints': True,
                 'timepoint_aggregation': 'concat',
+                'num_of_timepoints': 4,
                 'mask_2d': False,
             },
             {
-                'bands': 12,
+                'bands': [1,2,3],
                 'use_timepoints': True,
                 'timepoint_aggregation': 'median',
+                'num_of_timepoints': 4,
                 'mask_2d': True,
             },
             {
-                'bands': 5,
+                'bands': [1,2,3],
                 'use_timepoints': True,
                 'timepoint_aggregation': 'first',
+                'num_of_timepoints': 4,
                 'mask_2d': False,
             },
             {
-                'bands': 4,
+                'bands': [1,2,3],
                 'use_timepoints': True,
                 'timepoint_aggregation': 'random',
+                'num_of_timepoints': 4,
                 'mask_2d': True,
             },
-            {'bands': 2, 'use_timepoints': False, 'mask_2d': False},
+            {'bands': [1,2,3], 'use_timepoints': False, 'mask_2d': False},
             {
-                'bands': 5,
+                'bands': [1,2,3],
                 'use_timepoints': False,
                 'timepoint_aggregation': 'first',
+                'num_of_timepoints': 4,
                 'mask_2d': False,
             },
             {
-                'bands': 4,
+                'bands': [1,2,3],
                 'use_timepoints': False,
                 'timepoint_aggregation': 'random',
+                'num_of_timepoints': 4,
                 'mask_2d': True,
             },
         ],
@@ -89,12 +94,12 @@ class TestSubstation:
 
     def test_len(self, dataset: Substation) -> None:
         """Test the length of the dataset."""
-        assert len(dataset) == 2
+        assert len(dataset) == 5
 
     def test_output_shape(self, dataset: Substation) -> None:
         """Test the output shape of the dataset."""
         x = dataset[0]
-        assert x['image'].shape == torch.Size([13, 32, 32])
+        assert x['image'].shape == torch.Size([3, 32, 32])
         assert x['mask'].shape == torch.Size([2, 32, 32])
 
     def test_plot(self, dataset: Substation) -> None:
@@ -108,8 +113,7 @@ class TestSubstation:
         plt.close()
 
     def test_already_downloaded(
-        self,
-        dataset: Substation, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self, dataset: Substation, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Test that the dataset doesn't re-download if already present."""
         # Simulating that files are already present by copying them to the target directory
@@ -128,8 +132,7 @@ class TestSubstation:
         dataset._download()  # This will now call the mocked method
 
     def test_download(
-        self,
-        dataset: Substation, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self, dataset: Substation, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Test the _download method of the dataset."""
         # Mock the download_url and extract_archive functions
@@ -152,3 +155,7 @@ class TestSubstation:
         # Check that extract_archive was called twice
         mock_extract_archive.assert_called()
         assert mock_extract_archive.call_count == 2
+
+
+if __name__ == '__main__':
+    pytest.main([__file__])

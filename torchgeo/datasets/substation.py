@@ -47,12 +47,12 @@ class Substation(NonGeoDataset):
         self,
         root: str,
         bands: int,
-        num_of_timepoints: int,
-        use_timepoints: bool,
         mask_2d: bool,
-        timepoint_aggregation: str,
+        timepoint_aggregation: str = 'concat',
         download: bool = False,
         checksum: bool = False,
+        num_of_timepoints: int = 4,
+        use_timepoints: bool = False,
     ) -> None:
         """Initialize the Substation.
 
