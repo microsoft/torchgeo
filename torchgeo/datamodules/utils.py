@@ -31,10 +31,10 @@ def collate_fn_detection(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
     output: dict[str, Any] = {}
     output['image'] = torch.stack([sample['image'] for sample in batch])
     output['bbox_xyxy'] = [sample['bbox_xyxy'].float() for sample in batch]
-    if 'class' in batch[0].keys():
-        output['class'] = [sample['class'] for sample in batch]
+    if 'label' in batch[0].keys():
+        output['label'] = [sample['label'] for sample in batch]
     else:
-        output['class'] = [
+        output['label'] = [
             torch.tensor([1] * len(sample['bbox_xyxy'])) for sample in batch
         ]
 

@@ -251,7 +251,7 @@ class VHR10(NonGeoDataset):
             sample['class'] = sample['label']['labels']
             sample['bbox_xyxy'] = sample['label']['boxes']
             sample['mask'] = sample['label']['masks'].float()
-            del sample['label']
+            sample['label'] = sample.pop('class')
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -402,7 +402,7 @@ class VHR10(NonGeoDataset):
 
         image = sample['image'].permute(1, 2, 0).numpy()
         boxes = sample['bbox_xyxy'].cpu().numpy()
-        labels = sample['class'].cpu().numpy()
+        labels = sample['label'].cpu().numpy()
         if 'mask' in sample:
             masks = [mask.squeeze().cpu().numpy() for mask in sample['mask']]
 

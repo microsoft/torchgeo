@@ -41,7 +41,7 @@ class TestVHR10:
             assert isinstance(x, dict)
             assert isinstance(x['image'], torch.Tensor)
             if dataset.split == 'positive':
-                assert isinstance(x['class'], torch.Tensor)
+                assert isinstance(x['label'], torch.Tensor)
                 assert isinstance(x['bbox_xyxy'], torch.Tensor)
                 if 'mask' in x:
                     assert isinstance(x['mask'], torch.Tensor)
@@ -82,7 +82,7 @@ class TestVHR10:
             scores = [0.7, 0.3, 0.7]
             for i in range(3):
                 x = dataset[i]
-                x['prediction_labels'] = x['class']
+                x['prediction_labels'] = x['label']
                 x['prediction_boxes'] = x['bbox_xyxy']
                 x['prediction_scores'] = torch.Tensor([scores[i]])
                 if 'mask' in x:
