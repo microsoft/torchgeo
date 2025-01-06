@@ -240,7 +240,7 @@ class ObjectDetectionTask(BaseTask):
         batch_size = x.shape[0]
         assert 'bbox_xyxy' in batch, 'bbox_xyxy is required for object detection.'
         y = [
-            {'boxes': batch['bbox_xyxy'][i], 'labels': batch['class'][i]}
+            {'boxes': batch['bbox_xyxy'][i], 'labels': batch['label'][i]}
             for i in range(batch_size)
         ]
         loss_dict = self(x, y)
@@ -262,7 +262,7 @@ class ObjectDetectionTask(BaseTask):
         batch_size = x.shape[0]
         assert 'bbox_xyxy' in batch, 'bbox_xyxy is required for object detection.'
         y = [
-            {'boxes': batch['bbox_xyxy'][i], 'labels': batch['class'][i]}
+            {'boxes': batch['bbox_xyxy'][i], 'labels': batch['label'][i]}
             for i in range(batch_size)
         ]
         y_hat = self(x)
@@ -317,7 +317,7 @@ class ObjectDetectionTask(BaseTask):
         batch_size = x.shape[0]
         assert 'bbox_xyxy' in batch, 'bbox_xyxy is required for object detection.'
         y = [
-            {'boxes': batch['bbox_xyxy'][i], 'labels': batch['class'][i]}
+            {'boxes': batch['bbox_xyxy'][i], 'labels': batch['label'][i]}
             for i in range(batch_size)
         ]
         y_hat = self(x)
