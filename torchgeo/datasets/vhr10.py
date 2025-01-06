@@ -416,8 +416,8 @@ class VHR10(NonGeoDataset):
             show_pred_masks = False
             prediction_labels = sample['prediction_labels'].numpy()
             prediction_scores = sample['prediction_scores'].numpy()
-            if 'prediction_boxes' in sample:
-                prediction_boxes = sample['prediction_boxes'].numpy()
+            if 'prediction_bbox_xyxy' in sample:
+                prediction_bbox_xyxy = sample['prediction_bbox_xyxy'].numpy()
                 show_pred_boxes = True
             if 'prediction_masks' in sample:
                 prediction_masks = sample['prediction_masks'].numpy()
@@ -485,7 +485,7 @@ class VHR10(NonGeoDataset):
 
                 if show_pred_boxes:
                     # Add bounding boxes
-                    x1, y1, x2, y2 = prediction_boxes[i]
+                    x1, y1, x2, y2 = prediction_bbox_xyxy[i]
                     r = patches.Rectangle(
                         (x1, y1),
                         x2 - x1,

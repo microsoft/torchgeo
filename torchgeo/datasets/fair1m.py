@@ -401,7 +401,7 @@ class FAIR1M(NonGeoDataset):
         image = sample['image'].permute((1, 2, 0)).numpy()
 
         ncols = 1
-        if 'prediction_boxes' in sample:
+        if 'prediction_bbox_xyxy' in sample:
             ncols += 1
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
@@ -427,7 +427,7 @@ class FAIR1M(NonGeoDataset):
             axs[1].axis('off')
             polygons = [
                 patches.Polygon(points, color='r', fill=False)
-                for points in sample['prediction_boxes'].numpy()
+                for points in sample['prediction_bbox_xyxy'].numpy()
             ]
             for polygon in polygons:
                 axs[0].add_patch(polygon)

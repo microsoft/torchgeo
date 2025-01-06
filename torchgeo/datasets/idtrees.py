@@ -520,7 +520,7 @@ class IDTReeS(NonGeoDataset):
         else:
             image = sample['image'].permute((1, 2, 0)).numpy()
 
-        if 'prediction_boxes' in sample and len(sample['prediction_boxes']):
+        if 'prediction_bbox_xyxy' in sample and len(sample['prediction_bbox_xyxy']):
             ncols += 1
             labels = (
                 [self.idx2class[int(i)] for i in sample['prediction_label']]
@@ -528,7 +528,7 @@ class IDTReeS(NonGeoDataset):
                 else None
             )
             preds = draw_bounding_boxes(
-                image=sample['image'], boxes=sample['prediction_boxes'], labels=labels
+                image=sample['image'], boxes=sample['prediction_bbox_xyxy'], labels=labels
             )
             preds = preds.permute((1, 2, 0)).numpy()
 

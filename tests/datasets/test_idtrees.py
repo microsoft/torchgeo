@@ -88,7 +88,7 @@ class TestIDTReeS:
         plt.close()
 
         if 'bbox_xyxy' in x:
-            x['prediction_boxes'] = x['bbox_xyxy']
+            x['prediction_bbox_xyxy'] = x['bbox_xyxy']
             dataset.plot(x, show_titles=True)
             plt.close()
         if 'label' in x:

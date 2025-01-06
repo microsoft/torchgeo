@@ -124,6 +124,6 @@ class TestFAIR1M:
         plt.close()
 
         if dataset.split != 'test':
-            x['prediction_boxes'] = x['bbox_xyxy'].clone()
+            x['prediction_bbox_xyxy'] = x['bbox_xyxy'].clone()
             dataset.plot(x)
             plt.close()

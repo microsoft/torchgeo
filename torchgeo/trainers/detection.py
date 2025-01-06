@@ -282,7 +282,7 @@ class ObjectDetectionTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
-            batch['prediction_boxes'] = [b['boxes'].cpu() for b in y_hat]
+            batch['prediction_bbox_xyxy'] = [b['boxes'].cpu() for b in y_hat]
             batch['prediction_labels'] = [b['labels'].cpu() for b in y_hat]
             batch['prediction_scores'] = [b['scores'].cpu() for b in y_hat]
             batch['image'] = batch['image'].cpu()

@@ -67,6 +67,6 @@ class TestForestDamage:
 
     def test_plot_prediction(self, dataset: ForestDamage) -> None:
         x = dataset[0].copy()
-        x['prediction_boxes'] = x['bbox_xyxy'].clone()
+        x['prediction_bbox_xyxy'] = x['bbox_xyxy'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()

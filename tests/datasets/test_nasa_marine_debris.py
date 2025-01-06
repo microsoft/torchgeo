@@ -50,6 +50,6 @@ class TestNASAMarineDebris:
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        x['prediction_boxes'] = x['bbox_xyxy'].clone()
+        x['prediction_bbox_xyxy'] = x['bbox_xyxy'].clone()
         dataset.plot(x)
         plt.close()
