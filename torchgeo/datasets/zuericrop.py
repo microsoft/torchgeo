@@ -11,14 +11,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from torchgeo.datasets.errors import DatasetNotFoundError, RGBBandsMissingError
-from torchgeo.datasets.geo import NonGeoDataset
-from torchgeo.datasets.utils import (
-    Path,
-    download_url,
-    lazy_import,
-    percentile_normalization,
-)
+from .errors import DatasetNotFoundError, RGBBandsMissingError
+from .geo import NonGeoDataset
+from .utils import Path, download_url, lazy_import, percentile_normalization
 
 
 class ZueriCrop(NonGeoDataset):
