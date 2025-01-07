@@ -28,8 +28,8 @@ Testing:
 
 The recommended way to install TorchGeo is with [pip](https://pip.pypa.io/):
 
-```console
-$ pip install torchgeo
+```sh
+pip install torchgeo
 ```
 
 For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation instructions, see the [documentation](https://torchgeo.readthedocs.io/en/stable/user/installation.html).
@@ -192,7 +192,7 @@ trainer.fit(model=task, datamodule=datamodule)
 
 TorchGeo also supports command-line interface training using [LightningCLI](https://lightning.ai/docs/pytorch/stable/cli/lightning_cli.html). It can be invoked in two ways:
 
-```console
+```sh
 # If torchgeo has been installed
 torchgeo
 # If torchgeo has been installed, or if it has been cloned to the current directory
@@ -201,7 +201,7 @@ python3 -m torchgeo
 
 It supports command-line configuration or YAML/JSON config files. Valid options can be found from the help messages:
 
-```console
+```sh
 # See valid stages
 torchgeo --help
 # See valid trainer options
@@ -233,7 +233,7 @@ data:
 
 we can see the script in action:
 
-```console
+```sh
 # Train and validate a model
 torchgeo fit --config config.yaml
 # Validate-only
