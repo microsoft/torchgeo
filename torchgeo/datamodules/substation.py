@@ -6,9 +6,10 @@ from torch.utils.data import Subset
 from tqdm import tqdm
 
 from ..datasets import Substation
+from .geo import NonGeoDataModule
 
 
-class SubstationDataModule:
+class SubstationDataModule(NonGeoDataModule):
     """Substation Data Module with train-test split and transformations.
 
     .. versionadded:: 0.7
