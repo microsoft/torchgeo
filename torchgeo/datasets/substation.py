@@ -46,7 +46,7 @@ class Substation(NonGeoDataset):
     def __init__(
         self,
         root: str,
-        bands: int,
+        bands: list[int],
         mask_2d: bool,
         timepoint_aggregation: str = 'concat',
         download: bool = False,
