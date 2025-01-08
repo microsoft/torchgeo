@@ -9,7 +9,7 @@ model:
     num_filters: 1
     ignore_index: null
 data:
-  class_path: Vaihingen2DDataModule
+  class_path: SubstationDataModule
   init_args:
     batch_size: 1
     patch_size: 2
