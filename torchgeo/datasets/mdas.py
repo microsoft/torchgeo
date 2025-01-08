@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
 import torch
+from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from torch import Tensor
 
@@ -355,8 +356,8 @@ class MDAS(NonGeoDataset):
                     axs[idx].imshow(img)
                 case 'osm_landuse_mask':
                     img = data.numpy().squeeze(0)
-                    tab20 = cm.get_cmap('tab20')
-                    im = axs[idx].imshow(img, cmap=[tab20(i) for i in range(20)])
+                    cmap = ListedColormap([cm.get_cmap('tab20')(i) for i in range(20)])
+                    im = axs[idx].imshow(img, cmap=cmap)
                     cbar = plt.colorbar(im, ax=axs[idx], ticks=range(19))
                     cbar.ax.set_yticklabels(
                         [self.landuse_class_names[i] for i in range(19)]
