@@ -134,9 +134,10 @@ class SubstationDataModule:
 
             if self.color_transforms:
                 num_timepoints = image.shape[0] // self.bands
+                num_of_bands = len(self.bands)
                 for i in range(num_timepoints):
-                    if self.bands >= 3:
-                        start = i * self.bands
+                    if num_of_bands >= 3:
+                        start = i * num_of_bands
                         end = start + 3
                         image[start:end, :, :] = self.color_transforms(
                             image[start:end, :, :]
