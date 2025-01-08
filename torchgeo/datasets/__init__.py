@@ -60,6 +60,7 @@ from .geo import (
 )
 from .geonrw import GeoNRW
 from .gid15 import GID15
+from .glacier_mapping_alps import GlacierMappingAlps
 from .globbiomass import GlobBiomass
 from .hyspecnet import HySpecNet11k
 from .idtrees import IDTReeS
@@ -215,6 +216,7 @@ __all__ = (
     'ForestDamage',
     'GeoDataset',
     'GeoNRW',
+    'GlacierMappingAlps',
     'GlobBiomass',
     'HySpecNet11k',
     'IDTReeS',
