@@ -5,12 +5,14 @@ model:
     model: 'unet'
     backbone: 'resnet18'
     in_channels: 3
-    num_classes: 11
+    num_classes: 7
+    num_filters: 1
     ignore_index: null
 data:
-  class_path: SubstationDataModule
+  class_path: Vaihingen2DDataModule
   init_args:
     batch_size: 1
-    band_set: 'all'
+    patch_size: 2
+    val_split_pct: 0.5
   dict_kwargs:
     root: 'tests/data/substation'
