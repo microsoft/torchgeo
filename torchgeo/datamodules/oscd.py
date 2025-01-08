@@ -86,8 +86,8 @@ class OSCDDataModule(NonGeoDataModule):
 
         self.aug = K.AugmentationSequential(
             K.VideoSequential(
-              K.Normalize(mean=self.mean, std=self.std),
-              _RandomNCrop(self.patch_size, batch_size),
+                K.Normalize(mean=self.mean, std=self.std),
+                _RandomNCrop(self.patch_size, batch_size),
             ),
             data_keys=None,
             keepdim=True,
