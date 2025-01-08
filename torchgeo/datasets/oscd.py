@@ -103,7 +103,8 @@ class OSCD(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[dict[str, Tensor]],
+                             dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -184,7 +185,8 @@ class OSCD(NonGeoDataset):
             def get_image_paths(ind: int) -> list[str]:
                 return sorted(
                     glob.glob(
-                        os.path.join(images_root, region, f'imgs_{ind}_rect', '*.tif')
+                        os.path.join(images_root, region,
+                                     f'imgs_{ind}_rect', '*.tif')
                     ),
                     key=sort_sentinel2_bands,
                 )
@@ -223,7 +225,8 @@ class OSCD(NonGeoDataset):
         for path in paths:
             with Image.open(path) as img:
                 images.append(np.array(img))
-        array: np.typing.NDArray[np.int_] = np.stack(images, axis=0).astype(np.int_)
+        array: np.typing.NDArray[np.int_] = np.stack(
+            images, axis=0).astype(np.int_)
         tensor = torch.from_numpy(array).float()
         return tensor
 
@@ -241,7 +244,7 @@ class OSCD(NonGeoDataset):
             array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
-            tensor = tensor.to(torch.float)
+            tensor = tensor.to(torch.long)
             return tensor
 
     def _verify(self) -> None:

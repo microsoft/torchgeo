@@ -7,6 +7,7 @@ import os
 from typing import Any
 
 import segmentation_models_pytorch as smp
+import torch
 import torch.nn as nn
 from torch import Tensor
 from torchmetrics import MetricCollection
@@ -173,7 +174,7 @@ class ChangeDetectionTask(BaseTask):
             x = x.flatten(start_dim=1, end_dim=2)
         y_hat = self(x)
 
-        loss: Tensor = self.criterion(y_hat, y)
+        loss: Tensor = self.criterion(y_hat, y.to(torch.float))
         self.log(f'{stage}_loss', loss)
 
         # Retrieve the correct metrics based on the stage
