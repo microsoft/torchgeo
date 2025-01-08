@@ -14,7 +14,7 @@ pillow==11.1.0
 pyproj==3.7.0
 rasterio==1.4.3
 rtree==1.3.0
-segmentation-models-pytorch==0.3.4
+segmentation-models-pytorch==0.4.0
 shapely==2.0.6
 timm==0.9.7
 torch==2.5.1
