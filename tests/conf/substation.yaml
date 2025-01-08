@@ -12,6 +12,5 @@ data:
   class_path: SubstationDataModule
   init_args:
     batch_size: 1
-    val_split_pct: 0.5
   dict_kwargs:
     root: 'tests/data/substation'
