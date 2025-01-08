@@ -170,8 +170,7 @@ class OSCD(NonGeoDataset):
         regions = []
         labels_root = os.path.join(
             self.root,
-            f'Onera Satellite Change Detection dataset - {
-                self.split.capitalize()} '
+            f'Onera Satellite Change Detection dataset - {self.split.capitalize()} '
             + 'Labels',
         )
         images_root = os.path.join(
