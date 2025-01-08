@@ -24,7 +24,7 @@ class SubstationDataModule:
         normalizing_factor: np.ndarray[Any, Any] | None = None,
         means: np.ndarray[Any, Any] | None = None,
         stds: np.ndarray[Any, Any] | None = None,
-        bands: int = 13,
+        bands: list[int] = [1,2,3],
         num_of_timepoints: int = 4,
         model_type: str = 'default',
         geo_transforms: Any | None = None,
