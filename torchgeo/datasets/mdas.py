@@ -32,14 +32,15 @@ class MDAS(NonGeoDataset):
     Dataset features:
 
     * 3K DSM data
-    * 3K high resolution RGB image
+    * 3K high resolution RGB images
     * Original very high resolution HySpex airborne imagery
     * EeteS simulated imagery with 10m GSD and EnMAP spectral bands
     * EeteS simulated imagery with 30m GSD and EnMAP spectral bands
     * EeteS simulated imagery with 10m GSD and Sentinel-2 spectral bands
     * Sentinel-2 L2A product
     * Sentinel-1 GRD product
-    * Open Street Map (OSM) labels
+    * Open Street Map (OSM) labels, see `this table <https://github.com/zhu-xlab/augsburg_Multimodal_Data_Set_MDaS/blob/75c015022b5f688dfc44744f19bcf34bdce786c7/Augsburg_data_4_publication/entire_city/OSM_label/README#L14>`__ for
+      a table of the label distribution
 
     Dataset format:
 
@@ -98,6 +99,7 @@ class MDAS(NonGeoDataset):
         18: 'heath',
     }
 
+    # https://github.com/zhu-xlab/augsburg_Multimodal_Data_Set_MDaS/blob/75c015022b5f688dfc44744f19bcf34bdce786c7/Augsburg_data_4_publication/entire_city/OSM_label/README#L14
     landuse_mapping: ClassVar[dict[int, int]] = {
         -2147483647: 0,
         7201: 1,
@@ -157,7 +159,7 @@ class MDAS(NonGeoDataset):
 
         Raises:
             AssertionError: If the subareas or modalities are not valid.
-            DatasetNotFoundError: If the dataset is not found.
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.download = download
@@ -176,11 +178,19 @@ class MDAS(NonGeoDataset):
         self.files = self._load_files()
 
     def __len__(self) -> int:
-        """Return the number of samples in the dataset."""
+        """Return the number of samples in the dataset.
+
+        Returns:
+            the length of the dataset
+        """
         return len(self.files)
 
     def _load_files(self) -> list[dict[str, str]]:
-        """Return the paths of the files in the dataset."""
+        """Return the paths of the files in the dataset.
+
+        Returns:
+            a list of dictionaries containing the paths of the files in the dataset
+        """
         files = []
         for subarea in self.subareas:
             subarea_files = {}
@@ -207,7 +217,14 @@ class MDAS(NonGeoDataset):
         return parts[0] + '_' + parts[1] + parts[2]
 
     def _load_image(self, path: Path) -> Tensor:
-        """Load an image from a given path."""
+        """Load an image from a given path.
+
+        Args:
+            path: The path to the image file
+
+        Returns:
+            the loaded image as a tensor
+        """
         with rio.open(path) as src:
             img = src.read()
             if img.dtype == np.uint16:
@@ -217,8 +234,15 @@ class MDAS(NonGeoDataset):
 
             return torch.from_numpy(img)
 
-    def __getitem__(self, idx: int) -> dict[str, Any]:
-        """Return the dataset sample at the given index."""
+    def __getitem__(self, idx: int) -> dict[str, Tensor]:
+        """Return the dataset sample at the given index.
+
+        Args:
+            idx: The index of the sample to return
+
+        Returns:
+            a dictionary containing the data of chosen modalities
+        """
         sample_files = self.files[idx]
         sample: dict[str, Any] = {}
         for modality, path in sample_files.items():
@@ -286,6 +310,9 @@ class MDAS(NonGeoDataset):
             sample: A sample returned by `__getitem__`.
             show_titles: Whether to display titles on the subplots.
             suptitle: An optional super title for the plot.
+
+        Returns:
+            a matplotlib Figure with the rendered sample
         """
         ncols = len(sample)
         fig, axs = plt.subplots(1, ncols, figsize=(5 * ncols, 5))
@@ -294,48 +321,53 @@ class MDAS(NonGeoDataset):
             axs = [axs]
 
         for idx, (key, data) in enumerate(sample.items()):
-            if key == '3K_RGB_image':
-                img = data[:3].numpy().transpose(1, 2, 0) / 255.0
-                axs[idx].imshow(img)
-            elif key == '3K_DSM_image':
-                img = data.numpy().squeeze(0)
-                axs[idx].imshow(img, cmap='gray')
-            elif key in ['EeteS_EnMAP_10m_image', 'EeteS_EnMAP_30m_image']:
-                img = data[self.enmap_rgb_band_idx].numpy().transpose(1, 2, 0) / 10000.0
-                axs[idx].imshow(img)
-            elif key == 'EeteS_Sentinel_2_10m_image':
-                img = (
-                    data[self.sentinel_2_rgb_band_idx].numpy().transpose(1, 2, 0)
-                    / 10000.0
-                )
-                axs[idx].imshow(img)
-            elif key == 'Sentinel_1_image':
-                img = data[0].numpy().clip(0, 1)
-                axs[idx].imshow(img)
-            elif key == 'Sentinel_2_image':
-                img = (
-                    data[self.sentinel_2_rgb_band_idx].numpy().transpose(1, 2, 0)
-                    / 10000.0
-                )
-                axs[idx].imshow(img)
-            elif key == 'HySpex_image':
-                img = (
-                    data[self.hyspex_rgb_band_idx].numpy().transpose(1, 2, 0) / 15000.0
-                )
-                axs[idx].imshow(img)
-            elif key == 'osm_landuse_mask':
-                img = data.numpy().squeeze(0)
-                im = axs[idx].imshow(img, cmap=self.cmap)
-                cbar = plt.colorbar(im, ax=axs[idx], ticks=range(19))
-                cbar.ax.set_yticklabels(
-                    [self.landuse_class_names[i] for i in range(19)]
-                )
-            elif key == 'osm_buildings_mask':
-                img = data.numpy().squeeze(0)
-                axs[idx].imshow(img, cmap='gray')
-            elif key == 'osm_water_mask':
-                img = data.numpy().squeeze(0)
-                axs[idx].imshow(img, cmap='Blues')
+            match key:
+                case '3K_RGB_image':
+                    img = data[:3].numpy().transpose(1, 2, 0) / 255.0
+                    axs[idx].imshow(img)
+                case '3K_DSM_image':
+                    img = data.numpy().squeeze(0)
+                    axs[idx].imshow(img, cmap='gray')
+                case 'EeteS_EnMAP_10m_image' | 'EeteS_EnMAP_30m_image':
+                    img = (
+                        data[self.enmap_rgb_band_idx].numpy().transpose(1, 2, 0)
+                        / 10000.0
+                    )
+                    axs[idx].imshow(img)
+                case 'EeteS_Sentinel_2_10m_image':
+                    img = (
+                        data[self.sentinel_2_rgb_band_idx].numpy().transpose(1, 2, 0)
+                        / 10000.0
+                    )
+                    axs[idx].imshow(img)
+                case 'Sentinel_1_image':
+                    img = data[0].numpy().clip(0, 1)
+                    axs[idx].imshow(img)
+                case 'Sentinel_2_image':
+                    img = (
+                        data[self.sentinel_2_rgb_band_idx].numpy().transpose(1, 2, 0)
+                        / 10000.0
+                    )
+                    axs[idx].imshow(img)
+                case 'HySpex_image':
+                    img = (
+                        data[self.hyspex_rgb_band_idx].numpy().transpose(1, 2, 0)
+                        / 15000.0
+                    )
+                    axs[idx].imshow(img)
+                case 'osm_landuse_mask':
+                    img = data.numpy().squeeze(0)
+                    im = axs[idx].imshow(img, cmap=self.cmap)
+                    cbar = plt.colorbar(im, ax=axs[idx], ticks=range(19))
+                    cbar.ax.set_yticklabels(
+                        [self.landuse_class_names[i] for i in range(19)]
+                    )
+                case 'osm_buildings_mask':
+                    img = data.numpy().squeeze(0)
+                    axs[idx].imshow(img, cmap='gray')
+                case 'osm_water_mask':
+                    img = data.numpy().squeeze(0)
+                    axs[idx].imshow(img, cmap='Blues')
 
             axs[idx].axis('off')
             if show_titles:
