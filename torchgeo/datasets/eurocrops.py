@@ -205,9 +205,6 @@ class EuroCrops(VectorDataset):
         # (Parent code is computed by replacing rightmost non-0 character with 0.)
         hcat_code = feature['properties'][self.label_name]
         if hcat_code is None:
-            print(
-                f"Feature does not contain the label '{self.label_name}'. Skip rendering."
-            )
             return 0
 
         while True:
