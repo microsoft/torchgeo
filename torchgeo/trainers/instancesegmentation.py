@@ -1,9 +1,9 @@
-from typing import Any                                           # Allows us to annotate arguments and return types of functions
-import torch.nn as nn                                            # PyTorch module for neural network layers
-import torch                                                     # PyTorch for deep learning operations
-from torch import Tensor                                         # Type hint for tensors
-from torchmetrics.detection.mean_ap import MeanAveragePrecision  # Metric to evaluate instance segmentation models
-from torchvision.models.detection import maskrcnn_resnet50_fpn   # Pre-built Mask R-CNN model from PyTorch
+from typing import Any                                           
+import torch.nn as nn                                            
+import torch                                                   
+from torch import Tensor                                        
+from torchmetrics.detection.mean_ap import MeanAveragePrecision  
+from torchvision.models.detection import maskrcnn_resnet50_fpn   
 from ultralytics import YOLO  
 from .base import BaseTask  
 
