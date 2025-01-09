@@ -12,13 +12,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
-import xarray as xr
 from matplotlib.figure import Figure
 from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_and_extract_archive, download_url, extract_archive
+from .utils import (
+    download_and_extract_archive,
+    download_url,
+    extract_archive,
+    lazy_import,
+)
 
 
 class GlacierMappingAlps(NonGeoDataset):
@@ -220,6 +224,7 @@ class GlacierMappingAlps(NonGeoDataset):
                 * the cloud and shadow mask
                 * the additional features (DEM, derived features, etc.) if required
         """
+        xr = lazy_import('xarray')
         nc = xr.open_dataset(
             self.fp_patches[index], decode_coords='all', mask_and_scale=True
         )
