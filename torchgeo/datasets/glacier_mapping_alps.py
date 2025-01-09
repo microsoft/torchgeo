@@ -93,17 +93,6 @@ class GlacierMappingAlps(NonGeoDataset):
         },
     }
 
-    extra_features_all = (
-        'dem',  # Digital Elevation Model
-        'slope',
-        'aspect',
-        'planform_curvature',
-        'profile_curvature',
-        'terrain_ruggedness_index',  # DEM-based features
-        'dhdt',  # surface elevation change
-        'v',  # surface velocity
-    )
-
     rgb_bands = ('B4', 'B3', 'B2')
     all_bands = (
         'B1',
@@ -121,6 +110,20 @@ class GlacierMappingAlps(NonGeoDataset):
         'B12',
     )
     rgb_nir_swir_bands = ('B4', 'B3', 'B2', 'B8', 'B11')  # the subset used in our paper
+
+    valid_extra_features = (
+        'dem',  # Digital Elevation Model
+        'slope',
+        'aspect',
+        'planform_curvature',
+        'profile_curvature',
+        'terrain_ruggedness_index',  # DEM-based features
+        'dhdt',  # surface elevation change
+        'v',  # surface velocity
+    )
+    valid_splits = ('train', 'val', 'test')
+    valid_versions = ('small', 'large')
+    valid_cv_iters = (1, 2, 3, 4, 5)
 
     def __init__(
         self,
@@ -147,6 +150,11 @@ class GlacierMappingAlps(NonGeoDataset):
              version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            AssertionError: if the ``split``, ``cv_iter``, ``version``, ``bands`` or ``extra_features`` are invalid
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+            DependencyNotFoundError: If xarray is not installed.
         """
         self.root = Path(root)
         self.split = split
@@ -159,27 +167,20 @@ class GlacierMappingAlps(NonGeoDataset):
         self.checksum = checksum
 
         # sanity checks
-        assert split in (
-            'train',
-            'val',
-            'test',
-        ), f'Split {split} not found in the available splits'
-        assert cv_iter in range(
-            1, 6
-        ), f'Cross-validation iteration {cv_iter} has to be in [1, 2, 3, 4, 5]'
-        assert version in (
-            'small',
-            'large',
-        ), f'Version {version} not found in the available versions'
+        assert split in self.valid_splits, f'Split {split} not in: {self.valid_splits}'
+        assert (
+            cv_iter in self.valid_cv_iters
+        ), f'Cross-validation iteration {cv_iter} not in: {self.valid_cv_iters}'
+        assert (
+            version in self.valid_versions
+        ), f'Version {version} not in: {self.valid_versions}'
         for band in bands:
-            assert (
-                band in self.all_bands
-            ), f'Band {band} not found in the available Sentinel-2 bands'
-        if self.extra_features:
-            for feature in self.extra_features:
+            assert band in self.all_bands, f'Band {band} not in: {self.all_bands}'
+        if extra_features:
+            for feature in extra_features:
                 assert (
-                    feature in self.extra_features_all
-                ), f'Feature {feature} not found in the available extra features'
+                    feature in self.valid_extra_features
+                ), f'Feature {feature} not in: {self.valid_extra_features}'
 
         # set the local file paths
         label = f'dataset_{version}'
@@ -199,20 +200,25 @@ class GlacierMappingAlps(NonGeoDataset):
     def __len__(self) -> int:
         """The length of the dataset.
 
-        It returns the number of patches in the dataset.
+        Returns:
+            the number of patches in the dataset
         """
         return len(self.fp_patches)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
-        """A single sample from the dataset.
+        """It loads the netcdf file for the given index and returns the sample as a dict.
 
-        It loads the netcdf file for the given index, and returns a dictionary containing:
+        Args:
+            index: index of the sample to return
 
-        * the Sentinel-2 image (selected bands)
-        * the glacier mask (binary mask with all the glaciers in the current patch)
-        * the debris mask
-        * the cloud and shadow mask
-        * the additional features (DEM, derived features, etc.) if required
+        Returns:
+            dict: a dictionary containing the sample with the following:
+
+                * the Sentinel-2 image (selected bands)
+                * the glacier mask (binary mask with all the glaciers in the current patch)
+                * the debris mask
+                * the cloud and shadow mask
+                * the additional features (DEM, derived features, etc.) if required
         """
         nc = xr.open_dataset(
             self.fp_patches[index], decode_coords='all', mask_and_scale=True
@@ -220,31 +226,28 @@ class GlacierMappingAlps(NonGeoDataset):
 
         # extract the S2 image and masks from the netcdf file
         all_band_names = nc.band_data.long_name
+        idx_img = [all_band_names.index(b) for b in self.bands]
+        image = nc.band_data.isel(band=idx_img).values.astype(np.float32)
+        id_cloud_mask = all_band_names.index('CLOUDLESS_MASK')
+        mask_clouds_and_shadows = ~(nc.band_data.isel(band=id_cloud_mask).values == 1)
         sample = {
-            'image': nc.band_data.isel(
-                band=[all_band_names.index(b) for b in self.bands]
-            ).values.astype(np.float32),
+            'image': image,
             'mask_glacier': ~np.isnan(nc.mask_all_g_id.values),
-            'mask_debris': (nc['mask_debris'].values == 1),
-            'mask_clouds_and_shadows': ~(
-                nc.band_data.isel(band=all_band_names.index('CLOUDLESS_MASK')).values
-                == 1
-            ),
+            'mask_debris': (nc.mask_debris.values == 1),
+            'mask_clouds_and_shadows': mask_clouds_and_shadows,
         }
 
         # extract the additional features if needed
         if self.extra_features:
             for feature in self.extra_features:
                 assert feature in nc, f'Feature {feature} not found in the netcdf file'
-                data_crt_feature = nc[feature].values.astype(np.float32)
+                vals = nc[feature].values.astype(np.float32)
 
                 # impute the missing values with the mean or zero (for dh/dt and surface velocity)
-                v_fill = (
-                    0.0 if feature in ('dhdt', 'v') else np.nanmean(data_crt_feature)
-                )
-                data_crt_feature[np.isnan(data_crt_feature)] = v_fill
+                v_fill = 0.0 if feature in ('dhdt', 'v') else np.nanmean(vals)
+                vals[np.isnan(vals)] = v_fill
 
-                sample[feature] = data_crt_feature
+                sample[feature] = vals
 
         # convert to torch tensors
         for k, v in sample.items():

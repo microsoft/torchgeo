@@ -25,7 +25,7 @@ class TestGlacierMappingAlps:
                 GlacierMappingAlps.rgb_nir_swir_bands,
                 GlacierMappingAlps.all_bands,
             ],
-            [None, ['dem'], GlacierMappingAlps.extra_features_all],
+            [None, ['dem'], GlacierMappingAlps.valid_extra_features],
         )
     )
     def dataset(
