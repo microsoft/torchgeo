@@ -325,8 +325,8 @@ class OSCD(NonGeoDataset):
             )
             return array
 
-        image1 = get_masked(sample['image1'])
-        image2 = get_masked(sample['image2'])
+        image1 = get_masked(sample['image'][0])
+        image2 = get_masked(sample['image'][1])
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image1)
         axs[0].axis('off')
