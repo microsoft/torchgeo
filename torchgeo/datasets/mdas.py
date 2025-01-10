@@ -162,13 +162,13 @@ class MDAS(NonGeoDataset):
         """
         self.root = root
         self.download = download
-        assert all(
-            sub in self.valid_subareas for sub in subareas
-        ), f'Subareas must be one of {self.valid_subareas}'
+        assert all(sub in self.valid_subareas for sub in subareas), (
+            f'Subareas must be one of {self.valid_subareas}'
+        )
         self.subareas = subareas
-        assert all(
-            mod in self.valid_modalities for mod in modalities
-        ), f'Modalities must be one of {self.valid_modalities}'
+        assert all(mod in self.valid_modalities for mod in modalities), (
+            f'Modalities must be one of {self.valid_modalities}'
+        )
         self.modalities = modalities
         self.transforms = transforms
         self.checksum = checksum

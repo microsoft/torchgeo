@@ -139,9 +139,9 @@ class DigitalTyphoon(NonGeoDataset):
         self.min_feature_value = min_feature_value
         self.max_feature_value = max_feature_value
 
-        assert (
-            task in self.valid_tasks
-        ), f'Please choose one of {self.valid_tasks}, you provided {task}.'
+        assert task in self.valid_tasks, (
+            f'Please choose one of {self.valid_tasks}, you provided {task}.'
+        )
         self.task = task
 
         assert set(features).issubset(set(self.valid_features))

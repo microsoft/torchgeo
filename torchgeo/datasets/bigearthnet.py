@@ -565,9 +565,9 @@ class BigEarthNet(NonGeoDataset):
         ax.imshow(image)
         ax.axis('off')
         if show_titles:
-            title = f"Labels: {', '.join(labels)}"
+            title = f'Labels: {", ".join(labels)}'
             if showing_predictions:
-                title += f"\nPredictions: {', '.join(predictions)}"
+                title += f'\nPredictions: {", ".join(predictions)}'
             ax.set_title(title)
 
         if suptitle is not None:
