@@ -39,7 +39,7 @@ if __name__ == '__main__':
     for model, lr, loss, weights, bands in itertools.product(
         model_options, lr_options, loss_options, weight_options, bands_options
     ):
-        experiment_name = f"{model}_{lr}_{loss}_byol_{bands}-{weights.split('/')[-2]}"
+        experiment_name = f'{model}_{lr}_{loss}_byol_{bands}-{weights.split("/")[-2]}'
 
         output_dir = os.path.join('output', 'so2sat_experiments')
         log_dir = os.path.join(output_dir, 'logs')
