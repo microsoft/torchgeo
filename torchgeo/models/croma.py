@@ -56,9 +56,9 @@ class CROMA(nn.Module):
         """
         super().__init__()
         for modality in modalities:
-            assert (
-                modality in self.valid_modalities
-            ), f'{modality} is not a valid modality'
+            assert modality in self.valid_modalities, (
+                f'{modality} is not a valid modality'
+            )
 
         assert image_size % 8 == 0, 'image_size must be a multiple of 8'
         assert num_heads % 2 == 0, 'num_heads must be a power of 2'

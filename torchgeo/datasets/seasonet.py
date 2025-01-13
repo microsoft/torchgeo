@@ -450,7 +450,7 @@ class SeasoNet(NonGeoDataset):
             axs[ax].imshow(image)
             axs[ax].axis('off')
             if show_titles:
-                axs[ax].set_title(f'Image {ax+1}')
+                axs[ax].set_title(f'Image {ax + 1}')
 
         axs[ax + 1].imshow(mask, vmin=0, vmax=32, cmap=plt_cmap, interpolation='none')
         axs[ax + 1].axis('off')

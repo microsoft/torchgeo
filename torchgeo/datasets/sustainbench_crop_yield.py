@@ -82,14 +82,14 @@ class SustainBenchCropYield(NonGeoDataset):
                 is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert set(countries).issubset(
-            self.valid_countries
-        ), f'Please choose a subset of these valid countried: {self.valid_countries}.'
+        assert set(countries).issubset(self.valid_countries), (
+            f'Please choose a subset of these valid countried: {self.valid_countries}.'
+        )
         self.countries = countries
 
-        assert (
-            split in self.valid_splits
-        ), f'Pleas choose one of these valid data splits {self.valid_splits}.'
+        assert split in self.valid_splits, (
+            f'Pleas choose one of these valid data splits {self.valid_splits}.'
+        )
         self.split = split
 
         self.root = root

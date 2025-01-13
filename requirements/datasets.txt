@@ -6,6 +6,6 @@ pandas[parquet]==2.2.3
 pycocotools==2.0.8
 pyvista==0.44.2
 scikit-image==0.25.0
-scipy==1.14.1
+scipy==1.15.0
 xarray==2024.11.0
 netcdf4==1.7.2
