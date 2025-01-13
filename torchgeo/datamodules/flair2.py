@@ -1,14 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""This module contains the FLAIR2DataModule class for loading the FLAIR2 dataset.
-
-The FLAIR dataset is released under open license 2.0:
-- https://www.etalab.gouv.fr/wp-content/uploads/2018/11/open-licence.pdf
-- https://ignf.github.io/FLAIR/#FLAIR2
-
-Code for loading dataset licensed under the MIT License.
-"""
+"""This module contains the FLAIR2DataModule class for loading the FLAIR2 dataset."""
 
 from typing import Any
 
@@ -50,7 +43,7 @@ class FLAIR2DataModule(NonGeoDataModule):
             augs: Optional augmentations to apply to the dataset.
             **kwargs: Additional keyword arguments passed to :class:`~torchgeo.datasets.FLAIR2`.
 
-            ..versionadded:: 0.7
+            .. versionadded:: 0.7
         """
         self.ds_class = FLAIR2 if not use_toy else FLAIR2Toy
 
