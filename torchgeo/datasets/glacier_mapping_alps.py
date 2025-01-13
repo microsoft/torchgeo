@@ -172,19 +172,19 @@ class GlacierMappingAlps(NonGeoDataset):
 
         # sanity checks
         assert split in self.valid_splits, f'Split {split} not in: {self.valid_splits}'
-        assert (
-            cv_iter in self.valid_cv_iters
-        ), f'Cross-validation iteration {cv_iter} not in: {self.valid_cv_iters}'
-        assert (
-            version in self.valid_versions
-        ), f'Version {version} not in: {self.valid_versions}'
+        assert cv_iter in self.valid_cv_iters, (
+            f'Cross-validation iteration {cv_iter} not in: {self.valid_cv_iters}'
+        )
+        assert version in self.valid_versions, (
+            f'Version {version} not in: {self.valid_versions}'
+        )
         for band in bands:
             assert band in self.all_bands, f'Band {band} not in: {self.all_bands}'
         if extra_features:
             for feature in extra_features:
-                assert (
-                    feature in self.valid_extra_features
-                ), f'Feature {feature} not in: {self.valid_extra_features}'
+                assert feature in self.valid_extra_features, (
+                    f'Feature {feature} not in: {self.valid_extra_features}'
+                )
 
         # set the local file paths
         label = f'dataset_{version}'
@@ -301,7 +301,7 @@ class GlacierMappingAlps(NonGeoDataset):
 
         # get the glacier IDs of the current split of the cross-validation
         self.df_splits = pd.read_csv(self.fp_splits_csv)
-        fold_name = f"fold_{self.split if self.split != 'val' else 'valid'}"
+        fold_name = f'fold_{self.split if self.split != "val" else "valid"}'
         idx = self.df_splits[f'split_{self.cv_iter}'] == fold_name
         glacier_ids = list(self.df_splits.loc[idx, 'entry_id'])
 
@@ -329,9 +329,9 @@ class GlacierMappingAlps(NonGeoDataset):
             a matplotlib Figure with the rendered sample
         """
         # we expect the RGB bands to be present
-        assert {'B4', 'B3', 'B2'}.issubset(
-            set(self.bands)
-        ), 'RGB bands not found in the available bands.'
+        assert {'B4', 'B3', 'B2'}.issubset(set(self.bands)), (
+            'RGB bands not found in the available bands.'
+        )
         nir_and_swir_present = {'B8', 'B11'}.issubset(set(self.bands))
 
         # prepare the RGB image and the masks
