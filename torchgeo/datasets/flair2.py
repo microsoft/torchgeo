@@ -261,7 +261,7 @@ class FLAIR2(NonGeoDataset):
             sentinel_bands: which bands to load from sentinel data (B01, B02, ..., B10)
 
         Raises:
-            DatasetNotFoundError
+            DatasetNotFoundError: If dataset is not found and *download* is False.
 
         .. versionadded:: 0.7
         """
@@ -750,7 +750,7 @@ class FLAIR2Toy(FLAIR2):
             sentinel_bands: which bands to load from sentinel data (B01, B02, ..., B10)
 
         Raises:
-            DatasetNotFoundError
+            DatasetNotFoundError: If dataset is not found and *download* is False.
 
         ..versionadded:: 0.7
         """
