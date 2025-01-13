@@ -7,7 +7,3 @@ issues before filing new issues to avoid duplicates. For new issues, file your b
 feature request as a new Issue.
 
 For help and questions about using this project, please open an Issue.
-
-## Microsoft Support Policy
-
-Support for TorchGeo is limited to the resources listed above.
