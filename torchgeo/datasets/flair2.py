@@ -72,7 +72,7 @@ class FLAIR2(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * https://doi.org/10.48550/arXiv.2310.13336
+    * https://arxiv.org/abs/2305.14467
     """
 
     splits: ClassVar[Sequence[str]] = ('train', 'test')
