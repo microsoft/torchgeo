@@ -312,6 +312,10 @@ GID-15
 
 .. autoclass:: GID15
 
+Glacier Mapping Alps
+^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: GlacierMappingAlps
+
 HySpecNet-11k
 ^^^^^^^^^^^^^
 
