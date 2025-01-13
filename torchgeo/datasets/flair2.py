@@ -263,7 +263,7 @@ class FLAIR2(NonGeoDataset):
         Raises:
             DatasetNotFoundError
 
-        ..versionadded:: 0.7
+        .. versionadded:: 0.7
         """
         assert (
             split in self.splits
