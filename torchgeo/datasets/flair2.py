@@ -75,9 +75,9 @@ class FLAIR2(NonGeoDataset):
     * https://arxiv.org/abs/2305.14467
     """
 
-    splits: ClassVar[Sequence[str]] = ('train', 'test')
+    splits: Sequence[str] = ('train', 'test')
 
-    url_prefix: ClassVar[str] = (
+    url_prefix: str = (
         'https://storage.gra.cloud.ovh.net/v1/AUTH_366279ce616242ebb14161b7991a8461/defi-ia/flair_data_2'
     )
     md5s: ClassVar[dict[str, str]] = {
