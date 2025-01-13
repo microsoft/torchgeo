@@ -32,14 +32,14 @@ class TestFLAIR2:
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> FLAIR2:
         md5s = {
-            'flair_2_toy_dataset': '850736cd9c092d4ec3445a29da01f742',
-            'flair-2_centroids_sp_to_patch': '82010d9917c8bce52e18d82dac292b5b',
-            'flair_aerial_train': '4c7541ec00136e9ee42592931f90f395',
-            'flair_sen_train': 'b719b0859ab1eb7ae0fae73b90fbad80',
-            'flair_labels_train': 'b109583c8745342714a817252aeb7f84',
-            'flair_2_aerial_test': 'f60ab0671fc02b6c3e490c39b0a22ed0',
-            'flair_2_sen_test': '855540b98f86ab8acec87f9aa1a95e0e',
-            'flair_2_labels_test': 'b13c4a3cb7ebb5cadddc36474bb386f9',
+            'flair_2_labels_test.zip': '00718f3c0dc071dc9eaa7f9cfa977707',
+            'flair_2_toy_dataset.zip': '45b9b9c85b5b52833d4c844765c54750',
+            'flair_2_sen_test.zip': '56aa00085ccaa9350ae294adad406933',
+            'flair_2_aerial_test.zip': 'e82210d08b9d636c083c54107de4fc68',
+            'flair_sen_train.zip': '99a76c3fa598930f7339a530fe29010b',
+            'flair_aerial_train.zip': 'bde5f1da7b51da76a87d61ede9c560c5',
+            'flair_labels_train.zip': 'b221c7cd69cc3e160c4ad3e7b00ed2d9',
+            'flair_2_centroids_sp_to_patch.zip': '35318aa3b984f02a9049b7eab5f1fecb',
         }
 
         monkeypatch.setattr(FLAIR2, 'md5s', md5s)
@@ -88,10 +88,8 @@ class TestFLAIR2:
         assert x['image'].shape[-2:] == x['mask'].shape[-2:]
 
     def test_len(self, dataset: FLAIR2) -> None:
-        if dataset.split == 'train':
-            assert len(dataset) == 20
-        else:
-            assert len(dataset) == 10
+        assert len(dataset) == 4
+
 
         # Test the 1:n mapping of images to sentinels (i.e. 1 sentinel to 2 images)
         if not isinstance(dataset, FLAIR2Toy):

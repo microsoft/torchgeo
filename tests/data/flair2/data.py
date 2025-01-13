@@ -17,7 +17,7 @@ from pyproj import CRS
 
 # General hyperparams / speed up by choosing a small value (actual values will be 256)
 IMG_SIZE = 32
-DUMMY_DATA_SIZE = {'train': 10, 'test': 5}
+DUMMY_DATA_SIZE = {'train': 2, 'test': 2}
 
 # Directory structure
 root_dir = '{0}/FLAIR2'
@@ -263,4 +263,4 @@ if __name__ == '__main__':
                 filename = os.path.basename(element)
                 with open(element, 'rb') as f:
                     md5 = hashlib.md5(f.read()).hexdigest()
-                    md5_file.write(f'{filename}: {md5}\n')
+                    md5_file.write(f'"{filename}": "{md5}"\n')
