@@ -634,7 +634,7 @@ class FLAIR2(NonGeoDataset):
         if showing_predictions:
             predictions = sample['prediction'].numpy().astype('uint8').squeeze()
 
-        # Remove none available plots
+        # Remove non-available plots
         plot_candidates = zip(
             [
                 'image (R+G+B)',
