@@ -572,7 +572,6 @@ class FLAIR2(NonGeoDataset):
 
     def _extract(self, file_path: str) -> None:
         """Extract the dataset."""
-        assert isinstance(self.root, str | os.PathLike)
         zipfile = os.path.join(self.root, f'{file_path}.zip')
         extract_archive(zipfile)
 
@@ -795,7 +794,6 @@ class FLAIR2Toy(FLAIR2):
 
     def _extract(self, file_name: str = 'flair_2_toy_dataset.zip') -> None:
         """Extract the dataset."""
-        assert isinstance(self.root, str | os.PathLike)
         assert os.path.isfile(os.path.join(self.root, file_name))
         zipfile = os.path.join(self.root, file_name)
         extract_archive(zipfile)
