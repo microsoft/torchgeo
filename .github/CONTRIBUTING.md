@@ -18,5 +18,6 @@ You can find a curated list of issues that we believe are easy for new contribut
 The Project abides by the Organization's [code of conduct](https://github.com/github/MVG/blob/main/org-docs/CODE-OF-CONDUCT.md) and [trademark policy](https://github.com/github/MVG/blob/main/org-docs/TRADEMARKS.md).
 
 ---
+
 Part of MVG-0.1-beta.
 Made with love by GitHub. Licensed under the [CC-BY 4.0 License](https://creativecommons.org/licenses/by/4.0/).
