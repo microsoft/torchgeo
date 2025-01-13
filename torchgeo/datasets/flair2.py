@@ -26,13 +26,16 @@ from .utils import Path, check_integrity, download_url, extract_archive
 class FLAIR2(NonGeoDataset):
     """FLAIR #2 (The French Land cover from Aerospace ImageRy) dataset.
 
-    The `FLAIR #2 <https://github.com/IGNF/FLAIR-2>` dataset is an extensive dataset from the French National Institute
-    of Geographical and Forest Information (IGN) that provides a unique and rich resource for large-scale geospatial analysis.
-    The  dataset is sampled countrywide and is composed of over 20 billion annotated pixels of very high resolution aerial
-    imagery at 0.2 m spatial resolution, acquired over three years and different months (spatio-temporal domains).
+    The `FLAIR #2 <https://github.com/IGNF/FLAIR-2>`_ dataset is an extensive dataset from
+    the French National Institute of Geographical and Forest Information (IGN) that provides
+    a unique and rich resource for large-scale geospatial analysis. The  dataset is sampled
+    countrywide and is composed of over 20 billion annotated pixels of very high resolution
+    aerial imagery at 0.2 m spatial resolution, acquired over three years and different
+    months (spatio-temporal domains).
 
-    The FLAIR2 dataset is a dataset for semantic segmentation of aerial images. It contains aerial images, sentinel-2 images and masks for 13 classes.
-    The dataset is split into a training and test set.
+    The FLAIR2 dataset is a dataset for semantic segmentation of aerial images. It contains
+    aerial images, sentinel-2 images and masks for 13 classes. The dataset is split into a
+    training and test set.
 
     Dataset features:
 
