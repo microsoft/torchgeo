@@ -148,6 +148,7 @@ show_missing = true
 
 [tool.coverage.run]
 source_pkgs = ["torchgeo"]
+branch = true
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
