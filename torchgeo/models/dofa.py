@@ -311,7 +311,7 @@ class DOFA(nn.Module):
                     num_heads,
                     mlp_ratio,
                     qkv_bias=True,
-                    norm_layer=norm_layer,
+                    norm_layer=norm_layer,  # type: ignore[arg-type]
                 )
                 for i in range(depth)
             ]

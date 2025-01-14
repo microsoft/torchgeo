@@ -243,7 +243,7 @@ def vit_small_patch16_224(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: VisionTransformer = timm.create_model(
+    model: VisionTransformer = timm.create_model(  # type: ignore[attr-defined]
         'vit_small_patch16_224', *args, **kwargs
     )
 
