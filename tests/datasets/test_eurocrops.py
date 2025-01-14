@@ -82,6 +82,11 @@ class TestEuroCrops:
         ):
             dataset[query]
 
+    def test_get_label_with_none_hcat_code(self, dataset: EuroCrops) -> None:
+        mock_feature = {'properties': {dataset.label_name: None}}
+        label = dataset.get_label(mock_feature)
+        assert label == 0, "Expected label to be 0 when 'EC_hcat_c' is None."
+
     def test_integrity_error(self, dataset: EuroCrops) -> None:
         dataset.zenodo_files = (('AA.zip', 'invalid'),)
         assert not dataset._check_integrity()
