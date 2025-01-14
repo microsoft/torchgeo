@@ -73,7 +73,7 @@ class GlacierMappingAlps(NonGeoDataset):
 
     .. note::
 
-        This dataset requires the following additional library to be installed:
+        This dataset requires the following additional libraries to be installed:
 
         * `xarray <https://docs.xarray.dev/en/stable/getting-started-guide/installing.html>`_
         * `netcdf4 <https://unidata.github.io/netcdf4-python/>`_
