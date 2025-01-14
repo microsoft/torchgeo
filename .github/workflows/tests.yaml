@@ -34,8 +34,6 @@ jobs:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/tests.txt') }}
         if: ${{ runner.os != 'macOS' }}
-      - name: Setup headless display for pyvista
-        uses: pyvista/setup-headless-display-action@v3
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -68,8 +66,6 @@ jobs:
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/min-reqs.old') }}
-      - name: Setup headless display for pyvista
-        uses: pyvista/setup-headless-display-action@v3
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
