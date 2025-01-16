@@ -15,6 +15,5 @@ data:
   dict_kwargs:
     root: 'tests/data/mmflood'
     patch_size: 8
-    normalization: 'median'
     include_dem: True
     include_hydro: True

@@ -62,13 +62,10 @@ def generate_data(
             with rasterio.open(filepath, mode='w', **profile2) as src:
                 src.write(data[folder])
 
-    return
-
 
 def generate_tar_gz(src: str, dst: str) -> None:
     with tarfile.open(dst, 'w:gz') as tar:
         tar.add(src, arcname=src)
-    return
 
 
 def split_tar(path: str, dst: str, nparts: int) -> None:
@@ -83,8 +80,6 @@ def split_tar(path: str, dst: str, nparts: int) -> None:
             bytes_to_write = chunk if idx < nparts - 1 else size - fp.tell()
             with open(part_path, 'wb') as dst_fp:
                 dst_fp.write(fp.read(bytes_to_write))
-
-    return
 
 
 def generate_folders_and_metadata(datapath: str, metadatapath: str) -> None:
@@ -131,8 +126,6 @@ def generate_folders_and_metadata(datapath: str, metadatapath: str) -> None:
     os.remove('activations.tar.gz')
     with open(os.path.join(metadatapath, 'activations.json'), 'w') as fp:
         json.dump(metadata, fp)
-
-    return
 
 
 if __name__ == '__main__':

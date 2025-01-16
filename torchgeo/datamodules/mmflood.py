@@ -3,7 +3,7 @@
 
 """MMFlood datamodule."""
 
-from typing import Any, Literal
+from typing import Any
 
 import kornia.augmentation as K
 import torch
@@ -23,7 +23,7 @@ class MMFloodDataModule(GeoDataModule):
     """
 
     # Computed over train set
-    mean = torch.tensor([0.1785585, 0.03574104, 168.45529, 0.02248373255133629])
+    # VV, VH, dem, hydro
     median = torch.tensor([0.116051525, 0.025692634, 86.0, 0.0])
     std = torch.tensor([2.405442, 0.22719479, 242.74359, 0.1482505053281784])
 
@@ -33,7 +33,6 @@ class MMFloodDataModule(GeoDataModule):
         patch_size: int | tuple[int, int] = 512,
         length: int | None = None,
         num_workers: int = 0,
-        normalization: Literal['mean', 'median'] = 'median',
         **kwargs: Any,
     ) -> None:
         """Initialize a new MMFloodDataModule instance.
@@ -43,7 +42,6 @@ class MMFloodDataModule(GeoDataModule):
             patch_size: Size of each patch, either ``size`` or ``(height, width)``.
             length: Length of each training epoch.
             num_workers: Number of workers for parallel data loading.
-            normalization: Either 'mean' or 'median', used to normalize the dataset
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.MMFlood`.
         """
@@ -55,10 +53,6 @@ class MMFloodDataModule(GeoDataModule):
             num_workers=num_workers,
             **kwargs,
         )
-        assert (
-            normalization in {'mean', 'median'}
-        ), f'Invalid normalization parameter specified {normalization}, must be either "mean" or "median".'
-        self.normalization = normalization
         avg, std = self._get_mean_std(
             dem=kwargs.get('include_dem', False),
             hydro=kwargs.get('include_hydro', False),
@@ -67,8 +61,8 @@ class MMFloodDataModule(GeoDataModule):
         # Using median for normalization for better stability,
         # as stated by the original authors
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(avg, std),
             K.RandomResizedCrop(_to_tuple(self.patch_size), p=0.8, scale=(0.5, 1.0)),
+            K.Normalize(avg, std),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             K.RandomRotation90((0, 3), p=0.5),
@@ -87,13 +81,21 @@ class MMFloodDataModule(GeoDataModule):
     def _get_mean_std(
         self, dem: bool = False, hydro: bool = False
     ) -> tuple[Tensor, Tensor]:
-        avg = self.mean if self.normalization == 'mean' else self.median
+        """Retrieve mean and standard deviation tensors used for normalization.
+
+        Args:
+            dem: True if DEM data is loaded
+            hydro: True if hydrography data is loaded
+
+        Returns:
+            mean and standard deviation tensors
+        """
         idxs = [0, 1]  # VV, VH
         if dem:
             idxs.append(2)
         if hydro:
             idxs.append(3)
-        return avg[idxs], self.std[idxs]
+        return self.median[idxs], self.std[idxs]
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
