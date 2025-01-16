@@ -43,9 +43,9 @@ class DigitalTyphoonDataModule(NonGeoDataModule):
         """
         super().__init__(DigitalTyphoon, batch_size, num_workers, **kwargs)
 
-        assert (
-            split_by in self.valid_split_types
-        ), f'Please choose from {self.valid_split_types}'
+        assert split_by in self.valid_split_types, (
+            f'Please choose from {self.valid_split_types}'
+        )
         self.split_by = split_by
 
     def _split_dataset(

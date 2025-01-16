@@ -138,26 +138,26 @@ class SSL4EOLBenchmark(NonGeoDataset):
             AssertionError: if any arguments are invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert (
-            sensor in self.valid_sensors
-        ), f'Only supports one of {self.valid_sensors}, but found {sensor}.'
+        assert sensor in self.valid_sensors, (
+            f'Only supports one of {self.valid_sensors}, but found {sensor}.'
+        )
         self.sensor = sensor
-        assert (
-            product in self.valid_products
-        ), f'Only supports one of {self.valid_products}, but found {product}.'
+        assert product in self.valid_products, (
+            f'Only supports one of {self.valid_products}, but found {product}.'
+        )
         self.product = product
-        assert (
-            split in self.valid_splits
-        ), f'Only supports one of {self.valid_splits}, but found {split}.'
+        assert split in self.valid_splits, (
+            f'Only supports one of {self.valid_splits}, but found {split}.'
+        )
         self.split = split
 
         self.cmap = self.cmaps[product]
         if classes is None:
             classes = list(self.cmap.keys())
 
-        assert (
-            set(classes) <= self.cmap.keys()
-        ), f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert set(classes) <= self.cmap.keys(), (
+            f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        )
         assert 0 in classes, 'Classes must include the background class: 0'
 
         self.root = root

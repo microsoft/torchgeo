@@ -104,14 +104,14 @@ class SKIPPD(NonGeoDataset):
         """
         lazy_import('h5py')
 
-        assert (
-            split in self.valid_splits
-        ), f'Please choose one of these valid data splits {self.valid_splits}.'
+        assert split in self.valid_splits, (
+            f'Please choose one of these valid data splits {self.valid_splits}.'
+        )
         self.split = split
 
-        assert (
-            task in self.valid_tasks
-        ), f'Please choose one of these valid tasks {self.valid_tasks}.'
+        assert task in self.valid_tasks, (
+            f'Please choose one of these valid tasks {self.valid_tasks}.'
+        )
         self.task = task
 
         self.root = root
