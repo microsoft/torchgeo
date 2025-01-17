@@ -11,6 +11,7 @@ from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
+from .bright import BRIGHT_DFC2025
 from .cabuar import CaBuAr
 from .caffe import CaFFe
 from .cbf import CanadianBuildingFootprints
@@ -182,6 +183,7 @@ __all__ = (
     'BigEarthNet',
     'BioMassters',
     'BoundingBox',
+    'BRIGHT_DFC2025',
     'CMSGlobalMangroveCanopy',
     'COWCCounting',
     'COWCDetection',
