@@ -4,6 +4,5 @@ laspy==2.5.4
 opencv-python==4.11.0.86
 pandas[parquet]==2.2.3
 pycocotools==2.0.8
-pyvista==0.44.2
 scikit-image==0.25.0
 scipy==1.15.1
