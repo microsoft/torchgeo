@@ -40,7 +40,6 @@ class TestBRIGHTDFC2025:
         if dataset.split != 'test':
             assert isinstance(x['mask'], torch.Tensor)
             assert x['pre_image'].shape[-2:] == x['mask'].shape[-2:]
-        
 
     def test_len(self, dataset: BRIGHTDFC2025) -> None:
         if dataset.split == 'train':

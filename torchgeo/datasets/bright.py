@@ -4,14 +4,16 @@
 """BRIGHT dataset."""
 
 import os
+import textwrap
 from collections.abc import Callable
-from typing import ClassVar, Literal
+from typing import ClassVar
 from einops import repeat
 
 import rasterio
 from matplotlib import colors
 import torch
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import numpy as np
 from matplotlib.figure import Figure
 from torch import Tensor
@@ -23,10 +25,10 @@ from .utils import Path, download_url, extract_archive
 
 class BRIGHTDFC2025(NonGeoDataset):
     """BRIGHT dataset.
-    
+
     The `BRIGHT <https://github.com/ChenHongruixuan/BRIGHT>`__ dataset consists of bi-temporal high-resolution multimodal images for
     building damage assessment. The dataset is part of the 2025 IEEE GRSS Data Fusion Contest.
-    The pre-distaster images are optical images and the post-disaster images are SAR images, and 
+    The pre-distaster images are optical images and the post-disaster images are SAR images, and
     targets were manually annotated. The dataset is split into train, val, and test splits, but
     the test split does not contain targets in this version.
 
@@ -51,35 +53,37 @@ class BRIGHTDFC2025(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    classes = (
-        'background',
-        'intact',
-        'damaged',
-        'destroyed'
-    )
+    classes = ('background', 'intact', 'damaged', 'destroyed')
 
     colormap = (
-        "white", # white backgroud
-        "green", # green intact
-        "burlywood", # damaged
-        "red", # red destroyey
+        'white',  # white backgroud
+        'green',  # green intact
+        'burlywood',  # damaged
+        'red',  # red destroyey
     )
 
     md5 = '2c435bb50345d425390eff59a92134ac'
 
     url = 'https://huggingface.co/datasets/Kullervo/BRIGHT/resolve/50901f05db4acbd141e7c96d719d8317910498fb/dfc25_track2_trainval.zip'
 
-    data_dir = "dfc25_track2_trainval"
+    data_dir = 'dfc25_track2_trainval'
 
     valid_split = ('train', 'val', 'test')
 
     # train_setlevels.txt are the training samples
     # holdout_setlevels.txt are the validation samples
     # val_setlevels.txt are the test samples
-    split_files ClassVar[dict[str, str]] = {
+    split_files: ClassVar[dict[str, str]] = {
         'train': 'train_setlevel.txt',
         'val': 'holdout_setlevel.txt',
-        'test': 'val_setlevel.txt'
+        'test': 'val_setlevel.txt',
+    }
+
+    px_class_values: ClassVar[dict[int, str]] = {
+        0: 'background',
+        1: 'intact',
+        2: 'damaged',
+        3: 'destroyed',
     }
 
     def __init__(
@@ -104,7 +108,7 @@ class BRIGHTDFC2025(NonGeoDataset):
             DatasetNotFoundError: If dataset is not found and *download* is False.
             AssertionError: If *split* is not one of 'train', 'val', or 'test.
         """
-        assert split in self.valid_split, f"Split must be one of {self.valid_split}"
+        assert split in self.valid_split, f'Split must be one of {self.valid_split}'
         self.root = root
         self.split = split
         self.transforms = transforms
@@ -115,9 +119,9 @@ class BRIGHTDFC2025(NonGeoDataset):
 
         self.sample_paths = self._get_paths()
 
-    def __getitem__(self, index :int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
-        
+
         Args:
             index: index to return
 
@@ -132,10 +136,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         # post image is stacked to also have 3 channels
         post_image = repeat(post_image, 'c h w -> (repeat c) h w', repeat=3)
 
-        sample = {
-            'pre_image': pre_image,
-            'post_image': post_image
-        }
+        sample = {'pre_image': pre_image, 'post_image': post_image}
 
         if 'target' in idx_paths and self.split != 'test':
             target = self._load_image(idx_paths['target']).long()
@@ -145,7 +146,6 @@ class BRIGHTDFC2025(NonGeoDataset):
             sample = self.transforms(sample)
 
         return sample
-
 
     def _get_paths(self) -> tuple[list[Path], list[Path], list[Path]]:
         """Get paths to the dataset files based on specified splits."""
@@ -162,16 +162,34 @@ class BRIGHTDFC2025(NonGeoDataset):
 
         sample_paths = [
             {
-                "pre_image": os.path.join(self.root, self.data_dir, dir_split_name, "pre-event", f"{sample_id.strip()}_pre_disaster.tif"),
-                "post_image": os.path.join(self.root, self.data_dir, dir_split_name, "post-event", f"{sample_id.strip()}_post_disaster.tif"),
-            } for sample_id in sample_ids
+                'pre_image': os.path.join(
+                    self.root,
+                    self.data_dir,
+                    dir_split_name,
+                    'pre-event',
+                    f'{sample_id.strip()}_pre_disaster.tif',
+                ),
+                'post_image': os.path.join(
+                    self.root,
+                    self.data_dir,
+                    dir_split_name,
+                    'post-event',
+                    f'{sample_id.strip()}_post_disaster.tif',
+                ),
+            }
+            for sample_id in sample_ids
         ]
         if self.split != 'test':
             for sample, sample_id in zip(sample_paths, sample_ids):
-                sample['target'] = os.path.join(self.root, self.data_dir, dir_split_name, "target", f"{sample_id.strip()}_building_damage.tif")
+                sample['target'] = os.path.join(
+                    self.root,
+                    self.data_dir,
+                    dir_split_name,
+                    'target',
+                    f'{sample_id.strip()}_building_damage.tif',
+                )
 
         return sample_paths
-
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -185,16 +203,14 @@ class BRIGHTDFC2025(NonGeoDataset):
             exists = []
             for sample in sample_paths:
                 exists.append(
-                    all(
-                        os.path.exists(path) for name, path in sample.items()
-                    )
+                    all(os.path.exists(path) for name, path in sample.items())
                 )
             if all(exists):
                 return
-        
+
         # check if .zip files already exists (if so, then extract)
         exists = []
-        zip_file_path = os.path.join(self.root, self.data_dir + ".zip")
+        zip_file_path = os.path.join(self.root, self.data_dir + '.zip')
         if os.path.exists(zip_file_path):
             if self.checksum and not check_integrity(zip_file_path, split_info['md5']):
                 raise RuntimeError('Dataset found, but corrupted.')
@@ -202,7 +218,7 @@ class BRIGHTDFC2025(NonGeoDataset):
             extract_archive(zip_file_path, self.root)
         else:
             exists.append(False)
-        
+
         if all(exists):
             return
 
@@ -216,12 +232,15 @@ class BRIGHTDFC2025(NonGeoDataset):
     def _download(self) -> None:
         """Download the dataset."""
         download_url(
-            self.url, self.root, self.data_dir + ".zip", md5=self.md5 if self.checksum else None
+            self.url,
+            self.root,
+            self.data_dir + '.zip',
+            md5=self.md5 if self.checksum else None,
         )
 
     def __len__(self) -> int:
         """Return the number of samples in the dataset.
-        
+
         Returns:
             number of samples in the dataset
         """
@@ -229,7 +248,7 @@ class BRIGHTDFC2025(NonGeoDataset):
 
     def _load_image(self, path: Path) -> Tensor:
         """Load a file from disk.
-        
+
         Args:
             path: path to the file to load
 
@@ -265,12 +284,12 @@ class BRIGHTDFC2025(NonGeoDataset):
         if showing_prediction:
             ncols += 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(15, ncols*10))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(15, 5))
 
-        axs[0].imshow(sample['pre_image'].permute(1, 2, 0) / 255.)
+        axs[0].imshow(sample['pre_image'].permute(1, 2, 0) / 255.0)
         axs[0].axis('off')
 
-        axs[1].imshow(sample['post_image'].permute(1, 2, 0) / 255.)
+        axs[1].imshow(sample['post_image'].permute(1, 2, 0) / 255.0)
         axs[1].axis('off')
 
         cmap = colors.ListedColormap(self.colormap)
@@ -278,11 +297,27 @@ class BRIGHTDFC2025(NonGeoDataset):
         if showing_mask:
             axs[2].imshow(sample['mask'].squeeze(0), cmap=cmap, interpolation='none')
             axs[2].axis('off')
+            unique_classes = np.unique(sample['mask'].numpy())
+            handles = [
+                mpatches.Patch(
+                    color=cmap(ordinal),
+                    label='\n'.join(
+                        textwrap.wrap(self.px_class_values[px_class], width=10)
+                    ),
+                )
+                for ordinal, px_class in enumerate(self.px_class_values.keys())
+                if ordinal in unique_classes
+            ]
+            axs[2].legend(handles=handles, loc='upper right', bbox_to_anchor=(1.4, 1))
             if showing_prediction:
-                axs[3].imshow(sample['prediction'].squeeze(0), cmap=cmap, interpolation='none')
+                axs[3].imshow(
+                    sample['prediction'].squeeze(0), cmap=cmap, interpolation='none'
+                )
                 axs[3].axis('off')
         elif showing_prediction:
-            axs[2].imshow(sample['prediction'].squeeze(0), cmap=cmap, interpolation='none')
+            axs[2].imshow(
+                sample['prediction'].squeeze(0), cmap=cmap, interpolation='none'
+            )
             axs[2].axis('off')
 
         if show_titles:
@@ -297,9 +332,3 @@ class BRIGHTDFC2025(NonGeoDataset):
             plt.suptitle(suptitle)
 
         return fig
-
-        
-
-
-
-

@@ -3,7 +3,6 @@
 
 """BRIGHT datamodule."""
 
-
 from typing import Any
 
 import kornia.augmentation as K
@@ -12,9 +11,10 @@ import torch
 from ..datasets import BRIGHTDFC2025
 from .geo import NonGeoDataModule
 
+
 class BRIGHTDFC2025DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the BRIGHT_DFC25 dataset.
-    
+
     Implements the default splits that come with the dataset. Note
     that the test split does not have any targets.
 
@@ -32,7 +32,7 @@ class BRIGHTDFC2025DataModule(NonGeoDataModule):
         self, batch_size: int = 64, num_workers: int = 0, size: int = 512, **kwargs: Any
     ) -> None:
         """Initialize a new BRIGHT_DFCDataModule instance.
-        
+
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
@@ -54,7 +54,5 @@ class BRIGHTDFC2025DataModule(NonGeoDataModule):
         )
 
         self.aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            data_keys=None,
-            keepdim=True,
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )

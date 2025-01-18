@@ -10,46 +10,44 @@ import rasterio
 import shutil
 from rasterio.transform import from_origin
 
-ROOT = "."
-DATA_DIR = "dfc25_track2_trainval"
+ROOT = '.'
+DATA_DIR = 'dfc25_track2_trainval'
 
-TRAIN_FILE = "train_setlevel.txt"
-HOLDOUT_FILE = "holdout_setlevel.txt"
-VAL_FILE = "val_setlevel.txt"
+TRAIN_FILE = 'train_setlevel.txt'
+HOLDOUT_FILE = 'holdout_setlevel.txt'
+VAL_FILE = 'val_setlevel.txt'
 
 TRAIN_IDS = [
-    "bata-explosion_00000049",
-    "bata-explosion_00000014",
-    "bata-explosion_00000047"
+    'bata-explosion_00000049',
+    'bata-explosion_00000014',
+    'bata-explosion_00000047',
 ]
-HOLDOUT_IDS = [
-    "turkey-earthquake_00000413"
-]
-VAL_IDS = [
-    "val-disaster_00000001",
-    "val-disaster_00000002"
-]
+HOLDOUT_IDS = ['turkey-earthquake_00000413']
+VAL_IDS = ['val-disaster_00000001', 'val-disaster_00000002']
 
 SIZE = 32
+
 
 def make_dirs():
     paths = [
         os.path.join(ROOT, DATA_DIR),
-        os.path.join(ROOT, DATA_DIR, "train", "pre-event"),
-        os.path.join(ROOT, DATA_DIR, "train", "post-event"),
-        os.path.join(ROOT, DATA_DIR, "train", "target"),
-        os.path.join(ROOT, DATA_DIR, "val", "pre-event"),
-        os.path.join(ROOT, DATA_DIR, "val", "post-event"),
-        os.path.join(ROOT, DATA_DIR, "val", "target"),
+        os.path.join(ROOT, DATA_DIR, 'train', 'pre-event'),
+        os.path.join(ROOT, DATA_DIR, 'train', 'post-event'),
+        os.path.join(ROOT, DATA_DIR, 'train', 'target'),
+        os.path.join(ROOT, DATA_DIR, 'val', 'pre-event'),
+        os.path.join(ROOT, DATA_DIR, 'val', 'post-event'),
+        os.path.join(ROOT, DATA_DIR, 'val', 'target'),
     ]
     for p in paths:
         os.makedirs(p, exist_ok=True)
 
+
 def write_list_file(filename, ids):
     file_path = os.path.join(ROOT, DATA_DIR, filename)
-    with open(file_path, "w") as f:
+    with open(file_path, 'w') as f:
         for sid in ids:
-            f.write(f"{sid}\n")
+            f.write(f'{sid}\n')
+
 
 def write_tif(filepath, channels):
     data = np.random.randint(0, 255, (channels, SIZE, SIZE), dtype=np.uint8)
@@ -57,27 +55,35 @@ def write_tif(filepath, channels):
     crs = 'epsg:4326'
     with rasterio.open(
         filepath,
-        "w",
-        driver="GTiff",
+        'w',
+        driver='GTiff',
         height=SIZE,
         width=SIZE,
         count=channels,
         crs=crs,
         dtype=data.dtype,
-        compress="lzw",
+        compress='lzw',
         # transform=transform,
     ) as dst:
         dst.write(data)
 
+
 def populate_data(ids, dir_name, with_target=True):
     for sid in ids:
-        pre_path = os.path.join(ROOT, DATA_DIR, dir_name, "pre-event", f"{sid}_pre_disaster.tif")
+        pre_path = os.path.join(
+            ROOT, DATA_DIR, dir_name, 'pre-event', f'{sid}_pre_disaster.tif'
+        )
         write_tif(pre_path, channels=3)
-        post_path = os.path.join(ROOT, DATA_DIR, dir_name, "post-event", f"{sid}_post_disaster.tif")
+        post_path = os.path.join(
+            ROOT, DATA_DIR, dir_name, 'post-event', f'{sid}_post_disaster.tif'
+        )
         write_tif(post_path, channels=1)
         if with_target:
-            target_path = os.path.join(ROOT, DATA_DIR, dir_name, "target", f"{sid}_building_damage.tif")
+            target_path = os.path.join(
+                ROOT, DATA_DIR, dir_name, 'target', f'{sid}_building_damage.tif'
+            )
             write_tif(target_path, channels=1)
+
 
 def main():
     make_dirs()
@@ -88,13 +94,13 @@ def main():
     write_list_file(VAL_FILE, VAL_IDS)
 
     # Generate TIF files for the train (with target) and val (no target) splits
-    populate_data(TRAIN_IDS, "train", with_target=True)
-    populate_data(HOLDOUT_IDS, "train", with_target=True)
-    populate_data(VAL_IDS, "val", with_target=False)
+    populate_data(TRAIN_IDS, 'train', with_target=True)
+    populate_data(HOLDOUT_IDS, 'train', with_target=True)
+    populate_data(VAL_IDS, 'val', with_target=False)
 
     # zip and compute md5
-    zip_filename = os.path.join(ROOT, "dfc25_track2_trainval")
-    shutil.make_archive(zip_filename, "zip", ROOT, DATA_DIR)
+    zip_filename = os.path.join(ROOT, 'dfc25_track2_trainval')
+    shutil.make_archive(zip_filename, 'zip', ROOT, DATA_DIR)
 
     def md5(fname: str) -> str:
         hash_md5 = hashlib.md5()
@@ -103,8 +109,9 @@ def main():
                 hash_md5.update(chunk)
         return hash_md5.hexdigest()
 
-    md5sum = md5(zip_filename+".zip")
+    md5sum = md5(zip_filename + '.zip')
     print(f'MD5 checksum: {md5sum}')
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()
