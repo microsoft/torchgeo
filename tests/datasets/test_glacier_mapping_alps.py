@@ -13,8 +13,8 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, GlacierMappingAlps
 
-pytest.importorskip('xarray', minversion='2024.11.0')
-pytest.importorskip('netCDF4', minversion='1.7.2')
+pytest.importorskip('xarray', minversion='2023.9')
+pytest.importorskip('netCDF4', minversion='1.5.4')
 
 
 class TestGlacierMappingAlps:
