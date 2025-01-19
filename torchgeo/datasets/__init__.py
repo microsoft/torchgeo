@@ -85,6 +85,7 @@ from .landsat import (
 from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
 from .mapinwild import MapInWild
+from .mdas import MDAS
 from .millionaid import MillionAID
 from .mmearth import MMEarth
 from .naip import NAIP
@@ -160,6 +161,7 @@ __all__ = (
     'GBIF',
     'GID15',
     'LEVIRCD',
+    'MDAS',
     'NAIP',
     'NCCM',
     'NLCD',

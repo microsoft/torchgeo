@@ -204,15 +204,15 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         self.checksum = checksum
 
         assert isinstance(country, str), 'Country argument must be a str.'
-        assert (
-            country in self.all_countries
-        ), f'You have selected an invalid country, please choose one of {self.all_countries}'
+        assert country in self.all_countries, (
+            f'You have selected an invalid country, please choose one of {self.all_countries}'
+        )
         self.country = country
 
         assert isinstance(measurement, str), 'Measurement must be a string.'
-        assert (
-            measurement in self.measurements
-        ), f'You have entered an invalid measurement, please choose one of {self.measurements}.'
+        assert measurement in self.measurements, (
+            f'You have entered an invalid measurement, please choose one of {self.measurements}.'
+        )
         self.measurement = measurement
 
         self.filename_glob = f'**/Mangrove_{self.measurement}_{self.country}*'
