@@ -222,7 +222,3 @@ class TestSubstation:
             num_of_timepoints=4,
             root=tmp_path,
         )
-
-
-if __name__ == '__main__':
-    pytest.main([__file__])
