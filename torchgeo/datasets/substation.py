@@ -62,6 +62,7 @@ class Substation(NonGeoDataset):
             use_timepoints: Whether to use multiple timepoints for each image.
             mask_2d: Whether to use a 2D mask.
             timepoint_aggregation: How to aggregate multiple timepoints.
+            num_of_timepoints: Number of timepoints to use for each image.
             download: Whether to download the dataset if it is not found.
             checksum: Whether to verify the dataset after downloading.
         """
@@ -125,7 +126,6 @@ class Substation(NonGeoDataset):
         image = torch.from_numpy(image)
         mask = torch.from_numpy(mask).long()
         mask = mask.unsqueeze(dim=0)
-
 
         if self.mask_2d:
             mask_0 = 1.0 - mask

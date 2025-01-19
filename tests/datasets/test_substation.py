@@ -21,11 +21,11 @@ class TestSubstation:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> Generator[Substation, None, None]:
         """Fixture for the Substation."""
-        root = os.path.join(os.getcwd(), 'tests', 'data', 'substation') 
+        root = os.path.join(os.getcwd(), 'tests', 'data', 'substation')
 
         yield Substation(
             root=root,
-            bands=[1,2,3],
+            bands=[1, 2, 3],
             use_timepoints=True,
             mask_2d=True,
             timepoint_aggregation='median',
@@ -35,45 +35,45 @@ class TestSubstation:
     @pytest.mark.parametrize(
         'config',
         [
-            {'bands': [1,2,3], 'use_timepoints': False, 'mask_2d': True},
+            {'bands': [1, 2, 3], 'use_timepoints': False, 'mask_2d': True},
             {
-                'bands': [1,2,3],
+                'bands': [1, 2, 3],
                 'use_timepoints': True,
                 'timepoint_aggregation': 'concat',
                 'num_of_timepoints': 4,
                 'mask_2d': False,
             },
             {
-                'bands': [1,2,3],
+                'bands': [1, 2, 3],
                 'use_timepoints': True,
                 'timepoint_aggregation': 'median',
                 'num_of_timepoints': 4,
                 'mask_2d': True,
             },
             {
-                'bands': [1,2,3],
+                'bands': [1, 2, 3],
                 'use_timepoints': True,
                 'timepoint_aggregation': 'first',
                 'num_of_timepoints': 4,
                 'mask_2d': False,
             },
             {
-                'bands': [1,2,3],
+                'bands': [1, 2, 3],
                 'use_timepoints': True,
                 'timepoint_aggregation': 'random',
                 'num_of_timepoints': 4,
                 'mask_2d': True,
             },
-            {'bands': [1,2,3], 'use_timepoints': False, 'mask_2d': False},
+            {'bands': [1, 2, 3], 'use_timepoints': False, 'mask_2d': False},
             {
-                'bands': [1,2,3],
+                'bands': [1, 2, 3],
                 'use_timepoints': False,
                 'timepoint_aggregation': 'first',
                 'num_of_timepoints': 4,
                 'mask_2d': False,
             },
             {
-                'bands': [1,2,3],
+                'bands': [1, 2, 3],
                 'use_timepoints': False,
                 'timepoint_aggregation': 'random',
                 'num_of_timepoints': 4,

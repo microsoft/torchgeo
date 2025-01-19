@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+"""Substation datamodule."""
+
 from typing import Any
 
 import torch
@@ -52,6 +57,7 @@ class SubstationDataModule(NonGeoDataModule):
             color_transforms: Color transformations to apply to the image.
             image_resize: Resizing function for the image.
             mask_resize: Resizing function for the mask.
+            num_of_timepoints: Number of timepoints to use in the dataset.
             **kwargs: Additional arguments passed to Substation.
         """
         super().__init__(Substation, batch_size, num_workers, **kwargs)
@@ -86,7 +92,7 @@ class SubstationDataModule(NonGeoDataModule):
             download=True,
             checksum=False,
         )
-        
+
         generator = torch.Generator().manual_seed(0)
         total_len = len(dataset)
         val_len = int(total_len * self.val_split_pct)
