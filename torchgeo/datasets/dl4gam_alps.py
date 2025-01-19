@@ -160,6 +160,8 @@ class DL4GAMAlps(NonGeoDataset):
             DatasetNotFoundError: If dataset is not found and *download* is False.
             DependencyNotFoundError: If xarray is not installed.
         """
+        lazy_import('xarray')
+
         self.root = Path(root)
         self.split = split
         self.cv_iter = cv_iter
