@@ -75,15 +75,19 @@ class SubstationDataModule(NonGeoDataModule):
         self.image_resize = image_resize
         self.mask_resize = mask_resize
         self.num_of_timepoints = num_of_timepoints
-        self.geo_transforms = geo_transforms if geo_transforms is not None else self._identity
-        self.color_transforms = color_transforms if color_transforms is not None else self._identity
+        self.geo_transforms = (
+            geo_transforms if geo_transforms is not None else self._identity
+        )
+        self.color_transforms = (
+            color_transforms if color_transforms is not None else self._identity
+        )
         self.image_resize = image_resize if image_resize is not None else self._identity
         self.mask_resize = mask_resize if mask_resize is not None else self._identity
 
     def _identity(self, x: torch.Tensor) -> torch.Tensor:
         """Identity function for default transformations."""
         return x
-    
+
     def setup(self, stage: str) -> None:
         """Set up datasets.
 

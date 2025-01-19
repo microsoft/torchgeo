@@ -87,9 +87,9 @@ class TestSubstation:
 
         x = dataset[0]
         assert isinstance(x, dict), f'Expected dict, got {type(x)}'
-        assert isinstance(
-            x['image'], torch.Tensor
-        ), 'Expected image to be a torch.Tensor'
+        assert isinstance(x['image'], torch.Tensor), (
+            'Expected image to be a torch.Tensor'
+        )
         assert isinstance(x['mask'], torch.Tensor), 'Expected mask to be a torch.Tensor'
 
     def test_len(self, dataset: Substation) -> None:
