@@ -14,7 +14,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class Substation(NonGeoDataset):
@@ -46,7 +46,7 @@ class Substation(NonGeoDataset):
 
     def __init__(
         self,
-        root: str,
+        root: Path,
         bands: list[int],
         mask_2d: bool,
         timepoint_aggregation: str = 'concat',
@@ -220,9 +220,7 @@ class Substation(NonGeoDataset):
 
         # If dataset files are missing and download is not allowed, raise an error
         if not getattr(self, 'download', True):
-            raise DatasetNotFoundError(
-                f'Dataset files not found in {self.root}. Enable downloading or provide the files.'
-            )
+            raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
         self._download()

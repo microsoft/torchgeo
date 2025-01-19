@@ -87,9 +87,9 @@ class TestSubstation:
 
         x = dataset[0]
         assert isinstance(x, dict), f'Expected dict, got {type(x)}'
-        assert isinstance(x['image'], torch.Tensor), (
-            'Expected image to be a torch.Tensor'
-        )
+        assert isinstance(
+            x['image'], torch.Tensor
+        ), 'Expected image to be a torch.Tensor'
         assert isinstance(x['mask'], torch.Tensor), 'Expected mask to be a torch.Tensor'
 
     def test_len(self, dataset: Substation) -> None:
@@ -166,6 +166,44 @@ class TestSubstation:
                 num_of_timepoints=4,
                 root=tmp_path,
             )
+
+    def test_not_downloaded_with_download(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        filename = 'image_stack'
+        maskname = 'mask'
+        source_image_path = os.path.join('tests', 'data', 'substation', filename)
+        source_mask_path = os.path.join('tests', 'data', 'substation', maskname)
+        target_image_path = tmp_path / filename
+        target_mask_path = tmp_path / maskname
+
+        def mock_download_side_effect() -> None:
+            shutil.copytree(source_image_path, target_image_path)
+            shutil.copytree(source_mask_path, target_mask_path)
+
+        mock_download = MagicMock(side_effect=mock_download_side_effect)
+        mock_extract = MagicMock()
+        monkeypatch.setattr(
+            'torchgeo.datasets.substation.Substation._download', mock_download
+        )
+        monkeypatch.setattr(
+            'torchgeo.datasets.substation.Substation._extract', mock_extract
+        )
+
+        # Create the Substation instance
+        Substation(
+            bands=[1, 2, 3],
+            use_timepoints=True,
+            mask_2d=True,
+            timepoint_aggregation='median',
+            num_of_timepoints=4,
+            root=tmp_path,
+            download=True,
+        )
+
+        # Verify the mocked methods were called
+        mock_download.assert_called_once()
+        mock_extract.assert_called_once()
 
     def test_extract(self, tmp_path: Path) -> None:
         filename = Substation.filename_images
