@@ -12,6 +12,7 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import download_url, extract_archive
 
@@ -213,14 +214,13 @@ class Substation(NonGeoDataset):
         # Check if the tar.gz files for images and masks have already been downloaded
         image_exists = os.path.exists(os.path.join(self.root, self.filename_images))
         mask_exists = os.path.exists(os.path.join(self.root, self.filename_masks))
-
         if image_exists and mask_exists:
             self._extract()
             return
 
         # If dataset files are missing and download is not allowed, raise an error
         if not getattr(self, 'download', True):
-            raise FileNotFoundError(
+            raise DatasetNotFoundError(
                 f'Dataset files not found in {self.root}. Enable downloading or provide the files.'
             )
 

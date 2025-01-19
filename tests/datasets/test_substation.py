@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 
-from torchgeo.datasets import Substation
+from torchgeo.datasets import Substation, DatasetNotFoundError
 
 
 class TestSubstation:
@@ -155,6 +155,35 @@ class TestSubstation:
         # Check that extract_archive was called twice
         mock_extract_archive.assert_called()
         assert mock_extract_archive.call_count == 2
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            Substation(
+                bands=[1, 2, 3],
+                use_timepoints=True,
+                mask_2d=True,
+                timepoint_aggregation='median',
+                num_of_timepoints=4,
+                root=tmp_path,
+            )
+
+    def test_extract(self, tmp_path: Path) -> None:
+        filename = Substation.filename_images
+        maskname = Substation.filename_masks
+        shutil.copyfile(
+            os.path.join('tests', 'data', 'substation', filename), tmp_path / filename
+        )
+        shutil.copyfile(
+            os.path.join('tests', 'data', 'substation', maskname), tmp_path / maskname
+        )
+        Substation(
+            bands=[1, 2, 3],
+            use_timepoints=True,
+            mask_2d=True,
+            timepoint_aggregation='median',
+            num_of_timepoints=4,
+            root=tmp_path,
+        )
 
 
 if __name__ == '__main__':
