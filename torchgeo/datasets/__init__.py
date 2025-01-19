@@ -36,6 +36,7 @@ from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
+from .dl4gam_alps import DL4GAMAlps
 from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
 from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
@@ -60,7 +61,6 @@ from .geo import (
 )
 from .geonrw import GeoNRW
 from .gid15 import GID15
-from .glacier_mapping_alps import GlacierMappingAlps
 from .globbiomass import GlobBiomass
 from .hyspecnet import HySpecNet11k
 from .idtrees import IDTReeS
@@ -202,6 +202,7 @@ __all__ = (
     'ChesapeakeWV',
     'CloudCoverDetection',
     'CropHarvest',
+    'DL4GAMAlps',
     'DatasetNotFoundError',
     'DeepGlobeLandCover',
     'DependencyNotFoundError',
@@ -218,7 +219,6 @@ __all__ = (
     'ForestDamage',
     'GeoDataset',
     'GeoNRW',
-    'GlacierMappingAlps',
     'GlobBiomass',
     'HySpecNet11k',
     'IDTReeS',

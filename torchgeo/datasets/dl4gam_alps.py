@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""GlacierMappingAlps Dataset."""
+"""DL4GAMAlps Dataset."""
 
 import os
 from collections.abc import Callable, Sequence
@@ -25,7 +25,7 @@ from .utils import (
 )
 
 
-class GlacierMappingAlps(NonGeoDataset):
+class DL4GAMAlps(NonGeoDataset):
     r"""A Multi-modal Dataset for Glacier Mapping (Segmentation) in the European Alps.
 
     The dataset consists of Sentinel-2 images from 2015 (mainly), 2016 and 2017, and binary segmentation masks for
@@ -320,7 +320,7 @@ class GlacierMappingAlps(NonGeoDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`GlacierMappingAlps.__getitem__`
+            sample: a sample returned by :meth:`DL4GAMAlps.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
             clip_extrema: flag indicating whether to clip the lowest/highest 2.5% of the values for contrast enhancement
