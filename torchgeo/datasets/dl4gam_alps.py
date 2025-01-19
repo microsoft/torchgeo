@@ -260,6 +260,9 @@ class DL4GAMAlps(NonGeoDataset):
         for k, v in sample.items():
             sample[k] = torch.from_numpy(v)
 
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
         return sample
 
     def _verify(self) -> None:
