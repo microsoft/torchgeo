@@ -447,7 +447,7 @@ TASKS: dict[str, _Task] = {
 class SatlasPretrain(NonGeoDataset):
     """SatlasPretrain dataset.
 
-    `SatlasPretrain <https://satlas-pretrain.allen.ai/>`_ is a large-scale pre-training
+    `SatlasPretrain <https://satlas-pretrain.allen.ai/>`__ is a large-scale pre-training
     dataset for tasks that involve understanding satellite images. Regularly-updated
     satellite data is publicly available for much of the Earth through sources such as
     Sentinel-2 and NAIP, and can inform numerous applications from tackling illegal
