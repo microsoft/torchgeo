@@ -70,8 +70,8 @@ class Substation(NonGeoDataset):
         self.use_timepoints = use_timepoints
         self.timepoint_aggregation = timepoint_aggregation
         self.mask_2d = mask_2d
-        self.image_dir = os.path.join(root, 'substation', 'image_stack')
-        self.mask_dir = os.path.join(root, 'substation', 'mask')
+        self.image_dir = os.path.join(root, 'image_stack')
+        self.mask_dir = os.path.join(root, 'mask')
         self.num_of_timepoints = num_of_timepoints
         self.download = download
         self.checksum = checksum
@@ -123,12 +123,14 @@ class Substation(NonGeoDataset):
         mask[mask == 3] = 1
 
         image = torch.from_numpy(image)
-        mask = torch.from_numpy(mask).float()
+        mask = torch.from_numpy(mask).long()
         mask = mask.unsqueeze(dim=0)
+
 
         if self.mask_2d:
             mask_0 = 1.0 - mask
             mask = torch.concat([mask_0, mask], dim=0)
+        mask = mask.squeeze()
 
         return {'image': image, 'mask': mask}
 
@@ -157,12 +159,19 @@ class Substation(NonGeoDataset):
         image = sample['image'][:3].permute(1, 2, 0).cpu().numpy()
         image = image / 255.0  # Normalize image
 
-        mask = sample['mask'][0].squeeze(0).cpu().numpy()
-
+        if self.mask_2d:
+            mask = sample['mask'][0].squeeze(0).cpu().numpy()
+        else:
+            mask = sample['mask'].cpu().numpy()
         showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = sample['prediction'][0].squeeze(0).cpu().numpy()
+            prediction = sample['prediction'].cpu().numpy()
+            if self.mask_2d:
+                prediction = prediction[0]
+            print(prediction.shape)
             ncols = 3
+
+        print(mask.shape, image.shape)
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
         axs[0].imshow(image)

@@ -1,8 +1,7 @@
-from typing import Any, List, Optional
+from typing import Any
 
-import numpy as np
 import torch
-from torch.utils.data import Subset
+from torch.utils.data import Subset, random_split
 from tqdm import tqdm
 
 from ..datasets import Substation
@@ -20,12 +19,13 @@ class SubstationDataModule(NonGeoDataModule):
         root: str,
         batch_size: int = 64,
         num_workers: int = 0,
-        split_ratio: float = 0.8,
+        val_split_pct: float = 0.2,
+        test_split_pct: float = 0.2,
         normalizing_type: str = 'percentile',
         normalizing_factor: Any | None = None,
         means: Any | None = None,
         stds: Any | None = None,
-        bands: list[int] = [1,2,3],
+        bands: list[int] = [1, 2, 3],
         num_of_timepoints: int = 4,
         model_type: str = 'default',
         geo_transforms: Any | None = None,
@@ -40,12 +40,12 @@ class SubstationDataModule(NonGeoDataModule):
             root: Path to the dataset directory.
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for data loading.
-            split_ratio: Ratio of data to use for training.
+            val_split_pct: Percentage of data to use for validation.
+            test_split_pct: Percentage of data to use for testing.
             normalizing_type: Normalization type ('percentile', 'zscore', or 'default').
             normalizing_factor: Normalization factor for percentile normalization.
             means: Mean values for z-score normalization.
             stds: Standard deviation values for z-score normalization.
-            num_of_timepoints: Number of timepoints to use.
             bands: Number of input channels to use.
             model_type: Type of model being used (e.g., 'swin' for specific channel selection).
             geo_transforms: Geometric transformations to apply to the data.
@@ -54,8 +54,10 @@ class SubstationDataModule(NonGeoDataModule):
             mask_resize: Resizing function for the mask.
             **kwargs: Additional arguments passed to Substation.
         """
+        super().__init__(Substation, batch_size, num_workers, **kwargs)
         self.root = root
-        self.split_ratio = split_ratio
+        self.val_split_pct = val_split_pct
+        self.test_split_pct = test_split_pct
         self.normalizing_type = normalizing_type
         self.normalizing_factor = normalizing_factor
         self.means = means
@@ -67,10 +69,6 @@ class SubstationDataModule(NonGeoDataModule):
         self.image_resize = image_resize
         self.mask_resize = mask_resize
         self.num_of_timepoints = num_of_timepoints
-
-        self.train_dataset: Subset[Any] | None = None
-        self.val_dataset: Subset[Any] | None = None
-        self.test_dataset: Subset[Any] | None = None
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -84,36 +82,26 @@ class SubstationDataModule(NonGeoDataModule):
             use_timepoints=True,
             mask_2d=False,
             num_of_timepoints=self.num_of_timepoints,
-            timepoint_aggregation='concat',
+            timepoint_aggregation='median',
             download=True,
             checksum=False,
         )
+        
+        generator = torch.Generator().manual_seed(0)
+        total_len = len(dataset)
+        val_len = int(total_len * self.val_split_pct)
+        test_len = int(total_len * self.test_split_pct)
+        train_len = total_len - val_len - test_len
+        print(val_len, test_len, train_len)
 
-        total_size = len(dataset)
-        train_size = int(total_size * self.split_ratio)
-        train_indices: Subset[Any]
-        test_indices: Subset[Any]
-        train_indices, test_indices = torch.utils.data.random_split(
-            dataset, [train_size, total_size - train_size]
+        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
+            dataset, [train_len, val_len, test_len], generator
         )
 
-        if stage in ['fit', 'validate']:
-            val_split_ratio = 0.2
-            val_size = int(len(train_indices) * val_split_ratio)
-            train_size = len(train_indices) - val_size
-            val_indices: Subset[Any]
-            train_indices, val_indices = torch.utils.data.random_split(
-                train_indices, [train_size, val_size]
-            )
-
-            self.train_dataset = Subset(dataset, train_indices.indices)
-            self.val_dataset = Subset(dataset, val_indices.indices)
-
+        if stage == 'fit':
             self.train_dataset = self._apply_transforms(self.train_dataset)
             self.val_dataset = self._apply_transforms(self.val_dataset)
-
-        if stage == 'test':
-            self.test_dataset = Subset(dataset, test_indices.indices)
+        elif stage == 'test':
             self.test_dataset = self._apply_transforms(self.test_dataset)
 
     def _apply_transforms(self, dataset: Subset[Any]) -> Subset[Any]:
@@ -135,18 +123,12 @@ class SubstationDataModule(NonGeoDataModule):
 
             if self.color_transforms:
                 num_timepoints = image.shape[0] // self.bands
-                num_of_bands = len(self.bands)
                 for i in range(num_timepoints):
-                    if num_of_bands >= 3:
-                        start = i * num_of_bands
-                        end = start + 3
-                        image[start:end, :, :] = self.color_transforms(
-                            image[start:end, :, :]
-                        )
-                    else:
-                        raise ValueError(
-                            'Input dimensions must support color transformations.'
-                        )
+                    start = i * len(self.bands)
+                    end = start + 3
+                    image[start:end, :, :] = self.color_transforms(
+                        image[start:end, :, :]
+                    )
 
             if self.image_resize:
                 image = self.image_resize(image)

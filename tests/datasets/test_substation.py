@@ -21,7 +21,7 @@ class TestSubstation:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> Generator[Substation, None, None]:
         """Fixture for the Substation."""
-        root = os.path.join(os.getcwd(), 'tests', 'data')
+        root = os.path.join(os.getcwd(), 'tests', 'data', 'substation') 
 
         yield Substation(
             root=root,
@@ -82,7 +82,7 @@ class TestSubstation:
         ],
     )
     def test_getitem_semantic(self, config: dict[str, Any]) -> None:
-        root = os.path.join(os.getcwd(), 'tests', 'data')
+        root = os.path.join(os.getcwd(), 'tests', 'data', 'substation')
         dataset = Substation(root=root, **config)
 
         x = dataset[0]
