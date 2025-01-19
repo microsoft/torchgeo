@@ -28,40 +28,50 @@ from .utils import (
 class DL4GAMAlps(NonGeoDataset):
     r"""A Multi-modal Dataset for Glacier Mapping (Segmentation) in the European Alps.
 
-    The dataset consists of Sentinel-2 images from 2015 (mainly), 2016 and 2017, and binary segmentation masks for
-    glaciers, based on an inventory built by glaciology experts
-    (`Paul et al. 2020 <https://doi.org/10.1594/PANGAEA.909133>`_).
+    The dataset consists of Sentinel-2 images from 2015 (mainly), 2016 and 2017, and
+    binary segmentation masks for glaciers, based on an inventory built by glaciology
+    experts (`Paul et al. 2020 <https://doi.org/10.1594/PANGAEA.909133>`_).
 
-    Given that glacier ice is not always visible in the images, due to seasonal snow, shadow/cloud cover and, most
-    importantly, debris cover, the dataset also includes additional features that can help in the segmentation task.
+    Given that glacier ice is not always visible in the images, due to seasonal snow,
+    shadow/cloud cover and, most importantly, debris cover, the dataset also includes
+    additional features that can help in the segmentation task.
 
     Dataset features:
 
-    * Sentinel-2 images (all bands, including cloud and shadow masks which can be used for loss masking)
+    * Sentinel-2 images (all bands, including cloud and shadow masks which can be used
+      for loss masking)
     * glacier mask (0: no glacier, 1: glacier)
     * debris mask (0: no debris, 1: debris) based on a mix of three publications
       (`Scherler et al. 2018 <https://doi.org/10.5880/GFZ.3.3.2018.005>`_,
       `Herreid & Pellicciotti 2020 <https://doi.org/10.5281/zenodo.3866466>`_,
-      `Linsbauer et al. 2021 <https://doi.glamos.ch/data/inventory/inventory_sgi2016_r2020.html>`_)
-    * DEM (Copernicus GLO-30) + five derived features (using `xDEM <https://github.com/GlacioHack/xdem>`_): slope,
+      `Linsbauer et al. 2021
+      <https://doi.glamos.ch/data/inventory/inventory_sgi2016_r2020.html>`_)
+    * DEM (Copernicus GLO-30) + five derived features
+      (using `xDEM <https://github.com/GlacioHack/xdem>`_): slope,
       aspect, terrain ruggedness index, planform and profile curvatures
-    * dh/dt (surface elevation change) map over 2010-2015 (`Hugonnet et al. 2021 <https://doi.org/10.6096/13>`_)
+    * dh/dt (surface elevation change) map over 2010-2015
+      (`Hugonnet et al. 2021 <https://doi.org/10.6096/13>`_)
     * v (surface velocity) map over 2015 (`ITS_LIVE <https://its-live.jpl.nasa.gov/>`_)
 
     Other specifications:
 
-    * temporal coverage: one acquisition per glacier, from either 2015 (mainly), 2016, or 2017
-    * spatial coverage: only glaciers larger than 0.1 km\ :sup:`2`\  are considered (n=1593, after manual QC), totalling
-      ~1685 km\ :sup:`2`\  which represents ~93% of the total inventory area for this region
+    * temporal coverage: one acquisition per glacier, from either 2015 (mainly), 2016,
+      or 2017
+    * spatial coverage: only glaciers larger than 0.1 km\ :sup:`2`\  are considered
+      (n=1593, after manual QC), totalling ~1685 km\ :sup:`2`\  which represents ~93% of
+      the total inventory area for this region
     * 2251 patches sampled with overlap from the 1593 glaciers;
       or 11440 for the `large` version, obtained with an increased sampling overlap
     * the dataset download size is 5.8 GB (11 GB when unarchived);
       or 29.5 GB (52 GB when unarchived) for the `large` version
-    * the dataset is provided at 10m GSD (after bilinearly resampling some of the Sentinel-2 bands and the additional
-      features which come at a lower resolution)
-    * the dataset provides fixed training, validation, and test geographical splits (70-10-20, by glacier area)
-    * five different splits are provided, according to a five-fold cross-validation scheme
-    * all the features/masks are stacked and provided as NetCDF files (one or more per glacier), structured as
+    * the dataset is provided at 10m GSD (after bilinearly resampling some of the
+      Sentinel-2 bands and the additional features which come at a lower resolution)
+    * the dataset provides fixed training, validation, and test geographical splits
+      (70-10-20, by glacier area)
+    * five different splits are provided, according to a five-fold cross-validation
+      scheme
+    * all the features/masks are stacked and provided as NetCDF files (one or more per
+      glacier), structured as
       `data/{glacier_id}/{glacier_id}_{patch_number}_{center_x}_{center_y}.nc`
     * data is projected and geocoded in local UTM zones
 
@@ -75,13 +85,16 @@ class DL4GAMAlps(NonGeoDataset):
 
         This dataset requires the following additional libraries to be installed:
 
-        * `xarray <https://docs.xarray.dev/en/stable/getting-started-guide/installing.html>`_
-        * `netcdf4 <https://unidata.github.io/netcdf4-python/>`_
+        * `xarray <https://pypi.org/project/xarray/>`_
+        * `netcdf4 <https://pypi.org/project/netCDF4/>`_
 
     .. versionadded:: 0.7
     """
 
-    r_url = 'https://huggingface.co/datasets/dcodrut/dl4gam_alps/resolve/7d20ca8a2b30c5518e086ffaa5ce37e6a66c42c1/data'
+    r_url = (
+        'https://huggingface.co/datasets/dcodrut/dl4gam_alps/resolve/'
+        '7d20ca8a2b30c5518e086ffaa5ce37e6a66c42c1/data'
+    )
     download_metadata: ClassVar[dict[str, dict[str, str]]] = {
         'dataset_small': {
             'url': f'{r_url}/patches/inv_r_128_s_128.tar.gz',
@@ -146,19 +159,21 @@ class DL4GAMAlps(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             split: one of "train", "val", or "test"
-            cv_iter: one of 1, 2, 3, 4, 5 (for the five-fold geographical cross-validation scheme)
+            cv_iter: one of 1, 2, 3, 4, 5 (for the five-fold geographical
+                cross-validation scheme)
             version: one of "small" or "large" (controls the sampling overlap)
             bands: the Sentinel-2 bands to use as input (default: RGB + NIR + SWIR)
-            extra_features: additional features to include (default: None; see the class attribute for the available)
-            transforms: a function/transform that takes input sample and its target as entry and returns a transformed
-             version
+            extra_features: additional features to include (default: None; see the class
+                attribute for the available)
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if the ``split``, ``cv_iter``, ``version``, ``bands`` or ``extra_features`` are invalid
-            DatasetNotFoundError: If dataset is not found and *download* is False.
-            DependencyNotFoundError: If xarray is not installed.
+            AssertionError: if any parameters are invalid.
+            DatasetNotFoundError: if dataset is not found and *download* is False.
+            DependencyNotFoundError: if xarray is not installed.
         """
         lazy_import('xarray')
 
@@ -212,7 +227,7 @@ class DL4GAMAlps(NonGeoDataset):
         return len(self.fp_patches)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
-        """It loads the netcdf file for the given index and returns the sample as a dict.
+        """Load the NetCDF file for the given index and return the sample as a dict.
 
         Args:
             index: index of the sample to return
@@ -221,7 +236,8 @@ class DL4GAMAlps(NonGeoDataset):
             dict: a dictionary containing the sample with the following:
 
                 * the Sentinel-2 image (selected bands)
-                * the glacier mask (binary mask with all the glaciers in the current patch)
+                * the glacier mask (binary mask with all the glaciers in the current
+                  patch)
                 * the debris mask
                 * the cloud and shadow mask
                 * the additional features (DEM, derived features, etc.) if required
@@ -250,7 +266,8 @@ class DL4GAMAlps(NonGeoDataset):
                 assert feature in nc, f'Feature {feature} not found in the netcdf file'
                 vals = nc[feature].values.astype(np.float32)
 
-                # impute the missing values with the mean or zero (for dh/dt and surface velocity)
+                # impute the missing values with the mean
+                # or zero (for dh/dt and surface velocity)
                 v_fill = 0.0 if feature in ('dhdt', 'v') else np.nanmean(vals)
                 vals[np.isnan(vals)] = v_fill
 
@@ -328,7 +345,8 @@ class DL4GAMAlps(NonGeoDataset):
             sample: a sample returned by :meth:`DL4GAMAlps.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
-            clip_extrema: flag indicating whether to clip the lowest/highest 2.5% of the values for contrast enhancement
+            clip_extrema: flag indicating whether to clip the lowest/highest 2.5% of the
+                values for contrast enhancement
 
         Returns:
             a matplotlib Figure with the rendered sample
