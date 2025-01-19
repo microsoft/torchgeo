@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import pytest
 import torch
 
-from torchgeo.datasets import Substation, DatasetNotFoundError
+from torchgeo.datasets import DatasetNotFoundError, Substation
 
 
 class TestSubstation:
