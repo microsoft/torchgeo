@@ -3,9 +3,8 @@
 
 """DL4GAMAlps Dataset."""
 
-import os
+import pathlib
 from collections.abc import Callable, Sequence
-from pathlib import Path
 from typing import ClassVar
 
 import matplotlib.pyplot as plt
@@ -18,6 +17,7 @@ from torch import Tensor
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
+    Path,
     download_and_extract_archive,
     download_url,
     extract_archive,
@@ -144,7 +144,7 @@ class DL4GAMAlps(NonGeoDataset):
 
     def __init__(
         self,
-        root: str | os.PathLike[str] = 'data',
+        root: Path = 'data',
         split: str = 'train',
         cv_iter: int = 1,
         version: str = 'small',
@@ -177,7 +177,7 @@ class DL4GAMAlps(NonGeoDataset):
         """
         lazy_import('xarray')
 
-        self.root = Path(root)
+        self.root = pathlib.Path(root)
         self.split = split
         self.cv_iter = cv_iter
         self.version = version
