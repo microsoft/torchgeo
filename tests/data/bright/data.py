@@ -28,7 +28,7 @@ VAL_IDS = ['val-disaster_00000001', 'val-disaster_00000002']
 SIZE = 32
 
 
-def make_dirs():
+def make_dirs() -> None:
     paths = [
         os.path.join(ROOT, DATA_DIR),
         os.path.join(ROOT, DATA_DIR, 'train', 'pre-event'),
@@ -42,14 +42,14 @@ def make_dirs():
         os.makedirs(p, exist_ok=True)
 
 
-def write_list_file(filename, ids):
+def write_list_file(filename: str, ids: list[str]) -> None:
     file_path = os.path.join(ROOT, DATA_DIR, filename)
     with open(file_path, 'w') as f:
         for sid in ids:
             f.write(f'{sid}\n')
 
 
-def write_tif(filepath, channels):
+def write_tif(filepath: str, channels: int) -> None:
     data = np.random.randint(0, 255, (channels, SIZE, SIZE), dtype=np.uint8)
     # transform = from_origin(0, 0, 1, 1)
     crs = 'epsg:4326'
@@ -68,7 +68,7 @@ def write_tif(filepath, channels):
         dst.write(data)
 
 
-def populate_data(ids, dir_name, with_target=True):
+def populate_data(ids: list[str], dir_name: str, with_target: bool=True) -> None:
     for sid in ids:
         pre_path = os.path.join(
             ROOT, DATA_DIR, dir_name, 'pre-event', f'{sid}_pre_disaster.tif'
