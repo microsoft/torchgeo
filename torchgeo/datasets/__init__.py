@@ -152,6 +152,7 @@ from .zuericrop import ZueriCrop
 
 __all__ = (
     'ADVANCE',
+    'BRIGHTDFC2025',
     'CDL',
     'COWC',
     'DFC2022',
@@ -183,7 +184,6 @@ __all__ = (
     'BigEarthNet',
     'BioMassters',
     'BoundingBox',
-    'BRIGHTDFC2025',
     'CMSGlobalMangroveCanopy',
     'COWCCounting',
     'COWCDetection',

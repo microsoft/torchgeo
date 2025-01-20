@@ -7,32 +7,32 @@ import os
 import textwrap
 from collections.abc import Callable
 from typing import ClassVar
-from einops import repeat
 
-import rasterio
-from matplotlib import colors
-import torch
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
 import numpy as np
+import rasterio
+import torch
+from einops import repeat
+from matplotlib import colors
 from matplotlib.figure import Figure
 from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, check_integrity
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
 class BRIGHTDFC2025(NonGeoDataset):
-    """BRIGHT dataset.
+    """BRIGHT DFC2025 dataset.
 
     The `BRIGHT <https://github.com/ChenHongruixuan/BRIGHT>`__ dataset consists of bi-temporal high-resolution multimodal images for
     building damage assessment. The dataset is part of the 2025 IEEE GRSS Data Fusion Contest.
-    The pre-distaster images are optical images and the post-disaster images are SAR images, and
+    The pre-disaster images are optical images and the post-disaster images are SAR images, and
     targets were manually annotated. The dataset is split into train, val, and test splits, but
     the test split does not contain targets in this version.
 
-    More infomation can be found at the `Challenge website <https://www.grss-ieee.org/technical-committees/image-analysis-and-data-fusion/?tab=data-fusion-contest>`__.
+    More information can be found at the `Challenge website <https://www.grss-ieee.org/technical-committees/image-analysis-and-data-fusion/?tab=data-fusion-contest>`__.
 
     Dataset Features:
 
@@ -56,10 +56,10 @@ class BRIGHTDFC2025(NonGeoDataset):
     classes = ('background', 'intact', 'damaged', 'destroyed')
 
     colormap = (
-        'white',  # white backgroud
-        'green',  # green intact
+        'white',  # background
+        'green',  # intact
         'burlywood',  # damaged
-        'red',  # red destroyey
+        'red',  # destroyed
     )
 
     md5 = '2c435bb50345d425390eff59a92134ac'
@@ -94,7 +94,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new MMFlood dataset instance.
+        """Initialize a new BRIGHT DFC2025 dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -156,7 +156,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         split_file = self.split_files[self.split]
 
         file_path = os.path.join(self.root, self.data_dir, split_file)
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             sample_ids = f.readlines()
 
         if self.split in ('train', 'val'):
