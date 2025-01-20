@@ -3,12 +3,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import os
-import numpy as np
 import hashlib
-import rasterio
+import os
 import shutil
-from rasterio.transform import from_origin
+
+import numpy as np
+import rasterio
 
 ROOT = '.'
 DATA_DIR = 'dfc25_track2_trainval'
@@ -68,7 +68,7 @@ def write_tif(filepath: str, channels: int) -> None:
         dst.write(data)
 
 
-def populate_data(ids: list[str], dir_name: str, with_target: bool=True) -> None:
+def populate_data(ids: list[str], dir_name: str, with_target: bool = True) -> None:
     for sid in ids:
         pre_path = os.path.join(
             ROOT, DATA_DIR, dir_name, 'pre-event', f'{sid}_pre_disaster.tif'
@@ -85,7 +85,7 @@ def populate_data(ids: list[str], dir_name: str, with_target: bool=True) -> None
             write_tif(target_path, channels=1)
 
 
-def main():
+def main() -> None:
     make_dirs()
 
     # Write the ID lists to text files
