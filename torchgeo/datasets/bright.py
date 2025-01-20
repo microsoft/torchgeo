@@ -20,7 +20,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive
+from .utils import Path, download_url, extract_archive, check_integrity
 
 
 class BRIGHTDFC2025(NonGeoDataset):
@@ -147,8 +147,12 @@ class BRIGHTDFC2025(NonGeoDataset):
 
         return sample
 
-    def _get_paths(self) -> tuple[list[Path], list[Path], list[Path]]:
-        """Get paths to the dataset files based on specified splits."""
+    def _get_paths(self) -> list[dict[str, str]]:
+        """Get paths to the dataset files based on specified splits.
+
+        Returns:
+            a list of dictionaries containing paths to the pre,post and target images
+        """
         split_file = self.split_files[self.split]
 
         file_path = os.path.join(self.root, self.data_dir, split_file)
@@ -212,7 +216,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         exists = []
         zip_file_path = os.path.join(self.root, self.data_dir + '.zip')
         if os.path.exists(zip_file_path):
-            if self.checksum and not check_integrity(zip_file_path, split_info['md5']):
+            if self.checksum and not check_integrity(zip_file_path, self.md5):
                 raise RuntimeError('Dataset found, but corrupted.')
             exists.append(True)
             extract_archive(zip_file_path, self.root)
@@ -257,7 +261,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         """
         with rasterio.open(path) as src:
             img = src.read()
-            tensor = torch.from_numpy(img).float()
+            tensor: Tensor = torch.from_numpy(img).float()
         return tensor
 
     def plot(
