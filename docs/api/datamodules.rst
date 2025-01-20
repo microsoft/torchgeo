@@ -57,10 +57,6 @@ BigEarthNet
 
 .. autoclass:: BigEarthNetDataModule
 
-BRIGHTDFC2025
-
-.. autoclass:: BRIGHTDFC2025DataModule
-
 CaBuAr
 ^^^^^^
 

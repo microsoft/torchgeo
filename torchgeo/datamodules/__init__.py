@@ -5,7 +5,6 @@
 
 from .agrifieldnet import AgriFieldNetDataModule
 from .bigearthnet import BigEarthNetDataModule
-from .bright import BRIGHTDFC2025DataModule
 from .cabuar import CaBuArDataModule
 from .caffe import CaFFeDataModule
 from .chabud import ChaBuDDataModule
@@ -61,7 +60,6 @@ __all__ = (
     'AgriFieldNetDataModule',
     'BaseDataModule',
     'BigEarthNetDataModule',
-    'BRIGHTDFC2025DataModule',
     'COWCCountingDataModule',
     'CaBuArDataModule',
     'CaFFeDataModule',
