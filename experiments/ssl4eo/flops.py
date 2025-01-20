@@ -17,7 +17,7 @@ input_shape = (batch_size, in_channels, patch_size, patch_size)
 for model in models:
     print(f'Model: {model}')
 
-    m = timm.create_model(model, num_classes=num_classes, in_chans=in_channels)
+    m = timm.create_model(model, num_classes=num_classes, in_chans=in_channels)  # type: ignore[attr-defined]
 
     # Calculate memory requirements of model
     mem_params = sum([p.nelement() * p.element_size() for p in m.parameters()])
