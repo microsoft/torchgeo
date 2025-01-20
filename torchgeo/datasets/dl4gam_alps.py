@@ -428,7 +428,7 @@ class DL4GAMAlps(NonGeoDataset):
                 )
 
             vmin, vmax = np.min(img), np.max(img)
-            # smale the images to [0,1]
+            # scale the images to [0,1]
             if k in ['RGB Image', 'SWIR-NIR-R Image']:
                 img = (img - vmin) / (vmax - vmin)
 
