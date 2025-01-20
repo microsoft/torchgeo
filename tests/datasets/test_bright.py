@@ -68,6 +68,12 @@ class TestBRIGHTDFC2025:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             BRIGHTDFC2025(tmp_path)
 
+    def test_corrupted(self, tmp_path: Path) -> None:
+        with open(os.path.join(tmp_path, 'dfc25_track2_trainval.zip'), 'w') as f:
+            f.write('bad')
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+            BRIGHTDFC2025(root=tmp_path, checksum=True)
+
     def test_plot(self, dataset: BRIGHTDFC2025) -> None:
         dataset.plot(dataset[0], suptitle='Test')
         plt.close()
@@ -76,4 +82,8 @@ class TestBRIGHTDFC2025:
             sample = dataset[0]
             sample['prediction'] = torch.clone(sample['mask'])
             dataset.plot(sample, suptitle='Prediction')
+            plt.close()
+
+            del sample['mask']
+            dataset.plot(sample, suptitle='Only Prediction')
             plt.close()
