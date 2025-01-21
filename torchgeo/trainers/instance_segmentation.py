@@ -10,17 +10,12 @@ from torch import Tensor
 from torchmetrics.detection.mean_ap import MeanAveragePrecision  
 from torchmetrics import MetricCollection
 from torchvision.models.detection import maskrcnn_resnet50_fpn
-from base import BaseTask  
+from .base import BaseTask  
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from torchgeo.datasets import RGBBandsMissingError, unbind_samples
+from ..datasets import RGBBandsMissingError, unbind_samples
 
-# for testing
-import pytorch_lightning as pl
-from pytorch_lightning import LightningModule
-from torch.utils.data import DataLoader
-from torchgeo.datasets import VHR10
 
 class InstanceSegmentationTask(BaseTask):
     """Instance Segmentation."""
