@@ -3,6 +3,8 @@ import pytorch_lightning as pl
 from pytorch_lightning import LightningModule
 from torch.utils.data import DataLoader
 from torchgeo.datasets import VHR10
+from torchgeo.main import main
+
 from torchgeo.trainers import InstanceSegmentationTask
 
 
@@ -20,12 +22,12 @@ val_loader = DataLoader(val_dataset, batch_size=4, shuffle=False, collate_fn=col
 
 # Initialize the InstanceSegmentationTask
 task = InstanceSegmentationTask(
-    model="mask_rcnn",         # Use Mask R-CNN as the model
-    backbone="resnet50",       # ResNet-50 as the backbone
-    weights=True,              # Use pretrained weights 
-    num_classes=11,            # 10 object classes in VHR10 + 1 background class
-    lr=1e-3,                   # Learning rate
-    freeze_backbone=False      # Allow training the backbone
+    model="mask_rcnn",         
+    backbone="resnet50",       
+    weights=True,              
+    num_classes=11,            
+    lr=1e-3,                   
+    freeze_backbone=False      
 )
 
 # Set up PyTorch Lightning Trainer
