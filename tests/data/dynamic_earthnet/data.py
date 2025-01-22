@@ -27,7 +27,7 @@ samples = [
     },
 ]
 
-planet_dirs = ['PF-SR', 'PF-QA']
+# planet_dirs = ['PF-SR', 'PF-QA']
 
 NUM_CLASSES = 7
 
@@ -157,12 +157,12 @@ def main():
             date = f'{row["year_month"]}-{day:02d}'
 
             # 1. Planet data (PF-SR → 4 bands, PF-QA → 1 band)
-            for planet_dir in planet_dirs:
-                bands = 4 if planet_dir == 'PF-SR' else 1
-                tif_path = os.path.join(
-                    os.path.dirname(planet_path), planet_dir, f'{date}.tif'
-                )
-                create_dummy_tiff(tif_path, bands=bands)
+            # for planet_dir in planet_dirs:
+            #     bands = 4 if planet_dir == 'PF-SR' else 1
+            tif_path = os.path.join(
+                planet_path, f'{date}.tif'
+            )
+            create_dummy_tiff(tif_path, bands=4)
 
             # 2. Sentinel-1 data (8 band)
             tif_path = os.path.join(s1_path, f'{date}.tif')
