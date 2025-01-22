@@ -27,8 +27,6 @@ updates:
       # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
       - dependency-name: 'sphinx'
         versions: '>=6'
-      # segmentation-models-pytorch pins timm, must update in unison
-      - dependency-name: 'timm'
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:

@@ -139,7 +139,7 @@ class TestSemanticSegmentationTask:
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
-        model = timm.create_model(
+        model = timm.create_model(  # type: ignore[attr-defined]
             weights.meta['model'], in_chans=weights.meta['in_chans']
         )
         torch.save(model.state_dict(), path)
