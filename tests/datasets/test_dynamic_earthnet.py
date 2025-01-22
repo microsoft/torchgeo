@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from itertools import product
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -16,42 +17,43 @@ from torchgeo.datasets import DatasetNotFoundError, DynamicEarthNet
 
 
 class TestDynamicEarthNet:
-    @pytest.fixture(
-        params=product(['train', 'val', 'test'], ['monthly', 'weekly', 'daily'])
-    )
-    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> DynamicEarthNet:
+    @pytest.fixture(params=product(['train'], ['monthly', 'weekly', 'daily']))
+    def dataset(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, request: SubRequest
+    ) -> DynamicEarthNet:
         filename_and_md5: ClassVar[dict[str, dict[str, str]]] = {
             'planet': {
                 'filename': 'planet_pf_sr.tar.gz',
-                'md5': 'd41d8cd98f00b204e9800998ecf8427e',
+                'md5': 'c52b33928598ab33d3c29d45dcc7a908',
             },
-            # 's1': {
-            #     'filename': 's1.tar.gz',
-            #     'md5': 'd41d8cd98f00b204e9800998ecf8427e',
-            # },
-            # 's2': {
-            #     'filename': 's2.tar.gz',
-            #     'md5': 'd41d8cd98f00b204e9800998ecf8427e',
-            # },
+            'sentinel1': {
+                'filename': 'sentinel1.tar.gz',
+                'md5': '282d7643b2ceef1790a46ab4b689227b',
+            },
+            'sentinel2': {
+                'filename': 'sentinel2.tar.gz',
+                'md5': 'd4161a1cd35f65e277a7b69d7afcc3f0',
+            },
             'labels': {
                 'filename': 'labels.tar.gz',
-                'md5': 'd41d8cd98f00b204e9800998ecf8427e',
+                'md5': 'f2c35402e5719320ad2fd74621f63f6c',
             },
             'split_info': {
                 'filename': 'split_info.tar.gz',
-                'md5': 'd41d8cd98f00b204e9800998ecf8427e',
+                'md5': '1b4eadb3048eb2225324f1f65245feb8',
             },
         }
         monkeypatch.setattr(DynamicEarthNet, 'filename_and_md5', filename_and_md5)
-        root = os.path.join('tests', 'data', 'dynamic_earthnet')
-        split, tempooral_input = request.param
+        url = os.path.join('tests', 'data', 'dynamic_earthnet', '{}')
+        monkeypatch.setattr(DynamicEarthNet, 'base_url', url)
+        split, temporal_input = request.param
         transforms = nn.Identity()
         return DynamicEarthNet(
-            root,
+            tmp_path,
             split,
             temporal_input=temporal_input,
             transforms=transforms,
-            checksum=True,
+            checksum=False,
             download=True,
         )
 

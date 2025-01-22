@@ -59,8 +59,8 @@ class DynamicEarthNet(NonGeoDataset):
 
     * Image and label pixel dimensions: 1024x1024
     * Planet imagery in GeoTIFF format
-    * Sentinel-1 imagery in GeoTIFF format
-    * Sentinel-2 imagery in GeoTIFF format
+    * Sentinel-1 imagery in GeoTIFF format with 8 channels
+    * Sentinel-2 imagery in GeoTIFF format with 12 channels
     * Annotation labels in raster and vector format
 
     Dataset classes:
@@ -73,6 +73,14 @@ class DynamicEarthNet(NonGeoDataset):
     6. water
     7. snow & ice
 
+    .. note::
+
+        If you choose to return 'daily' data with the *temporal_input* argument, the dataset will return all images for a given month.
+        And since months have different number of days, you will need to create a collate function for your accompanying DataLoader.
+
+        Also if you choose additional modalities, there are some missing files in the dataset, so choosing additional modalities
+        will reduce the dataset corpus by 62 samples.
+
     If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2203.12560
@@ -80,24 +88,24 @@ class DynamicEarthNet(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    valid_splits = ('train', 'val', 'test')
-    valid_temporal_inputs = ('daily', 'weekly', 'monthly')
+    valid_splits = 'train'
+    valid_temporal_input = ('daily', 'weekly', 'monthly')
 
-    base_url = 'https://hf.co/datasets/torchgeo/dynamic_earthnet/resolve/commit_hash/'
+    base_url = 'https://hf.co/datasets/torchgeo/dynamic_earthnet/resolve/commit_hash/{}'
 
     filename_and_md5: ClassVar[dict[str, dict[str, str]]] = {
         'planet': {
             'filename': 'planet_pf_sr.tar.gz',
             'md5': 'd41d8cd98f00b204e9800998ecf8427e',
         },
-        # 's1': {
-        #     'filename': 's1.tar.gz',
-        #     'md5': 'd41d8cd98f00b204e9800998ecf8427e',
-        # },
-        # 's2': {
-        #     'filename': 's2.tar.gz',
-        #     'md5': 'd41d8cd98f00b204e9800998ecf8427e',
-        # },
+        'sentinel1': {
+            'filename': 'sentinel1.tar.gz',
+            'md5': 'd41d8cd98f00b204e9800998ecf8427e',
+        },
+        'sentinel2': {
+            'filename': 'sentinel2.tar.gz',
+            'md5': 'd41d8cd98f00b204e9800998ecf8427e',
+        },
         'labels': {
             'filename': 'labels.tar.gz',
             'md5': 'd41d8cd98f00b204e9800998ecf8427e',
@@ -114,7 +122,7 @@ class DynamicEarthNet(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        temporal_inputs: str = 'daily',
+        temporal_input: str = 'daily',
         year_month_start: str = '2018-01',
         year_month_end: str = '2019-12',
         add_modalities: Sequence[str] | None = None,
@@ -126,8 +134,8 @@ class DynamicEarthNet(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: one of "train", "val", or "test"
-            temporal_inputs: one of "daily","weekly", "monthly", where daily will return
+            split: currently only 'train' is available
+            temporal_input: one of "daily","weekly", "monthly", where daily will return
                 all images for a given month, weekly will return 6 images spaced by 5 days, and
                 monthly will return 1 image corresponding to the same day of the month as the label
             year_month_start: start date to include in dataset
@@ -160,8 +168,8 @@ class DynamicEarthNet(NonGeoDataset):
         )
 
         assert split in self.valid_splits, f'Split must be one of {self.valid_splits}'
-        assert temporal_inputs in self.valid_temporal_inputs, (
-            f'Temporal type must be one of {self.valid_temporal_inputs}'
+        assert temporal_input in self.valid_temporal_input, (
+            f'Temporal type must be one of {self.valid_temporal_input}'
         )
 
         if add_modalities is not None:
@@ -171,7 +179,7 @@ class DynamicEarthNet(NonGeoDataset):
 
         self.root = root
         self.split = split
-        self.temporal_inputs = temporal_inputs
+        self.temporal_input = temporal_input
         self.year_month_start = year_month_start
         self.year_month_end = year_month_end
         self.transforms = transforms
@@ -179,7 +187,7 @@ class DynamicEarthNet(NonGeoDataset):
         self.checksum = checksum
         self.add_modalities = add_modalities
 
-        # self._verify()
+        self._verify()
 
         self.metadata_df = pd.read_parquet(
             os.path.join(self.root, 'split_info', 'splits.parquet')
@@ -193,7 +201,17 @@ class DynamicEarthNet(NonGeoDataset):
         self.metadata_df = self.metadata_df[
             (self.metadata_df['year_month'] >= year_month_start)
             & (self.metadata_df['year_month'] <= year_month_end)
-        ]
+        ].reset_index(drop=True)
+        # filter for missing
+        self.metadata_df = self.metadata_df[
+            (self.metadata_df['missing_label'] == False)
+        ].reset_index(drop=True)
+        # if additional modalities are chosen filter for missing
+        if self.add_modalities:
+            for modality in self.add_modalities:
+                self.metadata_df = self.metadata_df[
+                    (self.metadata_df[f'missing_{modality}'] == False)
+                ].reset_index(drop=True)
 
         # collect file paths
         self.sample_file_paths = self.collect_file_paths()
@@ -217,10 +235,10 @@ class DynamicEarthNet(NonGeoDataset):
             """
             planet_paths = []
             # removing leading slash from label path for join
-            image_path = os.path.join(self.root, row['image_path'])
+            image_path = os.path.join(self.root, row['planet_path'])
             label_path = os.path.join(self.root, row['label_path'])
             date_str_year_month = row['year_month'].strftime('%Y-%m')
-            match self.temporal_inputs:
+            match self.temporal_input:
                 case 'daily':
                     # check how many days are in this month and return all days in a month
                     days_in_month = pd.Period(date_str_year_month).days_in_month
@@ -305,7 +323,7 @@ class DynamicEarthNet(NonGeoDataset):
         with rasterio.open(path) as src:
             img = src.read()
             # https://github.com/aysim/dynnet/blob/1e7d90294b54f52744ae2b35db10b4d0a48d093d/data/utae_dynamicen.py#L105
-            # order of bands is BGRN, so we need to rearrange them to RGBN
+            # order of bands is BGRN, so rearrange them to RGBN
             img = img[[2, 1, 0, 3], :, :]
             tensor = torch.from_numpy(img).float()
         return tensor
@@ -333,6 +351,9 @@ class DynamicEarthNet(NonGeoDataset):
         Returns:
             tensor of the mask
         """
+        import pdb
+
+        pdb.set_trace()
         with rasterio.open(path) as src:
             # mask has separate channel per class
             label = src.read()
@@ -359,8 +380,8 @@ class DynamicEarthNet(NonGeoDataset):
         """Verify the integrity of the dataset."""
         # check that directories are there
         exists = []
-        for dirname in self.filename_and_md5.values():
-            exists.append(os.path.exists(os.path.join(self.root, dirname)))
+        for dir, fileinfo in self.filename_and_md5.items():
+            exists.append(os.path.exists(os.path.join(self.root, dir)))
 
         if all(exists):
             return
@@ -389,9 +410,8 @@ class DynamicEarthNet(NonGeoDataset):
     def _download_and_extract(self) -> None:
         """Download and extract the dataset."""
         for dirname, fileinfo in self.filename_and_md5.items():
-            url = self.base_url + fileinfo['filename']
             download_and_extract_archive(
-                url,
+                self.base_url.format(fileinfo['filename']),
                 self.root,
                 filename=fileinfo['filename'],
                 md5=fileinfo['md5'] if self.checksum else None,
