@@ -29,8 +29,7 @@ class TestMMFlood:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> MMFlood:
-        dataset_root = os.path.join('tests', 'data', 'mmflood/')
-        url = os.path.join(dataset_root)
+        url = os.path.join('tests', 'data', 'mmflood') + os.sep
 
         monkeypatch.setattr(MMFlood, 'url', url)
         monkeypatch.setattr(MMFlood, '_nparts', 2)
