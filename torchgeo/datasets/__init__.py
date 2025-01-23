@@ -55,6 +55,7 @@ from .geo import (
     NonGeoClassificationDataset,
     NonGeoDataset,
     RasterDataset,
+    RioXarrayDataset,
     UnionDataset,
     VectorDataset,
 )
@@ -101,7 +102,6 @@ from .prisma import PRISMA
 from .quakeset import QuakeSet
 from .reforestree import ReforesTree
 from .resisc45 import RESISC45
-from .rioxr import RioXarrayDataset
 from .rwanda_field_boundary import RwandaFieldBoundary
 from .satlas import SatlasPretrain
 from .seasonet import SeasoNet
@@ -258,6 +258,7 @@ __all__ = (
     'RGBBandsMissingError',
     'RasterDataset',
     'ReforesTree',
+    'RioXarrayDataset',
     'RwandaFieldBoundary',
     'SSL4EOLBenchmark',
     'SatlasPretrain',
