@@ -174,6 +174,7 @@ class MMFlood(IntersectionDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            AssertionError: If *split* is invalid.
 
         """
         assert split in self._splits
