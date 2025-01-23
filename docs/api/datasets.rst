@@ -202,6 +202,10 @@ ADVANCE
 
 .. autoclass:: ADVANCE
 
+AI4ArcticSeaIce
+
+.. autoclass:: AI4ArcticSeaIce
+
 Benin Cashew Plantations
 ^^^^^^^^^^^^^^^^^^^^^^^^
 

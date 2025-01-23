@@ -6,6 +6,7 @@
 from .advance import ADVANCE
 from .agb_live_woody_density import AbovegroundLiveWoodyBiomassDensity
 from .agrifieldnet import AgriFieldNet
+from .ai4arctic_sea_ice import AI4ArcticSeaIce
 from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
@@ -151,6 +152,7 @@ from .zuericrop import ZueriCrop
 
 __all__ = (
     'ADVANCE',
+    'AI4ArcticSeaIce',
     'CDL',
     'COWC',
     'DFC2022',
