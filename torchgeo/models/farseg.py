@@ -36,12 +36,12 @@ class FarSeg(Module):
 
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/pdf/2011.09766.pdf
+    * https://arxiv.org/pdf/2011.09766
     """
 
     def __init__(
         self,
-        backbone: str = "resnet50",
+        backbone: str = 'resnet50',
         classes: int = 16,
         backbone_pretrained: bool = True,
     ) -> None:
@@ -54,21 +54,21 @@ class FarSeg(Module):
             backbone_pretrained: whether to use pretrained weight for backbone
         """
         super().__init__()
-        if backbone in ["resnet18", "resnet34"]:
+        if backbone in ['resnet18', 'resnet34']:
             max_channels = 512
-        elif backbone in ["resnet50", "resnet101"]:
+        elif backbone in ['resnet50', 'resnet101']:
             max_channels = 2048
         else:
-            raise ValueError(f"unknown backbone: {backbone}.")
+            raise ValueError(f'unknown backbone: {backbone}.')
         kwargs = {}
         if backbone_pretrained:
             kwargs = {
-                "weights": getattr(
-                    torchvision.models, f"ResNet{backbone[6:]}_Weights"
+                'weights': getattr(
+                    torchvision.models, f'ResNet{backbone[6:]}_Weights'
                 ).DEFAULT
             }
         else:
-            kwargs = {"weights": None}
+            kwargs = {'weights': None}
 
         self.backbone = getattr(resnet, backbone)(**kwargs)
 
@@ -102,7 +102,7 @@ class FarSeg(Module):
         coarsest_features = features[-1]
         scene_embedding = F.adaptive_avg_pool2d(coarsest_features, 1)
         fpn_features = self.fpn(
-            OrderedDict({f"c{i + 2}": features[i] for i in range(4)})
+            OrderedDict({f'c{i + 2}': features[i] for i in range(4)})
         )
         features = [v for k, v in fpn_features.items()]
         features = self.fsr(scene_embedding, features)
@@ -219,9 +219,11 @@ class _LightWeightDecoder(Module):
                             ),
                             BatchNorm2d(out_channels),
                             ReLU(inplace=True),
-                            UpsamplingBilinear2d(scale_factor=2)
-                            if num_upsample != 0
-                            else Identity(),
+                            (
+                                UpsamplingBilinear2d(scale_factor=2)
+                                if num_upsample != 0
+                                else Identity()
+                            ),
                         )
                         for idx in range(num_layers)
                     ]

@@ -5,8 +5,8 @@
 
 import os
 import sys
-from collections.abc import Sequence
-from typing import Any, Callable, Optional, cast
+from collections.abc import Callable, Sequence
+from typing import Any, ClassVar, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -21,8 +21,9 @@ from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
+from .utils import BoundingBox, Path, download_url, extract_archive
 
 
 class EnviroAtlas(GeoDataset):
@@ -46,83 +47,84 @@ class EnviroAtlas(GeoDataset):
     .. versionadded:: 0.3
     """
 
-    url = "https://zenodo.org/record/5778193/files/enviroatlas_lotp.zip?download=1"
-    filename = "enviroatlas_lotp.zip"
-    md5 = "bfe601be21c7c001315fc6154be8ef14"
+    url = 'https://zenodo.org/records/5778193/files/enviroatlas_lotp.zip?download=1'
+    filename = 'enviroatlas_lotp.zip'
+    md5 = 'bfe601be21c7c001315fc6154be8ef14'
 
     crs = CRS.from_epsg(3857)
     res = 1
 
-    valid_prior_layers = ["prior", "prior_no_osm_no_buildings"]
+    valid_prior_layers = ('prior', 'prior_no_osm_no_buildings')
 
-    valid_layers = [
-        "naip",
-        "nlcd",
-        "roads",
-        "water",
-        "waterways",
-        "waterbodies",
-        "buildings",
-        "lc",
-    ] + valid_prior_layers
+    valid_layers = (
+        'naip',
+        'nlcd',
+        'roads',
+        'water',
+        'waterways',
+        'waterbodies',
+        'buildings',
+        'lc',
+        *valid_prior_layers,
+    )
 
-    cities = [
-        "pittsburgh_pa-2010_1m",
-        "durham_nc-2012_1m",
-        "austin_tx-2012_1m",
-        "phoenix_az-2010_1m",
-    ]
+    cities = (
+        'pittsburgh_pa-2010_1m',
+        'durham_nc-2012_1m',
+        'austin_tx-2012_1m',
+        'phoenix_az-2010_1m',
+    )
     splits = (
-        [f"{state}-train" for state in cities[:1]]
-        + [f"{state}-val" for state in cities[:1]]
-        + [f"{state}-test" for state in cities]
-        + [f"{state}-val5" for state in cities]
+        [f'{state}-train' for state in cities[:1]]
+        + [f'{state}-val' for state in cities[:1]]
+        + [f'{state}-test' for state in cities]
+        + [f'{state}-val5' for state in cities]
     )
 
     # these are used to check the integrity of the dataset
-    _files = [
-        "austin_tx-2012_1m-test_tiles-debuffered",
-        "austin_tx-2012_1m-val5_tiles-debuffered",
-        "durham_nc-2012_1m-test_tiles-debuffered",
-        "durham_nc-2012_1m-val5_tiles-debuffered",
-        "phoenix_az-2010_1m-test_tiles-debuffered",
-        "phoenix_az-2010_1m-val5_tiles-debuffered",
-        "pittsburgh_pa-2010_1m-test_tiles-debuffered",
-        "pittsburgh_pa-2010_1m-train_tiles-debuffered",
-        "pittsburgh_pa-2010_1m-val5_tiles-debuffered",
-        "pittsburgh_pa-2010_1m-val_tiles-debuffered",
-        "austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_a_naip.tif",
-        "austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_b_nlcd.tif",
-        "austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_c_roads.tif",
-        "austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_d1_waterways.tif",
-        "austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_d2_waterbodies.tif",
-        "austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_d_water.tif",
-        "austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_e_buildings.tif",
-        "austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_h_highres_labels.tif",
-        "austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_prior_from_cooccurrences_101_31.tif",  # noqa: E501
-        "austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif",  # noqa: E501
-        "spatial_index.geojson",
-    ]
+    _files = (
+        'austin_tx-2012_1m-test_tiles-debuffered',
+        'austin_tx-2012_1m-val5_tiles-debuffered',
+        'durham_nc-2012_1m-test_tiles-debuffered',
+        'durham_nc-2012_1m-val5_tiles-debuffered',
+        'phoenix_az-2010_1m-test_tiles-debuffered',
+        'phoenix_az-2010_1m-val5_tiles-debuffered',
+        'pittsburgh_pa-2010_1m-test_tiles-debuffered',
+        'pittsburgh_pa-2010_1m-train_tiles-debuffered',
+        'pittsburgh_pa-2010_1m-val5_tiles-debuffered',
+        'pittsburgh_pa-2010_1m-val_tiles-debuffered',
+        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_a_naip.tif',
+        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_b_nlcd.tif',
+        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_c_roads.tif',
+        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_d1_waterways.tif',
+        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_d2_waterbodies.tif',
+        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_d_water.tif',
+        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_e_buildings.tif',
+        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_h_highres_labels.tif',
+        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_prior_from_cooccurrences_101_31.tif',
+        'austin_tx-2012_1m-test_tiles-debuffered/3009726_sw_prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
+        'spatial_index.geojson',
+    )
 
-    p_src_crs = pyproj.CRS("epsg:3857")
-    p_transformers = {
-        "epsg:26917": pyproj.Transformer.from_crs(
-            p_src_crs, pyproj.CRS("epsg:26917"), always_xy=True
+    p_src_crs = pyproj.CRS('epsg:3857')
+    p_transformers: ClassVar[dict[str, CRS]] = {
+        'epsg:26917': pyproj.Transformer.from_crs(
+            p_src_crs, pyproj.CRS('epsg:26917'), always_xy=True
         ).transform,
-        "epsg:26918": pyproj.Transformer.from_crs(
-            p_src_crs, pyproj.CRS("epsg:26918"), always_xy=True
+        'epsg:26918': pyproj.Transformer.from_crs(
+            p_src_crs, pyproj.CRS('epsg:26918'), always_xy=True
         ).transform,
-        "epsg:26914": pyproj.Transformer.from_crs(
-            p_src_crs, pyproj.CRS("epsg:26914"), always_xy=True
+        'epsg:26914': pyproj.Transformer.from_crs(
+            p_src_crs, pyproj.CRS('epsg:26914'), always_xy=True
         ).transform,
-        "epsg:26912": pyproj.Transformer.from_crs(
-            p_src_crs, pyproj.CRS("epsg:26912"), always_xy=True
+        'epsg:26912': pyproj.Transformer.from_crs(
+            p_src_crs, pyproj.CRS('epsg:26912'), always_xy=True
         ).transform,
     }
 
     # used to convert the 10 high-res classes labeled as [0, 10, 20, 30, 40, 52, 70, 80,
     # 82, 91, 92] to sequential labels [0, ..., 10]
-    raw_enviroatlas_to_idx_map: "np.typing.NDArray[np.uint8]" = np.array(
+    raw_enviroatlas_to_idx_map: 'np.typing.NDArray[np.uint8]' = np.array(
         [
             0,
             0,
@@ -221,19 +223,19 @@ class EnviroAtlas(GeoDataset):
         dtype=np.uint8,
     )
 
-    highres_classes = [
-        "Unclassified",
-        "Water",
-        "Impervious Surface",
-        "Soil and Barren",
-        "Trees and Forest",
-        "Shrubs",
-        "Grass and Herbaceous",
-        "Agriculture",
-        "Orchards",
-        "Woody Wetlands",
-        "Emergent Wetlands",
-    ]
+    highres_classes = (
+        'Unclassified',
+        'Water',
+        'Impervious Surface',
+        'Soil and Barren',
+        'Trees and Forest',
+        'Shrubs',
+        'Grass and Herbaceous',
+        'Agriculture',
+        'Orchards',
+        'Woody Wetlands',
+        'Emergent Wetlands',
+    )
     highres_cmap = ListedColormap(
         [
             [1.00000000, 1.00000000, 1.00000000],
@@ -252,10 +254,10 @@ class EnviroAtlas(GeoDataset):
 
     def __init__(
         self,
-        root: str = "data",
-        splits: Sequence[str] = ["pittsburgh_pa-2010_1m-train"],
-        layers: Sequence[str] = ["naip", "prior"],
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        root: Path = 'data',
+        splits: Sequence[str] = ['pittsburgh_pa-2010_1m-train'],
+        layers: Sequence[str] = ['naip', 'prior'],
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         prior_as_input: bool = False,
         cache: bool = True,
         download: bool = False,
@@ -299,11 +301,11 @@ class EnviroAtlas(GeoDataset):
         mint: float = 0
         maxt: float = sys.maxsize
         with fiona.open(
-            os.path.join(root, "enviroatlas_lotp", "spatial_index.geojson"), "r"
+            os.path.join(root, 'enviroatlas_lotp', 'spatial_index.geojson'), 'r'
         ) as f:
             for i, row in enumerate(f):
-                if row["properties"]["split"] in splits:
-                    box = shapely.geometry.shape(row["geometry"])
+                if row['properties']['split'] in splits:
+                    box = shapely.geometry.shape(row['geometry'])
                     minx, miny, maxx, maxy = box.bounds
                     coords = (minx, maxx, miny, maxy, mint, maxt)
 
@@ -311,22 +313,22 @@ class EnviroAtlas(GeoDataset):
                         i,
                         coords,
                         {
-                            "naip": row["properties"]["naip"],
-                            "nlcd": row["properties"]["nlcd"],
-                            "roads": row["properties"]["roads"],
-                            "water": row["properties"]["water"],
-                            "waterways": row["properties"]["waterways"],
-                            "waterbodies": row["properties"]["waterbodies"],
-                            "buildings": row["properties"]["buildings"],
-                            "lc": row["properties"]["lc"],
-                            "prior_no_osm_no_buildings": row["properties"][
-                                "naip"
+                            'naip': row['properties']['naip'],
+                            'nlcd': row['properties']['nlcd'],
+                            'roads': row['properties']['roads'],
+                            'water': row['properties']['water'],
+                            'waterways': row['properties']['waterways'],
+                            'waterbodies': row['properties']['waterbodies'],
+                            'buildings': row['properties']['buildings'],
+                            'lc': row['properties']['lc'],
+                            'prior_no_osm_no_buildings': row['properties'][
+                                'naip'
                             ].replace(
-                                "a_naip",
-                                "prior_from_cooccurrences_101_31_no_osm_no_buildings",
+                                'a_naip',
+                                'prior_from_cooccurrences_101_31_no_osm_no_buildings',
                             ),
-                            "prior": row["properties"]["naip"].replace(
-                                "a_naip", "prior_from_cooccurrences_101_31"
+                            'prior': row['properties']['naip'].replace(
+                                'a_naip', 'prior_from_cooccurrences_101_31'
                             ),
                         },
                     )
@@ -346,11 +348,11 @@ class EnviroAtlas(GeoDataset):
         hits = self.index.intersection(tuple(query), objects=True)
         filepaths = cast(list[dict[str, str]], [hit.object for hit in hits])
 
-        sample = {"image": [], "mask": [], "crs": self.crs, "bbox": query}
+        sample = {'image': [], 'mask': [], 'crs': self.crs, 'bounds': query}
 
         if len(filepaths) == 0:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
         elif len(filepaths) == 1:
             filenames = filepaths[0]
@@ -363,7 +365,7 @@ class EnviroAtlas(GeoDataset):
                 fn = filenames[layer]
 
                 with rasterio.open(
-                    os.path.join(self.root, "enviroatlas_lotp", fn)
+                    os.path.join(self.root, 'enviroatlas_lotp', fn)
                 ) as f:
                     dst_crs = f.crs.to_string().lower()
 
@@ -380,30 +382,30 @@ class EnviroAtlas(GeoDataset):
                     )
 
                 if layer in [
-                    "naip",
-                    "buildings",
-                    "roads",
-                    "waterways",
-                    "waterbodies",
-                    "water",
+                    'naip',
+                    'buildings',
+                    'roads',
+                    'waterways',
+                    'waterbodies',
+                    'water',
                 ]:
-                    sample["image"].append(data)
-                elif layer in ["prior", "prior_no_osm_no_buildings"]:
+                    sample['image'].append(data)
+                elif layer in ['prior', 'prior_no_osm_no_buildings']:
                     if self.prior_as_input:
-                        sample["image"].append(data)
+                        sample['image'].append(data)
                     else:
-                        sample["mask"].append(data)
-                elif layer in ["lc"]:
+                        sample['mask'].append(data)
+                elif layer in ['lc']:
                     data = self.raw_enviroatlas_to_idx_map[data]
-                    sample["mask"].append(data)
+                    sample['mask'].append(data)
         else:
-            raise IndexError(f"query: {query} spans multiple tiles which is not valid")
+            raise IndexError(f'query: {query} spans multiple tiles which is not valid')
 
-        sample["image"] = np.concatenate(sample["image"], axis=0)
-        sample["mask"] = np.concatenate(sample["mask"], axis=0)
+        sample['image'] = np.concatenate(sample['image'], axis=0)
+        sample['mask'] = np.concatenate(sample['mask'], axis=0)
 
-        sample["image"] = torch.from_numpy(sample["image"])
-        sample["mask"] = torch.from_numpy(sample["mask"])
+        sample['image'] = torch.from_numpy(sample['image'])
+        sample['mask'] = torch.from_numpy(sample['mask'])
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -413,8 +415,8 @@ class EnviroAtlas(GeoDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
 
-        def exists(filename: str) -> bool:
-            return os.path.exists(os.path.join(self.root, "enviroatlas_lotp", filename))
+        def exists(filename: Path) -> bool:
+            return os.path.exists(os.path.join(self.root, 'enviroatlas_lotp', filename))
 
         # Check if the extracted files already exist
         if all(map(exists, self._files)):
@@ -445,7 +447,7 @@ class EnviroAtlas(GeoDataset):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -462,53 +464,53 @@ class EnviroAtlas(GeoDataset):
         Raises:
             ValueError: if the NAIP layer isn't included in ``self.layers``
         """
-        if "naip" not in self.layers or "lc" not in self.layers:
+        if 'naip' not in self.layers or 'lc' not in self.layers:
             raise ValueError("The 'naip' and 'lc' layers must be included for plotting")
 
         image_layers = []
         mask_layers = []
         for layer in self.layers:
             if layer in [
-                "naip",
-                "buildings",
-                "roads",
-                "waterways",
-                "waterbodies",
-                "water",
+                'naip',
+                'buildings',
+                'roads',
+                'waterways',
+                'waterbodies',
+                'water',
             ]:
                 image_layers.append(layer)
-            elif layer in ["prior", "prior_no_osm_no_buildings"]:
+            elif layer in ['prior', 'prior_no_osm_no_buildings']:
                 if self.prior_as_input:
                     image_layers.append(layer)
                 else:
                     mask_layers.append(layer)
-            elif layer in ["lc"]:
+            elif layer in ['lc']:
                 mask_layers.append(layer)
 
-        naip_index = image_layers.index("naip")
-        lc_index = mask_layers.index("lc")
+        naip_index = image_layers.index('naip')
+        lc_index = mask_layers.index('lc')
 
         image = np.rollaxis(
-            sample["image"][naip_index : naip_index + 3, :, :].numpy(), 0, 3
+            sample['image'][naip_index : naip_index + 3, :, :].numpy(), 0, 3
         )
-        mask = sample["mask"][lc_index].numpy()
+        mask = sample['mask'][lc_index].numpy()
 
         num_panels = 2
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            predictions = sample["prediction"].numpy()
+            predictions = sample['prediction'].numpy()
             num_panels += 1
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 5))
         axs[0].imshow(image)
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(
-            mask, vmin=0, vmax=10, cmap=self.highres_cmap, interpolation="none"
+            mask, vmin=0, vmax=10, cmap=self.highres_cmap, interpolation='none'
         )
-        axs[1].axis("off")
+        axs[1].axis('off')
         if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
+            axs[0].set_title('Image')
+            axs[1].set_title('Mask')
 
         if showing_predictions:
             axs[2].imshow(
@@ -516,11 +518,11 @@ class EnviroAtlas(GeoDataset):
                 vmin=0,
                 vmax=10,
                 cmap=self.highres_cmap,
-                interpolation="none",
+                interpolation='none',
             )
-            axs[2].axis("off")
+            axs[2].axis('off')
             if show_titles:
-                axs[2].set_title("Predictions")
+                axs[2].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

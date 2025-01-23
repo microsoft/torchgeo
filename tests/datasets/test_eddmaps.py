@@ -16,9 +16,9 @@ from torchgeo.datasets import (
 
 
 class TestEDDMapS:
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope='class')
     def dataset(self) -> EDDMapS:
-        root = os.path.join("tests", "data", "eddmaps")
+        root = os.path.join('tests', 'data', 'eddmaps')
         return EDDMapS(root)
 
     def test_getitem(self, dataset: EDDMapS) -> None:
@@ -37,12 +37,12 @@ class TestEDDMapS:
         assert isinstance(ds, UnionDataset)
 
     def test_no_data(self, tmp_path: Path) -> None:
-        with pytest.raises(DatasetNotFoundError, match="Dataset not found"):
-            EDDMapS(str(tmp_path))
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            EDDMapS(tmp_path)
 
     def test_invalid_query(self, dataset: EDDMapS) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
-            IndexError, match="query: .* not found in index with bounds:"
+            IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]

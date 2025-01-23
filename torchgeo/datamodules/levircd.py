@@ -3,17 +3,57 @@
 
 """LEVIR-CD+ datamodule."""
 
-from typing import Any, Union
+from typing import Any
 
 import kornia.augmentation as K
+import torch
+from torch.utils.data import random_split
 
-from torchgeo.datamodules.utils import dataset_split
-from torchgeo.samplers.utils import _to_tuple
-
-from ..datasets import LEVIRCDPlus
-from ..transforms import AugmentationSequential
+from ..datasets import LEVIRCD, LEVIRCDPlus
+from ..samplers.utils import _to_tuple
 from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
+
+
+class LEVIRCDDataModule(NonGeoDataModule):
+    """LightningDataModule implementation for the LEVIR-CD dataset.
+
+    .. versionadded:: 0.6
+    """
+
+    def __init__(
+        self,
+        batch_size: int = 8,
+        patch_size: tuple[int, int] | int = 256,
+        num_workers: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a new LEVIRCDDataModule instance.
+
+        Args:
+            batch_size: Size of each mini-batch.
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
+                Should be a multiple of 32 for most segmentation architectures.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.LEVIRCD`.
+        """
+        super().__init__(LEVIRCD, 1, num_workers, **kwargs)
+
+        self.patch_size = _to_tuple(patch_size)
+
+        self.train_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            _RandomNCrop(self.patch_size, batch_size),
+            data_keys=None,
+            keepdim=True,
+        )
+        self.val_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
+        )
+        self.test_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
+        )
 
 
 class LEVIRCDPlusDataModule(NonGeoDataModule):
@@ -28,7 +68,7 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 8,
-        patch_size: Union[tuple[int, int], int] = 256,
+        patch_size: tuple[int, int] | int = 256,
         val_split_pct: float = 0.2,
         num_workers: int = 0,
         **kwargs: Any,
@@ -49,10 +89,17 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
-        self.aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=["image1", "image2", "mask"],
+            data_keys=None,
+            keepdim=True,
+        )
+        self.val_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
+        )
+        self.test_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std), data_keys=None, keepdim=True
         )
 
     def setup(self, stage: str) -> None:
@@ -61,10 +108,11 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit", "validate"]:
-            self.dataset = LEVIRCDPlus(split="train", **self.kwargs)
-            self.train_dataset, self.val_dataset = dataset_split(
-                self.dataset, val_pct=self.val_split_pct
+        if stage in ['fit', 'validate']:
+            self.dataset = LEVIRCDPlus(split='train', **self.kwargs)
+            generator = torch.Generator().manual_seed(0)
+            self.train_dataset, self.val_dataset = random_split(
+                self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
             )
-        if stage in ["test"]:
-            self.test_dataset = LEVIRCDPlus(split="test", **self.kwargs)
+        if stage in ['test']:
+            self.test_dataset = LEVIRCDPlus(split='test', **self.kwargs)

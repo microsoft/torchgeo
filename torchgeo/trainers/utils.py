@@ -5,7 +5,7 @@
 
 import warnings
 from collections import OrderedDict
-from typing import Optional, Union, cast
+from typing import cast
 
 import torch
 import torch.nn as nn
@@ -13,7 +13,7 @@ from torch import Tensor
 from torch.nn.modules import Conv2d, Module
 
 
-def extract_backbone(path: str) -> tuple[str, "OrderedDict[str, Tensor]"]:
+def extract_backbone(path: str) -> tuple[str, 'OrderedDict[str, Tensor]']:
     """Extracts a backbone from a lightning checkpoint file.
 
     Args:
@@ -29,26 +29,26 @@ def extract_backbone(path: str) -> tuple[str, "OrderedDict[str, Tensor]"]:
     .. versionchanged:: 0.4
         Renamed from *extract_encoder* to *extract_backbone*
     """
-    checkpoint = torch.load(path, map_location=torch.device("cpu"))
-    if "model" in checkpoint["hyper_parameters"]:
-        name = checkpoint["hyper_parameters"]["model"]
-        state_dict = checkpoint["state_dict"]
-        state_dict = OrderedDict({k: v for k, v in state_dict.items() if "model." in k})
+    checkpoint = torch.load(path, map_location=torch.device('cpu'))
+    if 'model' in checkpoint['hyper_parameters']:
+        name = checkpoint['hyper_parameters']['model']
+        state_dict = checkpoint['state_dict']
+        state_dict = OrderedDict({k: v for k, v in state_dict.items() if 'model.' in k})
         state_dict = OrderedDict(
-            {k.replace("model.", ""): v for k, v in state_dict.items()}
+            {k.replace('model.', ''): v for k, v in state_dict.items()}
         )
-    elif "backbone" in checkpoint["hyper_parameters"]:
-        name = checkpoint["hyper_parameters"]["backbone"]
-        state_dict = checkpoint["state_dict"]
+    elif 'backbone' in checkpoint['hyper_parameters']:
+        name = checkpoint['hyper_parameters']['backbone']
+        state_dict = checkpoint['state_dict']
         state_dict = OrderedDict(
-            {k: v for k, v in state_dict.items() if "model.backbone.model" in k}
+            {k: v for k, v in state_dict.items() if 'model.backbone.model' in k}
         )
         state_dict = OrderedDict(
-            {k.replace("model.backbone.model.", ""): v for k, v in state_dict.items()}
+            {k.replace('model.backbone.model.', ''): v for k, v in state_dict.items()}
         )
     else:
         raise ValueError(
-            "Unknown checkpoint task. Only backbone or model extraction is supported"
+            'Unknown checkpoint task. Only backbone or model extraction is supported'
         )
 
     return name, state_dict
@@ -67,11 +67,13 @@ def _get_input_layer_name_and_module(model: Module) -> tuple[str, Module]:
         keys.append(name)
         children = list(module.named_children())
 
-    key = ".".join(keys)
+    key = '.'.join(keys)
     return key, module
 
 
-def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Module:
+def load_state_dict(
+    model: Module, state_dict: 'OrderedDict[str, Tensor]'
+) -> tuple[list[str], list[str]]:
     """Load pretrained resnet weights to a model.
 
     Args:
@@ -79,7 +81,7 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
         state_dict: dict containing tensor parameters
 
     Returns:
-        the model with pretrained weights
+        The missing and unexpected keys
 
     Warns:
         If input channels in model != pretrained model input channels
@@ -87,7 +89,7 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
     """
     input_module_key, input_module = _get_input_layer_name_and_module(model)
     in_channels = input_module.in_channels
-    expected_in_channels = state_dict[input_module_key + ".weight"].shape[1]
+    expected_in_channels = state_dict[input_module_key + '.weight'].shape[1]
 
     output_module_key, output_module = list(model.named_children())[-1]
     if isinstance(output_module, nn.Identity):
@@ -95,36 +97,38 @@ def load_state_dict(model: Module, state_dict: "OrderedDict[str, Tensor]") -> Mo
     else:
         num_classes = output_module.out_features
     expected_num_classes = None
-    if output_module_key + ".weight" in state_dict:
-        expected_num_classes = state_dict[output_module_key + ".weight"].shape[0]
+    if output_module_key + '.weight' in state_dict:
+        expected_num_classes = state_dict[output_module_key + '.weight'].shape[0]
 
     if in_channels != expected_in_channels:
         warnings.warn(
-            f"input channels {in_channels} != input channels in pretrained"
-            f" model {expected_in_channels}. Overriding with new input channels"
+            f'input channels {in_channels} != input channels in pretrained'
+            f' model {expected_in_channels}. Overriding with new input channels'
         )
-        del state_dict[input_module_key + ".weight"]
+        del state_dict[input_module_key + '.weight']
 
     if expected_num_classes and num_classes != expected_num_classes:
         warnings.warn(
-            f"num classes {num_classes} != num classes in pretrained model"
-            f" {expected_num_classes}. Overriding with new num classes"
+            f'num classes {num_classes} != num classes in pretrained model'
+            f' {expected_num_classes}. Overriding with new num classes'
         )
         del (
-            state_dict[output_module_key + ".weight"],
-            state_dict[output_module_key + ".bias"],
+            state_dict[output_module_key + '.weight'],
+            state_dict[output_module_key + '.bias'],
         )
 
-    model.load_state_dict(state_dict, strict=False)
-    return model
+    missing_keys: list[str]
+    unexpected_keys: list[str]
+    missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
+    return missing_keys, unexpected_keys
 
 
 def reinit_initial_conv_layer(
     layer: Conv2d,
     new_in_channels: int,
     keep_rgb_weights: bool,
-    new_stride: Optional[Union[int, tuple[int, int]]] = None,
-    new_padding: Optional[Union[str, Union[int, tuple[int, int]]]] = None,
+    new_stride: int | tuple[int, int] | None = None,
+    new_padding: str | int | tuple[int, int] | None = None,
 ) -> Conv2d:
     """Clones a Conv2d layer while optionally retaining some of the original weights.
 
@@ -163,7 +167,7 @@ def reinit_initial_conv_layer(
         bias=use_bias,
         padding_mode=layer.padding_mode,
     )
-    nn.init.kaiming_normal_(new_layer.weight, mode="fan_out", nonlinearity="relu")
+    nn.init.kaiming_normal_(new_layer.weight, mode='fan_out', nonlinearity='relu')
 
     if keep_rgb_weights:
         new_layer.weight.data[:, :3, :, :] = w_old

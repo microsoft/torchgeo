@@ -3,29 +3,27 @@
 
 """Rwanda Field Boundary Competition dataset."""
 
+import glob
 import os
-from collections.abc import Sequence
-from typing import Callable, Optional
+from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import rasterio.features
 import torch
+from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import (
-    DatasetNotFoundError,
-    check_integrity,
-    download_radiant_mlhub_collection,
-    extract_archive,
-)
+from .utils import Path, which
 
 
 class RwandaFieldBoundary(NonGeoDataset):
-    r"""Rwanda Field Boundary Competition dataset.
+    """Rwanda Field Boundary Competition dataset.
 
     This dataset contains field boundaries for smallholder farms in eastern Rwanda.
     The Nasa Harvest program funded a team of annotators from TaQadam to label Planet
@@ -51,49 +49,27 @@ class RwandaFieldBoundary(NonGeoDataset):
 
        This dataset requires the following additional library to be installed:
 
-       * `radiant-mlhub <https://pypi.org/project/radiant-mlhub/>`_ to download the
-         imagery and labels from the Radiant Earth MLHub
+       * `azcopy <https://github.com/Azure/azure-storage-azcopy>`_: to download the
+         dataset from Source Cooperative.
 
     .. versionadded:: 0.5
     """
 
-    dataset_id = "nasa_rwanda_field_boundary_competition"
-    collection_ids = [
-        "nasa_rwanda_field_boundary_competition_source_train",
-        "nasa_rwanda_field_boundary_competition_labels_train",
-        "nasa_rwanda_field_boundary_competition_source_test",
-    ]
-    number_of_patches_per_split = {"train": 57, "test": 13}
+    url = 'https://radiantearth.blob.core.windows.net/mlhub/nasa_rwanda_field_boundary_competition'
 
-    filenames = {
-        "train_images": "nasa_rwanda_field_boundary_competition_source_train.tar.gz",
-        "test_images": "nasa_rwanda_field_boundary_competition_source_test.tar.gz",
-        "train_labels": "nasa_rwanda_field_boundary_competition_labels_train.tar.gz",
-    }
-    md5s = {
-        "train_images": "1f9ec08038218e67e11f82a86849b333",
-        "test_images": "17bb0e56eedde2e7a43c57aa908dc125",
-        "train_labels": "10e4eb761523c57b6d3bdf9394004f5f",
-    }
-
-    dates = ("2021_03", "2021_04", "2021_08", "2021_10", "2021_11", "2021_12")
-
-    all_bands = ("B01", "B02", "B03", "B04")
-    rgb_bands = ("B03", "B02", "B01")
-
-    classes = ["No field-boundary", "Field-boundary"]
-
-    splits = ["train", "test"]
+    splits: ClassVar[dict[str, int]] = {'train': 57, 'test': 13}
+    dates = ('2021_03', '2021_04', '2021_08', '2021_10', '2021_11', '2021_12')
+    all_bands = ('B01', 'B02', 'B03', 'B04')
+    rgb_bands = ('B03', 'B02', 'B01')
+    classes = ('No field-boundary', 'Field-boundary')
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: Path = 'data',
+        split: str = 'train',
         bands: Sequence[str] = all_bands,
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
-        api_key: Optional[str] = None,
-        checksum: bool = False,
     ) -> None:
         """Initialize a new RwandaFieldBoundary instance.
 
@@ -104,49 +80,29 @@ class RwandaFieldBoundary(NonGeoDataset):
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
-            api_key: a RadiantEarth MLHub API key to use for downloading the dataset
-            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
+            AssertionError: If *split* or *bands* are invalid.
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        self._validate_bands(bands)
         assert split in self.splits
-        if download and api_key is None:
-            raise RuntimeError("Must provide an API key to download the dataset")
-        self.root = os.path.expanduser(root)
+        assert set(bands) <= set(self.all_bands)
+
+        self.root = root
+        self.split = split
         self.bands = bands
         self.transforms = transforms
-        self.split = split
         self.download = download
-        self.api_key = api_key
-        self.checksum = checksum
+
         self._verify()
 
-        self.image_filenames: list[list[list[str]]] = []
-        self.mask_filenames: list[str] = []
-        for i in range(self.number_of_patches_per_split[split]):
-            dates = []
-            for date in self.dates:
-                patch = []
-                for band in self.bands:
-                    fn = os.path.join(
-                        self.root,
-                        f"nasa_rwanda_field_boundary_competition_source_{split}",
-                        f"nasa_rwanda_field_boundary_competition_source_{split}_{i:02d}_{date}",  # noqa: E501
-                        f"{band}.tif",
-                    )
-                    patch.append(fn)
-                dates.append(patch)
-            self.image_filenames.append(dates)
-            self.mask_filenames.append(
-                os.path.join(
-                    self.root,
-                    f"nasa_rwanda_field_boundary_competition_labels_{split}",
-                    f"nasa_rwanda_field_boundary_competition_labels_{split}_{i:02d}",
-                    "raster_labels.tif",
-                )
-            )
+    def __len__(self) -> int:
+        """Return the number of chips in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return self.splits[self.split]
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -155,83 +111,34 @@ class RwandaFieldBoundary(NonGeoDataset):
             index: index to return
 
         Returns:
-            a dict containing image, mask, transform, crs, and metadata at index.
+            a dict containing image and mask at index.
         """
-        img_fns = self.image_filenames[index]
-        mask_fn = self.mask_filenames[index]
+        images = []
+        for date in self.dates:
+            patches = []
+            for band in self.bands:
+                path = os.path.join(self.root, 'source', self.split, date)
+                with rasterio.open(os.path.join(path, f'{index:02}_{band}.tif')) as src:
+                    patches.append(src.read(1).astype(np.float32))
+            images.append(patches)
+        sample = {'image': torch.from_numpy(np.array(images))}
 
-        imgs = []
-        for date_fns in img_fns:
-            bands = []
-            for band_fn in date_fns:
-                with rasterio.open(band_fn) as f:
-                    bands.append(f.read(1).astype(np.int32))
-            imgs.append(bands)
-        img = torch.from_numpy(np.array(imgs))
-
-        sample = {"image": img}
-
-        if self.split == "train":
-            with rasterio.open(mask_fn) as f:
-                mask = f.read(1)
-            mask = torch.from_numpy(mask)
-            sample["mask"] = mask
+        if self.split == 'train':
+            path = os.path.join(self.root, 'labels', self.split)
+            with rasterio.open(os.path.join(path, f'{index:02}.tif')) as src:
+                sample['mask'] = torch.from_numpy(src.read(1).astype(np.int64))
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
 
-    def __len__(self) -> int:
-        """Return the number of chips in the dataset.
-
-        Returns:
-            length of the dataset
-        """
-        return len(self.image_filenames)
-
-    def _validate_bands(self, bands: Sequence[str]) -> None:
-        """Validate list of bands.
-
-        Args:
-            bands: user-provided sequence of bands to load
-
-        Raises:
-            ValueError: if an invalid band name is provided
-        """
-        for band in bands:
-            if band not in self.all_bands:
-                raise ValueError(f"'{band}' is an invalid band name.")
-
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the subdirectories already exist and have the correct number of files
-        checks = []
-        for split, num_patches in self.number_of_patches_per_split.items():
-            path = os.path.join(
-                self.root, f"nasa_rwanda_field_boundary_competition_source_{split}"
-            )
-            if os.path.exists(path):
-                num_files = len(os.listdir(path))
-                # 6 dates + 1 collection.json file
-                checks.append(num_files == (num_patches * 6) + 1)
-            else:
-                checks.append(False)
-
-        if all(checks):
-            return
-
-        # Check if tar file already exists (if so then extract)
-        have_all_files = True
-        for group in ["train_images", "train_labels", "test_images"]:
-            filepath = os.path.join(self.root, self.filenames[group])
-            if os.path.exists(filepath):
-                if self.checksum and not check_integrity(filepath, self.md5s[group]):
-                    raise RuntimeError("Dataset found, but corrupted.")
-                extract_archive(filepath)
-            else:
-                have_all_files = False
-        if have_all_files:
+        path = os.path.join(self.root, 'source', self.split, '*', '*.tif')
+        expected = len(self.dates) * self.splits[self.split] * len(self.all_bands)
+        if len(glob.glob(path)) == expected:
             return
 
         # Check if the user requested to download the dataset
@@ -242,22 +149,17 @@ class RwandaFieldBoundary(NonGeoDataset):
         self._download()
 
     def _download(self) -> None:
-        """Download the dataset and extract it."""
-        for collection_id in self.collection_ids:
-            download_radiant_mlhub_collection(collection_id, self.root, self.api_key)
-
-        for group in ["train_images", "train_labels", "test_images"]:
-            filepath = os.path.join(self.root, self.filenames[group])
-            if self.checksum and not check_integrity(filepath, self.md5s[group]):
-                raise RuntimeError("Dataset not found or corrupted.")
-            extract_archive(filepath, self.root)
+        """Download the dataset."""
+        os.makedirs(self.root, exist_ok=True)
+        azcopy = which('azcopy')
+        azcopy('sync', self.url, self.root, '--recursive=true')
 
     def plot(
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
         time_step: int = 0,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -271,50 +173,42 @@ class RwandaFieldBoundary(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if the RGB bands are not included in ``self.bands``
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         rgb_indices = []
         for band in self.rgb_bands:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
-        num_time_points = sample["image"].shape[0]
-        assert time_step < num_time_points
+        ncols = 1
+        for key in ('mask', 'prediction'):
+            if key in sample:
+                ncols += 1
 
-        image = np.rollaxis(sample["image"][time_step, rgb_indices].numpy(), 0, 3)
-        image = np.clip(image / 2000, 0, 1)
+        fig, axs = plt.subplots(ncols=ncols, squeeze=False)
 
-        if "mask" in sample:
-            mask = sample["mask"].numpy()
-        else:
-            mask = np.zeros_like(image)
-
-        num_panels = 2
-        showing_predictions = "prediction" in sample
-        if showing_predictions:
-            predictions = sample["prediction"].numpy()
-            num_panels += 1
-
-        fig, axs = plt.subplots(ncols=num_panels, figsize=(4 * num_panels, 4))
-
-        axs[0].imshow(image)
-        axs[0].axis("off")
+        image = torch.clamp(sample['image'][time_step, rgb_indices] / 2000, 0, 1)
+        image = rearrange(image, 'c h w -> h w c')
+        axs[0, 0].imshow(image)
+        axs[0, 0].axis('off')
         if show_titles:
-            axs[0].set_title(f"t={time_step}")
+            axs[0, 0].set_title(f't={time_step}')
 
-        axs[1].imshow(mask, vmin=0, vmax=1, interpolation="none")
-        axs[1].axis("off")
-        if show_titles:
-            axs[1].set_title("Mask")
-
-        if showing_predictions:
-            axs[2].imshow(predictions, vmin=0, vmax=1, interpolation="none")
-            axs[2].axis("off")
+        if 'mask' in sample:
+            axs[0, 1].imshow(sample['mask'])
+            axs[0, 1].axis('off')
             if show_titles:
-                axs[2].set_title("Predictions")
+                axs[0, 1].set_title('Mask')
+
+        if 'prediction' in sample:
+            axs[0, 2].imshow(sample['prediction'])
+            axs[0, 2].axis('off')
+            if show_titles:
+                axs[0, 2].set_title('Prediction')
 
         if suptitle is not None:
-            plt.suptitle(suptitle)
+            fig.suptitle(suptitle)
+
         return fig

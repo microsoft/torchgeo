@@ -5,10 +5,10 @@
 
 import abc
 from collections.abc import Iterator
-from typing import Optional, Union
 
 import torch
 from rtree.index import Index, Property
+from torch import Generator
 from torch.utils.data import Sampler
 
 from ..datasets import BoundingBox, GeoDataset
@@ -25,7 +25,7 @@ class BatchGeoSampler(Sampler[list[BoundingBox]], abc.ABC):
     longitude, height, width, projection, coordinate system, and time.
     """
 
-    def __init__(self, dataset: GeoDataset, roi: Optional[BoundingBox] = None) -> None:
+    def __init__(self, dataset: GeoDataset, roi: BoundingBox | None = None) -> None:
         """Initialize a new Sampler instance.
 
         Args:
@@ -66,11 +66,12 @@ class RandomBatchGeoSampler(BatchGeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        size: Union[tuple[float, float], float],
+        size: tuple[float, float] | float,
         batch_size: int,
-        length: Optional[int] = None,
-        roi: Optional[BoundingBox] = None,
+        length: int | None = None,
+        roi: BoundingBox | None = None,
         units: Units = Units.PIXELS,
+        generator: Generator | None = None,
     ) -> None:
         """Initialize a new Sampler instance.
 
@@ -87,6 +88,9 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         .. versionchanged:: 0.4
            ``length`` parameter is now optional, a reasonable default will be used
 
+        .. versionadded:: 0.7
+            The *generator* parameter.
+
         Args:
             dataset: dataset to index from
             size: dimensions of each :term:`patch`
@@ -98,9 +102,11 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
+            generator: pseudo-random number generator (PRNG).
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
+        self.generator = generator
 
         if units == Units.PIXELS:
             self.size = (self.size[0] * self.res, self.size[1] * self.res)
@@ -145,7 +151,9 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             # Choose random indices within that tile
             batch = []
             for _ in range(self.batch_size):
-                bounding_box = get_random_bounding_box(bounds, self.size, self.res)
+                bounding_box = get_random_bounding_box(
+                    bounds, self.size, self.res, self.generator
+                )
                 batch.append(bounding_box)
 
             yield batch

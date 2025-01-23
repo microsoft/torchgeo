@@ -4,8 +4,8 @@
 """EuroSAT dataset."""
 
 import os
-from collections.abc import Sequence
-from typing import Callable, Optional, cast
+from collections.abc import Callable, Sequence
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,14 +13,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoClassificationDataset
-from .utils import (
-    DatasetNotFoundError,
-    check_integrity,
-    download_url,
-    extract_archive,
-    rasterio_loader,
-)
+from .utils import Path, check_integrity, download_url, extract_archive, rasterio_loader
 
 
 class EuroSAT(NonGeoClassificationDataset):
@@ -46,7 +41,7 @@ class EuroSAT(NonGeoClassificationDataset):
     * Permanent Crop
     * Residential Buildings
     * River
-    * SeaLake
+    * Sea & Lake
 
     This dataset uses the train/val/test splits defined in the "In-domain representation
     learning for remote sensing" paper:
@@ -59,53 +54,56 @@ class EuroSAT(NonGeoClassificationDataset):
     * https://ieeexplore.ieee.org/document/8519248
     """
 
-    url = "https://huggingface.co/datasets/torchgeo/eurosat/resolve/main/EuroSATallBands.zip"  # noqa: E501
-    filename = "EuroSATallBands.zip"
-    md5 = "5ac12b3b2557aa56e1826e981e8e200e"
+    url = 'https://hf.co/datasets/torchgeo/eurosat/resolve/1ce6f1bfb56db63fd91b6ecc466ea67f2509774c/'
+    filename = 'EuroSATallBands.zip'
+    md5 = '5ac12b3b2557aa56e1826e981e8e200e'
 
     # For some reason the class directories are actually nested in this directory
     base_dir = os.path.join(
-        "ds", "images", "remote_sensing", "otherDatasets", "sentinel_2", "tif"
+        'ds', 'images', 'remote_sensing', 'otherDatasets', 'sentinel_2', 'tif'
     )
 
-    splits = ["train", "val", "test"]
-    split_urls = {
-        "train": "https://storage.googleapis.com/remote_sensing_representations/eurosat-train.txt",  # noqa: E501
-        "val": "https://storage.googleapis.com/remote_sensing_representations/eurosat-val.txt",  # noqa: E501
-        "test": "https://storage.googleapis.com/remote_sensing_representations/eurosat-test.txt",  # noqa: E501
+    splits = ('train', 'val', 'test')
+    split_filenames: ClassVar[dict[str, str]] = {
+        'train': 'eurosat-train.txt',
+        'val': 'eurosat-val.txt',
+        'test': 'eurosat-test.txt',
     }
-    split_md5s = {
-        "train": "908f142e73d6acdf3f482c5e80d851b1",
-        "val": "95de90f2aa998f70a3b2416bfe0687b4",
-        "test": "7ae5ab94471417b6e315763121e67c5f",
+    split_md5s: ClassVar[dict[str, str]] = {
+        'train': '908f142e73d6acdf3f482c5e80d851b1',
+        'val': '95de90f2aa998f70a3b2416bfe0687b4',
+        'test': '7ae5ab94471417b6e315763121e67c5f',
     }
 
     all_band_names = (
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06",
-        "B07",
-        "B08",
-        "B8A",
-        "B09",
-        "B10",
-        "B11",
-        "B12",
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B09',
+        'B10',
+        'B11',
+        'B12',
+        'B8A',
     )
 
-    rgb_bands = ("B04", "B03", "B02")
+    rgb_bands = ('B04', 'B03', 'B02')
 
-    BAND_SETS = {"all": all_band_names, "rgb": rgb_bands}
+    BAND_SETS: ClassVar[dict[str, tuple[str, ...]]] = {
+        'all': all_band_names,
+        'rgb': rgb_bands,
+    }
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        bands: Sequence[str] = BAND_SETS["all"],
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        split: str = 'train',
+        bands: Sequence[str] = BAND_SETS['all'],
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -132,7 +130,7 @@ class EuroSAT(NonGeoClassificationDataset):
         self.download = download
         self.checksum = checksum
 
-        assert split in ["train", "val", "test"]
+        assert split in ['train', 'val', 'test']
 
         self._validate_bands(bands)
         self.bands = bands
@@ -143,10 +141,12 @@ class EuroSAT(NonGeoClassificationDataset):
         self._verify()
 
         valid_fns = set()
-        with open(os.path.join(self.root, f"eurosat-{split}.txt")) as f:
+        with open(os.path.join(self.root, self.split_filenames[split])) as f:
             for fn in f:
-                valid_fns.add(fn.strip().replace(".jpg", ".tif"))
-        is_in_split: Callable[[str], bool] = lambda x: os.path.basename(x) in valid_fns
+                valid_fns.add(fn.strip().replace('.jpg', '.tif'))
+
+        def is_in_split(x: Path) -> bool:
+            return os.path.basename(x) in valid_fns
 
         super().__init__(
             root=os.path.join(root, self.base_dir),
@@ -166,7 +166,7 @@ class EuroSAT(NonGeoClassificationDataset):
         image, label = self._load_image(index)
 
         image = torch.index_select(image, dim=0, index=self.band_indices).float()
-        sample = {"image": image, "label": label}
+        sample = {'image': image, 'label': label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -207,16 +207,12 @@ class EuroSAT(NonGeoClassificationDataset):
     def _download(self) -> None:
         """Download the dataset."""
         download_url(
-            self.url,
-            self.root,
-            filename=self.filename,
-            md5=self.md5 if self.checksum else None,
+            self.url + self.filename, self.root, md5=self.md5 if self.checksum else None
         )
         for split in self.splits:
             download_url(
-                self.split_urls[split],
+                self.url + self.split_filenames[split],
                 self.root,
-                filename=f"eurosat-{split}.txt",
                 md5=self.split_md5s[split] if self.checksum else None,
             )
 
@@ -246,7 +242,7 @@ class EuroSAT(NonGeoClassificationDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -259,7 +255,7 @@ class EuroSAT(NonGeoClassificationDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if RGB bands are not found in dataset
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
 
         .. versionadded:: 0.2
         """
@@ -268,32 +264,53 @@ class EuroSAT(NonGeoClassificationDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
-        image = np.take(sample["image"].numpy(), indices=rgb_indices, axis=0)
+        image = np.take(sample['image'].numpy(), indices=rgb_indices, axis=0)
         image = np.rollaxis(image, 0, 3)
         image = np.clip(image / 3000, 0, 1)
 
-        label = cast(int, sample["label"].item())
+        label = cast(int, sample['label'].item())
         label_class = self.classes[label]
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = cast(int, sample["prediction"].item())
+            prediction = cast(int, sample['prediction'].item())
             prediction_class = self.classes[prediction]
 
         fig, ax = plt.subplots(figsize=(4, 4))
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
         if show_titles:
-            title = f"Label: {label_class}"
+            title = f'Label: {label_class}'
             if showing_predictions:
-                title += f"\nPrediction: {prediction_class}"
+                title += f'\nPrediction: {prediction_class}'
             ax.set_title(title)
 
         if suptitle is not None:
             plt.suptitle(suptitle)
         return fig
+
+
+class EuroSATSpatial(EuroSAT):
+    """Overrides the default EuroSAT dataset splits.
+
+    Splits the data into training, validation, and test sets based on longitude.
+    The splits are distributed as 60%, 20%, and 20% respectively.
+
+    .. versionadded:: 0.6
+    """
+
+    split_filenames: ClassVar[dict[str, str]] = {
+        'train': 'eurosat-spatial-train.txt',
+        'val': 'eurosat-spatial-val.txt',
+        'test': 'eurosat-spatial-test.txt',
+    }
+    split_md5s: ClassVar[dict[str, str]] = {
+        'train': '7be3254be39f23ce4d4d144290c93292',
+        'val': 'acf392290050bb3df790dc8fc0ebf193',
+        'test': '5ec1733f9c16116bf0aa2d921fc613ef',
+    }
 
 
 class EuroSAT100(EuroSAT):
@@ -307,17 +324,16 @@ class EuroSAT100(EuroSAT):
     .. versionadded:: 0.5
     """
 
-    url = "https://huggingface.co/datasets/torchgeo/eurosat/resolve/main/EuroSAT100.zip"
-    filename = "EuroSAT100.zip"
-    md5 = "c21c649ba747e86eda813407ef17d596"
+    filename = 'EuroSAT100.zip'
+    md5 = 'c21c649ba747e86eda813407ef17d596'
 
-    split_urls = {
-        "train": "https://huggingface.co/datasets/torchgeo/eurosat/raw/main/eurosat-train.txt",  # noqa: E501
-        "val": "https://huggingface.co/datasets/torchgeo/eurosat/raw/main/eurosat-val.txt",  # noqa: E501
-        "test": "https://huggingface.co/datasets/torchgeo/eurosat/raw/main/eurosat-test.txt",  # noqa: E501
+    split_filenames: ClassVar[dict[str, str]] = {
+        'train': 'eurosat-100-train.txt',
+        'val': 'eurosat-100-val.txt',
+        'test': 'eurosat-100-test.txt',
     }
-    split_md5s = {
-        "train": "033d0c23e3a75e3fa79618b0e35fe1c7",
-        "val": "3e3f8b3c344182b8d126c4cc88f3f215",
-        "test": "f908f151b950f270ad18e61153579794",
+    split_md5s: ClassVar[dict[str, str]] = {
+        'train': '033d0c23e3a75e3fa79618b0e35fe1c7',
+        'val': '3e3f8b3c344182b8d126c4cc88f3f215',
+        'test': 'f908f151b950f270ad18e61153579794',
     }

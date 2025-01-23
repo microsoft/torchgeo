@@ -4,11 +4,12 @@
 """Trainers for object detection."""
 
 from functools import partial
-from typing import Any, Optional
+from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
 import torchvision.models.detection
+from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
@@ -18,31 +19,31 @@ from torchvision.models.detection.retinanet import RetinaNetHead
 from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
-from ..datasets.utils import unbind_samples
+from ..datasets import RGBBandsMissingError, unbind_samples
 from .base import BaseTask
 
 BACKBONE_LAT_DIM_MAP = {
-    "resnet18": 512,
-    "resnet34": 512,
-    "resnet50": 2048,
-    "resnet101": 2048,
-    "resnet152": 2048,
-    "resnext50_32x4d": 2048,
-    "resnext101_32x8d": 2048,
-    "wide_resnet50_2": 2048,
-    "wide_resnet101_2": 2048,
+    'resnet18': 512,
+    'resnet34': 512,
+    'resnet50': 2048,
+    'resnet101': 2048,
+    'resnet152': 2048,
+    'resnext50_32x4d': 2048,
+    'resnext101_32x8d': 2048,
+    'wide_resnet50_2': 2048,
+    'wide_resnet101_2': 2048,
 }
 
 BACKBONE_WEIGHT_MAP = {
-    "resnet18": R.ResNet18_Weights.DEFAULT,
-    "resnet34": R.ResNet34_Weights.DEFAULT,
-    "resnet50": R.ResNet50_Weights.DEFAULT,
-    "resnet101": R.ResNet101_Weights.DEFAULT,
-    "resnet152": R.ResNet152_Weights.DEFAULT,
-    "resnext50_32x4d": R.ResNeXt50_32X4D_Weights.DEFAULT,
-    "resnext101_32x8d": R.ResNeXt101_32X8D_Weights.DEFAULT,
-    "wide_resnet50_2": R.Wide_ResNet50_2_Weights.DEFAULT,
-    "wide_resnet101_2": R.Wide_ResNet101_2_Weights.DEFAULT,
+    'resnet18': R.ResNet18_Weights.DEFAULT,
+    'resnet34': R.ResNet34_Weights.DEFAULT,
+    'resnet50': R.ResNet50_Weights.DEFAULT,
+    'resnet101': R.ResNet101_Weights.DEFAULT,
+    'resnet152': R.ResNet152_Weights.DEFAULT,
+    'resnext50_32x4d': R.ResNeXt50_32X4D_Weights.DEFAULT,
+    'resnext101_32x8d': R.ResNeXt101_32X8D_Weights.DEFAULT,
+    'wide_resnet50_2': R.Wide_ResNet50_2_Weights.DEFAULT,
+    'wide_resnet101_2': R.Wide_ResNet101_2_Weights.DEFAULT,
 }
 
 
@@ -52,14 +53,15 @@ class ObjectDetectionTask(BaseTask):
     .. versionadded:: 0.4
     """
 
-    monitor = "val_map"
-    mode = "max"
+    ignore = None
+    monitor = 'val_map'
+    mode = 'max'
 
     def __init__(
         self,
-        model: str = "faster-rcnn",
-        backbone: str = "resnet50",
-        weights: Optional[bool] = None,
+        model: str = 'faster-rcnn',
+        backbone: str = 'resnet50',
+        weights: bool | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
         trainable_layers: int = 3,
@@ -81,7 +83,7 @@ class ObjectDetectionTask(BaseTask):
             weights: Initial model weights. True for ImageNet weights, False or None
                 for random weights.
             in_channels: Number of input channels to model.
-            num_classes: Number of prediction classes.
+            num_classes: Number of prediction classes (including the background).
             trainable_layers: Number of trainable layers.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
@@ -106,34 +108,34 @@ class ObjectDetectionTask(BaseTask):
         Raises:
             ValueError: If *model* or *backbone* are invalid.
         """
-        backbone: str = self.hparams["backbone"]
-        model: str = self.hparams["model"]
-        weights: Optional[bool] = self.hparams["weights"]
-        num_classes: int = self.hparams["num_classes"]
-        freeze_backbone: bool = self.hparams["freeze_backbone"]
+        backbone: str = self.hparams['backbone']
+        model: str = self.hparams['model']
+        weights: bool | None = self.hparams['weights']
+        num_classes: int = self.hparams['num_classes']
+        freeze_backbone: bool = self.hparams['freeze_backbone']
 
         if backbone in BACKBONE_LAT_DIM_MAP:
             kwargs = {
-                "backbone_name": backbone,
-                "trainable_layers": self.hparams["trainable_layers"],
+                'backbone_name': backbone,
+                'trainable_layers': self.hparams['trainable_layers'],
             }
             if weights:
-                kwargs["weights"] = BACKBONE_WEIGHT_MAP[backbone]
+                kwargs['weights'] = BACKBONE_WEIGHT_MAP[backbone]
             else:
-                kwargs["weights"] = None
+                kwargs['weights'] = None
 
             latent_dim = BACKBONE_LAT_DIM_MAP[backbone]
         else:
             raise ValueError(f"Backbone type '{backbone}' is not valid.")
 
-        if model == "faster-rcnn":
+        if model == 'faster-rcnn':
             model_backbone = resnet_fpn_backbone(**kwargs)
             anchor_generator = AnchorGenerator(
                 sizes=((32), (64), (128), (256), (512)), aspect_ratios=((0.5, 1.0, 2.0))
             )
 
             roi_pooler = MultiScaleRoIAlign(
-                featmap_names=["0", "1", "2", "3"], output_size=7, sampling_ratio=2
+                featmap_names=['0', '1', '2', '3'], output_size=7, sampling_ratio=2
             )
 
             if freeze_backbone:
@@ -146,9 +148,9 @@ class ObjectDetectionTask(BaseTask):
                 rpn_anchor_generator=anchor_generator,
                 box_roi_pool=roi_pooler,
             )
-        elif model == "fcos":
-            kwargs["extra_blocks"] = feature_pyramid_network.LastLevelP6P7(256, 256)
-            kwargs["norm_layer"] = (
+        elif model == 'fcos':
+            kwargs['extra_blocks'] = feature_pyramid_network.LastLevelP6P7(256, 256)
+            kwargs['norm_layer'] = (
                 misc.FrozenBatchNorm2d if weights else torch.nn.BatchNorm2d
             )
 
@@ -165,8 +167,8 @@ class ObjectDetectionTask(BaseTask):
             self.model = torchvision.models.detection.FCOS(
                 model_backbone, num_classes, anchor_generator=anchor_generator
             )
-        elif model == "retinanet":
-            kwargs["extra_blocks"] = feature_pyramid_network.LastLevelP6P7(
+        elif model == 'retinanet':
+            kwargs['extra_blocks'] = feature_pyramid_network.LastLevelP6P7(
                 latent_dim, 256
             )
             model_backbone = resnet_fpn_backbone(**kwargs)
@@ -203,10 +205,23 @@ class ObjectDetectionTask(BaseTask):
             raise ValueError(f"Model type '{model}' is not valid.")
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
-        metrics = MetricCollection([MeanAveragePrecision()])
-        self.val_metrics = metrics.clone(prefix="val_")
-        self.test_metrics = metrics.clone(prefix="test_")
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.detection.mean_ap.MeanAveragePrecision`: Mean average
+          precision (mAP) and mean average recall (mAR). Precision is the number of
+          true positives divided by the number of true positives + false positives.
+          Recall is the number of true positives divived by the number of true positives
+          + false negatives. Uses 'macro' averaging. Higher values are better.
+
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not
+             reflect minority class accuracy.
+           * 'Macro' averaging gives equal weight to each class, and is useful for
+             balanced performance assessment across imbalanced classes.
+        """
+        metrics = MetricCollection([MeanAveragePrecision(average='macro')])
+        self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -221,15 +236,15 @@ class ObjectDetectionTask(BaseTask):
         Returns:
             The loss tensor.
         """
-        x = batch["image"]
+        x = batch['image']
         batch_size = x.shape[0]
         y = [
-            {"boxes": batch["boxes"][i], "labels": batch["labels"][i]}
+            {'boxes': batch['boxes'][i], 'labels': batch['labels'][i]}
             for i in range(batch_size)
         ]
         loss_dict = self(x, y)
         train_loss: Tensor = sum(loss_dict.values())
-        self.log_dict(loss_dict)
+        self.log_dict(loss_dict, batch_size=batch_size)
         return train_loss
 
     def validation_step(
@@ -242,48 +257,51 @@ class ObjectDetectionTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        x = batch["image"]
+        x = batch['image']
         batch_size = x.shape[0]
         y = [
-            {"boxes": batch["boxes"][i], "labels": batch["labels"][i]}
+            {'boxes': batch['boxes'][i], 'labels': batch['labels'][i]}
             for i in range(batch_size)
         ]
         y_hat = self(x)
         metrics = self.val_metrics(y_hat, y)
 
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
-        metrics.pop("val_classes", None)
+        metrics.pop('val_classes', None)
 
-        self.log_dict(metrics)
+        self.log_dict(metrics, batch_size=batch_size)
 
         if (
             batch_idx < 10
-            and hasattr(self.trainer, "datamodule")
-            and hasattr(self.trainer.datamodule, "plot")
+            and hasattr(self.trainer, 'datamodule')
+            and hasattr(self.trainer.datamodule, 'plot')
             and self.logger
-            and hasattr(self.logger, "experiment")
-            and hasattr(self.logger.experiment, "add_figure")
+            and hasattr(self.logger, 'experiment')
+            and hasattr(self.logger.experiment, 'add_figure')
         ):
+            datamodule = self.trainer.datamodule
+            batch['prediction_boxes'] = [b['boxes'].cpu() for b in y_hat]
+            batch['prediction_labels'] = [b['labels'].cpu() for b in y_hat]
+            batch['prediction_scores'] = [b['scores'].cpu() for b in y_hat]
+            batch['image'] = batch['image'].cpu()
+            sample = unbind_samples(batch)[0]
+            # Convert image to uint8 for plotting
+            if torch.is_floating_point(sample['image']):
+                sample['image'] *= 255
+                sample['image'] = sample['image'].to(torch.uint8)
+
+            fig: Figure | None = None
             try:
-                datamodule = self.trainer.datamodule
-                batch["prediction_boxes"] = [b["boxes"].cpu() for b in y_hat]
-                batch["prediction_labels"] = [b["labels"].cpu() for b in y_hat]
-                batch["prediction_scores"] = [b["scores"].cpu() for b in y_hat]
-                batch["image"] = batch["image"].cpu()
-                sample = unbind_samples(batch)[0]
-                # Convert image to uint8 for plotting
-                if torch.is_floating_point(sample["image"]):
-                    sample["image"] *= 255
-                    sample["image"] = sample["image"].to(torch.uint8)
                 fig = datamodule.plot(sample)
-                if fig:
-                    summary_writer = self.logger.experiment
-                    summary_writer.add_figure(
-                        f"image/{batch_idx}", fig, global_step=self.global_step
-                    )
-                    plt.close()
-            except ValueError:
+            except RGBBandsMissingError:
                 pass
+
+            if fig:
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f'image/{batch_idx}', fig, global_step=self.global_step
+                )
+                plt.close()
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test metrics.
@@ -293,19 +311,19 @@ class ObjectDetectionTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        x = batch["image"]
+        x = batch['image']
         batch_size = x.shape[0]
         y = [
-            {"boxes": batch["boxes"][i], "labels": batch["labels"][i]}
+            {'boxes': batch['boxes'][i], 'labels': batch['labels'][i]}
             for i in range(batch_size)
         ]
         y_hat = self(x)
         metrics = self.test_metrics(y_hat, y)
 
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
-        metrics.pop("test_classes", None)
+        metrics.pop('test_classes', None)
 
-        self.log_dict(metrics)
+        self.log_dict(metrics, batch_size=batch_size)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -320,6 +338,6 @@ class ObjectDetectionTask(BaseTask):
         Returns:
             Output predicted probabilities.
         """
-        x = batch["image"]
+        x = batch['image']
         y_hat: list[dict[str, Tensor]] = self(x)
         return y_hat

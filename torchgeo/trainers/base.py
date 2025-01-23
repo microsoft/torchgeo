@@ -5,7 +5,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import Any, Optional, Union
+from typing import Any
 
 import lightning
 from lightning.pytorch import LightningModule
@@ -19,26 +19,33 @@ class BaseTask(LightningModule, ABC):
     .. versionadded:: 0.5
     """
 
+    #: Parameters to ignore when saving hyperparameters.
+    ignore: Sequence[str] | str | None = 'weights'
+
     #: Model to train.
     model: Any
 
     #: Performance metric to monitor in learning rate scheduler and callbacks.
-    monitor = "val_loss"
+    monitor = 'val_loss'
 
     #: Whether the goal is to minimize or maximize the performance metric to monitor.
-    mode = "min"
+    mode = 'min'
 
-    def __init__(self, ignore: Optional[Union[Sequence[str], str]] = None) -> None:
+    def __init__(self) -> None:
         """Initialize a new BaseTask instance.
 
         Args:
             ignore: Arguments to skip when saving hyperparameters.
         """
         super().__init__()
-        self.save_hyperparameters(ignore=ignore)
+        self.save_hyperparameters(ignore=self.ignore)
+        self.configure_models()
         self.configure_losses()
         self.configure_metrics()
-        self.configure_models()
+
+    @abstractmethod
+    def configure_models(self) -> None:
+        """Initialize the model."""
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
@@ -46,23 +53,19 @@ class BaseTask(LightningModule, ABC):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
 
-    @abstractmethod
-    def configure_models(self) -> None:
-        """Initialize the model."""
-
     def configure_optimizers(
         self,
-    ) -> "lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig":
+    ) -> 'lightning.pytorch.utilities.types.OptimizerLRScheduler':
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
             Optimizer and learning rate scheduler.
         """
-        optimizer = AdamW(self.parameters(), lr=self.hparams["lr"])
-        scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams["patience"])
+        optimizer = AdamW(self.parameters(), lr=self.hparams['lr'])
+        scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams['patience'])
         return {
-            "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},
+            'optimizer': optimizer,
+            'lr_scheduler': {'scheduler': scheduler, 'monitor': self.monitor},
         }
 
     def forward(self, *args: Any, **kwargs: Any) -> Any:

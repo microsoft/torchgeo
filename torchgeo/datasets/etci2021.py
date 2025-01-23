@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Callable, Optional
+from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,8 +15,9 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class ETCI2021(NonGeoDataset):
@@ -55,34 +57,34 @@ class ETCI2021(NonGeoDataset):
         the ETCI competition.
     """
 
-    bands = ["VV", "VH"]
-    masks = ["flood", "water_body"]
-    metadata = {
-        "train": {
-            "filename": "train.zip",
-            "md5": "1e95792fe0f6e3c9000abdeab2a8ab0f",
-            "directory": "train",
-            "url": "https://drive.google.com/file/d/14HqNW5uWLS92n7KrxKgDwUTsSEST6LCr",
+    bands = ('VV', 'VH')
+    masks = ('flood', 'water_body')
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
+        'train': {
+            'filename': 'train.zip',
+            'md5': '1e95792fe0f6e3c9000abdeab2a8ab0f',
+            'directory': 'train',
+            'url': 'https://drive.google.com/file/d/14HqNW5uWLS92n7KrxKgDwUTsSEST6LCr',
         },
-        "val": {
-            "filename": "val_with_ref_labels.zip",
-            "md5": "fd18cecb318efc69f8319f90c3771bdf",
-            "directory": "test",
-            "url": "https://drive.google.com/file/d/19sriKPHCZLfJn_Jmk3Z_0b3VaCBVRVyn",
+        'val': {
+            'filename': 'val_with_ref_labels.zip',
+            'md5': 'fd18cecb318efc69f8319f90c3771bdf',
+            'directory': 'test',
+            'url': 'https://drive.google.com/file/d/19sriKPHCZLfJn_Jmk3Z_0b3VaCBVRVyn',
         },
-        "test": {
-            "filename": "test_without_ref_labels.zip",
-            "md5": "da9fa69e1498bd49d5c766338c6dac3d",
-            "directory": "test_internal",
-            "url": "https://drive.google.com/file/d/1rpMVluASnSHBfm2FhpPDio0GyCPOqg7E",
+        'test': {
+            'filename': 'test_without_ref_labels.zip',
+            'md5': 'da9fa69e1498bd49d5c766338c6dac3d',
+            'directory': 'test_internal',
+            'url': 'https://drive.google.com/file/d/1rpMVluASnSHBfm2FhpPDio0GyCPOqg7E',
         },
     }
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        split: str = 'train',
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -125,18 +127,18 @@ class ETCI2021(NonGeoDataset):
             data and label at that index
         """
         files = self.files[index]
-        vv = self._load_image(files["vv"])
-        vh = self._load_image(files["vh"])
-        water_mask = self._load_target(files["water_mask"])
+        vv = self._load_image(files['vv'])
+        vh = self._load_image(files['vh'])
+        water_mask = self._load_target(files['water_mask'])
 
-        if self.split != "test":
-            flood_mask = self._load_target(files["flood_mask"])
+        if self.split != 'test':
+            flood_mask = self._load_target(files['flood_mask'])
             mask = torch.stack(tensors=[water_mask, flood_mask], dim=0)
         else:
             mask = water_mask.unsqueeze(0)
 
         image = torch.cat(tensors=[vv, vh], dim=0)
-        sample = {"image": image, "mask": mask}
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -151,7 +153,7 @@ class ETCI2021(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -163,20 +165,20 @@ class ETCI2021(NonGeoDataset):
             water body mask, flood mask (train/val only)
         """
         files = []
-        directory = self.metadata[split]["directory"]
-        folders = sorted(glob.glob(os.path.join(root, directory, "*")))
-        folders = [os.path.join(folder, "tiles") for folder in folders]
+        directory = self.metadata[split]['directory']
+        folders = sorted(glob.glob(os.path.join(root, directory, '*')))
+        folders = [os.path.join(folder, 'tiles') for folder in folders]
         for folder in folders:
-            vvs = sorted(glob.glob(os.path.join(folder, "vv", "*.png")))
-            vhs = [vv.replace("vv", "vh") for vv in vvs]
+            vvs = sorted(glob.glob(os.path.join(folder, 'vv', '*.png')))
+            vhs = [vv.replace('vv', 'vh') for vv in vvs]
             water_masks = [
-                vv.replace("_vv.png", ".png").replace("vv", "water_body_label")
+                vv.replace('_vv.png', '.png').replace('vv', 'water_body_label')
                 for vv in vvs
             ]
 
-            if split != "test":
+            if split != 'test':
                 flood_masks = [
-                    vv.replace("_vv.png", ".png").replace("vv", "flood_label")
+                    vv.replace('_vv.png', '.png').replace('vv', 'flood_label')
                     for vv in vvs
                 ]
 
@@ -192,7 +194,7 @@ class ETCI2021(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -203,13 +205,13 @@ class ETCI2021(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:
@@ -220,7 +222,7 @@ class ETCI2021(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)
@@ -232,7 +234,7 @@ class ETCI2021(NonGeoDataset):
         Returns:
             True if the dataset directories and split files are found, else False
         """
-        directory = self.metadata[self.split]["directory"]
+        directory = self.metadata[self.split]['directory']
         dirpath = os.path.join(self.root, directory)
         if not os.path.exists(dirpath):
             return False
@@ -241,21 +243,21 @@ class ETCI2021(NonGeoDataset):
     def _download(self) -> None:
         """Download the dataset and extract it."""
         if self._check_integrity():
-            print("Files already downloaded and verified")
+            print('Files already downloaded and verified')
             return
 
         download_and_extract_archive(
-            self.metadata[self.split]["url"],
+            self.metadata[self.split]['url'],
             self.root,
-            filename=self.metadata[self.split]["filename"],
-            md5=self.metadata[self.split]["md5"] if self.checksum else None,
+            filename=self.metadata[self.split]['filename'],
+            md5=self.metadata[self.split]['md5'] if self.checksum else None,
         )
 
     def plot(
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -267,12 +269,12 @@ class ETCI2021(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        vv = np.rollaxis(sample["image"][:3].numpy(), 0, 3)
-        vh = np.rollaxis(sample["image"][3:].numpy(), 0, 3)
-        mask = sample["mask"].squeeze(0)
+        vv = np.rollaxis(sample['image'][:3].numpy(), 0, 3)
+        vh = np.rollaxis(sample['image'][3:].numpy(), 0, 3)
+        mask = sample['mask'].squeeze(0)
 
         showing_flood_mask = mask.shape[0] == 2
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         num_panels = 3
         if showing_flood_mask:
             water_mask = mask[0].numpy()
@@ -282,34 +284,34 @@ class ETCI2021(NonGeoDataset):
             water_mask = mask.numpy()
 
         if showing_predictions:
-            predictions = sample["prediction"].numpy()
+            predictions = sample['prediction'].numpy()
             num_panels += 1
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 3))
         axs[0].imshow(vv)
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(vh)
-        axs[1].axis("off")
+        axs[1].axis('off')
         axs[2].imshow(water_mask)
-        axs[2].axis("off")
+        axs[2].axis('off')
         if show_titles:
-            axs[0].set_title("VV")
-            axs[1].set_title("VH")
-            axs[2].set_title("Water mask")
+            axs[0].set_title('VV')
+            axs[1].set_title('VH')
+            axs[2].set_title('Water mask')
 
         idx = 0
         if showing_flood_mask:
             axs[3 + idx].imshow(flood_mask)
-            axs[3 + idx].axis("off")
+            axs[3 + idx].axis('off')
             if show_titles:
-                axs[3 + idx].set_title("Flood mask")
+                axs[3 + idx].set_title('Flood mask')
             idx += 1
 
         if showing_predictions:
             axs[3 + idx].imshow(predictions)
-            axs[3 + idx].axis("off")
+            axs[3 + idx].axis('off')
             if show_titles:
-                axs[3 + idx].set_title("Predictions")
+                axs[3 + idx].set_title('Predictions')
             idx += 1
 
         if suptitle is not None:

@@ -16,4 +16,4 @@ data:
     batch_size: 64
     num_workers: 4
   dict_kwargs:
-    root: "data/cowc_counting"
+    root: 'data/cowc_counting'

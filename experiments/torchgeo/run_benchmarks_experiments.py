@@ -16,42 +16,42 @@ CACHE_OPTIONS = [True, False]
 BATCH_SIZE_OPTIONS = [16, 32, 64, 128, 256, 512]
 
 # path to a directory containing Landsat 8 GeoTIFFs
-LANDSAT_DATA_ROOT = ""
+LANDSAT_DATA_ROOT = ''
 
 # path to a directory containing CDL GeoTIFF(s)
-CDL_DATA_ROOT = ""
+CDL_DATA_ROOT = ''
 
 total_num_experiments = len(SEED_OPTIONS) * len(CACHE_OPTIONS) * len(BATCH_SIZE_OPTIONS)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # With 6 workers, this will use ~60% of available RAM
-    os.environ["GDAL_CACHEMAX"] = "10%"
+    os.environ['GDAL_CACHEMAX'] = '10%'
 
     tic = time.time()
     for i, (cache, batch_size, seed) in enumerate(
         itertools.product(CACHE_OPTIONS, BATCH_SIZE_OPTIONS, SEED_OPTIONS)
     ):
-        print(f"\n{i}/{total_num_experiments} -- {time.time() - tic}")
+        print(f'\n{i}/{total_num_experiments} -- {time.time() - tic}')
         tic = time.time()
         command: list[str] = [
-            "python",
-            "benchmark.py",
-            "--landsat-root",
+            'python',
+            'benchmark.py',
+            '--landsat-root',
             LANDSAT_DATA_ROOT,
-            "--cdl-root",
+            '--cdl-root',
             CDL_DATA_ROOT,
-            "--num-workers",
-            "6",
-            "--batch-size",
+            '--num-workers',
+            '6',
+            '--batch-size',
             str(batch_size),
-            "--epoch-size",
+            '--epoch-size',
             str(EPOCH_SIZE),
-            "--seed",
+            '--seed',
             str(seed),
-            "--verbose",
+            '--verbose',
         ]
 
         if cache:
-            command.append("--cache")
+            command.append('--cache')
 
         subprocess.call(command)

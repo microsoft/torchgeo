@@ -4,8 +4,8 @@
 """SEN12MS dataset."""
 
 import os
-from collections.abc import Sequence
-from typing import Callable, Optional
+from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,8 +14,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, check_integrity, percentile_normalization
+from .utils import Path, check_integrity, percentile_normalization
 
 
 class SEN12MS(NonGeoDataset):
@@ -63,112 +64,112 @@ class SEN12MS(NonGeoDataset):
        or manually downloaded from https://dataserv.ub.tum.de/s/m1474000
        and https://github.com/schmitt-muc/SEN12MS/tree/master/splits.
        This download will likely take several hours.
-    """  # noqa: E501
+    """
 
-    BAND_SETS: dict[str, tuple[str, ...]] = {
-        "all": (
-            "VV",
-            "VH",
-            "B01",
-            "B02",
-            "B03",
-            "B04",
-            "B05",
-            "B06",
-            "B07",
-            "B08",
-            "B8A",
-            "B09",
-            "B10",
-            "B11",
-            "B12",
+    BAND_SETS: ClassVar[dict[str, tuple[str, ...]]] = {
+        'all': (
+            'VV',
+            'VH',
+            'B01',
+            'B02',
+            'B03',
+            'B04',
+            'B05',
+            'B06',
+            'B07',
+            'B08',
+            'B8A',
+            'B09',
+            'B10',
+            'B11',
+            'B12',
         ),
-        "s1": ("VV", "VH"),
-        "s2-all": (
-            "B01",
-            "B02",
-            "B03",
-            "B04",
-            "B05",
-            "B06",
-            "B07",
-            "B08",
-            "B8A",
-            "B09",
-            "B10",
-            "B11",
-            "B12",
+        's1': ('VV', 'VH'),
+        's2-all': (
+            'B01',
+            'B02',
+            'B03',
+            'B04',
+            'B05',
+            'B06',
+            'B07',
+            'B08',
+            'B8A',
+            'B09',
+            'B10',
+            'B11',
+            'B12',
         ),
-        "s2-reduced": ("B02", "B03", "B04", "B08", "B10", "B11"),
+        's2-reduced': ('B02', 'B03', 'B04', 'B08', 'B10', 'B11'),
     }
 
     band_names = (
-        "VV",
-        "VH",
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06",
-        "B07",
-        "B08",
-        "B8A",
-        "B09",
-        "B10",
-        "B11",
-        "B12",
+        'VV',
+        'VH',
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B09',
+        'B10',
+        'B11',
+        'B12',
     )
 
-    rgb_bands = ["B04", "B03", "B02"]
+    rgb_bands = ('B04', 'B03', 'B02')
 
-    filenames = [
-        "ROIs1158_spring_lc.tar.gz",
-        "ROIs1158_spring_s1.tar.gz",
-        "ROIs1158_spring_s2.tar.gz",
-        "ROIs1868_summer_lc.tar.gz",
-        "ROIs1868_summer_s1.tar.gz",
-        "ROIs1868_summer_s2.tar.gz",
-        "ROIs1970_fall_lc.tar.gz",
-        "ROIs1970_fall_s1.tar.gz",
-        "ROIs1970_fall_s2.tar.gz",
-        "ROIs2017_winter_lc.tar.gz",
-        "ROIs2017_winter_s1.tar.gz",
-        "ROIs2017_winter_s2.tar.gz",
-        "train_list.txt",
-        "test_list.txt",
-    ]
-    light_filenames = [
-        "ROIs1158_spring",
-        "ROIs1868_summer",
-        "ROIs1970_fall",
-        "ROIs2017_winter",
-        "train_list.txt",
-        "test_list.txt",
-    ]
-    md5s = [
-        "6e2e8fa8b8cba77ddab49fd20ff5c37b",
-        "fba019bb27a08c1db96b31f718c34d79",
-        "d58af2c15a16f376eb3308dc9b685af2",
-        "2c5bd80244440b6f9d54957c6b1f23d4",
-        "01044b7f58d33570c6b57fec28a3d449",
-        "4dbaf72ecb704a4794036fe691427ff3",
-        "9b126a68b0e3af260071b3139cb57cee",
-        "19132e0aab9d4d6862fd42e8e6760847",
-        "b8f117818878da86b5f5e06400eb1866",
-        "0fa0420ef7bcfe4387c7e6fe226dc728",
-        "bb8cbfc16b95a4f054a3d5380e0130ed",
-        "3807545661288dcca312c9c538537b63",
-        "0a68d4e1eb24f128fccdb930000b2546",
-        "c7faad064001e646445c4c634169484d",
-    ]
+    filenames = (
+        'ROIs1158_spring_lc.tar.gz',
+        'ROIs1158_spring_s1.tar.gz',
+        'ROIs1158_spring_s2.tar.gz',
+        'ROIs1868_summer_lc.tar.gz',
+        'ROIs1868_summer_s1.tar.gz',
+        'ROIs1868_summer_s2.tar.gz',
+        'ROIs1970_fall_lc.tar.gz',
+        'ROIs1970_fall_s1.tar.gz',
+        'ROIs1970_fall_s2.tar.gz',
+        'ROIs2017_winter_lc.tar.gz',
+        'ROIs2017_winter_s1.tar.gz',
+        'ROIs2017_winter_s2.tar.gz',
+        'train_list.txt',
+        'test_list.txt',
+    )
+    light_filenames = (
+        'ROIs1158_spring',
+        'ROIs1868_summer',
+        'ROIs1970_fall',
+        'ROIs2017_winter',
+        'train_list.txt',
+        'test_list.txt',
+    )
+    md5s = (
+        '6e2e8fa8b8cba77ddab49fd20ff5c37b',
+        'fba019bb27a08c1db96b31f718c34d79',
+        'd58af2c15a16f376eb3308dc9b685af2',
+        '2c5bd80244440b6f9d54957c6b1f23d4',
+        '01044b7f58d33570c6b57fec28a3d449',
+        '4dbaf72ecb704a4794036fe691427ff3',
+        '9b126a68b0e3af260071b3139cb57cee',
+        '19132e0aab9d4d6862fd42e8e6760847',
+        'b8f117818878da86b5f5e06400eb1866',
+        '0fa0420ef7bcfe4387c7e6fe226dc728',
+        'bb8cbfc16b95a4f054a3d5380e0130ed',
+        '3807545661288dcca312c9c538537b63',
+        '0a68d4e1eb24f128fccdb930000b2546',
+        'c7faad064001e646445c4c634169484d',
+    )
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        bands: Sequence[str] = BAND_SETS["all"],
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        split: str = 'train',
+        bands: Sequence[str] = BAND_SETS['all'],
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new SEN12MS dataset instance.
@@ -191,7 +192,7 @@ class SEN12MS(NonGeoDataset):
             AssertionError: if ``split`` argument is invalid
             DatasetNotFoundError: If dataset is not found.
         """
-        assert split in ["train", "test"]
+        assert split in ['train', 'test']
 
         self._validate_bands(bands)
         self.band_indices = torch.tensor(
@@ -209,7 +210,7 @@ class SEN12MS(NonGeoDataset):
         ) or not self._check_integrity_light():
             raise DatasetNotFoundError(self)
 
-        with open(os.path.join(self.root, split + "_list.txt")) as f:
+        with open(os.path.join(self.root, split + '_list.txt')) as f:
             self.ids = [line.rstrip() for line in f.readlines()]
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -223,14 +224,14 @@ class SEN12MS(NonGeoDataset):
         """
         filename = self.ids[index]
 
-        lc = self._load_raster(filename, "lc").long()
-        s1 = self._load_raster(filename, "s1")
-        s2 = self._load_raster(filename, "s2")
+        lc = self._load_raster(filename, 'lc').long()
+        s1 = self._load_raster(filename, 's1')
+        s2 = self._load_raster(filename, 's2')
 
         image = torch.cat(tensors=[s1, s2], dim=0)
         image = torch.index_select(image, dim=0, index=self.band_indices)
 
-        sample: dict[str, Tensor] = {"image": image, "mask": lc[0]}
+        sample: dict[str, Tensor] = {'image': image, 'mask': lc[0]}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -255,15 +256,15 @@ class SEN12MS(NonGeoDataset):
         Returns:
             the raster image or target
         """
-        parts = filename.split("_")
+        parts = filename.split('_')
         parts[2] = source
 
         with rasterio.open(
             os.path.join(
                 self.root,
-                "{}_{}".format(*parts),
-                "{2}_{3}".format(*parts),
-                "{}_{}_{}_{}_{}".format(*parts),
+                '{}_{}'.format(*parts),
+                '{2}_{3}'.format(*parts),
+                '{}_{}_{}_{}_{}'.format(*parts),
             )
         ) as f:
             array = f.read()
@@ -315,7 +316,7 @@ class SEN12MS(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -327,6 +328,9 @@ class SEN12MS(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
 
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+
         .. versionadded:: 0.2
         """
         rgb_indices = []
@@ -334,33 +338,33 @@ class SEN12MS(NonGeoDataset):
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
-        image, mask = sample["image"][rgb_indices].numpy(), sample["mask"]
+        image, mask = sample['image'][rgb_indices].numpy(), sample['mask']
         image = percentile_normalization(image)
         ncols = 2
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = sample["prediction"]
+            prediction = sample['prediction']
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
 
         axs[0].imshow(np.transpose(image, (1, 2, 0)))
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(mask)
-        axs[1].axis("off")
+        axs[1].axis('off')
 
         if showing_predictions:
             axs[2].imshow(prediction)
-            axs[2].axis("off")
+            axs[2].axis('off')
 
         if show_titles:
-            axs[0].set_title("Image")
-            axs[1].set_title("Mask")
+            axs[0].set_title('Image')
+            axs[1].set_title('Mask')
             if showing_predictions:
-                axs[2].set_title("Prediction")
+                axs[2].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

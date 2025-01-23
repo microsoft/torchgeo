@@ -3,16 +3,16 @@
 
 """Vaihingen datamodule."""
 
-from typing import Any, Union
+from typing import Any
 
 import kornia.augmentation as K
+import torch
+from torch.utils.data import random_split
 
 from ..datasets import Vaihingen2D
 from ..samplers.utils import _to_tuple
-from ..transforms import AugmentationSequential
 from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
-from .utils import dataset_split
 
 
 class Vaihingen2DDataModule(NonGeoDataModule):
@@ -26,7 +26,7 @@ class Vaihingen2DDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[tuple[int, int], int] = 64,
+        patch_size: tuple[int, int] | int = 64,
         val_split_pct: float = 0.2,
         num_workers: int = 0,
         **kwargs: Any,
@@ -47,10 +47,11 @@ class Vaihingen2DDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
-        self.aug = AugmentationSequential(
+        self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=["image", "mask"],
+            data_keys=None,
+            keepdim=True,
         )
 
     def setup(self, stage: str) -> None:
@@ -59,10 +60,11 @@ class Vaihingen2DDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit", "validate"]:
-            self.dataset = Vaihingen2D(split="train", **self.kwargs)
-            self.train_dataset, self.val_dataset = dataset_split(
-                self.dataset, self.val_split_pct
+        if stage in ['fit', 'validate']:
+            self.dataset = Vaihingen2D(split='train', **self.kwargs)
+            generator = torch.Generator().manual_seed(0)
+            self.train_dataset, self.val_dataset = random_split(
+                self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
             )
-        if stage in ["test"]:
-            self.test_dataset = Vaihingen2D(split="test", **self.kwargs)
+        if stage in ['test']:
+            self.test_dataset = Vaihingen2D(split='test', **self.kwargs)

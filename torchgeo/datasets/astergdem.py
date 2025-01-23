@@ -3,14 +3,16 @@
 
 """Aster Global Digital Elevation Model dataset."""
 
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable
+from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import DatasetNotFoundError
+from .utils import Path
 
 
 class AsterGDEM(RasterDataset):
@@ -37,7 +39,7 @@ class AsterGDEM(RasterDataset):
     """
 
     is_image = False
-    filename_glob = "ASTGTMV003_*_dem*"
+    filename_glob = 'ASTGTMV003_*_dem*'
     filename_regex = r"""
         (?P<name>[ASTGTMV003]{10})
         _(?P<id>[A-Z0-9]{7})
@@ -46,10 +48,10 @@ class AsterGDEM(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, list[str]] = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        paths: Path | list[Path] = 'data',
+        crs: CRS | None = None,
+        res: float | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -89,7 +91,7 @@ class AsterGDEM(RasterDataset):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -101,29 +103,29 @@ class AsterGDEM(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = sample["prediction"].squeeze()
+            prediction = sample['prediction'].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4 * ncols, 4))
 
         if showing_predictions:
             axs[0].imshow(mask)
-            axs[0].axis("off")
+            axs[0].axis('off')
             axs[1].imshow(prediction)
-            axs[1].axis("off")
+            axs[1].axis('off')
             if show_titles:
-                axs[0].set_title("Mask")
-                axs[1].set_title("Prediction")
+                axs[0].set_title('Mask')
+                axs[1].set_title('Prediction')
         else:
             axs.imshow(mask)
-            axs.axis("off")
+            axs.axis('off')
             if show_titles:
-                axs.set_title("Mask")
+                axs.set_title('Mask')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

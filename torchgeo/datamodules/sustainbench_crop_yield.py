@@ -34,9 +34,9 @@ class SustainBenchCropYieldDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ["fit"]:
-            self.train_dataset = SustainBenchCropYield(split="train", **self.kwargs)
-        if stage in ["fit", "validate"]:
-            self.val_dataset = SustainBenchCropYield(split="dev", **self.kwargs)
-        if stage in ["test"]:
-            self.test_dataset = SustainBenchCropYield(split="test", **self.kwargs)
+        if stage in ['fit']:
+            self.train_dataset = SustainBenchCropYield(split='train', **self.kwargs)
+        if stage in ['fit', 'validate']:
+            self.val_dataset = SustainBenchCropYield(split='dev', **self.kwargs)
+        if stage in ['test']:
+            self.test_dataset = SustainBenchCropYield(split='test', **self.kwargs)

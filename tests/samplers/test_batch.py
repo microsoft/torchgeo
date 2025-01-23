@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from itertools import product
 
 import pytest
+import torch
 from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
 from torch.utils.data import DataLoader
@@ -33,17 +34,17 @@ class CustomGeoDataset(GeoDataset):
         self.res = res
 
     def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
-        return {"index": query}
+        return {'index': query}
 
 
 class TestBatchGeoSampler:
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 100, 200, 300, 400, 500))
         return ds
 
-    @pytest.fixture(scope="function")
+    @pytest.fixture(scope='function')
     def sampler(self) -> CustomBatchGeoSampler:
         return CustomBatchGeoSampler()
 
@@ -55,7 +56,7 @@ class TestBatchGeoSampler:
         assert len(sampler) == 2
 
     @pytest.mark.slow
-    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    @pytest.mark.parametrize('num_workers', [0, 1, 2])
     def test_dataloader(
         self,
         dataset: CustomGeoDataset,
@@ -77,7 +78,7 @@ class TestBatchGeoSampler:
 
 
 class TestRandomBatchGeoSampler:
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
         ds = CustomGeoDataset()
         ds.index.insert(0, (0, 100, 200, 300, 400, 500))
@@ -85,7 +86,7 @@ class TestRandomBatchGeoSampler:
         return ds
 
     @pytest.fixture(
-        scope="function",
+        scope='function',
         params=product([3, 4.5, (2, 2), (3, 4.5), (4.5, 3)], [Units.PIXELS, Units.CRS]),
     )
     def sampler(
@@ -144,8 +145,19 @@ class TestRandomBatchGeoSampler:
             for bbox in batch:
                 assert bbox == BoundingBox(0, 10, 0, 10, 0, 10)
 
+    def test_random_seed(self) -> None:
+        ds = CustomGeoDataset()
+        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        generator1 = torch.Generator().manual_seed(0)
+        generator2 = torch.Generator().manual_seed(0)
+        sampler1 = RandomBatchGeoSampler(ds, 1, 1, generator=generator1)
+        sampler2 = RandomBatchGeoSampler(ds, 1, 1, generator=generator2)
+        sample1 = next(iter(sampler1))
+        sample2 = next(iter(sampler2))
+        assert sample1 == sample2
+
     @pytest.mark.slow
-    @pytest.mark.parametrize("num_workers", [0, 1, 2])
+    @pytest.mark.parametrize('num_workers', [0, 1, 2])
     def test_dataloader(
         self,
         dataset: CustomGeoDataset,

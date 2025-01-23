@@ -5,7 +5,7 @@
 
 import glob
 import os
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,8 +14,9 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_and_extract_archive
+from .utils import Path, download_and_extract_archive
 
 
 class GID15(NonGeoDataset):
@@ -61,35 +62,35 @@ class GID15(NonGeoDataset):
     * https://doi.org/10.1016/j.rse.2019.111322
     """
 
-    url = "https://drive.google.com/file/d/1zbkCEXPEKEV6gq19OKmIbaT8bXXfWW6u"
-    md5 = "615682bf659c3ed981826c6122c10c83"
-    filename = "gid-15.zip"
-    directory = "GID"
-    splits = ["train", "val", "test"]
-    classes = [
-        "background",
-        "industrial_land",
-        "urban_residential",
-        "rural_residential",
-        "traffic_land",
-        "paddy_field",
-        "irrigated_land",
-        "dry_cropland",
-        "garden_plot",
-        "arbor_woodland",
-        "shrub_land",
-        "natural_grassland",
-        "artificial_grassland",
-        "river",
-        "lake",
-        "pond",
-    ]
+    url = 'https://drive.google.com/file/d/1zbkCEXPEKEV6gq19OKmIbaT8bXXfWW6u'
+    md5 = '615682bf659c3ed981826c6122c10c83'
+    filename = 'gid-15.zip'
+    directory = 'GID'
+    splits = ('train', 'val', 'test')
+    classes = (
+        'background',
+        'industrial_land',
+        'urban_residential',
+        'rural_residential',
+        'traffic_land',
+        'paddy_field',
+        'irrigated_land',
+        'dry_cropland',
+        'garden_plot',
+        'arbor_woodland',
+        'shrub_land',
+        'natural_grassland',
+        'artificial_grassland',
+        'river',
+        'lake',
+        'pond',
+    )
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        split: str = 'train',
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -132,13 +133,13 @@ class GID15(NonGeoDataset):
             data and label at that index
         """
         files = self.files[index]
-        image = self._load_image(files["image"])
+        image = self._load_image(files['image'])
 
-        if self.split != "test":
-            mask = self._load_target(files["mask"])
-            sample = {"image": image, "mask": mask}
+        if self.split != 'test':
+            mask = self._load_target(files['mask'])
+            sample = {'image': image, 'mask': mask}
         else:
-            sample = {"image": image}
+            sample = {'image': image}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -153,7 +154,7 @@ class GID15(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -163,12 +164,12 @@ class GID15(NonGeoDataset):
         Returns:
             list of dicts containing paths for each pair of image, mask
         """
-        image_root = os.path.join(root, "GID", "img_dir")
-        images = glob.glob(os.path.join(image_root, split, "*.tif"))
+        image_root = os.path.join(root, 'GID', 'img_dir')
+        images = glob.glob(os.path.join(image_root, split, '*.tif'))
         images = sorted(images)
-        if split != "test":
+        if split != 'test':
             masks = [
-                image.replace("img_dir", "ann_dir").replace(".tif", "_15label.png")
+                image.replace('img_dir', 'ann_dir').replace('.tif', '_15label.png')
                 for image in images
             ]
             files = [dict(image=image, mask=mask) for image, mask in zip(images, masks)]
@@ -177,7 +178,7 @@ class GID15(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -188,13 +189,13 @@ class GID15(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1)).float()
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:
@@ -205,7 +206,7 @@ class GID15(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("L"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = tensor.to(torch.long)
             return tensor
@@ -224,7 +225,7 @@ class GID15(NonGeoDataset):
     def _download(self) -> None:
         """Download the dataset and extract it."""
         if self._check_integrity():
-            print("Files already downloaded and verified")
+            print('Files already downloaded and verified')
             return
 
         download_and_extract_archive(
@@ -234,7 +235,7 @@ class GID15(NonGeoDataset):
             md5=self.md5 if self.checksum else None,
         )
 
-    def plot(self, sample: dict[str, Tensor], suptitle: Optional[str] = None) -> Figure:
+    def plot(self, sample: dict[str, Tensor], suptitle: str | None = None) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
@@ -246,36 +247,36 @@ class GID15(NonGeoDataset):
 
         .. versionadded:: 0.2
         """
-        if self.split != "test":
-            image, mask = sample["image"], sample["mask"]
+        if self.split != 'test':
+            image, mask = sample['image'], sample['mask']
             ncols = 2
         else:
-            image = sample["image"]
+            image = sample['image']
             ncols = 1
 
-        if "prediction" in sample:
+        if 'prediction' in sample:
             ncols += 1
-            pred = sample["prediction"]
+            pred = sample['prediction']
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
 
-        if self.split != "test":
+        if self.split != 'test':
             axs[0].imshow(image.permute(1, 2, 0))
-            axs[0].axis("off")
+            axs[0].axis('off')
             axs[1].imshow(mask)
-            axs[1].axis("off")
-            if "prediction" in sample:
+            axs[1].axis('off')
+            if 'prediction' in sample:
                 axs[2].imshow(pred)
-                axs[2].axis("off")
+                axs[2].axis('off')
         else:
-            if "prediction" in sample:
+            if 'prediction' in sample:
                 axs[0].imshow(image.permute(1, 2, 0))
-                axs[0].axis("off")
+                axs[0].axis('off')
                 axs[1].imshow(pred)
-                axs[1].axis("off")
+                axs[1].axis('off')
             else:
                 axs.imshow(image.permute(1, 2, 0))
-                axs.axis("off")
+                axs.axis('off')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

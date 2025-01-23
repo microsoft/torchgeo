@@ -2,40 +2,44 @@ name: tutorials
 on:
   push:
     branches:
-    - main
+      - main
     paths:
-    - docs/tutorials/**
+      - docs/tutorials/**
   pull_request:
     branches:
-    - main
+      - main
     paths:
-    - docs/tutorials/**
+      - docs/tutorials/**
+defaults:
+  run:
+    shell: bash
 jobs:
   notebooks:
     name: notebooks
     runs-on: ubuntu-latest
     steps:
-    - name: Clone repo
-      uses: actions/checkout@v4.1.1
-    - name: Set up python
-      uses: actions/setup-python@v4.7.1
-      with:
-        python-version: '3.11'
-    - name: Cache dependencies
-      uses: actions/cache@v3.3.2
-      id: cache
-      with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}-tutorials
-    - name: Install pip dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        pip install .[docs,tests] planetary_computer pystac
-        pip cache purge
-    - name: List pip dependencies
-      run: pip list
-    - name: Run notebook checks
-      run: pytest --nbmake --durations=10 docs/tutorials
+      - name: Clone repo
+        uses: actions/checkout@v4.2.2
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: '3.12'
+      - name: Cache dependencies
+        uses: actions/cache@v4.2.0
+        id: cache
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/docs.txt', 'requirements/tests.txt') }}-tutorials
+      - name: Install pip dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          pip install -r requirements/required.txt -r requirements/docs.txt -r requirements/tests.txt planetary_computer pystac tensorboard .
+          pip cache purge
+      - name: List pip dependencies
+        run: pip list
+      - name: Run notebook checks
+        run: pytest --nbmake --durations=10 docs/tutorials
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: true

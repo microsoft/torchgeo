@@ -5,7 +5,8 @@
 
 import glob
 import os
-from typing import Any, Callable, Optional, cast, overload
+from collections.abc import Callable
+from typing import Any, ClassVar, cast, overload
 
 import fiona
 import matplotlib.pyplot as plt
@@ -19,8 +20,9 @@ from torch import Tensor
 from torchvision.ops import clip_boxes_to_image, remove_small_boxes
 from torchvision.utils import draw_bounding_boxes
 
+from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, download_url, extract_archive
+from .utils import Path, download_url, extract_archive, lazy_import
 
 
 class IDTReeS(NonGeoDataset):
@@ -90,65 +92,73 @@ class IDTReeS(NonGeoDataset):
 
     * https://doi.org/10.1101/2021.08.06.453503
 
+    This dataset requires the following additional libraries to be installed:
+
+       * `laspy <https://pypi.org/project/laspy/>`_ to read lidar point clouds
+       * `pyvista <https://pypi.org/project/pyvista/>`_ to plot lidar point clouds
+
     .. versionadded:: 0.2
     """
 
-    classes = {
-        "ACPE": "Acer pensylvanicum L.",
-        "ACRU": "Acer rubrum L.",
-        "ACSA3": "Acer saccharum Marshall",
-        "AMLA": "Amelanchier laevis Wiegand",
-        "BETUL": "Betula sp.",
-        "CAGL8": "Carya glabra (Mill.) Sweet",
-        "CATO6": "Carya tomentosa (Lam.) Nutt.",
-        "FAGR": "Fagus grandifolia Ehrh.",
-        "GOLA": "Gordonia lasianthus (L.) Ellis",
-        "LITU": "Liriodendron tulipifera L.",
-        "LYLU3": "Lyonia lucida (Lam.) K. Koch",
-        "MAGNO": "Magnolia sp.",
-        "NYBI": "Nyssa biflora Walter",
-        "NYSY": "Nyssa sylvatica Marshall",
-        "OXYDE": "Oxydendrum sp.",
-        "PEPA37": "Persea palustris (Raf.) Sarg.",
-        "PIEL": "Pinus elliottii Engelm.",
-        "PIPA2": "Pinus palustris Mill.",
-        "PINUS": "Pinus sp.",
-        "PITA": "Pinus taeda L.",
-        "PRSE2": "Prunus serotina Ehrh.",
-        "QUAL": "Quercus alba L.",
-        "QUCO2": "Quercus coccinea",
-        "QUGE2": "Quercus geminata Small",
-        "QUHE2": "Quercus hemisphaerica W. Bartram ex Willd.",
-        "QULA2": "Quercus laevis Walter",
-        "QULA3": "Quercus laurifolia Michx.",
-        "QUMO4": "Quercus montana Willd.",
-        "QUNI": "Quercus nigra L.",
-        "QURU": "Quercus rubra L.",
-        "QUERC": "Quercus sp.",
-        "ROPS": "Robinia pseudoacacia L.",
-        "TSCA": "Tsuga canadensis (L.) Carriere",
+    classes: ClassVar[dict[str, str]] = {
+        'ACPE': 'Acer pensylvanicum L.',
+        'ACRU': 'Acer rubrum L.',
+        'ACSA3': 'Acer saccharum Marshall',
+        'AMLA': 'Amelanchier laevis Wiegand',
+        'BETUL': 'Betula sp.',
+        'CAGL8': 'Carya glabra (Mill.) Sweet',
+        'CATO6': 'Carya tomentosa (Lam.) Nutt.',
+        'FAGR': 'Fagus grandifolia Ehrh.',
+        'GOLA': 'Gordonia lasianthus (L.) Ellis',
+        'LITU': 'Liriodendron tulipifera L.',
+        'LYLU3': 'Lyonia lucida (Lam.) K. Koch',
+        'MAGNO': 'Magnolia sp.',
+        'NYBI': 'Nyssa biflora Walter',
+        'NYSY': 'Nyssa sylvatica Marshall',
+        'OXYDE': 'Oxydendrum sp.',
+        'PEPA37': 'Persea palustris (Raf.) Sarg.',
+        'PIEL': 'Pinus elliottii Engelm.',
+        'PIPA2': 'Pinus palustris Mill.',
+        'PINUS': 'Pinus sp.',
+        'PITA': 'Pinus taeda L.',
+        'PRSE2': 'Prunus serotina Ehrh.',
+        'QUAL': 'Quercus alba L.',
+        'QUCO2': 'Quercus coccinea',
+        'QUGE2': 'Quercus geminata Small',
+        'QUHE2': 'Quercus hemisphaerica W. Bartram ex Willd.',
+        'QULA2': 'Quercus laevis Walter',
+        'QULA3': 'Quercus laurifolia Michx.',
+        'QUMO4': 'Quercus montana Willd.',
+        'QUNI': 'Quercus nigra L.',
+        'QURU': 'Quercus rubra L.',
+        'QUERC': 'Quercus sp.',
+        'ROPS': 'Robinia pseudoacacia L.',
+        'TSCA': 'Tsuga canadensis (L.) Carriere',
     }
-    metadata = {
-        "train": {
-            "url": "https://zenodo.org/record/3934932/files/IDTREES_competition_train_v2.zip?download=1",  # noqa: E501
-            "md5": "5ddfa76240b4bb6b4a7861d1d31c299c",
-            "filename": "IDTREES_competition_train_v2.zip",
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
+        'train': {
+            'url': 'https://zenodo.org/records/3934932/files/IDTREES_competition_train_v2.zip?download=1',
+            'md5': '5ddfa76240b4bb6b4a7861d1d31c299c',
+            'filename': 'IDTREES_competition_train_v2.zip',
         },
-        "test": {
-            "url": "https://zenodo.org/record/3934932/files/IDTREES_competition_test_v2.zip?download=1",  # noqa: E501
-            "md5": "b108931c84a70f2a38a8234290131c9b",
-            "filename": "IDTREES_competition_test_v2.zip",
+        'test': {
+            'url': 'https://zenodo.org/records/3934932/files/IDTREES_competition_test_v2.zip?download=1',
+            'md5': 'b108931c84a70f2a38a8234290131c9b',
+            'filename': 'IDTREES_competition_test_v2.zip',
         },
     }
-    directories = {"train": ["train"], "test": ["task1", "task2"]}
+    directories: ClassVar[dict[str, list[str]]] = {
+        'train': ['train'],
+        'test': ['task1', 'task2'],
+    }
     image_size = (200, 200)
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
-        task: str = "task1",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        split: str = 'train',
+        task: str = 'task1',
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -165,11 +175,14 @@ class IDTReeS(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            ImportError: if laspy is not installed
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            DependencyNotFoundError: If laspy is not installed.
         """
-        assert split in ["train", "test"]
-        assert task in ["task1", "task2"]
+        lazy_import('laspy')
+
+        assert split in ['train', 'test']
+        assert task in ['task1', 'task2']
+
         self.root = root
         self.split = split
         self.task = task
@@ -180,14 +193,6 @@ class IDTReeS(NonGeoDataset):
         self.idx2class = {i: c for i, c in enumerate(self.classes)}
         self.num_classes = len(self.classes)
         self._verify()
-
-        try:
-            import laspy  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "laspy is not installed and is required to use this dataset"
-            )
-
         self.images, self.geometries, self.labels = self._load(root)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -201,28 +206,28 @@ class IDTReeS(NonGeoDataset):
         """
         path = self.images[index]
         image = self._load_image(path).to(torch.uint8)
-        hsi = self._load_image(path.replace("RGB", "HSI"))
-        chm = self._load_image(path.replace("RGB", "CHM"))
-        las = self._load_las(path.replace("RGB", "LAS").replace(".tif", ".las"))
-        sample = {"image": image, "hsi": hsi, "chm": chm, "las": las}
+        hsi = self._load_image(path.replace('RGB', 'HSI'))
+        chm = self._load_image(path.replace('RGB', 'CHM'))
+        las = self._load_las(path.replace('RGB', 'LAS').replace('.tif', '.las'))
+        sample = {'image': image, 'hsi': hsi, 'chm': chm, 'las': las}
 
-        if self.split == "test":
-            if self.task == "task2":
-                sample["boxes"] = self._load_boxes(path)
-                h, w = sample["image"].shape[1:]
-                sample["boxes"], _ = self._filter_boxes(
-                    image_size=(h, w), min_size=1, boxes=sample["boxes"], labels=None
+        if self.split == 'test':
+            if self.task == 'task2':
+                sample['boxes'] = self._load_boxes(path)
+                h, w = sample['image'].shape[1:]
+                sample['boxes'], _ = self._filter_boxes(
+                    image_size=(h, w), min_size=1, boxes=sample['boxes'], labels=None
                 )
         else:
-            sample["boxes"] = self._load_boxes(path)
-            sample["label"] = self._load_target(path)
+            sample['boxes'] = self._load_boxes(path)
+            sample['label'] = self._load_target(path)
 
-            h, w = sample["image"].shape[1:]
-            sample["boxes"], sample["label"] = self._filter_boxes(
+            h, w = sample['image'].shape[1:]
+            sample['boxes'], sample['label'] = self._filter_boxes(
                 image_size=(h, w),
                 min_size=1,
-                boxes=sample["boxes"],
-                labels=sample["label"],
+                boxes=sample['boxes'],
+                labels=sample['label'],
             )
 
         if self.transforms is not None:
@@ -238,7 +243,7 @@ class IDTReeS(NonGeoDataset):
         """
         return len(self.images)
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a tiff file.
 
         Args:
@@ -252,7 +257,7 @@ class IDTReeS(NonGeoDataset):
         tensor = torch.from_numpy(array)
         return tensor
 
-    def _load_las(self, path: str) -> Tensor:
+    def _load_las(self, path: Path) -> Tensor:
         """Load a single point cloud.
 
         Args:
@@ -261,14 +266,13 @@ class IDTReeS(NonGeoDataset):
         Returns:
             the point cloud
         """
-        import laspy
-
+        laspy = lazy_import('laspy')
         las = laspy.read(path)
-        array: "np.typing.NDArray[np.int_]" = np.stack([las.x, las.y, las.z], axis=0)
+        array: np.typing.NDArray[np.int_] = np.stack([las.x, las.y, las.z], axis=0)
         tensor = torch.from_numpy(array)
         return tensor
 
-    def _load_boxes(self, path: str) -> Tensor:
+    def _load_boxes(self, path: Path) -> Tensor:
         """Load object bounding boxes.
 
         Args:
@@ -283,10 +287,10 @@ class IDTReeS(NonGeoDataset):
         # Find object ids and geometries
         # The train set geometry->image mapping is contained
         # in the train/Field/itc_rsFile.csv file
-        if self.split == "train":
-            indices = self.labels["rsFile"] == base_path
-            ids = self.labels[indices]["id"].tolist()
-            geoms = [geometries[i]["geometry"]["coordinates"][0][:4] for i in ids]
+        if self.split == 'train':
+            indices = self.labels['rsFile'] == base_path
+            ids = self.labels[indices]['id'].tolist()
+            geoms = [geometries[i]['geometry']['coordinates'][0][:4] for i in ids]
         # The test set has no mapping csv. The mapping is inside of the geometry
         # properties i.e. geom["property"]["plotID"] contains the RGB image filename
         # Return all geometries with the matching RGB image filename of the sample
@@ -294,9 +298,9 @@ class IDTReeS(NonGeoDataset):
             ids = [
                 k
                 for k, v in geometries.items()
-                if v["properties"]["plotID"] == base_path
+                if v['properties']['plotID'] == base_path
             ]
-            geoms = [geometries[i]["geometry"]["coordinates"][0][:4] for i in ids]
+            geoms = [geometries[i]['geometry']['coordinates'][0][:4] for i in ids]
 
         # Convert to pixel coords
         boxes = []
@@ -312,7 +316,7 @@ class IDTReeS(NonGeoDataset):
         tensor = torch.tensor(boxes)
         return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load target label for a single sample.
 
         Args:
@@ -323,17 +327,17 @@ class IDTReeS(NonGeoDataset):
         """
         # Find indices for objects in the image
         base_path = os.path.basename(path)
-        indices = self.labels["rsFile"] == base_path
+        indices = self.labels['rsFile'] == base_path
 
         # Load object labels
-        classes = self.labels[indices]["taxonID"].tolist()
+        classes = self.labels[indices]['taxonID'].tolist()
         labels = [self.class2idx[c] for c in classes]
         tensor = torch.tensor(labels)
         return tensor
 
     def _load(
-        self, root: str
-    ) -> tuple[list[str], Optional[dict[int, dict[str, Any]]], Any]:
+        self, root: Path
+    ) -> tuple[list[str], dict[int, dict[str, Any]] | None, Any]:
         """Load files, geometries, and labels.
 
         Args:
@@ -342,24 +346,24 @@ class IDTReeS(NonGeoDataset):
         Returns:
             the image path, geometries, and labels
         """
-        if self.split == "train":
+        if self.split == 'train':
             directory = os.path.join(root, self.directories[self.split][0])
             labels: pd.DataFrame = self._load_labels(directory)
             geoms = self._load_geometries(directory)
         else:
             directory = os.path.join(root, self.task)
-            if self.task == "task1":
+            if self.task == 'task1':
                 geoms = None
                 labels = None
             else:
                 geoms = self._load_geometries(directory)
                 labels = None
 
-        images = glob.glob(os.path.join(directory, "RemoteSensing", "RGB", "*.tif"))
+        images = glob.glob(os.path.join(directory, 'RemoteSensing', 'RGB', '*.tif'))
 
         return images, geoms, labels
 
-    def _load_labels(self, directory: str) -> Any:
+    def _load_labels(self, directory: Path) -> Any:
         """Load the csv files containing the labels.
 
         Args:
@@ -368,18 +372,18 @@ class IDTReeS(NonGeoDataset):
         Returns:
             a pandas DataFrame containing the labels for each image
         """
-        path_mapping = os.path.join(directory, "Field", "itc_rsFile.csv")
-        path_labels = os.path.join(directory, "Field", "train_data.csv")
+        path_mapping = os.path.join(directory, 'Field', 'itc_rsFile.csv')
+        path_labels = os.path.join(directory, 'Field', 'train_data.csv')
         df_mapping = pd.read_csv(path_mapping)
         df_labels = pd.read_csv(path_labels)
-        df_mapping = df_mapping.set_index("indvdID", drop=True)
-        df_labels = df_labels.set_index("indvdID", drop=True)
-        df = df_labels.join(df_mapping, on="indvdID")
+        df_mapping = df_mapping.set_index('indvdID', drop=True)
+        df_labels = df_labels.set_index('indvdID', drop=True)
+        df = df_labels.join(df_mapping, on='indvdID')
         df = df.drop_duplicates()
         df.reset_index()
         return df
 
-    def _load_geometries(self, directory: str) -> dict[int, dict[str, Any]]:
+    def _load_geometries(self, directory: Path) -> dict[int, dict[str, Any]]:
         """Load the shape files containing the geometries.
 
         Args:
@@ -388,7 +392,7 @@ class IDTReeS(NonGeoDataset):
         Returns:
             a dict containing the geometries for each object
         """
-        filepaths = glob.glob(os.path.join(directory, "ITC", "*.shp"))
+        filepaths = glob.glob(os.path.join(directory, 'ITC', '*.shp'))
 
         i = 0
         features: dict[int, dict[str, Any]] = {}
@@ -396,8 +400,8 @@ class IDTReeS(NonGeoDataset):
             with fiona.open(path) as src:
                 for feature in src:
                     # The train set has a unique id for each geometry in the properties
-                    if self.split == "train":
-                        features[feature["properties"]["id"]] = feature
+                    if self.split == 'train':
+                        features[feature['properties']['id']] = feature
                     # The test set has no unique id so create a dummy id
                     else:
                         features[i] = feature
@@ -407,22 +411,20 @@ class IDTReeS(NonGeoDataset):
     @overload
     def _filter_boxes(
         self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: Tensor
-    ) -> tuple[Tensor, Tensor]:
-        ...
+    ) -> tuple[Tensor, Tensor]: ...
 
     @overload
     def _filter_boxes(
         self, image_size: tuple[int, int], min_size: int, boxes: Tensor, labels: None
-    ) -> tuple[Tensor, None]:
-        ...
+    ) -> tuple[Tensor, None]: ...
 
     def _filter_boxes(
         self,
         image_size: tuple[int, int],
         min_size: int,
         boxes: Tensor,
-        labels: Optional[Tensor],
-    ) -> tuple[Tensor, Optional[Tensor]]:
+        labels: Tensor | None,
+    ) -> tuple[Tensor, Tensor | None]:
         """Clip boxes to image size and filter boxes with sides less than ``min_size``.
 
         Args:
@@ -445,9 +447,9 @@ class IDTReeS(NonGeoDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        url = self.metadata[self.split]["url"]
-        md5 = self.metadata[self.split]["md5"]
-        filename = self.metadata[self.split]["filename"]
+        url = self.metadata[self.split]['url']
+        md5 = self.metadata[self.split]['md5']
+        filename = self.metadata[self.split]['filename']
         directories = self.directories[self.split]
 
         # Check if the files already exist
@@ -479,7 +481,7 @@ class IDTReeS(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
         hsi_indices: tuple[int, int, int] = (0, 1, 2),
     ) -> Figure:
         """Plot a sample from the dataset.
@@ -500,60 +502,58 @@ class IDTReeS(NonGeoDataset):
 
         ncols = 3
 
-        hsi = normalize(sample["hsi"][hsi_indices, :, :]).permute((1, 2, 0)).numpy()
-        chm = normalize(sample["chm"]).permute((1, 2, 0)).numpy()
+        hsi = normalize(sample['hsi'][hsi_indices, :, :]).permute((1, 2, 0)).numpy()
+        chm = normalize(sample['chm']).permute((1, 2, 0)).numpy()
 
-        if "boxes" in sample and len(sample["boxes"]):
+        if 'boxes' in sample and len(sample['boxes']):
             labels = (
-                [self.idx2class[int(i)] for i in sample["label"]]
-                if "label" in sample
+                [self.idx2class[int(i)] for i in sample['label']]
+                if 'label' in sample
                 else None
             )
             image = draw_bounding_boxes(
-                image=sample["image"], boxes=sample["boxes"], labels=labels
+                image=sample['image'], boxes=sample['boxes'], labels=labels
             )
             image = image.permute((1, 2, 0)).numpy()
         else:
-            image = sample["image"].permute((1, 2, 0)).numpy()
+            image = sample['image'].permute((1, 2, 0)).numpy()
 
-        if "prediction_boxes" in sample and len(sample["prediction_boxes"]):
+        if 'prediction_boxes' in sample and len(sample['prediction_boxes']):
             ncols += 1
             labels = (
-                [self.idx2class[int(i)] for i in sample["prediction_label"]]
-                if "prediction_label" in sample
+                [self.idx2class[int(i)] for i in sample['prediction_label']]
+                if 'prediction_label' in sample
                 else None
             )
             preds = draw_bounding_boxes(
-                image=sample["image"], boxes=sample["prediction_boxes"], labels=labels
+                image=sample['image'], boxes=sample['prediction_boxes'], labels=labels
             )
             preds = preds.permute((1, 2, 0)).numpy()
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image)
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(hsi)
-        axs[1].axis("off")
+        axs[1].axis('off')
         axs[2].imshow(chm)
-        axs[2].axis("off")
+        axs[2].axis('off')
         if ncols > 3:
             axs[3].imshow(preds)
-            axs[3].axis("off")
+            axs[3].axis('off')
 
         if show_titles:
-            axs[0].set_title("Ground Truth")
-            axs[1].set_title("Hyperspectral False Color Image")
-            axs[2].set_title("Canopy Height Model")
+            axs[0].set_title('Ground Truth')
+            axs[1].set_title('Hyperspectral False Color Image')
+            axs[2].set_title('Canopy Height Model')
             if ncols > 3:
-                axs[3].set_title("Predictions")
+                axs[3].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
 
         return fig
 
-    def plot_las(
-        self, index: int
-    ) -> "pyvista.Plotter":  # type: ignore[name-defined] # noqa: F821
+    def plot_las(self, index: int) -> 'pyvista.Plotter':  # type: ignore[name-defined] # noqa: F821
         """Plot a sample point cloud at the index.
 
         Args:
@@ -563,31 +563,25 @@ class IDTReeS(NonGeoDataset):
             pyvista.PolyData object. Run pyvista.plot(point_cloud, ...) to display
 
         Raises:
-            ImportError: if pyvista is not installed
+            DependencyNotFoundError: If laspy or pyvista are not installed.
 
         .. versionchanged:: 0.4
            Ported from Open3D to PyVista, *colormap* parameter removed.
         """
-        try:
-            import pyvista  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "pyvista is not installed and is required to plot point clouds"
-            )
-        import laspy
-
+        laspy = lazy_import('laspy')
+        pyvista = lazy_import('pyvista')
         path = self.images[index]
-        path = path.replace("RGB", "LAS").replace(".tif", ".las")
+        path = path.replace('RGB', 'LAS').replace('.tif', '.las')
         las = laspy.read(path)
-        points: "np.typing.NDArray[np.int_]" = np.stack(
+        points: np.typing.NDArray[np.int_] = np.stack(
             [las.x, las.y, las.z], axis=0
         ).transpose((1, 0))
         point_cloud = pyvista.PolyData(points)
 
         # Some point cloud files have no color->points mapping
-        if hasattr(las, "red"):
+        if hasattr(las, 'red'):
             colors = np.stack([las.red, las.green, las.blue], axis=0)
             colors = colors.transpose((1, 0)) / np.iinfo(np.uint16).max
-            point_cloud["colors"] = colors
+            point_cloud['colors'] = colors
 
         return point_cloud

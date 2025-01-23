@@ -6,6 +6,11 @@ torchgeo.datamodules
 Geospatial DataModules
 ----------------------
 
+AgriFieldNet
+^^^^^^^^^^^^
+
+.. autoclass:: AgriFieldNetDataModule
+
 Chesapeake Land Cover
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -26,6 +31,24 @@ NAIP
 
 .. autoclass:: NAIPChesapeakeDataModule
 
+I/O Bench
+^^^^^^^^^
+
+.. autoclass:: IOBenchDataModule
+
+Sentinel
+^^^^^^^^
+
+.. autoclass:: Sentinel2CDLDataModule
+.. autoclass:: Sentinel2EuroCropsDataModule
+.. autoclass:: Sentinel2NCCMDataModule
+.. autoclass:: Sentinel2SouthAmericaSoybeanDataModule
+
+SouthAfricaCropType
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SouthAfricaCropTypeDataModule
+
 Non-geospatial DataModules
 --------------------------
 
@@ -33,6 +56,21 @@ BigEarthNet
 ^^^^^^^^^^^
 
 .. autoclass:: BigEarthNetDataModule
+
+CaBuAr
+^^^^^^
+
+.. autoclass:: CaBuArDataModule
+
+CaFFe
+^^^^^
+
+.. autoclass:: CaFFeDataModule
+
+ChaBuD
+^^^^^^
+
+.. autoclass:: ChaBuDDataModule
 
 COWC
 ^^^^
@@ -44,6 +82,11 @@ Deep Globe Land Cover Challenge
 
 .. autoclass:: DeepGlobeLandCoverDataModule
 
+Digital Typhoon
+^^^^^^^^^^^^^^^
+
+.. autoclass:: DigitalTyphoonDataModule
+
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -53,6 +96,7 @@ EuroSAT
 ^^^^^^^
 
 .. autoclass:: EuroSATDataModule
+.. autoclass:: EuroSATSpatialDataModule
 .. autoclass:: EuroSAT100DataModule
 
 FAIR1M
@@ -60,15 +104,30 @@ FAIR1M
 
 .. autoclass:: FAIR1MDataModule
 
+Fields Of The World
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: FieldsOfTheWorldDataModule
+
 FireRisk
 ^^^^^^^^
 
 .. autoclass:: FireRiskDataModule
 
+GeoNRW
+^^^^^^
+
+.. autoclass:: GeoNRWDataModule
+
 GID-15
 ^^^^^^
 
 .. autoclass:: GID15DataModule
+
+HySpecNet-11k
+^^^^^^^^^^^^^
+
+.. autoclass:: HySpecNet11kDataModule
 
 Inria Aerial Image Labeling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -79,6 +138,17 @@ LandCover.ai
 ^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAIDataModule
+.. autoclass:: LandCoverAI100DataModule
+
+LEVIR-CD
+^^^^^^^^
+
+.. autoclass:: LEVIRCDDataModule
+
+LEVIR-CD+
+^^^^^^^^^
+
+.. autoclass:: LEVIRCDPlusDataModule
 
 LoveDA
 ^^^^^^
@@ -99,6 +169,11 @@ Potsdam
 ^^^^^^^
 
 .. autoclass:: Potsdam2DDataModule
+
+QuakeSet
+^^^^^^^^
+
+.. autoclass:: QuakeSetDataModule
 
 RESISC45
 ^^^^^^^^
@@ -123,7 +198,9 @@ So2Sat
 SpaceNet
 ^^^^^^^^
 
+.. autoclass:: SpaceNetBaseDataModule
 .. autoclass:: SpaceNet1DataModule
+.. autoclass:: SpaceNet6DataModule
 
 SSL4EO
 ^^^^^^
@@ -140,6 +217,11 @@ SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SustainBenchCropYieldDataModule
+
+TreeSatAI
+^^^^^^^^^
+
+.. autoclass:: TreeSatAIDataModule
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^

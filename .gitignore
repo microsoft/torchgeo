@@ -6,6 +6,9 @@
 /results/
 *.aux.xml
 
+# Node stuff:
+node_modules/
+
 # Spack
 .spack-env/
 spack.lock

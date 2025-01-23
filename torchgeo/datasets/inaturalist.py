@@ -11,8 +11,9 @@ from typing import Any
 import pandas as pd
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, DatasetNotFoundError, disambiguate_timestamp
+from .utils import BoundingBox, Path, disambiguate_timestamp
 
 
 class INaturalist(GeoDataset):
@@ -25,7 +26,7 @@ class INaturalist(GeoDataset):
 
     If you use an iNaturalist dataset in your research, please cite it according to:
 
-    * https://www.inaturalist.org/pages/help#cite
+    * https://help.inaturalist.org/en/support/solutions/articles/151000170344-how-should-i-cite-inaturalist-
 
     .. versionadded:: 0.3
     """
@@ -33,7 +34,7 @@ class INaturalist(GeoDataset):
     res = 0
     _crs = CRS.from_epsg(4326)  # Lat/Lon
 
-    def __init__(self, root: str = "data") -> None:
+    def __init__(self, root: Path = 'data') -> None:
         """Initialize a new Dataset instance.
 
         Args:
@@ -46,15 +47,15 @@ class INaturalist(GeoDataset):
 
         self.root = root
 
-        files = glob.glob(os.path.join(root, "**.csv"))
+        files = glob.glob(os.path.join(root, '**.csv'))
         if not files:
             raise DatasetNotFoundError(self)
 
         # Read CSV file
         data = pd.read_csv(
             files[0],
-            engine="c",
-            usecols=["observed_on", "time_observed_at", "latitude", "longitude"],
+            engine='c',
+            usecols=['observed_on', 'time_observed_at', 'latitude', 'longitude'],
         )
 
         # Dataset contains many possible timestamps:
@@ -76,9 +77,9 @@ class INaturalist(GeoDataset):
                 continue
 
             if not pd.isna(time):
-                mint, maxt = disambiguate_timestamp(time, "%Y-%m-%d %H:%M:%S %z")
+                mint, maxt = disambiguate_timestamp(time, '%Y-%m-%d %H:%M:%S %z')
             elif not pd.isna(date):
-                mint, maxt = disambiguate_timestamp(date, "%Y-%m-%d")
+                mint, maxt = disambiguate_timestamp(date, '%Y-%m-%d')
             else:
                 mint, maxt = 0, sys.maxsize
 
@@ -103,9 +104,9 @@ class INaturalist(GeoDataset):
 
         if not bboxes:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        sample = {"crs": self.crs, "bbox": bboxes}
+        sample = {'crs': self.crs, 'bounds': bboxes}
 
         return sample

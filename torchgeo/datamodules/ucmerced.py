@@ -8,7 +8,6 @@ from typing import Any
 import kornia.augmentation as K
 
 from ..datasets import UCMerced
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -31,8 +30,9 @@ class UCMercedDataModule(NonGeoDataModule):
         """
         super().__init__(UCMerced, batch_size, num_workers, **kwargs)
 
-        self.aug = AugmentationSequential(
+        self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.Resize(size=256),
-            data_keys=["image"],
+            data_keys=None,
+            keepdim=True,
         )

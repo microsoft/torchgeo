@@ -4,23 +4,24 @@
 """CDL dataset."""
 
 import os
-from collections.abc import Iterable
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable, Iterable
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
+from .utils import BoundingBox, Path, download_url, extract_archive
 
 
 class CDL(RasterDataset):
     """Cropland Data Layer (CDL) dataset.
 
     The `Cropland Data Layer
-    <https://data.nal.usda.gov/dataset/cropscape-cropland-data-layer>`__, hosted on
+    <https://www.nass.usda.gov/Research_and_Science/Cropland/SARS1a.php>`__, hosted on
     `CropScape <https://nassgeodata.gmu.edu/CropScape/>`_, provides a raster,
     geo-referenced, crop-specific land cover map for the continental United States. The
     CDL also includes a crop mask layer and planting frequency layers, as well as
@@ -35,38 +36,39 @@ class CDL(RasterDataset):
 
     If you use this dataset in your research, please cite it using the following format:
 
-    * https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php#Section1_14.0
-    """  # noqa: E501
+    * https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php#what.1
+    """
 
-    filename_glob = "*_30m_cdls.tif"
+    filename_glob = '*_30m_cdls.tif'
     filename_regex = r"""
         ^(?P<date>\d+)
         _30m_cdls\..*$
     """
-    zipfile_glob = "*_30m_cdls.zip"
-    date_format = "%Y"
+    zipfile_glob = '*_30m_cdls.zip'
+    date_format = '%Y'
     is_image = False
 
-    url = "https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip"  # noqa: E501
-    md5s = {
-        2022: "754cf50670cdfee511937554785de3e6",
-        2021: "27606eab08fe975aa138baad3e5dfcd8",
-        2020: "483ee48c503aa81b684225179b402d42",
-        2019: "a5168a2fc93acbeaa93e24eee3d8c696",
-        2018: "4ad0d7802a9bb751685eb239b0fa8609",
-        2017: "d173f942a70f94622f9b8290e7548684",
-        2016: "fddc5dff0bccc617d70a12864c993e51",
-        2015: "2e92038ab62ba75e1687f60eecbdd055",
-        2014: "50bdf9da84ebd0457ddd9e0bf9bbcc1f",
-        2013: "7be66c650416dc7c4a945dd7fd93c5b7",
-        2012: "286504ff0512e9fe1a1975c635a1bec2",
-        2011: "517bad1a99beec45d90abb651fb1f0e3",
-        2010: "98d354c5a62c9e3e40ccadce265c721c",
-        2009: "663c8a5fdd92ebfc0d6bee008586d19a",
-        2008: "0610f2f17ab60a9fbb3baeb7543993a4",
+    url = 'https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip'
+    md5s: ClassVar[dict[int, str]] = {
+        2023: '8c7685d6278d50c554f934b16a6076b7',
+        2022: '754cf50670cdfee511937554785de3e6',
+        2021: '27606eab08fe975aa138baad3e5dfcd8',
+        2020: '483ee48c503aa81b684225179b402d42',
+        2019: 'a5168a2fc93acbeaa93e24eee3d8c696',
+        2018: '4ad0d7802a9bb751685eb239b0fa8609',
+        2017: 'd173f942a70f94622f9b8290e7548684',
+        2016: 'fddc5dff0bccc617d70a12864c993e51',
+        2015: '2e92038ab62ba75e1687f60eecbdd055',
+        2014: '50bdf9da84ebd0457ddd9e0bf9bbcc1f',
+        2013: '7be66c650416dc7c4a945dd7fd93c5b7',
+        2012: '286504ff0512e9fe1a1975c635a1bec2',
+        2011: '517bad1a99beec45d90abb651fb1f0e3',
+        2010: '98d354c5a62c9e3e40ccadce265c721c',
+        2009: '663c8a5fdd92ebfc0d6bee008586d19a',
+        2008: '0610f2f17ab60a9fbb3baeb7543993a4',
     }
 
-    cmap = {
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 255),
         1: (255, 211, 0, 255),
         2: (255, 37, 37, 255),
@@ -205,12 +207,12 @@ class CDL(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        years: list[int] = [2022],
+        paths: Path | Iterable[Path] = 'data',
+        crs: CRS | None = None,
+        res: float | None = None,
+        years: list[int] = [2023],
         classes: list[int] = list(cmap.keys()),
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -243,13 +245,13 @@ class CDL(RasterDataset):
            *root* was renamed to *paths*.
         """
         assert set(years) <= self.md5s.keys(), (
-            "CDL data product only exists for the following years: "
-            f"{list(self.md5s.keys())}."
+            'CDL data product only exists for the following years: '
+            f'{list(self.md5s.keys())}.'
         )
-        assert (
-            set(classes) <= self.cmap.keys()
-        ), f"Only the following classes are valid: {list(self.cmap.keys())}."
-        assert 0 in classes, "Classes must include the background class: 0"
+        assert set(classes) <= self.cmap.keys(), (
+            f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        )
+        assert 0 in classes, 'Classes must include the background class: 0'
 
         self.paths = paths
         self.years = years
@@ -281,7 +283,7 @@ class CDL(RasterDataset):
             IndexError: if query is not found in the index
         """
         sample = super().__getitem__(query)
-        sample["mask"] = self.ordinal_map[sample["mask"]]
+        sample['mask'] = self.ordinal_map[sample['mask']]
         return sample
 
     def _verify(self) -> None:
@@ -292,10 +294,10 @@ class CDL(RasterDataset):
 
         # Check if the zip files have already been downloaded
         exists = []
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | os.PathLike)
         for year in self.years:
             pathname = os.path.join(
-                self.paths, self.zipfile_glob.replace("*", str(year))
+                self.paths, self.zipfile_glob.replace('*', str(year))
             )
             if os.path.exists(pathname):
                 exists.append(True)
@@ -325,9 +327,9 @@ class CDL(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | os.PathLike)
         for year in self.years:
-            zipfile_name = self.zipfile_glob.replace("*", str(year))
+            zipfile_name = self.zipfile_glob.replace('*', str(year))
             pathname = os.path.join(self.paths, zipfile_name)
             extract_archive(pathname, self.paths)
 
@@ -335,7 +337,7 @@ class CDL(RasterDataset):
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -351,29 +353,29 @@ class CDL(RasterDataset):
            Method now takes a sample dict, not a Tensor. Additionally, possible to
            show subplot titles and/or use a custom suptitle.
         """
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze()
+            pred = sample['prediction'].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(
             nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
         )
 
-        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation="none")
-        axs[0, 0].axis("off")
+        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[0, 0].axis('off')
 
         if show_titles:
-            axs[0, 0].set_title("Mask")
+            axs[0, 0].set_title('Mask')
 
         if showing_predictions:
-            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation="none")
-            axs[0, 1].axis("off")
+            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[0, 1].axis('off')
             if show_titles:
-                axs[0, 1].set_title("Prediction")
+                axs[0, 1].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

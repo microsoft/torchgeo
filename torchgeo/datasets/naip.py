@@ -3,7 +3,7 @@
 
 """National Agriculture Imagery Program (NAIP) dataset."""
 
-from typing import Any, Optional
+from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -32,7 +32,7 @@ class NAIP(RasterDataset):
 
     # https://www.nrcs.usda.gov/Internet/FSE_DOCUMENTS/nrcs141p2_015644.pdf
     # https://planetarycomputer.microsoft.com/dataset/naip#Storage-Documentation
-    filename_glob = "m_*.*"
+    filename_glob = 'm_*.*'
     filename_regex = r"""
         ^m
         _(?P<quadrangle>\d+)
@@ -45,14 +45,14 @@ class NAIP(RasterDataset):
     """
 
     # Plotting
-    all_bands = ["R", "G", "B", "NIR"]
-    rgb_bands = ["R", "G", "B"]
+    all_bands = ('R', 'G', 'B', 'NIR')
+    rgb_bands = ('R', 'G', 'B')
 
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -68,14 +68,14 @@ class NAIP(RasterDataset):
            Method now takes a sample dict, not a Tensor. Additionally, possible to
            show subplot titles and/or use a custom suptitle.
         """
-        image = sample["image"][0:3, :, :].permute(1, 2, 0)
+        image = sample['image'][0:3, :, :].permute(1, 2, 0)
 
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(4, 4))
 
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
         if show_titles:
-            ax.set_title("Image")
+            ax.set_title('Image')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

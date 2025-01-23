@@ -3,14 +3,13 @@
 
 """SSL4EO datamodule."""
 
-from typing import Any, Union
+from typing import Any
 
 import kornia.augmentation as K
 from kornia.constants import DataKey, Resample
 
 from ..datasets import SSL4EOLBenchmark
 from ..samplers.utils import _to_tuple
-from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
 
 
@@ -23,7 +22,7 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: Union[int, tuple[int, int]] = 224,
+        patch_size: int | tuple[int, int] = 224,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
@@ -40,23 +39,26 @@ class SSL4EOLBenchmarkDataModule(NonGeoDataModule):
 
         self.patch_size = _to_tuple(patch_size)
 
-        self.train_aug = AugmentationSequential(
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomResizedCrop(_to_tuple(self.patch_size), scale=(0.6, 1.0)),
             K.RandomVerticalFlip(p=0.5),
             K.RandomHorizontalFlip(p=0.5),
-            data_keys=["image", "mask"],
+            data_keys=None,
+            keepdim=True,
             extra_args={
-                DataKey.MASK: {"resample": Resample.NEAREST, "align_corners": None}
+                DataKey.MASK: {'resample': Resample.NEAREST, 'align_corners': None}
             },
         )
-        self.val_aug = AugmentationSequential(
+        self.val_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.CenterCrop(self.patch_size),
-            data_keys=["image", "mask"],
+            data_keys=None,
+            keepdim=True,
         )
-        self.test_aug = AugmentationSequential(
+        self.test_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.CenterCrop(self.patch_size),
-            data_keys=["image", "mask"],
+            data_keys=None,
+            keepdim=True,
         )

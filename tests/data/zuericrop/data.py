@@ -19,8 +19,8 @@ NUM_CLASSES = 10
 
 np.random.seed(0)
 
-data_file = "ZueriCrop.hdf5"
-labels_file = "labels.csv"
+data_file = 'ZueriCrop.hdf5'
+labels_file = 'labels.csv'
 
 # Remove old data
 if os.path.exists(data_file):
@@ -41,7 +41,7 @@ gt_instance = np.random.randint(
     NUM_CLASSES, size=(NUM_SAMPLES, SIZE, SIZE, 1), dtype=np.int32
 )
 
-with h5py.File(data_file, "w") as f:
-    f.create_dataset("data", data=data)
-    f.create_dataset("gt", data=gt)
-    f.create_dataset("gt_instance", data=gt_instance)
+with h5py.File(data_file, 'w') as f:
+    f.create_dataset('data', data=data)
+    f.create_dataset('gt', data=gt)
+    f.create_dataset('gt_instance', data=gt_instance)

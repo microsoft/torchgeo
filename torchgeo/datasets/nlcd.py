@@ -3,31 +3,29 @@
 
 """NLCD dataset."""
 
-import glob
 import os
-from collections.abc import Iterable
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable, Iterable
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
+from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, DatasetNotFoundError, download_url, extract_archive
+from .utils import BoundingBox, Path, download_url
 
 
 class NLCD(RasterDataset):
-    """National Land Cover Database (NLCD) dataset.
+    """Annual National Land Cover Database (NLCD) dataset.
 
-    The `NLCD dataset
-    <https://www.usgs.gov/centers/eros/science/national-land-cover-database>`_
-    is a land cover product that covers the United States and Puerto Rico. The current
-    implementation supports maps for the continental United States only. The product is
-    a joint effort between the United States Geological Survey
+    The `Annual NLCD products
+    <https://www.usgs.gov/centers/eros/science/annual-national-land-cover-database>`_
+    is an annual land cover product for the conterminous U.S. initially covering the period
+    from 1985 to 2023. The product is a joint effort between the United States Geological Survey
     (`USGS <https://www.usgs.gov/>`_) and the Multi-Resolution Land Characteristics
-    Consortium (`MRLC <https://www.mrlc.gov/>`_) which released the first product
-    in 2001 with new updates every five years since then.
+    Consortium (`MRLC <https://www.mrlc.gov/>`_).
 
     The dataset contains the following 17 classes:
 
@@ -56,36 +54,63 @@ class NLCD(RasterDataset):
 
     * single channel .img file with integer class labels
 
-    If you use this dataset in your research, please use the corresponding citation:
+    If you use this dataset in your research, please cite the following paper:
 
-    * 2001: https://doi.org/10.5066/P9MZGHLF
-    * 2006: https://doi.org/10.5066/P9HBR9V3
-    * 2011: https://doi.org/10.5066/P97S2IID
-    * 2016: https://doi.org/10.5066/P96HHBIE
-    * 2019: https://doi.org/10.5066/P9KZCM54
+    * https://doi.org/10.5066/P94UXNTS
 
     .. versionadded:: 0.5
-    """  # noqa: E501
+    """
 
-    filename_glob = "nlcd_*_land_cover_l48_*.img"
-    filename_regex = (
-        r"nlcd_(?P<date>\d{4})_land_cover_l48_(?P<publication_date>\d{8})\.img"
-    )
-    zipfile_glob = "nlcd_*_land_cover_l48_*.zip"
-    date_format = "%Y"
+    filename_glob = 'Annual_NLCD_LndCov_*_CU_C1V0.tif'
+    filename_regex = r'Annual_NLCD_LndCov_(?P<date>\d{4})_CU_C1V0\.tif'
+    date_format = '%Y'
     is_image = False
 
-    url = "https://s3-us-west-2.amazonaws.com/mrlc/nlcd_{}_land_cover_l48_20210604.zip"
+    url = 'https://s3-us-west-2.amazonaws.com/mrlc/Annual_NLCD_LndCov_{}_CU_C1V0.tif'
 
-    md5s = {
-        2001: "538166a4d783204764e3df3b221fc4cd",
-        2006: "67454e7874a00294adb9442374d0c309",
-        2011: "ea524c835d173658eeb6fa3c8e6b917b",
-        2016: "452726f6e3bd3f70d8ca2476723d238a",
-        2019: "82851c3f8105763b01c83b4a9e6f3961",
+    md5s: ClassVar[dict[int, str]] = {
+        1985: 'a2e1c5f0b34e9b15a63a9dc10e8d3ec2',
+        1986: 'da1d08ca51ac43abc14711c8d6139f1d',
+        1987: '2cb85e8f077c227605cd7bac62a72a75',
+        1988: 'b20fb987cc30926d2d125d045e02626d',
+        1989: 'dbe851cbea34d0a57c2a94eb745a1267',
+        1990: '1927e0e040b9ff513ff039749b64919b',
+        1991: 'eca73474843d6c58693eba62d70e507c',
+        1992: '8beda41ba79000f55a8e9358ba3fa5a4',
+        1993: '1a023552967cdac1111e9968ea62c879',
+        1994: 'acc30ce4f6cdd78af5f7887d17ac4de3',
+        1995: 'f728e8fc231b2e8e74a14201f500543a',
+        1996: 'd2580904244f89b20d6258150fbf4161',
+        1997: 'fec4e08032e162f2cc7dbe019d042609',
+        1998: '87ea19434de96ea99cd5d7991042816c',
+        1999: 'd4133737f20e75f3bd3a5baa32a668da',
+        2000: 'e20b61bb2e7f4034a33c9fd536798a01',
+        2001: 'b1f46ace9aedd17a89efab489cb67bc3',
+        2002: '57bf60d7cd473096af3bb125391bde63',
+        2003: '5e346854da9abf739152e85fee4c7aff',
+        2004: '13136f271f53a454358eb7ec12bda686',
+        2005: 'f00b66b57a23eb49a077e88704964a91',
+        2006: '074ba90de5e62a37a5f001b7572f6baa',
+        2007: 'cdef29a191cf165baaae80857ce5a980',
+        2008: 'da907c76a1f12739333148504fd111c9',
+        2009: '47890b306b875e681990b3db0c709da3',
+        2010: '9a81f405f9e2f45d581078afd53c2d4b',
+        2011: '13f4ef40b204aa1108dc0599d9546701',
+        2012: '66b33146f9a9d9491be10c59c51e3e33',
+        2013: 'f8d230f7dea493c47fbc74984ff856cc',
+        2014: '68eb07ce86c1f7c2546ec43c2f9f7029',
+        2015: 'f5a1b59fe54a70752f544c06cb965be4',
+        2016: 'f0c2e74824fc281a57821e28e2c7fe6e',
+        2017: 'a0aa8be0ed7d637f0f88f26d3742b20e',
+        2018: 'a01f31547837ff1dfec1aba07b89bbec',
+        2019: 'fa738201cddc1393dac4383b6ce2561a',
+        2020: 'aa8f51690c7b01f3b3b413be9a7c36d6',
+        2021: '47fc1794a64704a918b6ad586df4267c',
+        2022: '11359748229e138cde971947864104a4',
+        2023: '498ff8a512d32fe905720796fdb7fd52',
     }
 
-    cmap = {
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 0),
         11: (70, 107, 159, 255),
         12: (209, 222, 248, 255),
@@ -107,12 +132,12 @@ class NLCD(RasterDataset):
 
     def __init__(
         self,
-        paths: Union[str, Iterable[str]] = "data",
-        crs: Optional[CRS] = None,
-        res: Optional[float] = None,
-        years: list[int] = [2019],
+        paths: Path | Iterable[Path] = 'data',
+        crs: CRS | None = None,
+        res: float | None = None,
+        years: list[int] = [2023],
         classes: list[int] = list(cmap.keys()),
-        transforms: Optional[Callable[[dict[str, Any]], dict[str, Any]]] = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
         checksum: bool = False,
@@ -139,13 +164,13 @@ class NLCD(RasterDataset):
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert set(years) <= self.md5s.keys(), (
-            "NLCD data product only exists for the following years: "
-            f"{list(self.md5s.keys())}."
+            'NLCD data product only exists for the following years: '
+            f'{list(self.md5s.keys())}.'
         )
-        assert (
-            set(classes) <= self.cmap.keys()
-        ), f"Only the following classes are valid: {list(self.cmap.keys())}."
-        assert 0 in classes, "Classes must include the background class: 0"
+        assert set(classes) <= self.cmap.keys(), (
+            f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        )
+        assert 0 in classes, 'Classes must include the background class: 0'
 
         self.paths = paths
         self.years = years
@@ -177,24 +202,19 @@ class NLCD(RasterDataset):
             IndexError: if query is not found in the index
         """
         sample = super().__getitem__(query)
-        sample["mask"] = self.ordinal_map[sample["mask"]]
+        sample['mask'] = self.ordinal_map[sample['mask']]
         return sample
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        # Check if the extracted files already exist
-        if self.files:
-            return
-
-        # Check if the zip files have already been downloaded
+        # Check if the TIFF files for the specified years have already been downloaded
         exists = []
         for year in self.years:
-            zipfile_year = self.zipfile_glob.replace("*", str(year), 1)
-            assert isinstance(self.paths, str)
-            pathname = os.path.join(self.paths, "**", zipfile_year)
-            if glob.glob(pathname, recursive=True):
+            filename_year = self.filename_glob.replace('*', str(year), 1)
+            assert isinstance(self.paths, str | os.PathLike)
+            pathname = os.path.join(self.paths, filename_year)
+            if os.path.exists(pathname):
                 exists.append(True)
-                self._extract()
             else:
                 exists.append(False)
 
@@ -207,7 +227,6 @@ class NLCD(RasterDataset):
 
         # Download the dataset
         self._download()
-        self._extract()
 
     def _download(self) -> None:
         """Download the dataset."""
@@ -218,19 +237,11 @@ class NLCD(RasterDataset):
                 md5=self.md5s[year] if self.checksum else None,
             )
 
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        for year in self.years:
-            zipfile_name = self.zipfile_glob.replace("*", str(year), 1)
-            assert isinstance(self.paths, str)
-            pathname = os.path.join(self.paths, "**", zipfile_name)
-            extract_archive(glob.glob(pathname, recursive=True)[0], self.paths)
-
     def plot(
         self,
         sample: dict[str, Any],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -242,29 +253,29 @@ class NLCD(RasterDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        mask = sample["mask"].squeeze()
+        mask = sample['mask'].squeeze()
         ncols = 1
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            pred = sample["prediction"].squeeze()
+            pred = sample['prediction'].squeeze()
             ncols = 2
 
         fig, axs = plt.subplots(
             nrows=1, ncols=ncols, figsize=(ncols * 4, 4), squeeze=False
         )
 
-        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation="none")
-        axs[0, 0].axis("off")
+        axs[0, 0].imshow(self.ordinal_cmap[mask], interpolation='none')
+        axs[0, 0].axis('off')
 
         if show_titles:
-            axs[0, 0].set_title("Mask")
+            axs[0, 0].set_title('Mask')
 
         if showing_predictions:
-            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation="none")
-            axs[0, 1].axis("off")
+            axs[0, 1].imshow(self.ordinal_cmap[pred], interpolation='none')
+            axs[0, 1].axis('off')
             if show_titles:
-                axs[0, 1].set_title("Prediction")
+                axs[0, 1].set_title('Prediction')
 
         if suptitle is not None:
             plt.suptitle(suptitle)

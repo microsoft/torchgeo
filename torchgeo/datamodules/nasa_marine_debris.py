@@ -5,28 +5,14 @@
 
 from typing import Any
 
+import kornia.augmentation as K
 import torch
-from torch import Tensor
+from torch.utils.data import random_split
 
 from ..datasets import NASAMarineDebris
+from ..transforms import AugmentationSequential
 from .geo import NonGeoDataModule
-from .utils import dataset_split
-
-
-def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
-    """Custom object detection collate fn to handle variable boxes.
-
-    Args:
-        batch: list of sample dicts return by dataset
-
-    Returns:
-        batch dict output
-    """
-    output: dict[str, Any] = {}
-    output["image"] = torch.stack([sample["image"] for sample in batch])
-    output["boxes"] = [sample["boxes"] for sample in batch]
-    output["labels"] = [torch.tensor([1] * len(sample["boxes"])) for sample in batch]
-    return output
+from .utils import AugPipe, collate_fn_detection
 
 
 class NASAMarineDebrisDataModule(NonGeoDataModule):
@@ -34,6 +20,8 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
 
     .. versionadded:: 0.2
     """
+
+    std = torch.tensor(255)
 
     def __init__(
         self,
@@ -58,7 +46,14 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
 
-        self.collate_fn = collate_fn
+        self.aug = AugPipe(
+            AugmentationSequential(
+                K.Normalize(mean=self.mean, std=self.std), data_keys=['image', 'boxes']
+            ),
+            batch_size,
+        )
+
+        self.collate_fn = collate_fn_detection
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -67,6 +62,13 @@ class NASAMarineDebrisDataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         self.dataset = NASAMarineDebris(**self.kwargs)
-        self.train_dataset, self.val_dataset, self.test_dataset = dataset_split(
-            self.dataset, val_pct=self.val_split_pct, test_pct=self.test_split_pct
+        generator = torch.Generator().manual_seed(0)
+        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
+            self.dataset,
+            [
+                1 - self.val_split_pct - self.test_split_pct,
+                self.val_split_pct,
+                self.test_split_pct,
+            ],
+            generator,
         )

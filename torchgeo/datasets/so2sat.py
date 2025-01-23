@@ -4,8 +4,8 @@
 """So2Sat dataset."""
 
 import os
-from collections.abc import Sequence
-from typing import Callable, Optional, cast
+from collections.abc import Callable, Sequence
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,8 +13,9 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import DatasetNotFoundError, check_integrity, percentile_normalization
+from .utils import Path, check_integrity, lazy_import, percentile_normalization
 
 
 class So2Sat(NonGeoDataset):
@@ -96,102 +97,108 @@ class So2Sat(NonGeoDataset):
           done
 
        or manually downloaded from https://mediatum.ub.tum.de/1613658
-    """  # noqa: E501
 
-    versions = ["2", "3_random", "3_block", "3_culture_10"]
-    filenames_by_version = {
-        "2": {
-            "train": "training.h5",
-            "validation": "validation.h5",
-            "test": "testing.h5",
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `<https://pypi.org/project/h5py/>`_ to load the dataset
+    """
+
+    versions = ('2', '3_random', '3_block', '3_culture_10')
+    filenames_by_version: ClassVar[dict[str, dict[str, str]]] = {
+        '2': {
+            'train': 'training.h5',
+            'validation': 'validation.h5',
+            'test': 'testing.h5',
         },
-        "3_random": {"train": "random/training.h5", "test": "random/testing.h5"},
-        "3_block": {"train": "block/training.h5", "test": "block/testing.h5"},
-        "3_culture_10": {
-            "train": "culture_10/training.h5",
-            "test": "culture_10/testing.h5",
+        '3_random': {'train': 'random/training.h5', 'test': 'random/testing.h5'},
+        '3_block': {'train': 'block/training.h5', 'test': 'block/testing.h5'},
+        '3_culture_10': {
+            'train': 'culture_10/training.h5',
+            'test': 'culture_10/testing.h5',
         },
     }
-    md5s_by_version = {
-        "2": {
-            "train": "702bc6a9368ebff4542d791e53469244",
-            "validation": "71cfa6795de3e22207229d06d6f8775d",
-            "test": "e81426102b488623a723beab52b31a8a",
+    md5s_by_version: ClassVar[dict[str, dict[str, str]]] = {
+        '2': {
+            'train': '702bc6a9368ebff4542d791e53469244',
+            'validation': '71cfa6795de3e22207229d06d6f8775d',
+            'test': 'e81426102b488623a723beab52b31a8a',
         },
-        "3_random": {
-            "train": "94e2e2e667b406c2adf61e113b42204e",
-            "test": "1e15c425585ce816342d1cd779d453d8",
+        '3_random': {
+            'train': '94e2e2e667b406c2adf61e113b42204e',
+            'test': '1e15c425585ce816342d1cd779d453d8',
         },
-        "3_block": {
-            "train": "a91d6150e8b059dac86105853f377a11",
-            "test": "6414af1ec33ace417e879f9c88066d47",
+        '3_block': {
+            'train': 'a91d6150e8b059dac86105853f377a11',
+            'test': '6414af1ec33ace417e879f9c88066d47',
         },
-        "3_culture_10": {
-            "train": "702bc6a9368ebff4542d791e53469244",
-            "test": "58335ce34ca3a18424e19da84f2832fc",
+        '3_culture_10': {
+            'train': '702bc6a9368ebff4542d791e53469244',
+            'test': '58335ce34ca3a18424e19da84f2832fc',
         },
     }
 
-    classes = [
-        "Compact high rise",
-        "Compact mid rise",
-        "Compact low rise",
-        "Open high rise",
-        "Open mid rise",
-        "Open low rise",
-        "Lightweight low rise",
-        "Large low rise",
-        "Sparsely built",
-        "Heavy industry",
-        "Dense trees",
-        "Scattered trees",
-        "Bush, scrub",
-        "Low plants",
-        "Bare rock or paved",
-        "Bare soil or sand",
-        "Water",
-    ]
+    classes = (
+        'Compact high rise',
+        'Compact mid rise',
+        'Compact low rise',
+        'Open high rise',
+        'Open mid rise',
+        'Open low rise',
+        'Lightweight low rise',
+        'Large low rise',
+        'Sparsely built',
+        'Heavy industry',
+        'Dense trees',
+        'Scattered trees',
+        'Bush, scrub',
+        'Low plants',
+        'Bare rock or paved',
+        'Bare soil or sand',
+        'Water',
+    )
 
     all_s1_band_names = (
-        "S1_B1",
-        "S1_B2",
-        "S1_B3",
-        "S1_B4",
-        "S1_B5",
-        "S1_B6",
-        "S1_B7",
-        "S1_B8",
+        'S1_B1',
+        'S1_B2',
+        'S1_B3',
+        'S1_B4',
+        'S1_B5',
+        'S1_B6',
+        'S1_B7',
+        'S1_B8',
     )
     all_s2_band_names = (
-        "S2_B02",
-        "S2_B03",
-        "S2_B04",
-        "S2_B05",
-        "S2_B06",
-        "S2_B07",
-        "S2_B08",
-        "S2_B8A",
-        "S2_B11",
-        "S2_B12",
+        'S2_B02',
+        'S2_B03',
+        'S2_B04',
+        'S2_B05',
+        'S2_B06',
+        'S2_B07',
+        'S2_B08',
+        'S2_B8A',
+        'S2_B11',
+        'S2_B12',
     )
     all_band_names = all_s1_band_names + all_s2_band_names
 
-    rgb_bands = ["S2_B04", "S2_B03", "S2_B02"]
+    rgb_bands = ('S2_B04', 'S2_B03', 'S2_B02')
 
-    BAND_SETS = {
-        "all": all_band_names,
-        "s1": all_s1_band_names,
-        "s2": all_s2_band_names,
-        "rgb": rgb_bands,
+    BAND_SETS: ClassVar[dict[str, tuple[str, ...]]] = {
+        'all': all_band_names,
+        's1': all_s1_band_names,
+        's2': all_s2_band_names,
+        'rgb': rgb_bands,
     }
 
     def __init__(
         self,
-        root: str = "data",
-        version: str = "2",
-        split: str = "train",
-        bands: Sequence[str] = BAND_SETS["all"],
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        version: str = '2',
+        split: str = 'train',
+        bands: Sequence[str] = BAND_SETS['all'],
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new So2Sat dataset instance.
@@ -209,6 +216,7 @@ class So2Sat(NonGeoDataset):
         Raises:
             AssertionError: if ``split`` argument is invalid
             DatasetNotFoundError: If dataset is not found.
+            DependencyNotFoundError: If h5py is not installed.
 
         .. versionadded:: 0.3
            The *bands* parameter.
@@ -216,17 +224,13 @@ class So2Sat(NonGeoDataset):
         .. versionadded:: 0.5
            The *version* parameter.
         """
-        try:
-            import h5py  # noqa: F401
-        except ImportError:
-            raise ImportError(
-                "h5py is not installed and is required to use this dataset"
-            )
+        h5py = lazy_import('h5py')
+
         assert version in self.versions
         assert split in self.filenames_by_version[version]
 
         self._validate_bands(bands)
-        self.s1_band_indices: "np.typing.NDArray[np.int_]" = np.array(
+        self.s1_band_indices: np.typing.NDArray[np.int_] = np.array(
             [
                 self.all_s1_band_names.index(b)
                 for b in bands
@@ -236,7 +240,7 @@ class So2Sat(NonGeoDataset):
 
         self.s1_band_names = [self.all_s1_band_names[i] for i in self.s1_band_indices]
 
-        self.s2_band_indices: "np.typing.NDArray[np.int_]" = np.array(
+        self.s2_band_indices: np.typing.NDArray[np.int_] = np.array(
             [
                 self.all_s2_band_names.index(b)
                 for b in bands
@@ -259,8 +263,8 @@ class So2Sat(NonGeoDataset):
         if not self._check_integrity():
             raise DatasetNotFoundError(self)
 
-        with h5py.File(self.fn, "r") as f:
-            self.size: int = f["label"].shape[0]
+        with h5py.File(self.fn, 'r') as f:
+            self.size: int = f['label'].shape[0]
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -271,16 +275,15 @@ class So2Sat(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        import h5py
-
-        with h5py.File(self.fn, "r") as f:
-            s1 = f["sen1"][index].astype(np.float64)  # convert from <f8 to float64
+        h5py = lazy_import('h5py')
+        with h5py.File(self.fn, 'r') as f:
+            s1 = f['sen1'][index].astype(np.float64)  # convert from <f8 to float64
             s1 = np.take(s1, indices=self.s1_band_indices, axis=2)
-            s2 = f["sen2"][index].astype(np.float64)  # convert from <f8 to float64
+            s2 = f['sen2'][index].astype(np.float64)  # convert from <f8 to float64
             s2 = np.take(s2, indices=self.s2_band_indices, axis=2)
 
             # convert one-hot encoding to int64 then torch int
-            label = torch.tensor(f["label"][index].argmax())
+            label = torch.tensor(f['label'][index].argmax())
 
             s1 = np.rollaxis(s1, 2, 0)  # convert to CxHxW format
             s2 = np.rollaxis(s2, 2, 0)  # convert to CxHxW format
@@ -288,7 +291,7 @@ class So2Sat(NonGeoDataset):
             s1 = torch.from_numpy(s1)
             s2 = torch.from_numpy(s2)
 
-        sample = {"image": torch.cat([s1, s2]).float(), "label": label}
+        sample = {'image': torch.cat([s1, s2]).float(), 'label': label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -335,7 +338,7 @@ class So2Sat(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -348,7 +351,7 @@ class So2Sat(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         Raises:
-            ValueError: if RGB bands are not found in dataset
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
 
         .. versionadded:: 0.2
         """
@@ -358,27 +361,27 @@ class So2Sat(NonGeoDataset):
                 idx = self.s2_band_names.index(band) + len(self.s1_band_names)
                 rgb_indices.append(idx)
             else:
-                raise ValueError("Dataset doesn't contain some of the RGB bands")
+                raise RGBBandsMissingError()
 
-        image = np.take(sample["image"].numpy(), indices=rgb_indices, axis=0)
+        image = np.take(sample['image'].numpy(), indices=rgb_indices, axis=0)
         image = np.rollaxis(image, 0, 3)
         image = percentile_normalization(image, 0, 100)
 
-        label = cast(int, sample["label"].item())
+        label = cast(int, sample['label'].item())
         label_class = self.classes[label]
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = cast(int, sample["prediction"].item())
+            prediction = cast(int, sample['prediction'].item())
             prediction_class = self.classes[prediction]
 
         fig, ax = plt.subplots(figsize=(4, 4))
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
         if show_titles:
-            title = f"Label: {label_class}"
+            title = f'Label: {label_class}'
             if showing_predictions:
-                title += f"\nPrediction: {prediction_class}"
+                title += f'\nPrediction: {prediction_class}'
             ax.set_title(title)
 
         if suptitle is not None:

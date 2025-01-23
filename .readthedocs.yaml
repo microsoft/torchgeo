@@ -6,19 +6,18 @@ version: 2
 
 # Set the version of Python
 build:
-  os: ubuntu-22.04
+  os: ubuntu-lts-latest
   tools:
-    python: "3.11"
+    python: '3.12'
 
 # Configuration of the Python environment to be used
 python:
-   install:
-   - requirements: requirements/docs.txt
-   - requirements: docs/requirements.txt
-   - method: pip
-     path: .
+  install:
+    - requirements: requirements/required.txt
+    - requirements: requirements/docs.txt
+    - requirements: docs/requirements.txt
 
 # Configuration for Sphinx documentation
 sphinx:
-   configuration: docs/conf.py
-   fail_on_warning: true
+  configuration: docs/conf.py
+  fail_on_warning: true

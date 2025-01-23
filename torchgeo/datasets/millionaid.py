@@ -2,9 +2,11 @@
 # Licensed under the MIT License.
 
 """Million-AID dataset."""
+
 import glob
 import os
-from typing import Any, Callable, Optional, cast
+from collections.abc import Callable
+from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,9 +15,9 @@ from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
-from torchgeo.datasets import NonGeoDataset
-
-from .utils import DatasetNotFoundError, check_integrity, extract_archive
+from .errors import DatasetNotFoundError
+from .geo import NonGeoDataset
+from .utils import Path, check_integrity, extract_archive
 
 
 class MillionAID(NonGeoDataset):
@@ -46,152 +48,152 @@ class MillionAID(NonGeoDataset):
     .. versionadded:: 0.3
     """
 
-    multi_label_categories = [
-        "agriculture_land",
-        "airport_area",
-        "apartment",
-        "apron",
-        "arable_land",
-        "bare_land",
-        "baseball_field",
-        "basketball_court",
-        "beach",
-        "bridge",
-        "cemetery",
-        "church",
-        "commercial_area",
-        "commercial_land",
-        "dam",
-        "desert",
-        "detached_house",
-        "dry_field",
-        "factory_area",
-        "forest",
-        "golf_course",
-        "grassland",
-        "greenhouse",
-        "ground_track_field",
-        "helipad",
-        "highway_area",
-        "ice_land",
-        "industrial_land",
-        "intersection",
-        "island",
-        "lake",
-        "leisure_land",
-        "meadow",
-        "mine",
-        "mining_area",
-        "mobile_home_park",
-        "oil_field",
-        "orchard",
-        "paddy_field",
-        "parking_lot",
-        "pier",
-        "port_area",
-        "power_station",
-        "public_service_land",
-        "quarry",
-        "railway",
-        "railway_area",
-        "religious_land",
-        "residential_land",
-        "river",
-        "road",
-        "rock_land",
-        "roundabout",
-        "runway",
-        "solar_power_plant",
-        "sparse_shrub_land",
-        "special_land",
-        "sports_land",
-        "stadium",
-        "storage_tank",
-        "substation",
-        "swimming_pool",
-        "tennis_court",
-        "terraced_field",
-        "train_station",
-        "transportation_land",
-        "unutilized_land",
-        "viaduct",
-        "wastewater_plant",
-        "water_area",
-        "wind_turbine",
-        "woodland",
-        "works",
-    ]
+    multi_label_categories = (
+        'agriculture_land',
+        'airport_area',
+        'apartment',
+        'apron',
+        'arable_land',
+        'bare_land',
+        'baseball_field',
+        'basketball_court',
+        'beach',
+        'bridge',
+        'cemetery',
+        'church',
+        'commercial_area',
+        'commercial_land',
+        'dam',
+        'desert',
+        'detached_house',
+        'dry_field',
+        'factory_area',
+        'forest',
+        'golf_course',
+        'grassland',
+        'greenhouse',
+        'ground_track_field',
+        'helipad',
+        'highway_area',
+        'ice_land',
+        'industrial_land',
+        'intersection',
+        'island',
+        'lake',
+        'leisure_land',
+        'meadow',
+        'mine',
+        'mining_area',
+        'mobile_home_park',
+        'oil_field',
+        'orchard',
+        'paddy_field',
+        'parking_lot',
+        'pier',
+        'port_area',
+        'power_station',
+        'public_service_land',
+        'quarry',
+        'railway',
+        'railway_area',
+        'religious_land',
+        'residential_land',
+        'river',
+        'road',
+        'rock_land',
+        'roundabout',
+        'runway',
+        'solar_power_plant',
+        'sparse_shrub_land',
+        'special_land',
+        'sports_land',
+        'stadium',
+        'storage_tank',
+        'substation',
+        'swimming_pool',
+        'tennis_court',
+        'terraced_field',
+        'train_station',
+        'transportation_land',
+        'unutilized_land',
+        'viaduct',
+        'wastewater_plant',
+        'water_area',
+        'wind_turbine',
+        'woodland',
+        'works',
+    )
 
-    multi_class_categories = [
-        "apartment",
-        "apron",
-        "bare_land",
-        "baseball_field",
-        "bapsketball_court",
-        "beach",
-        "bridge",
-        "cemetery",
-        "church",
-        "commercial_area",
-        "dam",
-        "desert",
-        "detached_house",
-        "dry_field",
-        "forest",
-        "golf_course",
-        "greenhouse",
-        "ground_track_field",
-        "helipad",
-        "ice_land",
-        "intersection",
-        "island",
-        "lake",
-        "meadow",
-        "mine",
-        "mobile_home_park",
-        "oil_field",
-        "orchard",
-        "paddy_field",
-        "parking_lot",
-        "pier",
-        "quarry",
-        "railway",
-        "river",
-        "road",
-        "rock_land",
-        "roundabout",
-        "runway",
-        "solar_power_plant",
-        "sparse_shrub_land",
-        "stadium",
-        "storage_tank",
-        "substation",
-        "swimming_pool",
-        "tennis_court",
-        "terraced_field",
-        "train_station",
-        "viaduct",
-        "wastewater_plant",
-        "wind_turbine",
-        "works",
-    ]
+    multi_class_categories = (
+        'apartment',
+        'apron',
+        'bare_land',
+        'baseball_field',
+        'bapsketball_court',
+        'beach',
+        'bridge',
+        'cemetery',
+        'church',
+        'commercial_area',
+        'dam',
+        'desert',
+        'detached_house',
+        'dry_field',
+        'forest',
+        'golf_course',
+        'greenhouse',
+        'ground_track_field',
+        'helipad',
+        'ice_land',
+        'intersection',
+        'island',
+        'lake',
+        'meadow',
+        'mine',
+        'mobile_home_park',
+        'oil_field',
+        'orchard',
+        'paddy_field',
+        'parking_lot',
+        'pier',
+        'quarry',
+        'railway',
+        'river',
+        'road',
+        'rock_land',
+        'roundabout',
+        'runway',
+        'solar_power_plant',
+        'sparse_shrub_land',
+        'stadium',
+        'storage_tank',
+        'substation',
+        'swimming_pool',
+        'tennis_court',
+        'terraced_field',
+        'train_station',
+        'viaduct',
+        'wastewater_plant',
+        'wind_turbine',
+        'works',
+    )
 
-    md5s = {
-        "train": "1b40503cafa9b0601653ca36cd788852",
-        "test": "51a63ee3eeb1351889eacff349a983d8",
+    md5s: ClassVar[dict[str, str]] = {
+        'train': '1b40503cafa9b0601653ca36cd788852',
+        'test': '51a63ee3eeb1351889eacff349a983d8',
     }
 
-    filenames = {"train": "train.zip", "test": "test.zip"}
+    filenames: ClassVar[dict[str, str]] = {'train': 'train.zip', 'test': 'test.zip'}
 
-    tasks = ["multi-class", "multi-label"]
-    splits = ["train", "test"]
+    tasks = ('multi-class', 'multi-label')
+    splits = ('train', 'test')
 
     def __init__(
         self,
-        root: str = "data",
-        task: str = "multi-class",
-        split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        task: str = 'multi-class',
+        split: str = 'train',
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new MillionAID dataset instance.
@@ -219,7 +221,7 @@ class MillionAID(NonGeoDataset):
 
         self.files = self._load_files(self.root)
 
-        self.classes = sorted({cls for f in self.files for cls in f["label"]})
+        self.classes = sorted({cls for f in self.files for cls in f['label']})
         self.class_to_idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
     def __len__(self) -> int:
@@ -240,17 +242,17 @@ class MillionAID(NonGeoDataset):
             data and label at that index
         """
         files = self.files[index]
-        image = self._load_image(files["image"])
-        cls_label = [self.class_to_idx[label] for label in files["label"]]
+        image = self._load_image(files['image'])
+        cls_label = [self.class_to_idx[label] for label in files['label']]
         label = torch.tensor(cls_label, dtype=torch.long)
-        sample = {"image": image, "label": label}
+        sample = {'image': image, 'label': label}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
 
-    def _load_files(self, root: str) -> list[dict[str, Any]]:
+    def _load_files(self, root: Path) -> list[dict[str, Any]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -260,18 +262,18 @@ class MillionAID(NonGeoDataset):
             list of dicts containing paths for each pair of image, and list of labels
         """
         imgs_no_subcat = list(
-            glob.glob(os.path.join(root, self.split, "*", "*", "*.jpg"))
+            glob.glob(os.path.join(root, self.split, '*', '*', '*.jpg'))
         )
 
         imgs_subcat = list(
-            glob.glob(os.path.join(root, self.split, "*", "*", "*", "*.jpg"))
+            glob.glob(os.path.join(root, self.split, '*', '*', '*', '*.jpg'))
         )
 
         scenes = [p.split(os.sep)[-3] for p in imgs_no_subcat] + [
             p.split(os.sep)[-4] for p in imgs_subcat
         ]
 
-        subcategories = ["Missing" for p in imgs_no_subcat] + [
+        subcategories = ['Missing' for p in imgs_no_subcat] + [
             p.split(os.sep)[-3] for p in imgs_subcat
         ]
 
@@ -279,9 +281,9 @@ class MillionAID(NonGeoDataset):
             p.split(os.sep)[-2] for p in imgs_subcat
         ]
 
-        if self.task == "multi-label":
+        if self.task == 'multi-label':
             labels = [
-                [sc, sub, c] if sub != "Missing" else [sc, c]
+                [sc, sub, c] if sub != 'Missing' else [sc, c]
                 for sc, sub, c in zip(scenes, subcategories, classes)
             ]
         else:
@@ -289,11 +291,11 @@ class MillionAID(NonGeoDataset):
 
         images = imgs_no_subcat + imgs_subcat
 
-        files = [dict(image=img, label=l) for img, l in zip(images, labels)]
+        files = [dict(image=image, label=label) for image, label in zip(images, labels)]
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -303,26 +305,22 @@ class MillionAID(NonGeoDataset):
             the image
         """
         with Image.open(path) as img:
-            array: "np.typing.NDArray[np.int_]" = np.array(img.convert("RGB"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor: Tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
     def _verify(self) -> None:
-        """Checks the integrity of the dataset structure.
-
-        Returns:
-            True if the dataset directories are found, else False
-        """
+        """Verify the integrity of the dataset."""
         filepath = os.path.join(self.root, self.split)
         if os.path.isdir(filepath):
             return
 
-        filepath = os.path.join(self.root, self.split + ".zip")
+        filepath = os.path.join(self.root, self.split + '.zip')
         if os.path.isfile(filepath):
             if self.checksum and not check_integrity(filepath, self.md5s[self.split]):
-                raise RuntimeError("Dataset found, but corrupted.")
+                raise RuntimeError('Dataset found, but corrupted.')
             extract_archive(filepath)
             return
 
@@ -332,7 +330,7 @@ class MillionAID(NonGeoDataset):
         self,
         sample: dict[str, Tensor],
         show_titles: bool = True,
-        suptitle: Optional[str] = None,
+        suptitle: str | None = None,
     ) -> Figure:
         """Plot a sample from the dataset.
 
@@ -345,22 +343,22 @@ class MillionAID(NonGeoDataset):
             a matplotlib Figure with the rendered sample
 
         """
-        image = np.rollaxis(sample["image"].numpy(), 0, 3)
-        labels = [self.classes[cast(int, label)] for label in sample["label"]]
+        image = np.rollaxis(sample['image'].numpy(), 0, 3)
+        labels = [self.classes[cast(int, label)] for label in sample['label']]
 
-        showing_predictions = "prediction" in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
             prediction_labels = [
-                self.classes[cast(int, label)] for label in sample["prediction"]
+                self.classes[cast(int, label)] for label in sample['prediction']
             ]
 
         fig, ax = plt.subplots(figsize=(4, 4))
         ax.imshow(image)
-        ax.axis("off")
+        ax.axis('off')
         if show_titles:
-            title = f"Label: {labels}"
+            title = f'Label: {labels}'
             if showing_predictions:
-                title += f"\nPrediction: {prediction_labels}"
+                title += f'\nPrediction: {prediction_labels}'
             ax.set_title(title)
 
         if suptitle is not None:

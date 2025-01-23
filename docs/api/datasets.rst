@@ -13,15 +13,25 @@ Geospatial Datasets
 :class:`GeoDataset` is designed for datasets that contain geospatial information, like latitude, longitude, coordinate system, and projection. Datasets containing this kind of information can be combined using :class:`IntersectionDataset` and :class:`UnionDataset`.
 
 .. csv-table::
-   :widths: 30 15 20 20 15
+   :widths: 30 15 20 36 20 15
    :header-rows: 1
    :align: center
-   :file: geo_datasets.csv
+   :file: datasets/geo_datasets.csv
 
 Aboveground Woody Biomass
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: AbovegroundLiveWoodyBiomassDensity
+
+AgriFieldNet
+^^^^^^^^^^^^
+
+.. autoclass:: AgriFieldNet
+
+Airphen
+^^^^^^^
+
+.. autoclass:: Airphen
 
 Aster Global DEM
 ^^^^^^^^^^^^^^^^
@@ -37,8 +47,6 @@ Chesapeake Land Cover
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: Chesapeake
-.. autoclass:: Chesapeake7
-.. autoclass:: Chesapeake13
 .. autoclass:: ChesapeakeDC
 .. autoclass:: ChesapeakeDE
 .. autoclass:: ChesapeakeMD
@@ -78,6 +86,11 @@ EU-DEM
 
 .. autoclass:: EUDEM
 
+EuroCrops
+^^^^^^^^^
+
+.. autoclass:: EuroCrops
+
 GBIF
 ^^^^
 
@@ -92,6 +105,11 @@ iNaturalist
 ^^^^^^^^^^^
 
 .. autoclass:: INaturalist
+
+I/O Bench
+^^^^^^^^^
+
+.. autoclass:: IOBench
 
 L7 Irish
 ^^^^^^^^
@@ -129,6 +147,11 @@ NAIP
 
 .. autoclass:: NAIP
 
+NCCM
+^^^^
+
+.. autoclass:: NCCM
+
 NLCD
 ^^^^
 
@@ -139,12 +162,27 @@ Open Buildings
 
 .. autoclass:: OpenBuildings
 
+PRISMA
+^^^^^^
+
+.. autoclass:: PRISMA
+
 Sentinel
 ^^^^^^^^
 
 .. autoclass:: Sentinel
 .. autoclass:: Sentinel1
 .. autoclass:: Sentinel2
+
+South Africa Crop Type
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SouthAfricaCropType
+
+South America Soybean
+^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SouthAmericaSoybean
 
 .. _Non-geospatial Datasets:
 
@@ -153,11 +191,11 @@ Non-geospatial Datasets
 
 :class:`NonGeoDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
 
-.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection
-   :widths: 15 7 15 12 11 12 15 13
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
+   :widths: 15 7 15 20 12 11 12 15 13
    :header-rows: 1
    :align: center
-   :file: non_geo_datasets.csv
+   :file: datasets/non_geo_datasets.csv
 
 ADVANCE
 ^^^^^^^
@@ -179,6 +217,21 @@ BioMassters
 
 .. autoclass:: BioMassters
 
+CaBuAr
+^^^^^^
+
+.. autoclass:: CaBuAr
+
+CaFFe
+^^^^^
+
+.. autoclass:: CaFFe
+
+ChaBuD
+^^^^^^
+
+.. autoclass:: ChaBuD
+
 Cloud Cover Detection
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -190,6 +243,11 @@ COWC
 .. autoclass:: COWC
 .. autoclass:: COWCCounting
 .. autoclass:: COWCDetection
+
+CropHarvest
+^^^^^^^^^^^
+
+.. autoclass:: CropHarvest
 
 Kenya Crop Type
 ^^^^^^^^^^^^^^^
@@ -206,6 +264,12 @@ DFC2022
 
 .. autoclass:: DFC2022
 
+
+Digital Typhoon
+^^^^^^^^^^^^^^^
+
+.. autoclass:: DigitalTyphoon
+
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -215,12 +279,18 @@ EuroSAT
 ^^^^^^^
 
 .. autoclass:: EuroSAT
+.. autoclass:: EuroSATSpatial
 .. autoclass:: EuroSAT100
 
 FAIR1M
 ^^^^^^
 
 .. autoclass:: FAIR1M
+
+Fields Of The World
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: FieldsOfTheWorld
 
 FireRisk
 ^^^^^^^^
@@ -232,10 +302,20 @@ Forest Damage
 
 .. autoclass:: ForestDamage
 
+GeoNRW
+^^^^^^^
+
+.. autoclass:: GeoNRW
+
 GID-15
 ^^^^^^
 
 .. autoclass:: GID15
+
+HySpecNet-11k
+^^^^^^^^^^^^^
+
+.. autoclass:: HySpecNet11k
 
 IDTReeS
 ^^^^^^^
@@ -251,6 +331,13 @@ LandCover.ai
 ^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAI
+.. autoclass:: LandCoverAI100
+
+LEVIR-CD
+^^^^^^^^
+
+.. autoclass:: LEVIRCDBase
+.. autoclass:: LEVIRCD
 
 LEVIR-CD+
 ^^^^^^^^^
@@ -267,10 +354,20 @@ MapInWild
 
 .. autoclass:: MapInWild
 
+MDAS
+^^^^
+
+.. autoclass:: MDAS
+
 Million-AID
 ^^^^^^^^^^^
 
 .. autoclass:: MillionAID
+
+MMEarth
+^^^^^^^^
+
+.. autoclass:: MMEarth
 
 NASA Marine Debris
 ^^^^^^^^^^^^^^^^^^
@@ -297,6 +394,11 @@ Potsdam
 
 .. autoclass:: Potsdam2D
 
+QuakeSet
+^^^^^^^^
+
+.. autoclass:: QuakeSet
+
 ReforesTree
 ^^^^^^^^^^^
 
@@ -311,6 +413,11 @@ Rwanda Field Boundary
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: RwandaFieldBoundary
+
+SatlasPretrain
+^^^^^^^^^^^^^^
+
+.. autoclass:: SatlasPretrain
 
 Seasonal Contrast
 ^^^^^^^^^^^^^^^^^
@@ -332,6 +439,11 @@ SKIPP'D
 
 .. autoclass:: SKIPPD
 
+SkyScript
+^^^^^^^^^
+
+.. autoclass:: SkyScript
+
 So2Sat
 ^^^^^^
 
@@ -348,6 +460,7 @@ SpaceNet
 .. autoclass:: SpaceNet5
 .. autoclass:: SpaceNet6
 .. autoclass:: SpaceNet7
+.. autoclass:: SpaceNet8
 
 SSL4EO
 ^^^^^^
@@ -365,6 +478,11 @@ SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SustainBenchCropYield
+
+TreeSatAI
+^^^^^^^^^
+
+.. autoclass:: TreeSatAI
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^
@@ -474,3 +592,5 @@ Errors
 ------
 
 .. autoclass:: DatasetNotFoundError
+.. autoclass:: DependencyNotFoundError
+.. autoclass:: RGBBandsMissingError
