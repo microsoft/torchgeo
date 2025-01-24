@@ -211,6 +211,7 @@ BigEarthNet
 ^^^^^^^^^^^
 
 .. autoclass:: BigEarthNet
+.. autoclass:: BigEarthNetV2
 
 BioMassters
 ^^^^^^^^^^^

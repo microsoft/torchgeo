@@ -712,7 +712,6 @@ class BigEarthNetV2(NonGeoDataset):
             patch_dir = '_'.join(patch_id.split('_')[0:-2])
         else:
             patch_dir = '_'.join(patch_id.split('_')[0:-3])
-        # patch_dir = "_".join(patch_id.split("_")[0:-3 if sensor == "s1" else 0:-2])
 
         paths = glob.glob(
             os.path.join(
