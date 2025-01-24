@@ -177,7 +177,7 @@ class ETCI2021(NonGeoDataset):
 
             if split != 'test':
                 flood_masks = sorted(
-                    glob.glob(os.path.join(folder, 'flood_masks', '*.png'))
+                    glob.glob(os.path.join(folder, 'flood_label', '*.png'))
                 )
 
                 for vv, vh, flood_mask, water_mask in zip(
