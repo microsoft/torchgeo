@@ -27,10 +27,11 @@ from .utils import Path, download_url, extract_archive, check_integrity
 class AI4ArcticSeaIce(NonGeoDataset):
     """AI4Artic Sea Ice Dataset.
 
-    The Sea Ice Challenge Dataset contains Sentinel-1 SAR imagery, passive microwave radiometer observations
+    The `AI4ArcticSea Ice Challenge Dataset <https://data.dtu.dk/articles/dataset/Ready-To-Train_AI4Arctic_Sea_Ice_Challenge_Dataset/21316608>`_ contains Sentinel-1 SAR imagery, passive microwave radiometer observations
     from AMSR2, and numerical weather prediction data from the ECMWF Reanalysis v5 (ERA5) dataset - all
     gridded to match the Sentinel-1 SAR scenes geometrically. As label data, the dataset contains ice charts
-    manually produced by the ice analysts at the Greenland Ice Service and the Canadian Ice Service.
+    manually produced by the ice analysts at the Greenland Ice Service and the Canadian Ice Service. This is the
+    "Ready-To-Train" version of the dataset (Version 3).
 
     Dataset features:
 
