@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import glob
 import os
 from pathlib import Path
 
@@ -47,6 +48,7 @@ class TestETCI2021:
         return ETCI2021(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: ETCI2021) -> None:
+        print(glob.glob(os.path.join(dataset.root, '**'), recursive=True))
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
