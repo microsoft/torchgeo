@@ -11,6 +11,7 @@ from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
 from matplotlib.figure import Figure
@@ -301,7 +302,7 @@ class BigEarthNet(NonGeoDataset):
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-        self.class2idx = {c: i for i, c in enumerate(self.class_sets[43])}
+        self.class2idx = {c: i for i, c in enumerate(self.class_sets[num_classes])}
         self._verify()
         self.folders = self._load_folders()
 
@@ -572,4 +573,343 @@ class BigEarthNet(NonGeoDataset):
 
         if suptitle is not None:
             plt.suptitle(suptitle)
+        return fig
+
+
+class BigEarthNetV2(NonGeoDataset):
+    """BigEarthNetV2 dataset.
+
+    Automatic download not implemented, get data from below link.
+    """
+
+    class_sets = BigEarthNet.class_sets
+
+    image_size = BigEarthNet.image_size
+
+    metadata_locs = {
+        's1': {
+            'url': 'https://zenodo.org/records/10891137/files/BigEarthNet-S1.tar.zst',
+            'md5': 'a55eaa2cdf6a917e296bd6601ec1e348',
+            'filename': 'BigEarthNet-S1.tar.zst',
+            'directory': 'BigEarthNet-S1',
+        },
+        's2': {
+            'url': 'https://zenodo.org/records/10891137/files/BigEarthNet-S2.tar.zst',
+            'md5': '2245ed2d1a93f6ce637d839bc856396e',
+            'filename': 'BigEarthNet-S2.tar.zst',
+            'directory': 'BigEarthNet-S2',
+        },
+        'maps': {
+            'url': 'https://zenodo.org/records/10891137/files/Reference_Maps.tar.zst',
+            'md5': '95d85a222fa983faddcac51a19f28917',
+            'filename': 'Reference_Maps.zst',
+            'directory': 'Reference_Maps',
+        },
+        'train': {
+            'url': 'https://zenodo.org/records/10891137/files/metadata.parquet',
+            'md5': 'b2d7b4b2e6c7c7d8f3f5b8f3c5a8f3b1',
+            'filename': 'metadata.parquet',
+            'directory': '',
+        },
+    }
+
+    valid_splits = ('train', 'val', 'test')
+
+    def __init__(
+        self,
+        root: str = 'data',
+        split: str = 'train',
+        bands: str = 'all',
+        num_classes: int = 19,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        download: bool = False,
+        checksum: bool = False,
+    ) -> None:
+        """Initialize a new BigEarthNet V2 dataset instance.
+
+        Args:
+            root: root directory where dataset can be found
+            split: train/val/test split to load
+            bands: load Sentinel-1 bands, Sentinel-2, or both. one of {s1, s2, all}
+            num_classes: number of classes to load in target. one of {19, 43}
+            transforms: a function/transform that takes input sample and its target as
+                entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+            AssertionError: If *split*, *bands*, or *num_classes* are not valid.
+        """
+        assert split in self.valid_splits, f'split must be one of {self.valid_splits}'
+        assert bands in ['s1', 's2', 'all']
+        assert num_classes in [43, 19]
+        self.root = root
+        self.split = split
+        self.bands = bands
+        self.num_classes = num_classes
+        self.transforms = transforms
+        self.download = download
+        self.checksum = checksum
+        self.class2idx = {c: i for i, c in enumerate(self.class_sets[num_classes])}
+        self._verify()
+
+        self.metadata_df = pd.read_parquet(os.path.join(self.root, 'metadata.parquet'))
+        self.metadata_df = self.metadata_df[
+            self.metadata_df['split'] == self.split
+        ].reset_index(drop=True)
+
+    def __len__(self) -> int:
+        """Return the number of data points in the dataset.
+
+        Returns:
+            length of the dataset
+        """
+        return len(self.metadata_df)
+
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
+        """Return an index within the dataset.
+
+        Args:
+            index: index to return
+
+        Returns:
+            data and label at that index
+        """
+        sample: dict[str, Tensor] = {}
+
+        match self.bands:
+            case 's1':
+                sample['image'] = self._load_image(index, 's1')
+            case 's2':
+                sample['image'] = self._load_image(index, 's2')
+            case 'all':
+                sample['image_s1'] = self._load_image(index, 's1')
+                sample['image_s2'] = self._load_image(index, 's2')
+
+        sample['mask'] = self._load_map(index)
+        sample['label'] = self._load_target(index)
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def _load_image(self, index: int, sensor: str) -> Tensor:
+        """Generic image loader for both S1 and S2.
+
+        Args:
+            index: index to return
+            sensor: 's1' or 's2'
+
+        Returns:
+            the sensor image
+        """
+        row = self.metadata_df.loc[index]
+        id_field = 's1_name' if sensor == 's1' else 'patch_id'
+        patch_id = row[id_field]
+        if sensor == 's2':
+            patch_dir = '_'.join(patch_id.split('_')[0:-2])
+        else:
+            patch_dir = '_'.join(patch_id.split('_')[0:-3])
+        # patch_dir = "_".join(patch_id.split("_")[0:-3 if sensor == "s1" else 0:-2])
+
+        paths = glob.glob(
+            os.path.join(
+                self.root,
+                self.metadata_locs[sensor]['directory'],
+                patch_dir,
+                patch_id,
+                '*.tif',
+            )
+        )
+
+        if sensor == 's2':
+            paths = sorted(paths, key=sort_sentinel2_bands)
+        else:
+            paths = sorted(paths)
+
+        images = []
+        for path in paths:
+            with rasterio.open(path) as dataset:
+                array = dataset.read(
+                    indexes=1,
+                    out_shape=self.image_size,
+                    out_dtype='int32',
+                    resampling=Resampling.bilinear,
+                )
+                images.append(array)
+
+        return torch.from_numpy(np.stack(images, axis=0)).float()
+
+    def _load_s1image(self, index: int) -> Tensor:
+        """Load a Sentinel-1 image.
+
+        Args:
+            index: index to return
+
+        Returns:
+            the Sentinel-1 image
+        """
+        row = self.metadata_df.loc[index]
+        s1_id = row['s1_name']
+        s1_dir = '_'.join(s1_id.split('_')[0:-3])
+        paths = sorted(
+            glob.glob(
+                os.path.join(
+                    self.root,
+                    self.metatada_locs['s1']['directory'],
+                    s1_dir,
+                    s1_id,
+                    '*.tif',
+                )
+            )
+        )
+        images = []
+        for path in paths:
+            # Bands are of different spatial resolutions
+            # Resample to (120, 120)
+            with rasterio.open(path) as dataset:
+                array = dataset.read(
+                    indexes=1,
+                    out_shape=self.image_size,
+                    out_dtype='int32',
+                    resampling=Resampling.bilinear,
+                )
+                images.append(array)
+        arrays: np.typing.NDArray[np.int_] = np.stack(images, axis=0)
+        tensor = torch.from_numpy(arrays).float()
+        return tensor
+
+    def _load_s2image(self, index: int) -> Tensor:
+        """Load a Sentinel-2 image.
+
+        Args:
+            index: index to return
+
+        Returns:
+            the Sentinel-2 image
+        """
+        row = self.metadata_df.loc[index]
+        patch_id = row['patch_id']
+        patch_dir = '_'.join(patch_id.split('_')[0:-2])
+        paths = glob.glob(
+            os.path.join(
+                self.root,
+                self.metatada_locs['s2']['directory'],
+                patch_dir,
+                patch_id,
+                '*.tif',
+            )
+        )
+        paths = sorted(paths, key=sort_sentinel2_bands)
+        images = []
+        for path in paths:
+            # Bands are of different spatial resolutions
+            # Resample to (120, 120)
+            with rasterio.open(path) as dataset:
+                array = dataset.read(
+                    indexes=1,
+                    out_shape=self.image_size,
+                    out_dtype='int32',
+                    resampling=Resampling.bilinear,
+                )
+                images.append(array)
+        arrays: np.typing.NDArray[np.int_] = np.stack(images, axis=0)
+        tensor = torch.from_numpy(arrays).float()
+        return tensor
+
+    def _load_map(self, index: int) -> Tensor:
+        """Load a single image.
+
+        Args:
+            index: index to return
+
+        Returns:
+            the Corine Land Cover map
+        """
+        row = self.metadata_df.loc[index]
+        patch_id = row['patch_id']
+        patch_dir = '_'.join(patch_id.split('_')[0:-2])
+        path = os.path.join(
+            self.root,
+            self.metadata_locs['maps']['directory'],
+            patch_dir,
+            patch_id,
+            patch_id + '_reference_map.tif',
+        )
+        with rasterio.open(path) as dataset:
+            map = dataset.read(out_dtype='int32')
+        return torch.from_numpy(map).long()
+
+    def _load_target(self, index: int) -> Tensor:
+        """Load the target mask for a single image.
+
+        Args:
+            index: index to return
+
+        Returns:
+            the target label
+        """
+        image_labels = self.metadata_df.iloc[index]['labels']
+
+        # labels -> indices
+        indices = [self.class2idx[label] for label in image_labels]
+        image_target = torch.zeros(self.num_classes, dtype=torch.long)
+        image_target[indices] = 1
+        return image_target
+
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset."""
+        pass
+
+    def _extract(self, filepath: Path) -> None:
+        """Extract the dataset.
+
+        Args:
+            filepath: path to file to be extracted
+        """
+        if not str(filepath).endswith('.parquet'):
+            extract_archive(filepath)
+
+    def plot(
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: str | None = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+        fig, axes = plt.subplots(1, 2 if self.bands != 'all' else 3, figsize=(12, 4))
+
+        if self.bands in ['s2', 'all']:
+            s2_img = sample['image_s2' if self.bands == 'all' else 'image']
+            rgb = np.rollaxis(s2_img[[3, 2, 1]].numpy(), 0, 3)
+            axes[0].imshow(np.clip(rgb / 2000, 0, 1))
+            if show_titles:
+                axes[0].set_title('Sentinel-2 RGB')
+
+        if self.bands in ['s1', 'all']:
+            idx = 0 if self.bands == 's1' else 1
+            s1_img = sample['image_s1' if self.bands == 'all' else 'image']
+            axes[idx].imshow(s1_img[0].numpy())
+            if show_titles:
+                axes[idx].set_title('Sentinel-1 VV')
+
+        mask_idx = 1 if self.bands != 'all' else 2
+        axes[mask_idx].imshow(sample['mask'][0])
+        if show_titles:
+            axes[mask_idx].set_title('Land Cover Map')
+
+        if suptitle:
+            plt.suptitle(suptitle)
+
         return fig
