@@ -302,7 +302,7 @@ class BigEarthNet(NonGeoDataset):
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
-        self.class2idx = {c: i for i, c in enumerate(self.class_sets[num_classes])}
+        self.class2idx = {c: i for i, c in enumerate(self.class_sets[43])}
         self._verify()
         self.folders = self._load_folders()
 
