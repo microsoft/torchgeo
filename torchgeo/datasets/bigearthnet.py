@@ -504,7 +504,7 @@ class BigEarthNet(NonGeoDataset):
             filename: output filename to write downloaded file
             md5: md5 of downloaded file
         """
-        if not os.path.exists(filename):
+        if not os.path.exists(os.path.join(self.root, filename)):
             download_url(
                 url, self.root, filename=filename, md5=md5 if self.checksum else None
             )
@@ -667,6 +667,7 @@ class BigEarthNetV2(NonGeoDataset):
         self.download = download
         self.checksum = checksum
         self.class2idx = {c: i for i, c in enumerate(self.class_sets[num_classes])}
+        self.idx2class = {i: c for i, c in enumerate(self.class_sets[num_classes])}
         self._verify()
 
         self.metadata_df = pd.read_parquet(os.path.join(self.root, 'metadata.parquet'))
@@ -788,10 +789,8 @@ class BigEarthNetV2(NonGeoDataset):
         Returns:
             the target label
         """
-        image_labels = self.metadata_df.iloc[index]['labels']
+        indices = self.metadata_df.iloc[index]['labels']
 
-        # labels -> indices
-        indices = [self.class2idx[label] for label in image_labels]
         image_target = torch.zeros(self.num_classes, dtype=torch.long)
         image_target[indices] = 1
         return image_target
@@ -839,7 +838,7 @@ class BigEarthNetV2(NonGeoDataset):
             filename: output filename to write downloaded file
             md5: md5 of downloaded file
         """
-        if not os.path.exists(filename):
+        if not os.path.exists(os.path.join(self.root, filename)):
             download_url(
                 url, self.root, filename=filename, md5=md5 if self.checksum else None
             )

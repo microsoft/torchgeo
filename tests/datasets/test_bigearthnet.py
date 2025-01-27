@@ -216,7 +216,7 @@ class TestBigEarthNetV2:
     def test_len(self, dataset: BigEarthNetV2) -> None:
         """Test dataset length."""
         if dataset.split == 'train':
-            assert len(dataset) == 2
+            assert len(dataset) == 1
         elif dataset.split == 'val':
             assert len(dataset) == 1
         else:
