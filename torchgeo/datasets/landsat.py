@@ -5,7 +5,7 @@
 
 import abc
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -57,6 +57,12 @@ class Landsat(RasterDataset, abc.ABC):
     @abc.abstractmethod
     def default_bands(self) -> tuple[str, ...]:
         """Bands to load by default."""
+
+    # https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites
+    @property
+    @abc.abstractmethod
+    def wavelengths(self) -> dict[str, float]:
+        """Central wavelength (μm)."""
 
     def __init__(
         self,
@@ -148,6 +154,13 @@ class Landsat1(Landsat):
     default_bands = ('B4', 'B5', 'B6', 'B7')
     rgb_bands = ('B6', 'B5', 'B4')
 
+    wavelengths: ClassVar[str, float] = {
+        'B4': (0.5 + 0.6) / 2,
+        'B5': (0.6 + 0.7) / 2,
+        'B6': (0.7 + 0.8) / 2,
+        'B7': (0.8 + 1.1) / 2,
+    }
+
 
 class Landsat2(Landsat1):
     """Landsat 2 Multispectral Scanner (MSS)."""
@@ -169,6 +182,13 @@ class Landsat4MSS(Landsat):
     default_bands = ('B1', 'B2', 'B3', 'B4')
     rgb_bands = ('B3', 'B2', 'B1')
 
+    wavelengths: ClassVar[str, float] = {
+        'B1': (0.5 + 0.6) / 2,
+        'B2': (0.6 + 0.7) / 2,
+        'B3': (0.7 + 0.8) / 2,
+        'B4': (0.8 + 1.1) / 2,
+    }
+
 
 class Landsat4TM(Landsat):
     """Landsat 4 Thematic Mapper (TM)."""
@@ -177,6 +197,16 @@ class Landsat4TM(Landsat):
 
     default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7')
     rgb_bands = ('SR_B3', 'SR_B2', 'SR_B1')
+
+    wavelengths: ClassVar[str, float] = {
+        'B1': (0.45 + 0.52) / 2,
+        'B2': (0.52 + 0.60) / 2,
+        'B3': (0.63 + 0.69) / 2,
+        'B4': (0.76 + 0.90) / 2,
+        'B5': (1.55 + 1.75) / 2,
+        'B6': (10.40 + 12.50) / 2,
+        'B7': (2.08 + 2.35) / 2,
+    }
 
 
 class Landsat5MSS(Landsat4MSS):
@@ -199,6 +229,17 @@ class Landsat7(Landsat):
     default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B7')
     rgb_bands = ('SR_B3', 'SR_B2', 'SR_B1')
 
+    wavelengths: ClassVar[str, float] = {
+        'B1': (0.45 + 0.52) / 2,
+        'B2': (0.52 + 0.60) / 2,
+        'B3': (0.63 + 0.69) / 2,
+        'B4': (0.77 + 0.90) / 2,
+        'B5': (1.55 + 1.75) / 2,
+        'B6': (10.40 + 12.50) / 2,
+        'B7': (2.09 + 2.35) / 2,
+        'B8': (0.52 + 0.90) / 2,
+    }
+
 
 class Landsat8(Landsat):
     """Landsat 8 Operational Land Imager (OLI) and Thermal Infrared Sensor (TIRS)."""
@@ -207,6 +248,20 @@ class Landsat8(Landsat):
 
     default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7')
     rgb_bands = ('SR_B4', 'SR_B3', 'SR_B2')
+
+    wavelengths: ClassVar[str, float] = {
+        'B1': (0.43 + 0.45) / 2,
+        'B2': (0.45 + 0.51) / 2,
+        'B3': (0.53 + 0.59) / 2,
+        'B4': (0.64 + 0.67) / 2,
+        'B5': (0.85 + 0.88) / 2,
+        'B6': (1.57 + 1.65) / 2,
+        'B7': (2.11 + 2.29) / 2,
+        'B8': (0.50 + 0.68) / 2,
+        'B9': (1.36 + 1.38) / 2,
+        'B10': (10.6 + 11.19) / 2,
+        'B11': (11.50 + 12.51) / 2,
+    }
 
 
 class Landsat9(Landsat8):
