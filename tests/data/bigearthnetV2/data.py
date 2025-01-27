@@ -3,16 +3,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-#!/usr/bin/env python3
-
 import os
 import shutil
-import hashlib
 import numpy as np
 import pandas as pd
 from pathlib import Path
 import rasterio
-from datetime import datetime
 import zstandard as zstd
 import tarfile
 
@@ -62,7 +58,7 @@ S2_BANDS = [
 ]
 
 
-def create_directory_structure():
+def create_directory_structure() -> None:
     """Create the base directory structure"""
 
     for dir_name in ['BigEarthNet-S1', 'BigEarthNet-S2', 'Reference_Maps']:
@@ -126,7 +122,7 @@ def generate_sample(patch_info: dict) -> None:
     create_dummy_image(path, (IMG_SIZE, IMG_SIZE), 'reference')
 
 
-def create_metadata():
+def create_metadata() -> None:
     """Create metadata parquet file"""
     records = []
 
@@ -144,7 +140,7 @@ def create_metadata():
     df.to_parquet(os.path.join(ROOT_DIR, 'metadata.parquet'))
 
 
-def compress_directory(dirname: str):
+def compress_directory(dirname: str) -> None:
     """Compress directory using tar+zstd"""
     tar_path = os.path.join(ROOT_DIR, f'{dirname}.tar')
     with tarfile.open(tar_path, 'w') as tar:
@@ -160,7 +156,7 @@ def compress_directory(dirname: str):
     os.remove(tar_path)
 
 
-def main():
+def main() -> None:
     # Create directories and generate data
     create_directory_structure()
 

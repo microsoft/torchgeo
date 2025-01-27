@@ -586,7 +586,7 @@ class BigEarthNetV2(NonGeoDataset):
 
     image_size = BigEarthNet.image_size
 
-    metadata_locs = {
+    metadata_locs: ClassVar[dict[str, dict[str, str]]] = {
         's1': {
             'url': 'https://zenodo.org/records/10891137/files/BigEarthNet-S1.tar.zst',
             'md5': 'a55eaa2cdf6a917e296bd6601ec1e348',
