@@ -217,8 +217,8 @@ BioMassters
 
 .. autoclass:: BioMassters
 
-BRIGHT DFC2025
-^^^^^^^^^^^^^^
+BRIGHT
+^^^^^^
 
 .. autoclass:: BRIGHTDFC2025
 

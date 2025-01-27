@@ -26,7 +26,8 @@ from .utils import Path, check_integrity, download_url, extract_archive
 class BRIGHTDFC2025(NonGeoDataset):
     """BRIGHT DFC2025 dataset.
 
-    The `BRIGHT <https://github.com/ChenHongruixuan/BRIGHT>`__ dataset consists of bi-temporal high-resolution multimodal images for
+    The `BRIGHT <https://github.com/ChenHongruixuan/BRIGHT>`__ dataset consists of bi-temporal
+    high-resolution multimodal images for
     building damage assessment. The dataset is part of the 2025 IEEE GRSS Data Fusion Contest.
     The pre-disaster images are optical images and the post-disaster images are SAR images, and
     targets were manually annotated. The dataset is split into train, val, and test splits, but
@@ -64,7 +65,7 @@ class BRIGHTDFC2025(NonGeoDataset):
 
     md5 = '2c435bb50345d425390eff59a92134ac'
 
-    url = 'https://huggingface.co/datasets/Kullervo/BRIGHT/resolve/50901f05db4acbd141e7c96d719d8317910498fb/dfc25_track2_trainval.zip'
+    url = 'https://huggingface.co/datasets/torchgeo/bright/resolve/d19972f5e682ad684dcde35529a6afad4c719f1b/dfc25_track2_trainval_with_split.zip'
 
     data_dir = 'dfc25_track2_trainval'
 
@@ -126,17 +127,18 @@ class BRIGHTDFC2025(NonGeoDataset):
             index: index to return
 
         Returns:
-            data and target at that index
+            data and target at that index, pre and post image
+            are returned under separate image keys
         """
         idx_paths = self.sample_paths[index]
 
-        pre_image = self._load_image(idx_paths['pre_image']).float()
-        post_image = self._load_image(idx_paths['post_image']).float()
+        image_pre = self._load_image(idx_paths['image_pre']).float()
+        image_post = self._load_image(idx_paths['image_post']).float()
         # https://github.com/ChenHongruixuan/BRIGHT/blob/11b1ffafa4d30d2df2081189b56864b0de4e3ed7/dfc25_benchmark/dataset/make_data_loader.py#L101
         # post image is stacked to also have 3 channels
-        post_image = repeat(post_image, 'c h w -> (repeat c) h w', repeat=3)
+        image_post = repeat(image_post, 'c h w -> (repeat c) h w', repeat=3)
 
-        sample = {'pre_image': pre_image, 'post_image': post_image}
+        sample = {'image_pre': image_pre, 'image_post': image_post}
 
         if 'target' in idx_paths and self.split != 'test':
             target = self._load_image(idx_paths['target']).long()
@@ -151,7 +153,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         """Get paths to the dataset files based on specified splits.
 
         Returns:
-            a list of dictionaries containing paths to the pre,post and target images
+            a list of dictionaries containing paths to the pre, post, and target images
         """
         split_file = self.split_files[self.split]
 
@@ -166,14 +168,14 @@ class BRIGHTDFC2025(NonGeoDataset):
 
         sample_paths = [
             {
-                'pre_image': os.path.join(
+                'image_pre': os.path.join(
                     self.root,
                     self.data_dir,
                     dir_split_name,
                     'pre-event',
                     f'{sample_id.strip()}_pre_disaster.tif',
                 ),
-                'post_image': os.path.join(
+                'image_post': os.path.join(
                     self.root,
                     self.data_dir,
                     dir_split_name,
@@ -290,10 +292,10 @@ class BRIGHTDFC2025(NonGeoDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(15, 5))
 
-        axs[0].imshow(sample['pre_image'].permute(1, 2, 0) / 255.0)
+        axs[0].imshow(sample['image_pre'].permute(1, 2, 0) / 255.0)
         axs[0].axis('off')
 
-        axs[1].imshow(sample['post_image'].permute(1, 2, 0) / 255.0)
+        axs[1].imshow(sample['image_post'].permute(1, 2, 0) / 255.0)
         axs[1].axis('off')
 
         cmap = colors.ListedColormap(self.colormap)

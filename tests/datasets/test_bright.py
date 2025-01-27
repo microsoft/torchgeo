@@ -32,14 +32,14 @@ class TestBRIGHTDFC2025:
     def test_getitem(self, dataset: BRIGHTDFC2025) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x['pre_image'], torch.Tensor)
-        assert x['pre_image'].shape[0] == 3
-        assert isinstance(x['post_image'], torch.Tensor)
-        assert x['post_image'].shape[0] == 3
-        assert x['pre_image'].shape[-2:] == x['post_image'].shape[-2:]
+        assert isinstance(x['image_pre'], torch.Tensor)
+        assert x['image_pre'].shape[0] == 3
+        assert isinstance(x['image_post'], torch.Tensor)
+        assert x['image_post'].shape[0] == 3
+        assert x['image_pre'].shape[-2:] == x['image_post'].shape[-2:]
         if dataset.split != 'test':
             assert isinstance(x['mask'], torch.Tensor)
-            assert x['pre_image'].shape[-2:] == x['mask'].shape[-2:]
+            assert x['image_pre'].shape[-2:] == x['mask'].shape[-2:]
 
     def test_len(self, dataset: BRIGHTDFC2025) -> None:
         if dataset.split == 'train':
