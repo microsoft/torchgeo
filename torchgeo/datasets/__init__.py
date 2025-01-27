@@ -88,6 +88,7 @@ from .mapinwild import MapInWild
 from .mdas import MDAS
 from .millionaid import MillionAID
 from .mmearth import MMEarth
+from .mmflood import MMFlood
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nccm import NCCM
@@ -246,6 +247,7 @@ __all__ = (
     'Landsat9',
     'LoveDA',
     'MMEarth',
+    'MMFlood',
     'MapInWild',
     'MillionAID',
     'NASAMarineDebris',
