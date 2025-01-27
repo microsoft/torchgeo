@@ -8,16 +8,16 @@ import json
 import os
 import tarfile
 import tempfile
+import textwrap
 from collections.abc import Callable
 from typing import ClassVar
 
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap, BoundaryNorm
 import numpy as np
 import pandas as pd
-import textwrap
 import rasterio
 import torch
+from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
@@ -974,11 +974,10 @@ class BigEarthNetV2(NonGeoDataset):
 
         # Create custom colormap
         cmap = ListedColormap(colors)
-        bounds = unique_labels + [unique_labels[-1] + 1]
+        bounds = [*unique_labels, unique_labels[-1] + 1]
         norm = BoundaryNorm(bounds, len(colors))
 
-        # Plot mask with custom colormap
-        im = axes[mask_idx].imshow(mask, cmap=cmap, norm=norm)
+        axes[mask_idx].imshow(mask, cmap=cmap, norm=norm)
 
         # Add legend with class names
         legend_elements = [
@@ -997,7 +996,6 @@ class BigEarthNetV2(NonGeoDataset):
         if show_titles:
             axes[mask_idx].set_title('Land Cover Map')
 
-        # Add classification labels to suptitle
         if 'label' in sample:
             label_indices = sample['label'].nonzero().squeeze(1).tolist()
             label_names = [self.class_set[idx] for idx in label_indices]

@@ -3,15 +3,16 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import os
 import hashlib
+import os
 import shutil
+import tarfile
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
 import rasterio
 import zstandard as zstd
-import tarfile
 
 # Constants
 IMG_SIZE = 120

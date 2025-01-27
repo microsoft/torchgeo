@@ -146,7 +146,7 @@ class TestBigEarthNet:
 
 class TestBigEarthNetV2:
     @pytest.fixture(
-        params=zip(['all', 's1', 's2'], [19, 19, 19], ['train', 'val', 'test'])
+        params=zip(['all', 's1', 's2'], ['train', 'val', 'test'])
     )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
@@ -179,12 +179,12 @@ class TestBigEarthNetV2:
         }
         monkeypatch.setattr(BigEarthNetV2, 'metadata_locs', metadata)
 
-        bands, num_classes, split = request.param
+        bands, split = request.param
 
         root = tmp_path
         transforms = nn.Identity()
         return BigEarthNetV2(
-            root, split, bands, num_classes, transforms, download=True, checksum=True
+            root, split, bands, transforms, download=True, checksum=True
         )
 
     def test_getitem(self, dataset: BigEarthNetV2) -> None:
@@ -204,7 +204,6 @@ class TestBigEarthNetV2:
                 assert x['image_s1'].shape == (2, 120, 120)
 
         assert x['mask'].shape == (1, 120, 120)
-        assert x['label'].shape == (dataset.num_classes,)
 
         assert x['mask'].dtype == torch.int64
         assert x['label'].dtype == torch.int64
@@ -227,7 +226,6 @@ class TestBigEarthNetV2:
             root=tmp_path,
             bands=dataset.bands,
             split=dataset.split,
-            num_classes=dataset.num_classes,
             download=True,
         )
 
@@ -264,7 +262,6 @@ class TestBigEarthNetV2:
             root=tmp_path,
             bands=dataset.bands,
             split=dataset.split,
-            num_classes=dataset.num_classes,
             download=False,
         )
 
@@ -277,11 +274,6 @@ class TestBigEarthNetV2:
         """Test error on invalid bands selection."""
         with pytest.raises(AssertionError):
             BigEarthNetV2(tmp_path, bands='invalid')
-
-    def test_invalid_num_classes(self, tmp_path: Path) -> None:
-        """Test error on invalid number of classes."""
-        with pytest.raises(AssertionError):
-            BigEarthNetV2(tmp_path, num_classes=20)
 
     def test_plot(self, dataset: BigEarthNetV2) -> None:
         """Test plotting functionality."""
