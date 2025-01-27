@@ -8,7 +8,7 @@ import os
 import random
 import re
 from collections.abc import Callable
-from typing import Any, ClassVar, TypedDict
+from typing import ClassVar, TypedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,7 +21,6 @@ from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .utils import (
-    BoundingBox,
     Path,
     check_integrity,
     disambiguate_timestamp,
@@ -452,7 +451,7 @@ class SSL4EOS12(SSL4EO):
 
         self._verify()
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
@@ -467,7 +466,9 @@ class SSL4EOS12(SSL4EO):
         filename_regex = self.metadata[self.split]['filename_regex']
 
         images = []
-        bounds = []
+        xs = []
+        ys = []
+        ts = []
         wavelengths: list[float] = []
         for subdir in subdirs:
             directory = os.path.join(root, subdir)
@@ -487,13 +488,17 @@ class SSL4EOS12(SSL4EO):
                         miny, maxy = f.bounds.bottom, f.bounds.top
                         image = f.read(out_shape=(1, self.size, self.size))
                         images.append(torch.from_numpy(image.astype(np.float32)))
-                bounds.append(BoundingBox(minx, maxx, miny, maxy, mint, maxt))
+                xs.append((minx + maxx) / 2)
+                ys.append((miny + maxy) / 2)
+                ts.append((mint + maxt) / 2)
 
-        sample: dict[str, Any] = {
+        sample = {
             'image': torch.cat(images),
-            'bounds': bounds,
-            'wavelengths': wavelengths,
-            'gsd': 10,
+            'x': torch.tensor(xs),
+            'y': torch.tensor(ys),
+            't': torch.tensor(ts),
+            'wavelength': torch.tensor(wavelengths),
+            'res': torch.tensor(10),
         }
 
         if self.transforms is not None:
