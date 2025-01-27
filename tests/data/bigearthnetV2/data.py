@@ -4,12 +4,13 @@
 # Licensed under the MIT License.
 
 import os
+import shutil
+import tarfile
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import rasterio
-import tarfile
 import zstandard as zstd
 
 # Constants
