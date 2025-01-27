@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import rasterio
-import zstandard as zstd
 import tarfile
+import zstandard as zstd
 
 # Constants
 IMG_SIZE = 120

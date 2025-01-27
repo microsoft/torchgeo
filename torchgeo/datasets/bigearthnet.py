@@ -13,12 +13,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import rasterio
+import tarfile
+import tempfile
 import torch
 from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
-import tempfile
-import tarfile
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -631,7 +631,7 @@ class BigEarthNetV2(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         bands: str = 'all',
         num_classes: int = 19,
