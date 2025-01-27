@@ -10,8 +10,10 @@ from collections.abc import Callable
 from typing import ClassVar
 
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap, BoundaryNorm
 import numpy as np
 import pandas as pd
+import textwrap
 import rasterio
 import torch
 from matplotlib.figure import Figure
@@ -504,7 +506,7 @@ class BigEarthNet(NonGeoDataset):
             filename: output filename to write downloaded file
             md5: md5 of downloaded file
         """
-        if not os.path.exists(os.path.join(self.root, filename)):
+        if not os.path.exists(filename):
             download_url(
                 url, self.root, filename=filename, md5=md5 if self.checksum else None
             )
@@ -587,6 +589,10 @@ class BigEarthNet(NonGeoDataset):
 class BigEarthNetV2(NonGeoDataset):
     """BigEarthNetV2 dataset.
 
+    The `BigEarthNet V2 <https://bigearth.net/>`__ dataset contains improved labels, improved
+    geospatial data splits and additionally pixel-level labels from CORINE Land
+    Cover (CLC) map of 2018. Additionally, some probelmatic patches from V1 have been removed.
+
     .. note::
 
         This dataset rquires the following additional library to automatically decompress the files:
@@ -596,7 +602,7 @@ class BigEarthNetV2(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    class_sets = BigEarthNet.class_sets
+    class_set = BigEarthNet.class_sets[19]
 
     image_size = BigEarthNet.image_size
 
@@ -627,6 +633,52 @@ class BigEarthNetV2(NonGeoDataset):
         },
     }
 
+    # https://collections.sentinel-hub.com/corine-land-cover/readme.html
+    clc_colors: ClassVar[dict[str, str]] = {
+        'Urban fabric': '#e6004d',
+        'Industrial or commercial units': '#cc4df2',
+        'Arable land': '#ffffa8',
+        'Permanent crops': '#e68000',
+        'Pastures': '#e6e64d',
+        'Complex cultivation patterns': '#ffe64d',
+        'Land principally occupied by agriculture, with significant areas of natural vegetation': '#e6cc4d',
+        'Agro-forestry areas': '#f2cca6',
+        'Broad-leaved forest': '#80ff00',
+        'Coniferous forest': '#00a600',
+        'Mixed forest': '#4dff00',
+        'Natural grassland and sparsely vegetated areas': '#ccf24d',
+        'Moors, heathland and sclerophyllous vegetation': '#a6ff80',
+        'Transitional woodland, shrub': '#a6f200',
+        'Beaches, dunes, sands': '#e6e6e6',
+        'Inland wetlands': '#a6a6ff',
+        'Coastal wetlands': '#ccccff',
+        'Inland waters': '#80f2e6',
+        'Marine waters': '#e6f2ff',
+    }
+
+    clc_codes: ClassVar[dict[int, int]] = {
+        111: 0,  # Continuous Urban fabric
+        112: 0,  # Discontinous Urban fabric
+        121: 1,  # Industrial or commercial units
+        211: 2,  # Arable land
+        221: 3,  # Permanent crops
+        231: 4,  # Pastures
+        242: 5,  # Complex cultivation patterns
+        243: 6,  # Land principally occupied by agriculture...
+        244: 7,  # Agro-forestry areas
+        311: 8,  # Broad-leaved forest
+        312: 9,  # Coniferous forest
+        313: 10,  # Mixed forest
+        321: 11,  # Natural grassland and sparsely vegetated areas
+        322: 12,  # Moors, heathland and sclerophyllous vegetation
+        324: 13,  # Transitional woodland, shrub
+        331: 14,  # Beaches, dunes, sands
+        411: 15,  # Inland wetlands
+        421: 16,  # Coastal wetlands
+        511: 17,  # Inland waters
+        523: 18,  # Marine waters
+    }
+
     valid_splits = ('train', 'val', 'test')
 
     def __init__(
@@ -634,7 +686,6 @@ class BigEarthNetV2(NonGeoDataset):
         root: str = 'data',
         split: str = 'train',
         bands: str = 'all',
-        num_classes: int = 19,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -645,7 +696,6 @@ class BigEarthNetV2(NonGeoDataset):
             root: root directory where dataset can be found
             split: train/val/test split to load
             bands: load Sentinel-1 bands, Sentinel-2, or both. one of {s1, s2, all}
-            num_classes: number of classes to load in target. one of {19, 43}
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -653,27 +703,30 @@ class BigEarthNetV2(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
-            AssertionError: If *split*, *bands*, or *num_classes* are not valid.
+            AssertionError: If *split*, or *bands*, are not valid.
         """
         lazy_import('zstandard')
         assert split in self.valid_splits, f'split must be one of {self.valid_splits}'
         assert bands in ['s1', 's2', 'all']
-        assert num_classes in [43, 19]
         self.root = root
         self.split = split
         self.bands = bands
-        self.num_classes = num_classes
         self.transforms = transforms
+        self.num_classes = 19
         self.download = download
         self.checksum = checksum
-        self.class2idx = {c: i for i, c in enumerate(self.class_sets[num_classes])}
-        self.idx2class = {i: c for i, c in enumerate(self.class_sets[num_classes])}
+        self.class2idx = {c: i for i, c in enumerate(self.class_set)}
         self._verify()
 
         self.metadata_df = pd.read_parquet(os.path.join(self.root, 'metadata.parquet'))
         self.metadata_df = self.metadata_df[
             self.metadata_df['split'] == self.split
         ].reset_index(drop=True)
+
+        # Map chosen classes to ordinal numbers, all others mapped to background class
+        self.ordinal_map = torch.zeros(19)
+        for corine, ordinal in self.clc_codes.items():
+            self.ordinal_map[ordinal] = corine
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -778,7 +831,12 @@ class BigEarthNetV2(NonGeoDataset):
         )
         with rasterio.open(path) as dataset:
             map = dataset.read(out_dtype='int32')
-        return torch.from_numpy(map).long()
+
+        tensor = torch.from_numpy(map)
+        # remap to ordinal values
+        for corine, ordinal in self.clc_codes.items():
+            tensor[tensor == corine] = ordinal
+        return tensor.long()
 
     def _load_target(self, index: int) -> Tensor:
         """Load the target mask for a single image.
@@ -789,7 +847,9 @@ class BigEarthNetV2(NonGeoDataset):
         Returns:
             the target label
         """
-        indices = self.metadata_df.iloc[index]['labels']
+        label_names = self.metadata_df.iloc[index]['labels']
+
+        indices = [self.class2idx[label_names] for label_names in label_names]
 
         image_target = torch.zeros(self.num_classes, dtype=torch.long)
         image_target[indices] = 1
@@ -887,6 +947,7 @@ class BigEarthNetV2(NonGeoDataset):
             axes[0].imshow(np.clip(rgb / 2000, 0, 1))
             if show_titles:
                 axes[0].set_title('Sentinel-2 RGB')
+            axes[0].axis('off')
 
         if self.bands in ['s1', 'all']:
             idx = 0 if self.bands == 's1' else 1
@@ -894,13 +955,61 @@ class BigEarthNetV2(NonGeoDataset):
             axes[idx].imshow(s1_img[0].numpy())
             if show_titles:
                 axes[idx].set_title('Sentinel-1 VV')
+            axes[idx].axis('off')
 
+        # Handle mask plotting
         mask_idx = 1 if self.bands != 'all' else 2
-        axes[mask_idx].imshow(sample['mask'][0])
+        mask = sample['mask'][0].numpy()
+
+        # Get unique ordinal labels from mask
+        unique_labels = sorted(np.unique(mask))
+
+        # Map ordinal labels to class names and colors directly
+        colors = []
+        class_names = []
+        for label in unique_labels:
+            name = self.class_set[label]  # Get class name from ordinal index
+            colors.append(self.clc_colors[name])  # Get color for class name
+            class_names.append(name)
+
+        # Create custom colormap
+        cmap = ListedColormap(colors)
+        bounds = unique_labels + [unique_labels[-1] + 1]
+        norm = BoundaryNorm(bounds, len(colors))
+
+        # Plot mask with custom colormap
+        im = axes[mask_idx].imshow(mask, cmap=cmap, norm=norm)
+
+        # Add legend with class names
+        legend_elements = [
+            plt.Rectangle((0, 0), 1, 1, facecolor=color) for color in colors
+        ]
+        wrapped_names = [textwrap.fill(name, width=25) for name in class_names]
+        axes[mask_idx].legend(
+            legend_elements,
+            wrapped_names,
+            loc='center left',
+            bbox_to_anchor=(1, 0.5),
+            fontsize='x-small',
+        )
+        axes[mask_idx].axis('off')
+
         if show_titles:
             axes[mask_idx].set_title('Land Cover Map')
 
+        # Add classification labels to suptitle
+        if 'label' in sample:
+            label_indices = sample['label'].nonzero().squeeze(1).tolist()
+            label_names = [self.class_set[idx] for idx in label_indices]
+            if suptitle:
+                suptitle = f'{suptitle}\nLabels: {", ".join(label_names)}'
+            else:
+                suptitle = f'Labels: {", ".join(label_names)}'
+
         if suptitle:
             plt.suptitle(suptitle)
+
+        # Adjust layout to prevent overlap
+        plt.tight_layout()
 
         return fig

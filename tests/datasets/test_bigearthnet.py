@@ -153,25 +153,25 @@ class TestBigEarthNetV2:
         metadata = {
             's1': {
                 'url': os.path.join(data_dir, 'BigEarthNet-S1.tar.zst'),
-                'md5': 'a55eaa2cdf6a917e296bd6601ec1e348',
+                'md5': '4af64b03d0c9024d8ad4f930f662adb6',
                 'filename': 'BigEarthNet-S1.tar.zst',
                 'directory': 'BigEarthNet-S1',
             },
             's2': {
                 'url': os.path.join(data_dir, 'BigEarthNet-S2.tar.zst'),
-                'md5': '2245ed2d1a93f6ce637d839bc856396e',
+                'md5': '31b661e09f23e8c09e3abdfbb62826bb',
                 'filename': 'BigEarthNet-S2.tar.zst',
                 'directory': 'BigEarthNet-S2',
             },
             'maps': {
                 'url': os.path.join(data_dir, 'Reference_Maps.tar.zst'),
-                'md5': '95d85a222fa983faddcac51a19f28917',
+                'md5': '54b9f487e49fce6ed8bd286c5e2df755',
                 'filename': 'Reference_Maps.tar.zst',
                 'directory': 'Reference_Maps',
             },
             'metadata': {
                 'url': os.path.join(data_dir, 'metadata.parquet'),
-                'md5': '5f6b7f8b9d4b8e4c4e9a4c9b8d9e4f8b',
+                'md5': 'ad100d6b020f2e693673f77ebbe57891',
                 'filename': 'metadata.parquet',
             },
         }
@@ -216,9 +216,7 @@ class TestBigEarthNetV2:
     def test_len(self, dataset: BigEarthNetV2) -> None:
         """Test dataset length."""
         if dataset.split == 'train':
-            assert len(dataset) == 1
-        elif dataset.split == 'val':
-            assert len(dataset) == 1
+            assert len(dataset) == 2
         else:
             assert len(dataset) == 1
 

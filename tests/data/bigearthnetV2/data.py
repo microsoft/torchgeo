@@ -4,6 +4,7 @@
 # Licensed under the MIT License.
 
 import os
+import hashlib
 import shutil
 import numpy as np
 import pandas as pd
@@ -24,6 +25,23 @@ SAMPLE_PATCHES = [
         's1_name': 'S1A_IW_GRDH_1SDV_20170613T165043_33UUP_61_39',
         's1_base': 'S1A_IW_GRDH_1SDV_20170613T165043',
         'split': 'train',
+        'labels': [
+            'Urban fabric',
+            'Industrial or commercial units',
+            'Complex cultivation patterns',
+        ],
+    },
+    {
+        's2_name': 'S2A_MSIL2A_20170614T102021_N9999_R122_T32TQT_45_38',
+        's2_base': 'S2A_MSIL2A_20170614T102021_N9999_R122_T32TQT',
+        's1_name': 'S1A_IW_GRDH_1SDV_20170614T165154_32TQT_71_84',
+        's1_base': 'S1A_IW_GRDH_1SDV_20170614T165154',
+        'split': 'train',
+        'labels': [
+            'Broad-leaved forest',
+            'Mixed forest',
+            'Transitional woodland, shrub',
+        ],
     },
     {
         's2_name': 'S2B_MSIL2A_20170615T102019_N9999_R122_T32TNS_45_23',
@@ -31,6 +49,7 @@ SAMPLE_PATCHES = [
         's1_name': 'S1A_IW_GRDH_1SDV_20170615T170156_32TNS_77_12',
         's1_base': 'S1A_IW_GRDH_1SDV_20170615T170156',
         'split': 'val',
+        'labels': ['Arable land', 'Pastures', 'Inland waters'],
     },
     {
         's2_name': 'S2A_MSIL2A_20170618T101021_N9999_R022_T32TQR_89_34',
@@ -38,8 +57,34 @@ SAMPLE_PATCHES = [
         's1_name': 'S1A_IW_GRDH_1SDV_20170618T165722_32TQR_92_45',
         's1_base': 'S1A_IW_GRDH_1SDV_20170618T165722',
         'split': 'test',
+        'labels': [
+            'Coniferous forest',
+            'Natural grassland and sparsely vegetated areas',
+        ],
     },
 ]
+
+LABEL_TO_CLC = {
+    'Urban fabric': 111,
+    'Industrial or commercial units': 121,
+    'Arable land': 211,
+    'Permanent crops': 221,
+    'Pastures': 231,
+    'Complex cultivation patterns': 242,
+    'Land principally occupied by agriculture, with significant areas of natural vegetation': 243,
+    'Agro-forestry areas': 244,
+    'Broad-leaved forest': 311,
+    'Coniferous forest': 312,
+    'Mixed forest': 313,
+    'Natural grassland and sparsely vegetated areas': 321,
+    'Moors, heathland and sclerophyllous vegetation': 322,
+    'Transitional woodland, shrub': 324,
+    'Beaches, dunes, sands': 331,
+    'Inland wetlands': 411,
+    'Coastal wetlands': 421,
+    'Inland waters': 512,
+    'Marine waters': 523,
+}
 
 S1_BANDS = ['VV', 'VH']
 S2_BANDS = [
@@ -67,14 +112,17 @@ def create_directory_structure() -> None:
         Path(os.path.join(ROOT_DIR, dir_name)).mkdir(parents=True, exist_ok=True)
 
 
-def create_dummy_image(path: str, shape: tuple[int, int], dtype: str) -> None:
+def create_dummy_image(
+    path: str, shape: tuple[int, int], dtype: str, labels: list[str] | None = None
+) -> None:
     """Create a dummy GeoTIFF file"""
     if dtype == 's1':
         data = np.random.randint(-25, 0, shape).astype(np.int16)
     elif dtype == 's2':
         data = np.random.randint(0, 10000, shape).astype(np.int16)
     else:  # reference map
-        data = np.random.randint(0, 19, shape).astype(np.uint8)
+        clc_codes = [LABEL_TO_CLC[label] for label in labels]
+        data = np.random.choice(clc_codes, size=shape).astype(np.uint16)
 
     with rasterio.open(
         path,
@@ -119,7 +167,9 @@ def generate_sample(patch_info: dict) -> None:
     os.makedirs(ref_dir, exist_ok=True)
 
     path = os.path.join(ref_dir, f'{patch_info["s2_name"]}_reference_map.tif')
-    create_dummy_image(path, (IMG_SIZE, IMG_SIZE), 'reference')
+    create_dummy_image(
+        path, (IMG_SIZE, IMG_SIZE), 'reference', labels=patch_info['labels']
+    )
 
 
 def create_metadata() -> None:
@@ -132,7 +182,7 @@ def create_metadata() -> None:
                 'patch_id': patch['s2_name'],
                 's1_name': patch['s1_name'],
                 'split': patch['split'],
-                'labels': np.random.choice(range(19), size=3, replace=False).tolist(),
+                'labels': patch['labels'],
             }
         )
 
@@ -154,6 +204,14 @@ def compress_directory(dirname: str) -> None:
             f_out.write(compressed)
 
     os.remove(tar_path)
+
+    # print md5sum with hashlib
+    hash_md5 = hashlib.md5()
+    with open(f'{tar_path}.zst', 'rb') as f:
+        for chunk in iter(lambda: f.read(4096), b''):
+            hash_md5.update(chunk)
+
+    print(f'{tar_path}.zst: {hash_md5.hexdigest()}')
 
 
 def main() -> None:
