@@ -372,7 +372,7 @@ class SSL4EOS12(SSL4EO):
             'filename': 's1.tar.gz',
             'md5': '51ee23b33eb0a2f920bda25225072f3a',
             'bands': ['VV', 'VH'],
-            'filename_regex': r'^S1[AB]_(?P<mode>SM|IW|EW|WV)_.{9}_(?P<date>\d{8}T\d{6})',
+            'filename_regex': r'^.{16}_(?P<date>\d{8}T\d{6})',
         },
         's2c': {
             'filename': 's2_l1c.tar.gz',
