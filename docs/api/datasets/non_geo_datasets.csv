@@ -3,7 +3,7 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `Benin Cashew Plantations`_,S,Airbus Pléiades,"CC-BY-4.0",70,6,"1,122x1,186",10,MSI
 `BigEarthNet`_,C,Sentinel-1/2,"CDLA-Permissive-1.0","590,326",19--43,120x120,10,"SAR, MSI"
 `BioMassters`_,R,Sentinel-1/2 and Lidar,"CC-BY-4.0",,,256x256, 10, "SAR, MSI"
-`BRIGHT`_,CD,"MAXAR, NAIP, Capella, Umbra","CC-BY-NC-4.0",3239,4,"0.1-1","RGB,SAR"
+`BRIGHT`_,CD,"MAXAR, NAIP, Capella, Umbra","CC-BY-4.0 AND CC-BY-NC-4.0",3239,4,"0.1-1","RGB,SAR"
 `CaBuAr`_,CD,Sentinel-2,"OpenRAIL",424,2,512x512,20,MSI
 `CaFFe`_,S,"Sentinel-1, TerraSAR-X, TanDEM-X, ENVISAT, ERS-1/2, ALOS PALSAR, and RADARSAT-1","CC-BY-4.0","19092","2 or 4","512x512",6-20,"SAR"
 `ChaBuD`_,CD,Sentinel-2,"OpenRAIL",356,2,512x512,10,MSI
