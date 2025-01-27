@@ -16,6 +16,7 @@ from torchgeo.datasets import BigEarthNet, BigEarthNetV2, DatasetNotFoundError
 
 pytest.importorskip('zstandard', minversion='0.23')
 
+
 class TestBigEarthNet:
     @pytest.fixture(
         params=zip(['all', 's1', 's2'], [43, 19, 19], ['train', 'val', 'test'])
