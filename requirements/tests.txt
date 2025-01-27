@@ -2,3 +2,4 @@
 nbmake==1.5.5
 pytest==8.3.4
 pytest-cov==6.0.0
+zstandard==0.23.0

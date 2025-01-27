@@ -17,10 +17,18 @@ import torch
 from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
+import tempfile
+import tarfile
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, sort_sentinel2_bands
+from .utils import (
+    Path,
+    download_url,
+    extract_archive,
+    sort_sentinel2_bands,
+    lazy_import,
+)
 
 
 class BigEarthNet(NonGeoDataset):
@@ -579,7 +587,13 @@ class BigEarthNet(NonGeoDataset):
 class BigEarthNetV2(NonGeoDataset):
     """BigEarthNetV2 dataset.
 
-    Automatic download not implemented, get data from below link.
+    .. note::
+
+        This dataset rquires the following additional library to automatically decompress the files:
+
+        * `zstandard <https://pypi.org/project/zstandard/>`__
+
+    .. versionadded:: 0.7
     """
 
     class_sets = BigEarthNet.class_sets
@@ -605,7 +619,7 @@ class BigEarthNetV2(NonGeoDataset):
             'filename': 'Reference_Maps.zst',
             'directory': 'Reference_Maps',
         },
-        'train': {
+        'metadata': {
             'url': 'https://zenodo.org/records/10891137/files/metadata.parquet',
             'md5': 'b2d7b4b2e6c7c7d8f3f5b8f3c5a8f3b1',
             'filename': 'metadata.parquet',
@@ -641,6 +655,7 @@ class BigEarthNetV2(NonGeoDataset):
             DatasetNotFoundError: If dataset is not found and *download* is False.
             AssertionError: If *split*, *bands*, or *num_classes* are not valid.
         """
+        lazy_import('zstandard')
         assert split in self.valid_splits, f'split must be one of {self.valid_splits}'
         assert bands in ['s1', 's2', 'all']
         assert num_classes in [43, 19]
@@ -741,83 +756,6 @@ class BigEarthNetV2(NonGeoDataset):
 
         return torch.from_numpy(np.stack(images, axis=0)).float()
 
-    def _load_s1image(self, index: int) -> Tensor:
-        """Load a Sentinel-1 image.
-
-        Args:
-            index: index to return
-
-        Returns:
-            the Sentinel-1 image
-        """
-        row = self.metadata_df.loc[index]
-        s1_id = row['s1_name']
-        s1_dir = '_'.join(s1_id.split('_')[0:-3])
-        paths = sorted(
-            glob.glob(
-                os.path.join(
-                    self.root,
-                    self.metatada_locs['s1']['directory'],
-                    s1_dir,
-                    s1_id,
-                    '*.tif',
-                )
-            )
-        )
-        images = []
-        for path in paths:
-            # Bands are of different spatial resolutions
-            # Resample to (120, 120)
-            with rasterio.open(path) as dataset:
-                array = dataset.read(
-                    indexes=1,
-                    out_shape=self.image_size,
-                    out_dtype='int32',
-                    resampling=Resampling.bilinear,
-                )
-                images.append(array)
-        arrays: np.typing.NDArray[np.int_] = np.stack(images, axis=0)
-        tensor = torch.from_numpy(arrays).float()
-        return tensor
-
-    def _load_s2image(self, index: int) -> Tensor:
-        """Load a Sentinel-2 image.
-
-        Args:
-            index: index to return
-
-        Returns:
-            the Sentinel-2 image
-        """
-        row = self.metadata_df.loc[index]
-        patch_id = row['patch_id']
-        patch_dir = '_'.join(patch_id.split('_')[0:-2])
-        paths = glob.glob(
-            os.path.join(
-                self.root,
-                self.metatada_locs['s2']['directory'],
-                patch_dir,
-                patch_id,
-                '*.tif',
-            )
-        )
-        paths = sorted(paths, key=sort_sentinel2_bands)
-        images = []
-        for path in paths:
-            # Bands are of different spatial resolutions
-            # Resample to (120, 120)
-            with rasterio.open(path) as dataset:
-                array = dataset.read(
-                    indexes=1,
-                    out_shape=self.image_size,
-                    out_dtype='int32',
-                    resampling=Resampling.bilinear,
-                )
-                images.append(array)
-        arrays: np.typing.NDArray[np.int_] = np.stack(images, axis=0)
-        tensor = torch.from_numpy(arrays).float()
-        return tensor
-
     def _load_map(self, index: int) -> Tensor:
         """Load a single image.
 
@@ -860,7 +798,51 @@ class BigEarthNetV2(NonGeoDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        pass
+        exists = []
+        for key, metadata in self.metadata_locs.items():
+            if key != 'metadata':
+                exists.append(
+                    os.path.exists(os.path.join(self.root, metadata['directory']))
+                )
+            else:
+                exists.append(
+                    os.path.exists(os.path.join(self.root, metadata['filename']))
+                )
+
+        if all(exists):
+            return
+
+        # check if compressed files already exist
+        exists = []
+        for key, metadata in self.metadata_locs.items():
+            if os.path.exists(os.path.join(self.root, metadata['filename'])):
+                exists.append(True)
+                if key != 'metadata':
+                    self._extract(os.path.join(self.root, metadata['filename']))
+            else:
+                exists.append(False)
+
+        if not self.download:
+            raise DatasetNotFoundError(self)
+
+        for key, metadata in self.metadata_locs.items():
+            self._download(metadata['url'], metadata['filename'], metadata['md5'])
+            filepath = os.path.join(self.root, metadata['filename'])
+            if key != 'metadata':
+                self._extract(filepath)
+
+    def _download(self, url: str, filename: Path, md5: str) -> None:
+        """Download the dataset.
+
+        Args:
+            url: url to download file
+            filename: output filename to write downloaded file
+            md5: md5 of downloaded file
+        """
+        if not os.path.exists(filename):
+            download_url(
+                url, self.root, filename=filename, md5=md5 if self.checksum else None
+            )
 
     def _extract(self, filepath: Path) -> None:
         """Extract the dataset.
@@ -868,8 +850,16 @@ class BigEarthNetV2(NonGeoDataset):
         Args:
             filepath: path to file to be extracted
         """
-        if not str(filepath).endswith('.parquet'):
-            extract_archive(filepath)
+        zstandard = lazy_import('zstandard')
+        if not str(filepath).endswith('.csv'):
+            dctx = zstandard.ZstdDecompressor()
+
+            with tempfile.TemporaryFile(suffix='.tar') as ofh:
+                with open(filepath, 'rb') as ifh:
+                    dctx.copy_stream(ifh, ofh)
+                ofh.seek(0)
+                with tarfile.open(fileobj=ofh) as z:
+                    z.extractall(self.root)
 
     def plot(
         self,
