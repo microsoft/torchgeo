@@ -6,6 +6,8 @@
 import glob
 import json
 import os
+import tarfile
+import tempfile
 from collections.abc import Callable
 from typing import ClassVar
 
@@ -19,8 +21,6 @@ import torch
 from matplotlib.figure import Figure
 from rasterio.enums import Resampling
 from torch import Tensor
-import tempfile
-import tarfile
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -28,8 +28,8 @@ from .utils import (
     Path,
     download_url,
     extract_archive,
-    sort_sentinel2_bands,
     lazy_import,
+    sort_sentinel2_bands,
 )
 
 
@@ -683,7 +683,7 @@ class BigEarthNetV2(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         bands: str = 'all',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
