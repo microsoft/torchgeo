@@ -185,8 +185,8 @@ class TestBigEarthNetV2:
             root, split, bands, num_classes, transforms, download=True, checksum=True
         )
 
-    def test_getitem_s2(self, dataset: BigEarthNetV2) -> None:
-        """Test loading S2 or combined data."""
+    def test_getitem(self, dataset: BigEarthNetV2) -> None:
+        """Test loading data."""
         x = dataset[0]
 
         if dataset.bands in ['s2', 'all']:
@@ -222,10 +222,51 @@ class TestBigEarthNetV2:
         else:
             assert len(dataset) == 1
 
+    def test_already_downloaded(self, dataset: BigEarthNetV2, tmp_path: Path) -> None:
+        BigEarthNetV2(
+            root=tmp_path,
+            bands=dataset.bands,
+            split=dataset.split,
+            num_classes=dataset.num_classes,
+            download=True,
+        )
+
     def test_not_downloaded(self, tmp_path: Path) -> None:
         """Test error handling when data not present."""
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             BigEarthNetV2(tmp_path)
+
+    def test_already_downloaded_not_extracted(
+        self, dataset: BigEarthNetV2, tmp_path: Path
+    ) -> None:
+        shutil.copy(dataset.metadata_locs['metadata']['url'], tmp_path)
+        if dataset.bands == 'all':
+            shutil.rmtree(
+                os.path.join(dataset.root, dataset.metadata_locs['s1']['directory'])
+            )
+            shutil.rmtree(
+                os.path.join(dataset.root, dataset.metadata_locs['s2']['directory'])
+            )
+            shutil.copy(dataset.metadata_locs['s1']['url'], tmp_path)
+            shutil.copy(dataset.metadata_locs['s2']['url'], tmp_path)
+        elif dataset.bands == 's1':
+            shutil.rmtree(
+                os.path.join(dataset.root, dataset.metadata_locs['s1']['directory'])
+            )
+            shutil.copy(dataset.metadata_locs['s1']['url'], tmp_path)
+        else:
+            shutil.rmtree(
+                os.path.join(dataset.root, dataset.metadata_locs['s2']['directory'])
+            )
+            shutil.copy(dataset.metadata_locs['s2']['url'], tmp_path)
+
+        BigEarthNetV2(
+            root=tmp_path,
+            bands=dataset.bands,
+            split=dataset.split,
+            num_classes=dataset.num_classes,
+            download=False,
+        )
 
     def test_invalid_split(self, tmp_path: Path) -> None:
         """Test error on invalid split."""

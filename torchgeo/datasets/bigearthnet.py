@@ -821,6 +821,9 @@ class BigEarthNetV2(NonGeoDataset):
             else:
                 exists.append(False)
 
+        if all(exists):
+            return
+
         if not self.download:
             raise DatasetNotFoundError(self)
 
