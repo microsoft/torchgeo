@@ -6,6 +6,8 @@
 import glob
 import json
 import os
+import tarfile
+import tempfile
 from collections.abc import Callable
 from typing import ClassVar
 
@@ -13,8 +15,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import rasterio
-import tarfile
-import tempfile
 import torch
 from matplotlib.figure import Figure
 from rasterio.enums import Resampling
@@ -26,8 +26,8 @@ from .utils import (
     Path,
     download_url,
     extract_archive,
-    sort_sentinel2_bands,
     lazy_import,
+    sort_sentinel2_bands,
 )
 
 

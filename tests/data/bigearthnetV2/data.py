@@ -4,10 +4,10 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
 import rasterio
 import tarfile
 import zstandard as zstd
