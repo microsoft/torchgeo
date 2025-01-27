@@ -18,7 +18,14 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, download_url, extract_archive
+from .landsat import Landsat, Landsat5TM, Landsat7, Landsat8
+from .utils import (
+    Path,
+    check_integrity,
+    disambiguate_timestamp,
+    download_url,
+    extract_archive,
+)
 
 
 class SSL4EO(NonGeoDataset):
@@ -32,7 +39,7 @@ class SSL4EO(NonGeoDataset):
     """
 
 
-class SSL4EOL(NonGeoDataset):
+class SSL4EOL(SSL4EO):
     """SSL4EO-L dataset.
 
     Landsat version of SSL4EO.
@@ -197,6 +204,17 @@ class SSL4EOL(NonGeoDataset):
 
         self._verify()
 
+        if split.startswith('tm'):
+            base = Landsat5TM
+        elif split.startswith('etm'):
+            base = Landsat7
+        else:
+            base = Landsat8
+
+        self.wavelengths = []
+        for band in range(1, self.metadata[split]['num_bands'] + 1):
+            self.wavelengths.append(base.wavelengths[f'B{band}'])
+
         self.scenes = sorted(os.listdir(self.subdir))
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -213,14 +231,32 @@ class SSL4EOL(NonGeoDataset):
         subdirs = random.sample(subdirs, self.seasons)
 
         images = []
+        xs = []
+        ys = []
+        ts = []
+        wavelengths = []
         for subdir in subdirs:
+            mint, maxt = disambiguate_timestamp(subdir[:-8], Landsat.date_format)
             directory = os.path.join(root, subdir)
             filename = os.path.join(directory, 'all_bands.tif')
             with rasterio.open(filename) as f:
+                minx, maxx = f.bounds.left, f.bounds.right
+                miny, maxy = f.bounds.bottom, f.bounds.top
                 image = f.read()
                 images.append(torch.from_numpy(image.astype(np.float32)))
+                xs.append((minx + maxx) / 2)
+                ys.append((miny + maxy) / 2)
+                ts.append((mint + maxt) / 2)
+                wavelengths.extend(self.wavelengths)
 
-        sample = {'image': torch.cat(images)}
+        sample = {
+            'image': torch.cat(images),
+            'x': torch.tensor(xs),
+            'y': torch.tensor(ys),
+            't': torch.tensor(ts),
+            'wavelength': torch.tensor(wavelengths),
+            'res': torch.tensor(30),
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
