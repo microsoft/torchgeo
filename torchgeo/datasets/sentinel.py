@@ -281,7 +281,7 @@ class Sentinel2(Sentinel):
     """
 
     # https://sentiwiki.copernicus.eu/web/s2-mission
-    all_bands = (
+    all_bands: tuple[str, ...] = (
         'B01',
         'B02',
         'B03',

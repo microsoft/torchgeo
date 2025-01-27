@@ -365,6 +365,7 @@ class SSL4EOS12(SSL4EO):
         filename: str
         md5: str
         bands: list[str]
+        filename_regex: str
 
     metadata: ClassVar[dict[str, _Metadata]] = {
         's1': {
@@ -467,7 +468,7 @@ class SSL4EOS12(SSL4EO):
 
         images = []
         bounds = []
-        wavelengths = []
+        wavelengths: list[float] = []
         for subdir in subdirs:
             directory = os.path.join(root, subdir)
             if match := re.match(filename_regex, subdir):
@@ -488,7 +489,7 @@ class SSL4EOS12(SSL4EO):
                         images.append(torch.from_numpy(image.astype(np.float32)))
                 bounds.append(BoundingBox(minx, maxx, miny, maxy, mint, maxt))
 
-        sample = {
+        sample: dict[str, Any] = {
             'image': torch.cat(images),
             'bounds': bounds,
             'wavelengths': wavelengths,
