@@ -144,9 +144,6 @@ exclude_also = [
 ]
 show_missing = true
 
-[tool.coverage.run]
-source_pkgs = ["torchgeo"]
-
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
 # Import discovery
