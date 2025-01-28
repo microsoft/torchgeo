@@ -154,7 +154,7 @@ class Landsat1(Landsat):
     default_bands = ('B4', 'B5', 'B6', 'B7')
     rgb_bands = ('B6', 'B5', 'B4')
 
-    wavelengths: ClassVar[str, float] = {
+    wavelengths: ClassVar[dict[str, float]] = {
         'B4': (0.5 + 0.6) / 2,
         'B5': (0.6 + 0.7) / 2,
         'B6': (0.7 + 0.8) / 2,
@@ -182,7 +182,7 @@ class Landsat4MSS(Landsat):
     default_bands = ('B1', 'B2', 'B3', 'B4')
     rgb_bands = ('B3', 'B2', 'B1')
 
-    wavelengths: ClassVar[str, float] = {
+    wavelengths: ClassVar[dict[str, float]] = {
         'B1': (0.5 + 0.6) / 2,
         'B2': (0.6 + 0.7) / 2,
         'B3': (0.7 + 0.8) / 2,
@@ -198,7 +198,7 @@ class Landsat4TM(Landsat):
     default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7')
     rgb_bands = ('SR_B3', 'SR_B2', 'SR_B1')
 
-    wavelengths: ClassVar[str, float] = {
+    wavelengths: ClassVar[dict[str, float]] = {
         'B1': (0.45 + 0.52) / 2,
         'B2': (0.52 + 0.60) / 2,
         'B3': (0.63 + 0.69) / 2,
@@ -229,7 +229,7 @@ class Landsat7(Landsat):
     default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B7')
     rgb_bands = ('SR_B3', 'SR_B2', 'SR_B1')
 
-    wavelengths: ClassVar[str, float] = {
+    wavelengths: ClassVar[dict[str, float]] = {
         'B1': (0.45 + 0.52) / 2,
         'B2': (0.52 + 0.60) / 2,
         'B3': (0.63 + 0.69) / 2,
@@ -249,7 +249,7 @@ class Landsat8(Landsat):
     default_bands = ('SR_B1', 'SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7')
     rgb_bands = ('SR_B4', 'SR_B3', 'SR_B2')
 
-    wavelengths: ClassVar[str, float] = {
+    wavelengths: ClassVar[dict[str, float]] = {
         'B1': (0.43 + 0.45) / 2,
         'B2': (0.45 + 0.51) / 2,
         'B3': (0.53 + 0.59) / 2,
