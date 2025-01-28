@@ -635,6 +635,7 @@ class BigEarthNetV2(NonGeoDataset):
     }
 
     # https://collections.sentinel-hub.com/corine-land-cover/readme.html
+    # Table 1 of https://bigearth.net/static/documents/Description_BigEarthNet_v2.pdf
     clc_colors: ClassVar[dict[str, str]] = {
         'Urban fabric': '#e6004d',
         'Industrial or commercial units': '#cc4df2',
@@ -659,25 +660,37 @@ class BigEarthNetV2(NonGeoDataset):
 
     clc_codes: ClassVar[dict[int, int]] = {
         111: 0,  # Continuous Urban fabric
-        112: 0,  # Discontinous Urban fabric
+        112: 0,  # Discontinuous Urban fabric
         121: 1,  # Industrial or commercial units
-        211: 2,  # Arable land
-        221: 3,  # Permanent crops
+        211: 2,  # Non-irrigated arable land
+        212: 2,  # Permanently irrigated land
+        213: 2,  # Rice fields
+        221: 3,  # Vineyards
+        222: 3,  # Fruit trees and berry plantations
+        223: 3,  # Olive groves
         231: 4,  # Pastures
+        241: 3,  # Annual crops with permanent crops
         242: 5,  # Complex cultivation patterns
         243: 6,  # Land principally occupied by agriculture...
         244: 7,  # Agro-forestry areas
         311: 8,  # Broad-leaved forest
         312: 9,  # Coniferous forest
         313: 10,  # Mixed forest
-        321: 11,  # Natural grassland and sparsely vegetated areas
-        322: 12,  # Moors, heathland and sclerophyllous vegetation
-        324: 13,  # Transitional woodland, shrub
+        321: 11,  # Natural grassland
+        322: 12,  # Moors and heathland
+        323: 12,  # Sclerophyllous vegetation
+        324: 13,  # Transitional woodland/shrub
         331: 14,  # Beaches, dunes, sands
-        411: 15,  # Inland wetlands
-        421: 16,  # Coastal wetlands
-        511: 17,  # Inland waters
-        523: 18,  # Marine waters
+        333: 11,  # Sparsely vegetated areas
+        411: 15,  # Inland marshes
+        412: 15,  # Peatbogs
+        421: 16,  # Salt marshes
+        422: 16,  # Salines
+        511: 17,  # Water courses
+        512: 17,  # Water bodies
+        521: 18,  # Coastal lagoons
+        522: 18,  # Estuaries
+        523: 18,  # Sea and ocean
     }
 
     valid_splits = ('train', 'val', 'test')
