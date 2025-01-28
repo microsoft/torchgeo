@@ -83,7 +83,7 @@ LABEL_TO_CLC = {
     'Beaches, dunes, sands': 331,
     'Inland wetlands': 411,
     'Coastal wetlands': 421,
-    'Inland waters': 512,
+    'Inland waters': 511,
     'Marine waters': 523,
 }
 

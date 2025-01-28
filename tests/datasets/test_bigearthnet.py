@@ -145,9 +145,7 @@ class TestBigEarthNet:
 
 
 class TestBigEarthNetV2:
-    @pytest.fixture(
-        params=zip(['all', 's1', 's2'], ['train', 'val', 'test'])
-    )
+    @pytest.fixture(params=zip(['all', 's1', 's2'], ['train', 'val', 'test']))
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> BigEarthNetV2:
@@ -155,19 +153,19 @@ class TestBigEarthNetV2:
         metadata = {
             's1': {
                 'url': os.path.join(data_dir, 'BigEarthNet-S1.tar.zst'),
-                'md5': '4af64b03d0c9024d8ad4f930f662adb6',
+                'md5': '7c40abec6662bf1df4335e92a9caf5ab',
                 'filename': 'BigEarthNet-S1.tar.zst',
                 'directory': 'BigEarthNet-S1',
             },
             's2': {
                 'url': os.path.join(data_dir, 'BigEarthNet-S2.tar.zst'),
-                'md5': '31b661e09f23e8c09e3abdfbb62826bb',
+                'md5': '9a699ac4a8aade77ce53d35e198ba2d0',
                 'filename': 'BigEarthNet-S2.tar.zst',
                 'directory': 'BigEarthNet-S2',
             },
             'maps': {
                 'url': os.path.join(data_dir, 'Reference_Maps.tar.zst'),
-                'md5': '54b9f487e49fce6ed8bd286c5e2df755',
+                'md5': '1e4b2fdfb954594aa9465f4496defea6',
                 'filename': 'Reference_Maps.tar.zst',
                 'directory': 'Reference_Maps',
             },
@@ -223,10 +221,7 @@ class TestBigEarthNetV2:
 
     def test_already_downloaded(self, dataset: BigEarthNetV2, tmp_path: Path) -> None:
         BigEarthNetV2(
-            root=tmp_path,
-            bands=dataset.bands,
-            split=dataset.split,
-            download=True,
+            root=tmp_path, bands=dataset.bands, split=dataset.split, download=True
         )
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
@@ -259,10 +254,7 @@ class TestBigEarthNetV2:
             shutil.copy(dataset.metadata_locs['s2']['url'], tmp_path)
 
         BigEarthNetV2(
-            root=tmp_path,
-            bands=dataset.bands,
-            split=dataset.split,
-            download=False,
+            root=tmp_path, bands=dataset.bands, split=dataset.split, download=False
         )
 
     def test_invalid_split(self, tmp_path: Path) -> None:

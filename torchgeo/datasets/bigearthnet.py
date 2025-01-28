@@ -19,6 +19,7 @@ import rasterio
 import torch
 from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib.figure import Figure
+from matplotlib.patches import Rectangle
 from rasterio.enums import Resampling
 from torch import Tensor
 
@@ -980,9 +981,7 @@ class BigEarthNetV2(NonGeoDataset):
         axes[mask_idx].imshow(mask, cmap=cmap, norm=norm)
 
         # Add legend with class names
-        legend_elements = [
-            plt.Rectangle((0, 0), 1, 1, facecolor=color) for color in colors
-        ]
+        legend_elements = [Rectangle((0, 0), 1, 1, facecolor=color) for color in colors]
         wrapped_names = [textwrap.fill(name, width=25) for name in class_names]
         axes[mask_idx].legend(
             legend_elements,
