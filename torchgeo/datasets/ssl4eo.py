@@ -234,7 +234,7 @@ class SSL4EOL(SSL4EO):
         self._verify()
 
         if split.startswith('tm'):
-            base = Landsat5TM
+            base: type[Landsat] = Landsat5TM
         elif split.startswith('etm'):
             base = Landsat7
         else:
