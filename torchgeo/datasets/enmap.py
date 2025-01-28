@@ -329,7 +329,7 @@ class EnMAP(RasterDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: A sample returned by :meth:`__getitem__`.
+            sample: A sample returned by :meth:`RasterDataset.__getitem__`.
             suptitle: optional string to use as a suptitle
 
         Returns:
