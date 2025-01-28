@@ -11,6 +11,7 @@ from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
+from .bright import BRIGHTDFC2025
 from .cabuar import CaBuAr
 from .caffe import CaFFe
 from .cbf import CanadianBuildingFootprints
@@ -152,6 +153,7 @@ from .zuericrop import ZueriCrop
 
 __all__ = (
     'ADVANCE',
+    'BRIGHTDFC2025',
     'CDL',
     'COWC',
     'DFC2022',

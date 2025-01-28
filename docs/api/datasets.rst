@@ -221,6 +221,11 @@ BioMassters
 
 .. autoclass:: BioMassters
 
+BRIGHT
+^^^^^^
+
+.. autoclass:: BRIGHTDFC2025
+
 CaBuAr
 ^^^^^^
 
