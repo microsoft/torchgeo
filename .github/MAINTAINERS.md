@@ -5,7 +5,7 @@ This document lists the Maintainers of the Project. Maintainers may be added onc
 | **NAME**        | **Organization** |
 | --------------- | ---------------- |
 | Adam J. Stewart |                  |
-
+| Nils Lehmann    |                  |
 ---
 
 Part of MVG-0.1-beta.
