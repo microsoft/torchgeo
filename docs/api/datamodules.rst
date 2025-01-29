@@ -26,6 +26,11 @@ L8 Biome
 
 .. autoclass:: L8BiomeDataModule
 
+MMFlood
+^^^^^^^^
+
+.. autoclass:: MMFloodDataModule
+
 NAIP
 ^^^^
 

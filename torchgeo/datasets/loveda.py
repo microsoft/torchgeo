@@ -115,9 +115,9 @@ class LoveDA(NonGeoDataset):
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.splits
-        assert set(scene).intersection(
-            set(self.scenes)
-        ), "The possible scenes are 'rural' and/or 'urban'"
+        assert set(scene).intersection(set(self.scenes)), (
+            "The possible scenes are 'rural' and/or 'urban'"
+        )
         assert len(scene) <= 2, "There are no other scenes than 'rural' or 'urban'"
 
         self.root = root
