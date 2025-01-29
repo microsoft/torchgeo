@@ -153,7 +153,7 @@ class SimCLRTask(BaseTask):
         weights = self.weights
 
         # Create backbone
-        self.backbone = timm.create_model(
+        self.backbone = timm.create_model(  # type: ignore[attr-defined]
             self.hparams['model'],
             in_chans=self.hparams['in_channels'],
             num_classes=0,
@@ -286,7 +286,7 @@ class SimCLRTask(BaseTask):
 
     def configure_optimizers(
         self,
-    ) -> 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig':
+    ) -> 'lightning.pytorch.utilities.types.OptimizerLRScheduler':
         """Initialize the optimizer and learning rate scheduler.
 
         .. versionchanged:: 0.6
