@@ -194,7 +194,7 @@ class PASTIS(NonGeoDataset):
             sample = {'image': image, 'mask': mask}
         elif self.mode == 'instance':
             mask, boxes, labels = self._load_instance_targets(index)
-            sample = {'image': image, 'mask': mask, 'boxes': boxes, 'label': labels}
+            sample = {'image': image, 'mask': mask, 'bbox_xyxy': boxes, 'label': labels}
 
         if self.transforms is not None:
             sample = self.transforms(sample)

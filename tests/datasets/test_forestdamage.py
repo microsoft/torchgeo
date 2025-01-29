@@ -36,7 +36,7 @@ class TestForestDamage:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
-        assert isinstance(x['boxes'], torch.Tensor)
+        assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert x['image'].shape[0] == 3
         assert x['image'].ndim == 3
 
@@ -67,6 +67,6 @@ class TestForestDamage:
 
     def test_plot_prediction(self, dataset: ForestDamage) -> None:
         x = dataset[0].copy()
-        x['prediction_boxes'] = x['boxes'].clone()
+        x['prediction_bbox_xyxy'] = x['bbox_xyxy'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
