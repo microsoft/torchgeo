@@ -8,6 +8,7 @@ Dataset,Type,Source,License,Size (px),Resolution (m)
 `Global Mangrove Distribution`_,Masks,"Remote Sensing, In Situ Measurements","public domain",-,3
 `Cropland Data Layer`_,Masks,Landsat,"public domain",-,30
 `EDDMapS`_,Points,Citizen Scientists,-,-,-
+`EnMAP`_,Imagery,EnMAP,-,"1,200x1,200",30
 `EnviroAtlas`_,"Imagery, Masks","NAIP, NLCD, OpenStreetMap","CC-BY-4.0",-,1
 `Esri2020`_,Masks,Sentinel-2,"CC-BY-4.0",-,10
 `EU-DEM`_,DEM,"Aster, SRTM, Russian Topomaps","CSCDA-ESA",-,25
