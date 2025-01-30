@@ -8,7 +8,8 @@ version: 2
 build:
   os: ubuntu-lts-latest
   tools:
-    python: '3.13'
+    # Sphinx 6.1 and older do not support Python 3.13+
+    python: '3.12'
 
 # Configuration of the Python environment to be used
 python:
