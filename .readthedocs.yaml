@@ -8,7 +8,7 @@ version: 2
 build:
   os: ubuntu-lts-latest
   tools:
-    python: '3.12'
+    python: '3.13'
 
 # Configuration of the Python environment to be used
 python:
