@@ -321,6 +321,10 @@ GID-15
 
 .. autoclass:: GID15
 
+DL4GAM Alps
+^^^^^^^^^^^
+.. autoclass:: DL4GAMAlps
+
 HySpecNet-11k
 ^^^^^^^^^^^^^
 
