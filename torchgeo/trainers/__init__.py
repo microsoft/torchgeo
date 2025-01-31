@@ -5,6 +5,7 @@
 
 from .base import BaseTask
 from .byol import BYOLTask
+from .change import ChangeDetectionTask
 from .classification import ClassificationTask, MultiLabelClassificationTask
 from .detection import ObjectDetectionTask
 from .iobench import IOBenchTask
@@ -14,8 +15,10 @@ from .segmentation import SemanticSegmentationTask
 from .simclr import SimCLRTask
 
 __all__ = (
+    # Supervised
     'BYOLTask',
     'BaseTask',
+    'ChangeDetectionTask',
     'ClassificationTask',
     'IOBenchTask',
     'MoCoTask',
