@@ -279,6 +279,11 @@ Digital Typhoon
 
 .. autoclass:: DigitalTyphoon
 
+Dynamic EarthNet
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: DynamicEarthNet
+
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
