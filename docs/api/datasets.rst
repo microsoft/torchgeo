@@ -279,6 +279,10 @@ Digital Typhoon
 
 .. autoclass:: DigitalTyphoon
 
+DOTA
+^^^^
+.. autoclass:: DOTA
+
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
