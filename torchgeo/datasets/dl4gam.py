@@ -254,10 +254,10 @@ class DL4GAMAlps(NonGeoDataset):
         id_cloud_mask = all_band_names.index('CLOUDLESS_MASK')
         mask_clouds_and_shadows = ~(nc.band_data.isel(band=id_cloud_mask).values == 1)
         sample = {
-            'image': image,
-            'mask_glacier': ~np.isnan(nc.mask_all_g_id.values),
-            'mask_debris': (nc.mask_debris.values == 1),
-            'mask_clouds_and_shadows': mask_clouds_and_shadows,
+            'image': torch.from_numpy(image),
+            'mask_glacier': torch.from_numpy(~np.isnan(nc.mask_all_g_id.values)),
+            'mask_debris': torch.from_numpy(nc.mask_debris.values == 1),
+            'mask_clouds_and_shadows': torch.from_numpy(mask_clouds_and_shadows),
         }
 
         # extract the additional features if needed
@@ -271,11 +271,7 @@ class DL4GAMAlps(NonGeoDataset):
                 v_fill = 0.0 if feature in ('dhdt', 'v') else np.nanmean(vals)
                 vals[np.isnan(vals)] = v_fill
 
-                sample[feature] = vals
-
-        # convert to torch tensors
-        for k, v in sample.items():
-            sample[k] = torch.from_numpy(v)
+                sample[feature] = torch.from_numpy(vals)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
