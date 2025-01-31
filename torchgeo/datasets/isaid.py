@@ -123,12 +123,37 @@ class ISAID(NonGeoDataset):
 
     Dataset features:
 
+    * multi-class instance segmentation
+    * multi-class object detection
+    * aerial imagery over various GSDs
+
     Dataset format:
+
+    * images are three channel RGB PNGs with various pixel dimensions
+    * labels are annotaitons in json MSCOCO format
+
+    Classes:
+
+    * plane
+    * ship
+    * storage-tank
+    * baseball-diamond
+    * tennis-court
+    * basketball-court
+    * ground-track-field
+    * harbor
+    * bridge
+    * large-vehicle
+    * small-vehicle
+    * helicopter
+    * roundabout
+    * soccer-ball-field
+    * swimming-pool
 
     If you use this dataset in your research, please cite the following paper:
 
-    *
-    *
+    * https://arxiv.org/abs/1905.12886
+    * https://arxiv.org/abs/1711.10398
 
     .. versionadded:: 0.7
     """
