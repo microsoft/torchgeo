@@ -37,7 +37,7 @@ from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
-from .dl4gam_alps import DL4GAMAlps
+from .dl4gam import DL4GAMAlps
 from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
 from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
