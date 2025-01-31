@@ -11,7 +11,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import DatasetNotFoundError, DL4GAMAlps
+from torchgeo.datasets import DatasetNotFoundError, DL4GAMAlps, RGBBandsMissingError
 
 pytest.importorskip('xarray', minversion='2023.9')
 pytest.importorskip('netCDF4', minversion='1.5.4')
@@ -110,3 +110,16 @@ class TestDL4GAMAlps:
         sample['prediction'] = torch.clone(sample['mask_glacier'])
         dataset.plot(sample, suptitle='Test with prediction')
         plt.close()
+
+    def test_plot_wrong_bands(self, dataset: DL4GAMAlps) -> None:
+        ds = DL4GAMAlps(
+            root=dataset.root,
+            split=dataset.split,
+            cv_iter=dataset.cv_iter,
+            version=dataset.version,
+            bands=('B3',),
+        )
+        with pytest.raises(
+            RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
+        ):
+            ds.plot(dataset[0], suptitle='Single Band')

@@ -14,7 +14,7 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from .errors import DatasetNotFoundError
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
@@ -350,11 +350,13 @@ class DL4GAMAlps(NonGeoDataset):
 
         Returns:
             a matplotlib Figure with the rendered sample
+
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
         # we expect the RGB bands to be present
-        assert {'B4', 'B3', 'B2'}.issubset(set(self.bands)), (
-            'RGB bands not found in the available bands.'
-        )
+        if not {'B4', 'B3', 'B2'}.issubset(set(self.bands)):
+            raise RGBBandsMissingError()
         nir_and_swir_present = {'B8', 'B11'}.issubset(set(self.bands))
 
         # prepare the RGB image and the masks
