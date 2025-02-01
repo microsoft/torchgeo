@@ -14,7 +14,7 @@ from pytest import MonkeyPatch
 from torchgeo.datasets import DatasetNotFoundError, DL4GAMAlps, RGBBandsMissingError
 
 pytest.importorskip('xarray', minversion='2023.9')
-pytest.importorskip('netCDF4', minversion='1.5.4')
+pytest.importorskip('netCDF4', minversion='1.5.8')
 
 
 class TestDL4GAMAlps:

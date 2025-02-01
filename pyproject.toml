@@ -87,8 +87,8 @@ datasets = [
     "h5py>=3.6",
     # laspy 2+ required for laspy.read
     "laspy>=2",
-    # netcdf4 1.5.4+ required for xarray.open_dataset with engine="netcdf4"
-    "netcdf4>=1.5.4",
+    # netcdf4 1.5.8+ required for Python 3.10 wheels
+    "netcdf4>=1.5.8",
     # opencv-python 4.5.4+ required for Python 3.10 wheels
     "opencv-python>=4.5.4",
     # pandas 2+ required for parquet extra
