@@ -126,7 +126,7 @@ class DL4GAMAlps(NonGeoDataset):
         'B11',
         'B12',
     )
-    rgb_nir_swir_bands = ('B4', 'B3', 'B2', 'B8', 'B11')  # the subset used in our paper
+    rgb_nir_swir_bands = ('B4', 'B3', 'B2', 'B8', 'B11')  # the subset used in the paper
 
     valid_extra_features = (
         'dem',  # Digital Elevation Model
