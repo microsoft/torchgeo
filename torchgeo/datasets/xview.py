@@ -362,10 +362,10 @@ class XView2DistShift(XView2):
         self.files = self._load_split_files_by_disaster_and_type(
             self.all_files, id_ood_disaster[0], id_ood_disaster[1]
         )
-        print(
-            f"Loaded for disasters ID and OOD: {len(self.files['train'])} train, {len(self.files['test'])} test files."
-        )
 
+        train_size, test_size = self.get_id_ood_sizes()
+        print(f"ID sample len: {train_size}, OOD sample len: {test_size}")
+            
     def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
         """Get an item from the dataset at the given index."""
         file_info = (
@@ -395,6 +395,12 @@ class XView2DistShift(XView2):
             if self.split == 'train'
             else len(self.files['test'])
         )
+
+
+    def get_id_ood_sizes(self) -> tuple[int, int]:
+        """Return the number of samples in the train and test splits."""
+        return (len(self.files['train']), len(self.files['test']))
+
 
     def _initialize_files(self, root: str) -> list[dict[str, str]]:
         """Initialize the dataset by loading file paths and computing basenames with sample numbers."""
@@ -454,7 +460,7 @@ class XView2DistShift(XView2):
 
             disaster_list.append(disaster_name)
 
-            # Filter for in-domain (ID) training set
+            # Filter for in-distribution (ID) training set
             if disaster_name == id_disaster['disaster_name']:
                 if (
                     id_disaster.get('pre-post') == 'both'
