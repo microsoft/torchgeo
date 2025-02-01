@@ -374,10 +374,12 @@ class XView2DistShift(XView2):
             else self.files['test'][index]
         )
 
-        image = self._load_image(file_info['image']).to('cuda')
-        mask = self._load_target(file_info['mask']).long().to('cuda')
-        mask[mask == 2] = 1
-        mask[(mask == 3) | (mask == 4)] = 0
+        image = self._load_image(file_info['image'])
+        mask = self._load_target(file_info['mask']).long()
+
+        # Reformulate as building segmentation task 
+        mask[mask == 2] = 1 # Map damage class 2 to 1 
+        mask[(mask == 3) | (mask == 4)] = 0 # Map 3 and 4 damage classes to background
 
         sample = {'image': image, 'mask': mask}
 
@@ -402,7 +404,7 @@ class XView2DistShift(XView2):
             mask_root = os.path.join(root, split, 'targets')
             images = glob.glob(os.path.join(image_root, '*.png'))
 
-            # Extract basenames while preserving the event-name and sample number
+            # Extract basenames while preserving the disaster-name and sample number
             for img in images:
                 basename_parts = os.path.basename(img).split('_')
                 event_name = basename_parts[0]  # e.g., mexico-earthquake
@@ -470,7 +472,7 @@ class XView2DistShift(XView2):
                     )
                     train_files.append(dict(image=image, mask=mask))
 
-            # Filter for out-of-domain (OOD) test set
+            # Filter for out-of-distribution (OOD) test set
             if disaster_name == ood_disaster['disaster_name']:
                 if (
                     ood_disaster.get('pre-post') == 'both'
