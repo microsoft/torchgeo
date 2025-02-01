@@ -92,7 +92,7 @@ def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor) -> Tens
     return emb
 
 
-class ScaleMAE(VisionTransformer):  # type: ignore[misc]
+class ScaleMAE(VisionTransformer):
     """Custom Vision Transformer for Scale-MAE with GSD positional embeddings.
 
     This is a ViT encoder only model of the Scale-MAE architecture with GSD positional embeddings.
@@ -117,7 +117,8 @@ class ScaleMAE(VisionTransformer):  # type: ignore[misc]
         self.res = res
 
         # Scale MAE uses resolution specific positional embeddings
-        self.pos_embed.requires_grad = False
+        if self.pos_embed is not None:
+            self.pos_embed.requires_grad = False
 
     def _pos_embed(self, x: Tensor) -> Tensor:
         """Apply GSD positional embeddings to the input tensor."""
@@ -133,8 +134,9 @@ class ScaleMAE(VisionTransformer):  # type: ignore[misc]
             .to(x.dtype)
             .to(x.device)
         )
-        cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
-        x = torch.cat((cls_tokens, x), dim=1)
+        if self.cls_token is not None:
+            cls_tokens = self.cls_token.expand(x.shape[0], -1, -1)
+            x = torch.cat((cls_tokens, x), dim=1)
         x = x + pos_embed
         x = self.pos_drop(x)
         return x
@@ -155,7 +157,9 @@ def interpolate_pos_embed(
     pos_embed_checkpoint = state_dict['pos_embed']
     embedding_size = pos_embed_checkpoint.shape[-1]
     num_patches = model.patch_embed.num_patches
-    num_extra_tokens = model.pos_embed.shape[-2] - num_patches
+    num_extra_tokens = 0
+    if model.pos_embed is not None:
+        num_extra_tokens = model.pos_embed.shape[-2] - num_patches
     # height (== width) for the checkpoint position embedding
     orig_size = int((pos_embed_checkpoint.shape[-2] - num_extra_tokens) ** 0.5)
     # height (== width) for the new position embedding

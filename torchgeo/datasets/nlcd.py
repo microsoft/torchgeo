@@ -167,9 +167,9 @@ class NLCD(RasterDataset):
             'NLCD data product only exists for the following years: '
             f'{list(self.md5s.keys())}.'
         )
-        assert (
-            set(classes) <= self.cmap.keys()
-        ), f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert set(classes) <= self.cmap.keys(), (
+            f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        )
         assert 0 in classes, 'Classes must include the background class: 0'
 
         self.paths = paths

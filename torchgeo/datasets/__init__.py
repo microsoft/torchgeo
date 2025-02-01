@@ -11,6 +11,7 @@ from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet
 from .biomassters import BioMassters
+from .bright import BRIGHTDFC2025
 from .cabuar import CaBuAr
 from .caffe import CaFFe
 from .cbf import CanadianBuildingFootprints
@@ -85,8 +86,10 @@ from .landsat import (
 from .levircd import LEVIRCD, LEVIRCDBase, LEVIRCDPlus
 from .loveda import LoveDA
 from .mapinwild import MapInWild
+from .mdas import MDAS
 from .millionaid import MillionAID
 from .mmearth import MMEarth
+from .mmflood import MMFlood
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nccm import NCCM
@@ -150,6 +153,7 @@ from .zuericrop import ZueriCrop
 
 __all__ = (
     'ADVANCE',
+    'BRIGHTDFC2025',
     'CDL',
     'COWC',
     'DFC2022',
@@ -159,6 +163,7 @@ __all__ = (
     'GBIF',
     'GID15',
     'LEVIRCD',
+    'MDAS',
     'NAIP',
     'NCCM',
     'NLCD',
@@ -243,6 +248,7 @@ __all__ = (
     'Landsat9',
     'LoveDA',
     'MMEarth',
+    'MMFlood',
     'MapInWild',
     'MillionAID',
     'NASAMarineDebris',

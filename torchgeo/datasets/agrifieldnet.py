@@ -149,9 +149,9 @@ class AgriFieldNet(RasterDataset):
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert (
-            set(classes) <= self.cmap.keys()
-        ), f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert set(classes) <= self.cmap.keys(), (
+            f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        )
         assert 0 in classes, 'Classes must include the background class: 0'
 
         self.paths = paths

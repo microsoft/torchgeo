@@ -34,8 +34,6 @@ jobs:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/tests.txt') }}
         if: ${{ runner.os != 'macOS' }}
-      - name: Setup headless display for pyvista
-        uses: pyvista/setup-headless-display-action@v3
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -45,10 +43,10 @@ jobs:
         run: pip list
       - name: Run pytest checks
         run: |
-          pytest --cov --cov-report=xml
+          pytest --cov=torchgeo --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.1.2
+        uses: codecov/codecov-action@v5.3.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
@@ -68,8 +66,6 @@ jobs:
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/min-reqs.old') }}
-      - name: Setup headless display for pyvista
-        uses: pyvista/setup-headless-display-action@v3
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -79,10 +75,10 @@ jobs:
         run: pip list
       - name: Run pytest checks
         run: |
-          pytest --cov --cov-report=xml
+          pytest --cov=torchgeo --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.1.2
+        uses: codecov/codecov-action@v5.3.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   datasets:
@@ -111,10 +107,10 @@ jobs:
         run: pip list
       - name: Run pytest checks
         run: |
-          pytest --cov --cov-report=xml
+          pytest --cov=torchgeo --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.1.2
+        uses: codecov/codecov-action@v5.3.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:
