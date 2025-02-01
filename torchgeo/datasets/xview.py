@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,8 +17,12 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, draw_semantic_segmentation_masks, extract_archive
-
+from .utils import (
+    Path,
+    check_integrity,
+    draw_semantic_segmentation_masks,
+    extract_archive,
+)
 
 
 class XView2(NonGeoDataset):
@@ -50,11 +55,11 @@ class XView2(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    metadata = {
-        "train": {
-            "filename": "train_images_labels_targets.tar.gz",
-            "md5": "a20ebbfb7eb3452785b63ad02ffd1e16",
-            "directory": "train",
+    metadata: ClassVar[dict[str, dict[str, str]]] = {
+        'train': {
+            'filename': 'train_images_labels_targets.tar.gz',
+            'md5': 'a20ebbfb7eb3452785b63ad02ffd1e16',
+            'directory': 'train',
         },
         "test": {
             "filename": "test_images_labels_targets.tar.gz",
@@ -62,13 +67,13 @@ class XView2(NonGeoDataset):
             "directory": "test",
         },
     }
-    classes = ["background", "no-damage", "minor-damage", "major-damage", "destroyed"]
-    colormap = ["green", "blue", "orange", "red"]
+    classes = ('background', 'no-damage', 'minor-damage', 'major-damage', 'destroyed')
+    colormap = ('green', 'blue', 'orange', 'red')
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: Path = 'data',
+        split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
@@ -128,7 +133,7 @@ class XView2(NonGeoDataset):
         """
         return len(self.files)
 
-    def _load_files(self, root: str, split: str) -> list[dict[str, str]]:
+    def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -153,7 +158,7 @@ class XView2(NonGeoDataset):
             files.append(dict(image1=image1, image2=image2, mask1=mask1, mask2=mask2))
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -170,7 +175,7 @@ class XView2(NonGeoDataset):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, path: str) -> Tensor:
+    def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
 
         Args:
@@ -238,10 +243,16 @@ class XView2(NonGeoDataset):
         """
         ncols = 2
         image1 = draw_semantic_segmentation_masks(
-            sample["image"][0], sample["mask"][0], alpha=alpha, colors=self.colormap
+            sample['image'][0],
+            sample['mask'][0],
+            alpha=alpha,
+            colors=list(self.colormap),
         )
         image2 = draw_semantic_segmentation_masks(
-            sample["image"][1], sample["mask"][1], alpha=alpha, colors=self.colormap
+            sample['image'][1],
+            sample['mask'][1],
+            alpha=alpha,
+            colors=list(self.colormap),
         )
         if "prediction" in sample:  # NOTE: this assumes predictions are made for post
             ncols += 1
@@ -249,7 +260,7 @@ class XView2(NonGeoDataset):
                 sample["image"][1],
                 sample["prediction"],
                 alpha=alpha,
-                colors=self.colormap,
+                colors=list(self.colormap),
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))

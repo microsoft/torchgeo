@@ -4,12 +4,12 @@ trainer:
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    model: "unet"
-    backbone: "resnet18"
+    model: 'unet'
+    backbone: 'resnet18'
     weights: null
     in_channels: 7
     num_classes: 14
-    loss: "ce"
+    loss: 'ce'
     ignore_index: 0
     lr: 1e-3
     patience: 6
@@ -19,9 +19,9 @@ data:
     batch_size: 64
     num_workers: 16
   dict_kwargs:
-    root: "data/ssl4eo_benchmark"
-    sensor: "tm_toa"
-    product: "nlcd"
+    root: 'data/ssl4eo_benchmark'
+    sensor: 'tm_toa'
+    product: 'nlcd'
     classes:
       - 0
       - 11

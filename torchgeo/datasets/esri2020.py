@@ -14,7 +14,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class Esri2020(RasterDataset):
@@ -41,7 +41,7 @@ class Esri2020(RasterDataset):
     9. Snow/Ice
     10. Clouds
 
-    A more detailed explanation of the invidual classes can be found
+    A more detailed explanation of the individual classes can be found
     `here <https://www.arcgis.com/home/item.html?id=fc92d38533d440078f17678ebc20e8e2>`_.
 
     If you use this dataset please cite the following paper:
@@ -69,7 +69,7 @@ class Esri2020(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -112,7 +112,7 @@ class Esri2020(RasterDataset):
             return
 
         # Check if the zip files have already been downloaded
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | os.PathLike)
         pathname = os.path.join(self.paths, self.zipfile)
         if glob.glob(pathname):
             self._extract()
@@ -132,7 +132,7 @@ class Esri2020(RasterDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | os.PathLike)
         extract_archive(os.path.join(self.paths, self.zipfile))
 
     def plot(

@@ -12,12 +12,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, SustainBenchCropYield
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestSustainBenchCropYield:
@@ -25,16 +20,12 @@ class TestSustainBenchCropYield:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SustainBenchCropYield:
-        monkeypatch.setattr(
-            torchgeo.datasets.sustainbench_crop_yield, 'download_url', download_url
-        )
-
         md5 = '7a5591794e14dd73d2b747cd2244acbc'
         monkeypatch.setattr(SustainBenchCropYield, 'md5', md5)
         url = os.path.join('tests', 'data', 'sustainbench_crop_yield', 'soybeans.zip')
         monkeypatch.setattr(SustainBenchCropYield, 'url', url)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         countries = ['argentina', 'brazil', 'usa']
         transforms = nn.Identity()
@@ -49,7 +40,7 @@ class TestSustainBenchCropYield:
         pathname = os.path.join(
             'tests', 'data', 'sustainbench_crop_yield', 'soybeans.zip'
         )
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(pathname, root)
         SustainBenchCropYield(root)
 
@@ -72,7 +63,7 @@ class TestSustainBenchCropYield:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SustainBenchCropYield(str(tmp_path))
+            SustainBenchCropYield(tmp_path)
 
     def test_plot(self, dataset: SustainBenchCropYield) -> None:
         dataset.plot(dataset[0], suptitle='Test')

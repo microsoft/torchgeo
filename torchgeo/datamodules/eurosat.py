@@ -19,11 +19,11 @@ SPATIAL_MEAN = {
     'B06': 2130.3491,
     'B07': 2524.0549,
     'B08': 2454.1938,
-    'B8A': 785.4963,
-    'B09': 12.4639,
-    'B10': 1969.9224,
-    'B11': 1206.2421,
-    'B12': 2779.4104,
+    'B09': 785.4963,
+    'B10': 12.4639,
+    'B11': 1969.9224,
+    'B12': 1206.2421,
+    'B8A': 2779.4104,
 }
 
 SPATIAL_STD = {
@@ -35,11 +35,11 @@ SPATIAL_STD = {
     'B06': 806.8271,
     'B07': 1022.6378,
     'B08': 1065.4312,
-    'B8A': 410.5831,
-    'B09': 4.8878,
-    'B10': 958.4751,
-    'B11': 740.6196,
-    'B12': 1157.2896,
+    'B09': 410.5831,
+    'B10': 4.8878,
+    'B11': 958.4751,
+    'B12': 740.6196,
+    'B8A': 1157.2896,
 }
 
 MEAN = {
@@ -51,11 +51,11 @@ MEAN = {
     'B06': 1999.79090914,
     'B07': 2369.22292565,
     'B08': 2296.82608323,
-    'B8A': 732.08340178,
-    'B09': 12.11327804,
-    'B10': 1819.01027855,
-    'B11': 1118.92391149,
-    'B12': 2594.14080798,
+    'B09': 732.08340178,
+    'B10': 12.11327804,
+    'B11': 1819.01027855,
+    'B12': 1118.92391149,
+    'B8A': 2594.14080798,
 }
 
 STD = {
@@ -67,11 +67,11 @@ STD = {
     'B06': 861.18399006,
     'B07': 1086.63139075,
     'B08': 1117.98170791,
-    'B8A': 404.91978886,
-    'B09': 4.77584468,
-    'B10': 1002.58768311,
-    'B11': 761.30323499,
-    'B12': 1231.58581042,
+    'B09': 404.91978886,
+    'B10': 4.77584468,
+    'B11': 1002.58768311,
+    'B12': 761.30323499,
+    'B8A': 1231.58581042,
 }
 
 
@@ -94,11 +94,10 @@ class EuroSATDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.EuroSAT`.
         """
-        super().__init__(EuroSAT, batch_size, num_workers, **kwargs)
-
         bands = kwargs.get('bands', EuroSAT.all_band_names)
         self.mean = torch.tensor([MEAN[b] for b in bands])
         self.std = torch.tensor([STD[b] for b in bands])
+        super().__init__(EuroSAT, batch_size, num_workers, **kwargs)
 
 
 class EuroSATSpatialDataModule(NonGeoDataModule):
@@ -120,11 +119,10 @@ class EuroSATSpatialDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.EuroSATSpatial`.
         """
-        super().__init__(EuroSATSpatial, batch_size, num_workers, **kwargs)
-
         bands = kwargs.get('bands', EuroSAT.all_band_names)
         self.mean = torch.tensor([SPATIAL_MEAN[b] for b in bands])
         self.std = torch.tensor([SPATIAL_STD[b] for b in bands])
+        super().__init__(EuroSATSpatial, batch_size, num_workers, **kwargs)
 
 
 class EuroSAT100DataModule(NonGeoDataModule):
@@ -146,8 +144,7 @@ class EuroSAT100DataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.EuroSAT100`.
         """
-        super().__init__(EuroSAT100, batch_size, num_workers, **kwargs)
-
         bands = kwargs.get('bands', EuroSAT.all_band_names)
         self.mean = torch.tensor([MEAN[b] for b in bands])
         self.std = torch.tensor([STD[b] for b in bands])
+        super().__init__(EuroSAT100, batch_size, num_workers, **kwargs)

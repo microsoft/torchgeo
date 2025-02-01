@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -12,12 +11,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import LEVIRCD, DatasetNotFoundError, LEVIRCDPlus
-
-
-def download_url(url: str, root: str, *args: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestLEVIRCD:
@@ -43,9 +37,8 @@ class TestLEVIRCD:
                 'md5': '021db72d4486726d6a0702563a617b32',
             },
         }
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         monkeypatch.setattr(LEVIRCD, 'splits', splits)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return LEVIRCD(root, split, transforms, download=True, checksum=True)
@@ -71,7 +64,7 @@ class TestLEVIRCD:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            LEVIRCD(str(tmp_path))
+            LEVIRCD(tmp_path)
 
     def test_plot(self, dataset: LEVIRCD) -> None:
         dataset.plot(dataset[0], suptitle='Test')
@@ -88,12 +81,11 @@ class TestLEVIRCDPlus:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LEVIRCDPlus:
-        monkeypatch.setattr(torchgeo.datasets.utils, 'download_url', download_url)
         md5 = '0ccca34310bfe7096dadfbf05b0d180f'
         monkeypatch.setattr(LEVIRCDPlus, 'md5', md5)
         url = os.path.join('tests', 'data', 'levircd', 'levircdplus', 'LEVIR-CD+.zip')
         monkeypatch.setattr(LEVIRCDPlus, 'url', url)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return LEVIRCDPlus(root, split, transforms, download=True, checksum=True)
@@ -119,7 +111,7 @@ class TestLEVIRCDPlus:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            LEVIRCDPlus(str(tmp_path))
+            LEVIRCDPlus(tmp_path)
 
     def test_plot(self, dataset: LEVIRCDPlus) -> None:
         dataset.plot(dataset[0], suptitle='Test')

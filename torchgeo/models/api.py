@@ -8,7 +8,7 @@ See the following references for design details:
 * https://pytorch.org/blog/easily-list-and-initialize-models-with-new-apis-in-torchvision/
 * https://pytorch.org/vision/stable/models.html
 * https://github.com/pytorch/vision/blob/main/torchvision/models/_api.py
-"""  # noqa: E501
+"""
 
 from collections.abc import Callable
 from typing import Any
@@ -22,8 +22,16 @@ from .dofa import (
     dofa_base_patch16_224,
     dofa_large_patch16_224,
 )
-from .resnet import ResNet18_Weights, ResNet50_Weights, resnet18, resnet50
-from .swin import Swin_V2_B_Weights, swin_v2_b
+from .resnet import (
+    ResNet18_Weights,
+    ResNet50_Weights,
+    ResNet152_Weights,
+    resnet18,
+    resnet50,
+    resnet152,
+)
+from .scale_mae import ScaleMAELarge16_Weights, scalemae_large_patch16
+from .swin import Swin_V2_B_Weights, Swin_V2_T_Weights, swin_v2_b, swin_v2_t
 from .vit import ViTSmall16_Weights, vit_small_patch16_224
 
 _model = {
@@ -31,21 +39,30 @@ _model = {
     'dofa_large_patch16_224': dofa_large_patch16_224,
     'resnet18': resnet18,
     'resnet50': resnet50,
+    'resnet152': resnet152,
+    'scalemae_large_patch16': scalemae_large_patch16,
+    'swin_v2_t': swin_v2_t,
     'swin_v2_b': swin_v2_b,
     'vit_small_patch16_224': vit_small_patch16_224,
 }
 
-_model_weights = {
+_model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     dofa_base_patch16_224: DOFABase16_Weights,
     dofa_large_patch16_224: DOFALarge16_Weights,
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
+    resnet152: ResNet152_Weights,
+    scalemae_large_patch16: ScaleMAELarge16_Weights,
+    swin_v2_t: Swin_V2_T_Weights,
     swin_v2_b: Swin_V2_B_Weights,
     vit_small_patch16_224: ViTSmall16_Weights,
     'dofa_base_patch16_224': DOFABase16_Weights,
     'dofa_large_patch16_224': DOFALarge16_Weights,
     'resnet18': ResNet18_Weights,
     'resnet50': ResNet50_Weights,
+    'resnet152': ResNet152_Weights,
+    'scalemae_large_patch16': ScaleMAELarge16_Weights,
+    'swin_v2_t': Swin_V2_T_Weights,
     'swin_v2_b': Swin_V2_B_Weights,
     'vit_small_patch16_224': ViTSmall16_Weights,
 }
@@ -92,8 +109,17 @@ def get_weight(name: str) -> WeightsEnum:
 
     Returns:
         The requested weight enum.
+
+    Raises:
+        ValueError: If *name* is not a valid WeightsEnum.
     """
-    return eval(name)
+    for weight_name, weight_enum in _model_weights.items():
+        if isinstance(weight_name, str):
+            for sub_weight_enum in weight_enum:
+                if name == str(sub_weight_enum):
+                    return sub_weight_enum
+
+    raise ValueError(f'{name} is not a valid WeightsEnum')
 
 
 def list_models() -> list[str]:

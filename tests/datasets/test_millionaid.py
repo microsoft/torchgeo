@@ -39,18 +39,18 @@ class TestMillionAID:
 
     def test_not_found(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            MillionAID(str(tmp_path))
+            MillionAID(tmp_path)
 
     def test_not_extracted(self, tmp_path: Path) -> None:
         url = os.path.join('tests', 'data', 'millionaid', 'train.zip')
         shutil.copy(url, tmp_path)
-        MillionAID(str(tmp_path))
+        MillionAID(tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'train.zip'), 'w') as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            MillionAID(str(tmp_path), checksum=True)
+            MillionAID(tmp_path, checksum=True)
 
     def test_plot(self, dataset: MillionAID) -> None:
         x = dataset[0].copy()

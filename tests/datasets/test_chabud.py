@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -12,14 +11,9 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import ChaBuD, DatasetNotFoundError
 
 pytest.importorskip('h5py', minversion='3.6')
-
-
-def download_url(url: str, root: str, filename: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, os.path.join(root, filename))
 
 
 class TestChaBuD:
@@ -27,14 +21,13 @@ class TestChaBuD:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> ChaBuD:
-        monkeypatch.setattr(torchgeo.datasets.chabud, 'download_url', download_url)
         data_dir = os.path.join('tests', 'data', 'chabud')
         url = os.path.join(data_dir, 'train_eval.hdf5')
         md5 = '1bec048beeb87a865c53f40ab418aa75'
         monkeypatch.setattr(ChaBuD, 'url', url)
         monkeypatch.setattr(ChaBuD, 'md5', md5)
         bands, split = request.param
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return ChaBuD(
             root=root,
@@ -70,7 +63,7 @@ class TestChaBuD:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            ChaBuD(str(tmp_path))
+            ChaBuD(tmp_path)
 
     def test_invalid_bands(self) -> None:
         with pytest.raises(AssertionError):

@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Iterable
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import torch
@@ -15,7 +15,13 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import BoundingBox, check_integrity, disambiguate_timestamp, extract_archive
+from .utils import (
+    BoundingBox,
+    Path,
+    check_integrity,
+    disambiguate_timestamp,
+    extract_archive,
+)
 
 
 class GlobBiomass(RasterDataset):
@@ -66,9 +72,9 @@ class GlobBiomass(RasterDataset):
     is_image = False
     dtype = torch.float32  # pixelwise regression
 
-    measurements = ['agb', 'gsv']
+    measurements = ('agb', 'gsv')
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'N00E020_agb.zip': 'bd83a3a4c143885d1962bde549413be6',
         'N00E020_gsv.zip': 'da5ddb88e369df2d781a0c6be008ae79',
         'N00E060_agb.zip': '85eaca95b939086cc528e396b75bd097',
@@ -131,7 +137,7 @@ class GlobBiomass(RasterDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         measurement: str = 'agb',
@@ -195,12 +201,12 @@ class GlobBiomass(RasterDataset):
 
         mask = self._merge_files(filepaths, query)
 
-        std_error_paths = [f.replace('.tif', '_err.tif') for f in filepaths]
+        std_error_paths = [str(f).replace('.tif', '_err.tif') for f in filepaths]
         std_err_mask = self._merge_files(std_error_paths, query)
 
         mask = torch.cat((mask, std_err_mask), dim=0)
 
-        sample = {'mask': mask, 'crs': self.crs, 'bbox': query}
+        sample = {'mask': mask, 'crs': self.crs, 'bounds': query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -214,7 +220,7 @@ class GlobBiomass(RasterDataset):
             return
 
         # Check if the zip files have already been downloaded
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | os.PathLike)
         pathname = os.path.join(self.paths, f'*_{self.measurement}.zip')
         if glob.glob(pathname):
             for zipfile in glob.iglob(pathname):

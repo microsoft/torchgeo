@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import download_url, extract_archive
+from .utils import Path, download_url, extract_archive
 
 
 class SustainBenchCropYield(NonGeoDataset):
@@ -45,21 +45,21 @@ class SustainBenchCropYield(NonGeoDataset):
     * https://doi.org/10.1609/aaai.v31i1.11172
 
     .. versionadded:: 0.5
-    """  # noqa: E501
+    """
 
-    valid_countries = ['usa', 'brazil', 'argentina']
+    valid_countries = ('usa', 'brazil', 'argentina')
 
     md5 = '362bad07b51a1264172b8376b39d1fc9'
 
-    url = 'https://drive.google.com/file/d/1lhbmICpmNuOBlaErywgiD6i9nHuhuv0A/view?usp=drive_link'  # noqa: E501
+    url = 'https://drive.google.com/file/d/1lhbmICpmNuOBlaErywgiD6i9nHuhuv0A/view?usp=drive_link'
 
     dir = 'soybeans'
 
-    valid_splits = ['train', 'dev', 'test']
+    valid_splits = ('train', 'dev', 'test')
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'train',
         countries: list[str] = ['usa'],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,

@@ -57,6 +57,16 @@ BigEarthNet
 
 .. autoclass:: BigEarthNetDataModule
 
+CaBuAr
+^^^^^^
+
+.. autoclass:: CaBuArDataModule
+
+CaFFe
+^^^^^
+
+.. autoclass:: CaFFeDataModule
+
 ChaBuD
 ^^^^^^
 
@@ -71,6 +81,11 @@ Deep Globe Land Cover Challenge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: DeepGlobeLandCoverDataModule
+
+Digital Typhoon
+^^^^^^^^^^^^^^^
+
+.. autoclass:: DigitalTyphoonDataModule
 
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -89,15 +104,30 @@ FAIR1M
 
 .. autoclass:: FAIR1MDataModule
 
+Fields Of The World
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: FieldsOfTheWorldDataModule
+
 FireRisk
 ^^^^^^^^
 
 .. autoclass:: FireRiskDataModule
 
+GeoNRW
+^^^^^^
+
+.. autoclass:: GeoNRWDataModule
+
 GID-15
 ^^^^^^
 
 .. autoclass:: GID15DataModule
+
+HySpecNet-11k
+^^^^^^^^^^^^^
+
+.. autoclass:: HySpecNet11kDataModule
 
 Inria Aerial Image Labeling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -108,6 +138,7 @@ LandCover.ai
 ^^^^^^^^^^^^
 
 .. autoclass:: LandCoverAIDataModule
+.. autoclass:: LandCoverAI100DataModule
 
 LEVIR-CD
 ^^^^^^^^
@@ -167,7 +198,9 @@ So2Sat
 SpaceNet
 ^^^^^^^^
 
+.. autoclass:: SpaceNetBaseDataModule
 .. autoclass:: SpaceNet1DataModule
+.. autoclass:: SpaceNet6DataModule
 
 SSL4EO
 ^^^^^^
@@ -184,6 +217,11 @@ SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SustainBenchCropYieldDataModule
+
+TreeSatAI
+^^^^^^^^^
+
+.. autoclass:: TreeSatAIDataModule
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^

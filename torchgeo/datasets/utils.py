@@ -6,183 +6,42 @@
 # https://github.com/sphinx-doc/sphinx/issues/11327
 from __future__ import annotations
 
-import bz2
 import collections
 import contextlib
-import gzip
 import importlib
-import lzma
 import os
 import shutil
 import subprocess
 import sys
-import tarfile
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, cast, overload
+from typing import Any, TypeAlias, cast, overload
 
 import numpy as np
 import rasterio
 import torch
 from torch import Tensor
-from torchvision.datasets.utils import check_integrity, download_url
+from torchvision.datasets.utils import (
+    check_integrity,
+    download_and_extract_archive,
+    download_url,
+    extract_archive,
+)
 from torchvision.utils import draw_segmentation_masks
 
 from .errors import DependencyNotFoundError
 
 # Only include import redirects
-__all__ = ('check_integrity', 'download_url')
+__all__ = (
+    'check_integrity',
+    'download_and_extract_archive',
+    'download_url',
+    'extract_archive',
+)
 
 
-class _rarfile:
-    class RarFile:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            self.args = args
-            self.kwargs = kwargs
-
-        def __enter__(self) -> Any:
-            rarfile = lazy_import('rarfile')
-            # TODO: catch exception for when rarfile is installed but not
-            # unrar/unar/bsdtar
-            return rarfile.RarFile(*self.args, **self.kwargs)
-
-        def __exit__(self, exc_type: None, exc_value: None, traceback: None) -> None:
-            pass
-
-
-class _zipfile:
-    class ZipFile:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            self.args = args
-            self.kwargs = kwargs
-
-        def __enter__(self) -> Any:
-            try:
-                # Supports normal zip files, proprietary deflate64 compression algorithm
-                import zipfile_deflate64 as zipfile
-            except ImportError:
-                # Only supports normal zip files
-                # https://github.com/python/mypy/issues/1153
-                import zipfile
-
-            return zipfile.ZipFile(*self.args, **self.kwargs)
-
-        def __exit__(self, exc_type: None, exc_value: None, traceback: None) -> None:
-            pass
-
-
-def extract_archive(src: str, dst: str | None = None) -> None:
-    """Extract an archive.
-
-    Args:
-        src: file to be extracted
-        dst: directory to extract to (defaults to dirname of ``src``)
-
-    Raises:
-        RuntimeError: if src file has unknown archival/compression scheme
-    """
-    if dst is None:
-        dst = os.path.dirname(src)
-
-    suffix_and_extractor: list[tuple[str | tuple[str, ...], Any]] = [
-        ('.rar', _rarfile.RarFile),
-        (
-            ('.tar', '.tar.gz', '.tar.bz2', '.tar.xz', '.tgz', '.tbz2', '.tbz', '.txz'),
-            tarfile.open,
-        ),
-        ('.zip', _zipfile.ZipFile),
-    ]
-
-    for suffix, extractor in suffix_and_extractor:
-        if src.endswith(suffix):
-            with extractor(src, 'r') as f:
-                f.extractall(dst)
-            return
-
-    suffix_and_decompressor: list[tuple[str, Any]] = [
-        ('.bz2', bz2.open),
-        ('.gz', gzip.open),
-        ('.xz', lzma.open),
-    ]
-
-    for suffix, decompressor in suffix_and_decompressor:
-        if src.endswith(suffix):
-            dst = os.path.join(dst, os.path.basename(src).replace(suffix, ''))
-            with decompressor(src, 'rb') as sf, open(dst, 'wb') as df:
-                df.write(sf.read())
-            return
-
-    raise RuntimeError('src file has unknown archival/compression scheme')
-
-
-def download_and_extract_archive(
-    url: str,
-    download_root: str,
-    extract_root: str | None = None,
-    filename: str | None = None,
-    md5: str | None = None,
-) -> None:
-    """Download and extract an archive.
-
-    Args:
-        url: URL to download
-        download_root: directory to download to
-        extract_root: directory to extract to (defaults to ``download_root``)
-        filename: download filename (defaults to basename of ``url``)
-        md5: checksum for download verification
-    """
-    download_root = os.path.expanduser(download_root)
-    if extract_root is None:
-        extract_root = download_root
-    if not filename:
-        filename = os.path.basename(url)
-
-    download_url(url, download_root, filename, md5)
-
-    archive = os.path.join(download_root, filename)
-    print(f'Extracting {archive} to {extract_root}')
-    extract_archive(archive, extract_root)
-
-
-def download_radiant_mlhub_dataset(
-    dataset_id: str, download_root: str, api_key: str | None = None
-) -> None:
-    """Download a dataset from Radiant Earth.
-
-    Args:
-        dataset_id: the ID of the dataset to fetch
-        download_root: directory to download to
-        api_key: the API key to use for all requests from the session. Can also be
-            passed in via the ``MLHUB_API_KEY`` environment variable, or configured in
-            ``~/.mlhub/profiles``.
-
-    Raises:
-        DependencyNotFoundError: If radiant_mlhub is not installed.
-    """
-    radiant_mlhub = lazy_import('radiant_mlhub')
-    dataset = radiant_mlhub.Dataset.fetch(dataset_id, api_key=api_key)
-    dataset.download(output_dir=download_root, api_key=api_key)
-
-
-def download_radiant_mlhub_collection(
-    collection_id: str, download_root: str, api_key: str | None = None
-) -> None:
-    """Download a collection from Radiant Earth.
-
-    Args:
-        collection_id: the ID of the collection to fetch
-        download_root: directory to download to
-        api_key: the API key to use for all requests from the session. Can also be
-            passed in via the ``MLHUB_API_KEY`` environment variable, or configured in
-            ``~/.mlhub/profiles``.
-
-    Raises:
-        DependencyNotFoundError: If radiant_mlhub is not installed.
-    """
-    radiant_mlhub = lazy_import('radiant_mlhub')
-    collection = radiant_mlhub.Collection.fetch(collection_id, api_key=api_key)
-    collection.download(output_dir=download_root, api_key=api_key)
+Path: TypeAlias = str | os.PathLike[str]
 
 
 @dataclass(frozen=True)
@@ -224,13 +83,12 @@ class BoundingBox:
                 f"Bounding box is invalid: 'mint={self.mint}' > 'maxt={self.maxt}'"
             )
 
-    # https://github.com/PyCQA/pydocstyle/issues/525
     @overload
-    def __getitem__(self, key: int) -> float:  # noqa: D105
+    def __getitem__(self, key: int) -> float:
         pass
 
     @overload
-    def __getitem__(self, key: slice) -> list[float]:  # noqa: D105
+    def __getitem__(self, key: slice) -> list[float]:
         pass
 
     def __getitem__(self, key: int | slice) -> float | list[float]:
@@ -410,7 +268,7 @@ class Executable:
     .. versionadded:: 0.6
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: Path) -> None:
         """Initialize a new Executable instance.
 
         Args:
@@ -429,7 +287,7 @@ class Executable:
             The completed process.
         """
         kwargs['check'] = True
-        return subprocess.run((self.name,) + args, **kwargs)
+        return subprocess.run((self.name, *args), **kwargs)
 
 
 def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
@@ -449,8 +307,8 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
         (mint, maxt) tuple for indexing
     """
     mint = datetime.strptime(date_str, format)
+    format = format.replace('%%', '')
 
-    # TODO: This doesn't correctly handle literal `%%` characters in format
     # TODO: May have issues with time zones, UTC vs. local time, and DST
     # TODO: This is really tedious, is there a better way to do this?
 
@@ -488,7 +346,7 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
 
 
 @contextlib.contextmanager
-def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
+def working_dir(dirname: Path, create: bool = False) -> Iterator[None]:
     """Context manager for changing directories.
 
     Args:
@@ -507,7 +365,9 @@ def working_dir(dirname: str, create: bool = False) -> Iterator[None]:
         os.chdir(cwd)
 
 
-def _list_dict_to_dict_list(samples: Iterable[dict[Any, Any]]) -> dict[Any, list[Any]]:
+def _list_dict_to_dict_list(
+    samples: Iterable[Mapping[Any, Any]],
+) -> dict[Any, list[Any]]:
     """Convert a list of dictionaries to a dictionary of lists.
 
     Args:
@@ -518,14 +378,18 @@ def _list_dict_to_dict_list(samples: Iterable[dict[Any, Any]]) -> dict[Any, list
 
     .. versionadded:: 0.2
     """
-    collated = collections.defaultdict(list)
+    collated: dict[Any, list[Any]] = dict()
     for sample in samples:
         for key, value in sample.items():
+            if key not in collated:
+                collated[key] = []
             collated[key].append(value)
     return collated
 
 
-def _dict_list_to_list_dict(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
+def _dict_list_to_list_dict(
+    sample: Mapping[Any, Sequence[Any]],
+) -> list[dict[Any, Any]]:
     """Convert a dictionary of lists to a list of dictionaries.
 
     Args:
@@ -545,7 +409,7 @@ def _dict_list_to_list_dict(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, 
     return uncollated
 
 
-def stack_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
+def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     """Stack a list of samples along a new axis.
 
     Useful for forming a mini-batch of samples to pass to
@@ -566,7 +430,7 @@ def stack_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
     return collated
 
 
-def concat_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
+def concat_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     """Concatenate a list of samples along an existing axis.
 
     Useful for joining samples in a :class:`torchgeo.datasets.IntersectionDataset`.
@@ -588,7 +452,7 @@ def concat_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
     return collated
 
 
-def merge_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
+def merge_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:
     """Merge a list of samples.
 
     Useful for joining samples in a :class:`torchgeo.datasets.UnionDataset`.
@@ -613,7 +477,7 @@ def merge_samples(samples: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
     return collated
 
 
-def unbind_samples(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
+def unbind_samples(sample: MutableMapping[Any, Any]) -> list[dict[Any, Any]]:
     """Reverse of :func:`stack_samples`.
 
     Useful for turning a mini-batch of samples into a list of samples. These individual
@@ -633,7 +497,7 @@ def unbind_samples(sample: dict[Any, Sequence[Any]]) -> list[dict[Any, Any]]:
     return _dict_list_to_list_dict(sample)
 
 
-def rasterio_loader(path: str) -> np.typing.NDArray[np.int_]:
+def rasterio_loader(path: Path) -> np.typing.NDArray[np.int_]:
     """Load an image file using rasterio.
 
     Args:
@@ -649,7 +513,7 @@ def rasterio_loader(path: str) -> np.typing.NDArray[np.int_]:
     return array
 
 
-def sort_sentinel2_bands(x: str) -> str:
+def sort_sentinel2_bands(x: Path) -> str:
     """Sort Sentinel-2 band files in the correct order."""
     x = os.path.basename(x).split('_')[-1]
     x = os.path.splitext(x)[0]
@@ -674,7 +538,7 @@ def draw_semantic_segmentation_masks(
         colors: list of RGB int tuples, or color strings e.g. red, #FF00FF
 
     Returns:
-        a version of ``image`` overlayed with the colors given by ``mask`` and
+        a version of ``image`` overlaid with the colors given by ``mask`` and
             ``colors``
     """
     classes = torch.from_numpy(np.arange(len(colors) if colors else 0, dtype=np.uint8))
@@ -687,7 +551,7 @@ def draw_semantic_segmentation_masks(
 
 
 def rgb_to_mask(
-    rgb: np.typing.NDArray[np.uint8], colors: list[tuple[int, int, int]]
+    rgb: np.typing.NDArray[np.uint8], colors: Sequence[tuple[int, int, int]]
 ) -> np.typing.NDArray[np.uint8]:
     """Converts an RGB colormap mask to a integer mask.
 
@@ -744,7 +608,7 @@ def percentile_normalization(
     return img_normalized
 
 
-def path_is_vsi(path: str) -> bool:
+def path_is_vsi(path: Path) -> bool:
     """Checks if the given path is pointing to a Virtual File System.
 
     .. note::
@@ -758,14 +622,14 @@ def path_is_vsi(path: str) -> bool:
     * https://rasterio.readthedocs.io/en/latest/topics/datasets.html
 
     Args:
-        path: string representing a directory or file
+        path: a directory or file
 
     Returns:
         True if path is on a virtual file system, else False
 
     .. versionadded:: 0.6
     """
-    return '://' in path or path.startswith('/vsi')
+    return '://' in str(path) or str(path).startswith('/vsi')
 
 
 def array_to_tensor(array: np.typing.NDArray[Any]) -> Tensor:
@@ -831,7 +695,7 @@ to install all optional dataset dependencies."""
         raise DependencyNotFoundError(msg) from None
 
 
-def which(name: str) -> Executable:
+def which(name: Path) -> Executable:
     """Search for executable *name*.
 
     Args:
@@ -845,8 +709,8 @@ def which(name: str) -> Executable:
 
     .. versionadded:: 0.6
     """
-    if shutil.which(name):
-        return Executable(name)
+    if cmd := shutil.which(name):
+        return Executable(cmd)
     else:
         msg = f'{name} is not installed and is required to use this dataset.'
         raise DependencyNotFoundError(msg) from None

@@ -4,6 +4,7 @@
 """Base classes for all :mod:`torchgeo` datasets."""
 
 import abc
+import fnmatch
 import functools
 import glob
 import os
@@ -11,7 +12,7 @@ import re
 import sys
 import warnings
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import fiona
 import fiona.transform
@@ -34,6 +35,7 @@ from torchvision.datasets.folder import default_loader as pil_loader
 from .errors import DatasetNotFoundError
 from .utils import (
     BoundingBox,
+    Path,
     array_to_tensor,
     concat_samples,
     disambiguate_timestamp,
@@ -84,7 +86,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
-    paths: str | Iterable[str]
+    paths: Path | Iterable[Path]
     _crs = CRS.from_epsg(4326)
     _res = 0.0
 
@@ -205,7 +207,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self,
         state: tuple[
             dict[Any, Any],
-            list[tuple[int, tuple[float, float, float, float, float, float], str]],
+            list[tuple[int, tuple[float, float, float, float, float, float], Path]],
         ],
     ) -> None:
         """Define how to unpickle an instance.
@@ -297,8 +299,8 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         .. versionadded:: 0.5
         """
         # Make iterable
-        if isinstance(self.paths, str):
-            paths: Iterable[str] = [self.paths]
+        if isinstance(self.paths, str | os.PathLike):
+            paths: Iterable[Path] = [self.paths]
         else:
             paths = self.paths
 
@@ -308,8 +310,10 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             if os.path.isdir(path):
                 pathname = os.path.join(path, '**', self.filename_glob)
                 files |= set(glob.iglob(pathname, recursive=True))
-            elif os.path.isfile(path) or path_is_vsi(path):
-                files.add(path)
+            elif (os.path.isfile(path) or path_is_vsi(path)) and fnmatch.fnmatch(
+                str(path), f'*{self.filename_glob}'
+            ):
+                files.add(str(path))
             elif not hasattr(self, 'download'):
                 warnings.warn(
                     f"Could not find any relevant files for provided path '{path}'. "
@@ -348,7 +352,7 @@ class RasterDataset(GeoDataset):
     #: Minimum timestamp if not in filename
     mint: float = 0
 
-    #: Maximum timestmap if not in filename
+    #: Maximum timestamp if not in filename
     maxt: float = sys.maxsize
 
     #: True if the dataset only contains model inputs (such as images). False if the
@@ -357,21 +361,21 @@ class RasterDataset(GeoDataset):
     #: The sample returned by the dataset/data loader will use the "image" key if
     #: *is_image* is True, otherwise it will use the "mask" key.
     #:
-    #: For datasets with both model inputs and outputs, a custom
-    #: :func:`~RasterDataset.__getitem__` method must be implemented.
+    #: For datasets with both model inputs and outputs, the recommended approach is
+    #: to use 2 `RasterDataset` instances and combine them using an `IntersectionDataset`.
     is_image = True
 
     #: True if data is stored in a separate file for each band, else False.
     separate_files = False
 
     #: Names of all available bands in the dataset
-    all_bands: list[str] = []
+    all_bands: tuple[str, ...] = ()
 
     #: Names of RGB bands in the dataset, used for plotting
-    rgb_bands: list[str] = []
+    rgb_bands: tuple[str, ...] = ()
 
     #: Color map for the dataset, used for plotting
-    cmap: dict[int, tuple[int, int, int, int]] = {}
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {}
 
     @property
     def dtype(self) -> torch.dtype:
@@ -410,7 +414,7 @@ class RasterDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
         bands: Sequence[str] | None = None,
@@ -453,17 +457,17 @@ class RasterDataset(GeoDataset):
                         # See if file has a color map
                         if len(self.cmap) == 0:
                             try:
-                                self.cmap = src.colormap(1)
+                                self.cmap = src.colormap(1)  # type: ignore[misc]
                             except ValueError:
                                 pass
 
                         if crs is None:
                             crs = src.crs
-                        if res is None:
-                            res = src.res[0]
 
                         with WarpedVRT(src, crs=crs) as vrt:
                             minx, miny, maxx, maxy = vrt.bounds
+                            if res is None:
+                                res = vrt.res[0]
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
                     continue
@@ -544,13 +548,13 @@ class RasterDataset(GeoDataset):
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)
 
-        sample = {'crs': self.crs, 'bbox': query}
+        sample = {'crs': self.crs, 'bounds': query}
 
         data = data.to(self.dtype)
         if self.is_image:
             sample['image'] = data
         else:
-            sample['mask'] = data
+            sample['mask'] = data.squeeze(0)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -587,7 +591,7 @@ class RasterDataset(GeoDataset):
         return tensor
 
     @functools.lru_cache(maxsize=128)
-    def _cached_load_warp_file(self, filepath: str) -> DatasetReader:
+    def _cached_load_warp_file(self, filepath: Path) -> DatasetReader:
         """Cached version of :meth:`_load_warp_file`.
 
         Args:
@@ -598,7 +602,7 @@ class RasterDataset(GeoDataset):
         """
         return self._load_warp_file(filepath)
 
-    def _load_warp_file(self, filepath: str) -> DatasetReader:
+    def _load_warp_file(self, filepath: Path) -> DatasetReader:
         """Load and warp a file to the correct CRS and resolution.
 
         Args:
@@ -649,7 +653,7 @@ class VectorDataset(GeoDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float = 0.0001,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -774,7 +778,7 @@ class VectorDataset(GeoDataset):
         masks = array_to_tensor(masks)
 
         masks = masks.to(self.dtype)
-        sample = {'mask': masks, 'crs': self.crs, 'bbox': query}
+        sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -846,10 +850,10 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
-        loader: Callable[[str], Any] | None = pil_loader,
-        is_valid_file: Callable[[str], bool] | None = None,
+        loader: Callable[[Path], Any] | None = pil_loader,
+        is_valid_file: Callable[[Path], bool] | None = None,
     ) -> None:
         """Initialize a new NonGeoClassificationDataset instance.
 

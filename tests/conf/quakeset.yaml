@@ -1,8 +1,8 @@
 model:
   class_path: ClassificationTask
   init_args:
-    loss: "ce"
-    model: "resnet18"
+    loss: 'ce'
+    model: 'resnet18'
     in_channels: 4
     num_classes: 2
 data:
@@ -10,5 +10,4 @@ data:
   init_args:
     batch_size: 2
   dict_kwargs:
-    root: "tests/data/quakeset"
-    download: false
+    root: 'tests/data/quakeset'

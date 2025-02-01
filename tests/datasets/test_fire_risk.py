@@ -12,12 +12,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import DatasetNotFoundError, FireRisk
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestFireRisk:
@@ -25,12 +20,11 @@ class TestFireRisk:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> FireRisk:
-        monkeypatch.setattr(torchgeo.datasets.fire_risk, 'download_url', download_url)
         url = os.path.join('tests', 'data', 'fire_risk', 'FireRisk.zip')
         md5 = 'db22106d61b10d855234b4a74db921ac'
         monkeypatch.setattr(FireRisk, 'md5', md5)
         monkeypatch.setattr(FireRisk, 'url', url)
-        root = str(tmp_path)
+        root = tmp_path
         split = request.param
         transforms = nn.Identity()
         return FireRisk(root, split, transforms, download=True, checksum=True)
@@ -46,18 +40,18 @@ class TestFireRisk:
         assert len(dataset) == 5
 
     def test_already_downloaded(self, dataset: FireRisk, tmp_path: Path) -> None:
-        FireRisk(root=str(tmp_path), download=True)
+        FireRisk(root=tmp_path, download=True)
 
     def test_already_downloaded_not_extracted(
         self, dataset: FireRisk, tmp_path: Path
     ) -> None:
         shutil.rmtree(os.path.dirname(dataset.root))
-        download_url(dataset.url, root=str(tmp_path))
-        FireRisk(root=str(tmp_path), download=False)
+        shutil.copy(dataset.url, tmp_path)
+        FireRisk(root=tmp_path, download=False)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            FireRisk(str(tmp_path))
+            FireRisk(tmp_path)
 
     def test_plot(self, dataset: FireRisk) -> None:
         x = dataset[0].copy()

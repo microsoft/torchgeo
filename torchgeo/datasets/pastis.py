@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
+from typing import ClassVar
 
 import fiona
 import matplotlib.pyplot as plt
@@ -16,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, download_url, extract_archive
+from .utils import Path, check_integrity, download_url, extract_archive
 
 
 class PASTIS(NonGeoDataset):
@@ -70,7 +71,7 @@ class PASTIS(NonGeoDataset):
     .. versionadded:: 0.5
     """
 
-    classes = [
+    classes = (
         'background',  # all non-agricultural land
         'meadow',
         'soft_winter_wheat',
@@ -91,8 +92,8 @@ class PASTIS(NonGeoDataset):
         'mixed_cereal',
         'sorghum',
         'void_label',  # for parcels mostly outside their patch
-    ]
-    cmap = {
+    )
+    cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 255),
         1: (174, 199, 232, 255),
         2: (255, 127, 14, 255),
@@ -116,9 +117,9 @@ class PASTIS(NonGeoDataset):
     }
     directory = 'PASTIS-R'
     filename = 'PASTIS-R.zip'
-    url = 'https://zenodo.org/record/5735646/files/PASTIS-R.zip?download=1'
+    url = 'https://zenodo.org/records/5735646/files/PASTIS-R.zip?download=1'
     md5 = '4887513d6c2d2b07fa935d325bd53e09'
-    prefix = {
+    prefix: ClassVar[dict[str, str]] = {
         's2': os.path.join('DATA_S2', 'S2_'),
         's1a': os.path.join('DATA_S1A', 'S1A_'),
         's1d': os.path.join('DATA_S1D', 'S1D_'),
@@ -128,7 +129,7 @@ class PASTIS(NonGeoDataset):
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         folds: Sequence[int] = (1, 2, 3, 4, 5),
         bands: str = 's2',
         mode: str = 'semantic',
@@ -232,7 +233,7 @@ class PASTIS(NonGeoDataset):
         Returns:
             the target mask
         """
-        # See https://github.com/VSainteuf/pastis-benchmark/blob/main/code/dataloader.py#L201 # noqa: E501
+        # See https://github.com/VSainteuf/pastis-benchmark/blob/main/code/dataloader.py#L201
         # even though the mask file is 3 bands, we just select the first band
         array = np.load(self.files[index]['semantic'])[0].astype(np.uint8)
         tensor = torch.from_numpy(array).long()

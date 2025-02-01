@@ -8,7 +8,7 @@ import json
 import os
 import sys
 from collections.abc import Callable, Iterable
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import fiona
 import fiona.transform
@@ -24,14 +24,14 @@ from rtree.index import Index, Property
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import BoundingBox, check_integrity
+from .utils import BoundingBox, Path, check_integrity
 
 
 class OpenBuildings(VectorDataset):
     r"""Open Buildings dataset.
 
     The `Open Buildings
-    <https://sites.research.google/open-buildings/#download>`__ dataset
+    <https://sites.research.google/open-buildings/>`__ dataset
     consists of computer generated building detections across the African continent.
 
     Dataset features:
@@ -47,10 +47,10 @@ class OpenBuildings(VectorDataset):
     * meta data geojson file
 
     The data can be downloaded from `here
-    <https://sites.research.google/open-buildings/#download>`__. Additionally, the
-    `meta data geometry file
-    <https://sites.research.google/open-buildings/tiles.geojson>`_ also needs to be
-    placed in `root` as `tiles.geojson`.
+    <https://sites.research.google/open-buildings/#open-buildings-download>`__.
+    Additionally, the `meta data geometry file
+    <https://openbuildings-public-dot-gweb-research.uw.r.appspot.com/public/tiles.geojson>`_
+    also needs to be placed in `root` as `tiles.geojson`.
 
     If you use this dataset in your research, please cite the following technical
     report:
@@ -60,7 +60,7 @@ class OpenBuildings(VectorDataset):
     .. versionadded:: 0.3
     """
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         '025_buildings.csv.gz': '41db2572bfd08628d01475a2ee1a2f17',
         '04f_buildings.csv.gz': '3232c1c6d45c1543260b77e5689fc8b1',
         '05b_buildings.csv.gz': '4fc57c63bbbf9a21a3902da7adc3a670',
@@ -207,7 +207,7 @@ class OpenBuildings(VectorDataset):
 
     def __init__(
         self,
-        paths: str | Iterable[str] = 'data',
+        paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float = 0.0001,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -241,7 +241,7 @@ class OpenBuildings(VectorDataset):
         # Create an R-tree to index the dataset using the polygon centroid as bounds
         self.index = Index(interleaved=False, properties=Property(dimension=3))
 
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | os.PathLike)
         with open(os.path.join(self.paths, 'tiles.geojson')) as f:
             data = json.load(f)
 
@@ -327,7 +327,7 @@ class OpenBuildings(VectorDataset):
         else:
             masks = torch.zeros(size=(1, round(height), round(width)))
 
-        sample = {'mask': masks, 'crs': self.crs, 'bbox': query}
+        sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -397,7 +397,7 @@ class OpenBuildings(VectorDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the zip files have already been downloaded and checksum
-        assert isinstance(self.paths, str)
+        assert isinstance(self.paths, str | os.PathLike)
         pathname = os.path.join(self.paths, self.zipfile_glob)
         i = 0
         for zipfile in glob.iglob(pathname):

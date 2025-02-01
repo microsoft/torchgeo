@@ -12,7 +12,7 @@
 ### match and download pre-sampled locations
 python download_ssl4eo.py \
     --save-path ./data \
-    --collection COPERNICUS/S2 \
+    --collection COPERNICUS/S2_HARMONIZED \
     --meta-cloud-name CLOUDY_PIXEL_PERCENTAGE \
     --cloud-pct 20 \
     --dates 2021-12-21 2021-09-22 2021-06-21 2021-03-20 \
@@ -125,7 +125,7 @@ def filter_collection(
 
     if filtered.size().getInfo() == 0:
         raise ee.EEException(
-            f'ImageCollection.filter: No suitable images found in ({coords[1]:.4f}, {coords[0]:.4f}) between {period[0]} and {period[1]}.'  # noqa: E501
+            f'ImageCollection.filter: No suitable images found in ({coords[1]:.4f}, {coords[0]:.4f}) between {period[0]} and {period[1]}.'
         )
     return filtered
 
@@ -319,7 +319,10 @@ if __name__ == '__main__':
     )
     # collection properties
     parser.add_argument(
-        '--collection', type=str, default='COPERNICUS/S2', help='GEE collection name'
+        '--collection',
+        type=str,
+        default='COPERNICUS/S2_HARMONIZED',
+        help='GEE collection name',
     )
     parser.add_argument('--qa-band', type=str, default='QA60', help='qa band name')
     parser.add_argument(
@@ -517,7 +520,7 @@ if __name__ == '__main__':
                 print(f'Downloaded {count} images in {time.time() - start_time:.3f}s.')
         else:
             if args.debug:
-                print('no suitable image for location %d.' % (idx))
+                print(f'no suitable image for location {idx}.')
 
         # add to existing checked locations
         with open(ext_path, 'a') as f:

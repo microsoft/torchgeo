@@ -13,88 +13,76 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
-    Chesapeake13,
     ChesapeakeCVPR,
+    ChesapeakeDC,
     DatasetNotFoundError,
     IntersectionDataset,
     UnionDataset,
 )
 
-pytest.importorskip('zipfile_deflate64')
 
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
-class TestChesapeake13:
+class TestChesapeakeDC:
     @pytest.fixture
-    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> Chesapeake13:
-        monkeypatch.setattr(torchgeo.datasets.chesapeake, 'download_url', download_url)
-        md5 = 'fe35a615b8e749b21270472aa98bb42c'
-        monkeypatch.setattr(Chesapeake13, 'md5', md5)
+    def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ChesapeakeDC:
         url = os.path.join(
-            'tests', 'data', 'chesapeake', 'BAYWIDE', 'Baywide_13Class_20132014.zip'
+            'tests',
+            'data',
+            'chesapeake',
+            'lulc',
+            '{state}_lulc_{year}_2022-Edition.zip',
         )
-        monkeypatch.setattr(Chesapeake13, 'url', url)
+        monkeypatch.setattr(ChesapeakeDC, 'url', url)
+        md5s = {2018: '35c644f13ccdb1baf62adf85cb8c7e48'}
+        monkeypatch.setattr(ChesapeakeDC, 'md5s', md5s)
         monkeypatch.setattr(plt, 'show', lambda *args: None)
-        root = str(tmp_path)
         transforms = nn.Identity()
-        return Chesapeake13(root, transforms=transforms, download=True, checksum=True)
+        return ChesapeakeDC(
+            tmp_path, transforms=transforms, download=True, checksum=True
+        )
 
-    def test_getitem(self, dataset: Chesapeake13) -> None:
+    def test_getitem(self, dataset: ChesapeakeDC) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
 
-    def test_len(self, dataset: Chesapeake13) -> None:
+    def test_len(self, dataset: ChesapeakeDC) -> None:
         assert len(dataset) == 1
 
-    def test_and(self, dataset: Chesapeake13) -> None:
+    def test_and(self, dataset: ChesapeakeDC) -> None:
         ds = dataset & dataset
         assert isinstance(ds, IntersectionDataset)
 
-    def test_or(self, dataset: Chesapeake13) -> None:
+    def test_or(self, dataset: ChesapeakeDC) -> None:
         ds = dataset | dataset
         assert isinstance(ds, UnionDataset)
 
-    def test_already_extracted(self, dataset: Chesapeake13) -> None:
-        Chesapeake13(dataset.paths, download=True)
+    def test_already_extracted(self, dataset: ChesapeakeDC) -> None:
+        ChesapeakeDC(dataset.paths, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         url = os.path.join(
-            'tests', 'data', 'chesapeake', 'BAYWIDE', 'Baywide_13Class_20132014.zip'
+            'tests', 'data', 'chesapeake', 'lulc', 'dc_lulc_2018_2022-Edition.zip'
         )
-        root = str(tmp_path)
-        shutil.copy(url, root)
-        Chesapeake13(root)
+        shutil.copy(url, tmp_path)
+        ChesapeakeDC(tmp_path)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            Chesapeake13(str(tmp_path), checksum=True)
+            ChesapeakeDC(tmp_path, checksum=True)
 
-    def test_plot(self, dataset: Chesapeake13) -> None:
+    def test_plot(self, dataset: ChesapeakeDC) -> None:
         query = dataset.bounds
         x = dataset[query]
         dataset.plot(x, suptitle='Test')
         plt.close()
-
-    def test_plot_prediction(self, dataset: Chesapeake13) -> None:
-        query = dataset.bounds
-        x = dataset[query]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
 
-    def test_url(self) -> None:
-        ds = Chesapeake13(os.path.join('tests', 'data', 'chesapeake', 'BAYWIDE'))
-        assert 'cicwebresources.blob.core.windows.net' in ds.url
-
-    def test_invalid_query(self, dataset: Chesapeake13) -> None:
+    def test_invalid_query(self, dataset: ChesapeakeDC) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
@@ -114,7 +102,6 @@ class TestChesapeakeCVPR:
     def dataset(
         self, request: SubRequest, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> ChesapeakeCVPR:
-        monkeypatch.setattr(torchgeo.datasets.chesapeake, 'download_url', download_url)
         monkeypatch.setattr(
             ChesapeakeCVPR,
             'md5s',
@@ -148,7 +135,7 @@ class TestChesapeakeCVPR:
             '_files',
             ['de_1m_2013_extended-debuffered-test_tiles', 'spatial_index.geojson'],
         )
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return ChesapeakeCVPR(
             root,
@@ -180,7 +167,7 @@ class TestChesapeakeCVPR:
         ChesapeakeCVPR(root=dataset.root, download=True)
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(
             os.path.join(
                 'tests', 'data', 'chesapeake', 'cvpr', 'cvpr_chesapeake_landcover.zip'
@@ -201,7 +188,7 @@ class TestChesapeakeCVPR:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            ChesapeakeCVPR(str(tmp_path), checksum=True)
+            ChesapeakeCVPR(tmp_path, checksum=True)
 
     def test_out_of_bounds_query(self, dataset: ChesapeakeCVPR) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
@@ -225,6 +212,9 @@ class TestChesapeakeCVPR:
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        x['prediction'] = x['mask'][:, :, 0].clone().unsqueeze(2)
+        if x['mask'].ndim == 2:
+            x['prediction'] = x['mask'].clone()
+        else:
+            x['prediction'] = x['mask'][0, :, :].clone()
         dataset.plot(x)
         plt.close()

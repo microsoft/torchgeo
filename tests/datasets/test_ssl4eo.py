@@ -14,12 +14,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo
 from torchgeo.datasets import SSL4EOL, SSL4EOS12, DatasetNotFoundError
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestSSL4EOL:
@@ -27,8 +22,6 @@ class TestSSL4EOL:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> SSL4EOL:
-        monkeypatch.setattr(torchgeo.datasets.ssl4eo, 'download_url', download_url)
-
         url = os.path.join('tests', 'data', 'ssl4eo', 'l', 'ssl4eo_l_{0}.tar.gz{1}')
         monkeypatch.setattr(SSL4EOL, 'url', url)
 
@@ -61,7 +54,7 @@ class TestSSL4EOL:
         }
         monkeypatch.setattr(SSL4EOL, 'checksums', checksums)
 
-        root = str(tmp_path)
+        root = tmp_path
         split, seasons = request.param
         transforms = nn.Identity()
         return SSL4EOL(root, split, seasons, transforms, download=True, checksum=True)
@@ -88,14 +81,14 @@ class TestSSL4EOL:
 
     def test_already_downloaded(self, dataset: SSL4EOL, tmp_path: Path) -> None:
         pathname = os.path.join('tests', 'data', 'ssl4eo', 'l', '*.tar.gz*')
-        root = str(tmp_path)
+        root = tmp_path
         for tarfile in glob.iglob(pathname):
             shutil.copy(tarfile, root)
         SSL4EOL(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SSL4EOL(str(tmp_path))
+            SSL4EOL(tmp_path)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
@@ -148,7 +141,7 @@ class TestSSL4EOS12:
                 os.path.join('tests', 'data', 'ssl4eo', 's12', filename),
                 tmp_path / filename,
             )
-        SSL4EOS12(str(tmp_path))
+        SSL4EOS12(tmp_path)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
@@ -156,7 +149,7 @@ class TestSSL4EOS12:
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            SSL4EOS12(str(tmp_path))
+            SSL4EOS12(tmp_path)
 
     def test_plot(self, dataset: SSL4EOS12) -> None:
         sample = dataset[0]

@@ -11,40 +11,39 @@ from torch.utils.data import random_split
 
 from ..datasets import OSCD
 from ..samplers.utils import _to_tuple
-from ..transforms import AugmentationSequential
 from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
 
 MEAN = {
-    'B01': 1583.0741,
-    'B02': 1374.3202,
-    'B03': 1294.1616,
-    'B04': 1325.6158,
-    'B05': 1478.7408,
-    'B06': 1933.0822,
-    'B07': 2166.0608,
-    'B08': 2076.4868,
-    'B8A': 2306.0652,
-    'B09': 690.9814,
-    'B10': 16.2360,
-    'B11': 2080.3347,
-    'B12': 1524.6930,
+    'B01': 1565.696044921875,
+    'B02': 1351.3319091796875,
+    'B03': 1257.1082763671875,
+    'B04': 1254.932861328125,
+    'B05': 1388.689208984375,
+    'B06': 1827.6710205078125,
+    'B07': 2050.2744140625,
+    'B08': 1963.4619140625,
+    'B8A': 2182.680908203125,
+    'B09': 629.837646484375,
+    'B10': 14.855598449707031,
+    'B11': 1909.8394775390625,
+    'B12': 1379.6024169921875,
 }
 
 STD = {
-    'B01': 52.1937,
-    'B02': 83.4168,
-    'B03': 105.6966,
-    'B04': 151.1401,
-    'B05': 147.4615,
-    'B06': 115.9289,
-    'B07': 123.1974,
-    'B08': 114.6483,
-    'B8A': 141.4530,
-    'B09': 73.2758,
-    'B10': 4.8368,
-    'B11': 213.4821,
-    'B12': 179.4793,
+    'B01': 263.7977600097656,
+    'B02': 394.5567321777344,
+    'B03': 508.9673767089844,
+    'B04': 726.4053344726562,
+    'B05': 686.6111450195312,
+    'B06': 730.0204467773438,
+    'B07': 822.0133056640625,
+    'B08': 842.5917358398438,
+    'B8A': 895.7645263671875,
+    'B09': 314.8407287597656,
+    'B10': 9.417905807495117,
+    'B11': 984.9249267578125,
+    'B12': 844.7711181640625,
 }
 
 
@@ -85,10 +84,11 @@ class OSCDDataModule(NonGeoDataModule):
         self.mean = torch.tensor([MEAN[b] for b in self.bands])
         self.std = torch.tensor([STD[b] for b in self.bands])
 
-        self.aug = AugmentationSequential(
+        self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             _RandomNCrop(self.patch_size, batch_size),
-            data_keys=['image1', 'image2', 'mask'],
+            data_keys=None,
+            keepdim=True,
         )
 
     def setup(self, stage: str) -> None:

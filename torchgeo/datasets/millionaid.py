@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import check_integrity, extract_archive
+from .utils import Path, check_integrity, extract_archive
 
 
 class MillionAID(NonGeoDataset):
@@ -48,7 +48,7 @@ class MillionAID(NonGeoDataset):
     .. versionadded:: 0.3
     """
 
-    multi_label_categories = [
+    multi_label_categories = (
         'agriculture_land',
         'airport_area',
         'apartment',
@@ -122,9 +122,9 @@ class MillionAID(NonGeoDataset):
         'wind_turbine',
         'woodland',
         'works',
-    ]
+    )
 
-    multi_class_categories = [
+    multi_class_categories = (
         'apartment',
         'apron',
         'bare_land',
@@ -176,21 +176,21 @@ class MillionAID(NonGeoDataset):
         'wastewater_plant',
         'wind_turbine',
         'works',
-    ]
+    )
 
-    md5s = {
+    md5s: ClassVar[dict[str, str]] = {
         'train': '1b40503cafa9b0601653ca36cd788852',
         'test': '51a63ee3eeb1351889eacff349a983d8',
     }
 
-    filenames = {'train': 'train.zip', 'test': 'test.zip'}
+    filenames: ClassVar[dict[str, str]] = {'train': 'train.zip', 'test': 'test.zip'}
 
-    tasks = ['multi-class', 'multi-label']
-    splits = ['train', 'test']
+    tasks = ('multi-class', 'multi-label')
+    splits = ('train', 'test')
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         task: str = 'multi-class',
         split: str = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -252,7 +252,7 @@ class MillionAID(NonGeoDataset):
 
         return sample
 
-    def _load_files(self, root: str) -> list[dict[str, Any]]:
+    def _load_files(self, root: Path) -> list[dict[str, Any]]:
         """Return the paths of the files in the dataset.
 
         Args:
@@ -295,7 +295,7 @@ class MillionAID(NonGeoDataset):
 
         return files
 
-    def _load_image(self, path: str) -> Tensor:
+    def _load_image(self, path: Path) -> Tensor:
         """Load a single image.
 
         Args:
@@ -312,11 +312,7 @@ class MillionAID(NonGeoDataset):
             return tensor
 
     def _verify(self) -> None:
-        """Checks the integrity of the dataset structure.
-
-        Returns:
-            True if the dataset directories are found, else False
-        """
+        """Verify the integrity of the dataset."""
         filepath = os.path.join(self.root, self.split)
         if os.path.isdir(filepath):
             return

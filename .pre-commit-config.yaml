@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.5
+    rev: v0.8.0
     hooks:
       - id: ruff
         types_or:
@@ -13,7 +13,7 @@ repos:
           - python
           - jupyter
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.9.0
+    rev: v1.13.0
     hooks:
       - id: mypy
         args:
@@ -24,14 +24,15 @@ repos:
           - einops>=0.6.0
           - kornia>=0.6.9
           - lightning>=2.0.9
-          - matplotlib>=3.8.1
+          - matplotlib>=3.9.2
           - numpy>=1.22
-          - pillow>=10.3.0
+          - pillow>=10.4.0
           - pytest>=6.1.2
           - pyvista>=0.34.2
           - scikit-image>=0.22.0
           - torch>=2.3
           - torchmetrics>=0.10
+          - torchvision>=0.18
         exclude: (build|data|dist|logo|logs|output)/
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v3.1.0

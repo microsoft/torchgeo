@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,6 +18,7 @@ from torch import Tensor
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
+    Path,
     check_integrity,
     download_and_extract_archive,
     download_url,
@@ -151,26 +152,24 @@ class VHR10(NonGeoDataset):
 
     .. note::
 
-       This dataset requires the following additional libraries to be installed:
+       This dataset requires the following additional library to be installed:
 
        * `pycocotools <https://pypi.org/project/pycocotools/>`_ to load the
          ``annotations.json`` file for the "positive" image set
-       * `rarfile <https://pypi.org/project/rarfile/>`_ to extract the dataset,
-         which is stored in a RAR file
     """
 
-    image_meta = {
-        'url': 'https://drive.google.com/file/d/1--foZ3dV5OCsqXQXT84UeKtrAqc5CkAE',
-        'filename': 'NWPU VHR-10 dataset.rar',
-        'md5': 'd30a7ff99d92123ebb0b3a14d9102081',
+    image_meta: ClassVar[dict[str, str]] = {
+        'url': 'https://hf.co/datasets/torchgeo/vhr10/resolve/7e7968ad265dadc4494e0ca4a079e0b63dc6f3f8/NWPU%20VHR-10%20dataset.zip',
+        'filename': 'NWPU VHR-10 dataset.zip',
+        'md5': '6add6751469c12dd8c8d6223064c6c4d',
     }
-    target_meta = {
-        'url': 'https://raw.githubusercontent.com/chaozhong2010/VHR-10_dataset_coco/ce0ba0f5f6a0737031f1cbe05e785ddd5ef05bd7/NWPU%20VHR-10_dataset_coco/annotations.json',  # noqa: E501
+    target_meta: ClassVar[dict[str, str]] = {
+        'url': 'https://hf.co/datasets/torchgeo/vhr10/resolve/7e7968ad265dadc4494e0ca4a079e0b63dc6f3f8/annotations.json',
         'filename': 'annotations.json',
         'md5': '7c76ec50c17a61bb0514050d20f22c08',
     }
 
-    categories = [
+    categories = (
         'background',
         'airplane',
         'ships',
@@ -182,11 +181,11 @@ class VHR10(NonGeoDataset):
         'harbor',
         'bridge',
         'vehicle',
-    ]
+    )
 
     def __init__(
         self,
-        root: str = 'data',
+        root: Path = 'data',
         split: str = 'positive',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
@@ -196,7 +195,7 @@ class VHR10(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            split: one of "postive" or "negative"
+            split: one of "positive" or "negative"
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory

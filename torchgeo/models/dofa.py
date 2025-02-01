@@ -65,6 +65,13 @@ class TransformerWeightGenerator(nn.Module):
             num_layers: Number of layers.
         """
         super().__init__()
+
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.num_layers = num_layers
+
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=input_dim,
             nhead=num_heads,
@@ -203,8 +210,10 @@ class DOFAEmbedding(nn.Module):
         weight, bias = self.weight_generator(waves)  # 3x3x3
 
         dynamic_weight = weight.view(
-            self.embed_dim, inplanes, self.kernel_size, self.kernel_size
-        )  # 3xoutdx16x16
+            inplanes, self.kernel_size, self.kernel_size, self.embed_dim
+        )
+        dynamic_weight = dynamic_weight.permute([3, 0, 1, 2])
+
         if bias is not None:
             bias = bias.view([self.embed_dim]) * self.scaler
 
@@ -265,8 +274,17 @@ class DOFA(nn.Module):
         """
         super().__init__()
 
+        self.img_size = img_size
+        self.patch_size = patch_size
+        self.drop_rate = drop_rate
+        self.embed_dim = embed_dim
+        self.depth = depth
+        self.num_heads = num_heads
         self.dynamic_embed_dim = dynamic_embed_dim
+        self.num_classes = num_classes
         self.global_pool = global_pool
+        self.mlp_ratio = mlp_ratio
+
         if self.global_pool:
             norm_layer = norm_layer
             embed_dim = embed_dim
@@ -384,7 +402,7 @@ class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DOFA_MAE = Weights(
-        url='https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_base_patch16_224-7cc0f413.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/dofa/resolve/b8db318b64a90b9e085ec04ba8851233c5893666/dofa_base_patch16_224-a0275954.pth',
         transforms=_dofa_transforms,
         meta={
             'dataset': 'SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k',
@@ -403,7 +421,7 @@ class DOFALarge16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DOFA_MAE = Weights(
-        url='https://hf.co/torchgeo/dofa/resolve/ade8745c5ec6eddfe15d8c03421e8cb8f21e66ff/dofa_large_patch16_224-fbd47fa9.pth',  # noqa: E501
+        url='https://hf.co/torchgeo/dofa/resolve/b8db318b64a90b9e085ec04ba8851233c5893666/dofa_large_patch16_224-0ff904d3.pth',
         transforms=_dofa_transforms,
         meta={
             'dataset': 'SatlasPretrain, Five-Billion-Pixels, HySpecNet-11k',
@@ -426,7 +444,7 @@ def dofa_small_patch16_224(*args: Any, **kwargs: Any) -> DOFA:
 
     Args:
         *args: Additional arguments to pass to :class:`DOFA`.
-        **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
+        **kwargs: Additional keyword arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA small 16 model.
@@ -450,7 +468,7 @@ def dofa_base_patch16_224(
     Args:
         weights: Pre-trained model weights to use.
         *args: Additional arguments to pass to :class:`DOFA`.
-        **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
+        **kwargs: Additional keyword arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA base 16 model.
@@ -488,7 +506,7 @@ def dofa_large_patch16_224(
     Args:
         weights: Pre-trained model weights to use.
         *args: Additional arguments to pass to :class:`DOFA`.
-        **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
+        **kwargs: Additional keyword arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA large 16 model.
@@ -523,7 +541,7 @@ def dofa_huge_patch16_224(*args: Any, **kwargs: Any) -> DOFA:
 
     Args:
         *args: Additional arguments to pass to :class:`DOFA`.
-        **kwargs: Additional keywork arguments to pass to :class:`DOFA`.
+        **kwargs: Additional keyword arguments to pass to :class:`DOFA`.
 
     Returns:
         A DOFA huge 16 model.

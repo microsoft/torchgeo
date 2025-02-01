@@ -3,6 +3,7 @@
 
 import os
 import shutil
+from itertools import product
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -13,28 +14,23 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import (
     BoundingBox,
     DatasetNotFoundError,
     LandCoverAI,
+    LandCoverAI100,
     LandCoverAIGeo,
 )
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestLandCoverAIGeo:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> LandCoverAIGeo:
-        monkeypatch.setattr(torchgeo.datasets.landcoverai, 'download_url', download_url)
         md5 = 'ff8998857cc8511f644d3f7d0f3688d0'
         monkeypatch.setattr(LandCoverAIGeo, 'md5', md5)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
         monkeypatch.setattr(LandCoverAIGeo, 'url', url)
-        root = str(tmp_path)
+        root = tmp_path
         transforms = nn.Identity()
         return LandCoverAIGeo(root, transforms=transforms, download=True, checksum=True)
 
@@ -49,13 +45,13 @@ class TestLandCoverAIGeo:
 
     def test_already_downloaded(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(url, root)
         LandCoverAIGeo(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            LandCoverAIGeo(str(tmp_path))
+            LandCoverAIGeo(tmp_path)
 
     def test_out_of_bounds_query(self, dataset: LandCoverAIGeo) -> None:
         query = BoundingBox(0, 0, 0, 0, 0, 0)
@@ -78,21 +74,25 @@ class TestLandCoverAIGeo:
 class TestLandCoverAI:
     pytest.importorskip('cv2', minversion='4.5.4')
 
-    @pytest.fixture(params=['train', 'val', 'test'])
+    @pytest.fixture(
+        params=product([LandCoverAI100, LandCoverAI], ['train', 'val', 'test'])
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LandCoverAI:
-        monkeypatch.setattr(torchgeo.datasets.landcoverai, 'download_url', download_url)
+        base_class: type[LandCoverAI] = request.param[0]
+        split: str = request.param[1]
         md5 = 'ff8998857cc8511f644d3f7d0f3688d0'
-        monkeypatch.setattr(LandCoverAI, 'md5', md5)
+        monkeypatch.setattr(base_class, 'md5', md5)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
-        monkeypatch.setattr(LandCoverAI, 'url', url)
+        monkeypatch.setattr(base_class, 'url', url)
         sha256 = 'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
-        monkeypatch.setattr(LandCoverAI, 'sha256', sha256)
-        root = str(tmp_path)
-        split = request.param
+        monkeypatch.setattr(base_class, 'sha256', sha256)
+        if base_class == LandCoverAI100:
+            monkeypatch.setattr(base_class, 'filename', 'landcover.ai.v1.zip')
+        root = tmp_path
         transforms = nn.Identity()
-        return LandCoverAI(root, split, transforms, download=True, checksum=True)
+        return base_class(root, split, transforms, download=True, checksum=True)
 
     def test_getitem(self, dataset: LandCoverAI) -> None:
         x = dataset[0]
@@ -115,13 +115,13 @@ class TestLandCoverAI:
         sha256 = 'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
         monkeypatch.setattr(LandCoverAI, 'sha256', sha256)
         url = os.path.join('tests', 'data', 'landcoverai', 'landcover.ai.v1.zip')
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(url, root)
         LandCoverAI(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            LandCoverAI(str(tmp_path))
+            LandCoverAI(tmp_path)
 
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):

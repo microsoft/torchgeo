@@ -1,7 +1,7 @@
 model:
   class_path: MoCoTask
   init_args:
-    model: "resnet18"
+    model: 'resnet18'
     in_channels: 3
     version: 2
     layers: 2
@@ -16,10 +16,5 @@ data:
   init_args:
     batch_size: 2
   dict_kwargs:
-    root: "tests/data/seco"
+    root: 'tests/data/seco'
     seasons: 2
-    # https://github.com/Lightning-AI/lightning/issues/18616
-    bands:
-      - "B4"
-      - "B3"
-      - "B2"

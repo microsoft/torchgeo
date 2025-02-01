@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -12,7 +11,6 @@ import torch.nn as nn
 from pytest import MonkeyPatch
 from rasterio.crs import CRS
 
-import torchgeo
 from torchgeo.datasets import (
     AbovegroundLiveWoodyBiomassDensity,
     DatasetNotFoundError,
@@ -21,19 +19,12 @@ from torchgeo.datasets import (
 )
 
 
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
-
-
 class TestAbovegroundLiveWoodyBiomassDensity:
     @pytest.fixture
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path
     ) -> AbovegroundLiveWoodyBiomassDensity:
         transforms = nn.Identity()
-        monkeypatch.setattr(
-            torchgeo.datasets.agb_live_woody_density, 'download_url', download_url
-        )
         url = os.path.join(
             'tests',
             'data',
@@ -42,7 +33,7 @@ class TestAbovegroundLiveWoodyBiomassDensity:
         )
         monkeypatch.setattr(AbovegroundLiveWoodyBiomassDensity, 'url', url)
 
-        root = str(tmp_path)
+        root = tmp_path
         return AbovegroundLiveWoodyBiomassDensity(
             root, transforms=transforms, download=True
         )
@@ -58,7 +49,7 @@ class TestAbovegroundLiveWoodyBiomassDensity:
 
     def test_no_dataset(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            AbovegroundLiveWoodyBiomassDensity(str(tmp_path))
+            AbovegroundLiveWoodyBiomassDensity(tmp_path)
 
     def test_already_downloaded(
         self, dataset: AbovegroundLiveWoodyBiomassDensity

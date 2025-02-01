@@ -13,12 +13,7 @@ from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
-import torchgeo.datasets.utils
 from torchgeo.datasets import PASTIS, DatasetNotFoundError
-
-
-def download_url(url: str, root: str, *args: str, **kwargs: str) -> None:
-    shutil.copy(url, root)
 
 
 class TestPASTIS:
@@ -32,13 +27,11 @@ class TestPASTIS:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> PASTIS:
-        monkeypatch.setattr(torchgeo.datasets.pastis, 'download_url', download_url)
-
         md5 = '135a29fb8221241dde14f31579c07f45'
         monkeypatch.setattr(PASTIS, 'md5', md5)
         url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
         monkeypatch.setattr(PASTIS, 'url', url)
-        root = str(tmp_path)
+        root = tmp_path
         folds = request.param['folds']
         bands = request.param['bands']
         mode = request.param['mode']
@@ -75,19 +68,19 @@ class TestPASTIS:
 
     def test_already_downloaded(self, tmp_path: Path) -> None:
         url = os.path.join('tests', 'data', 'pastis', 'PASTIS-R.zip')
-        root = str(tmp_path)
+        root = tmp_path
         shutil.copy(url, root)
         PASTIS(root)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            PASTIS(str(tmp_path))
+            PASTIS(tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'PASTIS-R.zip'), 'w') as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
-            PASTIS(root=str(tmp_path), checksum=True)
+            PASTIS(root=tmp_path, checksum=True)
 
     def test_invalid_fold(self) -> None:
         with pytest.raises(AssertionError):

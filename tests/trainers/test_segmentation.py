@@ -10,7 +10,6 @@ import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
-import torchvision
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
@@ -38,11 +37,6 @@ def create_model(**kwargs: Any) -> Module:
     return SegmentationTestModel(**kwargs)
 
 
-def load(url: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
-    state_dict: dict[str, Any] = torch.load(url)
-    return state_dict
-
-
 def plot(*args: Any, **kwargs: Any) -> None:
     return None
 
@@ -56,16 +50,20 @@ class TestSemanticSegmentationTask:
         'name',
         [
             'agrifieldnet',
+            'cabuar',
             'chabud',
             'chesapeake_cvpr_5',
             'chesapeake_cvpr_7',
             'deepglobelandcover',
             'etci2021',
+            'ftw',
+            'geonrw',
             'gid15',
             'inria',
             'l7irish',
             'l8biome',
             'landcoverai',
+            'landcoverai100',
             'loveda',
             'naipchesapeake',
             'potsdam2d',
@@ -79,6 +77,7 @@ class TestSemanticSegmentationTask:
             'sentinel2_south_america_soybean',
             'southafricacroptype',
             'spacenet1',
+            'spacenet6',
             'ssl4eo_l_benchmark_cdl',
             'ssl4eo_l_benchmark_nlcd',
             'vaihingen2d',
@@ -88,15 +87,15 @@ class TestSemanticSegmentationTask:
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         match name:
-            case 'chabud':
+            case 'chabud' | 'cabuar':
                 pytest.importorskip('h5py', minversion='3.6')
+            case 'ftw':
+                pytest.importorskip('pyarrow')
             case 'landcoverai':
                 sha256 = (
                     'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
                 )
                 monkeypatch.setattr(LandCoverAI, 'sha256', sha256)
-            case 'naipchesapeake':
-                pytest.importorskip('zipfile_deflate64')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
 
@@ -116,13 +115,13 @@ class TestSemanticSegmentationTask:
             '1',
         ]
 
-        main(['fit'] + args)
+        main(['fit', *args])
         try:
-            main(['test'] + args)
+            main(['test', *args])
         except MisconfigurationException:
             pass
         try:
-            main(['predict'] + args)
+            main(['predict', *args])
         except MisconfigurationException:
             pass
 
@@ -132,7 +131,11 @@ class TestSemanticSegmentationTask:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, weights: WeightsEnum
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
@@ -143,7 +146,6 @@ class TestSemanticSegmentationTask:
             monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
             monkeypatch.setattr(weights, 'url', str(path))
-        monkeypatch.setattr(torchvision.models._api, 'load_state_dict_from_url', load)
         return weights
 
     def test_weight_file(self, checkpoint: str) -> None:
