@@ -61,10 +61,10 @@ class XView2(NonGeoDataset):
             'md5': 'a20ebbfb7eb3452785b63ad02ffd1e16',
             'directory': 'train',
         },
-        "test": {
-            "filename": "test_images_labels_targets.tar.gz",
-            "md5": "1b39c47e05d1319c17cc8763cee6fe0c",
-            "directory": "test",
+        'test': {
+            'filename': 'test_images_labels_targets.tar.gz',
+            'md5': '1b39c47e05d1319c17cc8763cee6fe0c',
+            'directory': 'test',
         },
     }
     classes = ('background', 'no-damage', 'minor-damage', 'major-damage', 'destroyed')
@@ -111,14 +111,14 @@ class XView2(NonGeoDataset):
             data and label at that index
         """
         files = self.files[index]
-        image1 = self._load_image(files["image1"])
-        image2 = self._load_image(files["image2"])
-        mask1 = self._load_target(files["mask1"])
-        mask2 = self._load_target(files["mask2"])
+        image1 = self._load_image(files['image1'])
+        image2 = self._load_image(files['image2'])
+        mask1 = self._load_target(files['mask1'])
+        mask2 = self._load_target(files['mask2'])
 
         image = torch.stack(tensors=[image1, image2], dim=0)
         mask = torch.stack(tensors=[mask1, mask2], dim=0)
-        sample = {"image": image, "mask": mask}
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -138,23 +138,23 @@ class XView2(NonGeoDataset):
 
         Args:
             root: root dir of dataset
-            split: subset of dataset, one of [train, test]
+            split: subset of dataset, one of ['train', 'test']
 
         Returns:
             list of dicts containing paths for each pair of images and masks
         """
         files = []
-        directory = self.metadata[split]["directory"]
-        image_root = os.path.join(root, directory, "images")
-        mask_root = os.path.join(root, directory, "targets")
-        images = glob.glob(os.path.join(image_root, "*.png"))
+        directory = self.metadata[split]['directory']
+        image_root = os.path.join(root, directory, 'images')
+        mask_root = os.path.join(root, directory, 'targets')
+        images = glob.glob(os.path.join(image_root, '*.png'))
         basenames = [os.path.basename(f) for f in images]
-        basenames = ["_".join(f.split("_")[:-2]) for f in basenames]
+        basenames = ['_'.join(f.split('_')[:-2]) for f in basenames]
         for name in sorted(set(basenames)):
-            image1 = os.path.join(image_root, f"{name}_pre_disaster.png")
-            image2 = os.path.join(image_root, f"{name}_post_disaster.png")
-            mask1 = os.path.join(mask_root, f"{name}_pre_disaster_target.png")
-            mask2 = os.path.join(mask_root, f"{name}_post_disaster_target.png")
+            image1 = os.path.join(image_root, f'{name}_pre_disaster.png')
+            image2 = os.path.join(image_root, f'{name}_post_disaster.png')
+            mask1 = os.path.join(mask_root, f'{name}_pre_disaster_target.png')
+            mask2 = os.path.join(mask_root, f'{name}_post_disaster_target.png')
             files.append(dict(image1=image1, image2=image2, mask1=mask1, mask2=mask2))
         return files
 
@@ -169,7 +169,7 @@ class XView2(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: np.typing.NDArray[np.int_] = np.array(img.convert("RGB"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
@@ -186,7 +186,7 @@ class XView2(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: np.typing.NDArray[np.int_] = np.array(img.convert("L"))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
             tensor = torch.from_numpy(array)
             tensor = tensor.to(torch.long)
             return tensor
@@ -196,10 +196,10 @@ class XView2(NonGeoDataset):
         # Check if the files already exist
         exists = []
         for split_info in self.metadata.values():
-            for directory in ["images", "targets"]:
+            for directory in ['images', 'targets']:
                 exists.append(
                     os.path.exists(
-                        os.path.join(self.root, split_info["directory"], directory)
+                        os.path.join(self.root, split_info['directory'], directory)
                     )
                 )
 
@@ -209,10 +209,10 @@ class XView2(NonGeoDataset):
         # Check if .tar.gz files already exists (if so then extract)
         exists = []
         for split_info in self.metadata.values():
-            filepath = os.path.join(self.root, split_info["filename"])
+            filepath = os.path.join(self.root, split_info['filename'])
             if os.path.isfile(filepath):
-                if self.checksum and not check_integrity(filepath, split_info["md5"]):
-                    raise RuntimeError("Dataset found, but corrupted.")
+                if self.checksum and not check_integrity(filepath, split_info['md5']):
+                    raise RuntimeError('Dataset found, but corrupted.')
                 exists.append(True)
                 extract_archive(filepath)
             else:
@@ -254,29 +254,29 @@ class XView2(NonGeoDataset):
             alpha=alpha,
             colors=list(self.colormap),
         )
-        if "prediction" in sample:  # NOTE: this assumes predictions are made for post
+        if 'prediction' in sample:  # NOTE: this assumes predictions are made for post
             ncols += 1
             image3 = draw_semantic_segmentation_masks(
-                sample["image"][1],
-                sample["prediction"],
+                sample['image'][1],
+                sample['prediction'],
                 alpha=alpha,
                 colors=list(self.colormap),
             )
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image1)
-        axs[0].axis("off")
+        axs[0].axis('off')
         axs[1].imshow(image2)
-        axs[1].axis("off")
+        axs[1].axis('off')
         if ncols > 2:
             axs[2].imshow(image3)
-            axs[2].axis("off")
+            axs[2].axis('off')
 
         if show_titles:
-            axs[0].set_title("Pre disaster")
-            axs[1].set_title("Post disaster")
+            axs[0].set_title('Pre disaster')
+            axs[1].set_title('Post disaster')
             if ncols > 2:
-                axs[2].set_title("Predictions")
+                axs[2].set_title('Predictions')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
@@ -295,29 +295,29 @@ class XView2DistShift(XView2):
     on others.
     """
 
-    classes = ["background", "building"]
+    classes = ['background', 'building']
 
     # List of disaster names
     valid_disasters = [
-        "hurricane-harvey",
-        "socal-fire",
-        "hurricane-matthew",
-        "mexico-earthquake",
-        "guatemala-volcano",
-        "santa-rosa-wildfire",
-        "palu-tsunami",
-        "hurricane-florence",
-        "hurricane-michael",
-        "midwest-flooding",
+        'hurricane-harvey',
+        'socal-fire',
+        'hurricane-matthew',
+        'mexico-earthquake',
+        'guatemala-volcano',
+        'santa-rosa-wildfire',
+        'palu-tsunami',
+        'hurricane-florence',
+        'hurricane-michael',
+        'midwest-flooding',
     ]
 
     def __init__(
         self,
-        root: str = "data",
-        split: str = "train",
+        root: str = 'data',
+        split: str = 'train',
         id_ood_disaster: list[dict[str, str]] = [
-            {"disaster_name": "hurricane-matthew", "pre-post": "post"},
-            {"disaster_name": "mexico-earthquake", "pre-post": "post"},
+            {'disaster_name': 'hurricane-matthew', 'pre-post': 'post'},
+            {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'},
         ],
         transforms: Callable[[dict[str, torch.Tensor]], dict[str, torch.Tensor]] = None,
         checksum: bool = False,
@@ -337,12 +337,12 @@ class XView2DistShift(XView2):
             ValueError: If a disaster name in `id_ood_disaster` is not one of the valid disasters.
             DatasetNotFoundError: If dataset is not found.
         """
-        assert split in ["train", "test"], "Split must be either 'train' or 'test'."
+        assert split in ['train', 'test'], "Split must be either 'train' or 'test'."
         # Validate that the disasters are valid
 
         if (
-            id_ood_disaster[0]["disaster_name"] not in self.valid_disasters
-            or id_ood_disaster[1]["disaster_name"] not in self.valid_disasters
+            id_ood_disaster[0]['disaster_name'] not in self.valid_disasters
+            or id_ood_disaster[1]['disaster_name'] not in self.valid_disasters
         ):
             raise ValueError(
                 f"Invalid disaster names. Valid options are: {', '.join(self.valid_disasters)}"
@@ -369,17 +369,17 @@ class XView2DistShift(XView2):
     def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
         """Get an item from the dataset at the given index."""
         file_info = (
-            self.files["train"][index]
-            if self.split == "train"
-            else self.files["test"][index]
+            self.files['train'][index]
+            if self.split == 'train'
+            else self.files['test'][index]
         )
 
-        image = self._load_image(file_info["image"]).to("cuda")
-        mask = self._load_target(file_info["mask"]).long().to("cuda")
+        image = self._load_image(file_info['image']).to('cuda')
+        mask = self._load_target(file_info['mask']).long().to('cuda')
         mask[mask == 2] = 1
         mask[(mask == 3) | (mask == 4)] = 0
 
-        sample = {"image": image, "mask": mask}
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms:
             sample = self.transforms(sample)
@@ -389,34 +389,34 @@ class XView2DistShift(XView2):
     def __len__(self) -> int:
         """Return the total number of samples in the dataset."""
         return (
-            len(self.files["train"])
-            if self.split == "train"
-            else len(self.files["test"])
+            len(self.files['train'])
+            if self.split == 'train'
+            else len(self.files['test'])
         )
 
     def _initialize_files(self, root: str) -> list[dict[str, str]]:
         """Initialize the dataset by loading file paths and computing basenames with sample numbers."""
         all_files = []
         for split in self.metadata.keys():
-            image_root = os.path.join(root, split, "images")
-            mask_root = os.path.join(root, split, "targets")
-            images = glob.glob(os.path.join(image_root, "*.png"))
+            image_root = os.path.join(root, split, 'images')
+            mask_root = os.path.join(root, split, 'targets')
+            images = glob.glob(os.path.join(image_root, '*.png'))
 
             # Extract basenames while preserving the event-name and sample number
             for img in images:
-                basename_parts = os.path.basename(img).split("_")
+                basename_parts = os.path.basename(img).split('_')
                 event_name = basename_parts[0]  # e.g., mexico-earthquake
                 sample_number = basename_parts[1]  # e.g., 00000001
                 basename = (
-                    f"{event_name}_{sample_number}"  # e.g., mexico-earthquake_00000001
+                    f'{event_name}_{sample_number}'  # e.g., mexico-earthquake_00000001
                 )
 
                 file_info = {
-                    "image": img,
-                    "mask": os.path.join(
-                        mask_root, f"{basename}_pre_disaster_target.png"
+                    'image': img,
+                    'mask': os.path.join(
+                        mask_root, f'{basename}_pre_disaster_target.png'
                     ),
-                    "basename": basename,
+                    'basename': basename,
                 }
                 all_files.append(file_info)
         return all_files
@@ -431,8 +431,8 @@ class XView2DistShift(XView2):
 
         Args:
             files: List of file paths with their corresponding information.
-            id_disaster: Dictionary specifying in-domain (ID) disaster and type (e.g., {"disaster_name": "guatemala-volcano", "pre-post": "pre"}).
-            ood_disaster: Dictionary specifying out-of-domain (OOD) disaster and type (e.g., {"disaster_name": "mexico-earthquake", "pre-post": "post"}).
+            id_disaster: Dictionary specifying in-domain (ID) disaster and type (e.g., {'disaster_name': 'guatemala-volcano', 'pre-post': 'pre'}).
+            ood_disaster: Dictionary specifying out-of-domain (OOD) disaster and type (e.g., {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'}).
 
         Returns:
             A dictionary containing 'train' (ID) and 'test' (OOD) file lists.
@@ -442,40 +442,40 @@ class XView2DistShift(XView2):
         disaster_list = []
 
         for file_info in files:
-            basename = file_info["basename"]
-            disaster_name = basename.split("_")[
+            basename = file_info['basename']
+            disaster_name = basename.split('_')[
                 0
             ]  # Extract disaster name from basename
             pre_post = (
-                "pre" if "pre_disaster" in file_info["image"] else "post"
+                'pre' if 'pre_disaster' in file_info['image'] else 'post'
             )  # Identify pre/post type
 
             disaster_list.append(disaster_name)
 
             # Filter for in-domain (ID) training set
-            if disaster_name == id_disaster["disaster_name"]:
+            if disaster_name == id_disaster['disaster_name']:
                 if (
-                    id_disaster.get("pre-post") == "both"
-                    or id_disaster["pre-post"] == pre_post
+                    id_disaster.get('pre-post') == 'both'
+                    or id_disaster['pre-post'] == pre_post
                 ):
                     image = (
-                        file_info["image"].replace("post_disaster", "pre_disaster")
-                        if pre_post == "pre"
-                        else file_info["image"]
+                        file_info['image'].replace('post_disaster', 'pre_disaster')
+                        if pre_post == 'pre'
+                        else file_info['image']
                     )
                     mask = (
-                        file_info["mask"].replace("post_disaster", "pre_disaster")
-                        if pre_post == "pre"
-                        else file_info["mask"]
+                        file_info['mask'].replace('post_disaster', 'pre_disaster')
+                        if pre_post == 'pre'
+                        else file_info['mask']
                     )
                     train_files.append(dict(image=image, mask=mask))
 
             # Filter for out-of-domain (OOD) test set
-            if disaster_name == ood_disaster["disaster_name"]:
+            if disaster_name == ood_disaster['disaster_name']:
                 if (
-                    ood_disaster.get("pre-post") == "both"
-                    or ood_disaster["pre-post"] == pre_post
+                    ood_disaster.get('pre-post') == 'both'
+                    or ood_disaster['pre-post'] == pre_post
                 ):
                     test_files.append(file_info)
 
-        return {"train": train_files, "test": test_files, "disasters": disaster_list}
+        return {'train': train_files, 'test': test_files, 'disasters': disaster_list}
