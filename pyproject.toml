@@ -99,8 +99,8 @@ datasets = [
     "scikit-image>=0.19",
     # scipy 1.7.2+ required for Python 3.10 wheels
     "scipy>=1.7.2",
-    # xarray 2023.9+ required for xarray.open_dataset
-    "xarray>=2023.9",
+    # xarray 0.12.3+ required for xarray.open_dataset
+    "xarray>=0.12.3",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx
