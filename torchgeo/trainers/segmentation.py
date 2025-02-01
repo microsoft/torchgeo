@@ -10,7 +10,14 @@ import segmentation_models_pytorch as smp
 import torch.nn as nn
 from torch import Tensor
 from torchmetrics import MetricCollection
-from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
+from torchmetrics.classification import (
+    Accuracy,
+    FBetaScore,
+    JaccardIndex,
+    Precision,
+    Recall,
+)
+from torchmetrics.wrappers import ClasswiseWrapper
 from torchvision.models._api import WeightsEnum
 
 from ..models import FCN, get_weight
@@ -85,7 +92,8 @@ class SemanticSegmentationTask(BaseTask):
             The *ignore_index* parameter now works for jaccard loss.
         """
         self.weights = weights
-        super().__init__(ignore='weights')
+        # super().__init__(ignore='weights')
+        super().__init__() # https://github.com/microsoft/torchgeo/issues/2553
 
     def configure_models(self) -> None:
         """Initialize the model.
