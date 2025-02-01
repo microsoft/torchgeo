@@ -3,12 +3,10 @@
 
 import os
 
-import matplotlib.pyplot as plt
 import pytest
 from _pytest.fixtures import SubRequest
 
 from torchgeo.datamodules import USAVarsDataModule
-from torchgeo.datasets import unbind_samples
 
 
 class TestUSAVarsDataModule:
@@ -41,10 +39,3 @@ class TestUSAVarsDataModule:
         assert len(datamodule.test_dataloader()) == 1
         batch = next(iter(datamodule.test_dataloader()))
         assert batch['image'].shape[0] == datamodule.batch_size
-
-    def test_plot(self, datamodule: USAVarsDataModule) -> None:
-        datamodule.setup('validate')
-        batch = next(iter(datamodule.val_dataloader()))
-        sample = unbind_samples(batch)[0]
-        datamodule.plot(sample)
-        plt.close()

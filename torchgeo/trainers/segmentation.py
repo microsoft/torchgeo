@@ -6,10 +6,8 @@
 import os
 from typing import Any
 
-import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import torch.nn as nn
-from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.classification import (
@@ -22,7 +20,6 @@ from torchmetrics.classification import (
 from torchmetrics.wrappers import ClasswiseWrapper
 from torchvision.models._api import WeightsEnum
 
-from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import FCN, get_weight
 from . import utils
 from .base import BaseTask
@@ -86,7 +83,7 @@ class SemanticSegmentationTask(BaseTask):
            were renamed to *model*, *backbone*, and *weights*.
 
         .. versionadded:: 0.5
-           The *class_weights*, *freeze_backbone*, and *freeze_decoder* parameters.
+            The *class_weights*, *freeze_backbone*, and *freeze_decoder* parameters.
 
         .. versionchanged:: 0.5
            The *weights* parameter now supports WeightEnums and checkpoint paths.
@@ -94,10 +91,10 @@ class SemanticSegmentationTask(BaseTask):
            *lr* and *patience*.
 
         .. versionchanged:: 0.6
-           The *ignore_index* parameter now works for jaccard loss.
+            The *ignore_index* parameter now works for jaccard loss.
         """
         self.weights = weights
-        super().__init__()
+        super().__init__(ignore='weights')
 
     def configure_models(self) -> None:
         """Initialize the model.
@@ -315,33 +312,6 @@ class SemanticSegmentationTask(BaseTask):
             on_step=False,
             on_epoch=True,
         )
-
-        if (
-            batch_idx < 10
-            and hasattr(self.trainer, 'datamodule')
-            and hasattr(self.trainer.datamodule, 'plot')
-            and self.logger
-            and hasattr(self.logger, 'experiment')
-            and hasattr(self.logger.experiment, 'add_figure')
-        ):
-            datamodule = self.trainer.datamodule
-            batch['prediction'] = y_hat.argmax(dim=1)
-            for key in ['image', 'mask', 'prediction']:
-                batch[key] = batch[key].cpu()
-            sample = unbind_samples(batch)[0]
-
-            fig: Figure | None = None
-            try:
-                fig = datamodule.plot(sample)
-            except RGBBandsMissingError:
-                pass
-
-            if fig:
-                summary_writer = self.logger.experiment
-                summary_writer.add_figure(
-                    f'image/{batch_idx}', fig, global_step=self.global_step
-                )
-                plt.close()
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.

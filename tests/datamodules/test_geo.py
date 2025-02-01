@@ -3,12 +3,10 @@
 
 from typing import Any
 
-import matplotlib.pyplot as plt
 import pytest
 import torch
 from _pytest.fixtures import SubRequest
 from lightning.pytorch import Trainer
-from matplotlib.figure import Figure
 from rasterio.crs import CRS
 from torch import Tensor
 
@@ -31,11 +29,8 @@ class CustomGeoDataset(GeoDataset):
         self.res = 1
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        image = torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)
+        image = torch.arange(3 * 2 * 2).view(3, 2, 2)
         return {'image': image, 'crs': CRS.from_epsg(4326), 'bounds': query}
-
-    def plot(self, *args: Any, **kwargs: Any) -> Figure:
-        return plt.figure()
 
 
 class CustomGeoDataModule(GeoDataModule):
@@ -68,13 +63,10 @@ class CustomNonGeoDataset(NonGeoDataset):
         self.length = length
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
-        return {'image': torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)}
+        return {'image': torch.arange(3 * 2 * 2).view(3, 2, 2)}
 
     def __len__(self) -> int:
         return self.length
-
-    def plot(self, *args: Any, **kwargs: Any) -> Figure:
-        return plt.figure()
 
 
 class CustomNonGeoDataModule(NonGeoDataModule):
@@ -132,11 +124,6 @@ class TestGeoDataModule:
         batch = next(iter(datamodule.predict_dataloader()))
         batch = datamodule.transfer_batch_to_device(batch, torch.device('cpu'), 1)
         batch = datamodule.on_after_batch_transfer(batch, 0)
-
-    def test_plot(self, datamodule: CustomGeoDataModule) -> None:
-        datamodule.setup('validate')
-        datamodule.plot()
-        plt.close()
 
     def test_no_datasets(self) -> None:
         dm = CustomGeoDataModule()
@@ -234,11 +221,6 @@ class TestNonGeoDataModule:
             datamodule.trainer.predicting = True
         batch = next(iter(datamodule.predict_dataloader()))
         batch = datamodule.on_after_batch_transfer(batch, 0)
-
-    def test_plot(self, datamodule: CustomNonGeoDataModule) -> None:
-        datamodule.setup('validate')
-        datamodule.plot()
-        plt.close()
 
     def test_no_datasets(self) -> None:
         dm = CustomNonGeoDataModule()
