@@ -81,14 +81,14 @@ class BioMassters(NonGeoDataset):
         """
         self.root = root
 
-        assert (
-            split in self.valid_splits
-        ), f'Please choose one of the valid splits: {self.valid_splits}.'
+        assert split in self.valid_splits, (
+            f'Please choose one of the valid splits: {self.valid_splits}.'
+        )
         self.split = split
 
-        assert set(sensors).issubset(
-            set(self.valid_sensors)
-        ), f'Please choose a subset of valid sensors: {self.valid_sensors}.'
+        assert set(sensors).issubset(set(self.valid_sensors)), (
+            f'Please choose a subset of valid sensors: {self.valid_sensors}.'
+        )
         self.sensors = sensors
         self.as_time_series = as_time_series
 

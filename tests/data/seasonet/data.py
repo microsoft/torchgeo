@@ -63,7 +63,7 @@ for season in seasons:
         os.remove(archive)
 
     for grid, comp in zip(grids, name_comps):
-        file_name = f"{comp[0]}_{''.join(comp[1:8])}_{'_'.join(comp[8:])}"
+        file_name = f'{comp[0]}_{"".join(comp[1:8])}_{"_".join(comp[8:])}'
         dir = os.path.join(season, f'grid{grid}', file_name)
         os.makedirs(dir)
 
