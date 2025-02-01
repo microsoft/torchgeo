@@ -44,9 +44,9 @@ class FieldsOfTheWorldDataModule(NonGeoDataModule):
         Raises:
             AssertionError: If 'countries' are specified in kwargs
         """
-        assert (
-            'countries' not in kwargs
-        ), "Please specify 'train_countries', 'val_countries', and 'test_countries' instead of 'countries' inside kwargs"
+        assert 'countries' not in kwargs, (
+            "Please specify 'train_countries', 'val_countries', and 'test_countries' instead of 'countries' inside kwargs"
+        )
 
         super().__init__(FieldsOfTheWorld, batch_size, num_workers, **kwargs)
 

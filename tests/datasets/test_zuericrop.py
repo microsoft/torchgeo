@@ -18,17 +18,11 @@ pytest.importorskip('h5py', minversion='3.6')
 class TestZueriCrop:
     @pytest.fixture
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ZueriCrop:
-        data_dir = os.path.join('tests', 'data', 'zuericrop')
-        urls = [
-            os.path.join(data_dir, 'ZueriCrop.hdf5'),
-            os.path.join(data_dir, 'labels.csv'),
-        ]
-        md5s = ['1635231df67f3d25f4f1e62c98e221a4', '5118398c7a5bbc246f5f6bb35d8d529b']
-        monkeypatch.setattr(ZueriCrop, 'urls', urls)
-        monkeypatch.setattr(ZueriCrop, 'md5s', md5s)
+        url = os.path.join('tests', 'data', 'zuericrop') + os.sep
+        monkeypatch.setattr(ZueriCrop, 'url', url)
         root = tmp_path
         transforms = nn.Identity()
-        return ZueriCrop(root=root, transforms=transforms, download=True, checksum=True)
+        return ZueriCrop(root=root, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: ZueriCrop) -> None:
         x = dataset[0]

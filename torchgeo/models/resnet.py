@@ -768,7 +768,7 @@ def resnet18(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet = timm.create_model('resnet18', *args, **kwargs)
+    model: ResNet = timm.create_model('resnet18', *args, **kwargs)  # type: ignore[attr-defined]
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -803,7 +803,7 @@ def resnet50(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet = timm.create_model('resnet50', *args, **kwargs)
+    model: ResNet = timm.create_model('resnet50', *args, **kwargs)  # type: ignore[attr-defined]
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -837,7 +837,7 @@ def resnet152(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet = timm.create_model('resnet152', *args, **kwargs)
+    model: ResNet = timm.create_model('resnet152', *args, **kwargs)  # type: ignore[attr-defined]
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(

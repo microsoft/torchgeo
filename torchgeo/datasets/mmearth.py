@@ -206,12 +206,12 @@ class MMEarth(NonGeoDataset):
         """
         lazy_import('h5py')
 
-        assert (
-            normalization_mode in self.norm_modes
-        ), f'Invalid normalization mode: {normalization_mode}, please choose from {self.norm_modes}'
-        assert (
-            subset in self.subsets
-        ), f'Invalid dataset version: {subset}, please choose from {self.subsets}'
+        assert normalization_mode in self.norm_modes, (
+            f'Invalid normalization mode: {normalization_mode}, please choose from {self.norm_modes}'
+        )
+        assert subset in self.subsets, (
+            f'Invalid dataset version: {subset}, please choose from {self.subsets}'
+        )
 
         self._validate_modalities(modalities)
         self.modalities = modalities

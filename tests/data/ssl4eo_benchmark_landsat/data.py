@@ -193,7 +193,7 @@ if __name__ == '__main__':
     # mask directory cdl
     mask_keep = ['tm_toa', 'etm_sr', 'oli_sr']
     mask_filenames = {
-        f"ssl4eo_l_{key.split('_')[0]}_cdl": val
+        f'ssl4eo_l_{key.split("_")[0]}_cdl': val
         for key, val in filenames.items()
         if key in mask_keep
     }
@@ -203,7 +203,7 @@ if __name__ == '__main__':
 
     # mask directory nlcd
     mask_filenames = {
-        f"ssl4eo_l_{key.split('_')[0]}_nlcd": val
+        f'ssl4eo_l_{key.split("_")[0]}_nlcd': val
         for key, val in filenames.items()
         if key in mask_keep
     }

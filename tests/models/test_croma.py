@@ -18,7 +18,7 @@ from torchgeo.models import (
 )
 
 
-def save_model(model: torch.nn.Module, path: Path) -> None:
+def save_model(model: CROMA, path: Path) -> None:
     state_dict = {
         's1_encoder': model.s1_encoder.state_dict(),
         's1_GAP_FFN': model.s1_GAP_FFN.state_dict(),
