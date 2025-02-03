@@ -23,7 +23,6 @@ from torch.optim import SGD, AdamW, Optimizer
 from torch.optim.lr_scheduler import (
     CosineAnnealingLR,
     LinearLR,
-    LRScheduler,
     MultiStepLR,
     SequentialLR,
 )
@@ -34,6 +33,11 @@ import torchgeo.transforms as T
 from ..models import get_weight
 from . import utils
 from .base import BaseTask
+
+try:
+    from torch.optim.lr_scheduler import LRScheduler
+except ImportError:
+    from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 
 
 def moco_augmentations(

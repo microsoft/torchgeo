@@ -171,7 +171,11 @@ class SeasonalContrastS2(NonGeoDataset):
                     # slowdown here from converting to/from a PIL Image just to resize.
                     # https://gist.github.com/calebrob6/748045ac8d844154067b2eefa47de92f
                     pil_image = Image.fromarray(band_data)
-                    resample = Image.Resampling.BILINEAR
+                    # Moved in PIL 9.1.0
+                    try:
+                        resample = Image.Resampling.BILINEAR
+                    except AttributeError:
+                        resample = Image.BILINEAR  # type: ignore[attr-defined]
                     band_data = np.array(
                         pil_image.resize((264, 264), resample=resample)
                     )

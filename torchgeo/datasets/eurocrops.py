@@ -247,7 +247,9 @@ class EuroCrops(VectorDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(4, 4))
 
-        def apply_cmap(arr: np.typing.NDArray[Any]) -> np.typing.NDArray[np.float64]:
+        def apply_cmap(
+            arr: 'np.typing.NDArray[Any]',
+        ) -> 'np.typing.NDArray[np.float64]':
             # Color 0 as black, while applying default color map for the class indices.
             cmap = plt.get_cmap('viridis')
             im: np.typing.NDArray[np.float64] = cmap(arr / len(self.class_map))

@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 def retrieve_mask_chip(
     img_src: DatasetReader, mask_src: DatasetReader
-) -> np.typing.NDArray[np.uint8]:
+) -> 'np.typing.NDArray[np.uint8]':
     """Retrieve the mask for a given landsat image.
 
     Args:

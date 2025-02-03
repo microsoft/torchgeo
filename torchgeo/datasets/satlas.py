@@ -639,6 +639,12 @@ class SatlasPretrain(NonGeoDataset):
             row: Web Mercator row.
             directories: Directories that may contain the image.
         """
+        # Moved in PIL 9.1.0
+        try:
+            resample = Image.Resampling.BILINEAR
+        except AttributeError:
+            resample = Image.BILINEAR  # type: ignore[attr-defined]
+
         # Find directories that match image product
         good_directories: list[str] = []
         for directory in directories:
@@ -653,7 +659,6 @@ class SatlasPretrain(NonGeoDataset):
         sample[f'time_{image}'] = torch.tensor(time)
 
         # Load all bands
-        resample = Image.Resampling.BILINEAR
         channels = []
         for band in self.bands[image]:
             path = os.path.join(self.root, image, directory, band, f'{col}_{row}.png')

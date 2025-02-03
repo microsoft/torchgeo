@@ -35,7 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('--num-workers', type=int, default=10, help='number of threads')
     args = parser.parse_args()
 
-    def class_counts(path: str) -> np.typing.NDArray[np.float64]:
+    def class_counts(path: str) -> 'np.typing.NDArray[np.float64]':
         """Calculate the number of values in each class.
 
         Args:
