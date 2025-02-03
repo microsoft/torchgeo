@@ -105,7 +105,7 @@ class NASAMarineDebris(NonGeoDataset):
         indices = w_check & h_check
         boxes = boxes[indices]
 
-        sample = {'image': image, 'boxes': boxes}
+        sample = {'image': image, 'bbox_xyxy': boxes}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -161,14 +161,16 @@ class NASAMarineDebris(NonGeoDataset):
 
         sample['image'] = sample['image'].byte()
         image = sample['image']
-        if 'boxes' in sample and len(sample['boxes']):
-            image = draw_bounding_boxes(image=sample['image'], boxes=sample['boxes'])
+        if 'bbox_xyxy' in sample and len(sample['bbox_xyxy']):
+            image = draw_bounding_boxes(
+                image=sample['image'], boxes=sample['bbox_xyxy']
+            )
         image_arr = image.permute((1, 2, 0)).numpy()
 
-        if 'prediction_boxes' in sample and len(sample['prediction_boxes']):
+        if 'prediction_bbox_xyxy' in sample and len(sample['prediction_bbox_xyxy']):
             ncols += 1
             preds = draw_bounding_boxes(
-                image=sample['image'], boxes=sample['prediction_boxes']
+                image=sample['image'], boxes=sample['prediction_bbox_xyxy']
             )
             preds_arr = preds.permute((1, 2, 0)).numpy()
 
