@@ -25,6 +25,7 @@ from .utils import (
     download_and_extract_archive,
     download_url,
     extract_archive,
+    percentile_normalization,
 )
 
 
@@ -38,7 +39,8 @@ class WorldStrat(NonGeoDataset):
     Dataset features:
 
     * High resolution (1.5m/pixel) Airbus SPOT 6/7 imagery with RGBN channels
-    * Low resolution (8x lower) Sentinel 2 L1C and L2A data
+    * Low resolution (8x lower) Sentinel 2 L1C and L2A
+    * globally distributed areas of interest around the world
 
 
     Dataset format:
@@ -56,6 +58,15 @@ class WorldStrat(NonGeoDataset):
 
     .. version_added:: 0.7
     """
+
+    modality_titles: ClassVar[dict[str, str]] = {
+        'l1c': 'Sentinel-2 L1C',
+        'l2a': 'Sentinel-2 L2A',
+        'lr_rgbn': 'Low-res RGBN',
+        'hr_ps': 'High-res PS',
+        'hr_pan': 'High-res PAN',
+        'hr_rgbn': 'High-res RGB',
+    }
 
     all_modalities = ('hr_ps', 'hr_pan', 'hr_rgbn', 'lr_rgbn', 'l1c', 'l2a')
 
@@ -181,7 +192,7 @@ class WorldStrat(NonGeoDataset):
             sample[f'image_{modality}'] = modality_loaders[modality]()
 
         # Add metadata
-        metadata = self.metadata_df[self.metadata_df['tile'] == aoi].reset_index(
+        metadata = self.metadata_df[self.metadata_df['tile_id'] == aoi].reset_index(
             drop=True
         )
         sample.update(
@@ -302,53 +313,39 @@ class WorldStrat(NonGeoDataset):
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> plt.Figure:
-        """Plot a sample from the dataset.
-
-        Args:
-            sample: A sample returned by __getitem__
-            show_titles: Flag indicating whether to show titles above each panel
-            suptitle: Optional string to use as a suptitle
-
-        Returns:
-            A matplotlib Figure with the rendered sample
-        """
-        # Determine number of panels needed
+        """Plot a sample from the dataset."""
         n_panels = len([k for k in sample.keys() if k.startswith('image_')])
-        if 'prediction' in sample:
-            n_panels += 1
+        n_panels += 'prediction' in sample
 
         fig, axs = plt.subplots(1, n_panels, figsize=(5 * n_panels, 5))
         if n_panels == 1:
             axs = [axs]
 
-        panel = 0
-        modality_titles = {
-            'l1c': 'Sentinel-2 L1C',
-            'l2a': 'Sentinel-2 L2A',
-            'lr_rgbn': 'Low-res RGBN',
-            'hr_ps': 'High-res PS',
-            'hr_pan': 'High-res PAN',
-            'hr_rgbn': 'High-res RGB',
-        }
-
-        # Plot each modality
-        for modality in self.modalities:
+        for panel, modality in enumerate(self.modalities):
             key = f'image_{modality}'
             if key in sample:
                 img = sample[key]
+
+                # Select and normalize image data
+                if modality in ['hr_ps', 'hr_pan']:
+                    img = img[0, ...]
+                elif modality == 'hr_rgbn':
+                    img = img[0:3, ...]
+                elif modality in ['l1c', 'l2a']:
+                    img = img[0, [4, 3, 2], ...]
+
+                # Apply percentile normalization
+                img = percentile_normalization(img)
+
+                # Handle channel ordering
                 if img.ndim == 3:
                     img = img.permute(1, 2, 0)
-                if key == 'image_l1c':
-                    img = img[0].permute(1, 2, 0)[..., [3, 2, 1]]
-                if key == 'image_l2a':
-                    img = img[0].permute(1, 2, 0)[..., [3, 2, 1]]
+
                 axs[panel].imshow(img)
                 axs[panel].axis('off')
                 if show_titles:
-                    axs[panel].set_title(modality_titles[modality])
-                panel += 1
+                    axs[panel].set_title(self.modality_titles[modality])
 
-        # Plot prediction if available
         if 'prediction' in sample:
             axs[-1].imshow(sample['prediction'])
             axs[-1].axis('off')

@@ -123,7 +123,7 @@ def create_dummy_worldstrat(root: str, img_size: int = 64) -> None:
             for date in dates:
                 metadata.append(
                     {
-                        'tile': tile,
+                        'tile_id': tile,
                         'lon': np.random.uniform(-180, 180),
                         'lat': np.random.uniform(-90, 90),
                         'lowres_date': date.strftime('%Y-%m-%d'),
@@ -133,7 +133,7 @@ def create_dummy_worldstrat(root: str, img_size: int = 64) -> None:
 
             split_info.append({'tile': tile, 'split': split})
 
-    pd.DataFrame(metadata).to_csv(os.path.join(root, 'metadata.csv'), index=True)
+    pd.DataFrame(metadata).to_csv(os.path.join(root, 'metadata.csv'), index=False)
     pd.DataFrame(split_info).to_csv(
         os.path.join(root, 'stratified_train_val_test_split.csv'), index=False
     )
