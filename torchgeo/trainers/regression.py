@@ -203,6 +203,8 @@ class RegressionTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
+            aug = datamodule._valid_attribute('val_aug', 'aug')
+            batch = aug.inverse(batch)
             if self.target_key == 'mask':
                 y = y.squeeze(dim=1)
                 y_hat = y_hat.squeeze(dim=1)

@@ -215,6 +215,8 @@ class ClassificationTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
+            aug = datamodule._valid_attribute('val_aug', 'aug')
+            batch = aug.inverse(batch)
             batch['prediction'] = y_hat.argmax(dim=-1)
             for key in ['image', 'label', 'prediction']:
                 batch[key] = batch[key].cpu()
@@ -359,6 +361,8 @@ class MultiLabelClassificationTask(ClassificationTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
+            aug = datamodule._valid_attribute('val_aug', 'aug')
+            batch = aug.inverse(batch)
             batch['prediction'] = y_hat_hard
             for key in ['image', 'label', 'prediction']:
                 batch[key] = batch[key].cpu()
