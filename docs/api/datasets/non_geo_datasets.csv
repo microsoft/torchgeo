@@ -62,6 +62,6 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `Vaihingen`_,S,Aerial,-,33,6,"1,281--3,816",0.09,RGB
 `VHR-10`_,I,"Google Earth, Vaihingen","MIT",800,10,"358--1,728",0.08--2,RGB
 `Western USA Live Fuel Moisture`_,R,"Landsat8, Sentinel-1","CC-BY-NC-ND-4.0",2615,-,-,-,-
-`WorldStrat`_,SR,"Sentinel-2,SPOT 6/7","CC-BY-NC-4.0",
+`WorldStrat`_,SR,"Sentinel-2,SPOT 6/7","CC-BY-NC-4.0",,-,"1.5m and 10m","RGB,MSI"
 `xView2`_,CD,Maxar,"CC-BY-NC-SA-4.0","3,732",4,"1,024x1,024",0.8,RGB
 `ZueriCrop`_,"I, T",Sentinel-2,CC-BY-NC-4.0,116K,48,24x24,10,MSI

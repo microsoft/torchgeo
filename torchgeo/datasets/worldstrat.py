@@ -8,25 +8,54 @@ from collections.abc import Callable, Sequence
 from glob import glob
 from typing import ClassVar
 
+import numpy as np
 import pandas as pd
 import rasterio
 import torch
+from PIL import Image
 from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, array_to_tensor, extract_archive
+from .utils import (
+    Path,
+    array_to_tensor,
+    download_and_extract_archive,
+    download_url,
+    extract_archive,
+)
 
 
 class WorldStrat(NonGeoDataset):
     """WorldStrat dataset.
 
+    The WorldStrat dataset is a multi-modal dataset covering nearly 10,000km2 of matched high and low resolution
+    satellite imagery across the globe. High-resolution SPOT 6/7 imagery comes at a resolution of 1.5m/pixel and is matched with a time-series
+    of Sentinel 2 data.
+
+    Dataset features:
+
+    * High resolution (1.5m/pixel) Airbus SPOT 6/7 imagery with RGBN channels
+    * Low resolution (8x lower) Sentinel 2 L1C and L2A data
+
+
     Dataset format:
 
-    * varying pixel sizes across AOI tiles
+    * pixel dimensions vary across AOI tiles
+    * all modalities are 'tif' files except for 'hr_rgbn' which is 'png'
+    * 'hr_ps', 'hr_pan', 'hr_rgbn' are high resolution data of pixel dimension
+    * 'lr_rgbn' is low resolution data of pixel dimension and roughly 4x lower resolution than 'hr_rgbn'
+    * 'l1c' and 'l2a' are Sentinel-2 data with 13 and 12 bands respectively and roughly 8x lower resolution than 'hr_rgbn'
+
+    If you use this dataset in your research, please cite the following entries:
+
+    * https://zenodo.org/records/6810792
+    * https://arxiv.org/abs/2207.06418
+
+    .. version_added:: 0.7
     """
 
-    all_modalities = ('sentinel1', 'sentinel2')
+    all_modalities = ('hr_ps', 'hr_pan', 'hr_rgbn', 'lr_rgbn', 'l1c', 'l2a')
 
     valid_splits = ('train', 'val', 'test')
 
@@ -71,7 +100,9 @@ class WorldStrat(NonGeoDataset):
 
         Args:
             root: Root directory where the dataset can be found.
-            modalities: Sequence of input modalities to load.
+            modalities: Sequence of input modalities to load, choose from
+                'hr_ps', 'hr_pan', 'hr_rgbn', 'lr_rgbn', 'l1c', 'l2a'.
+            split: The dataset split to load, choose from 'train', 'val', 'test'.
             transforms: A function/transform that takes in a dictionary of tensors
                 and returns a transformed version.
             download: if True, download dataset and store it in the root directory
@@ -81,18 +112,19 @@ class WorldStrat(NonGeoDataset):
             AssertionError: if ``split`` or ``modalities``arguments are invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert all(
-            modality in self.all_modalities for modality in modalities
-        ), f'Invalid modality: {modalities}, please choose from {self.all_modalities}'
-        assert (
-            split in self.valid_splits
-        ), f'Invalid split: {split}, please choose from {self.valid_splits}'
+        assert all(modality in self.all_modalities for modality in modalities), (
+            f'Invalid modality: {modalities}, please choose from {self.all_modalities}'
+        )
+        assert split in self.valid_splits, (
+            f'Invalid split: {split}, please choose from {self.valid_splits}'
+        )
 
         self.root = root
         self.modalities = modalities
         self.split = split
         self.transforms = transforms
         self.download = download
+        self.checksum = checksum
 
         self._verify()
 
@@ -111,50 +143,46 @@ class WorldStrat(NonGeoDataset):
         self.metadata_df.rename(columns={'Unnamed: 0': 'tile'}, inplace=True)
 
     def __getitem__(self, idx: int) -> dict[str, Tensor]:
-        """"""
+        """Retrieve a sample from the dataset.
+
+        Args:
+            idx: Index of the sample to retrieve.
+
+        Returns:
+            low and high resolution images and metadata for the sample.
+        """
         file_entry = self.file_path_df.iloc[idx]
         aoi = file_entry['tile']
 
-        metadata = self.metadata_df[self.metadata_df['tile'] == aoi]
+        metadata = self.metadata_df[self.metadata_df['tile'] == aoi].reset_index(
+            drop=True
+        )
 
         data_dir = os.path.join(self.root, aoi)
 
         l1_data = self._load_sentinel_data(os.path.join(data_dir, 'L1C'))
         l2_data = self._load_sentinel_data(os.path.join(data_dir, 'L2A'))
+        low_res_rgbn = self._load_tiff(os.path.join(data_dir, f'{aoi}_rgbn.tiff'))
 
         high_res_data_ps = self._load_tiff(os.path.join(data_dir, f'{aoi}_ps.tiff'))
         high_res_data_pan = self._load_tiff(os.path.join(data_dir, f'{aoi}_pan.tiff'))
-        high_res_data_rgbn = self._load_tiff(os.path.join(data_dir, f'{aoi}_rgbn.tiff'))
-        import numpy as np
-        from matplotlib import pyplot as plt
-        from PIL import Image
+        high_res_png = torch.from_numpy(
+            np.array(Image.open(os.path.join(data_dir, f'{aoi}_rgb.png')))[..., :3]
+        )
+        sample = {
+            'image_l1c': l1_data,
+            'image_ls1a': l2_data,
+            'image_lr_rgbn': low_res_rgbn,
+            'image_hr_ps': high_res_data_ps,
+            'image_hr_pan': high_res_data_pan,
+            'image_hr': high_res_png,
+            'lon': metadata['lon'][0],
+            'lat': metadata['lat'][0],
+            'low_res_data': metadata['lowres_data'][0],
+            'high_res_data': metadata['highres_data'][0],
+        }
 
-        high_res_png = np.array(Image.open(os.path.join(data_dir, f'{aoi}_rgb.png')))
-
-        # print shape for each
-        print('L1C shape: ', l1_data.shape)
-        print('L2A shape: ', l2_data.shape)
-        print('High res PS: ', high_res_data_ps.shape)
-        print('High res PAN: ', high_res_data_pan.shape)
-        print('High res RGBN: ', high_res_data_rgbn.shape)
-        print('High res PNG: ', high_res_png.shape)
-
-        fig, axs = plt.subplots(1, 6, figsize=(20, 5))
-
-        axs[0].imshow(high_res_png)
-        axs[1].imshow(high_res_data_ps[0].numpy() / 13000)
-        axs[2].imshow(high_res_data_pan[0].numpy() / 12000)
-        axs[3].imshow(high_res_data_rgbn[0:3].permute(1, 2, 0).numpy() / 6000)
-        axs[4].imshow(l1_data[-1, [4, 3, 2], :, :].permute(1, 2, 0).numpy())
-        axs[5].imshow(l2_data[-1, [4, 3, 2], :, :].permute(1, 2, 0).numpy())
-
-        fig.savefig('example.png')
-
-        import pdb
-
-        pdb.set_trace()
-
-        print(0)
+        return sample
 
     def _load_sentinel_data(self, data_dir: str) -> Tensor:
         """Load Sentinel data for a given AOI in a data directory.
@@ -192,7 +220,6 @@ class WorldStrat(NonGeoDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # check if directories are present
-        # maybe go through metatdata because that lists the directories?
         exists = []
         split_info_path = os.path.join(
             self.root, self.file_info_dict['train_val_test_split']['filename']
@@ -237,17 +264,17 @@ class WorldStrat(NonGeoDataset):
         """Download the dataset and extract it."""
         # TODO: implement download
         for filename, metadata in self.file_info_dict.items():
-            if metadata['filename'].contains('tar.gz'):
+            if 'tar.gz' in metadata['filename']:
                 download_and_extract_archive(
                     metadata['url'],
                     self.root,
                     filename=metadata['filename'],
-                    md5=metadata['md5'] if checksum else None,
+                    md5=metadata['md5'] if self.checksum else None,
                 )
             else:
                 download_url(
                     metadata['url'],
                     self.root,
                     filename=metadata['filename'],
-                    md5=metadata['md5'] if checksum else None,
+                    md5=metadata['md5'] if self.checksum else None,
                 )
