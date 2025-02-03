@@ -15,6 +15,8 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DOTA, DatasetNotFoundError
 
+pytest.importorskip('pyarrow')
+
 
 class TestDOTA:
     @pytest.fixture(params=product(['train', 'val'], ['1.0', '2.0']))
