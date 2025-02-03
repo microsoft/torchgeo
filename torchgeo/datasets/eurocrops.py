@@ -204,6 +204,9 @@ class EuroCrops(VectorDataset):
         # We go up the class hierarchy until there is a match.
         # (Parent code is computed by replacing rightmost non-0 character with 0.)
         hcat_code = feature['properties'][self.label_name]
+        if hcat_code is None:
+            return 0
+
         while True:
             if hcat_code in self.class_map:
                 return self.class_map[hcat_code]
