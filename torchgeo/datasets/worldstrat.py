@@ -8,6 +8,7 @@ from collections.abc import Callable, Sequence
 from glob import glob
 from typing import ClassVar
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import rasterio
@@ -20,6 +21,7 @@ from .geo import NonGeoDataset
 from .utils import (
     Path,
     array_to_tensor,
+    check_integrity,
     download_and_extract_archive,
     download_url,
     extract_archive,
@@ -140,7 +142,7 @@ class WorldStrat(NonGeoDataset):
         self.metadata_df = pd.read_csv(
             os.path.join(self.root, self.file_info_dict['metadata']['filename'])
         )
-        self.metadata_df.rename(columns={'Unnamed: 0': 'tile'}, inplace=True)
+        self.metadata_df.rename(columns={'Unnamed: 0': 'tile_id'}, inplace=True)
 
     def __getitem__(self, idx: int) -> dict[str, Tensor]:
         """Retrieve a sample from the dataset.
@@ -149,38 +151,47 @@ class WorldStrat(NonGeoDataset):
             idx: Index of the sample to retrieve.
 
         Returns:
-            low and high resolution images and metadata for the sample.
+            Selected modalities of low and high resolution images and metadata.
         """
         file_entry = self.file_path_df.iloc[idx]
         aoi = file_entry['tile']
+        data_dir = os.path.join(self.root, aoi)
 
+        sample: dict[str, Tensor] = {}
+
+        modality_loaders = {
+            'l1c': lambda: self._load_sentinel_data(os.path.join(data_dir, 'L1C')),
+            'l2a': lambda: self._load_sentinel_data(os.path.join(data_dir, 'L2A')),
+            'lr_rgbn': lambda: self._load_tiff(
+                os.path.join(data_dir, f'{aoi}_rgbn.tiff')
+            ),
+            'hr_ps': lambda: self._load_tiff(os.path.join(data_dir, f'{aoi}_ps.tiff')),
+            'hr_pan': lambda: self._load_tiff(
+                os.path.join(data_dir, f'{aoi}_pan.tiff')
+            ),
+            'hr_rgbn': lambda: torch.from_numpy(
+                np.array(
+                    Image.open(os.path.join(data_dir, f'{aoi}_rgb.png'))
+                ).transpose(2, 0, 1)
+            ).float(),
+        }
+
+        # Load only selected modalities
+        for modality in self.modalities:
+            sample[f'image_{modality}'] = modality_loaders[modality]()
+
+        # Add metadata
         metadata = self.metadata_df[self.metadata_df['tile'] == aoi].reset_index(
             drop=True
         )
-
-        data_dir = os.path.join(self.root, aoi)
-
-        l1_data = self._load_sentinel_data(os.path.join(data_dir, 'L1C'))
-        l2_data = self._load_sentinel_data(os.path.join(data_dir, 'L2A'))
-        low_res_rgbn = self._load_tiff(os.path.join(data_dir, f'{aoi}_rgbn.tiff'))
-
-        high_res_data_ps = self._load_tiff(os.path.join(data_dir, f'{aoi}_ps.tiff'))
-        high_res_data_pan = self._load_tiff(os.path.join(data_dir, f'{aoi}_pan.tiff'))
-        high_res_png = torch.from_numpy(
-            np.array(Image.open(os.path.join(data_dir, f'{aoi}_rgb.png')))[..., :3]
+        sample.update(
+            {
+                'lon': metadata['lon'][0],
+                'lat': metadata['lat'][0],
+                'low_res_date': metadata['lowres_date'][0],
+                'high_res_date': metadata['highres_date'][0],
+            }
         )
-        sample = {
-            'image_l1c': l1_data,
-            'image_ls1a': l2_data,
-            'image_lr_rgbn': low_res_rgbn,
-            'image_hr_ps': high_res_data_ps,
-            'image_hr_pan': high_res_data_pan,
-            'image_hr': high_res_png,
-            'lon': metadata['lon'][0],
-            'lat': metadata['lat'][0],
-            'low_res_data': metadata['lowres_data'][0],
-            'high_res_data': metadata['highres_data'][0],
-        }
 
         return sample
 
@@ -189,10 +200,10 @@ class WorldStrat(NonGeoDataset):
 
         Args:
             data_dir: Directory containing the Sentinel data, in the dataset
-                this is either the L1C or L2A directory.
+                this is either the L1C or L2A directory with time-series.
 
         Returns:
-            Loaded Sentinel data stacked as tensor
+            Loaded Sentinel data stacked as tensor so [T, C, H, W].
         """
         tiff_paths = glob(
             os.path.join(data_dir, f'*{os.path.basename(data_dir)}_data.tiff'),
@@ -239,7 +250,12 @@ class WorldStrat(NonGeoDataset):
         # check if downloaded files are present
         exists = []
         for file in self.file_info_dict.values():
-            if os.path.exists(os.path.join(self.root, file['filename'])):
+            path = os.path.join(self.root, file['filename'])
+            if os.path.exists(path):
+                if self.checksum:
+                    md5 = file['md5']
+                    if not check_integrity(path, md5):
+                        raise RuntimeError(f'Archive {file["filename"]} corrupted')
                 exists.append(True)
             else:
                 exists.append(False)
@@ -258,12 +274,13 @@ class WorldStrat(NonGeoDataset):
     def _extract(self) -> None:
         """Extract tar balls to root directory."""
         for file in self.file_info_dict.values():
-            extract_archive(os.path.join(self.root, file['filename']), self.root)
+            if 'tar.gz' in file['filename']:
+                extract_archive(os.path.join(self.root, file['filename']), self.root)
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
         # TODO: implement download
-        for filename, metadata in self.file_info_dict.items():
+        for _, metadata in self.file_info_dict.items():
             if 'tar.gz' in metadata['filename']:
                 download_and_extract_archive(
                     metadata['url'],
@@ -278,3 +295,67 @@ class WorldStrat(NonGeoDataset):
                     filename=metadata['filename'],
                     md5=metadata['md5'] if self.checksum else None,
                 )
+
+    def plot(
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: str | None = None,
+    ) -> plt.Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: A sample returned by __getitem__
+            show_titles: Flag indicating whether to show titles above each panel
+            suptitle: Optional string to use as a suptitle
+
+        Returns:
+            A matplotlib Figure with the rendered sample
+        """
+        # Determine number of panels needed
+        n_panels = len([k for k in sample.keys() if k.startswith('image_')])
+        if 'prediction' in sample:
+            n_panels += 1
+
+        fig, axs = plt.subplots(1, n_panels, figsize=(5 * n_panels, 5))
+        if n_panels == 1:
+            axs = [axs]
+
+        panel = 0
+        modality_titles = {
+            'l1c': 'Sentinel-2 L1C',
+            'l2a': 'Sentinel-2 L2A',
+            'lr_rgbn': 'Low-res RGBN',
+            'hr_ps': 'High-res PS',
+            'hr_pan': 'High-res PAN',
+            'hr_rgbn': 'High-res RGB',
+        }
+
+        # Plot each modality
+        for modality in self.modalities:
+            key = f'image_{modality}'
+            if key in sample:
+                img = sample[key]
+                if img.ndim == 3:
+                    img = img.permute(1, 2, 0)
+                if key == 'image_l1c':
+                    img = img[0].permute(1, 2, 0)[..., [3, 2, 1]]
+                if key == 'image_l2a':
+                    img = img[0].permute(1, 2, 0)[..., [3, 2, 1]]
+                axs[panel].imshow(img)
+                axs[panel].axis('off')
+                if show_titles:
+                    axs[panel].set_title(modality_titles[modality])
+                panel += 1
+
+        # Plot prediction if available
+        if 'prediction' in sample:
+            axs[-1].imshow(sample['prediction'])
+            axs[-1].axis('off')
+            if show_titles:
+                axs[-1].set_title('Prediction')
+
+        if suptitle:
+            fig.suptitle(suptitle)
+
+        return fig
