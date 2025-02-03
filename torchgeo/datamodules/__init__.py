@@ -17,6 +17,7 @@ from .etci2021 import ETCI2021DataModule
 from .eurosat import EuroSAT100DataModule, EuroSATDataModule, EuroSATSpatialDataModule
 from .fair1m import FAIR1MDataModule
 from .fire_risk import FireRiskDataModule
+from .flair2 import FLAIR2DataModule
 from .ftw import FieldsOfTheWorldDataModule
 from .geo import BaseDataModule, GeoDataModule, NonGeoDataModule
 from .geonrw import GeoNRWDataModule
@@ -73,6 +74,7 @@ __all__ = (
     'EuroSATDataModule',
     'EuroSATSpatialDataModule',
     'FAIR1MDataModule',
+    'FLAIR2DataModule',
     'FieldsOfTheWorldDataModule',
     'FireRiskDataModule',
     'GID15DataModule',
