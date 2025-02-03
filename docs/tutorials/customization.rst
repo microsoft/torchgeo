@@ -12,7 +12,6 @@ The following tutorials will teach you how to customize TorchGeo to meet your ne
 TorchGeo is a community-driven open source library. If there is a feature missing that you would like to add, please open a pull request to add it. See the ref:`contributing` guidelines to get started.
 
 .. toctree::
-   :hidden:
    :maxdepth: 1
 
    contribute_non_geo_dataset
