@@ -123,10 +123,10 @@ class RCF(Module):
 
     def _normalize(
         self,
-        patches: 'np.typing.NDArray[np.float32]',
+        patches: np.typing.NDArray[np.float32],
         min_divisor: float = 1e-8,
         zca_bias: float = 0.001,
-    ) -> 'np.typing.NDArray[np.float32]':
+    ) -> np.typing.NDArray[np.float32]:
         """Does ZCA whitening on a set of input patches.
 
         Copied from https://github.com/Global-Policy-Lab/mosaiks-paper/blob/7efb09ed455505562d6bb04c2aaa242ef59f0a82/code/mosaiks/featurization.py#L120

@@ -309,7 +309,7 @@ class OSCD(NonGeoDataset):
         except ValueError as e:
             raise RGBBandsMissingError() from e
 
-        def get_masked(img: Tensor) -> 'np.typing.NDArray[np.uint8]':
+        def get_masked(img: Tensor) -> np.typing.NDArray[np.uint8]:
             rgb_img = img[rgb_indices].float().numpy()
             per02 = np.percentile(rgb_img, 2)
             per98 = np.percentile(rgb_img, 98)

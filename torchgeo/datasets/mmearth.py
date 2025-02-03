@@ -493,7 +493,7 @@ class MMEarth(NonGeoDataset):
 
     def _preprocess_modality(
         self,
-        data: 'np.typing.NDArray[Any]',
+        data: np.typing.NDArray[Any],
         modality: str,
         tile_info: dict[str, Any],
         bands: list[str],
@@ -575,8 +575,8 @@ class MMEarth(NonGeoDataset):
         return tensor
 
     def _normalize_modality(
-        self, data: 'np.typing.NDArray[Any]', modality: str, bands: list[str]
-    ) -> 'np.typing.NDArray[np.float64]':
+        self, data: np.typing.NDArray[Any], modality: str, bands: list[str]
+    ) -> np.typing.NDArray[np.float64]:
         """Normalize a single modality.
 
         Args:
