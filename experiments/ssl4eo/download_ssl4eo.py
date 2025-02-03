@@ -131,8 +131,8 @@ def filter_collection(
 
 
 def center_crop(
-    img: 'np.typing.NDArray[np.float32]', out_size: int
-) -> 'np.typing.NDArray[np.float32]':
+    img: np.typing.NDArray[np.float32], out_size: int
+) -> np.typing.NDArray[np.float32]:
     image_height, image_width = img.shape[:2]
     crop_height = crop_width = out_size
     pad_height = max(crop_height - image_height, 0)
@@ -253,9 +253,7 @@ def get_random_patches_match(
 
 
 def save_geotiff(
-    img: 'np.typing.NDArray[np.float32]',
-    coords: list[tuple[float, float]],
-    filename: str,
+    img: np.typing.NDArray[np.float32], coords: list[tuple[float, float]], filename: str
 ) -> None:
     height, width, channels = img.shape
     xres = (coords[1][0] - coords[0][0]) / width
@@ -278,7 +276,7 @@ def save_geotiff(
 
 
 def save_patch(
-    raster: dict[int, 'np.typing.NDArray[np.float32]'],
+    raster: dict[int, np.typing.NDArray[np.float32]],
     coords: list[tuple[float, float]],
     metadata: dict[str, Any],
     bands: list[str],

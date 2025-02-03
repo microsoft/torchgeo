@@ -19,7 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('--num-workers', type=int, default=10, help='number of threads')
     args = parser.parse_args()
 
-    def compute(path: str) -> tuple['np.typing.NDArray[np.float32]', int]:
+    def compute(path: str) -> tuple[np.typing.NDArray[np.float32], int]:
         """Compute the min, max, mean, and std dev of a single image.
 
         Args:

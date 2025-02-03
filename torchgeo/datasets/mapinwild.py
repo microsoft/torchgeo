@@ -314,7 +314,7 @@ class MapInWild(NonGeoDataset):
 
     def _convert_to_color(
         self, arr_2d: Tensor, cmap: dict[int, tuple[int, int, int]]
-    ) -> 'np.typing.NDArray[np.uint8]':
+    ) -> np.typing.NDArray[np.uint8]:
         """Numeric labels to RGB-color encoding.
 
         Args:
