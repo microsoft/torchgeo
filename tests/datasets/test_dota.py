@@ -151,7 +151,5 @@ class TestDOTA:
 
     def test_plot(self, dataset: DOTA) -> None:
         x = dataset[1]
-
         dataset.plot(x, suptitle='Test')
-
         plt.close()
