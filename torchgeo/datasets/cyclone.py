@@ -131,7 +131,11 @@ class TropicalCyclone(NonGeoDataset):
         filename = os.path.join(self.root, self.split, f'{image_id}.jpg')
         with Image.open(filename) as img:
             if img.height != self.size or img.width != self.size:
-                resample = Image.Resampling.BILINEAR
+                # Moved in PIL 9.1.0
+                try:
+                    resample = Image.Resampling.BILINEAR
+                except AttributeError:
+                    resample = Image.BILINEAR  # type: ignore[attr-defined]
                 img = img.resize(size=(self.size, self.size), resample=resample)
             array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array)

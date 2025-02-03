@@ -124,7 +124,7 @@ class EnviroAtlas(GeoDataset):
 
     # used to convert the 10 high-res classes labeled as [0, 10, 20, 30, 40, 52, 70, 80,
     # 82, 91, 92] to sequential labels [0, ..., 10]
-    raw_enviroatlas_to_idx_map: np.typing.NDArray[np.uint8] = np.array(
+    raw_enviroatlas_to_idx_map: 'np.typing.NDArray[np.uint8]' = np.array(
         [
             0,
             0,
