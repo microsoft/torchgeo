@@ -40,7 +40,7 @@ class BioMassters(NonGeoDataset):
     * Sentinel 1 and Sentinel 2 data for each location
     * Sentinel 1 available for every month
     * Sentinel 2 available for almost every month
-      (not available for every month due to ESA aquisition halt over the region
+      (not available for every month due to ESA acquisition halt over the region
       during particular periods)
 
     If you use this dataset in your research, please cite the following paper:
@@ -81,14 +81,14 @@ class BioMassters(NonGeoDataset):
         """
         self.root = root
 
-        assert (
-            split in self.valid_splits
-        ), f'Please choose one of the valid splits: {self.valid_splits}.'
+        assert split in self.valid_splits, (
+            f'Please choose one of the valid splits: {self.valid_splits}.'
+        )
         self.split = split
 
-        assert set(sensors).issubset(
-            set(self.valid_sensors)
-        ), f'Please choose a subset of valid sensors: {self.valid_sensors}.'
+        assert set(sensors).issubset(set(self.valid_sensors)), (
+            f'Please choose a subset of valid sensors: {self.valid_sensors}.'
+        )
         self.sensors = sensors
         self.as_time_series = as_time_series
 

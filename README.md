@@ -28,8 +28,8 @@ Testing:
 
 The recommended way to install TorchGeo is with [pip](https://pip.pypa.io/):
 
-```console
-$ pip install torchgeo
+```sh
+pip install torchgeo
 ```
 
 For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation instructions, see the [documentation](https://torchgeo.readthedocs.io/en/stable/user/installation.html).
@@ -72,15 +72,15 @@ Many remote sensing applications involve working with [_geospatial datasets_](ht
 In this example, we show how easy it is to work with geospatial data and to sample small image patches from a combination of [Landsat](https://www.usgs.gov/landsat-missions) and [Cropland Data Layer (CDL)](https://data.nal.usda.gov/dataset/cropscape-cropland-data-layer) data using TorchGeo. First, we assume that the user has Landsat 7 and 8 imagery downloaded. Since Landsat 8 has more spectral bands than Landsat 7, we'll only use the bands that both satellites have in common. We'll create a single dataset including all images from both Landsat 7 and 8 data by taking the union between these two datasets.
 
 ```python
-landsat7 = Landsat7(root="...", bands=["B1", ..., "B7"])
-landsat8 = Landsat8(root="...", bands=["B2", ..., "B8"])
+landsat7 = Landsat7(paths="...", bands=["B1", ..., "B7"])
+landsat8 = Landsat8(paths="...", bands=["B2", ..., "B8"])
 landsat = landsat7 | landsat8
 ```
 
 Next, we take the intersection between this dataset and the CDL dataset. We want to take the intersection instead of the union to ensure that we only sample from regions that have both Landsat and CDL data. Note that we can automatically download and checksum CDL data. Also note that each of these datasets may contain files in different coordinate reference systems (CRS) or resolutions, but TorchGeo automatically ensures that a matching CRS and resolution is used.
 
 ```python
-cdl = CDL(root="...", download=True, checksum=True)
+cdl = CDL(paths="...", download=True, checksum=True)
 dataset = landsat & cdl
 ```
 
@@ -192,7 +192,7 @@ trainer.fit(model=task, datamodule=datamodule)
 
 TorchGeo also supports command-line interface training using [LightningCLI](https://lightning.ai/docs/pytorch/stable/cli/lightning_cli.html). It can be invoked in two ways:
 
-```console
+```sh
 # If torchgeo has been installed
 torchgeo
 # If torchgeo has been installed, or if it has been cloned to the current directory
@@ -201,7 +201,7 @@ python3 -m torchgeo
 
 It supports command-line configuration or YAML/JSON config files. Valid options can be found from the help messages:
 
-```console
+```sh
 # See valid stages
 torchgeo --help
 # See valid trainer options
@@ -233,7 +233,7 @@ data:
 
 we can see the script in action:
 
-```console
+```sh
 # Train and validate a model
 torchgeo fit --config config.yaml
 # Validate-only

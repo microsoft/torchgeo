@@ -495,10 +495,9 @@ class BigEarthNet(NonGeoDataset):
             filename: output filename to write downloaded file
             md5: md5 of downloaded file
         """
-        if not os.path.exists(filename):
-            download_url(
-                url, self.root, filename=filename, md5=md5 if self.checksum else None
-            )
+        download_url(
+            url, self.root, filename=filename, md5=md5 if self.checksum else None
+        )
 
     def _extract(self, filepath: Path) -> None:
         """Extract the dataset.
@@ -565,9 +564,9 @@ class BigEarthNet(NonGeoDataset):
         ax.imshow(image)
         ax.axis('off')
         if show_titles:
-            title = f"Labels: {', '.join(labels)}"
+            title = f'Labels: {", ".join(labels)}'
             if showing_predictions:
-                title += f"\nPredictions: {', '.join(predictions)}"
+                title += f'\nPredictions: {", ".join(predictions)}'
             ax.set_title(title)
 
         if suptitle is not None:

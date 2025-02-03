@@ -24,7 +24,7 @@ class CMSGlobalMangroveCanopy(RasterDataset):
     consists of a single band map at 30m resolution of either aboveground biomass (agb),
     basal area weighted height (hba95), or maximum canopy height (hmax95).
 
-    The dataset needs to be manually dowloaded from the above link, where you can make
+    The dataset needs to be manually downloaded from the above link, where you can make
     an account and subsequently download the dataset.
 
     .. versionadded:: 0.3
@@ -204,15 +204,15 @@ class CMSGlobalMangroveCanopy(RasterDataset):
         self.checksum = checksum
 
         assert isinstance(country, str), 'Country argument must be a str.'
-        assert (
-            country in self.all_countries
-        ), f'You have selected an invalid country, please choose one of {self.all_countries}'
+        assert country in self.all_countries, (
+            f'You have selected an invalid country, please choose one of {self.all_countries}'
+        )
         self.country = country
 
         assert isinstance(measurement, str), 'Measurement must be a string.'
-        assert (
-            measurement in self.measurements
-        ), f'You have entered an invalid measurement, please choose one of {self.measurements}.'
+        assert measurement in self.measurements, (
+            f'You have entered an invalid measurement, please choose one of {self.measurements}.'
+        )
         self.measurement = measurement
 
         self.filename_glob = f'**/Mangrove_{self.measurement}_{self.country}*'

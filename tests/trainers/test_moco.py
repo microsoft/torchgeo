@@ -29,6 +29,7 @@ class TestMoCoTask:
         'name',
         [
             'chesapeake_cvpr_prior_moco',
+            'hyspecnet_moco',
             'seco_moco_1',
             'seco_moco_2',
             'ssl4eo_l_moco_1',
@@ -90,7 +91,7 @@ class TestMoCoTask:
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
-        model = timm.create_model(
+        model = timm.create_model(  # type: ignore[attr-defined]
             weights.meta['model'], in_chans=weights.meta['in_chans']
         )
         torch.save(model.state_dict(), path)

@@ -34,7 +34,7 @@ class TestResNet18:
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
-        model = timm.create_model('resnet18', in_chans=weights.meta['in_chans'])
+        model = timm.create_model('resnet18', in_chans=weights.meta['in_chans'])  # type: ignore[attr-defined]
         torch.save(model.state_dict(), path)
         try:
             monkeypatch.setattr(weights.value, 'url', str(path))
@@ -47,6 +47,10 @@ class TestResNet18:
 
     def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet18(weights=mocked_weights)
+
+    def test_bands(self, mocked_weights: WeightsEnum) -> None:
+        if 'bands' in mocked_weights.meta:
+            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
 
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta['in_chans']
@@ -74,7 +78,7 @@ class TestResNet50:
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
-        model = timm.create_model('resnet50', in_chans=weights.meta['in_chans'])
+        model = timm.create_model('resnet50', in_chans=weights.meta['in_chans'])  # type: ignore[attr-defined]
         torch.save(model.state_dict(), path)
         try:
             monkeypatch.setattr(weights.value, 'url', str(path))
@@ -87,6 +91,10 @@ class TestResNet50:
 
     def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet50(weights=mocked_weights)
+
+    def test_bands(self, mocked_weights: WeightsEnum) -> None:
+        if 'bands' in mocked_weights.meta:
+            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
 
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta['in_chans']
@@ -114,7 +122,7 @@ class TestResNet152:
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
-        model = timm.create_model('resnet152', in_chans=weights.meta['in_chans'])
+        model = timm.create_model('resnet152', in_chans=weights.meta['in_chans'])  # type: ignore[attr-defined]
         torch.save(model.state_dict(), path)
         try:
             monkeypatch.setattr(weights.value, 'url', str(path))
@@ -127,6 +135,10 @@ class TestResNet152:
 
     def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet152(weights=mocked_weights)
+
+    def test_bands(self, mocked_weights: WeightsEnum) -> None:
+        if 'bands' in mocked_weights.meta:
+            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
 
     def test_transforms(self, mocked_weights: WeightsEnum) -> None:
         c = mocked_weights.meta['in_chans']

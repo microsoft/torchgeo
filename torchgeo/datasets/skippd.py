@@ -91,7 +91,7 @@ class SKIPPD(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             split: one of "trainval", or "test"
-            task: one fo "nowcast", or "forecast"
+            task: one of "nowcast", or "forecast"
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -104,14 +104,14 @@ class SKIPPD(NonGeoDataset):
         """
         lazy_import('h5py')
 
-        assert (
-            split in self.valid_splits
-        ), f'Please choose one of these valid data splits {self.valid_splits}.'
+        assert split in self.valid_splits, (
+            f'Please choose one of these valid data splits {self.valid_splits}.'
+        )
         self.split = split
 
-        assert (
-            task in self.valid_tasks
-        ), f'Please choose one of these valid tasks {self.valid_tasks}.'
+        assert task in self.valid_tasks, (
+            f'Please choose one of these valid tasks {self.valid_tasks}.'
+        )
         self.task = task
 
         self.root = root

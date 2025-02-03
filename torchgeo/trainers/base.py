@@ -9,7 +9,7 @@ from typing import Any
 
 import lightning
 from lightning.pytorch import LightningModule
-from torch.optim import AdamW  # type: ignore[attr-defined]
+from torch.optim import AdamW
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
@@ -55,7 +55,7 @@ class BaseTask(LightningModule, ABC):
 
     def configure_optimizers(
         self,
-    ) -> 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig':
+    ) -> 'lightning.pytorch.utilities.types.OptimizerLRScheduler':
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:

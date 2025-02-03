@@ -17,17 +17,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.2.1
+        uses: actions/checkout@v4.2.2
       - name: Set up python
-        uses: actions/setup-python@v5.2.0
+        id: setup-python
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: '3.12'
       - name: Cache dependencies
-        uses: actions/cache@v4.1.0
+        uses: actions/cache@v4.2.0
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/required.txt') }}-${{ hashFiles('requirements/datasets.txt') }}-${{ hashFiles('requirements/style.txt') }}-${{ hashFiles('requirements/tests.txt') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/style.txt', 'requirements/tests.txt') }}
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -42,17 +43,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.2.1
+        uses: actions/checkout@v4.2.2
       - name: Set up python
-        uses: actions/setup-python@v5.2.0
+        id: setup-python
+        uses: actions/setup-python@v5.3.0
         with:
           python-version: '3.12'
       - name: Cache dependencies
-        uses: actions/cache@v4.1.0
+        uses: actions/cache@v4.2.0
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements/style.txt') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/style.txt') }}
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -69,9 +71,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.2.1
+        uses: actions/checkout@v4.2.2
       - name: Set up nodejs
-        uses: actions/setup-node@v4.0.4
+        uses: actions/setup-node@v4.2.0
         with:
           node-version: '20'
           cache: 'npm'

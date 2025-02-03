@@ -131,9 +131,9 @@ class SouthAfricaCropType(RasterDataset):
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert (
-            set(classes) <= self.cmap.keys()
-        ), f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        assert set(classes) <= self.cmap.keys(), (
+            f'Only the following classes are valid: {list(self.cmap.keys())}.'
+        )
         assert 0 in classes, 'Classes must include the background class: 0'
 
         self.paths = paths
@@ -223,7 +223,7 @@ class SouthAfricaCropType(RasterDataset):
             )
             mask_filepaths.append(file_path)
 
-        mask = self._merge_files(mask_filepaths, query)
+        mask = self._merge_files(mask_filepaths, query).squeeze(0)
 
         sample = {
             'crs': self.crs,

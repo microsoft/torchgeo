@@ -68,9 +68,9 @@ def generate_test_data(root: str, n_samples: int = 2) -> str:
         lbl = np.random.randint(2, size=size, dtype=dtype)
         timg = np.random.randint(dtype_max, size=size, dtype=dtype)
 
-        img_path = os.path.join(img_dir, f'austin{i+1}.tif')
-        lbl_path = os.path.join(lbl_dir, f'austin{i+1}.tif')
-        timg_path = os.path.join(timg_dir, f'austin{i+10}.tif')
+        img_path = os.path.join(img_dir, f'austin{i + 1}.tif')
+        lbl_path = os.path.join(lbl_dir, f'austin{i + 1}.tif')
+        timg_path = os.path.join(timg_dir, f'austin{i + 10}.tif')
 
         write_data(img_path, img, driver, crs, transform)
         write_data(lbl_path, lbl, driver, crs, transform)

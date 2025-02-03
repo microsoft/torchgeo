@@ -39,7 +39,7 @@ class SeasoNet(NonGeoDataset):
 
     Dataset format:
 
-    * images are 16-bit GeoTiffs, split into seperate files based on resolution
+    * images are 16-bit GeoTiffs, split into separate files based on resolution
     * images include 12 spectral bands with 10, 20 and 60 m per pixel resolutions
     * masks are single-channel 8-bit GeoTiffs
 
@@ -450,7 +450,7 @@ class SeasoNet(NonGeoDataset):
             axs[ax].imshow(image)
             axs[ax].axis('off')
             if show_titles:
-                axs[ax].set_title(f'Image {ax+1}')
+                axs[ax].set_title(f'Image {ax + 1}')
 
         axs[ax + 1].imshow(mask, vmin=0, vmax=32, cmap=plt_cmap, interpolation='none')
         axs[ax + 1].axis('off')

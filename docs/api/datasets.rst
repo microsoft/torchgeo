@@ -142,6 +142,10 @@ Landsat
 .. autoclass:: Landsat2
 .. autoclass:: Landsat1
 
+MMFlood
+^^^^^^^
+.. autoclass:: MMFlood
+
 NAIP
 ^^^^
 
@@ -217,10 +221,20 @@ BioMassters
 
 .. autoclass:: BioMassters
 
+BRIGHT
+^^^^^^
+
+.. autoclass:: BRIGHTDFC2025
+
 CaBuAr
 ^^^^^^
 
 .. autoclass:: CaBuAr
+
+CaFFe
+^^^^^
+
+.. autoclass:: CaFFe
 
 ChaBuD
 ^^^^^^
@@ -307,6 +321,11 @@ GID-15
 
 .. autoclass:: GID15
 
+HySpecNet-11k
+^^^^^^^^^^^^^
+
+.. autoclass:: HySpecNet11k
+
 IDTReeS
 ^^^^^^^
 
@@ -344,10 +363,20 @@ MapInWild
 
 .. autoclass:: MapInWild
 
+MDAS
+^^^^
+
+.. autoclass:: MDAS
+
 Million-AID
 ^^^^^^^^^^^
 
 .. autoclass:: MillionAID
+
+MMEarth
+^^^^^^^^
+
+.. autoclass:: MMEarth
 
 NASA Marine Debris
 ^^^^^^^^^^^^^^^^^^
@@ -393,6 +422,11 @@ Rwanda Field Boundary
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: RwandaFieldBoundary
+
+SatlasPretrain
+^^^^^^^^^^^^^^
+
+.. autoclass:: SatlasPretrain
 
 Seasonal Contrast
 ^^^^^^^^^^^^^^^^^
@@ -453,6 +487,11 @@ SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SustainBenchCropYield
+
+TreeSatAI
+^^^^^^^^^
+
+.. autoclass:: TreeSatAI
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^

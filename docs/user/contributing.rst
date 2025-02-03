@@ -1,3 +1,5 @@
+.. _contributing:
+
 Contributing
 ============
 
@@ -56,7 +58,7 @@ For example, if you add a new dataset in ``torchgeo/datasets/foo.py``, you'll ne
 
 .. code-block:: console
 
-   $ pytest --cov=torchgeo.datasets.foo tests/datasets/test_foo.py
+   $ pytest --cov=torchgeo.datasets tests/datasets/test_foo.py
    ========================= test session starts =========================
    platform darwin -- Python 3.10.11, pytest-6.2.4, py-1.9.0, pluggy-0.13.0
    rootdir: ~/torchgeo, configfile: pyproject.toml

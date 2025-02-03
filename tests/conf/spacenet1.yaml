@@ -15,4 +15,4 @@ data:
     val_split_pct: 0.34
     test_split_pct: 0.34
   dict_kwargs:
-    root: 'tests/data/spacenet'
+    root: 'tests/data/spacenet/spacenet1'

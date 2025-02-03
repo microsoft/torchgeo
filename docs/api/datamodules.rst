@@ -26,6 +26,11 @@ L8 Biome
 
 .. autoclass:: L8BiomeDataModule
 
+MMFlood
+^^^^^^^^
+
+.. autoclass:: MMFloodDataModule
+
 NAIP
 ^^^^
 
@@ -61,6 +66,11 @@ CaBuAr
 ^^^^^^
 
 .. autoclass:: CaBuArDataModule
+
+CaFFe
+^^^^^
+
+.. autoclass:: CaFFeDataModule
 
 ChaBuD
 ^^^^^^
@@ -99,6 +109,11 @@ FAIR1M
 
 .. autoclass:: FAIR1MDataModule
 
+Fields Of The World
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: FieldsOfTheWorldDataModule
+
 FireRisk
 ^^^^^^^^
 
@@ -113,6 +128,11 @@ GID-15
 ^^^^^^
 
 .. autoclass:: GID15DataModule
+
+HySpecNet-11k
+^^^^^^^^^^^^^
+
+.. autoclass:: HySpecNet11kDataModule
 
 Inria Aerial Image Labeling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -183,7 +203,9 @@ So2Sat
 SpaceNet
 ^^^^^^^^
 
+.. autoclass:: SpaceNetBaseDataModule
 .. autoclass:: SpaceNet1DataModule
+.. autoclass:: SpaceNet6DataModule
 
 SSL4EO
 ^^^^^^
@@ -200,6 +222,11 @@ SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SustainBenchCropYieldDataModule
+
+TreeSatAI
+^^^^^^^^^
+
+.. autoclass:: TreeSatAIDataModule
 
 Tropical Cyclone
 ^^^^^^^^^^^^^^^^

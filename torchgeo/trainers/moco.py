@@ -19,7 +19,7 @@ from lightly.models.modules import MoCoProjectionHead
 from lightly.models.utils import deactivate_requires_grad, update_momentum
 from lightly.utils.scheduler import cosine_schedule
 from torch import Tensor
-from torch.optim import SGD, AdamW, Optimizer  # type: ignore[attr-defined]
+from torch.optim import SGD, AdamW, Optimizer
 from torch.optim.lr_scheduler import (
     CosineAnnealingLR,
     LinearLR,
@@ -238,10 +238,10 @@ class MoCoTask(BaseTask):
         output_dim: int = self.hparams['output_dim']
 
         # Create backbone
-        self.backbone = timm.create_model(
+        self.backbone = timm.create_model(  # type: ignore[attr-defined]
             model, in_chans=in_channels, num_classes=0, pretrained=weights is True
         )
-        self.backbone_momentum = timm.create_model(
+        self.backbone_momentum = timm.create_model(  # type: ignore[attr-defined]
             model, in_chans=in_channels, num_classes=0, pretrained=weights is True
         )
         deactivate_requires_grad(self.backbone_momentum)
@@ -293,7 +293,7 @@ class MoCoTask(BaseTask):
 
     def configure_optimizers(
         self,
-    ) -> 'lightning.pytorch.utilities.types.OptimizerLRSchedulerConfig':
+    ) -> 'lightning.pytorch.utilities.types.OptimizerLRScheduler':
         """Initialize the optimizer and learning rate scheduler.
 
         Returns:
