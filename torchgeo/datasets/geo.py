@@ -447,7 +447,8 @@ class RasterDataset(GeoDataset):
         self.bands = bands or self.all_bands
         self.cache = cache
 
-        assert set(self.bands) <= set(self.all_bands)
+        if self.all_bands:
+            assert set(self.bands) <= set(self.all_bands)
 
         # Populate the dataset index
         i = 0
