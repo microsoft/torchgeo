@@ -2,17 +2,14 @@
 # Licensed under the MIT License.
 
 import os
+import shutil
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-from itertools import product
 import pytest
 import torch
-import shutil
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
-
 
 from torchgeo.datasets import ISAID, DatasetNotFoundError
 
@@ -28,8 +25,6 @@ class TestISAID:
         monkeypatch.setattr(ISAID, 'img_url', url)
         monkeypatch.setattr(ISAID, 'label_url', url)
 
-        img_url = 'https://huggingface.co/datasets/torchgeo/dota/tree/main/{}'
-
         img_files = {
             'train': {
                 'filename': 'dotav1_images_train.tar.gz',
@@ -41,6 +36,8 @@ class TestISAID:
             },
         }
 
+        monkeypatch.setattr(ISAID, 'img_files', img_files)
+
         label_files = {
             'train': {
                 'filename': 'isaid_annotations_train.tar.gz',
@@ -51,6 +48,7 @@ class TestISAID:
                 'md5': '88eccdf9744c201248266b9a784ffeab',
             },
         }
+        monkeypatch.setattr(ISAID, 'label_files', label_files)
 
         root = tmp_path
         split = request.param

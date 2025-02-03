@@ -1,14 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import numpy as np
-import os
-from pathlib import Path
-import json
-import tarfile
-import shutil
-from PIL import Image
 import hashlib
+import json
+import os
+import shutil
+import tarfile
+from pathlib import Path
+
+import numpy as np
+from PIL import Image
 
 
 def create_dummy_image(path: Path, size: tuple[int, int] = (64, 64)) -> None:

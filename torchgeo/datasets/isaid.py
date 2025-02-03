@@ -7,12 +7,8 @@ import os
 from collections.abc import Callable
 from typing import Any, ClassVar
 
-import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from matplotlib import patches
-from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
@@ -22,10 +18,8 @@ from .utils import (
     Path,
     check_integrity,
     download_and_extract_archive,
-    download_url,
     extract_archive,
     lazy_import,
-    percentile_normalization,
 )
 
 
@@ -156,23 +150,30 @@ class ISAID(NonGeoDataset):
     * https://arxiv.org/abs/1711.10398
 
     .. versionadded:: 0.7
+
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `pycocotools <https://pypi.org/project/pycocotools/>`_ to load the
+         annotations
     """
 
     img_url = 'https://huggingface.co/datasets/torchgeo/dota/tree/main/{}'
 
-    img_files = {
+    img_files: ClassVar[dict[str, dict[str, str]]] = {
         'train': {'filename': 'dotav1_images_train.tar.gz', 'md5': ''},
         'val': {'filename': 'dotav1_images_val.tar.gz', 'md5': ''},
     }
 
     label_url = 'https://huggingface.co/datasets/torchgeo/isaid/tree/main/{}'
 
-    label_files = {
+    label_files: ClassVar[dict[str, dict[str, str]]] = {
         'train': {'filename': 'isaid_annotations_train.tar.gz', 'md5': ''},
         'val': {'filename': 'isaid_annotations_val.tar.gz', 'md5': ''},
     }
 
-    classes: dict[int, str] = {
+    classes: ClassVar[dict[int, str]] = {
         0: 'plane',
         1: 'ship',
         2: 'storage tank',
@@ -213,8 +214,9 @@ class ISAID(NonGeoDataset):
         Raises:
             AssertionError: if ``split`` argument is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
+            DependencyNotFoundError: if pycocotools is
+                not installed.
         """
-
         assert split in self.valid_splits, (
             f"Invalid split '{split}', please use one of {self.valid_splits}"
         )
@@ -237,6 +239,7 @@ class ISAID(NonGeoDataset):
         self.ids = list(sorted(self.coco.imgs.keys()))
 
     def __len__(self) -> int:
+        """Return the length of the dataset."""
         return len(self.ids)
 
     def __getitem__(self, index: int) -> dict[str, Any]:
@@ -250,7 +253,10 @@ class ISAID(NonGeoDataset):
         """
         id_ = index % len(self) + 1
 
-        sample = {'image': self._load_image(id_), 'label': self._load_mask(id_)}
+        sample: dict[str, Any] = {
+            'image': self._load_image(id_),
+            'label': self._load_mask(id_),
+        }
 
         sample = self.coco_convert(sample)
         sample['labels'] = sample['label']['labels']
@@ -264,10 +270,10 @@ class ISAID(NonGeoDataset):
         return sample
 
     def _load_mask(self, id_: int) -> dict[str, Any]:
-        """Load mask
+        """Load mask.
 
         Args:
-            id: image ID for coco
+            id_: image ID for coco
 
         Returns:
             instance mask tensor with unique IDs
@@ -281,7 +287,7 @@ class ISAID(NonGeoDataset):
         """Load an image from a given path.
 
         Args:
-            path: path to image file
+            id_: image ID for coco
 
         Returns:
             image tensor
