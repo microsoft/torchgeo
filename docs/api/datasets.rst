@@ -71,6 +71,11 @@ EDDMapS
 
 .. autoclass:: EDDMapS
 
+EnMAP
+^^^^^
+
+.. autoclass:: EnMAP
+
 EnviroAtlas
 ^^^^^^^^^^^
 
