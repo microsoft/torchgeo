@@ -3,34 +3,34 @@ setuptools==61.0.0
 
 # install
 einops==0.3.0
-fiona==1.8.21
+fiona==1.8.22
 kornia==0.7.4
 lightly==1.4.5
 lightning[pytorch-extra]==2.0.0
-matplotlib==3.5.0
-numpy==1.21.2
-pandas==1.3.3
-pillow==8.4.0
-pyproj==3.3.0
-rasterio==1.3.0.post1
-rtree==1.0.0
+matplotlib==3.6.0
+numpy==1.23.2
+pandas==1.5.0
+pillow==9.2.0
+pyproj==3.4.0
+rasterio==1.3.3
+rtree==1.0.1
 segmentation-models-pytorch==0.2.0
-shapely==1.8.0
+shapely==1.8.5
 timm==0.4.12
-torch==1.13.0
+torch==2.0.0
 torchmetrics==0.10.0
-torchvision==0.14.0
+torchvision==0.15.1
 typing-extensions==4.5.0
 
 # datasets
-h5py==3.6.0
+h5py==3.8.0
 laspy==2.0.0
 netCDF4==1.5.8
-opencv-python==4.5.4.58
+opencv-python==4.5.5.64
 pycocotools==2.0.7
 pyarrow==15.0.0  # Remove when we upgrade min version of pandas to `pandas[parquet]>=2`
-scikit-image==0.19.0
-scipy==1.7.2
+scikit-image==0.20.0
+scipy==1.9.2
 xarray==0.12.3
 
 # tests
