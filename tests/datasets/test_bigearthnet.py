@@ -12,7 +12,9 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import BigEarthNet, DatasetNotFoundError
+from torchgeo.datasets import BigEarthNet, BigEarthNetV2, DatasetNotFoundError
+
+pytest.importorskip('zstandard', minversion='0.23')
 
 
 class TestBigEarthNet:
@@ -137,6 +139,145 @@ class TestBigEarthNet:
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
+        x['prediction'] = x['label'].clone()
+        dataset.plot(x)
+        plt.close()
+
+
+class TestBigEarthNetV2:
+    @pytest.fixture(params=zip(['all', 's1', 's2'], ['train', 'val', 'test']))
+    def dataset(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
+    ) -> BigEarthNetV2:
+        data_dir = os.path.join('tests', 'data', 'bigearthnetV2')
+        metadata = {
+            's1': {
+                'url': os.path.join(data_dir, 'BigEarthNet-S1.tar.zst'),
+                'md5': '7c40abec6662bf1df4335e92a9caf5ab',
+                'filename': 'BigEarthNet-S1.tar.zst',
+                'directory': 'BigEarthNet-S1',
+            },
+            's2': {
+                'url': os.path.join(data_dir, 'BigEarthNet-S2.tar.zst'),
+                'md5': '9a699ac4a8aade77ce53d35e198ba2d0',
+                'filename': 'BigEarthNet-S2.tar.zst',
+                'directory': 'BigEarthNet-S2',
+            },
+            'maps': {
+                'url': os.path.join(data_dir, 'Reference_Maps.tar.zst'),
+                'md5': '1e4b2fdfb954594aa9465f4496defea6',
+                'filename': 'Reference_Maps.tar.zst',
+                'directory': 'Reference_Maps',
+            },
+            'metadata': {
+                'url': os.path.join(data_dir, 'metadata.parquet'),
+                'md5': 'ad100d6b020f2e693673f77ebbe57891',
+                'filename': 'metadata.parquet',
+            },
+        }
+        monkeypatch.setattr(BigEarthNetV2, 'metadata_locs', metadata)
+
+        bands, split = request.param
+
+        root = tmp_path
+        transforms = nn.Identity()
+        return BigEarthNetV2(
+            root, split, bands, transforms, download=True, checksum=True
+        )
+
+    def test_getitem(self, dataset: BigEarthNetV2) -> None:
+        """Test loading data."""
+        x = dataset[0]
+
+        if dataset.bands in ['s2', 'all']:
+            if dataset.bands == 's2':
+                assert x['image'].shape == (12, 120, 120)
+            else:
+                assert x['image_s2'].shape == (12, 120, 120)
+
+        if dataset.bands in ['s1', 'all']:
+            if dataset.bands == 's1':
+                assert x['image'].shape == (2, 120, 120)
+            else:
+                assert x['image_s1'].shape == (2, 120, 120)
+
+        assert x['mask'].shape == (1, 120, 120)
+
+        assert x['mask'].dtype == torch.int64
+        assert x['label'].dtype == torch.int64
+        if 'image' in x:
+            assert x['image'].dtype == torch.float32
+        if 'image_s1' in x:
+            assert x['image_s1'].dtype == torch.float32
+        if 'image_s2' in x:
+            assert x['image_s2'].dtype == torch.float32
+
+    def test_len(self, dataset: BigEarthNetV2) -> None:
+        """Test dataset length."""
+        if dataset.split == 'train':
+            assert len(dataset) == 2
+        else:
+            assert len(dataset) == 1
+
+    def test_already_downloaded(self, dataset: BigEarthNetV2, tmp_path: Path) -> None:
+        BigEarthNetV2(
+            root=tmp_path, bands=dataset.bands, split=dataset.split, download=True
+        )
+
+    def test_not_downloaded(self, tmp_path: Path) -> None:
+        """Test error handling when data not present."""
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            BigEarthNetV2(tmp_path)
+
+    def test_already_downloaded_not_extracted(
+        self, dataset: BigEarthNetV2, tmp_path: Path
+    ) -> None:
+        shutil.copy(dataset.metadata_locs['metadata']['url'], tmp_path)
+        if dataset.bands == 'all':
+            shutil.rmtree(
+                os.path.join(dataset.root, dataset.metadata_locs['s1']['directory'])
+            )
+            shutil.rmtree(
+                os.path.join(dataset.root, dataset.metadata_locs['s2']['directory'])
+            )
+            shutil.copy(dataset.metadata_locs['s1']['url'], tmp_path)
+            shutil.copy(dataset.metadata_locs['s2']['url'], tmp_path)
+        elif dataset.bands == 's1':
+            shutil.rmtree(
+                os.path.join(dataset.root, dataset.metadata_locs['s1']['directory'])
+            )
+            shutil.copy(dataset.metadata_locs['s1']['url'], tmp_path)
+        else:
+            shutil.rmtree(
+                os.path.join(dataset.root, dataset.metadata_locs['s2']['directory'])
+            )
+            shutil.copy(dataset.metadata_locs['s2']['url'], tmp_path)
+
+        BigEarthNetV2(
+            root=tmp_path, bands=dataset.bands, split=dataset.split, download=False
+        )
+
+    def test_invalid_split(self, tmp_path: Path) -> None:
+        """Test error on invalid split."""
+        with pytest.raises(AssertionError, match='split must be one of'):
+            BigEarthNetV2(tmp_path, split='invalid')
+
+    def test_invalid_bands(self, tmp_path: Path) -> None:
+        """Test error on invalid bands selection."""
+        with pytest.raises(AssertionError):
+            BigEarthNetV2(tmp_path, bands='invalid')
+
+    def test_plot(self, dataset: BigEarthNetV2) -> None:
+        """Test plotting functionality."""
+        x = dataset[0].copy()
+        dataset.plot(x, suptitle='Test')
+        plt.close()
+
+        # Test without titles
+        dataset.plot(x, show_titles=False)
+        plt.close()
+
+        # Test with prediction
         x['prediction'] = x['label'].clone()
         dataset.plot(x)
         plt.close()
