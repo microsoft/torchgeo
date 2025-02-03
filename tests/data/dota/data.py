@@ -1,14 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import numpy as np
+import hashlib
 import os
-from pathlib import Path
+import shutil
 import tarfile
+from pathlib import Path
+
+import numpy as np
 import pandas as pd
 from PIL import Image
-import hashlib
-import shutil
 
 
 def create_dummy_image(path: Path, size: tuple[int, int] = (64, 64)) -> None:
@@ -17,7 +18,9 @@ def create_dummy_image(path: Path, size: tuple[int, int] = (64, 64)) -> None:
     Image.fromarray(img).save(path)
 
 
-def create_annotation_file(path: Path, is_hbb: bool = False, no_boxes=False) -> None:
+def create_annotation_file(
+    path: Path, is_hbb: bool = False, no_boxes: bool = False
+) -> None:
     """Create dummy annotation file with scaled coordinates."""
     if is_hbb:
         # Horizontal boxes scaled for 64x64

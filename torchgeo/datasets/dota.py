@@ -4,12 +4,12 @@
 """DOTA dataset."""
 
 import os
-import pandas as pd
 from collections.abc import Callable
 from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import torch
 from matplotlib import patches
 from matplotlib.figure import Figure
@@ -22,9 +22,7 @@ from .utils import (
     Path,
     check_integrity,
     download_and_extract_archive,
-    extract_archive,
     download_url,
-    lazy_import,
     percentile_normalization,
 )
 
@@ -65,7 +63,7 @@ class DOTA(NonGeoDataset):
     * swimming-pool
     * container-crane
     * airport
-    + helipad
+    * helipad
 
 
     If you use this work in your research, please cite the following paper:
@@ -156,7 +154,6 @@ class DOTA(NonGeoDataset):
             AssertionError: if *split*, *version*, or *bbox_orientation* argument are not valid
             DatasetNotFoundError: if dataset is not found or corrupted
         """
-
         assert split in self.valid_splits, (
             f"Split '{split}' not supported, use one of {self.valid_splits}"
         )
@@ -249,7 +246,7 @@ class DOTA(NonGeoDataset):
                     and (N, 4) for hbb
                 labels: tensor of shape (N,) with class indices
         """
-        with open(os.path.join(self.root, path), 'r') as f:
+        with open(os.path.join(self.root, path)) as f:
             lines = f.readlines()
 
         # Skip header if present

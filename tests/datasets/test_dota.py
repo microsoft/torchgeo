@@ -2,17 +2,16 @@
 # Licensed under the MIT License.
 
 import os
+import shutil
+from itertools import product
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from itertools import product
 import pytest
 import torch
-import shutil
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
-
 
 from torchgeo.datasets import DOTA, DatasetNotFoundError
 
@@ -153,6 +152,6 @@ class TestDOTA:
     def test_plot(self, dataset: DOTA) -> None:
         x = dataset[1]
 
-        fig = dataset.plot(x, suptitle='Test')
+        dataset.plot(x, suptitle='Test')
 
         plt.close()
