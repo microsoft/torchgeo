@@ -10,7 +10,6 @@ The following tutorials introduce the basic concepts and components of TorchGeo:
 * `Command-Line Interface <cli.ipynb>`_: TorchGeo's command-line interface
 
 .. toctree::
-   :hidden:
    :maxdepth: 1
 
    transforms
