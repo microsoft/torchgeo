@@ -15,7 +15,14 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoClassificationDataset
-from .utils import Path, check_integrity, download_url, extract_archive, rasterio_loader
+from .utils import (
+    Path,
+    check_integrity,
+    download_url,
+    extract_archive,
+    percentile_normalization,
+    rasterio_loader,
+)
 
 
 class EuroSAT(NonGeoClassificationDataset):
@@ -268,7 +275,7 @@ class EuroSAT(NonGeoClassificationDataset):
 
         image = np.take(sample['image'].numpy(), indices=rgb_indices, axis=0)
         image = np.rollaxis(image, 0, 3)
-        image = np.clip(image / 3000, 0, 1)
+        image = percentile_normalization(image)
 
         label = cast(int, sample['label'].item())
         label_class = self.classes[label]
