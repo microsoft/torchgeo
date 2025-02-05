@@ -49,13 +49,7 @@ class InstanceSegmentationTask(BaseTask):
         .. versionadded:: 0.7
         """
         self.weights = weights         
-        super().__init__()              
-        self.save_hyperparameters()     
-        self.model = None               
-        self.validation_outputs = []    
-        self.test_outputs = []          
-        self.configure_models()         
-        self.configure_metrics()        
+        super().__init__()                  
 
     def configure_models(self) -> None:
         """Initialize the model.
@@ -116,9 +110,6 @@ class InstanceSegmentationTask(BaseTask):
         images, targets = batch['image'], batch['target']     
         loss_dict = self.model(images, targets)               
         loss = sum(loss for loss in loss_dict.values())  
-
-        print(f"\nTRAINING STEP LOSS: {loss.item()}")
-
         self.log('train_loss', loss, batch_size=len(images))  
         return loss  
 
@@ -163,7 +154,6 @@ class InstanceSegmentationTask(BaseTask):
 
         self.log_dict(scalar_metrics, batch_size=batch_size)           
 
-        # check
         if (
             batch_idx < 10
             and hasattr(self.trainer, 'datamodule')
