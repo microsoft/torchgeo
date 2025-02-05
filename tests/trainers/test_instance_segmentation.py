@@ -86,21 +86,8 @@ class TestSemanticSegmentationTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-        match name:
-            case 'chabud' | 'cabuar':
-                pytest.importorskip('h5py', minversion='3.6')
-            case 'ftw':
-                pytest.importorskip('pyarrow')
-            case 'landcoverai':
-                sha256 = (
-                    'ecec8e871faf1bbd8ca525ca95ddc1c1f5213f40afb94599884bd85f990ebd6b'
-                )
-                monkeypatch.setattr(LandCoverAI, 'sha256', sha256)
 
         config = os.path.join('tests', 'conf', name + '.yaml')
-
-        monkeypatch.setattr(smp, 'Unet', create_model)
-        monkeypatch.setattr(smp, 'DeepLabV3Plus', create_model)
 
         args = [
             '--config',
@@ -241,17 +228,3 @@ class TestSemanticSegmentationTask:
                 for param in model.model.segmentation_head.parameters()
             ]
         )
-
-    # @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
-    # def test_freeze_decoder(self, model_name: str) -> None:
-    #     model = InstanceSegmentationTask(model=model_name, freeze_decoder=True)
-    #     assert all(
-    #         [param.requires_grad is False for param in model.model.decoder.parameters()]
-    #     )
-    #     assert all([param.requires_grad for param in model.model.encoder.parameters()])
-    #     assert all(
-    #         [
-    #             param.requires_grad
-    #             for param in model.model.segmentation_head.parameters()
-    #         ]
-    #     )
