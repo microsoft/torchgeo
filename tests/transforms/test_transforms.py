@@ -6,7 +6,7 @@ import pytest
 import torch
 from torch import Tensor
 
-from torchgeo.transforms import indices, transforms
+from torchgeo.transforms import indices
 from torchgeo.transforms.transforms import _ExtractPatches
 
 # Kornia is very particular about its boxes:
@@ -203,12 +203,12 @@ def test_extract_patches() -> None:
         'image': torch.randn(size=(b, c, h, w)),
         'mask': torch.randint(low=0, high=2, size=(b, h, w)),
     }
-    train_transforms = transforms.AugmentationSequential(
-        _ExtractPatches(window_size=p), same_on_batch=True, data_keys=['image', 'mask']
+    train_transforms = K.AugmentationSequential(
+        _ExtractPatches(window_size=p), same_on_batch=True, data_keys=None
     )
     output = train_transforms(batch)
-    assert batch['image'].shape == (b * num_patches, c, p, p)
-    assert batch['mask'].shape == (b * num_patches, p, p)
+    assert output['image'].shape == (b * num_patches, c, p, p)
+    assert output['mask'].shape == (b * num_patches, 1, p, p)
 
     # Test different stride
     s = 16
@@ -217,14 +217,12 @@ def test_extract_patches() -> None:
         'image': torch.randn(size=(b, c, h, w)),
         'mask': torch.randint(low=0, high=2, size=(b, h, w)),
     }
-    train_transforms = transforms.AugmentationSequential(
-        _ExtractPatches(window_size=p, stride=s),
-        same_on_batch=True,
-        data_keys=['image', 'mask'],
+    train_transforms = K.AugmentationSequential(
+        _ExtractPatches(window_size=p, stride=s), same_on_batch=True, data_keys=None
     )
     output = train_transforms(batch)
-    assert batch['image'].shape == (b * num_patches, c, p, p)
-    assert batch['mask'].shape == (b * num_patches, p, p)
+    assert output['image'].shape == (b * num_patches, c, p, p)
+    assert output['mask'].shape == (b * num_patches, 1, p, p)
 
     # Test keepdim=False
     s = p
@@ -233,13 +231,13 @@ def test_extract_patches() -> None:
         'image': torch.randn(size=(b, c, h, w)),
         'mask': torch.randint(low=0, high=2, size=(b, h, w)),
     }
-    train_transforms = transforms.AugmentationSequential(
+    train_transforms = K.AugmentationSequential(
         _ExtractPatches(window_size=p, stride=s, keepdim=False),
         same_on_batch=True,
-        data_keys=['image', 'mask'],
+        data_keys=None,
     )
     output = train_transforms(batch)
     for k, v in output.items():
         print(k, v.shape, v.dtype)
-    assert batch['image'].shape == (b, num_patches, c, p, p)
-    assert batch['mask'].shape == (b, num_patches, 1, p, p)
+    assert output['image'].shape == (b, num_patches, c, p, p)
+    assert output['mask'].shape == (b, num_patches, 1, p, p)
