@@ -71,6 +71,11 @@ EDDMapS
 
 .. autoclass:: EDDMapS
 
+EnMAP
+^^^^^
+
+.. autoclass:: EnMAP
+
 EnviroAtlas
 ^^^^^^^^^^^
 
@@ -141,6 +146,10 @@ Landsat
 .. autoclass:: Landsat3
 .. autoclass:: Landsat2
 .. autoclass:: Landsat1
+
+MMFlood
+^^^^^^^
+.. autoclass:: MMFlood
 
 NAIP
 ^^^^
@@ -216,6 +225,11 @@ BioMassters
 ^^^^^^^^^^^
 
 .. autoclass:: BioMassters
+
+BRIGHT
+^^^^^^
+
+.. autoclass:: BRIGHTDFC2025
 
 CaBuAr
 ^^^^^^
