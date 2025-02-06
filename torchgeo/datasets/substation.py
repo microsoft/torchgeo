@@ -22,9 +22,13 @@ class Substation(NonGeoDataset):
     """Class for Substation Dataset.
 
     The `Substation <https://github.com/Lindsay-Lab/substation-seg>`__
-    dataset is responsible for handling the loading and transformation of
-    substation segmentation datasets. It extends NonGeoDataset, providing methods
-    for dataset verification, downloading, and transformation.
+    dataset is curated by TransitionZero and sourced from publicly 
+    available data repositories, including OpenSreetMap (OSMF) and
+    Copernicus Sentinel data. The dataset consists of Sentinel-2 
+    images from 27k+ locations; the task is to segment power-substations,
+    which appear in the majority of locations in the dataset. 
+    Most locations have 4-5 images taken at different timepoints
+    (i.e., revisits)
 
     Dataset Format:
     * .npz file for each datapoint
@@ -134,7 +138,7 @@ class Substation(NonGeoDataset):
             mask = torch.concat([mask_0, mask], dim=0)
         mask = mask.squeeze()
 
-        sample = { 'image': image, 'mask': mask }
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
