@@ -7,8 +7,7 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch
-from torch.utils.data import Subset, random_split
-from tqdm import tqdm
+from torch.utils.data import random_split
 
 from ..datasets import Substation
 from .geo import NonGeoDataModule
@@ -43,10 +42,11 @@ class SubstationDataModule(NonGeoDataModule):
             val_split_pct: Percentage of data to use for validation.
             test_split_pct: Percentage of data to use for testing.
             bands: Number of input channels to use.
-            model_type: Type of model being used (e.g., 'swin' for specific channel selection).
             num_of_timepoints: Number of timepoints to use in the dataset.
-            aug: Augmentation to apply to the dataset.
-            train_aug: Augmentation to apply to the training dataset.
+            timepoint_aggregation: Aggregation method for multiple timepoints.
+            model_type: Type of model being used (e.g., 'swin' for specific channel selection).
+            size: Size of the input images.
+
             **kwargs: Additional arguments passed to Substation.
         """
         super().__init__(Substation, batch_size, num_workers, **kwargs)
@@ -67,10 +67,6 @@ class SubstationDataModule(NonGeoDataModule):
         self.aug = K.AugmentationSequential(
             K.Resize(size), data_keys=None, keepdim=True
         )
-
-    def _identity(self, x: torch.Tensor) -> torch.Tensor:
-        """Identity function for default transformations."""
-        return x
 
     def setup(self, stage: str) -> None:
         """Set up datasets.

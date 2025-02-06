@@ -18,7 +18,7 @@ class TestSubstation:
     @pytest.fixture
     def dataset(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> Generator[Substation, None, None]:
+    ) -> Substation:
         """Fixture for the Substation."""
         root = os.path.join(os.getcwd(), 'tests', 'data', 'substation')
 
@@ -157,7 +157,7 @@ class TestSubstation:
         target_image_path = tmp_path / filename
         target_mask_path = tmp_path / maskname
 
-        def mock_download(_self):  # Accept 'self' as an argument
+        def mock_download(self) -> None:
             shutil.copytree(source_image_path, target_image_path)
             shutil.copytree(source_mask_path, target_mask_path)
 
@@ -165,7 +165,7 @@ class TestSubstation:
             'torchgeo.datasets.substation.Substation._download', mock_download
         )
         monkeypatch.setattr(
-            'torchgeo.datasets.substation.Substation._extract', lambda _self: None
+            'torchgeo.datasets.substation.Substation._extract', lambda self: None
         )
 
         Substation(
