@@ -3,7 +3,6 @@
 
 import os
 import shutil
-from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 
@@ -157,7 +156,7 @@ class TestSubstation:
         target_image_path = tmp_path / filename
         target_mask_path = tmp_path / maskname
 
-        def mock_download(self) -> None:
+        def mock_download(self: Substation) -> None:
             shutil.copytree(source_image_path, target_image_path)
             shutil.copytree(source_mask_path, target_mask_path)
 
