@@ -5,6 +5,7 @@
 
 from typing import Any
 
+import kornia.augmentation as K
 import torch
 from torch.utils.data import Subset, random_split
 from tqdm import tqdm
@@ -26,17 +27,11 @@ class SubstationDataModule(NonGeoDataModule):
         num_workers: int = 0,
         val_split_pct: float = 0.2,
         test_split_pct: float = 0.2,
-        normalizing_type: str = 'percentile',
-        normalizing_factor: Any | None = None,
-        means: Any | None = None,
-        stds: Any | None = None,
         bands: list[int] = [1, 2, 3],
         num_of_timepoints: int = 4,
+        timepoint_aggregation: str = 'median',
         model_type: str = 'default',
-        geo_transforms: Any | None = None,
-        color_transforms: Any | None = None,
-        image_resize: Any | None = None,
-        mask_resize: Any | None = None,
+        size: int = 256,
         **kwargs: Any,
     ) -> None:
         """Initialize a new SubstationDataModule instance.
@@ -47,42 +42,31 @@ class SubstationDataModule(NonGeoDataModule):
             num_workers: Number of workers for data loading.
             val_split_pct: Percentage of data to use for validation.
             test_split_pct: Percentage of data to use for testing.
-            normalizing_type: Normalization type ('percentile', 'zscore', or 'default').
-            normalizing_factor: Normalization factor for percentile normalization.
-            means: Mean values for z-score normalization.
-            stds: Standard deviation values for z-score normalization.
             bands: Number of input channels to use.
             model_type: Type of model being used (e.g., 'swin' for specific channel selection).
-            geo_transforms: Geometric transformations to apply to the data.
-            color_transforms: Color transformations to apply to the image.
-            image_resize: Resizing function for the image.
-            mask_resize: Resizing function for the mask.
             num_of_timepoints: Number of timepoints to use in the dataset.
+            aug: Augmentation to apply to the dataset.
+            train_aug: Augmentation to apply to the training dataset.
             **kwargs: Additional arguments passed to Substation.
         """
         super().__init__(Substation, batch_size, num_workers, **kwargs)
         self.root = root
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
-        self.normalizing_type = normalizing_type
-        self.normalizing_factor = normalizing_factor
-        self.means = means
-        self.stds = stds
         self.bands = bands
         self.model_type = model_type
-        self.geo_transforms = geo_transforms
-        self.color_transforms = color_transforms
-        self.image_resize = image_resize
-        self.mask_resize = mask_resize
         self.num_of_timepoints = num_of_timepoints
-        self.geo_transforms = (
-            geo_transforms if geo_transforms is not None else self._identity
+        self.timepoint_aggregation = timepoint_aggregation
+        self.train_aug = K.AugmentationSequential(
+            K.Resize(size),
+            K.RandomHorizontalFlip(p=0.5),
+            K.RandomVerticalFlip(p=0.5),
+            data_keys=None,
+            keepdim=True,
         )
-        self.color_transforms = (
-            color_transforms if color_transforms is not None else self._identity
+        self.aug = K.AugmentationSequential(
+            K.Resize(size), data_keys=None, keepdim=True
         )
-        self.image_resize = image_resize if image_resize is not None else self._identity
-        self.mask_resize = mask_resize if mask_resize is not None else self._identity
 
     def _identity(self, x: torch.Tensor) -> torch.Tensor:
         """Identity function for default transformations."""
@@ -100,7 +84,7 @@ class SubstationDataModule(NonGeoDataModule):
             use_timepoints=True,
             mask_2d=False,
             num_of_timepoints=self.num_of_timepoints,
-            timepoint_aggregation='median',
+            timepoint_aggregation=self.timepoint_aggregation,
             download=True,
             checksum=False,
         )
@@ -114,49 +98,3 @@ class SubstationDataModule(NonGeoDataModule):
         self.train_dataset, self.val_dataset, self.test_dataset = random_split(
             dataset, [train_len, val_len, test_len], generator
         )
-
-        if stage == 'fit':
-            self.train_dataset = self._apply_transforms(self.train_dataset)
-            self.val_dataset = self._apply_transforms(self.val_dataset)
-        elif stage == 'test':
-            self.test_dataset = self._apply_transforms(self.test_dataset)
-
-    def _apply_transforms(self, dataset: Subset[Any]) -> Subset[Any]:
-        """Apply preprocessing and transformations to the dataset.
-
-        Args:
-            dataset: A subset of the dataset.
-
-        Returns:
-            The processed dataset.
-        """
-        for sample in tqdm(dataset, desc='Processing images', unit='sample'):
-            image, mask = sample['image'], sample['mask']
-
-            if self.geo_transforms:
-                print(self.geo_transforms)
-                if mask.shape.__len__() == 2:
-                    mask = mask.unsqueeze(0)
-                combined = torch.cat((image, mask), 0)
-                combined = self.geo_transforms(combined)
-                image, mask = torch.split(combined, [image.shape[0], mask.shape[0]], 0)
-                if mask.shape[0] == 1:
-                    mask = mask.squeeze(0)
-
-            if self.color_transforms:
-                num_timepoints = image.shape[0] // self.bands.__len__()
-                for i in range(num_timepoints):
-                    start = i * len(self.bands)
-                    end = start + 3
-                    image[start:end, :, :] = self.color_transforms(
-                        image[start:end, :, :]
-                    )
-
-            if self.image_resize:
-                image = self.image_resize(image)
-            if self.mask_resize:
-                mask = self.mask_resize(mask)
-
-            sample['image'], sample['mask'] = image, mask
-
-        return dataset

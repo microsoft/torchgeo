@@ -11,6 +11,7 @@ import numpy as np
 import torch
 from matplotlib.figure import Figure
 from torch import Tensor
+from typing import Sequence
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -20,10 +21,11 @@ from .utils import Path, download_url, extract_archive
 class Substation(NonGeoDataset):
     """Class for Substation Dataset.
 
-    The `Substation <https://github.com/Lindsay-Lab/substation-seg/blob/main/README.md>`__
+    The `Substation <https://github.com/Lindsay-Lab/substation-seg>`__
     dataset is responsible for handling the loading and transformation of
     substation segmentation datasets. It extends NonGeoDataset, providing methods
     for dataset verification, downloading, and transformation.
+
     Dataset Format:
     * .npz file for each datapoint
 
@@ -35,6 +37,7 @@ class Substation(NonGeoDataset):
       with a spatial resolution of 228x228 pixels
 
     If you use this dataset in your research, please cite the following:
+
     * https://doi.org/10.48550/arXiv.2409.17363
     """
 
@@ -47,7 +50,7 @@ class Substation(NonGeoDataset):
     def __init__(
         self,
         root: Path,
-        bands: list[int],
+        bands: Sequence[int],
         mask_2d: bool,
         timepoint_aggregation: str = 'concat',
         download: bool = False,
@@ -79,11 +82,7 @@ class Substation(NonGeoDataset):
         self.checksum = checksum
 
         self._verify()
-        self.load_image_filenames()
-
-    def load_image_filenames(self) -> None:
-        """Load image filenames from the image directory."""
-        self.image_filenames = os.listdir(self.image_dir)
+        self.image_filenames = sorted(os.listdir(self.image_dir))
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Get an item from the dataset by index.
@@ -169,10 +168,7 @@ class Substation(NonGeoDataset):
             prediction = sample['prediction'].cpu().numpy()
             if self.mask_2d:
                 prediction = prediction[0]
-            print(prediction.shape)
             ncols = 3
-
-        print(mask.shape, image.shape)
 
         fig, axs = plt.subplots(ncols=ncols, figsize=(4 * ncols, 4))
         axs[0].imshow(image)
@@ -233,7 +229,7 @@ class Substation(NonGeoDataset):
             self.url_for_images,
             self.root,
             filename=self.filename_images,
-            md5='INSERT_IMAGES_MD5_HASH' if self.checksum else None,
+            md5='bc0e3d2565f30b1c84a0d4cf37d44be6' if self.checksum else None,
         )
         extract_archive(os.path.join(self.root, self.filename_images), self.root)
 
@@ -242,6 +238,6 @@ class Substation(NonGeoDataset):
             self.url_for_masks,
             self.root,
             filename=self.filename_masks,
-            md5='INSERT_MASKS_MD5_HASH' if self.checksum else None,
+            md5='919bb9599f47f44f17a1a4ecce56d81c' if self.checksum else None,
         )
         extract_archive(os.path.join(self.root, self.filename_masks), self.root)
