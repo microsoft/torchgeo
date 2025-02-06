@@ -11,10 +11,10 @@ from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchmetrics import MetricCollection
 from torchvision.models.detection import maskrcnn_resnet50_fpn, MaskRCNN_ResNet50_FPN_Weights
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from torchgeo.trainers.base import BaseTask  
+from .base import BaseTask  
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from torchgeo.datasets import RGBBandsMissingError, unbind_samples
+from ..datasets import RGBBandsMissingError, unbind_samples
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 import numpy as np
 
