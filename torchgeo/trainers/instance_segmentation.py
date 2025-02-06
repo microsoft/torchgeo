@@ -3,20 +3,24 @@
 
 """Trainers for instance segmentation."""
 
-from typing import Any                                            
-import torch.nn as nn                                            
-import torch                                                     
-from torch import Tensor                                         
-from torchmetrics.detection.mean_ap import MeanAveragePrecision  
-from torchmetrics import MetricCollection
-from torchvision.models.detection import maskrcnn_resnet50_fpn, MaskRCNN_ResNet50_FPN_Weights
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from .base import BaseTask  
+from typing import Any
+
 import matplotlib.pyplot as plt
+import torch
 from matplotlib.figure import Figure
-from ..datasets import RGBBandsMissingError, unbind_samples
+from torch import Tensor
+from torchmetrics import MetricCollection
+from torchmetrics.detection.mean_ap import MeanAveragePrecision
+from torchvision.models.detection import (
+    MaskRCNN_ResNet50_FPN_Weights,
+    maskrcnn_resnet50_fpn,
+)
+from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
-import numpy as np
+
+from torchgeo.datasets import RGBBandsMissingError, unbind_samples
+from torchgeo.trainers.base import BaseTask
+
 
 class InstanceSegmentationTask(BaseTask):
     """Instance Segmentation."""
@@ -49,7 +53,13 @@ class InstanceSegmentationTask(BaseTask):
         .. versionadded:: 0.7
         """
         self.weights = weights         
-        super().__init__()                  
+        super().__init__()              
+        self.save_hyperparameters()     
+        self.model = None               
+        self.validation_outputs = []    
+        self.test_outputs = []          
+        self.configure_models()         
+        self.configure_metrics()        
 
     def configure_models(self) -> None:
         """Initialize the model.
@@ -62,7 +72,7 @@ class InstanceSegmentationTask(BaseTask):
 
         if model == 'mask_rcnn':
             # Load the Mask R-CNN model with a ResNet50 backbone
-            self.model = maskrcnn_resnet50_fpn(weights=self.weights is True, rpn_nms_thresh=0.5, box_nms_thresh=0.3)  
+            self.model = maskrcnn_resnet50_fpn(weights=MaskRCNN_ResNet50_FPN_Weights.DEFAULT, rpn_nms_thresh=0.5, box_nms_thresh=0.3)  
 
             # Update the classification head to predict `num_classes` 
             in_features = self.model.roi_heads.box_predictor.cls_score.in_features
@@ -110,6 +120,9 @@ class InstanceSegmentationTask(BaseTask):
         images, targets = batch['image'], batch['target']     
         loss_dict = self.model(images, targets)               
         loss = sum(loss for loss in loss_dict.values())  
+
+        print(f"\nTRAINING STEP LOSS: {loss.item()}")
+
         self.log('train_loss', loss, batch_size=len(images))  
         return loss  
 
@@ -154,6 +167,7 @@ class InstanceSegmentationTask(BaseTask):
 
         self.log_dict(scalar_metrics, batch_size=batch_size)           
 
+        # check
         if (
             batch_idx < 10
             and hasattr(self.trainer, 'datamodule')
@@ -184,7 +198,6 @@ class InstanceSegmentationTask(BaseTask):
     
     def test_step(self, batch: Any, batch_idx: int) -> None:
         """Compute the test loss and additional metrics."""
-
         images, targets = batch['image'], batch['target']
         batch_size = images.shape[0]
 
@@ -233,4 +246,3 @@ class InstanceSegmentationTask(BaseTask):
             output["masks"] = (output["masks"] > 0.5).squeeze(1).to(torch.uint8)[keep]
 
         return outputs   
-
