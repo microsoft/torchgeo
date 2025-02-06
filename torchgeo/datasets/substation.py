@@ -68,6 +68,7 @@ class Substation(NonGeoDataset):
             timepoint_aggregation: How to aggregate multiple timepoints.
             download: Whether to download the dataset if it is not found.
             checksum: Whether to verify the dataset after downloading.
+            transforms: A transform takes input sample and returns a transformed version.
             num_of_timepoints: Number of timepoints to use for each image.
             use_timepoints: Whether to use multiple timepoints for each image.
         """
