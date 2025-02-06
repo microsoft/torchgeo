@@ -134,10 +134,7 @@ class Substation(NonGeoDataset):
             mask = torch.concat([mask_0, mask], dim=0)
         mask = mask.squeeze()
 
-        sample = {
-            'image': image,
-            'mask': mask
-        }
+        sample = { 'image': image, 'mask': mask }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
