@@ -9,6 +9,7 @@ from typing import Any
 import matplotlib.pyplot as plt
 import pytest
 import torch
+import torch.nn as nn
 
 from torchgeo.datasets import DatasetNotFoundError, Substation
 
@@ -18,7 +19,7 @@ class TestSubstation:
     def dataset(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Substation:
         """Fixture for the Substation."""
         root = os.path.join(os.getcwd(), 'tests', 'data', 'substation')
-
+        transforms = nn.Identity()
         return Substation(
             root=root,
             bands=[1, 2, 3],
@@ -26,6 +27,7 @@ class TestSubstation:
             mask_2d=True,
             timepoint_aggregation='median',
             num_of_timepoints=4,
+            transforms=transforms,
         )
 
     @pytest.mark.parametrize(

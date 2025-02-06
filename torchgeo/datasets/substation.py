@@ -5,7 +5,7 @@
 
 import glob
 import os
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,6 +55,7 @@ class Substation(NonGeoDataset):
         timepoint_aggregation: str = 'concat',
         download: bool = False,
         checksum: bool = False,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         num_of_timepoints: int = 4,
         use_timepoints: bool = False,
     ) -> None:
@@ -63,24 +64,24 @@ class Substation(NonGeoDataset):
         Args:
             root: Path to the directory containing the dataset.
             bands: Number of channels to use from the image.
-            use_timepoints: Whether to use multiple timepoints for each image.
             mask_2d: Whether to use a 2D mask.
             timepoint_aggregation: How to aggregate multiple timepoints.
-            num_of_timepoints: Number of timepoints to use for each image.
             download: Whether to download the dataset if it is not found.
             checksum: Whether to verify the dataset after downloading.
+            num_of_timepoints: Number of timepoints to use for each image.
+            use_timepoints: Whether to use multiple timepoints for each image.
         """
         self.root = root
         self.bands = bands
-        self.use_timepoints = use_timepoints
-        self.timepoint_aggregation = timepoint_aggregation
         self.mask_2d = mask_2d
+        self.timepoint_aggregation = timepoint_aggregation
+        self.download = download
+        self.use_timepoints = use_timepoints
+        self.checksum = checksum
+        self.transforms = transforms
         self.image_dir = os.path.join(root, 'image_stack')
         self.mask_dir = os.path.join(root, 'mask')
         self.num_of_timepoints = num_of_timepoints
-        self.download = download
-        self.checksum = checksum
-
         self._verify()
         self.image_filenames = sorted(os.listdir(self.image_dir))
 
@@ -132,7 +133,15 @@ class Substation(NonGeoDataset):
             mask = torch.concat([mask_0, mask], dim=0)
         mask = mask.squeeze()
 
-        return {'image': image, 'mask': mask}
+        sample = {
+            'image': image,
+            'mask': mask
+        }
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
 
     def __len__(self) -> int:
         """Returns the number of items in the dataset."""
