@@ -62,7 +62,7 @@ class InstanceSegmentationTask(BaseTask):
 
         if model == 'mask_rcnn':
             # Load the Mask R-CNN model with a ResNet50 backbone
-            self.model = maskrcnn_resnet50_fpn(weights=MaskRCNN_ResNet50_FPN_Weights.DEFAULT, rpn_nms_thresh=0.5, box_nms_thresh=0.3)  
+            self.model = maskrcnn_resnet50_fpn(weights=self.weights is True, rpn_nms_thresh=0.5, box_nms_thresh=0.3)  
 
             # Update the classification head to predict `num_classes` 
             in_features = self.model.roi_heads.box_predictor.cls_score.in_features
