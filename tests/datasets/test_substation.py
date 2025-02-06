@@ -15,9 +15,7 @@ from torchgeo.datasets import DatasetNotFoundError, Substation
 
 class TestSubstation:
     @pytest.fixture
-    def dataset(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> Substation:
+    def dataset(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Substation:
         """Fixture for the Substation."""
         root = os.path.join(os.getcwd(), 'tests', 'data', 'substation')
 
