@@ -22,11 +22,11 @@ class Substation(NonGeoDataset):
     """Class for Substation Dataset.
 
     The `Substation <https://github.com/Lindsay-Lab/substation-seg>`__
-    dataset is curated by TransitionZero and sourced from publicly 
+    dataset is curated by TransitionZero and sourced from publicly
     available data repositories, including OpenSreetMap (OSMF) and
-    Copernicus Sentinel data. The dataset consists of Sentinel-2 
+    Copernicus Sentinel data. The dataset consists of Sentinel-2
     images from 27k+ locations; the task is to segment power-substations,
-    which appear in the majority of locations in the dataset. 
+    which appear in the majority of locations in the dataset.
     Most locations have 4-5 images taken at different timepoints
     (i.e., revisits)
 
