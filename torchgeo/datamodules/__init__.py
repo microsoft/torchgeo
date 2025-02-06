@@ -29,6 +29,7 @@ from .l8biome import L8BiomeDataModule
 from .landcoverai import LandCoverAI100DataModule, LandCoverAIDataModule
 from .levircd import LEVIRCDDataModule, LEVIRCDPlusDataModule
 from .loveda import LoveDADataModule
+from .mmflood import MMFloodDataModule
 from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
 from .oscd import OSCDDataModule
@@ -88,6 +89,7 @@ __all__ = (
     'LandCoverAI100DataModule',
     'LandCoverAIDataModule',
     'LoveDADataModule',
+    'MMFloodDataModule',
     'MisconfigurationException',
     'NAIPChesapeakeDataModule',
     'NASAMarineDebrisDataModule',
