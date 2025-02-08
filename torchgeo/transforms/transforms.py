@@ -8,7 +8,6 @@ from typing import Any
 import kornia.augmentation as K
 import torch
 from einops import rearrange
-from kornia.augmentation import AugmentationSequential
 from kornia.contrib import extract_tensor_patches
 from kornia.geometry import crop_by_indices
 from torch import Tensor
@@ -17,7 +16,7 @@ from typing_extensions import deprecated
 
 @deprecated('Use kornia.augmentation.AugmentationSequential instead')
 class AugmentationSequential(K.AugmentationSequential):
-    ...
+    """Deprecated wrapper around kornia.augmentation.AugmentationSequential."""
 
 
 # TODO: contribute these to Kornia and delete this file

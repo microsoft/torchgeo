@@ -6,7 +6,7 @@ import pytest
 import torch
 from torch import Tensor
 
-from torchgeo.transforms import indices
+from torchgeo.transforms import AugmentationSequential, indices
 from torchgeo.transforms.transforms import _ExtractPatches
 
 # Kornia is very particular about its boxes:
@@ -82,7 +82,8 @@ def test_augmentation_sequential_gray(batch_gray: dict[str, Tensor]) -> None:
         'bbox_xyxy': torch.tensor([[0.0, 0.0, 2.0, 2.0]], dtype=torch.float),
         'labels': torch.tensor([[0, 1]]),
     }
-    augs = K.AugmentationSequential(K.RandomHorizontalFlip(p=1.0), data_keys=None)
+    with pytest.deprecated_call():
+        augs = AugmentationSequential(K.RandomHorizontalFlip(p=1.0), data_keys=None)
     output = augs(batch_gray)
     assert_matching(output, expected)
 
@@ -103,7 +104,8 @@ def test_augmentation_sequential_rgb(batch_rgb: dict[str, Tensor]) -> None:
         'bbox_xyxy': torch.tensor([[1.0, 1.0, 2.0, 2.0]], dtype=torch.float),
         'labels': torch.tensor([[0, 1]]),
     }
-    augs = K.AugmentationSequential(K.RandomHorizontalFlip(p=1.0), data_keys=None)
+    with pytest.deprecated_call():
+        augs = AugmentationSequential(K.RandomHorizontalFlip(p=1.0), data_keys=None)
     output = augs(batch_rgb)
     assert_matching(output, expected)
 
@@ -128,7 +130,8 @@ def test_augmentation_sequential_multispectral(
         'bbox_xyxy': torch.tensor([[0.0, 0.0, 1.0, 1.0]], dtype=torch.float),
         'labels': torch.tensor([[0, 1]]),
     }
-    augs = K.AugmentationSequential(K.RandomVerticalFlip(p=1.0), data_keys=None)
+    with pytest.deprecated_call():
+        augs = AugmentationSequential(K.RandomVerticalFlip(p=1.0), data_keys=None)
     output = augs(batch_multispectral)
     assert_matching(output, expected)
 
@@ -149,7 +152,10 @@ def test_augmentation_sequential_image_only(
         dtype=torch.float,
     )
 
-    augs = K.AugmentationSequential(K.RandomHorizontalFlip(p=1.0), data_keys=['image'])
+    with pytest.deprecated_call():
+        augs = AugmentationSequential(
+            K.RandomHorizontalFlip(p=1.0), data_keys=['image']
+        )
     aug_image = augs(batch_multispectral['image'])
     assert torch.allclose(aug_image, expected_image)
 
@@ -179,15 +185,16 @@ def test_sequential_transforms_augmentations(
         'bbox_xyxy': torch.tensor([[1.0, 1.0, 2.0, 2.0]], dtype=torch.float),
         'labels': torch.tensor([[0, 1]]),
     }
-    train_transforms = K.AugmentationSequential(
-        indices.AppendNBR(index_nir=0, index_swir=0),
-        indices.AppendNDBI(index_swir=0, index_nir=0),
-        indices.AppendNDSI(index_green=0, index_swir=0),
-        indices.AppendNDVI(index_red=0, index_nir=0),
-        indices.AppendNDWI(index_green=0, index_nir=0),
-        K.RandomHorizontalFlip(p=1.0),
-        data_keys=None,
-    )
+    with pytest.deprecated_call():
+        train_transforms = AugmentationSequential(
+            indices.AppendNBR(index_nir=0, index_swir=0),
+            indices.AppendNDBI(index_swir=0, index_nir=0),
+            indices.AppendNDSI(index_green=0, index_swir=0),
+            indices.AppendNDVI(index_red=0, index_nir=0),
+            indices.AppendNDWI(index_green=0, index_nir=0),
+            K.RandomHorizontalFlip(p=1.0),
+            data_keys=None,
+        )
     output = train_transforms(batch_multispectral)
     assert_matching(output, expected)
 
