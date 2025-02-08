@@ -26,8 +26,8 @@ def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
     output: dict[str, Any] = {}
     output['image'] = torch.stack([sample['image'] for sample in batch])
 
-    if 'boxes' in batch[0]:
-        output['boxes'] = [sample['boxes'] for sample in batch]
+    if 'bbox_xyxy' in batch[0]:
+        output['bbox_xyxy'] = [sample['bbox_xyxy'] for sample in batch]
     if 'label' in batch[0]:
         output['label'] = [sample['label'] for sample in batch]
 

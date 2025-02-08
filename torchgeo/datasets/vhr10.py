@@ -248,10 +248,10 @@ class VHR10(NonGeoDataset):
 
         if sample['label']['annotations']:
             sample = self.coco_convert(sample)
-            sample['labels'] = sample['label']['labels']
-            sample['boxes'] = sample['label']['boxes']
-            sample['masks'] = sample['label']['masks']
-            del sample['label']
+            sample['class'] = sample['label']['labels']
+            sample['bbox_xyxy'] = sample['label']['boxes']
+            sample['mask'] = sample['label']['masks'].float()
+            sample['label'] = sample.pop('class')
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -400,11 +400,11 @@ class VHR10(NonGeoDataset):
         if show_feats != 'boxes':
             skimage = lazy_import('skimage')
 
-        boxes = sample['boxes'].cpu().numpy()
-        labels = sample['labels'].cpu().numpy()
-
-        if 'masks' in sample:
-            masks = [mask.squeeze().cpu().numpy() for mask in sample['masks']]
+        image = sample['image'].permute(1, 2, 0).numpy()
+        boxes = sample['bbox_xyxy'].cpu().numpy()
+        labels = sample['label'].cpu().numpy()
+        if 'mask' in sample:
+            masks = [mask.squeeze().cpu().numpy() for mask in sample['mask']]
 
         n_gt = len(boxes)
 
@@ -416,8 +416,8 @@ class VHR10(NonGeoDataset):
             show_pred_masks = False
             prediction_labels = sample['prediction_labels'].numpy()
             prediction_scores = sample['prediction_scores'].numpy()
-            if 'prediction_boxes' in sample:
-                prediction_boxes = sample['prediction_boxes'].numpy()
+            if 'prediction_bbox_xyxy' in sample:
+                prediction_bbox_xyxy = sample['prediction_bbox_xyxy'].numpy()
                 show_pred_boxes = True
             if 'prediction_masks' in sample:
                 prediction_masks = sample['prediction_masks'].numpy()
@@ -459,7 +459,7 @@ class VHR10(NonGeoDataset):
             )
 
             # Add masks
-            if show_feats in {'masks', 'both'} and 'masks' in sample:
+            if show_feats in {'masks', 'both'} and 'mask' in sample:
                 mask = masks[i]
                 contours = skimage.measure.find_contours(mask, 0.5)
                 for verts in contours:
@@ -485,7 +485,7 @@ class VHR10(NonGeoDataset):
 
                 if show_pred_boxes:
                     # Add bounding boxes
-                    x1, y1, x2, y2 = prediction_boxes[i]
+                    x1, y1, x2, y2 = prediction_bbox_xyxy[i]
                     r = patches.Rectangle(
                         (x1, y1),
                         x2 - x1,
