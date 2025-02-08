@@ -14,7 +14,7 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, DigitalTyphoon
 
-pytest.importorskip('h5py', minversion='3.6')
+pytest.importorskip('h5py', minversion='3.8')
 
 
 class TestDigitalTyphoon:
