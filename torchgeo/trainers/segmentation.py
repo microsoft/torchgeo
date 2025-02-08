@@ -4,7 +4,6 @@
 """Trainers for semantic segmentation."""
 
 import os
-from typing import Any
 
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
@@ -16,6 +15,7 @@ from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardInd
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
 from ..models import FCN, get_weight
 from . import utils
 from .base import BaseTask
@@ -213,7 +213,7 @@ class SemanticSegmentationTask(BaseTask):
         self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss and additional metrics.
 
@@ -236,7 +236,7 @@ class SemanticSegmentationTask(BaseTask):
         return loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Compute the validation loss and additional metrics.
 
@@ -281,7 +281,7 @@ class SemanticSegmentationTask(BaseTask):
                 )
                 plt.close()
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
 
         Args:
@@ -299,7 +299,7 @@ class SemanticSegmentationTask(BaseTask):
         self.log_dict(self.test_metrics, batch_size=batch_size)
 
     def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the predicted class probabilities.
 

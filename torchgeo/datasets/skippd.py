@@ -134,7 +134,7 @@ class SKIPPD(NonGeoDataset):
 
         return num_datapoints
 
-    def __getitem__(self, index: int) -> dict[str, str | Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -143,7 +143,7 @@ class SKIPPD(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        sample: dict[str, str | Tensor] = {'image': self._load_image(index)}
+        sample = {'image': self._load_image(index)}
         sample.update(self._load_features(index))
 
         if self.transforms is not None:

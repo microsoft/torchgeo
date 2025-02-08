@@ -547,7 +547,7 @@ class RasterDataset(GeoDataset):
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)
 
-        sample = {'crs': self.crs, 'bounds': query}
+        sample = {}
 
         data = data.to(self.dtype)
         if self.is_image:

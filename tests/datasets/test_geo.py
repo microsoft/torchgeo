@@ -30,6 +30,7 @@ from torchgeo.datasets import (
     UnionDataset,
     VectorDataset,
 )
+from torchgeo.datasets.utils import Sample
 
 
 class CustomGeoDataset(GeoDataset):
@@ -46,7 +47,7 @@ class CustomGeoDataset(GeoDataset):
         self.res = res
         self.paths = paths or []
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         hits = self.index.intersection(tuple(query), objects=True)
         hit = next(iter(hits))
         bounds = BoundingBox(*hit.bounds)
