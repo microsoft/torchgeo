@@ -6,13 +6,13 @@ import os
 import pytest
 import torchvision.transforms.functional as F
 from lightning.pytorch import Trainer
-from torch import Tensor
 from torchvision.transforms import InterpolationMode
 
 from torchgeo.datamodules import LEVIRCDDataModule, LEVIRCDPlusDataModule
+from torchgeo.datasets.utils import Sample
 
 
-def transforms(sample: dict[str, Tensor]) -> dict[str, Tensor]:
+def transforms(sample: Sample) -> Sample:
     sample['image1'] = F.resize(
         sample['image1'],
         size=[1024, 1024],

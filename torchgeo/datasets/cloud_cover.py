@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, which
+from .utils import Path, Sample, which
 
 
 class CloudCoverDetection(NonGeoDataset):
@@ -65,7 +65,7 @@ class CloudCoverDetection(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initiatlize a CloudCoverDetection instance.
@@ -104,7 +104,7 @@ class CloudCoverDetection(NonGeoDataset):
         """
         return len(self.metadata)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Returns a sample from dataset.
 
         Args:
@@ -174,10 +174,7 @@ class CloudCoverDetection(NonGeoDataset):
         azcopy('sync', url, directory, '--recursive=true')
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

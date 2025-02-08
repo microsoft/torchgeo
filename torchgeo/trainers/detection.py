@@ -20,6 +20,7 @@ from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
 from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
 from .base import BaseTask
 
 BACKBONE_LAT_DIM_MAP = {
@@ -330,7 +331,7 @@ class ObjectDetectionTask(BaseTask):
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> list[dict[str, Tensor]]:
+    ) -> list[Sample]:
         """Compute the predicted bounding boxes.
 
         Args:
@@ -342,5 +343,5 @@ class ObjectDetectionTask(BaseTask):
             Output predicted probabilities.
         """
         x = batch['image']
-        y_hat: list[dict[str, Tensor]] = self(x)
+        y_hat: list[Sample] = self(x)
         return y_hat

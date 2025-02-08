@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, lazy_import
+from .utils import Path, Sample, lazy_import
 
 
 class MMEarth(NonGeoDataset):
@@ -187,7 +187,7 @@ class MMEarth(NonGeoDataset):
         modalities: Sequence[str] = all_modalities,
         modality_bands: dict[str, list[str]] | None = None,
         normalization_mode: str = 'z-score',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize the MMEarth dataset.
 
@@ -338,7 +338,7 @@ class MMEarth(NonGeoDataset):
                         f"'{val}' is an invalid band name for modality '{key}'."
                     )
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return a sample from the dataset.
 
         Normalization is applied to the data with chosen ``normalization_mode``.
@@ -368,9 +368,7 @@ class MMEarth(NonGeoDataset):
 
         return sample
 
-    def get_sample_specific_band_names(
-        self, tile_info: dict[str, Any]
-    ) -> dict[str, list[str]]:
+    def get_sample_specific_band_names(self, tile_info: Sample) -> dict[str, list[str]]:
         """Retrieve the sample specific band names.
 
         Args:
@@ -396,7 +394,7 @@ class MMEarth(NonGeoDataset):
 
         return specific_modality_bands
 
-    def get_intersection_dict(self, tile_info: dict[str, Any]) -> dict[str, list[str]]:
+    def get_intersection_dict(self, tile_info: Sample) -> dict[str, list[str]]:
         """Get intersection of requested and available bands.
 
         Args:
@@ -420,7 +418,7 @@ class MMEarth(NonGeoDataset):
 
         return intersection_dict
 
-    def _retrieve_sample(self, ds_index: int) -> dict[str, Any]:
+    def _retrieve_sample(self, ds_index: int) -> Sample:
         """Retrieve a sample from the dataset.
 
         Args:
@@ -431,13 +429,13 @@ class MMEarth(NonGeoDataset):
             of the sample
         """
         h5py = lazy_import('h5py')
-        sample: dict[str, Any] = {}
+        sample: Sample = {}
         with h5py.File(
             os.path.join(self.root, self.filenames[self.subset], self.dataset_filename),
             'r',
         ) as f:
             name = f['metadata'][ds_index][0].decode('utf-8')
-            tile_info: dict[str, Any] = self.tile_info[name]
+            tile_info: Sample = self.tile_info[name]
             # need to find the intersection of requested and available bands
             intersection_dict = self.get_intersection_dict(tile_info)
             for modality, bands in intersection_dict.items():
@@ -495,7 +493,7 @@ class MMEarth(NonGeoDataset):
         self,
         data: 'np.typing.NDArray[Any]',
         modality: str,
-        tile_info: dict[str, Any],
+        tile_info: Sample,
         bands: list[str],
     ) -> Tensor:
         """Preprocess a single modality.

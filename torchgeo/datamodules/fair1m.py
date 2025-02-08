@@ -6,13 +6,13 @@
 from typing import Any
 
 import torch
-from torch import Tensor
 
 from ..datasets import FAIR1M
+from ..datasets.utils import Sample
 from .geo import NonGeoDataModule
 
 
-def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
+def collate_fn(batch: list[Sample]) -> Sample:
     """Custom object detection collate fn to handle variable boxes.
 
     Args:
@@ -23,7 +23,7 @@ def collate_fn(batch: list[dict[str, Tensor]]) -> dict[str, Any]:
 
     .. versionadded:: 0.5
     """
-    output: dict[str, Any] = {}
+    output: Sample = {}
     output['image'] = torch.stack([sample['image'] for sample in batch])
 
     if 'bbox_xyxy' in batch[0]:

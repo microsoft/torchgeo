@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, percentile_normalization
+from .utils import Path, Sample, download_url, extract_archive, percentile_normalization
 
 
 class SeasonalContrastS2(NonGeoDataset):
@@ -75,7 +75,7 @@ class SeasonalContrastS2(NonGeoDataset):
         version: str = '100k',
         seasons: int = 1,
         bands: Sequence[str] = rgb_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -113,7 +113,7 @@ class SeasonalContrastS2(NonGeoDataset):
 
         self._verify()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -222,10 +222,7 @@ class SeasonalContrastS2(NonGeoDataset):
         )
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

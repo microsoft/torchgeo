@@ -10,7 +10,6 @@ from _pytest.fixtures import SubRequest
 from lightning.pytorch import Trainer
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
-from torch import Tensor
 
 from torchgeo.datamodules import (
     GeoDataModule,
@@ -18,6 +17,7 @@ from torchgeo.datamodules import (
     NonGeoDataModule,
 )
 from torchgeo.datasets import BoundingBox, GeoDataset, NonGeoDataset
+from torchgeo.datasets.utils import Sample
 from torchgeo.samplers import RandomBatchGeoSampler, RandomGeoSampler
 
 
@@ -30,7 +30,7 @@ class CustomGeoDataset(GeoDataset):
             self.index.insert(i, (0, 1, 2, 3, 4, 5))
         self.res = 1
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         image = torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)
         return {'image': image, 'crs': CRS.from_epsg(4326), 'bounds': query}
 
@@ -67,7 +67,7 @@ class CustomNonGeoDataset(NonGeoDataset):
     ) -> None:
         self.length = length
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         return {'image': torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)}
 
     def __len__(self) -> int:

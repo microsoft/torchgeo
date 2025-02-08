@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar, cast
+from typing import ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, lazy_import, percentile_normalization
+from .utils import Path, Sample, download_url, lazy_import, percentile_normalization
 
 
 class QuakeSet(NonGeoDataset):
@@ -72,7 +72,7 @@ class QuakeSet(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -104,7 +104,7 @@ class QuakeSet(NonGeoDataset):
         self._verify()
         self.data = self._load_data()
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -132,7 +132,7 @@ class QuakeSet(NonGeoDataset):
         """
         return len(self.data)
 
-    def _load_data(self) -> list[dict[str, Any]]:
+    def _load_data(self) -> list[Sample]:
         """Return the metadata for a given split.
 
         Returns:
@@ -224,10 +224,7 @@ class QuakeSet(NonGeoDataset):
             )
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

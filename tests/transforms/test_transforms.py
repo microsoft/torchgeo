@@ -4,8 +4,8 @@
 import kornia.augmentation as K
 import pytest
 import torch
-from torch import Tensor
 
+from torchgeo.datasets.utils import Sample
 from torchgeo.transforms import indices
 from torchgeo.transforms.transforms import _ExtractPatches
 
@@ -19,7 +19,7 @@ from torchgeo.transforms.transforms import _ExtractPatches
 
 
 @pytest.fixture
-def batch_gray() -> dict[str, Tensor]:
+def batch_gray() -> Sample:
     return {
         'image': torch.tensor([[[[1, 2, 3], [4, 5, 6], [7, 8, 9]]]], dtype=torch.float),
         'mask': torch.tensor([[[0, 0, 1], [0, 1, 1], [1, 1, 1]]], dtype=torch.long),
@@ -29,7 +29,7 @@ def batch_gray() -> dict[str, Tensor]:
 
 
 @pytest.fixture
-def batch_rgb() -> dict[str, Tensor]:
+def batch_rgb() -> Sample:
     return {
         'image': torch.tensor(
             [
@@ -48,7 +48,7 @@ def batch_rgb() -> dict[str, Tensor]:
 
 
 @pytest.fixture
-def batch_multispectral() -> dict[str, Tensor]:
+def batch_multispectral() -> Sample:
     return {
         'image': torch.tensor(
             [
@@ -68,14 +68,14 @@ def batch_multispectral() -> dict[str, Tensor]:
     }
 
 
-def assert_matching(output: dict[str, Tensor], expected: dict[str, Tensor]) -> None:
+def assert_matching(output: Sample, expected: Sample) -> None:
     for key in expected:
         err = f'output[{key}] != expected[{key}]'
         equal = torch.allclose(output[key], expected[key])
         assert equal, err
 
 
-def test_augmentation_sequential_gray(batch_gray: dict[str, Tensor]) -> None:
+def test_augmentation_sequential_gray(batch_gray: Sample) -> None:
     expected = {
         'image': torch.tensor([[[[3, 2, 1], [6, 5, 4], [9, 8, 7]]]], dtype=torch.float),
         'mask': torch.tensor([[[1, 0, 0], [1, 1, 0], [1, 1, 1]]], dtype=torch.long),
@@ -87,7 +87,7 @@ def test_augmentation_sequential_gray(batch_gray: dict[str, Tensor]) -> None:
     assert_matching(output, expected)
 
 
-def test_augmentation_sequential_rgb(batch_rgb: dict[str, Tensor]) -> None:
+def test_augmentation_sequential_rgb(batch_rgb: Sample) -> None:
     expected = {
         'image': torch.tensor(
             [
@@ -108,9 +108,7 @@ def test_augmentation_sequential_rgb(batch_rgb: dict[str, Tensor]) -> None:
     assert_matching(output, expected)
 
 
-def test_augmentation_sequential_multispectral(
-    batch_multispectral: dict[str, Tensor],
-) -> None:
+def test_augmentation_sequential_multispectral(batch_multispectral: Sample) -> None:
     expected = {
         'image': torch.tensor(
             [
@@ -133,9 +131,7 @@ def test_augmentation_sequential_multispectral(
     assert_matching(output, expected)
 
 
-def test_augmentation_sequential_image_only(
-    batch_multispectral: dict[str, Tensor],
-) -> None:
+def test_augmentation_sequential_image_only(batch_multispectral: Sample) -> None:
     expected_image = torch.tensor(
         [
             [
@@ -154,9 +150,7 @@ def test_augmentation_sequential_image_only(
     assert torch.allclose(aug_image, expected_image)
 
 
-def test_sequential_transforms_augmentations(
-    batch_multispectral: dict[str, Tensor],
-) -> None:
+def test_sequential_transforms_augmentations(batch_multispectral: Sample) -> None:
     expected = {
         'image': torch.tensor(
             [

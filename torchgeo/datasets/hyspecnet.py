@@ -12,11 +12,10 @@ import torch
 from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
-from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, percentile_normalization
+from .utils import Path, Sample, download_url, extract_archive, percentile_normalization
 
 # https://git.tu-berlin.de/rsim/hyspecnet-tools/-/blob/main/tif_to_npy.ipynb
 invalid_channels = [
@@ -108,7 +107,7 @@ class HySpecNet11k(NonGeoDataset):
         split: str = 'train',
         strategy: str = 'easy',
         bands: Sequence[int] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -150,7 +149,7 @@ class HySpecNet11k(NonGeoDataset):
         """
         return len(self.files)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -195,7 +194,7 @@ class HySpecNet11k(NonGeoDataset):
 
             raise DatasetNotFoundError(self)
 
-    def plot(self, sample: dict[str, Tensor], suptitle: str | None = None) -> Figure:
+    def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

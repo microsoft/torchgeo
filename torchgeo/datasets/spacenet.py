@@ -28,6 +28,7 @@ from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
+    Sample,
     check_integrity,
     extract_archive,
     percentile_normalization,
@@ -108,7 +109,7 @@ class SpaceNet(NonGeoDataset, ABC):
         aois: list[int] = [],
         image: str | None = None,
         mask: str | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -217,7 +218,7 @@ class SpaceNet(NonGeoDataset, ABC):
 
         return torch.from_numpy(mask)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -339,10 +340,7 @@ class SpaceNet(NonGeoDataset, ABC):
                 self.masks.extend(masks)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -7,10 +7,10 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch
-from torch import Tensor
 from torch.utils.data import random_split
 
 from ..datasets import SpaceNet, SpaceNet1, SpaceNet6
+from ..datasets.utils import Sample
 from .geo import NonGeoDataModule
 
 
@@ -71,9 +71,7 @@ class SpaceNetBaseDataModule(NonGeoDataModule):
         if stage in ['predict']:
             self.predict_dataset = self.spacenet_ds_class(split='test', **self.kwargs)
 
-    def on_after_batch_transfer(
-        self, batch: dict[str, Tensor], dataloader_idx: int
-    ) -> dict[str, Tensor]:
+    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
         """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:

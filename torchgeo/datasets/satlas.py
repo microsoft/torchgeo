@@ -14,11 +14,10 @@ from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from PIL import Image
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, extract_archive, which
+from .utils import Path, Sample, check_integrity, extract_archive, which
 
 
 class _Task(TypedDict, total=False):
@@ -541,7 +540,7 @@ class SatlasPretrain(NonGeoDataset):
         image_times: str = 'image_times',
         images: Iterable[str] = ('sentinel1', 'sentinel2', 'landsat'),
         labels: Iterable[str] = ('land_cover',),
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -597,7 +596,7 @@ class SatlasPretrain(NonGeoDataset):
         """
         return len(self.split)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -609,7 +608,7 @@ class SatlasPretrain(NonGeoDataset):
         col, row = self.split.iloc[index]
         directories = self.good_images.get_group((col, row))['directory']
 
-        sample: dict[str, Tensor] = {}
+        sample: Sample = {}
 
         for image in self.images:
             self._load_image(sample, image, col, row, directories)
@@ -623,12 +622,7 @@ class SatlasPretrain(NonGeoDataset):
         return sample
 
     def _load_image(
-        self,
-        sample: dict[str, Tensor],
-        image: str,
-        col: int,
-        row: int,
-        directories: pd.Series,
+        self, sample: Sample, image: str, col: int, row: int, directories: pd.Series
     ) -> None:
         """Load a single image.
 
@@ -669,9 +663,7 @@ class SatlasPretrain(NonGeoDataset):
         raster = rearrange(torch.cat(channels, dim=-1), 'h w c -> c h w')
         sample[f'image_{image}'] = raster
 
-    def _load_label(
-        self, sample: dict[str, Tensor], label: str, col: int, row: int
-    ) -> None:
+    def _load_label(self, sample: Sample, label: str, col: int, row: int) -> None:
         """Load a single label.
 
         Args:
@@ -720,10 +712,7 @@ class SatlasPretrain(NonGeoDataset):
                 extract_archive(path)
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

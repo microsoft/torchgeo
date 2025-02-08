@@ -42,6 +42,7 @@ __all__ = (
 
 
 Path: TypeAlias = str | os.PathLike[str]
+Sample: TypeAlias = dict[str, Tensor]
 
 
 @dataclass(frozen=True)

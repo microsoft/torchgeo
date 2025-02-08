@@ -7,7 +7,7 @@ import glob
 import os
 import tarfile
 from collections.abc import Callable, Sequence
-from typing import Any, ClassVar, TypedDict
+from typing import ClassVar, TypedDict
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, lazy_import, percentile_normalization
+from .utils import Path, Sample, download_url, lazy_import, percentile_normalization
 
 
 class _SampleSequenceDict(TypedDict):
@@ -105,7 +105,7 @@ class DigitalTyphoon(NonGeoDataset):
         sequence_length: int = 3,
         min_feature_value: dict[str, float] | None = None,
         max_feature_value: dict[str, float] | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -244,7 +244,7 @@ class DigitalTyphoon(NonGeoDataset):
             for item in sublist
         ]
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -334,7 +334,7 @@ class DigitalTyphoon(NonGeoDataset):
         ).float()
         return tensor
 
-    def _load_features(self, filepath: str, image_path: str) -> dict[str, Any]:
+    def _load_features(self, filepath: str, image_path: str) -> Sample:
         """Load features for the corresponding image.
 
         Args:
@@ -410,10 +410,7 @@ class DigitalTyphoon(NonGeoDataset):
                 tar.extractall(path=self.root)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

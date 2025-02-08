@@ -9,8 +9,9 @@ import pytest
 import torch
 import torchvision
 from _pytest.fixtures import SubRequest
-from torch import Tensor
 from torch.nn.modules import Module
+
+from torchgeo.datasets.utils import Sample
 
 
 @pytest.fixture(
@@ -28,14 +29,12 @@ def model() -> Module:
 
 
 @pytest.fixture(scope='package')
-def state_dict(model: Module) -> dict[str, Tensor]:
+def state_dict(model: Module) -> Sample:
     return model.state_dict()
 
 
 @pytest.fixture(params=['model', 'backbone'])
-def checkpoint(
-    state_dict: dict[str, Tensor], request: SubRequest, tmp_path: Path
-) -> str:
+def checkpoint(state_dict: Sample, request: SubRequest, tmp_path: Path) -> str:
     if request.param == 'model':
         state_dict = OrderedDict({'model.' + k: v for k, v in state_dict.items()})
     else:

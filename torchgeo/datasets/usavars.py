@@ -18,7 +18,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive
+from .utils import Path, Sample, download_url, extract_archive
 
 
 class USAVars(NonGeoDataset):
@@ -90,7 +90,7 @@ class USAVars(NonGeoDataset):
         root: Path = 'data',
         split: str = 'train',
         labels: Sequence[str] = ALL_LABELS,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -131,7 +131,7 @@ class USAVars(NonGeoDataset):
             for lab in self.labels
         }
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -228,10 +228,7 @@ class USAVars(NonGeoDataset):
         extract_archive(os.path.join(self.root, self.dirname + '.zip'))
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_labels: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_labels: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

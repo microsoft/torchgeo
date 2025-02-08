@@ -6,10 +6,11 @@
 from typing import Any, ClassVar
 
 import torch
-from torch import Generator, Tensor
+from torch import Generator
 from torch.utils.data import random_split
 
 from ..datasets import So2Sat
+from ..datasets.utils import Sample
 from .geo import NonGeoDataModule
 
 
@@ -21,7 +22,7 @@ class So2SatDataModule(NonGeoDataModule):
     "train" set and use the "test" set as the test set.
     """
 
-    means_per_version: ClassVar[dict[str, Tensor]] = {
+    means_per_version: ClassVar[Sample] = {
         '2': torch.tensor(
             [
                 -0.00003591224260,
@@ -91,7 +92,7 @@ class So2SatDataModule(NonGeoDataModule):
     }
     means_per_version['3_culture_10'] = means_per_version['2']
 
-    stds_per_version: ClassVar[dict[str, Tensor]] = {
+    stds_per_version: ClassVar[Sample] = {
         '2': torch.tensor(
             [
                 0.17555201,

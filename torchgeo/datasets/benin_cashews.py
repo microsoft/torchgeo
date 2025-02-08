@@ -19,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, which
+from .utils import Path, Sample, which
 
 
 class BeninSmallHolderCashews(NonGeoDataset):
@@ -167,7 +167,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
         chip_size: int = 256,
         stride: int = 128,
         bands: Sequence[str] = all_bands,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
     ) -> None:
         """Initialize a new Benin Smallholder Cashew Plantations Dataset instance.
@@ -209,7 +209,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
             ]:
                 self.chips_metadata.append((y, x))
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -348,7 +348,7 @@ class BeninSmallHolderCashews(NonGeoDataset):
 
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: Sample,
         show_titles: bool = True,
         time_step: int = 0,
         suptitle: str | None = None,

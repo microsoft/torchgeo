@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import numpy as np
 import pandas as pd
@@ -14,11 +14,16 @@ from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from PIL import Image
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive, download_url, extract_archive
+from .utils import (
+    Path,
+    Sample,
+    download_and_extract_archive,
+    download_url,
+    extract_archive,
+)
 
 
 class SkyScript(NonGeoDataset):
@@ -64,7 +69,7 @@ class SkyScript(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -102,7 +107,7 @@ class SkyScript(NonGeoDataset):
         """
         return len(self.captions)
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -154,10 +159,7 @@ class SkyScript(NonGeoDataset):
             download_url(url, self.root, md5=md5)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 
