@@ -16,8 +16,7 @@ DTYPE = 'int16'
 
 np.random.seed(0)
 
-# Tile name purposefully shortened to avoid Windows git filename length limit.
-tiles = ['ENMAP01_20221103T162438Z']
+tiles = ['ENMAP01-____L2A-DT0000004950_20221103T162438Z_001_V010110_20221118T145147Z']
 patches = ['Y01460273_X05670694', 'Y01460273_X06950822']
 
 profile = {
@@ -41,7 +40,8 @@ os.makedirs(path, exist_ok=True)
 for tile in tiles:
     for patch in patches:
         # Split CSV
-        path = os.path.join(tile, f'{tile}-{patch}', f'{tile}-{patch}-DATA.npy')
+        # Directory purposefully shortened to avoid Windows git filename length limit.
+        path = os.path.join(f'{tile}-{patch}-DATA.npy')
         for split in ['train', 'val', 'test']:
             with open(os.path.join(root, 'splits', 'easy', f'{split}.csv'), 'a+') as f:
                 f.write(f'{path}\n')
