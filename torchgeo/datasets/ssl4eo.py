@@ -474,7 +474,12 @@ class SSL4EOS12(SSL4EO):
             directory = os.path.join(root, subdir)
             if match := re.match(filename_regex, subdir):
                 date_str = match.group('date')
-                mint, maxt = disambiguate_timestamp(date_str, Sentinel.date_format)
+                match self.split:
+                    case 's1':
+                        date_format = Sentinel1.date_format
+                    case 's2c' | 's2a':
+                        date_format = Sentinel2.date_format
+                mint, maxt = disambiguate_timestamp(date_str, date_format)
                 for band in self.bands:
                     match self.split:
                         case 's1':
