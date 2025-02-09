@@ -59,10 +59,8 @@ class Landsat(RasterDataset, abc.ABC):
         """Bands to load by default."""
 
     # https://www.usgs.gov/faqs/what-are-band-designations-landsat-satellites
-    @property
-    @abc.abstractmethod
-    def wavelengths(self) -> dict[str, float]:
-        """Central wavelength (μm)."""
+    # Central wavelength (μm)
+    wavelengths: ClassVar[dict[str, float]]
 
     def __init__(
         self,
