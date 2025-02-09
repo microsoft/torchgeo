@@ -78,7 +78,7 @@ class CustomSentinelDataset(Sentinel2):
 
 
 class CustomNonGeoDataset(NonGeoDataset):
-    def __getitem__(self, index: int) -> dict[str, int]:
+    def __getitem__(self, index: int) -> Sample:
         return {'index': index}
 
     def __len__(self) -> int:

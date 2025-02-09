@@ -8,7 +8,7 @@ import json
 import os
 import sys
 from collections.abc import Callable, Iterable
-from typing import ClassVar, cast
+from typing import Any, ClassVar, cast
 
 import fiona
 import fiona.transform
@@ -336,7 +336,7 @@ class OpenBuildings(VectorDataset):
 
     def _filter_geometries(
         self, query: BoundingBox, filepaths: list[str]
-    ) -> list[Sample]:
+    ) -> list[dict[str, Any]]:
         """Filters a df read from the polygon csv file based on query and conf thresh.
 
         Args:
@@ -369,7 +369,7 @@ class OpenBuildings(VectorDataset):
 
         return shapes
 
-    def _wkt_fiona_geom_transform(self, x: str) -> Sample:
+    def _wkt_fiona_geom_transform(self, x: str) -> dict[str, Any]:
         """Function to transform a geometry string into new crs.
 
         Args:
@@ -389,7 +389,7 @@ class OpenBuildings(VectorDataset):
             geom = fiona.model.Geometry(**x)
         else:
             geom = x
-        transformed: Sample = fiona.transform.transform_geom(
+        transformed: dict[str, Any] = fiona.transform.transform_geom(
             self._source_crs.to_dict(), self._crs.to_dict(), geom
         )
         return transformed

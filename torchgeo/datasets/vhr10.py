@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -63,7 +63,7 @@ class ConvertCocoAnnotations:
     https://github.com/pytorch/vision/blob/v0.14.0/references/detection/coco_utils.py
     """
 
-    def __call__(self, sample: Sample) -> Sample:
+    def __call__(self, sample: dict[str, Any]) -> dict[str, Any]:
         """Converts MS COCO fields (boxes, masks & labels) from list of ints to tensors.
 
         Args:
@@ -293,7 +293,7 @@ class VHR10(NonGeoDataset):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, id_: int) -> Sample:
+    def _load_target(self, id_: int) -> dict[str, Any]:
         """Load the annotations for a single image.
 
         Args:

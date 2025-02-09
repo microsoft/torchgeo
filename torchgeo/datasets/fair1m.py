@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import ClassVar, cast
+from typing import Any, ClassVar, cast
 from xml.etree.ElementTree import Element, parse
 
 import matplotlib.patches as patches
@@ -119,7 +119,7 @@ class FAIR1M(NonGeoDataset):
     .. versionadded:: 0.2
     """
 
-    classes: ClassVar[dict[str, Sample]] = {
+    classes: ClassVar[dict[str, dict[str, Any]]] = {
         'Passenger Ship': {'id': 0, 'category': 'Ship'},
         'Motorboat': {'id': 1, 'category': 'Ship'},
         'Fishing Boat': {'id': 2, 'category': 'Ship'},

@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import ClassVar, cast
+from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -252,7 +252,7 @@ class MillionAID(NonGeoDataset):
 
         return sample
 
-    def _load_files(self, root: Path) -> list[Sample]:
+    def _load_files(self, root: Path) -> list[dict[str, Any]]:
         """Return the paths of the files in the dataset.
 
         Args:

@@ -12,8 +12,6 @@ import torch
 from kornia.augmentation import IntensityAugmentationBase2D
 from torch import Tensor
 
-from ..datasets.utils import Sample
-
 _EPSILON = 1e-10
 
 
@@ -42,7 +40,7 @@ class AppendNormalizedDifferenceIndex(IntensityAugmentationBase2D):
     def apply_transform(
         self,
         input: Tensor,
-        params: Sample,
+        params: dict[str, Tensor],
         flags: dict[str, int],
         transform: Tensor | None = None,
     ) -> Tensor:
@@ -317,7 +315,7 @@ class AppendTriBandNormalizedDifferenceIndex(IntensityAugmentationBase2D):
     def apply_transform(
         self,
         input: Tensor,
-        params: Sample,
+        params: dict[str, Tensor],
         flags: dict[str, int],
         transform: Tensor | None = None,
     ) -> Tensor:

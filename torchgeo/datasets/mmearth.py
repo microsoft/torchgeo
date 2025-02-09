@@ -368,7 +368,9 @@ class MMEarth(NonGeoDataset):
 
         return sample
 
-    def get_sample_specific_band_names(self, tile_info: Sample) -> dict[str, list[str]]:
+    def get_sample_specific_band_names(
+        self, tile_info: dict[str, Any]
+    ) -> dict[str, list[str]]:
         """Retrieve the sample specific band names.
 
         Args:
@@ -394,7 +396,7 @@ class MMEarth(NonGeoDataset):
 
         return specific_modality_bands
 
-    def get_intersection_dict(self, tile_info: Sample) -> dict[str, list[str]]:
+    def get_intersection_dict(self, tile_info: dict[str, Any]) -> dict[str, list[str]]:
         """Get intersection of requested and available bands.
 
         Args:
@@ -418,7 +420,7 @@ class MMEarth(NonGeoDataset):
 
         return intersection_dict
 
-    def _retrieve_sample(self, ds_index: int) -> Sample:
+    def _retrieve_sample(self, ds_index: int) -> dict[str, Any]:
         """Retrieve a sample from the dataset.
 
         Args:
@@ -435,7 +437,7 @@ class MMEarth(NonGeoDataset):
             'r',
         ) as f:
             name = f['metadata'][ds_index][0].decode('utf-8')
-            tile_info: Sample = self.tile_info[name]
+            tile_info: dict[str, Any] = self.tile_info[name]
             # need to find the intersection of requested and available bands
             intersection_dict = self.get_intersection_dict(tile_info)
             for modality, bands in intersection_dict.items():
@@ -493,7 +495,7 @@ class MMEarth(NonGeoDataset):
         self,
         data: 'np.typing.NDArray[Any]',
         modality: str,
-        tile_info: Sample,
+        tile_info: dict[str, Any],
         bands: list[str],
     ) -> Tensor:
         """Preprocess a single modality.

@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
+from typing import Any
 from xml.etree import ElementTree
 
 import matplotlib.patches as patches
@@ -27,7 +28,7 @@ from .utils import (
 )
 
 
-def parse_pascal_voc(path: Path) -> Sample:
+def parse_pascal_voc(path: Path) -> dict[str, Any]:
     """Read a PASCAL VOC annotation file.
 
     Args:

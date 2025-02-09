@@ -284,7 +284,7 @@ class IDTReeS(NonGeoDataset):
             the bounding boxes
         """
         base_path = os.path.basename(path)
-        geometries = cast(dict[int, Sample], self.geometries)
+        geometries = cast(dict[int, dict[str, Any]], self.geometries)
 
         # Find object ids and geometries
         # The train set geometry->image mapping is contained
@@ -337,7 +337,9 @@ class IDTReeS(NonGeoDataset):
         tensor = torch.tensor(labels)
         return tensor
 
-    def _load(self, root: Path) -> tuple[list[str], dict[int, Sample] | None, Any]:
+    def _load(
+        self, root: Path
+    ) -> tuple[list[str], dict[int, dict[str, Any]] | None, Any]:
         """Load files, geometries, and labels.
 
         Args:
@@ -383,7 +385,7 @@ class IDTReeS(NonGeoDataset):
         df.reset_index()
         return df
 
-    def _load_geometries(self, directory: Path) -> dict[int, Sample]:
+    def _load_geometries(self, directory: Path) -> dict[int, dict[str, Any]]:
         """Load the shape files containing the geometries.
 
         Args:
@@ -395,7 +397,7 @@ class IDTReeS(NonGeoDataset):
         filepaths = glob.glob(os.path.join(directory, 'ITC', '*.shp'))
 
         i = 0
-        features: dict[int, Sample] = {}
+        features: dict[int, dict[str, Any]] = {}
         for path in filepaths:
             with fiona.open(path) as src:
                 for feature in src:

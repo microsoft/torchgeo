@@ -9,7 +9,6 @@ import torch
 from _pytest.fixtures import SubRequest
 from lightning.pytorch import Trainer
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
 
 from torchgeo.datamodules import (
     GeoDataModule,
@@ -32,7 +31,7 @@ class CustomGeoDataset(GeoDataset):
 
     def __getitem__(self, query: BoundingBox) -> Sample:
         image = torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)
-        return {'image': image, 'crs': CRS.from_epsg(4326), 'bounds': query}
+        return {'image': image}
 
     def plot(self, *args: Any, **kwargs: Any) -> Figure:
         return plt.figure()

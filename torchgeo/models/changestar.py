@@ -9,7 +9,6 @@ from einops import rearrange
 from torch import Tensor
 from torch.nn.modules import Module
 
-from ..datasets.utils import Sample
 from .farseg import FarSeg
 
 
@@ -128,7 +127,7 @@ class ChangeStar(Module):
             raise ValueError(f'Unknown inference_mode: {inference_mode}')
         self.inference_mode = inference_mode
 
-    def forward(self, x: Tensor) -> Sample:
+    def forward(self, x: Tensor) -> dict[str, Tensor]:
         """Forward pass of the model.
 
         Args:
@@ -150,7 +149,7 @@ class ChangeStar(Module):
         # change detection
         c12, c21 = self.changemixin(bi_feature)
 
-        results: Sample = {}
+        results: dict[str, Tensor] = {}
         if not self.training:
             results.update({'bi_seg_logit': bi_seg_logit})
             if self.inference_mode == 't1t2':

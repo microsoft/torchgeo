@@ -6,8 +6,6 @@
 from kornia.augmentation import IntensityAugmentationBase2D
 from torch import Tensor
 
-from ..datasets.utils import Sample
-
 
 class RandomGrayscale(IntensityAugmentationBase2D):
     r"""Apply random transformation to grayscale according to a probability p value.
@@ -55,8 +53,8 @@ class RandomGrayscale(IntensityAugmentationBase2D):
     def apply_transform(
         self,
         input: Tensor,
-        params: Sample,
-        flags: Sample,
+        params: dict[str, Tensor],
+        flags: dict[str, Tensor],
         transform: Tensor | None = None,
     ) -> Tensor:
         """Apply the transform.

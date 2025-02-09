@@ -192,7 +192,7 @@ class GeoDataset(Dataset[Sample], abc.ABC):
     # NOTE: This hack should be removed once the following issue is fixed:
     # https://github.com/Toblerity/rtree/issues/87
 
-    def __getstate__(self) -> tuple[Sample, list[tuple[Any, Any, Any | None]]]:
+    def __getstate__(self) -> tuple[dict[str, Any], list[tuple[Any, Any, Any | None]]]:
         """Define how instances are pickled.
 
         Returns:
@@ -547,7 +547,7 @@ class RasterDataset(GeoDataset):
         else:
             data = self._merge_files(filepaths, query, self.band_indexes)
 
-        sample = {}
+        sample: Sample = {}
 
         data = data.to(self.dtype)
         if self.is_image:

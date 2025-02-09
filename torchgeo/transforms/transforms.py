@@ -11,8 +11,6 @@ from kornia.contrib import extract_tensor_patches
 from kornia.geometry import crop_by_indices
 from torch import Tensor
 
-from ..datasets.utils import Sample
-
 # Only include import redirects
 __all__ = ('AugmentationSequential',)
 
@@ -32,7 +30,7 @@ class _RandomNCrop(K.GeometricAugmentationBase2D):
         self.flags = {'size': size, 'num': num}
 
     def compute_transformation(
-        self, input: Tensor, params: Sample, flags: Sample
+        self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Tensor]
     ) -> Tensor:
         """Compute the transformation.
 
@@ -50,8 +48,8 @@ class _RandomNCrop(K.GeometricAugmentationBase2D):
     def apply_transform(
         self,
         input: Tensor,
-        params: Sample,
-        flags: Sample,
+        params: dict[str, Tensor],
+        flags: dict[str, Tensor],
         transform: Tensor | None = None,
     ) -> Tensor:
         """Apply the transform.
@@ -86,7 +84,7 @@ class _NCropGenerator(K.random_generator.CropGenerator):
 
     def forward(
         self, batch_shape: tuple[int, ...], same_on_batch: bool = False
-    ) -> Sample:
+    ) -> dict[str, Tensor]:
         """Generate the crops.
 
         Args:
@@ -135,7 +133,7 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
         }
 
     def compute_transformation(
-        self, input: Tensor, params: Sample, flags: Sample
+        self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Tensor]
     ) -> Tensor:
         """Compute the transformation.
 
@@ -153,8 +151,8 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
     def apply_transform(
         self,
         input: Tensor,
-        params: Sample,
-        flags: Sample,
+        params: dict[str, Tensor],
+        flags: dict[str, Tensor],
         transform: Tensor | None = None,
     ) -> Tensor:
         """Apply the transform.
@@ -214,8 +212,8 @@ class _Clamp(K.IntensityAugmentationBase2D):
     def apply_transform(
         self,
         input: Tensor,
-        params: Sample,
-        flags: Sample,
+        params: dict[str, Tensor],
+        flags: dict[str, Tensor],
         transform: Tensor | None = None,
     ) -> Tensor:
         """Apply the transform.

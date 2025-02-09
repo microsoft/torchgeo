@@ -15,8 +15,6 @@ from einops import rearrange
 from torch import Tensor, einsum, nn
 from torchvision.models._api import Weights, WeightsEnum
 
-from ..datasets.utils import Sample
-
 
 class CROMA(nn.Module):
     """Pretrained CROMA model.
@@ -117,14 +115,14 @@ class CROMA(nn.Module):
 
     def forward(
         self, x_sar: Tensor | None = None, x_optical: Tensor | None = None
-    ) -> Sample:
+    ) -> dict[str, Tensor]:
         """Forward pass of the CROMA model.
 
         Args:
             x_sar: Input mini-batch of SAR images [B, 2, H, W].
             x_optical: Input mini-batch of optical images [B, 12, H, W].
         """
-        return_dict: Sample = {}
+        return_dict: dict[str, Tensor] = {}
 
         if 'sar' in self.modalities and x_sar is not None:
             sar_encodings = self.s1_encoder(imgs=x_sar, attn_bias=self.attn_bias)

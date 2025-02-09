@@ -330,7 +330,7 @@ class ObjectDetectionTask(BaseTask):
 
     def predict_step(
         self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
-    ) -> list[Sample]:
+    ) -> list[dict[str, Tensor]]:
         """Compute the predicted bounding boxes.
 
         Args:
@@ -342,5 +342,5 @@ class ObjectDetectionTask(BaseTask):
             Output predicted probabilities.
         """
         x = batch['image']
-        y_hat: list[Sample] = self(x)
+        y_hat: list[dict[str, Tensor]] = self(x)
         return y_hat
