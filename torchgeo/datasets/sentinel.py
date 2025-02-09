@@ -28,9 +28,6 @@ class Sentinel(RasterDataset):
     * https://asf.alaska.edu/datasets/daac/sentinel-1/
     """
 
-    date_format = '%Y%m%dT%H%M%S'
-    separate_files = True
-
 
 class Sentinel1(Sentinel):
     r"""Sentinel-1 dataset.
@@ -139,9 +136,13 @@ class Sentinel1(Sentinel):
         _(?P<band>[VH]{2})
         \.
     """
+    date_format = '%Y%m%dT%H%M%S'
 
     # https://sentiwiki.copernicus.eu/web/s1-mission
     all_bands = ('HH', 'HV', 'VV', 'VH')
+
+    separate_files = True
+
     # Central wavelength (μm)
     wavelength = 55500
 
@@ -279,6 +280,7 @@ class Sentinel2(Sentinel):
         (?:_(?P<resolution>{}m))?
         \..*$
     """
+    date_format = '%Y%m%dT%H%M%S'
 
     # https://sentiwiki.copernicus.eu/web/s2-mission
     all_bands: tuple[str, ...] = (
@@ -297,6 +299,9 @@ class Sentinel2(Sentinel):
         'B12',
     )
     rgb_bands = ('B04', 'B03', 'B02')
+
+    separate_files = True
+
     # Central wavelength (μm)
     wavelengths: ClassVar[dict[str, float]] = {
         'B01': 0.4427,
