@@ -19,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .sentinel import Sentinel, Sentinel1, Sentinel2
+from .sentinel import Sentinel1, Sentinel2
 from .utils import (
     Path,
     check_integrity,
