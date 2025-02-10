@@ -463,6 +463,12 @@ So2Sat
 
 .. autoclass:: So2Sat
 
+
+SODAA
+^^^^^
+
+.. autoclass:: SODAA
+
 SpaceNet
 ^^^^^^^^
 

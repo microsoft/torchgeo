@@ -112,6 +112,7 @@ from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
 from .skyscript import SkyScript
+from .soda import SODAA
 from .so2sat import So2Sat
 from .south_africa_crop_type import SouthAfricaCropType
 from .south_america_soybean import SouthAmericaSoybean
@@ -174,6 +175,7 @@ __all__ = (
     'RESISC45',
     'SEN12MS',
     'SKIPPD',
+    'SODAA',
     'SSL4EO',
     'SSL4EOL',
     'SSL4EOS12',
