@@ -221,7 +221,7 @@ class DIOR(NonGeoDataset):
                 os.path.join(self.root, sample['label_path'])
             )
 
-            sample = {'image': image, 'boxes': boxes, 'labels': labels}
+            sample = {'image': image, 'bbox_xyxy': boxes, 'label': labels}
         else:
             sample = {'image': image}
 
@@ -351,7 +351,7 @@ class DIOR(NonGeoDataset):
         """
         image = sample['image'].permute((1, 2, 0)).numpy()
         boxes = sample['boxes'].numpy()
-        labels = sample['labels'].numpy()
+        labels = sample['label'].numpy()
 
         fig, axs = plt.subplots(ncols=1, figsize=(10, 10))
 

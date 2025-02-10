@@ -74,7 +74,7 @@ class TestDIOR:
         assert x['image'].ndim == 3
         assert isinstance(x['image'], torch.Tensor)
         if dataset.split != 'test':
-            assert isinstance(x['labels'], torch.Tensor)
+            assert isinstance(x['label'], torch.Tensor)
             assert isinstance(x['boxes'], torch.Tensor)
 
     def test_len(self, dataset: DIOR) -> None:
