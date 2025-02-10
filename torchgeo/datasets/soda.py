@@ -50,14 +50,15 @@ class SODAA(NonGeoDataset):
     Classes:
 
     0. Airplane
-    1. Small-vehicle
-    2. Ship
-    3. Container
-    4. Large-vehicle
-    5. Swimming-pool
-    6. Helicopter
-    7. Windmill
-    8. Storage-tank
+    1. Helicopter
+    2. Small vehicle
+    3. Large vehicle
+    4. Ship
+    5. Container
+    6. Storage tank
+    7. Swimming-pool
+    8. Windmill
+    9. Other
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -81,14 +82,15 @@ class SODAA(NonGeoDataset):
 
     classes = (
         'airplane',
+        'helicopter',
         'small-vehicle',
+        'large-vehicle',
         'ship',
         'container',
-        'large-vehicle',
-        'swimming-pool',
-        'helicopter',
-        'windmill',
         'storage-tank',
+        'swimming-pool',
+        'windmill',
+        'other',
     )
 
     valid_splits = ('train', 'val', 'test')
@@ -349,9 +351,11 @@ class SODAA(NonGeoDataset):
 
         ax.legend(
             handles=legend_elements,
-            bbox_to_anchor=(1.05, 1),
-            loc='upper left',
+            bbox_to_anchor=(0.5, -0.05),
+            loc='upper center',
             borderaxespad=0.0,
+            ncol=len(legend_elements),
+            mode='expand',
         )
 
         if suptitle is not None:
