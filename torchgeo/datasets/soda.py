@@ -314,7 +314,7 @@ class SODAA(NonGeoDataset):
 
         for box, label_idx in zip(boxes, labels):
             color = cm(label_idx / len(self.classes))
-            label = self.classes[label_idx - 1]
+            label = self.classes[label_idx]
 
             if self.bbox_orientation == 'horizontal':
                 # Horizontal box: [xmin, ymin, xmax, ymax]
@@ -351,9 +351,7 @@ class SODAA(NonGeoDataset):
 
         ax.legend(
             handles=legend_elements,
-            bbox_to_anchor=(0.5, -0.05),
-            loc='upper center',
-            borderaxespad=0.0,
+            loc='lower center',
             ncol=len(legend_elements),
             mode='expand',
         )
