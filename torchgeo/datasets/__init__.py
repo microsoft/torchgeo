@@ -37,6 +37,7 @@ from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
+from .dior import DIOR
 from .eddmaps import EDDMapS
 from .enviroatlas import EnviroAtlas
 from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
@@ -156,6 +157,7 @@ __all__ = (
     'BRIGHTDFC2025',
     'CDL',
     'COWC',
+    'DIOR',
     'DFC2022',
     'ETCI2021',
     'EUDEM',
