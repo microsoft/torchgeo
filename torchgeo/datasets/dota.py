@@ -84,6 +84,7 @@ class DOTA(NonGeoDataset):
             },
             'annotations': {
                 '1.0': {'filename': 'dotav1_annotations_train.tar.gz', 'md5': ''},
+                '1.5': {'filename': 'dotav1.5_annotations_train.tar.gz', 'md5': ''},
                 '2.0': {'filename': 'dotav2_annotations_train.tar.gz', 'md5': ''},
             },
         },
@@ -94,6 +95,7 @@ class DOTA(NonGeoDataset):
             },
             'annotations': {
                 '1.0': {'filename': 'dotav1_annotations_val.tar.gz', 'md5': ''},
+                '1.5': {'filename': 'dotav1.5_annotations_val.tar.gz', 'md5': ''},
                 '2.0': {'filename': 'dotav2_annotations_val.tar.gz', 'md5': ''},
             },
         },
@@ -123,16 +125,16 @@ class DOTA(NonGeoDataset):
     )
 
     valid_splits = ('train', 'val')
-    valid_versions = ('1.0', '2.0')
+    valid_versions = ('1.0', '1.5', '2.0')
 
-    valid_orientations = ('hbb', 'obb')
+    valid_orientations = ('horizontal ', 'oriented')
 
     def __init__(
         self,
         root: Path = 'data',
         split: str = 'train',
         version: str = '2.0',
-        bbox_orientation: str = 'hbb',
+        bbox_orientation: str = 'horizontal',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -143,8 +145,8 @@ class DOTA(NonGeoDataset):
             root: root directory where dataset can be found
             split: split of the dataset to use, one of ['train', 'val']
             version: version of the dataset to use, one of ['1.0', '2.0']
-            bbox_orientation: bounding box orientation, one of ['hbb', 'obb'], meaning horizontal
-                or oriented bounding boxes, hbb only available for v2.0
+            bbox_orientation: bounding box orientation, one of ['horizontal', 'oriented'], meaning horizontal
+                or oriented bounding boxes, horizontal only available for v1.5 and v2.0
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -162,8 +164,8 @@ class DOTA(NonGeoDataset):
         )
 
         if version == '1.0':
-            assert bbox_orientation == 'hbb', (
-                "Bounding box orientation must be 'hbb' for version 1.0"
+            assert bbox_orientation == 'horizontal', (
+                "Bounding box orientation must be 'horizontal' for version 1.0"
             )
         elif version == '2.0':
             assert bbox_orientation in self.valid_orientations, (
@@ -186,6 +188,11 @@ class DOTA(NonGeoDataset):
             self.sample_df['version'] == self.version
         ].reset_index(drop=True)
 
+        import pdb
+        pdb.set_trace()
+
+        print(0)
+
     def __len__(self) -> int:
         """Return the number of samples in the dataset."""
         return len(self.sample_df)
@@ -203,10 +210,8 @@ class DOTA(NonGeoDataset):
 
         sample = {'image': self._load_image(sample_row['image_path'])}
 
-        if self.bbox_orientation == 'obb':
-            boxes, labels = self._load_annotations(sample_row['annotation_path'])
-        else:
-            boxes, labels = self._load_annotations(sample_row['annotation_path'])
+        path = sample_row['annotation_path'] if self.bbox_orientation == 'oriented' else sample_row['annotation_hbb_path']
+        boxes, labels = self._load_annotations(path)
 
         sample['boxes'] = boxes
         sample['labels'] = labels
@@ -242,8 +247,8 @@ class DOTA(NonGeoDataset):
             path: path to annotation file
         Returns:
             tuple of:
-                boxes: tensor of shape (N, 8) with coordinates for obb
-                    and (N, 4) for hbb
+                boxes: tensor of shape (N, 8) with coordinates for oriented
+                    and (N, 4) for horizontal
                 labels: tensor of shape (N,) with class indices
         """
         with open(os.path.join(self.root, path)) as f:
@@ -265,7 +270,7 @@ class DOTA(NonGeoDataset):
 
             labels.append(self.classes.index(label))
 
-            if self.bbox_orientation == 'hbb':
+            if self.bbox_orientation == 'horizontal':
                 # Convert to [xmin, ymin, xmax, ymax] format
                 x_coords = coords[::2]  # even indices (0,2,4,6)
                 y_coords = coords[1::2]  # odd indices (1,3,5,7)
@@ -277,7 +282,7 @@ class DOTA(NonGeoDataset):
 
         if not boxes:
             return (
-                torch.zeros((0, 4 if self.bbox_orientation == 'hbb' else 8)),
+                torch.zeros((0, 4 if self.bbox_orientation == 'horizontal' else 8)),
                 torch.zeros(0, dtype=torch.long),
             )
 
@@ -317,7 +322,6 @@ class DOTA(NonGeoDataset):
         exists = []
         for filename in files_needed:
             filepath = os.path.join(self.root, filename)
-            print('FILEPATH', filepath)
             if os.path.exists(filepath):
                 if self.checksum:
                     md5 = self.file_info[self.split]['images'][self.version]['md5']
@@ -334,24 +338,41 @@ class DOTA(NonGeoDataset):
         if not self.download:
             raise DatasetNotFoundError(self)
 
-        # Download and extract dataset
+        # also download the metadata file
+        self._download(files_needed)
+        self._extract()
+        
+
+    def _download(self, files_needed: list[str]) -> None:
+        """Download the dataset.
+        
+        Args:
+            files_needed: list of files to download for the particular version
+        """
         for filename in files_needed:
             if not os.path.exists(os.path.join(self.root, filename)):
                 md5 = self.file_info[self.split]['images'][self.version]['md5']
-                download_and_extract_archive(
+                download_url(
                     url=self.url.format(filename),
                     download_root=self.root,
                     filename=filename,
-                    remove_finished=False,
                     md5=None if not self.checksum else md5,
                 )
-        # also download the metadata file
+
         if not os.path.exists(os.path.join(self.root, self.sample_df_path)):
             download_url(
                 url=self.url.format(self.sample_df_path),
                 root=self.root,
                 filename=self.sample_df_path,
             )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        for filename in files_needed:
+            filepath = os.path.join(self.root, filename)
+            extract_archive
+
+        
 
     def plot(
         self,
@@ -386,7 +407,7 @@ class DOTA(NonGeoDataset):
             color = cm(label_idx / len(self.classes))
             label = self.classes[label_idx]
 
-            if self.bbox_orientation == 'hbb':
+            if self.bbox_orientation == 'horizontal':
                 # Horizontal box: [xmin, ymin, xmax, ymax]
                 x1, y1, x2, y2 = box
                 rect = patches.Rectangle(
