@@ -3,32 +3,23 @@
 
 """SODA-A dataset."""
 
-import glob
+import json
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar
-from xml.etree import ElementTree
+from typing import ClassVar
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import torch
 from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
-import pandas as pd
-import json
-
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    Path,
-    check_integrity,
-    download_and_extract_archive,
-    extract_archive,
-    download_url,
-)
+from .utils import Path, check_integrity, download_and_extract_archive, download_url
 
 
 class SODAA(NonGeoDataset):
@@ -121,7 +112,6 @@ class SODAA(NonGeoDataset):
             AssertionError: if ``split`` or ``bbox_orientation`` argument is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-
         assert split in self.valid_splits, f'split must be one of {self.valid_splits}'
 
         assert bbox_orientation in self.valid_orientations, (
@@ -155,14 +145,15 @@ class SODAA(NonGeoDataset):
         Returns:
             the sample at the given index
         """
-        sample = self.sample_df.iloc[idx]
+        row = self.sample_df.iloc[idx]
 
-        image = self._load_image(os.path.join(self.root, sample['image_path']))
-        boxes, labels = self._load_labels(os.path.join(self.root, sample['label_path']))
+        image = self._load_image(os.path.join(self.root, row['image_path']))
+        boxes, labels = self._load_labels(os.path.join(self.root, row['label_path']))
 
-        sample = {'image': image, 'label': labels}
+        sample: dict[str, Tensor] = {'image': image, 'label': labels}
 
         if self.bbox_orientation == 'oriented':
+            # TODO different keys for oriented and horizontal boxes
             sample['boxes'] = boxes
         else:
             sample['boxes'] = boxes
@@ -220,10 +211,10 @@ class SODAA(NonGeoDataset):
                 boxes.append(coords)
             labels.append(ann['category_id'])
 
-        boxes = torch.tensor(boxes, dtype=torch.float32)
-        labels = torch.tensor(labels, dtype=torch.long)
+        boxes_tensor = torch.tensor(boxes, dtype=torch.float32)
+        labels_tensor = torch.tensor(labels, dtype=torch.long)
 
-        return boxes, labels
+        return boxes_tensor, labels_tensor
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""

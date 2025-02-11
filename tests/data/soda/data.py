@@ -1,14 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import os
+import hashlib
 import json
+import os
 import shutil
+from typing import Any
+
 import numpy as np
 import pandas as pd
 from PIL import Image
-import hashlib
-from typing import Any
 
 # Constants
 SPLITS = ['train', 'val', 'test']
@@ -139,8 +140,6 @@ def create_dataset() -> None:
 
     # Create archives
     for dirname in ['Images', 'Annotations']:
-        base_path = os.path.join(root, dirname)
-
         archive_name = f'{dirname}.zip'
         archive_path = os.path.join(root, archive_name)
 
