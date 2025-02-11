@@ -12,7 +12,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import DatasetNotFoundError, DIOR
+from torchgeo.datasets import DIOR, DatasetNotFoundError
 
 
 class TestDIOR:
@@ -75,7 +75,7 @@ class TestDIOR:
         assert isinstance(x['image'], torch.Tensor)
         if dataset.split != 'test':
             assert isinstance(x['label'], torch.Tensor)
-            assert isinstance(x['boxes'], torch.Tensor)
+            assert isinstance(x['bbox_xyxy'], torch.Tensor)
 
     def test_len(self, dataset: DIOR) -> None:
         if dataset.split == 'train':
@@ -97,11 +97,4 @@ class TestDIOR:
         if dataset.split != 'test':
             x = dataset[0].copy()
             dataset.plot(x, suptitle='Test')
-            plt.close()
-
-    def test_plot_prediction(self, dataset: DIOR) -> None:
-        if dataset.split != 'test':
-            x = dataset[0].copy()
-            x['prediction_boxes'] = x['boxes'].clone()
-            dataset.plot(x, suptitle='Prediction')
             plt.close()

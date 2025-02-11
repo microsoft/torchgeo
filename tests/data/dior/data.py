@@ -7,10 +7,10 @@ import hashlib
 import os
 import shutil
 import xml.etree.ElementTree as ET
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 from PIL import Image
-from pathlib import Path
 
 # Constants
 SIZE = 32  # DIOR uses 800x800 but smaller for tests
@@ -78,7 +78,7 @@ def create_annotation(path: str, image_name: str) -> None:
     tree.write(path)
 
 
-def create_dataset():
+def create_dataset() -> None:
     """Create dummy DIOR dataset."""
     root = os.getcwd()
 

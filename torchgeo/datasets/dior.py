@@ -3,20 +3,19 @@
 
 """DIOR dataset."""
 
-import glob
 import os
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ClassVar
 from xml.etree import ElementTree
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import torch
 from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
-import pandas as pd
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -24,8 +23,8 @@ from .utils import (
     Path,
     check_integrity,
     download_and_extract_archive,
-    extract_archive,
     download_url,
+    extract_archive,
 )
 
 
@@ -51,7 +50,7 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
             int(bndbox.find('xmax').text),  # type: ignore[union-attr, arg-type]
             int(bndbox.find('ymax').text),  # type: ignore[union-attr, arg-type]
         ]
-        label = obj.find('name').text
+        label = obj.find('name').text  # type: ignore[union-attr, arg-type]
         bboxes.append(bbox)
         labels.append(label)
 
@@ -111,7 +110,7 @@ class DIOR(NonGeoDataset):
 
     url = 'https://huggingface.co/datasets/torchgeo/dior/resolve/main/{}'
 
-    files = {
+    files: ClassVar[dict[str, dict[str, dict[str, str]]]] = {
         'trainval': {
             'images': {
                 'filename': 'Images_trainval.zip',
@@ -212,18 +211,18 @@ class DIOR(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        sample = self.sample_df.iloc[idx]
+        row = self.sample_df.iloc[idx]
 
-        image = self._load_image(os.path.join(self.root, sample['image_path']))
+        image = self._load_image(os.path.join(self.root, row['image_path']))
+
+        sample: dict[str, Tensor] = {'image': image}
 
         if self.split != 'test':
             boxes, labels = self._load_target(
-                os.path.join(self.root, sample['label_path'])
+                os.path.join(self.root, row['label_path'])
             )
-
-            sample = {'image': image, 'bbox_xyxy': boxes, 'label': labels}
-        else:
-            sample = {'image': image}
+            sample['bbox_xyxy'] = boxes
+            sample['label'] = labels
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -350,7 +349,7 @@ class DIOR(NonGeoDataset):
             a matplotlib Figure with the rendered sample
         """
         image = sample['image'].permute((1, 2, 0)).numpy()
-        boxes = sample['boxes'].numpy()
+        boxes = sample['bbox_xyxy'].numpy()
         labels = sample['label'].numpy()
 
         fig, axs = plt.subplots(ncols=1, figsize=(10, 10))
