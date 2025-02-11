@@ -14,6 +14,8 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DIOR, DatasetNotFoundError
 
+pytest.importorskip('pyarrow')
+
 
 class TestDIOR:
     @pytest.fixture(params=['train', 'val', 'test'])
