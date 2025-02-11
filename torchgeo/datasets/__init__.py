@@ -112,8 +112,8 @@ from .sen12ms import SEN12MS
 from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
 from .skyscript import SkyScript
-from .soda import SODAA
 from .so2sat import So2Sat
+from .soda import SODAA
 from .south_africa_crop_type import SouthAfricaCropType
 from .south_america_soybean import SouthAmericaSoybean
 from .spacenet import (
