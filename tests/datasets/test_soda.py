@@ -15,6 +15,8 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import SODAA, DatasetNotFoundError
 
+pytest.importorskip('pyarrow')
+
 
 class TestSODAA:
     @pytest.fixture(
