@@ -11,6 +11,7 @@ from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
 from .bigearthnet import BigEarthNet, BigEarthNetV2
 from .biomassters import BioMassters
+from .bright import BRIGHTDFC2025
 from .cabuar import CaBuAr
 from .caffe import CaFFe
 from .cbf import CanadianBuildingFootprints
@@ -37,6 +38,7 @@ from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
 from .eddmaps import EDDMapS
+from .enmap import EnMAP
 from .enviroatlas import EnviroAtlas
 from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
 from .esri2020 import Esri2020
@@ -152,6 +154,7 @@ from .zuericrop import ZueriCrop
 
 __all__ = (
     'ADVANCE',
+    'BRIGHTDFC2025',
     'CDL',
     'COWC',
     'DFC2022',
@@ -208,6 +211,7 @@ __all__ = (
     'DependencyNotFoundError',
     'DigitalTyphoon',
     'EDDMapS',
+    'EnMAP',
     'EnviroAtlas',
     'Esri2020',
     'EuroCrops',

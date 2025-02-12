@@ -507,10 +507,9 @@ class BigEarthNet(NonGeoDataset):
             filename: output filename to write downloaded file
             md5: md5 of downloaded file
         """
-        if not os.path.exists(filename):
-            download_url(
-                url, self.root, filename=filename, md5=md5 if self.checksum else None
-            )
+        download_url(
+            url, self.root, filename=filename, md5=md5 if self.checksum else None
+        )
 
     def _extract(self, filepath: Path) -> None:
         """Extract the dataset.

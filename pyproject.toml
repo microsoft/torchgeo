@@ -32,6 +32,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: GIS",
 ]
@@ -144,9 +145,6 @@ exclude_also = [
 ]
 show_missing = true
 
-[tool.coverage.run]
-source_pkgs = ["torchgeo"]
-
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
 # Import discovery
@@ -250,6 +248,8 @@ filterwarnings = [
     # https://github.com/pytorch/pytorch/issues/136264
     "ignore:__array__ implementation doesn't accept a copy keyword:DeprecationWarning",
     "ignore:__array_wrap__ must accept context and return_scalar arguments:DeprecationWarning",
+    # https://github.com/pydantic/pydantic/pull/11377
+    "ignore:Failing to pass a value to the 'type_params' parameter of 'typing.*' is deprecated:DeprecationWarning:pydantic",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS

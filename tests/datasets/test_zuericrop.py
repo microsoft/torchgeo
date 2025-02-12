@@ -29,7 +29,7 @@ class TestZueriCrop:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
-        assert isinstance(x['boxes'], torch.Tensor)
+        assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
 
         # Image tests
@@ -40,8 +40,8 @@ class TestZueriCrop:
         assert x['mask'].shape[-2:] == x['image'].shape[-2:]
 
         # Bboxes tests
-        assert x['boxes'].ndim == 2
-        assert x['boxes'].shape[1] == 4
+        assert x['bbox_xyxy'].ndim == 2
+        assert x['bbox_xyxy'].shape[1] == 4
 
         # Labels tests
         assert x['label'].ndim == 1
