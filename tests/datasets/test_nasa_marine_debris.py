@@ -28,9 +28,9 @@ class TestNASAMarineDebris:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
-        assert isinstance(x['boxes'], torch.Tensor)
+        assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert x['image'].shape[0] == 3
-        assert x['boxes'].shape[-1] == 4
+        assert x['bbox_xyxy'].shape[-1] == 4
 
     def test_len(self, dataset: NASAMarineDebris) -> None:
         assert len(dataset) == 5
@@ -50,6 +50,6 @@ class TestNASAMarineDebris:
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        x['prediction_boxes'] = x['boxes'].clone()
+        x['prediction_bbox_xyxy'] = x['bbox_xyxy'].clone()
         dataset.plot(x)
         plt.close()

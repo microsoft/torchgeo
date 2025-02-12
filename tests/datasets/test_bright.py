@@ -20,14 +20,12 @@ class TestBRIGHTDFC2025:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> BRIGHTDFC2025:
-        md5 = '7b0e24d45fb2d9a4f766196702586414'
-        monkeypatch.setattr(BRIGHTDFC2025, 'md5', md5)
         url = os.path.join('tests', 'data', 'bright', 'dfc25_track2_trainval.zip')
         monkeypatch.setattr(BRIGHTDFC2025, 'url', url)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return BRIGHTDFC2025(root, split, transforms, download=True, checksum=True)
+        return BRIGHTDFC2025(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: BRIGHTDFC2025) -> None:
         x = dataset[0]
