@@ -107,6 +107,6 @@ class TestWorldStrat:
 
     def test_pred_plot(self, dataset: WorldStrat) -> None:
         x = dataset[0]
-        x['prediction'] = x['image_hr_pan']
+        x['prediction'] = x['image_hr_rgbn']
         dataset.plot(x, suptitle='Test')
         plt.close()
