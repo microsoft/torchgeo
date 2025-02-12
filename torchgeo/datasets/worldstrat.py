@@ -33,7 +33,7 @@ from .utils import (
 class WorldStrat(NonGeoDataset):
     """WorldStrat dataset.
 
-    The `WorldStrat <https://worldstrat.github.io/>`_ dataset is a multi-modal dataset covering nearly 10,000km2 of matched high and low resolution
+    The `WorldStrat <https://worldstrat.github.io/>`__ dataset is a multi-modal dataset covering nearly 10,000km2 of matched high and low resolution
     satellite imagery across the globe. High-resolution SPOT 6/7 imagery comes at a resolution of 1.5m/pixel and is matched with a time-series
     of Sentinel 2 data.
 
@@ -48,8 +48,8 @@ class WorldStrat(NonGeoDataset):
 
     * pixel dimensions vary across AOI tiles
     * all modalities are 'tif' files except for 'hr_rgbn' which is 'png'
-    * 'hr_ps', 'hr_pan', 'hr_rgbn' are high resolution data of pixel dimension
-    * 'lr_rgbn' is low resolution data of pixel dimension and roughly 4x lower resolution than 'hr_rgbn'
+    * 'hr_ps', 'hr_pan', 'hr_rgbn' are high resolution data
+    * 'lr_rgbn' is low resolution data and roughly 4x lower resolution than 'hr_rgbn'
     * 'l1c' and 'l2a' are Sentinel-2 data with 13 and 12 bands respectively and roughly 8x lower resolution than 'hr_rgbn'
 
     If you use this dataset in your research, please cite the following entries:
@@ -326,9 +326,7 @@ class WorldStrat(NonGeoDataset):
         n_panels = len([k for k in sample.keys() if k.startswith('image_')])
         n_panels += 'prediction' in sample
 
-        fig, axs = plt.subplots(1, n_panels, figsize=(5 * n_panels, 5))
-        if n_panels == 1:
-            axs = [axs]
+        fig, axs = plt.subplots(1, n_panels, figsize=(5 * n_panels, 5), squeeze=False)
 
         for panel, modality in enumerate(self.modalities):
             key = f'image_{modality}'
@@ -350,16 +348,19 @@ class WorldStrat(NonGeoDataset):
                 if img.ndim == 3:
                     img = img.transpose(1, 2, 0)
 
-                axs[panel].imshow(img)
-                axs[panel].axis('off')
+                axs[0, panel].imshow(img)
+                axs[0, panel].axis('off')
                 if show_titles:
-                    axs[panel].set_title(self.modality_titles[modality])
+                    axs[0, panel].set_title(self.modality_titles[modality])
 
         if 'prediction' in sample:
-            axs[-1].imshow(sample['prediction'])
-            axs[-1].axis('off')
+            pred = sample['prediction'].numpy().transpose(1, 2, 0)
+            if pred.shape[-1] == 4:
+                pred = pred[..., :3]
+            axs[0, -1].imshow(pred)
+            axs[0, -1].axis('off')
             if show_titles:
-                axs[-1].set_title('Prediction')
+                axs[0, -1].set_title('Prediction')
 
         if suptitle:
             fig.suptitle(suptitle)
