@@ -50,7 +50,7 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
             int(bndbox.find('xmax').text),  # type: ignore[union-attr, arg-type]
             int(bndbox.find('ymax').text),  # type: ignore[union-attr, arg-type]
         ]
-        label = obj.find('name').text  # type: ignore[union-attr, arg-type]
+        label = obj.find('name').text  # type: ignore[union-attr]
         bboxes.append(bbox)
         labels.append(label)
 
