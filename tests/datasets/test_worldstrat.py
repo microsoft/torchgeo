@@ -26,22 +26,22 @@ class TestWorldStrat:
             'hr_dataset': {
                 'url': os.path.join(url, 'hr_dataset.tar.gz'),
                 'filename': 'hr_dataset.tar.gz',
-                'md5': '13573e74b9c593b2d09575866bff481d',
+                'md5': 'e395f3357c6d97e5fee1baaffcaa31bd',
             },
             'lr_dataset_l1c': {
                 'url': os.path.join(url, 'lr_dataset_l1c.tar.gz'),
                 'filename': 'lr_dataset_l1c.tar.gz',
-                'md5': '2611e80e77f409660e6b7ae30e200fe5',
+                'md5': '24db4553ea14b8c8253c13c297d6c862',
             },
             'lr_dataset_l2a': {
                 'url': os.path.join(url, 'lr_dataset_l2a.tar.gz'),
                 'filename': 'lr_dataset_l2a.tar.gz',
-                'md5': 'ab87ceb923733c8993d5e51dbeaacf36',
+                'md5': 'a4237eb6fb6a96ef3f52a4e9bf6ee754',
             },
             'metadata': {
                 'url': os.path.join(url, 'metadata.csv'),
                 'filename': 'metadata.csv',
-                'md5': '0aa4e1fe5bb7d787ee55bf4037e48d4c',
+                'md5': '6d2ced33b6dc2c25a5c067d34d2c1738',
             },
             'train_val_test_split': {
                 'url': os.path.join(url, 'stratified_train_val_test_split.csv'),

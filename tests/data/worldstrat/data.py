@@ -48,6 +48,8 @@ def create_dummy_worldstrat(root: str, img_size: int = 64) -> None:
                 width=img_size,
                 count=4,
                 dtype=np.uint16,
+                transform=rasterio.Affine(1.0, 0, 0, 0, 1.0, 0),
+                crs=rasterio.crs.CRS.from_epsg(4326),
             ) as dst:
                 dst.write(hr_ps)
 
@@ -60,6 +62,8 @@ def create_dummy_worldstrat(root: str, img_size: int = 64) -> None:
                 width=img_size,
                 count=1,
                 dtype=np.uint16,
+                transform=rasterio.Affine(1.0, 0, 0, 0, 1.0, 0),
+                crs=rasterio.crs.CRS.from_epsg(4326),
             ) as dst:
                 dst.write(hr_pan)
 
@@ -82,6 +86,8 @@ def create_dummy_worldstrat(root: str, img_size: int = 64) -> None:
                 width=img_size // 8,
                 count=4,
                 dtype=np.uint16,
+                transform=rasterio.Affine(1.0, 0, 0, 0, 1.0, 0),
+                crs=rasterio.crs.CRS.from_epsg(4326),
             ) as dst:
                 dst.write(lr_rgbn)
 
@@ -101,6 +107,15 @@ def create_dummy_worldstrat(root: str, img_size: int = 64) -> None:
                     width=img_size // 8,
                     count=13,
                     dtype=np.uint16,
+                    transform=rasterio.Affine(
+                        9.553533791820828e-05,
+                        0.0,
+                        92.38122406971227,
+                        0.0,
+                        -9.096299266268611e-05,
+                        20.83381094772868,
+                    ),
+                    crs=rasterio.crs.CRS.from_epsg(4326),
                 ) as dst:
                     dst.write(l1c)
 
@@ -116,6 +131,15 @@ def create_dummy_worldstrat(root: str, img_size: int = 64) -> None:
                     width=img_size // 8,
                     count=12,
                     dtype=np.uint16,
+                    transform=rasterio.Affine(
+                        9.553533791820828e-05,
+                        0.0,
+                        92.38122406971227,
+                        0.0,
+                        -9.096299266268611e-05,
+                        20.83381094772868,
+                    ),
+                    crs=rasterio.crs.CRS.from_epsg(4326),
                 ) as dst:
                     dst.write(l2a)
 

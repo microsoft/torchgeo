@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import rasterio
 import torch
+from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
 
@@ -32,7 +33,7 @@ from .utils import (
 class WorldStrat(NonGeoDataset):
     """WorldStrat dataset.
 
-    The WorldStrat dataset is a multi-modal dataset covering nearly 10,000km2 of matched high and low resolution
+    The `WorldStrat <https://worldstrat.github.io/>`_ dataset is a multi-modal dataset covering nearly 10,000km2 of matched high and low resolution
     satellite imagery across the globe. High-resolution SPOT 6/7 imagery comes at a resolution of 1.5m/pixel and is matched with a time-series
     of Sentinel 2 data.
 
@@ -56,7 +57,7 @@ class WorldStrat(NonGeoDataset):
     * https://zenodo.org/records/6810792
     * https://arxiv.org/abs/2207.06418
 
-    .. version_added:: 0.7
+    .. versionadded:: 0.7
     """
 
     modality_titles: ClassVar[dict[str, str]] = {
@@ -170,7 +171,7 @@ class WorldStrat(NonGeoDataset):
 
         sample: dict[str, Tensor] = {}
 
-        modality_loaders = {
+        modality_loaders: dict[str, Callable[[], Tensor]] = {
             'l1c': lambda: self._load_sentinel_data(os.path.join(data_dir, 'L1C')),
             'l2a': lambda: self._load_sentinel_data(os.path.join(data_dir, 'L2A')),
             'lr_rgbn': lambda: self._load_tiff(
@@ -214,7 +215,7 @@ class WorldStrat(NonGeoDataset):
                 this is either the L1C or L2A directory with time-series.
 
         Returns:
-            Loaded Sentinel data stacked as tensor so [T, C, H, W].
+            Loaded Sentinel data stacked as tensor of shape [T, C, H, W].
         """
         tiff_paths = glob(
             os.path.join(data_dir, f'*{os.path.basename(data_dir)}_data.tiff'),
@@ -290,7 +291,6 @@ class WorldStrat(NonGeoDataset):
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
-        # TODO: implement download
         for _, metadata in self.file_info_dict.items():
             if 'tar.gz' in metadata['filename']:
                 download_and_extract_archive(
@@ -312,8 +312,17 @@ class WorldStrat(NonGeoDataset):
         sample: dict[str, Tensor],
         show_titles: bool = True,
         suptitle: str | None = None,
-    ) -> plt.Figure:
-        """Plot a sample from the dataset."""
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
         n_panels = len([k for k in sample.keys() if k.startswith('image_')])
         n_panels += 'prediction' in sample
 
@@ -324,7 +333,7 @@ class WorldStrat(NonGeoDataset):
         for panel, modality in enumerate(self.modalities):
             key = f'image_{modality}'
             if key in sample:
-                img = sample[key]
+                img = sample[key].numpy()
 
                 # Select and normalize image data
                 if modality in ['hr_ps', 'hr_pan']:
@@ -339,7 +348,7 @@ class WorldStrat(NonGeoDataset):
 
                 # Handle channel ordering
                 if img.ndim == 3:
-                    img = img.permute(1, 2, 0)
+                    img = img.transpose(1, 2, 0)
 
                 axs[panel].imshow(img)
                 axs[panel].axis('off')
