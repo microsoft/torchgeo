@@ -591,7 +591,7 @@ class BigEarthNetV2(NonGeoDataset):
 
     The `BigEarthNet V2 <https://bigearth.net/>`__ dataset contains improved labels, improved
     geospatial data splits and additionally pixel-level labels from CORINE Land
-    Cover (CLC) map of 2018. Additionally, some probelmatic patches from V1 have been removed.
+    Cover (CLC) map of 2018. Additionally, some problematic patches from V1 have been removed.
 
     .. note::
 
