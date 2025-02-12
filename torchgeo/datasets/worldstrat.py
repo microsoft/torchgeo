@@ -33,7 +33,7 @@ from .utils import (
 class WorldStrat(NonGeoDataset):
     """WorldStrat dataset.
 
-    The `WorldStrat <https://worldstrat.github.io/>`__ dataset is a multi-modal dataset covering nearly 10,000km2 of matched high and low resolution
+    `WorldStrat <https://worldstrat.github.io/>`_ is a multi-modal dataset covering nearly 10,000km2 of matched high and low resolution
     satellite imagery across the globe. High-resolution SPOT 6/7 imagery comes at a resolution of 1.5m/pixel and is matched with a time-series
     of Sentinel 2 data.
 
