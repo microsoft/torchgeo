@@ -7,10 +7,10 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch
-from torch import Tensor
 from torch.utils.data import random_split
 
 from ..datasets import TreeSatAI
+from ..datasets.utils import Sample
 from ..samplers.utils import _to_tuple
 from .geo import NonGeoDataModule
 
@@ -117,9 +117,7 @@ class TreeSatAIDataModule(NonGeoDataModule):
             generator=generator,
         )
 
-    def on_after_batch_transfer(
-        self, batch: dict[str, Tensor], dataloader_idx: int
-    ) -> dict[str, Tensor]:
+    def on_after_batch_transfer(self, batch: Sample, dataloader_idx: int) -> Sample:
         """Apply batch augmentations to the batch after it is transferred to the device.
 
         Args:

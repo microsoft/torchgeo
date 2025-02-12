@@ -14,12 +14,11 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from PIL import Image
-from torch import Tensor
 from torchvision import transforms
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive, extract_archive
+from .utils import Path, Sample, download_and_extract_archive, extract_archive
 
 
 class GeoNRW(NonGeoDataset):
@@ -166,7 +165,7 @@ class GeoNRW(NonGeoDataset):
         self,
         root: Path = 'data',
         split: str = 'train',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -218,7 +217,7 @@ class GeoNRW(NonGeoDataset):
         """
         return len(self.file_list)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> Sample:
         """Return an index within the dataset.
 
         Args:
@@ -233,7 +232,7 @@ class GeoNRW(NonGeoDataset):
         utm_coords = os.path.basename(path).split('_')[:2]
         base_dir = os.path.dirname(path)
 
-        sample: dict[str, Tensor] = {}
+        sample: Sample = {}
         for modality in self.modalities:
             modality_path = os.path.join(
                 base_dir, self.modality_filenames[modality](utm_coords)
@@ -279,10 +278,7 @@ class GeoNRW(NonGeoDataset):
         )
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive, extract_archive
+from .utils import Path, Sample, download_and_extract_archive, extract_archive
 
 
 class MDAS(NonGeoDataset):
@@ -141,7 +141,7 @@ class MDAS(NonGeoDataset):
         root: Path = 'data',
         subareas: list[str] = ['sub_area_1'],
         modalities: list[str] = ['3K_RGB', 'HySpex', 'Sentinel_2'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
     ) -> None:
@@ -232,7 +232,7 @@ class MDAS(NonGeoDataset):
 
             return torch.from_numpy(img)
 
-    def __getitem__(self, idx: int) -> dict[str, Tensor]:
+    def __getitem__(self, idx: int) -> Sample:
         """Return the dataset sample at the given index.
 
         Args:
@@ -242,7 +242,7 @@ class MDAS(NonGeoDataset):
             a dictionary containing the data of chosen modalities
         """
         sample_files = self.files[idx]
-        sample: dict[str, Any] = {}
+        sample: Sample = {}
         for modality, path in sample_files.items():
             if 'osm' in modality:
                 sample[f'{modality}_mask'] = self._load_image(path).long()
@@ -297,10 +297,7 @@ class MDAS(NonGeoDataset):
         )
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

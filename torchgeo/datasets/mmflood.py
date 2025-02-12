@@ -15,11 +15,10 @@ import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
-from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import BoundingBox, Path, download_url, extract_archive
+from .utils import BoundingBox, Path, Sample, download_url, extract_archive
 
 
 class MMFloodComponent(RasterDataset):
@@ -32,7 +31,7 @@ class MMFloodComponent(RasterDataset):
         root: Path = 'data',
         crs: CRS | None = None,
         res: float | None = None,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = False,
     ) -> None:
         """Initialize MMFloodComponent dataset instance.
@@ -149,7 +148,7 @@ class MMFlood(IntersectionDataset):
         split: str = 'train',
         include_dem: bool = False,
         include_hydro: bool = False,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         download: bool = False,
         checksum: bool = False,
         cache: bool = False,
@@ -227,7 +226,7 @@ class MMFlood(IntersectionDataset):
                 with open(part_path, 'rb') as part_fp:
                     dst_fp.write(part_fp.read())
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Tensor]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -295,10 +294,7 @@ class MMFlood(IntersectionDataset):
         self._extract()
 
     def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

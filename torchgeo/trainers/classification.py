@@ -4,7 +4,6 @@
 """Trainers for image classification."""
 
 import os
-from typing import Any
 
 import matplotlib.pyplot as plt
 import timm
@@ -24,6 +23,7 @@ from torchmetrics.classification import (
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
 from ..models import get_weight
 from . import utils
 from .base import BaseTask
@@ -164,7 +164,7 @@ class ClassificationTask(BaseTask):
         self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss and additional metrics.
 
@@ -188,7 +188,7 @@ class ClassificationTask(BaseTask):
         return loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Compute the validation loss and additional metrics.
 
@@ -233,7 +233,7 @@ class ClassificationTask(BaseTask):
                 )
                 plt.close()
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
 
         Args:
@@ -251,7 +251,7 @@ class ClassificationTask(BaseTask):
         self.log_dict(self.test_metrics, batch_size=batch_size)
 
     def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the predicted class probabilities.
 
@@ -306,7 +306,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss and additional metrics.
 
@@ -331,7 +331,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         return loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Compute the validation loss and additional metrics.
 
@@ -376,7 +376,7 @@ class MultiLabelClassificationTask(ClassificationTask):
                     f'image/{batch_idx}', fig, global_step=self.global_step
                 )
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test loss and additional metrics.
 
         Args:
@@ -395,7 +395,7 @@ class MultiLabelClassificationTask(ClassificationTask):
         self.log_dict(self.test_metrics, batch_size=batch_size)
 
     def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the predicted class probabilities.
 

@@ -3,7 +3,6 @@
 
 from collections.abc import Sequence
 from math import floor, isclose
-from typing import Any
 
 import pytest
 from rasterio.crs import CRS
@@ -17,6 +16,7 @@ from torchgeo.datasets import (
     roi_split,
     time_series_split,
 )
+from torchgeo.datasets.utils import Sample
 
 
 def total_area(dataset: GeoDataset) -> float:
@@ -49,7 +49,7 @@ class CustomGeoDataset(GeoDataset):
         self._crs = crs
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         hits = self.index.intersection(tuple(query), objects=True)
         hit = next(iter(hits))
         return {'content': hit.object}

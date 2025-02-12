@@ -4,7 +4,6 @@
 """Aster Global Digital Elevation Model dataset."""
 
 from collections.abc import Callable
-from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -12,7 +11,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
-from .utils import Path
+from .utils import Path, Sample
 
 
 class AsterGDEM(RasterDataset):
@@ -51,7 +50,7 @@ class AsterGDEM(RasterDataset):
         paths: Path | list[Path] = 'data',
         crs: CRS | None = None,
         res: float | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -88,10 +87,7 @@ class AsterGDEM(RasterDataset):
         raise DatasetNotFoundError(self)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

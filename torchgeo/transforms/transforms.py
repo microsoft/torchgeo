@@ -3,8 +3,6 @@
 
 """TorchGeo transforms."""
 
-from typing import Any
-
 import kornia.augmentation as K
 import torch
 from einops import rearrange
@@ -32,7 +30,7 @@ class _RandomNCrop(K.GeometricAugmentationBase2D):
         self.flags = {'size': size, 'num': num}
 
     def compute_transformation(
-        self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Any]
+        self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Tensor]
     ) -> Tensor:
         """Compute the transformation.
 
@@ -51,7 +49,7 @@ class _RandomNCrop(K.GeometricAugmentationBase2D):
         self,
         input: Tensor,
         params: dict[str, Tensor],
-        flags: dict[str, Any],
+        flags: dict[str, Tensor],
         transform: Tensor | None = None,
     ) -> Tensor:
         """Apply the transform.
@@ -135,7 +133,7 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
         }
 
     def compute_transformation(
-        self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Any]
+        self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Tensor]
     ) -> Tensor:
         """Compute the transformation.
 
@@ -154,7 +152,7 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
         self,
         input: Tensor,
         params: dict[str, Tensor],
-        flags: dict[str, Any],
+        flags: dict[str, Tensor],
         transform: Tensor | None = None,
     ) -> Tensor:
         """Apply the transform.
@@ -215,7 +213,7 @@ class _Clamp(K.IntensityAugmentationBase2D):
         self,
         input: Tensor,
         params: dict[str, Tensor],
-        flags: dict[str, Any],
+        flags: dict[str, Tensor],
         transform: Tensor | None = None,
     ) -> Tensor:
         """Apply the transform.

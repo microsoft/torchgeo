@@ -5,7 +5,6 @@
 
 import abc
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
@@ -13,7 +12,7 @@ from rasterio.crs import CRS
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import Path
+from .utils import Path, Sample
 
 
 class Landsat(RasterDataset, abc.ABC):
@@ -64,7 +63,7 @@ class Landsat(RasterDataset, abc.ABC):
         crs: CRS | None = None,
         res: float | None = None,
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -92,10 +91,7 @@ class Landsat(RasterDataset, abc.ABC):
         super().__init__(paths, crs, res, bands, transforms, cache)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

@@ -4,7 +4,6 @@
 """Trainers for object detection."""
 
 from functools import partial
-from typing import Any
 
 import matplotlib.pyplot as plt
 import torch
@@ -20,6 +19,7 @@ from torchvision.models.detection.rpn import AnchorGenerator
 from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
 from ..datasets import RGBBandsMissingError, unbind_samples
+from ..datasets.utils import Sample
 from .base import BaseTask
 
 BACKBONE_LAT_DIM_MAP = {
@@ -224,7 +224,7 @@ class ObjectDetectionTask(BaseTask):
         self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """Compute the training loss.
 
@@ -249,7 +249,7 @@ class ObjectDetectionTask(BaseTask):
         return train_loss
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """Compute the validation metrics.
 
@@ -305,7 +305,7 @@ class ObjectDetectionTask(BaseTask):
                 )
                 plt.close()
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """Compute the test metrics.
 
         Args:
@@ -329,7 +329,7 @@ class ObjectDetectionTask(BaseTask):
         self.log_dict(metrics, batch_size=batch_size)
 
     def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> list[dict[str, Tensor]]:
         """Compute the predicted bounding boxes.
 

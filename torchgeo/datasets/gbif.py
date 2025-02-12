@@ -7,7 +7,6 @@ import glob
 import os
 import sys
 from datetime import datetime, timedelta
-from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -15,7 +14,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, Path
+from .utils import BoundingBox, Path, Sample
 
 
 def _disambiguate_timestamps(
@@ -117,7 +116,7 @@ class GBIF(GeoDataset):
             self.index.insert(i, coords)
             i += 1
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Retrieve metadata indexed by query.
 
         Args:

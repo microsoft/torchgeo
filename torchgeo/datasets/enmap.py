@@ -4,7 +4,7 @@
 """EnMAP dataset."""
 
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar
+from typing import ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,7 +14,7 @@ from rasterio.crs import CRS
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import Path, percentile_normalization
+from .utils import Path, Sample, percentile_normalization
 
 ALL_BANDS = list(range(1, 225))
 # Remove bands strongly affected by water vapor absorption due to presence of nodata:
@@ -303,7 +303,7 @@ class EnMAP(RasterDataset):
         crs: CRS | None = None,
         res: float | None = None,
         bands: Sequence[str] | None = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         cache: bool = True,
     ) -> None:
         """Initialize a new EnMAP instance.
@@ -325,7 +325,7 @@ class EnMAP(RasterDataset):
         bands = bands or self.default_bands
         super().__init__(paths, crs, res, bands, transforms, cache)
 
-    def plot(self, sample: dict[str, Any], suptitle: str | None = None) -> Figure:
+    def plot(self, sample: Sample, suptitle: str | None = None) -> Figure:
         """Plot a sample from the dataset.
 
         Args:

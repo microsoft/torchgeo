@@ -24,7 +24,7 @@ from rtree.index import Index, Property
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import BoundingBox, Path, check_integrity
+from .utils import BoundingBox, Path, Sample, check_integrity
 
 
 class OpenBuildings(VectorDataset):
@@ -210,7 +210,7 @@ class OpenBuildings(VectorDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         res: float = 0.0001,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
@@ -290,7 +290,7 @@ class OpenBuildings(VectorDataset):
         self._crs = crs
         self._source_crs = source_crs
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -412,10 +412,7 @@ class OpenBuildings(VectorDataset):
         raise DatasetNotFoundError(self)
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

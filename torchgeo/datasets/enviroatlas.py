@@ -6,7 +6,7 @@
 import os
 import sys
 from collections.abc import Callable, Sequence
-from typing import Any, ClassVar, cast
+from typing import ClassVar, cast
 
 import fiona
 import matplotlib.pyplot as plt
@@ -23,7 +23,7 @@ from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, Path, download_url, extract_archive
+from .utils import BoundingBox, Path, Sample, download_url, extract_archive
 
 
 class EnviroAtlas(GeoDataset):
@@ -257,7 +257,7 @@ class EnviroAtlas(GeoDataset):
         root: Path = 'data',
         splits: Sequence[str] = ['pittsburgh_pa-2010_1m-train'],
         layers: Sequence[str] = ['naip', 'prior'],
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
         prior_as_input: bool = False,
         cache: bool = True,
         download: bool = False,
@@ -333,7 +333,7 @@ class EnviroAtlas(GeoDataset):
                         },
                     )
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: BoundingBox) -> Sample:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -444,10 +444,7 @@ class EnviroAtlas(GeoDataset):
         extract_archive(os.path.join(self.root, self.filename))
 
     def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
+        self, sample: Sample, show_titles: bool = True, suptitle: str | None = None
     ) -> Figure:
         """Plot a sample from the dataset.
 

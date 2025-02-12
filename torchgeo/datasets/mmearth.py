@@ -15,7 +15,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, lazy_import
+from .utils import Path, Sample, lazy_import
 
 
 class MMEarth(NonGeoDataset):
@@ -187,7 +187,7 @@ class MMEarth(NonGeoDataset):
         modalities: Sequence[str] = all_modalities,
         modality_bands: dict[str, list[str]] | None = None,
         normalization_mode: str = 'z-score',
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        transforms: Callable[[Sample], Sample] | None = None,
     ) -> None:
         """Initialize the MMEarth dataset.
 
@@ -338,7 +338,7 @@ class MMEarth(NonGeoDataset):
                         f"'{val}' is an invalid band name for modality '{key}'."
                     )
 
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> Sample:
         """Return a sample from the dataset.
 
         Normalization is applied to the data with chosen ``normalization_mode``.
@@ -431,7 +431,7 @@ class MMEarth(NonGeoDataset):
             of the sample
         """
         h5py = lazy_import('h5py')
-        sample: dict[str, Any] = {}
+        sample: Sample = {}
         with h5py.File(
             os.path.join(self.root, self.filenames[self.subset], self.dataset_filename),
             'r',

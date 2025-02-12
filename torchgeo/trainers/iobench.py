@@ -3,13 +3,12 @@
 
 """Trainers for I/O benchmarking."""
 
-from typing import Any
-
 import lightning
 import torch
 from torch import Tensor
 from torch.optim import SGD
 
+from ..datasets.utils import Sample
 from .base import BaseTask
 
 
@@ -34,7 +33,7 @@ class IOBenchTask(BaseTask):
         return {'optimizer': optimizer}
 
     def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         """No-op.
 
@@ -49,7 +48,7 @@ class IOBenchTask(BaseTask):
         return torch.tensor(0.0, requires_grad=True)
 
     def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
         """No-op.
 
@@ -59,7 +58,7 @@ class IOBenchTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
         """
 
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def test_step(self, batch: Sample, batch_idx: int, dataloader_idx: int = 0) -> None:
         """No-op.
 
         Args:
@@ -68,7 +67,9 @@ class IOBenchTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
         """
 
-    def predict_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+    def predict_step(
+        self, batch: Sample, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
         """No-op.
 
         Args:
