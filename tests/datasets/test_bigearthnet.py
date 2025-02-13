@@ -24,7 +24,7 @@ class TestBigEarthNet:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> BigEarthNet:
-        data_dir = os.path.join('tests', 'data', 'bigearthnet')
+        data_dir = os.path.join('tests', 'data', 'bigearthnet', 'v1')
         metadata = {
             's1': {
                 'url': os.path.join(data_dir, 'BigEarthNet-S1-v1.0.tar.gz'),
@@ -149,29 +149,29 @@ class TestBigEarthNetV2:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> BigEarthNetV2:
-        data_dir = os.path.join('tests', 'data', 'bigearthnetV2')
+        url = os.path.join('tests', 'data', 'bigearthnet', 'v2', '{}')
+        monkeypatch.setattr(BigEarthNetV2, 'url', url)
         metadata = {
             's1': {
-                'url': os.path.join(data_dir, 'BigEarthNet-S1.tar.zst'),
-                'md5': '7c40abec6662bf1df4335e92a9caf5ab',
-                'filename': 'BigEarthNet-S1.tar.zst',
+                'files': {
+                    'BigEarthNet-S1.tar.gzaa': 'a55eaa2cdf6a',
+                    'BigEarthNet-S1.tar.gzab': '917e296bd66',
+                },
                 'directory': 'BigEarthNet-S1',
             },
             's2': {
-                'url': os.path.join(data_dir, 'BigEarthNet-S2.tar.zst'),
-                'md5': '9a699ac4a8aade77ce53d35e198ba2d0',
-                'filename': 'BigEarthNet-S2.tar.zst',
+                'files': {
+                    'BigEarthNet-S2.tar.gzaa': 'a55eaa2cdf6a',
+                    'BigEarthNet-S2.tar.gzab': '917e296bd66',
+                },
                 'directory': 'BigEarthNet-S2',
             },
             'maps': {
-                'url': os.path.join(data_dir, 'Reference_Maps.tar.zst'),
-                'md5': '1e4b2fdfb954594aa9465f4496defea6',
-                'filename': 'Reference_Maps.tar.zst',
+                'files': {'Reference_Maps.tar.gzaa': 'a55eaa2cdf6a'},
                 'directory': 'Reference_Maps',
             },
             'metadata': {
-                'url': os.path.join(data_dir, 'metadata.parquet'),
-                'md5': 'ad100d6b020f2e693673f77ebbe57891',
+                'files': {'metadata.parquet': 'ad100d6b020f2e693673f77ebbe57891'},
                 'filename': 'metadata.parquet',
             },
         }

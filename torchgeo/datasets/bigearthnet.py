@@ -6,8 +6,6 @@
 import glob
 import json
 import os
-import tarfile
-import tempfile
 import textwrap
 from collections.abc import Callable
 from typing import ClassVar
@@ -606,30 +604,30 @@ class BigEarthNetV2(NonGeoDataset):
 
     image_size = BigEarthNet.image_size
 
-    metadata_locs: ClassVar[dict[str, dict[str, str]]] = {
+    url = 'https://hf.co/datasets/torchgeo/bigearthnet/resolve/3cf3a5910a5302d449fdb8e570e5b78de24fe07f/V2/{}'
+
+    metadata_locs: ClassVar[dict[str, dict[str, str | dict[str, str]]]] = {
         's1': {
-            'url': 'https://zenodo.org/records/10891137/files/BigEarthNet-S1.tar.zst',
-            'md5': 'a55eaa2cdf6a917e296bd6601ec1e348',
-            'filename': 'BigEarthNet-S1.tar.zst',
+            'files': {
+                'BigEarthNet-S1.tar.gzaa': 'a55eaa2cdf6a',
+                'BigEarthNet-S1.tar.gzab': '917e296bd66',
+            },
             'directory': 'BigEarthNet-S1',
         },
         's2': {
-            'url': 'https://zenodo.org/records/10891137/files/BigEarthNet-S2.tar.zst',
-            'md5': '2245ed2d1a93f6ce637d839bc856396e',
-            'filename': 'BigEarthNet-S2.tar.zst',
+            'files': {
+                'BigEarthNet-S2.tar.gzaa': 'a55eaa2cdf6a',
+                'BigEarthNet-S2.tar.gzab': '917e296bd66',
+            },
             'directory': 'BigEarthNet-S2',
         },
         'maps': {
-            'url': 'https://zenodo.org/records/10891137/files/Reference_Maps.tar.zst',
-            'md5': '95d85a222fa983faddcac51a19f28917',
-            'filename': 'Reference_Maps.zst',
+            'files': {'Reference_Maps.tar.gzaa': 'a55eaa2cdf6a'},
             'directory': 'Reference_Maps',
         },
         'metadata': {
-            'url': 'https://zenodo.org/records/10891137/files/metadata.parquet',
-            'md5': 'b2d7b4b2e6c7c7d8f3f5b8f3c5a8f3b1',
+            'files': {'metadata.parquet': 'b2d7b4b2e6c7'},
             'filename': 'metadata.parquet',
-            'directory': '',
         },
     }
 
@@ -887,12 +885,18 @@ class BigEarthNetV2(NonGeoDataset):
         # check if compressed files already exist
         exists = []
         for key, metadata in self.metadata_locs.items():
-            if os.path.exists(os.path.join(self.root, metadata['filename'])):
-                exists.append(True)
-                if key != 'metadata':
-                    self._extract(os.path.join(self.root, metadata['filename']))
+            if key == 'metadata':
+                if os.path.exists(os.path.join(self.root, metadata['filename'])):
+                    exists.append(True)
+                else:
+                    exists.append(False)
             else:
-                exists.append(False)
+                for fname in metadata['files']:
+                    fpath = os.path.join(self.root, fname)
+                    if os.path.exists(fpath):
+                        exists.append(True)
+                    else:
+                        exists.append(False)
 
         if all(exists):
             return
@@ -900,41 +904,37 @@ class BigEarthNetV2(NonGeoDataset):
         if not self.download:
             raise DatasetNotFoundError(self)
 
-        for key, metadata in self.metadata_locs.items():
-            self._download(metadata['url'], metadata['filename'], metadata['md5'])
-            filepath = os.path.join(self.root, metadata['filename'])
-            if key != 'metadata':
-                self._extract(filepath)
+        self._download()
+        self._extract()
 
-    def _download(self, url: str, filename: Path, md5: str) -> None:
-        """Download the dataset.
+    def _download(self) -> None:
+        """Download the required tarball parts using the URL template and md5 sums."""
+        for key, meta in self.metadata_locs.items():
+            if key == 'metadata':
+                continue
+            for fname, md5 in meta['files'].items():
+                target_path = os.path.join(self.root, fname)
+                if not os.path.exists(target_path):
+                    download_url(self.url.format(fname), target_path, md5)
 
-        Args:
-            url: url to download file
-            filename: output filename to write downloaded file
-            md5: md5 of downloaded file
+    def _extract(self) -> None:
+        """Extract the tarball parts.
+
+        For each modality (s1, s2, maps), its parts are concatenated together and then extracted.
         """
-        if not os.path.exists(os.path.join(self.root, filename)):
-            download_url(
-                url, self.root, filename=filename, md5=md5 if self.checksum else None
-            )
-
-    def _extract(self, filepath: Path) -> None:
-        """Extract the dataset.
-
-        Args:
-            filepath: path to file to be extracted
-        """
-        zstandard = lazy_import('zstandard')
-        if not str(filepath).endswith('.csv'):
-            dctx = zstandard.ZstdDecompressor()
-
-            with tempfile.TemporaryFile(suffix='.tar') as ofh:
-                with open(filepath, 'rb') as ifh:
-                    dctx.copy_stream(ifh, ofh)
-                ofh.seek(0)
-                with tarfile.open(fileobj=ofh) as z:
-                    z.extractall(self.root)
+        chunk_size = 2**15  # same as used in torchvision and ssl4eo
+        for key, meta in self.metadata_locs.items():
+            if key == 'metadata':
+                continue
+            file_parts = sorted(meta['files'].keys())
+            parts = [os.path.join(self.root, f) for f in file_parts]
+            concat_path = os.path.join(self.root, meta['directory'] + '.tar.gz')
+            with open(concat_path, 'wb') as outfile:
+                for part in parts:
+                    with open(part, 'rb') as g:
+                        while chunk := g.read(chunk_size):
+                            outfile.write(chunk)
+            extract_archive(concat_path, self.root)
 
     def plot(
         self,
