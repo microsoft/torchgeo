@@ -915,7 +915,7 @@ class BigEarthNetV2(NonGeoDataset):
             for fname, md5 in meta['files'].items():
                 target_path = os.path.join(self.root, fname)
                 if not os.path.exists(target_path):
-                    download_url(self.url.format(fname), target_path, md5)
+                    download_url(self.url.format(fname), self.root, md5)
 
     def _extract(self) -> None:
         """Extract the tarball parts.
