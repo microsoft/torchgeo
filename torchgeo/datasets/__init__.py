@@ -39,6 +39,7 @@ from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
 from .dl4gam import DL4GAMAlps
 from .eddmaps import EDDMapS
+from .enmap import EnMAP
 from .enviroatlas import EnviroAtlas
 from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
 from .esri2020 import Esri2020
@@ -211,6 +212,7 @@ __all__ = (
     'DependencyNotFoundError',
     'DigitalTyphoon',
     'EDDMapS',
+    'EnMAP',
     'EnviroAtlas',
     'Esri2020',
     'EuroCrops',
