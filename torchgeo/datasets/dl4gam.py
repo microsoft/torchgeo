@@ -92,21 +92,18 @@ class DL4GAMAlps(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    r_url = (
-        'https://huggingface.co/datasets/dcodrut/dl4gam_alps/resolve/'
-        '7d20ca8a2b30c5518e086ffaa5ce37e6a66c42c1/data'
-    )
+    url = 'https://huggingface.co/datasets/dcodrut/dl4gam_alps/resolve/7d20ca8a2b30c5518e086ffaa5ce37e6a66c42c1/data'
     download_metadata: ClassVar[dict[str, dict[str, str]]] = {
         'dataset_small': {
-            'url': f'{r_url}/patches/inv_r_128_s_128.tar.gz',
+            'url': f'{url}/patches/inv_r_128_s_128.tar.gz',
             'checksum': '3e69c47c6ff5106cd4ffaa6bb2caaaef',
         },
         'dataset_large': {
-            'url': f'{r_url}/patches/inv_r_128_s_64.tar.gz',
+            'url': f'{url}/patches/inv_r_128_s_64.tar.gz',
             'checksum': '06e85a6a9e3dc6b3cdb07f928e832bc8',
         },
         'splits_csv': {
-            'url': f'{r_url}/map_all_splits_all_folds.csv',
+            'url': f'{url}/map_all_splits_all_folds.csv',
             'checksum': '862355c5c3482271dd171d31c70551b3',
         },
     }
