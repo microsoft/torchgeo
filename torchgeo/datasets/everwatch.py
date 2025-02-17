@@ -83,7 +83,7 @@ class EverWatch(NonGeoDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new ReforesTree dataset instance.
+        """Initialize a new EverWatch dataset instance.
 
         Args:
             root: root directory where dataset can be found
