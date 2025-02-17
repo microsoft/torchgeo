@@ -61,7 +61,7 @@ class TestSODAA:
         assert x['image'].shape[0] == 3
         assert x['image'].ndim == 3
         if dataset.bbox_orientation == 'horizontal':
-            assert isinstance(x['boxes'], torch.Tensor)
+            assert isinstance(x['boxes_xyxy'], torch.Tensor)
         else:
             assert isinstance(x['boxes'], torch.Tensor)
 
