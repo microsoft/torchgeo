@@ -204,8 +204,6 @@ class EverWatch(NonGeoDataset):
             for path in image_paths:
                 if os.path.exists(os.path.join(self.root, self.dir, path)):
                     exists.append(True)
-                else:
-                    exists.append(False)
         else:
             exists.append(False)
 
