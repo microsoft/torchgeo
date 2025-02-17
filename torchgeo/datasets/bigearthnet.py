@@ -609,24 +609,24 @@ class BigEarthNetV2(NonGeoDataset):
     metadata_locs: ClassVar[dict[str, dict[str, str | dict[str, str]]]] = {
         's1': {
             'files': {
-                'BigEarthNet-S1.tar.gzaa': 'a55eaa2cdf6a',
-                'BigEarthNet-S1.tar.gzab': '917e296bd66',
+                'BigEarthNet-S1.tar.gzaa': '039b9ce305fc6582b2c3d60d1573f5b7',
+                'BigEarthNet-S1.tar.gzab': 'e94f0ea165d04992ca91d8e58e82ec6d',
             },
             'directory': 'BigEarthNet-S1',
         },
         's2': {
             'files': {
-                'BigEarthNet-S2.tar.gzaa': 'a55eaa2cdf6a',
-                'BigEarthNet-S2.tar.gzab': '917e296bd66',
+                'BigEarthNet-S2.tar.gzaa': '94e8ed32065234d3ab46353d814778d1',
+                'BigEarthNet-S2.tar.gzab': '24c223d9e36166136c13b24a27debe34',
             },
             'directory': 'BigEarthNet-S2',
         },
         'maps': {
-            'files': {'Reference_Maps.tar.gzaa': 'a55eaa2cdf6a'},
+            'files': {'Reference_Maps.tar.gzaa': 'b0cd1f0a31b49fcbfd61d80f963e759d'},
             'directory': 'Reference_Maps',
         },
         'metadata': {
-            'files': {'metadata.parquet': 'b2d7b4b2e6c7'},
+            'files': {'metadata.parquet': '55687065e77b6d0b0f1ff604a6e7b49c'},
             'filename': 'metadata.parquet',
         },
     }
