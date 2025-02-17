@@ -87,7 +87,7 @@ class DL4GAMAlps(NonGeoDataset):
 
         * `xarray <https://pypi.org/project/xarray/>`_
         * `netcdf4 <https://pypi.org/project/netCDF4/>`_
-           or `h5netcdf <https://pypi.org/project/h5netcdf/>`_
+          or `h5netcdf <https://pypi.org/project/h5netcdf/>`_
 
     .. versionadded:: 0.7
     """
