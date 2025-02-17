@@ -110,7 +110,17 @@ class Substation(NonGeoDataset):
 
         # handling multiple images across timepoints
         if self.use_timepoints:
-            image = image[: self.num_of_timepoints, :, :, :]
+            if image.shape[0] < self.num_of_timepoints:
+                # Padding: cycle through existing timepoints
+                num_to_pad = self.num_of_timepoints - image.shape[0]
+                padded_images = []
+                for i in range(self.num_of_timepoints):
+                    padded_images.append(image[i % image.shape[0]])
+                image = np.stack(padded_images)
+            elif image.shape[0] > self.num_of_timepoints:
+                # Removal: take the most recent timepoints
+                image = image[-self.num_of_timepoints:]
+                
             if self.timepoint_aggregation == 'concat':
                 image = np.reshape(
                     image, (-1, image.shape[2], image.shape[3])
