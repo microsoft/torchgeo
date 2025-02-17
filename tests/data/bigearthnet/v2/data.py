@@ -217,7 +217,6 @@ def compress_directory(dirname: str) -> None:
 
 
 def main() -> None:
-    # Create directories and generate data
     create_directory_structure()
 
     for patch_info in SAMPLE_PATCHES:
@@ -225,21 +224,23 @@ def main() -> None:
 
     create_metadata()
 
-    # Compress directories
     for directory in ['BigEarthNet-S1', 'BigEarthNet-S2', 'Reference_Maps']:
-        # Create the tarball archive; this produces "<directory>.tar.gz"
         shutil.make_archive(directory, 'gztar', '.', directory)
         tar_path = f'{directory}.tar.gz'
 
         split_paths = []
         if directory.startswith('BigEarthNet-'):
             with open(tar_path, 'rb') as f:
-                suffixes = ['aa', 'ab']
-                for suf in suffixes:
-                    split_name = f'{directory}.tar.gz{suf}'
-                    with open(split_name, 'wb') as g:
-                        g.write(f.read(CHUNK_SIZE))
-                    split_paths.append(split_name)
+                content = f.read()
+            file_size = len(content)
+            midpoint = file_size // 2
+            splits = [content[:midpoint], content[midpoint:]]
+            suffixes = ['aa', 'ab']
+            for suf, split_data in zip(suffixes, splits):
+                split_name = f'{directory}.tar.gz{suf}'
+                with open(split_name, 'wb') as g:
+                    g.write(split_data)
+                split_paths.append(split_name)
 
         elif directory == 'Reference_Maps':
             # For Reference_Maps, create only one split with suffix "aa"
@@ -251,7 +252,6 @@ def main() -> None:
 
         os.remove(tar_path)
 
-        # Compute MD5 checksums for the split files
         for path in split_paths:
             hash_md5 = hashlib.md5()
             with open(path, 'rb') as f:
