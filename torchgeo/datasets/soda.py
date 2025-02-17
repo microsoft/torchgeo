@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""SODA-A dataset."""
+"""SODA datasets."""
 
 import json
 import os
@@ -58,7 +58,7 @@ class SODAA(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    url = 'https://huggingface.co/datasets/torchgeo/soda-a/resolve/main/{}'
+    url = 'https://hf.co/datasets/torchgeo/soda-a/resolve/5ccad7b7147381b06fb969f95c3ffd8bf71208b9/{}'
 
     files: ClassVar[dict[str, dict[str, str]]] = {
         'images': {

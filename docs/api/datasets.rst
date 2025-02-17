@@ -464,8 +464,8 @@ So2Sat
 .. autoclass:: So2Sat
 
 
-SODAA
-^^^^^
+SODA
+^^^^
 
 .. autoclass:: SODAA
 
