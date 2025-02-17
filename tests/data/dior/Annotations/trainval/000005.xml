@@ -1,0 +1,1 @@
+<annotation><filename>000005.jpg</filename><size><width>32</width><height>32</height><depth>3</depth></size><object><name>expresswaytollstation</name><bndbox><xmin>10</xmin><ymin>7</ymin><xmax>31</xmax><ymax>19</ymax></bndbox></object><object><name>vehicle</name><bndbox><xmin>15</xmin><ymin>12</ymin><xmax>25</xmax><ymax>29</ymax></bndbox></object></annotation>
