@@ -11,6 +11,9 @@ import numpy as np
 import torch
 from PIL import Image
 from torch import Tensor
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.patches import Rectangle
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -47,7 +50,8 @@ def convert_coco_poly_to_mask(
         mask = torch.as_tensor(mask, dtype=torch.uint8)
         mask = mask.any(dim=2)
         masks.append(mask)
-    masks_tensor = torch.stack(masks, dim=0)
+        masks_tensor = torch.stack(masks, dim=0)
+
     return masks_tensor
 
 
@@ -173,22 +177,23 @@ class ISAID(NonGeoDataset):
         'val': {'filename': 'isaid_annotations_val.tar.gz', 'md5': ''},
     }
 
+    # Retrieved from self.coco.loadCats(self.coco.getCatIds())
     classes: ClassVar[dict[int, str]] = {
-        0: 'plane',
-        1: 'ship',
-        2: 'storage tank',
-        3: 'baseball diamond',
-        4: 'tennis court',
-        5: 'basketball court',
-        6: 'ground track field',
-        7: 'harbor',
-        8: 'bridge',
-        9: 'vehicle',
-        10: 'helicopter',
-        11: 'roundabout',
-        12: 'swimming pool',
-        13: 'soccer ball field',
-        14: 'container crane',
+        1: 'storage_tank',
+        2: 'Large_Vehicle',
+        3: 'Small_Vehicle',
+        4: 'plane',
+        5: 'ship',
+        6: 'Swimming_pool',
+        7: 'Harbor',
+        8: 'tennis_court',
+        9: 'Ground_Track_Field',
+        10: 'Soccer_ball_field',
+        11: 'baseball_diamond',
+        12: 'Bridge',
+        13: 'basketball_court',
+        14: 'Roundabout',
+        15: 'Helicopter',
     }
 
     valid_splits = ('train', 'val')
@@ -338,3 +343,72 @@ class ISAID(NonGeoDataset):
             download_and_extract_archive(
                 self.img_url.format(file), self.root, md5=md5 if self.checksum else None
             )
+
+    def plot(
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: str | None = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional string to use as a suptitle
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+        """
+
+        image = sample['image']
+        boxes = sample['boxes']
+        labels = sample['labels']
+        masks = sample.get('masks', None)
+
+        # Convert image tensor (C, H, W) to a numpy array (H, W, C).
+        if isinstance(image, torch.Tensor):
+            image = image.permute(1, 2, 0).cpu().numpy()
+            # If the values are normalized [0,1], convert to [0,255]
+            if image.max() <= 1.0:
+                image = (image * 255).astype(np.uint8)
+            else:
+                image = image.astype(np.uint8)
+
+        fig, ax = plt.subplots(1, figsize=(12, 9))
+        ax.imshow(image)
+        cmap = plt.get_cmap('tab10')
+
+        # Plot bounding boxes and class labels.
+        for i in range(len(boxes)):
+            box = boxes[i].cpu().numpy()
+            x1, y1, x2, y2 = box
+            width = x2 - x1
+            height = y2 - y1
+            color = cmap(i % 10)
+            rect = Rectangle(
+                (x1, y1), width, height, linewidth=2, edgecolor=color, facecolor='none'
+            )
+            ax.add_patch(rect)
+            label_id = int(labels[i].cpu().item())
+            class_name = self.classes.get(label_id, str(label_id))
+            ax.text(
+                x1, y1, class_name, color=color, fontsize=12, backgroundcolor='white'
+            )
+
+        # Overlay instance segmentation masks if available.
+        if masks is not None:
+            masks = masks.cpu().numpy()  # shape: (N, H, W)
+            for i in range(masks.shape[0]):
+                mask = masks[i]
+                color = cmap(i % 10)
+                # Create an RGBA image for the mask.
+                colored_mask = np.zeros((*mask.shape, 4))
+                colored_mask[..., :3] = color[:3]
+                # Use the binary mask to set an alpha value.
+                colored_mask[..., 3] = 0.4 * mask
+                ax.imshow(colored_mask)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+        return fig
