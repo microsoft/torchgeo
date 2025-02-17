@@ -119,8 +119,8 @@ class Substation(NonGeoDataset):
                 image = np.stack(padded_images)
             elif image.shape[0] > self.num_of_timepoints:
                 # Removal: take the most recent timepoints
-                image = image[-self.num_of_timepoints:]
-                
+                image = image[-self.num_of_timepoints :]
+
             if self.timepoint_aggregation == 'concat':
                 image = np.reshape(
                     image, (-1, image.shape[2], image.shape[3])
