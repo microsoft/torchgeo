@@ -112,7 +112,6 @@ class Substation(NonGeoDataset):
         if self.use_timepoints:
             if image.shape[0] < self.num_of_timepoints:
                 # Padding: cycle through existing timepoints
-                num_to_pad = self.num_of_timepoints - image.shape[0]
                 padded_images = []
                 for i in range(self.num_of_timepoints):
                     padded_images.append(image[i % image.shape[0]])

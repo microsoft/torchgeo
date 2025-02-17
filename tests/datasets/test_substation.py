@@ -58,6 +58,20 @@ class TestSubstation:
             {
                 'bands': [1, 2, 3],
                 'use_timepoints': True,
+                'timepoint_aggregation': None,
+                'num_of_timepoints': 3,
+                'mask_2d': False,
+            },
+            {
+                'bands': [1, 2, 3],
+                'use_timepoints': True,
+                'timepoint_aggregation': None,
+                'num_of_timepoints': 5,
+                'mask_2d': False,
+            },
+            {
+                'bands': [1, 2, 3],
+                'use_timepoints': True,
                 'timepoint_aggregation': 'random',
                 'num_of_timepoints': 4,
                 'mask_2d': True,
