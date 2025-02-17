@@ -3,7 +3,6 @@
 
 """EverWatch dataset."""
 
-import glob
 import os
 from collections.abc import Callable
 
@@ -23,13 +22,17 @@ from .utils import Path, check_integrity, download_and_extract_archive, extract_
 
 class EverWatch(NonGeoDataset):
     """EverWatch Bird Detection dataset.
-    
+
     The `EverWatch Bird Detection <https://zenodo.org/records/11165946>`__
-    dataset contains high-resolution aerial images of birds in the Everglades National Park. 
-    
+    dataset contains high-resolution aerial images of birds in the Everglades National Park. Seven
+    bird species haven been annotated and classified.
+
     Dataset features:
 
-    
+    * 5128 training images with 50491 annotations
+    * 197 test images with 4113 annotations
+    * seven different bird species
+
     Dataset format:
 
     * images are three-channel pngs
@@ -37,7 +40,13 @@ class EverWatch(NonGeoDataset):
 
     Dataset Classes:
 
-    White Ibis (Eudocimus albus), Great Egret (Ardea alba), Great Blue Heron (Ardea herodias), Snowy Egret (Egretta thula), Wood Stork (Mycteria americana), Roseate Spoonbill (Platalea ajaja), and Anhinga (Anhinga anhinga)
+    0. White Ibis (Eudocimus albus)
+    1. Great Egret (Ardea alba)
+    2. Great Blue Heron (Ardea herodias)
+    3. Snowy Egret (Egretta thula)
+    4. Wood Stork (Mycteria americana)
+    5. Roseate Spoonbill (Platalea ajaja)
+    6. Anhinga (Anhinga anhinga)
 
     If you use this dataset in your research, please cite the following source:
 
@@ -88,7 +97,9 @@ class EverWatch(NonGeoDataset):
             DatasetNotFoundError: If dataset is not found and *download* is False.
             AssertionError: If *split* argument is invalid.
         """
-        assert split in self.valid_splits, f"Split '{split}' not supported, please use one of {self.valid_splits}"
+        assert split in self.valid_splits, (
+            f"Split '{split}' not supported, please use one of {self.valid_splits}"
+        )
 
         self.root = root
         self.split = split
@@ -98,11 +109,14 @@ class EverWatch(NonGeoDataset):
 
         self._verify()
 
-        self.annot_df = pd.read_csv(os.path.join(self.root, self.dir, f'{self.split}.csv'))
+        self.annot_df = pd.read_csv(
+            os.path.join(self.root, self.dir, f'{self.split}.csv')
+        )
 
         # remove all entries where xmin == xmax or ymin == ymax
         self.annot_df = self.annot_df[
-            (self.annot_df['xmin'] != self.annot_df['xmax']) & (self.annot_df['ymin'] != self.annot_df['ymax'])
+            (self.annot_df['xmin'] != self.annot_df['xmax'])
+            & (self.annot_df['ymin'] != self.annot_df['ymax'])
         ].reset_index(drop=True)
 
         # group per image path to get all annotations for one sample
@@ -111,10 +125,9 @@ class EverWatch(NonGeoDataset):
 
         self.class2idx: dict[str, int] = {c: i for i, c in enumerate(self.classes)}
 
-
     def __len__(self) -> int:
         """Return the number of samples in the dataset.
-        
+
         Returns:
             length of the dataset
         """
@@ -129,19 +142,15 @@ class EverWatch(NonGeoDataset):
         Returns:
             data and label at that index
         """
-        sample_df= self.annot_df.loc[index]
-        
+        sample_df = self.annot_df.loc[index]
+
         img_path = os.path.join(self.root, self.dir, sample_df['image_path'].iloc[0])
 
         image = self._load_image(img_path)
 
         boxes, labels = self._load_target(sample_df)
 
-        sample = {
-            'image': image,
-            'bbox_xyxy': boxes,
-            'label': labels,
-        }
+        sample = {'image': image, 'bbox_xyxy': boxes, 'label': labels}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -164,7 +173,7 @@ class EverWatch(NonGeoDataset):
             tensor = tensor.permute((2, 0, 1))
             return tensor
 
-    def _load_target(self, sample_df: pd.DataFrame) -> tuple[Tensor, Tensor, Tensor]:
+    def _load_target(self, sample_df: pd.DataFrame) -> tuple[Tensor, Tensor]:
         """Load target from a dataframe row.
 
         Args:
@@ -173,7 +182,9 @@ class EverWatch(NonGeoDataset):
         Returns:
             bounding boxes and labels
         """
-        boxes = torch.Tensor(sample_df[['xmin', 'ymin', 'xmax', 'ymax']].values.tolist())
+        boxes = torch.Tensor(
+            sample_df[['xmin', 'ymin', 'xmax', 'ymax']].values.tolist()
+        ).float()
         labels = torch.Tensor(
             [self.class2idx[label] for label in sample_df['label'].tolist()]
         ).long()
@@ -208,11 +219,9 @@ class EverWatch(NonGeoDataset):
             extract_archive(filepath)
             return
 
-        # Check if the user requested to download the dataset
         if not self.download:
             raise DatasetNotFoundError(self)
 
-        # else download the dataset
         self._download()
 
     def _download(self) -> None:
@@ -223,11 +232,10 @@ class EverWatch(NonGeoDataset):
             filename=self.zipfilename,
             md5=self.md5 if self.checksum else None,
         )
-    
+
     def plot(
         self,
         sample: dict[str, Tensor],
-        show_titles: bool = True,
         suptitle: str | None = None,
         box_alpha: float = 0.7,
     ) -> Figure:
@@ -235,7 +243,6 @@ class EverWatch(NonGeoDataset):
 
         Args:
             sample: a sample returned by :meth:`__getitem__`
-            show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
             box_alpha: alpha value for boxes
 

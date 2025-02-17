@@ -24,9 +24,7 @@ class TestEverWatch:
         monkeypatch.setattr(EverWatch, 'md5', md5)
         root = tmp_path
         transforms = nn.Identity()
-        return EverWatch(
-            root=root, transforms=transforms, download=True, checksum=True
-        )
+        return EverWatch(root=root, transforms=transforms, download=True, checksum=True)
 
     def test_already_downloaded(self, dataset: EverWatch) -> None:
         EverWatch(root=dataset.root, download=True)
