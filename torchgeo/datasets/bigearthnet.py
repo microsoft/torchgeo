@@ -606,29 +606,30 @@ class BigEarthNetV2(NonGeoDataset):
 
     url = 'https://hf.co/datasets/torchgeo/bigearthnet/resolve/3cf3a5910a5302d449fdb8e570e5b78de24fe07f/V2/{}'
 
-    metadata_locs: ClassVar[dict[str, dict[str, str | dict[str, str]]]] = {
+    metadata_locs: ClassVar[dict[str, dict[str, dict[str, str]]]] = {
         's1': {
             'files': {
                 'BigEarthNet-S1.tar.gzaa': '039b9ce305fc6582b2c3d60d1573f5b7',
                 'BigEarthNet-S1.tar.gzab': 'e94f0ea165d04992ca91d8e58e82ec6d',
-            },
-            'directory': 'BigEarthNet-S1',
+            }
         },
         's2': {
             'files': {
                 'BigEarthNet-S2.tar.gzaa': '94e8ed32065234d3ab46353d814778d1',
                 'BigEarthNet-S2.tar.gzab': '24c223d9e36166136c13b24a27debe34',
-            },
-            'directory': 'BigEarthNet-S2',
+            }
         },
         'maps': {
-            'files': {'Reference_Maps.tar.gzaa': 'b0cd1f0a31b49fcbfd61d80f963e759d'},
-            'directory': 'Reference_Maps',
+            'files': {'Reference_Maps.tar.gzaa': 'b0cd1f0a31b49fcbfd61d80f963e759d'}
         },
-        'metadata': {
-            'files': {'metadata.parquet': '55687065e77b6d0b0f1ff604a6e7b49c'},
-            'filename': 'metadata.parquet',
-        },
+        'metadata': {'files': {'metadata.parquet': '55687065e77b6d0b0f1ff604a6e7b49c'}},
+    }
+
+    dir_file_names: ClassVar[dict[str, str]] = {
+        's1': 'BigEarthNet-S1',
+        's2': 'BigEarthNet-S2',
+        'maps': 'Reference_Maps',
+        'metadata': 'metadata.parquet',
     }
 
     # https://collections.sentinel-hub.com/corine-land-cover/readme.html
@@ -795,11 +796,7 @@ class BigEarthNetV2(NonGeoDataset):
 
         paths = glob.glob(
             os.path.join(
-                self.root,
-                self.metadata_locs[sensor]['directory'],
-                patch_dir,
-                patch_id,
-                '*.tif',
+                self.root, self.dir_file_names[sensor], patch_dir, patch_id, '*.tif'
             )
         )
 
@@ -835,7 +832,7 @@ class BigEarthNetV2(NonGeoDataset):
         patch_dir = '_'.join(patch_id.split('_')[0:-2])
         path = os.path.join(
             self.root,
-            self.metadata_locs['maps']['directory'],
+            self.dir_file_names['maps'],
             patch_dir,
             patch_id,
             patch_id + '_reference_map.tif',
@@ -872,11 +869,11 @@ class BigEarthNetV2(NonGeoDataset):
         for key, metadata in self.metadata_locs.items():
             if key != 'metadata':
                 exists.append(
-                    os.path.exists(os.path.join(self.root, metadata['directory']))
+                    os.path.exists(os.path.join(self.root, self.dir_file_names[key]))
                 )
             else:
                 exists.append(
-                    os.path.exists(os.path.join(self.root, metadata['filename']))
+                    os.path.exists(os.path.join(self.root, self.dir_file_names[key]))
                 )
 
         if all(exists):
@@ -886,7 +883,7 @@ class BigEarthNetV2(NonGeoDataset):
         exists = []
         for key, metadata in self.metadata_locs.items():
             if key == 'metadata':
-                if os.path.exists(os.path.join(self.root, metadata['filename'])):
+                if os.path.exists(os.path.join(self.root, self.dir_file_names[key])):
                     exists.append(True)
                 else:
                     exists.append(False)
@@ -927,7 +924,7 @@ class BigEarthNetV2(NonGeoDataset):
             assert not os.path.isdir(os.listdir(self.root)[2])
             assert not os.path.isdir(os.path.join(self.root, 'BigEarthNet-S1.tar.gzaa'))
             parts = [os.path.join(self.root, f) for f in meta['files'].keys()]
-            concat_path = os.path.join(self.root, meta['directory'] + '.tar.gz')
+            concat_path = os.path.join(self.root, self.dir_file_names[key] + '.tar.gz')
             with open(concat_path, 'wb') as outfile:
                 for part in parts:
                     with open(part, 'rb') as g:

@@ -156,25 +156,19 @@ class TestBigEarthNetV2:
                 'files': {
                     'BigEarthNet-S1.tar.gzaa': '8101e604552c010178af0bf3645cf391',
                     'BigEarthNet-S1.tar.gzab': 'e77d4408fc4594407b7b50ec0d43053c',
-                },
-                'directory': 'BigEarthNet-S1',
+                }
             },
             's2': {
                 'files': {
                     'BigEarthNet-S2.tar.gzaa': '9c611dc8598b20830d2d79f5a73df294',
                     'BigEarthNet-S2.tar.gzab': '4e6904c7f60504cceaf90a35401e4262',
-                },
-                'directory': 'BigEarthNet-S2',
+                }
             },
             'maps': {
-                'files': {
-                    'Reference_Maps.tar.gzaa': 'dd129c68c4902bfae48d7caada03fdc0'
-                },
-                'directory': 'Reference_Maps',
+                'files': {'Reference_Maps.tar.gzaa': 'dd129c68c4902bfae48d7caada03fdc0'}
             },
             'metadata': {
-                'files': {'metadata.parquet': 'ad100d6b020f2e693673f77ebbe57891'},
-                'filename': 'metadata.parquet',
+                'files': {'metadata.parquet': 'ad100d6b020f2e693673f77ebbe57891'}
             },
         }
         monkeypatch.setattr(BigEarthNetV2, 'metadata_locs', metadata)
@@ -238,7 +232,9 @@ class TestBigEarthNetV2:
             for key, val in dataset.metadata_locs.items():
                 if key in file_list:
                     if key != 'metadata':
-                        shutil.rmtree(os.path.join(dataset.root, val['directory']))
+                        shutil.rmtree(
+                            os.path.join(dataset.root, dataset.dir_file_names[key])
+                        )
 
         if dataset.bands == 'all':
             rm_files(['s1', 's2', 'maps', 'metadata'])
