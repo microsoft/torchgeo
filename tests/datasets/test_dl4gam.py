@@ -30,18 +30,18 @@ class TestDL4GAMAlps:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> DL4GAMAlps:
-        r_url = Path('tests', 'data', 'dl4gam_alps')
+        url = Path('tests', 'data', 'dl4gam_alps')
         download_metadata = {
             'dataset_small': {
-                'url': str(r_url / 'dataset_small.tar.gz'),
+                'url': str(url / 'dataset_small.tar.gz'),
                 'checksum': '35f85360b943caa8661d9fb573b0f0b5',
             },
             'dataset_large': {
-                'url': str(r_url / 'dataset_large.tar.gz'),
+                'url': str(url / 'dataset_large.tar.gz'),
                 'checksum': '636be5be35b8bd1e7771e9010503e4bc',
             },
             'splits_csv': {
-                'url': str(r_url / 'splits.csv'),
+                'url': str(url / 'splits.csv'),
                 'checksum': '973367465c8ab322d0cf544a345b02f5',
             },
         }
