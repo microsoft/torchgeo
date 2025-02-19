@@ -37,6 +37,7 @@ from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
+from .dl4gam import DL4GAMAlps
 from .eddmaps import EDDMapS
 from .enmap import EnMAP
 from .enviroatlas import EnviroAtlas
@@ -206,6 +207,7 @@ __all__ = (
     'ChesapeakeWV',
     'CloudCoverDetection',
     'CropHarvest',
+    'DL4GAMAlps',
     'DatasetNotFoundError',
     'DeepGlobeLandCover',
     'DependencyNotFoundError',
