@@ -242,6 +242,8 @@ class TestMultiLabelClassificationTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
+        if name == 'bigearthnet_s2':
+            pytest.importorskip('pyarrow')
         config = os.path.join('tests', 'conf', name + '.yaml')
 
         monkeypatch.setattr(timm, 'create_model', create_model)
