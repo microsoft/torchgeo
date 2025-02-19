@@ -23,13 +23,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import (
-    Path,
-    download_url,
-    extract_archive,
-    lazy_import,
-    sort_sentinel2_bands,
-)
+from .utils import Path, download_url, extract_archive, sort_sentinel2_bands
 
 
 class BigEarthNet(NonGeoDataset):
@@ -914,8 +908,6 @@ class BigEarthNetV2(NonGeoDataset):
         for key, meta in self.metadata_locs.items():
             if key == 'metadata':
                 continue
-            assert not os.path.isdir(os.listdir(self.root)[2])
-            assert not os.path.isdir(os.path.join(self.root, 'BigEarthNet-S1.tar.gzaa'))
             parts = [os.path.join(self.root, f) for f in meta['files'].keys()]
             concat_path = os.path.join(self.root, self.dir_file_names[key] + '.tar.gz')
             with open(concat_path, 'wb') as outfile:

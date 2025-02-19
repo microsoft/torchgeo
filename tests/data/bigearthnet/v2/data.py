@@ -6,7 +6,6 @@
 import hashlib
 import os
 import shutil
-import tarfile
 from pathlib import Path
 
 import numpy as np
@@ -189,30 +188,6 @@ def create_metadata() -> None:
 
     df = pd.DataFrame.from_records(records)
     df.to_parquet(os.path.join(ROOT_DIR, 'metadata.parquet'))
-
-
-def compress_directory(dirname: str) -> None:
-    """Compress directory using tar+zstd"""
-    tar_path = os.path.join(ROOT_DIR, f'{dirname}.tar')
-    with tarfile.open(tar_path, 'w') as tar:
-        tar.add(os.path.join(ROOT_DIR, dirname), arcname=dirname)
-
-    with open(tar_path, 'rb') as f_in:
-        data = f_in.read()
-        cctx = zstd.ZstdCompressor()
-        compressed = cctx.compress(data)
-        with open(f'{tar_path}.zst', 'wb') as f_out:
-            f_out.write(compressed)
-
-    os.remove(tar_path)
-
-    # print md5sum with hashlib
-    hash_md5 = hashlib.md5()
-    with open(f'{tar_path}.zst', 'rb') as f:
-        for chunk in iter(lambda: f.read(4096), b''):
-            hash_md5.update(chunk)
-
-    print(f'{tar_path}.zst: {hash_md5.hexdigest()}')
 
 
 def main() -> None:
