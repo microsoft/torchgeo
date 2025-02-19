@@ -854,14 +854,9 @@ class BigEarthNetV2(NonGeoDataset):
         """Verify the integrity of the dataset."""
         exists = []
         for key, metadata in self.metadata_locs.items():
-            if key != 'metadata':
-                exists.append(
-                    os.path.exists(os.path.join(self.root, self.dir_file_names[key]))
-                )
-            else:
-                exists.append(
-                    os.path.exists(os.path.join(self.root, self.dir_file_names[key]))
-                )
+            exists.append(
+                os.path.exists(os.path.join(self.root, self.dir_file_names[key]))
+            )
 
         if all(exists):
             return
@@ -870,17 +865,13 @@ class BigEarthNetV2(NonGeoDataset):
         exists = []
         for key, metadata in self.metadata_locs.items():
             if key == 'metadata':
-                if os.path.exists(os.path.join(self.root, self.dir_file_names[key])):
-                    exists.append(True)
-                else:
-                    exists.append(False)
+                exists.append(
+                    os.path.exists(os.path.join(self.root, self.dir_file_names[key]))
+                )
             else:
                 for fname in metadata['files']:
                     fpath = os.path.join(self.root, fname)
-                    if os.path.exists(fpath):
-                        exists.append(True)
-                    else:
-                        exists.append(False)
+                    exists.append(os.path.exists(fpath))
 
         if all(exists):
             return
