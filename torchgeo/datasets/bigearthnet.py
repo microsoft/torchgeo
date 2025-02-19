@@ -591,12 +591,6 @@ class BigEarthNetV2(NonGeoDataset):
     geospatial data splits and additionally pixel-level labels from CORINE Land
     Cover (CLC) map of 2018. Additionally, some problematic patches from V1 have been removed.
 
-    .. note::
-
-        This dataset rquires the following additional library to automatically decompress the files:
-
-        * `zstandard <https://pypi.org/project/zstandard/>`__
-
     .. versionadded:: 0.7
     """
 
@@ -717,7 +711,6 @@ class BigEarthNetV2(NonGeoDataset):
             DatasetNotFoundError: If dataset is not found and *download* is False.
             AssertionError: If *split*, or *bands*, are not valid.
         """
-        lazy_import('zstandard')
         assert split in self.valid_splits, f'split must be one of {self.valid_splits}'
         assert bands in ['s1', 's2', 'all']
         self.root = root

@@ -14,8 +14,6 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import BigEarthNet, BigEarthNetV2, DatasetNotFoundError
 
-pytest.importorskip('zstandard', minversion='0.23')
-
 
 class TestBigEarthNet:
     @pytest.fixture(

@@ -12,7 +12,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import rasterio
-import zstandard as zstd
 
 # Constants
 IMG_SIZE = 120

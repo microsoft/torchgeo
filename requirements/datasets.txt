@@ -6,4 +6,3 @@ pandas[parquet]==2.2.3
 pycocotools==2.0.8
 scikit-image==0.25.1
 scipy==1.15.1
-zstandard==0.23.0
