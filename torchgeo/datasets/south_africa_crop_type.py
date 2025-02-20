@@ -45,7 +45,7 @@ class SouthAfricaCropType(RasterDataset):
     0. No Data
     1. Lucerne/Medics
     2. Planted pastures (perennial)
-    3. Fallow
+    3. Follow
     4. Wine grapes
     5. Weeds
     6. Small grain grazing

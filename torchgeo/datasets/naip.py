@@ -27,7 +27,7 @@ class NAIP(RasterDataset):
 
     If you use this dataset in your research, please cite it using the following format:
 
-    * https://www.fisheries.noaa.gov/inport/item/49508/citation
+    * https://www.fisheries.noaa.gov//item/49508/citation
     """
 
     # https://www.nrcs.usda.gov/Internet/FSE_DOCUMENTS/nrcs141p2_015644.pdf

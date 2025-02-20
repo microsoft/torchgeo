@@ -55,7 +55,7 @@ class AgriFieldNet(RasterDataset):
     * 1. Wheat
     * 2. Mustard
     * 3. Lentil
-    * 4. No Crop/Fallow
+    * 4. No Crop/Follow
     * 5. Green pea
     * 6. Sugarcane
     * 8. Garlic
