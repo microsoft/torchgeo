@@ -3,39 +3,43 @@
 
 """Trainers for instance segmentation."""
 
+import os
 from typing import Any
 
 import matplotlib.pyplot as plt
+import timm
 import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchvision.models.detection import (
-    MaskRCNN_ResNet50_FPN_Weights,
-    maskrcnn_resnet50_fpn,
-)
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
+from torchvision.models._api import WeightsEnum
+from torchvision.models.detection import MaskRCNN
 
-from torchgeo.datasets import RGBBandsMissingError, unbind_samples
-from torchgeo.trainers.base import BaseTask
+from ..datasets import RGBBandsMissingError, unbind_samples
+from ..models import get_weight
+from . import utils
+from .base import BaseTask
 
 
 class InstanceSegmentationTask(BaseTask):
-    """Instance Segmentation."""
+    """Instance Segmentation.
+
+    .. versionadded:: 0.7
+    """
 
     def __init__(
         self,
         model: str = 'mask_rcnn',
         backbone: str = 'resnet50',
-        weights: str | bool | None = None,
+        weights: WeightsEnum | str | bool | None = None,
+        in_channels: int = 3,
         num_classes: int = 2,
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
     ) -> None:
-        """Initialize a new SemanticSegmentationTask instance.
+        """Initialize a new InstanceSegmentationTask instance.
 
         Args:
             model: Name of the model to use.
@@ -49,17 +53,9 @@ class InstanceSegmentationTask(BaseTask):
             patience: Patience for learning rate scheduler.
             freeze_backbone: Freeze the backbone network to fine-tune the
                 decoder and segmentation head.
-
-        .. versionadded:: 0.7
         """
         self.weights = weights
         super().__init__()
-        self.save_hyperparameters()
-        self.model = None
-        self.validation_outputs = []
-        self.test_outputs = []
-        self.configure_models()
-        self.configure_metrics()
 
     def configure_models(self) -> None:
         """Initialize the model.
@@ -67,81 +63,77 @@ class InstanceSegmentationTask(BaseTask):
         Raises:
             ValueError: If *model* is invalid.
         """
-        model = self.hparams['model'].lower()
-        num_classes = self.hparams['num_classes']
+        # Create backbone
+        backbone = timm.create_model(  # type: ignore[attr-defined]
+            self.hparams['backbone'],
+            in_chans=self.hparams['in_channels'],
+            pretrained=self.weights is True,
+        )
 
-        if model == 'mask_rcnn':
-            # Load the Mask R-CNN model with a ResNet50 backbone
-            self.model = maskrcnn_resnet50_fpn(
-                weights=MaskRCNN_ResNet50_FPN_Weights.DEFAULT,
-                rpn_nms_thresh=0.5,
-                box_nms_thresh=0.3,
-            )
-
-            # Update the classification head to predict `num_classes`
-            in_features = self.model.roi_heads.box_predictor.cls_score.in_features
-            # self.model.roi_heads.box_predictor = nn.Linear(in_features, num_classes)
-            self.model.roi_heads.box_predictor = FastRCNNPredictor(
-                in_features, num_classes
-            )
-
-            # Update the mask head for instance segmentation
-            in_features_mask = (
-                self.model.roi_heads.mask_predictor.conv5_mask.in_channels
-            )
-
-            hidden_layer = 256
-            self.model.roi_heads.mask_predictor = MaskRCNNPredictor(
-                in_features_mask, hidden_layer, num_classes
-            )
-
-        else:
-            raise ValueError(
-                f"Invalid model type '{model}'. Supported model: 'mask_rcnn'"
-            )
+        # Compatibility with torchvision
+        backbone.out_channels = backbone.num_classes
 
         # Freeze backbone
         if self.hparams['freeze_backbone']:
-            for param in self.model.backbone.parameters():
+            for param in backbone.parameters():
                 param.requires_grad = False
+
+        # Load weights
+        if self.weights and self.weights is not True:
+            if isinstance(self.weights, WeightsEnum):
+                state_dict = self.weights.get_state_dict(progress=True)
+            elif os.path.exists(self.weights):
+                _, state_dict = utils.extract_backbone(self.weights)
+            else:
+                state_dict = get_weight(self.weights).get_state_dict(progress=True)
+            utils.load_state_dict(backbone, state_dict)
+
+        # Create model
+        match model := self.hparams['model']:
+            case 'mask_rcnn':
+                self.model = MaskRCNN(backbone, self.hparams['num_classes'])
+            case _:
+                msg = f"Invalid model type '{model}'. Supported model: 'mask_rcnn'"
+                raise ValueError(msg)
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
         - Uses Mean Average Precision (mAP) for masks (IOU-based metric).
         """
-        self.metrics = MetricCollection([MeanAveragePrecision(iou_type='segm')])
-        self.train_metrics = self.metrics.clone(prefix='train_')
-        self.val_metrics = self.metrics.clone(prefix='val_')
-        self.test_metrics = self.metrics.clone(prefix='test_')
+        metrics = MetricCollection([MeanAveragePrecision(iou_type='segm')])
+        self.train_metrics = metrics.clone(prefix='train_')
+        self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
 
-    def training_step(self, batch: Any, batch_idx: int) -> Tensor:
-        """Compute the training loss.
+    def training_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the training loss and additional metrics.
 
         Args:
-            batch: A batch of data from the DataLoader. Includes images and ground truth targets.
-            batch_idx: Index of the current batch.
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
 
         Returns:
-            The total loss for the batch.
+            The loss tensor.
         """
         images, targets = batch['image'], batch['target']
         loss_dict = self.model(images, targets)
         loss = sum(loss for loss in loss_dict.values())
-
-        print(f'\nTRAINING STEP LOSS: {loss.item()}')
-
         self.log('train_loss', loss, batch_size=len(images))
         return loss
 
-    def validation_step(self, batch: Any, batch_idx: int) -> None:
-        """Compute the validation loss.
+    def validation_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
+        """Compute the validation loss and additional metrics.
 
         Args:
-            batch: A batch of data from the DataLoader. Includes images and targets.
-            batch_idx: Index of the current batch.
-
-        Updates metrics and stores predictions/targets for further analysis.
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
         """
         images, targets = batch['image'], batch['target']
         batch_size = images.shape[0]
@@ -204,8 +196,14 @@ class InstanceSegmentationTask(BaseTask):
                 )
                 plt.close()
 
-    def test_step(self, batch: Any, batch_idx: int) -> None:
-        """Compute the test loss and additional metrics."""
+    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+        """Compute the test loss and additional metrics.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+        """
         images, targets = batch['image'], batch['target']
         batch_size = images.shape[0]
 
@@ -240,9 +238,19 @@ class InstanceSegmentationTask(BaseTask):
 
         self.log_dict(scalar_metrics, batch_size=batch_size)
 
-    def predict_step(self, batch: Any, batch_idx: int) -> Any:
-        """Perform inference on a batch of images."""
-        self.model.eval()
+    def predict_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the predicted class probabilities.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+
+        Returns:
+            Output predicted probabilities.
+        """
         images = batch['image']
 
         with torch.no_grad():
