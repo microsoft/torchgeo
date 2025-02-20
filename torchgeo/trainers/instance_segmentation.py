@@ -9,6 +9,7 @@ from typing import Any
 import matplotlib.pyplot as plt
 import timm
 import torch
+import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MetricCollection
@@ -92,6 +93,7 @@ class InstanceSegmentationTask(BaseTask):
         match model := self.hparams['model']:
             case 'mask_rcnn':
                 self.model = MaskRCNN(backbone, self.hparams['num_classes'])
+                self.model.transform = nn.Sequential()  # no-op
             case _:
                 msg = f"Invalid model type '{model}'. Supported model: 'mask_rcnn'"
                 raise ValueError(msg)

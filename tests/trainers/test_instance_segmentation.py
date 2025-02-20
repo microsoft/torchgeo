@@ -14,7 +14,7 @@ from pytest import MonkeyPatch
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
+from torchgeo.datamodules import MisconfigurationException, VHR10DataModule
 from torchgeo.datasets import RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
@@ -44,44 +44,8 @@ def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
     raise RGBBandsMissingError()
 
 
-class TestSemanticSegmentationTask:
-    @pytest.mark.parametrize(
-        'name',
-        [
-            'agrifieldnet',
-            'cabuar',
-            'chabud',
-            'chesapeake_cvpr_5',
-            'chesapeake_cvpr_7',
-            'deepglobelandcover',
-            'etci2021',
-            'ftw',
-            'geonrw',
-            'gid15',
-            'inria',
-            'l7irish',
-            'l8biome',
-            'landcoverai',
-            'landcoverai100',
-            'loveda',
-            'naipchesapeake',
-            'potsdam2d',
-            'sen12ms_all',
-            'sen12ms_s1',
-            'sen12ms_s2_all',
-            'sen12ms_s2_reduced',
-            'sentinel2_cdl',
-            'sentinel2_eurocrops',
-            'sentinel2_nccm',
-            'sentinel2_south_america_soybean',
-            'southafricacroptype',
-            'spacenet1',
-            'spacenet6',
-            'ssl4eo_l_benchmark_cdl',
-            'ssl4eo_l_benchmark_nlcd',
-            'vaihingen2d',
-        ],
-    )
+class TestInstanceSegmentationTask:
+    @pytest.mark.parametrize('name', ['vhr10_ins_seg'])
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
@@ -167,19 +131,13 @@ class TestSemanticSegmentationTask:
         )
 
     def test_invalid_model(self) -> None:
-        match = "Model type 'invalid_model' is not valid."
-        with pytest.raises(ValueError, match=match):
+        with pytest.raises(ValueError, match='Invalid model type'):
             InstanceSegmentationTask(model='invalid_model')
 
-    def test_invalid_loss(self) -> None:
-        match = "Loss type 'invalid_loss' is not valid."
-        with pytest.raises(ValueError, match=match):
-            InstanceSegmentationTask(loss='invalid_loss')
-
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(SEN12MSDataModule, 'plot', plot)
-        datamodule = SEN12MSDataModule(
-            root='tests/data/sen12ms', batch_size=1, num_workers=0
+        monkeypatch.setattr(VHR10DataModule, 'plot', plot)
+        datamodule = VHR10DataModule(
+            root='tests/data/vhr10', batch_size=1, num_workers=0
         )
         model = InstanceSegmentationTask(
             backbone='resnet18', in_channels=15, num_classes=6
@@ -193,9 +151,9 @@ class TestSemanticSegmentationTask:
         trainer.validate(model=model, datamodule=datamodule)
 
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(SEN12MSDataModule, 'plot', plot_missing_bands)
-        datamodule = SEN12MSDataModule(
-            root='tests/data/sen12ms', batch_size=1, num_workers=0
+        monkeypatch.setattr(VHR10DataModule, 'plot', plot_missing_bands)
+        datamodule = VHR10DataModule(
+            root='tests/data/vhr10', batch_size=1, num_workers=0
         )
         model = InstanceSegmentationTask(
             backbone='resnet18', in_channels=15, num_classes=6
@@ -208,21 +166,11 @@ class TestSemanticSegmentationTask:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
-    @pytest.mark.parametrize(
-        'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
-    )
-    def test_freeze_backbone(self, model_name: str, backbone: str) -> None:
-        model = InstanceSegmentationTask(
-            model=model_name, backbone=backbone, freeze_backbone=True
-        )
-        assert all(
-            [param.requires_grad is False for param in model.model.encoder.parameters()]
-        )
-        assert all([param.requires_grad for param in model.model.decoder.parameters()])
-        assert all(
-            [
-                param.requires_grad
-                for param in model.model.segmentation_head.parameters()
-            ]
-        )
+    def test_freeze_backbone(self) -> None:
+        task = InstanceSegmentationTask(backbone='resnet18', freeze_backbone=True)
+        for param in task.model.backbone.parameters():
+            assert param.requires_grad is False
+
+        for head in ['rpn', 'roi_heads']:
+            for param in getattr(task.model, head).parameters():
+                assert param.requires_grad is True
