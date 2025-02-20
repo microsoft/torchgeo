@@ -10,7 +10,6 @@ The following tutorials will teach you enough to get started:
 * `Introduction to TorchGeo <torchgeo.ipynb>`_: A brief overview of the design of TorchGeo
 
 .. toctree::
-   :hidden:
    :maxdepth: 1
 
    pytorch

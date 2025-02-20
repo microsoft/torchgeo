@@ -8,7 +8,6 @@ The following case studies present end-to-end workflows for common use cases of 
 Do you have a use case that is missing from this list? Please open a pull request to add tutorials for your own use cases.
 
 .. toctree::
-   :hidden:
    :maxdepth: 1
 
    earth_surface_water
