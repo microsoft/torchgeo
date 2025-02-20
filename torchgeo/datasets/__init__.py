@@ -52,6 +52,7 @@ from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
+from .gbm import GlobalBuildingMap
 from .geo import (
     GeoDataset,
     IntersectionDataset,
@@ -226,6 +227,7 @@ __all__ = (
     'GeoDataset',
     'GeoNRW',
     'GlobBiomass',
+    'GlobalBuildingMap',
     'HySpecNet11k',
     'IDTReeS',
     'INaturalist',
