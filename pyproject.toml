@@ -325,3 +325,6 @@ torchgeo = ["py.typed"]
 
 [tool.setuptools.packages.find]
 include = ["torchgeo*"]
+
+[tool.coverage.run]
+branch = true
