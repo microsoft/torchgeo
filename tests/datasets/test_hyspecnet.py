@@ -52,7 +52,7 @@ class TestHySpecNet11k:
         plt.close()
 
     def test_plot_rgb(self, dataset: HySpecNet11k) -> None:
-        dataset = HySpecNet11k(root=dataset.root, bands=(1, 2, 3))
+        dataset = HySpecNet11k(root=dataset.root, bands=('B1', 'B2', 'B3'))
         match = 'Dataset does not contain some of the RGB bands'
         with pytest.raises(RGBBandsMissingError, match=match):
             dataset.plot(dataset[0])
