@@ -2,7 +2,7 @@ model:
   class_path: InstanceSegmentationTask
   init_args:
     model: 'mask_rcnn'
-    backbone: 'resnet18'
+    backbone: 'resnet50'
     num_classes: 11
 data:
   class_path: VHR10DataModule

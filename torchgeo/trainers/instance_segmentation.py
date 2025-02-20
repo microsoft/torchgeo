@@ -3,23 +3,21 @@
 
 """Trainers for instance segmentation."""
 
-import os
 from typing import Any
 
 import matplotlib.pyplot as plt
-import timm
 import torch
-import torch.nn as nn
 from matplotlib.figure import Figure
-from torch import Tensor
+from torch import Tensor, nn
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchvision.models._api import WeightsEnum
-from torchvision.models.detection import MaskRCNN
+from torchvision.models import ResNet50_Weights
+from torchvision.models.detection import (
+    MaskRCNN_ResNet50_FPN_Weights,
+    maskrcnn_resnet50_fpn,
+)
 
 from ..datasets import RGBBandsMissingError, unbind_samples
-from ..models import get_weight
-from . import utils
 from .base import BaseTask
 
 
@@ -33,7 +31,7 @@ class InstanceSegmentationTask(BaseTask):
         self,
         model: str = 'mask_rcnn',
         backbone: str = 'resnet50',
-        weights: WeightsEnum | str | bool | None = None,
+        weights: bool | None = None,
         in_channels: int = 3,
         num_classes: int = 2,
         lr: float = 1e-3,
@@ -45,9 +43,8 @@ class InstanceSegmentationTask(BaseTask):
         Args:
             model: Name of the model to use.
             backbone: Name of the backbone to use.
-            weights: Initial model weights. Either a weight enum, the string
-                representation of a weight enum, True for ImageNet weights, False or
-                None for random weights, or the path to a saved model state dict.
+            weights: Initial model weights. True for ImageNet weights, False or None
+                for random weights.
             in_channels: Number of input channels to model.
             num_classes: Number of prediction classes (including the background).
             lr: Learning rate for optimizer.
@@ -62,41 +59,48 @@ class InstanceSegmentationTask(BaseTask):
         """Initialize the model.
 
         Raises:
-            ValueError: If *model* is invalid.
+            ValueError: If *model* or *backbone* are invalid.
         """
-        # Create backbone
-        backbone = timm.create_model(  # type: ignore[attr-defined]
-            self.hparams['backbone'],
-            in_chans=self.hparams['in_channels'],
-            pretrained=self.weights is True,
-        )
+        model: str = self.hparams['model']
+        backbone: str = self.hparams['backbone']
+        in_channels: int = self.hparams['in_channels']
+        num_classes: str = self.hparams['num_classes']
 
-        # Compatibility with torchvision
-        backbone.out_channels = backbone.num_classes
+        weights = None
+        weights_backbone = None
+        if self.weights:
+            weights = MaskRCNN_ResNet50_FPN_Weights.COCO_V1
+            weights_backbone = ResNet50_Weights.IMAGENET1K_V1
+
+        # Create model
+        if model == 'mask_rcnn':
+            if backbone == 'resnet50':
+                self.model = maskrcnn_resnet50_fpn(
+                    weights=weights,
+                    num_classes=num_classes,
+                    weights_backbone=weights_backbone,
+                )
+            else:
+                msg = f"Invalid backbone type '{backbone}'. Supported backbone: 'resnet50'"
+                raise ValueError(msg)
+        else:
+            msg = f"Invalid model type '{model}'. Supported model: 'mask_rcnn'"
+            raise ValueError(msg)
+
+        if in_channels != 3:
+            self.model.backbone.conv1 = nn.Conv2d(
+                in_channels,
+                self.model.backbone.inplanes,
+                kernel_size=7,
+                stride=2,
+                padding=3,
+                bias=False,
+            )
 
         # Freeze backbone
         if self.hparams['freeze_backbone']:
-            for param in backbone.parameters():
+            for param in self.model.backbone.parameters():
                 param.requires_grad = False
-
-        # Load weights
-        if self.weights and self.weights is not True:
-            if isinstance(self.weights, WeightsEnum):
-                state_dict = self.weights.get_state_dict(progress=True)
-            elif os.path.exists(self.weights):
-                _, state_dict = utils.extract_backbone(self.weights)
-            else:
-                state_dict = get_weight(self.weights).get_state_dict(progress=True)
-            utils.load_state_dict(backbone, state_dict)
-
-        # Create model
-        match model := self.hparams['model']:
-            case 'mask_rcnn':
-                self.model = MaskRCNN(backbone, self.hparams['num_classes'])
-                self.model.transform = nn.Sequential()  # no-op
-            case _:
-                msg = f"Invalid model type '{model}'. Supported model: 'mask_rcnn'"
-                raise ValueError(msg)
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
@@ -121,8 +125,13 @@ class InstanceSegmentationTask(BaseTask):
         Returns:
             The loss tensor.
         """
-        images, targets = batch['image'], batch['target']
-        loss_dict = self.model(images, targets)
+        images = batch['image'].unbind()
+        targets = {
+            'boxes': batch['bbox_xyxy'],
+            'labels': batch['label'],
+            'masks': batch['mask'],
+        }
+        loss_dict = self(images, unbind_samples(targets))
         loss = sum(loss for loss in loss_dict.values())
         self.log('train_loss', loss, batch_size=len(images))
         return loss
