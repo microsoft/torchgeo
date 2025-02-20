@@ -316,6 +316,9 @@ split-on-trailing-comma = false
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+[tool.coverage.run]
+branch = true
+
 # https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [tool.setuptools.dynamic]
 version = {attr = "torchgeo.__version__"}
@@ -325,6 +328,3 @@ torchgeo = ["py.typed"]
 
 [tool.setuptools.packages.find]
 include = ["torchgeo*"]
-
-[tool.coverage.run]
-branch = true
