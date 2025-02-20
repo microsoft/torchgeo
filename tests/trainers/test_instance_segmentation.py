@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
-import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
@@ -16,7 +15,7 @@ from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, SEN12MSDataModule
-from torchgeo.datasets import LandCoverAI, RGBBandsMissingError
+from torchgeo.datasets import RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import InstanceSegmentationTask
@@ -86,7 +85,6 @@ class TestSemanticSegmentationTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
-
         config = os.path.join('tests', 'conf', name + '.yaml')
 
         args = [
