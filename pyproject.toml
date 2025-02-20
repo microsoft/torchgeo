@@ -24,7 +24,7 @@ maintainers = [
 ]
 keywords = ["pytorch", "deep learning", "machine learning", "remote sensing", "satellite imagery", "earth observation", "geospatial"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -79,6 +79,9 @@ dependencies = [
     "torchmetrics>=0.10",
     # torchvision 0.14+ required for torchvision.models.swin_v2_b
     "torchvision>=0.14",
+    # typing-extensions 4.5+ required for typing_extensions.deprecated
+    # can be removed once Python 3.13 is minimum supported version
+    "typing-extensions>=4.5",
 ]
 dynamic = ["version"]
 
@@ -88,6 +91,8 @@ datasets = [
     "h5py>=3.6",
     # laspy 2+ required for laspy.read
     "laspy>=2",
+    # netcdf4 1.5.8+ required for Python 3.10 wheels
+    "netcdf4>=1.5.8",
     # opencv-python 4.5.4+ required for Python 3.10 wheels
     "opencv-python>=4.5.4",
     # pandas 2+ required for parquet extra
@@ -98,6 +103,8 @@ datasets = [
     "scikit-image>=0.19",
     # scipy 1.7.2+ required for Python 3.10 wheels
     "scipy>=1.7.2",
+    # xarray 0.12.3+ required for pandas 1.3.3 support
+    "xarray>=0.12.3",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx

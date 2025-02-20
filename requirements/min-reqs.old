@@ -20,15 +20,18 @@ timm==0.4.12
 torch==1.13.0
 torchmetrics==0.10.0
 torchvision==0.14.0
+typing-extensions==4.5.0
 
 # datasets
 h5py==3.6.0
 laspy==2.0.0
+netCDF4==1.5.8
 opencv-python==4.5.4.58
 pycocotools==2.0.7
 pyarrow==15.0.0  # Remove when we upgrade min version of pandas to `pandas[parquet]>=2`
 scikit-image==0.19.0
 scipy==1.7.2
+xarray==0.12.3
 
 # tests
 pytest==7.3.0

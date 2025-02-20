@@ -10,6 +10,6 @@ data:
   init_args:
     batch_size: 1
   dict_kwargs:
-    root: 'tests/data/bigearthnet'
+    root: 'tests/data/bigearthnet/v1'
     bands: 's2'
     num_classes: 19
