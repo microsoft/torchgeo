@@ -9,7 +9,7 @@ from .agrifieldnet import AgriFieldNet
 from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
-from .bigearthnet import BigEarthNet
+from .bigearthnet import BigEarthNet, BigEarthNetV2
 from .biomassters import BioMassters
 from .bright import BRIGHTDFC2025
 from .cabuar import CaBuAr
@@ -185,6 +185,7 @@ __all__ = (
     'AsterGDEM',
     'BeninSmallHolderCashews',
     'BigEarthNet',
+    'BigEarthNetV2',
     'BioMassters',
     'BoundingBox',
     'CMSGlobalMangroveCanopy',
