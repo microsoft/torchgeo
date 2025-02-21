@@ -50,7 +50,7 @@ class AsterGDEM(RasterDataset):
         self,
         paths: Path | list[Path] = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
+        res: tuple[float, float] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
     ) -> None:

@@ -209,7 +209,7 @@ class OpenBuildings(VectorDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float = 0.0001,
+        res: tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         checksum: bool = False,
     ) -> None:
@@ -233,7 +233,6 @@ class OpenBuildings(VectorDataset):
         self.paths = paths
         self.res = res
         self.checksum = checksum
-        self.res = res
         self.transforms = transforms
 
         self._verify()
@@ -314,8 +313,8 @@ class OpenBuildings(VectorDataset):
         shapes = self._filter_geometries(query, filepaths)
 
         # Rasterize geometries
-        width = (query.maxx - query.minx) / self.res
-        height = (query.maxy - query.miny) / self.res
+        width = (query.maxx - query.minx) / self.res[0]
+        height = (query.maxy - query.miny) / self.res[1]
         transform = rasterio.transform.from_bounds(
             query.minx, query.miny, query.maxx, query.maxy, width, height
         )
