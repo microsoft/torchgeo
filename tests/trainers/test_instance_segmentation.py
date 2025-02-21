@@ -111,8 +111,8 @@ class TestInstanceSegmentationTask:
         with pytest.raises(ValueError, match=match):
             InstanceSegmentationTask(backbone='invalid_backbone')
 
-    def test_pretrained_backbone(self) -> None:
-        InstanceSegmentationTask(backbone='resnet50', weights=True)
+    def test_weights(self) -> None:
+        InstanceSegmentationTask(weights=True, num_classes=91)
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(VHR10DataModule, 'plot', plot)

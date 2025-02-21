@@ -73,7 +73,9 @@ class InstanceSegmentationTask(BaseTask):
         weights_backbone = None
         if self.hparams['weights']:
             weights = MaskRCNN_ResNet50_FPN_Weights.COCO_V1
-            weights_backbone = ResNet50_Weights.IMAGENET1K_V1
+            # TODO: drop last layer of weights
+            if num_classes == 91:
+                weights_backbone = ResNet50_Weights.IMAGENET1K_V1
 
         # Create model
         if model == 'mask_rcnn':
