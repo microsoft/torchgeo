@@ -75,13 +75,7 @@ class FCSiamConc(SegmentationModel):  # type: ignore[misc]
         )
         encoder_out_channels = [c * 2 for c in self.encoder.out_channels[1:]]
         encoder_out_channels.insert(0, self.encoder.out_channels[0])
-        try:
-            # smp 0.3+
-            UnetDecoder = smp.decoders.unet.decoder.UnetDecoder
-        except AttributeError:
-            # smp 0.2
-            UnetDecoder = smp.unet.decoder.UnetDecoder
-        self.decoder = UnetDecoder(
+        self.decoder = smp.decoders.unet.decoder.UnetDecoder(
             encoder_channels=encoder_out_channels,
             decoder_channels=decoder_channels,
             n_blocks=encoder_depth,
