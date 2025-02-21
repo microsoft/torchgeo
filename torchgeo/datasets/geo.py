@@ -88,7 +88,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
 
     paths: Path | Iterable[Path]
     _crs = CRS.from_epsg(4326)
-    _res = (0.0, 0.0)
+    _res: tuple[float, float] = (0.0, 0.0)
 
     #: Glob expression used to search for files.
     #:
@@ -277,14 +277,17 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         return self._res
 
     @res.setter
-    def res(self, new_res: tuple[float, float]) -> None:
+    def res(self, new_res: float | tuple[float, float]) -> None:
         """Change the resolution of a GeoDataset.
 
         Args:
-            new_res: New resolution.
+            new_res: New resolution in (xres, yres) format. If a single float is provided, it is used for both
+                the x and y resolution.
         """
         if new_res == self.res:
             return
+        if isinstance(new_res, float):
+            new_res = (new_res, new_res)
 
         print(f'Converting {self.__class__.__name__} res from {self.res} to {new_res}')
         self._res = new_res
