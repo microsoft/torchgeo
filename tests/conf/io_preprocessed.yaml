@@ -5,6 +5,7 @@ data:
   dict_kwargs:
     root: 'data/io'
     split: 'preprocessed'
+    download: true
     checksum: true
 trainer:
   max_epochs: 1
