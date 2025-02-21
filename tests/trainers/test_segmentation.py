@@ -56,7 +56,7 @@ class TestSemanticSegmentationTask:
             'chesapeake_cvpr_7',
             'deepglobelandcover',
             'etci2021',
-            'ftw_sem_seg',
+            'ftw',
             'geonrw',
             'gid15',
             'inria',
@@ -90,7 +90,7 @@ class TestSemanticSegmentationTask:
         match name:
             case 'chabud' | 'cabuar':
                 pytest.importorskip('h5py', minversion='3.6')
-            case 'ftw_sem_seg':
+            case 'ftw':
                 pytest.importorskip('pyarrow')
             case 'landcoverai':
                 sha256 = (
