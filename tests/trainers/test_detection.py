@@ -5,12 +5,8 @@ import os
 from typing import Any
 
 import pytest
-import torch
-import torch.nn as nn
-import torchvision.models.detection
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
-from torch.nn.modules import Module
 
 from torchgeo.datamodules import MisconfigurationException, NASAMarineDebrisDataModule
 from torchgeo.datasets import NASAMarineDebris, RGBBandsMissingError
