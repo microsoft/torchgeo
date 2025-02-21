@@ -71,8 +71,8 @@ dependencies = [
     "segmentation-models-pytorch>=0.2",
     # shapely 1.8+ required for Python 3.10 wheels
     "shapely>=1.8",
-    # timm 0.4.12 required by segmentation-models-pytorch
-    "timm>=0.4.12",
+    # timm 0.9.0 required for timm.models.adapt_input_conv
+    "timm>=0.9.0",
     # torch 1.13+ required by torchvision
     "torch>=1.13",
     # torchmetrics 0.10+ required for binary/multiclass/multilabel classification metrics
