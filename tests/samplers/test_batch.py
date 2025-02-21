@@ -28,7 +28,9 @@ class CustomBatchGeoSampler(BatchGeoSampler):
 
 
 class CustomGeoDataset(GeoDataset):
-    def __init__(self, crs: CRS = CRS.from_epsg(3005), res: tuple[float, float] = (10, 10)) -> None:
+    def __init__(
+        self, crs: CRS = CRS.from_epsg(3005), res: tuple[float, float] = (10, 10)
+    ) -> None:
         super().__init__()
         self._crs = crs
         self.res = res
