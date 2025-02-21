@@ -128,14 +128,14 @@ class InstanceSegmentationTask(BaseTask):
         Returns:
             The loss tensor.
         """
-        images = batch['image']
-        targets = {
+        x = batch['image']
+        y = {
             'boxes': batch['bbox_xyxy'],
             'labels': batch['label'],
             'masks': batch['mask'],
         }
-        losses = self(images.unbind(), unbind_samples(targets))
-        self.log_dict(losses, batch_size=len(images))
+        losses = self(x.unbind(), unbind_samples(y))
+        self.log_dict(losses, batch_size=len(x))
         loss: Tensor = sum(losses.values())
         return loss
 
@@ -149,18 +149,18 @@ class InstanceSegmentationTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        images = batch['image']
-        targets = {'masks': batch['mask'], 'labels': batch['label']}
-        predictions = self(images.unbind())
-        for pred in predictions:
+        x = batch['image']
+        y = {'masks': batch['mask'], 'labels': batch['label']}
+        y_hat = self(x.unbind())
+        for pred in y_hat:
             pred['masks'] = (pred['masks'] > 0.5).squeeze(1).to(torch.uint8)
 
-        metrics = self.val_metrics(predictions, unbind_samples(targets))
+        metrics = self.val_metrics(y_hat, unbind_samples(y))
 
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
         metrics.pop('val_classes', None)
 
-        self.log_dict(metrics, batch_size=len(images))
+        self.log_dict(metrics, batch_size=len(x))
 
         if (
             batch_idx < 10
@@ -172,10 +172,10 @@ class InstanceSegmentationTask(BaseTask):
         ):
             datamodule = self.trainer.datamodule
 
-            batch['prediction_bbox_xyxy'] = [
-                pred['boxes'].cpu() for pred in predictions
-            ]
-            batch['prediction_mask'] = [pred['masks'].cpu() for pred in predictions]
+            batch['prediction_bbox_xyxy'] = [pred['boxes'].cpu() for pred in y_hat]
+            batch['prediction_mask'] = [pred['masks'].cpu() for pred in y_hat]
+            batch['prediction_label'] = [pred['labels'].cpu() for pred in y_hat]
+            batch['prediction_score'] = [pred['scores'].cpu() for pred in y_hat]
             batch['image'] = batch['image'].cpu()
 
             sample = unbind_samples(batch)[0]
@@ -201,18 +201,18 @@ class InstanceSegmentationTask(BaseTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        images = batch['image']
-        targets = {'masks': batch['mask'], 'labels': batch['label']}
-        predictions = self(images.unbind())
-        for prediction in predictions:
-            prediction['masks'] = (prediction['masks'] > 0.5).squeeze(1).to(torch.uint8)
+        x = batch['image']
+        y = {'masks': batch['mask'], 'labels': batch['label']}
+        y_hat = self(x.unbind())
+        for pred in y_hat:
+            pred['masks'] = (pred['masks'] > 0.5).squeeze(1).to(torch.uint8)
 
-        metrics = self.test_metrics(predictions, unbind_samples(targets))
+        metrics = self.test_metrics(y_hat, unbind_samples(y))
 
         # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
         metrics.pop('test_classes', None)
 
-        self.log_dict(metrics, batch_size=len(images))
+        self.log_dict(metrics, batch_size=len(x))
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -227,14 +227,14 @@ class InstanceSegmentationTask(BaseTask):
         Returns:
             Output predicted masks.
         """
-        images = batch['image']
-        predictions: list[dict[str, Tensor]] = self(images.unbind())
+        x = batch['image']
+        y_hat: list[dict[str, Tensor]] = self(x.unbind())
 
-        for pred in predictions:
+        for pred in y_hat:
             keep = pred['scores'] > 0.05
             pred['boxes'] = pred['boxes'][keep]
             pred['labels'] = pred['labels'][keep]
             pred['scores'] = pred['scores'][keep]
             pred['masks'] = (pred['masks'] > 0.5).squeeze(1).to(torch.uint8)[keep]
 
-        return predictions
+        return y_hat
