@@ -56,7 +56,6 @@ class InstanceSegmentationTask(BaseTask):
             freeze_backbone: Freeze the backbone network to fine-tune the
                 decoder and segmentation head.
         """
-        self.weights = weights
         super().__init__()
 
     def configure_models(self) -> None:
@@ -72,7 +71,7 @@ class InstanceSegmentationTask(BaseTask):
 
         weights = None
         weights_backbone = None
-        if self.weights:
+        if self.hparams['weights']:
             weights = MaskRCNN_ResNet50_FPN_Weights.COCO_V1
             weights_backbone = ResNet50_Weights.IMAGENET1K_V1
 
