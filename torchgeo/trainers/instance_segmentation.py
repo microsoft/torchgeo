@@ -27,6 +27,10 @@ class InstanceSegmentationTask(BaseTask):
     .. versionadded:: 0.7
     """
 
+    ignore = None
+    monitor = 'val_map'
+    mode = 'max'
+
     def __init__(
         self,
         model: str = 'mask_rcnn',
@@ -108,14 +112,13 @@ class InstanceSegmentationTask(BaseTask):
         - Uses Mean Average Precision (mAP) for masks (IOU-based metric).
         """
         metrics = MetricCollection([MeanAveragePrecision(iou_type='segm')])
-        self.train_metrics = metrics.clone(prefix='train_')
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
-        """Compute the training loss and additional metrics.
+        """Compute the training loss.
 
         Args:
             batch: The output of your DataLoader.
@@ -125,60 +128,40 @@ class InstanceSegmentationTask(BaseTask):
         Returns:
             The loss tensor.
         """
-        images = batch['image'].unbind()
+        images = batch['image']
         targets = {
             'boxes': batch['bbox_xyxy'],
             'labels': batch['label'],
             'masks': batch['mask'],
         }
-        loss_dict = self(images, unbind_samples(targets))
-        loss = sum(loss for loss in loss_dict.values())
-        self.log('train_loss', loss, batch_size=len(images))
+        losses = self(images.unbind(), unbind_samples(targets))
+        self.log_dict(losses, batch_size=len(images))
+        loss: Tensor = sum(losses.values())
         return loss
 
     def validation_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> None:
-        """Compute the validation loss and additional metrics.
+        """Compute the validation metrics.
 
         Args:
             batch: The output of your DataLoader.
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        images, targets = batch['image'], batch['target']
-        batch_size = images.shape[0]
+        images = batch['image']
+        targets = {'masks': batch['mask'], 'labels': batch['label']}
+        predictions = self(images.unbind())
+        for pred in predictions:
+            pred['masks'] = (pred['masks'] > 0.5).squeeze(1).to(torch.uint8)
 
-        outputs = self.model(images)
-        loss_dict_list = self.model(images, targets)  # list of dictionaries
-        total_loss = sum(
-            sum(loss_item for loss_item in loss_dict.values() if loss_item.ndim == 0)
-            for loss_dict in loss_dict_list
-        )
+        metrics = self.val_metrics(predictions, unbind_samples(targets))
 
-        for target in targets:
-            target['masks'] = (target['masks'] > 0).to(torch.uint8)
-            target['boxes'] = target['boxes'].to(torch.float32)
-            target['labels'] = target['labels'].to(torch.int64)
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        metrics.pop('val_classes', None)
 
-        for output in outputs:
-            if 'masks' in output:
-                output['masks'] = (output['masks'] > 0.5).squeeze(1).to(torch.uint8)
+        self.log_dict(metrics, batch_size=len(images))
 
-        self.log('val_loss', total_loss, batch_size=batch_size)
-
-        metrics = self.val_metrics(outputs, targets)
-        # Log only scalar values from metrics
-        scalar_metrics = {}
-        for key, value in metrics.items():
-            if isinstance(value, torch.Tensor) and value.numel() > 1:
-                # Cast to float if integer and compute mean
-                value = value.to(torch.float32).mean()
-            scalar_metrics[key] = value
-
-        self.log_dict(scalar_metrics, batch_size=batch_size)
-
-        # check
         if (
             batch_idx < 10
             and hasattr(self.trainer, 'datamodule')
@@ -189,7 +172,10 @@ class InstanceSegmentationTask(BaseTask):
         ):
             datamodule = self.trainer.datamodule
 
-            batch['prediction_masks'] = [output['masks'].cpu() for output in outputs]
+            batch['prediction_bbox_xyxy'] = [
+                pred['boxes'].cpu() for pred in predictions
+            ]
+            batch['prediction_mask'] = [pred['masks'].cpu() for pred in predictions]
             batch['image'] = batch['image'].cpu()
 
             sample = unbind_samples(batch)[0]
@@ -208,51 +194,30 @@ class InstanceSegmentationTask(BaseTask):
                 plt.close()
 
     def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
-        """Compute the test loss and additional metrics.
+        """Compute the test metrics.
 
         Args:
             batch: The output of your DataLoader.
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        images, targets = batch['image'], batch['target']
-        batch_size = images.shape[0]
+        images = batch['image']
+        targets = {'masks': batch['mask'], 'labels': batch['label']}
+        predictions = self(images.unbind())
+        for prediction in predictions:
+            prediction['masks'] = (prediction['masks'] > 0.5).squeeze(1).to(torch.uint8)
 
-        outputs = self.model(images)
-        loss_dict_list = self.model(
-            images, targets
-        )  # Compute all losses, list of dictonaries (one for every batch element)
-        total_loss = sum(
-            sum(loss_item for loss_item in loss_dict.values() if loss_item.ndim == 0)
-            for loss_dict in loss_dict_list
-        )
+        metrics = self.test_metrics(predictions, unbind_samples(targets))
 
-        for target in targets:
-            target['masks'] = target['masks'].to(torch.uint8)
-            target['boxes'] = target['boxes'].to(torch.float32)
-            target['labels'] = target['labels'].to(torch.int64)
+        # https://github.com/Lightning-AI/torchmetrics/pull/1832#issuecomment-1623890714
+        metrics.pop('test_classes', None)
 
-        for output in outputs:
-            if 'masks' in output:
-                output['masks'] = (output['masks'] > 0.5).squeeze(1).to(torch.uint8)
-
-        self.log('test_loss', total_loss, batch_size=batch_size)
-
-        metrics = self.val_metrics(outputs, targets)
-        # Log only scalar values from metrics
-        scalar_metrics = {}
-        for key, value in metrics.items():
-            if isinstance(value, torch.Tensor) and value.numel() > 1:
-                # Cast to float if integer and compute mean
-                value = value.to(torch.float32).mean()
-            scalar_metrics[key] = value
-
-        self.log_dict(scalar_metrics, batch_size=batch_size)
+        self.log_dict(metrics, batch_size=len(images))
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> Tensor:
-        """Compute the predicted class probabilities.
+    ) -> list[dict[str, Tensor]]:
+        """Compute the predicted masks.
 
         Args:
             batch: The output of your DataLoader.
@@ -260,18 +225,16 @@ class InstanceSegmentationTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
 
         Returns:
-            Output predicted probabilities.
+            Output predicted masks.
         """
         images = batch['image']
+        predictions: list[dict[str, Tensor]] = self(images.unbind())
 
-        with torch.no_grad():
-            outputs = self.model(images)
+        for pred in predictions:
+            keep = pred['scores'] > 0.05
+            pred['boxes'] = pred['boxes'][keep]
+            pred['labels'] = pred['labels'][keep]
+            pred['scores'] = pred['scores'][keep]
+            pred['masks'] = (pred['masks'] > 0.5).squeeze(1).to(torch.uint8)[keep]
 
-        for output in outputs:
-            keep = output['scores'] > 0.05
-            output['boxes'] = output['boxes'][keep]
-            output['labels'] = output['labels'][keep]
-            output['scores'] = output['scores'][keep]
-            output['masks'] = (output['masks'] > 0.5).squeeze(1).to(torch.uint8)[keep]
-
-        return outputs
+        return predictions

@@ -17,7 +17,7 @@ from torchvision.models._api import WeightsEnum
 from torchgeo.datamodules import MisconfigurationException, VHR10DataModule
 from torchgeo.datasets import RGBBandsMissingError
 from torchgeo.main import main
-from torchgeo.models import ResNet18_Weights
+from torchgeo.models import ResNet50_Weights
 from torchgeo.trainers import InstanceSegmentationTask
 
 
@@ -76,7 +76,7 @@ class TestInstanceSegmentationTask:
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:
-        return ResNet18_Weights.SENTINEL2_ALL_MOCO
+        return ResNet50_Weights.SENTINEL2_ALL_MOCO
 
     @pytest.fixture
     def mocked_weights(
@@ -98,7 +98,7 @@ class TestInstanceSegmentationTask:
         return weights
 
     def test_weight_file(self, checkpoint: str) -> None:
-        InstanceSegmentationTask(backbone='resnet18', weights=checkpoint, num_classes=6)
+        InstanceSegmentationTask(backbone='resnet50', weights=checkpoint, num_classes=6)
 
     def test_weight_enum(self, mocked_weights: WeightsEnum) -> None:
         InstanceSegmentationTask(
@@ -140,7 +140,7 @@ class TestInstanceSegmentationTask:
             root='tests/data/vhr10', batch_size=1, num_workers=0
         )
         model = InstanceSegmentationTask(
-            backbone='resnet18', in_channels=15, num_classes=6
+            backbone='resnet50', in_channels=15, num_classes=6
         )
         trainer = Trainer(
             accelerator='cpu',
@@ -156,7 +156,7 @@ class TestInstanceSegmentationTask:
             root='tests/data/vhr10', batch_size=1, num_workers=0
         )
         model = InstanceSegmentationTask(
-            backbone='resnet18', in_channels=15, num_classes=6
+            backbone='resnet50', in_channels=15, num_classes=6
         )
         trainer = Trainer(
             accelerator='cpu',
@@ -167,7 +167,7 @@ class TestInstanceSegmentationTask:
         trainer.validate(model=model, datamodule=datamodule)
 
     def test_freeze_backbone(self) -> None:
-        task = InstanceSegmentationTask(backbone='resnet18', freeze_backbone=True)
+        task = InstanceSegmentationTask(backbone='resnet50', freeze_backbone=True)
         for param in task.model.backbone.parameters():
             assert param.requires_grad is False
 
