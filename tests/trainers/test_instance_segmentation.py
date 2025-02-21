@@ -72,6 +72,10 @@ class TestInstanceSegmentationTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
+        match name:
+            case 'ftw_ins_seg':
+                pytest.importorskip('pyarrow')
+
         config = os.path.join('tests', 'conf', name + '.yaml')
 
         args = [

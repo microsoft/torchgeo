@@ -90,7 +90,7 @@ class TestSemanticSegmentationTask:
         match name:
             case 'chabud' | 'cabuar':
                 pytest.importorskip('h5py', minversion='3.6')
-            case 'ftw':
+            case 'ftw_sem_seg':
                 pytest.importorskip('pyarrow')
             case 'landcoverai':
                 sha256 = (
