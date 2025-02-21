@@ -47,6 +47,7 @@ from .etci2021 import ETCI2021
 from .eudem import EUDEM
 from .eurocrops import EuroCrops
 from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
+from .everwatch import EverWatch
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
@@ -220,6 +221,7 @@ __all__ = (
     'EuroSAT',
     'EuroSAT100',
     'EuroSATSpatial',
+    'EverWatch',
     'FieldsOfTheWorld',
     'FireRisk',
     'ForestDamage',
