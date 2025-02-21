@@ -4,7 +4,7 @@
 """Sentinel datasets."""
 
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import torch
@@ -137,8 +137,14 @@ class Sentinel1(Sentinel):
         \.
     """
     date_format = '%Y%m%dT%H%M%S'
+
+    # https://sentiwiki.copernicus.eu/web/s1-mission
     all_bands = ('HH', 'HV', 'VV', 'VH')
+
     separate_files = True
+
+    # Central wavelength (μm)
+    wavelength = 55500
 
     def __init__(
         self,
@@ -276,7 +282,7 @@ class Sentinel2(Sentinel):
     """
     date_format = '%Y%m%dT%H%M%S'
 
-    # https://gisgeography.com/sentinel-2-bands-combinations/
+    # https://sentiwiki.copernicus.eu/web/s2-mission
     all_bands: tuple[str, ...] = (
         'B01',
         'B02',
@@ -295,6 +301,33 @@ class Sentinel2(Sentinel):
     rgb_bands = ('B04', 'B03', 'B02')
 
     separate_files = True
+
+    # Central wavelength (μm)
+    wavelengths: ClassVar[dict[str, float]] = {
+        'B01': 0.4427,
+        'B02': 0.4927,
+        'B03': 0.5598,
+        'B04': 0.6646,
+        'B05': 0.7041,
+        'B06': 0.7405,
+        'B07': 0.7828,
+        'B08': 0.8328,
+        'B8A': 0.8647,
+        'B09': 0.9451,
+        'B10': 1.3735,
+        'B11': 1.6137,
+        'B12': 2.2024,
+        # For compatibility with other dataset naming conventions
+        'B1': 0.4427,
+        'B2': 0.4927,
+        'B3': 0.5598,
+        'B4': 0.6646,
+        'B5': 0.7041,
+        'B6': 0.7405,
+        'B7': 0.7828,
+        'B8': 0.8328,
+        'B9': 0.9451,
+    }
 
     def __init__(
         self,

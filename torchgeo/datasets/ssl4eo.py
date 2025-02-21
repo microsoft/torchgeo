@@ -6,6 +6,7 @@
 import glob
 import os
 import random
+import re
 from collections.abc import Callable
 from typing import ClassVar, TypedDict
 
@@ -18,7 +19,14 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, check_integrity, download_url, extract_archive
+from .sentinel import Sentinel1, Sentinel2
+from .utils import (
+    Path,
+    check_integrity,
+    disambiguate_timestamp,
+    download_url,
+    extract_archive,
+)
 
 
 class SSL4EO(NonGeoDataset):
@@ -321,7 +329,7 @@ class SSL4EOL(NonGeoDataset):
         return fig
 
 
-class SSL4EOS12(NonGeoDataset):
+class SSL4EOS12(SSL4EO):
     """SSL4EO-S12 dataset.
 
     `Sentinel-1/2 <https://github.com/zhu-xlab/SSL4EO-S12>`_ version of SSL4EO.
@@ -356,12 +364,14 @@ class SSL4EOS12(NonGeoDataset):
         filename: str
         md5: str
         bands: list[str]
+        filename_regex: str
 
     metadata: ClassVar[dict[str, _Metadata]] = {
         's1': {
             'filename': 's1.tar.gz',
             'md5': '51ee23b33eb0a2f920bda25225072f3a',
             'bands': ['VV', 'VH'],
+            'filename_regex': r'^.{16}_(?P<date>\d{8}T\d{6})',
         },
         's2c': {
             'filename': 's2_l1c.tar.gz',
@@ -381,6 +391,7 @@ class SSL4EOS12(NonGeoDataset):
                 'B11',
                 'B12',
             ],
+            'filename_regex': r'^(?P<date>\d{8}T\d{6})',
         },
         's2a': {
             'filename': 's2_l2a.tar.gz',
@@ -399,6 +410,7 @@ class SSL4EOS12(NonGeoDataset):
                 'B11',
                 'B12',
             ],
+            'filename_regex': r'^(?P<date>\d{8}T\d{6})',
         },
     }
 
@@ -451,17 +463,48 @@ class SSL4EOS12(NonGeoDataset):
         root = os.path.join(self.root, self.split, f'{index:07}')
         subdirs = os.listdir(root)
         subdirs = random.sample(subdirs, self.seasons)
+        filename_regex = self.metadata[self.split]['filename_regex']
 
         images = []
+        xs = []
+        ys = []
+        ts = []
+        wavelengths: list[float] = []
         for subdir in subdirs:
             directory = os.path.join(root, subdir)
-            for band in self.bands:
-                filename = os.path.join(directory, f'{band}.tif')
-                with rasterio.open(filename) as f:
-                    image = f.read(out_shape=(1, self.size, self.size))
-                    images.append(torch.from_numpy(image.astype(np.float32)))
+            if match := re.match(filename_regex, subdir):
+                date_str = match.group('date')
+                match self.split:
+                    case 's1':
+                        date_format = Sentinel1.date_format
+                    case 's2c' | 's2a':
+                        date_format = Sentinel2.date_format
+                mint, maxt = disambiguate_timestamp(date_str, date_format)
+                for band in self.bands:
+                    match self.split:
+                        case 's1':
+                            wavelengths.append(Sentinel1.wavelength)
+                        case 's2c' | 's2a':
+                            wavelengths.append(Sentinel2.wavelengths[band])
 
-        sample = {'image': torch.cat(images)}
+                    filename = os.path.join(directory, f'{band}.tif')
+                    with rasterio.open(filename) as f:
+                        minx, maxx = f.bounds.left, f.bounds.right
+                        miny, maxy = f.bounds.bottom, f.bounds.top
+                        image = f.read(out_shape=(1, self.size, self.size))
+                        images.append(torch.from_numpy(image.astype(np.float32)))
+                xs.append((minx + maxx) / 2)
+                ys.append((miny + maxy) / 2)
+                ts.append((mint + maxt) / 2)
+
+        sample = {
+            'image': torch.cat(images),
+            'x': torch.tensor(xs),
+            'y': torch.tensor(ys),
+            't': torch.tensor(ts),
+            'wavelength': torch.tensor(wavelengths),
+            'res': torch.tensor(10),
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
