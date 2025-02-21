@@ -123,7 +123,7 @@ class TestRandomBatchGeoSampler:
                 assert query in roi
 
     def test_small_area(self) -> None:
-        ds = CustomGeoDataset(res=1)
+        ds = CustomGeoDataset(res=(1, 1))
         ds.index.insert(0, (0, 10, 0, 10, 0, 10))
         ds.index.insert(1, (20, 21, 20, 21, 20, 21))
         sampler = RandomBatchGeoSampler(ds, 2, 2, 10)
