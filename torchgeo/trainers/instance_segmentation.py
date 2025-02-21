@@ -8,7 +8,8 @@ from typing import Any
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
-from torch import Tensor, nn
+from timm.models import adapt_input_conv  # type: ignore[attr-defined]
+from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import ResNet50_Weights
@@ -67,7 +68,7 @@ class InstanceSegmentationTask(BaseTask):
         model: str = self.hparams['model']
         backbone: str = self.hparams['backbone']
         in_channels: int = self.hparams['in_channels']
-        num_classes: str = self.hparams['num_classes']
+        num_classes: int = self.hparams['num_classes']
 
         weights = None
         weights_backbone = None
@@ -92,15 +93,9 @@ class InstanceSegmentationTask(BaseTask):
             msg = f"Invalid model type '{model}'. Supported model: 'mask_rcnn'"
             raise ValueError(msg)
 
-        if in_channels != 3:
-            self.model.backbone.conv1 = nn.Conv2d(
-                in_channels,
-                self.model.backbone.inplanes,
-                kernel_size=7,
-                stride=2,
-                padding=3,
-                bias=False,
-            )
+        self.model.backbone.body.conv1.weight = adapt_input_conv(  # type: ignore[no-untyped-call]
+            in_channels, self.model.backbone.body.conv1.weight
+        )
 
         # Freeze backbone
         if self.hparams['freeze_backbone']:
