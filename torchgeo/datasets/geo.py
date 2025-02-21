@@ -435,6 +435,7 @@ class RasterDataset(GeoDataset):
             cache: if True, cache file handle to speed up repeated sampling
 
         Raises:
+            AssertionError: If *bands* are invalid.
             DatasetNotFoundError: If dataset is not found.
 
         .. versionchanged:: 0.5
@@ -445,6 +446,9 @@ class RasterDataset(GeoDataset):
         self.paths = paths
         self.bands = bands or self.all_bands
         self.cache = cache
+
+        if self.all_bands:
+            assert set(self.bands) <= set(self.all_bands)
 
         # Populate the dataset index
         i = 0
