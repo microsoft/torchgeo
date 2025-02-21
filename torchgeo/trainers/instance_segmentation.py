@@ -10,6 +10,7 @@ import torch
 from matplotlib.figure import Figure
 from timm.models import adapt_input_conv  # type: ignore[attr-defined]
 from torch import Tensor
+from torch.nn.parameter import Parameter
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import ResNet50_Weights
@@ -93,9 +94,8 @@ class InstanceSegmentationTask(BaseTask):
             msg = f"Invalid model type '{model}'. Supported model: 'mask_rcnn'"
             raise ValueError(msg)
 
-        self.model.backbone.body.conv1.weight = adapt_input_conv(  # type: ignore[no-untyped-call]
-            in_channels, self.model.backbone.body.conv1.weight
-        )
+        weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)  # type: ignore[no-untyped-call]
+        self.model.backbone.body.conv1.weight = Parameter(weight)
 
         # Freeze backbone
         if self.hparams['freeze_backbone']:
