@@ -144,7 +144,7 @@ class Sentinel1(Sentinel):
         self,
         paths: Path | list[Path] = 'data',
         crs: CRS | None = None,
-        res: float = 10,
+        res: tuple[float, float] = (10, 10),
         bands: Sequence[str] = ['VV', 'VH'],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
@@ -300,7 +300,7 @@ class Sentinel2(Sentinel):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float = 10,
+        res: tuple[float, float] = (10, 10),
         bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
@@ -326,7 +326,7 @@ class Sentinel2(Sentinel):
         """
         bands = bands or self.all_bands
         self.filename_glob = self.filename_glob.format(bands[0])
-        self.filename_regex = self.filename_regex.format(res)
+        self.filename_regex = self.filename_regex.format(res[0])
 
         super().__init__(paths, crs, res, bands, transforms, cache)
 

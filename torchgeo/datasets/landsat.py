@@ -62,7 +62,7 @@ class Landsat(RasterDataset, abc.ABC):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
+        res: tuple[float, float] | None = None,
         bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,

@@ -37,7 +37,7 @@ class CustomGeoDataset(GeoDataset):
         self,
         bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
         crs: CRS = CRS.from_epsg(4087),
-        res: float = 1,
+        res: tuple[float, float] = (1, 1),
         paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
     ) -> None:
         super().__init__()
@@ -324,7 +324,8 @@ class TestRasterDataset:
     def test_reprojection(self, naip: NAIP) -> None:
         naip2 = NAIP(naip.paths, crs='EPSG:4326')
         assert naip.crs != naip2.crs
-        assert not math.isclose(naip.res, naip2.res)
+        assert not math.isclose(naip.res[0], naip2.res[0])
+        assert not math.isclose(naip.res[1], naip2.res[1])
 
     @pytest.mark.parametrize('dtype', ['uint16', 'uint32'])
     def test_getitem_uint_dtype(self, dtype: str) -> None:
@@ -381,14 +382,14 @@ class TestVectorDataset:
     def dataset(self) -> CustomVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
-        return CustomVectorDataset(root, res=0.1, transforms=transforms)
+        return CustomVectorDataset(root, res=(0.1, 0.1), transforms=transforms)
 
     @pytest.fixture(scope='class')
     def multilabel(self) -> CustomVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
         return CustomVectorDataset(
-            root, res=0.1, transforms=transforms, label_name='label_id'
+            root, res=(0.1, 0.1), transforms=transforms, label_name='label_id'
         )
 
     def test_getitem(self, dataset: CustomVectorDataset) -> None:
@@ -562,7 +563,7 @@ class TestIntersectionDataset:
         ds = IntersectionDataset(ds1, ds2)
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds.res == 2
+        assert ds1.res == ds2.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds) == 1
         assert isinstance(sample['image'], torch.Tensor)
 
@@ -573,7 +574,7 @@ class TestIntersectionDataset:
         ds = (ds1 & ds2) & ds3
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
         assert isinstance(sample['image'], torch.Tensor)
 
@@ -584,7 +585,7 @@ class TestIntersectionDataset:
         ds = ds1 & (ds2 & ds3)
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
         assert isinstance(sample['image'], torch.Tensor)
 
@@ -594,7 +595,7 @@ class TestIntersectionDataset:
         ds = IntersectionDataset(ds1, ds2)
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds.res == 2
+        assert ds1.res == ds2.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds) == 1
         assert isinstance(sample['image'], torch.Tensor)
 
@@ -605,7 +606,7 @@ class TestIntersectionDataset:
         ds = (ds1 & ds2) & ds3
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
         assert isinstance(sample['image'], torch.Tensor)
 
@@ -616,7 +617,7 @@ class TestIntersectionDataset:
         ds = ds1 & (ds2 & ds3)
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
         assert isinstance(sample['image'], torch.Tensor)
 
@@ -625,7 +626,7 @@ class TestIntersectionDataset:
         ds2 = CustomGeoDataset(BoundingBox(1, 1, 3, 3, 5, 5))
         ds = IntersectionDataset(ds1, ds2)
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds.res == 1
+        assert ds1.res == ds2.res == ds.res == (1, 1)
         assert len(ds1) == len(ds2) == len(ds) == 1
 
     def test_no_overlap(self) -> None:
@@ -678,7 +679,7 @@ class TestUnionDataset:
         ds = UnionDataset(ds1, ds2)
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds.res == 2
+        assert ds1.res == ds2.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == 1
         assert len(ds) == 2
         assert isinstance(sample['image'], torch.Tensor)
@@ -690,7 +691,7 @@ class TestUnionDataset:
         ds = (ds1 | ds2) | ds3
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == 1
         assert len(ds) == 3
         assert isinstance(sample['image'], torch.Tensor)
@@ -702,7 +703,7 @@ class TestUnionDataset:
         ds = ds1 | (ds2 | ds3)
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == 1
         assert len(ds) == 3
         assert isinstance(sample['image'], torch.Tensor)
@@ -713,7 +714,7 @@ class TestUnionDataset:
         ds = UnionDataset(ds1, ds2)
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds.res == 2
+        assert ds1.res == ds2.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == 1
         assert len(ds) == 2
         assert isinstance(sample['image'], torch.Tensor)
@@ -725,7 +726,7 @@ class TestUnionDataset:
         ds = (ds1 | ds2) | ds3
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == 1
         assert len(ds) == 3
         assert isinstance(sample['image'], torch.Tensor)
@@ -737,7 +738,7 @@ class TestUnionDataset:
         ds = ds1 | (ds2 | ds3)
         sample = ds[ds.bounds]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds3.res == ds.res == 2
+        assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == 1
         assert len(ds) == 3
         assert isinstance(sample['image'], torch.Tensor)

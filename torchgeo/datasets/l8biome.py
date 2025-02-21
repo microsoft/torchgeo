@@ -134,7 +134,7 @@ class L8Biome(IntersectionDataset):
         self,
         paths: Path | Iterable[Path],
         crs: CRS | None = CRS.from_epsg(3857),
-        res: float | None = None,
+        res: tuple[float, float] | None = None,
         bands: Sequence[str] = L8BiomeImage.all_bands,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,

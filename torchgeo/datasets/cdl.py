@@ -209,7 +209,7 @@ class CDL(RasterDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
+        res: tuple[float, float] | None = None,
         years: list[int] = [2023],
         classes: list[int] = list(cmap.keys()),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,

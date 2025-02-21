@@ -53,7 +53,7 @@ class IOBench(IntersectionDataset):
         root: Path = 'data',
         split: str = 'preprocessed',
         crs: CRS | None = None,
-        res: float | None = None,
+        res: tuple[float, float] | None = None,
         bands: Sequence[str] | None = [*Landsat9.default_bands, 'SR_QA_AEROSOL'],
         classes: list[int] = [0],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
