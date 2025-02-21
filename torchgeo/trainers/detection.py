@@ -10,7 +10,9 @@ import matplotlib.pyplot as plt
 import torch
 import torchvision.models.detection
 from matplotlib.figure import Figure
+from timm.models import adapt_input_conv  # type: ignore[attr-defined]
 from torch import Tensor
+from torch.nn.parameter import Parameter
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import resnet as R
@@ -111,6 +113,7 @@ class ObjectDetectionTask(BaseTask):
         backbone: str = self.hparams['backbone']
         model: str = self.hparams['model']
         weights: bool | None = self.hparams['weights']
+        in_channels: int = self.hparams['in_channels']
         num_classes: int = self.hparams['num_classes']
         freeze_backbone: bool = self.hparams['freeze_backbone']
 
@@ -203,6 +206,9 @@ class ObjectDetectionTask(BaseTask):
             )
         else:
             raise ValueError(f"Model type '{model}' is not valid.")
+
+        weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)  # type: ignore[no-untyped-call]
+        self.model.backbone.body.conv1.weight = Parameter(weight)
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
