@@ -419,7 +419,7 @@ class RasterDataset(GeoDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: tuple[float, float] | None = None,
+        res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
@@ -506,6 +506,9 @@ class RasterDataset(GeoDataset):
                         'attribute, so `bands` cannot be specified.'
                     )
                     raise AssertionError(msg)
+
+        if isinstance(res, float):
+            res = (res, res)
 
         self._crs = cast(CRS, crs)
         self._res = cast(tuple[float, float], res)
@@ -658,7 +661,7 @@ class VectorDataset(GeoDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: tuple[float, float] = (0.0001, 0.0001),
+        res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         label_name: str | None = None,
     ) -> None:
@@ -718,6 +721,9 @@ class VectorDataset(GeoDataset):
 
         if i == 0:
             raise DatasetNotFoundError(self)
+
+        if isinstance(res, float):
+            res = (res, res)
 
         self._crs = crs
         self._res = res
