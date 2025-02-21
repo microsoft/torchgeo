@@ -102,9 +102,7 @@ class ScaleMAE(VisionTransformer):
     * https://arxiv.org/abs/2212.14532
     """
 
-    def __init__(
-        self, res: tuple[float, float] = (1.0, 1.0), *args: Any, **kwargs: Any
-    ) -> None:
+    def __init__(self, res: float = 1.0, *args: Any, **kwargs: Any) -> None:
         """Initialize a new ScaleMAE model.
 
         Args:
