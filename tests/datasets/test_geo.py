@@ -561,7 +561,7 @@ class TestIntersectionDataset:
         ):
             IntersectionDataset(ds1, ds2)  # type: ignore[arg-type]
 
-    def test_different_res_12(self) -> None:
+    def test_multiple_res_12(self) -> None:
         ds1 = RasterDataset(
             os.path.join('tests', 'data', 'raster', 'res_2-1_epsg_4087')
         )
@@ -575,7 +575,7 @@ class TestIntersectionDataset:
         assert len(ds1) == len(ds2) == len(ds) == 1
         assert isinstance(sample['image'], torch.Tensor)
 
-    def test_different_res_21(self) -> None:
+    def test_multiple_res_21(self) -> None:
         ds1 = RasterDataset(
             os.path.join('tests', 'data', 'raster', 'res_2-1_epsg_4087')
         )
