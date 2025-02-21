@@ -68,7 +68,7 @@ def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
 
 
 class TestInstanceSegmentationTask:
-    @pytest.mark.parametrize('name', ['vhr10_ins_seg'])
+    @pytest.mark.parametrize('name', ['ftw_ins_seg', 'vhr10_ins_seg'])
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
