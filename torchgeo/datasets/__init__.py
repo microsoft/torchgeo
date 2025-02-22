@@ -49,6 +49,7 @@ from .eurocrops import EuroCrops
 from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
+from .flair2 import FLAIR2, FLAIR2Toy
 from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
@@ -162,6 +163,7 @@ __all__ = (
     'ETCI2021',
     'EUDEM',
     'FAIR1M',
+    'FLAIR2',
     'GBIF',
     'GID15',
     'LEVIRCD',
@@ -220,6 +222,7 @@ __all__ = (
     'EuroSAT',
     'EuroSAT100',
     'EuroSATSpatial',
+    'FLAIR2Toy',
     'FieldsOfTheWorld',
     'FireRisk',
     'ForestDamage',

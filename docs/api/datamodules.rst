@@ -119,6 +119,11 @@ FireRisk
 
 .. autoclass:: FireRiskDataModule
 
+FLAIR2
+^^^^^^
+
+.. autoclass:: FLAIR2DataModule
+
 GeoNRW
 ^^^^^^
 
