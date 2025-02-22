@@ -283,8 +283,8 @@ class ObjectDetectionTask(BaseTask):
         ):
             datamodule = self.trainer.datamodule
             batch['prediction_bbox_xyxy'] = [b['boxes'].cpu() for b in y_hat]
-            batch['prediction_labels'] = [b['labels'].cpu() for b in y_hat]
-            batch['prediction_scores'] = [b['scores'].cpu() for b in y_hat]
+            batch['prediction_label'] = [b['labels'].cpu() for b in y_hat]
+            batch['prediction_score'] = [b['scores'].cpu() for b in y_hat]
             batch['image'] = batch['image'].cpu()
             sample = unbind_samples(batch)[0]
             # Convert image to uint8 for plotting
