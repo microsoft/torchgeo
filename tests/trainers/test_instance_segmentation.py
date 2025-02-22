@@ -5,58 +5,21 @@ import os
 from typing import Any
 
 import pytest
-import torch
-import torch.nn as nn
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
-from torch.nn.modules import Module
 
 from torchgeo.datamodules import MisconfigurationException, VHR10DataModule
 from torchgeo.datasets import VHR10, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.trainers import InstanceSegmentationTask
 
-# MAP metric requires pycocotools to be installed
+# mAP metric requires pycocotools to be installed
 pytest.importorskip('pycocotools')
 
 
 class PredictInstanceSegmentationDataModule(VHR10DataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = VHR10(**self.kwargs)
-
-
-# TODO: This is not even used yet
-class InstanceSegmentationTestModel(Module):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__()
-        self.fc = nn.Linear(1, 1)
-
-    def forward(self, images: Any, targets: Any = None) -> Any:
-        batch_size = len(images)
-        if self.training:
-            assert batch_size == len(targets)
-            # use the Linear layer to generate a tensor that has a gradient
-            return {
-                'loss_classifier': self.fc(torch.rand(1)),
-                'loss_box_reg': self.fc(torch.rand(1)),
-                'loss_objectness': self.fc(torch.rand(1)),
-                'loss_rpn_box_reg': self.fc(torch.rand(1)),
-            }
-        else:  # eval mode
-            output = []
-            for i in range(batch_size):
-                boxes = torch.rand(10, 4)
-                # xmax, ymax must be larger than xmin, ymin
-                boxes[:, 2:] += 1
-                output.append(
-                    {
-                        'boxes': boxes,
-                        'masks': torch.randint(2, images.shape[1:]),
-                        'labels': torch.randint(2, (10,)),
-                        'scores': torch.rand(10),
-                    }
-                )
-            return output
 
 
 def plot(*args: Any, **kwargs: Any) -> None:

@@ -35,11 +35,11 @@ class InstanceSegmentationTask(BaseTask):
 
     def __init__(
         self,
-        model: str = 'mask_rcnn',
+        model: str = 'mask-rcnn',
         backbone: str = 'resnet50',
         weights: bool | None = None,
         in_channels: int = 3,
-        num_classes: int = 2,
+        num_classes: int = 91,
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
@@ -80,7 +80,7 @@ class InstanceSegmentationTask(BaseTask):
                 weights_backbone = ResNet50_Weights.IMAGENET1K_V1
 
         # Create model
-        if model == 'mask_rcnn':
+        if model == 'mask-rcnn':
             if backbone == 'resnet50':
                 self.model = maskrcnn_resnet50_fpn(
                     weights=weights,
@@ -91,7 +91,7 @@ class InstanceSegmentationTask(BaseTask):
                 msg = f"Invalid backbone type '{backbone}'. Supported backbone: 'resnet50'"
                 raise ValueError(msg)
         else:
-            msg = f"Invalid model type '{model}'. Supported model: 'mask_rcnn'"
+            msg = f"Invalid model type '{model}'. Supported model: 'mask-rcnn'"
             raise ValueError(msg)
 
         weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)  # type: ignore[no-untyped-call]
@@ -105,7 +105,17 @@ class InstanceSegmentationTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        - Uses Mean Average Precision (mAP) for masks (IOU-based metric).
+        * :class:`~torchmetrics.detection.mean_ap.MeanAveragePrecision`: Mean average
+          precision (mAP) and mean average recall (mAR). Precision is the number of
+          true positives divided by the number of true positives + false positives.
+          Recall is the number of true positives divived by the number of true positives
+          + false negatives. Uses 'macro' averaging. Higher values are better.
+
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not
+             reflect minority class accuracy.
+           * 'Macro' averaging gives equal weight to each class, and is useful for
+             balanced performance assessment across imbalanced classes.
         """
         metrics = MetricCollection([MeanAveragePrecision(iou_type='segm')])
         self.val_metrics = metrics.clone(prefix='val_')
@@ -130,9 +140,9 @@ class InstanceSegmentationTask(BaseTask):
             'labels': batch['label'],
             'masks': batch['mask'],
         }
-        losses = self(x.unbind(), unbind_samples(y))
-        self.log_dict(losses, batch_size=len(x))
-        loss: Tensor = sum(losses.values())
+        loss_dict = self(x.unbind(), unbind_samples(y))
+        self.log_dict(loss_dict, batch_size=len(x))
+        loss: Tensor = sum(loss_dict.values())
         return loss
 
     def validation_step(
