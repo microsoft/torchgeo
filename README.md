@@ -276,4 +276,4 @@ If you use this software in your work, please cite our [paper](https://dl.acm.or
 
 This project welcomes contributions and suggestions. If you would like to submit a pull request, see our [Contribution Guide](https://torchgeo.readthedocs.io/en/stable/user/contributing.html) for more information.
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+This project has adopted the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/). For more information see the [Contributor Covenant Code of Conduct FAQ](https://www.contributor-covenant.org/faq/) or contact @adamjstewart on Slack with any additional questions or comments.
