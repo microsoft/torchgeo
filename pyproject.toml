@@ -75,8 +75,8 @@ dependencies = [
     "timm>=0.9.2",
     # torch 1.13+ required by torchvision
     "torch>=1.13",
-    # torchmetrics 0.10+ required for binary/multiclass/multilabel classification metrics
-    "torchmetrics>=0.10",
+    # torchmetrics 1.2+ required for average argument in mAP metric
+    "torchmetrics>=1.2",
     # torchvision 0.14+ required for torchvision.models.swin_v2_b
     "torchvision>=0.14",
     # typing-extensions 4.5+ required for typing_extensions.deprecated
