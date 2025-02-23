@@ -21,7 +21,7 @@ Path: TypeAlias = str | os.PathLike[str]
 class SenBenchBiomassS3(NonGeoDataset):
     """SenBench-Biomass-S3 dataset.
 
-    The Sentinel-Bench Biomass S3 dataset is a level-3 dataset from the SentinelBench benchmark.
+    The SenBench-Biomass-S3 dataset is a level-3 dataset from the SentinelBench benchmark.
 
     It contains Sentinel-3 OLCI images and CCI biomass maps for the biomass regression task.
     It supports both static (1 image / location) and time series (1-4 images / location) mode, the former is used in the original benchmark.
