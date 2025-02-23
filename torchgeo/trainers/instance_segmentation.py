@@ -30,7 +30,7 @@ class InstanceSegmentationTask(BaseTask):
     """
 
     ignore = None
-    monitor = 'val_map'
+    monitor = 'val_segm_map'
     mode = 'max'
 
     def __init__(
@@ -117,7 +117,7 @@ class InstanceSegmentationTask(BaseTask):
            * 'Macro' averaging gives equal weight to each class, and is useful for
              balanced performance assessment across imbalanced classes.
         """
-        metrics = MetricCollection([MeanAveragePrecision(iou_type='segm')])
+        metrics = MetricCollection([MeanAveragePrecision(iou_type=('bbox', 'segm'))])
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
 
@@ -156,7 +156,11 @@ class InstanceSegmentationTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
         """
         x = batch['image']
-        y = {'masks': batch['mask'], 'labels': batch['label']}
+        y = {
+            'boxes': batch['bbox_xyxy'],
+            'labels': batch['label'],
+            'masks': batch['mask'],
+        }
         y_hat = self(x.unbind())
         for pred in y_hat:
             pred['masks'] = (pred['masks'] > 0.5).squeeze(1).to(torch.uint8)
@@ -208,7 +212,11 @@ class InstanceSegmentationTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
         """
         x = batch['image']
-        y = {'masks': batch['mask'], 'labels': batch['label']}
+        y = {
+            'boxes': batch['bbox_xyxy'],
+            'labels': batch['label'],
+            'masks': batch['mask'],
+        }
         y_hat = self(x.unbind())
         for pred in y_hat:
             pred['masks'] = (pred['masks'] > 0.5).squeeze(1).to(torch.uint8)
