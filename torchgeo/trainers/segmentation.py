@@ -6,6 +6,7 @@
 import os
 from typing import Any
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import torch.nn as nn
@@ -263,8 +264,12 @@ class SemanticSegmentationTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
-            aug = datamodule._valid_attribute('val_aug', 'aug')
-            batch = aug.inverse(batch)
+            aug = K.AugmentationSequential(
+                K.Denormalize(datamodule.mean, datamodule.std),
+                data_keys=None,
+                keepdim=True,
+            )
+            batch = aug(batch)
             batch['prediction'] = y_hat.argmax(dim=1)
             for key in ['image', 'mask', 'prediction']:
                 batch[key] = batch[key].cpu()

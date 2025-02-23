@@ -6,6 +6,7 @@
 import os
 from typing import Any
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import timm
@@ -203,8 +204,12 @@ class RegressionTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
-            aug = datamodule._valid_attribute('val_aug', 'aug')
-            batch = aug.inverse(batch)
+            aug = K.AugmentationSequential(
+                K.Denormalize(datamodule.mean, datamodule.std),
+                data_keys=None,
+                keepdim=True,
+            )
+            batch = aug(batch)
             if self.target_key == 'mask':
                 y = y.squeeze(dim=1)
                 y_hat = y_hat.squeeze(dim=1)
