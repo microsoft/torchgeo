@@ -154,6 +154,7 @@ from .xview import XView2
 from .zuericrop import ZueriCrop
 
 from .senbench_cloud_s3 import SenBenchCloudS3
+from .senbench_lc100cls_s3 import SenBenchLC100ClsS3
 from .sentinelbench import SentinelBench
 
 
@@ -312,5 +313,6 @@ __all__ = (
     'time_series_split',
     'unbind_samples',
     'SenBenchCloudS3',
+    'SenBenchLC100ClsS3',
     'SentinelBench',
 )
