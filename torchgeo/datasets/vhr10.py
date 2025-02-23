@@ -400,7 +400,6 @@ class VHR10(NonGeoDataset):
         if show_feats != 'boxes':
             skimage = lazy_import('skimage')
 
-        image = sample['image'].permute(1, 2, 0).numpy()
         boxes = sample['bbox_xyxy'].cpu().numpy()
         labels = sample['label'].cpu().numpy()
         if 'mask' in sample:
