@@ -152,6 +152,7 @@ from .vhr10 import VHR10
 from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
 from .xview import XView2
 from .zuericrop import ZueriCrop
+from .senbench_biomass_s3 import SenBenchBiomassS3
 
 __all__ = (
     'ADVANCE',
@@ -307,4 +308,5 @@ __all__ = (
     'stack_samples',
     'time_series_split',
     'unbind_samples',
+    'SenBenchBiomassS3',
 )
