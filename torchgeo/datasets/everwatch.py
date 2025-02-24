@@ -182,8 +182,8 @@ class EverWatch(NonGeoDataset):
         Returns:
             bounding boxes and labels
         """
-        boxes = torch.Tensor(
-            sample_df[['xmin', 'ymin', 'xmax', 'ymax']].values.tolist()
+        boxes = torch.from_numpy(
+            sample_df[['xmin', 'ymin', 'xmax', 'ymax']].values
         ).float()
         labels = torch.Tensor(
             [self.class2idx[label] for label in sample_df['label'].tolist()]

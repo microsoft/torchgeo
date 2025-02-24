@@ -16,7 +16,7 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `Digital Typhoon`_,"C, R",Himawari,"CC-BY-4.0","189,364",8,512,5000,Infrared
 `ETCI2021 Flood Detection`_,S,Sentinel-1,-,"66,810",2,256x256,5--20,SAR
 `EuroSAT`_,C,Sentinel-2,"MIT","27,000",10,64x64,10,MSI
-`EverWatch`_,OD,Aerial,"CC0 1.0 Universal","5,325",7,"1,500x1500p",0.01,RGB
+`EverWatch`_,OD,Aerial,"CC0-1.0","5,325",7,"1,500x1500p",0.01,RGB
 `FAIR1M`_,OD,Gaofen/Google Earth,"CC-BY-NC-SA-3.0","15,000",37,"1,024x1,024",0.3--0.8,RGB
 `Fields Of The World`_,"S,I",Sentinel-2,"Various","70795","2,3",256x256,10,MSI
 `FireRisk`_,C,NAIP Aerial,"CC-BY-NC-4.0","91,872",7,"320x320",1,RGB
