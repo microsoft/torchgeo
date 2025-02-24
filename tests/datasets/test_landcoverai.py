@@ -72,7 +72,7 @@ class TestLandCoverAIGeo:
 
 
 class TestLandCoverAI:
-    pytest.importorskip('cv2', minversion='4.5.4')
+    pytest.importorskip('cv2', minversion='4.5.5')
 
     @pytest.fixture(
         params=product([LandCoverAI100, LandCoverAI], ['train', 'val', 'test'])
