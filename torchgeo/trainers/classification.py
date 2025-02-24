@@ -6,6 +6,7 @@
 import os
 from typing import Any
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import timm
 import torch
@@ -215,6 +216,12 @@ class ClassificationTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
+            aug = K.AugmentationSequential(
+                K.Denormalize(datamodule.mean, datamodule.std),
+                data_keys=None,
+                keepdim=True,
+            )
+            batch = aug(batch)
             batch['prediction'] = y_hat.argmax(dim=-1)
             for key in ['image', 'label', 'prediction']:
                 batch[key] = batch[key].cpu()
@@ -359,6 +366,12 @@ class MultiLabelClassificationTask(ClassificationTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
+            aug = K.AugmentationSequential(
+                K.Denormalize(datamodule.mean, datamodule.std),
+                data_keys=None,
+                keepdim=True,
+            )
+            batch = aug(batch)
             batch['prediction'] = y_hat_hard
             for key in ['image', 'label', 'prediction']:
                 batch[key] = batch[key].cpu()
