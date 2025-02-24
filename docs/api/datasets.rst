@@ -220,6 +220,7 @@ BigEarthNet
 ^^^^^^^^^^^
 
 .. autoclass:: BigEarthNet
+.. autoclass:: BigEarthNetV2
 
 BioMassters
 ^^^^^^^^^^^
@@ -283,6 +284,10 @@ Digital Typhoon
 ^^^^^^^^^^^^^^^
 
 .. autoclass:: DigitalTyphoon
+
+DL4GAM
+^^^^^^
+.. autoclass:: DL4GAMAlps
 
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
