@@ -19,6 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
+from .landsat import Landsat, Landsat5TM, Landsat7, Landsat8
 from .sentinel import Sentinel1, Sentinel2
 from .utils import (
     Path,
@@ -40,7 +41,7 @@ class SSL4EO(NonGeoDataset):
     """
 
 
-class SSL4EOL(NonGeoDataset):
+class SSL4EOL(SSL4EO):
     """SSL4EO-L dataset.
 
     Landsat version of SSL4EO.
@@ -104,15 +105,42 @@ class SSL4EOL(NonGeoDataset):
     """
 
     class _Metadata(TypedDict):
-        num_bands: int
+        all_bands: list[str]
         rgb_bands: list[int]
 
     metadata: ClassVar[dict[str, _Metadata]] = {
-        'tm_toa': {'num_bands': 7, 'rgb_bands': [2, 1, 0]},
-        'etm_toa': {'num_bands': 9, 'rgb_bands': [2, 1, 0]},
-        'etm_sr': {'num_bands': 6, 'rgb_bands': [2, 1, 0]},
-        'oli_tirs_toa': {'num_bands': 11, 'rgb_bands': [3, 2, 1]},
-        'oli_sr': {'num_bands': 7, 'rgb_bands': [3, 2, 1]},
+        'tm_toa': {
+            'all_bands': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
+            'rgb_bands': [2, 1, 0],
+        },
+        'etm_toa': {
+            'all_bands': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B6', 'B7', 'B8'],
+            'rgb_bands': [2, 1, 0],
+        },
+        'etm_sr': {
+            'all_bands': ['B1', 'B2', 'B3', 'B4', 'B5', 'B7'],
+            'rgb_bands': [2, 1, 0],
+        },
+        'oli_tirs_toa': {
+            'all_bands': [
+                'B1',
+                'B2',
+                'B3',
+                'B4',
+                'B5',
+                'B6',
+                'B7',
+                'B8',
+                'B9',
+                'B10',
+                'B11',
+            ],
+            'rgb_bands': [3, 2, 1],
+        },
+        'oli_sr': {
+            'all_bands': ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7'],
+            'rgb_bands': [3, 2, 1],
+        },
     }
 
     url = 'https://hf.co/datasets/torchgeo/ssl4eo_l/resolve/e2467887e6a6bcd7547d9d5999f8d9bc3323dc31/{0}/ssl4eo_l_{0}.tar.gz{1}'
@@ -205,6 +233,17 @@ class SSL4EOL(NonGeoDataset):
 
         self._verify()
 
+        if split.startswith('tm'):
+            base: type[Landsat] = Landsat5TM
+        elif split.startswith('etm'):
+            base = Landsat7
+        else:
+            base = Landsat8
+
+        self.wavelengths = []
+        for band in self.metadata[split]['all_bands']:
+            self.wavelengths.append(base.wavelengths[band])
+
         self.scenes = sorted(os.listdir(self.subdir))
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -221,14 +260,32 @@ class SSL4EOL(NonGeoDataset):
         subdirs = random.sample(subdirs, self.seasons)
 
         images = []
+        xs = []
+        ys = []
+        ts = []
+        wavelengths = []
         for subdir in subdirs:
+            mint, maxt = disambiguate_timestamp(subdir[-8:], Landsat.date_format)
             directory = os.path.join(root, subdir)
             filename = os.path.join(directory, 'all_bands.tif')
             with rasterio.open(filename) as f:
+                minx, maxx = f.bounds.left, f.bounds.right
+                miny, maxy = f.bounds.bottom, f.bounds.top
                 image = f.read()
                 images.append(torch.from_numpy(image.astype(np.float32)))
+                xs.append((minx + maxx) / 2)
+                ys.append((miny + maxy) / 2)
+                ts.append((mint + maxt) / 2)
+                wavelengths.extend(self.wavelengths)
 
-        sample = {'image': torch.cat(images)}
+        sample = {
+            'image': torch.cat(images),
+            'x': torch.tensor(xs),
+            'y': torch.tensor(ys),
+            't': torch.tensor(ts),
+            'wavelength': torch.tensor(wavelengths),
+            'res': torch.tensor(30),
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -310,7 +367,7 @@ class SSL4EOL(NonGeoDataset):
         fig, axes = plt.subplots(
             ncols=self.seasons, squeeze=False, figsize=(4 * self.seasons, 4)
         )
-        num_bands = self.metadata[self.split]['num_bands']
+        num_bands = len(self.metadata[self.split]['all_bands'])
         rgb_bands = self.metadata[self.split]['rgb_bands']
 
         for i in range(self.seasons):
