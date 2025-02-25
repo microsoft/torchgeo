@@ -154,6 +154,12 @@ from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
 from .xview import XView2
 from .zuericrop import ZueriCrop
 
+from .senbench_cloud_s3 import SenBenchCloudS3
+from .senbench_lc100cls_s3 import SenBenchLC100ClsS3
+from .senbench_lc100seg_s3 import SenBenchLC100SegS3
+from .sentinelbench import SentinelBench
+
+
 __all__ = (
     'ADVANCE',
     'BRIGHTDFC2025',
@@ -309,4 +315,8 @@ __all__ = (
     'stack_samples',
     'time_series_split',
     'unbind_samples',
+    'SenBenchCloudS3',
+    'SenBenchLC100ClsS3',
+    'SenBenchLC100SegS3',
+    'SentinelBench',
 )
