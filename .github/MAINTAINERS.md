@@ -8,6 +8,7 @@ This document lists the Maintainers of the Project. Maintainers may be added onc
 | Nils Lehmann    | @nilsleh      | TUM             |
 | Caleb Robinson  | @calebrob6    | Microsoft       |
 | Isaac Corley    | @isaaccorley  |                 |
+| Ashwin Nair     | @ashnair1     | Bayanat         |
 ---
 
 Part of MVG-0.1-beta.
