@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import torch
 import torchvision.models.detection
 from matplotlib.figure import Figure
-from timm.models import adapt_input_conv  # type: ignore[attr-defined]
+from timm.models import adapt_input_conv
 from torch import Tensor
 from torch.nn.parameter import Parameter
 from torchmetrics import MetricCollection
@@ -207,7 +207,7 @@ class ObjectDetectionTask(BaseTask):
         else:
             raise ValueError(f"Model type '{model}' is not valid.")
 
-        weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)  # type: ignore[no-untyped-call]
+        weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)
         self.model.backbone.body.conv1.weight = Parameter(weight)
 
     def configure_metrics(self) -> None:
