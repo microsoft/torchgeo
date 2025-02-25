@@ -8,7 +8,7 @@ from typing import Any
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
-from timm.models import adapt_input_conv  # type: ignore[attr-defined]
+from timm.models import adapt_input_conv
 from torch import Tensor
 from torch.nn.parameter import Parameter
 from torchmetrics import MetricCollection
@@ -74,10 +74,10 @@ class InstanceSegmentationTask(BaseTask):
         weights = None
         weights_backbone = None
         if self.hparams['weights']:
-            weights = MaskRCNN_ResNet50_FPN_Weights.COCO_V1
+            weights_backbone = ResNet50_Weights.IMAGENET1K_V1
             # TODO: drop last layer of weights
             if num_classes == 91:
-                weights_backbone = ResNet50_Weights.IMAGENET1K_V1
+                weights = MaskRCNN_ResNet50_FPN_Weights.COCO_V1
 
         # Create model
         if model == 'mask-rcnn':
@@ -94,7 +94,7 @@ class InstanceSegmentationTask(BaseTask):
             msg = f"Invalid model type '{model}'. Supported model: 'mask-rcnn'"
             raise ValueError(msg)
 
-        weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)  # type: ignore[no-untyped-call]
+        weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)
         self.model.backbone.body.conv1.weight = Parameter(weight)
 
         # Freeze backbone
