@@ -332,7 +332,7 @@ class BYOLTask(BaseTask):
         in_channels: int = self.hparams['in_channels']
 
         # Create backbone
-        backbone = timm.create_model(  # type: ignore[attr-defined]
+        backbone = timm.create_model(
             self.hparams['model'], in_chans=in_channels, pretrained=weights is True
         )
 

@@ -87,8 +87,8 @@ class DigitalTyphoon(NonGeoDataset):
     url = 'https://hf.co/datasets/torchgeo/digital_typhoon/resolve/cf2f9ef89168d31cb09e42993d35b068688fe0df/WP.tar.gz{0}'
 
     md5sums: ClassVar[dict[str, str]] = {
-        'aa': '3af98052aed17e0ddb1e94caca2582e2',
-        'ab': '2c5d25455ac8aef1de33fe6456ab2c8d',
+        'aa': '9e77a5f74783f7909dee0fb936053b17',
+        'ab': '46aebdcba6e4e2df1619e4a3d7e556bb',
     }
 
     min_input_clamp = 170.0
