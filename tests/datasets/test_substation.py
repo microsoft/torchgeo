@@ -15,24 +15,8 @@ from torchgeo.datasets import DatasetNotFoundError, Substation
 
 
 class TestSubstation:
-    @pytest.fixture
-    def dataset(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Substation:
-        """Fixture for the Substation."""
-        root = os.path.join(os.getcwd(), 'tests', 'data', 'substation')
-        transforms = nn.Identity()
-        return Substation(
-            root=root,
-            bands=[1, 2, 3],
-            use_timepoints=True,
-            mask_2d=True,
-            timepoint_aggregation='median',
-            num_of_timepoints=4,
-            transforms=transforms,
-        )
-
-    @pytest.mark.parametrize(
-        'config',
-        [
+    @pytest.fixture(
+        params=[
             {'bands': [1, 2, 3], 'use_timepoints': False, 'mask_2d': True},
             {
                 'bands': [1, 2, 3],
@@ -91,12 +75,23 @@ class TestSubstation:
                 'num_of_timepoints': 4,
                 'mask_2d': True,
             },
-        ],
+        ]
     )
-    def test_getitem_semantic(self, config: dict[str, Any]) -> None:
+    def dataset(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Substation:
+        """Fixture for the Substation."""
         root = os.path.join(os.getcwd(), 'tests', 'data', 'substation')
-        dataset = Substation(root=root, **config)
+        transforms = nn.Identity()
+        return Substation(
+            root=root,
+            bands=[1, 2, 3],
+            use_timepoints=True,
+            mask_2d=True,
+            timepoint_aggregation='median',
+            num_of_timepoints=4,
+            transforms=transforms,
+        )
 
+    def test_getitem_semantic(self, dataset: Substation) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
@@ -208,7 +203,3 @@ class TestSubstation:
             num_of_timepoints=4,
             root=tmp_path,
         )
-
-
-if __name__ == '__main__':
-    pytest.main([__file__])

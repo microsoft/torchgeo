@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""This module handles the Substation segmentation dataset."""
+"""Substation segmentation dataset."""
 
 import glob
 import os
+import pandas as pd
 from collections.abc import Callable, Sequence
 
 import matplotlib.pyplot as plt
@@ -19,16 +20,16 @@ from .utils import Path, download_url, extract_archive
 
 
 class Substation(NonGeoDataset):
-    """Class for Substation Dataset.
+    """Substation dataset.
 
     The `Substation <https://github.com/Lindsay-Lab/substation-seg>`__
     dataset is curated by TransitionZero and sourced from publicly
-    available data repositories, including OpenSreetMap (OSMF) and
+    available data repositories, including OpenSreetMap (OSM) and
     Copernicus Sentinel data. The dataset consists of Sentinel-2
     images from 27k+ locations; the task is to segment power-substations,
     which appear in the majority of locations in the dataset.
     Most locations have 4-5 images taken at different timepoints
-    (i.e., revisits)
+    (i.e., revisits).
 
     Dataset Format:
     * .npz file for each datapoint
@@ -67,7 +68,7 @@ class Substation(NonGeoDataset):
 
         Args:
             root: Path to the directory containing the dataset.
-            bands: Number of channels to use from the image.
+            bands: Channels to use from the image.
             mask_2d: Whether to use a 2D mask.
             timepoint_aggregation: How to aggregate multiple timepoints.
             download: Whether to download the dataset if it is not found.
@@ -88,7 +89,7 @@ class Substation(NonGeoDataset):
         self.mask_dir = os.path.join(root, 'mask')
         self.num_of_timepoints = num_of_timepoints
         self._verify()
-        self.image_filenames = sorted(os.listdir(self.image_dir))
+        self.image_filenames = pd.Series(sorted(os.listdir(self.image_dir)))
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Get an item from the dataset by index.
@@ -127,8 +128,6 @@ class Substation(NonGeoDataset):
             elif self.timepoint_aggregation == 'median':
                 image = np.median(image, axis=0)
         else:
-            # image = np.median(image, axis=0)
-            # image = image[0]
             if self.timepoint_aggregation == 'first':
                 image = image[0]
             elif self.timepoint_aggregation == 'random':

@@ -26,10 +26,6 @@ class SubstationDataModule(NonGeoDataModule):
         num_workers: int = 0,
         val_split_pct: float = 0.2,
         test_split_pct: float = 0.2,
-        bands: list[int] = [1, 2, 3],
-        num_of_timepoints: int = 4,
-        timepoint_aggregation: str = 'median',
-        model_type: str = 'default',
         size: int = 256,
         **kwargs: Any,
     ) -> None:
@@ -41,9 +37,6 @@ class SubstationDataModule(NonGeoDataModule):
             num_workers: Number of workers for data loading.
             val_split_pct: Percentage of data to use for validation.
             test_split_pct: Percentage of data to use for testing.
-            bands: Number of input channels to use.
-            num_of_timepoints: Number of timepoints to use in the dataset.
-            timepoint_aggregation: Aggregation method for multiple timepoints.
             model_type: Type of model being used (e.g., 'swin' for specific channel selection).
             size: Size of the input images.
 
@@ -53,10 +46,6 @@ class SubstationDataModule(NonGeoDataModule):
         self.root = root
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
-        self.bands = bands
-        self.model_type = model_type
-        self.num_of_timepoints = num_of_timepoints
-        self.timepoint_aggregation = timepoint_aggregation
         self.train_aug = K.AugmentationSequential(
             K.Resize(size),
             K.RandomHorizontalFlip(p=0.5),
@@ -76,13 +65,11 @@ class SubstationDataModule(NonGeoDataModule):
         """
         dataset = Substation(
             root=self.root,
-            bands=self.bands,
             use_timepoints=True,
             mask_2d=False,
-            num_of_timepoints=self.num_of_timepoints,
-            timepoint_aggregation=self.timepoint_aggregation,
             download=True,
             checksum=False,
+            **self.hparams,
         )
 
         generator = torch.Generator().manual_seed(0)
