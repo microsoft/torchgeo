@@ -14,3 +14,6 @@ data:
     batch_size: 1
   dict_kwargs:
     root: 'tests/data/substation'
+    bands: [0, 1, 2]
+    num_of_timepoints: 4
+    timepoint_aggregation: 'median'

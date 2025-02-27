@@ -69,7 +69,7 @@ class SubstationDataModule(NonGeoDataModule):
             mask_2d=False,
             download=True,
             checksum=False,
-            **self.hparams,
+            **self.kwargs,
         )
 
         generator = torch.Generator().manual_seed(0)
