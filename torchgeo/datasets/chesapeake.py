@@ -128,7 +128,7 @@ class Chesapeake(RasterDataset, ABC):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
+        res: tuple[float, float] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
         download: bool = False,
@@ -351,7 +351,7 @@ class ChesapeakeCVPR(GeoDataset):
     }
 
     crs = CRS.from_epsg(3857)
-    res = 1
+    res = (1, 1)
 
     lc_cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 0),
