@@ -13,6 +13,7 @@ import torch
 import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor
+from torch.nn import Module
 from torchmetrics import MeanAbsoluteError, MeanSquaredError, MetricCollection
 from torchvision.models._api import WeightsEnum
 
@@ -29,7 +30,7 @@ class RegressionTask(BaseTask):
 
     def __init__(
         self,
-        model: str = 'resnet50',
+        model: Module | str = 'resnet50',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
@@ -44,7 +45,7 @@ class RegressionTask(BaseTask):
         """Initialize a new RegressionTask instance.
 
         Args:
-            model: Name of the
+            model: Model implementation, or name of the
                 `timm <https://huggingface.co/docs/timm/reference/models>`__ or
                 `smp <https://smp.readthedocs.io/en/latest/models.html>`__ model to use.
             backbone: Name of the
@@ -76,19 +77,22 @@ class RegressionTask(BaseTask):
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
         """
+        self.model = model
         self.weights = weights
         super().__init__()
 
     def configure_models(self) -> None:
         """Initialize the model."""
-        # Create model
         weights = self.weights
-        self.model = timm.create_model(
-            self.hparams['model'],
-            num_classes=self.hparams['num_outputs'],
-            in_chans=self.hparams['in_channels'],
-            pretrained=weights is True,
-        )
+
+        # Create model
+        if not isinstance(self.model, Module):
+            self.model = timm.create_model(
+                self.model,
+                num_classes=self.hparams['num_outputs'],
+                in_chans=self.hparams['in_channels'],
+                pretrained=weights is True,
+            )
 
         # Load weights
         if weights and weights is not True:
@@ -115,7 +119,7 @@ class RegressionTask(BaseTask):
         """
         loss: str = self.hparams['loss']
         if loss == 'mse':
-            self.criterion: nn.Module = nn.MSELoss()
+            self.criterion: Module = nn.MSELoss()
         elif loss == 'mae':
             self.criterion = nn.L1Loss()
         else:
@@ -272,23 +276,26 @@ class PixelwiseRegressionTask(RegressionTask):
 
     def configure_models(self) -> None:
         """Initialize the model."""
+        model = self.model
         weights = self.weights
 
-        if self.hparams['model'] == 'unet':
+        if isinstance(model, Module):
+            pass
+        elif model == 'unet':
             self.model = smp.Unet(
                 encoder_name=self.hparams['backbone'],
                 encoder_weights='imagenet' if weights is True else None,
                 in_channels=self.hparams['in_channels'],
                 classes=1,
             )
-        elif self.hparams['model'] == 'deeplabv3+':
+        elif model == 'deeplabv3+':
             self.model = smp.DeepLabV3Plus(
                 encoder_name=self.hparams['backbone'],
                 encoder_weights='imagenet' if weights is True else None,
                 in_channels=self.hparams['in_channels'],
                 classes=1,
             )
-        elif self.hparams['model'] == 'fcn':
+        elif model == 'fcn':
             self.model = FCN(
                 in_channels=self.hparams['in_channels'],
                 classes=1,
@@ -296,11 +303,11 @@ class PixelwiseRegressionTask(RegressionTask):
             )
         else:
             raise ValueError(
-                f"Model type '{self.hparams['model']}' is not valid. "
+                f"Model type '{model}' is not valid. "
                 "Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
             )
 
-        if self.hparams['model'] != 'fcn':
+        if model != 'fcn':
             if weights and weights is not True:
                 if isinstance(weights, WeightsEnum):
                     state_dict = weights.get_state_dict(progress=True)
@@ -311,17 +318,11 @@ class PixelwiseRegressionTask(RegressionTask):
                 self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
-        if self.hparams.get('freeze_backbone', False) and self.hparams['model'] in [
-            'unet',
-            'deeplabv3+',
-        ]:
+        if self.hparams['freeze_backbone'] and model in ['unet', 'deeplabv3+']:
             for param in self.model.encoder.parameters():
                 param.requires_grad = False
 
         # Freeze decoder
-        if self.hparams.get('freeze_decoder', False) and self.hparams['model'] in [
-            'unet',
-            'deeplabv3+',
-        ]:
+        if self.hparams['freeze_decoder'] and model in ['unet', 'deeplabv3+']:
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
