@@ -137,6 +137,7 @@ from .splits import (
 )
 from .ssl4eo import SSL4EO, SSL4EOL, SSL4EOS12
 from .ssl4eo_benchmark import SSL4EOLBenchmark
+from .substation import Substation
 from .sustainbench_crop_yield import SustainBenchCropYield
 from .treesatai import TreeSatAI
 from .ucmerced import UCMerced
@@ -289,6 +290,7 @@ __all__ = (
     'SpaceNet6',
     'SpaceNet7',
     'SpaceNet8',
+    'Substation',
     'SustainBenchCropYield',
     'TreeSatAI',
     'TropicalCyclone',

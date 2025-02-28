@@ -81,6 +81,7 @@ class TestSemanticSegmentationTask:
             'spacenet6',
             'ssl4eo_l_benchmark_cdl',
             'ssl4eo_l_benchmark_nlcd',
+            'substation',
             'vaihingen2d',
         ],
     )
