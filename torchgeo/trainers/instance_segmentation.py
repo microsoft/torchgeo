@@ -10,6 +10,7 @@ import torch
 from matplotlib.figure import Figure
 from timm.models import adapt_input_conv
 from torch import Tensor
+from torch.nn import Module
 from torch.nn.parameter import Parameter
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
@@ -29,13 +30,13 @@ class InstanceSegmentationTask(BaseTask):
     .. versionadded:: 0.7
     """
 
-    ignore = None
+    ignore = 'model'
     monitor = 'val_segm_map'
     mode = 'max'
 
     def __init__(
         self,
-        model: str = 'mask-rcnn',
+        model: Module | str = 'mask-rcnn',
         backbone: str = 'resnet50',
         weights: bool | None = None,
         in_channels: int = 3,
@@ -47,7 +48,7 @@ class InstanceSegmentationTask(BaseTask):
         """Initialize a new InstanceSegmentationTask instance.
 
         Args:
-            model: Name of the model to use.
+            model: Model implementation, or name of the model to use.
             backbone: Name of the backbone to use.
             weights: Initial model weights. True for ImageNet weights, False or None
                 for random weights.
@@ -58,6 +59,7 @@ class InstanceSegmentationTask(BaseTask):
             freeze_backbone: Freeze the backbone network to fine-tune the
                 decoder and segmentation head.
         """
+        self.model = model
         super().__init__()
 
     def configure_models(self) -> None:
@@ -66,7 +68,6 @@ class InstanceSegmentationTask(BaseTask):
         Raises:
             ValueError: If *model* or *backbone* are invalid.
         """
-        model: str = self.hparams['model']
         backbone: str = self.hparams['backbone']
         in_channels: int = self.hparams['in_channels']
         num_classes: int = self.hparams['num_classes']
@@ -80,7 +81,9 @@ class InstanceSegmentationTask(BaseTask):
                 weights = MaskRCNN_ResNet50_FPN_Weights.COCO_V1
 
         # Create model
-        if model == 'mask-rcnn':
+        if isinstance(self.model, Module):
+            pass
+        elif self.model == 'mask-rcnn':
             if backbone == 'resnet50':
                 self.model = maskrcnn_resnet50_fpn(
                     weights=weights,
@@ -91,7 +94,7 @@ class InstanceSegmentationTask(BaseTask):
                 msg = f"Invalid backbone type '{backbone}'. Supported backbone: 'resnet50'"
                 raise ValueError(msg)
         else:
-            msg = f"Invalid model type '{model}'. Supported model: 'mask-rcnn'"
+            msg = f"Invalid model type '{self.model}'. Supported model: 'mask-rcnn'"
             raise ValueError(msg)
 
         weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)

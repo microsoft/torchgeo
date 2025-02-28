@@ -12,6 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from kornia import augmentation as K
 from torch import Tensor
+from torch.nn import Module
 from torchvision.models._api import WeightsEnum
 
 from ..models import get_weight
@@ -38,7 +39,7 @@ def normalized_mse(x: Tensor, y: Tensor) -> Tensor:
 # TODO: This isn't _really_ applying the augmentations from SimCLR as we have
 # multispectral imagery and thus can't naively apply color jittering or grayscale
 # conversions. We should think more about what makes sense here.
-class SimCLRAugmentation(nn.Module):
+class SimCLRAugmentation(Module):
     """A module for applying SimCLR augmentations.
 
     SimCLR was one of the first papers to show the effectiveness of random data
@@ -78,7 +79,7 @@ class SimCLRAugmentation(nn.Module):
         return z
 
 
-class MLP(nn.Module):
+class MLP(Module):
     """MLP used in the BYOL projection head."""
 
     def __init__(
@@ -112,7 +113,7 @@ class MLP(nn.Module):
         return z
 
 
-class BackboneWrapper(nn.Module):
+class BackboneWrapper(Module):
     """Backbone wrapper for joining a model and a projection head.
 
     When we call .forward() on this module the following steps happen:
@@ -128,7 +129,7 @@ class BackboneWrapper(nn.Module):
 
     def __init__(
         self,
-        model: nn.Module,
+        model: Module,
         projection_size: int = 256,
         hidden_size: int = 4096,
         layer: int = -2,
@@ -148,13 +149,13 @@ class BackboneWrapper(nn.Module):
         self.hidden_size = hidden_size
         self.layer = layer
 
-        self._projector: nn.Module | None = None
+        self._projector: Module | None = None
         self._projector_dim: int | None = None
         self._encoded = torch.empty(0)
         self._register_hook()
 
     @property
-    def projector(self) -> nn.Module:
+    def projector(self) -> Module:
         """Wrapper module for the projector head."""
         assert self._projector_dim is not None
         if self._projector is None:
@@ -204,7 +205,7 @@ class BackboneWrapper(nn.Module):
         return self._encoded
 
 
-class BYOL(nn.Module):
+class BYOL(Module):
     """BYOL implementation.
 
     BYOL contains two identical backbone networks. The first is trained as usual, and
@@ -217,13 +218,13 @@ class BYOL(nn.Module):
 
     def __init__(
         self,
-        model: nn.Module,
+        model: Module,
         image_size: tuple[int, int] = (256, 256),
         hidden_layer: int = -2,
         in_channels: int = 4,
         projection_size: int = 256,
         hidden_size: int = 4096,
-        augment_fn: nn.Module | None = None,
+        augment_fn: Module | None = None,
         beta: float = 0.99,
         **kwargs: Any,
     ) -> None:
@@ -240,11 +241,11 @@ class BYOL(nn.Module):
             augment_fn: an instance of a module that performs data augmentation
             beta: the speed at which the target backbone is updated using the main
                 backbone
-            **kwargs: Additional keyword arguments passed to :class:`nn.Module`
+            **kwargs: Additional keyword arguments passed to :class:`Module`
         """
         super().__init__()
 
-        self.augment: nn.Module
+        self.augment: Module
         if augment_fn is None:
             self.augment = SimCLRAugmentation(image_size)
         else:
@@ -297,7 +298,7 @@ class BYOLTask(BaseTask):
 
     def __init__(
         self,
-        model: str = 'resnet50',
+        model: Module | str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         lr: float = 1e-3,
@@ -306,7 +307,7 @@ class BYOLTask(BaseTask):
         """Initialize a new BYOLTask instance.
 
         Args:
-            model: Name of the `timm
+            model: Model implementation, or name of the `timm
                 <https://huggingface.co/docs/timm/reference/models>`__ model to use.
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False
@@ -323,6 +324,7 @@ class BYOLTask(BaseTask):
            *backbone*, *learning_rate*, and *learning_rate_schedule_patience* were
            renamed to *model*, *lr*, and *patience*.
         """
+        self.model = model
         self.weights = weights
         super().__init__()
 
@@ -332,9 +334,12 @@ class BYOLTask(BaseTask):
         in_channels: int = self.hparams['in_channels']
 
         # Create backbone
-        backbone = timm.create_model(
-            self.hparams['model'], in_chans=in_channels, pretrained=weights is True
-        )
+        if isinstance(self.model, Module):
+            backbone = self.model
+        else:
+            backbone = timm.create_model(
+                self.model, in_chans=in_channels, pretrained=weights is True
+            )
 
         # Load weights
         if weights and weights is not True:

@@ -11,6 +11,7 @@ import segmentation_models_pytorch as smp
 import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor
+from torch.nn import Module
 from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassAccuracy, MulticlassJaccardIndex
 from torchvision.models._api import WeightsEnum
@@ -26,7 +27,7 @@ class SemanticSegmentationTask(BaseTask):
 
     def __init__(
         self,
-        model: str = 'unet',
+        model: Module | str = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
@@ -43,7 +44,7 @@ class SemanticSegmentationTask(BaseTask):
         """Initialize a new SemanticSegmentationTask instance.
 
         Args:
-            model: Name of the
+            model: Model implementation, or name of the
                 `smp <https://smp.readthedocs.io/en/latest/models.html>`__ model to use.
             backbone: Name of the `timm
                 <https://smp.readthedocs.io/en/latest/encoders_timm.html>`__ or `smp
@@ -87,6 +88,7 @@ class SemanticSegmentationTask(BaseTask):
         .. versionchanged:: 0.6
            The *ignore_index* parameter now works for jaccard loss.
         """
+        self.model = model
         self.weights = weights
         super().__init__()
 
@@ -96,14 +98,16 @@ class SemanticSegmentationTask(BaseTask):
         Raises:
             ValueError: If *model* is invalid.
         """
-        model: str = self.hparams['model']
-        backbone: str = self.hparams['backbone']
+        model = self.model
         weights = self.weights
+        backbone: str = self.hparams['backbone']
         in_channels: int = self.hparams['in_channels']
         num_classes: int = self.hparams['num_classes']
         num_filters: int = self.hparams['num_filters']
 
-        if model == 'unet':
+        if isinstance(model, Module):
+            pass
+        elif model == 'unet':
             self.model = smp.Unet(
                 encoder_name=backbone,
                 encoder_weights='imagenet' if weights is True else None,

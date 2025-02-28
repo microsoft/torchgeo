@@ -13,6 +13,7 @@ import torch.nn as nn
 from matplotlib.figure import Figure
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
+from torch.nn import Module
 from torchmetrics import MetricCollection
 from torchmetrics.classification import (
     MulticlassAccuracy,
@@ -34,7 +35,7 @@ class ClassificationTask(BaseTask):
 
     def __init__(
         self,
-        model: str = 'resnet50',
+        model: Module | str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         num_classes: int = 1000,
@@ -47,7 +48,7 @@ class ClassificationTask(BaseTask):
         """Initialize a new ClassificationTask instance.
 
         Args:
-            model: Name of the `timm
+            model: Model implementation, or name of the `timm
                 <https://huggingface.co/docs/timm/reference/models>`__ model to use.
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False
@@ -72,6 +73,7 @@ class ClassificationTask(BaseTask):
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
         """
+        self.model = model
         self.weights = weights
         super().__init__()
 
@@ -80,12 +82,13 @@ class ClassificationTask(BaseTask):
         weights = self.weights
 
         # Create model
-        self.model = timm.create_model(
-            self.hparams['model'],
-            num_classes=self.hparams['num_classes'],
-            in_chans=self.hparams['in_channels'],
-            pretrained=weights is True,
-        )
+        if not isinstance(self.model, Module):
+            self.model = timm.create_model(
+                self.model,
+                num_classes=self.hparams['num_classes'],
+                in_chans=self.hparams['in_channels'],
+                pretrained=weights is True,
+            )
 
         # Load weights
         if weights and weights is not True:
@@ -112,7 +115,7 @@ class ClassificationTask(BaseTask):
         """
         loss: str = self.hparams['loss']
         if loss == 'ce':
-            self.criterion: nn.Module = nn.CrossEntropyLoss(
+            self.criterion: Module = nn.CrossEntropyLoss(
                 weight=self.hparams['class_weights']
             )
         elif loss == 'bce':

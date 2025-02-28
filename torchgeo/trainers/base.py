@@ -20,7 +20,7 @@ class BaseTask(LightningModule, ABC):
     """
 
     #: Parameters to ignore when saving hyperparameters.
-    ignore: Sequence[str] | str | None = 'weights'
+    ignore: Sequence[str] | str | None = ('model', 'weights')
 
     #: Model to train.
     model: Any
