@@ -11,12 +11,12 @@ import kornia.augmentation as K
 import lightning
 import timm
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from lightly.loss import NTXentLoss
 from lightly.models.modules import SimCLRProjectionHead
 from lightly.utils.lars import LARS
 from torch import Tensor
+from torch.nn import Module
 from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from torchvision.models._api import WeightsEnum
 
@@ -27,7 +27,7 @@ from . import utils
 from .base import BaseTask
 
 
-def simclr_augmentations(size: int, weights: Tensor) -> nn.Module:
+def simclr_augmentations(size: int, weights: Tensor) -> Module:
     """Data augmentation used by SimCLR.
 
     Args:
@@ -68,12 +68,12 @@ class SimCLRTask(BaseTask):
     .. versionadded:: 0.5
     """
 
-    ignore = ('weights', 'augmentations')
+    ignore = ('model', 'weights', 'augmentations')
     monitor = 'train_loss'
 
     def __init__(
         self,
-        model: str = 'resnet50',
+        model: Module | str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         version: int = 2,
@@ -88,7 +88,7 @@ class SimCLRTask(BaseTask):
         gather_distributed: bool = False,
         size: int = 224,
         grayscale_weights: Tensor | None = None,
-        augmentations: nn.Module | None = None,
+        augmentations: Module | None = None,
     ) -> None:
         """Initialize a new SimCLRTask instance.
 
@@ -96,7 +96,7 @@ class SimCLRTask(BaseTask):
            The *momentum* parameter.
 
         Args:
-            model: Name of the `timm
+            model: Model implementation, or name of the `timm
                 <https://huggingface.co/docs/timm/reference/models>`__ model to use.
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False
@@ -140,6 +140,7 @@ class SimCLRTask(BaseTask):
             if memory_bank_size == 0:
                 warnings.warn('SimCLR v2 uses a memory bank')
 
+        self.model = model
         self.weights = weights
         super().__init__()
 
@@ -153,12 +154,15 @@ class SimCLRTask(BaseTask):
         weights = self.weights
 
         # Create backbone
-        self.backbone = timm.create_model(
-            self.hparams['model'],
-            in_chans=self.hparams['in_channels'],
-            num_classes=0,
-            pretrained=weights is True,
-        )
+        if isinstance(self.model, Module):
+            self.backbone = self.model
+        else:
+            self.backbone = timm.create_model(
+                self.model,
+                in_chans=self.hparams['in_channels'],
+                num_classes=0,
+                pretrained=weights is True,
+            )
 
         # Load weights
         if weights and weights is not True:
