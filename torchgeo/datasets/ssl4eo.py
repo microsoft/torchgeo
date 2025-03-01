@@ -559,6 +559,9 @@ class SSL4EOS12(SSL4EO):
         Raises:
             AssertionError: if ``split`` argument is invalid
             DatasetNotFoundError: If dataset is not found.
+
+        .. versionadded:: 0.7
+           The *download* parameter.
         """
         assert split in self.metadata
         assert seasons in range(1, 5)
