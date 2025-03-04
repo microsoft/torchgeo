@@ -14,7 +14,7 @@ from torchgeo.models import (
     DOFABase16_Weights,
     DOFALarge16_Weights,
     dofa_base_patch16_224,
-    dofa_huge_patch16_224,
+    dofa_huge_patch14_224,
     dofa_large_patch16_224,
     dofa_small_patch16_224,
 )
@@ -154,4 +154,4 @@ class TestDOFALarge16:
 
 class TestDOFAHuge16:
     def test_dofa(self) -> None:
-        dofa_huge_patch16_224()
+        dofa_huge_patch14_224()
