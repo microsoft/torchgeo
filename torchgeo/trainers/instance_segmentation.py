@@ -117,7 +117,7 @@ class InstanceSegmentationTask(BaseTask):
            * 'Macro' averaging gives equal weight to each class, and is useful for
              balanced performance assessment across imbalanced classes.
         """
-        metrics = MetricCollection([MeanAveragePrecision(iou_type=('bbox', 'segm'))])  # type: ignore[arg-type]
+        metrics = MetricCollection([MeanAveragePrecision(iou_type=('bbox', 'segm'))])
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
 
