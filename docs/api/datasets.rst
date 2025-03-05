@@ -301,6 +301,11 @@ EuroSAT
 .. autoclass:: EuroSATSpatial
 .. autoclass:: EuroSAT100
 
+EverWatch
+^^^^^^^^^
+
+.. autoclass:: EverWatch
+
 FAIR1M
 ^^^^^^
 

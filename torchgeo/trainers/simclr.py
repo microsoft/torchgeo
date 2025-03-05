@@ -153,7 +153,7 @@ class SimCLRTask(BaseTask):
         weights = self.weights
 
         # Create backbone
-        self.backbone = timm.create_model(  # type: ignore[attr-defined]
+        self.backbone = timm.create_model(
             self.hparams['model'],
             in_chans=self.hparams['in_channels'],
             num_classes=0,
