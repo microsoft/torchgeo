@@ -77,7 +77,10 @@ class TestSubstation:
         ]
     )
     def dataset(
-        self, request, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self,
+        request: pytest.FixtureRequest,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> Substation:
         """Fixture for the Substation with parameterization."""
         root = os.path.join(os.getcwd(), 'tests', 'data', 'substation')
@@ -120,7 +123,6 @@ class TestSubstation:
             assert x['mask'].shape == torch.Size([32, 32])
 
     def test_plot(self, dataset: Substation) -> None:
-        root = os.path.join(os.getcwd(), 'tests', 'data', 'substation')
         sample = dataset[0]
         dataset.plot(sample, suptitle='Test')
         plt.close()

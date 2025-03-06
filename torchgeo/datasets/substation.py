@@ -52,6 +52,8 @@ class Substation(NonGeoDataset):
     filename_masks = 'mask.tar.gz'
     url_for_images = 'https://storage.googleapis.com/tz-ml-public/substation-over-10km2-csv-main-444e360fd2b6444b9018d509d0e4f36e/image_stack.tar.gz'
     url_for_masks = 'https://storage.googleapis.com/tz-ml-public/substation-over-10km2-csv-main-444e360fd2b6444b9018d509d0e4f36e/mask.tar.gz'
+    md5_images = '948706609864d0283f74ee7015f9d032'
+    md5_masks = 'baa369ececdc2ff80e6ba2b4c7fe147c'
 
     def __init__(
         self,
@@ -176,7 +178,6 @@ class Substation(NonGeoDataset):
         """
         ncols = 2
         shape_of_image = sample['image'].shape
-        shape_of_mask = sample['mask'].shape
         if len(shape_of_image) == 4:
             image = (
                 sample['image'][0][:3].permute(1, 2, 0).cpu().numpy()
@@ -255,7 +256,7 @@ class Substation(NonGeoDataset):
             self.url_for_images,
             self.root,
             filename=self.filename_images,
-            md5='bc0e3d2565f30b1c84a0d4cf37d44be6' if self.checksum else None,
+            md5=self.md5_images if self.checksum else None,
         )
         extract_archive(os.path.join(self.root, self.filename_images), self.root)
 
@@ -264,6 +265,6 @@ class Substation(NonGeoDataset):
             self.url_for_masks,
             self.root,
             filename=self.filename_masks,
-            md5='919bb9599f47f44f17a1a4ecce56d81c' if self.checksum else None,
+            md5=self.md5_masks if self.checksum else None,
         )
         extract_archive(os.path.join(self.root, self.filename_masks), self.root)

@@ -36,7 +36,6 @@ class SubstationDataModule(NonGeoDataModule):
             val_split_pct: Percentage of data to use for validation.
             test_split_pct: Percentage of data to use for testing.
             size: Size of the input images.
-
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.dataset.Substation`.
         """
