@@ -76,37 +76,51 @@ class TestSubstation:
             },
         ]
     )
-    def dataset(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Substation:
-        """Fixture for the Substation."""
+    def dataset(
+        self, request, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> Substation:
+        """Fixture for the Substation with parameterization."""
         root = os.path.join(os.getcwd(), 'tests', 'data', 'substation')
         transforms = nn.Identity()
-        return Substation(
-            root=root,
-            bands=[1, 2, 3],
-            use_timepoints=True,
-            mask_2d=True,
-            timepoint_aggregation='median',
-            num_of_timepoints=4,
-            transforms=transforms,
-        )
+        return Substation(root=root, transforms=transforms, **request.param)
 
     def test_getitem_semantic(self, dataset: Substation) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
-
-    def test_len(self, dataset: Substation) -> None:
-        """Test the length of the dataset."""
         assert len(dataset) == 5
 
     def test_output_shape(self, dataset: Substation) -> None:
         """Test the output shape of the dataset."""
         x = dataset[0]
-        assert x['image'].shape == torch.Size([3, 32, 32])
-        assert x['mask'].shape == torch.Size([2, 32, 32])
+        if dataset.use_timepoints:
+            if dataset.timepoint_aggregation == 'concat':
+                assert x['image'].shape == torch.Size([12, 32, 32])
+            elif dataset.timepoint_aggregation == 'median':
+                assert x['image'].shape == torch.Size([3, 32, 32])
+            else:
+                assert x['image'].shape == torch.Size(
+                    [dataset.num_of_timepoints, 3, 32, 32]
+                )
+        else:
+            if (
+                dataset.timepoint_aggregation == 'first'
+                or dataset.timepoint_aggregation == 'random'
+            ):
+                assert x['image'].shape == torch.Size([3, 32, 32])
+            else:
+                assert x['image'].shape == torch.Size(
+                    [dataset.num_of_timepoints, 3, 32, 32]
+                )
+
+        if dataset.mask_2d:
+            assert x['mask'].shape == torch.Size([2, 32, 32])
+        else:
+            assert x['mask'].shape == torch.Size([32, 32])
 
     def test_plot(self, dataset: Substation) -> None:
+        root = os.path.join(os.getcwd(), 'tests', 'data', 'substation')
         sample = dataset[0]
         dataset.plot(sample, suptitle='Test')
         plt.close()
@@ -140,7 +154,6 @@ class TestSubstation:
         monkeypatch.setattr(
             'torchgeo.datasets.substation.extract_archive', lambda *args, **kwargs: None
         )
-
         dataset._download()
 
     def test_not_downloaded(self, tmp_path: Path) -> None:

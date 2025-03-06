@@ -175,9 +175,15 @@ class Substation(NonGeoDataset):
             A matplotlib Figure containing the rendered sample.
         """
         ncols = 2
-
-        image = sample['image'][:3].permute(1, 2, 0).cpu().numpy()
-        image = image / 255.0  # Normalize image
+        shape_of_image = sample['image'].shape
+        shape_of_mask = sample['mask'].shape
+        if len(shape_of_image) == 4:
+            image = (
+                sample['image'][0][:3].permute(1, 2, 0).cpu().numpy()
+            )  # Plot the first timepoint
+        else:
+            image = sample['image'][:3].permute(1, 2, 0).cpu().numpy()
+        image = image / 255.0
 
         if self.mask_2d:
             mask = sample['mask'][0].squeeze(0).cpu().numpy()

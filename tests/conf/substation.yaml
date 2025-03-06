@@ -17,3 +17,7 @@ data:
     bands: [0, 1, 2]
     num_of_timepoints: 4
     timepoint_aggregation: 'median'
+    mask_2d: False
+    download: True,
+    checksum: False
+    use_timepoints: True
