@@ -3,6 +3,9 @@
 
 """LSTM Sequence to Sequence (Seq2Seq) Model."""
 
+import random
+from typing import cast
+
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -13,8 +16,7 @@ class LSTMEncoder(nn.Module):
         super().__init__()
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
 
-    def forward(self, x: Tensor):
-        # Only keep the last hidden and cell states
+    def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
         _, (hidden, cell) = self.lstm(x)
         return hidden, cell
 
@@ -25,9 +27,10 @@ class LSTMDecoder(nn.Module):
         input_size: int,
         hidden_size: int,
         output_size: int,
-        target_indices: list[int] | None,
+        target_indices: list[int],
         num_layers: int = 1,
         output_sequence_len: int = 1,
+        teacher_force_prob: float | None = None,
     ) -> None:
         super().__init__()
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
@@ -35,20 +38,27 @@ class LSTMDecoder(nn.Module):
         self.output_size = output_size
         self.target_indices = target_indices
         self.output_sequence_len = output_sequence_len
+        self.teacher_force_prob = teacher_force_prob
 
     def forward(self, inputs: Tensor, hidden: Tensor, cell: Tensor) -> Tensor:
-        # shouldn't this be shape[0] since batch_first = True?
         batch_size = inputs.shape[0]
         outputs = torch.zeros(batch_size, self.output_sequence_len, self.output_size)
 
-        curr_input = inputs[:, 0:1, :]
+        current_input = inputs[:, 0:1, :]
 
         for t in range(self.output_sequence_len):
-            print(f'input_t: {curr_input.shape}')
-            _, (hidden, cell) = self.lstm(curr_input, (hidden, cell))
-            output = self.fc(hidden)  # Predict next step
-            outputs[:, t, :] = output
-            curr_input = output
+            _, (hidden, cell) = self.lstm(current_input, (hidden, cell))
+            output = self.fc(hidden)
+            output = output.permute(1, 0, 2)
+            outputs[:, t : t + 1, :] = output
+            current_input = inputs[:, t : t + 1, :].clone()
+            teacher_force = (
+                random.random() < self.teacher_force_prob
+                if self.teacher_force_prob is not None
+                else False
+            )
+            if not teacher_force:
+                current_input[:, :, self.target_indices] = output
 
         return outputs
 
@@ -58,23 +68,45 @@ class LSTMSeq2Seq(nn.Module):
         self,
         input_size_encoder: int,
         input_size_decoder: int,
+        target_indices: list[int],
+        encoder_indices: list[int] | None = None,
+        decoder_indices: list[int] | None = None,
         hidden_size: int = 1,
         output_size: int = 1,
         output_seq_length: int = 1,
         num_layers: int = 1,
     ) -> None:
         super().__init__()
+        # Target indices need to be mapped to the subset of inputs for decoder
+        mapped_target_indices = (
+            torch.nonzero(
+                torch.isin(torch.tensor(decoder_indices), torch.tensor(target_indices))
+            )
+            .squeeze()
+            .tolist()
+        )
         self.encoder = LSTMEncoder(input_size_encoder, hidden_size, num_layers)
         self.decoder = LSTMDecoder(
             input_size_decoder,
             hidden_size,
             output_size,
-            target_indices=None,
+            mapped_target_indices,
             num_layers=num_layers,
             output_sequence_len=output_seq_length,
         )
+        self.encoder_indices = encoder_indices
+        self.decoder_indices = decoder_indices
 
-    def forward(self, inputs_encoder: Tensor, inputs_decoder: Tensor) -> Tensor:
+    def forward(self, past_steps: Tensor, future_steps: Tensor) -> Tensor:
+        if self.encoder_indices:
+            inputs_encoder = past_steps[:, :, self.encoder_indices]
+        else:
+            inputs_encoder = past_steps
+        inputs_decoder = torch.cat(
+            [past_steps[:, -1, :].unsqueeze(1), future_steps], dim=1
+        )
+        if self.decoder_indices:
+            inputs_decoder = inputs_decoder[:, :, self.decoder_indices]
         hidden, cell = self.encoder(inputs_encoder)
         outputs = self.decoder(inputs_decoder, hidden, cell)
-        return outputs
+        return cast(Tensor, outputs)
