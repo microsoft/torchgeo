@@ -69,7 +69,10 @@ class TestDOFA:
 
 class TestDOFASmall16:
     def test_dofa(self) -> None:
-        dofa_small_patch16_224()
+        model = dofa_small_patch16_224()
+        x = torch.rand(1, 4, 224, 224)
+        wavelengths = [664.6, 559.8, 492.4, 832.8]
+        model(x, wavelengths)
 
 
 class TestDOFABase16:
@@ -95,7 +98,10 @@ class TestDOFABase16:
         return weights
 
     def test_dofa(self) -> None:
-        dofa_base_patch16_224()
+        model = dofa_base_patch16_224()
+        x = torch.rand(1, 4, 224, 224)
+        wavelengths = [664.6, 559.8, 492.4, 832.8]
+        model(x, wavelengths)
 
     def test_dofa_weights(self, mocked_weights: WeightsEnum) -> None:
         dofa_base_patch16_224(weights=mocked_weights)
@@ -135,7 +141,10 @@ class TestDOFALarge16:
         return weights
 
     def test_dofa(self) -> None:
-        dofa_large_patch16_224()
+        model = dofa_large_patch16_224()
+        x = torch.rand(1, 4, 224, 224)
+        wavelengths = [664.6, 559.8, 492.4, 832.8]
+        model(x, wavelengths)
 
     def test_dofa_weights(self, mocked_weights: WeightsEnum) -> None:
         dofa_large_patch16_224(weights=mocked_weights)
@@ -152,6 +161,9 @@ class TestDOFALarge16:
         dofa_large_patch16_224(weights=weights)
 
 
-class TestDOFAHuge16:
+class TestDOFAHuge14:
     def test_dofa(self) -> None:
-        dofa_huge_patch14_224()
+        model = dofa_huge_patch14_224()
+        x = torch.rand(1, 4, 224, 224)
+        wavelengths = [664.6, 559.8, 492.4, 832.8]
+        model(x, wavelengths)
