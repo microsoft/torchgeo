@@ -176,16 +176,15 @@ class ClassificationTask(BaseTask):
         y = batch['label']
         batch_size = x.shape[0]
         y_hat = self(x)
+        self.train_metrics(y_hat, y)
+        self.log_dict(self.train_metrics, batch_size=batch_size)
 
-        match self.hparams['task']:
-            case 'binary':
-                y = y.float()
-                y_hat = y_hat.squeeze(1)
+        if self.hparams['loss'] == 'bce':
+            y = y.float()
+            y_hat = y_hat.squeeze(1)
 
         loss: Tensor = self.criterion(y_hat, y)
         self.log('train_loss', loss, batch_size=batch_size)
-        self.train_metrics(y_hat, y)
-        self.log_dict(self.train_metrics, batch_size=batch_size)
 
         return loss
 
@@ -203,19 +202,15 @@ class ClassificationTask(BaseTask):
         y = batch['label']
         batch_size = x.shape[0]
         y_hat = self(x)
+        self.val_metrics(y_hat, y)
+        self.log_dict(self.val_metrics, batch_size=batch_size)
 
-        match self.hparams['task']:
-            case 'binary':
-                y = y.float()
-                y_hat = y_hat.squeeze(1)
-                batch['prediction'] = (y_hat >= 0.5).long()
-            case 'multiclass':
-                batch['prediction'] = y_hat.argmax(dim=1)
+        if self.hparams['loss'] == 'bce':
+            y = y.float()
+            y_hat = y_hat.squeeze(1)
 
         loss = self.criterion(y_hat, y)
         self.log('val_loss', loss, batch_size=batch_size)
-        self.val_metrics(y_hat, y)
-        self.log_dict(self.val_metrics, batch_size=batch_size)
 
         if (
             batch_idx < 10
@@ -225,11 +220,19 @@ class ClassificationTask(BaseTask):
             and hasattr(self.logger, 'experiment')
             and hasattr(self.logger.experiment, 'add_figure')
         ):
-            datamodule = self.trainer.datamodule
+            match self.hparams['task']:
+                case 'binary':
+                    batch['prediction'] = (y_hat >= 0.5).long()
+                case 'multiclass':
+                    batch['prediction'] = y_hat.argmax(dim=1)
+                case 'multilabel':
+                    batch['prediction'] = (y_hat >= 0.5).long()
+
             for key in ['image', 'label', 'prediction']:
                 batch[key] = batch[key].cpu()
             sample = unbind_samples(batch)[0]
 
+            datamodule = self.trainer.datamodule
             fig: Figure | None = None
             try:
                 fig = datamodule.plot(sample)
@@ -255,16 +258,15 @@ class ClassificationTask(BaseTask):
         y = batch['label']
         batch_size = x.shape[0]
         y_hat = self(x)
+        self.test_metrics(y_hat, y)
+        self.log_dict(self.test_metrics, batch_size=batch_size)
 
-        match self.hparams['task']:
-            case 'binary':
-                y = y.float()
-                y_hat = y_hat.squeeze(1)
+        if self.hparams['loss'] == 'bce':
+            y = y.float()
+            y_hat = y_hat.squeeze(1)
 
         loss = self.criterion(y_hat, y)
         self.log('test_loss', loss, batch_size=batch_size)
-        self.test_metrics(y_hat, y)
-        self.log_dict(self.test_metrics, batch_size=batch_size)
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
