@@ -176,13 +176,12 @@ class ClassificationTask(BaseTask):
         x = batch['image']
         y = batch['label']
         batch_size = x.shape[0]
-        y_hat = self(x)
+        y_hat = self(x).squeeze(1)
         self.train_metrics(y_hat, y)
         self.log_dict(self.train_metrics, batch_size=batch_size)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
-            y_hat = y_hat.squeeze(1)
 
         loss: Tensor = self.criterion(y_hat, y)
         self.log('train_loss', loss, batch_size=batch_size)
@@ -202,13 +201,12 @@ class ClassificationTask(BaseTask):
         x = batch['image']
         y = batch['label']
         batch_size = x.shape[0]
-        y_hat = self(x)
+        y_hat = self(x).squeeze(1)
         self.val_metrics(y_hat, y)
         self.log_dict(self.val_metrics, batch_size=batch_size)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
-            y_hat = y_hat.squeeze(1)
 
         loss = self.criterion(y_hat, y)
         self.log('val_loss', loss, batch_size=batch_size)
@@ -229,12 +227,10 @@ class ClassificationTask(BaseTask):
             )
             batch = aug(batch)
             match self.hparams['task']:
-                case 'binary':
+                case 'binary' | 'multilabel':
                     batch['prediction'] = (y_hat >= 0.5).long()
                 case 'multiclass':
                     batch['prediction'] = y_hat.argmax(dim=1)
-                case 'multilabel':
-                    batch['prediction'] = (y_hat >= 0.5).long()
 
             for key in ['image', 'label', 'prediction']:
                 batch[key] = batch[key].cpu()
@@ -264,13 +260,12 @@ class ClassificationTask(BaseTask):
         x = batch['image']
         y = batch['label']
         batch_size = x.shape[0]
-        y_hat = self(x)
+        y_hat = self(x).squeeze(1)
         self.test_metrics(y_hat, y)
         self.log_dict(self.test_metrics, batch_size=batch_size)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
-            y_hat = y_hat.squeeze(1)
 
         loss = self.criterion(y_hat, y)
         self.log('test_loss', loss, batch_size=batch_size)
