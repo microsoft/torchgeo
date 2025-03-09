@@ -9,13 +9,21 @@ from typing import Any
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import timm
+import torch
 import torch.nn as nn
 from matplotlib.figure import Figure
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torchmetrics import MetricCollection
-from torchmetrics.classification import Accuracy, FBetaScore, JaccardIndex
+from torchmetrics.classification import (
+    Accuracy,
+    FBetaScore,
+    JaccardIndex,
+    MultilabelAccuracy,
+    MultilabelFBetaScore,
+)
 from torchvision.models._api import WeightsEnum
+from typing_extensions import deprecated
 
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import get_weight
@@ -60,7 +68,7 @@ class ClassificationTask(BaseTask):
             freeze_backbone: Freeze the backbone network to linear probe
                 the classifier head.
 
-        .. versionadded:: 0.6
+        .. versionadded:: 0.7
            The *task* and *num_labels* parameters.
 
         .. versionadded:: 0.5
@@ -269,4 +277,149 @@ class ClassificationTask(BaseTask):
         """
         x = batch['image']
         y_hat: Tensor = self(x).softmax(dim=-1)
+        return y_hat
+
+
+@deprecated('Use torchgeo.trainers.ClassificationTask instead')
+class MultiLabelClassificationTask(ClassificationTask):
+    """Multi-label image classification."""
+
+    def configure_metrics(self) -> None:
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.classification.MultilabelAccuracy`: The number of
+          true positives divided by the dataset size. Both overall accuracy (OA)
+          using 'micro' averaging and average accuracy (AA) using 'macro' averaging
+          are reported. Higher values are better.
+        * :class:`~torchmetrics.classification.MultilabelFBetaScore`: F1 score.
+          The harmonic mean of precision and recall. Uses 'micro' averaging.
+          Higher values are better.
+
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not
+             reflect minority class accuracy.
+           * 'Macro' averaging gives equal weight to each class, and is useful for
+             balanced performance assessment across imbalanced classes.
+        """
+        metrics = MetricCollection(
+            {
+                'OverallAccuracy': MultilabelAccuracy(
+                    num_labels=self.hparams['num_classes'], average='micro'
+                ),
+                'AverageAccuracy': MultilabelAccuracy(
+                    num_labels=self.hparams['num_classes'], average='macro'
+                ),
+                'F1Score': MultilabelFBetaScore(
+                    num_labels=self.hparams['num_classes'], beta=1.0, average='micro'
+                ),
+            }
+        )
+        self.train_metrics = metrics.clone(prefix='train_')
+        self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
+
+    def training_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the training loss and additional metrics.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+
+        Returns:
+            The loss tensor.
+        """
+        x = batch['image']
+        y = batch['label']
+        batch_size = x.shape[0]
+        y_hat = self(x)
+        y_hat_hard = torch.sigmoid(y_hat)
+        loss: Tensor = self.criterion(y_hat, y.to(torch.float))
+        self.log('train_loss', loss, batch_size=batch_size)
+        self.train_metrics(y_hat_hard, y)
+        self.log_dict(self.train_metrics)
+
+        return loss
+
+    def validation_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> None:
+        """Compute the validation loss and additional metrics.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+        """
+        x = batch['image']
+        y = batch['label']
+        batch_size = x.shape[0]
+        y_hat = self(x)
+        y_hat_hard = torch.sigmoid(y_hat)
+        loss = self.criterion(y_hat, y.to(torch.float))
+        self.log('val_loss', loss, batch_size=batch_size)
+        self.val_metrics(y_hat_hard, y)
+        self.log_dict(self.val_metrics, batch_size=batch_size)
+
+        if (
+            batch_idx < 10
+            and hasattr(self.trainer, 'datamodule')
+            and hasattr(self.trainer.datamodule, 'plot')
+            and self.logger
+            and hasattr(self.logger, 'experiment')
+            and hasattr(self.logger.experiment, 'add_figure')
+        ):
+            datamodule = self.trainer.datamodule
+            batch['prediction'] = y_hat_hard
+            for key in ['image', 'label', 'prediction']:
+                batch[key] = batch[key].cpu()
+            sample = unbind_samples(batch)[0]
+
+            fig: Figure | None = None
+            try:
+                fig = datamodule.plot(sample)
+            except RGBBandsMissingError:
+                pass
+
+            if fig:
+                summary_writer = self.logger.experiment
+                summary_writer.add_figure(
+                    f'image/{batch_idx}', fig, global_step=self.global_step
+                )
+
+    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
+        """Compute the test loss and additional metrics.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+        """
+        x = batch['image']
+        y = batch['label']
+        batch_size = x.shape[0]
+        y_hat = self(x)
+        y_hat_hard = torch.sigmoid(y_hat)
+        loss = self.criterion(y_hat, y.to(torch.float))
+        self.log('test_loss', loss, batch_size=batch_size)
+        self.test_metrics(y_hat_hard, y)
+        self.log_dict(self.test_metrics, batch_size=batch_size)
+
+    def predict_step(
+        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
+    ) -> Tensor:
+        """Compute the predicted class probabilities.
+
+        Args:
+            batch: The output of your DataLoader.
+            batch_idx: Integer displaying index of this batch.
+            dataloader_idx: Index of the current dataloader.
+
+        Returns:
+            Output predicted probabilities.
+        """
+        x = batch['image']
+        y_hat = torch.sigmoid(self(x))
         return y_hat
