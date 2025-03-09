@@ -91,7 +91,7 @@ class ClassificationTask(BaseTask):
         # Create model
         self.model = timm.create_model(
             self.hparams['model'],
-            num_classes=self.hparams['num_classes'] or self.hparams['num_labels'] or 2,
+            num_classes=self.hparams['num_classes'] or self.hparams['num_labels'] or 1,
             in_chans=self.hparams['in_channels'],
             pretrained=weights is True,
         )
@@ -127,9 +127,9 @@ class ClassificationTask(BaseTask):
         elif loss == 'bce':
             self.criterion = nn.BCEWithLogitsLoss()
         elif loss == 'jaccard':
-            self.criterion = JaccardLoss(mode='multiclass')
+            self.criterion = JaccardLoss(mode=self.hparams['task'])
         elif loss == 'focal':
-            self.criterion = FocalLoss(mode='multiclass', normalized=True)
+            self.criterion = FocalLoss(mode=self.hparams['task'], normalized=True)
         else:
             raise ValueError(f"Loss type '{loss}' is not valid.")
 
@@ -283,40 +283,6 @@ class ClassificationTask(BaseTask):
 @deprecated('Use torchgeo.trainers.ClassificationTask instead')
 class MultiLabelClassificationTask(ClassificationTask):
     """Multi-label image classification."""
-
-    def configure_metrics(self) -> None:
-        """Initialize the performance metrics.
-
-        * :class:`~torchmetrics.classification.MultilabelAccuracy`: The number of
-          true positives divided by the dataset size. Both overall accuracy (OA)
-          using 'micro' averaging and average accuracy (AA) using 'macro' averaging
-          are reported. Higher values are better.
-        * :class:`~torchmetrics.classification.MultilabelFBetaScore`: F1 score.
-          The harmonic mean of precision and recall. Uses 'micro' averaging.
-          Higher values are better.
-
-        .. note::
-           * 'Micro' averaging suits overall performance evaluation but may not
-             reflect minority class accuracy.
-           * 'Macro' averaging gives equal weight to each class, and is useful for
-             balanced performance assessment across imbalanced classes.
-        """
-        metrics = MetricCollection(
-            {
-                'OverallAccuracy': MultilabelAccuracy(
-                    num_labels=self.hparams['num_classes'], average='micro'
-                ),
-                'AverageAccuracy': MultilabelAccuracy(
-                    num_labels=self.hparams['num_classes'], average='macro'
-                ),
-                'F1Score': MultilabelFBetaScore(
-                    num_labels=self.hparams['num_classes'], beta=1.0, average='micro'
-                ),
-            }
-        )
-        self.train_metrics = metrics.clone(prefix='train_')
-        self.val_metrics = metrics.clone(prefix='val_')
-        self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
