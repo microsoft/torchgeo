@@ -5,9 +5,9 @@ This document lists the Maintainers of the Project. Maintainers may be added onc
 | **NAME**        | **Handle**    | **Affiliation** |
 | --------------- | ------------- | --------------- |
 | Adam J. Stewart | @adamjstewart | TUM             |
-| Nils Lehmann    | @nilsleh      | TUM             |
 | Caleb Robinson  | @calebrob6    | Microsoft       |
 | Isaac Corley    | @isaaccorley  |                 |
+| Nils Lehmann    | @nilsleh      | TUM             |
 | Ashwin Nair     | @ashnair1     | Bayanat         |
 
 ---
