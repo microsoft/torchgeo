@@ -71,6 +71,7 @@ class TestClassificationTask:
             'so2sat_s1',
             'so2sat_s2',
             'so2sat_rgb',
+            'treesatai',
             'ucmerced',
         ],
     )
