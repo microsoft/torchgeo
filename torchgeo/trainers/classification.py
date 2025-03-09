@@ -119,19 +119,19 @@ class ClassificationTask(BaseTask):
         Raises:
             ValueError: If *loss* is invalid.
         """
-        loss: str = self.hparams['loss']
-        if loss == 'ce':
-            self.criterion: nn.Module = nn.CrossEntropyLoss(
-                weight=self.hparams['class_weights']
-            )
-        elif loss == 'bce':
-            self.criterion = nn.BCEWithLogitsLoss()
-        elif loss == 'jaccard':
-            self.criterion = JaccardLoss(mode=self.hparams['task'])
-        elif loss == 'focal':
-            self.criterion = FocalLoss(mode=self.hparams['task'], normalized=True)
-        else:
-            raise ValueError(f"Loss type '{loss}' is not valid.")
+        match self.hparams['loss']:
+            case 'ce':
+                self.criterion: nn.Module = nn.CrossEntropyLoss(
+                    weight=self.hparams['class_weights']
+                )
+            case 'bce':
+                self.criterion = nn.BCEWithLogitsLoss()
+            case 'jaccard':
+                self.criterion = JaccardLoss(mode=self.hparams['task'])
+            case 'focal':
+                self.criterion = FocalLoss(mode=self.hparams['task'], normalized=True)
+            case _:
+                raise ValueError(f"Loss type '{loss}' is not valid.")
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
@@ -276,116 +276,21 @@ class ClassificationTask(BaseTask):
             Output predicted probabilities.
         """
         x = batch['image']
-        y_hat: Tensor = self(x).softmax(dim=-1)
-        return y_hat
+        y_hat = self(x)
+        match self.hparams['task']:
+            case 'binary' | 'multilabel':
+                return y_hat.sigmoid()
+            case 'multiclass':
+                return y_hat.softmax(dim=1)
 
 
 @deprecated('Use torchgeo.trainers.ClassificationTask instead')
 class MultiLabelClassificationTask(ClassificationTask):
     """Multi-label image classification."""
 
-    def training_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> Tensor:
-        """Compute the training loss and additional metrics.
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Wrapper around torchgeo.trainers.ClassificationTask to massage kwargs."""
 
-        Args:
-            batch: The output of your DataLoader.
-            batch_idx: Integer displaying index of this batch.
-            dataloader_idx: Index of the current dataloader.
-
-        Returns:
-            The loss tensor.
-        """
-        x = batch['image']
-        y = batch['label']
-        batch_size = x.shape[0]
-        y_hat = self(x)
-        y_hat_hard = torch.sigmoid(y_hat)
-        loss: Tensor = self.criterion(y_hat, y.to(torch.float))
-        self.log('train_loss', loss, batch_size=batch_size)
-        self.train_metrics(y_hat_hard, y)
-        self.log_dict(self.train_metrics)
-
-        return loss
-
-    def validation_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> None:
-        """Compute the validation loss and additional metrics.
-
-        Args:
-            batch: The output of your DataLoader.
-            batch_idx: Integer displaying index of this batch.
-            dataloader_idx: Index of the current dataloader.
-        """
-        x = batch['image']
-        y = batch['label']
-        batch_size = x.shape[0]
-        y_hat = self(x)
-        y_hat_hard = torch.sigmoid(y_hat)
-        loss = self.criterion(y_hat, y.to(torch.float))
-        self.log('val_loss', loss, batch_size=batch_size)
-        self.val_metrics(y_hat_hard, y)
-        self.log_dict(self.val_metrics, batch_size=batch_size)
-
-        if (
-            batch_idx < 10
-            and hasattr(self.trainer, 'datamodule')
-            and hasattr(self.trainer.datamodule, 'plot')
-            and self.logger
-            and hasattr(self.logger, 'experiment')
-            and hasattr(self.logger.experiment, 'add_figure')
-        ):
-            datamodule = self.trainer.datamodule
-            batch['prediction'] = y_hat_hard
-            for key in ['image', 'label', 'prediction']:
-                batch[key] = batch[key].cpu()
-            sample = unbind_samples(batch)[0]
-
-            fig: Figure | None = None
-            try:
-                fig = datamodule.plot(sample)
-            except RGBBandsMissingError:
-                pass
-
-            if fig:
-                summary_writer = self.logger.experiment
-                summary_writer.add_figure(
-                    f'image/{batch_idx}', fig, global_step=self.global_step
-                )
-
-    def test_step(self, batch: Any, batch_idx: int, dataloader_idx: int = 0) -> None:
-        """Compute the test loss and additional metrics.
-
-        Args:
-            batch: The output of your DataLoader.
-            batch_idx: Integer displaying index of this batch.
-            dataloader_idx: Index of the current dataloader.
-        """
-        x = batch['image']
-        y = batch['label']
-        batch_size = x.shape[0]
-        y_hat = self(x)
-        y_hat_hard = torch.sigmoid(y_hat)
-        loss = self.criterion(y_hat, y.to(torch.float))
-        self.log('test_loss', loss, batch_size=batch_size)
-        self.test_metrics(y_hat_hard, y)
-        self.log_dict(self.test_metrics, batch_size=batch_size)
-
-    def predict_step(
-        self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> Tensor:
-        """Compute the predicted class probabilities.
-
-        Args:
-            batch: The output of your DataLoader.
-            batch_idx: Integer displaying index of this batch.
-            dataloader_idx: Index of the current dataloader.
-
-        Returns:
-            Output predicted probabilities.
-        """
-        x = batch['image']
-        y_hat = torch.sigmoid(self(x))
-        return y_hat
+        kwargs['task'] = 'multilabel'
+        kwargs['num_labels'] = kwargs['num_classes']
+        super().__init__(*args, **kwargs)
