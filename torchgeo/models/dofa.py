@@ -295,7 +295,7 @@ class DOFA(nn.Module):
         # --------------------------------------------------------------------------
         # MAE encoder specifics
         self.patch_embed = DOFAEmbedding(
-            dynamic_embed_dim=128, kernel_size=16, embed_dim=embed_dim
+            dynamic_embed_dim=128, kernel_size=patch_size, embed_dim=embed_dim
         )
         self.num_patches = (img_size // patch_size) ** 2
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
@@ -530,8 +530,8 @@ def dofa_large_patch16_224(
     return model
 
 
-def dofa_huge_patch16_224(*args: Any, **kwargs: Any) -> DOFA:
-    """Dynamic One-For-All (DOFA) huge patch size 16 model.
+def dofa_huge_patch14_224(*args: Any, **kwargs: Any) -> DOFA:
+    """Dynamic One-For-All (DOFA) huge patch size 14 model.
 
     If you use this model in your research, please cite the following paper:
 
@@ -544,7 +544,7 @@ def dofa_huge_patch16_224(*args: Any, **kwargs: Any) -> DOFA:
         **kwargs: Additional keyword arguments to pass to :class:`DOFA`.
 
     Returns:
-        A DOFA huge 16 model.
+        A DOFA huge 14 model.
     """
     kwargs |= {'patch_size': 14, 'embed_dim': 1280, 'depth': 32, 'num_heads': 16}
     model = DOFA(*args, **kwargs)
