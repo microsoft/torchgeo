@@ -4,7 +4,7 @@ model:
     loss: 'bce'
     model: 'resnet18'
     in_channels: 14
-    task: "multilabel"
+    task: 'multilabel'
     num_labels: 19
 data:
   class_path: BigEarthNetDataModule
