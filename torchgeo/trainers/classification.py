@@ -4,7 +4,7 @@
 """Trainers for image classification."""
 
 import os
-from typing import Any
+from typing import Any, Literal
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -39,10 +39,10 @@ class ClassificationTask(BaseTask):
         model: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
-        task: str = 'multiclass',
+        task: Literal['binary', 'multiclass', 'multilabel'] = 'multiclass',
         num_classes: int | None = None,
         num_labels: int | None = None,
-        loss: str = 'ce',
+        loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'ce',
         class_weights: Tensor | None = None,
         lr: float = 1e-3,
         patience: int = 10,
@@ -130,8 +130,6 @@ class ClassificationTask(BaseTask):
                 self.criterion = JaccardLoss(mode=self.hparams['task'])
             case 'focal':
                 self.criterion = FocalLoss(mode=self.hparams['task'], normalized=True)
-            case _:
-                raise ValueError(f"Loss type '{loss}' is not valid.")
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
@@ -276,12 +274,15 @@ class ClassificationTask(BaseTask):
             Output predicted probabilities.
         """
         x = batch['image']
-        y_hat = self(x)
+        y_hat: Tensor = self(x)
+
         match self.hparams['task']:
             case 'binary' | 'multilabel':
-                return y_hat.sigmoid()
+                y_hat = y_hat.sigmoid()
             case 'multiclass':
-                return y_hat.softmax(dim=1)
+                y_hat = y_hat.softmax(dim=1)
+
+        return y_hat
 
 
 @deprecated('Use torchgeo.trainers.ClassificationTask instead')

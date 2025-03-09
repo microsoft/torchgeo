@@ -173,11 +173,6 @@ class TestClassificationTask:
             num_classes=10,
         )
 
-    def test_invalid_loss(self) -> None:
-        match = "Loss type 'invalid_loss' is not valid."
-        with pytest.raises(ValueError, match=match):
-            ClassificationTask(model='resnet18', loss='invalid_loss')
-
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(EuroSATDataModule, 'plot', plot)
         datamodule = EuroSATDataModule(
