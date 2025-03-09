@@ -15,13 +15,14 @@ from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.classification import (
-    MulticlassAccuracy,
-    MulticlassFBetaScore,
-    MulticlassJaccardIndex,
+    Accuracy,
+    FBetaScore,
+    JaccardIndex,
     MultilabelAccuracy,
     MultilabelFBetaScore,
 )
 from torchvision.models._api import WeightsEnum
+from typing_extensions import deprecated
 
 from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import get_weight
@@ -37,7 +38,9 @@ class ClassificationTask(BaseTask):
         model: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
-        num_classes: int = 1000,
+        task: str = 'multiclass',
+        num_classes: int | None = None,
+        num_labels: int | None = None,
         loss: str = 'ce',
         class_weights: Tensor | None = None,
         lr: float = 1e-3,
@@ -53,7 +56,9 @@ class ClassificationTask(BaseTask):
                 representation of a weight enum, True for ImageNet weights, False
                 or None for random weights, or the path to a saved model state dict.
             in_channels: Number of input channels to model.
-            num_classes: Number of prediction classes.
+            task: One of 'binary', 'multiclass', or 'multilabel'.
+            num_classes: Number of prediction classes (only for ``task='multiclass'``).
+            num_labels: Number of prediction labels (only for ``task='multilabel'``).
             loss: One of 'ce', 'bce', 'jaccard', or 'focal'.
             class_weights: Optional rescaling weight given to each
                 class and used with 'ce' loss.
@@ -62,8 +67,8 @@ class ClassificationTask(BaseTask):
             freeze_backbone: Freeze the backbone network to linear probe
                 the classifier head.
 
-        .. versionchanged:: 0.4
-           *classification_model* was renamed to *model*.
+        .. versionadded:: 0.7
+           The *task* and *num_labels* parameters.
 
         .. versionadded:: 0.5
            The *class_weights* and *freeze_backbone* parameters.
@@ -71,6 +76,9 @@ class ClassificationTask(BaseTask):
         .. versionchanged:: 0.5
            *learning_rate* and *learning_rate_schedule_patience* were renamed to
            *lr* and *patience*.
+
+        .. versionchanged:: 0.4
+           *classification_model* was renamed to *model*.
         """
         self.weights = weights
         super().__init__()
@@ -82,7 +90,7 @@ class ClassificationTask(BaseTask):
         # Create model
         self.model = timm.create_model(
             self.hparams['model'],
-            num_classes=self.hparams['num_classes'],
+            num_classes=self.hparams['num_classes'] or self.hparams['num_labels'] or 1,
             in_chans=self.hparams['in_channels'],
             pretrained=weights is True,
         )
@@ -118,22 +126,22 @@ class ClassificationTask(BaseTask):
         elif loss == 'bce':
             self.criterion = nn.BCEWithLogitsLoss()
         elif loss == 'jaccard':
-            self.criterion = JaccardLoss(mode='multiclass')
+            self.criterion = JaccardLoss(mode=self.hparams['task'])
         elif loss == 'focal':
-            self.criterion = FocalLoss(mode='multiclass', normalized=True)
+            self.criterion = FocalLoss(mode=self.hparams['task'], normalized=True)
         else:
             raise ValueError(f"Loss type '{loss}' is not valid.")
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * :class:`~torchmetrics.classification.MulticlassAccuracy`: The number of
+        * :class:`~torchmetrics.Accuracy`: The number of
           true positives divided by the dataset size. Both overall accuracy (OA)
           using 'micro' averaging and average accuracy (AA) using 'macro' averaging
           are reported. Higher values are better.
-        * :class:`~torchmetrics.classification.MulticlassJaccardIndex`: Intersection
+        * :class:`~torchmetrics.JaccardIndex`: Intersection
           over union (IoU). Uses 'macro' averaging. Higher valuers are better.
-        * :class:`~torchmetrics.classification.MulticlassFBetaScore`: F1 score.
+        * :class:`~torchmetrics.FBetaScore`: F1 score.
           The harmonic mean of precision and recall. Uses 'micro' averaging.
           Higher values are better.
 
@@ -143,20 +151,17 @@ class ClassificationTask(BaseTask):
            * 'Macro' averaging gives equal weight to each class, and is useful for
              balanced performance assessment across imbalanced classes.
         """
+        kwargs = {
+            'task': self.hparams['task'],
+            'num_classes': self.hparams['num_classes'],
+            'num_labels': self.hparams['num_labels'],
+        }
         metrics = MetricCollection(
             {
-                'OverallAccuracy': MulticlassAccuracy(
-                    num_classes=self.hparams['num_classes'], average='micro'
-                ),
-                'AverageAccuracy': MulticlassAccuracy(
-                    num_classes=self.hparams['num_classes'], average='macro'
-                ),
-                'JaccardIndex': MulticlassJaccardIndex(
-                    num_classes=self.hparams['num_classes']
-                ),
-                'F1Score': MulticlassFBetaScore(
-                    num_classes=self.hparams['num_classes'], beta=1.0, average='micro'
-                ),
+                'OverallAccuracy': Accuracy(average='micro', **kwargs),
+                'AverageAccuracy': Accuracy(average='macro', **kwargs),
+                'JaccardIndex': JaccardIndex(**kwargs),
+                'F1Score': FBetaScore(beta=1.0, average='micro', **kwargs),
             }
         )
         self.train_metrics = metrics.clone(prefix='train_')
@@ -268,42 +273,9 @@ class ClassificationTask(BaseTask):
         return y_hat
 
 
+@deprecated('Use torchgeo.trainers.ClassificationTask instead')
 class MultiLabelClassificationTask(ClassificationTask):
     """Multi-label image classification."""
-
-    def configure_metrics(self) -> None:
-        """Initialize the performance metrics.
-
-        * :class:`~torchmetrics.classification.MultilabelAccuracy`: The number of
-          true positives divided by the dataset size. Both overall accuracy (OA)
-          using 'micro' averaging and average accuracy (AA) using 'macro' averaging
-          are reported. Higher values are better.
-        * :class:`~torchmetrics.classification.MultilabelFBetaScore`: F1 score.
-          The harmonic mean of precision and recall. Uses 'micro' averaging.
-          Higher values are better.
-
-        .. note::
-           * 'Micro' averaging suits overall performance evaluation but may not
-             reflect minority class accuracy.
-           * 'Macro' averaging gives equal weight to each class, and is useful for
-             balanced performance assessment across imbalanced classes.
-        """
-        metrics = MetricCollection(
-            {
-                'OverallAccuracy': MultilabelAccuracy(
-                    num_labels=self.hparams['num_classes'], average='micro'
-                ),
-                'AverageAccuracy': MultilabelAccuracy(
-                    num_labels=self.hparams['num_classes'], average='macro'
-                ),
-                'F1Score': MultilabelFBetaScore(
-                    num_labels=self.hparams['num_classes'], beta=1.0, average='micro'
-                ),
-            }
-        )
-        self.train_metrics = metrics.clone(prefix='train_')
-        self.val_metrics = metrics.clone(prefix='val_')
-        self.test_metrics = metrics.clone(prefix='test_')
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0

@@ -1,9 +1,10 @@
 model:
-  class_path: MultiLabelClassificationTask
+  class_path: ClassificationTask
   init_args:
     model: 'resnet18'
     in_channels: 19
-    num_classes: 15
+    task: 'multilabel'
+    num_labels: 15
     loss: 'bce'
 data:
   class_path: TreeSatAIDataModule
