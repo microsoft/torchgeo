@@ -15,11 +15,11 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DOTA, DatasetNotFoundError
 
-pytest.importorskip('pyarrow')
-
 
 class TestDOTA:
-    @pytest.fixture(params=product(['train', 'val'], ['1.0', '2.0']))
+    @pytest.fixture(
+        params=product(['train', 'val'], ['1.0', '2.0'], ['horizontal', 'oriented'])
+    )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> DOTA:
@@ -30,44 +30,60 @@ class TestDOTA:
             'train': {
                 'images': {
                     '1.0': {
-                        'filename': 'dotav1_images_train.tar.gz',
-                        'md5': '14296c11c897cb7718558815a2b1bf69',
+                        'filename': 'dotav1.0_images_train.tar.gz',
+                        'md5': '126d42cc8b2c093e7914528ac01ea8fc',
+                    },
+                    '1.5': {
+                        'filename': 'dotav1.0_images_train.tar.gz',
+                        'md5': 'fd187ea8acc3d429f0ba9e5ef96def75',
                     },
                     '2.0': {
-                        'filename': 'dotav2_images_train.tar.gz',
-                        'md5': 'fc80227b1f9b99cf5a7a3d0c5798efd0',
+                        'filename': 'dotav2.0_images_train.tar.gz',
+                        'md5': '613d192b70dc53fe7e10f95eed0e1a9d',
                     },
                 },
                 'annotations': {
                     '1.0': {
-                        'filename': 'dotav1_annotations_train.tar.gz',
-                        'md5': '805dc01688e00895a594c637569a2e1a',
+                        'filename': 'dotav1.0_annotations_train.tar.gz',
+                        'md5': '1fbdb35e2d55cab2632a8c20ed54a6de',
+                    },
+                    '1.5': {
+                        'filename': 'dotav1.5_annotations_train.tar.gz',
+                        'md5': '7a7ed5a309acb45dd1885f088fa24783',
                     },
                     '2.0': {
-                        'filename': 'dotav2_annotations_train.tar.gz',
-                        'md5': '723bceb26bc52a5de45902fada335c36',
+                        'filename': 'dotav2.0_annotations_train.tar.gz',
+                        'md5': 'f8cd1bf53362bd372ddc2fba97cff2b6',
                     },
                 },
             },
             'val': {
                 'images': {
                     '1.0': {
-                        'filename': 'dotav1_images_val.tar.gz',
-                        'md5': 'a95acf48281b7fc800666974730aeffd',
+                        'filename': 'dotav1.0_images_val.tar.gz',
+                        'md5': 'f73dbdc8aa4e580dda4ef6cb54cfbd68',
+                    },
+                    '1.5': {
+                        'filename': 'dotav1.0_images_val.tar.gz',
+                        'md5': 'b1c618180e0ca3e4426ecf53b82c8d74',
                     },
                     '2.0': {
-                        'filename': 'dotav2_images_val.tar.gz',
-                        'md5': '7c4ebb3317f970b26de273cd7313d46f',
+                        'filename': 'dotav2.0_images_val.tar.gz',
+                        'md5': '0950df7a4c700934572f3a9a85133520',
                     },
                 },
                 'annotations': {
                     '1.0': {
-                        'filename': 'dotav1_annotations_val.tar.gz',
-                        'md5': '435a4a77c62eff955dd30a1b2a13894f',
+                        'filename': 'dotav1.0_annotations_val.tar.gz',
+                        'md5': '700fd2e7cba8dd543ca5bcbe411c9db4',
+                    },
+                    '1.5': {
+                        'filename': 'dotav1.5_annotations_val.tar.gz',
+                        'md5': 'f0a32911fa3614a8de67f5fd8d04dd9e',
                     },
                     '2.0': {
-                        'filename': 'dotav2_annotations_val.tar.gz',
-                        'md5': '86b629c6c8a1d924841d34de4eeb87ec',
+                        'filename': 'dotav2.0_annotations_val.tar.gz',
+                        'md5': '4823cdc2c35d5f74254ffab0d99ea876',
                     },
                 },
             },
@@ -75,11 +91,7 @@ class TestDOTA:
         monkeypatch.setattr(DOTA, 'file_info', file_info)
 
         root = tmp_path
-        split, version = request.param
-        if version == '2.0':
-            bbox_orientation = 'obb'
-        else:
-            bbox_orientation = 'hbb'
+        split, version, bbox_orientation = request.param
 
         transforms = nn.Identity()
 
@@ -99,14 +111,18 @@ class TestDOTA:
             assert isinstance(x, dict)
             assert isinstance(x['image'], torch.Tensor)
             assert isinstance(x['labels'], torch.Tensor)
-            assert isinstance(x['boxes'], torch.Tensor)
-
-            if dataset.bbox_orientation == 'obb':
-                assert x['boxes'].shape[1] == 8
+            if dataset.bbox_orientation == 'oriented':
+                bbox_key = 'bbox'
             else:
-                assert x['boxes'].shape[1] == 4
+                bbox_key = 'bbox_xyxy'
+            assert isinstance(x[bbox_key], torch.Tensor)
 
-            assert x['labels'].shape[0] == x['boxes'].shape[0]
+            if dataset.bbox_orientation == 'oriented':
+                assert x[bbox_key].shape[1] == 8
+            else:
+                assert x[bbox_key].shape[1] == 4
+
+            assert x['labels'].shape[0] == x[bbox_key].shape[0]
 
     def test_len(self, dataset: DOTA) -> None:
         if dataset.split == 'train':
@@ -119,15 +135,17 @@ class TestDOTA:
 
     def test_not_yet_extracted(self, tmp_path: Path) -> None:
         files = [
-            'dotav1_images_train.tar.gz',
-            'dotav1_annotations_train.tar.gz',
-            'dotav1_images_val.tar.gz',
-            'dotav1_annotations_val.tar.gz',
-            'dotav2_images_train.tar.gz',
-            'dotav2_annotations_train.tar.gz',
-            'dotav2_images_val.tar.gz',
-            'dotav2_annotations_val.tar.gz',
-            'samples.parquet',
+            'dotav1.0_images_train.tar.gz',
+            'dotav1.0_annotations_train.tar.gz',
+            'dotav1.5_annotations_train.tar.gz',
+            'dotav1.5_annotations_val.tar.gz',
+            'dotav1.0_images_val.tar.gz',
+            'dotav1.0_annotations_val.tar.gz',
+            'dotav2.0_images_train.tar.gz',
+            'dotav2.0_annotations_train.tar.gz',
+            'dotav2.0_images_val.tar.gz',
+            'dotav2.0_annotations_val.tar.gz',
+            'samples.csv',
         ]
         for path in files:
             shutil.copyfile(
@@ -142,7 +160,7 @@ class TestDOTA:
             DOTA(split='foo')
 
     def test_corrupted(self, tmp_path: Path) -> None:
-        with open(os.path.join(tmp_path, 'dotav1_images_train.tar.gz'), 'w') as f:
+        with open(os.path.join(tmp_path, 'dotav1.0_images_train.tar.gz'), 'w') as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Archive'):
             DOTA(root=tmp_path, checksum=True)

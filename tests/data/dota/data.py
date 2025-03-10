@@ -47,7 +47,7 @@ def create_annotation_file(
 def create_test_data(root: Path) -> None:
     """Create DOTA test dataset."""
     splits = ['train', 'val']
-    versions = ['1.0', '2.0']
+    versions = ['1.0', '1.5', '2.0']
 
     # Create directory structure
     for split in splits:
@@ -58,16 +58,14 @@ def create_test_data(root: Path) -> None:
         for version in versions:
             # Create images and annotations
             for i in range(num_samples):
-                img_name = f'P{version[0]}_{i:04d}.png'
-                ann_name = f'P{version[0]}_{i:04d}.txt'
+                img_name = f'P{i:04d}.png'
+                ann_name = f'P{i:04d}.txt'
 
                 # Create directories
                 (root / split / 'images').mkdir(parents=True, exist_ok=True)
-                (root / split / 'annotations').mkdir(parents=True, exist_ok=True)
-                if version == '2.0':
-                    (root / split / 'annotations_hbb').mkdir(
-                        parents=True, exist_ok=True
-                    )
+                (root / split / 'annotations' / f'version{version}').mkdir(
+                    parents=True, exist_ok=True
+                )
 
                 # Create files
                 if i == 0:
@@ -76,18 +74,16 @@ def create_test_data(root: Path) -> None:
                     no_boxes = False
                 create_dummy_image(root / split / 'images' / img_name)
                 create_annotation_file(
-                    root / split / 'annotations' / ann_name, False, no_boxes
+                    root / split / 'annotations' / f'version{version}' / ann_name,
+                    False,
+                    no_boxes,
                 )
-                if version == '2.0':
-                    create_annotation_file(
-                        root / split / 'annotations_hbb' / ann_name, True, no_boxes
-                    )
 
             # Create tar archives
             for type_ in ['images', 'annotations']:
                 src_dir = root / split / type_
                 if src_dir.exists():
-                    tar_name = f'dotav{version[0]}_{type_}_{split}.tar.gz'
+                    tar_name = f'dotav{version}_{type_}_{split}.tar.gz'
                     with tarfile.open(root / tar_name, 'w:gz') as tar:
                         tar.add(src_dir, arcname=f'{split}/{type_}')
 
@@ -99,44 +95,66 @@ def create_test_data(root: Path) -> None:
                         hash_md5.update(chunk)
                 return hash_md5.hexdigest()
 
-    for version in versions:
+    # for version in versions:
+    #     for type_ in ['images', 'annotations']:
+    #         for split in splits:
+    #             tar_name = f'dotav{version}_{type_}_{split}.tar.gz'
+    #             print(f'{tar_name} md5: {md5(tar_name)}')
+    print('file_info = {')
+    for split in splits:
+        print(f"    '{split}': {{")
+
         for type_ in ['images', 'annotations']:
-            for split in splits:
-                tar_name = f'dotav{version[0]}_{type_}_{split}.tar.gz'
-                print(f'{tar_name} md5: {md5(tar_name)}')
+            print(f"        '{type_}': {{")
+
+            for version in versions:
+                tar_name = f'dotav{version}_{type_}_{split}.tar.gz'
+                checksum = md5(tar_name)
+
+                # version 1.0 and 1.5 have the same images
+                if version == '1.5' and type_ == 'images':
+                    version_filename = '1.0'
+                else:
+                    version_filename = version
+
+                print(f"            '{version}': {{")
+                print(
+                    f"                'filename': 'dotav{version_filename}_{type_}_{split}.tar.gz',"
+                )
+                print(f"                'md5': '{checksum}',")
+                print(f'            }},')
+
+            print('        },')
+
+        print('    },')
+    print('}')
 
 
 def create_sample_df(root: Path) -> pd.DataFrame:
     """Create sample DataFrame for test data."""
     rows = []
     splits = ['train', 'val']
-    versions = ['1.0', '2.0']
+    versions = ['1.0', '1.5', '2.0']
 
     for split in splits:
         num_samples = 3 if split == 'train' else 2
         for version in versions:
             for i in range(num_samples):
-                img_name = f'P{version[0]}_{i:04d}.png'
-                ann_name = f'P{version[0]}_{i:04d}.txt'
+                img_name = f'P{i:04d}.png'
+                ann_name = f'P{i:04d}.txt'
 
                 row = {
                     'image_path': str(Path(split) / 'images' / img_name),
-                    'annotation_path': str(Path(split) / 'annotations' / ann_name),
+                    'annotation_path': str(
+                        Path(split) / 'annotations' / f'version{version}' / ann_name
+                    ),
                     'split': split,
                     'version': version,
                 }
-
-                if version == '2.0':
-                    row['annotation_hbb_path'] = str(
-                        Path(split) / 'annotations_hbb' / ann_name
-                    )
-                else:
-                    row['annotation_hbb_path'] = None
-
                 rows.append(row)
 
     df = pd.DataFrame(rows)
-    df.to_parquet(root / 'samples.parquet')
+    df.to_csv(root / 'samples.csv')
     return df
 
 
