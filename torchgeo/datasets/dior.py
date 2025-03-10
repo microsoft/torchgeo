@@ -186,7 +186,7 @@ class DIOR(NonGeoDataset):
 
         self._verify()
 
-        self.sample_df = pd.read_parquet(os.path.join(self.root, 'sample_df.parquet'))
+        self.sample_df = pd.read_csv(os.path.join(self.root, 'sample_df.csv'))
 
         self.sample_df = self.sample_df[
             self.sample_df['split'] == self.split
@@ -263,11 +263,11 @@ class DIOR(NonGeoDataset):
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        df_path = os.path.join(self.root, 'sample_df.parquet')
+        df_path = os.path.join(self.root, 'sample_df.csv')
         exists = []
         if os.path.exists(df_path):
             exists.append(True)
-            df = pd.read_parquet(df_path)
+            df = pd.read_csv(df_path)
             df = df[df['split'] == self.split].reset_index(drop=True)
             for idx, row in df.iterrows():
                 if os.path.exists(os.path.join(self.root, row['image_path'])):
@@ -323,11 +323,9 @@ class DIOR(NonGeoDataset):
                 md5=md5 if self.checksum else None,
             )
 
-        # download the sample_df.parquet file
+        # download the sample_df.csv file
         download_url(
-            self.url.format('sample_df.parquet'),
-            self.root,
-            filename='sample_df.parquet',
+            self.url.format('sample_df.csv'), self.root, filename='sample_df.csv'
         )
 
     def plot(

@@ -135,7 +135,7 @@ def create_dataset() -> None:
         )
 
     df = pd.DataFrame(samples)
-    df.to_parquet(os.path.join('sample_df.parquet'))
+    df.to_csv(os.path.join('sample_df.csv'), index=False)
 
     for dirname in ['Images', 'Annotations']:
         archive_name = f'{dirname}_trainval.zip'

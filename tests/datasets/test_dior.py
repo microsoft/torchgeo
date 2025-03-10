@@ -14,8 +14,6 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import DIOR, DatasetNotFoundError
 
-pytest.importorskip('pyarrow')
-
 
 class TestDIOR:
     @pytest.fixture(params=['train', 'val', 'test'])
@@ -29,17 +27,17 @@ class TestDIOR:
             'trainval': {
                 'images': {
                     'filename': 'Images_trainval.zip',
-                    'md5': '17b9a13f7f9e30bc04f9d70b4bb0a47b',
+                    'md5': '585e21ddd28fdf1166e463db43cfe68d',
                 },
                 'labels': {
                     'filename': 'Annotations_trainval.zip',
-                    'md5': '887a590a2872be81f00f21f502a7cb56',
+                    'md5': 'dcc93fa421804515029a5a574f34fafc',
                 },
             },
             'test': {
                 'images': {
                     'filename': 'Images_test.zip',
-                    'md5': 'e14666a09788bfb0d5ad39a82f7da946',
+                    'md5': '0273920291def20cec60849b35eca713',
                 }
             },
         }
@@ -59,7 +57,7 @@ class TestDIOR:
             'Images_trainval.zip',
             'Annotations_trainval.zip',
             'Images_test.zip',
-            'sample_df.parquet',
+            'sample_df.csv',
         ]
         for path in files:
             shutil.copyfile(
