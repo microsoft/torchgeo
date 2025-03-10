@@ -21,7 +21,6 @@ from .geo import NonGeoDataset
 from .utils import (
     Path,
     check_integrity,
-    download_and_extract_archive,
     download_url,
     extract_archive,
     percentile_normalization,

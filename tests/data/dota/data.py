@@ -95,11 +95,6 @@ def create_test_data(root: Path) -> None:
                         hash_md5.update(chunk)
                 return hash_md5.hexdigest()
 
-    # for version in versions:
-    #     for type_ in ['images', 'annotations']:
-    #         for split in splits:
-    #             tar_name = f'dotav{version}_{type_}_{split}.tar.gz'
-    #             print(f'{tar_name} md5: {md5(tar_name)}')
     print('file_info = {')
     for split in splits:
         print(f"    '{split}': {{")
@@ -122,7 +117,7 @@ def create_test_data(root: Path) -> None:
                     f"                'filename': 'dotav{version_filename}_{type_}_{split}.tar.gz',"
                 )
                 print(f"                'md5': '{checksum}',")
-                print(f'            }},')
+                print('            },')
 
             print('        },')
 
