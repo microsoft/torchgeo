@@ -250,7 +250,7 @@ class VHR10(NonGeoDataset):
             sample = self.coco_convert(sample)
             sample['class'] = sample['label']['labels']
             sample['bbox_xyxy'] = sample['label']['boxes']
-            sample['mask'] = sample['label']['masks'].float()
+            sample['mask'] = sample['label']['masks']
             sample['label'] = sample.pop('class')
 
         if self.transforms is not None:
@@ -400,7 +400,6 @@ class VHR10(NonGeoDataset):
         if show_feats != 'boxes':
             skimage = lazy_import('skimage')
 
-        image = sample['image'].permute(1, 2, 0).numpy()
         boxes = sample['bbox_xyxy'].cpu().numpy()
         labels = sample['label'].cpu().numpy()
         if 'mask' in sample:
@@ -409,21 +408,21 @@ class VHR10(NonGeoDataset):
         n_gt = len(boxes)
 
         ncols = 1
-        show_predictions = 'prediction_labels' in sample
+        show_predictions = 'prediction_label' in sample
 
         if show_predictions:
             show_pred_boxes = False
             show_pred_masks = False
-            prediction_labels = sample['prediction_labels'].numpy()
-            prediction_scores = sample['prediction_scores'].numpy()
+            prediction_label = sample['prediction_label'].numpy()
+            prediction_score = sample['prediction_score'].numpy()
             if 'prediction_bbox_xyxy' in sample:
                 prediction_bbox_xyxy = sample['prediction_bbox_xyxy'].numpy()
                 show_pred_boxes = True
-            if 'prediction_masks' in sample:
-                prediction_masks = sample['prediction_masks'].numpy()
+            if 'prediction_mask' in sample:
+                prediction_mask = sample['prediction_mask'].numpy()
                 show_pred_masks = True
 
-            n_pred = len(prediction_labels)
+            n_pred = len(prediction_label)
             ncols += 1
 
         # Display image
@@ -476,11 +475,11 @@ class VHR10(NonGeoDataset):
             axs[0, 1].imshow(image)
             axs[0, 1].axis('off')
             for i in range(n_pred):
-                score = prediction_scores[i]
+                score = prediction_score[i]
                 if score < 0.5:
                     continue
 
-                class_num = prediction_labels[i]
+                class_num = prediction_label[i]
                 color = cm(class_num / len(self.categories))
 
                 if show_pred_boxes:
@@ -512,7 +511,7 @@ class VHR10(NonGeoDataset):
 
                 # Add masks
                 if show_pred_masks:
-                    mask = prediction_masks[i]
+                    mask = prediction_mask[i]
                     contours = skimage.measure.find_contours(mask, 0.5)
                     for verts in contours:
                         verts = np.fliplr(verts)

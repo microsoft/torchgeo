@@ -83,7 +83,7 @@ class RegressionTask(BaseTask):
         """Initialize the model."""
         # Create model
         weights = self.weights
-        self.model = timm.create_model(  # type: ignore[attr-defined]
+        self.model = timm.create_model(
             self.hparams['model'],
             num_classes=self.hparams['num_outputs'],
             in_chans=self.hparams['in_channels'],
