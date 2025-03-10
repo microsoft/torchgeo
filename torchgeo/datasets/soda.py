@@ -15,8 +15,8 @@ import pandas as pd
 import torch
 from matplotlib.figure import Figure
 from PIL import Image
+from shapely.geometry import MultiPoint, Polygon
 from torch import Tensor
-from shapely.geometry import Polygon, MultiPoint
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -55,14 +55,6 @@ class SODAA(NonGeoDataset):
     If you use this dataset in your research, please cite the following paper:
 
     * https://ieeexplore.ieee.org/document/10168277
-
-
-    .. note::
-
-       This dataset requires the following additional library to be installed:
-
-       * `opencv-python <https://pypi.org/project/opencv-python/>`_ to process
-            bounding box annotations
 
     .. versionadded:: 0.7
     """

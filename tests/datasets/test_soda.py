@@ -16,7 +16,6 @@ from pytest import MonkeyPatch
 from torchgeo.datasets import SODAA, DatasetNotFoundError
 
 
-
 class TestSODAA:
     @pytest.fixture(
         params=product(['train', 'val', 'test'], ['horizontal', 'oriented'])
