@@ -1,0 +1,101 @@
+{
+  "type": "instance",
+  "images": {
+    "file_name": "00003.jpg",
+    "height": 32,
+    "width": 32,
+    "id": 3
+  },
+  "annotations": [
+    {
+      "poly": [
+        9.5,
+        18.5,
+        18.5,
+        18.5,
+        18.5,
+        27.5,
+        9.5,
+        27.5
+      ],
+      "area": 1162.0,
+      "category_id": 4,
+      "image_id": 3,
+      "id": 1
+    },
+    {
+      "poly": [
+        18.5,
+        14.5,
+        27.5,
+        14.5,
+        27.5,
+        19.5,
+        18.5,
+        19.5
+      ],
+      "area": 707.0,
+      "category_id": 8,
+      "image_id": 3,
+      "id": 2
+    },
+    {
+      "poly": [
+        12.5,
+        13.5,
+        19.5,
+        13.5,
+        19.5,
+        22.5,
+        12.5,
+        22.5
+      ],
+      "area": 754.0,
+      "category_id": 8,
+      "image_id": 3,
+      "id": 3
+    }
+  ],
+  "categories": [
+    {
+      "id": 0,
+      "name": "airplane"
+    },
+    {
+      "id": 1,
+      "name": "helicopter"
+    },
+    {
+      "id": 2,
+      "name": "small-vehicle"
+    },
+    {
+      "id": 3,
+      "name": "large-vehicle"
+    },
+    {
+      "id": 4,
+      "name": "ship"
+    },
+    {
+      "id": 5,
+      "name": "container"
+    },
+    {
+      "id": 6,
+      "name": "storage-tank"
+    },
+    {
+      "id": 7,
+      "name": "swimming-pool"
+    },
+    {
+      "id": 8,
+      "name": "windmill"
+    },
+    {
+      "id": 9,
+      "name": "ignore"
+    }
+  ]
+}
