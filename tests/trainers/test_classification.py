@@ -14,8 +14,13 @@ from pytest import MonkeyPatch
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import EuroSATDataModule, MisconfigurationException
-from torchgeo.datasets import EuroSAT, RGBBandsMissingError
+from torchgeo.datamodules import (
+    BigEarthNetDataModule,
+    EuroSATDataModule,
+    MisconfigurationException,
+    QuakeSetDataModule,
+)
+from torchgeo.datasets import BigEarthNet, EuroSAT, QuakeSet, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import ClassificationTask
@@ -37,9 +42,19 @@ class ClassificationTestModel(Module):
         return x
 
 
-class PredictClassificationDataModule(EuroSATDataModule):
+class PredictBinaryDataModule(QuakeSetDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = QuakeSet(split='test', **self.kwargs)
+
+
+class PredictMulticlassDataModule(EuroSATDataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = EuroSAT(split='test', **self.kwargs)
+
+
+class PredictMultilabelDataModule(BigEarthNetDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = BigEarthNet(split='test', **self.kwargs)
 
 
 def create_model(*args: Any, **kwargs: Any) -> Module:
@@ -201,11 +216,51 @@ class TestClassificationTask:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, fast_dev_run: bool) -> None:
-        datamodule = PredictClassificationDataModule(
+    def test_binary_predict(self, fast_dev_run: bool) -> None:
+        datamodule = PredictBinaryDataModule(
+            root='tests/data/quakeset', batch_size=1, num_workers=0
+        )
+        model = ClassificationTask(
+            model='resnet18', in_channels=4, task='binary', loss='bce'
+        )
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.predict(model=model, datamodule=datamodule)
+
+    def test_multiclass_predict(self, fast_dev_run: bool) -> None:
+        datamodule = PredictMulticlassDataModule(
             root='tests/data/eurosat', batch_size=1, num_workers=0
         )
-        model = ClassificationTask(model='resnet18', in_channels=13, num_classes=10)
+        model = ClassificationTask(
+            model='resnet18',
+            in_channels=13,
+            task='multiclass',
+            num_classes=10,
+            loss='ce',
+        )
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.predict(model=model, datamodule=datamodule)
+
+    def test_multilabel_predict(self, fast_dev_run: bool) -> None:
+        datamodule = PredictMultilabelDataModule(
+            root='tests/data/bigearthnet/v1', batch_size=1, num_workers=0
+        )
+        model = ClassificationTask(
+            model='resnet18',
+            in_channels=14,
+            task='multilabel',
+            num_labels=19,
+            loss='bce',
+        )
         trainer = Trainer(
             accelerator='cpu',
             fast_dev_run=fast_dev_run,
