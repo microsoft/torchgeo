@@ -9,6 +9,8 @@ import shutil
 
 import numpy as np
 import rasterio
+from rasterio import Affine
+from rasterio.crs import CRS
 
 ROOT = '.'
 DATA_DIR = 'dfc25_track2_trainval'
@@ -26,6 +28,28 @@ HOLDOUT_IDS = ['turkey-earthquake_00000413']
 VAL_IDS = ['val-disaster_00000001', 'val-disaster_00000002']
 
 SIZE = 32
+crs = CRS.from_wkt("""
+GEOGCS["WGS 84",
+    DATUM["WGS_1984",
+        SPHEROID["WGS 84",6378137,298.257223563,
+            AUTHORITY["EPSG","7030"]],
+        AUTHORITY["EPSG","6326"]],
+    PRIMEM["Greenwich",0,
+        AUTHORITY["EPSG","8901"]],
+    UNIT["degree",0.0174532925199433,
+        AUTHORITY["EPSG","9122"]],
+    AXIS["Latitude",NORTH],
+    AXIS["Longitude",EAST],
+    AUTHORITY["EPSG","4326"]]
+""")
+transform = Affine(
+    4.572424737366368e-06,
+    0.0,
+    9.796201318793191,
+    0.0,
+    -4.572424813937713e-06,
+    1.846511153,
+)
 
 
 def make_dirs() -> None:
@@ -51,8 +75,6 @@ def write_list_file(filename: str, ids: list[str]) -> None:
 
 def write_tif(filepath: str, channels: int) -> None:
     data = np.random.randint(0, 255, (channels, SIZE, SIZE), dtype=np.uint8)
-    # transform = from_origin(0, 0, 1, 1)
-    crs = 'epsg:4326'
     with rasterio.open(
         filepath,
         'w',
@@ -63,7 +85,7 @@ def write_tif(filepath: str, channels: int) -> None:
         crs=crs,
         dtype=data.dtype,
         compress='lzw',
-        # transform=transform,
+        transform=transform,
     ) as dst:
         dst.write(data)
 

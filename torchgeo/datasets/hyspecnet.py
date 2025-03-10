@@ -4,6 +4,7 @@
 """HySpecNet dataset."""
 
 import os
+import re
 from collections.abc import Callable, Sequence
 from typing import ClassVar
 
@@ -14,36 +15,16 @@ from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 from torch import Tensor
 
+from .enmap import EnMAP
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
-from .utils import Path, download_url, extract_archive, percentile_normalization
-
-# https://git.tu-berlin.de/rsim/hyspecnet-tools/-/blob/main/tif_to_npy.ipynb
-invalid_channels = [
-    126,
-    127,
-    128,
-    129,
-    130,
-    131,
-    132,
-    133,
-    134,
-    135,
-    136,
-    137,
-    138,
-    139,
-    140,
-    160,
-    161,
-    162,
-    163,
-    164,
-    165,
-    166,
-]
-valid_channels_ids = [c + 1 for c in range(224) if c not in invalid_channels]
+from .utils import (
+    Path,
+    disambiguate_timestamp,
+    download_url,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class HySpecNet11k(NonGeoDataset):
@@ -99,15 +80,16 @@ class HySpecNet11k(NonGeoDataset):
         'hyspecnet-11k-splits.tar.gz': '94fad9e3c979c612c29a045406247d6c',
     }
 
-    all_bands = valid_channels_ids
-    rgb_bands = (43, 28, 10)
+    all_bands = EnMAP.all_bands
+    default_bands = EnMAP.default_bands
+    rgb_bands = EnMAP.rgb_bands
 
     def __init__(
         self,
         root: Path = 'data',
         split: str = 'train',
         strategy: str = 'easy',
-        bands: Sequence[int] = all_bands,
+        bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -131,10 +113,13 @@ class HySpecNet11k(NonGeoDataset):
         self.root = root
         self.split = split
         self.strategy = strategy
-        self.bands = bands
+        self.bands = bands or self.default_bands
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
+
+        self.wavelengths = torch.tensor([EnMAP.wavelengths[b] for b in self.bands])
+        self.band_indices = [self.all_bands.index(b) + 1 for b in self.bands]
 
         self._verify()
 
@@ -159,9 +144,23 @@ class HySpecNet11k(NonGeoDataset):
         Returns:
             Data and label at that index.
         """
-        file = self.files[index].replace('DATA.npy', 'SPECTRAL_IMAGE.TIF')
+        path = self.files[index].replace('DATA.npy', 'SPECTRAL_IMAGE.TIF')
+        file = os.path.basename(path)
+        match = re.match(EnMAP.filename_regex, file, re.VERBOSE)
+        assert match
+        mint, maxt = disambiguate_timestamp(match.group('date'), EnMAP.date_format)
+
         with rio.open(os.path.join(self.root, 'hyspecnet-11k', 'patches', file)) as src:
-            sample = {'image': torch.tensor(src.read(self.bands).astype('float32'))}
+            minx, maxx = src.bounds.left, src.bounds.right
+            miny, maxy = src.bounds.bottom, src.bounds.top
+            sample = {
+                'image': torch.tensor(src.read(self.band_indices).astype('float32')),
+                'x': torch.tensor((minx + maxx) / 2),
+                'y': torch.tensor((miny + maxy) / 2),
+                't': torch.tensor((mint + maxt) / 2),
+                'wavelength': self.wavelengths,
+                'res': torch.tensor(30),
+            }
 
         if self.transforms is not None:
             sample = self.transforms(sample)

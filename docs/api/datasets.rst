@@ -71,6 +71,11 @@ EDDMapS
 
 .. autoclass:: EDDMapS
 
+EnMAP
+^^^^^
+
+.. autoclass:: EnMAP
+
 EnviroAtlas
 ^^^^^^^^^^^
 
@@ -215,6 +220,7 @@ BigEarthNet
 ^^^^^^^^^^^
 
 .. autoclass:: BigEarthNet
+.. autoclass:: BigEarthNetV2
 
 BioMassters
 ^^^^^^^^^^^
@@ -279,6 +285,10 @@ Digital Typhoon
 
 .. autoclass:: DigitalTyphoon
 
+DL4GAM
+^^^^^^
+.. autoclass:: DL4GAMAlps
+
 DOTA
 ^^^^
 .. autoclass:: DOTA
@@ -294,6 +304,11 @@ EuroSAT
 .. autoclass:: EuroSAT
 .. autoclass:: EuroSATSpatial
 .. autoclass:: EuroSAT100
+
+EverWatch
+^^^^^^^^^
+
+.. autoclass:: EverWatch
 
 FAIR1M
 ^^^^^^
