@@ -219,9 +219,8 @@ class SODAA(NonGeoDataset):
                 shapely_poly = Polygon(points)
                 minx, miny, maxx, maxy = shapely_poly.bounds
                 boxes.append([minx, miny, maxx, maxy])
-            else:
+            else:  # convert to oriented bbox
                 hull = MultiPoint(points).convex_hull
-
                 min_rect = hull.minimum_rotated_rectangle
                 rect_coords = list(min_rect.exterior.coords)[:-1]
                 obb_coords = [coord for point in rect_coords for coord in point]
