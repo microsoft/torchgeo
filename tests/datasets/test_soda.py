@@ -30,11 +30,11 @@ class TestSODAA:
         files = {
             'images': {
                 'filename': 'Images.zip',
-                'md5sum': 'ed1128b2850932199f72b75bdc8bb863',
+                'md5sum': '8a3bb78816643dd1567e9664ac9c1b67',
             },
             'labels': {
                 'filename': 'Annotations.zip',
-                'md5sum': '583256693eb4e87eb80d575a111d8857',
+                'md5sum': '73e84f03b96f94c92aeb46816e43d2c0',
             },
         }
         monkeypatch.setattr(SODAA, 'files', files)
@@ -72,7 +72,7 @@ class TestSODAA:
             assert len(dataset) == 2
 
     def test_not_extracted(self, tmp_path: Path) -> None:
-        files = ['Images.zip', 'Annotations.zip', 'sample_df.parquet']
+        files = ['Images.zip', 'Annotations.zip', 'sample_df.csv']
         for file in files:
             shutil.copy(os.path.join('tests', 'data', 'soda', file), tmp_path)
         SODAA(root=tmp_path)

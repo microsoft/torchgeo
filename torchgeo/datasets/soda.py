@@ -16,6 +16,7 @@ import torch
 from matplotlib.figure import Figure
 from PIL import Image
 from torch import Tensor
+from shapely.geometry import Polygon, MultiPoint
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -55,10 +56,18 @@ class SODAA(NonGeoDataset):
 
     * https://ieeexplore.ieee.org/document/10168277
 
+
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `opencv-python <https://pypi.org/project/opencv-python/>`_ to process
+            bounding box annotations
+
     .. versionadded:: 0.7
     """
 
-    url = 'https://hf.co/datasets/torchgeo/soda-a/resolve/5ccad7b7147381b06fb969f95c3ffd8bf71208b9/{}'
+    url = 'https://hf.co/datasets/torchgeo/soda-a/resolve/b082b9555ea9960d614b54a8cecde4cc63ec5481/{}'
 
     files: ClassVar[dict[str, dict[str, str]]] = {
         'images': {
@@ -127,7 +136,7 @@ class SODAA(NonGeoDataset):
 
         self._verify()
 
-        self.sample_df = pd.read_parquet(os.path.join(self.root, 'sample_df.parquet'))
+        self.sample_df = pd.read_csv(os.path.join(self.root, 'sample_df.csv'))
         self.sample_df = self.sample_df[
             self.sample_df['split'] == self.split
         ].reset_index(drop=True)
@@ -199,15 +208,24 @@ class SODAA(NonGeoDataset):
             # Extract polygon points
             coords = ann['poly']
 
+            points = [
+                (coords[i], coords[i + 1])
+                for i in range(0, len(coords), 2)
+                if i + 1 < len(coords)
+            ]
+
             # Convert to axis-aligned bounding box
             if self.bbox_orientation == 'horizontal':
-                x_coords = coords[::2]  # even indices (0,2,4,6)
-                y_coords = coords[1::2]  # odd indices (1,3,5,7)
-                xmin, xmax = min(x_coords), max(x_coords)
-                ymin, ymax = min(y_coords), max(y_coords)
-                boxes.append([xmin, ymin, xmax, ymax])
+                shapely_poly = Polygon(points)
+                minx, miny, maxx, maxy = shapely_poly.bounds
+                boxes.append([minx, miny, maxx, maxy])
             else:
-                boxes.append(coords)
+                hull = MultiPoint(points).convex_hull
+
+                min_rect = hull.minimum_rotated_rectangle
+                rect_coords = list(min_rect.exterior.coords)[:-1]
+                obb_coords = [coord for point in rect_coords for coord in point]
+                boxes.append(obb_coords)
             labels.append(ann['category_id'])
 
         boxes_tensor = torch.tensor(boxes, dtype=torch.float32)
@@ -218,11 +236,11 @@ class SODAA(NonGeoDataset):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         exists = []
-        df_path = os.path.join(self.root, 'sample_df.parquet')
+        df_path = os.path.join(self.root, 'sample_df.csv')
 
         if os.path.exists(df_path):
             exists.append(True)
-            df = pd.read_parquet(df_path)
+            df = pd.read_csv(df_path)
             df = df[df['split'] == self.split].reset_index(drop=True)
             for idx, row in df.iterrows():
                 image_path = os.path.join(self.root, row['image_path'])
@@ -265,9 +283,7 @@ class SODAA(NonGeoDataset):
 
         # also download the sample_df
         download_url(
-            self.url.format('sample_df.parquet'),
-            self.root,
-            filename='sample_df.parquet',
+            self.url.format('sample_df.csv'), self.root, filename='sample_df.csv'
         )
 
     def plot(

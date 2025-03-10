@@ -136,7 +136,7 @@ def create_dataset() -> None:
 
     # Create sample_df
     df = pd.DataFrame(samples)
-    df.to_parquet(os.path.join(root, 'sample_df.parquet'))
+    df.to_csv(os.path.join(root, 'sample_df.csv'), index=False)
 
     # Create archives
     for dirname in ['Images', 'Annotations']:
