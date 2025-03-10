@@ -23,7 +23,7 @@ from torchgeo.datamodules import (
 from torchgeo.datasets import BigEarthNet, EuroSAT, QuakeSet, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
-from torchgeo.trainers import ClassificationTask
+from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
 
 
 class ClassificationTestModel(Module):
@@ -217,6 +217,7 @@ class TestClassificationTask:
         trainer.validate(model=model, datamodule=datamodule)
 
     def test_binary_predict(self, fast_dev_run: bool) -> None:
+        pytest.importorskip('h5py', minversion='3.6')
         datamodule = PredictBinaryDataModule(
             root='tests/data/quakeset', batch_size=1, num_workers=0
         )
@@ -280,3 +281,23 @@ class TestClassificationTask:
         assert all(
             [param.requires_grad for param in model.model.get_classifier().parameters()]
         )
+
+
+class TestMultiLabelClassificationTask:
+    def test_trainer(self, fast_dev_run: bool) -> None:
+        datamodule = BigEarthNetDataModule(
+            root='tests/data/bigearthnet/v1', batch_size=1, num_workers=0
+        )
+
+        with pytest.deprecated_call():
+            model = MultiLabelClassificationTask(
+                model='resnet18', in_channels=14, num_classes=19, loss='bce'
+            )
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.fit(model=model, datamodule=datamodule)
+        trainer.test(model=model, datamodule=datamodule)
