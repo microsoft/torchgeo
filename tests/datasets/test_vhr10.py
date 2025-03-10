@@ -82,10 +82,10 @@ class TestVHR10:
             scores = [0.7, 0.3, 0.7]
             for i in range(3):
                 x = dataset[i]
-                x['prediction_labels'] = x['label']
+                x['prediction_label'] = x['label']
                 x['prediction_bbox_xyxy'] = x['bbox_xyxy']
-                x['prediction_scores'] = torch.Tensor([scores[i]])
+                x['prediction_score'] = torch.Tensor([scores[i]])
                 if 'mask' in x:
-                    x['prediction_masks'] = x['mask']
+                    x['prediction_mask'] = x['mask']
                     dataset.plot(x, show_feats='masks')
                     plt.close()

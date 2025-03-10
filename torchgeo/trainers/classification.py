@@ -80,7 +80,7 @@ class ClassificationTask(BaseTask):
         weights = self.weights
 
         # Create model
-        self.model = timm.create_model(  # type: ignore[attr-defined]
+        self.model = timm.create_model(
             self.hparams['model'],
             num_classes=self.hparams['num_classes'],
             in_chans=self.hparams['in_channels'],

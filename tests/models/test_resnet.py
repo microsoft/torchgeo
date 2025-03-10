@@ -34,7 +34,7 @@ class TestResNet18:
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
-        model = timm.create_model('resnet18', in_chans=weights.meta['in_chans'])  # type: ignore[attr-defined]
+        model = timm.create_model('resnet18', in_chans=weights.meta['in_chans'])
         torch.save(model.state_dict(), path)
         try:
             monkeypatch.setattr(weights.value, 'url', str(path))
@@ -78,7 +78,7 @@ class TestResNet50:
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
-        model = timm.create_model('resnet50', in_chans=weights.meta['in_chans'])  # type: ignore[attr-defined]
+        model = timm.create_model('resnet50', in_chans=weights.meta['in_chans'])
         torch.save(model.state_dict(), path)
         try:
             monkeypatch.setattr(weights.value, 'url', str(path))
@@ -122,7 +122,7 @@ class TestResNet152:
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
-        model = timm.create_model('resnet152', in_chans=weights.meta['in_chans'])  # type: ignore[attr-defined]
+        model = timm.create_model('resnet152', in_chans=weights.meta['in_chans'])
         torch.save(model.state_dict(), path)
         try:
             monkeypatch.setattr(weights.value, 'url', str(path))

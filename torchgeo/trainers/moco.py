@@ -234,10 +234,10 @@ class MoCoTask(BaseTask):
         output_dim: int = self.hparams['output_dim']
 
         # Create backbone
-        self.backbone = timm.create_model(  # type: ignore[attr-defined]
+        self.backbone = timm.create_model(
             model, in_chans=in_channels, num_classes=0, pretrained=weights is True
         )
-        self.backbone_momentum = timm.create_model(  # type: ignore[attr-defined]
+        self.backbone_momentum = timm.create_model(
             model, in_chans=in_channels, num_classes=0, pretrained=weights is True
         )
         deactivate_requires_grad(self.backbone_momentum)

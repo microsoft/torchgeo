@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache dependencies
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4.2.2
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -46,7 +46,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.3.1
+        uses: codecov/codecov-action@v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
@@ -61,7 +61,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Cache dependencies
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4.2.2
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -78,7 +78,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.3.1
+        uses: codecov/codecov-action@v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   datasets:
@@ -93,7 +93,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Cache dependencies
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4.2.2
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -110,7 +110,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.3.1
+        uses: codecov/codecov-action@v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:
