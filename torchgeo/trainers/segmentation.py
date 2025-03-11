@@ -156,7 +156,7 @@ class SemanticSegmentationTask(BaseTask):
         match self.hparams['loss']:
             case 'ce':
                 ignore_value = -1000 if ignore_index is None else ignore_index
-                self.criterion = nn.CrossEntropyLoss(
+                self.criterion: nn.Module = nn.CrossEntropyLoss(
                     ignore_index=ignore_value, weight=self.hparams['class_weights']
                 )
             case 'bce':
