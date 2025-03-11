@@ -359,7 +359,7 @@ class DOTA(NonGeoDataset):
                 )
             )
 
-        # Check if archives exist and verify checksums
+        # Check if archives exist and verify checksums if requested
         exists = []
         for filename, md5 in files_needed:
             filepath = os.path.join(self.root, filename)
