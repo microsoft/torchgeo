@@ -11,6 +11,7 @@ import torch
 import torchvision.models.detection
 from matplotlib.figure import Figure
 from torch import Tensor
+from torch.nn import Module
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import resnet as R
@@ -53,13 +54,13 @@ class ObjectDetectionTask(BaseTask):
     .. versionadded:: 0.4
     """
 
-    ignore = None
+    ignore = 'model'
     monitor = 'val_map'
     mode = 'max'
 
     def __init__(
         self,
-        model: str = 'faster-rcnn',
+        model: Module | str = 'faster-rcnn',
         backbone: str = 'resnet50',
         weights: bool | None = None,
         in_channels: int = 3,
@@ -72,7 +73,7 @@ class ObjectDetectionTask(BaseTask):
         """Initialize a new ObjectDetectionTask instance.
 
         Args:
-            model: Name of the `torchvision
+            model: Model implementation, or name of the `torchvision
                 <https://pytorch.org/vision/stable/models.html#object-detection>`__
                 model to use. One of 'faster-rcnn', 'fcos', or 'retinanet'.
             backbone: Name of the `torchvision
@@ -100,6 +101,7 @@ class ObjectDetectionTask(BaseTask):
            *pretrained*, *learning_rate*, and *learning_rate_schedule_patience* were
            renamed to *weights*, *lr*, and *patience*.
         """
+        self.model = model
         super().__init__()
 
     def configure_models(self) -> None:
@@ -109,7 +111,6 @@ class ObjectDetectionTask(BaseTask):
             ValueError: If *model* or *backbone* are invalid.
         """
         backbone: str = self.hparams['backbone']
-        model: str = self.hparams['model']
         weights: bool | None = self.hparams['weights']
         num_classes: int = self.hparams['num_classes']
         freeze_backbone: bool = self.hparams['freeze_backbone']
@@ -128,7 +129,7 @@ class ObjectDetectionTask(BaseTask):
         else:
             raise ValueError(f"Backbone type '{backbone}' is not valid.")
 
-        if model == 'faster-rcnn':
+        if self.model == 'faster-rcnn':
             model_backbone = resnet_fpn_backbone(**kwargs)
             anchor_generator = AnchorGenerator(
                 sizes=((32), (64), (128), (256), (512)), aspect_ratios=((0.5, 1.0, 2.0))
@@ -148,7 +149,7 @@ class ObjectDetectionTask(BaseTask):
                 rpn_anchor_generator=anchor_generator,
                 box_roi_pool=roi_pooler,
             )
-        elif model == 'fcos':
+        elif self.model == 'fcos':
             kwargs['extra_blocks'] = feature_pyramid_network.LastLevelP6P7(256, 256)
             kwargs['norm_layer'] = (
                 misc.FrozenBatchNorm2d if weights else torch.nn.BatchNorm2d
@@ -167,7 +168,7 @@ class ObjectDetectionTask(BaseTask):
             self.model = torchvision.models.detection.FCOS(
                 model_backbone, num_classes, anchor_generator=anchor_generator
             )
-        elif model == 'retinanet':
+        elif self.model == 'retinanet':
             kwargs['extra_blocks'] = feature_pyramid_network.LastLevelP6P7(
                 latent_dim, 256
             )
@@ -202,7 +203,7 @@ class ObjectDetectionTask(BaseTask):
                 head=head,
             )
         else:
-            raise ValueError(f"Model type '{model}' is not valid.")
+            raise ValueError(f"Model type '{self.model}' is not valid.")
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.

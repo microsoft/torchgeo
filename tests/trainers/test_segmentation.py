@@ -126,6 +126,10 @@ class TestSemanticSegmentationTask:
         except MisconfigurationException:
             pass
 
+    def test_custom_model(self) -> None:
+        model = SegmentationTestModel()
+        SemanticSegmentationTask(model=model)
+
     @pytest.fixture
     def weights(self) -> WeightsEnum:
         return ResNet18_Weights.SENTINEL2_ALL_MOCO

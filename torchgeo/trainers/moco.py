@@ -3,6 +3,7 @@
 
 """MoCo trainer for self-supervised learning (SSL)."""
 
+import copy
 import os
 import warnings
 from collections.abc import Sequence
@@ -12,13 +13,13 @@ import kornia.augmentation as K
 import lightning
 import timm
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from lightly.loss import NTXentLoss
 from lightly.models.modules import MoCoProjectionHead
 from lightly.models.utils import deactivate_requires_grad, update_momentum
 from lightly.utils.scheduler import cosine_schedule
 from torch import Tensor
+from torch.nn import Module
 from torch.optim import SGD, AdamW, Optimizer
 from torch.optim.lr_scheduler import (
     CosineAnnealingLR,
@@ -42,7 +43,7 @@ except ImportError:
 
 def moco_augmentations(
     version: int, size: int, weights: Tensor
-) -> tuple[nn.Module, nn.Module]:
+) -> tuple[Module, Module]:
     """Data augmentations used by MoCo.
 
     Args:
@@ -136,12 +137,12 @@ class MoCoTask(BaseTask):
     .. versionadded:: 0.5
     """
 
-    ignore = ('weights', 'augmentation1', 'augmentation2')
+    ignore = ('model', 'weights', 'augmentation1', 'augmentation2')
     monitor = 'train_loss'
 
     def __init__(
         self,
-        model: str = 'resnet50',
+        model: Module | str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         version: int = 3,
@@ -158,13 +159,13 @@ class MoCoTask(BaseTask):
         gather_distributed: bool = False,
         size: int = 224,
         grayscale_weights: Tensor | None = None,
-        augmentation1: nn.Module | None = None,
-        augmentation2: nn.Module | None = None,
+        augmentation1: Module | None = None,
+        augmentation2: Module | None = None,
     ) -> None:
         """Initialize a new MoCoTask instance.
 
         Args:
-            model: Name of the `timm
+            model: Model implementation, or name of the `timm
                 <https://huggingface.co/docs/timm/reference/models>`__ model to use.
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False
@@ -219,6 +220,7 @@ class MoCoTask(BaseTask):
             if memory_bank_size > 0:
                 warnings.warn('MoCo v3 does not use a memory bank')
 
+        self.model = model
         self.weights = weights
         super().__init__()
 
@@ -229,7 +231,6 @@ class MoCoTask(BaseTask):
 
     def configure_models(self) -> None:
         """Initialize the model."""
-        model: str = self.hparams['model']
         weights = self.weights
         in_channels: int = self.hparams['in_channels']
         version: int = self.hparams['version']
@@ -238,12 +239,22 @@ class MoCoTask(BaseTask):
         output_dim: int = self.hparams['output_dim']
 
         # Create backbone
-        self.backbone = timm.create_model(
-            model, in_chans=in_channels, num_classes=0, pretrained=weights is True
-        )
-        self.backbone_momentum = timm.create_model(
-            model, in_chans=in_channels, num_classes=0, pretrained=weights is True
-        )
+        if isinstance(self.model, Module):
+            self.backbone = self.model
+            self.backbone_momentum = copy.deepcopy(self.model)
+        else:
+            self.backbone = timm.create_model(
+                self.model,
+                in_chans=in_channels,
+                num_classes=0,
+                pretrained=weights is True,
+            )
+            self.backbone_momentum = timm.create_model(
+                self.model,
+                in_chans=in_channels,
+                num_classes=0,
+                pretrained=weights is True,
+            )
         deactivate_requires_grad(self.backbone_momentum)
 
         # Load weights

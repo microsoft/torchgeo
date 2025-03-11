@@ -66,6 +66,10 @@ class TestSimCLRTask:
 
         main(['fit', *args])
 
+    def test_custom_model(self) -> None:
+        model = timm.create_model('resnet18')
+        SimCLRTask(model=model)
+
     def test_version_warnings(self) -> None:
         with pytest.warns(UserWarning, match='SimCLR v1 only uses 2 layers'):
             SimCLRTask(version=1, layers=3, memory_bank_size=0)

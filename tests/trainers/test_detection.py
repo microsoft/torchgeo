@@ -107,6 +107,10 @@ class TestObjectDetectionTask:
         except MisconfigurationException:
             pass
 
+    def test_custom_model(self) -> None:
+        model = ObjectDetectionTestModel()
+        ObjectDetectionTask(model=model)
+
     def test_invalid_model(self) -> None:
         match = "Model type 'invalid_model' is not valid."
         with pytest.raises(ValueError, match=match):

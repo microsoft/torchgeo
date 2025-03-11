@@ -113,6 +113,10 @@ class TestClassificationTask:
         except MisconfigurationException:
             pass
 
+    def test_custom_model(self) -> None:
+        model = timm.create_model('resnet18')
+        ClassificationTask(model=model)
+
     @pytest.fixture
     def weights(self) -> WeightsEnum:
         return ResNet18_Weights.SENTINEL2_ALL_MOCO
