@@ -76,6 +76,10 @@ class TestBYOLTask:
 
         main(['fit', *args])
 
+    def test_custom_model(self) -> None:
+        model = timm.create_model('resnet18')
+        BYOLTask(model=model)
+
     @pytest.fixture
     def weights(self) -> WeightsEnum:
         return ResNet18_Weights.SENTINEL2_ALL_MOCO

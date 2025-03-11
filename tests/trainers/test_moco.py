@@ -66,6 +66,10 @@ class TestMoCoTask:
 
         main(['fit', *args])
 
+    def test_custom_model(self) -> None:
+        model = timm.create_model('resnet18')
+        MoCoTask(model=model)
+
     def test_version_warnings(self) -> None:
         with pytest.warns(UserWarning, match='MoCo v1 uses a memory bank'):
             MoCoTask(version=1, layers=2, memory_bank_size=0)

@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
+from torchvision.models.detection import maskrcnn_resnet50_fpn
 
 from torchgeo.datamodules import MisconfigurationException, VHR10DataModule
 from torchgeo.datasets import VHR10, RGBBandsMissingError
@@ -59,6 +60,10 @@ class TestInstanceSegmentationTask:
             main(['predict', *args])
         except MisconfigurationException:
             pass
+
+    def test_custom_model(self) -> None:
+        model = maskrcnn_resnet50_fpn()
+        InstanceSegmentationTask(model=model)
 
     def test_invalid_model(self) -> None:
         match = 'Invalid model type'
