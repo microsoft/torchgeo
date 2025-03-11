@@ -8,3 +8,4 @@ Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weight
 `TerraTorch`_,PyTorch,"GDAL, h5py, pandas, xarray",R-tree,Albumentations,22,1,✅,✅,❌,🚧
 `SITS`_,R Torch,GDAL,-,tidyverse,22,0,❌,✅,✅,✅
 `scikit-eo`_,"scikit-learn, TensorFlow","pandas, scipy, numpy, rasterio","geopandas",numpy,0,0,❌,❌,❌,🚧
+`otbtf`_,TensorFlow,"GDAL, OTB",-,-,0,0,✅,✅,❌,❌
