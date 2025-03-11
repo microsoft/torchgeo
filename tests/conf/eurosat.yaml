@@ -4,7 +4,7 @@ model:
     loss: 'ce'
     model: 'resnet18'
     in_channels: 13
-    num_classes: 10
+    num_classes: 2
 data:
   class_path: EuroSATDataModule
   init_args:
