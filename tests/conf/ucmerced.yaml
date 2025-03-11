@@ -4,7 +4,7 @@ model:
     loss: 'ce'
     model: 'resnet18'
     in_channels: 3
-    num_classes: 21
+    num_classes: 2
 data:
   class_path: UCMercedDataModule
   init_args:
