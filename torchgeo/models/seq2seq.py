@@ -27,7 +27,7 @@ class LSTMDecoder(nn.Module):
         input_size: int,
         hidden_size: int,
         output_size: int,
-        target_indices: list[int],
+        target_indices: list[int] | None = None,
         num_layers: int = 1,
         output_sequence_len: int = 1,
         teacher_force_prob: float | None = None,
@@ -59,7 +59,10 @@ class LSTMDecoder(nn.Module):
                 else False
             )
             if not teacher_force:
-                current_input[:, :, self.target_indices] = output
+                if self.target_indices:
+                    current_input[:, :, self.target_indices] = output
+                else:
+                    current_input = output
 
         return outputs
 
@@ -69,32 +72,27 @@ class LSTMSeq2Seq(nn.Module):
         self,
         input_size_encoder: int,
         input_size_decoder: int,
-        target_indices: list[int],
+        target_indices: list[int] | None = None,
         encoder_indices: list[int] | None = None,
         decoder_indices: list[int] | None = None,
         hidden_size: int = 1,
         output_size: int = 1,
         output_seq_length: int = 1,
         num_layers: int = 1,
-        teacher_force_prob: int | None = None,
+        teacher_force_prob: float | None = None,
     ) -> None:
         super().__init__()
-        # Target indices need to be mapped to the subset of inputs for decoder
-        mapped_target_indices = (
-            torch.nonzero(
-                torch.isin(torch.tensor(decoder_indices), torch.tensor(target_indices))
-            )
-            .squeeze()
-            .tolist()
-        )
-        if not isinstance(mapped_target_indices, list):
-            mapped_target_indices = [mapped_target_indices]
+        if decoder_indices and isinstance(target_indices, list):
+            # Target indices need to be mapped to the subset of inputs for decoder
+            target_indices = [
+                i for i, val in enumerate(decoder_indices) if val in target_indices
+            ]
         self.encoder = LSTMEncoder(input_size_encoder, hidden_size, num_layers)
         self.decoder = LSTMDecoder(
             input_size=input_size_decoder,
             hidden_size=hidden_size,
             output_size=output_size,
-            target_indices=mapped_target_indices,
+            target_indices=target_indices,
             num_layers=num_layers,
             output_sequence_len=output_seq_length,
             teacher_force_prob=teacher_force_prob,

@@ -7,6 +7,7 @@ import pytest
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
+from torchgeo.trainers import AutoregressionTask
 
 
 class TestAutoregressionTask:
@@ -36,3 +37,13 @@ class TestAutoregressionTask:
             main(['predict', *args])
         except MisconfigurationException:
             pass
+
+    def test_invalid_model(self) -> None:
+        match = "Model type 'invalid_model' is not valid."
+        with pytest.raises(ValueError, match=match):
+            AutoregressionTask(model='invalid_model')
+
+    def test_invalid_loss(self) -> None:
+        match = "Loss type 'invalid_loss' is not valid."
+        with pytest.raises(ValueError, match=match):
+            AutoregressionTask(loss='invalid_loss')

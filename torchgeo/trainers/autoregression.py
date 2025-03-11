@@ -9,7 +9,6 @@ import torch.nn as nn
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.regression import MeanAbsoluteError, MeanSquaredError
-from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import LSTMSeq2Seq
 
@@ -22,12 +21,11 @@ class AutoregressionTask(BaseTask):
     def __init__(
         self,
         model: str = 'lstm_seq2seq',
-        weights: WeightsEnum | str | bool | None = None,
         input_size: int = 1,
         input_size_decoder: int = 1,
         hidden_size: int = 1,
         output_size: int = 1,
-        target_indices: list[int] | None = None,  # change this in the model
+        target_indices: list[int] | None = None,
         encoder_indices: list[int] | None = None,
         decoder_indices: list[int] | None = None,
         lookback: int = 3,
@@ -36,6 +34,7 @@ class AutoregressionTask(BaseTask):
         loss: str = 'mse',
         lr: float = 1e-3,
         patience: int = 10,
+        teacher_force_prob: float | None = None,
     ) -> None:
         """Initialize a new AutoregressionTask instance.
 
@@ -64,6 +63,7 @@ class AutoregressionTask(BaseTask):
         target_indices = self.hparams['target_indices']
         encoder_indices = self.hparams['encoder_indices']
         decoder_indices = self.hparams['decoder_indices']
+        teacher_force_prob = self.hparams['teacher_force_prob']
 
         if model == 'lstm_seq2seq':
             self.model = LSTMSeq2Seq(
@@ -76,6 +76,7 @@ class AutoregressionTask(BaseTask):
                 output_size=output_size,
                 output_seq_length=timesteps_ahead,
                 num_layers=num_layers,
+                teacher_force_prob=teacher_force_prob,
             )
         else:
             raise ValueError(
@@ -185,5 +186,5 @@ class AutoregressionTask(BaseTask):
         y_hat = self(past_steps, future_steps)
         mean = past_steps.mean(dim=0, keepdim=True)
         std = past_steps.std(dim=0, keepdim=True)
-        y_hat_denormalize: Tensor = y_hat*std+mean
+        y_hat_denormalize: Tensor = y_hat * std + mean
         return y_hat_denormalize
