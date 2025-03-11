@@ -9,7 +9,7 @@ from torchgeo.models import LSTMSeq2Seq
 BATCH_SIZE = [1, 2, 7]
 INPUT_SIZE_ENCODER = [1, 3]
 INPUT_SIZE_DECODER = [2, 3]
-OUTPUT_SIZE = [1]
+OUTPUT_SIZE = [1, 2, 3]
 NUM_LAYERS = [1, 2, 3]
 HIDDEN_SIZE = [1, 2, 3]
 
@@ -87,3 +87,33 @@ class TestLSTMSeq2Seq:
         future_steps = torch.randn(batch_size, output_sequence_length, n_features)
         y = model(past_steps, future_steps)
         assert y.shape == (batch_size, output_sequence_length, output_size)
+
+    @torch.no_grad()
+    def test_none_indices(self) -> None:
+        batch_size = 5
+        sequence_length = 3
+        output_sequence_length = 1
+        input_size = 5
+        output_size = 1
+        model = LSTMSeq2Seq(
+            input_size_encoder=input_size, input_size_decoder=input_size
+        )
+        past_steps = torch.randn(batch_size, sequence_length, input_size)
+        future_steps = torch.randn(batch_size, output_sequence_length, input_size)
+        y = model(past_steps, future_steps)
+        assert y.shape == (batch_size, output_sequence_length, output_size)
+
+    @torch.no_grad()
+    @pytest.mark.parametrize('o', OUTPUT_SIZE)
+    def test_output_size(self, o: int) -> None:
+        batch_size = 5
+        sequence_length = 3
+        output_sequence_length = 1
+        input_size = 5
+        model = LSTMSeq2Seq(
+            input_size_encoder=input_size, input_size_decoder=input_size, output_size=o
+        )
+        past_steps = torch.randn(batch_size, sequence_length, input_size)
+        future_steps = torch.randn(batch_size, output_sequence_length, input_size)
+        y = model(past_steps, future_steps)
+        assert y.shape == (batch_size, output_sequence_length, o)

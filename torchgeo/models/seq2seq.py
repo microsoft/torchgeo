@@ -4,7 +4,6 @@
 """LSTM Sequence to Sequence (Seq2Seq) Model."""
 
 import random
-from typing import cast
 
 import torch
 import torch.nn as nn
@@ -82,7 +81,17 @@ class LSTMSeq2Seq(nn.Module):
         teacher_force_prob: float | None = None,
     ) -> None:
         super().__init__()
+        for indices, size, name in [
+            (encoder_indices, input_size_encoder, 'encoder_indices'),
+            (decoder_indices, input_size_decoder, 'decoder_indices'),
+            (target_indices, output_size, 'target_indices'),
+        ]:
+            if indices:
+                assert len(indices) == size, f'Length of {name} should match {size}.'
         if decoder_indices and isinstance(target_indices, list):
+            assert set(target_indices).issubset(set(decoder_indices)), (
+                'target_indices should be in decoder_indices.'
+            )
             # Target indices need to be mapped to the subset of inputs for decoder
             target_indices = [
                 i for i, val in enumerate(decoder_indices) if val in target_indices
@@ -111,5 +120,5 @@ class LSTMSeq2Seq(nn.Module):
         if self.decoder_indices:
             inputs_decoder = inputs_decoder[:, :, self.decoder_indices]
         hidden, cell = self.encoder(inputs_encoder)
-        outputs = self.decoder(inputs_decoder, hidden, cell)
-        return cast(Tensor, outputs)
+        outputs: Tensor = self.decoder(inputs_decoder, hidden, cell)
+        return outputs
