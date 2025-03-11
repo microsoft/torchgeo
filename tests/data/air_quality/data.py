@@ -24,7 +24,7 @@ columns = [
     'AH',
 ]
 
-nrows = 3
+nrows = 50
 data = np.random.rand(nrows, len(columns))
 
 df = pd.DataFrame(data, columns=columns)

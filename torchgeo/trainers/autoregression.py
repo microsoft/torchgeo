@@ -5,13 +5,13 @@
 
 from typing import Any
 
-import torch
 import torch.nn as nn
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.regression import MeanAbsoluteError, MeanSquaredError
-from torchvision.models import LSTMSeq2Seq
 from torchvision.models._api import WeightsEnum
+
+from torchgeo.models import LSTMSeq2Seq
 
 from .base import BaseTask
 
@@ -21,12 +21,15 @@ class AutoregressionTask(BaseTask):
 
     def __init__(
         self,
-        model: str = 'lstm',
+        model: str = 'lstm_seq2seq',
         weights: WeightsEnum | str | bool | None = None,
         input_size: int = 1,
         input_size_decoder: int = 1,
         hidden_size: int = 1,
         output_size: int = 1,
+        target_indices: list[int] | None = None,  # change this in the model
+        encoder_indices: list[int] | None = None,
+        decoder_indices: list[int] | None = None,
         lookback: int = 3,
         timesteps_ahead: int = 1,
         num_layers: int = 1,
@@ -37,7 +40,7 @@ class AutoregressionTask(BaseTask):
         """Initialize a new AutoregressionTask instance.
 
         Args:
-            model: Name of the model to use, currently supports 'lstm' or 'seq2seq'.
+            model: Name of the model to use, currently supports 'lstm_seq2seq'.
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False
                 or None for random weights, or the path to a saved model state dict.
@@ -56,24 +59,19 @@ class AutoregressionTask(BaseTask):
         input_size_decoder = self.hparams['input_size_decoder']
         hidden_size = self.hparams['hidden_size']
         output_size = self.hparams['output_size']
-        lookback = self.hparams['lookback']
         timesteps_ahead = self.hparams['timesteps_ahead']
         num_layers = self.hparams['num_layers']
+        target_indices = self.hparams['target_indices']
+        encoder_indices = self.hparams['encoder_indices']
+        decoder_indices = self.hparams['decoder_indices']
 
-        if model == 'lstm':
-            assert timesteps_ahead == 1, (
-                f'LSTM only supports 1 timestep ahead, got timesteps_ahead={timesteps_ahead}.'
-            )
-            self.model = torch.nn.LSTM(
-                input_size=input_size,
-                hidden_size=hidden_size,
-                num_layers=num_layers,
-                batch_first=True,
-            )
-        elif model == 'seq2seq':
+        if model == 'lstm_seq2seq':
             self.model = LSTMSeq2Seq(
                 input_size_encoder=input_size,
                 input_size_decoder=input_size_decoder,
+                target_indices=target_indices,
+                encoder_indices=encoder_indices,
+                decoder_indices=decoder_indices,
                 hidden_size=hidden_size,
                 output_size=output_size,
                 output_seq_length=timesteps_ahead,
@@ -82,7 +80,7 @@ class AutoregressionTask(BaseTask):
         else:
             raise ValueError(
                 f"Model type '{model}' is not valid. "
-                "Currently, only supports 'lstm' and 'seq2seq'."
+                "Currently, only supports 'lstm_seq2seq'."
             )
 
     def configure_losses(self) -> None:
@@ -123,16 +121,18 @@ class AutoregressionTask(BaseTask):
         Returns:
             The loss tensor.
         """
-        x, y = batch
-        y_hat = self(x)
-
-        loss: Tensor = self.criterion(y_hat, y)
+        target_indices = self.hparams['target_indices']
+        past_steps, future_steps = batch
+        y_hat = self(past_steps, future_steps)
+        if target_indices:
+            future_steps = future_steps[:, :, target_indices]
+        loss: Tensor = self.criterion(y_hat, future_steps)
         self.log(f'{stage}_loss', loss)
 
         # Retrieve the correct metrics based on the stage
         metrics = getattr(self, f'{stage}_metrics', None)
         if metrics:
-            metrics(y_hat, y)
+            metrics(y_hat, future_steps)
             self.log_dict({f'{k}': v for k, v in metrics.compute().items()})
 
         return loss
@@ -181,6 +181,9 @@ class AutoregressionTask(BaseTask):
         Returns:
             Output predicted values.
         """
-        x = batch
-        y_hat: Tensor = self(x)
-        return y_hat
+        past_steps, future_steps = batch
+        y_hat = self(past_steps, future_steps)
+        mean = past_steps.mean(dim=0, keepdim=True)
+        std = past_steps.std(dim=0, keepdim=True)
+        y_hat_denormalize: Tensor = y_hat*std+mean
+        return y_hat_denormalize

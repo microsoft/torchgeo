@@ -21,12 +21,16 @@ class TestAirQuality:
         return AirQuality(tmp_path, download=True)
 
     def test_getitem(self, dataset: AirQuality) -> None:
-        x = dataset[0]
-        assert isinstance(x, pd.Series)
-        assert len(x) == 15
+        x, y = dataset[0]
+        assert isinstance(x, pd.DataFrame)
+        assert len(x.columns) == 15
+        assert len(x) == dataset.past_steps
+        assert isinstance(y, pd.DataFrame)
+        assert len(y.columns) == 15
+        assert len(y) == dataset.future_steps
 
     def test_len(self, dataset: AirQuality) -> None:
-        assert len(dataset) == 3
+        assert len(dataset) == 46
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):

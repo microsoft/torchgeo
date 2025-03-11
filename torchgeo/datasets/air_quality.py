@@ -6,6 +6,7 @@
 import os
 
 import pandas as pd
+import torch
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -39,7 +40,13 @@ class AirQuality(NonGeoDataset):
     url = 'https://archive.ics.uci.edu/static/public/360/data.csv'
     data_file_name = 'data.csv'
 
-    def __init__(self, root: Path = 'data', download: bool = False) -> None:
+    def __init__(
+        self,
+        root: Path = 'data',
+        download: bool = False,
+        num_past_steps: int = 3,
+        num_future_steps: int = 1,
+    ) -> None:
         """Initialize a new Dataset instance.
 
         Args:
@@ -50,6 +57,8 @@ class AirQuality(NonGeoDataset):
         """
         self.root = root
         self.download = download
+        self.num_past_steps = num_past_steps
+        self.num_future_steps = num_future_steps
         self.data = self._load_data()
 
     def __len__(self) -> int:
@@ -58,7 +67,7 @@ class AirQuality(NonGeoDataset):
         Returns:
             length of the dataset
         """
-        return len(self.data)
+        return len(self.data) - (self.num_past_steps + self.num_future_steps)
 
     def __getitem__(self, index: int) -> pd.Series:
         """Return an index within the dataset.
@@ -69,7 +78,21 @@ class AirQuality(NonGeoDataset):
         Returns:
             data at that index
         """
-        return self.data.iloc[index]
+        past_steps = self.data.iloc[index : index + self.num_past_steps]
+        future_steps = self.data.iloc[
+            index + self.num_past_steps : index
+            + self.num_past_steps
+            + self.num_future_steps
+        ]
+        past_steps = torch.tensor(past_steps.values, dtype=torch.float32)
+        future_steps = torch.tensor(future_steps.values, dtype=torch.float32)
+
+        mean = past_steps.mean(dim=0, keepdim=True)
+        std = past_steps.std(dim=0, keepdim=True)
+        past_steps_normalized = (past_steps - mean) / (std + 1e-12)
+        future_steps_normalized = (future_steps - mean) / (std + 1e-12)
+
+        return past_steps_normalized, future_steps_normalized
 
     def _load_data(self) -> pd.DataFrame:
         """Load the dataset into a pandas dataframe.

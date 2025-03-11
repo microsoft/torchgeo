@@ -48,8 +48,9 @@ class LSTMDecoder(nn.Module):
 
         for t in range(self.output_sequence_len):
             _, (hidden, cell) = self.lstm(current_input, (hidden, cell))
-            output = self.fc(hidden)
-            output = output.permute(1, 0, 2)
+            last_layer_hidden = hidden[-1:]
+            output = self.fc(last_layer_hidden)
+            output = output.permute(1, 0, 2)  # put batch dimension first
             outputs[:, t : t + 1, :] = output
             current_input = inputs[:, t : t + 1, :].clone()
             teacher_force = (
@@ -75,6 +76,7 @@ class LSTMSeq2Seq(nn.Module):
         output_size: int = 1,
         output_seq_length: int = 1,
         num_layers: int = 1,
+        teacher_force_prob: int | None = None,
     ) -> None:
         super().__init__()
         # Target indices need to be mapped to the subset of inputs for decoder
@@ -85,14 +87,17 @@ class LSTMSeq2Seq(nn.Module):
             .squeeze()
             .tolist()
         )
+        if not isinstance(mapped_target_indices, list):
+            mapped_target_indices = [mapped_target_indices]
         self.encoder = LSTMEncoder(input_size_encoder, hidden_size, num_layers)
         self.decoder = LSTMDecoder(
-            input_size_decoder,
-            hidden_size,
-            output_size,
-            mapped_target_indices,
+            input_size=input_size_decoder,
+            hidden_size=hidden_size,
+            output_size=output_size,
+            target_indices=mapped_target_indices,
             num_layers=num_layers,
             output_sequence_len=output_seq_length,
+            teacher_force_prob=teacher_force_prob,
         )
         self.encoder_indices = encoder_indices
         self.decoder_indices = decoder_indices
