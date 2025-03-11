@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import pytest
 import segmentation_models_pytorch as smp
@@ -185,16 +185,6 @@ class TestSemanticSegmentationTask:
             in_channels=weights.meta['in_chans'],
         )
 
-    def test_invalid_model(self) -> None:
-        match = "Model type 'invalid_model' is not valid."
-        with pytest.raises(ValueError, match=match):
-            SemanticSegmentationTask(model='invalid_model')
-
-    def test_invalid_loss(self) -> None:
-        match = "Loss type 'invalid_loss' is not valid."
-        with pytest.raises(ValueError, match=match):
-            SemanticSegmentationTask(loss='invalid_loss')
-
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, 'plot', plot)
         datamodule = SEN12MSDataModule(
@@ -231,7 +221,9 @@ class TestSemanticSegmentationTask:
     @pytest.mark.parametrize(
         'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
     )
-    def test_freeze_backbone(self, model_name: str, backbone: str) -> None:
+    def test_freeze_backbone(
+        self, model_name: Literal['unet', 'deeplabv3+'], backbone: str
+    ) -> None:
         model = SemanticSegmentationTask(
             model=model_name, backbone=backbone, num_classes=10, freeze_backbone=True
         )
@@ -247,7 +239,7 @@ class TestSemanticSegmentationTask:
         )
 
     @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
-    def test_freeze_decoder(self, model_name: str) -> None:
+    def test_freeze_decoder(self, model_name: Literal['unet', 'deeplabv3+']) -> None:
         model = SemanticSegmentationTask(
             model=model_name, num_classes=10, freeze_decoder=True
         )

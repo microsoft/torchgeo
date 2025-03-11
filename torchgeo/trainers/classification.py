@@ -107,11 +107,7 @@ class ClassificationTask(BaseTask):
                 param.requires_grad = True
 
     def configure_losses(self) -> None:
-        """Initialize the loss criterion.
-
-        Raises:
-            ValueError: If *loss* is invalid.
-        """
+        """Initialize the loss criterion."""
         match self.hparams['loss']:
             case 'ce':
                 self.criterion: nn.Module = nn.CrossEntropyLoss(
