@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -172,9 +172,9 @@ class DOTA(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: Literal['train', 'val'] = 'train',
-        version: Literal['1.0', '1.5', '2.0'] = '2.0',
-        bbox_orientation: Literal['horizontal', 'oriented'] = 'oriented',
+        split: str = 'train',
+        version: str = '2.0',
+        bbox_orientation: str = 'oriented',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
         checksum: bool = False,
