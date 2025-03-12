@@ -61,13 +61,12 @@ class Substation(NonGeoDataset):
         root: Path = 'data',
         bands: Sequence[int] = tuple(range(13)),
         mask_2d: bool = True,
+        num_of_timepoints: int = 4,
         timepoint_aggregation: Literal['concat', 'median', 'first', 'random']
         | None = 'concat',
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
-        num_of_timepoints: int = 4,
-        use_timepoints: bool = False,
     ) -> None:
         """Initialize the Substation.
 
@@ -75,24 +74,22 @@ class Substation(NonGeoDataset):
             root: Path to the directory containing the dataset.
             bands: Channels to use from the image.
             mask_2d: Whether to use a 2D mask.
+            num_of_timepoints: Number of timepoints to use for each image.
             timepoint_aggregation: How to aggregate multiple timepoints.
+            transforms: A transform takes input sample and returns a transformed version.
             download: Whether to download the dataset if it is not found.
             checksum: Whether to verify the dataset after downloading.
-            transforms: A transform takes input sample and returns a transformed version.
-            num_of_timepoints: Number of timepoints to use for each image.
-            use_timepoints: Whether to use multiple timepoints for each image.
         """
         self.root = root
         self.bands = bands
         self.mask_2d = mask_2d
+        self.num_of_timepoints = num_of_timepoints
         self.timepoint_aggregation = timepoint_aggregation
-        self.download = download
-        self.use_timepoints = use_timepoints
-        self.checksum = checksum
         self.transforms = transforms
+        self.download = download
+        self.checksum = checksum
         self.image_dir = os.path.join(root, 'image_stack')
         self.mask_dir = os.path.join(root, 'mask')
-        self.num_of_timepoints = num_of_timepoints
         self._verify()
         self.image_filenames = pd.Series(sorted(os.listdir(self.image_dir)))
 
@@ -115,26 +112,25 @@ class Substation(NonGeoDataset):
         image = image[:, self.bands, :, :]
 
         # handling multiple images across timepoints
-        if self.use_timepoints:
-            if image.shape[0] < self.num_of_timepoints:
-                # Padding: cycle through existing timepoints
-                padded_images = []
-                for i in range(self.num_of_timepoints):
-                    padded_images.append(image[i % image.shape[0]])
-                image = np.stack(padded_images)
-            elif image.shape[0] > self.num_of_timepoints:
-                # Removal: take the most recent timepoints
-                image = image[-self.num_of_timepoints :]
+        if image.shape[0] < self.num_of_timepoints:
+            # Padding: cycle through existing timepoints
+            padded_images = []
+            for i in range(self.num_of_timepoints):
+                padded_images.append(image[i % image.shape[0]])
+            image = np.stack(padded_images)
+        elif image.shape[0] > self.num_of_timepoints:
+            # Removal: take the most recent timepoints
+            image = image[-self.num_of_timepoints :]
 
-            if self.timepoint_aggregation == 'concat':
+        match self.timepoint_aggregation:
+            case 'concat':
                 # (num_of_timepoints*channels, h, w)
                 image = np.reshape(image, (-1, image.shape[2], image.shape[3]))
-            elif self.timepoint_aggregation == 'median':
+            case 'median':
                 image = np.median(image, axis=0)
-        else:
-            if self.timepoint_aggregation == 'first':
+            case 'first':
                 image = image[0]
-            elif self.timepoint_aggregation == 'random':
+            case 'random':
                 image = image[np.random.randint(image.shape[0])]
 
         mask = np.load(mask_path)['arr_0']

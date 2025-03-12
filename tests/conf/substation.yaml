@@ -18,5 +18,3 @@ data:
     num_of_timepoints: 4
     timepoint_aggregation: 'median'
     mask_2d: False
-    checksum: False
-    use_timepoints: True

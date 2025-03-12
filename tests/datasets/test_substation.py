@@ -17,60 +17,52 @@ from torchgeo.datasets import DatasetNotFoundError, Substation
 class TestSubstation:
     @pytest.fixture(
         params=[
-            {'bands': [1, 2, 3], 'use_timepoints': False, 'mask_2d': True},
+            {'bands': [1, 2, 3], 'mask_2d': True},
             {
                 'bands': [1, 2, 3],
-                'use_timepoints': True,
                 'timepoint_aggregation': 'concat',
                 'num_of_timepoints': 4,
                 'mask_2d': False,
             },
             {
                 'bands': [1, 2, 3],
-                'use_timepoints': True,
                 'timepoint_aggregation': 'median',
                 'num_of_timepoints': 4,
                 'mask_2d': True,
             },
             {
                 'bands': [1, 2, 3],
-                'use_timepoints': True,
                 'timepoint_aggregation': 'first',
                 'num_of_timepoints': 4,
                 'mask_2d': False,
             },
             {
                 'bands': [1, 2, 3],
-                'use_timepoints': True,
                 'timepoint_aggregation': None,
                 'num_of_timepoints': 3,
                 'mask_2d': False,
             },
             {
                 'bands': [1, 2, 3],
-                'use_timepoints': True,
                 'timepoint_aggregation': None,
                 'num_of_timepoints': 5,
                 'mask_2d': False,
             },
             {
                 'bands': [1, 2, 3],
-                'use_timepoints': True,
                 'timepoint_aggregation': 'random',
                 'num_of_timepoints': 4,
                 'mask_2d': True,
             },
-            {'bands': [1, 2, 3], 'use_timepoints': False, 'mask_2d': False},
+            {'bands': [1, 2, 3], 'mask_2d': False},
             {
                 'bands': [1, 2, 3],
-                'use_timepoints': False,
                 'timepoint_aggregation': 'first',
                 'num_of_timepoints': 4,
                 'mask_2d': False,
             },
             {
                 'bands': [1, 2, 3],
-                'use_timepoints': False,
                 'timepoint_aggregation': 'random',
                 'num_of_timepoints': 4,
                 'mask_2d': True,
@@ -90,22 +82,14 @@ class TestSubstation:
         assert isinstance(x['mask'], torch.Tensor)
         assert len(dataset) == 5
 
-        if dataset.use_timepoints:
-            if dataset.timepoint_aggregation == 'concat':
+        match dataset.timepoint_aggregation:
+            case 'concat':
                 assert x['image'].shape == torch.Size([12, 32, 32])
-            elif dataset.timepoint_aggregation == 'median':
+            case 'median':
                 assert x['image'].shape == torch.Size([3, 32, 32])
-            else:
-                assert x['image'].shape == torch.Size(
-                    [dataset.num_of_timepoints, 3, 32, 32]
-                )
-        else:
-            if (
-                dataset.timepoint_aggregation == 'first'
-                or dataset.timepoint_aggregation == 'random'
-            ):
+            case 'first' | 'random':
                 assert x['image'].shape == torch.Size([3, 32, 32])
-            else:
+            case _:
                 assert x['image'].shape == torch.Size(
                     [dataset.num_of_timepoints, 3, 32, 32]
                 )
