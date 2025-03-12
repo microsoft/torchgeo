@@ -6,6 +6,7 @@
 import hashlib
 import os
 import shutil
+from typing import Literal
 
 import numpy as np
 
@@ -20,21 +21,19 @@ FILENAME_HIERARCHY = dict[str, 'FILENAME_HIERARCHY'] | list[str]
 filenames: FILENAME_HIERARCHY = {'image_stack': ['image'], 'mask': ['mask']}
 
 
-def create_file(path: str, value: str) -> None:
-    """
-    Generates .npz files for images or masks based on the path.
+def create_file(path: str, value: Literal['image', 'mask']) -> None:
+    """Generates .npz files for images or masks based on the path.
 
     Args:
-    - path (str): Base path for saving files (either 'image' or 'mask').
+        path: Base path for saving files.
+        value: Type of file, either 'image' or 'mask'.
     """
     for i in range(NUM_SAMPLES):
         new_path = f'{path}_{i}.npz'
 
         if value == 'image':
             # Generate image data with shape (4, 13, SIZE, SIZE) for timepoints and channels
-            data = np.random.rand(4, 13, SIZE, SIZE).astype(
-                np.float32
-            )  # 4 timepoints, 13 channels
+            data = np.random.rand(4, 13, SIZE, SIZE).astype(np.float32)
         elif value == 'mask':
             # Generate mask data with shape (SIZE, SIZE) with 4 classes
             data = np.random.randint(0, 4, size=(SIZE, SIZE)).astype(np.uint8)
@@ -47,8 +46,8 @@ def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
     Recursively creates directory structure based on hierarchy and populates with data files.
 
     Args:
-    - directory (str): Base directory for dataset.
-    - hierarchy (FILENAME_HIERARCHY): Directory and file structure.
+        directory: Base directory for dataset.
+        hierarchy: Directory and file structure.
     """
     if isinstance(hierarchy, dict):
         # Recursive case

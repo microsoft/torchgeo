@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Sequence
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,7 +43,7 @@ class Substation(NonGeoDataset):
     * Multi-temporal, multi-spectral images (13 channels) paired with masks,
       with a spatial resolution of 228x228 pixels
 
-    If you use this dataset in your research, please cite the following:
+    If you use this dataset in your research, please cite the following paper:
 
     * https://doi.org/10.48550/arXiv.2409.17363
     """
@@ -60,7 +61,9 @@ class Substation(NonGeoDataset):
         root: Path,
         bands: Sequence[int],
         mask_2d: bool,
-        timepoint_aggregation: str = 'concat',
+        timepoint_aggregation: Literal[
+            'concat', 'median', 'first', 'random'
+        ] = 'concat',
         download: bool = False,
         checksum: bool = False,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
@@ -125,9 +128,8 @@ class Substation(NonGeoDataset):
                 image = image[-self.num_of_timepoints :]
 
             if self.timepoint_aggregation == 'concat':
-                image = np.reshape(
-                    image, (-1, image.shape[2], image.shape[3])
-                )  # (num_of_timepoints*channels,h,w)
+                # (num_of_timepoints*channels, h, w)
+                image = np.reshape(image, (-1, image.shape[2], image.shape[3]))
             elif self.timepoint_aggregation == 'median':
                 image = np.median(image, axis=0)
         else:
@@ -179,9 +181,8 @@ class Substation(NonGeoDataset):
         ncols = 2
         shape_of_image = sample['image'].shape
         if len(shape_of_image) == 4:
-            image = (
-                sample['image'][0][:3].permute(1, 2, 0).cpu().numpy()
-            )  # Plot the first timepoint
+            # Plot the first timepoint
+            image = sample['image'][0][:3].permute(1, 2, 0).cpu().numpy()
         else:
             image = sample['image'][:3].permute(1, 2, 0).cpu().numpy()
         image = image / 255.0
@@ -242,7 +243,7 @@ class Substation(NonGeoDataset):
             return
 
         # If dataset files are missing and download is not allowed, raise an error
-        if not getattr(self, 'download', True):
+        if not self.download:
             raise DatasetNotFoundError(self)
 
         # Download and extract the dataset
