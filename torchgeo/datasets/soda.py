@@ -155,9 +155,9 @@ class SODAA(NonGeoDataset):
         sample: dict[str, Tensor] = {'image': image, 'label': labels}
 
         if self.bbox_orientation == 'oriented':
-            sample['boxes'] = boxes
+            sample['bbox'] = boxes
         else:
-            sample['boxes_xyxy'] = boxes
+            sample['bbox_xyxy'] = boxes
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -298,9 +298,9 @@ class SODAA(NonGeoDataset):
         """
         image = sample['image'].permute((1, 2, 0)).numpy()
         if self.bbox_orientation == 'horizontal':
-            boxes = sample['boxes_xyxy'].numpy()
+            boxes = sample['bbox_xyxy'].numpy()
         else:
-            boxes = sample['boxes'].numpy()
+            boxes = sample['bbox'].numpy()
         labels = sample['label'].numpy()
 
         fig, ax = plt.subplots(ncols=1, figsize=(10, 10))
