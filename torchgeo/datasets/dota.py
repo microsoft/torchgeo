@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,15 +30,17 @@ from .utils import (
 class DOTA(NonGeoDataset):
     """DOTA dataset.
 
-    The `DOTA <https://captain-whu.github.io/DOTA/index.html>`__ is a large-scale object
-    detection dataset for aerial imagery containing RGB and gray-scale imagery from Google Earth, GF-2 and JL-1 satellites
-    as well as additional aerial imagery from CycloMedia. There are three versions of the dataset: V1.0, V1.5, and V2.0, where,
-    V1.0 and V1.5 have the same images but different annotations, and V2.0 extends both the images and annotations with more samples
+    `DOTA <https://captain-whu.github.io/DOTA/index.html>`__ is a large-scale object
+    detection dataset for aerial imagery containing RGB and gray-scale imagery
+    from Google Earth, GF-2 and JL-1 satellites as well as additional aerial imagery
+    from CycloMedia. There are three versions of the dataset: v1.0, v1.5, and v2.0, where,
+    v1.0 and v1.5 have the same images but different annotations,
+    and v2.0 extends both the images and annotations with more samples
 
     Dataset features:
 
-    * 1869 samples in V1.0 and V.1.5 and 2423 samples in V2.0
-    * multi-class object detection (15 classes in V1.0 and V1.5 and 18 classes in V2.0)
+    * 1869 samples in v1.0 and v1.5 and 2423 samples in v2.0
+    * multi-class object detection (15 classes in v1.0 and v1.5 and 18 classes in v2.0)
     * horizontal and oriented bounding boxes
 
     Dataset format:
@@ -48,25 +50,24 @@ class DOTA(NonGeoDataset):
 
     Classes:
 
-    * plane
-    * ship
-    * storage-tank
-    * baseball-diamond
-    * tennis-court
-    * basketball-court
-    * ground-track-field
-    * harbor
-    * bridge
-    * large-vehicle
-    * small-vehicle
-    * helicopter
-    * roundabout
-    * soccer-ball-field
-    * swimming-pool
-    * container-crane
-    * airport
-    * helipad
-
+    0. plane
+    1. ship
+    2. storage-tank
+    3. baseball-diamond
+    4. tennis-court
+    5. basketball-court
+    6. ground-track-field
+    7. harbor
+    8. bridge
+    9. large-vehicle
+    10. small-vehicle
+    11. helicopter
+    12. roundabout
+    13. soccer-ball-field
+    14. swimming-pool
+    15. container-crane (v1.5+)
+    16. airport (v2.0+)
+    17. helipad (v2.0+)
 
     If you use this work in your research, please cite the following papers:
 
@@ -172,9 +173,9 @@ class DOTA(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        version: str = '2.0',
-        bbox_orientation: str = 'oriented',
+        split: Literal['train', 'val'] = 'train',
+        version: Literal['1.0', '1.5', '2.0'] = '2.0',
+        bbox_orientation: Literal['horizontal', 'oriented'] = 'oriented',
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -184,7 +185,7 @@ class DOTA(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             split: split of the dataset to use, one of ['train', 'val']
-            version: version of the dataset to use, one of ['1.0', '2.0']
+            version: version of the dataset to use, one of ['1.0', '1.5', '2.0']
             bbox_orientation: bounding box orientation, one of ['horizontal', 'oriented'], where horizontal
                 returnx xyxy format and oriented returns x1y1x2y2x3y3x4y4 format
             transforms: a function/transform that takes input sample and its target as
@@ -194,7 +195,7 @@ class DOTA(NonGeoDataset):
 
         Raises:
             AssertionError: if *split*, *version*, or *bbox_orientation* argument are not valid
-            DatasetNotFoundError: if dataset is not found or corrupted
+            DatasetNotFoundError: if dataset is not found or corrupted, and *download* is False
         """
         assert split in self.valid_splits, (
             f"Split '{split}' not supported, use one of {self.valid_splits}"

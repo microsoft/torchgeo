@@ -18,7 +18,9 @@ from torchgeo.datasets import DOTA, DatasetNotFoundError
 
 class TestDOTA:
     @pytest.fixture(
-        params=product(['train', 'val'], ['1.0', '2.0'], ['horizontal', 'oriented'])
+        params=product(
+            ['train', 'val'], ['1.0', '1.5', '2.0'], ['horizontal', 'oriented']
+        )
     )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
@@ -154,10 +156,6 @@ class TestDOTA:
             )
 
         DOTA(root=tmp_path)
-
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            DOTA(split='foo')
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'dotav1.0_images_train.tar.gz'), 'w') as f:
