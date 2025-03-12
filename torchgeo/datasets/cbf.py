@@ -64,7 +64,7 @@ class CanadianBuildingFootprints(VectorDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float = 0.00001,
+        res: tuple[float, float] = (0.00001, 0.00001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
         checksum: bool = False,

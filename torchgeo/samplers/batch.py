@@ -109,7 +109,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         self.generator = generator
 
         if units == Units.PIXELS:
-            self.size = (self.size[0] * self.res, self.size[1] * self.res)
+            self.size = (self.size[0] * self.res[1], self.size[1] * self.res[0])
 
         self.batch_size = batch_size
         self.length = 0

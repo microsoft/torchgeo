@@ -28,7 +28,7 @@ class CustomGeoDataset(GeoDataset):
         super().__init__()
         for i in range(length):
             self.index.insert(i, (0, 1, 2, 3, 4, 5))
-        self.res = 1
+        self.res = (1, 1)
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         image = torch.arange(3 * 2 * 2, dtype=torch.float).view(3, 2, 2)

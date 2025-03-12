@@ -31,7 +31,7 @@ class MMFloodComponent(RasterDataset):
         content: Literal['s1_raw', 'DEM', 'hydro', 'mask'],
         root: Path = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
+        res: tuple[float, float] | None = None,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         cache: bool = False,
     ) -> None:
@@ -145,7 +145,7 @@ class MMFlood(IntersectionDataset):
         self,
         root: Path = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
+        res: tuple[float, float] | None = None,
         split: str = 'train',
         include_dem: bool = False,
         include_hydro: bool = False,
