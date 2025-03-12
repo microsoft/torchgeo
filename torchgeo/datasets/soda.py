@@ -6,7 +6,7 @@
 import json
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
@@ -26,7 +26,8 @@ from .utils import Path, check_integrity, download_and_extract_archive, download
 class SODAA(NonGeoDataset):
     """SODA-A dataset.
 
-    The `SODA-A <https://shaunyuan22.github.io/SODA/>`_ dataset is a high resolution aerial imagery dataset for small object detection.
+    The `SODA-A <https://shaunyuan22.github.io/SODA/>`_ dataset is a high resolution
+    aerial imagery dataset for small object detection.
 
     Dataset features:
 
@@ -92,8 +93,8 @@ class SODAA(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        bbox_orientation: str = 'oriented',
+        split: Literal['train', 'val', 'test'] = 'train',
+        bbox_orientation: Literal['oriented', 'horizontal'] = 'horizontal',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -110,7 +111,7 @@ class SODAA(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``split`` or ``bbox_orientation`` argument is invalid
+            AssertionError: if *split* or *bbox_orientation* argument is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         assert split in self.valid_splits, f'split must be one of {self.valid_splits}'
