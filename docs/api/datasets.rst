@@ -71,6 +71,11 @@ EDDMapS
 
 .. autoclass:: EDDMapS
 
+EnMAP
+^^^^^
+
+.. autoclass:: EnMAP
+
 EnviroAtlas
 ^^^^^^^^^^^
 
@@ -141,6 +146,10 @@ Landsat
 .. autoclass:: Landsat3
 .. autoclass:: Landsat2
 .. autoclass:: Landsat1
+
+MMFlood
+^^^^^^^
+.. autoclass:: MMFlood
 
 NAIP
 ^^^^
@@ -215,11 +224,17 @@ BigEarthNet
 ^^^^^^^^^^^
 
 .. autoclass:: BigEarthNet
+.. autoclass:: BigEarthNetV2
 
 BioMassters
 ^^^^^^^^^^^
 
 .. autoclass:: BioMassters
+
+BRIGHT
+^^^^^^
+
+.. autoclass:: BRIGHTDFC2025
 
 CaBuAr
 ^^^^^^
@@ -274,6 +289,10 @@ Digital Typhoon
 
 .. autoclass:: DigitalTyphoon
 
+DL4GAM
+^^^^^^
+.. autoclass:: DL4GAMAlps
+
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -285,6 +304,11 @@ EuroSAT
 .. autoclass:: EuroSAT
 .. autoclass:: EuroSATSpatial
 .. autoclass:: EuroSAT100
+
+EverWatch
+^^^^^^^^^
+
+.. autoclass:: EverWatch
 
 FAIR1M
 ^^^^^^

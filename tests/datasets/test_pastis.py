@@ -52,7 +52,7 @@ class TestPASTIS:
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
-        assert isinstance(x['boxes'], torch.Tensor)
+        assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
 
     def test_len(self, dataset: PASTIS) -> None:

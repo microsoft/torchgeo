@@ -10,8 +10,9 @@ from .ai4arctic_sea_ice import AI4ArcticSeaIce
 from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
-from .bigearthnet import BigEarthNet
+from .bigearthnet import BigEarthNet, BigEarthNetV2
 from .biomassters import BioMassters
+from .bright import BRIGHTDFC2025
 from .cabuar import CaBuAr
 from .caffe import CaFFe
 from .cbf import CanadianBuildingFootprints
@@ -37,7 +38,9 @@ from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
+from .dl4gam import DL4GAMAlps
 from .eddmaps import EDDMapS
+from .enmap import EnMAP
 from .enviroatlas import EnviroAtlas
 from .errors import DatasetNotFoundError, DependencyNotFoundError, RGBBandsMissingError
 from .esri2020 import Esri2020
@@ -45,6 +48,7 @@ from .etci2021 import ETCI2021
 from .eudem import EUDEM
 from .eurocrops import EuroCrops
 from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
+from .everwatch import EverWatch
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
@@ -89,6 +93,7 @@ from .mapinwild import MapInWild
 from .mdas import MDAS
 from .millionaid import MillionAID
 from .mmearth import MMEarth
+from .mmflood import MMFlood
 from .naip import NAIP
 from .nasa_marine_debris import NASAMarineDebris
 from .nccm import NCCM
@@ -153,6 +158,7 @@ from .zuericrop import ZueriCrop
 __all__ = (
     'ADVANCE',
     'AI4ArcticSeaIce',
+    'BRIGHTDFC2025',
     'CDL',
     'COWC',
     'DFC2022',
@@ -182,6 +188,7 @@ __all__ = (
     'AsterGDEM',
     'BeninSmallHolderCashews',
     'BigEarthNet',
+    'BigEarthNetV2',
     'BioMassters',
     'BoundingBox',
     'CMSGlobalMangroveCanopy',
@@ -203,17 +210,20 @@ __all__ = (
     'ChesapeakeWV',
     'CloudCoverDetection',
     'CropHarvest',
+    'DL4GAMAlps',
     'DatasetNotFoundError',
     'DeepGlobeLandCover',
     'DependencyNotFoundError',
     'DigitalTyphoon',
     'EDDMapS',
+    'EnMAP',
     'EnviroAtlas',
     'Esri2020',
     'EuroCrops',
     'EuroSAT',
     'EuroSAT100',
     'EuroSATSpatial',
+    'EverWatch',
     'FieldsOfTheWorld',
     'FireRisk',
     'ForestDamage',
@@ -247,6 +257,7 @@ __all__ = (
     'Landsat9',
     'LoveDA',
     'MMEarth',
+    'MMFlood',
     'MapInWild',
     'MillionAID',
     'NASAMarineDebris',

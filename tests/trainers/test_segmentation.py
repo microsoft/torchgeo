@@ -65,6 +65,7 @@ class TestSemanticSegmentationTask:
             'landcoverai',
             'landcoverai100',
             'loveda',
+            'mmflood',
             'naipchesapeake',
             'potsdam2d',
             'sen12ms_all',
