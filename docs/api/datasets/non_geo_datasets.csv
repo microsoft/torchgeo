@@ -53,6 +53,7 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `SKIPP'D`_,R,"Fish-eye","CC-BY-4.0","363,375",-,64x64,-,RGB
 `SkyScript`_,IC,"NAIP, orthophotos, Planet SkySat, Sentinel-2, Landsat 8--9",MIT,5.2M,-,100--1000,0.1--30,RGB
 `So2Sat`_,C,Sentinel-1/2,"CC-BY-4.0","400,673",17,32x32,10,"SAR, MSI"
+`SODA`_,OD,Aerial,"CC-BY-NC-4.0","2513",9,"~2700x~4800","RGB"
 `SpaceNet`_,I,WorldView-2/3 Planet Lab Dove,"CC-BY-SA-4.0","1,889--28,728",2,102--900,0.5--4,MSI
 `SSL4EO`_-L,T,Landsat,"CC0-1.0",1M,-,264x264,30,MSI
 `SSL4EO`_-S12,T,Sentinel-1/2,"CC-BY-4.0",1M,-,264x264,10,"SAR, MSI"
