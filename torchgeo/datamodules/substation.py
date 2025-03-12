@@ -37,7 +37,7 @@ class SubstationDataModule(NonGeoDataModule):
             test_split_pct: Percentage of data to use for testing.
             size: Size of the input images.
             **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.dataset.Substation`.
+                :class:`~torchgeo.datasets.Substation`.
         """
         super().__init__(Substation, batch_size, num_workers, **kwargs)
         self.val_split_pct = val_split_pct
