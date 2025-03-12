@@ -28,7 +28,6 @@ class AutoregressionTask(BaseTask):
         target_indices: list[int] | None = None,
         encoder_indices: list[int] | None = None,
         decoder_indices: list[int] | None = None,
-        lookback: int = 3,
         timesteps_ahead: int = 1,
         num_layers: int = 1,
         loss: str = 'mse',
@@ -40,14 +39,23 @@ class AutoregressionTask(BaseTask):
 
         Args:
             model: Name of the model to use, currently supports 'lstm_seq2seq'.
-            weights: Initial model weights. Either a weight enum, the string
-                representation of a weight enum, True for ImageNet weights, False
-                or None for random weights, or the path to a saved model state dict.
-            loss: One of 'mse' or 'mae'.
-            lr: Learning rate for optimizer.
-            patience: Patience for learning rate scheduler.
-
-        .. versionadded: 0.7
+                Defaults to 'lstm_seq2seq'.
+            input_size: The number of features in the input. Defaults to 1.
+            input_size_decoder: The number of features in the decoder input.
+                Defaults to 1.
+            hidden_size: The number of features in the hidden states of the encoder
+                and decoder. Defaults to 1.
+            output_size: The number of features output by the model. Defaults to 1.
+            target_indices: The indices of the target(s) in the dataset. If None, uses all features. Defaults to None.
+            encoder_indices: The indices of the encoder inputs. If None, uses all features. Defaults to None.
+            decoder_indices: The indices of the decoder inputs. If None, uses all features. Defaults to None.
+            timesteps_ahead: Number of time steps to predict. Defaults to 1.
+            num_layers: Number of LSTM layers in the encoder and decoder. Defaults to 1.
+            loss: One of 'mse' or 'mae'. Defaults to 'mse'.
+            lr: Learning rate for optimizer. Defaults to 1e-3.
+            patience: Patience for learning rate scheduler. Defaults to 10.
+            teacher_force_prob: Probability of using teacher forcing. If None, does not
+                use teacher forcing. Defaults to None.
         """
         super().__init__()
 
@@ -92,10 +100,13 @@ class AutoregressionTask(BaseTask):
         """
         loss: str = self.hparams['loss']
         if loss == 'mse':
-            self.criterion = nn.MSELoss()
+            self.criterion: nn.Module = nn.MSELoss()
+        elif loss == 'mae':
+            self.criterion = nn.L1Loss()
         else:
             raise ValueError(
-                f"Loss type '{loss}' is not valid. Currently, supports 'mse' loss."
+                f"Loss type '{loss}' is not valid. "
+                "Currently, supports 'mse' or 'mae' loss."
             )
 
     def configure_metrics(self) -> None:

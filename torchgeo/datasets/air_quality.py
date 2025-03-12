@@ -52,6 +52,9 @@ class AirQuality(NonGeoDataset):
         Args:
             root: root directory where dataset can be found
             download: if True, download dataset and store it in the root directory
+            num_past_steps: Number of past time steps to use.
+            num_future_steps: Number of future time steps to use.
+
         Raises:
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """

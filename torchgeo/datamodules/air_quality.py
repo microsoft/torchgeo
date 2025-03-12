@@ -63,7 +63,7 @@ class AirQualityDataModule(NonGeoDataModule):
     def on_after_batch_transfer(
         self, batch: dict[str, Tensor], dataloader_idx: int
     ) -> dict[str, Tensor]:
-        """Apply batch augmentations to the batch after it is transferred to the device.
+        """Override base class to avoid applying Kornia augmentations to non-image data.
 
         Args:
             batch: A batch of data that needs to be altered or augmented.

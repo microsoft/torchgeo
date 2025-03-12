@@ -58,7 +58,8 @@ from .vhr10 import VHR10DataModule
 from .xview import XView2DataModule
 
 __all__ = (
-    'AirQualityDataModuleAgriFieldNetDataModule',
+    'AgriFieldNetDataModule',
+    'AirQualityDataModule',
     'BaseDataModule',
     'BigEarthNetDataModule',
     'COWCCountingDataModule',

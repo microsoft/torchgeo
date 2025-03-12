@@ -11,16 +11,35 @@ from torch import Tensor
 
 
 class LSTMEncoder(nn.Module):
+    """Encoder for LSTM Seq2Seq."""
+
     def __init__(self, input_size: int, hidden_size: int, num_layers: int = 1) -> None:
+        """Initialize a new LSTMEncoder.
+
+        Args:
+            input_size: The number of features in the input.
+            hidden_size: The number of features in the hidden state.
+            num_layers: The number of LSTM layers.
+        """
         super().__init__()
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor]:
+        """Forward pass of the encoder.
+
+        Args:
+            x: Input sequence of shape (b, sequence length, input_size).
+
+        Returns:
+            Hidden and cell states.
+        """
         _, (hidden, cell) = self.lstm(x)
         return hidden, cell
 
 
 class LSTMDecoder(nn.Module):
+    """Decoder for LSTM Seq2Seq."""
+
     def __init__(
         self,
         input_size: int,
@@ -31,6 +50,19 @@ class LSTMDecoder(nn.Module):
         output_sequence_len: int = 1,
         teacher_force_prob: float | None = None,
     ) -> None:
+        """Initialize a new LSTMDecoder.
+
+        Args:
+            input_size: The number of features in the input.
+            hidden_size: The number of features in the hidden state.
+            output_size: The number of features output by the decoder.
+            target_indices: Indices of the target features in the dataset.
+                If None, uses all features passed to the decoder. Defaults to None.
+            num_layers: Number of LSTM layers. Defaults to 1.
+            output_sequence_len: The number of steps to predict forward. Defaults to 1.
+            teacher_force_prob: Probability of using teacher forcing. If None, does not
+                use teacher forcing. Defaults to None.
+        """
         super().__init__()
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
         self.fc = nn.Linear(hidden_size, output_size)
@@ -40,6 +72,16 @@ class LSTMDecoder(nn.Module):
         self.teacher_force_prob = teacher_force_prob
 
     def forward(self, inputs: Tensor, hidden: Tensor, cell: Tensor) -> Tensor:
+        """Forward pass of the decoder.
+
+        Args:
+            inputs: Input sequence of shape (b, sequence length, input_size).
+            hidden: hidden state from the encoder.
+            cell: cell state from the encoder.
+
+        Returns:
+            Output sequence of shape (b, output_sequence_len, output_size).
+        """
         batch_size = inputs.shape[0]
         outputs = torch.zeros(batch_size, self.output_sequence_len, self.output_size)
 
@@ -67,6 +109,8 @@ class LSTMDecoder(nn.Module):
 
 
 class LSTMSeq2Seq(nn.Module):
+    """LSTM Sequence-to-Sequence (Seq2Seq)."""
+
     def __init__(
         self,
         input_size_encoder: int,
@@ -80,6 +124,21 @@ class LSTMSeq2Seq(nn.Module):
         num_layers: int = 1,
         teacher_force_prob: float | None = None,
     ) -> None:
+        """Initialize a new LSTMSeq2Seq model.
+
+        Args:
+            input_size_encoder: The number of features in the encoder input.
+            input_size_decoder: The number of features in the decoder input.
+            target_indices: The indices of the target(s) in the dataset. If None, uses all features. Defaults to None.
+            encoder_indices: The indices of the encoder inputs. If None, uses all features. Defaults to None.
+            decoder_indices: The indices of the decoder inputs. If None, uses all features. Defaults to None.
+            hidden_size: The number of features in the hidden states of the encoder and decoder. Defaults to 1.
+            output_size: The number of features output by the model. Defaults to 1.
+            output_seq_length: The number of steps to predict forward. Defaults to 1.
+            num_layers: Number of LSTM layers in the encoder and decoder. Defaults to 1.
+            teacher_force_prob: Probability of using teacher forcing. If None, does not
+                use teacher forcing. Defaults to None.
+        """
         super().__init__()
         for indices, size, name in [
             (encoder_indices, input_size_encoder, 'encoder_indices'),
@@ -110,6 +169,15 @@ class LSTMSeq2Seq(nn.Module):
         self.decoder_indices = decoder_indices
 
     def forward(self, past_steps: Tensor, future_steps: Tensor) -> Tensor:
+        """Forward pass of the model.
+
+        Args:
+            past_steps: Past time steps.
+            future_steps: Future time steps.
+
+        Returns:
+            Output sequence of shape (b, output_seq_length, output_size).
+        """
         if self.encoder_indices:
             inputs_encoder = past_steps[:, :, self.encoder_indices]
         else:
