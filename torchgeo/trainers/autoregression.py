@@ -82,7 +82,7 @@ class AutoregressionTask(BaseTask):
                 decoder_indices=decoder_indices,
                 hidden_size=hidden_size,
                 output_size=output_size,
-                output_seq_length=timesteps_ahead,
+                output_sequence_len=timesteps_ahead,
                 num_layers=num_layers,
                 teacher_force_prob=teacher_force_prob,
             )

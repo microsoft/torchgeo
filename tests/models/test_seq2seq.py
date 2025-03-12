@@ -31,7 +31,7 @@ class TestLSTMSeq2Seq:
             encoder_indices=list(range(0, e)),
             decoder_indices=list(range(0, d)),
             output_size=output_size,
-            output_seq_length=output_sequence_length,
+            output_sequence_len=output_sequence_length,
         )
         past_steps = torch.randn(b, sequence_length, n_features)
         future_steps = torch.randn(b, output_sequence_length, n_features)
@@ -55,7 +55,7 @@ class TestLSTMSeq2Seq:
             encoder_indices=list(range(0, input_size_encoder)),
             decoder_indices=list(range(0, input_size_decoder)),
             output_size=output_size,
-            output_seq_length=output_sequence_length,
+            output_sequence_len=output_sequence_length,
             num_layers=n,
         )
         past_steps = torch.randn(batch_size, sequence_length, n_features)
@@ -80,7 +80,7 @@ class TestLSTMSeq2Seq:
             encoder_indices=list(range(0, input_size_encoder)),
             decoder_indices=list(range(0, input_size_decoder)),
             output_size=output_size,
-            output_seq_length=output_sequence_length,
+            output_sequence_len=output_sequence_length,
             hidden_size=h,
         )
         past_steps = torch.randn(batch_size, sequence_length, n_features)

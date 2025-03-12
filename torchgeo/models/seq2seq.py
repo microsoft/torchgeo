@@ -120,7 +120,7 @@ class LSTMSeq2Seq(nn.Module):
         decoder_indices: list[int] | None = None,
         hidden_size: int = 1,
         output_size: int = 1,
-        output_seq_length: int = 1,
+        output_sequence_len: int = 1,
         num_layers: int = 1,
         teacher_force_prob: float | None = None,
     ) -> None:
@@ -134,7 +134,7 @@ class LSTMSeq2Seq(nn.Module):
             decoder_indices: The indices of the decoder inputs. If None, uses all features. Defaults to None.
             hidden_size: The number of features in the hidden states of the encoder and decoder. Defaults to 1.
             output_size: The number of features output by the model. Defaults to 1.
-            output_seq_length: The number of steps to predict forward. Defaults to 1.
+            output_sequence_len: The number of steps to predict forward. Defaults to 1.
             num_layers: Number of LSTM layers in the encoder and decoder. Defaults to 1.
             teacher_force_prob: Probability of using teacher forcing. If None, does not
                 use teacher forcing. Defaults to None.
@@ -162,7 +162,7 @@ class LSTMSeq2Seq(nn.Module):
             output_size=output_size,
             target_indices=target_indices,
             num_layers=num_layers,
-            output_sequence_len=output_seq_length,
+            output_sequence_len=output_sequence_len,
             teacher_force_prob=teacher_force_prob,
         )
         self.encoder_indices = encoder_indices
@@ -176,7 +176,7 @@ class LSTMSeq2Seq(nn.Module):
             future_steps: Future time steps.
 
         Returns:
-            Output sequence of shape (b, output_seq_length, output_size).
+            Output sequence of shape (b, output_sequence_len, output_size).
         """
         if self.encoder_indices:
             inputs_encoder = past_steps[:, :, self.encoder_indices]
