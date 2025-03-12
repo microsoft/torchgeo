@@ -58,9 +58,9 @@ class Substation(NonGeoDataset):
 
     def __init__(
         self,
-        root: Path,
-        bands: Sequence[int],
-        mask_2d: bool,
+        root: Path = 'data',
+        bands: Sequence[int] = tuple(range(13)),
+        mask_2d: bool = True,
         timepoint_aggregation: Literal[
             'concat', 'median', 'first', 'random'
         ] = 'concat',
