@@ -279,6 +279,11 @@ DFC2022
 
 .. autoclass:: DFC2022
 
+DIOR
+^^^^
+
+.. autoclass:: DIOR
+
 
 Digital Typhoon
 ^^^^^^^^^^^^^^^
