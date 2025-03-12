@@ -41,10 +41,10 @@ class TestVHR10:
             assert isinstance(x, dict)
             assert isinstance(x['image'], torch.Tensor)
             if dataset.split == 'positive':
-                assert isinstance(x['labels'], torch.Tensor)
-                assert isinstance(x['boxes'], torch.Tensor)
-                if 'masks' in x:
-                    assert isinstance(x['masks'], torch.Tensor)
+                assert isinstance(x['label'], torch.Tensor)
+                assert isinstance(x['bbox_xyxy'], torch.Tensor)
+                if 'mask' in x:
+                    assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: VHR10) -> None:
         if dataset.split == 'positive':
@@ -82,10 +82,10 @@ class TestVHR10:
             scores = [0.7, 0.3, 0.7]
             for i in range(3):
                 x = dataset[i]
-                x['prediction_labels'] = x['labels']
-                x['prediction_boxes'] = x['boxes']
-                x['prediction_scores'] = torch.Tensor([scores[i]])
-                if 'masks' in x:
-                    x['prediction_masks'] = x['masks']
+                x['prediction_label'] = x['label']
+                x['prediction_bbox_xyxy'] = x['bbox_xyxy']
+                x['prediction_score'] = torch.Tensor([scores[i]])
+                if 'mask' in x:
+                    x['prediction_mask'] = x['mask']
                     dataset.plot(x, show_feats='masks')
                     plt.close()

@@ -65,6 +65,7 @@ class TestSemanticSegmentationTask:
             'landcoverai',
             'landcoverai100',
             'loveda',
+            'mmflood',
             'naipchesapeake',
             'potsdam2d',
             'sen12ms_all',
@@ -80,6 +81,7 @@ class TestSemanticSegmentationTask:
             'spacenet6',
             'ssl4eo_l_benchmark_cdl',
             'ssl4eo_l_benchmark_nlcd',
+            'substation',
             'vaihingen2d',
         ],
     )

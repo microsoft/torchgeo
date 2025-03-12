@@ -71,6 +71,11 @@ EDDMapS
 
 .. autoclass:: EDDMapS
 
+EnMAP
+^^^^^
+
+.. autoclass:: EnMAP
+
 EnviroAtlas
 ^^^^^^^^^^^
 
@@ -141,6 +146,10 @@ Landsat
 .. autoclass:: Landsat3
 .. autoclass:: Landsat2
 .. autoclass:: Landsat1
+
+MMFlood
+^^^^^^^
+.. autoclass:: MMFlood
 
 NAIP
 ^^^^
@@ -216,11 +225,17 @@ BigEarthNet
 ^^^^^^^^^^^
 
 .. autoclass:: BigEarthNet
+.. autoclass:: BigEarthNetV2
 
 BioMassters
 ^^^^^^^^^^^
 
 .. autoclass:: BioMassters
+
+BRIGHT
+^^^^^^
+
+.. autoclass:: BRIGHTDFC2025
 
 CaBuAr
 ^^^^^^
@@ -269,11 +284,24 @@ DFC2022
 
 .. autoclass:: DFC2022
 
+DIOR
+^^^^
+
+.. autoclass:: DIOR
+
 
 Digital Typhoon
 ^^^^^^^^^^^^^^^
 
 .. autoclass:: DigitalTyphoon
+
+DL4GAM
+^^^^^^
+.. autoclass:: DL4GAMAlps
+
+DOTA
+^^^^
+.. autoclass:: DOTA
 
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -286,6 +314,11 @@ EuroSAT
 .. autoclass:: EuroSAT
 .. autoclass:: EuroSATSpatial
 .. autoclass:: EuroSAT100
+
+EverWatch
+^^^^^^^^^
+
+.. autoclass:: EverWatch
 
 FAIR1M
 ^^^^^^
@@ -454,6 +487,12 @@ So2Sat
 
 .. autoclass:: So2Sat
 
+
+SODA
+^^^^
+
+.. autoclass:: SODAA
+
 SpaceNet
 ^^^^^^^^
 
@@ -478,6 +517,11 @@ SSL4EO-L Benchmark
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SSL4EOLBenchmark
+
+Substation
+^^^^^^^^^^
+
+.. autoclass:: Substation
 
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,0 +1,14 @@
+model:
+  class_path: InstanceSegmentationTask
+  init_args:
+    model: 'mask-rcnn'
+    backbone: 'resnet50'
+    num_classes: 11
+data:
+  class_path: VHR10DataModule
+  init_args:
+    batch_size: 1
+    num_workers: 0
+    patch_size: 4
+  dict_kwargs:
+    root: 'tests/data/vhr10'
