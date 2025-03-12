@@ -61,9 +61,8 @@ class Substation(NonGeoDataset):
         root: Path = 'data',
         bands: Sequence[int] = tuple(range(13)),
         mask_2d: bool = True,
-        timepoint_aggregation: Literal[
-            'concat', 'median', 'first', 'random'
-        ] = 'concat',
+        timepoint_aggregation: Literal['concat', 'median', 'first', 'random']
+        | None = 'concat',
         download: bool = False,
         checksum: bool = False,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
