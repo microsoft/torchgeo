@@ -202,6 +202,11 @@ ADVANCE
 
 .. autoclass:: ADVANCE
 
+Air Quality
+^^^^^^^^^^^
+
+.. autoclass:: AirQuality
+
 Benin Cashew Plantations
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
