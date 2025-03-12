@@ -37,6 +37,7 @@ from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
+from .dior import DIOR
 from .dl4gam import DL4GAMAlps
 from .dota import DOTA
 from .eddmaps import EDDMapS
@@ -161,6 +162,7 @@ __all__ = (
     'CDL',
     'COWC',
     'DFC2022',
+    'DIOR',
     'DOTA',
     'ETCI2021',
     'EUDEM',
