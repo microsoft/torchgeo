@@ -3,10 +3,10 @@
 
 from pathlib import Path
 
-import pandas as pd
 import pytest
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import Tensor
 
 from torchgeo.datasets import AirQuality, DatasetNotFoundError
 
@@ -22,12 +22,12 @@ class TestAirQuality:
 
     def test_getitem(self, dataset: AirQuality) -> None:
         x, y = dataset[0]
-        assert isinstance(x, pd.DataFrame)
-        assert len(x.columns) == 15
-        assert len(x) == dataset.past_steps
-        assert isinstance(y, pd.DataFrame)
-        assert len(y.columns) == 15
-        assert len(y) == dataset.future_steps
+        assert isinstance(x, Tensor)
+        assert x.shape[1] == 15
+        assert x.shape[0] == dataset.num_past_steps
+        assert isinstance(y, Tensor)
+        assert y.shape[1] == 15
+        assert y.shape[0] == dataset.num_future_steps
 
     def test_len(self, dataset: AirQuality) -> None:
         assert len(dataset) == 46
