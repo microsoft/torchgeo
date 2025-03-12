@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 from xml.etree import ElementTree
 
 import matplotlib.patches as patches
@@ -60,9 +60,9 @@ def parse_pascal_voc(path: Path) -> dict[str, Any]:
 class DIOR(NonGeoDataset):
     """DIOR dataset.
 
-    `DIOR <https://arxiv.org/abs/1909.00133>`_ dataset contains horizontal bounding box
+    `DIOR <https://arxiv.org/abs/1909.00133>`__ dataset contains horizontal bounding box
     annotations of Google Earth Aerial RGB imagery. The test split does not contain bounding
-    box annotations and labels
+    box annotations and labels.
 
     Dataset features:
 
@@ -157,7 +157,7 @@ class DIOR(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -173,8 +173,8 @@ class DIOR(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False.
-            AssertionError: If *split* argumnet is invalid.
+            DatasetNotFoundError: If dataset is not found or corrupted and *download* is False.
+            AssertionError: If *split* argument is invalid.
         """
         self.root = root
         self.transforms = transforms
@@ -307,7 +307,7 @@ class DIOR(NonGeoDataset):
         self._download()
 
     def _download(self) -> None:
-        """Downlaod the dataset and extract it."""
+        """Download the dataset and extract it."""
         if self.split in ['train', 'val']:
             files = self.files['trainval']
         else:
