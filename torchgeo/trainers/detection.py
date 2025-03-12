@@ -209,6 +209,7 @@ class ObjectDetectionTask(BaseTask):
 
         weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)
         self.model.backbone.body.conv1.weight = Parameter(weight)
+        self.model.backbone.body.conv1.in_channels = in_channels
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
