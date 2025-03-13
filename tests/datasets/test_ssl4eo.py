@@ -89,10 +89,6 @@ class TestSSL4EOL:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             SSL4EOL(tmp_path)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            SSL4EOL(split='foo')
-
     def test_plot(self, dataset: SSL4EOL) -> None:
         sample = dataset[0]
         dataset.plot(sample, suptitle='Test')
@@ -103,21 +99,11 @@ class TestSSL4EOL:
 
 class TestSSL4EOS12:
     @pytest.fixture(params=zip(SSL4EOS12.metadata.keys(), [1, 2, 4]))
-    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> SSL4EOS12:
-        monkeypatch.setitem(
-            SSL4EOS12.metadata['s1'], 'md5', 'a716f353e4c2f0014f2e1f1ad848f82e'
-        )
-        monkeypatch.setitem(
-            SSL4EOS12.metadata['s2c'], 'md5', '85eaf474af5642588a97dc5c991cfc15'
-        )
-        monkeypatch.setitem(
-            SSL4EOS12.metadata['s2a'], 'md5', 'df41a5d1ae6f840bc9a11ee254110369'
-        )
-
+    def dataset(self, request: SubRequest) -> SSL4EOS12:
         root = os.path.join('tests', 'data', 'ssl4eo', 's12')
         split, seasons = request.param
         transforms = nn.Identity()
-        return SSL4EOS12(root, split, seasons, transforms, checksum=True)
+        return SSL4EOS12(root, split, seasons, transforms)
 
     def test_getitem(self, dataset: SSL4EOS12) -> None:
         x = dataset[0]
@@ -133,18 +119,30 @@ class TestSSL4EOS12:
         assert isinstance(ds, ConcatDataset)
         assert len(ds) == 2 * 251079
 
-    def test_extract(self, tmp_path: Path) -> None:
-        for split in SSL4EOS12.metadata:
-            filename = SSL4EOS12.metadata[split]['filename']
-            shutil.copyfile(
-                os.path.join('tests', 'data', 'ssl4eo', 's12', filename),
-                tmp_path / filename,
-            )
-        SSL4EOS12(tmp_path)
+    def test_download(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        url = os.path.join('tests', 'data', 'ssl4eo', 's12', '{0}.tar.gz.part{1}')
+        checksums = {
+            's2c': {
+                'aa': 'ddabb8a21c75bc10c047ca480d0f93c9',
+                'ab': '5e634bb5bf4c261ce6f8c46afcccf2d5',
+            }
+        }
+        monkeypatch.setattr(SSL4EOS12, 'url', url)
+        monkeypatch.setattr(SSL4EOS12, 'checksums', checksums)
+        SSL4EOS12(tmp_path, download=True)
 
-    def test_invalid_split(self) -> None:
-        with pytest.raises(AssertionError):
-            SSL4EOS12(split='foo')
+    def test_extract(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        root = os.path.join('tests', 'data', 'ssl4eo', 's12')
+        checksums = {
+            's2c': {
+                'aa': 'ddabb8a21c75bc10c047ca480d0f93c9',
+                'ab': '5e634bb5bf4c261ce6f8c46afcccf2d5',
+            }
+        }
+        monkeypatch.setattr(SSL4EOS12, 'checksums', checksums)
+        for filename in ['s2_l1c.tar.gz.partaa', 's2_l1c.tar.gz.partab']:
+            shutil.copyfile(os.path.join(root, filename), tmp_path / filename)
+        SSL4EOS12(tmp_path)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
