@@ -8,7 +8,7 @@ import os
 import random
 import re
 from collections.abc import Callable
-from typing import ClassVar, TypedDict
+from typing import ClassVar, Literal, TypedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -200,8 +200,10 @@ class SSL4EOL(SSL4EO):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'oli_sr',
-        seasons: int = 1,
+        split: Literal[
+            'tm_toa', 'etm_toa', 'etm_sr', 'oli_tirs_toa', 'oli_sr'
+        ] = 'oli_sr',
+        seasons: Literal[1, 2, 3, 4] = 1,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -218,12 +220,8 @@ class SSL4EOL(SSL4EO):
             checksum: if True, check the MD5 after downloading files (may be slow)
 
         Raises:
-            AssertionError: if any arguments are invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
-        assert split in self.metadata
-        assert seasons in range(1, 5)
-
         self.root = root
         self.subdir = os.path.join(root, f'ssl4eo_l_{split}')
         self.split = split
@@ -537,8 +535,8 @@ class SSL4EOS12(SSL4EO):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 's2c',
-        seasons: int = 1,
+        split: Literal['s1', 's2c', 's2a'] = 's2c',
+        seasons: Literal[1, 2, 3, 4] = 1,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -557,15 +555,11 @@ class SSL4EOS12(SSL4EO):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            AssertionError: if ``split`` argument is invalid
-            DatasetNotFoundError: If dataset is not found.
+            DatasetNotFoundError: If dataset is not found and *download* is False.
 
         .. versionadded:: 0.7
            The *download* parameter.
         """
-        assert split in self.metadata
-        assert seasons in range(1, 5)
-
         self.root = root
         self.split = split
         self.seasons = seasons
@@ -648,14 +642,16 @@ class SSL4EOS12(SSL4EO):
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
-        path = os.path.join(self.root, self.split, '00000*', '*', 'all_bands.tif')
+        path = os.path.join(self.root, self.split, '00000*', '*', '*.tif')
         if glob.glob(path):
             return
 
         # Check if the tar.gz files have already been downloaded
         exists = []
         for suffix in self.checksums[self.split]:
-            path = os.path.join(self.root, self.filenames[self.split] + f'.tar.gz.part{suffix}')
+            path = os.path.join(
+                self.root, self.filenames[self.split] + f'.tar.gz.part{suffix}'
+            )
             exists.append(os.path.exists(path))
 
         if all(exists):
