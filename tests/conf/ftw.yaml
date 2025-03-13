@@ -1,13 +1,12 @@
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    loss: 'ce'
     model: 'unet'
     backbone: 'resnet18'
     in_channels: 8
-    num_classes: 2
+    task: 'binary'
     num_filters: 1
-    ignore_index: null
+    loss: 'bce'
 data:
   class_path: FieldsOfTheWorldDataModule
   init_args:
