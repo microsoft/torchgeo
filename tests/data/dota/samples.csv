@@ -1,0 +1,16 @@
+,image_path,annotation_path,split,version
+0,train/images/P0000.png,train/annotations/version1.0/P0000.txt,train,1.0
+1,train/images/P0001.png,train/annotations/version1.0/P0001.txt,train,1.0
+2,train/images/P0002.png,train/annotations/version1.0/P0002.txt,train,1.0
+3,train/images/P0000.png,train/annotations/version1.5/P0000.txt,train,1.5
+4,train/images/P0001.png,train/annotations/version1.5/P0001.txt,train,1.5
+5,train/images/P0002.png,train/annotations/version1.5/P0002.txt,train,1.5
+6,train/images/P0000.png,train/annotations/version2.0/P0000.txt,train,2.0
+7,train/images/P0001.png,train/annotations/version2.0/P0001.txt,train,2.0
+8,train/images/P0002.png,train/annotations/version2.0/P0002.txt,train,2.0
+9,val/images/P0000.png,val/annotations/version1.0/P0000.txt,val,1.0
+10,val/images/P0001.png,val/annotations/version1.0/P0001.txt,val,1.0
+11,val/images/P0000.png,val/annotations/version1.5/P0000.txt,val,1.5
+12,val/images/P0001.png,val/annotations/version1.5/P0001.txt,val,1.5
+13,val/images/P0000.png,val/annotations/version2.0/P0000.txt,val,2.0
+14,val/images/P0001.png,val/annotations/version2.0/P0001.txt,val,2.0

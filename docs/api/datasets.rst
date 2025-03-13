@@ -283,6 +283,11 @@ DFC2022
 
 .. autoclass:: DFC2022
 
+DIOR
+^^^^
+
+.. autoclass:: DIOR
+
 
 Digital Typhoon
 ^^^^^^^^^^^^^^^
@@ -292,6 +297,10 @@ Digital Typhoon
 DL4GAM
 ^^^^^^
 .. autoclass:: DL4GAMAlps
+
+DOTA
+^^^^
+.. autoclass:: DOTA
 
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -477,6 +486,12 @@ So2Sat
 
 .. autoclass:: So2Sat
 
+
+SODA
+^^^^
+
+.. autoclass:: SODAA
+
 SpaceNet
 ^^^^^^^^
 
@@ -501,6 +516,11 @@ SSL4EO-L Benchmark
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SSL4EOLBenchmark
+
+Substation
+^^^^^^^^^^
+
+.. autoclass:: Substation
 
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
