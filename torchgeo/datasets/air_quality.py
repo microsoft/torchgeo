@@ -113,4 +113,4 @@ class AirQuality(NonGeoDataset):
             raise DatasetNotFoundError(self)
 
         # Download the dataset
-        return pd.read_csv(self.url)
+        return pd.read_csv(self.url, na_values=-200)

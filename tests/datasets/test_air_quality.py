@@ -16,7 +16,7 @@ class TestAirQuality:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> AirQuality:
-        url = 'tests/data/air_quality/data.csv'
+        url = os.path.join('tests', 'data', 'air_quality', 'data.csv')
         monkeypatch.setattr(AirQuality, 'url', url)
         return AirQuality(tmp_path, download=True)
 
