@@ -18,7 +18,7 @@ class ReforesTreeDataModule(NonGeoDataModule):
 
     Implements 80/20 train/val splits.
 
-    .. versionchanged:: 0.1
+    .. versionadded:: 0.7
         
     """
 
