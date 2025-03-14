@@ -46,7 +46,7 @@ class ReforesTreeDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.ReforesTree`.
         """
-        super().__init__(ReforesTree, batch_size, num_workers, **kwargs)
+        super().__init__(ReforesTree, 1, num_workers, **kwargs)
 
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
