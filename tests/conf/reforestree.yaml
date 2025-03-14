@@ -3,7 +3,7 @@ model:
   init_args:
     model: 'faster-rcnn'
     backbone: 'resnet18'
-    num_classes: 2
+    num_classes: 6
 data:
   class_path: ReforesTreeDataModule
   init_args:
