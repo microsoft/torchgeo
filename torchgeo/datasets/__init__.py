@@ -110,7 +110,9 @@ from .satlas import SatlasPretrain
 from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
+from .senbench_cloud_s3 import SenBenchCloudS3
 from .sentinel import Sentinel, Sentinel1, Sentinel2
+from .sentinelbench import SentinelBench
 from .skippd import SKIPPD
 from .skyscript import SkyScript
 from .so2sat import So2Sat
@@ -152,10 +154,6 @@ from .vhr10 import VHR10
 from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
 from .xview import XView2
 from .zuericrop import ZueriCrop
-
-from .senbench_cloud_s3 import SenBenchCloudS3
-from .sentinelbench import SentinelBench
-
 
 __all__ = (
     'ADVANCE',
@@ -275,9 +273,11 @@ __all__ = (
     'SatlasPretrain',
     'SeasoNet',
     'SeasonalContrastS2',
+    'SenBenchCloudS3',
     'Sentinel',
     'Sentinel1',
     'Sentinel2',
+    'SentinelBench',
     'SkyScript',
     'So2Sat',
     'SouthAfricaCropType',
@@ -311,6 +311,4 @@ __all__ = (
     'stack_samples',
     'time_series_split',
     'unbind_samples',
-    'SenBenchCloudS3',
-    'SentinelBench',
 )
