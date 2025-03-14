@@ -75,14 +75,14 @@ class ReforesTreeDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-            self.dataset = ReforesTree(**self.kwargs)
-            generator = torch.Generator().manual_seed(0)
-            self.train_dataset, self.val_dataset, self.test_dataset = random_split(
-                self.dataset,
-                [
-                    1 - self.val_split_pct - self.test_split_pct,
-                    self.val_split_pct,
-                    self.test_split_pct,
-                ],
-                generator,
-            )
+        self.dataset = ReforesTree(**self.kwargs)
+        generator = torch.Generator().manual_seed(0)
+        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
+            self.dataset,
+            [
+                1 - self.val_split_pct - self.test_split_pct,
+                self.val_split_pct,
+                self.test_split_pct,
+            ],
+            generator,
+        )
