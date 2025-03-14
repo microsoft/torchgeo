@@ -2,17 +2,18 @@
 # Licensed under the MIT License.
 
 """ReforesTree datamodule."""
-import os
+
 from typing import Any
 
 import kornia.augmentation as K
-from torch.utils.data import Subset
+import torch
+from torch.utils.data import random_split
 
 from ..datasets import ReforesTree
 from .geo import NonGeoDataModule
 from ..samplers.utils import _to_tuple
 from ..transforms.transforms import _RandomNCrop
-from .utils import group_shuffle_split
+
 
 
 class ReforesTreeDataModule(NonGeoDataModule):
@@ -25,20 +26,31 @@ class ReforesTreeDataModule(NonGeoDataModule):
     """
 
     def __init__(
-        self, batch_size: int = 64, patch_size: tuple[int, int] | int = 64, num_workers: int = 0, size: int = 512, **kwargs: Any
+        self, 
+        batch_size: int = 64, 
+        patch_size: tuple[int, int] | int = 64, 
+        num_workers: int = 0, 
+        val_split_pct: float = 0.2,
+        test_split_pct: float = 0.2,
+        size: int = 512, 
+        **kwargs: Any
     ) -> None:
         """Initialize a new ReforesTreeDataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.
-            num_workers: Number of workers for parallel data loading.
             patch_size: Size of each patch, either ``size`` or ``(height, width)``.
                 Should be a multiple of 32 for most segmentation architectures.
+            num_workers: Number of workers for parallel data loading.
+            val_split_pct: Percentage of the dataset to use as a validation set.
+            test_split_pct: Percentage of the dataset to use as a test set.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.ReforesTree`.
         """
         super().__init__(ReforesTree, batch_size, num_workers, **kwargs)
 
+        self.val_split_pct = val_split_pct
+        self.test_split_pct = test_split_pct
         self.patch_size = _to_tuple(patch_size)
 
         self.train_aug = K.AugmentationSequential(
@@ -68,11 +80,15 @@ class ReforesTreeDataModule(NonGeoDataModule):
         """
         if stage in ['fit', 'validate']:
             dataset = ReforesTree(split='train', **self.kwargs)
-            grouping_paths = [os.path.dirname(path) for path in dataset.file_list]
-            train_indices, val_indices = group_shuffle_split(
-                grouping_paths, test_size=0.2, random_state=0
+            generator = torch.Generator().manual_seed(0)
+            self.train_dataset, self.val_dataset, self.test_dataset = random_split(
+                self.dataset,
+                [
+                    1 - self.val_split_pct - self.test_split_pct,
+                    self.val_split_pct,
+                    self.test_split_pct,
+                ],
+                generator,
             )
-            self.train_dataset = Subset(dataset, train_indices)
-            self.val_dataset = Subset(dataset, val_indices)
         if stage in ['test']:
             self.test_dataset = ReforesTree(split='test', **self.kwargs)
