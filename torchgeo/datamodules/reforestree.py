@@ -2,18 +2,16 @@
 # Licensed under the MIT License.
 
 """ReforesTree datamodule."""
-
 from typing import Any
 
-import torch
 import kornia.augmentation as K
+import torch
 from torch.utils.data import random_split
 
 from ..datasets import ReforesTree
+from .geo import NonGeoDataModule
 from ..samplers.utils import _to_tuple
 from ..transforms.transforms import _RandomNCrop
-from .geo import NonGeoDataModule
-
 
 
 
