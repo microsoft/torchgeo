@@ -10,8 +10,8 @@ import torch
 from torch.utils.data import random_split
 
 from ..datasets import ReforesTree
-from .geo import NonGeoDataModule
 from ..samplers.utils import _to_tuple
+from .geo import NonGeoDataModule
 from ..transforms.transforms import _RandomNCrop
 
 
@@ -31,8 +31,7 @@ class ReforesTreeDataModule(NonGeoDataModule):
         patch_size: tuple[int, int] | int = 64, 
         num_workers: int = 0, 
         val_split_pct: float = 0.2,
-        test_split_pct: float = 0.2,
-        size: int = 512, 
+        test_split_pct: float = 0.2, 
         **kwargs: Any
     ) -> None:
         """Initialize a new ReforesTreeDataModule instance.
@@ -54,7 +53,7 @@ class ReforesTreeDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
 
         self.train_aug = K.AugmentationSequential(
-            K.Resize(size),
+            K.Resize(patch_size),
             K.Normalize(self.mean, self.std),
             _RandomNCrop(self.patch_size, batch_size),
             K.RandomHorizontalFlip(p=0.5),
@@ -65,12 +64,10 @@ class ReforesTreeDataModule(NonGeoDataModule):
 
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            K.Resize(size),
+            K.Resize(patch_size),
             data_keys=None,
             keepdim=True,
         )
-
-        self.size = size
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -78,8 +75,7 @@ class ReforesTreeDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ['fit', 'validate']:
-            dataset = ReforesTree(split='train', **self.kwargs)
+            self.dataset = ReforesTree(**self.kwargs)
             generator = torch.Generator().manual_seed(0)
             self.train_dataset, self.val_dataset, self.test_dataset = random_split(
                 self.dataset,
@@ -90,5 +86,3 @@ class ReforesTreeDataModule(NonGeoDataModule):
                 ],
                 generator,
             )
-        if stage in ['test']:
-            self.test_dataset = ReforesTree(split='test', **self.kwargs)
