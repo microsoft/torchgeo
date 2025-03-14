@@ -181,7 +181,7 @@ QuakeSet
 .. autoclass:: QuakeSetDataModule
 
 ReforesTree
-^^^^^^^^
+^^^^^^^^^^^
 
 .. autoclass:: ReforesTreeDataModule
 
