@@ -10,6 +10,8 @@ from torch.utils.data import Subset
 
 from ..datasets import ReforesTree
 from .geo import NonGeoDataModule
+from ..samplers.utils import _to_tuple
+from ..transforms.transforms import _RandomNCrop
 from .utils import group_shuffle_split
 
 
@@ -23,22 +25,26 @@ class ReforesTreeDataModule(NonGeoDataModule):
     """
 
     def __init__(
-        self, batch_size: int = 64, num_workers: int = 0, size: int = 512, **kwargs: Any
+        self, batch_size: int = 64, patch_size: tuple[int, int] | int = 64, num_workers: int = 0, size: int = 512, **kwargs: Any
     ) -> None:
         """Initialize a new ReforesTreeDataModule instance.
 
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
-            size: resize images of input size 512x512 to size x size
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
+                Should be a multiple of 32 for most segmentation architectures.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.ReforesTree`.
         """
         super().__init__(ReforesTree, batch_size, num_workers, **kwargs)
 
+        self.patch_size = _to_tuple(patch_size)
+
         self.train_aug = K.AugmentationSequential(
             K.Resize(size),
             K.Normalize(self.mean, self.std),
+            _RandomNCrop(self.patch_size, batch_size),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             data_keys=None,
