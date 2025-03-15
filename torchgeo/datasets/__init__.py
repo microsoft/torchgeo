@@ -30,6 +30,7 @@ from .chesapeake import (
 )
 from .cloud_cover import CloudCoverDetection
 from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
+from .copernicus import CopernicusBench, CopernicusBenchBase, CopernicusBenchCloudS2
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cropharvest import CropHarvest
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
@@ -208,6 +209,9 @@ __all__ = (
     'ChesapeakeVA',
     'ChesapeakeWV',
     'CloudCoverDetection',
+    'CopernicusBench',
+    'CopernicusBenchBase',
+    'CopernicusBenchCloudS2',
     'CropHarvest',
     'DL4GAMAlps',
     'DatasetNotFoundError',

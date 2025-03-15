@@ -6,6 +6,7 @@
 from typing import Any, Literal
 
 from ..geo import NonGeoDataset
+from .base import CopernicusBenchBase
 from .cloud_s2 import CopernicusBenchCloudS2
 
 DATASET_REGISTRY = {'cloud_s2': CopernicusBenchCloudS2}
@@ -31,7 +32,7 @@ class CopernicusBench(NonGeoDataset):
             *args: Arguments to pass to dataset class.
             **kwargs: Keyword arguments to pass to dataset class.
         """
-        self.dataset = DATASET_REGISTRY[dataset](*args, **kwargs)
+        self.dataset: CopernicusBenchBase = DATASET_REGISTRY[dataset](*args, **kwargs)
 
     def __getattr__(self, name: str) -> Any:
         """Wrapper around actual dataset object."""
