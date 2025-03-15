@@ -112,4 +112,3 @@ def generate_fake_dataset(root_dir='data', num_train=2, num_val=1, num_test=1):
 
 if __name__ == '__main__':
     generate_fake_dataset(root_dir='./senbench_cloud_s3')
-    print('Fake dataset generated successfully.')
