@@ -8,4 +8,5 @@ data:
   class_path: ReforesTreeDataModule
   init_args:
     batch_size: 1
+  dict_kwargs:
     root: 'tests/data/reforestree'
