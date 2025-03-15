@@ -9,10 +9,10 @@ import rasterio as rio
 import torch
 from torch import Tensor
 
-from torchgeo.datasets.geo import NonGeoDataset
+from .base import CopernicusBenchBase
 
 
-class CopernicusBenchCloudS2(NonGeoDataset):
+class CopernicusBenchCloudS2(CopernicusBenchBase):
     """Copernicus-Bench Cloud-S2 dataset.
 
     Cloud-S2 is a multi-class cloud segmentation dataset derived from

@@ -13,7 +13,7 @@ from torch import Tensor
 
 from torchgeo.datasets.geo import NonGeoDataset
 
-from .utils import Path
+from ..utils import Path
 
 
 class CopernicusBenchBase(NonGeoDataset, ABC):

@@ -5,6 +5,8 @@
 
 from typing import Any, Literal
 
+from torch import Tensor
+
 from ..geo import NonGeoDataset
 from .base import CopernicusBenchBase
 from .cloud_s2 import CopernicusBenchCloudS2
@@ -34,6 +36,21 @@ class CopernicusBench(NonGeoDataset):
         """
         self.dataset: CopernicusBenchBase = DATASET_REGISTRY[dataset](*args, **kwargs)
 
-    def __getattr__(self, name: str) -> Any:
-        """Wrapper around actual dataset object."""
-        return getattr(self.dataset, name)
+    def __len__(self) -> int:
+        """Return the length of the dataset.
+
+        Returns:
+            Length of the dataset.
+        """
+        return len(self.dataset)
+
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
+        """Return an index within the dataset.
+
+        Args:
+            index: Index to return.
+
+        Returns:
+            Data and labels at that index.
+        """
+        return self.dataset[index]

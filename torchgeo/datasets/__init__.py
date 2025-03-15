@@ -111,9 +111,7 @@ from .satlas import SatlasPretrain
 from .seasonet import SeasoNet
 from .seco import SeasonalContrastS2
 from .sen12ms import SEN12MS
-from .senbench_cloud_s3 import SenBenchCloudS3
 from .sentinel import Sentinel, Sentinel1, Sentinel2
-from .sentinelbench import SentinelBench
 from .skippd import SKIPPD
 from .skyscript import SkyScript
 from .so2sat import So2Sat
@@ -277,7 +275,6 @@ __all__ = (
     'SatlasPretrain',
     'SeasoNet',
     'SeasonalContrastS2',
-    'SenBenchCloudS3',
     'Sentinel',
     'Sentinel1',
     'Sentinel2',
