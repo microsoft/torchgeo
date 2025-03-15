@@ -148,7 +148,7 @@ class ReforesTree(NonGeoDataset):
         """
         with Image.open(path) as img:
             array: np.typing.NDArray[np.uint8] = np.array(img)
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
