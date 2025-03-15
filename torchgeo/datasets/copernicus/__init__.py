@@ -1,38 +1,38 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from torch.utils.data import Dataset
+"""Copernicus-Bench datasets."""
 
-from .senbench_cloud_s3 import SenBenchCloudS3
+from typing import Any, Literal
 
-# Dictionary to map dataset names to classes
-DATASET_REGISTRY = {
-    'senbench-cloud-s3': SenBenchCloudS3
-    # To add other datasets
-}
+from ..geo import NonGeoDataset
+from .cloud_s2 import CopernicusBenchCloudS2
+
+DATASET_REGISTRY = {'cloud_s2': CopernicusBenchCloudS2}
 
 
-class SentinelBench(Dataset):
-    """Wrapper to dynamically load a dataset from SentinelBench."""
+class CopernicusBench(NonGeoDataset):
+    """Copernicus-Bench datasets.
 
-    def __init__(self, dataset_name: str, **kwargs):
-        """Args:
-        dataset_name (str): The name of the dataset to load.
-        **kwargs: All other arguments will be forwarded to the dataset's __init__ method.
+    This wrapper supports dynamically loading datasets in Copernicus-Bench.
+
+    If you use this dataset in your research, please cite the following papers:
+
+    * TODO
+
+    .. versionadded:: 0.7
+    """
+
+    def __init__(self, dataset: Literal['cloud_s2'], *args: Any, **kwargs: Any) -> None:
+        """Initialize a new CopernicusBench instance.
+
+        Args:
+            dataset: Name of the dataset to load.
+            *args: Arguments to pass to dataset class.
+            **kwargs: Keyword arguments to pass to dataset class.
         """
-        if dataset_name not in DATASET_REGISTRY:
-            raise ValueError(
-                f"Dataset '{dataset_name}' not found! Available datasets: {list(DATASET_REGISTRY.keys())}"
-            )
+        self.dataset = DATASET_REGISTRY[dataset](*args, **kwargs)
 
-        # Get the dataset class from registry
-        dataset_class: type[Dataset] = DATASET_REGISTRY[dataset_name]
-
-        # Dynamically initialize the dataset with the given arguments
-        self.dataset = dataset_class(**kwargs)
-
-    def __len__(self):
-        return len(self.dataset)
-
-    def __getitem__(self, index):
-        return self.dataset[index]
+    def __getattr__(self, name: str) -> Any:
+        """Wrapper around actual dataset object."""
+        return getattr(self.dataset, name)

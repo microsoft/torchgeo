@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+"""Copernicus-Bench abstract base class."""
+
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
