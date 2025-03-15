@@ -1,12 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from typing import Literal
 
 import pandas as pd
-import rasterio as rio
 from torch import Tensor
 
 from torchgeo.datasets.geo import NonGeoDataset
@@ -105,6 +105,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
         return sample
 
+    @abstractmethod
     def _load_image(self, index: int) -> dict[str, Tensor]:
         """Load an image.
 
@@ -114,11 +115,6 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         Returns:
             An image sample.
         """
-        sample: dict[str, Tensor] = {}
-        with rio.open(self.files[index]) as f:
-            sample['image'] = f.read(self.band_indices)
-
-        return sample
 
     @abstractmethod
     def _load_target(self, index: int) -> dict[str, Tensor]:
