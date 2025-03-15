@@ -10,6 +10,13 @@ Change Star
 .. autoclass:: ChangeStarFarSeg
 .. autoclass:: ChangeMixin
 
+Copernicus-FM
+^^^^
+
+.. autoclass:: CopernicusFM
+.. autofunction:: copernicusfm_base
+.. autoclass:: CopernicusFM_Base_Weights
+
 CROMA
 ^^^^^
 

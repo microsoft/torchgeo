@@ -4,3 +4,4 @@ DOFABase16_Weights.DOFA_MAE,`link <https://github.com/zhu-xlab/DOFA>`__,`link <h
 DOFALarge16_Weights.DOFA_MAE,`link <https://github.com/zhu-xlab/DOFA>`__,`link <https://arxiv.org/abs/2403.15356>`__,CC-BY-4.0,implicit,-,explicit,67.5,54.6,96.9,97.3,60.1,97.1,95.0,81.8,59.4,56.9,32.1,66.3
 ResNet50_Weights.FMOW_RGB_GASSL,`link <https://github.com/sustainlab-group/geography-aware-ssl>`__,`link <https://arxiv.org/abs/2011.09980>`__,-,implicit,-,-,,,,,,,,,,,,
 ScaleMAE_ViTLarge16_Weights.FMOW_RGB_SCALEMAE,`link <https://github.com/bair-climate-initiative/scale-mae>`__,`link <https://arxiv.org/abs/2212.14532>`__,CC-BY-NC-4.0,explicit,-,-,,,,,,,,,,,
+CopernicusFM_Weights.CopernicusFM_ViT,`link <https://github.com/zhu-xlab/Copernicus-FM>`__,`link <https://arxiv.org/abs/xxxx.xxxxx>`__,CC-BY-4.0,explicit,explicit,explicit,,,,,,,,,,,
