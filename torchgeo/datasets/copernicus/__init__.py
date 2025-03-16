@@ -10,10 +10,19 @@ from torch import Tensor
 from ..geo import NonGeoDataset
 from .base import CopernicusBenchBase
 from .cloud_s2 import CopernicusBenchCloudS2
+from .cloud_s3 import CopernicusBenchCloudS3
 
-__all__ = ('CopernicusBench', 'CopernicusBenchBase', 'CopernicusBenchCloudS2')
+__all__ = (
+    'CopernicusBench',
+    'CopernicusBenchBase',
+    'CopernicusBenchCloudS2',
+    'CopernicusBenchCloudS3',
+)
 
-DATASET_REGISTRY = {'cloud_s2': CopernicusBenchCloudS2}
+DATASET_REGISTRY = {
+    'cloud_s2': CopernicusBenchCloudS2,
+    'cloud_s3': CopernicusBenchCloudS3,
+}
 
 
 class CopernicusBench(NonGeoDataset):
@@ -28,7 +37,9 @@ class CopernicusBench(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    def __init__(self, name: Literal['cloud_s2'], *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self, name: Literal['cloud_s2', 'cloud_s3'], *args: Any, **kwargs: Any
+    ) -> None:
         """Initialize a new CopernicusBench instance.
 
         Args:

@@ -55,9 +55,7 @@ directory = os.path.join('cloud_s3', 'cloud_binary')
 os.makedirs(directory, exist_ok=True)
 profile['count'] = 1
 profile['dtype'] = 'uint8'
-Z = np.random.randint(
-    3, size=(profile['height'], profile['width']), dtype=profile['dtype']
-)
+Z = np.random.choice([0, 1, 255], size=(profile['height'], profile['width']))
 path = os.path.join(directory, filename)
 with rio.open(path, 'w', **profile) as src:
     for i in range(1, profile['count'] + 1):
@@ -68,16 +66,13 @@ directory = os.path.join('cloud_s3', 'cloud_multi')
 os.makedirs(directory, exist_ok=True)
 profile['count'] = 1
 profile['dtype'] = 'uint8'
-Z = np.random.randint(
-    6, size=(profile['height'], profile['width']), dtype=profile['dtype']
-)
+Z = np.random.choice([0, 1, 2, 3, 4, 255], size=(profile['height'], profile['width']))
 path = os.path.join(directory, filename)
 with rio.open(path, 'w', **profile) as src:
     for i in range(1, profile['count'] + 1):
         src.write(Z, i)
 
 # Splits
-filename = filename[: filename.index('.')]
 for split in ['train', 'val', 'test']:
     with open(os.path.join('cloud_s3', f'{split}.csv'), 'w') as csv:
         csv.write(f'{filename}\n')

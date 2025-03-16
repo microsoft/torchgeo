@@ -20,7 +20,7 @@ from torchgeo.datasets import (
 
 
 class TestCopernicusBench:
-    @pytest.fixture(params=[('cloud_s2', 'l1_cloud_s2')])
+    @pytest.fixture(params=[('cloud_s2', 'l1_cloud_s2'), ('cloud_s3', 'l1_cloud_s3')])
     def dataset(self, request: SubRequest) -> CopernicusBench:
         dataset, directory = request.param
         root = os.path.join('tests', 'data', 'copernicus', directory)

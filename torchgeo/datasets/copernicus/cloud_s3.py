@@ -1,56 +1,84 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import logging
+
+"""Copernicus-Bench Cloud-S3 dataset."""
+
 import os
 from collections.abc import Callable, Sequence
-from datetime import date
+from typing import Literal
 
 import numpy as np
-import rasterio
+import rasterio as rio
 import torch
-from pyproj import Transformer
 from torch import Tensor
 
-from torchgeo.datasets.geo import NonGeoDataset
-
-from .utils import Path
-
-logging.getLogger('rasterio').setLevel(logging.ERROR)
+from ..utils import Path
+from .base import CopernicusBenchBase
 
 
-class SenBenchCloudS3(NonGeoDataset):
-    """SenBench-Cloud-S3 dataset.
+class CopernicusBenchCloudS3(CopernicusBenchBase):
+    """Copernicus-Bench Cloud-S3 dataset.
 
-    The SenBench-Cloud-S3 dataset is a level-1 dataset from the SentinelBench benchmark.
-    It contains Sentinel-3 OLCI images, multi-class cloud masks, and binary cloud masks for the cloud segmentation task.
+    Cloud-S3 is a cloud segmentation dataset with raw images from Sentinel-3 OLCI
+    and labels from the
+    `IdePix <https://step.esa.int/main/snap-supported-plugins/idepix-tool/>`__
+    classification algorithm.
 
-    Dataset features:
+    This dataset has two modes:
 
-    * task: semantic segmentation
-    * # samples: 1197/399/399 (train/val/test)
-    * image resolution: 256x256
-    * # classes: 5 (multi-class) / 2 (binary)
+    .. list-table:: Multiclass Classification
+       :header-rows: 1
 
-    Dataset format:
+       * - Code
+         - Class
+         - Description
+       * - 255
+         - Invalid
+         - Invalid pixels, should be ignored during training.
+       * - 0
+         - Clear
+         - Land, coastline, or water pixels.
+       * - 1
+         - Cloud-Sure
+         - Fully-opaque clouds with full confidence of their detection.
+       * - 2
+         - Cloud-Ambiguous
+         - Semi-transparent clouds, or clouds where the detection level is uncertain.
+       * - 3
+         - Cloud Shadow
+         - Pixels are affected by a cloud shadow.
+       * - 4
+         - Snow/Ice
+         - Clear snow/ice pixels.
 
-    * images: 21-band Sentinel-3 OLCI images (GeoTIFF)
-    * labels: multi-class cloud masks (GeoTIFF)
-    * binary_labels: binary cloud masks (GeoTIFF)
+    .. list-table:: Binary Classification
+       :header-rows: 1
+
+       * - Code
+         - Class
+         - Description
+       * - 255
+         - Invalid
+         - Invalid pixels, should be ignored during training.
+       * - 0
+         - Clear
+         - Land, coastline, water, snow, or ice pixels.
+       * - 1
+         - Cloud
+         - Pixels which are either cloud-sure or cloud-ambiguous.
 
     If you use this dataset in your research, please cite the following paper:
 
-    * To be released soon
+    * TODO
 
-
+    .. versionadded:: 0.7
     """
 
-    url = 'https://huggingface.co/datasets/wangyi111/SentinelBench/resolve/main/l3_biomass_s3/biomass_s3olci.zip'
-
-    splits = ('train', 'val', 'test')
-
-    split_filenames = {'train': 'train.csv', 'val': 'val.csv', 'test': 'test.csv'}
-
-    all_band_names = (
+    url = 'https://huggingface.co/datasets/wangyi111/Copernicus-Bench/resolve/86342afa2409e49d80688fe00c05201c0f46569b/l1_cloud_s3/cloud_s3.zip'
+    md5 = '1f82a8ccf16a0c44f0b1729e523e343a'
+    zipfile = 'cloud_s3.zip'
+    directory = 'cloud_s3'
+    all_bands = (
         'Oa01_radiance',
         'Oa02_radiance',
         'Oa03_radiance',
@@ -73,148 +101,66 @@ class SenBenchCloudS3(NonGeoDataset):
         'Oa20_radiance',
         'Oa21_radiance',
     )
-
-    all_band_scale = (
-        0.0139465,
-        0.0133873,
-        0.0121481,
-        0.0115198,
-        0.0100953,
-        0.0123538,
-        0.00879161,
-        0.00876539,
-        0.0095103,
-        0.00773378,
-        0.00675523,
-        0.0071996,
-        0.00749684,
-        0.0086512,
-        0.00526779,
-        0.00530267,
-        0.00493004,
-        0.00549962,
-        0.00502847,
-        0.00326378,
-        0.00324118,
-    )
-
     rgb_bands = ('Oa08_radiance', 'Oa06_radiance', 'Oa04_radiance')
-
-    Cls_index_binary = {
-        'invalid': 0,  # --> 255 should be ignored during training
-        'clear': 1,  # --> 0
-        'cloud': 2,  # --> 1
-    }
-
-    Cls_index_multi = {
-        'invalid': 0,  # --> 255 should be ignored during training
-        'clear': 1,  # --> 0
-        'cloud-sure': 2,  # --> 1
-        'cloud-ambiguous': 3,  # --> 2
-        'cloud shadow': 4,  # --> 3
-        'snow and ice': 5,  # --> 4
-    }
+    classes = ('Clear', 'Cloud-Sure', 'Cloud-Ambiguous', 'Cloud Shadow', 'Snow/Ice')
 
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
-        bands: Sequence[str] = all_band_names,
-        mode='multi',
+        split: Literal['train', 'val', 'test'] = 'train',
+        mode: Literal['binary', 'multi'] = 'multi',
+        bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
+        checksum: bool = False,
     ) -> None:
-        self.root = root
-        self.transforms = transforms
-        self.download = download
+        """Initialize a new CopernicusBenchBase instance.
 
-        assert split in ['train', 'val', 'test']
+        Args:
+            root: Root directory where dataset can be found.
+            split: One of 'train', 'val', or 'test'.
+            mode: One of 'binary' or 'multi'.
+            bands: Sequence of band names to load (defaults to all bands).
+            transforms: A function/transform that takes input sample and its target as
+                entry and returns a transformed version.
+            download: If True, download dataset and store it in the root directory.
+            checksum: If True, check the MD5 of the downloaded files (may be slow).
 
-        self.bands = bands
-        self.band_indices = [
-            (self.all_band_names.index(b) + 1)
-            for b in bands
-            if b in self.all_band_names
-        ]
-
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+        """
         self.mode = mode
-        self.img_dir = os.path.join(self.root, 's3_olci')
-        self.label_dir = os.path.join(self.root, 'cloud_' + mode)
+        super().__init__(root, split, bands, transforms, download, checksum)
 
-        self.split_csv = os.path.join(self.root, self.split_filenames[split])
-        self.fnames = []
-        with open(self.split_csv) as f:
-            lines = f.readlines()
-            for line in lines:
-                fname = line.strip()
-                self.fnames.append(fname)
+    def _load_image(self, index: int) -> dict[str, Tensor]:
+        """Load an image.
 
-        self.reference_date = date(1970, 1, 1)
-        self.patch_area = (8 * 300 / 1000) ** 2  # patchsize 8 pix, gsd 300m
+        Args:
+            index: Index to return.
 
-    def __len__(self):
-        return len(self.fnames)
-
-    def __getitem__(self, index):
-        images, meta_infos = self._load_image(index)
-        label = self._load_target(index)
-        sample = {'image': images, 'mask': label, 'meta': meta_infos}
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
+        Returns:
+            An image sample.
+        """
+        sample: dict[str, Tensor] = {}
+        file = self.files[index]
+        with rio.open(os.path.join(self.root, self.directory, 's3_olci', file)) as f:
+            sample['image'] = torch.tensor(f.read(self.band_indices).astype(np.float32))
 
         return sample
 
-    def _load_image(self, index):
-        fname = self.fnames[index]
-        s3_path = os.path.join(self.img_dir, fname)
+    def _load_target(self, index: int) -> dict[str, Tensor]:
+        """Load a target mask.
 
-        with rasterio.open(s3_path) as src:
-            img = src.read(self.band_indices)
-            img[np.isnan(img)] = 0
-            chs = []
-            for b in range(21):
-                ch = img[b] * self.all_band_scale[b]
-                chs.append(ch)
-            img = np.stack(chs)
-            img = torch.from_numpy(img).float()
+        Args:
+            index: Index to return.
 
-            # get lon, lat
-            cx, cy = src.xy(src.height // 2, src.width // 2)
-            if src.crs.to_string() != 'EPSG:4326':
-                # convert to lon, lat
-                crs_transformer = Transformer.from_crs(
-                    src.crs, 'epsg:4326', always_xy=True
-                )
-                lon, lat = crs_transformer.transform(cx, cy)
-            else:
-                lon, lat = cx, cy
-            # get time
-            img_fname = os.path.basename(s3_path)
-            date_str = img_fname.split('____')[1][:8]
-            date_obj = date(int(date_str[:4]), int(date_str[4:6]), int(date_str[6:8]))
-            delta = (date_obj - self.reference_date).days
-            # this is what CopernicusFM requires
-            # meta_info = np.array([lon, lat, delta, self.patch_area]).astype(np.float32)
-            # meta_info = torch.from_numpy(meta_info)
-            # this is more general
-            meta_info = {
-                'lon': torch.tensor(lon),
-                'lat': torch.tensor(lat),
-                'delta-t': torch.tensor(delta),  # days since 1970-01-01
-                'area-p': torch.tensor(self.patch_area),  # ViT patch area in km^2
-            }
+        Returns:
+            A target sample.
+        """
+        sample: dict[str, Tensor] = {}
+        file = self.files[index]
+        mode = f'cloud_{self.mode}'
+        with rio.open(os.path.join(self.root, self.directory, mode, file)) as f:
+            sample['mask'] = torch.tensor(f.read(1).astype(np.int64))
 
-        return img, meta_info
-
-    def _load_target(self, index):
-        fname = self.fnames[index]
-        label_path = os.path.join(self.label_dir, fname)
-
-        with rasterio.open(label_path) as src:
-            label = src.read(1)
-            label[label == 0] = 256
-            label = label - 1
-            labels = torch.from_numpy(label).long()
-
-        return labels
+        return sample

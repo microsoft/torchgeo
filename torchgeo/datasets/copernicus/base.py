@@ -85,7 +85,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         Args:
             root: Root directory where dataset can be found.
             split: One of 'train', 'val', or 'test'.
-            bands: Sequence of band names to load (defauts to all bands).
+            bands: Sequence of band names to load (defaults to all bands).
             transforms: A function/transform that takes input sample and its target as
                 entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
