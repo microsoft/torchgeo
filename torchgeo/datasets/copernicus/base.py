@@ -58,17 +58,17 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
     @property
     @abstractmethod
-    def all_bands(self) -> tuple[str]:
+    def all_bands(self) -> tuple[str, ...]:
         """All spectral channels."""
 
     @property
     @abstractmethod
-    def rgb_bands(self) -> tuple[str]:
+    def rgb_bands(self) -> tuple[str, ...]:
         """Red, green, and blue spectral channels."""
 
     @property
     @abstractmethod
-    def classes(self) -> tuple[str]:
+    def classes(self) -> tuple[str, ...]:
         """List of classes for classification and semantic segmentation."""
 
     def __init__(
@@ -215,7 +215,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
         fig, ax = plt.subplots(ncols=ncols, squeeze=False)
 
-        image = sample['image'][rgb_indices]
+        image = sample['image'][rgb_indices].numpy()
         image = rearrange(image, 'c h w -> h w c')
         image = percentile_normalization(image)
         ax[0, 0].imshow(image)
