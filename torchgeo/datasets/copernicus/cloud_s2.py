@@ -51,6 +51,7 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
 
     url = 'https://huggingface.co/datasets/wangyi111/Copernicus-Bench/resolve/86342afa2409e49d80688fe00c05201c0f46569b/l1_cloud_s2/cloud_s2.zip'
     md5 = '39a1f966e76455549a3e6c209ba751c1'
+    zipfile = 'cloud_s2.zip'
     directory = 'cloud_s2'
     all_bands = (
         'B01',

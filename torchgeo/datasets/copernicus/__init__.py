@@ -26,15 +26,16 @@ class CopernicusBench(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    def __init__(self, dataset: Literal['cloud_s2'], *args: Any, **kwargs: Any) -> None:
+    def __init__(self, name: Literal['cloud_s2'], *args: Any, **kwargs: Any) -> None:
         """Initialize a new CopernicusBench instance.
 
         Args:
-            dataset: Name of the dataset to load.
+            name: Name of the dataset to load.
             *args: Arguments to pass to dataset class.
             **kwargs: Keyword arguments to pass to dataset class.
         """
-        self.dataset: CopernicusBenchBase = DATASET_REGISTRY[dataset](*args, **kwargs)
+        self.name = name
+        self.dataset: CopernicusBenchBase = DATASET_REGISTRY[name](*args, **kwargs)
 
     def __len__(self) -> int:
         """Return the length of the dataset.
@@ -54,3 +55,7 @@ class CopernicusBench(NonGeoDataset):
             Data and labels at that index.
         """
         return self.dataset[index]
+
+    def __getattr__(self, name: str) -> Any:
+        """Wrapper around dataset object."""
+        return getattr(self.dataset, name)

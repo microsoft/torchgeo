@@ -13,7 +13,8 @@ from torch import Tensor
 
 from torchgeo.datasets.geo import NonGeoDataset
 
-from ..utils import Path
+from ..errors import DatasetNotFoundError
+from ..utils import Path, download_and_extract_archive, extract_archive
 
 
 class CopernicusBenchBase(NonGeoDataset, ABC):
@@ -31,6 +32,11 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     @abstractmethod
     def md5(self) -> str:
         """MD5 checksum."""
+
+    @property
+    @abstractmethod
+    def zipfile(self) -> str:
+        """Zip file name."""
 
     @property
     @abstractmethod
@@ -71,6 +77,9 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
                 entry and returns a transformed version.
             download: If True, download dataset and store it in the root directory.
             checksum: If True, check the MD5 of the downloaded files (may be slow).
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.root = root
         self.split = split
@@ -80,7 +89,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         self.download = download
         self.checksum = checksum
 
-        # self._verify()
+        self._verify()
 
         filepath = os.path.join(root, self.directory, self.filename.format(split))
         self.files = pd.read_csv(filepath, header=None)[0]
@@ -130,3 +139,31 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         Returns:
             A target sample.
         """
+
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset."""
+        # Check if the files already exist
+        path = os.path.join(self.root, self.directory, self.filename.format(self.split))
+        if os.path.exists(path):
+            return
+
+        # Check if the zip file already exists (if so then extract)
+        if os.path.exists(os.path.join(self.root, self.zipfile)):
+            self._extract()
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise DatasetNotFoundError(self)
+
+        # Download and extract the dataset
+        self._download()
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        extract_archive(os.path.join(self.root, self.zipfile))
+
+    def _download(self) -> None:
+        """Download the dataset."""
+        md5 = self.md5 if self.checksum else None
+        download_and_extract_archive(self.url, self.root, md5=md5)
