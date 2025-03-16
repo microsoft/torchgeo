@@ -10,6 +10,7 @@ from typing import Literal
 import numpy as np
 import rasterio as rio
 import torch
+from matplotlib.colors import ListedColormap
 from torch import Tensor
 
 from ..utils import Path
@@ -32,22 +33,22 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
        * - Code
          - Class
          - Description
-       * - 255
+       * - 0
          - Invalid
          - Invalid pixels, should be ignored during training.
-       * - 0
+       * - 1
          - Clear
          - Land, coastline, or water pixels.
-       * - 1
+       * - 2
          - Cloud-Sure
          - Fully-opaque clouds with full confidence of their detection.
-       * - 2
+       * - 3
          - Cloud-Ambiguous
          - Semi-transparent clouds, or clouds where the detection level is uncertain.
-       * - 3
+       * - 4
          - Cloud Shadow
          - Pixels are affected by a cloud shadow.
-       * - 4
+       * - 5
          - Snow/Ice
          - Clear snow/ice pixels.
 
@@ -57,13 +58,13 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
        * - Code
          - Class
          - Description
-       * - 255
+       * - 0
          - Invalid
          - Invalid pixels, should be ignored during training.
-       * - 0
+       * - 1
          - Clear
          - Land, coastline, water, snow, or ice pixels.
-       * - 1
+       * - 2
          - Cloud
          - Pixels which are either cloud-sure or cloud-ambiguous.
 
@@ -102,7 +103,9 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
         'Oa21_radiance',
     )
     rgb_bands = ('Oa08_radiance', 'Oa06_radiance', 'Oa04_radiance')
+    cmap = ListedColormap(['red', 'gray', 'white', 'lightgray', 'black', 'snow'])
     classes: tuple[str, ...] = (
+        'Invalid',
         'Clear',
         'Cloud-Sure',
         'Cloud-Ambiguous',
@@ -136,7 +139,9 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.mode = mode
-        self.classes = ('Clear', 'Cloud') if mode == 'binary' else self.classes
+        if mode == 'binary':
+            self.classes = ('Invalid', 'Clear', 'Cloud')
+            self.cmap = ListedColormap(['red', 'gray', 'white'])
         super().__init__(root, split, bands, transforms, download, checksum)
 
     def _load_image(self, index: int) -> dict[str, Tensor]:

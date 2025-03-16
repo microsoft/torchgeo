@@ -8,6 +8,7 @@ import os
 import numpy as np
 import rasterio as rio
 import torch
+from matplotlib.colors import ListedColormap
 from torch import Tensor
 
 from .base import CopernicusBenchBase
@@ -70,6 +71,7 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
         'B12',
     )
     rgb_bands = ('B04', 'B03', 'B02')
+    cmap = ListedColormap(['white', 'yellow', 'green', 'red'])
     classes = ('Clear', 'Thick Cloud', 'Thin Cloud', 'Cloud Shadow')
 
     def _load_image(self, index: int) -> dict[str, Tensor]:

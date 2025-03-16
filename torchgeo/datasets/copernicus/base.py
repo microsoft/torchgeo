@@ -11,6 +11,7 @@ from typing import Literal
 import pandas as pd
 from einops import rearrange
 from matplotlib import pyplot as plt
+from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from torch import Tensor
 
@@ -69,6 +70,11 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     @abstractmethod
     def rgb_bands(self) -> tuple[str, ...]:
         """Red, green, and blue spectral channels."""
+
+    @property
+    @abstractmethod
+    def cmap(self) -> str | Colormap:
+        """Matplotlib color map."""
 
     @property
     @abstractmethod
@@ -229,7 +235,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
         if 'mask' in sample:
             kwargs = {
-                'cmap': 'gray',
+                'cmap': self.cmap,
                 'vmin': 0,
                 'vmax': len(self.classes) - 1,
                 'interpolation': 'none',
