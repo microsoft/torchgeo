@@ -96,6 +96,6 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
         sample: dict[str, Tensor] = {}
         path = os.path.join(self.subdir, 'cloud', self.files[index] + '.tif')
         with rio.open(path) as f:
-            sample['image'] = torch.tensor(f.read(0), dtype=torch.long)
+            sample['mask'] = torch.tensor(f.read(1), dtype=torch.long)
 
         return sample

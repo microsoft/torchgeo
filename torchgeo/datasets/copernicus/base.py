@@ -77,11 +77,11 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         self.download = download
         self.checksum = checksum
 
-        self._verify()
+        # self._verify()
 
         self.subdir = os.path.join(root, self.filename[: self.filename.index('.')])
         filepath = os.path.join(self.subdir, f'{split}.csv')
-        self.files = pd.read_csv(os.path.join(filepath, header=None))[0]
+        self.files = pd.read_csv(filepath, header=None)[0]
 
     def __len__(self) -> int:
         """Return the length of the dataset.

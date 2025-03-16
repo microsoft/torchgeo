@@ -15,7 +15,7 @@ class TestCopernicusBench:
     @pytest.fixture(params=[('cloud_s2', 'l1_cloud_s2')])
     def dataset(self, request: SubRequest) -> CopernicusBenchBase:
         dataset, directory = request.param
-        root = os.path.join('tests', 'data', directory)
+        root = os.path.join('tests', 'data', 'copernicus', directory)
         transforms = nn.Identity()
         return CopernicusBench(dataset, root, transforms=transforms)
 
