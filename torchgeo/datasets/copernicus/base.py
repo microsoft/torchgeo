@@ -9,12 +9,20 @@ from collections.abc import Callable, Sequence
 from typing import Literal
 
 import pandas as pd
+from einops import rearrange
+from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from torchgeo.datasets.geo import NonGeoDataset
 
-from ..errors import DatasetNotFoundError
-from ..utils import Path, download_and_extract_archive, extract_archive
+from ..errors import DatasetNotFoundError, RGBBandsMissingError
+from ..utils import (
+    Path,
+    download_and_extract_archive,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class CopernicusBenchBase(NonGeoDataset, ABC):
@@ -57,6 +65,11 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     @abstractmethod
     def rgb_bands(self) -> tuple[str]:
         """Red, green, and blue spectral channels."""
+
+    @property
+    @abstractmethod
+    def classes(self) -> tuple[str]:
+        """List of classes for classification and semantic segmentation."""
 
     def __init__(
         self,
@@ -167,3 +180,70 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         """Download the dataset."""
         md5 = self.md5 if self.checksum else None
         download_and_extract_archive(self.url, self.root, md5=md5)
+
+    def plot(
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: str | None = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: A sample returned by :meth:`__getitem__`.
+            show_titles: Flag indicating whether to show titles above each panel.
+            suptitle: Optional string to use as a suptitle.
+
+        Returns:
+            A matplotlib Figure with the rendered sample.
+
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+        """
+        rgb_indices = []
+        for band in self.rgb_bands:
+            if band in self.bands:
+                rgb_indices.append(self.bands.index(band))
+            else:
+                raise RGBBandsMissingError()
+
+        ncols = 1
+        if 'mask' in sample:
+            ncols += 1
+            if 'prediction' in sample:
+                ncols += 1
+
+        fig, ax = plt.subplots(ncols=ncols, squeeze=False)
+
+        image = sample['image'][rgb_indices]
+        image = rearrange(image, 'c h w -> h w c')
+        image = percentile_normalization(image)
+        ax[0, 0].imshow(image)
+        ax[0, 0].axis('off')
+        if show_titles:
+            ax[0, 0].set_title('Image')
+
+        if 'mask' in sample:
+            kwargs = {
+                'cmap': 'gray',
+                'vmin': 0,
+                'vmax': len(self.classes) - 1,
+                'interpolation': 'none',
+            }
+            mask = sample['mask']
+            ax[0, 1].imshow(mask, **kwargs)
+            ax[0, 1].axis('off')
+            if show_titles:
+                ax[0, 1].set_title('Mask')
+
+            if 'prediction' in sample:
+                prediction = sample['prediction']
+                ax[0, 2].imshow(prediction, **kwargs)
+                ax[0, 2].axis('off')
+                if show_titles:
+                    ax[0, 2].set_title('Prediction')
+
+        if suptitle is not None:
+            fig.suptitle(suptitle)
+
+        return fig

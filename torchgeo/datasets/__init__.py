@@ -278,7 +278,6 @@ __all__ = (
     'Sentinel',
     'Sentinel1',
     'Sentinel2',
-    'SentinelBench',
     'SkyScript',
     'So2Sat',
     'SouthAfricaCropType',

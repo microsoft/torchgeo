@@ -69,6 +69,7 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
         'B12',
     )
     rgb_bands = ('B04', 'B03', 'B02')
+    classes = ('Clear', 'Thick Cloud', 'Thin Cloud', 'Cloud Shadow')
 
     def _load_image(self, index: int) -> dict[str, Tensor]:
         """Load an image.

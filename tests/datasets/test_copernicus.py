@@ -9,9 +9,14 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
+from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import CopernicusBench, DatasetNotFoundError
+from torchgeo.datasets import (
+    CopernicusBench,
+    DatasetNotFoundError,
+    RGBBandsMissingError,
+)
 
 
 class TestCopernicusBench:
@@ -43,6 +48,24 @@ class TestCopernicusBench:
         monkeypatch.setattr(dataset.dataset.__class__, 'url', url)
         CopernicusBench(dataset.name, tmp_path, download=True)
 
-    def test_missing(self, dataset: CopernicusBench, tmp_path: Path) -> None:
+    def test_not_downloaded(self, dataset: CopernicusBench, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             CopernicusBench(dataset.name, tmp_path)
+
+    def test_plot(self, dataset: CopernicusBench) -> None:
+        x = dataset[0]
+        if 'mask' in x:
+            x['prediction'] = x['mask']
+        dataset.plot(x, suptitle='Test')
+        plt.close()
+
+    def test_not_rgb(self, dataset: CopernicusBench) -> None:
+        all_bands = list(dataset.all_bands)
+        rgb_bands = list(dataset.rgb_bands)
+        for band in rgb_bands:
+            all_bands.remove(band)
+
+        dataset = CopernicusBench(dataset.name, dataset.root, bands=all_bands)
+        match = 'Dataset does not contain some of the RGB bands'
+        with pytest.raises(RGBBandsMissingError, match=match):
+            dataset.plot(dataset[0])
