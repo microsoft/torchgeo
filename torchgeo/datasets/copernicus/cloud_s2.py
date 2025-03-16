@@ -5,6 +5,7 @@
 
 import os
 
+import numpy as np
 import rasterio as rio
 import torch
 from torch import Tensor
@@ -80,7 +81,7 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
         sample: dict[str, Tensor] = {}
         path = os.path.join(self.subdir, 's2_toa', self.files[index] + '.tif')
         with rio.open(path) as f:
-            sample['image'] = torch.tensor(f.read(self.band_indices), dtype=torch.float)
+            sample['image'] = torch.tensor(f.read(self.band_indices).astype(np.float32))
 
         return sample
 
@@ -96,6 +97,6 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
         sample: dict[str, Tensor] = {}
         path = os.path.join(self.subdir, 'cloud', self.files[index] + '.tif')
         with rio.open(path) as f:
-            sample['mask'] = torch.tensor(f.read(1), dtype=torch.long)
+            sample['mask'] = torch.tensor(f.read(1).astype(np.int64))
 
         return sample
