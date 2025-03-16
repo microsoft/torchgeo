@@ -45,6 +45,7 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
     If you use this dataset in your research, please cite the following papers:
 
     * TODO
+    * https://doi.org/10.1016/j.dib.2024.110852
 
     .. versionadded:: 0.7
     """

@@ -102,7 +102,13 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
         'Oa21_radiance',
     )
     rgb_bands = ('Oa08_radiance', 'Oa06_radiance', 'Oa04_radiance')
-    classes = ('Clear', 'Cloud-Sure', 'Cloud-Ambiguous', 'Cloud Shadow', 'Snow/Ice')
+    classes: tuple[str, ...] = (
+        'Clear',
+        'Cloud-Sure',
+        'Cloud-Ambiguous',
+        'Cloud Shadow',
+        'Snow/Ice',
+    )
 
     def __init__(
         self,
@@ -130,6 +136,7 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
             DatasetNotFoundError: If dataset is not found and *download* is False.
         """
         self.mode = mode
+        self.classes = ('Clear', 'Cloud') if mode == 'binary' else self.classes
         super().__init__(root, split, bands, transforms, download, checksum)
 
     def _load_image(self, index: int) -> dict[str, Tensor]:

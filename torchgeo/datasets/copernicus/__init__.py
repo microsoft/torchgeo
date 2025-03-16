@@ -30,7 +30,7 @@ class CopernicusBench(NonGeoDataset):
 
     This wrapper supports dynamically loading datasets in Copernicus-Bench.
 
-    If you use this dataset in your research, please cite the following papers:
+    If you use this dataset in your research, please cite the following paper:
 
     * TODO
 

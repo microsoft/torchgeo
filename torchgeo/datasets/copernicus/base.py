@@ -28,6 +28,10 @@ from ..utils import (
 class CopernicusBenchBase(NonGeoDataset, ABC):
     """Abstract base class for all Copernicus-Bench datasets.
 
+    If you use this dataset in your research, please cite the following paper:
+
+    * TODO
+
     .. versionadded:: 0.7
     """
 
