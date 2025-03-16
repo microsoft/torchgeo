@@ -49,9 +49,9 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
     .. versionadded:: 0.7
     """
 
-    directory = 'l1_cloud_s2'
-    filename = 'cloud_s2.zip'
-    checksum = '39a1f966e76455549a3e6c209ba751c1'
+    url = 'https://huggingface.co/datasets/wangyi111/Copernicus-Bench/resolve/86342afa2409e49d80688fe00c05201c0f46569b/l1_cloud_s2/cloud_s2.zip'
+    md5 = '39a1f966e76455549a3e6c209ba751c1'
+    directory = 'cloud_s2'
     all_bands = (
         'B01',
         'B02',
@@ -79,8 +79,8 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
             An image sample.
         """
         sample: dict[str, Tensor] = {}
-        path = os.path.join(self.subdir, 's2_toa', self.files[index] + '.tif')
-        with rio.open(path) as f:
+        file = self.files[index] + '.tif'
+        with rio.open(os.path.join(self.root, self.directory, 's2_toa', file)) as f:
             sample['image'] = torch.tensor(f.read(self.band_indices).astype(np.float32))
 
         return sample
@@ -95,8 +95,8 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
             A target sample.
         """
         sample: dict[str, Tensor] = {}
-        path = os.path.join(self.subdir, 'cloud', self.files[index] + '.tif')
-        with rio.open(path) as f:
+        file = self.files[index] + '.tif'
+        with rio.open(os.path.join(self.root, self.directory, 'cloud', file)) as f:
             sample['mask'] = torch.tensor(f.read(1).astype(np.int64))
 
         return sample

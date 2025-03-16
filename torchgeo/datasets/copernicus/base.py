@@ -22,22 +22,25 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     .. versionadded:: 0.7
     """
 
-    url = 'https://huggingface.co/datasets/wangyi111/Copernicus-Bench/resolve/86342afa2409e49d80688fe00c05201c0f46569b/{}/{}'
+    @property
+    @abstractmethod
+    def url(self) -> str:
+        """Download URL."""
+
+    @property
+    @abstractmethod
+    def md5(self) -> str:
+        """MD5 checksum."""
 
     @property
     @abstractmethod
     def directory(self) -> str:
-        """URL directory."""
+        """Subdirectory containing split files."""
 
     @property
-    @abstractmethod
     def filename(self) -> str:
-        """URL filename."""
-
-    @property
-    @abstractmethod
-    def checksum(self) -> str:
-        """MD5 checksum."""
+        """Filename format of split files."""
+        return '{}.csv'
 
     @property
     @abstractmethod
@@ -79,8 +82,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
         # self._verify()
 
-        self.subdir = os.path.join(root, self.filename[: self.filename.index('.')])
-        filepath = os.path.join(self.subdir, f'{split}.csv')
+        filepath = os.path.join(root, self.directory, self.filename.format(split))
         self.files = pd.read_csv(filepath, header=None)[0]
 
     def __len__(self) -> int:
