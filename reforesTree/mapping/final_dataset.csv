@@ -1,0 +1,5 @@
+img_path,xmin,ymin,xmax,ymax,group,AGB
+Site1_RGB_0_0_0_4000_4000.png,0,0,16.0,16.0,banana,6.75
+Site1_RGB_0_0_0_4000_4000.png,16.0,16.0,32,32,cacao,6.75
+Site2_RGB_0_0_0_4000_4000.png,0,0,16.0,16.0,banana,6.75
+Site2_RGB_0_0_0_4000_4000.png,16.0,16.0,32,32,cacao,6.75
