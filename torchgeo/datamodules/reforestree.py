@@ -8,11 +8,12 @@ import kornia.augmentation as K
 import torch
 from torch.utils.data import random_split
 
+from .geo import NonGeoDataModule
 from ..datasets import ReforesTree
 from ..samplers.utils import _to_tuple
 from ..transforms.transforms import _RandomNCrop
 
-from .geo import NonGeoDataModule
+
 
 
 
