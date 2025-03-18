@@ -5,11 +5,10 @@
 
 """Copernicus Foundation Model (Copernicus-FM)."""
 
-import collections.abc
 import math
 import os
-from itertools import repeat
-from typing import Any
+from collections.abc import Sequence
+from typing import Any, Literal
 
 import numpy as np
 import torch
@@ -23,43 +22,39 @@ from torch import Tensor
 from torchvision.datasets.utils import download_url
 from torchvision.models._api import Weights, WeightsEnum
 
-
-def to_2tuple(x: Any) -> tuple:
-    """Borrowed from https://github.com/bwconrad/flexivit.
-    """
-    if isinstance(x, collections.abc.Iterable) and not isinstance(x, str):
-        return tuple(x)
-    return tuple(repeat(x, 2))
+from ..samplers.utils import _to_tuple
+from .dofa import FCResLayer, TransformerWeightGenerator
 
 
 def resize_abs_pos_embed(
-    pos_embed: torch.Tensor,
+    pos_embed: Tensor,
     new_size: tuple[int, int],
     old_size: int | tuple[int, int] | None = None,
     num_prefix_tokens: int = 1,
     interpolation: str = 'bicubic',
     antialias: bool = True,
-) -> torch.Tensor:
-    """Resize absolute position embeddings to a target resolution via interpolation
+) -> Tensor:
+    """Resize absolute position embeddings to a target resolution via interpolation.
 
-    Borrowed from https://github.com/bwconrad/flexivit.
+    Borrowed from https://github.com/bwconrad/flexivit. Copyright (c) 2023 Ben Conrad.
 
     Args:
         pos_embed: Position embeddings tensor of size [b, n, d]
         new_size: Target [height, width] of embedding
         old_size: Original [height, width] of embedding
-        num_prefix_tokens: Number of non-spatial prefix tokens (eg. cls)
+        num_prefix_tokens: Number of non-spatial prefix tokens (e.g., cls)
         interpolation: Resize interpolation type
         antialias: Whether to apply antialiasing resizing
+
     Returns:
         Resized pos_embed of size [b, n', d]
     """
-    new_size = to_2tuple(new_size)
+    new_size = _to_tuple(new_size)
     new_ntok = new_size[0] * new_size[1]
 
     if not old_size:
-        old_size = int(math.sqrt(pos_embed.shape[1] - num_prefix_tokens))  # type:ignore
-    old_size = to_2tuple(old_size)
+        old_size = int(math.sqrt(pos_embed.shape[1] - num_prefix_tokens))
+    old_size = _to_tuple(old_size)
 
     # Return if no resize necessary
     if new_size == old_size:
@@ -92,17 +87,17 @@ def pi_resize_patch_embed(
     new_patch_size: tuple[int, int],
     interpolation: str = 'bicubic',
     antialias: bool = True,
-):
-    """Resample patch embedding weights to a target resolution via pseudo-inverse
-    resizing.
+) -> Tensor:
+    """Resample patch embeddings to a target resolution via pseudo-inverse resizing.
 
-    Borrowed from https://github.com/bwconrad/flexivit.
+    Borrowed from https://github.com/bwconrad/flexivit. Copyright (c) 2023 Ben Conrad.
 
     Args:
         patch_embed: Patch embedding parameters of size [d, c, h, w]
         new_patch_size: Target [height, width] of embedding
         interpolation: Resize interpolation type
         antialias: Whether to apply antialiasing resizing
+
     Returns:
         Resized pos_embed of size [d, c h', w']
     """
@@ -115,13 +110,15 @@ def pi_resize_patch_embed(
     if old_patch_size == new_patch_size:
         return patch_embed
 
-    def resize(x: Tensor, shape: tuple[int, int]):
+    def resize(x: Tensor, shape: tuple[int, int]) -> Tensor:
         x_resized = F.interpolate(
             x[None, None, ...], shape, mode=interpolation, antialias=antialias
         )
         return x_resized[0, 0, ...]
 
-    def calculate_pinv(old_shape: tuple[int, int], new_shape: tuple[int, int]):
+    def calculate_pinv(
+        old_shape: tuple[int, int], new_shape: tuple[int, int]
+    ) -> Tensor:
         mat = []
         for i in range(np.prod(old_shape)):
             basis_vec = torch.zeros(old_shape)
@@ -134,7 +131,7 @@ def pi_resize_patch_embed(
     resize_matrix_pinv = calculate_pinv(old_patch_size, new_patch_size)
     resize_matrix_pinv = resize_matrix_pinv.to(patch_embed.device)
 
-    def resample_patch_embed(patch_embed: Tensor):
+    def resample_patch_embed(patch_embed: Tensor) -> Tensor:
         h, w = new_patch_size
         resampled_kernel = resize_matrix_pinv @ patch_embed.reshape(-1)
         return rearrange(resampled_kernel, '(h w) -> h w', h=h, w=w)
@@ -148,53 +145,47 @@ class FourierExpansion(nn.Module):
     """A Fourier series-style expansion into a high-dimensional space.
 
     Borrowed from https://github.com/microsoft/aurora.
-
-    Attributes:
-        lower (float): Lower wavelength.
-        upper (float): Upper wavelength.
-        assert_range (bool): Assert that the encoded tensor is within the specified wavelength
-            range.
+    Copyright (c) Microsoft Corporation.
     """
 
     def __init__(self, lower: float, upper: float, assert_range: bool = True) -> None:
         """Initialise.
 
         Args:
-            lower (float): Lower wavelength.
-            upper (float): Upper wavelength.
-            assert_range (bool, optional): Assert that the encoded tensor is within the specified
-                wavelength range. Defaults to `True`.
+            lower: Lower wavelength.
+            upper: Upper wavelength.
+            assert_range: Assert that the encoded tensor is within the specified
+                wavelength range.
         """
         super().__init__()
         self.lower = lower
         self.upper = upper
         self.assert_range = assert_range
 
-    def forward(self, x: torch.Tensor, d: int) -> torch.Tensor:
+    def forward(self, x: Tensor, d: int) -> Tensor:
         """Perform the expansion.
 
         Adds a dimension of length `d` to the end of the shape of `x`.
 
         Args:
-            x (:class:`torch.Tensor`): Input to expand of shape `(..., n)`. All elements of `x` must
-                lie within `[self.lower, self.upper]` if `self.assert_range` is `True`.
-            d (int): Dimensionality. Must be a multiple of two.
+            x: Input to expand of shape `(..., n)`. All elements of `x` must
+               lie within `[self.lower, self.upper]` if `self.assert_range` is `True`.
+            d: Dimensionality. Must be a multiple of two.
 
         Raises:
-            AssertionError: If `self.assert_range` is `True` and not all elements of `x` are not
-                within `[self.lower, self.upper]`.
+            AssertionError: If `self.assert_range` is `True` and not all elements of `x`
+                are not within `[self.lower, self.upper]`.
             ValueError: If `d` is not a multiple of two.
 
         Returns:
-            torch.Tensor: Fourier series-style expansion of `x` of shape `(..., n, d)`.
+            Fourier series-style expansion of `x` of shape `(..., n, d)`.
         """
         # If the input is not within the configured range, the embedding might be ambiguous!
         in_range = torch.logical_and(
             self.lower <= x.abs(), torch.all(x.abs() <= self.upper)
         )
-        in_range_or_zero = torch.all(
-            torch.logical_or(in_range, x == 0)
-        )  # Allow zeros to pass through.
+        # Allow zeros to pass through.
+        in_range_or_zero = torch.all(torch.logical_or(in_range, x == 0))
         if self.assert_range and not in_range_or_zero:
             raise AssertionError(
                 f'The input tensor is not within the configured range'
@@ -222,86 +213,29 @@ class FourierExpansion(nn.Module):
         return encoding.float()  # Cast to `float32` to avoid incompatibilities.
 
 
-class TransformerWeightGenerator(nn.Module):
-    """Borrowed from DOFA.
-    """
-
-    def __init__(self, input_dim, output_dim, embed_dim, num_heads=4, num_layers=1):
-        super(TransformerWeightGenerator, self).__init__()
-        encoder_layer = nn.TransformerEncoderLayer(
-            d_model=input_dim,
-            nhead=num_heads,
-            activation='gelu',
-            norm_first=False,
-            batch_first=False,
-            dropout=False,
-        )
-        self.transformer_encoder = nn.TransformerEncoder(
-            encoder_layer, num_layers=num_layers, enable_nested_tensor=False
-        )
-
-        # Linear layer to map transformer output to desired weight shape
-        self.fc_weight = nn.Linear(input_dim, output_dim)
-        self.fc_bias = nn.Linear(input_dim, embed_dim)
-        self.wt_num = 128
-        self.weight_tokens = nn.Parameter(torch.empty([self.wt_num, input_dim]))
-        self.bias_token = nn.Parameter(torch.empty([1, input_dim]))
-
-        # timm's trunc_normal_(std=.02) is effectively normal_(std=0.02) as cutoff is too big (2.)
-        torch.nn.init.normal_(self.weight_tokens, std=0.02)
-        torch.nn.init.normal_(self.bias_token, std=0.02)
-
-    def forward(self, x):
-        # x should have shape [seq_len, batch, input_dim]
-        pos_wave = x
-        x = torch.cat([self.weight_tokens, pos_wave], dim=0)
-        x = torch.cat([x, self.bias_token], dim=0)
-        transformer_output = self.transformer_encoder(x)
-        weights = self.fc_weight(transformer_output[self.wt_num : -1] + pos_wave)
-        bias = self.fc_bias(
-            transformer_output[-1]
-        )  # Using the last output to generate bias
-        return weights, bias
-
-
-class FCResLayer(nn.Module):
-    def __init__(self, linear_size=128):
-        super(FCResLayer, self).__init__()
-        self.l_size = linear_size
-        self.nonlin1 = nn.ReLU(inplace=True)
-        self.nonlin2 = nn.ReLU(inplace=True)
-        # self.dropout1 = nn.Dropout()
-        self.w1 = nn.Linear(self.l_size, self.l_size)
-        self.w2 = nn.Linear(self.l_size, self.l_size)
-
-    def forward(self, x):
-        y = self.w1(x)
-        y = self.nonlin1(y)
-        # y = self.dropout1(y)
-        y = self.w2(y)
-        y = self.nonlin2(y)
-        out = x + y
-        return out
-
-
-class Dynamic_PatchEmbed(nn.Module):
+class DynamicPatchEmbed(nn.Module):
     """Dynamic patch embedding with spectral or variable hypernetworks.
 
     Adapted from DOFA.
-
-    Args:
-        wv_planes (int, optional): dim for wavelength/bandwidth/varname encoding. Default is 128.
-        kernel_size (int, optional): Kernel size for the patch embedding (convolution) layer. Default is 16.
-        embed_dim (int, optional): Embedding dimension. Default is 1024.
-        hypernet (str, optional): Type of hypernetwork to use. Options: 'spectral' or 'variable'.
-                                  'spectral' uses Fourier encodings for wavelength and bandwidth;
-                                  'variable' uses a language embedding for variable names.
-                                  Default is 'spectral'.
     """
 
     def __init__(
-        self, wv_planes=128, kernel_size=16, embed_dim=1024, hypernet='spectral'
-    ):
+        self,
+        wv_planes: int = 128,
+        kernel_size: int = 16,
+        embed_dim: int = 1024,
+        hypernet: Literal['spectral', 'variable'] = 'spectral',
+    ) -> None:
+        """Initialize a new DynamicPatchEmbed instance.
+
+        Args:
+            wv_planes: dim for wavelength/bandwidth/varname encoding.
+            kernel_size: Kernel size for the patch embedding (convolution) layer.
+            embed_dim: Embedding dimension.
+            hypernet: Type of hypernetwork to use. Options: 'spectral' or 'variable'.
+                'spectral' uses Fourier encodings for wavelength and bandwidth;
+                'variable' uses a language embedding for variable names.
+        """
         super().__init__()
         self.hypernet = hypernet
         self.kernel_size = kernel_size
@@ -315,8 +249,8 @@ class Dynamic_PatchEmbed(nn.Module):
             # Spectral hypernetwork: Fourier encoding for wavelength and bandwidth.
             # min wavelength: ultraviolet light (100 nm)
             # max wavelength: radio waves (1 m)
-            # min bandwidth: s2 ~ 10nm
-            # max bandwidth: s1 ~ 1m
+            # min bandwidth: s2 ~ 10 nm
+            # max bandwidth: s1 ~ 1 m
             self.spectrum_central_expansion = FourierExpansion(100, 1e9)
             self.spectrum_bandwidth_expansion = FourierExpansion(1, 1e9)
         elif self.hypernet == 'variable':
@@ -344,10 +278,6 @@ class Dynamic_PatchEmbed(nn.Module):
                 'Copernicus Digital Elevation Model'
             ]
             self.language_proj = nn.Linear(2048, self.wv_planes)
-        else:
-            raise ValueError(
-                "Unsupported hypernet type. Choose 'spectral' or 'language'."
-            )
 
         self.weight_generator = TransformerWeightGenerator(
             wv_planes, self._num_kernel, embed_dim
@@ -356,48 +286,70 @@ class Dynamic_PatchEmbed(nn.Module):
         self.fclayer = FCResLayer(wv_planes)
         self._init_weights()
 
-    def _get_weights(self, waves):
+    def _get_weights(self, waves: Tensor) -> Tensor:
+        """Use the dynamic weight generator.
+
+        Args:
+            waves: Spectral wavelengths.
+
+        Returns:
+            Dynamic weights.
+        """
         dynamic_weights = self.weight_generator(waves)
         return dynamic_weights
 
-    def weight_init(self, m):
+    def weight_init(self, m: object) -> None:
+        """Initialize weights of a single layer.
+
+        Args:
+            m: A single layer.
+        """
         if isinstance(m, nn.Linear):
             init.xavier_uniform_(m.weight)
             if m.bias is not None:
                 m.bias.data.fill_(0.01)
 
-    def _init_weights(self):
+    def _init_weights(self) -> None:
+        """Initialize weights of all layers."""
         self.weight_generator.apply(self.weight_init)
         self.fclayer.apply(self.weight_init)
 
     def forward(
         self,
-        img_feat,
-        wvs=None,
-        bandwidths=None,
-        key=None,
-        language_embed=None,
-        kernel_size=None,
-    ):
+        img_feat: Tensor,
+        wvs: Tensor | None = None,
+        bandwidths: Tensor | None = None,
+        key: str | None = None,
+        language_embed: Tensor | None = None,
+        kernel_size: int | None = None,
+    ) -> Tensor:
         """Forward pass.
 
         For hypernet=='spectral', `wvs` and `bandwidths` must be provided.
-        For hypernet=='variable', `key` and `language_embed` are needed depends on the cases.
-            -- if the variable is within predefined (s5p_co, s5p_no2, s5p_o3, s5p_so2, dem), only `key` is needed.
-            -- if the variable is new, `language_embed` must be provided, `key` is used only for documentation.
+        For hypernet=='variable', `key` and `language_embed` must be provided dependning
+        on the case:
+        - If the variable is within a predefined set
+          (s5p_co, s5p_no2, s5p_o3, s5p_so2, dem), only `key` is needed.
+        - If the variable is new, `language_embed` must be provided,
+          `key` is used only for documentation.
 
         Args:
-            img_feat (Tensor): Input image tensor (B, C, H, W).
-            wvs (Tensor, optional): Wavelengths in nm (required if hypernet=='spectral').
-            bandwidths (Tensor, optional): Bandwidths in nm (required if hypernet=='spectral').
-            key (str, optional): Key to retrieve a language embedding (required if hypernet=='variable').
-            language_embed (Tensor, optional): Language embedding tensor to override the predefined embedding
-                                               or for new variable (2048).
-            kernel_size (int, optional): If provided and differs from the initialized kernel size,
-                                         the generated patchembed kernel weights are resized accordingly.
+            img_feat: Input image tensor (B, C, H, W).
+            wvs: Wavelengths in nm (required if hypernet=='spectral').
+            bandwidths: Bandwidths in nm (required if hypernet=='spectral').
+            key: Key to retrieve a language embedding
+                (required if hypernet=='variable').
+            language_embed: Language embedding tensor to override the predefined
+                embedding or for new variable (2048).
+            kernel_size: If provided and differs from the initialized kernel size,
+                the generated patchembed kernel weights are resized accordingly.
 
         Returns:
-            x (Tensor): Output after patch embedding (B, N, D).
+            Output after patch embedding (B, N, D).
+
+        Raises:
+            ValueError: When *hypernet=='spectral'* and *wvs* or *bandwidths* is missing,
+                or when *hypernet=='variable'* and *key* or *language_embed* is missing.
         """
         if self.hypernet == 'spectral':
             if wvs is None or bandwidths is None:
@@ -422,8 +374,6 @@ class Dynamic_PatchEmbed(nn.Module):
                 emb_language = language_embed
             emb_language = emb_language.unsqueeze(0)  # Expand dims to match batch size.
             waves = self.language_proj(emb_language)
-        else:
-            raise ValueError('Unsupported hypernet type.')
 
         waves = self.fclayer(waves)
         weight, bias = self._get_weights(waves)
@@ -453,22 +403,37 @@ class Dynamic_PatchEmbed(nn.Module):
 
 
 class CopernicusFM(nn.Module):
-    """CopernicusFM: VisionTransformer backbone"""
+    """CopernicusFM: VisionTransformer backbone."""
 
     def __init__(
         self,
-        img_size=224,
-        patch_size=16,
-        drop_rate=0.0,
-        embed_dim=1024,
-        depth=24,
-        num_heads=16,
-        wv_planes=128,
-        num_classes=0,
-        global_pool=True,
-        mlp_ratio=4.0,
-        norm_layer=nn.LayerNorm,
-    ):
+        img_size: int = 224,
+        patch_size: int = 16,
+        drop_rate: float = 0.0,
+        embed_dim: int = 1024,
+        depth: int = 24,
+        num_heads: int = 16,
+        wv_planes: int = 128,
+        num_classes: int = 0,
+        global_pool: bool = True,
+        mlp_ratio: float = 4.0,
+        norm_layer: type[nn.Module] = nn.LayerNorm,
+    ) -> None:
+        """Initialize a new CopernicusFM instance.
+
+        Args:
+            img_size: Input image size.
+            patch_size: Patch size.
+            drop_rate: Head dropout rate.
+            embed_dim: Transformer embedding dimension.
+            depth: Depth of transformer.
+            num_heads: Number of attention heads.
+            wv_planes: Dimensions of dynamic weight generator.
+            num_classes: Number of classes for classification head.
+            global_pool: Whether or not to perform global pooling.
+            mlp_ratio: Ratio of MLP hidden dim to embedding dim.
+            norm_layer: Normalization layer.
+        """
         super().__init__()
 
         self.wv_planes = wv_planes
@@ -480,27 +445,26 @@ class CopernicusFM(nn.Module):
         else:
             self.norm = norm_layer(embed_dim)
 
-        self.patch_embed_spectral = Dynamic_PatchEmbed(
+        self.patch_embed_spectral = DynamicPatchEmbed(
             wv_planes=128, kernel_size=16, embed_dim=embed_dim, hypernet='spectral'
         )
-        self.patch_embed_variable = Dynamic_PatchEmbed(
+        self.patch_embed_variable = DynamicPatchEmbed(
             wv_planes=128, kernel_size=16, embed_dim=embed_dim, hypernet='variable'
         )
 
         self.num_patches = (img_size // patch_size) ** 2
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
-        # ---------------------------------------------------------------------------
 
+        # Fixed sin-cos embedding
         self.pos_embed = nn.Parameter(
             torch.zeros(1, self.num_patches + 1, embed_dim), requires_grad=False
-        )  # fixed sin-cos embedding
+        )
 
         self.coord_expansion = FourierExpansion(0.0001, 720)
         self.scale_expansion = FourierExpansion(0.001, 5.1e8)  # 1m2 to 5.1e8 km2
-        self.time_expansion = FourierExpansion(
-            1, 365.25, assert_range=False
-        )  # 1 to 365.25 days, enable more than 1 year
+        # 1 to 365.25 days, enable more than 1 year
+        self.time_expansion = FourierExpansion(1, 365.25, assert_range=False)
         self.coord_fc = nn.Linear(embed_dim, embed_dim)
         self.scale_fc = nn.Linear(embed_dim, embed_dim)
         self.time_fc = nn.Linear(embed_dim, embed_dim)
@@ -527,7 +491,17 @@ class CopernicusFM(nn.Module):
             nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
         )
 
-    def get_coord_pos_embed(self, lons, lats, embed_dim):
+    def get_coord_pos_embed(self, lons: Tensor, lats: Tensor, embed_dim: int) -> Tensor:
+        """Geospatial coordinate position embedding.
+
+        Args:
+            lons: Longitudes (x).
+            lats: Latitudes (y).
+            embed_dim: Embedding dimension.
+
+        Returns:
+            Coordinate position embedding.
+        """
         coord_embed_lon = self.coord_expansion(lons + 180, embed_dim // 2)
         coord_embed_lat = self.coord_expansion(lats + 90, embed_dim // 2)
         coord_embed = torch.cat([coord_embed_lon, coord_embed_lat], dim=-1)
@@ -548,25 +522,60 @@ class CopernicusFM(nn.Module):
 
         return coord_embed.unsqueeze(1)  # [B,1,D]
 
-    def get_area_pos_embed(self, areas, embed_dim):
+    def get_area_pos_embed(self, areas: Tensor, embed_dim: int) -> Tensor:
+        """Geospatial area position embedding.
+
+        Args:
+            areas: Spatial areas.
+            embed_dim: Embedding dimension.
+
+        Returns:
+            Area position embedding.
+        """
         scale_embed = self.scale_expansion(areas, embed_dim)  # B, D
         return scale_embed.unsqueeze(1)  # [B,1,D]
 
-    def get_time_pos_embed(self, times, embed_dim):
+    def get_time_pos_embed(self, times: Tensor, embed_dim: int) -> Tensor:
+        """Geotemporal position embedding.
+
+        Args:
+            times: Timestamps.
+            embed_dim: Embedding dimension.
+
+        Returns:
+            Temporal position embedding.
+        """
         time_embed = self.time_expansion(times, embed_dim)  # B, D
         return time_embed.unsqueeze(1)  # [B,1,D]
 
     def forward_features(
         self,
-        x,
-        meta_info,
-        key,
-        wave_list,
-        bandwidth,
-        language_embed,
-        input_mode,
-        kernel_size=None,
-    ):
+        x: Tensor,
+        meta_info: Tensor,
+        key: str,
+        wave_list: Sequence[float],
+        bandwidth: Sequence[float],
+        language_embed: Tensor,
+        input_mode: Literal['spectral', 'variable'],
+        kernel_size: int | None = None,
+    ) -> Tensor:
+        """Forward pass of the feature embedding layer.
+
+        Args:
+            x: Input mini-batch.
+            meta_info: Longitudes, latitudes, times, and areas of each patch.
+            key: Key to retrieve a language embedding.
+            wave_list: Wavelengths of each spectral band (μm).
+            bandwidth: Bandwidths in nm.
+            language_embed: Language embedding tensor to override the predefined
+                embedding or for new variable (2048).
+            input_mode: One of 'spectral' or 'variable'.
+            kernel_size: If provided and differs from the initialized kernel size,
+                the generated patchembed kernel weights are resized accordingly.
+
+        Returns:
+            Output mini-batch.
+        """
         # embed patches
         wavelist = torch.tensor(wave_list, device=x.device).float()
         bandwidths = torch.tensor(bandwidth, device=x.device).float()
@@ -578,8 +587,6 @@ class CopernicusFM(nn.Module):
             x = self.patch_embed_variable(
                 key, x, self.waves, bandwidths, language_embed, kernel_size
             )
-
-        # pdb.set_trace()
 
         # resize pos embed
         num_patches = x.size(1)
@@ -637,21 +644,47 @@ class CopernicusFM(nn.Module):
             outcome = x[:, 0]
         return outcome
 
-    def forward_head(self, x, pre_logits=False):
+    def forward_head(self, x: Tensor, pre_logits: bool = False) -> Tensor:
+        """Forward pass of the attention head.
+
+        Args:
+            x: Input mini-batch.
+            pre_logits: Whether or not to return the layer before logits are computed.
+
+        Returns:
+            Output mini-batch.
+        """
         x = self.head_drop(x)
         return x if pre_logits else self.head(x)
 
     def forward(
         self,
-        x,
-        meta_info,
-        key,
-        wave_list,
-        bandwidth,
-        language_embed,
-        input_mode,
-        kernel_size=None,
-    ):
+        x: Tensor,
+        meta_info: Tensor,
+        key: str,
+        wave_list: Sequence[float],
+        bandwidth: Sequence[float],
+        language_embed: Tensor,
+        input_mode: Literal['spectral', 'variable'],
+        kernel_size: int | None = None,
+    ) -> Tensor:
+        """Forward pass of the model.
+
+        Args:
+            x: Input mini-batch.
+            meta_info: Longitudes, latitudes, times, and areas of each patch.
+            key: Key to retrieve a language embedding.
+            wave_list: Wavelengths of each spectral band (μm).
+            bandwidth: Bandwidths in nm.
+            language_embed: Language embedding tensor to override the predefined
+                embedding or for new variable (2048).
+            input_mode: One of 'spectral' or 'variable'.
+            kernel_size: If provided and differs from the initialized kernel size,
+                the generated patchembed kernel weights are resized accordingly.
+
+        Returns:
+            Output mini-batch.
+        """
         fx = self.forward_features(
             x,
             meta_info,
@@ -663,7 +696,7 @@ class CopernicusFM(nn.Module):
             kernel_size,
         )
         x = self.forward_head(fx)
-        return x  # , fx
+        return x
 
 
 class CopernicusFM_Base_Weights(WeightsEnum):  # type: ignore[misc]
