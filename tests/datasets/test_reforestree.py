@@ -19,7 +19,7 @@ class TestReforesTree:
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ReforesTree:
         data_dir = os.path.join('tests', 'data', 'reforestree')
         url = os.path.join(data_dir, 'reforesTree.zip')
-        md5 = 'eb935756c69df71c6ec03b7219645ccc'
+        md5 = 'bfc8d35df5d61d1ff4020375843018d9'
         monkeypatch.setattr(ReforesTree, 'url', url)
         monkeypatch.setattr(ReforesTree, 'md5', md5)
         root = tmp_path
