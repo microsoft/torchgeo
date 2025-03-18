@@ -13,7 +13,6 @@ from torchgeo.datasets import NASAMarineDebris, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.trainers import ObjectDetectionTask
 
-
 # MAP metric requires pycocotools to be installed
 pytest.importorskip('pycocotools')
 
