@@ -569,11 +569,16 @@ class CopernicusFM(nn.Module):
         Args:
             x: Input mini-batch.
             meta_info: Longitudes, latitudes, times, and areas of each patch.
+                Use NaN for unknown metadata.
             key: Key to retrieve a language embedding.
+                Only used if *input_mode=='variable'*.
             wave_list: Wavelengths of each spectral band (μm).
+                Only used if *input_mode=='spectral'*.
             bandwidth: Bandwidths in nm.
+                Only used if *input_mode=='spectral'*.
             language_embed: Language embedding tensor to override the predefined
                 embedding or for new variable (2048).
+                Only used if *input_mode=='variable'*.
             input_mode: One of 'spectral' or 'variable'.
             kernel_size: If provided and differs from the initialized kernel size,
                 the generated patchembed kernel weights are resized accordingly.
@@ -678,11 +683,16 @@ class CopernicusFM(nn.Module):
         Args:
             x: Input mini-batch.
             meta_info: Longitudes, latitudes, times, and areas of each patch.
+                Use NaN for unknown metadata.
             key: Key to retrieve a language embedding.
+                Only used if *input_mode=='variable'*.
             wave_list: Wavelengths of each spectral band (μm).
+                Only used if *input_mode=='spectral'*.
             bandwidth: Bandwidths in nm.
+                Only used if *input_mode=='spectral'*.
             language_embed: Language embedding tensor to override the predefined
                 embedding or for new variable (2048).
+                Only used if *input_mode=='variable'*.
             input_mode: One of 'spectral' or 'variable'.
             kernel_size: If provided and differs from the initialized kernel size,
                 the generated patchembed kernel weights are resized accordingly.
