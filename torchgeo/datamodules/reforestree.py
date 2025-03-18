@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
 """ReforesTree datamodule."""
 from typing import Any
 
@@ -12,7 +11,6 @@ from ..datasets import ReforesTree
 from ..samplers.utils import _to_tuple
 from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
-
 
 class ReforesTreeDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the ReforesTree dataset.
