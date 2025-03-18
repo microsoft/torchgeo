@@ -43,7 +43,7 @@ class TestReforesTree:
         assert len(x['bbox_xyxy']) == 2
 
     def test_len(self, dataset: ReforesTree) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 5
 
     def test_not_extracted(self, tmp_path: Path) -> None:
         url = os.path.join('tests', 'data', 'reforestree', 'reforesTree.zip')
