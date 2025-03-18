@@ -14,9 +14,6 @@ from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
 
 
-
-
-
 class ReforesTreeDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the ReforesTree dataset.
 
