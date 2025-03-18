@@ -675,7 +675,7 @@ class CopernicusFM_Base_Weights(WeightsEnum):  # type: ignore[misc]
         meta={
             'dataset': 'Copernicus-Pretrain',
             'model': 'copernicusfm_base',
-            'publication': 'https://arxiv.org/abs/xxxx.xxxxx',
+            'publication': 'https://arxiv.org/abs/2503.11849',
             'repo': 'https://github.com/zhu-xlab/Copernicus-FM',
             'ssl_method': 'mae+distill',
         },
@@ -689,7 +689,7 @@ def copernicusfm_base(
 
     If you use this model in your research, please cite the following paper:
 
-    * https://arxiv.org/abs/xxxx.xxxxx
+    * https://arxiv.org/abs/2503.11849
 
     .. versionadded:: 0.7
 
