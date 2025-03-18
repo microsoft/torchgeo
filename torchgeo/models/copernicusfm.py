@@ -557,11 +557,11 @@ class CopernicusFM(nn.Module):
         self,
         x: Tensor,
         meta_info: Tensor,
-        key: str,
-        wave_list: Sequence[float],
-        bandwidth: Sequence[float],
-        language_embed: Tensor,
-        input_mode: Literal['spectral', 'variable'],
+        key: str | None = None,
+        wave_list: Sequence[float] | None = None,
+        bandwidth: Sequence[float] | None = None,
+        language_embed: Tensor | None = None,
+        input_mode: Literal['spectral', 'variable'] = 'spectral',
         kernel_size: int | None = None,
     ) -> Tensor:
         """Forward pass of the feature embedding layer.
@@ -671,11 +671,11 @@ class CopernicusFM(nn.Module):
         self,
         x: Tensor,
         meta_info: Tensor,
-        key: str,
-        wave_list: Sequence[float],
-        bandwidth: Sequence[float],
-        language_embed: Tensor,
-        input_mode: Literal['spectral', 'variable'],
+        key: str | None = None,
+        wave_list: Sequence[float] | None = None,
+        bandwidth: Sequence[float] | None = None,
+        language_embed: Tensor | None = None,
+        input_mode: Literal['spectral', 'variable'] = 'spectral',
         kernel_size: int | None = None,
     ) -> Tensor:
         """Forward pass of the model.
