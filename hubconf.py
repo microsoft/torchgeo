@@ -8,6 +8,8 @@
 """
 
 from torchgeo.models import (
+    croma_base,
+    croma_large,
     dofa_base_patch16_224,
     dofa_large_patch16_224,
     resnet18,
@@ -20,6 +22,8 @@ from torchgeo.models import (
 )
 
 __all__ = (
+    'croma_base',
+    'croma_large',
     'dofa_base_patch16_224',
     'dofa_large_patch16_224',
     'resnet18',
