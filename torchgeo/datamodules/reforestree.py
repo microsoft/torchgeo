@@ -1,4 +1,3 @@
-
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 """ReforesTree datamodule."""
@@ -20,7 +19,7 @@ class ReforesTreeDataModule(NonGeoDataModule):
     .. versionadded:: 0.7
     
     """
-
+    
     def __init__(
         self, 
         batch_size: int = 64, 
