@@ -20,7 +20,7 @@ class ReforesTreeDataModule(NonGeoDataModule):
     .. versionadded:: 0.7
 
     """
-
+    
     def __init__(
         self,
         batch_size: int = 64,
