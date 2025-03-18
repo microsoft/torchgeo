@@ -21,10 +21,8 @@ class PredictObjectDetectionDataModule(NASAMarineDebrisDataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = NASAMarineDebris(**self.kwargs)
 
-
 def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
     raise RGBBandsMissingError()
-
 
 def plot(*args: Any, **kwargs: Any) -> None:
     return None
