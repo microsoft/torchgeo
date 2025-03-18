@@ -8,6 +8,7 @@
 """
 
 from torchgeo.models import (
+    copernicusfm_base,
     dofa_base_patch16_224,
     dofa_large_patch16_224,
     resnet18,
@@ -20,6 +21,7 @@ from torchgeo.models import (
 )
 
 __all__ = (
+    'copernicusfm_base',
     'dofa_base_patch16_224',
     'dofa_large_patch16_224',
     'resnet18',
