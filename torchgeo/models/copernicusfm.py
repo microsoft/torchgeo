@@ -592,7 +592,9 @@ class CopernicusFM(nn.Module):
         self.waves = wavelist
 
         if input_mode == 'spectral':
-            x = self.patch_embed_spectral(x, self.waves, bandwidths, kernel_size=kernel_size)
+            x = self.patch_embed_spectral(
+                x, self.waves, bandwidths, kernel_size=kernel_size
+            )
         elif input_mode == 'variable':
             x = self.patch_embed_variable(
                 x, self.waves, bandwidths, key, language_embed, kernel_size

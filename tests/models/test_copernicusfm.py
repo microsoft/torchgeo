@@ -70,7 +70,14 @@ class TestCopernicusFMBase:
         wave_list = [664.6, 559.8, 492.4, 832.8]
         bandwidth = [31, 36, 66, 106]
         input_mode = 'variable'
-        model(x, meta_info, key=key, wave_list=wave_list, bandwidth=bandwidth, input_mode=input_mode)
+        model(
+            x,
+            meta_info,
+            key=key,
+            wave_list=wave_list,
+            bandwidth=bandwidth,
+            input_mode=input_mode,
+        )
 
     def test_copernicusfm_custom_variable(self, meta_info: Tensor) -> None:
         model = copernicusfm_base()
@@ -82,7 +89,13 @@ class TestCopernicusFMBase:
         language_embed = torch.rand(2048)
         input_mode = 'variable'
         model(
-            x, meta_info, key=key, wave_list=wave_list, bandwidth=bandwidth, language_embed=language_embed, input_mode=input_mode
+            x,
+            meta_info,
+            key=key,
+            wave_list=wave_list,
+            bandwidth=bandwidth,
+            language_embed=language_embed,
+            input_mode=input_mode,
         )
 
     def test_copernicusfm_weights(self, mocked_weights: WeightsEnum) -> None:
