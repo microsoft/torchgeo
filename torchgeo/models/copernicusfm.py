@@ -329,7 +329,7 @@ class DynamicPatchEmbed(nn.Module):
         """Forward pass.
 
         For hypernet=='spectral', `wvs` and `bandwidths` must be provided.
-        For hypernet=='variable', `key` and `language_embed` must be provided dependning
+        For hypernet=='variable', `key` and `language_embed` must be provided depending
         on the case:
         - If the variable is within a predefined set
           (s5p_co, s5p_no2, s5p_o3, s5p_so2, dem), only `key` is needed.
@@ -345,7 +345,7 @@ class DynamicPatchEmbed(nn.Module):
             language_embed: Language embedding tensor to override the predefined
                 embedding or for new variable (2048).
             kernel_size: If provided and differs from the initialized kernel size,
-                the generated patchembed kernel weights are resized accordingly.
+                the generated patch embed kernel weights are resized accordingly.
 
         Returns:
             Output after patch embedding (B, N, D).
@@ -581,7 +581,7 @@ class CopernicusFM(nn.Module):
                 Only used if *input_mode=='variable'*.
             input_mode: One of 'spectral' or 'variable'.
             kernel_size: If provided and differs from the initialized kernel size,
-                the generated patchembed kernel weights are resized accordingly.
+                the generated patch embed kernel weights are resized accordingly.
 
         Returns:
             Output mini-batch.
@@ -592,10 +592,10 @@ class CopernicusFM(nn.Module):
         self.waves = wavelist
 
         if input_mode == 'spectral':
-            x = self.patch_embed_spectral(x, self.waves, bandwidths, kernel_size)
+            x = self.patch_embed_spectral(x, self.waves, bandwidths, kernel_size=kernel_size)
         elif input_mode == 'variable':
             x = self.patch_embed_variable(
-                key, x, self.waves, bandwidths, language_embed, kernel_size
+                x, self.waves, bandwidths, key, language_embed, kernel_size
             )
 
         # resize pos embed
@@ -695,7 +695,7 @@ class CopernicusFM(nn.Module):
                 Only used if *input_mode=='variable'*.
             input_mode: One of 'spectral' or 'variable'.
             kernel_size: If provided and differs from the initialized kernel size,
-                the generated patchembed kernel weights are resized accordingly.
+                the generated patch embed kernel weights are resized accordingly.
 
         Returns:
             Output mini-batch.
