@@ -28,7 +28,7 @@ from .dofa import FCResLayer, TransformerWeightGenerator
 
 def resize_abs_pos_embed(
     pos_embed: Tensor,
-    new_size: tuple[int, int],
+    new_size: int | tuple[int, int],
     old_size: int | tuple[int, int] | None = None,
     num_prefix_tokens: int = 1,
     interpolation: str = 'bicubic',
@@ -104,17 +104,18 @@ def pi_resize_patch_embed(
     assert len(patch_embed.shape) == 4, 'Patch embed kernel should be a 4D tensor'
     assert len(new_patch_size) == 2, 'New patch size should only be (height, width)'
 
-    old_patch_size = tuple(patch_embed.shape[2:])
+    _, _, h, w = patch_embed.shape
+    old_patch_size = (h, w)
 
     # Return original kernel if no resize is necessary
     if old_patch_size == new_patch_size:
         return patch_embed
 
     def resize(x: Tensor, shape: tuple[int, int]) -> Tensor:
-        x_resized = F.interpolate(
+        x = F.interpolate(
             x[None, None, ...], shape, mode=interpolation, antialias=antialias
         )
-        return x_resized[0, 0, ...]
+        return x[0, 0, ...]
 
     def calculate_pinv(
         old_shape: tuple[int, int], new_shape: tuple[int, int]
@@ -125,7 +126,8 @@ def pi_resize_patch_embed(
             basis_vec[np.unravel_index(i, old_shape)] = 1.0
             mat.append(resize(basis_vec, new_shape).reshape(-1))
         resize_matrix = torch.stack(mat)
-        return torch.linalg.pinv(resize_matrix)
+        pinv: Tensor = torch.linalg.pinv(resize_matrix)
+        return pinv
 
     # Calculate pseudo-inverse of resize matrix
     resize_matrix_pinv = calculate_pinv(old_patch_size, new_patch_size)
@@ -138,7 +140,8 @@ def pi_resize_patch_embed(
 
     v_resample_patch_embed = vmap(vmap(resample_patch_embed, 0, 0), 1, 1)
 
-    return v_resample_patch_embed(patch_embed)
+    patch_embed = v_resample_patch_embed(patch_embed)
+    return patch_embed
 
 
 class FourierExpansion(nn.Module):
@@ -295,7 +298,7 @@ class DynamicPatchEmbed(nn.Module):
         Returns:
             Dynamic weights.
         """
-        dynamic_weights = self.weight_generator(waves)
+        dynamic_weights: Tensor = self.weight_generator(waves)
         return dynamic_weights
 
     def weight_init(self, m: object) -> None:
@@ -532,8 +535,9 @@ class CopernicusFM(nn.Module):
         Returns:
             Area position embedding.
         """
-        scale_embed = self.scale_expansion(areas, embed_dim)  # B, D
-        return scale_embed.unsqueeze(1)  # [B,1,D]
+        scale_embed: Tensor = self.scale_expansion(areas, embed_dim)  # B, D
+        scale_embed = scale_embed.unsqueeze(1)  # [B,1,D]
+        return scale_embed
 
     def get_time_pos_embed(self, times: Tensor, embed_dim: int) -> Tensor:
         """Geotemporal position embedding.
@@ -545,8 +549,9 @@ class CopernicusFM(nn.Module):
         Returns:
             Temporal position embedding.
         """
-        time_embed = self.time_expansion(times, embed_dim)  # B, D
-        return time_embed.unsqueeze(1)  # [B,1,D]
+        time_embed: Tensor = self.time_expansion(times, embed_dim)  # B, D
+        time_embed = time_embed.unsqueeze(1)  # [B,1,D]
+        return time_embed
 
     def forward_features(
         self,
@@ -638,7 +643,7 @@ class CopernicusFM(nn.Module):
 
         if self.global_pool:
             x = x[:, 1:, :].mean(dim=1)  # global pool without cls token
-            outcome = self.fc_norm(x)
+            outcome: Tensor = self.fc_norm(x)
         else:
             x = self.norm(x)
             outcome = x[:, 0]
