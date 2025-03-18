@@ -29,7 +29,6 @@ def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
 def plot(*args: Any, **kwargs: Any) -> None:
     return None
 
-
 class TestObjectDetectionTask:
     @pytest.mark.parametrize('name', ['nasa_marine_debris', 'reforestree', 'vhr10_obj_det'])
     @pytest.mark.parametrize('model_name', ['faster-rcnn', 'fcos', 'retinanet'])
