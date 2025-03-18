@@ -167,7 +167,7 @@ class ReforesTree(NonGeoDataset):
         boxes = torch.Tensor(tile_df[['xmin', 'ymin', 'xmax', 'ymax']].values.tolist())
         labels = torch.Tensor(
             [self.class2idx[label] for label in tile_df['group'].tolist()]
-        )
+        ).long()
         agb = torch.Tensor(tile_df['AGB'].tolist())
 
         return boxes, labels, agb
