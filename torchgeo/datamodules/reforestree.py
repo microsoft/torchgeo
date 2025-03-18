@@ -20,8 +20,6 @@ from ..transforms.transforms import _RandomNCrop
 class ReforesTreeDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the ReforesTree dataset.
 
-    Implements 80/20 train/val splits.
-
     .. versionadded:: 0.7
         
     """
