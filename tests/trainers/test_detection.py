@@ -16,18 +16,24 @@ from torchgeo.trainers import ObjectDetectionTask
 # MAP metric requires pycocotools to be installed
 pytest.importorskip('pycocotools')
 
+
 class PredictObjectDetectionDataModule(NASAMarineDebrisDataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = NASAMarineDebris(**self.kwargs)
 
+
 def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
     raise RGBBandsMissingError()
+
 
 def plot(*args: Any, **kwargs: Any) -> None:
     return None
 
+
 class TestObjectDetectionTask:
-    @pytest.mark.parametrize('name', ['nasa_marine_debris', 'reforestree', 'vhr10_obj_det'])
+    @pytest.mark.parametrize(
+        'name', ['nasa_marine_debris', 'reforestree', 'vhr10_obj_det']
+    )
     @pytest.mark.parametrize('model_name', ['faster-rcnn', 'fcos', 'retinanet'])
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, model_name: str, fast_dev_run: bool

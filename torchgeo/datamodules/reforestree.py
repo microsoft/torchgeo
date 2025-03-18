@@ -1,7 +1,7 @@
-
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 """ReforesTree datamodule."""
+
 from typing import Any
 
 import kornia.augmentation as K
@@ -16,19 +16,19 @@ from .geo import NonGeoDataModule
 
 class ReforesTreeDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the ReforesTree dataset.
-    
+
     .. versionadded:: 0.7
-    
+
     """
 
     def __init__(
-        self, 
-        batch_size: int = 64, 
-        patch_size: tuple[int, int] | int = 64, 
-        num_workers: int = 0, 
+        self,
+        batch_size: int = 64,
+        patch_size: tuple[int, int] | int = 64,
+        num_workers: int = 0,
         val_split_pct: float = 0.2,
-        test_split_pct: float = 0.2, 
-        **kwargs: Any
+        test_split_pct: float = 0.2,
+        **kwargs: Any,
     ) -> None:
         """Initialize a new ReforesTreeDataModule instance.
 
