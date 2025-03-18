@@ -613,17 +613,17 @@ class CopernicusFM(nn.Module):
         )
         embed_dim = pos_embed.shape[-1]
         if torch.isnan(lons).any() or torch.isnan(lats).any():
-            coord_embed = self.coord_token
+            coord_embed: nn.Parameter | Tensor = self.coord_token
         else:
             coord_embed = self.get_coord_pos_embed(lons, lats, embed_dim)
         coord_embed = self.coord_fc(coord_embed)
         if torch.isnan(areas).any():
-            area_embed = self.scale_token
+            area_embed: nn.Parameter | Tensor = self.scale_token
         else:
             area_embed = self.get_area_pos_embed(areas, embed_dim)
         area_embed = self.scale_fc(area_embed)
         if torch.isnan(times).any():
-            time_embed = self.time_token
+            time_embed: nn.Parameter | Tensor = self.time_token
         else:
             time_embed = self.get_time_pos_embed(times, embed_dim)
         time_embed = self.time_fc(time_embed)
@@ -733,11 +733,11 @@ def copernicusfm_base(
 
     Args:
         weights: Pre-trained model weights to use.
-        *args: Additional arguments to pass to :class:`CopernicusFMViT`.
-        **kwargs: Additional keyword arguments to pass to :class:`CopernicusFMViT`.
+        *args: Additional arguments to pass to :class:`CopernicusFM`.
+        **kwargs: Additional keyword arguments to pass to :class:`CopernicusFM`.
 
     Returns:
-        A CopernicusFMViT base model.
+        A CopernicusFM base model.
     """
     kwargs |= {'embed_dim': 768, 'depth': 12, 'num_heads': 12}
     model = CopernicusFM(*args, **kwargs)
