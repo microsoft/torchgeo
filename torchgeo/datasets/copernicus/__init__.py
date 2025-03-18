@@ -32,7 +32,7 @@ class CopernicusBench(NonGeoDataset):
 
     If you use this dataset in your research, please cite the following paper:
 
-    * TODO
+    * https://arxiv.org/abs/2503.11849
 
     .. versionadded:: 0.7
     """
