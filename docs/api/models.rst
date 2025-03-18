@@ -11,7 +11,7 @@ Change Star
 .. autoclass:: ChangeMixin
 
 Copernicus-FM
-^^^^
+^^^^^^^^^^^^^
 
 .. autoclass:: CopernicusFM
 .. autofunction:: copernicusfm_base

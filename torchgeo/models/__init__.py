@@ -33,17 +33,17 @@ from .swin import Swin_V2_B_Weights, Swin_V2_T_Weights, swin_v2_b, swin_v2_t
 from .vit import ViTSmall16_Weights, vit_small_patch16_224
 
 __all__ = (
-    'CopernicusFM',
     'CROMA',
     'DOFA',
     'FCN',
     'RCF',
-    'CopernicusFM_Base_Weights',
     'CROMABase_Weights',
     'CROMALarge_Weights',
     'ChangeMixin',
     'ChangeStar',
     'ChangeStarFarSeg',
+    'CopernicusFM',
+    'CopernicusFM_Base_Weights',
     'DOFABase16_Weights',
     'DOFALarge16_Weights',
     'FCSiamConc',
@@ -57,6 +57,7 @@ __all__ = (
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
     'ViTSmall16_Weights',
+    'copernicusfm_base',
     'croma_base',
     'croma_large',
     'dofa_base_patch16_224',
@@ -74,5 +75,4 @@ __all__ = (
     'swin_v2_b',
     'swin_v2_t',
     'vit_small_patch16_224',
-    'copernicusfm_base',
 )
