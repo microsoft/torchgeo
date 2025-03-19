@@ -40,11 +40,11 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
          - Clear
          - Land, coastline, or water pixels.
        * - 2
-         - Cloud-Sure
-         - Fully-opaque clouds with full confidence of their detection.
-       * - 3
          - Cloud-Ambiguous
          - Semi-transparent clouds, or clouds where the detection level is uncertain.
+       * - 3
+         - Cloud-Sure
+         - Fully-opaque clouds with full confidence of their detection.
        * - 4
          - Cloud Shadow
          - Pixels are affected by a cloud shadow.
@@ -103,12 +103,12 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
         'Oa21_radiance',
     )
     rgb_bands = ('Oa08_radiance', 'Oa06_radiance', 'Oa04_radiance')
-    cmap = ListedColormap(['red', 'gray', 'white', 'lightgray', 'black', 'snow'])
+    cmap = ListedColormap(['red', 'gray', 'lightgray', 'white', 'black', 'snow'])
     classes: tuple[str, ...] = (
         'Invalid',
         'Clear',
-        'Cloud-Sure',
         'Cloud-Ambiguous',
+        'Cloud-Sure',
         'Cloud Shadow',
         'Snow/Ice',
     )
