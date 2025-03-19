@@ -15,6 +15,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 from einops import rearrange
+
+# TODO: deprecated, switch to torch.vmap once we require PyTorch 2.0+
 from functorch import vmap
 from timm.models.vision_transformer import Block
 from torch import Tensor

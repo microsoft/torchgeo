@@ -11,7 +11,12 @@ from torch import Tensor
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import CopernicusFM_Base_Weights, copernicusfm_base
-from torchgeo.models.copernicusfm import FourierExpansion, resize_abs_pos_embed
+from torchgeo.models.copernicusfm import (
+    DynamicPatchEmbed,
+    FourierExpansion,
+    pi_resize_patch_embed,
+    resize_abs_pos_embed,
+)
 
 
 class TestResizeEmbeddings:
@@ -19,6 +24,10 @@ class TestResizeEmbeddings:
         pos_embed = torch.rand(1, 4, 4)
         resize_abs_pos_embed(pos_embed, 2, 2)
         resize_abs_pos_embed(pos_embed, 2, 4, 0)
+
+    def test_pi_resize_patch_embed(self) -> None:
+        patch_embed = torch.rand(1, 1, 4, 4)
+        pi_resize_patch_embed(patch_embed, (4, 4))
 
 
 class TestFourierExpansion:
@@ -40,6 +49,29 @@ class TestFourierExpansion:
         match = 'The dimensionality must be a multiple of two.'
         with pytest.raises(ValueError, match=match):
             expansion(x, 3)
+
+
+class TestDynamicPatchEmbed:
+    def test_spectral(self) -> None:
+        embed = DynamicPatchEmbed(hypernet='spectral')
+        img_feat = torch.rand(1, 1, 1, 1)
+        match = 'For spectral hypernet, wvs and bandwidths must be provided.'
+        with pytest.raises(ValueError, match=match):
+            embed(img_feat)
+
+    def test_variable(self) -> None:
+        embed = DynamicPatchEmbed(hypernet='variable')
+        img_feat = torch.rand(1, 1, 1, 1)
+        match = 'For variable hypernet, language_embed must be provided.'
+        with pytest.raises(ValueError, match=match):
+            embed(img_feat)
+
+    def test_kernel_size(self) -> None:
+        embed = DynamicPatchEmbed(kernel_size=16)
+        img_feat = torch.rand(1, 4, 28, 28)
+        wvs = torch.tensor([664.6, 559.8, 492.4, 832.8])
+        bandwidths = torch.tensor([31, 36, 66, 106])
+        embed(img_feat, wvs, bandwidths, kernel_size=12)
 
 
 class TestCopernicusFMBase:
