@@ -65,12 +65,9 @@ class TestCopernicusFMBase:
     def test_copernicusfm_variable(self, meta_info: Tensor) -> None:
         model = copernicusfm_base()
         x = torch.rand(1, 1, 224, 224)
-        key = 'lulc'
         language_embed = torch.rand(2048)
         input_mode = 'variable'
-        model(
-            x, meta_info, key=key, language_embed=language_embed, input_mode=input_mode
-        )
+        model(x, meta_info, language_embed=language_embed, input_mode=input_mode)
 
     def test_copernicusfm_weights(self, mocked_weights: WeightsEnum) -> None:
         copernicusfm_base(weights=mocked_weights)

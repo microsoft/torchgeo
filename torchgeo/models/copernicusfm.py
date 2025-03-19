@@ -298,21 +298,18 @@ class DynamicPatchEmbed(nn.Module):
         img_feat: Tensor,
         wvs: Tensor | None = None,
         bandwidths: Tensor | None = None,
-        key: str | None = None,
         language_embed: Tensor | None = None,
         kernel_size: int | None = None,
     ) -> Tensor:
         """Forward pass.
 
         For hypernet=='spectral', `wvs` and `bandwidths` must be provided.
-        For hypernet=='variable', `key` and `language_embed` must be provided.
+        For hypernet=='variable', `language_embed` must be provided.
 
         Args:
             img_feat: Input image tensor (B, C, H, W).
             wvs: Wavelengths in nm (required if hypernet=='spectral').
             bandwidths: Bandwidths in nm (required if hypernet=='spectral').
-            key: Key to retrieve a language embedding
-                (required if hypernet=='variable').
             language_embed: Language embedding tensor from Llama 3.2 1B (length 2048).
             kernel_size: If provided and differs from the initialized kernel size,
                 the generated patch embed kernel weights are resized accordingly.
@@ -322,7 +319,7 @@ class DynamicPatchEmbed(nn.Module):
 
         Raises:
             ValueError: When *hypernet=='spectral'* and *wvs* or *bandwidths* is missing,
-                or when *hypernet=='variable'* and *key* or *language_embed* is missing.
+                or when *hypernet=='variable'* and *language_embed* is missing.
         """
         if self.hypernet == 'spectral':
             if wvs is None or bandwidths is None:
@@ -335,8 +332,8 @@ class DynamicPatchEmbed(nn.Module):
             )
             waves = emb_central + emb_bandwidth
         elif self.hypernet == 'variable':
-            if key is None or language_embed is None:
-                msg = 'For variable hypernet, key and language_embed must be provided.'
+            if language_embed is None:
+                msg = 'For variable hypernet, language_embed must be provided.'
                 raise ValueError(msg)
 
             # Expand dims to match batch size.
@@ -521,7 +518,6 @@ class CopernicusFM(nn.Module):
         self,
         x: Tensor,
         meta_info: Tensor,
-        key: str | None = None,
         wave_list: Sequence[float] | None = None,
         bandwidth: Sequence[float] | None = None,
         language_embed: Tensor | None = None,
@@ -534,8 +530,6 @@ class CopernicusFM(nn.Module):
             x: Input mini-batch.
             meta_info: Longitudes, latitudes, times, and areas of each patch.
                 Use NaN for unknown metadata.
-            key: Key to retrieve a language embedding.
-                Only used if *input_mode=='variable'*.
             wave_list: Wavelengths of each spectral band (nm).
                 Only used if *input_mode=='spectral'*.
             bandwidth: Bandwidths in nm.
@@ -557,7 +551,7 @@ class CopernicusFM(nn.Module):
             )
         elif input_mode == 'variable':
             x = self.patch_embed_variable(
-                x, key=key, language_embed=language_embed, kernel_size=kernel_size
+                x, language_embed=language_embed, kernel_size=kernel_size
             )
 
         # resize pos embed
@@ -633,7 +627,6 @@ class CopernicusFM(nn.Module):
         self,
         x: Tensor,
         meta_info: Tensor,
-        key: str | None = None,
         wave_list: Sequence[float] | None = None,
         bandwidth: Sequence[float] | None = None,
         language_embed: Tensor | None = None,
@@ -646,8 +639,6 @@ class CopernicusFM(nn.Module):
             x: Input mini-batch.
             meta_info: Longitudes, latitudes, times, and areas of each patch.
                 Use NaN for unknown metadata.
-            key: Key to retrieve a language embedding.
-                Only used if *input_mode=='variable'*.
             wave_list: Wavelengths of each spectral band (nm).
                 Only used if *input_mode=='spectral'*.
             bandwidth: Bandwidths in nm.
@@ -662,14 +653,7 @@ class CopernicusFM(nn.Module):
             Output mini-batch.
         """
         fx = self.forward_features(
-            x,
-            meta_info,
-            key,
-            wave_list,
-            bandwidth,
-            language_embed,
-            input_mode,
-            kernel_size,
+            x, meta_info, wave_list, bandwidth, language_embed, input_mode, kernel_size
         )
         x = self.forward_head(fx)
         return x
