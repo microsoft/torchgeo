@@ -258,28 +258,6 @@ class DynamicPatchEmbed(nn.Module):
             self.spectrum_bandwidth_expansion = FourierExpansion(1, 1e9)
         elif self.hypernet == 'variable':
             # Variable hypernetwork: Language embedding for variable names.
-            # Load pre-trained language embeddings.
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            llm_embed_path = os.path.join(script_dir, 'var_embed_llama3.2_1B.pt')
-            if not os.path.exists(llm_embed_path):
-                url = 'https://huggingface.co/wangyi111/Copernicus-FM/resolve/main/var_embed_llama3.2_1B.pt'
-
-                download_url(url, script_dir, filename='var_embed_llama3.2_1B.pt')
-            self.language_embed = torch.load(llm_embed_path)
-            # Create key aliases
-            self.language_embed['s5p_co'] = self.language_embed[
-                'Sentinel 5P Carbon Monoxide'
-            ]
-            self.language_embed['s5p_no2'] = self.language_embed[
-                'Sentinel 5P Nitrogen Dioxide'
-            ]
-            self.language_embed['s5p_o3'] = self.language_embed['Sentinel 5P Ozone']
-            self.language_embed['s5p_so2'] = self.language_embed[
-                'Sentinel 5P Sulfur Dioxide'
-            ]
-            self.language_embed['dem'] = self.language_embed[
-                'Copernicus Digital Elevation Model'
-            ]
             self.language_proj = nn.Linear(2048, self.wv_planes)
 
         self.weight_generator = TransformerWeightGenerator(
@@ -329,12 +307,7 @@ class DynamicPatchEmbed(nn.Module):
         """Forward pass.
 
         For hypernet=='spectral', `wvs` and `bandwidths` must be provided.
-        For hypernet=='variable', `key` and `language_embed` must be provided depending
-        on the case:
-        - If the variable is within a predefined set
-          (s5p_co, s5p_no2, s5p_o3, s5p_so2, dem), only `key` is needed.
-        - If the variable is new, `language_embed` must be provided,
-          `key` is used only for documentation.
+        For hypernet=='variable', `key` and `language_embed` must be provided.
 
         Args:
             img_feat: Input image tensor (B, C, H, W).
@@ -342,8 +315,7 @@ class DynamicPatchEmbed(nn.Module):
             bandwidths: Bandwidths in nm (required if hypernet=='spectral').
             key: Key to retrieve a language embedding
                 (required if hypernet=='variable').
-            language_embed: Language embedding tensor to override the predefined
-                embedding or for new variable (2048).
+            language_embed: Language embedding tensor from Llama 3.2 1B (length 2048).
             kernel_size: If provided and differs from the initialized kernel size,
                 the generated patch embed kernel weights are resized accordingly.
 
@@ -356,27 +328,21 @@ class DynamicPatchEmbed(nn.Module):
         """
         if self.hypernet == 'spectral':
             if wvs is None or bandwidths is None:
-                raise ValueError(
-                    'For spectral hypernet, wvs and bandwidths must be provided.'
-                )
+                msg = 'For spectral hypernet, wvs and bandwidths must be provided.'
+                raise ValueError(msg)
+
             emb_central = self.spectrum_central_expansion(wvs, self.wv_planes)
             emb_bandwidth = self.spectrum_bandwidth_expansion(
                 bandwidths, self.wv_planes
             )
             waves = emb_central + emb_bandwidth
         elif self.hypernet == 'variable':
-            if key is None:
-                raise ValueError('For language hypernet, key must be provided.')
-            if language_embed is None and key in self.language_embed:
-                emb_language = self.language_embed[key].to(img_feat.device)
-            else:
-                if language_embed is None:
-                    raise ValueError(
-                        'For new variable, language_embed must be provided.'
-                    )
-                emb_language = language_embed
-            emb_language = emb_language.unsqueeze(0)  # Expand dims to match batch size.
-            waves = self.language_proj(emb_language)
+            if key is None or language_embed is None:
+                msg = 'For variable hypernet, key and language_embed must be provided.'
+                raise ValueError(msg)
+
+            # Expand dims to match batch size.
+            waves = self.language_proj(language_embed.unsqueeze(0))
 
         waves = self.fclayer(waves)
         weight, bias = self._get_weights(waves)
@@ -576,8 +542,7 @@ class CopernicusFM(nn.Module):
                 Only used if *input_mode=='spectral'*.
             bandwidth: Bandwidths in nm.
                 Only used if *input_mode=='spectral'*.
-            language_embed: Language embedding tensor to override the predefined
-                embedding or for new variable (2048).
+            language_embed: Language embedding tensor from Llama 3.2 1B (length 2048).
                 Only used if *input_mode=='variable'*.
             input_mode: One of 'spectral' or 'variable'.
             kernel_size: If provided and differs from the initialized kernel size,
@@ -689,8 +654,7 @@ class CopernicusFM(nn.Module):
                 Only used if *input_mode=='spectral'*.
             bandwidth: Bandwidths in nm.
                 Only used if *input_mode=='spectral'*.
-            language_embed: Language embedding tensor to override the predefined
-                embedding or for new variable (2048).
+            language_embed: Language embedding tensor from Llama 3.2 1B (length 2048).
                 Only used if *input_mode=='variable'*.
             input_mode: One of 'spectral' or 'variable'.
             kernel_size: If provided and differs from the initialized kernel size,

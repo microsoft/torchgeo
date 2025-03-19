@@ -62,14 +62,7 @@ class TestCopernicusFMBase:
             input_mode=input_mode,
         )
 
-    def test_copernicusfm_builtin_variable(self, meta_info: Tensor) -> None:
-        model = copernicusfm_base()
-        x = torch.rand(1, 1, 224, 224)
-        key = 's5p_co'
-        input_mode = 'variable'
-        model(x, meta_info, key=key, input_mode=input_mode)
-
-    def test_copernicusfm_custom_variable(self, meta_info: Tensor) -> None:
+    def test_copernicusfm_variable(self, meta_info: Tensor) -> None:
         model = copernicusfm_base()
         x = torch.rand(1, 1, 224, 224)
         key = 'lulc'
