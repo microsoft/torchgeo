@@ -6,7 +6,6 @@
 """Copernicus Foundation Model (Copernicus-FM)."""
 
 import math
-import os
 from collections.abc import Sequence
 from typing import Any, Literal
 
@@ -19,7 +18,6 @@ from einops import rearrange
 from functorch import vmap
 from timm.models.vision_transformer import Block
 from torch import Tensor
-from torchvision.datasets.utils import download_url
 from torchvision.models._api import Weights, WeightsEnum
 
 from ..samplers.utils import _to_tuple
