@@ -56,6 +56,11 @@ Chesapeake Land Cover
 .. autoclass:: ChesapeakeWV
 .. autoclass:: ChesapeakeCVPR
 
+GlobalBuildingMap
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: GlobalBuildingMap
+
 Global Mangrove Distribution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
