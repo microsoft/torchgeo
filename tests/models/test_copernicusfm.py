@@ -11,7 +11,14 @@ from torch import Tensor
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import CopernicusFM_Base_Weights, copernicusfm_base
-from torchgeo.models.copernicusfm import FourierExpansion
+from torchgeo.models.copernicusfm import FourierExpansion, resize_abs_pos_embed
+
+
+class TestResizeEmbeddings:
+    def test_resize_abs_pos_embed(self) -> None:
+        pos_embed = torch.rand(1, 4, 4)
+        resize_abs_pos_embed(pos_embed, 2, 2)
+        resize_abs_pos_embed(pos_embed, 2, 4, 0)
 
 
 class TestFourierExpansion:
@@ -72,7 +79,7 @@ class TestCopernicusFMBase:
 
     def test_copernicusfm_spectral(self, meta_info: Tensor) -> None:
         model = copernicusfm_base()
-        x = torch.rand(1, 4, 224, 224)
+        x = torch.rand(1, 4, 28, 28)
         wave_list = [664.6, 559.8, 492.4, 832.8]
         bandwidth = [31, 36, 66, 106]
         input_mode = 'spectral'
@@ -86,7 +93,7 @@ class TestCopernicusFMBase:
 
     def test_copernicusfm_variable(self, meta_info: Tensor) -> None:
         model = copernicusfm_base()
-        x = torch.rand(1, 1, 224, 224)
+        x = torch.rand(1, 1, 96, 96)
         language_embed = torch.rand(2048)
         input_mode = 'variable'
         model(x, meta_info, language_embed=language_embed, input_mode=input_mode)

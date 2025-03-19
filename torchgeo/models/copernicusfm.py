@@ -27,7 +27,7 @@ from .dofa import FCResLayer, TransformerWeightGenerator
 def resize_abs_pos_embed(
     pos_embed: Tensor,
     new_size: int | tuple[int, int],
-    old_size: int | tuple[int, int] | None = None,
+    old_size: int | tuple[int, int],
     num_prefix_tokens: int = 1,
     interpolation: str = 'bicubic',
     antialias: bool = True,
@@ -48,11 +48,8 @@ def resize_abs_pos_embed(
         Resized pos_embed of size [b, n', d]
     """
     new_size = _to_tuple(new_size)
-    new_ntok = new_size[0] * new_size[1]
-
-    if not old_size:
-        old_size = int(math.sqrt(pos_embed.shape[1] - num_prefix_tokens))
     old_size = _to_tuple(old_size)
+    new_ntok = new_size[0] * new_size[1]
 
     # Return if no resize necessary
     if new_size == old_size:
