@@ -10,7 +10,7 @@ from pytest import MonkeyPatch
 from torch import Tensor
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.models import CopernicusFM_Base_Weights, copernicusfm_base
+from torchgeo.models import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from torchgeo.models.copernicusfm import (
     DynamicPatchEmbed,
     FourierExpansion,
@@ -74,6 +74,50 @@ class TestDynamicPatchEmbed:
         embed(img_feat, wvs, bandwidths, kernel_size=12)
 
 
+class TestCopernicusFM:
+    @pytest.fixture(
+        params=[
+            [0, 1, 2, 3],
+            [float('nan'), 1, 2, 3],
+            [0, float('nan'), 2, 3],
+            [0, 1, float('nan'), 3],
+            [0, 1, 2, float('nan')],
+            [float('nan'), float('nan'), float('nan'), float('nan')],
+        ]
+    )
+    def meta_info(self, request: SubRequest) -> Tensor:
+        return torch.tensor([request.param])
+
+    def test_global_pool(self, meta_info: Tensor) -> None:
+        model = CopernicusFM(global_pool=False)
+        x = torch.rand(1, 4, 28, 28)
+        wave_list = [664.6, 559.8, 492.4, 832.8]
+        bandwidth = [31, 36, 66, 106]
+        input_mode = 'spectral'
+        model(
+            x,
+            meta_info,
+            wave_list=wave_list,
+            bandwidth=bandwidth,
+            input_mode=input_mode,
+        )
+
+    def test_embed_dim(self) -> None:
+        model = CopernicusFM(embed_dim=5, num_heads=5)
+        x = torch.rand(1, 4, 28, 28)
+        meta_info = torch.tensor([[0, 1, float('nan'), float('nan')]])
+        wave_list = [664.6, 559.8, 492.4, 832.8]
+        bandwidth = [31, 36, 66, 106]
+        input_mode = 'spectral'
+        model(
+            x,
+            meta_info,
+            wave_list=wave_list,
+            bandwidth=bandwidth,
+            input_mode=input_mode,
+        )
+
+
 class TestCopernicusFMBase:
     @pytest.fixture(params=[*CopernicusFM_Base_Weights])
     def weights(self, request: SubRequest) -> WeightsEnum:
@@ -96,22 +140,10 @@ class TestCopernicusFMBase:
             monkeypatch.setattr(weights, 'url', str(path))
         return weights
 
-    @pytest.fixture(
-        params=[
-            [0, 1, 2, 3],
-            [float('nan'), 1, 2, 3],
-            [0, float('nan'), 2, 3],
-            [0, 1, float('nan'), 3],
-            [0, 1, 2, float('nan')],
-            [float('nan'), float('nan'), float('nan'), float('nan')],
-        ]
-    )
-    def meta_info(self, request: SubRequest) -> Tensor:
-        return torch.tensor([request.param])
-
-    def test_copernicusfm_spectral(self, meta_info: Tensor) -> None:
+    def test_copernicusfm_spectral(self) -> None:
         model = copernicusfm_base()
         x = torch.rand(1, 4, 28, 28)
+        meta_info = torch.rand(1, 4)
         wave_list = [664.6, 559.8, 492.4, 832.8]
         bandwidth = [31, 36, 66, 106]
         input_mode = 'spectral'
@@ -123,9 +155,10 @@ class TestCopernicusFMBase:
             input_mode=input_mode,
         )
 
-    def test_copernicusfm_variable(self, meta_info: Tensor) -> None:
+    def test_copernicusfm_variable(self) -> None:
         model = copernicusfm_base()
         x = torch.rand(1, 1, 96, 96)
+        meta_info = torch.rand(1, 4)
         language_embed = torch.rand(2048)
         input_mode = 'variable'
         model(x, meta_info, language_embed=language_embed, input_mode=input_mode)
