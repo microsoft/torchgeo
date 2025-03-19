@@ -11,6 +11,28 @@ from torch import Tensor
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import CopernicusFM_Base_Weights, copernicusfm_base
+from torchgeo.models.copernicusfm import FourierExpansion
+
+
+class TestFourierExpansion:
+    def test_zeros(self) -> None:
+        expansion = FourierExpansion(1, 2)
+        x = torch.zeros(2)
+        expansion(x, 2)
+
+    def test_range(self) -> None:
+        expansion = FourierExpansion(1, 2)
+        x = torch.rand(2)
+        match = 'The input tensor is not within the configured range'
+        with pytest.raises(AssertionError, match=match):
+            expansion(x, 2)
+
+    def test_dimensionality(self) -> None:
+        expansion = FourierExpansion(0, 1)
+        x = torch.rand(2)
+        match = 'The dimensionality must be a multiple of two.'
+        with pytest.raises(ValueError, match=match):
+            expansion(x, 3)
 
 
 class TestCopernicusFMBase:
