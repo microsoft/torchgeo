@@ -572,7 +572,7 @@ class CopernicusFM(nn.Module):
                 Use NaN for unknown metadata.
             key: Key to retrieve a language embedding.
                 Only used if *input_mode=='variable'*.
-            wave_list: Wavelengths of each spectral band (μm).
+            wave_list: Wavelengths of each spectral band (nm).
                 Only used if *input_mode=='spectral'*.
             bandwidth: Bandwidths in nm.
                 Only used if *input_mode=='spectral'*.
@@ -688,7 +688,7 @@ class CopernicusFM(nn.Module):
                 Use NaN for unknown metadata.
             key: Key to retrieve a language embedding.
                 Only used if *input_mode=='variable'*.
-            wave_list: Wavelengths of each spectral band (μm).
+            wave_list: Wavelengths of each spectral band (nm).
                 Only used if *input_mode=='spectral'*.
             bandwidth: Bandwidths in nm.
                 Only used if *input_mode=='spectral'*.
