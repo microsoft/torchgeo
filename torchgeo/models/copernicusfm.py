@@ -586,18 +586,15 @@ class CopernicusFM(nn.Module):
         Returns:
             Output mini-batch.
         """
-        # embed patches
-        wavelist = torch.tensor(wave_list, device=x.device).float()
-        bandwidths = torch.tensor(bandwidth, device=x.device).float()
-        self.waves = wavelist
-
         if input_mode == 'spectral':
+            wvs = torch.tensor(wave_list, device=x.device).float()
+            bandwidths = torch.tensor(bandwidth, device=x.device).float()
             x = self.patch_embed_spectral(
-                x, self.waves, bandwidths, kernel_size=kernel_size
+                x, wvs=wvs, bandwidths=bandwidths, kernel_size=kernel_size
             )
         elif input_mode == 'variable':
             x = self.patch_embed_variable(
-                x, self.waves, bandwidths, key, language_embed, kernel_size
+                x, key=key, language_embed=language_embed, kernel_size=kernel_size
             )
 
         # resize pos embed
