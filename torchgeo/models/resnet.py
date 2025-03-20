@@ -8,7 +8,7 @@ from typing import Any
 import kornia.augmentation as K
 import timm
 import torch
-from timm.models import ResNet, FeatureListNet
+from timm.models import FeatureListNet, ResNet
 from torchvision.models._api import Weights, WeightsEnum
 
 from .swin import (
