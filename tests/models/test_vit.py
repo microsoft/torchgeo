@@ -42,6 +42,7 @@ class TestViTSmall16:
 
     def test_vit_weights(self, mocked_weights: WeightsEnum) -> None:
         vit_small_patch16_224(weights=mocked_weights)
+        vit_small_patch16_224(weights=mocked_weights, features_only=True)
 
     def test_bands(self, mocked_weights: WeightsEnum) -> None:
         if 'bands' in mocked_weights.meta:

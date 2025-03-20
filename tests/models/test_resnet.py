@@ -47,6 +47,7 @@ class TestResNet18:
 
     def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet18(weights=mocked_weights)
+        resnet18(weights=mocked_weights, features_only=True)
 
     def test_bands(self, mocked_weights: WeightsEnum) -> None:
         if 'bands' in mocked_weights.meta:
@@ -91,6 +92,7 @@ class TestResNet50:
 
     def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet50(weights=mocked_weights)
+        resnet50(weights=mocked_weights, features_only=True)
 
     def test_bands(self, mocked_weights: WeightsEnum) -> None:
         if 'bands' in mocked_weights.meta:
@@ -135,6 +137,7 @@ class TestResNet152:
 
     def test_resnet_weights(self, mocked_weights: WeightsEnum) -> None:
         resnet152(weights=mocked_weights)
+        resnet152(weights=mocked_weights, features_only=True)
 
     def test_bands(self, mocked_weights: WeightsEnum) -> None:
         if 'bands' in mocked_weights.meta:
