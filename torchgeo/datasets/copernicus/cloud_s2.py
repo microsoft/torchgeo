@@ -5,9 +5,6 @@
 
 import os
 
-import numpy as np
-import rasterio as rio
-import torch
 from matplotlib.colors import ListedColormap
 from torch import Tensor
 
@@ -55,6 +52,7 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
     md5 = '39a1f966e76455549a3e6c209ba751c1'
     zipfile = 'cloud_s2.zip'
     directory = 'cloud_s2'
+    filename_regex = r'ROI_\d{5}__(?P<date>\d{8}T\d{6})'
     all_bands = (
         'B01',
         'B02',
@@ -74,34 +72,21 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
     cmap = ListedColormap(['white', 'yellow', 'green', 'red'])
     classes = ('Clear', 'Thick Cloud', 'Thin Cloud', 'Cloud Shadow')
 
-    def _load_image(self, index: int) -> dict[str, Tensor]:
-        """Load an image.
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
+        """Return an index within the dataset.
 
         Args:
             index: Index to return.
 
         Returns:
-            An image sample.
+            Data and labels at that index.
         """
-        sample: dict[str, Tensor] = {}
         file = self.files[index] + '.tif'
-        with rio.open(os.path.join(self.root, self.directory, 's2_toa', file)) as f:
-            sample['image'] = torch.tensor(f.read(self.band_indices).astype(np.float32))
+        image_path = os.path.join(self.root, self.directory, 's2_toa', file)
+        mask_path = os.path.join(self.root, self.directory, 'cloud', file)
+        sample = self._load_image(image_path) | self._load_mask(mask_path)
 
-        return sample
-
-    def _load_target(self, index: int) -> dict[str, Tensor]:
-        """Load a target mask.
-
-        Args:
-            index: Index to return.
-
-        Returns:
-            A target sample.
-        """
-        sample: dict[str, Tensor] = {}
-        file = self.files[index] + '.tif'
-        with rio.open(os.path.join(self.root, self.directory, 'cloud', file)) as f:
-            sample['mask'] = torch.tensor(f.read(1).astype(np.int64))
+        if self.transforms is not None:
+            sample = self.transforms(sample)
 
         return sample

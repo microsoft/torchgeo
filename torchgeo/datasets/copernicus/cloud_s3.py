@@ -7,9 +7,6 @@ import os
 from collections.abc import Callable, Sequence
 from typing import Literal
 
-import numpy as np
-import rasterio as rio
-import torch
 from matplotlib.colors import ListedColormap
 from torch import Tensor
 
@@ -79,6 +76,7 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
     md5 = '1f82a8ccf16a0c44f0b1729e523e343a'
     zipfile = 'cloud_s3.zip'
     directory = 'cloud_s3'
+    filename_regex = r'S3[AB]_OL_1_EFR____(?P<date>\d{8}T\d{6})'
     all_bands = (
         'Oa01_radiance',
         'Oa02_radiance',
@@ -144,35 +142,21 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
             self.cmap = ListedColormap(['red', 'gray', 'white'])
         super().__init__(root, split, bands, transforms, download, checksum)
 
-    def _load_image(self, index: int) -> dict[str, Tensor]:
-        """Load an image.
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
+        """Return an index within the dataset.
 
         Args:
             index: Index to return.
 
         Returns:
-            An image sample.
+            Data and labels at that index.
         """
-        sample: dict[str, Tensor] = {}
         file = self.files[index]
-        with rio.open(os.path.join(self.root, self.directory, 's3_olci', file)) as f:
-            sample['image'] = torch.tensor(f.read(self.band_indices).astype(np.float32))
+        image_path = os.path.join(self.root, self.directory, 's3_olci', file)
+        mask_path = os.path.join(self.root, self.directory, f'cloud_{self.mode}', file)
+        sample = self._load_image(image_path) | self._load_mask(mask_path)
 
-        return sample
-
-    def _load_target(self, index: int) -> dict[str, Tensor]:
-        """Load a target mask.
-
-        Args:
-            index: Index to return.
-
-        Returns:
-            A target sample.
-        """
-        sample: dict[str, Tensor] = {}
-        file = self.files[index]
-        mode = f'cloud_{self.mode}'
-        with rio.open(os.path.join(self.root, self.directory, mode, file)) as f:
-            sample['mask'] = torch.tensor(f.read(1).astype(np.int64))
+        if self.transforms is not None:
+            sample = self.transforms(sample)
 
         return sample

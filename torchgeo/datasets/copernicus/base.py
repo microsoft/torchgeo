@@ -4,15 +4,20 @@
 """Copernicus-Bench abstract base class."""
 
 import os
+import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from typing import Literal
 
+import numpy as np
 import pandas as pd
+import rasterio as rio
+import torch
 from einops import rearrange
 from matplotlib import pyplot as plt
 from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
+from pyproj import Transformer
 from torch import Tensor
 
 from torchgeo.datasets.geo import NonGeoDataset
@@ -20,6 +25,7 @@ from torchgeo.datasets.geo import NonGeoDataset
 from ..errors import DatasetNotFoundError, RGBBandsMissingError
 from ..utils import (
     Path,
+    disambiguate_timestamp,
     download_and_extract_archive,
     extract_archive,
     percentile_normalization,
@@ -60,6 +66,16 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     def filename(self) -> str:
         """Filename format of split files."""
         return '{}.csv'
+
+    @property
+    def filename_regex(self) -> str:
+        """Regular expression used to extract date from filename."""
+        return '.*'
+
+    @property
+    def date_format(self) -> str:
+        """Date format string used to parse date from filename."""
+        return '%Y%m%dT%H%M%S'
 
     @property
     @abstractmethod
@@ -125,43 +141,53 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         """
         return len(self.files)
 
-    def __getitem__(self, index: int) -> dict[str, Tensor]:
-        """Return an index within the dataset.
+    def _load_image(self, path: str) -> dict[str, Tensor]:
+        """Load an image and metadata.
 
         Args:
-            index: Index to return.
-
-        Returns:
-            Data and labels at that index.
-        """
-        sample = self._load_image(index) | self._load_target(index)
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
-
-    @abstractmethod
-    def _load_image(self, index: int) -> dict[str, Tensor]:
-        """Load an image.
-
-        Args:
-            index: Index to return.
+            path: File path to load.
 
         Returns:
             An image sample.
         """
+        sample: dict[str, Tensor] = {}
+        with rio.open(path) as f:
+            # Image
+            image = f.read(self.band_indices).astype(np.float32)
+            sample['image'] = torch.tensor(image)
 
-    @abstractmethod
-    def _load_target(self, index: int) -> dict[str, Tensor]:
-        """Load a target label or mask.
+            # Location
+            x = (f.bounds.left + f.bounds.right) / 2
+            y = (f.bounds.bottom + f.bounds.top) / 2
+            transformer = Transformer.from_crs(f.crs, 'epsg:4326', always_xy=True)
+            lon, lat = transformer.transform(x, y)
+            sample['lat'] = torch.tensor(lat)
+            sample['lon'] = torch.tensor(lon)
+
+            # Time
+            if match := re.match(self.filename_regex, os.path.basename(path)):
+                if 'date' in match.groupdict():
+                    date_str = match.group('date')
+                    mint, maxt = disambiguate_timestamp(date_str, self.date_format)
+                    time = (mint + maxt) / 2
+                    sample['time'] = torch.tensor(time)
+
+        return sample
+
+    def _load_mask(self, path: str) -> dict[str, Tensor]:
+        """Load a target mask.
 
         Args:
-            index: Index to return.
+            path: File path to load.
 
         Returns:
             A target sample.
         """
+        sample: dict[str, Tensor] = {}
+        with rio.open(path) as f:
+            sample['mask'] = torch.tensor(f.read(1).astype(np.int64))
+
+        return sample
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""

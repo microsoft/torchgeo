@@ -35,8 +35,10 @@ class TestCopernicusBench:
 
     def test_getitem(self, dataset: CopernicusBench) -> None:
         x = dataset[0]
-        assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['lat'], torch.Tensor)
+        assert isinstance(x['lon'], torch.Tensor)
+        assert isinstance(x['time'], torch.Tensor)
 
     def test_len(self, dataset: CopernicusBench) -> None:
         assert len(dataset) == 1
