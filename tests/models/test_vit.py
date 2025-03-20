@@ -37,12 +37,36 @@ class TestViTSmall16:
             monkeypatch.setattr(weights, 'url', str(path))
         return weights
 
+    @pytest.fixture
+    def mocked_weights_features_only(
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        weights: WeightsEnum,
+        load_state_dict_from_url: None,
+    ) -> WeightsEnum:
+        path = tmp_path / f'{weights}.pth'
+        model = timm.create_model(
+            weights.meta['model'], in_chans=weights.meta['in_chans'], features_only=True
+        )
+        # the actual ViT is stored in model attribute
+        torch.save(model.model.state_dict(), path)
+        try:
+            monkeypatch.setattr(weights.value, 'url', str(path))
+        except AttributeError:
+            monkeypatch.setattr(weights, 'url', str(path))
+        return weights
+
     def test_vit(self) -> None:
         vit_small_patch16_224()
 
     def test_vit_weights(self, mocked_weights: WeightsEnum) -> None:
         vit_small_patch16_224(weights=mocked_weights)
-        vit_small_patch16_224(weights=mocked_weights, features_only=True)
+
+    def test_vit_weights_features_only(
+        self, mocked_weights_features_only: WeightsEnum
+    ) -> None:
+        vit_small_patch16_224(weights=mocked_weights_features_only, features_only=True)
 
     def test_bands(self, mocked_weights: WeightsEnum) -> None:
         if 'bands' in mocked_weights.meta:
