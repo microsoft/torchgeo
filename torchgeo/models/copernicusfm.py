@@ -551,7 +551,8 @@ class CopernicusFM(nn.Module):
 
         Args:
             x: Input mini-batch.
-            meta_info: Longitudes (degree), latitudes (degree), times (days since 1970/1/1), and areas (km^2) of each patch.
+            meta_info: Longitudes (degree), latitudes (degree), times
+                (days since 1970/1/1), and areas (km^2) of each patch.
                 Use NaN for unknown metadata.
             wave_list: Wavelengths of each spectral band (nm).
                 Only used if *input_mode=='spectral'*.
@@ -660,7 +661,8 @@ class CopernicusFM(nn.Module):
 
         Args:
             x: Input mini-batch.
-            meta_info: Longitudes (degree), latitudes (degree), times (days since 1970/1/1), and areas (km^2) of each patch.
+            meta_info: Longitudes (degree), latitudes (degree), times
+                (days since 1970/1/1), and areas (km^2) of each patch.
                 Use NaN for unknown metadata.
             wave_list: Wavelengths of each spectral band (nm).
                 Only used if *input_mode=='spectral'*.
