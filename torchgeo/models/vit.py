@@ -248,7 +248,7 @@ def vit_small_patch16_224(
         'vit_small_patch16_224', *args, **kwargs
     )
 
-    if 'features_only' in kwargs:
+    if kwargs.get('features_only', False):
         model = cast(FeatureGetterNet, model)
         target_model = cast(VisionTransformer, model.model)
     else:
