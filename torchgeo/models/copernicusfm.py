@@ -363,8 +363,38 @@ class DynamicPatchEmbed(nn.Module):
 
 
 class CopernicusFM(nn.Module):
-    """CopernicusFM: VisionTransformer backbone."""
+    """CopernicusFM: VisionTransformer backbone.
+    
+    Example:
+        **1. Spectral Mode (Using Wavelength and Bandwidth):**
 
+        >>> model = CopernicusFM()
+        >>> img = torch.randn(1, 4, 224, 224) # input image
+        >>> meta = torch.full((1, 4), float('nan')) # [lon, lat, delta_time, patch_token_area], assume unknown
+        >>> wvs = [490, 560, 665, 842] # wavelength: B,G,R,NIR (Sentinel 2)
+        >>> bws = [65, 35, 30, 115] # bandwidth: B,G,R,NIR (Sentinel 2)
+        >>> language_embed = None # N/A in this mode
+        >>> kernel_size = 16 # expected patch size
+        >>> input_mode = 'spectral'
+        >>> logit = model(img, meta, wvs, bws, language_embed, input_mode, kernel_size)
+        >>> print(logit.shape)
+
+        **2. Variable Mode (Using language embedding):**
+
+        >>> model = CopernicusFM()
+        >>> varname = 'Sentinel 5P Nitrogen Dioxide' # variable name (as input to a LLM for langauge embed)
+        >>> img = torch.randn(1, 1, 56, 56) # input image
+        >>> meta = torch.full((1, 4), float('nan')) # [lon, lat, delta_time, patch_token_area], assume unknown
+        >>> wvs = None # wavelength: N/A
+        >>> bws = None # bandwidth: N/A
+        >>> language_embed = torch.randn(2048) # language embedding: encode varname with a LLM (e.g. Llama)
+        >>> kernel_size = 4 # expected patch size
+        >>> input_mode = 'variable'
+        >>> logit = model(img, meta, wvs, bws, language_embed, input_mode, kernel_size)
+        >>> print(logit.shape)
+    
+    """
+    
     def __init__(
         self,
         img_size: int = 224,
