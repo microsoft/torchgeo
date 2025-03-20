@@ -370,13 +370,12 @@ class CopernicusFM(nn.Module):
 
         >>> model = CopernicusFM()
         >>> img = torch.randn(1, 4, 224, 224) # input image
-        >>> meta = torch.full((1, 4), float('nan')) # [lon, lat, delta_time, patch_token_area], assume unknown
-        >>> wvs = [490, 560, 665, 842] # wavelength: B,G,R,NIR (Sentinel 2)
-        >>> bws = [65, 35, 30, 115] # bandwidth: B,G,R,NIR (Sentinel 2)
-        >>> language_embed = None # N/A in this mode
+        >>> meta = torch.full((1, 4), float('nan')) # [lon (degree), lat (degree), delta_time (days since 1970/1/1), patch_token_area (km^2)], assume unknown
+        >>> wvs = [490, 560, 665, 842] # wavelength (nm): B,G,R,NIR (Sentinel 2)
+        >>> bws = [65, 35, 30, 115] # bandwidth (nm): B,G,R,NIR (Sentinel 2)
         >>> kernel_size = 16 # expected patch size
         >>> input_mode = 'spectral'
-        >>> logit = model(img, meta, wvs, bws, language_embed, input_mode, kernel_size)
+        >>> logit = model(img, meta, wave_list=wvs, bandwidth=bws, input_mode=input_mode, kernel_size=kernel_size)
         >>> print(logit.shape)
 
         **2. Variable Mode (Using language embedding):**
@@ -384,13 +383,11 @@ class CopernicusFM(nn.Module):
         >>> model = CopernicusFM()
         >>> varname = 'Sentinel 5P Nitrogen Dioxide' # variable name (as input to a LLM for langauge embed)
         >>> img = torch.randn(1, 1, 56, 56) # input image
-        >>> meta = torch.full((1, 4), float('nan')) # [lon, lat, delta_time, patch_token_area], assume unknown
-        >>> wvs = None # wavelength: N/A
-        >>> bws = None # bandwidth: N/A
+        >>> meta = torch.full((1, 4), float('nan')) # [lon (degree), lat (degree), delta_time (days since 1970/1/1), patch_token_area (km^2)], assume unknown
         >>> language_embed = torch.randn(2048) # language embedding: encode varname with a LLM (e.g. Llama)
         >>> kernel_size = 4 # expected patch size
         >>> input_mode = 'variable'
-        >>> logit = model(img, meta, wvs, bws, language_embed, input_mode, kernel_size)
+        >>> logit = model(img, meta, language_embed=language_embed, input_mode=input_mode, kernel_size=kernel_size)
         >>> print(logit.shape)
     
     """
@@ -554,7 +551,7 @@ class CopernicusFM(nn.Module):
 
         Args:
             x: Input mini-batch.
-            meta_info: Longitudes, latitudes, times, and areas of each patch.
+            meta_info: Longitudes (degree), latitudes (degree), times (days since 1970/1/1), and areas (km^2) of each patch.
                 Use NaN for unknown metadata.
             wave_list: Wavelengths of each spectral band (nm).
                 Only used if *input_mode=='spectral'*.
@@ -663,7 +660,7 @@ class CopernicusFM(nn.Module):
 
         Args:
             x: Input mini-batch.
-            meta_info: Longitudes, latitudes, times, and areas of each patch.
+            meta_info: Longitudes (degree), latitudes (degree), times (days since 1970/1/1), and areas (km^2) of each patch.
                 Use NaN for unknown metadata.
             wave_list: Wavelengths of each spectral band (nm).
                 Only used if *input_mode=='spectral'*.
