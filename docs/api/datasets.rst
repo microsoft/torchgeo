@@ -575,6 +575,22 @@ ZueriCrop
 
 .. _Base Classes:
 
+Copernicus-Bench
+----------------
+
+Copernicus-Bench is a comprehensive evaluation benchmark with 15 downstream tasks hierarchically organized across preprocessing (e.g., cloud removal), base applications (e.g., land cover classification), and specialized applications (e.g., air quality estimation). This benchmark enables systematic assessment of foundation model performances across various Sentinel missions on different levels of practical applications.
+
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, T = time series, CD = change detection
+   :widths: 5 15 7 15 20 12 11 12 15 13
+   :header-rows: 1
+   :align: center
+   :file: datasets/copernicus_bench.csv
+
+.. autoclass:: CopernicusBench
+.. autoclass:: CopernicusBenchBase
+.. autoclass:: CopernicusBenchCloudS2
+.. autoclass:: CopernicusBenchCloudS3
+
 Base Classes
 ------------
 
