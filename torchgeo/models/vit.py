@@ -8,8 +8,8 @@ from typing import Any, cast
 import kornia.augmentation as K
 import timm
 import torch
-from timm.models._features import FeatureGetterNet
 from timm.models.vision_transformer import VisionTransformer
+from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
 from .resnet import (
@@ -224,7 +224,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
 
 def vit_small_patch16_224(
     weights: ViTSmall16_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer | FeatureGetterNet:
+) -> VisionTransformer | nn.ModuleDict:
     """Vision Transform (ViT) small patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -243,13 +243,13 @@ def vit_small_patch16_224(
     """
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
-
-    model: VisionTransformer | FeatureGetterNet = timm.create_model(
+    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
+    model: VisionTransformer | nn.ModuleDict = timm.create_model(
         'vit_small_patch16_224', *args, **kwargs
     )
 
     if kwargs.get('features_only', False):
-        model = cast(FeatureGetterNet, model)
+        model = cast(nn.ModuleDict, model)
         target_model = cast(VisionTransformer, model.model)
     else:
         model = cast(VisionTransformer, model)
