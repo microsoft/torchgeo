@@ -364,7 +364,7 @@ class DynamicPatchEmbed(nn.Module):
 
 class CopernicusFM(nn.Module):
     """CopernicusFM: VisionTransformer backbone.
-    
+
     Example:
         **1. Spectral Mode (Using Wavelength and Bandwidth):**
 
@@ -389,9 +389,9 @@ class CopernicusFM(nn.Module):
         >>> input_mode = 'variable'
         >>> logit = model(img, meta, language_embed=language_embed, input_mode=input_mode, kernel_size=kernel_size)
         >>> print(logit.shape)
-    
+
     """
-    
+
     def __init__(
         self,
         img_size: int = 224,
