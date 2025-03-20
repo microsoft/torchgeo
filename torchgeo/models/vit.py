@@ -250,7 +250,7 @@ def vit_small_patch16_224(
 
     if 'features_only' in kwargs:
         model = cast(FeatureGetterNet, model)
-        target_model: VisionTransformer = cast(VisionTransformer, model.model)
+        target_model = cast(VisionTransformer, model.model)
     else:
         model = cast(VisionTransformer, model)
         target_model = model
