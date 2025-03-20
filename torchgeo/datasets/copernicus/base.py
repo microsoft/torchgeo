@@ -68,9 +68,9 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         return '{}.csv'
 
     @property
+    @abstractmethod
     def filename_regex(self) -> str:
         """Regular expression used to extract date from filename."""
-        return '.*'
 
     @property
     def date_format(self) -> str:
