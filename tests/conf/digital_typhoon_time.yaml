@@ -12,7 +12,6 @@ data:
     split_by: 'time'
   dict_kwargs:
     root: 'tests/data/digital_typhoon'
-    download: true
     min_feature_value:
       wind: 10
     sequence_length: 3
