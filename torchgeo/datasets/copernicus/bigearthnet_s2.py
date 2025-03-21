@@ -7,6 +7,7 @@ import os
 from collections.abc import Callable, Sequence
 from typing import Literal
 
+import numpy as np
 import pandas as pd
 import torch
 from einops import rearrange
@@ -112,10 +113,11 @@ class CopernicusBenchBigEarthNetS2(CopernicusBenchBase):
         Returns:
             Data and labels at that index.
         """
-        file = self.files.iloc[index, 1]
+        row = self.files.iloc[index].values
+        file = row[1]
         path = os.path.join(self.root, self.directory, 'BigEarthNet-S2-5%', file)
         sample = self._load_image(path)
-        sample['label'] = torch.tensor(self.files.iloc[index, 2:])
+        sample['label'] = torch.tensor(row[2:].astype(np.int64))
 
         if self.transforms is not None:
             sample = self.transforms(sample)
