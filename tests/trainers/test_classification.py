@@ -242,6 +242,8 @@ class TestMultiLabelClassificationTask:
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
+        if name == 'bigearthnet_s2':
+            pytest.importorskip('pyarrow')
         config = os.path.join('tests', 'conf', name + '.yaml')
 
         monkeypatch.setattr(timm, 'create_model', create_model)
@@ -277,7 +279,7 @@ class TestMultiLabelClassificationTask:
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(BigEarthNetDataModule, 'plot', plot)
         datamodule = BigEarthNetDataModule(
-            root='tests/data/bigearthnet', batch_size=1, num_workers=0
+            root='tests/data/bigearthnet/v1', batch_size=1, num_workers=0
         )
         model = MultiLabelClassificationTask(
             model='resnet18', in_channels=14, num_classes=19, loss='bce'
@@ -293,7 +295,7 @@ class TestMultiLabelClassificationTask:
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(BigEarthNetDataModule, 'plot', plot_missing_bands)
         datamodule = BigEarthNetDataModule(
-            root='tests/data/bigearthnet', batch_size=1, num_workers=0
+            root='tests/data/bigearthnet/v1', batch_size=1, num_workers=0
         )
         model = MultiLabelClassificationTask(
             model='resnet18', in_channels=14, num_classes=19, loss='bce'
@@ -308,7 +310,7 @@ class TestMultiLabelClassificationTask:
 
     def test_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictMultiLabelClassificationDataModule(
-            root='tests/data/bigearthnet', batch_size=1, num_workers=0
+            root='tests/data/bigearthnet/v1', batch_size=1, num_workers=0
         )
         model = MultiLabelClassificationTask(
             model='resnet18', in_channels=14, num_classes=19, loss='bce'

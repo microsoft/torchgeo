@@ -26,6 +26,11 @@ L8 Biome
 
 .. autoclass:: L8BiomeDataModule
 
+MMFlood
+^^^^^^^^
+
+.. autoclass:: MMFloodDataModule
+
 NAIP
 ^^^^
 
@@ -175,6 +180,11 @@ QuakeSet
 
 .. autoclass:: QuakeSetDataModule
 
+ReforesTree
+^^^^^^^^^^^
+
+.. autoclass:: ReforesTreeDataModule
+
 RESISC45
 ^^^^^^^^
 
@@ -212,6 +222,11 @@ SSL4EO-L Benchmark
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SSL4EOLBenchmarkDataModule
+
+Substation
+^^^^^^^^^^
+
+.. autoclass:: SubstationDataModule
 
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^

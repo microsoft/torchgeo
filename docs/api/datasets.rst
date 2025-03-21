@@ -56,6 +56,11 @@ Chesapeake Land Cover
 .. autoclass:: ChesapeakeWV
 .. autoclass:: ChesapeakeCVPR
 
+GlobalBuildingMap
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: GlobalBuildingMap
+
 Global Mangrove Distribution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -70,6 +75,11 @@ EDDMapS
 ^^^^^^^
 
 .. autoclass:: EDDMapS
+
+EnMAP
+^^^^^
+
+.. autoclass:: EnMAP
 
 EnviroAtlas
 ^^^^^^^^^^^
@@ -142,6 +152,10 @@ Landsat
 .. autoclass:: Landsat2
 .. autoclass:: Landsat1
 
+MMFlood
+^^^^^^^
+.. autoclass:: MMFlood
+
 NAIP
 ^^^^
 
@@ -211,11 +225,17 @@ BigEarthNet
 ^^^^^^^^^^^
 
 .. autoclass:: BigEarthNet
+.. autoclass:: BigEarthNetV2
 
 BioMassters
 ^^^^^^^^^^^
 
 .. autoclass:: BioMassters
+
+BRIGHT
+^^^^^^
+
+.. autoclass:: BRIGHTDFC2025
 
 CaBuAr
 ^^^^^^
@@ -264,6 +284,10 @@ DFC2022
 
 .. autoclass:: DFC2022
 
+DIOR
+^^^^
+
+.. autoclass:: DIOR
 
 Digital Typhoon
 ^^^^^^^^^^^^^^^
@@ -274,6 +298,14 @@ Dynamic EarthNet
 ^^^^^^^^^^^^^^^^
 
 .. autoclass:: DynamicEarthNet
+
+DL4GAM
+^^^^^^
+.. autoclass:: DL4GAMAlps
+
+DOTA
+^^^^
+.. autoclass:: DOTA
 
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -286,6 +318,11 @@ EuroSAT
 .. autoclass:: EuroSAT
 .. autoclass:: EuroSATSpatial
 .. autoclass:: EuroSAT100
+
+EverWatch
+^^^^^^^^^
+
+.. autoclass:: EverWatch
 
 FAIR1M
 ^^^^^^
@@ -454,6 +491,12 @@ So2Sat
 
 .. autoclass:: So2Sat
 
+
+SODA
+^^^^
+
+.. autoclass:: SODAA
+
 SpaceNet
 ^^^^^^^^
 
@@ -478,6 +521,11 @@ SSL4EO-L Benchmark
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SSL4EOLBenchmark
+
+Substation
+^^^^^^^^^^
+
+.. autoclass:: Substation
 
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -530,6 +578,22 @@ ZueriCrop
 .. autoclass:: ZueriCrop
 
 .. _Base Classes:
+
+Copernicus-Bench
+----------------
+
+Copernicus-Bench is a comprehensive evaluation benchmark with 15 downstream tasks hierarchically organized across preprocessing (e.g., cloud removal), base applications (e.g., land cover classification), and specialized applications (e.g., air quality estimation). This benchmark enables systematic assessment of foundation model performances across various Sentinel missions on different levels of practical applications.
+
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, T = time series, CD = change detection
+   :widths: 5 15 7 15 20 12 11 12 15 13
+   :header-rows: 1
+   :align: center
+   :file: datasets/copernicus_bench.csv
+
+.. autoclass:: CopernicusBench
+.. autoclass:: CopernicusBenchBase
+.. autoclass:: CopernicusBenchCloudS2
+.. autoclass:: CopernicusBenchCloudS3
 
 Base Classes
 ------------

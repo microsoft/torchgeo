@@ -92,10 +92,9 @@ class IDTReeS(NonGeoDataset):
 
     * https://doi.org/10.1101/2021.08.06.453503
 
-    This dataset requires the following additional libraries to be installed:
+    This dataset requires the following additional library to be installed:
 
        * `laspy <https://pypi.org/project/laspy/>`_ to read lidar point clouds
-       * `pyvista <https://pypi.org/project/pyvista/>`_ to plot lidar point clouds
 
     .. versionadded:: 0.2
     """
@@ -213,20 +212,23 @@ class IDTReeS(NonGeoDataset):
 
         if self.split == 'test':
             if self.task == 'task2':
-                sample['boxes'] = self._load_boxes(path)
+                sample['bbox_xyxy'] = self._load_boxes(path)
                 h, w = sample['image'].shape[1:]
-                sample['boxes'], _ = self._filter_boxes(
-                    image_size=(h, w), min_size=1, boxes=sample['boxes'], labels=None
+                sample['bbox_xyxy'], _ = self._filter_boxes(
+                    image_size=(h, w),
+                    min_size=1,
+                    boxes=sample['bbox_xyxy'],
+                    labels=None,
                 )
         else:
-            sample['boxes'] = self._load_boxes(path)
+            sample['bbox_xyxy'] = self._load_boxes(path)
             sample['label'] = self._load_target(path)
 
             h, w = sample['image'].shape[1:]
-            sample['boxes'], sample['label'] = self._filter_boxes(
+            sample['bbox_xyxy'], sample['label'] = self._filter_boxes(
                 image_size=(h, w),
                 min_size=1,
-                boxes=sample['boxes'],
+                boxes=sample['bbox_xyxy'],
                 labels=sample['label'],
             )
 
@@ -505,20 +507,20 @@ class IDTReeS(NonGeoDataset):
         hsi = normalize(sample['hsi'][hsi_indices, :, :]).permute((1, 2, 0)).numpy()
         chm = normalize(sample['chm']).permute((1, 2, 0)).numpy()
 
-        if 'boxes' in sample and len(sample['boxes']):
+        if 'bbox_xyxy' in sample and len(sample['bbox_xyxy']):
             labels = (
                 [self.idx2class[int(i)] for i in sample['label']]
                 if 'label' in sample
                 else None
             )
             image = draw_bounding_boxes(
-                image=sample['image'], boxes=sample['boxes'], labels=labels
+                image=sample['image'], boxes=sample['bbox_xyxy'], labels=labels
             )
             image = image.permute((1, 2, 0)).numpy()
         else:
             image = sample['image'].permute((1, 2, 0)).numpy()
 
-        if 'prediction_boxes' in sample and len(sample['prediction_boxes']):
+        if 'prediction_bbox_xyxy' in sample and len(sample['prediction_bbox_xyxy']):
             ncols += 1
             labels = (
                 [self.idx2class[int(i)] for i in sample['prediction_label']]
@@ -526,7 +528,9 @@ class IDTReeS(NonGeoDataset):
                 else None
             )
             preds = draw_bounding_boxes(
-                image=sample['image'], boxes=sample['prediction_boxes'], labels=labels
+                image=sample['image'],
+                boxes=sample['prediction_bbox_xyxy'],
+                labels=labels,
             )
             preds = preds.permute((1, 2, 0)).numpy()
 
@@ -552,36 +556,3 @@ class IDTReeS(NonGeoDataset):
             plt.suptitle(suptitle)
 
         return fig
-
-    def plot_las(self, index: int) -> 'pyvista.Plotter':  # type: ignore[name-defined] # noqa: F821
-        """Plot a sample point cloud at the index.
-
-        Args:
-            index: index to plot
-
-        Returns:
-            pyvista.PolyData object. Run pyvista.plot(point_cloud, ...) to display
-
-        Raises:
-            DependencyNotFoundError: If laspy or pyvista are not installed.
-
-        .. versionchanged:: 0.4
-           Ported from Open3D to PyVista, *colormap* parameter removed.
-        """
-        laspy = lazy_import('laspy')
-        pyvista = lazy_import('pyvista')
-        path = self.images[index]
-        path = path.replace('RGB', 'LAS').replace('.tif', '.las')
-        las = laspy.read(path)
-        points: np.typing.NDArray[np.int_] = np.stack(
-            [las.x, las.y, las.z], axis=0
-        ).transpose((1, 0))
-        point_cloud = pyvista.PolyData(points)
-
-        # Some point cloud files have no color->points mapping
-        if hasattr(las, 'red'):
-            colors = np.stack([las.red, las.green, las.blue], axis=0)
-            colors = colors.transpose((1, 0)) / np.iinfo(np.uint16).max
-            point_cloud['colors'] = colors
-
-        return point_cloud
