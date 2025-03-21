@@ -35,7 +35,7 @@ class CopernicusBenchEuroSATS1(CopernicusBenchBase):
     md5 = 'e7e7f8fc68fc55a7a689cb654912ff3f'
     zipfile = 'eurosat_s1.zip'
     directory = 'eurosat_s1'
-    filename = 'eurosat-{}.csv'
+    filename = 'eurosat-{}.txt'
     all_bands = ('VV', 'VH')
     rgb_bands = ('VV', 'VH')
     classes = (

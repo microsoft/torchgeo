@@ -30,7 +30,7 @@ class CopernicusBenchEuroSATS2(CopernicusBenchBase):
     md5 = 'b2be02ca9767554c717f2e9bd15bbd23'
     zipfile = 'eurosat_s2.zip'
     directory = 'eurosat_s2'
-    filename = 'eurosat-{}.csv'
+    filename = 'eurosat-{}.txt'
     all_bands = (
         'B01',
         'B02',

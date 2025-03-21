@@ -85,8 +85,8 @@ filename = filename.replace('.tif', '.jpg')
 for directory in ['eurosat_s1', 'eurosat_s2']:
     # Splits
     for split in ['train', 'val', 'test']:
-        with open(os.path.join(directory, f'eurosat-{split}.csv'), 'w') as csv:
-            csv.write(f'{filename}\n')
+        with open(os.path.join(directory, f'eurosat-{split}.txt'), 'w') as f:
+            f.write(f'{filename}\n')
 
     # Zip
     shutil.make_archive(directory, 'zip', '.', directory)
