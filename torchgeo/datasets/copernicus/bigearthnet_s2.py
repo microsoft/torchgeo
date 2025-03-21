@@ -54,7 +54,7 @@ class CopernicusBenchBigEarthNetS2(CopernicusBenchBase):
         'B11',
         'B12',
     )
-    rgb_bands = ('B04', 'B02', 'B03')
+    rgb_bands = ('B04', 'B03', 'B02')
     classes = (
         'Urban fabric',
         'Industrial or commercial units',
