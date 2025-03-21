@@ -53,25 +53,25 @@ class TestFourierExpansion:
 
 class TestDynamicPatchEmbed:
     def test_spectral(self) -> None:
-        embed = DynamicPatchEmbed(hypernet='spectral')
-        img_feat = torch.rand(1, 1, 1, 1)
-        match = 'For spectral hypernet, wvs and bandwidths must be provided.'
+        embed = DynamicPatchEmbed(input_mode='spectral')
+        x = torch.rand(1, 1, 1, 1)
+        match = 'For spectral hypernet, wavelengths and bandwidths must be provided.'
         with pytest.raises(ValueError, match=match):
-            embed(img_feat)
+            embed(x)
 
     def test_variable(self) -> None:
-        embed = DynamicPatchEmbed(hypernet='variable')
-        img_feat = torch.rand(1, 1, 1, 1)
+        embed = DynamicPatchEmbed(input_mode='variable')
+        x = torch.rand(1, 1, 1, 1)
         match = 'For variable hypernet, language_embed must be provided.'
         with pytest.raises(ValueError, match=match):
-            embed(img_feat)
+            embed(x)
 
     def test_kernel_size(self) -> None:
         embed = DynamicPatchEmbed(kernel_size=16)
-        img_feat = torch.rand(1, 4, 28, 28)
-        wvs = torch.tensor([664.6, 559.8, 492.4, 832.8])
+        x = torch.rand(1, 4, 28, 28)
+        wavelengths = torch.tensor([664.6, 559.8, 492.4, 832.8])
         bandwidths = torch.tensor([31, 36, 66, 106])
-        embed(img_feat, wvs, bandwidths, kernel_size=12)
+        embed(x, wavelengths, bandwidths, kernel_size=12)
 
 
 class TestCopernicusFM:
@@ -85,35 +85,35 @@ class TestCopernicusFM:
             [float('nan'), float('nan'), float('nan'), float('nan')],
         ]
     )
-    def meta_info(self, request: SubRequest) -> Tensor:
+    def metadata(self, request: SubRequest) -> Tensor:
         return torch.tensor([request.param])
 
-    def test_global_pool(self, meta_info: Tensor) -> None:
+    def test_global_pool(self, metadata: Tensor) -> None:
         model = CopernicusFM(global_pool=False)
         x = torch.rand(1, 4, 28, 28)
-        wave_list = [664.6, 559.8, 492.4, 832.8]
-        bandwidth = [31, 36, 66, 106]
+        wavelengths = [664.6, 559.8, 492.4, 832.8]
+        bandwidths = [31, 36, 66, 106]
         input_mode = 'spectral'
         model(
             x,
-            meta_info,
-            wave_list=wave_list,
-            bandwidth=bandwidth,
+            metadata,
+            wavelengths=wavelengths,
+            bandwidths=bandwidths,
             input_mode=input_mode,
         )
 
     def test_embed_dim(self) -> None:
         model = CopernicusFM(embed_dim=5, num_heads=5)
         x = torch.rand(1, 4, 28, 28)
-        meta_info = torch.tensor([[0, 1, float('nan'), float('nan')]])
-        wave_list = [664.6, 559.8, 492.4, 832.8]
-        bandwidth = [31, 36, 66, 106]
+        metadata = torch.tensor([[0, 1, float('nan'), float('nan')]])
+        wavelengths = [664.6, 559.8, 492.4, 832.8]
+        bandwidths = [31, 36, 66, 106]
         input_mode = 'spectral'
         model(
             x,
-            meta_info,
-            wave_list=wave_list,
-            bandwidth=bandwidth,
+            metadata,
+            wavelengths=wavelengths,
+            bandwidths=bandwidths,
             input_mode=input_mode,
         )
 
@@ -143,25 +143,25 @@ class TestCopernicusFMBase:
     def test_copernicusfm_spectral(self) -> None:
         model = copernicusfm_base()
         x = torch.rand(1, 4, 28, 28)
-        meta_info = torch.rand(1, 4)
-        wave_list = [664.6, 559.8, 492.4, 832.8]
-        bandwidth = [31, 36, 66, 106]
+        metadata = torch.rand(1, 4)
+        wavelengths = [664.6, 559.8, 492.4, 832.8]
+        bandwidths = [31, 36, 66, 106]
         input_mode = 'spectral'
         model(
             x,
-            meta_info,
-            wave_list=wave_list,
-            bandwidth=bandwidth,
+            metadata,
+            wavelengths=wavelengths,
+            bandwidths=bandwidths,
             input_mode=input_mode,
         )
 
     def test_copernicusfm_variable(self) -> None:
         model = copernicusfm_base()
         x = torch.rand(1, 1, 96, 96)
-        meta_info = torch.rand(1, 4)
+        metadata = torch.rand(1, 4)
         language_embed = torch.rand(2048)
         input_mode = 'variable'
-        model(x, meta_info, language_embed=language_embed, input_mode=input_mode)
+        model(x, metadata, language_embed=language_embed, input_mode=input_mode)
 
     def test_copernicusfm_weights(self, mocked_weights: WeightsEnum) -> None:
         copernicusfm_base(weights=mocked_weights)

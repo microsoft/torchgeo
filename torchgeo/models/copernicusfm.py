@@ -33,7 +33,7 @@ def resize_abs_pos_embed(
 ) -> Tensor:
     """Resize absolute position embeddings to a target resolution via interpolation.
 
-    Borrowed from https://github.com/bwconrad/flexivit. Copyright (c) 2023 Ben Conrad.
+    Adapted from https://github.com/bwconrad/flexivit. Copyright (c) 2023 Ben Conrad.
 
     Args:
         pos_embed: Position embeddings tensor of size [b, n, d]
@@ -84,7 +84,7 @@ def pi_resize_patch_embed(
 ) -> Tensor:
     """Resample patch embeddings to a target resolution via pseudo-inverse resizing.
 
-    Borrowed from https://github.com/bwconrad/flexivit. Copyright (c) 2023 Ben Conrad.
+    Adapted from https://github.com/bwconrad/flexivit. Copyright (c) 2023 Ben Conrad.
 
     Args:
         patch_embed: Patch embedding parameters of size [d, c, h, w]
@@ -141,7 +141,7 @@ def pi_resize_patch_embed(
 class FourierExpansion(nn.Module):
     """A Fourier series-style expansion into a high-dimensional space.
 
-    Borrowed from https://github.com/microsoft/aurora.
+    Adapted from https://github.com/microsoft/aurora.
     Copyright (c) Microsoft Corporation.
     """
 
@@ -218,31 +218,31 @@ class DynamicPatchEmbed(nn.Module):
 
     def __init__(
         self,
-        wv_planes: int = 128,
+        hyper_dim: int = 128,
         kernel_size: int = 16,
         embed_dim: int = 1024,
-        hypernet: Literal['spectral', 'variable'] = 'spectral',
+        input_mode: Literal['spectral', 'variable'] = 'spectral',
     ) -> None:
         """Initialize a new DynamicPatchEmbed instance.
 
         Args:
-            wv_planes: dim for wavelength/bandwidth/varname encoding.
+            hyper_dim: dim for wavelength/bandwidth/varname encoding.
             kernel_size: Kernel size for the patch embedding (convolution) layer.
             embed_dim: Embedding dimension.
-            hypernet: Type of hypernetwork to use. Options: 'spectral' or 'variable'.
+            input_mode: Type of hypernetwork to use. Options: 'spectral' or 'variable'.
                 'spectral' uses Fourier encodings for wavelength and bandwidth;
                 'variable' uses a language embedding for variable names.
         """
         super().__init__()
-        self.hypernet = hypernet
+        self.input_mode = input_mode
         self.kernel_size = kernel_size
-        self.wv_planes = wv_planes
+        self.hyper_dim = hyper_dim
         self.embed_dim = embed_dim
         self._num_kernel = self.kernel_size * self.kernel_size * self.embed_dim
         self.patch_size = (kernel_size, kernel_size)
         self.num_patches = -1
 
-        if self.hypernet == 'spectral':
+        if self.input_mode == 'spectral':
             # Spectral hypernetwork: Fourier encoding for wavelength and bandwidth.
             # min wavelength: ultraviolet light (100 nm)
             # max wavelength: radio waves (1 m)
@@ -250,15 +250,15 @@ class DynamicPatchEmbed(nn.Module):
             # max bandwidth: s1 ~ 1 m
             self.spectrum_central_expansion = FourierExpansion(100, 1e9)
             self.spectrum_bandwidth_expansion = FourierExpansion(1, 1e9)
-        elif self.hypernet == 'variable':
+        elif self.input_mode == 'variable':
             # Variable hypernetwork: Language embedding for variable names.
-            self.language_proj = nn.Linear(2048, self.wv_planes)
+            self.language_proj = nn.Linear(2048, self.hyper_dim)
 
         self.weight_generator = TransformerWeightGenerator(
-            wv_planes, self._num_kernel, embed_dim
+            hyper_dim, self._num_kernel, embed_dim
         )
         self.scaler = 0.01
-        self.fclayer = FCResLayer(wv_planes)
+        self.fclayer = FCResLayer(hyper_dim)
         self._init_weights()
 
     def _get_weights(self, waves: Tensor) -> Tensor:
@@ -291,21 +291,21 @@ class DynamicPatchEmbed(nn.Module):
 
     def forward(
         self,
-        img_feat: Tensor,
-        wvs: Tensor | None = None,
+        x: Tensor,
+        wavelengths: Tensor | None = None,
         bandwidths: Tensor | None = None,
         language_embed: Tensor | None = None,
         kernel_size: int | None = None,
     ) -> Tensor:
         """Forward pass.
 
-        For hypernet=='spectral', `wvs` and `bandwidths` must be provided.
-        For hypernet=='variable', `language_embed` must be provided.
+        For input_mode=='spectral', `wavelengths` and `bandwidths` must be provided.
+        For input_mode=='variable', `language_embed` must be provided.
 
         Args:
-            img_feat: Input image tensor (B, C, H, W).
-            wvs: Wavelengths in nm (required if hypernet=='spectral').
-            bandwidths: Bandwidths in nm (required if hypernet=='spectral').
+            x: Input image tensor (B, C, H, W).
+            wavelengths: Wavelengths in nm (required if input_mode=='spectral').
+            bandwidths: Bandwidths in nm (required if input_mode=='spectral').
             language_embed: Language embedding tensor from Llama 3.2 1B (length 2048).
             kernel_size: If provided and differs from the initialized kernel size,
                 the generated patch embed kernel weights are resized accordingly.
@@ -314,20 +314,20 @@ class DynamicPatchEmbed(nn.Module):
             Output after patch embedding (B, N, D).
 
         Raises:
-            ValueError: When *hypernet=='spectral'* and *wvs* or *bandwidths* is missing,
-                or when *hypernet=='variable'* and *language_embed* is missing.
+            ValueError: When *input_mode=='spectral'* and *wavelengths* or *bandwidths* is missing,
+                or when *input_mode=='variable'* and *language_embed* is missing.
         """
-        if self.hypernet == 'spectral':
-            if wvs is None or bandwidths is None:
-                msg = 'For spectral hypernet, wvs and bandwidths must be provided.'
+        if self.input_mode == 'spectral':
+            if wavelengths is None or bandwidths is None:
+                msg = 'For spectral hypernet, wavelengths and bandwidths must be provided.'
                 raise ValueError(msg)
 
-            emb_central = self.spectrum_central_expansion(wvs, self.wv_planes)
+            emb_central = self.spectrum_central_expansion(wavelengths, self.hyper_dim)
             emb_bandwidth = self.spectrum_bandwidth_expansion(
-                bandwidths, self.wv_planes
+                bandwidths, self.hyper_dim
             )
             waves = emb_central + emb_bandwidth
-        elif self.hypernet == 'variable':
+        elif self.input_mode == 'variable':
             if language_embed is None:
                 msg = 'For variable hypernet, language_embed must be provided.'
                 raise ValueError(msg)
@@ -356,7 +356,7 @@ class DynamicPatchEmbed(nn.Module):
         weights = dynamic_weight * self.scaler
 
         dynamic_out = F.conv2d(
-            img_feat, weights, bias=bias, stride=kernel_size, padding=1, dilation=1
+            x, weights, bias=bias, stride=kernel_size, padding=1, dilation=1
         )
         x = dynamic_out.flatten(2).transpose(1, 2)
         return x
@@ -369,25 +369,25 @@ class CopernicusFM(nn.Module):
         **1. Spectral Mode (Using Wavelength and Bandwidth):**
 
         >>> model = CopernicusFM()
-        >>> img = torch.randn(1, 4, 224, 224) # input image
-        >>> meta = torch.full((1, 4), float('nan')) # [lon (degree), lat (degree), delta_time (days since 1970/1/1), patch_token_area (km^2)], assume unknown
-        >>> wvs = [490, 560, 665, 842] # wavelength (nm): B,G,R,NIR (Sentinel 2)
-        >>> bws = [65, 35, 30, 115] # bandwidth (nm): B,G,R,NIR (Sentinel 2)
+        >>> x = torch.randn(1, 4, 224, 224) # input image
+        >>> metadata = torch.full((1, 4), float('nan')) # [lon (degree), lat (degree), delta_time (days since 1970/1/1), patch_token_area (km^2)], assume unknown
+        >>> wavelengths = [490, 560, 665, 842] # wavelength (nm): B,G,R,NIR (Sentinel 2)
+        >>> bandwidths = [65, 35, 30, 115] # bandwidth (nm): B,G,R,NIR (Sentinel 2)
         >>> kernel_size = 16 # expected patch size
         >>> input_mode = 'spectral'
-        >>> logit = model(img, meta, wave_list=wvs, bandwidth=bws, input_mode=input_mode, kernel_size=kernel_size)
+        >>> logit = model(x, metadata, wavelengths=wavelengths, bandwidth=bandwidths, input_mode=input_mode, kernel_size=kernel_size)
         >>> print(logit.shape)
 
         **2. Variable Mode (Using language embedding):**
 
         >>> model = CopernicusFM()
         >>> varname = 'Sentinel 5P Nitrogen Dioxide' # variable name (as input to a LLM for langauge embed)
-        >>> img = torch.randn(1, 1, 56, 56) # input image
-        >>> meta = torch.full((1, 4), float('nan')) # [lon (degree), lat (degree), delta_time (days since 1970/1/1), patch_token_area (km^2)], assume unknown
+        >>> x = torch.randn(1, 1, 56, 56) # input image
+        >>> metadata = torch.full((1, 4), float('nan')) # [lon (degree), lat (degree), delta_time (days since 1970/1/1), patch_token_area (km^2)], assume unknown
         >>> language_embed = torch.randn(2048) # language embedding: encode varname with a LLM (e.g. Llama)
         >>> kernel_size = 4 # expected patch size
         >>> input_mode = 'variable'
-        >>> logit = model(img, meta, language_embed=language_embed, input_mode=input_mode, kernel_size=kernel_size)
+        >>> logit = model(x, metadata, language_embed=language_embed, input_mode=input_mode, kernel_size=kernel_size)
         >>> print(logit.shape)
 
     """
@@ -400,7 +400,7 @@ class CopernicusFM(nn.Module):
         embed_dim: int = 1024,
         depth: int = 24,
         num_heads: int = 16,
-        wv_planes: int = 128,
+        hyper_dim: int = 128,
         num_classes: int = 0,
         global_pool: bool = True,
         mlp_ratio: float = 4.0,
@@ -415,7 +415,7 @@ class CopernicusFM(nn.Module):
             embed_dim: Transformer embedding dimension.
             depth: Depth of transformer.
             num_heads: Number of attention heads.
-            wv_planes: Dimensions of dynamic weight generator.
+            hyper_dim: Dimensions of dynamic weight generator.
             num_classes: Number of classes for classification head.
             global_pool: Whether or not to perform global pooling.
             mlp_ratio: Ratio of MLP hidden dim to embedding dim.
@@ -423,7 +423,7 @@ class CopernicusFM(nn.Module):
         """
         super().__init__()
 
-        self.wv_planes = wv_planes
+        self.hyper_dim = hyper_dim
         self.global_pool = global_pool
         if self.global_pool:
             norm_layer = norm_layer
@@ -433,10 +433,10 @@ class CopernicusFM(nn.Module):
             self.norm = norm_layer(embed_dim)
 
         self.patch_embed_spectral = DynamicPatchEmbed(
-            wv_planes=128, kernel_size=16, embed_dim=embed_dim, hypernet='spectral'
+            hyper_dim=128, kernel_size=16, embed_dim=embed_dim, input_mode='spectral'
         )
         self.patch_embed_variable = DynamicPatchEmbed(
-            wv_planes=128, kernel_size=16, embed_dim=embed_dim, hypernet='variable'
+            hyper_dim=128, kernel_size=16, embed_dim=embed_dim, input_mode='variable'
         )
 
         self.num_patches = (img_size // patch_size) ** 2
@@ -449,13 +449,13 @@ class CopernicusFM(nn.Module):
         )
 
         self.coord_expansion = FourierExpansion(0.0001, 720)
-        self.scale_expansion = FourierExpansion(0.001, 5.1e8)  # 1m2 to 5.1e8 km2
+        self.scale_expansion = FourierExpansion(0.001, 5.1e8)  # 1 m2 to 5.1e8 km2
         # 1 to 365.25 days, enable more than 1 year
         self.time_expansion = FourierExpansion(1, 365.25, assert_range=False)
         self.coord_fc = nn.Linear(embed_dim, embed_dim)
         self.scale_fc = nn.Linear(embed_dim, embed_dim)
         self.time_fc = nn.Linear(embed_dim, embed_dim)
-        # if meta info is not available, set to a learned parameter
+        # if metadata is not available, set to a learned parameter
         self.coord_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.scale_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.time_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
@@ -540,9 +540,9 @@ class CopernicusFM(nn.Module):
     def forward_features(
         self,
         x: Tensor,
-        meta_info: Tensor,
-        wave_list: Sequence[float] | None = None,
-        bandwidth: Sequence[float] | None = None,
+        metadata: Tensor,
+        wavelengths: Sequence[float] | None = None,
+        bandwidths: Sequence[float] | None = None,
         language_embed: Tensor | None = None,
         input_mode: Literal['spectral', 'variable'] = 'spectral',
         kernel_size: int | None = None,
@@ -551,12 +551,12 @@ class CopernicusFM(nn.Module):
 
         Args:
             x: Input mini-batch.
-            meta_info: Longitudes (degree), latitudes (degree), times
+            metadata: Longitudes (degree), latitudes (degree), times
                 (days since 1970/1/1), and areas (km^2) of each patch.
                 Use NaN for unknown metadata.
-            wave_list: Wavelengths of each spectral band (nm).
+            wavelengths: Wavelengths of each spectral band (nm).
                 Only used if *input_mode=='spectral'*.
-            bandwidth: Bandwidths in nm.
+            bandwidths: Bandwidths in nm.
                 Only used if *input_mode=='spectral'*.
             language_embed: Language embedding tensor from Llama 3.2 1B (length 2048).
                 Only used if *input_mode=='variable'*.
@@ -568,10 +568,10 @@ class CopernicusFM(nn.Module):
             Output mini-batch.
         """
         if input_mode == 'spectral':
-            wvs = torch.tensor(wave_list, device=x.device).float()
-            bandwidths = torch.tensor(bandwidth, device=x.device).float()
+            wvs = torch.tensor(wavelengths, device=x.device).float()
+            bws = torch.tensor(bandwidths, device=x.device).float()
             x = self.patch_embed_spectral(
-                x, wvs=wvs, bandwidths=bandwidths, kernel_size=kernel_size
+                x, wavelengths=wvs, bandwidths=bws, kernel_size=kernel_size
             )
         elif input_mode == 'variable':
             x = self.patch_embed_variable(
@@ -591,10 +591,10 @@ class CopernicusFM(nn.Module):
 
         # coord, scale and time pos embed
         lons, lats, times, areas = (
-            meta_info[:, 0],
-            meta_info[:, 1],
-            meta_info[:, 2],
-            meta_info[:, 3],
+            metadata[:, 0],
+            metadata[:, 1],
+            metadata[:, 2],
+            metadata[:, 3],
         )
         embed_dim = pos_embed.shape[-1]
         if torch.isnan(lons).any() or torch.isnan(lats).any():
@@ -650,9 +650,9 @@ class CopernicusFM(nn.Module):
     def forward(
         self,
         x: Tensor,
-        meta_info: Tensor,
-        wave_list: Sequence[float] | None = None,
-        bandwidth: Sequence[float] | None = None,
+        metadata: Tensor,
+        wavelengths: Sequence[float] | None = None,
+        bandwidths: Sequence[float] | None = None,
         language_embed: Tensor | None = None,
         input_mode: Literal['spectral', 'variable'] = 'spectral',
         kernel_size: int | None = None,
@@ -661,12 +661,12 @@ class CopernicusFM(nn.Module):
 
         Args:
             x: Input mini-batch.
-            meta_info: Longitudes (degree), latitudes (degree), times
+            metadata: Longitudes (degree), latitudes (degree), times
                 (days since 1970/1/1), and areas (km^2) of each patch.
                 Use NaN for unknown metadata.
-            wave_list: Wavelengths of each spectral band (nm).
+            wavelengths: Wavelengths of each spectral band (nm).
                 Only used if *input_mode=='spectral'*.
-            bandwidth: Bandwidths in nm.
+            bandwidths: Bandwidths in nm.
                 Only used if *input_mode=='spectral'*.
             language_embed: Language embedding tensor from Llama 3.2 1B (length 2048).
                 Only used if *input_mode=='variable'*.
@@ -678,7 +678,13 @@ class CopernicusFM(nn.Module):
             Output mini-batch.
         """
         fx = self.forward_features(
-            x, meta_info, wave_list, bandwidth, language_embed, input_mode, kernel_size
+            x,
+            metadata,
+            wavelengths,
+            bandwidths,
+            language_embed,
+            input_mode,
+            kernel_size,
         )
         x = self.forward_head(fx)
         return x
@@ -726,9 +732,6 @@ def copernicusfm_base(
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
-
-        print(missing_keys)
-        print(unexpected_keys)
 
         # Both fc_norm and head are generated dynamically
         assert set(missing_keys) <= {
