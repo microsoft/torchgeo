@@ -12,6 +12,7 @@ from .base import CopernicusBenchBase
 from .cloud_s2 import CopernicusBenchCloudS2
 from .cloud_s3 import CopernicusBenchCloudS3
 from .eurosat_s1 import CopernicusBenchEuroSATS1
+from .eurosat_s2 import CopernicusBenchEuroSATS2
 
 __all__ = (
     'CopernicusBench',
@@ -19,12 +20,14 @@ __all__ = (
     'CopernicusBenchCloudS2',
     'CopernicusBenchCloudS3',
     'CopernicusBenchEuroSATS1',
+    'CopernicusBenchEuroSATS2',
 )
 
 DATASET_REGISTRY = {
     'cloud_s2': CopernicusBenchCloudS2,
     'cloud_s3': CopernicusBenchCloudS3,
     'eurosat_s1': CopernicusBenchEuroSATS1,
+    'eurosat_s2': CopernicusBenchEuroSATS2,
 }
 
 
@@ -42,7 +45,7 @@ class CopernicusBench(NonGeoDataset):
 
     def __init__(
         self,
-        name: Literal['cloud_s2', 'cloud_s3', 'eurosat_s1'],
+        name: Literal['cloud_s2', 'cloud_s3', 'eurosat_s1', 'eurosat_s2'],
         *args: Any,
         **kwargs: Any,
     ) -> None:

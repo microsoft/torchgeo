@@ -26,6 +26,7 @@ class TestCopernicusBench:
             ('cloud_s3', 'l1_cloud_s3', {'mode': 'binary'}),
             ('cloud_s3', 'l1_cloud_s3', {'mode': 'multi'}),
             ('eurosat_s1', 'l2_eurosat_s1s2', {}),
+            ('eurosat_s2', 'l2_eurosat_s1s2', {}),
         ]
     )
     def dataset(self, request: SubRequest) -> CopernicusBench:
@@ -39,7 +40,7 @@ class TestCopernicusBench:
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['lat'], torch.Tensor)
         assert isinstance(x['lon'], torch.Tensor)
-        if dataset.name not in ['eurosat_s1']:
+        if dataset.name not in ['eurosat_s1', 'eurosat_s2']:
             assert isinstance(x['time'], torch.Tensor)
         if 'mask' in x:
             assert isinstance(x['mask'], torch.Tensor)

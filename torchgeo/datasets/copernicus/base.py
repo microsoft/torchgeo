@@ -256,6 +256,12 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         ax[0, 0].imshow(image)
         ax[0, 0].axis('off')
         if show_titles:
+            title = 'Image'
+            if 'label' in sample:
+                title = 'Label: ' + self.classes[sample['label']]
+                if 'prediction' in sample:
+                    title += '\nPrediction: ' + self.classes[sample['prediction']]
+
             ax[0, 0].set_title('Image')
 
         if 'mask' in sample:
