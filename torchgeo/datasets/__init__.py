@@ -35,6 +35,8 @@ from .copernicus import (
     CopernicusBenchBase,
     CopernicusBenchCloudS2,
     CopernicusBenchCloudS3,
+    CopernicusBenchLC100ClsS3,
+    CopernicusBenchLC100SegS3,
 )
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cropharvest import CropHarvest
@@ -165,12 +167,6 @@ from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
 from .xview import XView2
 from .zuericrop import ZueriCrop
 
-from .senbench_cloud_s3 import SenBenchCloudS3
-from .senbench_lc100cls_s3 import SenBenchLC100ClsS3
-from .senbench_lc100seg_s3 import SenBenchLC100SegS3
-from .sentinelbench import SentinelBench
-
-
 __all__ = (
     'ADVANCE',
     'BRIGHTDFC2025',
@@ -231,6 +227,8 @@ __all__ = (
     'CopernicusBenchBase',
     'CopernicusBenchCloudS2',
     'CopernicusBenchCloudS3',
+    'CopernicusBenchLC100ClsS3',
+    'CopernicusBenchLC100SegS3',
     'CropHarvest',
     'DL4GAMAlps',
     'DatasetNotFoundError',
@@ -335,8 +333,4 @@ __all__ = (
     'stack_samples',
     'time_series_split',
     'unbind_samples',
-    'SenBenchCloudS3',
-    'SenBenchLC100ClsS3',
-    'SenBenchLC100SegS3',
-    'SentinelBench',
 )

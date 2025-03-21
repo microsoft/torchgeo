@@ -11,17 +11,23 @@ from ..geo import NonGeoDataset
 from .base import CopernicusBenchBase
 from .cloud_s2 import CopernicusBenchCloudS2
 from .cloud_s3 import CopernicusBenchCloudS3
+from .lc100cls_s3 import CopernicusBenchLC100ClsS3
+from .lc100seg_s3 import CopernicusBenchLC100SegS3
 
 __all__ = (
     'CopernicusBench',
     'CopernicusBenchBase',
     'CopernicusBenchCloudS2',
     'CopernicusBenchCloudS3',
+    'CopernicusBenchLC100ClsS3',
+    'CopernicusBenchLC100SegS3',
 )
 
 DATASET_REGISTRY = {
     'cloud_s2': CopernicusBenchCloudS2,
     'cloud_s3': CopernicusBenchCloudS3,
+    'lc100cls_s3': CopernicusBenchLC100ClsS3,
+    'lc100seg_s3': CopernicusBenchLC100SegS3,
 }
 
 
@@ -38,7 +44,10 @@ class CopernicusBench(NonGeoDataset):
     """
 
     def __init__(
-        self, name: Literal['cloud_s2', 'cloud_s3'], *args: Any, **kwargs: Any
+        self,
+        name: Literal['cloud_s2', 'cloud_s3', 'lc100cls_s3', 'lc100seg_s3'],
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Initialize a new CopernicusBench instance.
 
