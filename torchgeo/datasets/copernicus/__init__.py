@@ -10,6 +10,7 @@ from torch import Tensor
 from ..geo import NonGeoDataset
 from .base import CopernicusBenchBase
 from .bigearthnet_s1 import CopernicusBenchBigEarthNetS1
+from .bigearthnet_s2 import CopernicusBenchBigEarthNetS2
 from .cloud_s2 import CopernicusBenchCloudS2
 from .cloud_s3 import CopernicusBenchCloudS3
 from .eurosat_s1 import CopernicusBenchEuroSATS1
@@ -19,6 +20,7 @@ __all__ = (
     'CopernicusBench',
     'CopernicusBenchBase',
     'CopernicusBenchBigEarthNetS1',
+    'CopernicusBenchBigEarthNetS2',
     'CopernicusBenchCloudS2',
     'CopernicusBenchCloudS3',
     'CopernicusBenchEuroSATS1',
@@ -31,6 +33,7 @@ DATASET_REGISTRY = {
     'eurosat_s1': CopernicusBenchEuroSATS1,
     'eurosat_s2': CopernicusBenchEuroSATS2,
     'bigearthnet_s1': CopernicusBenchBigEarthNetS1,
+    'bigearthnet_s2': CopernicusBenchBigEarthNetS2,
 }
 
 
@@ -49,7 +52,12 @@ class CopernicusBench(NonGeoDataset):
     def __init__(
         self,
         name: Literal[
-            'cloud_s2', 'cloud_s3', 'eurosat_s1', 'eurosat_s2', 'bigearthnet_s1'
+            'cloud_s2',
+            'cloud_s3',
+            'eurosat_s1',
+            'eurosat_s2',
+            'bigearthnet_s1',
+            'bigearthnet_s2',
         ],
         *args: Any,
         **kwargs: Any,

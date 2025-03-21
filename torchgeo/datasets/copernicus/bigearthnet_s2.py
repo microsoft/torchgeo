@@ -1,13 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"""Copernicus-Bench BigEarthNet-S1 dataset."""
+"""Copernicus-Bench BigEarthNet-S2 dataset."""
 
 import os
 from collections.abc import Callable, Sequence
 from typing import Literal
 
-import numpy as np
 import pandas as pd
 import torch
 from einops import rearrange
@@ -20,11 +19,11 @@ from ..utils import Path, percentile_normalization
 from .base import CopernicusBenchBase
 
 
-class CopernicusBenchBigEarthNetS1(CopernicusBenchBase):
-    """Copernicus-Bench BigEarthNet-S1 dataset.
+class CopernicusBenchBigEarthNetS2(CopernicusBenchBase):
+    """Copernicus-Bench BigEarthNet-S2 dataset.
 
-    BigEarthNet-S1 is a multilabel land use/land cover classification dataset
-    composed of 5% of the Sentinel-1 data of BigEarthNet-v2.
+    BigEarthNet-S2 is a multilabel land use/land cover classification dataset
+    composed of 5% of the Sentinel-2 data of BigEarthNet-v2.
 
     If you use this dataset in your research, please cite the following papers:
 
@@ -39,9 +38,22 @@ class CopernicusBenchBigEarthNetS1(CopernicusBenchBase):
     zipfile = 'bigearthnetv2.zip'
     directory = 'bigearthnet_s1s2'
     filename = 'multilabel-{}.csv'
-    filename_regex = r'.{16}_(?P<date>\d{8}T\d{6})'
-    all_bands = ('VV', 'VH')
-    rgb_bands = ('VV', 'VH')
+    filename_regex = r'.{10}_(?P<date>\d{8}T\d{6})'
+    all_bands = (
+        'B01',
+        'B02',
+        'B03',
+        'B04',
+        'B05',
+        'B06',
+        'B07',
+        'B08',
+        'B8A',
+        'B09',
+        'B11',
+        'B12',
+    )
+    rgb_bands = ('B04', 'B02', 'B03')
     classes = (
         'Urban fabric',
         'Industrial or commercial units',
@@ -73,7 +85,7 @@ class CopernicusBenchBigEarthNetS1(CopernicusBenchBase):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new CopernicusBenchBigEarthNetS1 instance.
+        """Initialize a new CopernicusBenchBigEarthNetS2 instance.
 
         Args:
             root: Root directory where dataset can be found.
@@ -100,8 +112,8 @@ class CopernicusBenchBigEarthNetS1(CopernicusBenchBase):
         Returns:
             Data and labels at that index.
         """
-        file = self.files.iloc[index, 0]
-        path = os.path.join(self.root, self.directory, 'BigEarthNet-S1-5%', file)
+        file = self.files.iloc[index, 1]
+        path = os.path.join(self.root, self.directory, 'BigEarthNet-S2-5%', file)
         sample = self._load_image(path)
         sample['label'] = torch.tensor(self.files.iloc[index, 2:])
 
@@ -139,7 +151,6 @@ class CopernicusBenchBigEarthNetS1(CopernicusBenchBase):
         fig, ax = plt.subplots()
 
         image = sample['image'][rgb_indices].numpy()
-        image = np.stack([image[0], image[1], (image[0] + image[1]) / 2])
         image = rearrange(image, 'c h w -> h w c')
         image = percentile_normalization(image)
         ax.imshow(image)

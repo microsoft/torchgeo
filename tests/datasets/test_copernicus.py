@@ -28,6 +28,7 @@ class TestCopernicusBench:
             ('eurosat_s1', 'l2_eurosat_s1s2', {}),
             ('eurosat_s2', 'l2_eurosat_s1s2', {}),
             ('bigearthnet_s1', 'l2_bigearthnet_s1s2', {}),
+            ('bigearthnet_s2', 'l2_bigearthnet_s1s2', {}),
         ]
     )
     def dataset(self, request: SubRequest) -> CopernicusBench:

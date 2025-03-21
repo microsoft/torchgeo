@@ -4,3 +4,4 @@ L1,Cloud-S3,S,Sentinel-3,CC-BY-4.0,"1,995",5,256x256,300,MSI
 L2,EuroSAT-S1,C,Sentinel-1,CC-BY-4.0,"27,000",10,64x64,10,SAR
 L2,EuroSAT-S2,C,Sentinel-2,MIT,"27,000",10,64x64,10,SAR
 L2,BigEarthNet-S1,C,Sentinel-1,CDLA-Permissive-1.0,"24,002",19,120x120,10,SAR
+L2,BigEarthNet-S2,C,Sentinel-2,CDLA-Permissive-1.0,"24,002",19,120x120,10,MSI
