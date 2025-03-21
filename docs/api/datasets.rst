@@ -289,11 +289,15 @@ DIOR
 
 .. autoclass:: DIOR
 
-
 Digital Typhoon
 ^^^^^^^^^^^^^^^
 
 .. autoclass:: DigitalTyphoon
+
+Dynamic EarthNet
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: DynamicEarthNet
 
 DL4GAM
 ^^^^^^
