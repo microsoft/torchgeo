@@ -159,9 +159,11 @@ class CopernicusBenchBigEarthNetS2(CopernicusBenchBase):
         ax.axis('off')
 
         if show_titles:
-            title = 'Label: ' + str(sample['label'].numpy())
+            label = sample['label'].numpy().nonzero()[0]
+            title = f'Labels: {label}'
             if 'prediction' in sample:
-                title += '\nPrediction: ' + str(sample['prediction'].numpy())
+                prediction = sample['prediction'].numpy().nonzero()[0]
+                title += f'\nPredictions: {prediction}'
             ax.set_title(title)
 
         if suptitle is not None:
