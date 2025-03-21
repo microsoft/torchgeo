@@ -5,7 +5,7 @@
 
 import os
 import re
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Sequence, Literal
 from typing import ClassVar
 
 import einops
@@ -88,31 +88,34 @@ class DynamicEarthNet(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    valid_splits = 'train'
     valid_temporal_input = ('daily', 'weekly', 'monthly')
 
-    base_url = 'https://hf.co/datasets/torchgeo/dynamic_earthnet/resolve/commit_hash/{}'
+    valid_splits = ('train',)
 
+    base_url = 'https://hf.co/datasets/torchgeo/dynamic_earthnet/resolve/169e9cb6bebfce8fcf2e6421f4f81385730247a0/{0}.tar.gz{1}'
     filename_and_md5: ClassVar[dict[str, dict[str, str]]] = {
-        'planet': {
-            'filename': 'planet_pf_sr.tar.gz',
-            'md5': 'd41d8cd98f00b204e9800998ecf8427e',
+        'labels': {
+            '': '3a0c037ca76a67656267ce51a52dbbb7',
         },
-        'sentinel1': {
-            'filename': 'sentinel1.tar.gz',
-            'md5': 'd41d8cd98f00b204e9800998ecf8427e',
+        'planet': {
+            'aa': 'dd127abf2fba594921a960ac582cfb7d',
+            'ab': '51e6c2ba87910fdc20c5b37890ccb709',
+            'ac': '6ce131815df1a883a8a6e391753be81d',
+            'ad': '3ac10e852712c4b6adcc9e26399e29af',
+            'ae': '057a069898a092a59dd2bb67f5a72051',
+            'af': '50aac7b6582b491d7f5a612510674b35',
+            'ag': '81598c59bf60d57d938468c721f2c35d',
+            'ah': '27e3ffb75488e0af9c9f2653e8a55db8',
+            'ai': '08ab5fd059537dec5c9ef814413e22bc',
+            'aj': '0835c041248e3bb1203f42a07d3c55f3',
+            'ak': '41b7ab84ab7ccd87cb2c97b6a2e441d5',
+        },
+        'sentine1': {
+            'aa': '724955ca952336d569704e36c558e555',
+            'ab': '2ba4c6a7c18f6564ae6f84d8d3149dd8',
         },
         'sentinel2': {
-            'filename': 'sentinel2.tar.gz',
-            'md5': 'd41d8cd98f00b204e9800998ecf8427e',
-        },
-        'labels': {
-            'filename': 'labels.tar.gz',
-            'md5': 'd41d8cd98f00b204e9800998ecf8427e',
-        },
-        'split_info': {
-            'filename': 'split_info.tar.gz',
-            'md5': 'd41d8cd98f00b204e9800998ecf8427e',
+            'aa': 'd8ce60293ce77633431132801fcb7851',
         },
     }
 
@@ -121,7 +124,7 @@ class DynamicEarthNet(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train'] = 'train',
         temporal_input: str = 'daily',
         year_month_start: str = '2018-01',
         year_month_end: str = '2019-12',
@@ -189,8 +192,8 @@ class DynamicEarthNet(NonGeoDataset):
 
         self._verify()
 
-        self.metadata_df = pd.read_parquet(
-            os.path.join(self.root, 'split_info', 'splits.parquet')
+        self.metadata_df = pd.read_csv(
+            os.path.join(self.root, 'splits.csv')
         )
         self.metadata_df = self.metadata_df[
             self.metadata_df['split'] == split
@@ -388,34 +391,70 @@ class DynamicEarthNet(NonGeoDataset):
 
         # check whether tarballs are there
         exists = []
-        for dirname, fileinfo in self.filename_and_md5.items():
-            path = os.path.join(self.root, fileinfo['filename'])
-            if os.path.exists(path):
-                if self.checksum and not check_integrity(path, fileinfo['md5']):
-                    raise RuntimeError(f'Dataset {dirname} found, but corrupted.')
-                exists.append(True)
-                extract_archive(path, self.root)
-            else:
-                exists.append(False)
+        for dir, fileinfo in self.filename_and_md5.items():
+            for suffix, md5 in fileinfo.items():
+                exists.append(
+                    os.path.exists(os.path.join(self.root, f'{dir}.tar.gz{suffix}'))
+                )
 
         if all(exists):
+            self._extract()
             return
 
         if not self.download:
             raise DatasetNotFoundError(self)
 
         # download and extract the dataset
-        self._download_and_extract()
+        self._download()
+        self.extract()
 
-    def _download_and_extract(self) -> None:
-        """Download and extract the dataset."""
-        for dirname, fileinfo in self.filename_and_md5.items():
-            download_and_extract_archive(
-                self.base_url.format(fileinfo['filename']),
-                self.root,
-                filename=fileinfo['filename'],
-                md5=fileinfo['md5'] if self.checksum else None,
-            )
+    def _download(self) -> None:
+        """Download the dataset."""
+        for modality, fileinfo in self.filename_and_md5.items():
+            for suffix, md5 in fileinfo.items():
+                download_url(
+                    self.url.format(modality, suffix),
+                    self.root,
+                    md5=md5 if self.checksum else None,
+                )
+
+        # download split info data
+        download_url(
+            self.url.split('.tar.gz')[0] + 'splits.csv',
+            self.root,
+        )
+
+    def _extract(self) -> None:
+        """Extract the dataset."""
+        for modality, fileinfo in self.filename_and_md5.items():
+            if modality == "labels":
+                extract_archive(
+                    os.path.join(self.root, "labels.tar.gz"),
+                )
+            else:
+                self._extract_multipart(modality)
+
+    def _extract_multipart(self, key: str) -> None:
+        """Extract a multi-part archive.
+        
+        Args:
+            key: Key in filename_and_md5 dict
+            output_dir: Optional name of output directory (defaults to key)
+        """
+        chunk_size = 2**15  # same as torchvision
+        path = os.path.join(self.root, f"{key}.tar.gz")
+        
+        with open(path, 'wb') as f:
+            for suffix in self.filename_and_md5[key]:
+                part_path = os.path.join(self.root, f"{key}.tar.gz{suffix}")
+                with open(part_path, 'rb') as part_file:
+                    while chunk := part_file.read(chunk_size):
+                        f.write(chunk)
+        
+        extract_archive(path, self.root)
+        
+        if os.path.exists(path):
+            os.remove(path)
 
     def plot(
         self,
