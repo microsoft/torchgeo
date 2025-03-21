@@ -262,7 +262,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
                 if 'prediction' in sample:
                     title += '\nPrediction: ' + self.classes[sample['prediction']]
 
-            ax[0, 0].set_title('Image')
+            ax[0, 0].set_title(title)
 
         if 'mask' in sample:
             kwargs = {
