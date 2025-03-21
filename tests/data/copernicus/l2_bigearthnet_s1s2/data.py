@@ -79,7 +79,7 @@ with rio.open(path, 'w', **profile) as src:
 # Splits
 df = pd.DataFrame([[s1_path, s2_path, *list(np.random.randint(0, 2, size=(19,)))]])
 for split in ['train', 'val', 'test']:
-    path = os.path.join('bigearthnet_s1s2', f'multilabel-{split}.txt')
+    path = os.path.join('bigearthnet_s1s2', f'multilabel-{split}.csv')
     df.to_csv(path, index=False)
 
 # Zip

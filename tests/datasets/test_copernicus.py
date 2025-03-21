@@ -27,6 +27,7 @@ class TestCopernicusBench:
             ('cloud_s3', 'l1_cloud_s3', {'mode': 'multi'}),
             ('eurosat_s1', 'l2_eurosat_s1s2', {}),
             ('eurosat_s2', 'l2_eurosat_s1s2', {}),
+            ('bigearthnet_s1', 'l2_bigearthnet_s1s2', {}),
         ]
     )
     def dataset(self, request: SubRequest) -> CopernicusBench:
@@ -80,7 +81,7 @@ class TestCopernicusBench:
         for band in rgb_bands:
             all_bands.remove(band)
 
-        if dataset.name in ['eurosat_s1']:
+        if dataset.name.endswith('s1'):
             all_bands = ['VV']
 
         dataset = CopernicusBench(dataset.name, dataset.root, bands=all_bands)
