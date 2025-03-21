@@ -25,6 +25,7 @@ class TestCopernicusBench:
             ('cloud_s2', 'l1_cloud_s2', {}),
             ('cloud_s3', 'l1_cloud_s3', {'mode': 'binary'}),
             ('cloud_s3', 'l1_cloud_s3', {'mode': 'multi'}),
+            ('eurosat_s1', 'l2_eurosat_s1s2', {}),
         ]
     )
     def dataset(self, request: SubRequest) -> CopernicusBench:
@@ -38,7 +39,10 @@ class TestCopernicusBench:
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['lat'], torch.Tensor)
         assert isinstance(x['lon'], torch.Tensor)
-        assert isinstance(x['time'], torch.Tensor)
+        if dataset.name not in ['eurosat_s1']:
+            assert isinstance(x['time'], torch.Tensor)
+        if 'mask' in x:
+            assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: CopernicusBench) -> None:
         assert len(dataset) == 1
@@ -64,6 +68,8 @@ class TestCopernicusBench:
         x = dataset[0]
         if 'mask' in x:
             x['prediction'] = x['mask']
+        elif 'label' in x:
+            x['prediction'] = x['label']
         dataset.plot(x, suptitle='Test')
         plt.close()
 
@@ -72,6 +78,9 @@ class TestCopernicusBench:
         rgb_bands = list(dataset.rgb_bands)
         for band in rgb_bands:
             all_bands.remove(band)
+
+        if dataset.name in ['eurosat_s1']:
+            all_bands = ['VV']
 
         dataset = CopernicusBench(dataset.name, dataset.root, bands=all_bands)
         match = 'Dataset does not contain some of the RGB bands'

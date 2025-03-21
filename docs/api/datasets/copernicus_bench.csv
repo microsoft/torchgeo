@@ -1,3 +1,4 @@
 Level,Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 L1,Cloud-S2,S,Sentinel-2,CC0-1.0,"2,817",4,512x512,10,MSI
 L1,Cloud-S3,S,Sentinel-3,CC-BY-4.0,"1,995",5,256x256,300,MSI
+L2,EuroSAT-S1,C,Sentinel-1,CC-BY-4.0,"27,000",10,64x64,10,SAR

@@ -44,8 +44,14 @@ PROJCS["WGS 84 / UTM zone 33N",
     AXIS["Northing",NORTH],
     AUTHORITY["EPSG","32633"]]
     """),
-    'transform': Affine(9.894933409914302, 0.0, 453604.151188705,
-       0.0, -9.786558657346177, 5165115.807450672),
+    'transform': Affine(
+        9.894933409914302,
+        0.0,
+        453604.151188705,
+        0.0,
+        -9.786558657346177,
+        5165115.807450672,
+    ),
 }
 
 # Sentinel-1
@@ -67,7 +73,8 @@ profile['dtype'] = 'uint16'
 Z = np.random.randint(
     np.iinfo(profile['dtype']).min,
     np.iinfo(profile['dtype']).max,
-    size=(profile['height'], profile['width']), dtype=profile['dtype']
+    size=(profile['height'], profile['width']),
+    dtype=profile['dtype'],
 )
 path = os.path.join(directory, filename)
 with rio.open(path, 'w', **profile) as src:
