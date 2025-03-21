@@ -590,6 +590,10 @@ Copernicus-Bench is a comprehensive evaluation benchmark with 15 downstream task
 .. autoclass:: CopernicusBenchBase
 .. autoclass:: CopernicusBenchCloudS2
 .. autoclass:: CopernicusBenchCloudS3
+.. autoclass:: CopernicusBenchEuroSATS1
+.. autoclass:: CopernicusBenchEuroSATS2
+.. autoclass:: CopernicusBenchBigEarthNetS1
+.. autoclass:: CopernicusBenchBigEarthNetS2
 
 Base Classes
 ------------

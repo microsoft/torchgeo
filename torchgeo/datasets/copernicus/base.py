@@ -68,9 +68,9 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         return '{}.csv'
 
     @property
-    @abstractmethod
     def filename_regex(self) -> str:
         """Regular expression used to extract date from filename."""
+        return '.*'
 
     @property
     def date_format(self) -> str:
@@ -88,7 +88,6 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         """Red, green, and blue spectral channels."""
 
     @property
-    @abstractmethod
     def cmap(self) -> str | Colormap:
         """Matplotlib color map."""
 
@@ -257,7 +256,13 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         ax[0, 0].imshow(image)
         ax[0, 0].axis('off')
         if show_titles:
-            ax[0, 0].set_title('Image')
+            title = 'Image'
+            if 'label' in sample:
+                title = 'Label: ' + self.classes[sample['label']]
+                if 'prediction' in sample:
+                    title += '\nPrediction: ' + self.classes[sample['prediction']]
+
+            ax[0, 0].set_title(title)
 
         if 'mask' in sample:
             kwargs = {
