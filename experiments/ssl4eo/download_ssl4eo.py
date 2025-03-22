@@ -16,7 +16,7 @@ import numpy
 import geopandas, pandas
 import shapely.geometry
 import rasterio, rasterio.enums, rasterio.warp
-import request
+import requests
 import datetime
 import logging
 import os
@@ -142,10 +142,10 @@ def get_cloudfree_sentinel2_timestamps(
        list of Unix epoch times where Sentinel-2 data for collection is available with given maximum cloud cover
     """
     logger.debug('get_cloudfree_sentinel2_timestamps: Reaching out to GEE for time series computation.')
-    return geeCollection.filter(
+    toReturn: List[Milliseconds] = geeCollection.filter(
         ee.Filter.lt(SENTINEL2_CLOUDCOVER_META_NAME, maxCloudCover),
     ).aggregate_array("system:time_start").getInfo()
-
+    return toReturn
 
 def get_utm_bounding_box(
     latitude:Degree, 
@@ -219,9 +219,9 @@ def construct_layer_file_name_base(
     assert type(timestamp) is int
 
     # timestamp formatting
-    timestamp = datetime.datetime.fromtimestamp(timestamp)
-    timestring = f'{timestamp.year:04}{timestamp.month:02}{timestamp.day:02}'\
-        if timestampAsDate else str(int(timestamp))
+    datetimeTimestamp = datetime.datetime.fromtimestamp(timestamp)
+    timestring = f'{datetimeTimestamp.year:04}{datetimeTimestamp.month:02}{datetimeTimestamp.day:02}'\
+        if timestampAsDate else str(timestamp)
 
     return f'''\
 lat{int(latitude*1e5):08}lon{int(longitude*1e5):08}{separator}\
@@ -321,15 +321,15 @@ def download_layer_geotiff(
 def download_data_from_gee(
     downloadDir:str,
     centerCoords:pandas.DataFrame,
-    layerNames:List[str],
+    layerNames:Union[List[str],str],
     geeCollection:ee.imagecollection.ImageCollection,
     collectionName:str,
     spatialBuffer:Meters,
     temporalBuffer:Days,
     temporal_sampling_strategy:Callable[[List[Milliseconds]], List[int]] \
         = random_select_four_seasons_from_timeseries,
-    saveInSubdirs:bool      = True,
-    reprojectLayerName:str  = None,
+    saveInSubdirs:bool                = True,
+    reprojectLayerName:Optional[str]  = None,
 ) -> pandas.DataFrame:
     """
     Browse spatio(-temporal) anchors to download Google Earth Engine data.
@@ -549,7 +549,7 @@ def crop_geotiff2ssl4eo_datacube(
     input_path:str,
     output_path:str,
     cubesize:int     = 264,
-):
+) -> None:
     """
     Take a georeferenced image and crop it to SSL4EO-S12 data cube size.
 
@@ -584,7 +584,7 @@ def crop_geotiff2ssl4eo_datacube(
 def stack_ssl4eo_geotiffs(
     ssl4eo_pathes:List[str],
     output_path:str,
-):
+) -> None:
     """
     Take SSL4EO georeferenced, multiband data cubes and stack them.
 
@@ -615,7 +615,7 @@ def stack_ssl4eo_geotiffs(
         dst.write(rasters)
 
 
-def save_results(results, output_csv_path):
+def save_results(results:list, output_csv_path:str) -> None:
     """
     Save results to a CSV file, overwriting the existing file each time.
     """
@@ -624,7 +624,7 @@ def save_results(results, output_csv_path):
     logger.info(f"Data saved to {output_csv_path}")
 
 
-def download_for_coords(args):
+def download_for_coords(args:Tuple):
     """
     Helper function to download data for a single set of coordinates.
     
@@ -651,18 +651,18 @@ def main(
     input_csv_path:str,
     output_csv_path:str,
     collection_id:str,
-    checkpoint_csv_path:str     = None,
-    start_date:str              = None,
-    end_date:str                = None,
-    cloud_cover_meta_name:str   = None,
-    cloud_cover_threshold:float = None,
-    layers:list                 = None,
-    spatial_buffer:int          = 1000,
-    time_buffer:float           = None,
-    reproject_layer_name:str    = None,
-    num_workers:int             = 4,
-    gcloud_service_creds:tuple  = None,
-):
+    checkpoint_csv_path:Optional[str]              = None,
+    start_date:Optional[str]                       = None,
+    end_date:Optional[str]                         = None,
+    cloud_cover_meta_name:Optional[str]            = None,
+    cloud_cover_threshold:Optional[float]          = None,
+    layers:Optional[list]                          = None,
+    spatial_buffer:Optional[int]                   = 1000,
+    time_buffer:Optional[float]                    = None,
+    reproject_layer_name:Optional[str]             = None,
+    num_workers:int                                = 4,
+    gcloud_service_creds:Optional[Tuple[str, str]] = None,
+) -> None:
     """
     Main function to orchestrate the downloading of satellite images based on specified parameters.
 
