@@ -411,7 +411,7 @@ def download_data_from_gee(
                 layerNamesIter: list[str] = layerNames
             else:
                 raise TypeError('`layerNames` must be `str | list[str]`')
-                
+
             for layer in layerNamesIter:
                 logger.debug(f'layer {layer}')
                 try:
