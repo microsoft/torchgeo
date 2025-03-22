@@ -16,7 +16,7 @@ import numpy
 import geopandas, pandas
 import shapely.geometry
 import rasterio, rasterio.enums, rasterio.warp
-import requests
+import requests # type: ignore
 import datetime
 import logging
 import os
@@ -274,7 +274,7 @@ def download_layer_geotiff(
     boundBox:ee.geometry.Geometry,
     layerName:str,
     outputPath:str,
-):
+) -> None:
     """
     Download a GeoTiff from Google Earth Engine image.
 
@@ -407,7 +407,11 @@ def download_data_from_gee(
             logger.warning(f'No timestamps available in GEE collection at location (lat,lon)=({lat},{lon}).')
         for timestampIndex in timestampIndices:
             logger.debug(f'timestamp index {timestampIndex}')
-            for layer in layerNames if not layersAtOnce else [layerNames]:
+            if layersAtOnce:
+                 layerNamesIter = [layerNames]
+            else:
+                 layerNamesIter = layerNames
+            for layer in layerNamesIter:
                 logger.debug(f'layer {layer}')
                 try:
                     # convert GEE collection into GEE image selecting relevant layers
@@ -466,7 +470,7 @@ def spatial_align_rasters(
     rasterPathes:List[str],
     scalefactor:float = 1,
     resamplingMethod:rasterio.enums.Resampling = rasterio.enums.Resampling.nearest,
-):
+) -> None:
     """
     Geospatially harmonize rasters to a common reference grid.
 
@@ -615,7 +619,7 @@ def stack_ssl4eo_geotiffs(
         dst.write(rasters)
 
 
-def save_results(results:list, output_csv_path:str) -> None:
+def save_results(results:Any, output_csv_path:str) -> None:
     """
     Save results to a CSV file, overwriting the existing file each time.
     """
@@ -624,7 +628,7 @@ def save_results(results:list, output_csv_path:str) -> None:
     logger.info(f"Data saved to {output_csv_path}")
 
 
-def download_for_coords(args:Tuple):
+def download_for_coords(args:Any):
     """
     Helper function to download data for a single set of coordinates.
     
@@ -656,7 +660,7 @@ def main(
     end_date:Optional[str]                         = None,
     cloud_cover_meta_name:Optional[str]            = None,
     cloud_cover_threshold:Optional[float]          = None,
-    layers:Optional[list]                          = None,
+    layers:Optional[List[str]]                     = None,
     spatial_buffer:Optional[int]                   = 1000,
     time_buffer:Optional[float]                    = None,
     reproject_layer_name:Optional[str]             = None,
