@@ -13,9 +13,12 @@ __status__      = 'experimental'
 # imports
 import ee
 import numpy
-import geopandas, pandas
+import geopandas
+import pandas
 import shapely.geometry
-import rasterio, rasterio.enums, rasterio.warp
+import rasterio
+import rasterio.enums
+import rasterio.warp
 import requests # type: ignore
 import datetime
 import logging
@@ -23,24 +26,17 @@ import os
 import sys
 import argparse
 from multiprocessing import Pool
-from typing import Any, List, Optional, Callable, Union, Tuple, Dict
+from typing import Any, Optional
+from collections.abc import Callable
+from typing import Annotated
 
-# definition of units for Python>=3.9
-if sys.version_info[:2] >= (3, 9):
-     from typing import Annotated
-     Percent     = Annotated[float, "%"]
-     Degree      = Annotated[float, "°"]
-     Meters      = Annotated[float, "m"]
-     Days        = Annotated[float, "d"]
-     Seconds     = Annotated[int, "s"]
-     Milliseconds= Annotated[int, "ms"]
-else:
-     Percent     = float
-     Degree      = float
-     Meters      = float
-     Days        = float
-     Seconds     = int
-     Milliseconds= int
+# define units
+Percent     = Annotated[float, "%"]
+Degree      = Annotated[float, "°"]
+Meters      = Annotated[float, "m"]
+Days        = Annotated[float, "d"]
+Seconds     = Annotated[int, "s"]
+Milliseconds= Annotated[int, "ms"]
 
 # set up logging
 logger = logging.getLogger(__name__)
@@ -130,7 +126,7 @@ SSL4EO_GEE_DATA = {
 def get_cloudfree_sentinel2_timestamps(
     geeCollection:ee.imagecollection.ImageCollection,
     maxCloudCover:Percent = 10.,
-) -> List[Milliseconds]:
+) -> list[Milliseconds]:
     """
     Query GEE to obtain timestamps of Sentinel-2 data with a cloud coverage below a given threshold.
 
@@ -142,7 +138,7 @@ def get_cloudfree_sentinel2_timestamps(
        list of Unix epoch times where Sentinel-2 data for collection is available with given maximum cloud cover
     """
     logger.debug('get_cloudfree_sentinel2_timestamps: Reaching out to GEE for time series computation.')
-    toReturn: List[Milliseconds] = geeCollection.filter(
+    toReturn: list[Milliseconds] = geeCollection.filter(
         ee.Filter.lt(SENTINEL2_CLOUDCOVER_META_NAME, maxCloudCover),
     ).aggregate_array("system:time_start").getInfo()
     return toReturn
@@ -151,7 +147,7 @@ def get_utm_bounding_box(
     latitude:Degree, 
     longitude:Degree, 
     radius:Meters, 
-) -> Tuple[Tuple[float,float,float,float],str]:
+) -> tuple[tuple[float,float,float,float],str]:
     """
     Function to generate UTM bounding box from a center coordinate in EPSG:4326.
 
@@ -189,7 +185,7 @@ def construct_layer_file_name_base(
     longitude:Degree,
     timestamp:Seconds,
     product:str,
-    layer: Union[str,List[str]],
+    layer: str | list[str],
     directoriesUNIX:bool=False,
     timestampAsDate:bool=True,
 ) -> str:
@@ -231,8 +227,8 @@ time{timestring}{separator}\
 
 
 def random_select_four_seasons_from_timeseries(
-    timestamps:List[Milliseconds],
-) -> List[int]:
+    timestamps:list[Milliseconds],
+) -> list[int]:
     """
     Pick a random year in which random timestamps are picked for the 4 seasons of a year.
 
@@ -263,7 +259,7 @@ def random_select_four_seasons_from_timeseries(
             ]
             assert len(indices)==4
             break
-        except:
+        except Exception as e:
             pass
 
     return indices
@@ -321,12 +317,12 @@ def download_layer_geotiff(
 def download_data_from_gee(
     downloadDir:str,
     centerCoords:pandas.DataFrame,
-    layerNames:Union[List[str],str],
+    layerNames:list[str] | str],
     geeCollection:ee.imagecollection.ImageCollection,
     collectionName:str,
     spatialBuffer:Meters,
     temporalBuffer:Days,
-    temporal_sampling_strategy:Callable[[List[Milliseconds]], List[int]] \
+    temporal_sampling_strategy:Callable[[list[Milliseconds]], list[int]] \
         = random_select_four_seasons_from_timeseries,
     saveInSubdirs:bool                = True,
     reprojectLayerName:Optional[str]  = None,
@@ -467,7 +463,7 @@ def download_data_from_gee(
 
 def spatial_align_rasters(
     referenceRasterPath:str,
-    rasterPathes:List[str],
+    rasterPathes:list[str],
     scalefactor:float = 1,
     resamplingMethod:rasterio.enums.Resampling = rasterio.enums.Resampling.nearest,
 ) -> None:
@@ -586,7 +582,7 @@ def crop_geotiff2ssl4eo_datacube(
 
 
 def stack_ssl4eo_geotiffs(
-    ssl4eo_pathes:List[str],
+    ssl4eo_pathes:list[str],
     output_path:str,
 ) -> None:
     """
@@ -628,7 +624,7 @@ def save_results(results:Any, output_csv_path:str) -> None:
     logger.info(f"Data saved to {output_csv_path}")
 
 
-def download_for_coords(args:Any):
+def download_for_coords(args:Any) -> pandas.DataFrame:
     """
     Helper function to download data for a single set of coordinates.
     
@@ -660,12 +656,12 @@ def main(
     end_date:Optional[str]                         = None,
     cloud_cover_meta_name:Optional[str]            = None,
     cloud_cover_threshold:Optional[float]          = None,
-    layers:Optional[List[str]]                     = None,
+    layers:Optional[list[str]]                     = None,
     spatial_buffer:Optional[int]                   = 1000,
     time_buffer:Optional[float]                    = None,
     reproject_layer_name:Optional[str]             = None,
     num_workers:int                                = 4,
-    gcloud_service_creds:Optional[Tuple[str, str]] = None,
+    gcloud_service_creds:Optional[tuple[str, str]] = None,
 ) -> None:
     """
     Main function to orchestrate the downloading of satellite images based on specified parameters.
