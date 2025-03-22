@@ -409,6 +409,8 @@ def download_data_from_gee(
                 [layerNames]
                 if layersAtOnce and isinstance(layerNames, str)
                 else layerNames
+                if isinstance(layerNames, list)
+                else []
             )
             for layer in layerNamesIter:
                 logger.debug(f'layer {layer}')
