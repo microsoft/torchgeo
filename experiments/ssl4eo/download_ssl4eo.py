@@ -10,7 +10,7 @@ __copyright__   = '(c) 2025'
 __license__     = 'to be determined'
 __status__      = 'experimental'
 
-# imports
+# Standard library imports
 import argparse
 import datetime
 import logging
@@ -20,6 +20,7 @@ from collections.abc import Callable
 from multiprocessing import Pool
 from typing import Annotated, Any
 
+# Third-party imports
 import ee
 import geopandas
 import numpy
@@ -27,7 +28,7 @@ import pandas
 import rasterio
 import rasterio.enums
 import rasterio.warp
-import requests            # type: ignore
+import requests  # type: ignore
 import shapely.geometry
 
 # define units
