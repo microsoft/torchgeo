@@ -18,7 +18,7 @@ import os
 import sys
 from collections.abc import Callable
 from multiprocessing import Pool
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any
 
 import ee
 import geopandas
@@ -27,7 +27,7 @@ import pandas
 import rasterio
 import rasterio.enums
 import rasterio.warp
-import requests  # type: ignore
+import requests            # type: ignore
 import shapely.geometry
 
 # define units
@@ -324,8 +324,8 @@ def download_data_from_gee(
     temporalBuffer:Days,
     temporal_sampling_strategy:Callable[[list[Milliseconds]], list[int]] \
         = random_select_four_seasons_from_timeseries,
-    saveInSubdirs:bool                      = True,
-    reprojectLayerName:Optional[str] | None = None,
+    saveInSubdirs:bool             = True,
+    reprojectLayerName: str | None = None,
 ) -> pandas.DataFrame:
     """
     Browse spatio(-temporal) anchors to download Google Earth Engine data.
@@ -443,7 +443,7 @@ def download_data_from_gee(
                 except Exception as e:
                     write = False
                     logger.error(
-                        f"Unable to download {layer} of {collectionName} at (lat,lon,time)=({lat},{lon},{timestampsMilliseconds[timestampIndex]//1000})",
+                        f"Unable to download {layer} of {collectionName} at (lat,lon,time)=({lat},{lon},{timestampsMilliseconds[timestampIndex]//1000}): {e}",
                         exc_info=True,
                     )
 
@@ -643,27 +643,27 @@ def download_for_coords(args:Any) -> pandas.DataFrame:
         )
         return result_df
     except Exception as e:
-        logger.error(f"Error processing {row['latitude']}, {row['longitude']}", exc_info=True)
+        logger.error(f"Error processing {row['latitude']}, {row['longitude']}: {e}", exc_info=True)
         # Return an empty DataFrame indicating failure
         return pandas.DataFrame()
 
 
 def main(
-    download_directory:str,
-    input_csv_path:str,
-    output_csv_path:str,
-    collection_id:str,
-    checkpoint_csv_path:Optional[str] | None              = None,
-    start_date:Optional[str] | None                       = None,
-    end_date:Optional[str] | None                         = None,
-    cloud_cover_meta_name:Optional[str] | None            = None,
-    cloud_cover_threshold:Optional[float] | None          = None,
-    layers:Optional[list[str]] | None                     = None,
-    spatial_buffer:Optional[int] | None                   = 1000,
-    time_buffer:Optional[float] | None                    = None,
-    reproject_layer_name:Optional[str] | None             = None,
-    num_workers:int                                       = 4,
-    gcloud_service_creds:Optional[tuple[str, str]] | None = None,
+    download_directory: str,
+    input_csv_path: str,
+    output_csv_path: str,
+    collection_id: str,
+    checkpoint_csv_path: str | None              = None,
+    start_date: str | None                       = None,
+    end_date: str | None                         = None,
+    cloud_cover_meta_name: str | None            = None,
+    cloud_cover_threshold: float | None          = None,
+    layers: list[str] | None                     = None,
+    spatial_buffer: int                          = 1000,
+    time_buffer: float | None                    = None,
+    reproject_layer_name: str | None             = None,
+    num_workers: int                             = 4,
+    gcloud_service_creds: tuple[str, str] | None = None,
 ) -> None:
     """
     Main function to orchestrate the downloading of satellite images based on specified parameters.
