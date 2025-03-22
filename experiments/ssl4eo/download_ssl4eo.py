@@ -49,19 +49,58 @@ SSL4EO_GEE_DATA = {
         'GEE_name': 'COPERNICUS/S2',
         'temporal_resolution_in_days': 5.0,
         'layers': [
-            {'name': 'B1', 'description': 'coastal aerosols (60m resolution)'},
-            {'name': 'B2', 'description': 'blue band (10m resolution)'},
-            {'name': 'B3', 'description': 'green band (10m resolution)'},
-            {'name': 'B4', 'description': 'red band (10m resolution)'},
-            {'name': 'B5', 'description': 'vegetation red edge +-700nm (20m resolution)'},
-            {'name': 'B6', 'description': 'vegetation red edge +-740nm (20m resolution)'},
-            {'name': 'B7', 'description': 'vegetation red edge +-780nm (20m resolution)'},
-            {'name': 'B8', 'description': 'near infrared (10m resolution)'},
-            {'name': 'B8A', 'description': 'near infrared narrow bandwidth (20m resolution)'},
-            {'name': 'B9', 'description': 'water vapor (60m resolution)'},
-            {'name': 'B10', 'description': 'short wave infrared +-1375nm narrow bandwidth (60m resolution)'},
-            {'name': 'B11', 'description': 'short wave infrared +-1610nm  (20m resolution)'},
-            {'name': 'B12', 'description': 'short wave infrared +-2190nm  (20m resolution)'},
+            {
+                'name': 'B1',
+                'description': 'coastal aerosols (60m resolution)',
+            },
+            {
+                'name': 'B2',
+                'description': 'blue band (10m resolution)',
+            },
+            {
+                'name': 'B3',
+                'description': 'green band (10m resolution)',
+            },
+            {
+                'name': 'B4',
+                'description': 'red band (10m resolution)',
+            },
+            {
+                'name': 'B5',
+                'description': 'vegetation red edge +-700nm (20m resolution)',
+            },
+            {
+                'name': 'B6',
+                'description': 'vegetation red edge +-740nm (20m resolution)',
+            },
+            {
+                'name': 'B7',
+                'description': 'vegetation red edge +-780nm (20m resolution)',
+            },
+            {
+                'name': 'B8',
+                'description': 'near infrared (10m resolution)',
+            },
+            {
+                'name': 'B8A',
+                'description': 'near infrared narrow bandwidth (20m resolution)',
+            },
+            {
+                'name': 'B9',
+                'description': 'water vapor (60m resolution)',
+            },
+            {
+                'name': 'B10',
+                'description': 'short wave infrared +-1375nm narrow bandwidth (60m resolution)',
+            },
+            {
+                'name': 'B11',
+                'description': 'short wave infrared +-1610nm  (20m resolution)',
+            },
+            {
+                'name': 'B12',
+                'description': 'short wave infrared +-2190nm  (20m resolution)',
+            },
         ]
     },
     'sentinel_1_grd': {
@@ -71,8 +110,8 @@ SSL4EO_GEE_DATA = {
             {'name': 'VV', 'description': 'vertical-vertical polarization channel'},
             {'name': 'VH', 'description': 'vertical-horizontal polarization channel'},
             {'name': 'angle', 'description': 'SAR illumination angle'},
-        ]
-    }
+        ],
+    },
 }
 
 
@@ -103,7 +142,7 @@ def get_cloudfree_sentinel2_timestamps(
 
 def get_utm_bounding_box(
     latitude: Degree, longitude: Degree, radius: Meters
-) -> tuple[tuple[float,float,float,float],str]:
+) -> tuple[tuple[float,float,float,float], str]:
     """
     Function to generate UTM bounding box from a center coordinate in EPSG:4326.
 
@@ -123,7 +162,7 @@ def get_utm_bounding_box(
     # project coordinate into UTM zone
     x, y = (
         geopandas.GeoSeries(
-            [shapely.geometry.Point(longitude,latitude)], crs={'init': 'epsg:4326'}
+            [shapely.geometry.Point(longitude, latitude)], crs={'init': 'epsg:4326'}
         )
         .to_crs({'init': utmCRS})[0]
         .coords.xy
@@ -178,7 +217,7 @@ def construct_layer_file_name_base(
     return f"""\
 lat{int(latitude * 1e5):08}lon{int(longitude * 1e5):08}{separator}\
 time{timestring}{separator}\
-{product}{separator if isinstance(layer,str) else ''}\
+{product}{separator if isinstance(layer, str) else ''}\
 {layer if isinstance(layer, str) else ''}"""
 
 
@@ -329,7 +368,7 @@ def download_data_from_gee(
     for idx, (lat, lon) in centerCoords[['latitude', 'longitude']].iterrows():
         # define GEE spatial area-of-interest
         bboxCoords, crs = get_utm_bounding_box(
-            latitude=lat, longitude=lon, radius=spatialBuffer,
+            latitude=lat, longitude=lon, radius=spatialBuffer
         )
 
         # filter GEE collection by spatial area
@@ -354,7 +393,7 @@ def download_data_from_gee(
             timestampIndices = (
                 [
                     numpy.abs(
-                        numpy.array(timestampsMilliseconds)/1000.
+                        numpy.array(timestampsMilliseconds) / 1000.0
                         - centerCoords.timestamp_anchor.loc[idx]
                     ).argmin()
                 ]
@@ -399,7 +438,7 @@ def download_data_from_gee(
                     if layersAtOnce:
                         reprojectCRS = geeImage.select(reprojectLayerName).projection()
                         geeImage = geeImage.resample().reproject(
-                            reprojectCRS, scale=reprojectCRS.nominalScale(),
+                            reprojectCRS, scale=reprojectCRS.nominalScale()
                         )
                     # download GEE image
                     download_layer_geotiff(
@@ -415,7 +454,8 @@ def download_data_from_gee(
                                 collectionName,
                                 layer,
                                 directoriesUNIX=saveInSubdirs,
-                           ) + f'_{int(2 * spatialBuffer)}m.tif',
+                            )
+                            + f'_{int(2 * spatialBuffer)}m.tif',
                         )
                     )
                     write = True
@@ -463,7 +503,7 @@ def spatial_align_rasters(
     # load reference data and rescale as required
     referenceRaster = rasterio.open(referenceRasterPath)
     if scalefactor != 1:
-        logger.debug("Rescaling {referenceRasterPath} by factor {scalefactor}.")
+        logger.debug('Rescaling {referenceRasterPath} by factor {scalefactor}.')
         data = referenceRaster.read(
             out_shape=(
                 referenceRaster.count,
@@ -475,7 +515,8 @@ def spatial_align_rasters(
         # write upscaled reference raster
         kwargs = referenceRaster.meta.copy()
         kwargs.update(
-            transform=referenceRaster.transform * referenceRaster.transform.scale(
+            transform=referenceRaster.transform
+            * referenceRaster.transform.scale(
                 (referenceRaster.width  / data.shape[-1]),
                 (referenceRaster.height / data.shape[-2]),
             ),
@@ -485,7 +526,7 @@ def spatial_align_rasters(
         referenceRasterRescaledPath = (
             f'{os.path.splitext(referenceRasterPath)[0]}-scaled{scalefactor}.tif'
         )
-        with rasterio.open(referenceRasterRescaledPath, 'w', **kwargs,) as dst:
+        with rasterio.open(referenceRasterRescaledPath, 'w', **kwargs) as dst:
             dst.write(data)
         referenceRaster.close()
         referenceRaster = rasterio.open(referenceRasterRescaledPath)
@@ -529,7 +570,7 @@ def spatial_align_rasters(
 
 
 def crop_geotiff2ssl4eo_datacube(
-    input_path: str, output_path: str, cubesize:int = 264
+    input_path: str, output_path: str, cubesize: int = 264
 ) -> None:
     """
     Take a georeferenced image and crop it to SSL4EO-S12 data cube size.
@@ -563,7 +604,7 @@ def crop_geotiff2ssl4eo_datacube(
             dst.write(src.read(window=window))
 
 
-def stack_ssl4eo_geotiffs(ssl4eo_pathes:list[str], output_path:str) -> None:
+def stack_ssl4eo_geotiffs(ssl4eo_pathes:list[str], output_path: str) -> None:
     """
     Take SSL4EO georeferenced, multiband data cubes and stack them.
 
@@ -634,7 +675,7 @@ def download_for_coords(args: Any) -> pandas.DataFrame:
         return result_df
     except Exception as e:
         logger.error(
-            f"Error processing {row['latitude']}, {row['longitude']}: {e}",
+            f'Error processing {row["latitude"]}, {row["longitude"]}: {e}',
             exc_info=True,
         )
         # Return an empty DataFrame indicating failure
@@ -759,92 +800,53 @@ def main(
     )
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Download satellite images from Google Earth Engine.')
-    parser.add_argument(
-        'download_directory',
-        type=str,
-        help='Directory to save the downloaded images.',
+    parser = argparse.ArgumentParser(
+        description='Download satellite images from Google Earth Engine.'
     )
     parser.add_argument(
-        'input_csv_path',
-        type=str,
-        help='CSV file path for input coordinates.',
+        'download_directory', type=str, help='Directory to save the downloaded images.',
     )
     parser.add_argument(
-        'output_csv_path',
-        type=str,
-        help='CSV file path to save the download metadata.',
+        'input_csv_path', type=str, help='CSV file path for input coordinates.',
     )
     parser.add_argument(
-        "collection_id",
-        type=str,
-        help='Google Earth Engine collection ID.',
+        'output_csv_path', type=str, help='CSV file path to save the download metadata.',
     )
     parser.add_argument(
-        '--checkpoint_csv_path',
-        type=str,
-        default=None,
-        help='Optional: CSV file path for checkpoint to resume download.',
+        "collection_id", type=str, help='Google Earth Engine collection ID.',
     )
     parser.add_argument(
-        '--start_date',
-        type=str,
-        help='Start date (YYYY-MM-DD) for the data collection.',
-        default=None,
+        '--checkpoint_csv_path', type=str, default=None, help='Optional: CSV file path for checkpoint to resume download.',
     )
     parser.add_argument(
-        '--end_date',
-        type=str,
-        help='End date (YYYY-MM-DD) for the data collection.',
-        default=None,
+        '--start_date', type=str, help='Start date (YYYY-MM-DD) for the data collection.', default=None,
     )
     parser.add_argument(
-        '--cloud_cover_meta_name',
-        type=str,
-        help='Metadata field name for cloud cover.',
-        default=None,
+        '--end_date', type=str, help='End date (YYYY-MM-DD) for the data collection.', default=None,
     )
     parser.add_argument(
-        '--cloud_cover_threshold',
-        type=float,
-        help='Maximum cloud cover percentage.',
-        default=None,
+        '--cloud_cover_meta_name', type=str, help='Metadata field name for cloud cover.', default=None,
     )
     parser.add_argument(
-        '--layers',
-        nargs='+',
-        help='List of layer names to download.',
-        default=None,
+        '--cloud_cover_threshold', type=float, help='Maximum cloud cover percentage.', default=None,
     )
     parser.add_argument(
-        '--spatial_buffer',
-        type=int,
-        help='Spatial buffer in meters.',
-        default=1000,
+        '--layers', nargs='+', help='List of layer names to download.', default=None,
     )
     parser.add_argument(
-        '--time_buffer',
-        type=float,
-        help='Temporal buffer in days for closest timestamp matching.',
-        default=None,
+        '--spatial_buffer', type=int, help='Spatial buffer in meters.', default=1000,
     )
     parser.add_argument(
-        '--reproject_layer_name',
-        type=str,
-        help="Reproject all layers to this layer's resolution.",
-        default=None,
+        '--time_buffer', type=float, help='Temporal buffer in days for closest timestamp matching.', default=None,
     )
     parser.add_argument(
-        '--num_workers',
-        type=int,
-        help='Number of parallel processes to use.',
-        default=4,
+        '--reproject_layer_name', type=str, help="Reproject all layers to this layer's resolution.", default=None,
     )
     parser.add_argument(
-        '--gcloud_service_email',
-        type=str,
-        help='Google Cloud Service email. The corresponding credentials are picked from the environment variable `$GOOGLE_APPLICATION_CREDENTIALS`',
-        default=None,
+        '--num_workers', type=int, help='Number of parallel processes to use.', default=4,
+    )
+    parser.add_argument(
+        '--gcloud_service_email', type=str, help='Google Cloud Service email. The corresponding credentials are picked from the environment variable `$GOOGLE_APPLICATION_CREDENTIALS`', default=None,
     )
 
     args = parser.parse_args()
