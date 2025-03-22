@@ -5,6 +5,7 @@
 
 from .api import get_model, get_model_weights, get_weight, list_models
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
+from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
 from .dofa import (
     DOFA,
@@ -41,6 +42,8 @@ __all__ = (
     'ChangeMixin',
     'ChangeStar',
     'ChangeStarFarSeg',
+    'CopernicusFM',
+    'CopernicusFM_Base_Weights',
     'DOFABase16_Weights',
     'DOFALarge16_Weights',
     'FCSiamConc',
@@ -54,6 +57,7 @@ __all__ = (
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
     'ViTSmall16_Weights',
+    'copernicusfm_base',
     'croma_base',
     'croma_large',
     'dofa_base_patch16_224',
