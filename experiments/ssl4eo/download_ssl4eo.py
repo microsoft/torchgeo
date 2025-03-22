@@ -831,7 +831,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--reproject_layer_name',
         type=str,
-        help='Reproject all layers to this layer's resolution.',
+        help="Reproject all layers to this layer's resolution.",
         default=None,
     )
     parser.add_argument(
