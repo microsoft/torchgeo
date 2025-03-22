@@ -317,7 +317,7 @@ def download_layer_geotiff(
 def download_data_from_gee(
     downloadDir:str,
     centerCoords:pandas.DataFrame,
-    layerNames:list[str] | str],
+    layerNames:list[str] | str,
     geeCollection:ee.imagecollection.ImageCollection,
     collectionName:str,
     spatialBuffer:Meters,
