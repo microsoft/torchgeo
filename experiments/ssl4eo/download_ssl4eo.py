@@ -2,10 +2,10 @@
 """
 Download and spatio-temporally align Earth observation data from Google Earth Engine.
 """
-__version__     = '0.0.5'
+__version__     = '0.0.1'
 __date__        = 'Mar 22, 2025'
 __authors__     = ['Nassim Ait Ali Braham', 'Conrad M Albrecht',]
-__contact__     = 'Conrad.Albrecht@DLR.de, https://github.com/cmalbrec'
+__contact__     = 'https://github.com/cmalbrec'
 __copyright__   = '(c) 2025'
 __license__     = 'to be determined'
 __status__      = 'experimental'
