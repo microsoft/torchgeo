@@ -101,7 +101,7 @@ SSL4EO_GEE_DATA = {
                 'name': 'B12',
                 'description': 'short wave infrared +-2190nm  (20m resolution)',
             },
-        ]
+        ],
     },
     'sentinel_1_grd': {
         'GEE_name': 'COPERNICUS/S1_GRD',
@@ -140,9 +140,10 @@ def get_cloudfree_sentinel2_timestamps(
     )
     return toReturn
 
+
 def get_utm_bounding_box(
     latitude: Degree, longitude: Degree, radius: Meters
-) -> tuple[tuple[float,float,float,float], str]:
+) -> tuple[tuple[float, float, float, float], str]:
     """
     Function to generate UTM bounding box from a center coordinate in EPSG:4326.
 
@@ -456,7 +457,7 @@ def download_data_from_gee(
                                 directoriesUNIX=saveInSubdirs,
                             )
                             + f'_{int(2 * spatialBuffer)}m.tif',
-                        )
+                        ),
                     )
                     write = True
                 except Exception as e:
@@ -482,7 +483,6 @@ def download_data_from_gee(
                 ]
 
     return spatioTemporalIndicesDownloaded
-
 
 
 def spatial_align_rasters(
@@ -517,7 +517,7 @@ def spatial_align_rasters(
         kwargs.update(
             transform=referenceRaster.transform
             * referenceRaster.transform.scale(
-                (referenceRaster.width  / data.shape[-1]),
+                (referenceRaster.width / data.shape[-1]),
                 (referenceRaster.height / data.shape[-2]),
             ),
             width=referenceRaster.width * scalefactor,
@@ -616,7 +616,7 @@ def stack_ssl4eo_geotiffs(ssl4eo_pathes:list[str], output_path: str) -> None:
     with rasterio.open(ssl4eo_pathes[0]) as src:
         meta = src.meta
     meta.update(count=sum(rasterio.open(path).count for path in ssl4eo_pathes))
-    
+
     # create empty SSL4EO datacube
     rasters = numpy.empty(
         (meta['count'], meta['height'], meta['width']), dtype=meta['dtype']
@@ -804,49 +804,82 @@ if __name__ == '__main__':
         description='Download satellite images from Google Earth Engine.'
     )
     parser.add_argument(
-        'download_directory', type=str, help='Directory to save the downloaded images.',
+        'download_directory', type=str, help='Directory to save the downloaded images.'
     )
     parser.add_argument(
-        'input_csv_path', type=str, help='CSV file path for input coordinates.',
+        'input_csv_path', type=str, help='CSV file path for input coordinates.'
     )
     parser.add_argument(
-        'output_csv_path', type=str, help='CSV file path to save the download metadata.',
+        'output_csv_path', type=str, help='CSV file path to save the download metadata.'
     )
     parser.add_argument(
-        "collection_id", type=str, help='Google Earth Engine collection ID.',
+        "collection_id", type=str, help='Google Earth Engine collection ID.'
     )
     parser.add_argument(
-        '--checkpoint_csv_path', type=str, default=None, help='Optional: CSV file path for checkpoint to resume download.',
+        '--checkpoint_csv_path',
+        type=str,
+        default=None,
+        help='Optional: CSV file path for checkpoint to resume download.',
     )
     parser.add_argument(
-        '--start_date', type=str, help='Start date (YYYY-MM-DD) for the data collection.', default=None,
+        '--start_date',
+        type=str,
+        help='Start date (YYYY-MM-DD) for the data collection.',
+        default=None,
     )
     parser.add_argument(
-        '--end_date', type=str, help='End date (YYYY-MM-DD) for the data collection.', default=None,
+        '--end_date',
+        type=str,
+        help='End date (YYYY-MM-DD) for the data collection.',
+        default=None,
     )
     parser.add_argument(
-        '--cloud_cover_meta_name', type=str, help='Metadata field name for cloud cover.', default=None,
+        '--cloud_cover_meta_name',
+        type=str,
+        help='Metadata field name for cloud cover.',
+        default=None,
     )
     parser.add_argument(
-        '--cloud_cover_threshold', type=float, help='Maximum cloud cover percentage.', default=None,
+        '--cloud_cover_threshold',
+        type=float,
+        help='Maximum cloud cover percentage.',
+        default=None,
     )
     parser.add_argument(
-        '--layers', nargs='+', help='List of layer names to download.', default=None,
+        '--layers',
+        nargs='+',
+        help='List of layer names to download.',
+        default=None,
     )
     parser.add_argument(
-        '--spatial_buffer', type=int, help='Spatial buffer in meters.', default=1000,
+        '--spatial_buffer',
+        type=int,
+        help='Spatial buffer in meters.',
+        default=1000,
     )
     parser.add_argument(
-        '--time_buffer', type=float, help='Temporal buffer in days for closest timestamp matching.', default=None,
+        '--time_buffer',
+        type=float,
+        help='Temporal buffer in days for closest timestamp matching.',
+        default=None,
     )
     parser.add_argument(
-        '--reproject_layer_name', type=str, help="Reproject all layers to this layer's resolution.", default=None,
+        '--reproject_layer_name',
+        type=str,
+        help="Reproject all layers to this layer's resolution.",
+        default=None,
     )
     parser.add_argument(
-        '--num_workers', type=int, help='Number of parallel processes to use.', default=4,
+        '--num_workers',
+        type=int,
+        help='Number of parallel processes to use.',
+        default=4,
     )
     parser.add_argument(
-        '--gcloud_service_email', type=str, help='Google Cloud Service email. The corresponding credentials are picked from the environment variable `$GOOGLE_APPLICATION_CREDENTIALS`', default=None,
+        '--gcloud_service_email',
+        type=str,
+        help='Google Cloud Service email. The corresponding credentials are picked from the environment variable `$GOOGLE_APPLICATION_CREDENTIALS`',
+        default=None,
     )
 
     args = parser.parse_args()
