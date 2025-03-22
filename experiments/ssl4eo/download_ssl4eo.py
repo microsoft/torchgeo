@@ -16,7 +16,6 @@ import numpy
 import geopandas, pandas
 import shapely.geometry
 import rasterio, rasterio.enums, rasterio.warp
-import rioxarray, xarray
 import request
 import datetime
 import logging
