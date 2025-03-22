@@ -49,36 +49,36 @@ SSL4EO_GEE_DATA = {
         'GEE_name': 'COPERNICUS/S2',
         'temporal_resolution_in_days': 5.0,
         'layers': [
-            {'name': 'B1', 'description': 'coastal aerosols (60m resolution)',},
-            {'name': 'B2', 'description': 'blue band (10m resolution)',},
-            {'name': 'B3', 'description': 'green band (10m resolution)',},
-            {'name': 'B4', 'description': 'red band (10m resolution)',},
-            {'name': 'B5', 'description': 'vegetation red edge +-700nm (20m resolution)',},
-            {'name': 'B6', 'description': 'vegetation red edge +-740nm (20m resolution)',},
-            {'name': 'B7', 'description': 'vegetation red edge +-780nm (20m resolution)',},
-            {'name': 'B8', 'description': 'near infrared (10m resolution)',},
-            {'name': 'B8A', 'description': 'near infrared narrow bandwidth (20m resolution)',},
-            {'name': 'B9', 'description': 'water vapor (60m resolution)',},
-            {'name': 'B10', 'description': 'short wave infrared +-1375nm narrow bandwidth (60m resolution)',},
-            {'name': 'B11', 'description': 'short wave infrared +-1610nm  (20m resolution)',},
-            {'name': 'B12', 'description': 'short wave infrared +-2190nm  (20m resolution)',},
-        ],
+            {'name': 'B1', 'description': 'coastal aerosols (60m resolution)'},
+            {'name': 'B2', 'description': 'blue band (10m resolution)'},
+            {'name': 'B3', 'description': 'green band (10m resolution)'},
+            {'name': 'B4', 'description': 'red band (10m resolution)'},
+            {'name': 'B5', 'description': 'vegetation red edge +-700nm (20m resolution)'},
+            {'name': 'B6', 'description': 'vegetation red edge +-740nm (20m resolution)'},
+            {'name': 'B7', 'description': 'vegetation red edge +-780nm (20m resolution)'},
+            {'name': 'B8', 'description': 'near infrared (10m resolution)'},
+            {'name': 'B8A', 'description': 'near infrared narrow bandwidth (20m resolution)'},
+            {'name': 'B9', 'description': 'water vapor (60m resolution)'},
+            {'name': 'B10', 'description': 'short wave infrared +-1375nm narrow bandwidth (60m resolution)'},
+            {'name': 'B11', 'description': 'short wave infrared +-1610nm  (20m resolution)'},
+            {'name': 'B12', 'description': 'short wave infrared +-2190nm  (20m resolution)'},
+        ]
     },
     'sentinel_1_grd': {
         'GEE_name': 'COPERNICUS/S1_GRD',
         'temporal_resolution_in_days': 5.0,
         'layers': [
-            {'name': 'VV', 'description': 'vertical-vertical polarization channel',},
-            {'name': 'VH', 'description': 'vertical-horizontal polarization channel',},
-            {'name': 'angle', 'description': 'SAR illumination angle',},
-        ],
-    },
+            {'name': 'VV', 'description': 'vertical-vertical polarization channel'},
+            {'name': 'VH', 'description': 'vertical-horizontal polarization channel'},
+            {'name': 'angle', 'description': 'SAR illumination angle'},
+        ]
+    }
 }
 
 
 def get_cloudfree_sentinel2_timestamps(
     geeCollection:ee.imagecollection.ImageCollection,
-    maxCloudCover:Percent = 10.0,
+    maxCloudCover:Percent = 10.0
 ) -> list[Milliseconds]:
     """
     Query GEE to obtain timestamps of Sentinel-2 data with a cloud coverage below a given threshold.
@@ -97,9 +97,9 @@ def get_cloudfree_sentinel2_timestamps(
     return toReturn
 
 def get_utm_bounding_box(
-    latitude:Degree, 
-    longitude:Degree, 
-    radius:Meters, 
+    latitude:Degree,
+    longitude:Degree,
+    radius:Meters
 ) -> tuple[tuple[float,float,float,float],str]:
     """
     Function to generate UTM bounding box from a center coordinate in EPSG:4326.
@@ -122,9 +122,7 @@ def get_utm_bounding_box(
         geopandas.GeoSeries(
             [shapely.geometry.Point(longitude,latitude)],
             crs = {'init': 'epsg:4326'},
-        )
-        .to_crs({'init': utmCRS})[0]
-        .coords.xy,
+        ).to_crs({'init': utmCRS})[0].coords.xy
     )
     x, y = x[0], y[0]
 
@@ -138,7 +136,7 @@ def construct_layer_file_name_base(
     product: str,
     layer: str | list[str],
     directoriesUNIX: bool = False,
-    timestampAsDate: bool = True,
+    timestampAsDate: bool = True
 ) -> str:
     """
     Define SSL4EO file name schema.
@@ -180,7 +178,7 @@ time{timestring}{separator}\
 
 
 def random_select_four_seasons_from_timeseries(
-    timestamps:list[Milliseconds],
+    timestamps:list[Milliseconds]
 ) -> list[int]:
     """
     Pick a random year in which random timestamps are picked for the 4 seasons of a year.
@@ -192,10 +190,10 @@ def random_select_four_seasons_from_timeseries(
         indices: 4 indices of the timestamp list picked as seasons
     """
     # define seasons
-    wintermonths = [12,1,2,]
-    springmonths = [3,4,5,]
-    summermonths = [6,7,8,]
-    fallmonths = [9,10,11,]
+    wintermonths = [12, 1, 2]
+    springmonths = [3, 4, 5]
+    summermonths = [6, 7, 8]
+    fallmonths = [9, 10, 11]
 
     # format raw UNIX epoch timestamps into proper datetime timestamp series
     s = pandas.to_datetime(pandas.Series(timestamps), unit='ms')
@@ -226,7 +224,7 @@ def download_layer_geotiff(
     geeImage: ee.image.Image,
     boundBox: ee.geometry.Geometry,
     layerName: str,
-    outputPath: str,
+    outputPath: str
 ) -> None:
     """
     Download a GeoTiff from Google Earth Engine image.
@@ -249,7 +247,7 @@ def download_layer_geotiff(
                 'format': 'GEO_TIFF',
                 'crs': geeImage.projection().crs(),
                 'region': boundBox,
-                'scale': geeImage.projection().nominalScale(),
+                'scale': geeImage.projection().nominalScale()
                 #'crsTransform': geeImage.projection().transform(),
                 # notes:
                 # - attention: the commented line above seems to upscale the hightest native resolution, probably a GEE issue
@@ -284,7 +282,7 @@ def download_data_from_gee(
     temporal_sampling_strategy:Callable[[list[Milliseconds]], list[int]] \
         = random_select_four_seasons_from_timeseries,
     saveInSubdirs:bool = True,
-    reprojectLayerName: str | None = None,
+    reprojectLayerName: str | None = None
 ) -> pandas.DataFrame:
     """
     Browse spatio(-temporal) anchors to download Google Earth Engine data.
@@ -340,22 +338,18 @@ def download_data_from_gee(
             logger.debug('Closest Timestamp Sampling')
             geeCollectionBounded = geeCollectionBounded.filterDate(
                 centerCoords.timestamp_anchor.loc[idx]*1e3 - int(24*3600*temporalBuffer*1e3),
-                centerCoords.timestamp_anchor.loc[idx]*1e3 + int(24*3600*temporalBuffer*1e3),
+                centerCoords.timestamp_anchor.loc[idx]*1e3 + int(24*3600*temporalBuffer*1e3)
             ).filter(
                 ee.Filter.contains('.geo', boundBox)
             )
             timestampsMilliseconds = geeCollectionBounded.aggregate_array("system:time_start").getInfo()
             logger.debug('Reaching out to GEE for time series computation.')
-            timestampIndices = (
-                [
-                    numpy.abs(
-                        numpy.array(timestampsMilliseconds)/1000.
-                        - centerCoords.timestamp_anchor.loc[idx]
-                    ).argmin()
-                ]
-                if len(timestampsMilliseconds) > 0
-                else []
-            )
+            timestampIndices = [
+                numpy.abs(
+                    numpy.array(timestampsMilliseconds)/1000.
+                    - centerCoords.timestamp_anchor.loc[idx]
+                ).argmin()
+            ] if len(timestampsMilliseconds) > 0 else []
         else:
             logger.debug('Seasonal Sampling')
             timestampsMilliseconds = geeCollectionBounded.filter(
@@ -363,9 +357,7 @@ def download_data_from_gee(
                     '.geo',
                     boundBox
                 ) # ATTENTION: potential inefficiency in performance over requirement of tile overlap with area-of-interest
-            )
-            .aggregate_array("system:time_start")
-            .getInfo()
+            ).aggregate_array("system:time_start").getInfo()
             logger.debug('Reaching out to GEE for time series computation.')
             timestampIndices = temporal_sampling_strategy(timestampsMilliseconds)
 
