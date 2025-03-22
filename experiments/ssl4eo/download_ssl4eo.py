@@ -6,8 +6,8 @@ __version__     = '0.0.5'
 __date__        = 'Mar 22, 2025'
 __authors__     = ['Nassim Ait Ali Braham', 'Conrad M Albrecht',]
 __contact__     = 'Conrad.Albrecht@DLR.de, https://github.com/cmalbrec'
-__copyright__   = '(c) 2024-2025 DLR'
-__license__     = 'MIT'
+__copyright__   = '(c) 2025'
+__license__     = 'to be determined'
 __status__      = 'experimental'
 
 # imports
