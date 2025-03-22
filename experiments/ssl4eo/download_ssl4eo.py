@@ -2,9 +2,10 @@
 """
 Download and spatio-temporally align Earth observation data from Google Earth Engine.
 """
+
 __version__ = '0.0.1'
 __date__ = 'Mar 22, 2025'
-__authors__ = ['Nassim Ait Ali Braham', 'Conrad M Albrecht',]
+__authors__ = ['Nassim Ait Ali Braham', 'Conrad M Albrecht']
 __contact__ = 'https://github.com/cmalbrec'
 __copyright__ = '(c) 2025'
 __license__ = 'to be determined'
@@ -32,12 +33,12 @@ import requests  # type: ignore
 import shapely.geometry
 
 # define units
-Percent = Annotated[float, "%"]
-Degree = Annotated[float, "°"]
-Meters = Annotated[float, "m"]
-Days = Annotated[float, "d"]
-Seconds = Annotated[int, "s"]
-Milliseconds = Annotated[int, "ms"]
+Percent = Annotated[float, '%']
+Degree = Annotated[float, '°']
+Meters = Annotated[float, 'm']
+Days = Annotated[float, 'd']
+Seconds = Annotated[int, 's']
+Milliseconds = Annotated[int, 'ms']
 
 # set up logging
 logger = logging.getLogger(__name__)
@@ -49,22 +50,10 @@ SSL4EO_GEE_DATA = {
         'GEE_name': 'COPERNICUS/S2',
         'temporal_resolution_in_days': 5.0,
         'layers': [
-            {
-                'name': 'B1',
-                'description': 'coastal aerosols (60m resolution)',
-            },
-            {
-                'name': 'B2',
-                'description': 'blue band (10m resolution)',
-            },
-            {
-                'name': 'B3',
-                'description': 'green band (10m resolution)',
-            },
-            {
-                'name': 'B4',
-                'description': 'red band (10m resolution)',
-            },
+            {'name': 'B1', 'description': 'coastal aerosols (60m resolution)'},
+            {'name': 'B2', 'description': 'blue band (10m resolution)'},
+            {'name': 'B3', 'description': 'green band (10m resolution)'},
+            {'name': 'B4', 'description': 'red band (10m resolution)'},
             {
                 'name': 'B5',
                 'description': 'vegetation red edge +-700nm (20m resolution)',
@@ -77,18 +66,12 @@ SSL4EO_GEE_DATA = {
                 'name': 'B7',
                 'description': 'vegetation red edge +-780nm (20m resolution)',
             },
-            {
-                'name': 'B8',
-                'description': 'near infrared (10m resolution)',
-            },
+            {'name': 'B8', 'description': 'near infrared (10m resolution)'},
             {
                 'name': 'B8A',
                 'description': 'near infrared narrow bandwidth (20m resolution)',
             },
-            {
-                'name': 'B9',
-                'description': 'water vapor (60m resolution)',
-            },
+            {'name': 'B9', 'description': 'water vapor (60m resolution)'},
             {
                 'name': 'B10',
                 'description': 'short wave infrared +-1375nm narrow bandwidth (60m resolution)',
@@ -604,7 +587,7 @@ def crop_geotiff2ssl4eo_datacube(
             dst.write(src.read(window=window))
 
 
-def stack_ssl4eo_geotiffs(ssl4eo_pathes:list[str], output_path: str) -> None:
+def stack_ssl4eo_geotiffs(ssl4eo_pathes: list[str], output_path: str) -> None:
     """
     Take SSL4EO georeferenced, multiband data cubes and stack them.
 
@@ -799,6 +782,7 @@ def main(
         f'Data has been successfully downloaded and saved to {output_csv_path}.'
     )
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Download satellite images from Google Earth Engine.'
@@ -813,7 +797,7 @@ if __name__ == '__main__':
         'output_csv_path', type=str, help='CSV file path to save the download metadata.'
     )
     parser.add_argument(
-        "collection_id", type=str, help='Google Earth Engine collection ID.'
+        'collection_id', type=str, help='Google Earth Engine collection ID.'
     )
     parser.add_argument(
         '--checkpoint_csv_path',
@@ -846,16 +830,10 @@ if __name__ == '__main__':
         default=None,
     )
     parser.add_argument(
-        '--layers',
-        nargs='+',
-        help='List of layer names to download.',
-        default=None,
+        '--layers', nargs='+', help='List of layer names to download.', default=None
     )
     parser.add_argument(
-        '--spatial_buffer',
-        type=int,
-        help='Spatial buffer in meters.',
-        default=1000,
+        '--spatial_buffer', type=int, help='Spatial buffer in meters.', default=1000
     )
     parser.add_argument(
         '--time_buffer',
