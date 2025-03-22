@@ -77,7 +77,7 @@ SSL4EO_GEE_DATA = {
 
 
 def get_cloudfree_sentinel2_timestamps(
-    geeCollection:ee.imagecollection.ImageCollection, maxCloudCover:Percent = 10.0
+    geeCollection: ee.imagecollection.ImageCollection, maxCloudCover: Percent = 10.0
 ) -> list[Milliseconds]:
     """
     Query GEE to obtain timestamps of Sentinel-2 data with a cloud coverage below a given threshold.
@@ -94,17 +94,15 @@ def get_cloudfree_sentinel2_timestamps(
     )
     toReturn: list[Milliseconds] = (
         geeCollection.filter(
-            ee.Filter.lt(SENTINEL2_CLOUDCOVER_META_NAME, maxCloudCover),
+            ee.Filter.lt(SENTINEL2_CLOUDCOVER_META_NAME, maxCloudCover)
         )
-        .aggregate_array("system:time_start")
+        .aggregate_array('system:time_start')
         .getInfo()
     )
     return toReturn
 
 def get_utm_bounding_box(
-    latitude:Degree,
-    longitude:Degree,
-    radius:Meters
+    latitude: Degree, longitude: Degree, radius: Meters
 ) -> tuple[tuple[float,float,float,float],str]:
     """
     Function to generate UTM bounding box from a center coordinate in EPSG:4326.
@@ -142,7 +140,7 @@ def construct_layer_file_name_base(
     product: str,
     layer: str | list[str],
     directoriesUNIX: bool = False,
-    timestampAsDate: bool = True
+    timestampAsDate: bool = True,
 ) -> str:
     """
     Define SSL4EO file name schema.
@@ -178,14 +176,14 @@ def construct_layer_file_name_base(
     )
 
     return f"""\
-lat{int(latitude*1e5):08}lon{int(longitude*1e5):08}{separator}\
+lat{int(latitude * 1e5):08}lon{int(longitude * 1e5):08}{separator}\
 time{timestring}{separator}\
 {product}{separator if isinstance(layer,str) else ''}\
-{layer if isinstance(layer,str) else ''}"""
+{layer if isinstance(layer, str) else ''}"""
 
 
 def random_select_four_seasons_from_timeseries(
-    timestamps:list[Milliseconds],
+    timestamps: list[Milliseconds],
 ) -> list[int]:
     """
     Pick a random year in which random timestamps are picked for the 4 seasons of a year.
@@ -290,7 +288,7 @@ def download_data_from_gee(
         [list[Milliseconds]], list[int]
     ] = random_select_four_seasons_from_timeseries,
     saveInSubdirs: bool = True,
-    reprojectLayerName: str | None = None
+    reprojectLayerName: str | None = None,
 ) -> pandas.DataFrame:
     """
     Browse spatio(-temporal) anchors to download Google Earth Engine data.
@@ -324,20 +322,19 @@ def download_data_from_gee(
 
     # initialize spatio-temporal information on downloaded data
     spatioTemporalIndicesDownloaded = pandas.DataFrame(
-        [],
-        columns=['latitude', 'longitude', 'timestamp_anchor', 'timestamp_data'],
+        [], columns=['latitude', 'longitude', 'timestamp_anchor', 'timestamp_data']
     )
 
     # visit geospatial locations as per user request
     for idx, (lat, lon) in centerCoords[['latitude', 'longitude']].iterrows():
         # define GEE spatial area-of-interest
         bboxCoords, crs = get_utm_bounding_box(
-            latitude = lat, longitude = lon, radius = spatialBuffer,
+            latitude=lat, longitude=lon, radius=spatialBuffer,
         )
 
         # filter GEE collection by spatial area
         boundBox = ee.Geometry.Rectangle(
-            bboxCoords, proj = crs, geodesic = True, evenOdd = False
+            bboxCoords, proj=crs, geodesic=True, evenOdd=False
         )
         geeCollectionBounded = geeCollection.filterBounds(boundBox)
 
@@ -345,19 +342,25 @@ def download_data_from_gee(
         if 'timestamp_anchor' in centerCoords:
             logger.debug('Closest Timestamp Sampling')
             geeCollectionBounded = geeCollectionBounded.filterDate(
-                centerCoords.timestamp_anchor.loc[idx]*1e3
-                - int(24*3600*temporalBuffer*1e3),
-                centerCoords.timestamp_anchor.loc[idx]*1e3
-                + int(24*3600*temporalBuffer*1e3),
+                centerCoords.timestamp_anchor.loc[idx] * 1e3
+                - int(24 * 3600 * temporalBuffer * 1e3),
+                centerCoords.timestamp_anchor.loc[idx] * 1e3
+                + int(24 * 3600 * temporalBuffer * 1e3),
             ).filter(ee.Filter.contains('.geo', boundBox))
-            timestampsMilliseconds = geeCollectionBounded.aggregate_array("system:time_start").getInfo()
+            timestampsMilliseconds = geeCollectionBounded.aggregate_array(
+                'system:time_start'
+            ).getInfo()
             logger.debug('Reaching out to GEE for time series computation.')
-            timestampIndices = [
-                numpy.abs(
-                    numpy.array(timestampsMilliseconds)/1000.
-                    - centerCoords.timestamp_anchor.loc[idx]
-                ).argmin()
-            ] if len(timestampsMilliseconds) > 0 else []
+            timestampIndices = (
+                [
+                    numpy.abs(
+                        numpy.array(timestampsMilliseconds)/1000.
+                        - centerCoords.timestamp_anchor.loc[idx]
+                    ).argmin()
+                ]
+                if len(timestampsMilliseconds) > 0
+                else []
+            )
         else:
             logger.debug('Seasonal Sampling')
             timestampsMilliseconds = (
@@ -366,7 +369,7 @@ def download_data_from_gee(
                         '.geo', boundBox
                     )  # ATTENTION: potential inefficiency in performance over requirement of tile overlap with area-of-interest
                 )
-                .aggregate_array("system:time_start")
+                .aggregate_array('system:time_start')
                 .getInfo()
             )
             logger.debug('Reaching out to GEE for time series computation.')
@@ -374,7 +377,9 @@ def download_data_from_gee(
 
         # download the data as GeoTIFFs (if any)
         if len(timestampIndices) == 0:
-            logger.warning(f'No timestamps available in GEE collection at location (lat,lon)=({lat},{lon}).')
+            logger.warning(
+                f'No timestamps available in GEE collection at location (lat,lon)=({lat},{lon}).'
+            )
         for timestampIndex in timestampIndices:
             logger.debug(f'timestamp index {timestampIndex}')
             if layersAtOnce and type(layerNames) is str:
@@ -386,15 +391,15 @@ def download_data_from_gee(
                 try:
                     # convert GEE collection into GEE image selecting relevant layers
                     geeImage = ee.Image(
-                        geeCollectionBounded.select(layer).toList(
-                            geeCollectionBounded.size()
-                        ).get(int(timestampIndex))
+                        geeCollectionBounded.select(layer)
+                        .toList(geeCollectionBounded.size())
+                        .get(int(timestampIndex))
                     )
                     # upscale GEE image in case it contains multiple layers
                     if layersAtOnce:
                         reprojectCRS = geeImage.select(reprojectLayerName).projection()
                         geeImage = geeImage.resample().reproject(
-                                reprojectCRS, scale=reprojectCRS.nominalScale(),
+                            reprojectCRS, scale=reprojectCRS.nominalScale(),
                         )
                     # download GEE image
                     download_layer_geotiff(
@@ -410,27 +415,29 @@ def download_data_from_gee(
                                 collectionName,
                                 layer,
                                 directoriesUNIX=saveInSubdirs,
-                           ) + f'_{int(2*spatialBuffer)}m.tif',
+                           ) + f'_{int(2 * spatialBuffer)}m.tif',
                         )
                     )
                     write = True
                 except Exception as e:
                     write = False
                     logger.error(
-                        f'Unable to download {layer} of {collectionName} at (lat,lon,time)=({lat},{lon},{timestampsMilliseconds[timestampIndex]//1000}): {e}',
+                        f'Unable to download {layer} of {collectionName} at (lat,lon,time)=({lat},{lon},{timestampsMilliseconds[timestampIndex] // 1000}): {e}',
                         exc_info=True,
                     )
 
                     break
             if write:
                 # record spatio-temporal information on downloaded data
-                timestamp = timestampsMilliseconds[int(timestampIndex)]/1e3
+                timestamp = timestampsMilliseconds[int(timestampIndex)] / 1e3
                 spatioTemporalIndicesDownloaded.loc[
                     len(spatioTemporalIndicesDownloaded)
                 ] = [
                     lat,
                     lon,
-                    timestamp if 'timestamp_anchor' not in centerCoords else centerCoords.timestamp_anchor.loc[idx],
+                    timestamp
+                    if 'timestamp_anchor' not in centerCoords
+                    else centerCoords.timestamp_anchor.loc[idx],
                     timestamp,
                 ]
 
@@ -458,7 +465,7 @@ def spatial_align_rasters(
     if scalefactor != 1:
         logger.debug("Rescaling {referenceRasterPath} by factor {scalefactor}.")
         data = referenceRaster.read(
-            out_shape = (
+            out_shape=(
                 referenceRaster.count,
                 int(referenceRaster.height * scalefactor),
                 int(referenceRaster.width * scalefactor),
@@ -468,14 +475,16 @@ def spatial_align_rasters(
         # write upscaled reference raster
         kwargs = referenceRaster.meta.copy()
         kwargs.update(
-            transform = referenceRaster.transform * referenceRaster.transform.scale(
+            transform=referenceRaster.transform * referenceRaster.transform.scale(
                 (referenceRaster.width  / data.shape[-1]),
                 (referenceRaster.height / data.shape[-2]),
             ),
             width=referenceRaster.width * scalefactor,
             height=referenceRaster.width * scalefactor,
         )
-        referenceRasterRescaledPath = f'{os.path.splitext(referenceRasterPath)[0]}-scaled{scalefactor}.tif'
+        referenceRasterRescaledPath = (
+            f'{os.path.splitext(referenceRasterPath)[0]}-scaled{scalefactor}.tif'
+        )
         with rasterio.open(referenceRasterRescaledPath, 'w', **kwargs,) as dst:
             dst.write(data)
         referenceRaster.close()
@@ -483,7 +492,7 @@ def spatial_align_rasters(
 
     # reproject all rasters to the reference raster
     for rasterPath in rasterPathes:
-        logger.debug("Reprojecting {rasterPath} to {referenceRasterPath}.")
+        logger.debug('Reprojecting {rasterPath} to {referenceRasterPath}.')
         with rasterio.open(rasterPath) as raster:
             # reproject raster data
             data, transform = rasterio.warp.reproject(
@@ -492,11 +501,7 @@ def spatial_align_rasters(
                 src_crs=raster.crs,
                 src_nodata=raster.nodata,
                 destination=numpy.empty(
-                    (
-                        raster.count,
-                        referenceRaster.width,
-                        referenceRaster.height,
-                    ),
+                    (raster.count, referenceRaster.width, referenceRaster.height),
                     dtype=raster.dtype[0],
                 ),
                 dst_transform=referenceRaster.transform,
@@ -510,12 +515,13 @@ def spatial_align_rasters(
                 count=raster.count,
                 nodata=raster.nodata,
                 transform=transform,
-                dtype=raster.dtype[0]
+                dtype=raster.dtype[0],
             )
             # write reprojected data to GeoTIFF
             with rasterio.open(
                 f'{os.path.splitext(rasterPath)[0]}-TO-{os.path.splitext(os.path.basename(referenceRasterPath))[0]}.tif',
-                'w', **kwargs,
+                'w',
+                **kwargs,
             ) as out:
                 out.write(data)
     # garbage collection
@@ -523,9 +529,7 @@ def spatial_align_rasters(
 
 
 def crop_geotiff2ssl4eo_datacube(
-    input_path:str,
-    output_path:str,
-    cubesize:int = 264
+    input_path: str, output_path: str, cubesize:int = 264
 ) -> None:
     """
     Take a georeferenced image and crop it to SSL4EO-S12 data cube size.
@@ -570,11 +574,11 @@ def stack_ssl4eo_geotiffs(ssl4eo_pathes:list[str], output_path:str) -> None:
     # generate metadata
     with rasterio.open(ssl4eo_pathes[0]) as src:
         meta = src.meta
-    meta.update(count = sum(rasterio.open(path).count for path in ssl4eo_pathes))
+    meta.update(count=sum(rasterio.open(path).count for path in ssl4eo_pathes))
     
     # create empty SSL4EO datacube
     rasters = numpy.empty(
-        (meta['count'], meta['height'], meta['width']), dtype = meta['dtype']
+        (meta['count'], meta['height'], meta['width']), dtype=meta['dtype']
     )
 
     # populate SSL4EO datacube
@@ -582,7 +586,7 @@ def stack_ssl4eo_geotiffs(ssl4eo_pathes:list[str], output_path:str) -> None:
     with rasterio.open(output_path, 'w', **meta) as dst:
         for path in ssl4eo_pathes:
             with rasterio.open(path) as src:
-                rasters[b_off:b_off+src.count, ...] = src.read()
+                rasters[b_off : b_off + src.count, ...] = src.read()
                 b_off += src.count
         dst.write(rasters)
 
@@ -599,7 +603,7 @@ def save_results(results: Any, output_csv_path: str) -> None:
 def download_for_coords(args: Any) -> pandas.DataFrame:
     """
     Helper function to download data for a single set of coordinates.
-    
+
     Args:
         args (tuple): Contains the arguments to pass to the download function.
     """
@@ -613,7 +617,7 @@ def download_for_coords(args: Any) -> pandas.DataFrame:
             spatial_buffer,
             time_buffer,
             reproject_layer_name,
-            creds
+            creds,
         ) = args
         ee.Initialize(creds)
         result_df = download_data_from_gee(
@@ -625,13 +629,13 @@ def download_for_coords(args: Any) -> pandas.DataFrame:
             spatial_buffer,
             time_buffer,
             saveInSubdirs=True,
-            reprojectLayerName=reproject_layer_name
+            reprojectLayerName=reproject_layer_name,
         )
         return result_df
     except Exception as e:
         logger.error(
             f"Error processing {row['latitude']}, {row['longitude']}: {e}",
-            exc_info = True,
+            exc_info=True,
         )
         # Return an empty DataFrame indicating failure
         return pandas.DataFrame()
@@ -716,7 +720,7 @@ def main(
             processed_coords,
             on=merge_columns,
             how='left',
-            indicator=True
+            indicator=True,
         )
         remaining_coords = combined[combined['_merge'] == 'left_only'].drop(
             columns='_merge'
@@ -750,94 +754,96 @@ def main(
     if results:
         save_results(results, output_csv_path)
 
-    logger.info(f'Data has been successfully downloaded and saved to {output_csv_path}.')
+    logger.info(
+        f'Data has been successfully downloaded and saved to {output_csv_path}.'
+    )
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Download satellite images from Google Earth Engine.")
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Download satellite images from Google Earth Engine.')
     parser.add_argument(
-        "download_directory",
+        'download_directory',
         type=str,
-        help="Directory to save the downloaded images.",
+        help='Directory to save the downloaded images.',
     )
     parser.add_argument(
-        "input_csv_path",
+        'input_csv_path',
         type=str,
-        help="CSV file path for input coordinates.",
+        help='CSV file path for input coordinates.',
     )
     parser.add_argument(
-        "output_csv_path",
+        'output_csv_path',
         type=str,
-        help="CSV file path to save the download metadata.",
+        help='CSV file path to save the download metadata.',
     )
     parser.add_argument(
         "collection_id",
         type=str,
-        help="Google Earth Engine collection ID.",
+        help='Google Earth Engine collection ID.',
     )
     parser.add_argument(
-        "--checkpoint_csv_path",
+        '--checkpoint_csv_path',
         type=str,
         default=None,
-        help="Optional: CSV file path for checkpoint to resume download.",
+        help='Optional: CSV file path for checkpoint to resume download.',
     )
     parser.add_argument(
-        "--start_date",
+        '--start_date',
         type=str,
-        help="Start date (YYYY-MM-DD) for the data collection.",
-        default=None,
-    )
-    parser.add_argument(
-        "--end_date",
-        type=str,
-        help="End date (YYYY-MM-DD) for the data collection.",
+        help='Start date (YYYY-MM-DD) for the data collection.',
         default=None,
     )
     parser.add_argument(
-        "--cloud_cover_meta_name",
+        '--end_date',
         type=str,
-        help="Metadata field name for cloud cover.",
+        help='End date (YYYY-MM-DD) for the data collection.',
         default=None,
     )
     parser.add_argument(
-        "--cloud_cover_threshold",
+        '--cloud_cover_meta_name',
+        type=str,
+        help='Metadata field name for cloud cover.',
+        default=None,
+    )
+    parser.add_argument(
+        '--cloud_cover_threshold',
         type=float,
-        help="Maximum cloud cover percentage.",
+        help='Maximum cloud cover percentage.',
         default=None,
     )
     parser.add_argument(
-        "--layers",
+        '--layers',
         nargs='+',
-        help="List of layer names to download.",
+        help='List of layer names to download.',
         default=None,
     )
     parser.add_argument(
-        "--spatial_buffer",
+        '--spatial_buffer',
         type=int,
-        help="Spatial buffer in meters.",
+        help='Spatial buffer in meters.',
         default=1000,
     )
     parser.add_argument(
-        "--time_buffer",
+        '--time_buffer',
         type=float,
-        help="Temporal buffer in days for closest timestamp matching.",
+        help='Temporal buffer in days for closest timestamp matching.',
         default=None,
     )
     parser.add_argument(
-        "--reproject_layer_name",
+        '--reproject_layer_name',
         type=str,
-        help="Reproject all layers to this layer's resolution.",
+        help='Reproject all layers to this layer's resolution.',
         default=None,
     )
     parser.add_argument(
-        "--num_workers",
+        '--num_workers',
         type=int,
-        help="Number of parallel processes to use.",
+        help='Number of parallel processes to use.',
         default=4,
     )
     parser.add_argument(
-        "--gcloud_service_email",
+        '--gcloud_service_email',
         type=str,
-        help="Google Cloud Service email. The corresponding credentials are picked from the environment variable `$GOOGLE_APPLICATION_CREDENTIALS`",
+        help='Google Cloud Service email. The corresponding credentials are picked from the environment variable `$GOOGLE_APPLICATION_CREDENTIALS`',
         default=None,
     )
 
