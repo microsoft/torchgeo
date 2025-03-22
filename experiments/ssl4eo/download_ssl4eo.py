@@ -11,24 +11,24 @@ __license__     = 'to be determined'
 __status__      = 'experimental'
 
 # imports
-import ee
-import numpy
-import geopandas
-import pandas
-import shapely.geometry
-import rasterio
-import rasterio.enums
-import rasterio.warp
-import requests # type: ignore
+import argparse
 import datetime
 import logging
 import os
 import sys
-import argparse
-from multiprocessing import Pool
-from typing import Any, Optional
 from collections.abc import Callable
-from typing import Annotated
+from multiprocessing import Pool
+from typing import Annotated, Any, Optional
+
+import ee
+import geopandas
+import numpy
+import pandas
+import rasterio
+import rasterio.enums
+import rasterio.warp
+import requests  # type: ignore
+import shapely.geometry
 
 # define units
 Percent     = Annotated[float, "%"]
