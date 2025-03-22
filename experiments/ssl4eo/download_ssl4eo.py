@@ -405,13 +405,7 @@ def download_data_from_gee(
             )
         for timestampIndex in timestampIndices:
             logger.debug(f'timestamp index {timestampIndex}')
-            if layersAtOnce and isinstance(layerNames, str):
-                layerNamesIter: list[str] = [layerNames]
-            elif isinstance(layerNames, list):
-                layerNamesIter: list[str] = layerNames
-            else:
-                raise TypeError('`layerNames` must be `str | list[str]`')
-
+            layerNamesIter: list[str] = [layerNames] if layersAtOnce and isinstance(layerNames, str) else layerNames
             for layer in layerNamesIter:
                 logger.debug(f'layer {layer}')
                 try:
