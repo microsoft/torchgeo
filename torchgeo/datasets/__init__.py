@@ -39,6 +39,7 @@ from .copernicus import (
     CopernicusBenchCloudS3,
     CopernicusBenchEuroSATS1,
     CopernicusBenchEuroSATS2,
+    CopernicusBenchLC100ClsS3,
 )
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cropharvest import CropHarvest
@@ -233,6 +234,7 @@ __all__ = (
     'CopernicusBenchCloudS3',
     'CopernicusBenchEuroSATS1',
     'CopernicusBenchEuroSATS2',
+    'CopernicusBenchLC100ClsS3',
     'CropHarvest',
     'DL4GAMAlps',
     'DatasetNotFoundError',
