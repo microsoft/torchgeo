@@ -5,15 +5,9 @@
 
 import os
 
-import numpy as np
-from einops import rearrange
-from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
-from matplotlib.figure import Figure
 from torch import Tensor
 
-from ..errors import RGBBandsMissingError
-from ..utils import percentile_normalization
 from .base import CopernicusBenchBase
 
 
@@ -87,60 +81,3 @@ class CopernicusBenchDFC2020S1(CopernicusBenchBase):
             sample = self.transforms(sample)
 
         return sample
-
-    def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
-    ) -> Figure:
-        """Plot a sample from the dataset.
-
-        Args:
-            sample: A sample returned by :meth:`__getitem__`.
-            show_titles: Flag indicating whether to show titles above each panel.
-            suptitle: Optional string to use as a suptitle.
-
-        Returns:
-            A matplotlib Figure with the rendered sample.
-
-        Raises:
-            RGBBandsMissingError: If *bands* does not include all RGB bands.
-        """
-        rgb_indices = []
-        for band in self.rgb_bands:
-            if band in self.bands:
-                rgb_indices.append(self.bands.index(band))
-            else:
-                raise RGBBandsMissingError()
-
-        ncols = 3 if 'prediction' in sample else 2
-        fig, ax = plt.subplots(ncols=ncols)
-
-        image = sample['image'][rgb_indices].numpy()
-        image = np.stack([image[0], image[1], (image[0] + image[1]) / 2])
-        image = rearrange(image, 'c h w -> h w c')
-        image = percentile_normalization(image)
-        ax[0].imshow(image)
-        ax[0].axis('off')
-
-        kwargs = {'cmap': self.cmap, 'vmin': 0, 'vmax': 10, 'interpolation': 'none'}
-        mask = sample['mask']
-        ax[1].imshow(mask, **kwargs)
-        ax[1].axis('off')
-
-        if 'prediction' in sample:
-            prediction = sample['prediction']
-            ax[2].imshow(prediction, **kwargs)
-            ax[2].axis('off')
-
-        if show_titles:
-            ax[0].set_title('Image')
-            ax[1].set_title('Mask')
-            if 'prediction' in sample:
-                ax[2].set_title('Prediction')
-
-        if suptitle is not None:
-            fig.suptitle(suptitle)
-
-        return fig

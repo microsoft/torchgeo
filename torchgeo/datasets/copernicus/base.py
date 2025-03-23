@@ -7,7 +7,7 @@ import os
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
-from typing import Literal
+from typing import Any, Literal
 
 import matplotlib.colors
 import numpy as np
@@ -261,9 +261,9 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         if 'label' in sample:
             if sample['label'].dim() == 0:
                 # Multiclass classification
-                label = self.classes[sample['label']]
+                label: Any = self.classes[sample['label']]
                 if 'prediction' in sample:
-                    prediction = self.classes[sample['prediction']]
+                    prediction: Any = self.classes[sample['prediction']]
             else:
                 # Multilabel classification
                 label = sample['label'].numpy().nonzero()[0]
@@ -276,8 +276,23 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
         # Image
         images = images[:, rgb_indices]
+        if set(self.rgb_bands) <= {'VV', 'VH', 'HH', 'HV'}:
+            # SAR
+            co_polarization = images[:, 0]  # transmit == receive
+            cross_polarization = images[:, 1]  # transmit != receive
+            ratio = co_polarization / cross_polarization
+
+            # https://gis.stackexchange.com/a/400780/123758
+            co_polarization = np.clip(co_polarization / 0.3, min=0, max=1)  # type: ignore[call-overload]
+            cross_polarization = np.clip(cross_polarization / 0.05, min=0, max=1)  # type: ignore[call-overload]
+            ratio = np.clip(ratio / 25, min=0, max=1)  # type: ignore[call-overload]
+
+            images = np.stack((co_polarization, cross_polarization, ratio), axis=1)
+        else:
+            # MSI
+            images = percentile_normalization(images)
+
         images = rearrange(images, 't c h w -> t h w c')
-        images = percentile_normalization(images)
         for i in range(len(images)):
             ax[0, 0].imshow(images[i])
             ax[0, 0].axis('off')

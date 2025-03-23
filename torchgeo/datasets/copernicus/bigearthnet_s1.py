@@ -10,13 +10,9 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 import torch
-from einops import rearrange
-from matplotlib import pyplot as plt
-from matplotlib.figure import Figure
 from torch import Tensor
 
-from ..errors import RGBBandsMissingError
-from ..utils import Path, percentile_normalization
+from ..utils import Path
 from .base import CopernicusBenchBase
 
 
@@ -110,51 +106,3 @@ class CopernicusBenchBigEarthNetS1(CopernicusBenchBase):
             sample = self.transforms(sample)
 
         return sample
-
-    def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
-    ) -> Figure:
-        """Plot a sample from the dataset.
-
-        Args:
-            sample: A sample returned by :meth:`__getitem__`.
-            show_titles: Flag indicating whether to show titles above each panel.
-            suptitle: Optional string to use as a suptitle.
-
-        Returns:
-            A matplotlib Figure with the rendered sample.
-
-        Raises:
-            RGBBandsMissingError: If *bands* does not include all RGB bands.
-        """
-        rgb_indices = []
-        for band in self.rgb_bands:
-            if band in self.bands:
-                rgb_indices.append(self.bands.index(band))
-            else:
-                raise RGBBandsMissingError()
-
-        fig, ax = plt.subplots()
-
-        image = sample['image'][rgb_indices].numpy()
-        image = np.stack([image[0], image[1], (image[0] + image[1]) / 2])
-        image = rearrange(image, 'c h w -> h w c')
-        image = percentile_normalization(image)
-        ax.imshow(image)
-        ax.axis('off')
-
-        if show_titles:
-            label = sample['label'].numpy().nonzero()[0]
-            title = f'Labels: {label}'
-            if 'prediction' in sample:
-                prediction = sample['prediction'].numpy().nonzero()[0]
-                title += f'\nPredictions: {prediction}'
-            ax.set_title(title)
-
-        if suptitle is not None:
-            fig.suptitle(suptitle)
-
-        return fig
