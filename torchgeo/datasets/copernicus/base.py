@@ -241,12 +241,10 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
             else:
                 raise RGBBandsMissingError()
 
-        if sample['image'].dim() == 4:
-            # Time series
-            images = np.array(sample['image'])
-        else:
-            # Static
-            images = np.array([sample['image']])
+        # Static -> time series
+        images = sample['image'].numpy()
+        if sample['image'].dim() == 3:
+            images = np.expand_dims(images, axis=0)
 
         ncols = len(images)
         if 'mask' in sample:
