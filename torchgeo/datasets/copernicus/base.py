@@ -241,7 +241,14 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
             else:
                 raise RGBBandsMissingError()
 
-        ncols = 1
+        if sample['image'].dim() == 4:
+            # Time series
+            images = np.array(sample['image'])
+        else:
+            # Static
+            images = np.array([sample['image']])
+
+        ncols = len(images)
         if 'mask' in sample:
             ncols += 1
             if 'prediction' in sample:
@@ -249,20 +256,35 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
         fig, ax = plt.subplots(ncols=ncols, squeeze=False)
 
-        image = sample['image'][rgb_indices].numpy()
-        image = rearrange(image, 'c h w -> h w c')
-        image = percentile_normalization(image)
-        ax[0, 0].imshow(image)
-        ax[0, 0].axis('off')
-        if show_titles:
-            title = 'Image'
-            if 'label' in sample:
-                title = 'Label: ' + self.classes[sample['label']]
+        # Label
+        title = 'Image'
+        if 'label' in sample:
+            if sample['label'].dim() == 0:
+                # Multiclass classification
+                label = self.classes[sample['label']]
                 if 'prediction' in sample:
-                    title += '\nPrediction: ' + self.classes[sample['prediction']]
+                    prediction = self.classes[sample['prediction']]
+            else:
+                # Multilabel classification
+                label = sample['label'].numpy().nonzero()[0]
+                if 'prediction' in sample:
+                    prediction = sample['prediction'].numpy().nonzero()[0]
 
-            ax[0, 0].set_title(title)
+            title = f'Label: {label}'
+            if 'prediction' in sample:
+                title += f'\nPrediction: {prediction}'
 
+        # Image
+        images = images[:, rgb_indices]
+        images = rearrange(images, 't c h w -> t h w c')
+        images = percentile_normalization(images)
+        for i in range(len(images)):
+            ax[0, 0].imshow(images[i])
+            ax[0, 0].axis('off')
+            if show_titles:
+                ax[0, 0].set_title(title)
+
+        # Mask
         if 'mask' in sample:
             kwargs = {
                 'cmap': self.cmap,
@@ -271,17 +293,17 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
                 'interpolation': 'none',
             }
             mask = sample['mask']
-            ax[0, 1].imshow(mask, **kwargs)
-            ax[0, 1].axis('off')
+            ax[0, i + 1].imshow(mask, **kwargs)
+            ax[0, i + 1].axis('off')
             if show_titles:
-                ax[0, 1].set_title('Mask')
+                ax[0, i + 1].set_title('Mask')
 
             if 'prediction' in sample:
                 prediction = sample['prediction']
-                ax[0, 2].imshow(prediction, **kwargs)
-                ax[0, 2].axis('off')
+                ax[0, i + 2].imshow(prediction, **kwargs)
+                ax[0, i + 2].axis('off')
                 if show_titles:
-                    ax[0, 2].set_title('Prediction')
+                    ax[0, i + 2].set_title('Prediction')
 
         if suptitle is not None:
             fig.suptitle(suptitle)

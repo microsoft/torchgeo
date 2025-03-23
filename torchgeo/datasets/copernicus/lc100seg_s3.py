@@ -9,14 +9,10 @@ from collections.abc import Callable, Sequence
 from typing import ClassVar, Literal
 
 import pandas as pd
-from einops import rearrange
-from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap
-from matplotlib.figure import Figure
 from torch import Tensor
 
-from ..errors import RGBBandsMissingError
-from ..utils import Path, percentile_normalization, stack_samples
+from ..utils import Path, stack_samples
 from .base import CopernicusBenchBase
 
 
@@ -286,69 +282,3 @@ class CopernicusBenchLC100SegS3(CopernicusBenchBase):
             sample = self.transforms(sample)
 
         return sample
-
-    def plot(
-        self,
-        sample: dict[str, Tensor],
-        show_titles: bool = True,
-        suptitle: str | None = None,
-    ) -> Figure:
-        """Plot a sample from the dataset.
-
-        Args:
-            sample: A sample returned by :meth:`__getitem__`.
-            show_titles: Flag indicating whether to show titles above each panel.
-            suptitle: Optional string to use as a suptitle.
-
-        Returns:
-            A matplotlib Figure with the rendered sample.
-
-        Raises:
-            RGBBandsMissingError: If *bands* does not include all RGB bands.
-        """
-        rgb_indices = []
-        for band in self.rgb_bands:
-            if band in self.bands:
-                rgb_indices.append(self.bands.index(band))
-            else:
-                raise RGBBandsMissingError()
-
-        ncols = sample['image'].shape[0] if self.mode == 'time-series' else 1  # images
-        ncols += 1  # mask
-        ncols += 1 if 'prediction' in sample else 0  # prediction
-        fig, ax = plt.subplots(ncols=ncols)
-
-        match self.mode:
-            case 'static':
-                image = sample['image'][rgb_indices].numpy()
-                image = rearrange(image, 'c h w -> h w c')
-                image = percentile_normalization(image)
-                i = 0
-                ax[i].imshow(image)
-                if show_titles:
-                    ax[i].set_title('Image')
-            case 'time-series':
-                images = sample['image'][:, rgb_indices].numpy()
-                images = rearrange(images, 't c h w -> t h w c')
-                images = percentile_normalization(images)
-                for i in range(sample['image'].shape[0]):
-                    ax[i].imshow(images[i])
-                    if show_titles:
-                        ax[i].set_title(f'Image {i}')
-
-        kwargs = {'cmap': self.cmap, 'vmin': 0, 'vmax': 22, 'interpolation': 'none'}
-        ax[i + 1].imshow(sample['mask'], **kwargs)
-        if show_titles:
-            ax[i + 1].set_title('Mask')
-        if 'prediction' in sample:
-            ax[i + 2].imshow(sample['prediction'], **kwargs)
-            if show_titles:
-                ax[i + 2].set_title('Prediction')
-
-        for i in range(ncols):
-            ax[i].axis('off')
-
-        if suptitle is not None:
-            fig.suptitle(suptitle)
-
-        return fig
