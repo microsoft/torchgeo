@@ -87,9 +87,8 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     def rgb_bands(self) -> tuple[str, ...]:
         """Red, green, and blue spectral channels."""
 
-    @property
-    def cmap(self) -> str | Colormap:
-        """Matplotlib color map."""
+    #: Matplotlib color map
+    cmap: str | Colormap
 
     @property
     @abstractmethod
