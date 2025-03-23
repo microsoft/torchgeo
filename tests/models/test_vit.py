@@ -45,6 +45,8 @@ class TestViTSmall16:
         weights: WeightsEnum,
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
+        # features_only args implemented in timm 1.0.3
+        pytest.importorskip('timm', minversion='1.0.3')
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
             weights.meta['model'], in_chans=weights.meta['in_chans'], features_only=True
