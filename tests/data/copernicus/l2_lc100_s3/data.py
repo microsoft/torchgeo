@@ -24,8 +24,6 @@ files = [
 
 profile = {
     'driver': 'GTiff',
-    'width': SIZE,
-    'height': SIZE,
     'crs': CRS.from_wkt("""
 GEOGCS["WGS 84",
     DATUM["WGS_1984",
@@ -40,19 +38,21 @@ GEOGCS["WGS 84",
     AXIS["Longitude",EAST],
     AUTHORITY["EPSG","4326"]]
     """),
-    'transform': Affine(
-        0.0026949458523585646,
-        0.0,
-        -69.62662104153587,
-        0.0,
-        -0.0026949458523585646,
-        -55.37305242841143,
-    ),
 }
 
 # Images
 directory = os.path.join('lc100_s3', 's3_olci', location)
 os.makedirs(directory, exist_ok=True)
+profile['width'] = SIZE // 3
+profile['height'] = SIZE // 3
+profile['transform'] = Affine(
+    0.0026949458523585646,
+    0.0,
+    -69.62662104153587,
+    0.0,
+    -0.0026949458523585646,
+    -55.37305242841143,
+)
 profile['count'] = 21
 profile['dtype'] = 'float32'
 Z = np.random.random(size=(profile['height'], profile['width']))
@@ -65,6 +65,16 @@ for file in files:
 # Mask
 directory = os.path.join('lc100_s3', 'lc100')
 os.makedirs(directory, exist_ok=True)
+profile['width'] = SIZE
+profile['height'] = SIZE
+profile['transform'] = Affine(
+    0.0008983152841195215,
+    0.0,
+    -70.37581598849155,
+    0.0,
+    -0.0008983152841195215,
+    -55.12421909471032,
+)
 profile['count'] = 1
 profile['dtype'] = 'uint8'
 values = [
