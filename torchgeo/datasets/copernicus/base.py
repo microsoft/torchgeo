@@ -278,20 +278,12 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         images = images[:, rgb_indices]
         if set(self.rgb_bands) <= {'VV', 'VH', 'HH', 'HV'}:
             # SAR
-            co_polarization = images[:, 0]  # transmit == receive
-            cross_polarization = images[:, 1]  # transmit != receive
-            ratio = co_polarization / cross_polarization
-
-            # https://gis.stackexchange.com/a/400780/123758
-            co_polarization = np.clip(co_polarization / 0.3, min=0, max=1)  # type: ignore[call-overload]
-            cross_polarization = np.clip(cross_polarization / 0.05, min=0, max=1)  # type: ignore[call-overload]
-            ratio = np.clip(ratio / 25, min=0, max=1)  # type: ignore[call-overload]
-
-            images = np.stack((co_polarization, cross_polarization, ratio), axis=1)
-        else:
-            # MSI
+            vv = images[:, 0]
+            vh = images[:, 1]
+            images = np.stack([vv, vh, (vv + vh) / 2], axis=1)
             images = percentile_normalization(images)
 
+        images = percentile_normalization(images)
         images = rearrange(images, 't c h w -> t h w c')
         for i in range(len(images)):
             ax[0, 0].imshow(images[i])
