@@ -839,6 +839,7 @@ def resnet152(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
+    # FeatureListNet (extends nn.ModuleDict) is returned when features_only=True
     model: ResNet | nn.ModuleDict = timm.create_model('resnet152', *args, **kwargs)
 
     if weights:
