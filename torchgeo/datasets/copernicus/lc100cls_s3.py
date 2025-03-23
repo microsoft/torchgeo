@@ -283,12 +283,12 @@ class CopernicusBenchLC100ClsS3(CopernicusBenchBase):
             if 'prediction' in sample:
                 prediction = sample['prediction'].numpy().nonzero()[0]
                 title += f'\nPredictions: {prediction}'
-                match self.mode:
-                    case 'static':
-                        ax.set_title(title)
-                    case 'time-series':
-                        for i in range(ncols):
-                            axes[i].set_title(title)
+            match self.mode:
+                case 'static':
+                    ax.set_title(title)
+                case 'time-series':
+                    for i in range(ncols):
+                        axes[i].set_title(title)
 
         if suptitle is not None:
             fig.suptitle(suptitle)
