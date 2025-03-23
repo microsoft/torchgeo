@@ -70,7 +70,7 @@ os.makedirs(directory, exist_ok=True)
 profile['count'] = 1
 profile['dtype'] = 'int32'
 Z = np.random.randint(
-    0, 10, size=(profile['height'], profile['width']), dtype=profile['dtype']
+    1, 11, size=(profile['height'], profile['width']), dtype=profile['dtype']
 )
 path = os.path.join(directory, filename)
 with rio.open(path, 'w', **profile) as src:

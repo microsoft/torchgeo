@@ -33,6 +33,7 @@ class TestCopernicusBench:
             ('lc100cls_s3', 'l2_lc100_s3', {'mode': 'time-series'}),
             ('lc100seg_s3', 'l2_lc100_s3', {'mode': 'static'}),
             ('lc100seg_s3', 'l2_lc100_s3', {'mode': 'time-series'}),
+            ('dfc2020_s1', 'l2_dfc2020_s1s2', {}),
         ]
     )
     def dataset(self, request: SubRequest) -> CopernicusBench:
@@ -46,7 +47,7 @@ class TestCopernicusBench:
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['lat'], torch.Tensor)
         assert isinstance(x['lon'], torch.Tensor)
-        if dataset.name not in ['eurosat_s1', 'eurosat_s2']:
+        if dataset.name not in ['eurosat_s1', 'eurosat_s2', 'dfc2020_s1']:
             assert isinstance(x['time'], torch.Tensor)
         if 'mask' in x:
             assert isinstance(x['mask'], torch.Tensor)
