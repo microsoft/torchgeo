@@ -13,7 +13,6 @@ import pandas as pd
 import torch
 from einops import rearrange
 from matplotlib import pyplot as plt
-from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from torch import Tensor
 
@@ -147,33 +146,6 @@ class CopernicusBenchLC100ClsS3(CopernicusBenchBase):
         'Oa21_radiance',
     )
     rgb_bands = ('Oa08_radiance', 'Oa06_radiance', 'Oa04_radiance')
-    cmap = ListedColormap(
-        [
-            '#282828',
-            '#ffbb22',
-            '#ffff4c',
-            '#f096ff',
-            '#fa0000',
-            '#b4b4b4',
-            '#f0f0f0',
-            '#0032c8',
-            '#0096a0',
-            '#fae6a0',
-            '#58481f',
-            '#009900',
-            '#70663e',
-            '#00cc00',
-            '#4e751f',
-            '#007800',
-            '#666000',
-            '#8db400',
-            '#8d7400',
-            '#a0dc00',
-            '#929900',
-            '#648c00',
-            '#000080',
-        ]
-    )
     classes = (
         'Unknown',
         'Shrubs',
@@ -251,10 +223,8 @@ class CopernicusBenchLC100ClsS3(CopernicusBenchBase):
                 sample['label'] = torch.tensor(row[1:].astype(np.int64))
             case 'time-series':
                 pid = row[0]
-                paths = glob.glob(
-                    os.path.join(self.root, self.directory, 's3_olci', pid, '*.tif')
-                )
-                samples = [self._load_image(path) for path in paths]
+                paths = os.path.join(self.root, self.directory, 's3_olci', pid, '*.tif')
+                samples = [self._load_image(path) for path in sorted(glob.glob(paths))]
                 sample = stack_samples(samples)
                 sample['label'] = torch.tensor(row[1:].astype(np.int64))
 

@@ -31,6 +31,8 @@ class TestCopernicusBench:
             ('bigearthnet_s2', 'l2_bigearthnet_s1s2', {}),
             ('lc100cls_s3', 'l2_lc100_s3', {'mode': 'static'}),
             ('lc100cls_s3', 'l2_lc100_s3', {'mode': 'time-series'}),
+            ('lc100seg_s3', 'l2_lc100_s3', {'mode': 'static'}),
+            ('lc100seg_s3', 'l2_lc100_s3', {'mode': 'time-series'}),
         ]
     )
     def dataset(self, request: SubRequest) -> CopernicusBench:

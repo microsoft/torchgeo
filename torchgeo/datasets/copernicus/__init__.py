@@ -16,6 +16,7 @@ from .cloud_s3 import CopernicusBenchCloudS3
 from .eurosat_s1 import CopernicusBenchEuroSATS1
 from .eurosat_s2 import CopernicusBenchEuroSATS2
 from .lc100cls_s3 import CopernicusBenchLC100ClsS3
+from .lc100seg_s3 import CopernicusBenchLC100SegS3
 
 __all__ = (
     'CopernicusBench',
@@ -27,6 +28,7 @@ __all__ = (
     'CopernicusBenchEuroSATS1',
     'CopernicusBenchEuroSATS2',
     'CopernicusBenchLC100ClsS3',
+    'CopernicusBenchLC100SegS3',
 )
 
 DATASET_REGISTRY = {
@@ -37,6 +39,7 @@ DATASET_REGISTRY = {
     'bigearthnet_s1': CopernicusBenchBigEarthNetS1,
     'bigearthnet_s2': CopernicusBenchBigEarthNetS2,
     'lc100cls_s3': CopernicusBenchLC100ClsS3,
+    'lc100seg_s3': CopernicusBenchLC100SegS3,
 }
 
 
@@ -62,6 +65,7 @@ class CopernicusBench(NonGeoDataset):
             'bigearthnet_s1',
             'bigearthnet_s2',
             'lc100cls_s3',
+            'lc100seg_s3',
         ],
         *args: Any,
         **kwargs: Any,
