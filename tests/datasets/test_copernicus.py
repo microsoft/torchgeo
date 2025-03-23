@@ -48,8 +48,10 @@ class TestCopernicusBench:
         assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['lat'], torch.Tensor)
         assert isinstance(x['lon'], torch.Tensor)
-        if dataset.name not in ['eurosat_s1', 'eurosat_s2', 'dfc2020_s1', 'dfc2020_s2']:
+        if not dataset.name.startswith(('eurosat', 'dfc2020')):
             assert isinstance(x['time'], torch.Tensor)
+        if 'label' in x:
+            assert isinstance(x['label'], torch.Tensor)
         if 'mask' in x:
             assert isinstance(x['mask'], torch.Tensor)
 
@@ -75,10 +77,10 @@ class TestCopernicusBench:
 
     def test_plot(self, dataset: CopernicusBench) -> None:
         x = dataset[0]
-        if 'mask' in x:
-            x['prediction'] = x['mask']
-        elif 'label' in x:
+        if 'label' in x:
             x['prediction'] = x['label']
+        elif 'mask' in x:
+            x['prediction'] = x['mask']
         dataset.plot(x, suptitle='Test')
         plt.close()
 
