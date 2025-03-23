@@ -9,13 +9,13 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from typing import Literal
 
+import matplotlib.colors
 import numpy as np
 import pandas as pd
 import rasterio as rio
 import torch
 from einops import rearrange
 from matplotlib import pyplot as plt
-from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from pyproj import Transformer
 from torch import Tensor
@@ -88,7 +88,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         """Red, green, and blue spectral channels."""
 
     #: Matplotlib color map
-    cmap: str | Colormap
+    cmap: str | matplotlib.colors.Colormap
 
     @property
     @abstractmethod
