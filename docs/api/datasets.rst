@@ -355,6 +355,11 @@ HySpecNet-11k
 
 .. autoclass:: HySpecNet11k
 
+iSAID
+^^^^^
+
+.. autoclass:: ISAID
+
 IDTReeS
 ^^^^^^^
 
