@@ -9,19 +9,43 @@ from torch import Tensor
 
 from ..geo import NonGeoDataset
 from .base import CopernicusBenchBase
+from .bigearthnet_s1 import CopernicusBenchBigEarthNetS1
+from .bigearthnet_s2 import CopernicusBenchBigEarthNetS2
 from .cloud_s2 import CopernicusBenchCloudS2
 from .cloud_s3 import CopernicusBenchCloudS3
+from .dfc2020_s1 import CopernicusBenchDFC2020S1
+from .dfc2020_s2 import CopernicusBenchDFC2020S2
+from .eurosat_s1 import CopernicusBenchEuroSATS1
+from .eurosat_s2 import CopernicusBenchEuroSATS2
+from .lc100cls_s3 import CopernicusBenchLC100ClsS3
+from .lc100seg_s3 import CopernicusBenchLC100SegS3
 
 __all__ = (
     'CopernicusBench',
     'CopernicusBenchBase',
+    'CopernicusBenchBigEarthNetS1',
+    'CopernicusBenchBigEarthNetS2',
     'CopernicusBenchCloudS2',
     'CopernicusBenchCloudS3',
+    'CopernicusBenchDFC2020S1',
+    'CopernicusBenchDFC2020S2',
+    'CopernicusBenchEuroSATS1',
+    'CopernicusBenchEuroSATS2',
+    'CopernicusBenchLC100ClsS3',
+    'CopernicusBenchLC100SegS3',
 )
 
 DATASET_REGISTRY = {
     'cloud_s2': CopernicusBenchCloudS2,
     'cloud_s3': CopernicusBenchCloudS3,
+    'eurosat_s1': CopernicusBenchEuroSATS1,
+    'eurosat_s2': CopernicusBenchEuroSATS2,
+    'bigearthnet_s1': CopernicusBenchBigEarthNetS1,
+    'bigearthnet_s2': CopernicusBenchBigEarthNetS2,
+    'lc100cls_s3': CopernicusBenchLC100ClsS3,
+    'lc100seg_s3': CopernicusBenchLC100SegS3,
+    'dfc2020_s1': CopernicusBenchDFC2020S1,
+    'dfc2020_s2': CopernicusBenchDFC2020S2,
 }
 
 
@@ -38,7 +62,21 @@ class CopernicusBench(NonGeoDataset):
     """
 
     def __init__(
-        self, name: Literal['cloud_s2', 'cloud_s3'], *args: Any, **kwargs: Any
+        self,
+        name: Literal[
+            'cloud_s2',
+            'cloud_s3',
+            'eurosat_s1',
+            'eurosat_s2',
+            'bigearthnet_s1',
+            'bigearthnet_s2',
+            'lc100cls_s3',
+            'lc100seg_s3',
+            'dfc2020_s1',
+            'dfc2020_s2',
+        ],
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Initialize a new CopernicusBench instance.
 

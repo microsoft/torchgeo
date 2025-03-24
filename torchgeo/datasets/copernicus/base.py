@@ -7,15 +7,15 @@ import os
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
-from typing import Literal
+from typing import Any, Literal
 
+import matplotlib.colors
 import numpy as np
 import pandas as pd
 import rasterio as rio
 import torch
 from einops import rearrange
 from matplotlib import pyplot as plt
-from matplotlib.colors import Colormap
 from matplotlib.figure import Figure
 from pyproj import Transformer
 from torch import Tensor
@@ -68,9 +68,9 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         return '{}.csv'
 
     @property
-    @abstractmethod
     def filename_regex(self) -> str:
         """Regular expression used to extract date from filename."""
+        return '.*'
 
     @property
     def date_format(self) -> str:
@@ -87,10 +87,8 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     def rgb_bands(self) -> tuple[str, ...]:
         """Red, green, and blue spectral channels."""
 
-    @property
-    @abstractmethod
-    def cmap(self) -> str | Colormap:
-        """Matplotlib color map."""
+    #: Matplotlib color map
+    cmap: str | matplotlib.colors.Colormap
 
     @property
     @abstractmethod
@@ -157,12 +155,13 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
             sample['image'] = torch.tensor(image)
 
             # Location
-            x = (f.bounds.left + f.bounds.right) / 2
-            y = (f.bounds.bottom + f.bounds.top) / 2
-            transformer = Transformer.from_crs(f.crs, 'epsg:4326', always_xy=True)
-            lon, lat = transformer.transform(x, y)
-            sample['lat'] = torch.tensor(lat)
-            sample['lon'] = torch.tensor(lon)
+            if f.transform != rio.Affine.identity():
+                x = (f.bounds.left + f.bounds.right) / 2
+                y = (f.bounds.bottom + f.bounds.top) / 2
+                transformer = Transformer.from_crs(f.crs, 'epsg:4326', always_xy=True)
+                lon, lat = transformer.transform(x, y)
+                sample['lat'] = torch.tensor(lat)
+                sample['lon'] = torch.tensor(lon)
 
             # Time
             if match := re.match(self.filename_regex, os.path.basename(path)):
@@ -243,7 +242,12 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
             else:
                 raise RGBBandsMissingError()
 
-        ncols = 1
+        # Static -> time series
+        images = sample['image'].numpy()
+        if sample['image'].dim() == 3:
+            images = np.expand_dims(images, axis=0)
+
+        ncols = len(images)
         if 'mask' in sample:
             ncols += 1
             if 'prediction' in sample:
@@ -251,14 +255,42 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
         fig, ax = plt.subplots(ncols=ncols, squeeze=False)
 
-        image = sample['image'][rgb_indices].numpy()
-        image = rearrange(image, 'c h w -> h w c')
-        image = percentile_normalization(image)
-        ax[0, 0].imshow(image)
-        ax[0, 0].axis('off')
-        if show_titles:
-            ax[0, 0].set_title('Image')
+        # Label
+        title = 'Image'
+        if 'label' in sample:
+            if sample['label'].dim() == 0:
+                # Multiclass classification
+                label: Any = self.classes[sample['label']]
+                if 'prediction' in sample:
+                    prediction: Any = self.classes[sample['prediction']]
+            else:
+                # Multilabel classification
+                label = sample['label'].numpy().nonzero()[0]
+                if 'prediction' in sample:
+                    prediction = sample['prediction'].numpy().nonzero()[0]
 
+            title = f'Label: {label}'
+            if 'prediction' in sample:
+                title += f'\nPrediction: {prediction}'
+
+        # Image
+        images = images[:, rgb_indices]
+        if set(self.rgb_bands) <= {'VV', 'VH', 'HH', 'HV'}:
+            # SAR
+            vv = images[:, 0]
+            vh = images[:, 1]
+            images = np.stack([vv, vh, (vv + vh) / 2], axis=1)
+            images = percentile_normalization(images)
+
+        images = percentile_normalization(images)
+        images = rearrange(images, 't c h w -> t h w c')
+        for i in range(len(images)):
+            ax[0, 0].imshow(images[i])
+            ax[0, 0].axis('off')
+            if show_titles:
+                ax[0, 0].set_title(title)
+
+        # Mask
         if 'mask' in sample:
             kwargs = {
                 'cmap': self.cmap,
@@ -267,17 +299,17 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
                 'interpolation': 'none',
             }
             mask = sample['mask']
-            ax[0, 1].imshow(mask, **kwargs)
-            ax[0, 1].axis('off')
+            ax[0, i + 1].imshow(mask, **kwargs)
+            ax[0, i + 1].axis('off')
             if show_titles:
-                ax[0, 1].set_title('Mask')
+                ax[0, i + 1].set_title('Mask')
 
             if 'prediction' in sample:
                 prediction = sample['prediction']
-                ax[0, 2].imshow(prediction, **kwargs)
-                ax[0, 2].axis('off')
+                ax[0, i + 2].imshow(prediction, **kwargs)
+                ax[0, i + 2].axis('off')
                 if show_titles:
-                    ax[0, 2].set_title('Prediction')
+                    ax[0, i + 2].set_title('Prediction')
 
         if suptitle is not None:
             fig.suptitle(suptitle)
