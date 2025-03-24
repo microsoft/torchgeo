@@ -155,12 +155,13 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
             sample['image'] = torch.tensor(image)
 
             # Location
-            x = (f.bounds.left + f.bounds.right) / 2
-            y = (f.bounds.bottom + f.bounds.top) / 2
-            transformer = Transformer.from_crs(f.crs, 'epsg:4326', always_xy=True)
-            lon, lat = transformer.transform(x, y)
-            sample['lat'] = torch.tensor(lat)
-            sample['lon'] = torch.tensor(lon)
+            if f.transform != rio.Affine.identity():
+                x = (f.bounds.left + f.bounds.right) / 2
+                y = (f.bounds.bottom + f.bounds.top) / 2
+                transformer = Transformer.from_crs(f.crs, 'epsg:4326', always_xy=True)
+                lon, lat = transformer.transform(x, y)
+                sample['lat'] = torch.tensor(lat)
+                sample['lon'] = torch.tensor(lon)
 
             # Time
             if match := re.match(self.filename_regex, os.path.basename(path)):
