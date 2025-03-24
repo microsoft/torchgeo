@@ -8,7 +8,6 @@ import matplotlib
 import pytest
 import torch
 import torchvision
-from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
 
@@ -29,8 +28,3 @@ def matplotlib_backend() -> None:
 @pytest.fixture(autouse=True)
 def torch_hub(tmp_path: Path) -> None:
     torch.hub.set_dir(tmp_path)
-
-
-@pytest.fixture(params=[True, False])
-def features_only(request: SubRequest) -> bool:
-    return bool(request.param)
