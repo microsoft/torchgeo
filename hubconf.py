@@ -19,6 +19,9 @@ from torchgeo.models import (
     swin_v2_b,
     swin_v2_t,
     vit_small_patch16_224,
+    vit_base_patch16_224,
+    vit_large_patch16_224,
+    vit_huge_patch14_224,
 )
 
 __all__ = (
@@ -33,6 +36,9 @@ __all__ = (
     'swin_v2_b',
     'swin_v2_t',
     'vit_small_patch16_224',
+    'vit_base_patch16_224',
+    'vit_large_patch16_224',
+    'vit_huge_patch14_224',
 )
 
 dependencies = ['timm', 'torchvision']
