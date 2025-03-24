@@ -1,2 +1,0 @@
-# setuptools 78+ breaks the pretrainedmodels build
-setuptools<78

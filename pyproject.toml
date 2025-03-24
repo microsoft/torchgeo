@@ -1,7 +1,8 @@
 [build-system]
 requires = [
     # setuptools 61+ required for pyproject.toml support
-    "setuptools>=61",
+    # setuptools 78+ breaks the pretrainedmodels build
+    "setuptools>=61,<78",
 ]
 build-backend = "setuptools.build_meta"
 
