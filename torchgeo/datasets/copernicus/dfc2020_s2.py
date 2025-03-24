@@ -91,6 +91,10 @@ class CopernicusBenchDFC2020S2(CopernicusBenchBase):
         mask_path = os.path.join(self.root, self.directory, 'dfc', file)
         sample = self._load_image(image_path) | self._load_mask(mask_path)
 
+        # Missing geolocation data, only pixel coordinates
+        del sample['lat']
+        del sample['lon']
+
         if self.transforms is not None:
             sample = self.transforms(sample)
 

@@ -46,8 +46,9 @@ class TestCopernicusBench:
     def test_getitem(self, dataset: CopernicusBench) -> None:
         x = dataset[0]
         assert isinstance(x['image'], torch.Tensor)
-        assert isinstance(x['lat'], torch.Tensor)
-        assert isinstance(x['lon'], torch.Tensor)
+        if not dataset.name.startswith('dfc2020'):
+            assert isinstance(x['lat'], torch.Tensor)
+            assert isinstance(x['lon'], torch.Tensor)
         if not dataset.name.startswith(('eurosat', 'dfc2020')):
             assert isinstance(x['time'], torch.Tensor)
         if 'label' in x:
