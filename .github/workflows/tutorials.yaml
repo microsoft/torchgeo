@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Cache dependencies
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4.2.3
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -42,4 +42,4 @@ jobs:
         run: pytest --nbmake --durations=10 docs/tutorials
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}

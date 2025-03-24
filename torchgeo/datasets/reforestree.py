@@ -148,7 +148,7 @@ class ReforesTree(NonGeoDataset):
         """
         with Image.open(path) as img:
             array: np.typing.NDArray[np.uint8] = np.array(img)
-            tensor = torch.from_numpy(array)
+            tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -167,7 +167,7 @@ class ReforesTree(NonGeoDataset):
         boxes = torch.Tensor(tile_df[['xmin', 'ymin', 'xmax', 'ymax']].values.tolist())
         labels = torch.Tensor(
             [self.class2idx[label] for label in tile_df['group'].tolist()]
-        )
+        ).long()
         agb = torch.Tensor(tile_df['AGB'].tolist())
 
         return boxes, labels, agb

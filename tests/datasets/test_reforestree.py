@@ -19,7 +19,7 @@ class TestReforesTree:
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> ReforesTree:
         data_dir = os.path.join('tests', 'data', 'reforestree')
         url = os.path.join(data_dir, 'reforesTree.zip')
-        md5 = '387e04dbbb0aa803f72bd6d774409648'
+        md5 = 'bfc8d35df5d61d1ff4020375843018d9'
         monkeypatch.setattr(ReforesTree, 'url', url)
         monkeypatch.setattr(ReforesTree, 'md5', md5)
         root = tmp_path
@@ -43,7 +43,7 @@ class TestReforesTree:
         assert len(x['bbox_xyxy']) == 2
 
     def test_len(self, dataset: ReforesTree) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 5
 
     def test_not_extracted(self, tmp_path: Path) -> None:
         url = os.path.join('tests', 'data', 'reforestree', 'reforesTree.zip')
