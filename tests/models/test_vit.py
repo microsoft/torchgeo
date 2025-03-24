@@ -18,13 +18,6 @@ class TestViTSmall16:
     def weights(self, request: SubRequest) -> WeightsEnum:
         return request.param
 
-    @pytest.fixture(params=[True, False])
-    def features_only(self, request: SubRequest) -> bool:
-        if request.param:
-            # features_only arg in ViT supported only from timm 1.0.3
-            pytest.importorskip('timm', minversion='1.0.3')
-        return bool(request.param)
-
     @pytest.fixture
     def mocked_weights(
         self,
