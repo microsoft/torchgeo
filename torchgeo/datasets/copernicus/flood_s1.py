@@ -115,9 +115,9 @@ class CopernicusBenchFloodS1(CopernicusBenchBase):
         """
         images = []
         times = []
-        ptypes = ['MS1', 'SL1']
+        ptypes = ['SL1', 'MS1']
         if self.mode == 2:
-            ptypes.append('SL2')
+            ptypes.insert(0, 'SL2')
 
         for ptype in ptypes:
             image = []

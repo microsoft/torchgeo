@@ -285,10 +285,10 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         images = percentile_normalization(images)
         images = rearrange(images, 't c h w -> t h w c')
         for i in range(len(images)):
-            ax[0, 0].imshow(images[i])
-            ax[0, 0].axis('off')
+            ax[0, i].imshow(images[i])
+            ax[0, i].axis('off')
             if show_titles:
-                ax[0, 0].set_title(title)
+                ax[0, i].set_title(title)
 
         # Mask
         if 'mask' in sample:
@@ -313,5 +313,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
         if suptitle is not None:
             fig.suptitle(suptitle)
+
+        fig.tight_layout()
 
         return fig
