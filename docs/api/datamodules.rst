@@ -180,6 +180,11 @@ QuakeSet
 
 .. autoclass:: QuakeSetDataModule
 
+ReforesTree
+^^^^^^^^^^^
+
+.. autoclass:: ReforesTreeDataModule
+
 RESISC45
 ^^^^^^^^
 
@@ -217,6 +222,11 @@ SSL4EO-L Benchmark
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SSL4EOLBenchmarkDataModule
+
+Substation
+^^^^^^^^^^
+
+.. autoclass:: SubstationDataModule
 
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^

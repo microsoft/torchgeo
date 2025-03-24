@@ -13,8 +13,10 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `Kenya Crop Type`_,S,Sentinel-2,"CC-BY-SA-4.0","4,688",7,"3,035x2,016",10,MSI
 `DeepGlobe Land Cover`_,S,DigitalGlobe +Vivid,-,803,7,"2,448x2,448",0.5,RGB
 `DFC2022`_,S,Aerial,"CC-BY-4.0","3,981",15,"2,000x2,000",0.5,RGB
+`DIOR`_,OD,Aerial,"CC-BY-NC-4.0","23,463",20,"800x800",0.5,RGB
 `Digital Typhoon`_,"C, R",Himawari,"CC-BY-4.0","189,364",8,512,5000,Infrared
 `DL4GAM`_,S,"Sentinel-2","CC-BY-4.0","2,251 or 11,440","2","256x256","10","MSI"
+`DOTA`_,OD,"Google Earth, Gaofen-2, Jilin-1, CycloMedia B.V.","non-commercial","5,229",15,"1000--5000",RGB
 `ETCI2021 Flood Detection`_,S,Sentinel-1,-,"66,810",2,256x256,5--20,SAR
 `EuroSAT`_,C,Sentinel-2,"MIT","27,000",10,64x64,10,MSI
 `EverWatch`_,OD,Aerial,"CC0-1.0","5,325",7,"1,500x1500p",0.01,RGB
@@ -42,7 +44,7 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `Potsdam`_,S,Aerial,-,38,6,"6,000x6,000",0.05,MSI
 `QuakeSet`_,"C, R",Sentinel-1,"OpenRAIL","3,327",2,512x512,10,SAR
 `ReforesTree`_,"OD, R",Aerial,"CC-BY-4.0",100,6,"4,000x4,000",0.02,RGB
-`RESISC45`_,C,Google Earth,-,"31,500",45,256x256,0.2--30,RGB
+`RESISC45`_,C,Google Earth,"CC-BY-NC-4.0","31,500",45,256x256,0.2--30,RGB
 `Rwanda Field Boundary`_,S,Planetscope,"NICFI AND CC-BY-4.0",70,2,256x256,4.7,RGB + NIR
 `SatlasPretrain`_,"C, R, S, I, OD","NAIP, Landsat, Sentinel",ESA AND CC0-1.0 AND ODbL-1.0 AND CC-BY-4.0,302M,137,512,0.6--30,"SAR, MSI"
 `Seasonal Contrast`_,T,Sentinel-2,"CC-BY-4.0",100K--1M,-,264x264,10,MSI
@@ -51,18 +53,20 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `SKIPP'D`_,R,"Fish-eye","CC-BY-4.0","363,375",-,64x64,-,RGB
 `SkyScript`_,IC,"NAIP, orthophotos, Planet SkySat, Sentinel-2, Landsat 8--9",MIT,5.2M,-,100--1000,0.1--30,RGB
 `So2Sat`_,C,Sentinel-1/2,"CC-BY-4.0","400,673",17,32x32,10,"SAR, MSI"
+`SODA`_,OD,Aerial,"CC-BY-NC-4.0","2513",9,"~2700x~4800","RGB"
 `SpaceNet`_,I,WorldView-2/3 Planet Lab Dove,"CC-BY-SA-4.0","1,889--28,728",2,102--900,0.5--4,MSI
 `SSL4EO`_-L,T,Landsat,"CC0-1.0",1M,-,264x264,30,MSI
 `SSL4EO`_-S12,T,Sentinel-1/2,"CC-BY-4.0",1M,-,264x264,10,"SAR, MSI"
 `SSL4EO-L Benchmark`_,S,Lansat & CDL,"CC0-1.0",25K,134,264x264,30,MSI
 `SSL4EO-L Benchmark`_,S,Lansat & NLCD,"CC0-1.0",25K,17,264x264,30,MSI
+`Substation`_,S,OpenStreetMap & Sentinel-2, "CC-BY-4.0", 27K, 2, 228x228, 10, MSI
 `SustainBench Crop Yield`_,R,MODIS,"CC-BY-SA-4.0",11k,-,32x32,-,MSI
 `TreeSatAI`_,"C, R, S","Aerial, Sentinel-1/2",CC-BY-4.0,50K,"12, 15, 20","6, 20, 304","0.2, 10","CIR, MSI, SAR"
 `Tropical Cyclone`_,R,GOES 8--16,"CC-BY-4.0","108,110",-,256x256,4K--8K,MSI
 `UC Merced`_,C,USGS National Map,"public domain","2,100",21,256x256,0.3,RGB
 `USAVars`_,R,NAIP Aerial,"CC-BY-4.0",100K,-,-,4,"RGB, NIR"
 `Vaihingen`_,S,Aerial,-,33,6,"1,281--3,816",0.09,RGB
-`VHR-10`_,I,"Google Earth, Vaihingen","MIT",800,10,"358--1,728",0.08--2,RGB
+`VHR-10`_,I,"Google Earth, Vaihingen","CC-BY-NC-4.0",800,10,"358--1,728",0.08--2,RGB
 `Western USA Live Fuel Moisture`_,R,"Landsat8, Sentinel-1","CC-BY-NC-ND-4.0",2615,-,-,-,-
 `xView2`_,CD,Maxar,"CC-BY-NC-SA-4.0","3,732",4,"1,024x1,024",0.8,RGB
 `ZueriCrop`_,"I, T",Sentinel-2,CC-BY-NC-4.0,116K,48,24x24,10,MSI
