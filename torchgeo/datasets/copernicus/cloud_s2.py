@@ -48,7 +48,7 @@ class CopernicusBenchCloudS2(CopernicusBenchBase):
     .. versionadded:: 0.7
     """
 
-    url = 'https://huggingface.co/datasets/wangyi111/Copernicus-Bench/resolve/86342afa2409e49d80688fe00c05201c0f46569b/l1_cloud_s2/cloud_s2.zip'
+    url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l1_cloud_s2/cloud_s2.zip'
     md5 = '39a1f966e76455549a3e6c209ba751c1'
     zipfile = 'cloud_s2.zip'
     directory = 'cloud_s2'

@@ -30,7 +30,7 @@ class CopernicusBenchBigEarthNetS2(CopernicusBenchBase):
     .. versionadded:: 0.7
     """
 
-    url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/dcd0b3a45165251e8f5944b040a3411d5e6466a5/l2_bigearthnet_s1s2/bigearthnetv2.zip'
+    url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l2_bigearthnet_s1s2/bigearthnetv2.zip'
     md5 = '269355db0449e0da7213c95f30c346d4'
     zipfile = 'bigearthnetv2.zip'
     directory = 'bigearthnet_s1s2'

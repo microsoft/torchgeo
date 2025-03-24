@@ -26,7 +26,7 @@ class CopernicusBenchEuroSATS2(CopernicusBenchBase):
     .. versionadded:: 0.7
     """
 
-    url = 'https://huggingface.co/datasets/wangyi111/Copernicus-Bench/resolve/8c294253fa04f8a0cac0f4249850fdd652e43ec2/l2_eurosat_s1s2/eurosat_s2.zip'
+    url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l2_eurosat_s1s2/eurosat_s2.zip'
     md5 = 'b2be02ca9767554c717f2e9bd15bbd23'
     zipfile = 'eurosat_s2.zip'
     directory = 'eurosat_s2'
