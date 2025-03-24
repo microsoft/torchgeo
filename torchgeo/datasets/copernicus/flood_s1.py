@@ -41,8 +41,8 @@ class CopernicusBenchFloodS1(CopernicusBenchBase):
     date_format = '%Y%m%d'
     all_bands = ('VV', 'VH')
     rgb_bands = ('VV', 'VH')
-    cmap = ListedColormap(['cyan', 'purple', 'black'])
-    classes = ('Permanent Waters', 'Floods', 'No Water')
+    cmap = ListedColormap(['black', 'cyan', 'magenta'])
+    classes = ('No Water', 'Permanent Waters', 'Floods')
 
     def __init__(
         self,
