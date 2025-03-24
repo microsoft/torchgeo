@@ -222,6 +222,20 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    SENTINEL2_ALL_MAE = Weights(
+        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B13_vits16_mae_ep99_enc.pth',
+        transforms=_zhu_xlab_transforms,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 13,
+            'model': 'vit_small_patch16_224',
+            'publication': 'https://arxiv.org/abs/2211.07044',
+            'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
+            'ssl_method': 'mae',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
     SENTINEL2_ALL_FGMAE = Weights(
         url='https://huggingface.co/wangyi111/FGMAE/resolve/24dd3077d7a99ecd454eaec7adb83d045d7fa122/B13_vits16_fgmae_ep99_enc.pth',
         transforms=_zhu_xlab_transforms,
@@ -233,6 +247,20 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/zhu-xlab/FGMAE',
             'ssl_method': 'fg-mae',
             'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL1_GRD_MAE = Weights(
+        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B2_vits16_mae_ep99_enc.pth',
+        transforms=_ssl4eo_s12_transforms_s1,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 2,
+            'model': 'vit_small_patch16_224',
+            'publication': 'https://arxiv.org/abs/2211.07044',
+            'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
+            'ssl_method': 'mae',
+            'bands': _sentinel1_grd_bands,
         },
     )
 
@@ -259,6 +287,20 @@ class ViTBase16_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.7
     """
 
+    SENTINEL2_ALL_MAE = Weights(
+        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B13_vitb16_mae_ep99_enc.pth',
+        transforms=_zhu_xlab_transforms,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 13,
+            'model': 'vit_base_patch16_224',
+            'publication': 'https://arxiv.org/abs/2211.07044',
+            'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
+            'ssl_method': 'mae',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
     SENTINEL2_ALL_FGMAE = Weights(
         url='https://huggingface.co/wangyi111/FGMAE/resolve/24dd3077d7a99ecd454eaec7adb83d045d7fa122/B13_vitb16_fgmae_ep99_enc.pth',
         transforms=_zhu_xlab_transforms,
@@ -270,6 +312,20 @@ class ViTBase16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/zhu-xlab/FGMAE',
             'ssl_method': 'fg-mae',
             'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL1_GRD_MAE = Weights(
+        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B2_vitb16_mae_ep99_enc.pth',
+        transforms=_ssl4eo_s12_transforms_s1,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 2,
+            'model': 'vit_base_patch16_224',
+            'publication': 'https://arxiv.org/abs/2211.07044',
+            'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
+            'ssl_method': 'mae',
+            'bands': _sentinel1_grd_bands,
         },
     )
 
@@ -296,6 +352,20 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.7
     """
 
+    SENTINEL2_ALL_MAE = Weights(
+        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B13_vitl16_mae_ep99_enc.pth',
+        transforms=_zhu_xlab_transforms,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 13,
+            'model': 'vit_large_patch16_224',
+            'publication': 'https://arxiv.org/abs/2211.07044',
+            'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
+            'ssl_method': 'mae',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
     SENTINEL2_ALL_FGMAE = Weights(
         url='https://huggingface.co/wangyi111/FGMAE/resolve/24dd3077d7a99ecd454eaec7adb83d045d7fa122/B13_vitl16_fgmae_ep99_enc.pth',
         transforms=_zhu_xlab_transforms,
@@ -307,6 +377,20 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/zhu-xlab/FGMAE',
             'ssl_method': 'fg-mae',
             'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL1_GRD_MAE = Weights(
+        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B2_vitl16_mae_ep99_enc.pth',
+        transforms=_ssl4eo_s12_transforms_s1,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 2,
+            'model': 'vit_large_patch16_224',
+            'publication': 'https://arxiv.org/abs/2211.07044',
+            'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
+            'ssl_method': 'mae',
+            'bands': _sentinel1_grd_bands,
         },
     )
 
@@ -333,6 +417,20 @@ class ViTHuge14_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.7
     """
 
+    SENTINEL2_ALL_MAE = Weights(
+        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B13_vith14_mae_ep199_enc.pth',
+        transforms=_zhu_xlab_transforms,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 13,
+            'model': 'vit_huge_patch14_224',
+            'publication': 'https://arxiv.org/abs/2211.07044',
+            'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
+            'ssl_method': 'mae',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
     SENTINEL2_ALL_FGMAE = Weights(
         url='https://huggingface.co/wangyi111/FGMAE/resolve/24dd3077d7a99ecd454eaec7adb83d045d7fa122/B13_vith14_fgmae_ep399_enc.pth',
         transforms=_zhu_xlab_transforms,
@@ -344,6 +442,20 @@ class ViTHuge14_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/zhu-xlab/FGMAE',
             'ssl_method': 'fg-mae',
             'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL1_GRD_MAE = Weights(
+        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B2_vith14_mae_ep199_enc.pth',
+        transforms=_ssl4eo_s12_transforms_s1,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 2,
+            'model': 'vit_huge_patch14_224',
+            'publication': 'https://arxiv.org/abs/2211.07044',
+            'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
+            'ssl_method': 'mae',
+            'bands': _sentinel1_grd_bands,
         },
     )
 
