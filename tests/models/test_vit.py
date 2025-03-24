@@ -40,7 +40,8 @@ class TestViTSmall16:
             in_chans=weights.meta['in_chans'],
             features_only=features_only,
         )
-        torch.save(model.state_dict(), path)
+        target_model = model.model if features_only else model
+        torch.save(target_model.state_dict(), path)
         try:
             monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
