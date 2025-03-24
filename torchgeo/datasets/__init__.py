@@ -33,8 +33,16 @@ from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .copernicus import (
     CopernicusBench,
     CopernicusBenchBase,
+    CopernicusBenchBigEarthNetS1,
+    CopernicusBenchBigEarthNetS2,
     CopernicusBenchCloudS2,
     CopernicusBenchCloudS3,
+    CopernicusBenchDFC2020S1,
+    CopernicusBenchDFC2020S2,
+    CopernicusBenchEuroSATS1,
+    CopernicusBenchEuroSATS2,
+    CopernicusBenchLC100ClsS3,
+    CopernicusBenchLC100SegS3,
 )
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cropharvest import CropHarvest
@@ -224,8 +232,16 @@ __all__ = (
     'CloudCoverDetection',
     'CopernicusBench',
     'CopernicusBenchBase',
+    'CopernicusBenchBigEarthNetS1',
+    'CopernicusBenchBigEarthNetS2',
     'CopernicusBenchCloudS2',
     'CopernicusBenchCloudS3',
+    'CopernicusBenchDFC2020S1',
+    'CopernicusBenchDFC2020S2',
+    'CopernicusBenchEuroSATS1',
+    'CopernicusBenchEuroSATS2',
+    'CopernicusBenchLC100ClsS3',
+    'CopernicusBenchLC100SegS3',
     'CropHarvest',
     'DL4GAMAlps',
     'DatasetNotFoundError',

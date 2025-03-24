@@ -72,7 +72,7 @@ class CopernicusBenchCloudS3(CopernicusBenchBase):
     .. versionadded:: 0.7
     """
 
-    url = 'https://huggingface.co/datasets/wangyi111/Copernicus-Bench/resolve/86342afa2409e49d80688fe00c05201c0f46569b/l1_cloud_s3/cloud_s3.zip'
+    url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l1_cloud_s3/cloud_s3.zip'
     md5 = '1f82a8ccf16a0c44f0b1729e523e343a'
     zipfile = 'cloud_s3.zip'
     directory = 'cloud_s3'
