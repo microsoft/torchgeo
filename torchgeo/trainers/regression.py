@@ -6,6 +6,7 @@
 import os
 from typing import Any
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import timm
@@ -83,7 +84,7 @@ class RegressionTask(BaseTask):
         """Initialize the model."""
         # Create model
         weights = self.weights
-        self.model = timm.create_model(  # type: ignore[attr-defined]
+        self.model = timm.create_model(
             self.hparams['model'],
             num_classes=self.hparams['num_outputs'],
             in_chans=self.hparams['in_channels'],
@@ -203,6 +204,12 @@ class RegressionTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
+            aug = K.AugmentationSequential(
+                K.Denormalize(datamodule.mean, datamodule.std),
+                data_keys=None,
+                keepdim=True,
+            )
+            batch = aug(batch)
             if self.target_key == 'mask':
                 y = y.squeeze(dim=1)
                 y_hat = y_hat.squeeze(dim=1)

@@ -1,0 +1,9 @@
+image_path,label_path,split
+Images/trainval/000000.jpg,Annotations/trainval/000000.xml,train
+Images/trainval/000001.jpg,Annotations/trainval/000001.xml,train
+Images/trainval/000002.jpg,Annotations/trainval/000002.xml,train
+Images/trainval/000003.jpg,Annotations/trainval/000003.xml,train
+Images/trainval/000004.jpg,Annotations/trainval/000004.xml,val
+Images/trainval/000005.jpg,Annotations/trainval/000005.xml,val
+Images/test/000000.jpg,,test
+Images/test/000001.jpg,,test

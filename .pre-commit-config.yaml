@@ -29,9 +29,9 @@ repos:
           - pillow>=10.4.0
           - pytest>=6.1.2
           - scikit-image>=0.22.0
-          - timm>=1.0.14
+          - timm>=1.0.15
           - torch>=2.6
-          - torchmetrics>=0.10
+          - torchmetrics>=1.6.2
           - torchvision>=0.18
         exclude: (build|data|dist|logo|logs|output)/
   - repo: https://github.com/pre-commit/mirrors-prettier

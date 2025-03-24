@@ -12,7 +12,7 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import ADVANCE, DatasetNotFoundError
 
-pytest.importorskip('scipy', minversion='1.7.2')
+pytest.importorskip('scipy', minversion='1.9.2')
 
 
 class TestADVANCE:
