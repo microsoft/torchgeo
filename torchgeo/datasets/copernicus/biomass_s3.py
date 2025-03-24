@@ -5,15 +5,15 @@ from datetime import date
 from typing import TypeAlias
 
 import cv2
-import kornia as K
 import numpy as np
 import rasterio
 import torch
 from pyproj import Transformer
 from torch import Tensor
+
 from torchgeo.datasets.geo import NonGeoDataset
 
-logging.getLogger("rasterio").setLevel(logging.ERROR)
+logging.getLogger('rasterio').setLevel(logging.ERROR)
 
 Path: TypeAlias = str | os.PathLike[str]
 
@@ -31,41 +31,41 @@ class SenBenchBiomassS3(NonGeoDataset):
     * # samples: 3000/1000/1000 (train/val/test, static mode)
     * image resolution: 96x96 (GSD 300m)
     * label resolution: 282x282 (GSD 100m)
-    
+
     Dataset format:
     * images: 21-band Sentinel-3 OLCI images (GeoTIFF)
     * labels: biomass maps (GeoTIFF)
 
     If you use this dataset in your research, please cite the following paper:
-    
+
     * To be released soon
 
     """
 
     url = 'https://huggingface.co/datasets/wangyi111/SentinelBench/resolve/main/l3_biomass_s3/biomass_s3olci.zip'
-    splits = ("train", "test", "val")
+    splits = ('train', 'test', 'val')
     all_band_names = (
-        "Oa01_radiance",
-        "Oa02_radiance",
-        "Oa03_radiance",
-        "Oa04_radiance",
-        "Oa05_radiance",
-        "Oa06_radiance",
-        "Oa07_radiance",
-        "Oa08_radiance",
-        "Oa09_radiance",
-        "Oa10_radiance",
-        "Oa11_radiance",
-        "Oa12_radiance",
-        "Oa13_radiance",
-        "Oa14_radiance",
-        "Oa15_radiance",
-        "Oa16_radiance",
-        "Oa17_radiance",
-        "Oa18_radiance",
-        "Oa19_radiance",
-        "Oa20_radiance",
-        "Oa21_radiance",
+        'Oa01_radiance',
+        'Oa02_radiance',
+        'Oa03_radiance',
+        'Oa04_radiance',
+        'Oa05_radiance',
+        'Oa06_radiance',
+        'Oa07_radiance',
+        'Oa08_radiance',
+        'Oa09_radiance',
+        'Oa10_radiance',
+        'Oa11_radiance',
+        'Oa12_radiance',
+        'Oa13_radiance',
+        'Oa14_radiance',
+        'Oa15_radiance',
+        'Oa16_radiance',
+        'Oa17_radiance',
+        'Oa18_radiance',
+        'Oa19_radiance',
+        'Oa20_radiance',
+        'Oa21_radiance',
     )
     all_band_scale = (
         0.0139465,
@@ -97,9 +97,9 @@ class SenBenchBiomassS3(NonGeoDataset):
 
     def __init__(
         self,
-        root: Path = "data",
-        split: str = "train",
-        mode: str = "static",  # or 'series'
+        root: Path = 'data',
+        split: str = 'train',
+        mode: str = 'static',  # or 'series'
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
     ) -> None:
@@ -108,22 +108,22 @@ class SenBenchBiomassS3(NonGeoDataset):
         self.download = download
         self.mode = mode
 
-        assert split in ["train", "test", "val"]
+        assert split in ['train', 'test', 'val']
         self.split = split
 
-        self.img_dir = os.path.join(root, split, "s3_olci")
-        self.biomass_dir = os.path.join(root, split, "biomass")
+        self.img_dir = os.path.join(root, split, 's3_olci')
+        self.biomass_dir = os.path.join(root, split, 'biomass')
 
         self.pids = os.listdir(self.biomass_dir)
 
-        if self.mode == "static":
-            self.static_csv = os.path.join(root, split, "static_fnames.csv")
-            with open(self.static_csv, "r") as f:
+        if self.mode == 'static':
+            self.static_csv = os.path.join(root, split, 'static_fnames.csv')
+            with open(self.static_csv) as f:
                 lines = f.readlines()
                 self.static_img = {}
                 for line in lines:
-                    dirname = line.strip().split(",")[0]
-                    img_fname = line.strip().split(",")[1]
+                    dirname = line.strip().split(',')[0]
+                    img_fname = line.strip().split(',')[1]
                     self.static_img[dirname] = img_fname
 
         self.reference_date = date(1970, 1, 1)
@@ -136,10 +136,10 @@ class SenBenchBiomassS3(NonGeoDataset):
         images, meta_infos = self._load_image(index)
         biomass = self._load_target(index)
 
-        if self.mode == "static":
-            sample = {"image": images[0], "groundtruth": biomass, "meta": meta_infos[0]}
-        elif self.mode == "series":
-            sample = {"image": images, "groundtruth": biomass, "meta": meta_infos}
+        if self.mode == 'static':
+            sample = {'image': images[0], 'groundtruth': biomass, 'meta': meta_infos[0]}
+        elif self.mode == 'series':
+            sample = {'image': images, 'groundtruth': biomass, 'meta': meta_infos}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -148,10 +148,10 @@ class SenBenchBiomassS3(NonGeoDataset):
 
     def _load_image(self, index):
         pid = self.pids[index]
-        s3_path = os.path.join(self.img_dir, pid.replace(".tif", ""))
+        s3_path = os.path.join(self.img_dir, pid.replace('.tif', ''))
 
-        if self.mode == "static":
-            img_fname = self.static_img[pid.replace(".tif", "")]
+        if self.mode == 'static':
+            img_fname = self.static_img[pid.replace('.tif', '')]
             s3_paths = [os.path.join(s3_path, img_fname)]
         else:
             img_fnames = os.listdir(s3_path)
@@ -166,8 +166,10 @@ class SenBenchBiomassS3(NonGeoDataset):
                 img = src.read()
                 chs = []
                 for b in range(21):
-                    #ch = cv2.resize(img[b], (96, 96), interpolation=cv2.INTER_CUBIC) # original size
-                    ch = cv2.resize(img[b], (282, 282), interpolation=cv2.INTER_CUBIC) # to match the size of biomass map
+                    # ch = cv2.resize(img[b], (96, 96), interpolation=cv2.INTER_CUBIC) # original size
+                    ch = cv2.resize(
+                        img[b], (282, 282), interpolation=cv2.INTER_CUBIC
+                    )  # to match the size of biomass map
                     ch = ch * self.all_band_scale[b]
                     chs.append(ch)
                 img = np.stack(chs)
@@ -176,38 +178,42 @@ class SenBenchBiomassS3(NonGeoDataset):
 
                 # get lon, lat
                 cx, cy = src.xy(src.height // 2, src.width // 2)
-                if src.crs.to_string() != "EPSG:4326":
+                if src.crs.to_string() != 'EPSG:4326':
                     # convert to lon, lat
-                    crs_transformer = Transformer.from_crs(src.crs, "epsg:4326", always_xy=True)
+                    crs_transformer = Transformer.from_crs(
+                        src.crs, 'epsg:4326', always_xy=True
+                    )
                     lon, lat = crs_transformer.transform(cx, cy)
                 else:
                     lon, lat = cx, cy
                 # get time
                 img_fname = os.path.basename(img_path)
-                date_str = img_fname.split("_")[1][:8]
-                date_obj = date(int(date_str[:4]), int(date_str[4:6]), int(date_str[6:8]))
+                date_str = img_fname.split('_')[1][:8]
+                date_obj = date(
+                    int(date_str[:4]), int(date_str[4:6]), int(date_str[6:8])
+                )
                 delta = (date_obj - self.reference_date).days
                 # this is what CopernicusFM requires
                 # meta_info = np.array([lon, lat, delta, self.patch_area]).astype(np.float32)
                 # meta_info = torch.from_numpy(meta_info)
                 # this is more general
                 meta_info = {
-                    'lon': torch.tensor(lon), 
-                    'lat': torch.tensor(lat), 
-                    'delta-t': torch.tensor(delta), # days since 1970-01-01
-                    'area-p': torch.tensor(self.patch_area), # ViT patch area in km^2
-                    }
+                    'lon': torch.tensor(lon),
+                    'lat': torch.tensor(lat),
+                    'delta-t': torch.tensor(delta),  # days since 1970-01-01
+                    'area-p': torch.tensor(self.patch_area),  # ViT patch area in km^2
+                }
 
             imgs.append(img)
             meta_infos.append(meta_info)
 
-        if self.mode == "series":
+        if self.mode == 'series':
             # pad to 4 images if less than 4
             while len(imgs) < 4:
                 imgs.append(img)
                 meta_infos.append(meta_info)
 
-        return imgs, meta_infos # return list of images and meta_infos
+        return imgs, meta_infos  # return list of images and meta_infos
 
     def _load_target(self, index):
         pid = self.pids[index]
@@ -217,7 +223,7 @@ class SenBenchBiomassS3(NonGeoDataset):
             biomass = src.read(1)
             biomass = cv2.resize(biomass, (282, 282), interpolation=cv2.INTER_CUBIC)
             biomass[np.isnan(biomass)] = 0
-            #biomass = (biomass - self.biomass_mean) / self.biomass_std
-            biomass = torch.from_numpy(biomass.astype("float32"))
+            # biomass = (biomass - self.biomass_mean) / self.biomass_std
+            biomass = torch.from_numpy(biomass.astype('float32'))
 
         return biomass

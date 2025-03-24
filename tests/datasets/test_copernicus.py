@@ -35,6 +35,8 @@ class TestCopernicusBench:
             ('lc100seg_s3', 'l2_lc100_s3', {'mode': 'time-series'}),
             ('dfc2020_s1', 'l2_dfc2020_s1s2', {}),
             ('dfc2020_s2', 'l2_dfc2020_s1s2', {}),
+            ('flood_s1', 'l3_flood_s1', {'mode': 1}),
+            ('flood_s1', 'l3_flood_s1', {'mode': 2}),
         ]
     )
     def dataset(self, request: SubRequest) -> CopernicusBench:
