@@ -30,7 +30,7 @@ jobs:
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install .[datasets,tests]
+          pip install .[datasets,tests] -c requirements/max-cons.old
           pip cache purge
       - name: List pip dependencies
         run: pip list
@@ -59,7 +59,7 @@ jobs:
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install .[docs,tests] planetary_computer pystac tensorboard
+          pip install .[docs,tests] planetary_computer pystac tensorboard -c requirements/max-cons.old
           pip cache purge
       - name: List pip dependencies
         run: pip list
