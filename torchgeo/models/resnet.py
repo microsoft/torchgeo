@@ -561,6 +561,20 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    SENTINEL1_ALL_SOFTCON = Weights(
+        url='https://huggingface.co/wangyi111/softcon/resolve/62ff465b2e7467dbfc70758ec1e9d08ab87fc46b/B2_rn50_softcon.pth',
+        transforms=_ssl4eo_s12_transforms_s1,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 2,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2405.20462',
+            'repo': 'https://github.com/zhu-xlab/softcon',
+            'ssl_method': 'softcon',
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
     SENTINEL2_ALL_DECUR = Weights(
         url='https://huggingface.co/torchgeo/decur/resolve/eba7ae5945d482a4319be046d34b552db5dd9950/rn50_ssl4eo-s12_ms_decur_ep100-fc6b09ff.pth',
         transforms=_ssl4eo_s12_transforms_s2_10k,
@@ -599,6 +613,20 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL2_ALL_SOFTCON = Weights(
+        url='https://huggingface.co/wangyi111/softcon/resolve/62ff465b2e7467dbfc70758ec1e9d08ab87fc46b/B13_rn50_softcon.pth',
+        transforms=_ssl4eo_s12_transforms_s2_stats,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 13,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2405.20462',
+            'repo': 'https://github.com/zhu-xlab/softcon',
+            'ssl_method': 'softcon',
             'bands': _sentinel2_toa_bands,
         },
     )
