@@ -34,10 +34,14 @@ from .vit import (
     ViTHuge14_Weights,
     ViTLarge16_Weights,
     ViTSmall16_Weights,
+    ViTSmall14_DINOv2_Weights,
+    ViTBase14_DINOv2_Weights,
     vit_base_patch16_224,
     vit_huge_patch14_224,
     vit_large_patch16_224,
     vit_small_patch16_224,
+    vit_small_patch14_dinov2,
+    vit_base_patch14_dinov2,
 )
 
 __all__ = (
@@ -66,6 +70,8 @@ __all__ = (
     'ViTHuge14_Weights',
     'ViTLarge16_Weights',
     'ViTSmall16_Weights',
+    'ViTSmall14_DINOv2_Weights',
+    'ViTBase14_DINOv2_Weights',
     'croma_base',
     'croma_large',
     'dofa_base_patch16_224',
@@ -86,4 +92,6 @@ __all__ = (
     'vit_huge_patch14_224',
     'vit_large_patch16_224',
     'vit_small_patch16_224',
+    'vit_small_patch14_dinov2',
+    'vit_base_patch14_dinov2',
 )
