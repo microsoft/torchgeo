@@ -376,6 +376,11 @@ class TestRasterDataset:
         with pytest.raises(AssertionError, match=msg):
             CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
 
+    def test_single_res(self) -> None:
+        root = os.path.join('tests', 'data', 'sentinel2')
+        ds = CustomSentinelDataset(root, res=10)
+        assert ds.res == (10, 10)
+
 
 class TestVectorDataset:
     @pytest.fixture(scope='class')
@@ -431,6 +436,11 @@ class TestVectorDataset:
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             VectorDataset(tmp_path)
+
+    def test_single_res(self) -> None:
+        root = os.path.join('tests', 'data', 'vector')
+        ds = CustomVectorDataset(root, res=0.1)
+        assert ds.res == (0.1, 0.1)
 
 
 class TestNonGeoDataset:
