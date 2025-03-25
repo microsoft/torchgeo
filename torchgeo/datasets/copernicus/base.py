@@ -47,35 +47,23 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     def url(self) -> str:
         """Download URL."""
 
-    @property
-    @abstractmethod
-    def md5(self) -> str:
-        """MD5 checksum."""
+    #: MD5 checksum.
+    md5: str
 
-    @property
-    @abstractmethod
-    def zipfile(self) -> str:
-        """Zip file name."""
+    #: Zip file name.
+    zipfile: str
 
-    @property
-    @abstractmethod
-    def directory(self) -> str:
-        """Subdirectory containing split files."""
+    #: Subdirectory containing split files.
+    directory: str
 
-    @property
-    def filename(self) -> str:
-        """Filename format of split files."""
-        return '{}.csv'
+    #: Filename format of split files.
+    filename = '{}.csv'
 
-    @property
-    def filename_regex(self) -> str:
-        """Regular expression used to extract date from filename."""
-        return '.*'
+    #: Regular expression used to extract date from filename.
+    filename_regex = '.*'
 
-    @property
-    def date_format(self) -> str:
-        """Date format string used to parse date from filename."""
-        return '%Y%m%dT%H%M%S'
+    #: Date format string used to parse date from filename.
+    date_format = '%Y%m%dT%H%M%S'
 
     @property
     @abstractmethod
@@ -85,15 +73,13 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     @property
     @abstractmethod
     def rgb_bands(self) -> tuple[str, ...]:
-        """Red, green, and blue spectral channels."""
+        """Spectral channels used to make RGB plots."""
 
-    #: Matplotlib color map
+    #: Matplotlib color map for semantic segmentation and change detection plots.
     cmap: str | matplotlib.colors.Colormap
 
-    @property
-    @abstractmethod
-    def classes(self) -> tuple[str, ...]:
-        """List of classes for classification and semantic segmentation."""
+    #: List of classes for classification, semantic segmentation, and change detection.
+    classes: tuple[str, ...]
 
     def __init__(
         self,
