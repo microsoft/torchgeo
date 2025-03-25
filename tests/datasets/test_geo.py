@@ -378,8 +378,8 @@ class TestRasterDataset:
 
     def test_single_res(self) -> None:
         root = os.path.join('tests', 'data', 'sentinel2')
-        ds = CustomSentinelDataset(root, res=10)
-        assert ds.res == (10, 10)
+        ds = CustomSentinelDataset(root, res=10.0)
+        assert ds.res == (10.0, 10.0)
 
 
 class TestVectorDataset:
