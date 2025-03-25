@@ -5,8 +5,8 @@
 
 import os
 import re
-from collections.abc import Callable, Sequence, Literal
-from typing import ClassVar
+from collections.abc import Callable, Sequence
+from typing import ClassVar, Literal
 
 import einops
 import matplotlib.pyplot as plt
