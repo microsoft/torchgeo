@@ -377,8 +377,8 @@ class TestRasterDataset:
             CustomSentinelDataset(root, bands=bands, transforms=transforms, cache=cache)
 
     def test_single_res(self) -> None:
-        root = os.path.join('tests', 'data', 'sentinel2')
-        ds = CustomSentinelDataset(root, res=10.0)
+        root = os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_32631')
+        ds = RasterDataset(root, res=10.0)
         assert ds.res == (10.0, 10.0)
 
 
