@@ -9,6 +9,7 @@ import kornia.augmentation as K
 import timm
 import torch
 from timm.models import ResNet
+from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
 from .swin import (
@@ -748,7 +749,7 @@ class ResNet152_Weights(WeightsEnum):  # type: ignore[misc]
 
 def resnet18(
     weights: ResNet18_Weights | None = None, *args: Any, **kwargs: Any
-) -> ResNet:
+) -> ResNet | nn.ModuleDict:
     """ResNet-18 model.
 
     If you use this model in your research, please cite the following paper:
@@ -768,7 +769,7 @@ def resnet18(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet = timm.create_model('resnet18', *args, **kwargs)
+    model: ResNet | nn.ModuleDict = timm.create_model('resnet18', *args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -782,7 +783,7 @@ def resnet18(
 
 def resnet50(
     weights: ResNet50_Weights | None = None, *args: Any, **kwargs: Any
-) -> ResNet:
+) -> ResNet | nn.ModuleDict:
     """ResNet-50 model.
 
     If you use this model in your research, please cite the following paper:
@@ -803,21 +804,22 @@ def resnet50(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet = timm.create_model('resnet50', *args, **kwargs)
+    model: ResNet | nn.ModuleDict = timm.create_model('resnet50', *args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
-        assert not unexpected_keys
+        # used when features_only = True
+        assert set(unexpected_keys) <= {'fc.weight', 'fc.bias'}
 
     return model
 
 
 def resnet152(
     weights: ResNet152_Weights | None = None, *args: Any, **kwargs: Any
-) -> ResNet:
+) -> ResNet | nn.ModuleDict:
     """ResNet-152 model.
 
     If you use this model in your research, please cite the following paper:
@@ -837,13 +839,15 @@ def resnet152(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet = timm.create_model('resnet152', *args, **kwargs)
+    # FeatureListNet (extends nn.ModuleDict) is returned when features_only=True
+    model: ResNet | nn.ModuleDict = timm.create_model('resnet152', *args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
-        assert not unexpected_keys
+        # used when features_only = True
+        assert set(unexpected_keys) <= {'fc.weight', 'fc.bias'}
 
     return model
