@@ -3,12 +3,13 @@
 
 """Pre-trained Vision Transformer models."""
 
-from typing import Any
+from typing import Any, cast
 
 import kornia.augmentation as K
 import timm
 import torch
 from timm.models.vision_transformer import VisionTransformer
+from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
 from .resnet import (
@@ -223,7 +224,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
 
 def vit_small_patch16_224(
     weights: ViTSmall16_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer:
+) -> VisionTransformer | nn.ModuleDict:
     """Vision Transform (ViT) small patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -242,16 +243,24 @@ def vit_small_patch16_224(
     """
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
-
-    model: VisionTransformer = timm.create_model(  # type: ignore[attr-defined]
+    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
+    model: VisionTransformer | nn.ModuleDict = timm.create_model(
         'vit_small_patch16_224', *args, **kwargs
     )
 
+    if kwargs.get('features_only', False):
+        model = cast(nn.ModuleDict, model)
+        target_model = cast(VisionTransformer, model.model)
+    else:
+        model = cast(VisionTransformer, model)
+        target_model = model
+
     if weights:
-        missing_keys, unexpected_keys = model.load_state_dict(
+        missing_keys, unexpected_keys = target_model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert not unexpected_keys
+        # used when features_only = True
+        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
 
     return model

@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Cache dependencies
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4.2.3
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -50,7 +50,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Cache dependencies
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4.2.3
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -73,7 +73,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.2.2
       - name: Set up nodejs
-        uses: actions/setup-node@v4.2.0
+        uses: actions/setup-node@v4.3.0
         with:
           node-version: '20'
           cache: 'npm'
@@ -88,4 +88,4 @@ jobs:
         run: npx prettier --check .
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
