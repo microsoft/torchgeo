@@ -11,6 +11,7 @@ from ..geo import NonGeoDataset
 from .base import CopernicusBenchBase
 from .bigearthnet_s1 import CopernicusBenchBigEarthNetS1
 from .bigearthnet_s2 import CopernicusBenchBigEarthNetS2
+from .biomass_s3 import CopernicusBenchBiomassS3
 from .cloud_s2 import CopernicusBenchCloudS2
 from .cloud_s3 import CopernicusBenchCloudS3
 from .dfc2020_s1 import CopernicusBenchDFC2020S1
@@ -27,6 +28,7 @@ __all__ = (
     'CopernicusBenchBase',
     'CopernicusBenchBigEarthNetS1',
     'CopernicusBenchBigEarthNetS2',
+    'CopernicusBenchBiomassS3',
     'CopernicusBenchCloudS2',
     'CopernicusBenchCloudS3',
     'CopernicusBenchDFC2020S1',
@@ -52,6 +54,7 @@ DATASET_REGISTRY = {
     'dfc2020_s2': CopernicusBenchDFC2020S2,
     'flood_s1': CopernicusBenchFloodS1,
     'lcz_s2': CopernicusBenchLCZS2,
+    'biomass_s3': CopernicusBenchBiomassS3,
 }
 
 
@@ -82,6 +85,7 @@ class CopernicusBench(NonGeoDataset):
             'dfc2020_s2',
             'flood_s1',
             'lcz_s2',
+            'biomass_s3',
         ],
         *args: Any,
         **kwargs: Any,

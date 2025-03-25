@@ -38,6 +38,8 @@ class TestCopernicusBench:
             ('flood_s1', 'l3_flood_s1', {'mode': 1}),
             ('flood_s1', 'l3_flood_s1', {'mode': 2}),
             ('lcz_s2', 'l3_lcz_s2', {}),
+            ('biomass_s3', 'l3_biomass_s3', {'mode': 'static'}),
+            ('biomass_s3', 'l3_biomass_s3', {'mode': 'time-series'}),
         ]
     )
     def dataset(self, request: SubRequest) -> CopernicusBench:

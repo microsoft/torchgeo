@@ -278,12 +278,14 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
         # Mask
         if 'mask' in sample:
-            kwargs = {
-                'cmap': self.cmap,
-                'vmin': 0,
-                'vmax': len(self.classes) - 1,
-                'interpolation': 'none',
-            }
+            kwargs: dict[str, Any] = {'cmap': self.cmap}
+            if hasattr(self, 'classes'):
+                # Semantic segmentation
+                kwargs |= {
+                    'vmin': 0,
+                    'vmax': len(self.classes) - 1,
+                    'interpolation': 'none',
+                }
             mask = sample['mask']
             ax[0, i + 1].imshow(mask, **kwargs)
             ax[0, i + 1].axis('off')
