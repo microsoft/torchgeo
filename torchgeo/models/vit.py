@@ -17,8 +17,8 @@ from .resnet import (
     _landsat_oli_sr_bands,
     _landsat_oli_tirs_toa_bands,
     _landsat_tm_toa_bands,
-    _sentinel2_toa_bands,
     _sentinel1_grd_bands,
+    _sentinel2_toa_bands,
     _ssl4eo_s12_transforms_s1,
 )
 

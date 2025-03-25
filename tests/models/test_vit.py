@@ -11,14 +11,14 @@ from pytest import MonkeyPatch
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
-    ViTSmall16_Weights,
     ViTBase16_Weights,
-    ViTLarge16_Weights,
     ViTHuge14_Weights,
-    vit_small_patch16_224,
+    ViTLarge16_Weights,
+    ViTSmall16_Weights,
     vit_base_patch16_224,
-    vit_large_patch16_224,
     vit_huge_patch14_224,
+    vit_large_patch16_224,
+    vit_small_patch16_224,
 )
 
 
