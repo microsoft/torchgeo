@@ -20,6 +20,7 @@ from .eurosat_s2 import CopernicusBenchEuroSATS2
 from .flood_s1 import CopernicusBenchFloodS1
 from .lc100cls_s3 import CopernicusBenchLC100ClsS3
 from .lc100seg_s3 import CopernicusBenchLC100SegS3
+from .lcz_s2 import CopernicusBenchLCZS2
 
 __all__ = (
     'CopernicusBench',
@@ -35,6 +36,7 @@ __all__ = (
     'CopernicusBenchFloodS1',
     'CopernicusBenchLC100ClsS3',
     'CopernicusBenchLC100SegS3',
+    'CopernicusBenchLCZS2',
 )
 
 DATASET_REGISTRY = {
@@ -49,6 +51,7 @@ DATASET_REGISTRY = {
     'dfc2020_s1': CopernicusBenchDFC2020S1,
     'dfc2020_s2': CopernicusBenchDFC2020S2,
     'flood_s1': CopernicusBenchFloodS1,
+    'lcz_s2': CopernicusBenchLCZS2,
 }
 
 
@@ -78,6 +81,7 @@ class CopernicusBench(NonGeoDataset):
             'dfc2020_s1',
             'dfc2020_s2',
             'flood_s1',
+            'lcz_s2',
         ],
         *args: Any,
         **kwargs: Any,

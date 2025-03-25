@@ -598,6 +598,8 @@ Copernicus-Bench is a comprehensive evaluation benchmark with 15 downstream task
 .. autoclass:: CopernicusBenchLC100SegS3
 .. autoclass:: CopernicusBenchDFC2020S1
 .. autoclass:: CopernicusBenchDFC2020S2
+.. autoclass:: CopernicusBenchFloodS1
+.. autoclass:: CopernicusBenchLCZS2
 
 Base Classes
 ------------

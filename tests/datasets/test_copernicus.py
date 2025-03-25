@@ -37,10 +37,15 @@ class TestCopernicusBench:
             ('dfc2020_s2', 'l2_dfc2020_s1s2', {}),
             ('flood_s1', 'l3_flood_s1', {'mode': 1}),
             ('flood_s1', 'l3_flood_s1', {'mode': 2}),
+            ('lcz_s2', 'l3_lcz_s2', {}),
         ]
     )
     def dataset(self, request: SubRequest) -> CopernicusBench:
         dataset, directory, kwargs = request.param
+
+        if dataset == 'lcz_s2':
+            pytest.importorskip('h5py', minversion='3.8')
+
         root = os.path.join('tests', 'data', 'copernicus', directory)
         transforms = nn.Identity()
         return CopernicusBench(dataset, root, transforms=transforms, **kwargs)
@@ -48,10 +53,10 @@ class TestCopernicusBench:
     def test_getitem(self, dataset: CopernicusBench) -> None:
         x = dataset[0]
         assert isinstance(x['image'], torch.Tensor)
-        if not dataset.name.startswith('dfc2020'):
+        if not dataset.name.startswith(('dfc2020', 'lcz')):
             assert isinstance(x['lat'], torch.Tensor)
             assert isinstance(x['lon'], torch.Tensor)
-        if not dataset.name.startswith(('eurosat', 'dfc2020')):
+        if not dataset.name.startswith(('eurosat', 'dfc2020', 'lcz')):
             assert isinstance(x['time'], torch.Tensor)
         if 'label' in x:
             assert isinstance(x['label'], torch.Tensor)
@@ -63,14 +68,20 @@ class TestCopernicusBench:
 
     def test_extract(self, dataset: CopernicusBench, tmp_path: Path) -> None:
         root = dataset.root
-        file = dataset.zipfile
+        if dataset.name == 'lcz_s2':
+            file = dataset.filename.format(dataset.split)
+        else:
+            file = dataset.zipfile
         shutil.copyfile(os.path.join(root, file), tmp_path / file)
         CopernicusBench(dataset.name, tmp_path)
 
     def test_download(
         self, dataset: CopernicusBench, tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
-        url = os.path.join(dataset.root, dataset.zipfile)
+        if dataset.name == 'lcz_s2':
+            url = os.path.join(dataset.root, dataset.filename.format(dataset.split))
+        else:
+            url = os.path.join(dataset.root, dataset.zipfile)
         monkeypatch.setattr(dataset.dataset.__class__, 'url', url)
         CopernicusBench(dataset.name, tmp_path, download=True)
 

@@ -29,6 +29,7 @@ def download_url(monkeypatch: MonkeyPatch, request: SubRequest) -> None:
         monkeypatch.setattr(f'torchgeo.datasets.{module}.download_url', copy)
     except AttributeError:
         pass
+    monkeypatch.setattr(f'torchgeo.datasets.copernicus.lcz_s2.download_url', copy)
 
 
 @pytest.fixture
