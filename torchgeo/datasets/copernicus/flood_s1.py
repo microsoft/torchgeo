@@ -24,6 +24,9 @@ from .base import CopernicusBenchBase
 class CopernicusBenchFloodS1(CopernicusBenchBase):
     """Copernicus-Bench Flood-S1 dataset.
 
+    Flood-S1 is a flood segmentation dataset extracted from a large flood mapping
+    dataset Kuro Siwo.
+
     If you use this dataset in your research, please cite the following papers:
 
     * https://arxiv.org/abs/2503.11849
