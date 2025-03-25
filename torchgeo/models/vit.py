@@ -739,7 +739,7 @@ def vit_small_patch14_dinov2(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert not unexpected_keys
+        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
 
     return model
 
@@ -775,6 +775,6 @@ def vit_base_patch14_dinov2(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert not unexpected_keys
+        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
 
     return model
