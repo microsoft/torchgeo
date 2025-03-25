@@ -47,35 +47,23 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     def url(self) -> str:
         """Download URL."""
 
-    @property
-    @abstractmethod
-    def md5(self) -> str:
-        """MD5 checksum."""
+    #: MD5 checksum.
+    md5: str
 
-    @property
-    @abstractmethod
-    def zipfile(self) -> str:
-        """Zip file name."""
+    #: Zip file name.
+    zipfile: str
 
-    @property
-    @abstractmethod
-    def directory(self) -> str:
-        """Subdirectory containing split files."""
+    #: Subdirectory containing split files.
+    directory: str
 
-    @property
-    def filename(self) -> str:
-        """Filename format of split files."""
-        return '{}.csv'
+    #: Filename format of split files.
+    filename = '{}.csv'
 
-    @property
-    def filename_regex(self) -> str:
-        """Regular expression used to extract date from filename."""
-        return '.*'
+    #: Regular expression used to extract date from filename.
+    filename_regex = '.*'
 
-    @property
-    def date_format(self) -> str:
-        """Date format string used to parse date from filename."""
-        return '%Y%m%dT%H%M%S'
+    #: Date format string used to parse date from filename.
+    date_format = '%Y%m%dT%H%M%S'
 
     @property
     @abstractmethod
@@ -85,15 +73,13 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     @property
     @abstractmethod
     def rgb_bands(self) -> tuple[str, ...]:
-        """Red, green, and blue spectral channels."""
+        """Spectral channels used to make RGB plots."""
 
-    #: Matplotlib color map
+    #: Matplotlib color map for semantic segmentation and change detection plots.
     cmap: str | matplotlib.colors.Colormap
 
-    @property
-    @abstractmethod
-    def classes(self) -> tuple[str, ...]:
-        """List of classes for classification and semantic segmentation."""
+    #: List of classes for classification, semantic segmentation, and change detection.
+    classes: tuple[str, ...]
 
     def __init__(
         self,
@@ -285,19 +271,21 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         images = percentile_normalization(images)
         images = rearrange(images, 't c h w -> t h w c')
         for i in range(len(images)):
-            ax[0, 0].imshow(images[i])
-            ax[0, 0].axis('off')
+            ax[0, i].imshow(images[i])
+            ax[0, i].axis('off')
             if show_titles:
-                ax[0, 0].set_title(title)
+                ax[0, i].set_title(title)
 
         # Mask
         if 'mask' in sample:
-            kwargs = {
-                'cmap': self.cmap,
-                'vmin': 0,
-                'vmax': len(self.classes) - 1,
-                'interpolation': 'none',
-            }
+            kwargs: dict[str, Any] = {'cmap': self.cmap}
+            if hasattr(self, 'classes'):
+                # Semantic segmentation
+                kwargs |= {
+                    'vmin': 0,
+                    'vmax': len(self.classes) - 1,
+                    'interpolation': 'none',
+                }
             mask = sample['mask']
             ax[0, i + 1].imshow(mask, **kwargs)
             ax[0, i + 1].axis('off')
@@ -313,5 +301,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
 
         if suptitle is not None:
             fig.suptitle(suptitle)
+
+        fig.tight_layout()
 
         return fig
