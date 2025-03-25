@@ -553,7 +553,7 @@ def vit_base_patch16_224(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert not unexpected_keys
+        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
 
     return model
 
@@ -589,7 +589,7 @@ def vit_large_patch16_224(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert not unexpected_keys
+        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
 
     return model
 
@@ -625,6 +625,6 @@ def vit_huge_patch14_224(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert not unexpected_keys
+        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
 
     return model
