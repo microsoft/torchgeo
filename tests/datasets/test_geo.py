@@ -381,6 +381,12 @@ class TestRasterDataset:
         ds = RasterDataset(root, res=10.0)
         assert ds.res == (10.0, 10.0)
 
+    def test_change_res(self) -> None:
+        root = os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_32631')
+        ds = RasterDataset(root, res=10.0)
+        assert ds.res == (10.0, 10.0)
+        ds.res = 20.0  # type: ignore[assignment]
+
 
 class TestVectorDataset:
     @pytest.fixture(scope='class')
