@@ -67,6 +67,7 @@ class TestViTSmall16:
     def test_vit_download(self, weights: WeightsEnum) -> None:
         vit_small_patch16_224(weights=weights)
 
+
 class TestViTBase16:
     @pytest.fixture(params=[*ViTBase16_Weights])
     def weights(self, request: SubRequest) -> WeightsEnum:
@@ -112,11 +113,12 @@ class TestViTBase16:
     def test_vit_download(self, weights: WeightsEnum) -> None:
         vit_base_patch16_224(weights=weights)
 
+
 class TestViTLarge16:
     @pytest.fixture(params=[*ViTLarge16_Weights])
     def weights(self, request: SubRequest) -> WeightsEnum:
         return request.param
-    
+
     @pytest.fixture
     def mocked_weights(
         self,
@@ -135,7 +137,7 @@ class TestViTLarge16:
         except AttributeError:
             monkeypatch.setattr(weights, 'url', str(path))
         return weights
-    
+
     def test_vit(self) -> None:
         vit_large_patch16_224()
 
@@ -157,11 +159,12 @@ class TestViTLarge16:
     def test_vit_download(self, weights: WeightsEnum) -> None:
         vit_large_patch16_224(weights=weights)
 
+
 class TestViTHuge14:
     @pytest.fixture(params=[*ViTHuge14_Weights])
     def weights(self, request: SubRequest) -> WeightsEnum:
         return request.param
-    
+
     @pytest.fixture
     def mocked_weights(
         self,
@@ -180,10 +183,10 @@ class TestViTHuge14:
         except AttributeError:
             monkeypatch.setattr(weights, 'url', str(path))
         return weights
-    
+
     def test_vit(self) -> None:
         vit_huge_patch14_224()
-        
+
     def test_vit_weights(self, mocked_weights: WeightsEnum) -> None:
         vit_huge_patch14_224(weights=mocked_weights)
 

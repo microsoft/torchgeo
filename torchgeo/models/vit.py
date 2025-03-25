@@ -278,6 +278,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+
 class ViTBase16_Weights(WeightsEnum):  # type: ignore[misc]
     """Vision Transformer Base Patch Size 16 weights.
 
@@ -342,6 +343,7 @@ class ViTBase16_Weights(WeightsEnum):  # type: ignore[misc]
             'bands': _sentinel1_grd_bands,
         },
     )
+
 
 class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
     """Vision Transformer Large Patch Size 16 weights.
@@ -408,6 +410,7 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+
 class ViTHuge14_Weights(WeightsEnum):  # type: ignore[misc]
     """Vision Transformer Huge Patch Size 14 weights.
 
@@ -473,6 +476,7 @@ class ViTHuge14_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+
 def vit_small_patch16_224(
     weights: ViTSmall16_Weights | None = None, *args: Any, **kwargs: Any
 ) -> VisionTransformer:
@@ -507,6 +511,7 @@ def vit_small_patch16_224(
         assert not unexpected_keys
 
     return model
+
 
 def vit_base_patch16_224(
     weights: ViTBase16_Weights | None = None, *args: Any, **kwargs: Any
@@ -543,6 +548,7 @@ def vit_base_patch16_224(
 
     return model
 
+
 def vit_large_patch16_224(
     weights: ViTLarge16_Weights | None = None, *args: Any, **kwargs: Any
 ) -> VisionTransformer:
@@ -577,6 +583,7 @@ def vit_large_patch16_224(
         assert not unexpected_keys
 
     return model
+
 
 def vit_huge_patch14_224(
     weights: ViTHuge14_Weights | None = None, *args: Any, **kwargs: Any
