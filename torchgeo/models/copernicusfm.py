@@ -433,7 +433,7 @@ class CopernicusFM(nn.Module):
             self.norm = norm_layer(embed_dim)
 
         self.patch_embed_spectral = DynamicPatchEmbed(
-            hyper_dim=128, kernel_size=16, embed_dim=embed_dim, input_mode='spectral'
+            hyper_dim=hyper_dim, kernel_size=patch_size, embed_dim=embed_dim, input_mode='spectral'
         )
         self.patch_embed_variable = DynamicPatchEmbed(
             hyper_dim=128, kernel_size=16, embed_dim=embed_dim, input_mode='variable'
