@@ -42,6 +42,8 @@ class TestCopernicusBench:
             ('biomass_s3', 'l3_biomass_s3', {'mode': 'time-series'}),
             ('aq_no2_s5p', 'l3_airquality_s5p', {'mode': 'annual'}),
             ('aq_no2_s5p', 'l3_airquality_s5p', {'mode': 'seasonal'}),
+            ('aq_o3_s5p', 'l3_airquality_s5p', {'mode': 'annual'}),
+            ('aq_o3_s5p', 'l3_airquality_s5p', {'mode': 'seasonal'}),
         ]
     )
     def dataset(self, request: SubRequest) -> CopernicusBench:

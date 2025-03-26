@@ -33,6 +33,7 @@ from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .copernicus import (
     CopernicusBench,
     CopernicusBenchAQNO2S5P,
+    CopernicusBenchAQO3S5P,
     CopernicusBenchBase,
     CopernicusBenchBigEarthNetS1,
     CopernicusBenchBigEarthNetS2,
@@ -235,6 +236,7 @@ __all__ = (
     'CloudCoverDetection',
     'CopernicusBench',
     'CopernicusBenchAQNO2S5P',
+    'CopernicusBenchAQO3S5P',
     'CopernicusBenchBase',
     'CopernicusBenchBigEarthNetS1',
     'CopernicusBenchBigEarthNetS2',

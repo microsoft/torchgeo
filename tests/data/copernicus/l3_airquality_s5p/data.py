@@ -48,19 +48,19 @@ PROJCS["ETRS89-extended / LAEA Europe",
 }
 
 Z = np.random.random(size=(profile['height'], profile['width']))
-file = '2021-01-01_2021-12-31.tif'
 files = [
     '2021-01-01_2021-04-01.tif',
     '2021-04-01_2021-07-01.tif',
     '2021-07-01_2021-10-01.tif',
     '2021-10-01_2021-12-31.tif',
 ]
-for variable in ['no2', 'os']:
+for variable in ['no2', 'o3']:
     pid = f'EEA_1kmgrid_2021_{variable}_avg_34_13'
 
     # Image (annual)
     directory = os.path.join('airquality_s5p', variable, 's5p_annual', pid)
     os.makedirs(directory, exist_ok=True)
+    file = '2021-01-01_2021-12-31.tif'
     path = os.path.join(directory, file)
     with rio.open(path, 'w', **profile) as src:
         src.write(Z, 1)

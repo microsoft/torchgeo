@@ -9,6 +9,7 @@ from torch import Tensor
 
 from ..geo import NonGeoDataset
 from .aq_no2_s5p import CopernicusBenchAQNO2S5P
+from .aq_o3_s5p import CopernicusBenchAQO3S5P
 from .base import CopernicusBenchBase
 from .bigearthnet_s1 import CopernicusBenchBigEarthNetS1
 from .bigearthnet_s2 import CopernicusBenchBigEarthNetS2
@@ -27,6 +28,7 @@ from .lcz_s2 import CopernicusBenchLCZS2
 __all__ = (
     'CopernicusBench',
     'CopernicusBenchAQNO2S5P',
+    'CopernicusBenchAQO3S5P',
     'CopernicusBenchBase',
     'CopernicusBenchBigEarthNetS1',
     'CopernicusBenchBigEarthNetS2',
@@ -58,6 +60,7 @@ DATASET_REGISTRY = {
     'lcz_s2': CopernicusBenchLCZS2,
     'biomass_s3': CopernicusBenchBiomassS3,
     'aq_no2_s5p': CopernicusBenchAQNO2S5P,
+    'aq_o3_s5p': CopernicusBenchAQO3S5P,
 }
 
 
@@ -90,6 +93,7 @@ class CopernicusBench(NonGeoDataset):
             'lcz_s2',
             'biomass_s3',
             'aq_no2_s5p',
+            'aq_o3_s5p',
         ],
         *args: Any,
         **kwargs: Any,

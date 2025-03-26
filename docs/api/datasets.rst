@@ -602,6 +602,7 @@ Copernicus-Bench is a comprehensive evaluation benchmark with 15 downstream task
 .. autoclass:: CopernicusBenchLCZS2
 .. autoclass:: CopernicusBenchBiomassS3
 .. autoclass:: CopernicusBenchAQNO2S5P
+.. autoclass:: CopernicusBenchAQO3S5P
 
 Base Classes
 ------------
