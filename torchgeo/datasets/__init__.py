@@ -32,6 +32,7 @@ from .cloud_cover import CloudCoverDetection
 from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
 from .copernicus import (
     CopernicusBench,
+    CopernicusBenchAQNO2S5P,
     CopernicusBenchBase,
     CopernicusBenchBigEarthNetS1,
     CopernicusBenchBigEarthNetS2,
@@ -175,7 +176,6 @@ from .vhr10 import VHR10
 from .western_usa_live_fuel_moisture import WesternUSALiveFuelMoisture
 from .xview import XView2
 from .zuericrop import ZueriCrop
-from .senbench_airquality_s5p import SenBenchAQNO2S5P, SenBenchAQO3S5P
 
 __all__ = (
     'ADVANCE',
@@ -234,6 +234,7 @@ __all__ = (
     'ChesapeakeWV',
     'CloudCoverDetection',
     'CopernicusBench',
+    'CopernicusBenchAQNO2S5P',
     'CopernicusBenchBase',
     'CopernicusBenchBigEarthNetS1',
     'CopernicusBenchBigEarthNetS2',
@@ -352,6 +353,4 @@ __all__ = (
     'stack_samples',
     'time_series_split',
     'unbind_samples',
-    'SenBenchAQNO2S5P',
-    'SenBenchNO2S5P',
 )

@@ -59,6 +59,10 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
     #: Filename format of split files.
     filename = '{}.csv'
 
+    #: Mask dtype to cast to, either torch.long for classification
+    #: or torch.float for regression.
+    dtype: torch.dtype = torch.long
+
     #: Regular expression used to extract date from filename.
     filename_regex = '.*'
 
@@ -156,6 +160,13 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
                     mint, maxt = disambiguate_timestamp(date_str, self.date_format)
                     time = (mint + maxt) / 2
                     sample['time'] = torch.tensor(time)
+                elif 'start' in match.groupdict() and 'stop' in match.groupdict():
+                    start = match.group('start')
+                    stop = match.group('stop')
+                    mint, _ = disambiguate_timestamp(start, self.date_format)
+                    _, maxt = disambiguate_timestamp(stop, self.date_format)
+                    time = (mint + maxt) / 2
+                    sample['time'] = torch.tensor(time)
 
         return sample
 
@@ -170,7 +181,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         """
         sample: dict[str, Tensor] = {}
         with rio.open(path) as f:
-            sample['mask'] = torch.tensor(f.read(1).astype(np.int64))
+            sample['mask'] = torch.tensor(f.read(1)).to(self.dtype)
 
         return sample
 
