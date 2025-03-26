@@ -1,0 +1,12 @@
+model:
+  class_path: ObjectDetectionTask
+  init_args:
+    model: 'faster-rcnn'
+    backbone: 'resnet18'
+    num_classes: 6
+data:
+  class_path: ReforesTreeDataModule
+  init_args:
+    batch_size: 1
+  dict_kwargs:
+    root: 'tests/data/reforestree'

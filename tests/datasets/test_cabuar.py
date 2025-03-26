@@ -14,7 +14,7 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import CaBuAr, DatasetNotFoundError
 
-pytest.importorskip('h5py', minversion='3.6')
+pytest.importorskip('h5py', minversion='3.8')
 
 
 class TestCaBuAr:

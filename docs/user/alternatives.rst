@@ -115,3 +115,5 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _segment-geospatial: https://github.com/opengeos/segment-geospatial
 .. _TerraTorch: https://github.com/IBM/terratorch
 .. _scikit-eo: https://github.com/yotarazona/scikit-eo
+.. _GeoAI: https://github.com/opengeos/geoai
+.. _OTBTF: https://github.com/remicres/otbtf
