@@ -478,6 +478,7 @@ class ViTHuge14_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+
 class ViTSmall14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
     """Vision Transformer Small Patch Size 14 (DINOv2) weights.
 
@@ -517,6 +518,7 @@ class ViTSmall14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+
 class ViTBase14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
     """Vision Transformer Base Patch Size 14 (DINOv2) weights.
 
@@ -555,6 +557,7 @@ class ViTBase14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
             'bands': _sentinel1_grd_bands,
         },
     )
+
 
 def vit_small_patch16_224(
     weights: ViTSmall16_Weights | None = None, *args: Any, **kwargs: Any
@@ -707,6 +710,7 @@ def vit_huge_patch14_224(
 
     return model
 
+
 def vit_small_patch14_dinov2(
     weights: ViTSmall14_DINOv2_Weights | None = None, *args: Any, **kwargs: Any
 ) -> VisionTransformer:
@@ -742,6 +746,7 @@ def vit_small_patch14_dinov2(
         assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
 
     return model
+
 
 def vit_base_patch14_dinov2(
     weights: ViTBase14_DINOv2_Weights | None = None, *args: Any, **kwargs: Any

@@ -11,18 +11,18 @@ from pytest import MonkeyPatch
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
+    ViTBase14_DINOv2_Weights,
     ViTBase16_Weights,
     ViTHuge14_Weights,
     ViTLarge16_Weights,
-    ViTSmall16_Weights,
     ViTSmall14_DINOv2_Weights,
-    ViTBase14_DINOv2_Weights,
+    ViTSmall16_Weights,
+    vit_base_patch14_dinov2,
     vit_base_patch16_224,
     vit_huge_patch14_224,
     vit_large_patch16_224,
-    vit_small_patch16_224,
     vit_small_patch14_dinov2,
-    vit_base_patch14_dinov2,
+    vit_small_patch16_224,
 )
 
 
@@ -215,6 +215,7 @@ class TestViTHuge14:
     def test_vit_download(self, weights: WeightsEnum) -> None:
         vit_huge_patch14_224(weights=weights)
 
+
 class TestViTSmall14_DINOv2:
     @pytest.fixture(params=[*ViTSmall14_DINOv2_Weights])
     def weights(self, request: SubRequest) -> WeightsEnum:
@@ -230,7 +231,9 @@ class TestViTSmall14_DINOv2:
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'], in_chans=weights.meta['in_chans'], img_size=weights.meta['img_size']
+            weights.meta['model'],
+            in_chans=weights.meta['in_chans'],
+            img_size=weights.meta['img_size'],
         )
         torch.save(model.state_dict(), path)
         try:
@@ -256,14 +259,13 @@ class TestViTSmall14_DINOv2:
             h = w = img_size
         else:
             h, w = img_size
-        sample = {
-            'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)
-        }
+        sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
         mocked_weights.transforms(sample)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
         vit_small_patch14_dinov2(weights=weights)
+
 
 class TestViTBase14_DINOv2:
     @pytest.fixture(params=[*ViTBase14_DINOv2_Weights])
@@ -280,7 +282,9 @@ class TestViTBase14_DINOv2:
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'], in_chans=weights.meta['in_chans'], img_size=weights.meta['img_size']
+            weights.meta['model'],
+            in_chans=weights.meta['in_chans'],
+            img_size=weights.meta['img_size'],
         )
         torch.save(model.state_dict(), path)
         try:
@@ -306,9 +310,7 @@ class TestViTBase14_DINOv2:
             h = w = img_size
         else:
             h, w = img_size
-        sample = {
-            'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)
-        }
+        sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
         mocked_weights.transforms(sample)
 
     @pytest.mark.slow
