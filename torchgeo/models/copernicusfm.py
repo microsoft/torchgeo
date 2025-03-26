@@ -436,7 +436,7 @@ class CopernicusFM(nn.Module):
             hyper_dim=hyper_dim, kernel_size=patch_size, embed_dim=embed_dim, input_mode='spectral'
         )
         self.patch_embed_variable = DynamicPatchEmbed(
-            hyper_dim=128, kernel_size=16, embed_dim=embed_dim, input_mode='variable'
+            hyper_dim=hyper_dim, kernel_size=patch_size, embed_dim=embed_dim, input_mode='variable'
         )
 
         self.num_patches = (img_size // patch_size) ** 2
