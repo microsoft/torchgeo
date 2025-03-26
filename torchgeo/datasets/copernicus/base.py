@@ -25,6 +25,7 @@ from torchgeo.datasets.geo import NonGeoDataset
 from ..errors import DatasetNotFoundError, RGBBandsMissingError
 from ..utils import (
     Path,
+    array_to_tensor,
     disambiguate_timestamp,
     download_and_extract_archive,
     extract_archive,
@@ -181,7 +182,7 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
         """
         sample: dict[str, Tensor] = {}
         with rio.open(path) as f:
-            sample['mask'] = torch.tensor(f.read(1)).to(self.dtype)
+            sample['mask'] = array_to_tensor(f.read(1)).to(self.dtype)
 
         return sample
 
