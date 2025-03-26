@@ -49,7 +49,7 @@ class SpaceNet2(SpaceNet):
             - 0.30
         *   - Chip size (px)
             - 650 x 650
-            - 162 x 162
+            - 163 x 163
             - 650 x 650
             - 650 x 650
 

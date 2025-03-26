@@ -25,7 +25,7 @@ class SpaceNet7(SpaceNet):
     * No. of test samples: 466
     * No. of building footprints: 11,080,000
     * Area Coverage: 41,000 sq km
-    * Chip size: 1023 x 1023
+    * Chip size: 1024 x 1024
     * GSD: ~4m
 
     Dataset format:

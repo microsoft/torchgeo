@@ -20,7 +20,7 @@ class SpaceNet1(SpaceNet):
     * No. of polygons: 382,534 building labels
     * Area Coverage: 2544 sq km
     * GSD: 1 m (8 band),  50 cm (rgb)
-    * Chip size: 101 x 110 (8 band), 406 x 438 (rgb)
+    * Chip size: 102 x 110 (8 band), 406 x 439 (rgb)
 
     Dataset format:
 
