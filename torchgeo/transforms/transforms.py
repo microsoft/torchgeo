@@ -9,7 +9,6 @@ import kornia.augmentation as K
 import torch
 from einops import rearrange
 from kornia.contrib import extract_tensor_patches
-from kornia.geometry import crop_by_indices
 from torch import Tensor
 from typing_extensions import deprecated
 
@@ -17,102 +16,6 @@ from typing_extensions import deprecated
 @deprecated('Use kornia.augmentation.AugmentationSequential instead')
 class AugmentationSequential(K.AugmentationSequential):
     """Deprecated wrapper around kornia.augmentation.AugmentationSequential."""
-
-
-@deprecated(
-    'Use kornia.augmentation.RandomCrop and torchgeo.transforms._ExtractPatches instead'
-)
-class _RandomNCrop(K.GeometricAugmentationBase2D):
-    """Take N random crops of a tensor."""
-
-    def __init__(self, size: tuple[int, int], num: int) -> None:
-        """Initialize a new _RandomNCrop instance.
-
-        Args:
-            size: desired output size (out_h, out_w) of the crop
-            num: number of crops to take
-        """
-        super().__init__(p=1)
-        self._param_generator: _NCropGenerator = _NCropGenerator(size, num)
-        self.flags = {'size': size, 'num': num}
-
-    def compute_transformation(
-        self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Any]
-    ) -> Tensor:
-        """Compute the transformation.
-
-        Args:
-            input: the input tensor
-            params: generated parameters
-            flags: static parameters
-
-        Returns:
-            the transformation
-        """
-        out: Tensor = self.identity_matrix(input)
-        return out
-
-    def apply_transform(
-        self,
-        input: Tensor,
-        params: dict[str, Tensor],
-        flags: dict[str, Any],
-        transform: Tensor | None = None,
-    ) -> Tensor:
-        """Apply the transform.
-
-        Args:
-            input: the input tensor
-            params: generated parameters
-            flags: static parameters
-            transform: the geometric transformation tensor
-
-        Returns:
-            the augmented input
-        """
-        out = []
-        for i in range(flags['num']):
-            out.append(crop_by_indices(input, params['src'][i], flags['size']))
-        return torch.cat(out)
-
-
-@deprecated(
-    'Use kornia.augmentation.RandomCrop and torchgeo.transforms._ExtractPatches instead'
-)
-class _NCropGenerator(K.random_generator.CropGenerator):
-    """Generate N random crops."""
-
-    def __init__(self, size: tuple[int, int] | Tensor, num: int) -> None:
-        """Initialize a new _NCropGenerator instance.
-
-        Args:
-            size: desired output size (out_h, out_w) of the crop
-            num: number of crops to generate
-        """
-        super().__init__(size)
-        self.num = num
-
-    def forward(
-        self, batch_shape: tuple[int, ...], same_on_batch: bool = False
-    ) -> dict[str, Tensor]:
-        """Generate the crops.
-
-        Args:
-            batch_shape: input size (b, c?, in_h, in_w)
-            same_on_batch: apply the same transformation across the batch
-
-        Returns:
-            the randomly generated parameters
-        """
-        out = []
-        for _ in range(self.num):
-            out.append(super().forward(batch_shape, same_on_batch))
-        return {
-            'src': torch.stack([x['src'] for x in out]),
-            'dst': torch.stack([x['dst'] for x in out]),
-            'input_size': out[0]['input_size'],
-            'output_size': out[0]['output_size'],
-        }
 
 
 # TODO: contribute these to Kornia and delete this file
