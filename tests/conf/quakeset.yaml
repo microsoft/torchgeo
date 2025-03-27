@@ -1,10 +1,10 @@
 model:
   class_path: ClassificationTask
   init_args:
-    loss: 'ce'
+    loss: 'bce'
     model: 'resnet18'
     in_channels: 4
-    num_classes: 2
+    task: 'binary'
 data:
   class_path: QuakeSetDataModule
   init_args:
