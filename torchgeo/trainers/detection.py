@@ -6,6 +6,7 @@
 from functools import partial
 from typing import Any
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import torch
 import torchvision.models.detection
@@ -289,6 +290,12 @@ class ObjectDetectionTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
+            aug = K.AugmentationSequential(
+                K.Denormalize(datamodule.mean, datamodule.std),
+                data_keys=None,
+                keepdim=True,
+            )
+            batch = aug(batch)
             batch['prediction_bbox_xyxy'] = [b['boxes'].cpu() for b in y_hat]
             batch['prediction_label'] = [b['labels'].cpu() for b in y_hat]
             batch['prediction_score'] = [b['scores'].cpu() for b in y_hat]

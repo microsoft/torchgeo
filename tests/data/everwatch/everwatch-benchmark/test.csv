@@ -1,5 +1,5 @@
 image_path,xmin,ymin,xmax,ymax,label
 test1.png,5,5,32,32,White Ibis
 test1.png,33,33,59,59,Great Blue Heron
-test2.png,5,5,32,32,Snowy Egret
+test2.png,5,5,32,32,Unknown White
 test2.png,33,33,59,59,Anhinga
