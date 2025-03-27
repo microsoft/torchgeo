@@ -47,6 +47,9 @@ class BioMassters(NonGeoDataset):
 
     * https://nascetti-a.github.io/BioMasster/
 
+    .. note::
+        This dataset can be downloaded from `Torchgeo Hugging Face Hub <https://hf.co/datasets/torchgeo/biomassters>`_.
+
     .. versionadded:: 0.5
     """
 
