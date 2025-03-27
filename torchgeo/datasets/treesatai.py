@@ -184,7 +184,7 @@ class TreeSatAI(NonGeoDataset):
             Data and label at that index.
         """
         file = self.files[index]
-        label = torch.zeros(len(self.classes))
+        label = torch.zeros(len(self.classes), dtype=torch.long)
         for genus, _ in self.labels[file]:
             i = self.classes.index(genus)
             label[i] = 1

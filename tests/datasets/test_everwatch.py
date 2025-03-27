@@ -19,7 +19,7 @@ class TestEverWatch:
     def dataset(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> EverWatch:
         data_dir = os.path.join('tests', 'data', 'everwatch')
         url = os.path.join(data_dir, 'everwatch-benchmark.zip')
-        md5 = '04c10a3102e884536354f0fa2cf0d651'
+        md5 = '6d797a56dc7edea89109b38c47c55e53'
         monkeypatch.setattr(EverWatch, 'url', url)
         monkeypatch.setattr(EverWatch, 'md5', md5)
         root = tmp_path

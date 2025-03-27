@@ -24,6 +24,7 @@ EVERWATCH_CLASSES = (
     'Wood Stork',
     'Roseate Spoonbill',
     'Anhinga',
+    'Unknown White',
 )
 
 
@@ -49,7 +50,7 @@ def create_dummy_annotations(csv_path: str, image_names: list[str]) -> None:
         'train2.png': [EVERWATCH_CLASSES[2], EVERWATCH_CLASSES[3]],
         'train3.png': [EVERWATCH_CLASSES[4], EVERWATCH_CLASSES[5]],
         'test1.png': [EVERWATCH_CLASSES[0], EVERWATCH_CLASSES[2]],
-        'test2.png': [EVERWATCH_CLASSES[3], EVERWATCH_CLASSES[6]],
+        'test2.png': [EVERWATCH_CLASSES[7], EVERWATCH_CLASSES[6]],
     }
 
     for img_name in image_names:

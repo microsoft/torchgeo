@@ -40,6 +40,10 @@ class TestCopernicusBench:
             ('lcz_s2', 'l3_lcz_s2', {}),
             ('biomass_s3', 'l3_biomass_s3', {'mode': 'static'}),
             ('biomass_s3', 'l3_biomass_s3', {'mode': 'time-series'}),
+            ('aq_no2_s5p', 'l3_airquality_s5p', {'mode': 'annual'}),
+            ('aq_no2_s5p', 'l3_airquality_s5p', {'mode': 'seasonal'}),
+            ('aq_o3_s5p', 'l3_airquality_s5p', {'mode': 'annual'}),
+            ('aq_o3_s5p', 'l3_airquality_s5p', {'mode': 'seasonal'}),
         ]
     )
     def dataset(self, request: SubRequest) -> CopernicusBench:
@@ -108,6 +112,8 @@ class TestCopernicusBench:
 
         if dataset.name.endswith('s1'):
             all_bands = ['VV']
+        elif dataset.name.endswith('s5p'):
+            pytest.skip('single-band dataset')
 
         dataset = CopernicusBench(dataset.name, dataset.root, bands=all_bands)
         match = 'Dataset does not contain some of the RGB bands'
