@@ -19,7 +19,9 @@ class AugmentationSequential(K.AugmentationSequential):
     """Deprecated wrapper around kornia.augmentation.AugmentationSequential."""
 
 
-# TODO: contribute these to Kornia and delete this file
+@deprecated(
+    'Use kornia.augmentation.RandomCrop and torchgeo.transforms._ExtractPatches instead'
+)
 class _RandomNCrop(K.GeometricAugmentationBase2D):
     """Take N random crops of a tensor."""
 
@@ -74,6 +76,9 @@ class _RandomNCrop(K.GeometricAugmentationBase2D):
         return torch.cat(out)
 
 
+@deprecated(
+    'Use kornia.augmentation.RandomCrop and torchgeo.transforms._ExtractPatches instead'
+)
 class _NCropGenerator(K.random_generator.CropGenerator):
     """Generate N random crops."""
 
@@ -110,6 +115,7 @@ class _NCropGenerator(K.random_generator.CropGenerator):
         }
 
 
+# TODO: contribute these to Kornia and delete this file
 class _ExtractPatches(K.GeometricAugmentationBase2D):
     """Extract patches from an image or mask."""
 
