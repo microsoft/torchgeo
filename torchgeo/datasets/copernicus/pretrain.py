@@ -58,11 +58,11 @@ class CopernicusPretrain:
     }
 
     def __init__(
-        self, 
-        shards_path: str, 
-        shuffle: int = 0, 
-        shardshuffle: bool = False, 
-        resampled: bool = False
+        self,
+        shards_path: str,
+        shuffle: int = 0,
+        shardshuffle: bool = False,
+        resampled: bool = False,
     ) -> None:
         """Initialize a new CopernicusPretrain instance.
 
@@ -130,15 +130,15 @@ class CopernicusPretrain:
             .map(self.sample_one_local_patch)  # sample one local patch for S1 and S2
             .map(self.sample_one_time_stamp)  # sample one timestamp for all modalities
             .to_tuple(
-                's1_grd.pth', # 2x264x264
-                's2_toa.pth', # 13x264x264
-                's3_olci.pth', # 21x96x96
-                's5p_co.pth', # 1x28x28
-                's5p_no2.pth', # 1x28x28
-                's5p_o3.pth', # 1x28x28
-                's5p_so2.pth', # 1x28x28
-                'dem.pth', # 1x960x960
-                'json', # metadata
+                's1_grd.pth',  # 2x264x264
+                's2_toa.pth',  # 13x264x264
+                's3_olci.pth',  # 21x96x96
+                's5p_co.pth',  # 1x28x28
+                's5p_no2.pth',  # 1x28x28
+                's5p_o3.pth',  # 1x28x28
+                's5p_so2.pth',  # 1x28x28
+                'dem.pth',  # 1x960x960
+                'json',  # metadata
             )  # convert to tuple
         )
 
