@@ -85,13 +85,17 @@ class TestViTBase16:
         tmp_path: Path,
         monkeypatch: MonkeyPatch,
         weights: WeightsEnum,
+        features_only: bool,
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'], in_chans=weights.meta['in_chans']
+            weights.meta['model'], 
+            in_chans=weights.meta['in_chans'],
+            features_only=features_only,
         )
-        torch.save(model.state_dict(), path)
+        target_model = model.model if features_only else model
+        torch.save(target_model.state_dict(), path)
         try:
             monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
@@ -101,8 +105,8 @@ class TestViTBase16:
     def test_vit(self) -> None:
         vit_base_patch16_224()
 
-    def test_vit_weights(self, mocked_weights: WeightsEnum) -> None:
-        vit_base_patch16_224(weights=mocked_weights)
+    def test_vit_weights(self, mocked_weights: WeightsEnum, features_only: bool) -> None:
+        vit_base_patch16_224(weights=mocked_weights, features_only=features_only)
 
     def test_bands(self, mocked_weights: WeightsEnum) -> None:
         if 'bands' in mocked_weights.meta:
@@ -131,13 +135,17 @@ class TestViTLarge16:
         tmp_path: Path,
         monkeypatch: MonkeyPatch,
         weights: WeightsEnum,
+        features_only: bool,
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'], in_chans=weights.meta['in_chans']
+            weights.meta['model'],
+            in_chans=weights.meta['in_chans'],
+            features_only=features_only,
         )
-        torch.save(model.state_dict(), path)
+        target_model = model.model if features_only else model
+        torch.save(target_model.state_dict(), path)
         try:
             monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
@@ -147,8 +155,8 @@ class TestViTLarge16:
     def test_vit(self) -> None:
         vit_large_patch16_224()
 
-    def test_vit_weights(self, mocked_weights: WeightsEnum) -> None:
-        vit_large_patch16_224(weights=mocked_weights)
+    def test_vit_weights(self, mocked_weights: WeightsEnum, features_only: bool) -> None:
+        vit_large_patch16_224(weights=mocked_weights, features_only=features_only)
 
     def test_bands(self, mocked_weights: WeightsEnum) -> None:
         if 'bands' in mocked_weights.meta:
@@ -177,13 +185,17 @@ class TestViTHuge14:
         tmp_path: Path,
         monkeypatch: MonkeyPatch,
         weights: WeightsEnum,
+        features_only: bool,
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'], in_chans=weights.meta['in_chans']
+            weights.meta['model'],
+            in_chans=weights.meta['in_chans'],
+            features_only=features_only,
         )
-        torch.save(model.state_dict(), path)
+        target_model = model.model if features_only else model
+        torch.save(target_model.state_dict(), path)
         try:
             monkeypatch.setattr(weights.value, 'url', str(path))
         except AttributeError:
@@ -193,8 +205,8 @@ class TestViTHuge14:
     def test_vit(self) -> None:
         vit_huge_patch14_224()
 
-    def test_vit_weights(self, mocked_weights: WeightsEnum) -> None:
-        vit_huge_patch14_224(weights=mocked_weights)
+    def test_vit_weights(self, mocked_weights: WeightsEnum, features_only: bool) -> None:
+        vit_huge_patch14_224(weights=mocked_weights, features_only=features_only)
 
     def test_bands(self, mocked_weights: WeightsEnum) -> None:
         if 'bands' in mocked_weights.meta:
