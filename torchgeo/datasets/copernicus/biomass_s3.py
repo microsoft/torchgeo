@@ -9,6 +9,7 @@ from collections.abc import Callable, Sequence
 from typing import Literal
 
 import pandas as pd
+import torch
 from torch import Tensor
 
 from ..utils import Path, stack_samples
@@ -37,8 +38,9 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
     url = 'https://hf.co/datasets/wangyi111/Copernicus-Bench/resolve/9d252acd3aa0e3da3128e05c6f028647f0e48e5f/l3_biomass_s3/biomass_s3.zip'
     md5 = '4769ab8c2c23cd8957b99e15e071931c'
     zipfile = 'biomass_s3.zip'
-    filename = 'static_fnames-{}.csv'
     directory = 'biomass_s3'
+    filename = 'static_fnames-{}.csv'
+    dtype = torch.float
     filename_regex = r'S3[AB]_(?P<date>\d{8}T\d{6})'
     all_bands = (
         'Oa01_radiance',

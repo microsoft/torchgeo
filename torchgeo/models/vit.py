@@ -477,8 +477,8 @@ class ViTHuge14_Weights(WeightsEnum):  # type: ignore[misc]
             'bands': _sentinel1_grd_bands,
         },
     )
-
-
+    
+    
 class ViTSmall14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
     """Vision Transformer Small Patch Size 14 (DINOv2) weights.
 
@@ -605,7 +605,7 @@ def vit_small_patch16_224(
 
 def vit_base_patch16_224(
     weights: ViTBase16_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer:
+) -> VisionTransformer | nn.ModuleDict:
     """Vision Transform (ViT) base patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -624,13 +624,20 @@ def vit_base_patch16_224(
     """
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
-
-    model: VisionTransformer = timm.create_model(
+    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
+    model: VisionTransformer | nn.ModuleDict = timm.create_model(
         'vit_base_patch16_224', *args, **kwargs
     )
 
+    if kwargs.get('features_only', False):
+        model = cast(nn.ModuleDict, model)
+        target_model = cast(VisionTransformer, model.model)
+    else:
+        model = cast(VisionTransformer, model)
+        target_model = model
+
     if weights:
-        missing_keys, unexpected_keys = model.load_state_dict(
+        missing_keys, unexpected_keys = target_model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}
@@ -641,7 +648,7 @@ def vit_base_patch16_224(
 
 def vit_large_patch16_224(
     weights: ViTLarge16_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer:
+) -> VisionTransformer | nn.ModuleDict:
     """Vision Transform (ViT) large patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -660,13 +667,20 @@ def vit_large_patch16_224(
     """
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
-
-    model: VisionTransformer = timm.create_model(
+    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
+    model: VisionTransformer | nn.ModuleDict = timm.create_model(
         'vit_large_patch16_224', *args, **kwargs
     )
 
+    if kwargs.get('features_only', False):
+        model = cast(nn.ModuleDict, model)
+        target_model = cast(VisionTransformer, model.model)
+    else:
+        model = cast(VisionTransformer, model)
+        target_model = model
+
     if weights:
-        missing_keys, unexpected_keys = model.load_state_dict(
+        missing_keys, unexpected_keys = target_model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}
@@ -677,7 +691,7 @@ def vit_large_patch16_224(
 
 def vit_huge_patch14_224(
     weights: ViTHuge14_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer:
+) -> VisionTransformer | nn.ModuleDict:
     """Vision Transform (ViT) huge patch size 14 model.
 
     If you use this model in your research, please cite the following paper:
@@ -696,13 +710,20 @@ def vit_huge_patch14_224(
     """
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
-
-    model: VisionTransformer = timm.create_model(
+    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
+    model: VisionTransformer | nn.ModuleDict = timm.create_model(
         'vit_huge_patch14_224', *args, **kwargs
     )
-
+      
+    if kwargs.get('features_only', False):
+        model = cast(nn.ModuleDict, model)
+        target_model = cast(VisionTransformer, model.model)
+    else:
+        model = cast(VisionTransformer, model)
+        target_model = model
+      
     if weights:
-        missing_keys, unexpected_keys = model.load_state_dict(
+        missing_keys, unexpected_keys = target_model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}
@@ -713,7 +734,7 @@ def vit_huge_patch14_224(
 
 def vit_small_patch14_dinov2(
     weights: ViTSmall14_DINOv2_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer:
+) -> VisionTransformer | nn.ModuleDict:
     """Vision Transform (ViT) small patch size 14 model for DINOv2.
 
     If you use this model in your research, please cite the following paper:
@@ -733,11 +754,18 @@ def vit_small_patch14_dinov2(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
         kwargs['img_size'] = weights.meta['img_size']
-
-    model: VisionTransformer = timm.create_model(
+    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
+    model: VisionTransformer | nn.ModuleDict = timm.create_model(
         'vit_small_patch14_dinov2', *args, **kwargs
     )
 
+    if kwargs.get('features_only', False):
+        model = cast(nn.ModuleDict, model)
+        target_model = cast(VisionTransformer, model.model)
+    else:
+        model = cast(VisionTransformer, model)
+        target_model = model
+      
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
@@ -770,13 +798,20 @@ def vit_base_patch14_dinov2(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
         kwargs['img_size'] = weights.meta['img_size']
-
-    model: VisionTransformer = timm.create_model(
-        'vit_base_patch14_dinov2', *args, **kwargs
+    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
+    model: VisionTransformer | nn.ModuleDict = timm.create_model(
+        'vit_huge_patch14_224', *args, **kwargs
     )
 
+    if kwargs.get('features_only', False):
+        model = cast(nn.ModuleDict, model)
+        target_model = cast(VisionTransformer, model.model)
+    else:
+        model = cast(VisionTransformer, model)
+        target_model = model
+
     if weights:
-        missing_keys, unexpected_keys = model.load_state_dict(
+        missing_keys, unexpected_keys = target_model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}

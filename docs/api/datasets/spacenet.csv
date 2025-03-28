@@ -1,0 +1,9 @@
+Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
+SpaceNet 1,I,WorldView-2,CC-BY-SA-4.0,"9,735",-,"406x439, 102x110",0.5--1,"RGB, MSI"
+SpaceNet 2,I,WorldView-3,CC-BY-SA-4.0,"14,119",-,"650x650, 163x163",0.3--1.24,"RGB, MSI"
+SpaceNet 3,I,WorldView-3,CC-BY-SA-4.0,"3,477",7,"1,300x1,300, 325x325",0.3--1.24,"RGB, MSI"
+SpaceNet 4,I,WorldView-2,CC-BY-SA-4.0,"1,991",-,"900x900, 225x225",0.46--1.67,"RGB, MSI"
+SpaceNet 5,I,WorldView-3,CC-BY-SA-4.0,"2,588",-,"1,300x1,300, 325x325",0.3--1.24,"RGB, MSI"
+SpaceNet 6,I,WorldView-2,CC-BY-SA-4.0,"5,462",-,"900x900, 450x450",0.5--2,"SAR, RGB, MSI"
+SpaceNet 7,I,Dove,CC-BY-SA-4.0,"1,889",-,"1,024x1,024",4,"RGB"
+SpaceNet 8,I,Maxar,CC-BY-SA-4.0,"1,289",8,"1,300x1,300",0.3--0.8,"RGB"
