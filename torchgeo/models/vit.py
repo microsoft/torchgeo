@@ -477,8 +477,8 @@ class ViTHuge14_Weights(WeightsEnum):  # type: ignore[misc]
             'bands': _sentinel1_grd_bands,
         },
     )
-    
-    
+
+
 class ViTSmall14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
     """Vision Transformer Small Patch Size 14 (DINOv2) weights.
 
@@ -714,14 +714,14 @@ def vit_huge_patch14_224(
     model: VisionTransformer | nn.ModuleDict = timm.create_model(
         'vit_huge_patch14_224', *args, **kwargs
     )
-      
+
     if kwargs.get('features_only', False):
         model = cast(nn.ModuleDict, model)
         target_model = cast(VisionTransformer, model.model)
     else:
         model = cast(VisionTransformer, model)
         target_model = model
-      
+
     if weights:
         missing_keys, unexpected_keys = target_model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
@@ -765,9 +765,9 @@ def vit_small_patch14_dinov2(
     else:
         model = cast(VisionTransformer, model)
         target_model = model
-      
+
     if weights:
-        missing_keys, unexpected_keys = model.load_state_dict(
+        missing_keys, unexpected_keys = target_model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}

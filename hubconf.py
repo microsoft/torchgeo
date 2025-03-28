@@ -24,9 +24,6 @@ from torchgeo.models import (
     vit_huge_patch14_224,
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
-    vit_base_patch16_224,
-    vit_huge_patch14_224,
-    vit_large_patch16_224,
     vit_small_patch16_224,
 )
 
@@ -47,9 +44,6 @@ __all__ = (
     'vit_huge_patch14_224',
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
-    'vit_base_patch16_224',
-    'vit_huge_patch14_224',
-    'vit_large_patch16_224',
     'vit_small_patch16_224',
 )
 

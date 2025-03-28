@@ -22,13 +22,6 @@ from torchgeo.models import (
     vit_huge_patch14_224,
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
-    ViTBase16_Weights,
-    ViTHuge14_Weights,
-    ViTLarge16_Weights,
-    ViTSmall16_Weights,
-    vit_base_patch16_224,
-    vit_huge_patch14_224,
-    vit_large_patch16_224,
     vit_small_patch16_224,
 )
 
@@ -273,7 +266,8 @@ class TestViTSmall14_DINOv2:
     def test_vit(self) -> None:
         vit_small_patch14_dinov2()
 
-    def test_vit_weights(self, mocked_weights: WeightsEnum, features_only: bool
+    def test_vit_weights(
+        self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
         vit_small_patch14_dinov2(weights=mocked_weights, features_only=features_only)
 
@@ -328,7 +322,8 @@ class TestViTBase14_DINOv2:
     def test_vit(self) -> None:
         vit_base_patch14_dinov2()
 
-    def test_vit_weights(self, mocked_weights: WeightsEnum, features_only: bool
+    def test_vit_weights(
+        self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
         vit_base_patch14_dinov2(weights=mocked_weights, features_only=features_only)
 
