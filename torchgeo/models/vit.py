@@ -800,7 +800,7 @@ def vit_base_patch14_dinov2(
         kwargs['img_size'] = weights.meta['img_size']
     # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
     model: VisionTransformer | nn.ModuleDict = timm.create_model(
-        'vit_huge_patch14_224', *args, **kwargs
+        'vit_base_patch14_dinov2', *args, **kwargs
     )
 
     if kwargs.get('features_only', False):
