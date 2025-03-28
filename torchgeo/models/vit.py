@@ -778,7 +778,7 @@ def vit_small_patch14_dinov2(
 
 def vit_base_patch14_dinov2(
     weights: ViTBase14_DINOv2_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer:
+) -> VisionTransformer | nn.ModuleDict:
     """Vision Transform (ViT) base patch size 14 model for DINOv2.
 
     If you use this model in your research, please cite the following paper:
