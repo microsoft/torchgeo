@@ -30,7 +30,16 @@ from .resnet import (
 )
 from .scale_mae import ScaleMAE, ScaleMAELarge16_Weights, scalemae_large_patch16
 from .swin import Swin_V2_B_Weights, Swin_V2_T_Weights, swin_v2_b, swin_v2_t
-from .vit import ViTSmall16_Weights, vit_small_patch16_224
+from .vit import (
+    ViTBase16_Weights,
+    ViTHuge14_Weights,
+    ViTLarge16_Weights,
+    ViTSmall16_Weights,
+    vit_base_patch16_224,
+    vit_huge_patch14_224,
+    vit_large_patch16_224,
+    vit_small_patch16_224,
+)
 
 __all__ = (
     'CROMA',
@@ -56,6 +65,9 @@ __all__ = (
     'ScaleMAELarge16_Weights',
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
+    'ViTBase16_Weights',
+    'ViTHuge14_Weights',
+    'ViTLarge16_Weights',
     'ViTSmall16_Weights',
     'copernicusfm_base',
     'croma_base',
@@ -74,5 +86,8 @@ __all__ = (
     'scalemae_large_patch16',
     'swin_v2_b',
     'swin_v2_t',
+    'vit_base_patch16_224',
+    'vit_huge_patch14_224',
+    'vit_large_patch16_224',
     'vit_small_patch16_224',
 )
