@@ -534,7 +534,8 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    SENTINEL1_GRD_DECUR = Weights(
+    # ALL is deprecated, use GRD instead
+    SENTINEL1_ALL_DECUR = SENTINEL1_GRD_DECUR = Weights(
         url='https://huggingface.co/torchgeo/decur/resolve/9328eeb90c686a88b30f8526ed757b4bc0f12027/rn50_ssl4eo-s12_sar_decur_ep100-f0e69ba2.pth',
         transforms=_ssl4eo_s12_transforms_s1,
         meta={
@@ -548,7 +549,8 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    SENTINEL1_GRD_MOCO = Weights(
+    # ALL is deprecated, use GRD instead
+    SENTINEL1_ALL_MOCO = SENTINEL1_GRD_MOCO = Weights(
         url='https://hf.co/torchgeo/resnet50_sentinel1_all_moco/resolve/e79862c667853c10a709bdd77ea8ffbad0e0f1cf/resnet50_sentinel1_all_moco-906e4356.pth',
         transforms=_ssl4eo_s12_transforms_s1,
         meta={
