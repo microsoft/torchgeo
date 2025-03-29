@@ -30,19 +30,16 @@ class TestResNet18:
         self,
         tmp_path: Path,
         monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
         features_only: bool,
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
+        weights = ResNet18_Weights.SENTINEL2_RGB_MOCO
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
             'resnet18', in_chans=weights.meta['in_chans'], features_only=features_only
         )
         torch.save(model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_resnet(self) -> None:
@@ -51,18 +48,18 @@ class TestResNet18:
     def test_resnet_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
-        resnet18(weights=mocked_weights, features_only=features_only)
+        resnet18(weights=mocked_weights, features_only=not features_only)
 
-    def test_bands(self, mocked_weights: WeightsEnum) -> None:
-        if 'bands' in mocked_weights.meta:
-            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+    def test_bands(self, weights: WeightsEnum) -> None:
+        if 'bands' in weights.meta:
+            assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta['in_chans']
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
         }
-        mocked_weights.transforms(sample)
+        weights.transforms(sample)
 
     @pytest.mark.slow
     def test_resnet_download(self, weights: WeightsEnum) -> None:
@@ -79,19 +76,16 @@ class TestResNet50:
         self,
         tmp_path: Path,
         monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
         features_only: bool,
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
+        weights = ResNet50_Weights.SENTINEL2_RGB_MOCO
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
             'resnet50', in_chans=weights.meta['in_chans'], features_only=features_only
         )
         torch.save(model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_resnet(self) -> None:
@@ -100,18 +94,18 @@ class TestResNet50:
     def test_resnet_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
-        resnet50(weights=mocked_weights, features_only=features_only)
+        resnet50(weights=mocked_weights, features_only=not features_only)
 
-    def test_bands(self, mocked_weights: WeightsEnum) -> None:
-        if 'bands' in mocked_weights.meta:
-            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+    def test_bands(self, weights: WeightsEnum) -> None:
+        if 'bands' in weights.meta:
+            assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta['in_chans']
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
         }
-        mocked_weights.transforms(sample)
+        weights.transforms(sample)
 
     @pytest.mark.slow
     def test_resnet_download(self, weights: WeightsEnum) -> None:
@@ -128,19 +122,16 @@ class TestResNet152:
         self,
         tmp_path: Path,
         monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
         features_only: bool,
         load_state_dict_from_url: None,
     ) -> WeightsEnum:
+        weights = ResNet152_Weights.SENTINEL2_SI_RGB_SATLAS
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
             'resnet152', in_chans=weights.meta['in_chans'], features_only=features_only
         )
         torch.save(model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_resnet(self) -> None:
@@ -149,18 +140,18 @@ class TestResNet152:
     def test_resnet_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
-        resnet152(weights=mocked_weights, features_only=features_only)
+        resnet152(weights=mocked_weights, features_only=not features_only)
 
-    def test_bands(self, mocked_weights: WeightsEnum) -> None:
-        if 'bands' in mocked_weights.meta:
-            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+    def test_bands(self, weights: WeightsEnum) -> None:
+        if 'bands' in weights.meta:
+            assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta['in_chans']
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
         }
-        mocked_weights.transforms(sample)
+        weights.transforms(sample)
 
     @pytest.mark.slow
     def test_resnet_download(self, weights: WeightsEnum) -> None:

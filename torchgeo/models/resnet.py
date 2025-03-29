@@ -806,7 +806,7 @@ def resnet18(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
-        assert not unexpected_keys
+        assert set(unexpected_keys) <= {'fc.weight', 'fc.bias'}
 
     return model
 

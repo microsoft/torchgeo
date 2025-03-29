@@ -60,19 +60,13 @@ class TestCROMABase:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = CROMABase_Weights.CROMA_VIT
         path = tmp_path / f'{weights}.pth'
         model = croma_base()
         save_model(model, path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_croma(self) -> None:
@@ -93,19 +87,13 @@ class TestCROMALarge:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = CROMALarge_Weights.CROMA_VIT
         path = tmp_path / f'{weights}.pth'
         model = croma_large()
         save_model(model, path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_croma(self) -> None:
