@@ -33,25 +33,15 @@ class TestViTSmall16:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        features_only: bool,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = ViTSmall16_Weights.SENTINEL1_GRD_MAE
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'],
-            in_chans=weights.meta['in_chans'],
-            features_only=features_only,
+            weights.meta['model'], in_chans=weights.meta['in_chans']
         )
-        target_model = model.model if features_only else model
-        torch.save(target_model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_vit(self) -> None:
@@ -62,16 +52,16 @@ class TestViTSmall16:
     ) -> None:
         vit_small_patch16_224(weights=mocked_weights, features_only=features_only)
 
-    def test_bands(self, mocked_weights: WeightsEnum) -> None:
-        if 'bands' in mocked_weights.meta:
-            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+    def test_bands(self, weights: WeightsEnum) -> None:
+        if 'bands' in weights.meta:
+            assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta['in_chans']
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
-        mocked_weights.transforms(sample)
+        weights.transforms(sample)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
@@ -85,25 +75,15 @@ class TestViTBase16:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        features_only: bool,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = ViTBase16_Weights.SENTINEL1_GRD_MAE
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'],
-            in_chans=weights.meta['in_chans'],
-            features_only=features_only,
+            weights.meta['model'], in_chans=weights.meta['in_chans']
         )
-        target_model = model.model if features_only else model
-        torch.save(target_model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_vit(self) -> None:
@@ -114,16 +94,16 @@ class TestViTBase16:
     ) -> None:
         vit_base_patch16_224(weights=mocked_weights, features_only=features_only)
 
-    def test_bands(self, mocked_weights: WeightsEnum) -> None:
-        if 'bands' in mocked_weights.meta:
-            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+    def test_bands(self, weights: WeightsEnum) -> None:
+        if 'bands' in weights.meta:
+            assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta['in_chans']
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
-        mocked_weights.transforms(sample)
+        weights.transforms(sample)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
@@ -137,25 +117,15 @@ class TestViTLarge16:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        features_only: bool,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = ViTLarge16_Weights.SENTINEL1_GRD_MAE
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'],
-            in_chans=weights.meta['in_chans'],
-            features_only=features_only,
+            weights.meta['model'], in_chans=weights.meta['in_chans']
         )
-        target_model = model.model if features_only else model
-        torch.save(target_model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_vit(self) -> None:
@@ -166,16 +136,16 @@ class TestViTLarge16:
     ) -> None:
         vit_large_patch16_224(weights=mocked_weights, features_only=features_only)
 
-    def test_bands(self, mocked_weights: WeightsEnum) -> None:
-        if 'bands' in mocked_weights.meta:
-            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+    def test_bands(self, weights: WeightsEnum) -> None:
+        if 'bands' in weights.meta:
+            assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta['in_chans']
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
-        mocked_weights.transforms(sample)
+        weights.transforms(sample)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
@@ -189,25 +159,15 @@ class TestViTHuge14:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        features_only: bool,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = ViTHuge14_Weights.SENTINEL1_GRD_MAE
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'],
-            in_chans=weights.meta['in_chans'],
-            features_only=features_only,
+            weights.meta['model'], in_chans=weights.meta['in_chans']
         )
-        target_model = model.model if features_only else model
-        torch.save(target_model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_vit(self) -> None:
@@ -218,16 +178,16 @@ class TestViTHuge14:
     ) -> None:
         vit_huge_patch14_224(weights=mocked_weights, features_only=features_only)
 
-    def test_bands(self, mocked_weights: WeightsEnum) -> None:
-        if 'bands' in mocked_weights.meta:
-            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+    def test_bands(self, weights: WeightsEnum) -> None:
+        if 'bands' in weights.meta:
+            assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta['in_chans']
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
-        mocked_weights.transforms(sample)
+        weights.transforms(sample)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
@@ -241,26 +201,17 @@ class TestViTSmall14_DINOv2:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        features_only: bool,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = ViTSmall14_DINOv2_Weights.SENTINEL1_GRD_SOFTCON
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
             weights.meta['model'],
             in_chans=weights.meta['in_chans'],
             img_size=weights.meta['img_size'],
-            features_only=features_only,
         )
-        target_model = model.model if features_only else model
-        torch.save(target_model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_vit(self) -> None:
@@ -271,19 +222,19 @@ class TestViTSmall14_DINOv2:
     ) -> None:
         vit_small_patch14_dinov2(weights=mocked_weights, features_only=features_only)
 
-    def test_bands(self, mocked_weights: WeightsEnum) -> None:
-        if 'bands' in mocked_weights.meta:
-            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+    def test_bands(self, weights: WeightsEnum) -> None:
+        if 'bands' in weights.meta:
+            assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta['in_chans']
-        img_size = mocked_weights.meta['img_size']
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta['in_chans']
+        img_size = weights.meta['img_size']
         if isinstance(img_size, int):
             h = w = img_size
         else:
             h, w = img_size
         sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
-        mocked_weights.transforms(sample)
+        weights.transforms(sample)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
@@ -297,26 +248,17 @@ class TestViTBase14_DINOv2:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        features_only: bool,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = ViTBase14_DINOv2_Weights.SENTINEL1_GRD_SOFTCON
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
             weights.meta['model'],
             in_chans=weights.meta['in_chans'],
             img_size=weights.meta['img_size'],
-            features_only=features_only,
         )
-        target_model = model.model if features_only else model
-        torch.save(target_model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_vit(self) -> None:
@@ -327,19 +269,19 @@ class TestViTBase14_DINOv2:
     ) -> None:
         vit_base_patch14_dinov2(weights=mocked_weights, features_only=features_only)
 
-    def test_bands(self, mocked_weights: WeightsEnum) -> None:
-        if 'bands' in mocked_weights.meta:
-            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+    def test_bands(self, weights: WeightsEnum) -> None:
+        if 'bands' in weights.meta:
+            assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta['in_chans']
-        img_size = mocked_weights.meta['img_size']
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta['in_chans']
+        img_size = weights.meta['img_size']
         if isinstance(img_size, int):
             h = w = img_size
         else:
             h, w = img_size
         sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
-        mocked_weights.transforms(sample)
+        weights.transforms(sample)
 
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:

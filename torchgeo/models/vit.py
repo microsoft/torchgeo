@@ -598,7 +598,12 @@ def vit_small_patch16_224(
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}
         # used when features_only = True
-        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
+        assert set(unexpected_keys) <= {
+            'norm.weight',
+            'norm.bias',
+            'head.weight',
+            'head.bias',
+        }
 
     return model
 
@@ -641,7 +646,12 @@ def vit_base_patch16_224(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
+        assert set(unexpected_keys) <= {
+            'norm.weight',
+            'norm.bias',
+            'head.weight',
+            'head.bias',
+        }
 
     return model
 
@@ -684,7 +694,12 @@ def vit_large_patch16_224(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
+        assert set(unexpected_keys) <= {
+            'norm.weight',
+            'norm.bias',
+            'head.weight',
+            'head.bias',
+        }
 
     return model
 
@@ -727,7 +742,12 @@ def vit_huge_patch14_224(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
+        assert set(unexpected_keys) <= {
+            'norm.weight',
+            'norm.bias',
+            'head.weight',
+            'head.bias',
+        }
 
     return model
 
