@@ -27,11 +27,19 @@ class TestResNet18:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        features_only: bool,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         weights = ResNet18_Weights.SENTINEL2_RGB_MOCO
         path = tmp_path / f'{weights}.pth'
-        model = timm.create_model('resnet18', in_chans=weights.meta['in_chans'])
+        model = timm.create_model(
+            'resnet18',
+            in_chans=weights.meta['in_chans'],
+            features_only=not features_only,
+        )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -67,11 +75,19 @@ class TestResNet50:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        features_only: bool,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         weights = ResNet50_Weights.SENTINEL2_RGB_MOCO
         path = tmp_path / f'{weights}.pth'
-        model = timm.create_model('resnet50', in_chans=weights.meta['in_chans'])
+        model = timm.create_model(
+            'resnet50',
+            in_chans=weights.meta['in_chans'],
+            features_only=not features_only,
+        )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -107,11 +123,19 @@ class TestResNet152:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        features_only: bool,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         weights = ResNet152_Weights.SENTINEL2_SI_RGB_SATLAS
         path = tmp_path / f'{weights}.pth'
-        model = timm.create_model('resnet152', in_chans=weights.meta['in_chans'])
+        model = timm.create_model(
+            'resnet152',
+            in_chans=weights.meta['in_chans'],
+            features_only=not features_only,
+        )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights

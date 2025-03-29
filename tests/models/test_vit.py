@@ -33,13 +33,20 @@ class TestViTSmall16:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        features_only: bool,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         weights = ViTSmall16_Weights.SENTINEL1_GRD_MAE
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'], in_chans=weights.meta['in_chans']
+            weights.meta['model'],
+            in_chans=weights.meta['in_chans'],
+            features_only=not features_only,
         )
+        model = model if features_only else model.model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -75,13 +82,20 @@ class TestViTBase16:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        features_only: bool,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         weights = ViTBase16_Weights.SENTINEL1_GRD_MAE
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'], in_chans=weights.meta['in_chans']
+            weights.meta['model'],
+            in_chans=weights.meta['in_chans'],
+            features_only=not features_only,
         )
+        model = model if features_only else model.model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -117,13 +131,20 @@ class TestViTLarge16:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        features_only: bool,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         weights = ViTLarge16_Weights.SENTINEL1_GRD_MAE
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'], in_chans=weights.meta['in_chans']
+            weights.meta['model'],
+            in_chans=weights.meta['in_chans'],
+            features_only=not features_only,
         )
+        model = model if features_only else model.model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -159,13 +180,20 @@ class TestViTHuge14:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        features_only: bool,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         weights = ViTHuge14_Weights.SENTINEL1_GRD_MAE
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'], in_chans=weights.meta['in_chans']
+            weights.meta['model'],
+            in_chans=weights.meta['in_chans'],
+            features_only=not features_only,
         )
+        model = model if features_only else model.model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -201,7 +229,11 @@ class TestViTSmall14_DINOv2:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        features_only: bool,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         weights = ViTSmall14_DINOv2_Weights.SENTINEL1_GRD_SOFTCON
         path = tmp_path / f'{weights}.pth'
@@ -209,7 +241,9 @@ class TestViTSmall14_DINOv2:
             weights.meta['model'],
             in_chans=weights.meta['in_chans'],
             img_size=weights.meta['img_size'],
+            features_only=not features_only,
         )
+        model = model if features_only else model.model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -248,7 +282,11 @@ class TestViTBase14_DINOv2:
 
     @pytest.fixture
     def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        features_only: bool,
+        load_state_dict_from_url: None,
     ) -> WeightsEnum:
         weights = ViTBase14_DINOv2_Weights.SENTINEL1_GRD_SOFTCON
         path = tmp_path / f'{weights}.pth'
@@ -256,7 +294,9 @@ class TestViTBase14_DINOv2:
             weights.meta['model'],
             in_chans=weights.meta['in_chans'],
             img_size=weights.meta['img_size'],
+            features_only=not features_only,
         )
+        model = model if features_only else model.model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
