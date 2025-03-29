@@ -88,7 +88,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
 
     paths: Path | Iterable[Path]
     _crs = CRS.from_epsg(4326)
-    _res = 0.0
+    _res: tuple[float, float] = (0.0, 0.0)
 
     #: Glob expression used to search for files.
     #:
@@ -268,7 +268,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         self.index = new_index
 
     @property
-    def res(self) -> float:
+    def res(self) -> tuple[float, float]:
         """Resolution of the dataset in units of CRS.
 
         Returns:
@@ -277,14 +277,17 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         return self._res
 
     @res.setter
-    def res(self, new_res: float) -> None:
+    def res(self, new_res: float | tuple[float, float]) -> None:
         """Change the resolution of a GeoDataset.
 
         Args:
-            new_res: New resolution.
+            new_res: New resolution in (xres, yres) format. If a single float is provided, it is used for both
+                the x and y resolution.
         """
         if new_res == self.res:
             return
+        if isinstance(new_res, float):
+            new_res = (new_res, new_res)
 
         print(f'Converting {self.__class__.__name__} res from {self.res} to {new_res}')
         self._res = new_res
@@ -416,7 +419,7 @@ class RasterDataset(GeoDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
+        res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
@@ -471,7 +474,7 @@ class RasterDataset(GeoDataset):
                         with WarpedVRT(src, crs=crs) as vrt:
                             minx, miny, maxx, maxy = vrt.bounds
                             if res is None:
-                                res = vrt.res[0]
+                                res = vrt.res
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
                     continue
@@ -508,8 +511,11 @@ class RasterDataset(GeoDataset):
                     )
                     raise AssertionError(msg)
 
+        if isinstance(res, float):
+            res = (res, res)
+
         self._crs = cast(CRS, crs)
-        self._res = cast(float, res)
+        self._res = cast(tuple[float, float], res)
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -659,7 +665,7 @@ class VectorDataset(GeoDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float = 0.0001,
+        res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         label_name: str | None = None,
     ) -> None:
@@ -720,6 +726,9 @@ class VectorDataset(GeoDataset):
         if i == 0:
             raise DatasetNotFoundError(self)
 
+        if isinstance(res, float):
+            res = (res, res)
+
         self._crs = crs
         self._res = res
 
@@ -764,8 +773,8 @@ class VectorDataset(GeoDataset):
                     shapes.append((shape, label))
 
         # Rasterize geometries
-        width = (query.maxx - query.minx) / self.res
-        height = (query.maxy - query.miny) / self.res
+        width = (query.maxx - query.minx) / self.res[0]
+        height = (query.maxy - query.miny) / self.res[1]
         transform = rasterio.transform.from_bounds(
             query.minx, query.miny, query.maxx, query.maxy, width, height
         )
@@ -1069,7 +1078,7 @@ class IntersectionDataset(GeoDataset):
         self.datasets[1].crs = new_crs
 
     @property
-    def res(self) -> float:
+    def res(self) -> tuple[float, float]:
         """Resolution of both datasets in units of CRS.
 
         Returns:
@@ -1078,7 +1087,7 @@ class IntersectionDataset(GeoDataset):
         return self._res
 
     @res.setter
-    def res(self, new_res: float) -> None:
+    def res(self, new_res: tuple[float, float]) -> None:
         """Change the resolution of both datasets.
 
         Args:
@@ -1224,7 +1233,7 @@ class UnionDataset(GeoDataset):
         self.datasets[1].crs = new_crs
 
     @property
-    def res(self) -> float:
+    def res(self) -> tuple[float, float]:
         """Resolution of both datasets in units of CRS.
 
         Returns:
@@ -1233,7 +1242,7 @@ class UnionDataset(GeoDataset):
         return self._res
 
     @res.setter
-    def res(self, new_res: float) -> None:
+    def res(self, new_res: tuple[float, float]) -> None:
         """Change the resolution of both datasets.
 
         Args:

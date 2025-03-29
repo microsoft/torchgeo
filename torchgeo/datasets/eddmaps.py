@@ -39,7 +39,7 @@ class EDDMapS(GeoDataset):
     .. versionadded:: 0.3
     """
 
-    res = 0
+    res = (0, 0)
     _crs = CRS.from_epsg(4326)  # Lat/Lon
 
     def __init__(self, root: Path = 'data') -> None:
