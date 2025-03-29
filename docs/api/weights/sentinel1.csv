@@ -1,5 +1,13 @@
 Weight,Channels,Source,Citation,License
 ResNet50_Weights.SENTINEL1_ALL_DECUR, 2,`link <https://github.com/zhu-xlab/DeCUR>`__,`link <https://arxiv.org/abs/2309.05300>`__,"Apache-2.0"
 ResNet50_Weights.SENTINEL1_ALL_MOCO, 2,`link <https://github.com/zhu-xlab/SSL4EO-S12>`__,`link <https://arxiv.org/abs/2211.07044>`__,"CC-BY-4.0"
+ViTSmall16_Weights.SENTINEL1_GRD_MAE,2,`link <https://github.com/zhu-xlab/SSL4EO-S12>`__,`link <https://arxiv.org/abs/2211.07044>`__,"CC-BY-4.0"
+ViTSmall16_Weights.SENTINEL1_GRD_FGMAE,2,`link <https://github.com/zhu-xlab/FGMAE>`__,`link <https://arxiv.org/abs/2310.18653>`__,"CC-BY-4.0"
+ViTBase16_Weights.SENTINEL1_GRD_MAE,2,`link <https://github.com/zhu-xlab/SSL4EO-S12>`__,`link <https://arxiv.org/abs/2211.07044>`__,"CC-BY-4.0"
+ViTBase16_Weights.SENTINEL1_GRD_FGMAE,2,`link <https://github.com/zhu-xlab/FGMAE>`__,`link <https://arxiv.org/abs/2310.18653>`__,"CC-BY-4.0"
+ViTLarge16_Weights.SENTINEL1_GRD_MAE,2,`link <https://github.com/zhu-xlab/SSL4EO-S12>`__,`link <https://arxiv.org/abs/2211.07044>`__,"CC-BY-4.0"
+ViTLarge16_Weights.SENTINEL1_GRD_FGMAE,2,`link <https://github.com/zhu-xlab/FGMAE>`__,`link <https://arxiv.org/abs/2310.18653>`__,"CC-BY-4.0"
+ViTHuge14_Weights.SENTINEL1_GRD_MAE,2,`link <https://github.com/zhu-xlab/SSL4EO-S12>`__,`link <https://arxiv.org/abs/2211.07044>`__,"CC-BY-4.0"
+ViTHuge14_Weights.SENTINEL1_GRD_FGMAE,2,`link <https://github.com/zhu-xlab/FGMAE>`__,`link <https://arxiv.org/abs/2310.18653>`__,"CC-BY-4.0"
 Swin_V2_B_Weights.SENTINEL1_MI_SATLAS,2,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY
 Swin_V2_B_Weights.SENTINEL1_SI_SATLAS,2,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY

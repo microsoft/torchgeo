@@ -9,6 +9,7 @@ import kornia.augmentation as K
 import timm
 import torch
 from timm.models import ResNet
+from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
 from .swin import (
@@ -76,7 +77,7 @@ _sentinel2_toa_bands = [
 _sentinel2_rgb_bands = ['B4', 'B3', 'B2']
 
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/main/src/download_data/convert_rgb.py
-_sentinel1_bands = ['VV', 'VH']
+_sentinel1_grd_bands = ['VV', 'VH']
 
 # https://github.com/zhu-xlab/DeCUR/blob/f190e9a3895ef645c005c8c2fce287ffa5a937e3/src/transfer_classification_BE/linear_BE_resnet.py#L286
 # Normalization by channel-wise band statistics
@@ -543,7 +544,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2309.05300',
             'repo': 'https://github.com/zhu-xlab/DeCUR',
             'ssl_method': 'decur',
-            'bands': _sentinel1_bands,
+            'bands': _sentinel1_grd_bands,
         },
     )
 
@@ -557,7 +558,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
-            'bands': _sentinel1_bands,
+            'bands': _sentinel1_grd_bands,
         },
     )
 
@@ -748,7 +749,7 @@ class ResNet152_Weights(WeightsEnum):  # type: ignore[misc]
 
 def resnet18(
     weights: ResNet18_Weights | None = None, *args: Any, **kwargs: Any
-) -> ResNet:
+) -> ResNet | nn.ModuleDict:
     """ResNet-18 model.
 
     If you use this model in your research, please cite the following paper:
@@ -768,7 +769,7 @@ def resnet18(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet = timm.create_model('resnet18', *args, **kwargs)
+    model: ResNet | nn.ModuleDict = timm.create_model('resnet18', *args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -782,7 +783,7 @@ def resnet18(
 
 def resnet50(
     weights: ResNet50_Weights | None = None, *args: Any, **kwargs: Any
-) -> ResNet:
+) -> ResNet | nn.ModuleDict:
     """ResNet-50 model.
 
     If you use this model in your research, please cite the following paper:
@@ -803,21 +804,22 @@ def resnet50(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet = timm.create_model('resnet50', *args, **kwargs)
+    model: ResNet | nn.ModuleDict = timm.create_model('resnet50', *args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
-        assert not unexpected_keys
+        # used when features_only = True
+        assert set(unexpected_keys) <= {'fc.weight', 'fc.bias'}
 
     return model
 
 
 def resnet152(
     weights: ResNet152_Weights | None = None, *args: Any, **kwargs: Any
-) -> ResNet:
+) -> ResNet | nn.ModuleDict:
     """ResNet-152 model.
 
     If you use this model in your research, please cite the following paper:
@@ -837,13 +839,15 @@ def resnet152(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet = timm.create_model('resnet152', *args, **kwargs)
+    # FeatureListNet (extends nn.ModuleDict) is returned when features_only=True
+    model: ResNet | nn.ModuleDict = timm.create_model('resnet152', *args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
-        assert not unexpected_keys
+        # used when features_only = True
+        assert set(unexpected_keys) <= {'fc.weight', 'fc.bias'}
 
     return model

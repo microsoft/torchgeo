@@ -585,6 +585,10 @@ class BigEarthNetV2(NonGeoDataset):
     geospatial data splits and additionally pixel-level labels from CORINE Land
     Cover (CLC) map of 2018. Additionally, some problematic patches from V1 have been removed.
 
+    If you use this dataset in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2407.03653
+
     .. versionadded:: 0.7
     """
 

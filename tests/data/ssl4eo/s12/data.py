@@ -3,7 +3,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import hashlib
 import os
 import shutil
 
@@ -13,6 +12,7 @@ from rasterio import Affine
 from rasterio.crs import CRS
 
 SIZE = 36
+CHUNK_SIZE = 2**14
 
 np.random.seed(0)
 
@@ -154,13 +154,20 @@ def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
 if __name__ == '__main__':
     create_directory('.', filenames)
 
-    files = ['s1', 's2_l1c', 's2_l2a']
+    files = ['s1_grd', 's2_l1c', 's2_l2a']
     directories = ['s1', 's2c', 's2a']
     for file, directory in zip(files, directories):
         # Create tarballs
         shutil.make_archive(file, 'gztar', '.', directory)
 
-        # Compute checksums
-        with open(f'{file}.tar.gz', 'rb') as f:
-            md5 = hashlib.md5(f.read()).hexdigest()
-            print(file, md5)
+        # Split tarball
+        path = f'{file}.tar.gz'
+        paths = []
+        with open(path, 'rb') as f:
+            suffix = 'a'
+            while chunk := f.read(CHUNK_SIZE):
+                split = f'{path}.parta{suffix}'
+                with open(split, 'wb') as g:
+                    g.write(chunk)
+                suffix = chr(ord(suffix) + 1)
+                paths.append(split)
