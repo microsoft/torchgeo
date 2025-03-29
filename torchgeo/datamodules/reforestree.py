@@ -10,7 +10,6 @@ from torch.utils.data import random_split
 
 from ..datasets import ReforesTree
 from ..samplers.utils import _to_tuple
-from ..transforms.transforms import _RandomNCrop
 from .geo import NonGeoDataModule
 
 
@@ -42,7 +41,9 @@ class ReforesTreeDataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.ReforesTree`.
         """
-        super().__init__(ReforesTree, 1, num_workers, **kwargs)
+        super().__init__(
+            ReforesTree, batch_size=batch_size, num_workers=num_workers, **kwargs
+        )
 
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
@@ -50,7 +51,7 @@ class ReforesTreeDataModule(NonGeoDataModule):
 
         self.train_aug = K.AugmentationSequential(
             K.Normalize(self.mean, self.std),
-            _RandomNCrop(self.patch_size, batch_size),
+            K.RandomCrop(self.patch_size, pad_if_needed=True),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             data_keys=None,
@@ -59,7 +60,7 @@ class ReforesTreeDataModule(NonGeoDataModule):
 
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _RandomNCrop(self.patch_size, batch_size),
+            K.CenterCrop(self.patch_size),
             data_keys=None,
             keepdim=True,
         )

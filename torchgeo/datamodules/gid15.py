@@ -11,7 +11,7 @@ from torch.utils.data import random_split
 
 from ..datasets import GID15
 from ..samplers.utils import _to_tuple
-from ..transforms.transforms import _RandomNCrop
+from ..transforms.transforms import _ExtractPatches
 from .geo import NonGeoDataModule
 
 
@@ -42,22 +42,25 @@ class GID15DataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.GID15`.
         """
-        super().__init__(GID15, 1, num_workers, **kwargs)
+        super().__init__(
+            GID15, batch_size=batch_size, num_workers=num_workers, **kwargs
+        )
 
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
         self.train_aug = self.val_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _RandomNCrop(self.patch_size, batch_size),
+            K.RandomCrop(self.patch_size, pad_if_needed=True),
             data_keys=None,
             keepdim=True,
         )
         self.predict_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _RandomNCrop(self.patch_size, batch_size),
+            _ExtractPatches(window_size=self.patch_size),
             data_keys=None,
             keepdim=True,
+            same_on_batch=True,
         )
 
     def setup(self, stage: str) -> None:
