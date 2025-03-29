@@ -44,9 +44,9 @@ class TestViTSmall16:
         model = timm.create_model(
             weights.meta['model'],
             in_chans=weights.meta['in_chans'],
-            features_only=not features_only,
+            features_only=features_only,
         )
-        model = model if features_only else model.model
+        model = model.model if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -57,7 +57,7 @@ class TestViTSmall16:
     def test_vit_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
-        vit_small_patch16_224(weights=mocked_weights, features_only=features_only)
+        vit_small_patch16_224(weights=mocked_weights, features_only=not features_only)
 
     def test_bands(self, weights: WeightsEnum) -> None:
         if 'bands' in weights.meta:
@@ -93,9 +93,9 @@ class TestViTBase16:
         model = timm.create_model(
             weights.meta['model'],
             in_chans=weights.meta['in_chans'],
-            features_only=not features_only,
+            features_only=features_only,
         )
-        model = model if features_only else model.model
+        model = model.model if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -106,7 +106,7 @@ class TestViTBase16:
     def test_vit_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
-        vit_base_patch16_224(weights=mocked_weights, features_only=features_only)
+        vit_base_patch16_224(weights=mocked_weights, features_only=not features_only)
 
     def test_bands(self, weights: WeightsEnum) -> None:
         if 'bands' in weights.meta:
@@ -142,9 +142,9 @@ class TestViTLarge16:
         model = timm.create_model(
             weights.meta['model'],
             in_chans=weights.meta['in_chans'],
-            features_only=not features_only,
+            features_only=features_only,
         )
-        model = model if features_only else model.model
+        model = model.model if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -155,7 +155,7 @@ class TestViTLarge16:
     def test_vit_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
-        vit_large_patch16_224(weights=mocked_weights, features_only=features_only)
+        vit_large_patch16_224(weights=mocked_weights, features_only=not features_only)
 
     def test_bands(self, weights: WeightsEnum) -> None:
         if 'bands' in weights.meta:
@@ -191,9 +191,9 @@ class TestViTHuge14:
         model = timm.create_model(
             weights.meta['model'],
             in_chans=weights.meta['in_chans'],
-            features_only=not features_only,
+            features_only=features_only,
         )
-        model = model if features_only else model.model
+        model = model.model if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -204,7 +204,7 @@ class TestViTHuge14:
     def test_vit_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
-        vit_huge_patch14_224(weights=mocked_weights, features_only=features_only)
+        vit_huge_patch14_224(weights=mocked_weights, features_only=not features_only)
 
     def test_bands(self, weights: WeightsEnum) -> None:
         if 'bands' in weights.meta:
@@ -241,9 +241,9 @@ class TestViTSmall14_DINOv2:
             weights.meta['model'],
             in_chans=weights.meta['in_chans'],
             img_size=weights.meta['img_size'],
-            features_only=not features_only,
+            features_only=features_only,
         )
-        model = model if features_only else model.model
+        model = model.model if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -254,7 +254,9 @@ class TestViTSmall14_DINOv2:
     def test_vit_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
-        vit_small_patch14_dinov2(weights=mocked_weights, features_only=features_only)
+        vit_small_patch14_dinov2(
+            weights=mocked_weights, features_only=not features_only
+        )
 
     def test_bands(self, weights: WeightsEnum) -> None:
         if 'bands' in weights.meta:
@@ -294,9 +296,9 @@ class TestViTBase14_DINOv2:
             weights.meta['model'],
             in_chans=weights.meta['in_chans'],
             img_size=weights.meta['img_size'],
-            features_only=not features_only,
+            features_only=features_only,
         )
-        model = model if features_only else model.model
+        model = model.model if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -307,7 +309,7 @@ class TestViTBase14_DINOv2:
     def test_vit_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
-        vit_base_patch14_dinov2(weights=mocked_weights, features_only=features_only)
+        vit_base_patch14_dinov2(weights=mocked_weights, features_only=not features_only)
 
     def test_bands(self, weights: WeightsEnum) -> None:
         if 'bands' in weights.meta:

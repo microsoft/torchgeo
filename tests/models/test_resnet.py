@@ -36,9 +36,7 @@ class TestResNet18:
         weights = ResNet18_Weights.SENTINEL2_RGB_MOCO
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            'resnet18',
-            in_chans=weights.meta['in_chans'],
-            features_only=not features_only,
+            'resnet18', in_chans=weights.meta['in_chans'], features_only=features_only
         )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
@@ -50,7 +48,7 @@ class TestResNet18:
     def test_resnet_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
-        resnet18(weights=mocked_weights, features_only=features_only)
+        resnet18(weights=mocked_weights, features_only=not features_only)
 
     def test_bands(self, weights: WeightsEnum) -> None:
         if 'bands' in weights.meta:
@@ -84,9 +82,7 @@ class TestResNet50:
         weights = ResNet50_Weights.SENTINEL2_RGB_MOCO
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            'resnet50',
-            in_chans=weights.meta['in_chans'],
-            features_only=not features_only,
+            'resnet50', in_chans=weights.meta['in_chans'], features_only=features_only
         )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
@@ -98,7 +94,7 @@ class TestResNet50:
     def test_resnet_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
-        resnet50(weights=mocked_weights, features_only=features_only)
+        resnet50(weights=mocked_weights, features_only=not features_only)
 
     def test_bands(self, weights: WeightsEnum) -> None:
         if 'bands' in weights.meta:
@@ -132,9 +128,7 @@ class TestResNet152:
         weights = ResNet152_Weights.SENTINEL2_SI_RGB_SATLAS
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            'resnet152',
-            in_chans=weights.meta['in_chans'],
-            features_only=not features_only,
+            'resnet152', in_chans=weights.meta['in_chans'], features_only=features_only
         )
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
@@ -146,7 +140,7 @@ class TestResNet152:
     def test_resnet_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
-        resnet152(weights=mocked_weights, features_only=features_only)
+        resnet152(weights=mocked_weights, features_only=not features_only)
 
     def test_bands(self, weights: WeightsEnum) -> None:
         if 'bands' in weights.meta:
