@@ -21,6 +21,7 @@ from .resnet import (
     _sentinel1_grd_bands,
     _sentinel2_toa_bands,
     _ssl4eo_s12_transforms_s1,
+    _ssl4eo_s12_transforms_s2_stats,
 )
 
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167
@@ -478,6 +479,86 @@ class ViTHuge14_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
+class ViTSmall14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
+    """Vision Transformer Small Patch Size 14 (DINOv2) weights.
+
+    For `timm <https://github.com/huggingface/pytorch-image-models>`_
+    *vit_small_patch14_dinov2* implementation.
+
+    .. versionadded:: 0.7
+    """
+
+    SENTINEL2_ALL_SOFTCON = Weights(
+        url='https://huggingface.co/wangyi111/softcon/resolve/bae909781911f8ec034b4b959992fae17b973c0c/B13_vits14_softcon_enc.pth',
+        transforms=_ssl4eo_s12_transforms_s2_stats,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 13,
+            'img_size': 224,
+            'model': 'vit_small_patch14_dinov2',
+            'publication': 'https://arxiv.org/abs/2405.20462',
+            'repo': 'https://github.com/zhu-xlab/softcon',
+            'ssl_method': 'softcon',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL1_GRD_SOFTCON = Weights(
+        url='https://huggingface.co/wangyi111/softcon/resolve/bae909781911f8ec034b4b959992fae17b973c0c/B2_vits14_softcon_enc.pth',
+        transforms=_ssl4eo_s12_transforms_s1,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 2,
+            'img_size': 224,
+            'model': 'vit_small_patch14_dinov2',
+            'publication': 'https://arxiv.org/abs/2405.20462',
+            'repo': 'https://github.com/zhu-xlab/softcon',
+            'ssl_method': 'softcon',
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
+
+class ViTBase14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
+    """Vision Transformer Base Patch Size 14 (DINOv2) weights.
+
+    For `timm <https://github.com/huggingface/pytorch-image-models>`_
+    *vit_base_patch14_dinov2* implementation.
+
+    .. versionadded:: 0.7
+    """
+
+    SENTINEL2_ALL_SOFTCON = Weights(
+        url='https://huggingface.co/wangyi111/softcon/resolve/bae909781911f8ec034b4b959992fae17b973c0c/B13_vitb14_softcon_enc.pth',
+        transforms=_ssl4eo_s12_transforms_s2_stats,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 13,
+            'img_size': 224,
+            'model': 'vit_base_patch14_dinov2',
+            'publication': 'https://arxiv.org/abs/2405.20462',
+            'repo': 'https://github.com/zhu-xlab/softcon',
+            'ssl_method': 'softcon',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL1_GRD_SOFTCON = Weights(
+        url='https://huggingface.co/wangyi111/softcon/resolve/bae909781911f8ec034b4b959992fae17b973c0c/B2_vitb14_softcon_enc.pth',
+        transforms=_ssl4eo_s12_transforms_s1,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 2,
+            'img_size': 224,
+            'model': 'vit_base_patch14_dinov2',
+            'publication': 'https://arxiv.org/abs/2405.20462',
+            'repo': 'https://github.com/zhu-xlab/softcon',
+            'ssl_method': 'softcon',
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
+
 def vit_small_patch16_224(
     weights: ViTSmall16_Weights | None = None, *args: Any, **kwargs: Any
 ) -> VisionTransformer | nn.ModuleDict:
@@ -632,6 +713,94 @@ def vit_huge_patch14_224(
     # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
     model: VisionTransformer | nn.ModuleDict = timm.create_model(
         'vit_huge_patch14_224', *args, **kwargs
+    )
+
+    if kwargs.get('features_only', False):
+        model = cast(nn.ModuleDict, model)
+        target_model = cast(VisionTransformer, model.model)
+    else:
+        model = cast(VisionTransformer, model)
+        target_model = model
+
+    if weights:
+        missing_keys, unexpected_keys = target_model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        assert set(missing_keys) <= {'head.weight', 'head.bias'}
+        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
+
+    return model
+
+
+def vit_small_patch14_dinov2(
+    weights: ViTSmall14_DINOv2_Weights | None = None, *args: Any, **kwargs: Any
+) -> VisionTransformer | nn.ModuleDict:
+    """Vision Transform (ViT) small patch size 14 model for DINOv2.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2304.07193
+
+    .. versionadded:: 0.7
+
+    Args:
+        weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keyword arguments to pass to :func:`timm.create_model`.
+
+    Returns:
+        A DINOv2 ViT small 14 model.
+    """
+    if weights:
+        kwargs['in_chans'] = weights.meta['in_chans']
+        kwargs['img_size'] = weights.meta['img_size']
+    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
+    model: VisionTransformer | nn.ModuleDict = timm.create_model(
+        'vit_small_patch14_dinov2', *args, **kwargs
+    )
+
+    if kwargs.get('features_only', False):
+        model = cast(nn.ModuleDict, model)
+        target_model = cast(VisionTransformer, model.model)
+    else:
+        model = cast(VisionTransformer, model)
+        target_model = model
+
+    if weights:
+        missing_keys, unexpected_keys = target_model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        assert set(missing_keys) <= {'head.weight', 'head.bias'}
+        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
+
+    return model
+
+
+def vit_base_patch14_dinov2(
+    weights: ViTBase14_DINOv2_Weights | None = None, *args: Any, **kwargs: Any
+) -> VisionTransformer | nn.ModuleDict:
+    """Vision Transform (ViT) base patch size 14 model for DINOv2.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2304.07193
+
+    .. versionadded:: 0.7
+
+    Args:
+        weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keyword arguments to pass to :func:`timm.create_model`.
+
+    Returns:
+        A DINOv2 ViT base 14 model.
+    """
+    if weights:
+        kwargs['in_chans'] = weights.meta['in_chans']
+        kwargs['img_size'] = weights.meta['img_size']
+    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
+    model: VisionTransformer | nn.ModuleDict = timm.create_model(
+        'vit_base_patch14_dinov2', *args, **kwargs
     )
 
     if kwargs.get('features_only', False):
