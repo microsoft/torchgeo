@@ -1,19 +1,23 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import glob
 import os
+import re
 import shutil
 from pathlib import Path
 
 import pytest
 import torch
 import torch.nn as nn
+import webdataset as wds
 from _pytest.fixtures import SubRequest
 from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     CopernicusBench,
+    CopernicusPretrain,
     DatasetNotFoundError,
     RGBBandsMissingError,
 )
@@ -119,3 +123,52 @@ class TestCopernicusBench:
         match = 'Dataset does not contain some of the RGB bands'
         with pytest.raises(RGBBandsMissingError, match=match):
             dataset.plot(dataset[0])
+
+
+class TestCopernicusPretrain:
+    @pytest.fixture
+    def dataset(self) -> wds.WebDataset:
+        root = os.path.join('tests', 'data', 'copernicus', 'pretrain')
+        tar_files = sorted(glob.glob(os.path.join(root, 'example-*.tar')))
+        numbers = sorted(
+            set(re.findall(r'example-(\d{6})\.tar', f)[0] for f in tar_files)
+        )
+        start, end = numbers[0], numbers[-1]
+        shards = f'example-{{{start}..{end}}}.tar'
+        shards_path = os.path.join(root, shards)
+        copernicuspretrain = CopernicusPretrain(
+            shards_path, shuffle=0, shardshuffle=False, resampled=False
+        )
+        train_dataset = copernicuspretrain.get_webdataset()
+        return train_dataset
+
+    def test_getitem(self, dataset: wds.WebDataset) -> None:
+        x = next(iter(dataset))
+        # Check the types of the tensors
+        assert isinstance(x[0], torch.Tensor)
+        assert isinstance(x[1], torch.Tensor)
+        assert isinstance(x[2], torch.Tensor)
+        assert isinstance(x[3], torch.Tensor)
+        assert isinstance(x[4], torch.Tensor)
+        assert isinstance(x[5], torch.Tensor)
+        assert isinstance(x[6], torch.Tensor)
+        assert isinstance(x[7], torch.Tensor)
+        assert isinstance(x[8], dict)
+        # Check the shapes of the tensors
+        assert x[0].shape == (2, 264, 264)
+        assert x[1].shape == (13, 264, 264)
+        assert x[2].shape == (21, 96, 96)
+        assert x[3].shape == (1, 28, 28)
+        assert x[4].shape == (1, 28, 28)
+        assert x[5].shape == (1, 28, 28)
+        assert x[6].shape == (1, 28, 28)
+        assert x[7].shape == (1, 960, 960)
+        # Check the keys in the dictionary
+        assert 's1_grd' in x[8]
+        assert 's2_toa' in x[8]
+        assert 's3_olci' in x[8]
+        assert 's5p_co' in x[8]
+        assert 's5p_no2' in x[8]
+        assert 's5p_o3' in x[8]
+        assert 's5p_so2' in x[8]
+        assert 'dem' in x[8]
