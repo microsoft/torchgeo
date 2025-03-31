@@ -11,7 +11,7 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4.2.2
       - name: Set up python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.5.0
         with:
           python-version: '3.13'
       - name: Install pip dependencies
