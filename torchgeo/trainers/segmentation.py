@@ -173,7 +173,9 @@ class SemanticSegmentationTask(BaseTask):
                 )
             case 'focal':
                 self.criterion = smp.losses.FocalLoss(
-                    mode=self.hparams['task'], ignore_index=ignore_index, normalized=True
+                    mode=self.hparams['task'],
+                    ignore_index=ignore_index,
+                    normalized=True,
                 )
 
     def configure_metrics(self) -> None:
