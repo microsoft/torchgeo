@@ -145,30 +145,30 @@ class TestCopernicusPretrain:
     def test_getitem(self, dataset: CopernicusPretrain) -> None:
         x = next(iter(dataset))
         # Check the types of the tensors
-        assert isinstance(x[0], torch.Tensor)
-        assert isinstance(x[1], torch.Tensor)
-        assert isinstance(x[2], torch.Tensor)
-        assert isinstance(x[3], torch.Tensor)
-        assert isinstance(x[4], torch.Tensor)
-        assert isinstance(x[5], torch.Tensor)
-        assert isinstance(x[6], torch.Tensor)
-        assert isinstance(x[7], torch.Tensor)
-        assert isinstance(x[8], dict)
+        assert isinstance(x['s1_grd.pth'], torch.Tensor)
+        assert isinstance(x['s2_toa.pth'], torch.Tensor)
+        assert isinstance(x['s3_olci.pth'], torch.Tensor)
+        assert isinstance(x['s5p_co.pth'], torch.Tensor)
+        assert isinstance(x['s5p_no2.pth'], torch.Tensor)
+        assert isinstance(x['s5p_o3.pth'], torch.Tensor)
+        assert isinstance(x['s5p_so2.pth'], torch.Tensor)
+        assert isinstance(x['dem.pth'], torch.Tensor)
+        assert isinstance(x['json'], dict)
         # Check the shapes of the tensors
-        assert x[0].shape == (2, 264, 264)
-        assert x[1].shape == (13, 264, 264)
-        assert x[2].shape == (21, 96, 96)
-        assert x[3].shape == (1, 28, 28)
-        assert x[4].shape == (1, 28, 28)
-        assert x[5].shape == (1, 28, 28)
-        assert x[6].shape == (1, 28, 28)
-        assert x[7].shape == (1, 960, 960)
+        assert x['s1_grd.pth'].shape == (2, 264, 264)
+        assert x['s2_toa.pth'].shape == (13, 264, 264)
+        assert x['s3_olci.pth'].shape == (21, 96, 96)
+        assert x['s5p_co.pth'].shape == (1, 28, 28)
+        assert x['s5p_no2.pth'].shape == (1, 28, 28)
+        assert x['s5p_o3.pth'].shape == (1, 28, 28)
+        assert x['s5p_so2.pth'].shape == (1, 28, 28)
+        assert x['dem.pth'].shape == (1, 960, 960)
         # Check the keys in the dictionary
-        assert 's1_grd' in x[8]
-        assert 's2_toa' in x[8]
-        assert 's3_olci' in x[8]
-        assert 's5p_co' in x[8]
-        assert 's5p_no2' in x[8]
-        assert 's5p_o3' in x[8]
-        assert 's5p_so2' in x[8]
-        assert 'dem' in x[8]
+        assert 's1_grd' in x['json']
+        assert 's2_toa' in x['json']
+        assert 's3_olci' in x['json']
+        assert 's5p_co' in x['json']
+        assert 's5p_no2' in x['json']
+        assert 's5p_o3' in x['json']
+        assert 's5p_so2' in x['json']
+        assert 'dem' in x['json']

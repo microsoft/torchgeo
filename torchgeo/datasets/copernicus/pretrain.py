@@ -7,13 +7,12 @@ import random
 from collections.abc import Iterator
 from typing import Any, ClassVar
 
-from torch import Tensor
 from torch.utils.data import IterableDataset
 
 from ..utils import lazy_import
 
 
-class CopernicusPretrain(IterableDataset[dict[str, Tensor]]):
+class CopernicusPretrain(IterableDataset[dict[str, Any]]):
     """Copernicus-Pretrain dataset.
 
     Copernicus-Pretrain is an extension of the SSL4EO-S12 dataset to all major Sentinel
@@ -120,20 +119,9 @@ class CopernicusPretrain(IterableDataset[dict[str, Tensor]]):
             .select(self._has_all_modalities)  # select samples with all modalities
             .map(self._sample_one_local_patch)  # sample one local patch for S1 and S2
             .map(self._sample_one_time_stamp)  # sample one timestamp for all modalities
-            .to_tuple(
-                's1_grd.pth',  # 2x264x264
-                's2_toa.pth',  # 13x264x264
-                's3_olci.pth',  # 21x96x96
-                's5p_co.pth',  # 1x28x28
-                's5p_no2.pth',  # 1x28x28
-                's5p_o3.pth',  # 1x28x28
-                's5p_so2.pth',  # 1x28x28
-                'dem.pth',  # 1x960x960
-                'json',  # metadata
-            )  # convert to tuple
         )
 
-    def __iter__(self) -> Iterator[dict[str, Tensor]]:
+    def __iter__(self) -> Iterator[dict[str, Any]]:
         """Iterate over images and metadata in the dataset.
 
         Returns:
