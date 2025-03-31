@@ -102,6 +102,8 @@ datasets = [
     "scikit-image>=0.20",
     # scipy 1.9.2+ required for Python 3.11 wheels
     "scipy>=1.9.2",
+    # TODO: determine correct minimum version
+    "webdataset>=0.0.0",
     # xarray 0.12.3+ required for pandas 1.3.3 support
     "xarray>=0.12.3",
 ]

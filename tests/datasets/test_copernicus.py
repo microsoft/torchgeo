@@ -10,7 +10,6 @@ from pathlib import Path
 import pytest
 import torch
 import torch.nn as nn
-import webdataset as wds
 from _pytest.fixtures import SubRequest
 from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
@@ -126,6 +125,8 @@ class TestCopernicusBench:
 
 
 class TestCopernicusPretrain:
+    wds = pytest.importorskip('webdataset')
+
     @pytest.fixture
     def dataset(self) -> wds.WebDataset:
         root = os.path.join('tests', 'data', 'copernicus', 'pretrain')

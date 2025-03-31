@@ -6,7 +6,7 @@
 import random
 from typing import Any, ClassVar
 
-import webdataset as wds
+from ..utils import lazy_import
 
 
 class CopernicusPretrain:
@@ -65,6 +65,12 @@ class CopernicusPretrain:
 
     * https://arxiv.org/abs/2503.11849
 
+    .. note::
+
+       This dataset requires the following additional library to be installed:
+
+       * `<https://pypi.org/project/webdataset/>`_ to load the dataset.
+
     .. versionadded:: 0.7
     """
 
@@ -93,6 +99,7 @@ class CopernicusPretrain:
             shardshuffle (bool): Shuffle the order of the shards.
             shuffle (int): Buffer size for shuffling individual samples before batching.
         """
+        lazy_import('webdataset')
         self.shards_path = shards_path
         self.shuffle = shuffle
         self.shardshuffle = shardshuffle
@@ -136,8 +143,9 @@ class CopernicusPretrain:
         sample['json']['dem'] = sample['json']['dem'][0]
         return sample
 
-    def get_webdataset(self) -> wds.WebDataset:
+    def get_webdataset(self) -> 'webdataset.WebDataset':
         """Creates an IterableDataset using WebDataset."""
+        wds = lazy_import('webdataset')
         dataset = (
             wds.WebDataset(
                 self.shards_path,
