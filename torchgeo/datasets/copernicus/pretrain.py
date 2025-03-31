@@ -40,30 +40,29 @@ class CopernicusPretrain(IterableDataset[dict[str, Tensor]]):
     Example:
 
     .. code-block:: python
-       copernicus_pretrain = CopernicusPretrain(
+       dataset = CopernicusPretrain(
            shards_path='data/example-{000000..000009}.tar',
            shuffle=100,
            shardshuffle=True,
            resampled=True
        )
-       train_dataset = copernicus_pretrain.get_webdataset()
 
        # Check the first sample
-       for sample in train_dataset:
+       for sample in dataset:
            s1, s2, s3, s5p_co, s5p_no2, s5p_o3, s5p_so2, dem, meta = sample
            break
 
        # Create a DataLoader for distributed training on 2 GPUs
-       train_dataset = train_dataset.batched(10) # batch size
-       train_loader = webdataset.WebLoader(
-           train_dataset, batch_size=None, num_workers=2
+       dataset = dataset.batched(10) # batch size
+       dataloader = webdataset.WebLoader(
+           dataset, batch_size=None, num_workers=2
        )
        # Unbatch, shuffle, and rebatch to mix samples from different workers
-       train_loader = train_loader.unbatched().shuffle(100).batched(10)
+       dataloader = dataloader.unbatched().shuffle(100).batched(10)
        # A resampled dataset is infinite size, but we can recreate a fixed epoch length
        # Total number of samples / (batch size * world size)
        number_of_batches = 1000 // (10 * 2)
-       data_loader_train = data_loader_train.with_epoch(number_of_batches)
+       dataloader = dataloader.with_epoch(number_of_batches)
 
     If you use this dataset in your research, please cite the following paper:
 

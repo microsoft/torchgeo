@@ -125,10 +125,10 @@ class TestCopernicusBench:
 
 
 class TestCopernicusPretrain:
-    wds = pytest.importorskip('webdataset')
+    pytest.importorskip('webdataset')
 
     @pytest.fixture
-    def dataset(self) -> wds.WebDataset:
+    def dataset(self) -> CopernicusPretrain:
         root = os.path.join('tests', 'data', 'copernicus', 'pretrain')
         tar_files = sorted(glob.glob(os.path.join(root, 'example-*.tar')))
         numbers = sorted(
@@ -137,13 +137,12 @@ class TestCopernicusPretrain:
         start, end = numbers[0], numbers[-1]
         shards = f'example-{{{start}..{end}}}.tar'
         shards_path = os.path.join(root, shards)
-        copernicuspretrain = CopernicusPretrain(
+        dataset = CopernicusPretrain(
             shards_path, shuffle=0, shardshuffle=False, resampled=False
         )
-        train_dataset = copernicuspretrain.get_webdataset()
-        return train_dataset
+        return dataset
 
-    def test_getitem(self, dataset: wds.WebDataset) -> None:
+    def test_getitem(self, dataset: CopernicusPretrain) -> None:
         x = next(iter(dataset))
         # Check the types of the tensors
         assert isinstance(x[0], torch.Tensor)
