@@ -46,6 +46,8 @@ _ssl4eo_l_transforms = K.AugmentationSequential(
 # Can be removed once torchvision>=0.15 is required
 Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
+KEYS = {'norm.weight', 'norm.bias', 'head.weight', 'head.bias'}
+
 
 class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
     """Vision Transformer Small Patch Size 16 weights.
@@ -596,9 +598,9 @@ def vit_small_patch16_224(
         missing_keys, unexpected_keys = target_model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
-        assert set(missing_keys) <= {'head.weight', 'head.bias'}
+        assert set(missing_keys) <= KEYS
         # used when features_only = True
-        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
+        assert set(unexpected_keys) <= KEYS
 
     return model
 
@@ -640,8 +642,8 @@ def vit_base_patch16_224(
         missing_keys, unexpected_keys = target_model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
-        assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
+        assert set(missing_keys) <= KEYS
+        assert set(unexpected_keys) <= KEYS
 
     return model
 
@@ -683,8 +685,8 @@ def vit_large_patch16_224(
         missing_keys, unexpected_keys = target_model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
-        assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
+        assert set(missing_keys) <= KEYS
+        assert set(unexpected_keys) <= KEYS
 
     return model
 
@@ -726,8 +728,8 @@ def vit_huge_patch14_224(
         missing_keys, unexpected_keys = target_model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
-        assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
+        assert set(missing_keys) <= KEYS
+        assert set(unexpected_keys) <= KEYS
 
     return model
 
@@ -770,8 +772,8 @@ def vit_small_patch14_dinov2(
         missing_keys, unexpected_keys = target_model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
-        assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
+        assert set(missing_keys) <= KEYS
+        assert set(unexpected_keys) <= KEYS
 
     return model
 
@@ -814,7 +816,7 @@ def vit_base_patch14_dinov2(
         missing_keys, unexpected_keys = target_model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
-        assert set(missing_keys) <= {'head.weight', 'head.bias'}
-        assert set(unexpected_keys) <= {'norm.weight', 'norm.bias'}
+        assert set(missing_keys) <= KEYS
+        assert set(unexpected_keys) <= KEYS
 
     return model
