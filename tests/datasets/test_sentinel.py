@@ -154,3 +154,6 @@ class TestSentinel2:
             IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]
+
+    def test_float_res(self, dataset: Sentinel2) -> None:
+        Sentinel2(dataset.paths, res=10.0, bands=dataset.bands)
