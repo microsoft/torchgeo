@@ -258,7 +258,7 @@ Cloud Cover Detection
 .. autoclass:: CloudCoverDetection
 
 Copernicus-Pretrain
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: CopernicusPretrain
 
