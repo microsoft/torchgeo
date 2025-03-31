@@ -4,12 +4,16 @@
 """Copernicus-Pretrain dataset."""
 
 import random
+from collections.abc import Iterator
 from typing import Any, ClassVar
+
+from torch import Tensor
+from torch.utils.data import IterableDataset
 
 from ..utils import lazy_import
 
 
-class CopernicusPretrain:
+class CopernicusPretrain(IterableDataset[dict[str, Tensor]]):
     """Copernicus-Pretrain dataset.
 
     Copernicus-Pretrain is an extension of the SSL4EO-S12 dataset to all major Sentinel
@@ -93,60 +97,19 @@ class CopernicusPretrain:
         """Initialize a new CopernicusPretrain instance.
 
         Args:
-            shards_path (str): Path to the shards of the dataset. Can be local paths or
-                URLs.
-            resampled (bool): Dynamically resample the dataset shards.
-            shardshuffle (bool): Shuffle the order of the shards.
-            shuffle (int): Buffer size for shuffling individual samples before batching.
+            shards_path: Path to the shards of the dataset. Can be local paths or URLs.
+            resampled: Dynamically resample the dataset shards.
+            shardshuffle: Shuffle the order of the shards.
+            shuffle: Buffer size for shuffling individual samples before batching.
         """
-        lazy_import('webdataset')
+        wds = lazy_import('webdataset')
+
         self.shards_path = shards_path
         self.shuffle = shuffle
         self.shardshuffle = shardshuffle
         self.resampled = resampled
 
-    def has_all_modalities(self, sample: dict[str, Any]) -> bool:
-        """Mapping function: filter samples with all required modalities."""
-        required_keys = [
-            's1_grd.pth',
-            's2_toa.pth',
-            's3_olci.pth',
-            's5p_co.pth',
-            's5p_no2.pth',
-            's5p_o3.pth',
-            's5p_so2.pth',
-            'dem.pth',
-            'json',
-        ]
-        return all(key in sample for key in required_keys)
-
-    def sample_one_local_patch(self, sample: dict[str, Any]) -> dict[str, Any]:
-        """Mapping function: randomly select one local patch for S1 and S2."""
-        s1, s2 = sample['s1_grd.pth'], sample['s2_toa.pth']
-        meta_s1, meta_s2 = sample['json']['s1_grd'], sample['json']['s2_toa']
-
-        idx = random.randint(0, s1.shape[0] - 1)
-        sample['s1_grd.pth'], sample['s2_toa.pth'] = s1[idx], s2[idx]
-        sample['json']['s1_grd'], sample['json']['s2_toa'] = meta_s1[idx], meta_s2[idx]
-        return sample
-
-    def sample_one_time_stamp(self, sample: dict[str, Any]) -> dict[str, Any]:
-        """Mapping function: randomly select one timestamp for all modalities."""
-        for key in sample:
-            if key.endswith('.pth') and key != 'dem.pth':
-                idx = random.randint(0, sample[key].shape[0] - 1)
-                sample[key] = sample[key][idx]
-                sample['json'][key.replace('.pth', '')] = sample['json'][
-                    key.replace('.pth', '')
-                ][idx]
-
-        sample['json']['dem'] = sample['json']['dem'][0]
-        return sample
-
-    def get_webdataset(self) -> 'webdataset.WebDataset':
-        """Creates an IterableDataset using WebDataset."""
-        wds = lazy_import('webdataset')
-        dataset = (
+        self.dataset = (
             wds.WebDataset(
                 self.shards_path,
                 resampled=self.resampled,
@@ -155,9 +118,9 @@ class CopernicusPretrain:
             )  # shuffle shard orders and samples within shards, split by node
             .shuffle(self.shuffle)  # shuffle individual samples before batching
             .decode()  # decode binary data
-            .select(self.has_all_modalities)  # select samples with all modalities
-            .map(self.sample_one_local_patch)  # sample one local patch for S1 and S2
-            .map(self.sample_one_time_stamp)  # sample one timestamp for all modalities
+            .select(self._has_all_modalities)  # select samples with all modalities
+            .map(self._sample_one_local_patch)  # sample one local patch for S1 and S2
+            .map(self._sample_one_time_stamp)  # sample one timestamp for all modalities
             .to_tuple(
                 's1_grd.pth',  # 2x264x264
                 's2_toa.pth',  # 13x264x264
@@ -171,4 +134,48 @@ class CopernicusPretrain:
             )  # convert to tuple
         )
 
-        return dataset
+    def __iter__(self) -> Iterator[dict[str, Tensor]]:
+        """Iterate over images and metadata in the dataset.
+
+        Returns:
+            sample of images and metadata
+        """
+        return iter(self.dataset)
+
+    def _has_all_modalities(self, sample: dict[str, Any]) -> bool:
+        """Selection function: filter samples with all required modalities."""
+        required_keys = [
+            's1_grd.pth',
+            's2_toa.pth',
+            's3_olci.pth',
+            's5p_co.pth',
+            's5p_no2.pth',
+            's5p_o3.pth',
+            's5p_so2.pth',
+            'dem.pth',
+            'json',
+        ]
+        return all(key in sample for key in required_keys)
+
+    def _sample_one_local_patch(self, sample: dict[str, Any]) -> dict[str, Any]:
+        """Mapping function: randomly select one local patch for S1 and S2."""
+        s1, s2 = sample['s1_grd.pth'], sample['s2_toa.pth']
+        meta_s1, meta_s2 = sample['json']['s1_grd'], sample['json']['s2_toa']
+
+        idx = random.randint(0, s1.shape[0] - 1)
+        sample['s1_grd.pth'], sample['s2_toa.pth'] = s1[idx], s2[idx]
+        sample['json']['s1_grd'], sample['json']['s2_toa'] = meta_s1[idx], meta_s2[idx]
+        return sample
+
+    def _sample_one_time_stamp(self, sample: dict[str, Any]) -> dict[str, Any]:
+        """Mapping function: randomly select one timestamp for all modalities."""
+        for key in sample:
+            if key.endswith('.pth') and key != 'dem.pth':
+                idx = random.randint(0, sample[key].shape[0] - 1)
+                sample[key] = sample[key][idx]
+                sample['json'][key.replace('.pth', '')] = sample['json'][
+                    key.replace('.pth', '')
+                ][idx]
+
+        sample['json']['dem'] = sample['json']['dem'][0]
+        return sample
