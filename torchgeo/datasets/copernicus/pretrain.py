@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 """Copernicus-Pretrain dataset."""
 
 import random
@@ -9,42 +12,56 @@ import webdataset as wds
 class CopernicusPretrain:
     """Copernicus-Pretrain dataset.
 
-    Copernicus-Pretrain is an extension of the SSL4EO-S12 dataset to all major Sentinel missions (S1-S5P).
-    The images are organized into ~310K regional grids (0.25°x0.25°, consistent with ERA5), densely covering
-    the whole land surface and near-land ocean with time series from eight distinct Sentinel modalities.
+    Copernicus-Pretrain is an extension of the SSL4EO-S12 dataset to all major Sentinel
+    missions (S1-S5P). The images are organized into ~310K regional grids (0.25°x0.25°,
+    consistent with ERA5), densely covering the whole land surface and near-land ocean
+    with time series from eight distinct Sentinel modalities.
 
-    This dataset class uses WebDataset for efficient data loading in distributed environments, which returns a
-    Pytorch IterableDataset that is compatible with Pytorch DataLoader. Note: it is recommended to further use
-    webdataset.WebLoader (a wrapper on DataLoader) for more features in data loading.
+    This dataset class uses WebDataset for efficient data loading in distributed
+    environments, which returns a PyTorch IterableDataset that is compatible with
+    Pytorch DataLoader. Note: it is recommended to further use webdataset.WebLoader
+    (a wrapper on DataLoader) for more features in data loading.
 
-    The full dataset has varying number of modalities, S1/2 local patches, and timestamps for different grids.
-    For simplicity, the current dataset class provides a minimum example:
+    The full dataset has varying number of modalities, S1/2 local patches, and
+    timestamps for different grids. For simplicity, the current dataset class provides
+    a minimum example:
+
     - only use grids with all modalities (220k)
     - sample one local patch for S1 and S2
     - sample one timestamp for each modality
-    Therefore, each sample contains 8 tensors (S1, S2, S3, S5P NO2/CO/SO2/O3, DEM) and a JSON metadata.
+
+    Therefore, each sample contains 8 tensors (S1, S2, S3, S5P NO2/CO/SO2/O3, DEM) and
+    a JSON metadata.
 
     Example:
-    ```
-    copernicus_pretrain = CopernicusPretrain(shards_path='data/example-{000000..000009}.tar', shuffle=100, shardshuffle=True, resampled=True)
-    train_dataset = copernicus_pretrain.get_webdataset()
 
-    ## check the first sample
-    for sample in train_dataset:
-        s1, s2, s3, s5p_co, s5p_no2, s5p_o3, s5p_so2, dem, meta = sample
-        break
+    .. code-block:: python
+       copernicus_pretrain = CopernicusPretrain(
+           shards_path='data/example-{000000..000009}.tar',
+           shuffle=100,
+           shardshuffle=True,
+           resampled=True
+       )
+       train_dataset = copernicus_pretrain.get_webdataset()
 
-    ## create a DataLoader for distributed training on 2 GPUs
-    train_dataset = train_dataset.batched(10) # batch size
-    train_loader = webdataset.WebLoader(train_dataset, batch_size=None, num_workers=2)
-    # unbatch, shuffle, and rebatch to mix samples from different workers
-    train_loader = train_loader.unbatched().shuffle(100).batched(10)
-    # A resampled dataset is infinite size, but we can recreate a fixed epoch length
-    number_of_batches = 1000 // (10 * 2) # total number of samples / (batch size * world size)
-    data_loader_train = data_loader_train.with_epoch(number_of_batches)
-    ```
+       # Check the first sample
+       for sample in train_dataset:
+           s1, s2, s3, s5p_co, s5p_no2, s5p_o3, s5p_so2, dem, meta = sample
+           break
 
-    If you use this dataset in your research, please cite the following papers:
+       # Create a DataLoader for distributed training on 2 GPUs
+       train_dataset = train_dataset.batched(10) # batch size
+       train_loader = webdataset.WebLoader(
+           train_dataset, batch_size=None, num_workers=2
+       )
+       # Unbatch, shuffle, and rebatch to mix samples from different workers
+       train_loader = train_loader.unbatched().shuffle(100).batched(10)
+       # A resampled dataset is infinite size, but we can recreate a fixed epoch length
+       # Total number of samples / (batch size * world size)
+       number_of_batches = 1000 // (10 * 2)
+       data_loader_train = data_loader_train.with_epoch(number_of_batches)
+
+    If you use this dataset in your research, please cite the following paper:
 
     * https://arxiv.org/abs/2503.11849
 
@@ -52,9 +69,12 @@ class CopernicusPretrain:
     """
 
     urls: ClassVar[dict[str, str]] = {
-        '220k_aligned': 'https://huggingface.co/datasets/wangyi111/Copernicus-Pretrain/resolve/main/ssl4eo_s_220k_aligned/example-{000000..002255}.tar',  # grids with all modalities
-        '220k_310k_union': 'https://huggingface.co/datasets/wangyi111/Copernicus-Pretrain/resolve/main/ssl4eo_s_220k_310k_union/example-{002256..003210}.tar',  # remaining grids (with at least one modality)
-        '100_example': 'https://huggingface.co/datasets/wangyi111/Copernicus-Pretrain/resolve/main/example_100_grids/example_100_webdataset/example-{000000..000009}.tar',  # 100 example grids
+        # grids with all modalities
+        '220k_aligned': 'https://hf.co/datasets/wangyi111/Copernicus-Pretrain/resolve/d17e1098bd4fef52e7994805658434ce7e5800fc/ssl4eo_s_220k_aligned/example-{000000..002255}.tar',
+        # remaining grids (with at least one modality)
+        '220k_310k_union': 'https://hf.co/datasets/wangyi111/Copernicus-Pretrain/resolve/d17e1098bd4fef52e7994805658434ce7e5800fc/ssl4eo_s_220k_310k_union/example-{002256..003210}.tar',
+        # 100 example grids
+        '100_example': 'https://hf.co/datasets/wangyi111/Copernicus-Pretrain/resolve/d17e1098bd4fef52e7994805658434ce7e5800fc/example_100_grids/example_100_webdataset/example-{000000..000009}.tar',
     }
 
     def __init__(
@@ -67,7 +87,8 @@ class CopernicusPretrain:
         """Initialize a new CopernicusPretrain instance.
 
         Args:
-            shards_path (str): Path to the shards of the dataset. Can be local paths or URLs.
+            shards_path (str): Path to the shards of the dataset. Can be local paths or
+                URLs.
             resampled (bool): Dynamically resample the dataset shards.
             shardshuffle (bool): Shuffle the order of the shards.
             shuffle (int): Buffer size for shuffling individual samples before batching.
