@@ -87,7 +87,7 @@ class EuroCrops(VectorDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS = CRS.from_epsg(4326),
-        res: tuple[float, float] = (0.00001, 0.00001),
+        res: float | tuple[float, float] = (0.00001, 0.00001),
         classes: list[str] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
@@ -99,7 +99,8 @@ class EuroCrops(VectorDataset):
             paths: one or more root directories to search for files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to WGS-84)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
             classes: list of classes to include (specified by their HCAT code),
                 the rest will be mapped to 0 (defaults to all classes)
             transforms: a function/transform that takes an input sample

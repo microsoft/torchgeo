@@ -134,7 +134,7 @@ class L8Biome(IntersectionDataset):
         self,
         paths: Path | Iterable[Path],
         crs: CRS | None = CRS.from_epsg(3857),
-        res: tuple[float, float] | None = None,
+        res: float | tuple[float, float] | None = None,
         bands: Sequence[str] = L8BiomeImage.all_bands,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
@@ -147,7 +147,8 @@ class L8Biome(IntersectionDataset):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to EPSG:3857)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes an input sample
