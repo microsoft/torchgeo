@@ -234,7 +234,6 @@ class OpenBuildings(VectorDataset):
         self.paths = paths
         if isinstance(res, float):
             res = (res, res)
-        res = cast(tuple[float, float], res)
         self.res = res
         self.checksum = checksum
         self.transforms = transforms
