@@ -25,6 +25,7 @@ from torchgeo.models import (
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
+    panopticon_vitb14
 )
 
 __all__ = (
@@ -45,6 +46,7 @@ __all__ = (
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
+    'panopticon_vitb14'
 )
 
 dependencies = ['timm', 'torchvision']

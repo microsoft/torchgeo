@@ -45,6 +45,8 @@ from .vit import (
     vit_small_patch16_224,
 )
 
+from .panopticon import panopticon_vitb14
+
 __all__ = (
     'CROMA',
     'DOFA',
@@ -98,4 +100,6 @@ __all__ = (
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
+    'panopticon_vitb14',
+    'Panopticon_Weights',
 )
