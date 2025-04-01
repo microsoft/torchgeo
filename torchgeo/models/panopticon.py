@@ -27,8 +27,10 @@ def panopticon_vitb14() -> torch.nn.Module:
     see https://github.com/Panopticon-FM/panopticon?tab=readme-ov-file#using-panopticon. 
 
     If you use this model in your research, please cite the following paper:
+    
     * https://arxiv.org/abs/2503.10845
-    .. versionadded:: 0.[TBD]
+    
+    .. versionadded:: 0.7
 
     Returns:
         The Panopticon ViT-Base model with the published weights loaded.
