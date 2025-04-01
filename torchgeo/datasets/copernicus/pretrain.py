@@ -40,7 +40,7 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
 
     .. code-block:: python
        dataset = CopernicusPretrain(
-           shards_path='data/example-{000000..000009}.tar',
+           urls='data/example-{000000..000009}.tar',
            shuffle=100,
            shardshuffle=True,
            resampled=True
@@ -76,7 +76,7 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
     .. versionadded:: 0.7
     """
 
-    urls: ClassVar[dict[str, str]] = {
+    url_dict: ClassVar[dict[str, str]] = {
         # grids with all modalities
         '220k_aligned': 'https://hf.co/datasets/wangyi111/Copernicus-Pretrain/resolve/d17e1098bd4fef52e7994805658434ce7e5800fc/ssl4eo_s_220k_aligned/example-{000000..002255}.tar',
         # remaining grids (with at least one modality)
@@ -87,7 +87,7 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
 
     def __init__(
         self,
-        shards_path: str,
+        urls: str | None = None,
         shuffle: int = 0,
         shardshuffle: bool = False,
         resampled: bool = False,
@@ -95,21 +95,22 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
         """Initialize a new CopernicusPretrain instance.
 
         Args:
-            shards_path: Path to the shards of the dataset. Can be local paths or URLs.
+            urls: URLs or cache directory containing sharded dataset.
+                Defaults to aligned grid.
             resampled: Dynamically resample the dataset shards.
             shardshuffle: Shuffle the order of the shards.
             shuffle: Buffer size for shuffling individual samples before batching.
         """
         wds = lazy_import('webdataset')
 
-        self.shards_path = shards_path
+        self.urls = urls or self.url_dict['220k_aligned']
         self.shuffle = shuffle
         self.shardshuffle = shardshuffle
         self.resampled = resampled
 
         self.dataset = (
             wds.WebDataset(
-                self.shards_path,
+                self.urls,
                 resampled=self.resampled,
                 shardshuffle=self.shardshuffle,
                 nodesplitter=wds.split_by_node,

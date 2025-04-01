@@ -125,10 +125,10 @@ class TestCopernicusBench:
 
 
 class TestCopernicusPretrain:
-    pytest.importorskip('webdataset')
-
     @pytest.fixture
     def dataset(self) -> CopernicusPretrain:
+        pytest.importorskip('webdataset')
+
         root = os.path.join('tests', 'data', 'copernicus', 'pretrain')
         tar_files = sorted(glob.glob(os.path.join(root, 'example-*.tar')))
         numbers = sorted(
@@ -136,9 +136,9 @@ class TestCopernicusPretrain:
         )
         start, end = numbers[0], numbers[-1]
         shards = f'example-{{{start}..{end}}}.tar'
-        shards_path = os.path.join(root, shards)
+        urls = os.path.join(root, shards)
         dataset = CopernicusPretrain(
-            shards_path, shuffle=0, shardshuffle=False, resampled=False
+            urls, shuffle=0, shardshuffle=False, resampled=False
         )
         return dataset
 
