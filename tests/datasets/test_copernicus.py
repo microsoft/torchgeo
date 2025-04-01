@@ -136,7 +136,7 @@ class TestCopernicusPretrain:
         )
         start, end = numbers[0], numbers[-1]
         shards = f'example-{{{start}..{end}}}.tar'
-        urls = os.path.join(root, shards)
+        urls = os.path.join(root, shards).replace('\\', '/')
         dataset = CopernicusPretrain(
             urls, shuffle=0, shardshuffle=False, resampled=False
         )

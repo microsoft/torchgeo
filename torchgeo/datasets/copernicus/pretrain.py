@@ -39,6 +39,7 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
     Example:
 
     .. code-block:: python
+
        dataset = CopernicusPretrain(
            urls='data/example-{000000..000009}.tar',
            shuffle=100,
