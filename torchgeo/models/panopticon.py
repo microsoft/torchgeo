@@ -1,10 +1,12 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import torch
 from torchvision.models._api import Weights, WeightsEnum
 
 
-
 class Panopticon_Weights(WeightsEnum):  # type: ignore[misc]
-    """Panopticon weights. """
+    """Panopticon weights."""
 
     VIT_BASE14 = Weights(
         url='[TBD]',
@@ -19,12 +21,12 @@ class Panopticon_Weights(WeightsEnum):  # type: ignore[misc]
 
 
 def panopticon_vitb14() -> torch.nn.Module:
-    """Panopticon ViT-Base model. 
-    
+    """Panopticon ViT-Base model.
+
     Panopticon can handle arbitrary optical channel and SAR combinations.
-    For optimal performance, please match the training settings of 224x224 images 
+    For optimal performance, please match the training settings of 224x224 images
     with a patch size of 14. For more information on how to use the model,
-    see https://github.com/Panopticon-FM/panopticon?tab=readme-ov-file#using-panopticon. 
+    see https://github.com/Panopticon-FM/panopticon?tab=readme-ov-file#using-panopticon.
 
     If you use this model in your research, please cite the following paper:
     
@@ -35,4 +37,4 @@ def panopticon_vitb14() -> torch.nn.Module:
     Returns:
         The Panopticon ViT-Base model with the published weights loaded.
     """
-    return torch.hub.load('Panopticon-FM/panopticon','panopticon_vitb14')
+    return torch.hub.load('Panopticon-FM/panopticon', 'panopticon_vitb14')

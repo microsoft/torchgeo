@@ -13,6 +13,7 @@ from torchgeo.models import (
     croma_large,
     dofa_base_patch16_224,
     dofa_large_patch16_224,
+    panopticon_vitb14,
     resnet18,
     resnet50,
     resnet152,
@@ -25,7 +26,6 @@ from torchgeo.models import (
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
-    panopticon_vitb14
 )
 
 __all__ = (
@@ -34,6 +34,7 @@ __all__ = (
     'croma_large',
     'dofa_base_patch16_224',
     'dofa_large_patch16_224',
+    'panopticon_vitb14',
     'resnet18',
     'resnet50',
     'resnet152',
@@ -46,7 +47,6 @@ __all__ = (
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
-    'panopticon_vitb14'
 )
 
 dependencies = ['timm', 'torchvision']

@@ -19,6 +19,7 @@ from .dofa import (
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
+from .panopticon import panopticon_vitb14
 from .rcf import RCF
 from .resnet import (
     ResNet18_Weights,
@@ -45,8 +46,6 @@ from .vit import (
     vit_small_patch16_224,
 )
 
-from .panopticon import panopticon_vitb14
-
 __all__ = (
     'CROMA',
     'DOFA',
@@ -64,6 +63,7 @@ __all__ = (
     'FCSiamConc',
     'FCSiamDiff',
     'FarSeg',
+    'Panopticon_Weights',
     'ResNet18_Weights',
     'ResNet50_Weights',
     'ResNet152_Weights',
@@ -88,6 +88,7 @@ __all__ = (
     'get_model_weights',
     'get_weight',
     'list_models',
+    'panopticon_vitb14',
     'resnet18',
     'resnet50',
     'resnet152',
@@ -100,6 +101,4 @@ __all__ = (
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
-    'panopticon_vitb14',
-    'Panopticon_Weights',
 )
