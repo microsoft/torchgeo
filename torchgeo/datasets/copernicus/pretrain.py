@@ -7,9 +7,13 @@ import random
 from collections.abc import Iterator
 from typing import Any, ClassVar
 
+import numpy as np
+from einops import rearrange
+from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
 from torch.utils.data import IterableDataset
 
-from ..utils import lazy_import
+from ..utils import lazy_import, percentile_normalization
 
 
 class CopernicusPretrain(IterableDataset[dict[str, Any]]):
@@ -168,3 +172,78 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
 
         sample['json']['dem'] = sample['json']['dem'][0]
         return sample
+
+    def plot(
+        self,
+        sample: dict[str, Any],
+        show_titles: bool = True,
+        suptitle: str | None = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: A sample returned by :meth:`__iter__`.
+            show_titles: Flag indicating whether to show titles above each panel.
+            suptitle: Optional string to use as a suptitle.
+
+        Returns:
+            A matplotlib Figure with the rendered sample.
+        """
+        fig, ax = plt.subplots(nrows=2, ncols=4)
+
+        ax[0, 0].set_title('S1 GRD')
+        image = sample['s1_grd.pth'].numpy()
+        vv = image[0]
+        vh = image[1]
+        image = np.stack([vv, vh, (vv + vh) / 2], axis=-1)
+        image = percentile_normalization(image)
+        ax[0, 0].imshow(image)
+        ax[0, 0].axis('off')
+
+        ax[0, 1].set_title('S2 TOA')
+        rgb_bands = [3, 2, 1]
+        image = sample['s2_toa.pth'].numpy()[rgb_bands]
+        image = rearrange(image, 'c h w -> h w c')
+        image = percentile_normalization(image)
+        ax[0, 1].imshow(image)
+        ax[0, 1].axis('off')
+
+        ax[0, 2].set_title('S3 OLCI')
+        rgb_bands = [7, 5, 3]
+        image = sample['s3_olci.pth'].numpy()[rgb_bands]
+        image = rearrange(image, 'c h w -> h w c')
+        image = percentile_normalization(image)
+        ax[0, 2].imshow(image)
+        ax[0, 2].axis('off')
+
+        ax[0, 3].set_title('DEM')
+        image = sample['dem.pth'].numpy()
+        ax[0, 3].imshow(image, cmap='terrain')
+        ax[0, 3].axis('off')
+
+        ax[1, 0].set_title('S5P CO')
+        image = sample['s5p_co.pth'].numpy()[0]
+        ax[1, 0].imshow(image, cmap='Wistia')
+        ax[1, 0].axis('off')
+
+        ax[1, 1].set_title('S5P NO$_2$')
+        image = sample['s5p_no2.pth'].numpy()[0]
+        ax[1, 1].imshow(image, cmap='Wistia')
+        ax[1, 1].axis('off')
+
+        ax[1, 2].set_title('S5P O$_3$')
+        image = sample['s5p_o3.pth'].numpy()[0]
+        ax[1, 2].imshow(image, cmap='Wistia')
+        ax[1, 2].axis('off')
+
+        ax[1, 3].set_title('S5P SO$_2$')
+        image = sample['s5p_so2.pth'].numpy()[0]
+        ax[1, 3].imshow(image, cmap='Wistia')
+        ax[1, 3].axis('off')
+
+        if suptitle is not None:
+            fig.suptitle(suptitle)
+
+        fig.tight_layout()
+
+        return fig
