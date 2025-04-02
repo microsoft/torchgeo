@@ -361,10 +361,11 @@ class Sentinel2(Sentinel):
         """
         bands = bands or self.all_bands
         self.filename_glob = self.filename_glob.format(bands[0])
+
         if isinstance(res, float):
-            self.filename_regex = self.filename_regex.format(int(res))
-        else:
-            self.filename_regex = self.filename_regex.format(int(res[0]))
+            res = (res, res)
+
+        self.filename_regex = self.filename_regex.format(int(res[0]))
         super().__init__(paths, crs, res, bands, transforms, cache)
 
     def plot(
