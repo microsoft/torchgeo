@@ -129,16 +129,11 @@ class TestCopernicusPretrain:
     def dataset(self) -> CopernicusPretrain:
         pytest.importorskip('webdataset')
 
-        root = os.path.join('tests', 'data', 'copernicus', 'pretrain')
-        tar_files = sorted(glob.glob(os.path.join(root, 'example-*.tar')))
-        numbers = sorted(
-            set(re.findall(r'example-(\d{6})\.tar', f)[0] for f in tar_files)
-        )
-        start, end = numbers[0], numbers[-1]
-        shards = f'example-{{{start}..{end}}}.tar'
+        urls = os.path.join('tests', 'data', 'copernicus', 'pretrain')
+        shards = 'example-000000.tar'
         # WebDataset requires forward slash for paths, even on Windows
         urls = os.path.join(root, shards).replace('\\', '/')
-        dataset = CopernicusPretrain(urls)
+        dataset = CopernicusPretrain(urls, shardshuffle=False)
         return dataset
 
     def test_getitem(self, dataset: CopernicusPretrain) -> None:
