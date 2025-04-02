@@ -31,7 +31,7 @@ pycocotools==2.0.7
 pyarrow==15.0.0  # Remove when we upgrade min version of pandas to `pandas[parquet]>=2`
 scikit-image==0.20.0
 scipy==1.9.2
-webdataset==0.2.4
+webdataset==0.1.0
 xarray==0.12.3
 
 # tests
