@@ -120,7 +120,14 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
         return iter(self.dataset)
 
     def _has_all_modalities(self, sample: dict[str, Any]) -> bool:
-        """Selection function: filter samples with all required modalities."""
+        """Selection function: filter samples with all required modalities.
+
+        Args:
+            sample: A single sample from the dataset.
+
+        Returns:
+            True if all modalities are present in the sample, else False.
+        """
         required_keys = [
             's1_grd.pth',
             's2_toa.pth',
@@ -135,7 +142,14 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
         return all(key in sample for key in required_keys)
 
     def _sample_one_local_patch(self, sample: dict[str, Any]) -> dict[str, Any]:
-        """Mapping function: randomly select one local patch for S1 and S2."""
+        """Mapping function: randomly select one local patch for S1 and S2.
+
+        Args:
+            sample: A single sample from the dataset.
+
+        Returns:
+            The same sample with only a single patch for S1 and S2.
+        """
         s1, s2 = sample['s1_grd.pth'], sample['s2_toa.pth']
         meta_s1, meta_s2 = sample['json']['s1_grd'], sample['json']['s2_toa']
 
@@ -145,7 +159,14 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
         return sample
 
     def _sample_one_time_stamp(self, sample: dict[str, Any]) -> dict[str, Any]:
-        """Mapping function: randomly select one timestamp for all modalities."""
+        """Mapping function: randomly select one timestamp for all modalities.
+
+        Args:
+            sample: A single sample from the dataset.
+
+        Returns:
+            The same sample with only a single timestamp.
+        """
         for key in sample:
             if key.endswith('.pth') and key != 'dem.pth':
                 idx = random.randint(0, sample[key].shape[0] - 1)
