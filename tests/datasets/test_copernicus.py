@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import glob
 import os
-import re
 import shutil
 from pathlib import Path
 
@@ -129,7 +127,7 @@ class TestCopernicusPretrain:
     def dataset(self) -> CopernicusPretrain:
         pytest.importorskip('webdataset')
 
-        urls = os.path.join('tests', 'data', 'copernicus', 'pretrain')
+        root = os.path.join('tests', 'data', 'copernicus', 'pretrain')
         shards = 'example-000000.tar'
         # WebDataset requires forward slash for paths, even on Windows
         urls = os.path.join(root, shards).replace('\\', '/')
