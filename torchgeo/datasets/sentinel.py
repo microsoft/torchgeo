@@ -150,7 +150,7 @@ class Sentinel1(Sentinel):
         self,
         paths: Path | list[Path] = 'data',
         crs: CRS | None = None,
-        res: float = 10,
+        res: float | tuple[float, float] = (10, 10),
         bands: Sequence[str] = ['VV', 'VH'],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
@@ -161,7 +161,8 @@ class Sentinel1(Sentinel):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             bands: bands to return (defaults to ["VV", "VH"])
             transforms: a function/transform that takes an input sample
@@ -333,7 +334,7 @@ class Sentinel2(Sentinel):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float = 10,
+        res: float | tuple[float, float] = (10, 10),
         bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
@@ -344,7 +345,8 @@ class Sentinel2(Sentinel):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes an input sample
@@ -359,8 +361,11 @@ class Sentinel2(Sentinel):
         """
         bands = bands or self.all_bands
         self.filename_glob = self.filename_glob.format(bands[0])
-        self.filename_regex = self.filename_regex.format(res)
 
+        if isinstance(res, float):
+            res = (res, res)
+
+        self.filename_regex = self.filename_regex.format(int(res[0]))
         super().__init__(paths, crs, res, bands, transforms, cache)
 
     def plot(
