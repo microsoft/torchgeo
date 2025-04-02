@@ -154,7 +154,7 @@ class TestCopernicusPretrain:
         assert x['s5p_no2.pth'].shape == (1, 28, 28)
         assert x['s5p_o3.pth'].shape == (1, 28, 28)
         assert x['s5p_so2.pth'].shape == (1, 28, 28)
-        assert x['dem.pth'].shape == (1, 960, 960)
+        assert x['dem.pth'].shape == (960, 960)
         # Check the keys in the dictionary
         assert 's1_grd' in x['json']
         assert 's2_toa' in x['json']

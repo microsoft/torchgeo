@@ -218,7 +218,7 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
         ax[0, 2].imshow(image)
         ax[0, 2].axis('off')
 
-        image = sample['dem.pth'].numpy()[0]
+        image = sample['dem.pth'].numpy()
         ax[0, 3].imshow(image, cmap='terrain')
         ax[0, 3].axis('off')
 

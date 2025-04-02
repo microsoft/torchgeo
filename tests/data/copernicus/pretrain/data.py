@@ -70,7 +70,7 @@ with tarfile.open(tar_path, 'w') as tar:
         f'{grid_id}.s5p_no2.pth': torch.rand(2, 1, 28, 28, dtype=torch.float32),
         f'{grid_id}.s5p_o3.pth': torch.rand(2, 1, 28, 28, dtype=torch.float32),
         f'{grid_id}.s5p_so2.pth': torch.rand(2, 1, 28, 28, dtype=torch.float32),
-        f'{grid_id}.dem.pth': torch.rand(1, 960, 960, dtype=torch.float32),
+        f'{grid_id}.dem.pth': torch.rand(960, 960, dtype=torch.float32),
     }
 
     # Save tensors to tarfile
