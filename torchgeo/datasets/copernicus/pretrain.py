@@ -45,19 +45,22 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
     .. code-block:: python
 
        dataset = CopernicusPretrain(
-           urls='data/example-{000000..000009}.tar',
-           shuffle=100,
-           shardshuffle=True,
-           resampled=True
+           urls='data/example-{000000..000009}.tar', shardshuffle=True, resampled=True
        )
 
        # Check the first sample
-       for sample in dataset:
-           s1, s2, s3, s5p_co, s5p_no2, s5p_o3, s5p_so2, dem, meta = sample
-           break
+       sample = next(iter(dataset))
+       s1 = sample['s1_grd.pth']
+       s2 = sample['s2_toa.pth']
+       s3 = sample['s3_olci.pth']
+       s5p_co = sample['s5p_co.pth']
+       s5p_no2 = sample['s5p_no2.pth']
+       s5p_o3 = sample['s5p_o3.pth']
+       s5p_so2 = sample['s5p_so2.pth']
+       dem = sample['dem.pth']
 
        # Create a DataLoader for distributed training on 2 GPUs
-       dataset = dataset.batched(10) # batch size
+       dataset = dataset.dataset.batched(10) # batch size
        dataloader = webdataset.WebLoader(
            dataset, batch_size=None, num_workers=2
        )
@@ -90,37 +93,18 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
         '100_example': 'https://hf.co/datasets/wangyi111/Copernicus-Pretrain/resolve/d17e1098bd4fef52e7994805658434ce7e5800fc/example_100_grids/example_100_webdataset/example-{000000..000009}.tar',
     }
 
-    def __init__(
-        self,
-        urls: str | None = None,
-        shuffle: int = 0,
-        shardshuffle: bool = False,
-        resampled: bool = False,
-    ) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize a new CopernicusPretrain instance.
 
         Args:
-            urls: URLs or cache directory containing sharded dataset.
-                Defaults to aligned grid.
-            resampled: Dynamically resample the dataset shards.
-            shardshuffle: Shuffle the order of the shards.
-            shuffle: Buffer size for shuffling individual samples before batching.
+            *args: Arguments passed to WebDataset base class.
+            **kwargs: Keyword arguments passed to WebDataset base class.
         """
         wds = lazy_import('webdataset')
 
-        self.urls = urls or self.url_dict['220k_aligned']
-        self.shuffle = shuffle
-        self.shardshuffle = shardshuffle
-        self.resampled = resampled
-
         self.dataset = (
-            wds.WebDataset(
-                self.urls,
-                resampled=self.resampled,
-                shardshuffle=self.shardshuffle,
-                nodesplitter=wds.split_by_node,
-            )  # shuffle shard orders and samples within shards, split by node
-            .shuffle(self.shuffle)  # shuffle individual samples before batching
+            wds.WebDataset(*args, **kwargs)
+            .shuffle(10)  # shuffle individual samples before batching
             .decode()  # decode binary data
             .select(self._has_all_modalities)  # select samples with all modalities
             .map(self._sample_one_local_patch)  # sample one local patch for S1 and S2
@@ -191,7 +175,6 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
         """
         fig, ax = plt.subplots(nrows=2, ncols=4)
 
-        ax[0, 0].set_title('S1 GRD')
         image = sample['s1_grd.pth'].numpy()
         vv = image[0]
         vh = image[1]
@@ -200,7 +183,6 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
         ax[0, 0].imshow(image)
         ax[0, 0].axis('off')
 
-        ax[0, 1].set_title('S2 TOA')
         rgb_bands = [3, 2, 1]
         image = sample['s2_toa.pth'].numpy()[rgb_bands]
         image = rearrange(image, 'c h w -> h w c')
@@ -208,7 +190,6 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
         ax[0, 1].imshow(image)
         ax[0, 1].axis('off')
 
-        ax[0, 2].set_title('S3 OLCI')
         rgb_bands = [7, 5, 3]
         image = sample['s3_olci.pth'].numpy()[rgb_bands]
         image = rearrange(image, 'c h w -> h w c')
@@ -216,30 +197,35 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
         ax[0, 2].imshow(image)
         ax[0, 2].axis('off')
 
-        ax[0, 3].set_title('DEM')
-        image = sample['dem.pth'].numpy()
+        image = sample['dem.pth'].numpy()[0]
         ax[0, 3].imshow(image, cmap='terrain')
         ax[0, 3].axis('off')
 
-        ax[1, 0].set_title('S5P CO')
         image = sample['s5p_co.pth'].numpy()[0]
         ax[1, 0].imshow(image, cmap='Wistia')
         ax[1, 0].axis('off')
 
-        ax[1, 1].set_title('S5P NO$_2$')
         image = sample['s5p_no2.pth'].numpy()[0]
         ax[1, 1].imshow(image, cmap='Wistia')
         ax[1, 1].axis('off')
 
-        ax[1, 2].set_title('S5P O$_3$')
         image = sample['s5p_o3.pth'].numpy()[0]
         ax[1, 2].imshow(image, cmap='Wistia')
         ax[1, 2].axis('off')
 
-        ax[1, 3].set_title('S5P SO$_2$')
         image = sample['s5p_so2.pth'].numpy()[0]
         ax[1, 3].imshow(image, cmap='Wistia')
         ax[1, 3].axis('off')
+
+        if show_titles:
+            ax[0, 0].set_title('S1 GRD')
+            ax[0, 1].set_title('S2 TOA')
+            ax[0, 2].set_title('S3 OLCI')
+            ax[0, 3].set_title('DEM')
+            ax[1, 0].set_title('S5P CO')
+            ax[1, 1].set_title('S5P NO$_2$')
+            ax[1, 2].set_title('S5P O$_3$')
+            ax[1, 3].set_title('S5P SO$_2$')
 
         if suptitle is not None:
             fig.suptitle(suptitle)

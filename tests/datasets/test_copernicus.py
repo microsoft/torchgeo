@@ -136,10 +136,9 @@ class TestCopernicusPretrain:
         )
         start, end = numbers[0], numbers[-1]
         shards = f'example-{{{start}..{end}}}.tar'
+        # WebDataset requires forward slash for paths, even on Windows
         urls = os.path.join(root, shards).replace('\\', '/')
-        dataset = CopernicusPretrain(
-            urls, shuffle=0, shardshuffle=False, resampled=False
-        )
+        dataset = CopernicusPretrain(urls)
         return dataset
 
     def test_getitem(self, dataset: CopernicusPretrain) -> None:
@@ -172,3 +171,8 @@ class TestCopernicusPretrain:
         assert 's5p_o3' in x['json']
         assert 's5p_so2' in x['json']
         assert 'dem' in x['json']
+
+    def test_plot(self, dataset: CopernicusPretrain) -> None:
+        x = next(iter(dataset))
+        dataset.plot(x, suptitle='Test')
+        plt.close()
