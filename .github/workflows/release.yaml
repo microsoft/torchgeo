@@ -59,7 +59,7 @@ jobs:
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install .[docs,tests] planetary_computer pystac tensorboard h5py sklearn
+          pip install .[docs,tests] planetary_computer pystac tensorboard h5py scikit-learn
           pip cache purge
       - name: List pip dependencies
         run: pip list
