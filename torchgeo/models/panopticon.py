@@ -12,11 +12,7 @@ from torchvision.models._api import Weights, WeightsEnum
 
 
 class PanopticonPE(nn.Module):
-    """General class defining a patch embedding that takes in arbitrary channel
-    dimension and outputs a fixed dimension embedding. This class handles
-    the tokenization and projections. The attributed self.chnfus handles
-    the channel fusion, i.e. the cross attention over channels.
-    """
+    """Defines the Panopticon Patch Embedding."""
 
     def __init__(
         self,
@@ -25,7 +21,19 @@ class PanopticonPE(nn.Module):
         patch_size: int,
         chnfus_cfg: dict = {},
         img_size: int = 224,
-    ):
+    ) -> None:
+        """Initialize a new Panopticon instance.
+
+        Args:
+            attn_dim (int): Embedding dimension  on which the channel attention
+                operates.
+            embed_dim (int): Dimension of embeddings that the PanopticonPE
+                outputs.
+            patch_size (int): The patch size.
+            chnfus_cfg (dict, optional): Key word arguemnts defining
+                the channel attention. Defaults to {}.
+            img_size (int, optional): Image size. Defaults to 224.
+        """
         super().__init__()
 
         self.conv3d = Conv3dWrapper(patch_size=patch_size, embed_dim=attn_dim)
@@ -36,7 +44,18 @@ class PanopticonPE(nn.Module):
         self.img_size, self.grid_size, self.num_patches = self._init_img_size(img_size)
 
     def forward(self, x_dict: dict) -> Tensor:
-        x = x_dict['x']
+        """Forward pass of the model.
+
+        Args:
+            x_dict (dict): Dictionary with inputs to the model. Contains keys
+                'imgs' with tensor of shape (B, C, H, W) and 'chn_ids' with tensor of shape
+                (B,C) encoding the channel ids.
+
+        Returns:
+            Tensor: Output of shape (B,h,w,embed_dim) where h=img_size/patch_size and
+                w=img_size/patch_size.
+        """
+        x = x_dict['imgs']
         chn_ids = x_dict['chn_ids']
         mask = x_dict.get('spec_masks', None)
 
@@ -49,7 +68,8 @@ class PanopticonPE(nn.Module):
 
         return x
 
-    def _init_img_size(self, img_size: int | tuple[int, int]):
+    def _init_img_size(self, img_size: int | tuple[int, int]) -> tuple[int, int, int]:
+        """Compute the image size, grid size and number of patches."""
         # copied from timm.layers.patch_embed.PatchEmbed._init_img_size
         assert self.patch_size
         if img_size is None:
@@ -60,8 +80,9 @@ class PanopticonPE(nn.Module):
         return img_size, grid_size, num_patches
 
 
-def make_2tuple(x):
-    # from dinov2, https://github.com/facebookresearch/dinov2/blob/main/dinov2/layers/patch_embed.py
+def make_2tuple(x: int | tuple[int, int]) -> tuple[int, int]:
+    """Convert an int or a tuple of ints to a 2-tuple."""
+    # copied from dinov2, https://github.com/facebookresearch/dinov2/blob/main/dinov2/layers/patch_embed.py
     if isinstance(x, tuple):
         assert len(x) == 2
         return x
@@ -71,25 +92,40 @@ def make_2tuple(x):
 
 
 class Conv3dWrapper(nn.Module):
-    """Channel-wise patchification and projection, essentially wrapper around
-    1 x P x P conv3d
-    """
+    """Channel-wise patchification and projection."""
 
-    def __init__(self, patch_size, embed_dim):
+    def __init__(self, patch_size: int, embed_dim: int) -> None:
+        """Initialize a conv3d wrapper.
+
+        Args:
+            patch_size (int): Patch size.
+            embed_dim (int): Embedding dimension.
+        """
         super().__init__()
         patch_size = make_2tuple(patch_size)
         patch_CHW = (1, *patch_size)
         self.conv3d = nn.Conv3d(1, embed_dim, kernel_size=patch_CHW, stride=patch_CHW)
 
-    def forward(self, x: Tensor):
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward pass.
+
+        Args:
+            x (Tensor): Tensor of shape (B, C, H, W) where B is the batch size,
+
+        Returns:
+            Tensor:
+            hp: number of patches in heigth
+            wp: number of patches in width
+        """
         x = self.conv3d(x.unsqueeze(1)).squeeze(1)  # B D C Hp Wp
         hp, wp = x.shape[-2:]
         return x.flatten(-2).permute(0, 2, 3, 1), hp, wp  # B C L D
 
 
 class ChnAttn(nn.Module):
-    """Cross attention over channels with channel embeddings to reduce any number
-    of channels to a fixed dimension. Inspired by
+    """Cross attention over channels with channel embeddings.
+
+    Can reduce any number of channels to a fixed dimension. Inspired by
         https://github.com/microsoft/ClimaX/blob/6d5d354ffb4b91bb684f430b98e8f6f8af7c7f7c/src/climax/arch.py#L185
     """
 
@@ -99,13 +135,15 @@ class ChnAttn(nn.Module):
         chnemb_cfg: dict = {},
         attn_cfg: dict = {},
         layer_norm: bool = False,
-    ):
-        """Args:
-        dim (int): Dimension of the channel attention.
-        chnemb_cfg (dict): Key-value pairs for the channel embedding.
-        attn_cfg (dict): Key-value pairs for the channel attention.
-        layer_norm (bool, optional): Whether to apply layer norm after
-            channel attention. Defaults to False.
+    ) -> None:
+        """Initialize a channel attention module.
+
+        Args:
+            dim (int): Dimension of the channel attention.
+            chnemb_cfg (dict, optional): Key-value pairs for the channel embedding. Defaults to {}.
+            attn_cfg (dict, optional): Key-value pairs for the channel attention.. Defaults to {}.
+            layer_norm (bool, optional): Whether to apply layer norm after
+                channel attention. Defaults to False.
         """
         super().__init__()
 
@@ -117,10 +155,11 @@ class ChnAttn(nn.Module):
             self.layer_norm = nn.LayerNorm(dim)
 
     def forward(self, x: Tensor, chn_ids: Tensor, mask: Tensor = None) -> Tensor:
-        """Args:
+        """Forward pass.
+
+        Args:
             x (Tensor): Image tensor of shape (B, C, L, D)
-            chn_ids (Tensor): Channel IDs tensor of shape (B,C) or (B,C,2) if
-                stds of the SRFs curves are included, see ChnEmb.
+            chn_ids (Tensor): Channel IDs tensor of shape (B,C), see ChnEmb.
             mask (Tensor, optional): Mask tensor of shape (B,C) indicating
                 which channels have been masked out. Defaults to None.
 
@@ -154,7 +193,11 @@ class ChnAttn(nn.Module):
 
 
 class ChnEmb(torch.nn.Module):
-    def __init__(self, embed_dim: int, use_full_spectra=False, opt_coarsity: int = 1):
+    """Computes embeddings from Channel IDs."""
+
+    def __init__(
+        self, embed_dim: int, use_full_spectra: bool = False, opt_coarsity: int = 1
+    ) -> None:
         """Creates embeddings based on the channel IDs.
 
         Args:
@@ -180,6 +223,16 @@ class ChnEmb(torch.nn.Module):
         )  # 0:ascending, 1:descending
 
     def forward(self, input: Tensor) -> Tensor:
+        """Forward pass.
+
+        Args:
+            input (Tensor): Tensor of shape (B,C) or (B,C,2). If (B,C), we expect
+                the channel IDs. If (B,C,2), we expect the channel IDs and the
+                standard deviation of the spectral response function (SRF).
+
+        Returns:
+            Tensor: Embeddings of shape (B,C,embed_dim).
+        """
         if input.ndim == 2:  # B,C (mus)
             mus = input
         elif input.ndim == 3:  # B,C,2 (mus, sigmas)
@@ -190,7 +243,7 @@ class ChnEmb(torch.nn.Module):
         dtype = self.embed_transmit.dtype
 
         embs = torch.zeros(
-            list(mus.shape) + [self.embed_dim], device=device, dtype=dtype
+            [*list(mus.shape), self.embed_dim], device=device, dtype=dtype
         )
 
         # build optical embeddings
@@ -202,7 +255,11 @@ class ChnEmb(torch.nn.Module):
             ).to(dtype)
 
         elif input.ndim == 3:  # full spectra
-            raise NotImplementedError('Full spectra not implemented yet.')
+            mus_opt = mus[opt_indices]
+            sigmas_opt = input[opt_indices][:, 1]
+            embs[opt_indices] = get_1d_sincos_ipe_analytical(
+                mus_opt, sigmas_opt, self.embed_dim, device
+            ).to(dtype)
 
         # build sar embeddings
 
@@ -229,19 +286,17 @@ class ChnEmb(torch.nn.Module):
 
 
 class CrossAttnNoQueryProj(nn.Module):
-    """Cross Attention without query projection and final projection
+    """Cross Attention without query projection and final projection."""
 
-    Comment: While doing the final refactor before the release, we noticed that
-        we project from patches to 2304 with the conv3d and then again have the
-        key & value projections from 2304 to 2304 without non-linearity in-between.
-        Hence, the key & value projections are redundant and could be removed,
-        significantly reducing the number of parameters. However, this is how
-        the paper results were generated and we keep it for reproducibility.
-        If you plan on further developing panopticon, please remove the key & value
-        projections!
-    """
+    def __init__(self, dim: int, num_heads: int = 8, qkv_bias: bool = False) -> None:
+        """Initialize a cross attention module.
 
-    def __init__(self, dim: int, num_heads: int = 8, qkv_bias: bool = False):
+        Args:
+            dim (int): dimension of attention.
+            num_heads (int, optional): number of heads. Defaults to 8.
+            qkv_bias (bool, optional): whether to use query, key, and
+                value biases. Defaults to False.
+        """
         super().__init__()
         self.num_heads = num_heads
         head_dim = dim // num_heads
@@ -252,8 +307,20 @@ class CrossAttnNoQueryProj(nn.Module):
         self.inproj_k = nn.Linear(dim, dim, bias=qkv_bias)
         self.inproj_v = nn.Linear(dim, dim, bias=qkv_bias)
 
-    def forward(self, q: Tensor, k: Tensor, v: Tensor, key_padding_mask=None):
-        """q: (B, Nq, D), kv: (B, Nkv, D), key_padding_mask: (B, Nkv)"""
+    def forward(
+        self, q: Tensor, k: Tensor, v: Tensor, key_padding_mask: Tensor | None = None
+    ) -> Tensor:
+        """Forward pass of the model.
+
+        Args:
+            q (Tensor): query of shape (B, Nq, D)
+            k (Tensor): key tensor of shape (B, Nkv, D)
+            v (Tensor): value tensor of shape (B, Nkv, D)
+            key_padding_mask (Tensor, optional): key padding mask tensor of shape (B, Nkv). Defaults to None.
+
+        Returns:
+            Tensor: resulting tensor
+        """
         B, Nq, D = q.shape
         q = (
             self.inproj_q(q)
@@ -287,10 +354,15 @@ class CrossAttnNoQueryProj(nn.Module):
         return x
 
 
-def get_1d_sincos_pos_embed_from_grid_torch(embed_dim, pos):
-    """embed_dim: output dimension for each position
-    pos: a list of positions to be encoded: size (M,)
-    out: (M, D)
+def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: Tensor, pos: list) -> Tensor:
+    """Generate standard sin cos positional embeddings.
+
+    Args:
+        embed_dim (Tensor): output dimension for each position
+        pos (list): a list of positions to be encoded: size (M,)
+
+    Returns:
+        Tensor: Tensor of embeddings of shape (M,D)
     """
     assert embed_dim % 2 == 0
     omega = torch.arange(embed_dim // 2, dtype=torch.float32, device=pos.device)
@@ -305,6 +377,50 @@ def get_1d_sincos_pos_embed_from_grid_torch(embed_dim, pos):
 
     emb = torch.cat([emb_sin, emb_cos], dim=1)  # (M, D)
     return emb
+
+
+def get_1d_sincos_ipe_analytical(
+    mu: Tensor, sigma: Tensor, D: int, device: torch.device, temperature: int = 10000
+) -> Tensor:
+    """Compute the integrated positional embedding (IPE).
+
+    This is only used in the appendix of the paper. You can find further
+    information on the motivation & formulas there.
+
+    Args:
+        mu (Tensor): Tensor containing the mus.
+        sigma (Tensor): Tensor containing the sigmas.
+        D (int): dimension of the embeddings.
+        device (torch.device): Torch device to move the embeddings to.
+        temperature (int, optional): temperature of embeddings. Defaults to 10000.
+
+    Returns:
+        Tensor: Tensor of embeddings.
+    """
+    # Create meshgrid for vectorized computation
+    d_mesh = torch.arange(D, dtype=torch.float32, device=device)
+    mu_mesh = mu.unsqueeze(1).expand(-1, D)
+    sigma_mesh = sigma.unsqueeze(1).expand(-1, D)
+
+    # Compute frequencies omega_i
+    omega = 1.0 / (temperature ** (2 * d_mesh / D))
+
+    # Compute the Gaussian decay term for each frequency
+    # Note: We divide by sigma to normalize similar to how a Gaussian kernel would be normalized
+    gaussian_term = torch.exp(-0.5 * (omega.unsqueeze(0) * sigma_mesh) ** 2)
+
+    # Compute sine and cosine terms
+    sin_term = torch.sin(omega.unsqueeze(0) * mu_mesh)
+    cos_term = torch.cos(omega.unsqueeze(0) * mu_mesh)
+
+    # Combine based on even/odd indices
+    IPE = torch.where(
+        d_mesh % 2 == 0,
+        gaussian_term * sin_term,  # even indices
+        gaussian_term * cos_term,
+    )  # odd indices
+
+    return IPE
 
 
 ################
@@ -326,33 +442,53 @@ class Panopticon_Weights(WeightsEnum):  # type: ignore[misc]
 
 
 class Panopticon(torch.nn.Module):
-    def __init__(self):
+    """Panopticon ViT-Base Foundation Model."""
+
+    def __init__(
+        self,
+        attn_dim: int = 2304,
+        embed_dim: int = 768,
+        patch_size: int = 14,
+        img_size: int = 518,
+    ) -> None:
+        """Initialize a panopticon model.
+
+        Args:
+            attn_dim (int, optional): Dimension of channel attention. Defaults to 2304.
+            embed_dim (int, optional): Embedding dimension of backbone. Defaults to 768.
+            patch_size (int, optional): Patch size. Defaults to 14.an
+            img_size (int, optional): Maximum image size. The model can still
+                process smaller image sizes. The model was trained on 224 with max
+                518, so best keep this arguemtn to 518 and pass 224 sizes images.
+                Defaults to 518.
+        """
         super().__init__()
         dinov2_vit = timm.create_model('vit_base_patch14_dinov2', dynamic_img_size=True)
 
         dinov2_vit.patch_embed = PanopticonPE(
-            attn_dim=2304,
-            embed_dim=768,
-            patch_size=14,
-            img_size=518,
+            attn_dim=attn_dim,
+            embed_dim=embed_dim,
+            patch_size=patch_size,
+            img_size=img_size,
             chnfus_cfg={'attn_cfg': {'num_heads': 16}},
         )
 
         self.model = dinov2_vit
 
-    def forward(self, x: Tensor, chn_ids: Tensor) -> Tensor:
+    def forward(self, x_dict: dict) -> Tensor:
         """Forward pass of the model including forward pass through the head.
 
         Args:
-            x (Tensor): Input tensor of shape (B, C, H, W).
-            chn_ids (Tensor): Tensor of shape (B,C) encoding the spectral information
-                of each channel. For optical channels, this is the wavelength
-                in nanometers. For SAR channels, this is a negative integer as
-                outlined in https://github.com/Panopticon-FM/panopticon/blob/main/dinov2/configs/data/satellites/sentinel1.yaml
+            x_dict (dict): Dictionary with keys:
+                imgs (Tensor): Input tensor of shape (B, C, H, W).
+                chn_ids (Tensor): Tensor of shape (B,C) encoding the spectral information
+                    of each channel. For optical channels, this is the wavelength
+                    in nanometers. For SAR channels, this is a negative integer as
+                    outlined in https://github.com/Panopticon-FM/panopticon/blob/main/dinov2/configs/data/satellites/sentinel1.yaml
         Returns:
-            Tensor: Output.
+            Tensor: Embeddings.
         """
-        return self.model(dict(x=x, chn_ids=chn_ids))
+        return self.model(x_dict)
 
 
 def panopticon_vitb14(weights: Panopticon_Weights | None = None) -> torch.nn.Module:
