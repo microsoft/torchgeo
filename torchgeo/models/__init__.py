@@ -19,7 +19,7 @@ from .dofa import (
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
-from .panopticon import panopticon_vitb14, Panopticon_Weights
+from .panopticon import Panopticon_Weights, panopticon_vitb14
 from .rcf import RCF
 from .resnet import (
     ResNet18_Weights,
