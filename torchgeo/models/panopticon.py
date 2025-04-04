@@ -452,7 +452,7 @@ class Panopticon(torch.nn.Module):
         """Forward pass of the model including forward pass through the head.
 
         Args:
-            x_dict: Dictionary with keys:
+            x_dict: Dictionary with keys::
                 imgs: Input tensor of shape (B, C, H, W).
                 chn_ids: Tensor of shape (B,C) encoding the spectral information
                     of each channel. For optical channels, this is the wavelength
