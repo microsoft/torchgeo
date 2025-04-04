@@ -65,9 +65,6 @@ class TestPanopticonBase:
     ) -> WeightsEnum:
         weights = Panopticon_Weights.VIT_BASE14
         path = tmp_path / f'{weights}.pth'
-        img_size = 224
-        patch_size = 14
-        embed_dim = 768
         model = panopticon_vitb14()
         state_dict = model.model.state_dict()
         state_dict['mask_token'] = None
