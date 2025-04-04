@@ -13,6 +13,9 @@ from timm.layers.helpers import to_2tuple
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
 
+from ..samplers.utils import _to_tuple
+from .copernicusfm import resize_abs_pos_embed
+
 
 class PanopticonPE(nn.Module):
     """Defines the Panopticon Patch Embedding."""
@@ -55,8 +58,7 @@ class PanopticonPE(nn.Module):
                 (B,C) encoding the channel ids.
 
         Returns:
-            Tensor: Output of shape (B,h,w,embed_dim) where h=img_size/patch_size and
-                w=img_size/patch_size.
+            Tensor: Output of shape (B, num_patches, embed_dim)
         """
         x: Tensor = x_dict['imgs']
         chn_ids = x_dict['chn_ids']
@@ -66,8 +68,6 @@ class PanopticonPE(nn.Module):
 
         x = self.chnfus(x, chn_ids=chn_ids, mask=mask)  # B,L,D
         x = self.proj(x)
-
-        x = x.reshape(x.shape[0], hp, wp, x.shape[-1])
 
         return x
 
@@ -92,17 +92,6 @@ class PanopticonPE(nn.Module):
         )
 
 
-def make_2tuple(x: int | tuple[int, int]) -> tuple[int, int]:
-    """Convert an int or a tuple of ints to a 2-tuple."""
-    # copied from dinov2, https://github.com/facebookresearch/dinov2/blob/main/dinov2/layers/patch_embed.py
-    if isinstance(x, tuple):
-        assert len(x) == 2
-        return x
-
-    assert isinstance(x, int)
-    return (x, x)
-
-
 class Conv3dWrapper(nn.Module):
     """Channel-wise patchification and projection."""
 
@@ -114,7 +103,7 @@ class Conv3dWrapper(nn.Module):
             embed_dim (int): Embedding dimension.
         """
         super().__init__()
-        tuple_patch_size = make_2tuple(patch_size)
+        tuple_patch_size = _to_tuple(patch_size)
         patch_CHW = (1, tuple_patch_size[0], tuple_patch_size[1])
         self.conv3d = nn.Conv3d(1, embed_dim, kernel_size=patch_CHW, stride=patch_CHW)
 
@@ -463,16 +452,41 @@ class Panopticon_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    # VIT_BASE14 = Weights(
+    #     url='/home/hk-project-pai00028/tum_mhj8661/code/release_weights_final/panopticon_vitb14_teacher_torchgeo.pth',
+    #     transforms=None,
+    #     meta={
+    #         'model': 'panopticon_vitb14',
+    #         'publication': 'https://arxiv.org/abs/2503.10845',
+    #         'repo': 'https://github.com/Panopticon-FM/panopticon',
+    #         'ssl_method': 'dinov2+spectral_progressive_pretraining',
+    #     },
+    # )
+
+
+# def interpolate_pe(pos_embed, img_size, patch_size):
+
+#     cls_pos_embed = pos_embed[:,0,:]
+#     patch_pos_embed = pos_embed[:,1:,:]
+
+#     dim = pos_embed.shape[-1]
+#     hw_p = img_size // patch_size
+
+#     patch_pos_embed = nn.functional.interpolate(
+#         patch_pos_embed.reshape(1, hw_p, hw_p, -1).permute(0, 3, 1, 2),
+#         size = (hw_p, hw_p),
+#         mode="bicubic",
+#     )
+
+#     patch_pos_embed = patch_pos_embed.permute(0, 2, 3, 1).view(1, -1, dim)
+#     return torch.cat((cls_pos_embed.unsqueeze(0), patch_pos_embed), dim=1)
+
 
 class Panopticon(torch.nn.Module):
     """Panopticon ViT-Base Foundation Model."""
 
     def __init__(
-        self,
-        attn_dim: int = 2304,
-        embed_dim: int = 768,
-        patch_size: int = 14,
-        img_size: int = 518,
+        self, attn_dim: int = 2304, embed_dim: int = 768, img_size: int = 224
     ) -> None:
         """Initialize a panopticon model.
 
@@ -487,7 +501,8 @@ class Panopticon(torch.nn.Module):
                 Defaults to 518.
         """
         super().__init__()
-        dinov2_vit = timm.create_model('vit_base_patch14_dinov2', dynamic_img_size=True)
+        dinov2_vit = timm.create_model('vit_base_patch14_dinov2')
+        patch_size = 14
 
         dinov2_vit.patch_embed = PanopticonPE(
             attn_dim=attn_dim,
@@ -496,9 +511,12 @@ class Panopticon(torch.nn.Module):
             img_size=img_size,
             chnfus_cfg={'attn_cfg': {'num_heads': 16}},
         )
+        dinov2_vit.pos_embed = torch.nn.Parameter(
+            torch.randn(1, 1 + (img_size // patch_size) ** 2, embed_dim)
+        )
 
-        self.model: timm.models.vision_transformer.VisionTransformer = dinov2_vit
-        # self.model: nn.Module = dinov2_vit
+        # self.model: timm.models.vision_transformer.VisionTransformer = dinov2_vit
+        self.model: nn.Module = dinov2_vit
 
     def forward(self, x_dict: dict[str, Any]) -> Tensor:
         """Forward pass of the model including forward pass through the head.
@@ -517,7 +535,7 @@ class Panopticon(torch.nn.Module):
 
 
 def panopticon_vitb14(
-    weights: Panopticon_Weights | None = None, **kwargs: int
+    weights: Panopticon_Weights | None = None, img_size: int = 224, **kwargs: int
 ) -> torch.nn.Module:
     """Panopticon ViT-Base model.
 
@@ -535,11 +553,18 @@ def panopticon_vitb14(
     Returns:
         The Panopticon ViT-Base model with the published weights loaded.
     """
-    model = Panopticon(**kwargs)
+    model = Panopticon(img_size=img_size, **kwargs)
+    patch_size = 14  # fixed
 
     if weights:
         state_dict = weights.get_state_dict(progress=True)
         state_dict.pop('mask_token')
+
+        # interpolate positional embeddings (timm==0.9.2) does not support this yet
+        state_dict['pos_embed'] = resize_abs_pos_embed(
+            state_dict['pos_embed'], img_size // patch_size, 518 // patch_size
+        )
+
         model.model.load_state_dict(state_dict, strict=True)
 
     return model

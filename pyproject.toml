@@ -71,7 +71,7 @@ dependencies = [
     # shapely 1.8.5+ required for Python 3.11 wheels
     "shapely>=1.8.5",
     # timm 0.8+ required for timm.models.adapt_input_conv, 0.9.2 required by SMP
-    "timm>=1.0.10",
+    "timm>=0.9.2",
     # torch 2+ required for Python 3.11 wheels
     "torch>=2",
     # torchmetrics 1.2+ required for average argument in mAP metric

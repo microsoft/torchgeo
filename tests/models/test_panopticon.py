@@ -20,7 +20,7 @@ from torchgeo.models.panopticon import (
 class TestPanopticon:
     def test_forward_shape(self) -> None:
         """Test if the forward pass produces the correct output shape."""
-        model = Panopticon(attn_dim=64, embed_dim=768, patch_size=14, img_size=518)
+        model = Panopticon(attn_dim=64, embed_dim=768, img_size=28)
         x_dict = {
             'imgs': torch.randn(2, 3, 28, 28),  # (B, C, H, W)
             'chn_ids': torch.tensor([[664, 559, 493]]).repeat(2, 1),  # (B, C)
@@ -30,7 +30,7 @@ class TestPanopticon:
 
     def test_forward_with_different_image_sizes(self) -> None:
         """Test forward pass with different image sizes."""
-        model = Panopticon(attn_dim=64, embed_dim=768, patch_size=14, img_size=518)
+        model = Panopticon(attn_dim=64, embed_dim=768, img_size=14)
         x_dict = {
             'imgs': torch.randn(2, 3, 14, 14),  # Smaller image size (B, C, H, W)
             'chn_ids': torch.tensor([[664, 559, 493]]).repeat(2, 1),  # (B, C)
@@ -40,7 +40,7 @@ class TestPanopticon:
 
     def test_forward_with_mask(self) -> None:
         """Test forward pass with a spectral mask."""
-        model = Panopticon(attn_dim=64, embed_dim=768, patch_size=14, img_size=518)
+        model = Panopticon(attn_dim=64, embed_dim=768, img_size=28)
         x_dict = {
             'imgs': torch.randn(2, 3, 28, 28),  # (B, C, H, W)
             'chn_ids': torch.tensor([[664, 559, 493]]).repeat(2, 1),  # (B, C)
@@ -50,20 +50,13 @@ class TestPanopticon:
         assert output.shape == (2, 768)  # (B, embed_dim)
 
     @pytest.mark.slow
-    def test_panopticon(self) -> None:
-        # from https://github.com/Panopticon-FM/panopticon?tab=readme-ov-file#using-panopticon
-
+    def test_panopticon_weights_loaded(self) -> None:
+        """Test forward pass with weights loaded."""
         model = panopticon_vitb14(Panopticon_Weights.VIT_BASE14)
-
-        # generate example input
         x_dict = dict(
-            imgs=torch.randn(2, 3, 224, 224),  # (B, C, H, W)
-            chn_ids=torch.tensor([[664, 559, 493]]).repeat(
-                2, 1
-            ),  # (B, C), RGB wavelengths in nm
+            imgs=torch.randn(2, 3, 224, 224),
+            chn_ids=torch.tensor([[664, 559, 493]]).repeat(2, 1),
         )
-
-        # get image-level features (for classification, regression, ...)
         normed_cls_token = model(x_dict)
         assert tuple(normed_cls_token.shape) == (2, 768)
 
@@ -84,7 +77,7 @@ class TestPanopticonPE:
             'chn_ids': torch.tensor([[664, 559, 493]]).repeat(2, 1),  # (B, C)
         }
         output = model(x_dict)
-        assert output.shape == (2, 2, 2, 32)  # (B, h, w, embed_dim)
+        assert output.shape == (2, 4, 32)  # (B, h, w, embed_dim)
 
     def test_forward_with_mask(self) -> None:
         """Test forward pass with a spectral mask."""
@@ -95,7 +88,7 @@ class TestPanopticonPE:
             'spec_masks': torch.randint(0, 2, (2, 3)).bool(),  # (B, C)
         }
         output = model(x_dict)
-        assert output.shape == (2, 2, 2, 32)  # (B, h, w, embed_dim)
+        assert output.shape == (2, 4, 32)  # (B, h, w, embed_dim)
 
     def test_forward_with_different_image_sizes(self) -> None:
         """Test forward pass with different image sizes."""
@@ -105,7 +98,7 @@ class TestPanopticonPE:
             'chn_ids': torch.tensor([[664, 559, 493]]).repeat(2, 1),  # (B, C)
         }
         output = model(x_dict)
-        assert output.shape == (2, 1, 1, 32)  # (B, h, w, embed_dim)
+        assert output.shape == (2, 1, 32)  # (B, h, w, embed_dim)
 
 
 class TestConv3dWrapper:
