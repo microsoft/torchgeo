@@ -1,5 +1,5 @@
-Alternatives
-============
+Related Libraries
+=================
 
 TorchGeo is not the only **geospatial machine learning library** out there, there are a number of alternatives that you can consider using. The goal of this page is to provide an up-to-date listing of these libraries and the features they support in order to help you decide which library is right for you. Criteria for inclusion on this list include:
 
