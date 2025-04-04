@@ -41,7 +41,7 @@ class PanopticonPE(nn.Module):
         self.chnfus = ChnAttn(**chnfus_cfg, dim=attn_dim)
         self.proj = nn.Linear(attn_dim, embed_dim)
 
-        self.patch_size: tuple[int, int] = _to_tuple(patch_size)
+        self.patch_size = _to_tuple(patch_size)
         self.img_size, self.grid_size, self.num_patches = self._init_img_size(img_size)
 
     def forward(self, x_dict: dict[str, Tensor]) -> Tensor:
