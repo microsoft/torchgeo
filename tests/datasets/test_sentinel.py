@@ -105,7 +105,7 @@ class TestSentinel2:
     @pytest.fixture
     def dataset(self) -> Sentinel2:
         root = os.path.join('tests', 'data', 'sentinel2')
-        res = 10
+        res = (10.0, 10.0)
         bands = ['B02', 'B03', 'B04', 'B08']
         transforms = nn.Identity()
         return Sentinel2(root, res=res, bands=bands, transforms=transforms)
@@ -154,3 +154,6 @@ class TestSentinel2:
             IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]
+
+    def test_float_res(self, dataset: Sentinel2) -> None:
+        Sentinel2(dataset.paths, res=10.0, bands=dataset.bands)

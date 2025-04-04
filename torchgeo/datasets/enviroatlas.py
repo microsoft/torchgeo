@@ -52,7 +52,7 @@ class EnviroAtlas(GeoDataset):
     md5 = 'bfe601be21c7c001315fc6154be8ef14'
 
     crs = CRS.from_epsg(3857)
-    res = 1
+    res = (1, 1)
 
     valid_prior_layers = ('prior', 'prior_no_osm_no_buildings')
 

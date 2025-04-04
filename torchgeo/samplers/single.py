@@ -110,7 +110,7 @@ class RandomGeoSampler(GeoSampler):
         self.size = _to_tuple(size)
 
         if units == Units.PIXELS:
-            self.size = (self.size[0] * self.res, self.size[1] * self.res)
+            self.size = (self.size[0] * self.res[1], self.size[1] * self.res[0])
 
         self.generator = generator
         self.length = 0
@@ -213,8 +213,8 @@ class GridGeoSampler(GeoSampler):
         self.stride = _to_tuple(stride)
 
         if units == Units.PIXELS:
-            self.size = (self.size[0] * self.res, self.size[1] * self.res)
-            self.stride = (self.stride[0] * self.res, self.stride[1] * self.res)
+            self.size = (self.size[0] * self.res[1], self.size[1] * self.res[0])
+            self.stride = (self.stride[0] * self.res[1], self.stride[1] * self.res[0])
 
         self.hits = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):

@@ -135,7 +135,20 @@ class ReforesTree(NonGeoDataset):
         """
         image_paths = sorted(glob.glob(os.path.join(root, 'tiles', '**', '*.png')))
 
-        return image_paths
+        # https://github.com/gyrrei/ReforesTree/issues/6
+        bad_paths = [
+            'Carlos Vera Guevara RGB_15_8425_8305_12425_12305.png',
+            'Flora Pluas RGB_3_0_11400_4000_15400.png',
+            'Flora Pluas RGB_4_0_11578_4000_15578.png',
+            'Flora Pluas RGB_23_12782_11400_16782_15400.png',
+            'Flora Pluas RGB_24_12782_11578_16782_15578.png',
+        ]
+        final_paths = []
+        for path in image_paths:
+            if os.path.basename(path) not in bad_paths:
+                final_paths.append(path)
+
+        return final_paths
 
     def _load_image(self, path: Path) -> Tensor:
         """Load a single image.

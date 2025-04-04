@@ -169,11 +169,13 @@ class SemanticSegmentationTask(BaseTask):
                 ]
 
                 self.criterion = smp.losses.JaccardLoss(
-                    mode='multiclass', classes=classes
+                    mode=self.hparams['task'], classes=classes
                 )
             case 'focal':
                 self.criterion = smp.losses.FocalLoss(
-                    'multiclass', ignore_index=ignore_index, normalized=True
+                    mode=self.hparams['task'],
+                    ignore_index=ignore_index,
+                    normalized=True,
                 )
 
     def configure_metrics(self) -> None:

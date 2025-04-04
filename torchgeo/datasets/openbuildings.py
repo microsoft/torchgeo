@@ -209,7 +209,7 @@ class OpenBuildings(VectorDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float = 0.0001,
+        res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         checksum: bool = False,
     ) -> None:
@@ -219,7 +219,8 @@ class OpenBuildings(VectorDataset):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             checksum: if True, check the MD5 of the downloaded files (may be slow)
@@ -231,9 +232,10 @@ class OpenBuildings(VectorDataset):
            *root* was renamed to *paths*.
         """
         self.paths = paths
+        if isinstance(res, float):
+            res = (res, res)
         self.res = res
         self.checksum = checksum
-        self.res = res
         self.transforms = transforms
 
         self._verify()
@@ -314,8 +316,8 @@ class OpenBuildings(VectorDataset):
         shapes = self._filter_geometries(query, filepaths)
 
         # Rasterize geometries
-        width = (query.maxx - query.minx) / self.res
-        height = (query.maxy - query.miny) / self.res
+        width = (query.maxx - query.minx) / self.res[0]
+        height = (query.maxy - query.miny) / self.res[1]
         transform = rasterio.transform.from_bounds(
             query.minx, query.miny, query.maxx, query.maxy, width, height
         )

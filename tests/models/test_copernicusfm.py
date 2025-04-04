@@ -125,19 +125,13 @@ class TestCopernicusFMBase:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = CopernicusFM_Base_Weights.CopernicusFM_ViT
         path = tmp_path / f'{weights}.pth'
         model = copernicusfm_base()
         torch.save(model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_copernicusfm_spectral(self) -> None:
