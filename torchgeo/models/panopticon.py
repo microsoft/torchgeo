@@ -3,7 +3,7 @@
 
 """Panopticon Foundation Model."""
 
-from typing import Any, overload
+from typing import Any
 
 import timm
 import torch
@@ -66,17 +66,9 @@ class PanopticonPE(nn.Module):
 
         return x
 
-    @overload
-    def _init_img_size(self, img_size: None) -> tuple[None, None, None]: ...
-
-    @overload
     def _init_img_size(
         self, img_size: int | tuple[int, int]
-    ) -> tuple[tuple[int, int], tuple[int, int], int]: ...
-
-    def _init_img_size(
-        self, img_size: None | int | tuple[int, int]
-    ) -> tuple[None, None, None] | tuple[tuple[int, int], tuple[int, int], int]:
+    ) -> tuple[tuple[int, int], tuple[int, int], int]:
         """Compute the image size, grid size and number of patches.
 
         Args:
@@ -85,8 +77,6 @@ class PanopticonPE(nn.Module):
         Returns:
             Image size tuple, grid size tuple, and number of patches.
         """
-        if img_size is None:
-            return None, None, None
         tuple_img_size = _to_tuple(img_size)
         grid_size = (
             tuple_img_size[0] // self.patch_size[0],
