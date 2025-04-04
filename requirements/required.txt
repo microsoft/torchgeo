@@ -20,4 +20,4 @@ timm==1.0.15
 torch==2.6.0
 torchmetrics==1.7.0
 torchvision==0.21.0
-typing-extensions==4.12.2
+typing-extensions==4.13.1
