@@ -3,6 +3,7 @@
 
 """Panopticon Foundation Model."""
 
+import math
 from typing import Any
 
 import timm
@@ -72,7 +73,7 @@ class PanopticonPE(nn.Module):
 
     def _init_img_size(self, img_size: int | tuple[int, int]) -> tuple[int, int, int]:
         """Compute the image size, grid size and number of patches."""
-        # copied from timm.layers.patch_embed.PatchEmbed._init_img_size
+        # copied from timm.layers.patch_embed.PatchEmbed._init_img_size (1.0.10)
         assert self.patch_size
         if img_size is None:
             return None, None, None
@@ -80,6 +81,13 @@ class PanopticonPE(nn.Module):
         grid_size = tuple([s // p for s, p in zip(img_size, self.patch_size)])
         num_patches = grid_size[0] * grid_size[1]
         return img_size, grid_size, num_patches
+
+    def dynamic_feat_size(self, img_size: tuple[int, int]) -> tuple[int, int]:
+        """Compute the dynamic feature size."""
+        # copied from timm.layers.patch_embed.PatchEmbed._init_img_size (1.0.10)
+        return math.ceil(img_size[0] / self.patch_size[0]), math.ceil(
+            img_size[1] / self.patch_size[1]
+        )
 
 
 def make_2tuple(x: int | tuple[int, int]) -> tuple[int, int]:
@@ -462,7 +470,7 @@ class Panopticon(torch.nn.Module):
             img_size (int, optional): Img size for which the positional embeddings
                 are initialized. For images of other sizes, embeddings are interpolated.
                 Panopticon was trained on 224 images with img_size=518 (dinov2
-                legacay), so best keep this argument to 518 and pass 224 sizes images.
+                legacy), so best keep this argument to 518 and pass 224x224 images.
                 Defaults to 518.
         """
         super().__init__()
