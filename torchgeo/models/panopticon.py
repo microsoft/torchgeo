@@ -3,7 +3,6 @@
 
 """Panopticon Foundation Model."""
 
-import math
 from typing import Any
 
 import timm
@@ -84,13 +83,6 @@ class PanopticonPE(nn.Module):
         num_patches = grid_size[0] * grid_size[1]
         return tuple_img_size, grid_size, num_patches
 
-    def dynamic_feat_size(self, img_size: tuple[int, int]) -> tuple[int, int]:
-        """Compute the dynamic feature size."""
-        # copied from timm.layers.patch_embed.PatchEmbed._init_img_size (1.0.10)
-        return math.ceil(img_size[0] / self.patch_size[0]), math.ceil(
-            img_size[1] / self.patch_size[1]
-        )
-
 
 class Conv3dWrapper(nn.Module):
     """Channel-wise patchification and projection."""
@@ -152,12 +144,8 @@ class ChnAttn(nn.Module):
         self.query = nn.Parameter(torch.randn(1, 1, dim))
         self.xattn = CrossAttnNoQueryProj(dim=dim, **attn_cfg)
 
-        # if layer_norm:
-        #     self.layer_norm = nn.LayerNorm(dim)
-        # else:
-        #     self.layer_norm = nn.Identity()
-
-        self.layer_norm = nn.LayerNorm(dim) if layer_norm else nn.Identity()
+        if layer_norm:
+            self.layer_norm = nn.LayerNorm(dim)
 
     def forward(self, x: Tensor, chn_ids: Tensor, mask: Tensor | None = None) -> Tensor:
         """Forward pass.
@@ -191,10 +179,8 @@ class ChnAttn(nn.Module):
         x = self.xattn(query, x, x, key_padding_mask=mask)
         x = x.reshape(B, L, D)
 
-        # if hasattr(self, 'layer_norm'):
-        #     return self.layer_norm(x)
-
-        x = self.layer_norm(x)
+        if hasattr(self, 'layer_norm'):
+            return self.layer_norm(x)
 
         return x
 
@@ -225,10 +211,9 @@ class ChnEmb(torch.nn.Module):
         dim2 = embed_dim - 2 * dim1
         self.embed_transmit = nn.Parameter(torch.zeros(2, dim1))  # 0:V, 1:H
         self.embed_receive = nn.Parameter(torch.zeros(2, dim1))  # 0:V, 1:H
-        self.embed_orbit: Tensor = nn.Parameter(
+        self.embed_orbit = nn.Parameter(
             torch.zeros(2, dim2)
-        )  # 0:ascending, 1:descending | type hint is not corret, but else
-        # mypy complains about torch.mean with nn.Parameter instead of Tensor
+        )  # 0:ascending, 1:descending
 
     def forward(self, input: Tensor) -> Tensor:
         """Forward pass.
@@ -452,35 +437,6 @@ class Panopticon_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    # VIT_BASE14 = Weights(
-    #     url='/home/hk-project-pai00028/tum_mhj8661/code/release_weights_final/panopticon_vitb14_teacher_torchgeo.pth',
-    #     transforms=None,
-    #     meta={
-    #         'model': 'panopticon_vitb14',
-    #         'publication': 'https://arxiv.org/abs/2503.10845',
-    #         'repo': 'https://github.com/Panopticon-FM/panopticon',
-    #         'ssl_method': 'dinov2+spectral_progressive_pretraining',
-    #     },
-    # )
-
-
-# def interpolate_pe(pos_embed, img_size, patch_size):
-
-#     cls_pos_embed = pos_embed[:,0,:]
-#     patch_pos_embed = pos_embed[:,1:,:]
-
-#     dim = pos_embed.shape[-1]
-#     hw_p = img_size // patch_size
-
-#     patch_pos_embed = nn.functional.interpolate(
-#         patch_pos_embed.reshape(1, hw_p, hw_p, -1).permute(0, 3, 1, 2),
-#         size = (hw_p, hw_p),
-#         mode="bicubic",
-#     )
-
-#     patch_pos_embed = patch_pos_embed.permute(0, 2, 3, 1).view(1, -1, dim)
-#     return torch.cat((cls_pos_embed.unsqueeze(0), patch_pos_embed), dim=1)
-
 
 class Panopticon(torch.nn.Module):
     """Panopticon ViT-Base Foundation Model."""
@@ -493,12 +449,11 @@ class Panopticon(torch.nn.Module):
         Args:
             attn_dim (int, optional): Dimension of channel attention. Defaults to 2304.
             embed_dim (int, optional): Embedding dimension of backbone. Defaults to 768.
-            patch_size (int, optional): Patch size. Defaults to 14.an
-            img_size (int, optional): Img size for which the positional embeddings
-                are initialized. For images of other sizes, embeddings are interpolated.
-                Panopticon was trained on 224 images with img_size=518 (dinov2
-                legacy), so best keep this argument to 518 and pass 224x224 images.
-                Defaults to 518.
+            img_size (int, optional): Image size. Panopticon can be initizialized
+                with any image size but image size is fixed after initialization.
+                For optimal performance, we recommend to use the same image size
+                as used during training. For the published weights, this is 224.
+                Defaults to 224.
         """
         super().__init__()
         dinov2_vit = timm.create_model('vit_base_patch14_dinov2')
@@ -540,8 +495,9 @@ def panopticon_vitb14(
     """Panopticon ViT-Base model.
 
     Panopticon can handle arbitrary optical channel and SAR combinations.
-    While image sizes up to 518x518 are possible, please match the training setting of 224x224 images
-    with a patch size of 14. For more information on how to use the model,
+    It can also be initialized with any image size where the image size is
+    fixed after initialization. However, we recommend to set 224 in alignment
+    with the pretraining. For more information on how to use the model,
     see https://github.com/Panopticon-FM/panopticon?tab=readme-ov-file#using-panopticon.
 
     If you use this model in your research, please cite the following paper:
