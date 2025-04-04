@@ -525,6 +525,10 @@ def panopticon_vitb14(
             state_dict['pos_embed'], img_size // patch_size, 518 // patch_size
         )
 
-        model.model.load_state_dict(state_dict, strict=True)
+        missing_keys, unexpected_keys = model.model.load_state_dict(
+            state_dict, strict=True
+        )
+        assert not missing_keys
+        assert not unexpected_keys
 
     return model
