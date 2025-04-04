@@ -3,6 +3,8 @@
 
 """Panopticon Foundation Model."""
 
+from typing import Any
+
 import timm
 import torch
 import torch.nn as nn
@@ -457,9 +459,10 @@ class Panopticon(torch.nn.Module):
             attn_dim (int, optional): Dimension of channel attention. Defaults to 2304.
             embed_dim (int, optional): Embedding dimension of backbone. Defaults to 768.
             patch_size (int, optional): Patch size. Defaults to 14.an
-            img_size (int, optional): Maximum image size. The model can still
-                process smaller image sizes. The model was trained on 224 with max
-                518, so best keep this arguemtn to 518 and pass 224 sizes images.
+            img_size (int, optional): Img size for which the positional embeddings
+                are initialized. For images of other sizes, embeddings are interpolated.
+                Panopticon was trained on 224 images with img_size=518 (dinov2
+                legacay), so best keep this argument to 518 and pass 224 sizes images.
                 Defaults to 518.
         """
         super().__init__()
@@ -491,7 +494,9 @@ class Panopticon(torch.nn.Module):
         return self.model(x_dict)
 
 
-def panopticon_vitb14(weights: Panopticon_Weights | None = None) -> torch.nn.Module:
+def panopticon_vitb14(
+    weights: Panopticon_Weights | None = None, **kwargs: dict[str, Any]
+) -> torch.nn.Module:
     """Panopticon ViT-Base model.
 
     Panopticon can handle arbitrary optical channel and SAR combinations.
@@ -508,7 +513,7 @@ def panopticon_vitb14(weights: Panopticon_Weights | None = None) -> torch.nn.Mod
     Returns:
         The Panopticon ViT-Base model with the published weights loaded.
     """
-    model = Panopticon()
+    model = Panopticon(**kwargs)
 
     if weights:
         state_dict = weights.get_state_dict(progress=True)
