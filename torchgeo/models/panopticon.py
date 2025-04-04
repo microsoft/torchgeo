@@ -3,12 +3,11 @@
 
 """Panopticon Foundation Model."""
 
-from typing import Any
+from typing import Any, overload
 
 import timm
 import torch
 import torch.nn as nn
-from timm.layers.helpers import to_2tuple
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -30,14 +29,11 @@ class PanopticonPE(nn.Module):
         """Initialize a new Panopticon instance.
 
         Args:
-            attn_dim (int): Embedding dimension  on which the channel attention
-                operates.
-            embed_dim (int): Dimension of embeddings that the PanopticonPE
-                outputs.
-            patch_size (int): The patch size.
-            chnfus_cfg (dict, optional): Key word arguemnts defining
-                the channel attention. Defaults to {}.
-            img_size (int, optional): Image size. Defaults to 224.
+            attn_dim: Embedding dimension on which the channel attention operates.
+            embed_dim: Dimension of embeddings that the PanopticonPE outputs.
+            patch_size: The patch size.
+            chnfus_cfg: Key word arguemnts defining the channel attention.
+            img_size: Image size.
         """
         super().__init__()
 
@@ -45,19 +41,19 @@ class PanopticonPE(nn.Module):
         self.chnfus = ChnAttn(**chnfus_cfg, dim=attn_dim)
         self.proj = nn.Linear(attn_dim, embed_dim)
 
-        self.patch_size: tuple[int, int] = to_2tuple(patch_size)
+        self.patch_size: tuple[int, int] = _to_tuple(patch_size)
         self.img_size, self.grid_size, self.num_patches = self._init_img_size(img_size)
 
     def forward(self, x_dict: dict[str, Tensor]) -> Tensor:
         """Forward pass of the model.
 
         Args:
-            x_dict (dict): Dictionary with inputs to the model. Contains keys
-                'imgs' with tensor of shape (B, C, H, W) and 'chn_ids' with tensor of shape
-                (B,C) encoding the channel ids.
+            x_dict: Dictionary with inputs to the model. Contains keys 'imgs' with
+                tensor of shape (B, C, H, W) and 'chn_ids' with tensor of shape (B,C)
+                encoding the channel ids.
 
         Returns:
-            Tensor: Output of shape (B, num_patches, embed_dim)
+            Output of shape (B, num_patches, embed_dim).
         """
         x: Tensor = x_dict['imgs']
         chn_ids = x_dict['chn_ids']
@@ -70,16 +66,34 @@ class PanopticonPE(nn.Module):
 
         return x
 
+    @overload
+    def _init_img_size(self, img_size: None) -> tuple[None, None, None]: ...
+
+    @overload
+    def _init_img_size(
+        self, img_size: int | tuple[int, int]
+    ) -> tuple[tuple[int, int], tuple[int, int], int]: ...
+
     def _init_img_size(
         self, img_size: None | int | tuple[int, int]
-    ) -> tuple[Any | int, Any | int, Any | int]:
-        """Compute the image size, grid size and number of patches."""
+    ) -> tuple[None, None, None] | tuple[tuple[int, int], tuple[int, int], int]:
+        """Compute the image size, grid size and number of patches.
+
+        Args:
+            img_size: Image size.
+
+        Returns:
+            Image size tuple, grid size tuple, and number of patches.
+        """
         # copied from timm.layers.patch_embed.PatchEmbed._init_img_size (1.0.10)
         assert self.patch_size
         if img_size is None:
             return None, None, None
-        tuple_img_size = to_2tuple(img_size)
-        grid_size = tuple([s // p for s, p in zip(tuple_img_size, self.patch_size)])
+        tuple_img_size = _to_tuple(img_size)
+        grid_size = (
+            tuple_img_size[0] // self.patch_size[0],
+            tuple_img_size[1] // self.patch_size[1],
+        )
         num_patches = grid_size[0] * grid_size[1]
         return tuple_img_size, grid_size, num_patches
 
@@ -269,11 +283,7 @@ class ChnEmb(torch.nn.Module):
             dim=0,
         ).repeat(3, 1)
         orbit = torch.stack(
-            [
-                self.embed_orbit.mean(dim=0),
-                self.embed_orbit[0],
-                self.embed_orbit[1],
-            ]
+            [self.embed_orbit.mean(dim=0), self.embed_orbit[0], self.embed_orbit[1]]
         ).repeat_interleave(4, dim=0)
         sar_embs = torch.cat([transmit, receive, orbit], dim=1)
 
@@ -420,24 +430,6 @@ def get_1d_sincos_ipe_analytical(
     return IPE
 
 
-################
-
-
-class Panopticon_Weights(WeightsEnum):  # type: ignore[misc]
-    """Panopticon weights."""
-
-    VIT_BASE14 = Weights(
-        url='https://huggingface.co/lewaldm/panopticon/resolve/main/panopticon_vitb14_teacher.pth',
-        transforms=None,
-        meta={
-            'model': 'panopticon_vitb14',
-            'publication': 'https://arxiv.org/abs/2503.10845',
-            'repo': 'https://github.com/Panopticon-FM/panopticon',
-            'ssl_method': 'dinov2+spectral_progressive_pretraining',
-        },
-    )
-
-
 class Panopticon(torch.nn.Module):
     """Panopticon ViT-Base Foundation Model."""
 
@@ -488,6 +480,21 @@ class Panopticon(torch.nn.Module):
         """
         out: Tensor = self.model.forward(x_dict)
         return out
+
+
+class Panopticon_Weights(WeightsEnum):  # type: ignore[misc]
+    """Panopticon weights."""
+
+    VIT_BASE14 = Weights(
+        url='https://huggingface.co/lewaldm/panopticon/resolve/main/panopticon_vitb14_teacher.pth',
+        transforms=None,
+        meta={
+            'model': 'panopticon_vitb14',
+            'publication': 'https://arxiv.org/abs/2503.10845',
+            'repo': 'https://github.com/Panopticon-FM/panopticon',
+            'ssl_method': 'dinov2+spectral_progressive_pretraining',
+        },
+    )
 
 
 def panopticon_vitb14(
