@@ -22,7 +22,7 @@ class PanopticonPE(nn.Module):
         attn_dim: int,
         embed_dim: int,
         patch_size: int,
-        chnfus_cfg: dict = {},
+        chnfus_cfg: dict[str, Any] = {},
         img_size: int = 224,
     ) -> None:
         """Initialize a new Panopticon instance.
@@ -43,10 +43,10 @@ class PanopticonPE(nn.Module):
         self.chnfus = ChnAttn(**chnfus_cfg, dim=attn_dim)
         self.proj = nn.Linear(attn_dim, embed_dim)
 
-        self.patch_size = to_2tuple(patch_size)
+        self.patch_size: tuple[int, int] = to_2tuple(patch_size)
         self.img_size, self.grid_size, self.num_patches = self._init_img_size(img_size)
 
-    def forward(self, x_dict: dict) -> Tensor:
+    def forward(self, x_dict: dict[str, Tensor]) -> Tensor:
         """Forward pass of the model.
 
         Args:
@@ -58,7 +58,7 @@ class PanopticonPE(nn.Module):
             Tensor: Output of shape (B,h,w,embed_dim) where h=img_size/patch_size and
                 w=img_size/patch_size.
         """
-        x = x_dict['imgs']
+        x: Tensor = x_dict['imgs']
         chn_ids = x_dict['chn_ids']
         mask = x_dict.get('spec_masks', None)
 
@@ -71,16 +71,18 @@ class PanopticonPE(nn.Module):
 
         return x
 
-    def _init_img_size(self, img_size: int | tuple[int, int]) -> tuple[int, int, int]:
+    def _init_img_size(
+        self, img_size: None | int | tuple[int, int]
+    ) -> tuple[Any | int, Any | int, Any | int]:
         """Compute the image size, grid size and number of patches."""
         # copied from timm.layers.patch_embed.PatchEmbed._init_img_size (1.0.10)
         assert self.patch_size
         if img_size is None:
             return None, None, None
-        img_size = to_2tuple(img_size)
-        grid_size = tuple([s // p for s, p in zip(img_size, self.patch_size)])
+        tuple_img_size = to_2tuple(img_size)
+        grid_size = tuple([s // p for s, p in zip(tuple_img_size, self.patch_size)])
         num_patches = grid_size[0] * grid_size[1]
-        return img_size, grid_size, num_patches
+        return tuple_img_size, grid_size, num_patches
 
     def dynamic_feat_size(self, img_size: tuple[int, int]) -> tuple[int, int]:
         """Compute the dynamic feature size."""
@@ -112,11 +114,11 @@ class Conv3dWrapper(nn.Module):
             embed_dim (int): Embedding dimension.
         """
         super().__init__()
-        patch_size = make_2tuple(patch_size)
-        patch_CHW = (1, *patch_size)
+        tuple_patch_size = make_2tuple(patch_size)
+        patch_CHW = (1, tuple_patch_size[0], tuple_patch_size[1])
         self.conv3d = nn.Conv3d(1, embed_dim, kernel_size=patch_CHW, stride=patch_CHW)
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> tuple[Tensor, int, int]:
         """Forward pass.
 
         Args:
@@ -142,8 +144,8 @@ class ChnAttn(nn.Module):
     def __init__(
         self,
         dim: int,
-        chnemb_cfg: dict = {},
-        attn_cfg: dict = {},
+        chnemb_cfg: dict[str, Any] = {},
+        attn_cfg: dict[str, Any] = {},
         layer_norm: bool = False,
     ) -> None:
         """Initialize a channel attention module.
@@ -151,7 +153,7 @@ class ChnAttn(nn.Module):
         Args:
             dim (int): Dimension of the channel attention.
             chnemb_cfg (dict, optional): Key-value pairs for the channel embedding. Defaults to {}.
-            attn_cfg (dict, optional): Key-value pairs for the channel attention.. Defaults to {}.
+            attn_cfg (dict, optional): Key-value pairs for the channel attention. Defaults to {}.
             layer_norm (bool, optional): Whether to apply layer norm after
                 channel attention. Defaults to False.
         """
@@ -161,10 +163,14 @@ class ChnAttn(nn.Module):
         self.query = nn.Parameter(torch.randn(1, 1, dim))
         self.xattn = CrossAttnNoQueryProj(dim=dim, **attn_cfg)
 
-        if layer_norm:
-            self.layer_norm = nn.LayerNorm(dim)
+        # if layer_norm:
+        #     self.layer_norm = nn.LayerNorm(dim)
+        # else:
+        #     self.layer_norm = nn.Identity()
 
-    def forward(self, x: Tensor, chn_ids: Tensor, mask: Tensor = None) -> Tensor:
+        self.layer_norm = nn.LayerNorm(dim) if layer_norm else nn.Identity()
+
+    def forward(self, x: Tensor, chn_ids: Tensor, mask: Tensor | None = None) -> Tensor:
         """Forward pass.
 
         Args:
@@ -196,8 +202,10 @@ class ChnAttn(nn.Module):
         x = self.xattn(query, x, x, key_padding_mask=mask)
         x = x.reshape(B, L, D)
 
-        if hasattr(self, 'layer_norm'):
-            return self.layer_norm(x)
+        # if hasattr(self, 'layer_norm'):
+        #     return self.layer_norm(x)
+
+        x = self.layer_norm(x)
 
         return x
 
@@ -228,9 +236,10 @@ class ChnEmb(torch.nn.Module):
         dim2 = embed_dim - 2 * dim1
         self.embed_transmit = nn.Parameter(torch.zeros(2, dim1))  # 0:V, 1:H
         self.embed_receive = nn.Parameter(torch.zeros(2, dim1))  # 0:V, 1:H
-        self.embed_orbit = nn.Parameter(
+        self.embed_orbit: Tensor = nn.Parameter(
             torch.zeros(2, dim2)
-        )  # 0:ascending, 1:descending
+        )  # 0:ascending, 1:descending | type hint is not corret, but else
+        # mypy complains about torch.mean with nn.Parameter instead of Tensor
 
     def forward(self, input: Tensor) -> Tensor:
         """Forward pass.
@@ -286,7 +295,11 @@ class ChnEmb(torch.nn.Module):
             dim=0,
         ).repeat(3, 1)
         orbit = torch.stack(
-            [self.embed_orbit.mean(axis=0), self.embed_orbit[0], self.embed_orbit[1]]
+            [
+                torch.mean(self.embed_orbit, axis=0),
+                self.embed_orbit[0],
+                self.embed_orbit[1],
+            ]
         ).repeat_interleave(4, dim=0)
         sar_embs = torch.cat([transmit, receive, orbit], dim=1)
 
@@ -364,12 +377,12 @@ class CrossAttnNoQueryProj(nn.Module):
         return x
 
 
-def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: Tensor, pos: list) -> Tensor:
+def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor) -> Tensor:
     """Generate standard sin cos positional embeddings.
 
     Args:
-        embed_dim (Tensor): output dimension for each position
-        pos (list): a list of positions to be encoded: size (M,)
+        embed_dim (int): output dimension for each position
+        pos (Tensor): a list of positions to be encoded: size (M,)
 
     Returns:
         Tensor: Tensor of embeddings of shape (M,D)
@@ -484,9 +497,10 @@ class Panopticon(torch.nn.Module):
             chnfus_cfg={'attn_cfg': {'num_heads': 16}},
         )
 
-        self.model = dinov2_vit
+        self.model: timm.models.vision_transformer.VisionTransformer = dinov2_vit
+        # self.model: nn.Module = dinov2_vit
 
-    def forward(self, x_dict: dict) -> Tensor:
+    def forward(self, x_dict: dict[str, Any]) -> Tensor:
         """Forward pass of the model including forward pass through the head.
 
         Args:
@@ -499,11 +513,11 @@ class Panopticon(torch.nn.Module):
         Returns:
             Tensor: Embeddings.
         """
-        return self.model(x_dict)
+        return self.model.forward(x_dict)
 
 
 def panopticon_vitb14(
-    weights: Panopticon_Weights | None = None, **kwargs: dict[str, Any]
+    weights: Panopticon_Weights | None = None, **kwargs: int
 ) -> torch.nn.Module:
     """Panopticon ViT-Base model.
 
