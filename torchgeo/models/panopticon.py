@@ -180,7 +180,7 @@ class ChnAttn(nn.Module):
         x = x.reshape(B, L, D)
 
         if hasattr(self, 'layer_norm'):
-            return self.layer_norm(x)
+            x = self.layer_norm(x)
 
         return x
 
@@ -270,7 +270,7 @@ class ChnEmb(torch.nn.Module):
         ).repeat(3, 1)
         orbit = torch.stack(
             [
-                torch.mean(self.embed_orbit, axis=0),
+                self.embed_orbit.mean(dim=0),
                 self.embed_orbit[0],
                 self.embed_orbit[1],
             ]
@@ -486,7 +486,8 @@ class Panopticon(torch.nn.Module):
         Returns:
             Tensor: Embeddings.
         """
-        return self.model.forward(x_dict)
+        out: Tensor = self.model.forward(x_dict)
+        return out
 
 
 def panopticon_vitb14(
