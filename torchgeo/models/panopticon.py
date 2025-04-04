@@ -489,7 +489,7 @@ class Panopticon_Weights(WeightsEnum):  # type: ignore[misc]
 
 def panopticon_vitb14(
     weights: Panopticon_Weights | None = None, img_size: int = 224, **kwargs: int
-) -> torch.nn.Module:
+) -> Panopticon:
     """Panopticon ViT-Base model.
 
     Panopticon can handle arbitrary optical channel and SAR combinations.

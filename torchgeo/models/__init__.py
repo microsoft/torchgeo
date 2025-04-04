@@ -19,7 +19,7 @@ from .dofa import (
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
-from .panopticon import Panopticon_Weights, panopticon_vitb14
+from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .rcf import RCF
 from .resnet import (
     ResNet18_Weights,
@@ -63,6 +63,7 @@ __all__ = (
     'FCSiamConc',
     'FCSiamDiff',
     'FarSeg',
+    'Panopticon',
     'Panopticon_Weights',
     'ResNet18_Weights',
     'ResNet50_Weights',
