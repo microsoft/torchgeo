@@ -423,7 +423,10 @@ def get_1d_sincos_ipe_analytical(
 
 
 class Panopticon(torch.nn.Module):
-    """Panopticon ViT-Base Foundation Model."""
+    """Panopticon ViT-Base Foundation Model.
+
+    .. versionadded:: 0.7
+    """
 
     def __init__(
         self, attn_dim: int = 2304, embed_dim: int = 768, img_size: int = 224
@@ -473,7 +476,10 @@ class Panopticon(torch.nn.Module):
 
 
 class Panopticon_Weights(WeightsEnum):  # type: ignore[misc]
-    """Panopticon weights."""
+    """Panopticon weights.
+
+    .. versionadded:: 0.7
+    """
 
     VIT_BASE14 = Weights(
         url='https://hf.co/lewaldm/panopticon/resolve/c8c2bb9555819e8b2bcedf5b3b00e3bf531554e7/panopticon_vitb14_teacher.pth',
