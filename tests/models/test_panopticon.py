@@ -1,16 +1,20 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+from pathlib import Path
+
 import pytest
 import torch
+from _pytest.fixtures import SubRequest
+from pytest import MonkeyPatch
+from torchvision.models._api import WeightsEnum
 
-from torchgeo.models import Panopticon_Weights, panopticon_vitb14
+from torchgeo.models import Panopticon, Panopticon_Weights, panopticon_vitb14
 from torchgeo.models.panopticon import (
     ChnAttn,
     ChnEmb,
     Conv3dWrapper,
     CrossAttnNoQueryProj,
-    Panopticon,
     PanopticonPE,
     get_1d_sincos_ipe_analytical,
     get_1d_sincos_pos_embed_from_grid_torch,
@@ -49,10 +53,51 @@ class TestPanopticon:
         output = model(x_dict)
         assert output.shape == (2, 768)  # (B, embed_dim)
 
+
+class TestPanopticonBase:
+    @pytest.fixture(params=[*Panopticon_Weights])
+    def weights(self, request: SubRequest) -> WeightsEnum:
+        return request.param
+
+    @pytest.fixture
+    def mocked_weights(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
+    ) -> WeightsEnum:
+        weights = Panopticon_Weights.VIT_BASE14
+        path = tmp_path / f'{weights}.pth'
+        img_size = 224
+        patch_size = 14
+        embed_dim = 768
+        model = panopticon_vitb14()
+        state_dict = model.model.state_dict()
+        state_dict['mask_token'] = None
+        state_dict['pos_embed'] = torch.nn.Parameter(torch.randn(1, 1370, 768))
+        torch.save(state_dict, path)
+        monkeypatch.setattr(weights.value, 'url', str(path))
+        return weights
+
+    def test_panopticon(self) -> None:
+        model = panopticon_vitb14(img_size=28)
+        x_dict = {
+            'imgs': torch.randn(2, 3, 28, 28),  # (B, C, H, W)
+            'chn_ids': torch.tensor([[664, 559, 493]]).repeat(2, 1),  # (B, C)
+        }
+        output = model(x_dict)
+        assert output.shape == (2, 768)  # (B, embed_dim)
+
+    def test_panopticon_weights(self, mocked_weights: WeightsEnum) -> None:
+        model = panopticon_vitb14(weights=mocked_weights)
+        x_dict = dict(
+            imgs=torch.randn(2, 3, 224, 224),
+            chn_ids=torch.tensor([[664, 559, 493]]).repeat(2, 1),
+        )
+        normed_cls_token = model(x_dict)
+        assert tuple(normed_cls_token.shape) == (2, 768)
+
     @pytest.mark.slow
-    def test_panopticon_weights_loaded(self) -> None:
+    def test_panopticon_download(self, weights: WeightsEnum) -> None:
         """Test forward pass with weights loaded."""
-        model = panopticon_vitb14(Panopticon_Weights.VIT_BASE14)
+        model = panopticon_vitb14(weights)
         x_dict = dict(
             imgs=torch.randn(2, 3, 224, 224),
             chn_ids=torch.tensor([[664, 559, 493]]).repeat(2, 1),
