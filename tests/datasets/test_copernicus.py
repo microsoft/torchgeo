@@ -14,6 +14,7 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     CopernicusBench,
+    CopernicusPretrain,
     DatasetNotFoundError,
     RGBBandsMissingError,
 )
@@ -119,3 +120,52 @@ class TestCopernicusBench:
         match = 'Dataset does not contain some of the RGB bands'
         with pytest.raises(RGBBandsMissingError, match=match):
             dataset.plot(dataset[0])
+
+
+class TestCopernicusPretrain:
+    @pytest.fixture
+    def dataset(self) -> CopernicusPretrain:
+        pytest.importorskip('webdataset')
+
+        root = os.path.join('tests', 'data', 'copernicus', 'pretrain')
+        shards = 'example-000000.tar'
+        # WebDataset requires forward slash for paths, even on Windows
+        urls = os.path.join(root, shards).replace('\\', '/')
+        dataset = CopernicusPretrain(urls, shardshuffle=False)
+        return dataset
+
+    def test_getitem(self, dataset: CopernicusPretrain) -> None:
+        x = next(iter(dataset))
+        # Check the types of the tensors
+        assert isinstance(x['s1_grd.pth'], torch.Tensor)
+        assert isinstance(x['s2_toa.pth'], torch.Tensor)
+        assert isinstance(x['s3_olci.pth'], torch.Tensor)
+        assert isinstance(x['s5p_co.pth'], torch.Tensor)
+        assert isinstance(x['s5p_no2.pth'], torch.Tensor)
+        assert isinstance(x['s5p_o3.pth'], torch.Tensor)
+        assert isinstance(x['s5p_so2.pth'], torch.Tensor)
+        assert isinstance(x['dem.pth'], torch.Tensor)
+        assert isinstance(x['json'], dict)
+        # Check the shapes of the tensors
+        assert x['s1_grd.pth'].shape == (2, 264, 264)
+        assert x['s2_toa.pth'].shape == (13, 264, 264)
+        assert x['s3_olci.pth'].shape == (21, 96, 96)
+        assert x['s5p_co.pth'].shape == (1, 28, 28)
+        assert x['s5p_no2.pth'].shape == (1, 28, 28)
+        assert x['s5p_o3.pth'].shape == (1, 28, 28)
+        assert x['s5p_so2.pth'].shape == (1, 28, 28)
+        assert x['dem.pth'].shape == (960, 960)
+        # Check the keys in the dictionary
+        assert 's1_grd' in x['json']
+        assert 's2_toa' in x['json']
+        assert 's3_olci' in x['json']
+        assert 's5p_co' in x['json']
+        assert 's5p_no2' in x['json']
+        assert 's5p_o3' in x['json']
+        assert 's5p_so2' in x['json']
+        assert 'dem' in x['json']
+
+    def test_plot(self, dataset: CopernicusPretrain) -> None:
+        x = next(iter(dataset))
+        dataset.plot(x, suptitle='Test')
+        plt.close()

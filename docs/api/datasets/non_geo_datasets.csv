@@ -8,6 +8,7 @@ Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
 `CaFFe`_,S,"Sentinel-1, TerraSAR-X, TanDEM-X, ENVISAT, ERS-1/2, ALOS PALSAR, and RADARSAT-1","CC-BY-4.0","19092","2 or 4","512x512",6-20,"SAR"
 `ChaBuD`_,CD,Sentinel-2,"OpenRAIL",356,2,512x512,10,MSI
 `Cloud Cover Detection`_,S,Sentinel-2,"CC-BY-4.0","22,728",2,512x512,10,MSI
+`Copernicus-Pretrain`_,T,"Sentinel-1/2/3/5P, DEM","CC-BY-4.0",18.7M,-,"264x264 or 96x96 or 28x28 or 960x960",10--1000,"SAR, MSI, Air Pollutants, DEM"
 `COWC`_,"C, R","CSUAV AFRL, ISPRS, LINZ, AGRC","AGPL-3.0-only","388,435",2,256x256,0.15,RGB
 `CropHarvest`_,"C","Sentinel-1/2, SRTM, ERA5","CC-BY-SA-4.0","70,213",351,1x1,10,"SAR, MSI, SRTM"
 `Kenya Crop Type`_,S,Sentinel-2,"CC-BY-SA-4.0","4,688",7,"3,035x2,016",10,MSI
