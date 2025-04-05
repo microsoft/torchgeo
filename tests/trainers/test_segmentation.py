@@ -175,6 +175,7 @@ class TestSemanticSegmentationTask:
             backbone=weights.meta['model'],
             weights=weights,
             in_channels=weights.meta['in_chans'],
+            num_classes=10,
         )
 
     @pytest.mark.slow
@@ -183,6 +184,7 @@ class TestSemanticSegmentationTask:
             backbone=weights.meta['model'],
             weights=str(weights),
             in_channels=weights.meta['in_chans'],
+            num_classes=10,
         )
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:

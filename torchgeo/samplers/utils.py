@@ -29,7 +29,7 @@ def _to_tuple(value: tuple[float, float] | float) -> tuple[float, float]:
     Returns:
         value if value is a tuple, else (value, value)
     """
-    if isinstance(value, float | int):
+    if isinstance(value, int | float):
         return (value, value)
     else:
         return value

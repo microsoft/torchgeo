@@ -334,7 +334,7 @@ class Sentinel2(Sentinel):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | tuple[float, float] = (10, 10),
+        res: float | tuple[float, float] = 10,
         bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
@@ -362,7 +362,7 @@ class Sentinel2(Sentinel):
         bands = bands or self.all_bands
         self.filename_glob = self.filename_glob.format(bands[0])
 
-        if isinstance(res, float):
+        if isinstance(res, int | float):
             res = (res, res)
 
         self.filename_regex = self.filename_regex.format(int(res[0]))

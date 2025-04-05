@@ -209,7 +209,7 @@ class OpenBuildings(VectorDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | tuple[float, float] = (0.0001, 0.0001),
+        res: float | tuple[float, float] = 0.0001,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         checksum: bool = False,
     ) -> None:
@@ -232,7 +232,7 @@ class OpenBuildings(VectorDataset):
            *root* was renamed to *paths*.
         """
         self.paths = paths
-        if isinstance(res, float):
+        if isinstance(res, int | float):
             res = (res, res)
         self.res = res
         self.checksum = checksum
