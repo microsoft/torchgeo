@@ -37,13 +37,13 @@ class CustomGeoDataset(GeoDataset):
         self,
         bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
         crs: CRS = CRS.from_epsg(4087),
-        res: tuple[float, float] = (1, 1),
+        res: float | tuple[float, float] = (1, 1),
         paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
     ) -> None:
         super().__init__()
         self.index.insert(0, tuple(bounds))
         self._crs = crs
-        self.res = res
+        self.res = res  # type: ignore[assignment]
         self.paths = paths or []
 
     def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
@@ -701,6 +701,17 @@ class TestIntersectionDataset:
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
         assert isinstance(sample['image'], torch.Tensor)
 
+    def test_single_res(self) -> None:
+        ds1 = RasterDataset(
+            os.path.join('tests', 'data', 'raster', 'res_2-1_epsg_4087')
+        )
+        ds2 = RasterDataset(
+            os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
+        )
+        ds = IntersectionDataset(ds1, ds2)
+        ds.res = 10  # type: ignore[assignment]
+        assert ds1.res == ds2.res == ds.res == (10, 10)
+
     def test_point_dataset(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 2, 2, 4, 4, 6))
         ds2 = CustomGeoDataset(BoundingBox(1, 1, 3, 3, 5, 5))
@@ -858,6 +869,17 @@ class TestUnionDataset:
         assert len(ds1) == len(ds2) == len(ds3) == 1
         assert len(ds) == 3
         assert isinstance(sample['image'], torch.Tensor)
+
+    def test_single_res(self) -> None:
+        ds1 = RasterDataset(
+            os.path.join('tests', 'data', 'raster', 'res_2-1_epsg_4087')
+        )
+        ds2 = RasterDataset(
+            os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
+        )
+        ds = UnionDataset(ds1, ds2)
+        ds.res = 10  # type: ignore[assignment]
+        assert ds1.res == ds2.res == ds.res == (10, 10)
 
     def test_nongeo_dataset(self) -> None:
         ds1 = CustomNonGeoDataset()
