@@ -291,7 +291,7 @@ testpaths = [
     "tests",
     "docs/tutorials",
 ]
-tmp_path_retention_policy = "failed"
+tmp_path_retention_policy = none
 
 # https://docs.astral.sh/ruff/settings/
 [tool.ruff]
