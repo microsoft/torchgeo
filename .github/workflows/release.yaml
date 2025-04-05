@@ -36,27 +36,7 @@ jobs:
         run: pip list
       - name: Run integration checks
         run: |
-          df
-          pytest -m slow --durations=10 tests/models/test_copernicusfm.py
-          df
-          pytest -m slow --durations=10 tests/models/test_croma.py
-          df
-          pytest -m slow --durations=10 tests/models/test_dofa.py
-          df
-          pytest -m slow --durations=10 tests/models/test_panopticon.py
-          df
-          pytest -m slow --durations=10 tests/models/test_resnet.py
-          df
-          pytest -m slow --durations=10 tests/models/test_scale_mae.py
-          df
-          pytest -m slow --durations=10 tests/models/test_swin.py
-          df
-          pytest -m slow --durations=10 tests/models/test_vit.py
-          df
-          pytest -m slow --durations=10 tests/samplers
-          df
-          pytest -m slow --durations=10 tests/trainers
-          df
+          pytest -m slow --durations=10
           python -m torchgeo --help
           torchgeo --help
   notebooks:
