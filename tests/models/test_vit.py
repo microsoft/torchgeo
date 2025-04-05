@@ -70,9 +70,9 @@ class TestViTSmall16:
         }
         weights.transforms(sample)
 
-    # @pytest.mark.slow
-    # def test_vit_download(self, weights: WeightsEnum) -> None:
-    #     vit_small_patch16_224(weights=weights)
+    @pytest.mark.slow
+    def test_vit_download(self, weights: WeightsEnum) -> None:
+        vit_small_patch16_224(weights=weights)
 
 
 class TestViTBase16:
@@ -119,9 +119,9 @@ class TestViTBase16:
         }
         weights.transforms(sample)
 
-    # @pytest.mark.slow
-    # def test_vit_download(self, weights: WeightsEnum) -> None:
-    #     vit_base_patch16_224(weights=weights)
+    @pytest.mark.slow
+    def test_vit_download(self, weights: WeightsEnum) -> None:
+        vit_base_patch16_224(weights=weights)
 
 
 class TestViTLarge16:
@@ -168,10 +168,9 @@ class TestViTLarge16:
         }
         weights.transforms(sample)
 
-    # ViT-Large is too Large?
-    # @pytest.mark.slow
-    # def test_vit_download(self, weights: WeightsEnum) -> None:
-    #     vit_large_patch16_224(weights=weights)
+    @pytest.mark.slow
+    def test_vit_download(self, weights: WeightsEnum) -> None:
+        vit_large_patch16_224(weights=weights)
 
 
 class TestViTHuge14:
@@ -218,10 +217,9 @@ class TestViTHuge14:
         }
         weights.transforms(sample)
 
-    # ViT-Huge is too Huge?
-    # @pytest.mark.slow
-    # def test_vit_download(self, weights: WeightsEnum) -> None:
-    #     vit_huge_patch14_224(weights=weights)
+    @pytest.mark.slow
+    def test_vit_download(self, weights: WeightsEnum) -> None:
+        vit_huge_patch14_224(weights=weights)
 
 
 class TestViTSmall14_DINOv2:
@@ -274,9 +272,9 @@ class TestViTSmall14_DINOv2:
         sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
         weights.transforms(sample)
 
-    # @pytest.mark.slow
-    # def test_vit_download(self, weights: WeightsEnum) -> None:
-    #     vit_small_patch14_dinov2(weights=weights)
+    @pytest.mark.slow
+    def test_vit_download(self, weights: WeightsEnum) -> None:
+        vit_small_patch14_dinov2(weights=weights)
 
 
 class TestViTBase14_DINOv2:
@@ -327,6 +325,6 @@ class TestViTBase14_DINOv2:
         sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
         weights.transforms(sample)
 
-    # @pytest.mark.slow
-    # def test_vit_download(self, weights: WeightsEnum) -> None:
-    #     vit_base_patch14_dinov2(weights=weights)
+    @pytest.mark.slow
+    def test_vit_download(self, weights: WeightsEnum) -> None:
+        vit_base_patch14_dinov2(weights=weights)
