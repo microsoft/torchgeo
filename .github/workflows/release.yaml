@@ -36,7 +36,7 @@ jobs:
         run: pip list
       - name: Run integration checks
         run: |
-          pytest -m slow --durations=10
+          pytest -m slow --durations=10 --basetemp=foo
           python -m torchgeo --help
           torchgeo --help
   notebooks:
