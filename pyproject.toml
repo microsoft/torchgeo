@@ -1,7 +1,7 @@
 [build-system]
 requires = [
-    # setuptools 77+ required for PEP 639 support
-    "setuptools>=77",
+    # setuptools 77.0.1+ required for PEP 639 support
+    "setuptools>=77.0.1",
 ]
 build-backend = "setuptools.build_meta"
 
