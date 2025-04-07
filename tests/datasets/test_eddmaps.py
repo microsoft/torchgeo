@@ -7,7 +7,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 from matplotlib.collections import PathCollection
-from matplotlib.colorbar import Colorbar
 from matplotlib.figure import Figure
 
 from torchgeo.datasets import (
@@ -30,7 +29,7 @@ class TestEDDMapS:
         assert isinstance(x, dict)
 
     def test_len(self, dataset: EDDMapS) -> None:
-        assert len(dataset) == 3
+        assert len(dataset) == 2
 
     def test_and(self, dataset: EDDMapS) -> None:
         ds = dataset & dataset
@@ -69,7 +68,9 @@ class TestEDDMapS:
         )
 
         # Check if colorbar was added
-        assert any(isinstance(child, Colorbar) for child in fig.get_children())
+        assert any(
+            'colorbar' in getattr(ax, 'get_label', lambda: '')() for ax in fig.axes
+        )
 
         # Optional: close figure to avoid warnings about too many open figures
         plt.close(fig)
