@@ -160,7 +160,7 @@ class SemanticSegmentationTask(BaseTask):
                 'Passing a Tensor for class_weights is deprecated. '
                 'Please pass a list of floats instead.'
             )
-        
+
         class_weights = torch.Tensor(cw) if cw is not None else None
 
         match self.hparams['loss']:
