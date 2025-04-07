@@ -157,8 +157,8 @@ class SemanticSegmentationTask(BaseTask):
         cw = self.hparams['class_weights']
         if cw is not None and isinstance(cw, torch.Tensor):
             raise DeprecationWarning(
-                "Passing a Tensor for 'class_weights' is deprecated. "
-                "Please pass a list of floats instead."
+                'Passing a Tensor for class_weights is deprecated. '
+                'Please pass a list of floats instead.'
             )
         
         class_weights = torch.Tensor(cw) if cw is not None else None
