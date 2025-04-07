@@ -2,11 +2,13 @@
 # Licensed under the MIT License.
 
 import os
-import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pytest
+from matplotlib.collections import PathCollection
+from matplotlib.colorbar import Colorbar
+from matplotlib.figure import Figure
 
 from torchgeo.datasets import (
     BoundingBox,
@@ -50,22 +52,24 @@ class TestEDDMapS:
             dataset[query]
 
     def test_plot(self, dataset: EDDMapS) -> None:
-        # Test with default parameters
-        fig, ax = dataset.plot()
-        assert fig is not None
-        assert ax is not None
-        plt.close(fig)  # Clean up
+        """Test that the plot method generates a figure without errors."""
+        sample = dataset[dataset.bounds]
+        fig = dataset.plot(sample)
 
-        # Test with specific BoundingBox
-        query = BoundingBox(
-            minx=-88.0,
-            maxx=-87.0,
-            miny=41.0,
-            maxy=42.0,
-            mint=0,
-            maxt=sys.maxsize,  # Full time range
-        )
-        fig, ax = dataset.plot(query=query)
+        # Basic checks to ensure figure was created correctly
         assert fig is not None
-        assert ax is not None
-        plt.close(fig)  # Clean up
+        assert isinstance(fig, Figure)
+
+        # Check if the figure has at least one axis
+        assert len(fig.axes) > 0
+
+        # Check if a scatter plot exists in the first axis
+        assert any(
+            isinstance(child, PathCollection) for child in fig.axes[0].get_children()
+        )
+
+        # Check if colorbar was added
+        assert any(isinstance(child, Colorbar) for child in fig.get_children())
+
+        # Optional: close figure to avoid warnings about too many open figures
+        plt.close(fig)
