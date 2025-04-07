@@ -24,6 +24,7 @@ from .flood_s1 import CopernicusBenchFloodS1
 from .lc100cls_s3 import CopernicusBenchLC100ClsS3
 from .lc100seg_s3 import CopernicusBenchLC100SegS3
 from .lcz_s2 import CopernicusBenchLCZS2
+from .pretrain import CopernicusPretrain
 
 __all__ = (
     'CopernicusBench',
@@ -43,6 +44,7 @@ __all__ = (
     'CopernicusBenchLC100ClsS3',
     'CopernicusBenchLC100SegS3',
     'CopernicusBenchLCZS2',
+    'CopernicusPretrain',
 )
 
 DATASET_REGISTRY = {

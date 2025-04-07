@@ -280,10 +280,8 @@ class SEN12MS(NonGeoDataset):
             bands: user-provided sequence of bands to load
 
         Raises:
-            AssertionError: if ``bands`` is not a sequence
             ValueError: if an invalid band name is provided
         """
-        assert isinstance(bands, tuple), "'bands' must be a sequence"
         for band in bands:
             if band not in self.band_names:
                 raise ValueError(f"'{band}' is an invalid band name.")

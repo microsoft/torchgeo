@@ -82,6 +82,13 @@ Swin Transformer
 .. autoclass:: Swin_V2_T_Weights
 .. autoclass:: Swin_V2_B_Weights
 
+Panopticon
+^^^^^^^^^^
+
+.. autoclass:: Panopticon
+.. autofunction:: panopticon_vitb14
+.. autoclass:: Panopticon_Weights
+
 Vision Transformer
 ^^^^^^^^^^^^^^^^^^
 

@@ -102,6 +102,8 @@ datasets = [
     "scikit-image>=0.20",
     # scipy 1.9.2+ required for Python 3.11 wheels
     "scipy>=1.9.2",
+    # webdataset 0.2.4+ required for PyTorch tuple seed support
+    "webdataset>=0.2.4",
     # xarray 0.12.3+ required for pandas 1.3.3 support
     "xarray>=0.12.3",
 ]
@@ -289,6 +291,7 @@ testpaths = [
     "tests",
     "docs/tutorials",
 ]
+tmp_path_retention_count = 1
 tmp_path_retention_policy = "failed"
 
 # https://docs.astral.sh/ruff/settings/

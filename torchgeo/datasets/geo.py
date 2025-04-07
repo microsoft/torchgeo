@@ -88,7 +88,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
 
     paths: Path | Iterable[Path]
     _crs = CRS.from_epsg(4326)
-    _res: tuple[float, float] = (0.0, 0.0)
+    _res = (0.0, 0.0)
 
     #: Glob expression used to search for files.
     #:
@@ -284,10 +284,11 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             new_res: New resolution in (xres, yres) format. If a single float is provided, it is used for both
                 the x and y resolution.
         """
+        if isinstance(new_res, int | float):
+            new_res = (new_res, new_res)
+
         if new_res == self.res:
             return
-        if isinstance(new_res, float):
-            new_res = (new_res, new_res)
 
         print(f'Converting {self.__class__.__name__} res from {self.res} to {new_res}')
         self._res = new_res
@@ -511,11 +512,13 @@ class RasterDataset(GeoDataset):
                     )
                     raise AssertionError(msg)
 
-        if isinstance(res, float):
-            res = (res, res)
+        if res is not None:
+            if isinstance(res, int | float):
+                res = (res, res)
 
-        self._crs = cast(CRS, crs)
-        self._res = cast(tuple[float, float], res)
+            self._res = res
+
+        self._crs = crs
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -726,7 +729,7 @@ class VectorDataset(GeoDataset):
         if i == 0:
             raise DatasetNotFoundError(self)
 
-        if isinstance(res, float):
+        if isinstance(res, int | float):
             res = (res, res)
 
         self._crs = crs
@@ -1087,12 +1090,15 @@ class IntersectionDataset(GeoDataset):
         return self._res
 
     @res.setter
-    def res(self, new_res: tuple[float, float]) -> None:
+    def res(self, new_res: float | tuple[float, float]) -> None:
         """Change the resolution of both datasets.
 
         Args:
             new_res: New resolution.
         """
+        if isinstance(new_res, int | float):
+            new_res = (new_res, new_res)
+
         self._res = new_res
         self.datasets[0].res = new_res
         self.datasets[1].res = new_res
@@ -1242,12 +1248,15 @@ class UnionDataset(GeoDataset):
         return self._res
 
     @res.setter
-    def res(self, new_res: tuple[float, float]) -> None:
+    def res(self, new_res: float | tuple[float, float]) -> None:
         """Change the resolution of both datasets.
 
         Args:
             new_res: New resolution.
         """
+        if isinstance(new_res, int | float):
+            new_res = (new_res, new_res)
+
         self._res = new_res
         self.datasets[0].res = new_res
         self.datasets[1].res = new_res

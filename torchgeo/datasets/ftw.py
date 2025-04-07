@@ -43,9 +43,10 @@ class FieldsOfTheWorld(NonGeoDataset):
 
     Dataset classes:
 
-    1. background
-    2. field
-    3. field-boundary (three-class only)
+    0. background
+    1. field
+    2. field-boundary (three-class only)
+    3. unlabeled (kenya, rwanda, brazil and india have presence only labels)
 
     If you use this dataset in your research, please cite the following paper:
 

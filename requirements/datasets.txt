@@ -7,4 +7,5 @@ pandas[parquet]==2.2.3
 pycocotools==2.0.8
 scikit-image==0.25.2
 scipy==1.15.2
+webdataset==0.2.111
 xarray==2025.1.2
