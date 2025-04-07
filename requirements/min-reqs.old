@@ -21,6 +21,7 @@ torch==2.0.0
 torchmetrics==1.2.0
 torchvision==0.15.1
 typing-extensions==4.5.0
+contextily>=1.3.0
 
 # datasets
 h5py==3.8.0
