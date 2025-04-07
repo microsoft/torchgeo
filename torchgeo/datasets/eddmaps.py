@@ -7,8 +7,11 @@ import os
 import sys
 from typing import Any
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
@@ -103,3 +106,59 @@ class EDDMapS(GeoDataset):
         sample = {'crs': self.crs, 'bounds': bboxes}
 
         return sample
+
+    def plot(self, query: BoundingBox | None = None) -> tuple[Figure, Axes]:
+        """Plot the data using the R-tree index for efficient spatial querying.
+
+        Args:
+            query: Optional BoundingBox to filter data If None, all data will be plotted
+
+        Returns:
+            fig, ax: The figure and axis objects
+        """
+        fig, ax = plt.subplots()
+
+        # If no query_box is provided, use the full bounds of the dataset
+        if query is None:
+            # Create a BoundingBox that covers the entire dataset
+            # Assuming self.bounds returns the full bounds of the index
+            query = BoundingBox(
+                minx=float('-inf'),
+                maxx=float('inf'),
+                miny=float('-inf'),
+                maxy=float('inf'),
+                mint=0,
+                maxt=sys.maxsize,
+            )
+
+        # Query the R-tree to get matching coordinates
+        try:
+            hits = self.index.intersection(tuple(query), objects=True)
+
+            # Extract coordinates from the R-tree query results
+            x_coords = []
+            y_coords = []
+
+            for hit in hits:
+                bbox = hit.bbox
+                # The coordinates in the R-tree are (x, x, y, y, mint, maxt)
+                x_coords.append(bbox[0])  # minx = maxx in our case (point data)
+                y_coords.append(bbox[2])  # miny = maxy in our case (point data)
+
+            # Plot the points
+            ax.scatter(x_coords, y_coords, color='red')
+
+            # Set labels and title
+            ax.set_xlabel('Longitude')
+            ax.set_ylabel('Latitude')
+            ax.set_title('EDDMapS Observations')
+
+            # Add grid
+            ax.grid(True, linestyle='--', alpha=0.7)
+
+        except Exception as e:
+            plt.close(fig)
+            raise Exception(f'Error querying R-tree: {e!s}')
+
+        plt.tight_layout()
+        return fig, ax
