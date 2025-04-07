@@ -3,9 +3,9 @@
 
 """Dataset for EDDMapS."""
 
-import datetime
 import os
 import sys
+from datetime import datetime
 from typing import Any
 
 import contextily as ctx
@@ -140,7 +140,7 @@ class EDDMapS(GeoDataset):
         timestamps = [bbox[2] for bbox in bboxes]  # mint (timestamp)
 
         # Convert timestamps to datetime objects
-        dates = [datetime.datetime.fromtimestamp(ts) for ts in timestamps]
+        dates = [datetime.fromtimestamp(ts) for ts in timestamps]
 
         # Create a normalize object for color mapping
         if dates:
