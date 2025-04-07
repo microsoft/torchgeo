@@ -203,12 +203,12 @@ class EDDMapS(GeoDataset):
 
         # Add the basemap tiles
         try:
-            # Add basemap (OpenStreetMap by default)
+            # Add basemap
             ctx.add_basemap(
                 ax,
-                source=ctx.providers.OpenStreetMap.Mapnik,  # You can change the provider
-                zoom='auto',  # Automatically determine zoom level
-                crs='EPSG:4326',  # WGS84 coordinate system (standard lat/lon)
+                source=ctx.providers.OpenStreetMap.Mapnik,
+                zoom='auto',
+                crs=self._crs.to_string(),
             )
         except Exception as e:
             # Print warning if basemap fails (can happen due to network issues)
