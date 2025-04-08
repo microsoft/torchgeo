@@ -226,8 +226,8 @@ class EDDMapS(GeoDataset):
             pass
 
         # Set labels
-        ax.set_xlabel('Longitude', fontsize=12, fontweight='bold')
-        ax.set_ylabel('Latitude', fontsize=12, fontweight='bold')
+        ax.set_xlabel('Longitude', fontsize=11, fontweight='bold')
+        ax.set_ylabel('Latitude', fontsize=11, fontweight='bold')
 
         # Add titles if requested
         if show_titles:
