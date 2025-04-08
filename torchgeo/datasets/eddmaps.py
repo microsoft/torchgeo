@@ -5,24 +5,13 @@
 
 import os
 import sys
-from datetime import datetime
 from typing import Any
 
-import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
-
-# Make contextily optional
-try:
-    import contextily as ctx
-
-    HAS_CONTEXTILY = True
-except ImportError:
-    HAS_CONTEXTILY = False
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
@@ -117,18 +106,11 @@ class EDDMapS(GeoDataset):
 
         return sample
 
-    def plot(
-        self,
-        sample: dict[str, Any],
-        show_titles: bool = True,
-        suptitle: str | None = None,
-    ) -> Figure:
+    def plot(self, sample: dict[str, Any]) -> Figure:
         """Plot a sample from the dataset.
 
         Args:
             sample: a sample return by :meth:`__getitem__`
-            show_titles: flag indicating whether to show titles above each panel
-            suptitle: optional suptitle to use for figure
 
         Returns:
             a matplotlib Figure with the rendered sample
@@ -147,96 +129,26 @@ class EDDMapS(GeoDataset):
         latitudes = [bbox[1] for bbox in bboxes]  # miny
         timestamps = [bbox[2] for bbox in bboxes]  # mint (timestamp)
 
-        # Convert timestamps to datetime objects
-        dates = [datetime.fromtimestamp(ts) for ts in timestamps]
-
-        # Create a normalize object for color mapping
-        if dates:
-            min_date, max_date = min(dates), max(dates)
-            min_date_num: float = mdates.date2num(min_date)  # type: ignore
-            max_date_num: float = mdates.date2num(max_date)  # type: ignore
-            norm = Normalize(min_date_num, max_date_num)
-
-            date_nums: list[float] = []
-            for date in dates:
-                date_nums.append(mdates.date2num(date))  # type: ignore
-        else:
-            norm = Normalize(0, 1)
-            date_nums = []
-
         # Plot the points with colors based on date
         scatter = ax.scatter(
             longitudes,
             latitudes,
-            c=date_nums,
+            c=timestamps,
             cmap='coolwarm',
-            norm=norm,
             s=30,
             alpha=0.8,
             edgecolors='black',
             linewidths=0.5,
-            zorder=3,  # Ensure points appear above basemap
+            zorder=3,
         )
 
-        # Add a more polished colorbar
-        cbar = fig.colorbar(scatter, ax=ax, pad=0.02)
-
-        # Improve colorbar tick formatting
-        locator: mdates.AutoDateLocator = mdates.AutoDateLocator()  # type: ignore
-        formatter: mdates.ConciseDateFormatter = mdates.ConciseDateFormatter(locator)  # type: ignore
-        cbar.ax.yaxis.set_major_locator(locator)
-        cbar.ax.yaxis.set_major_formatter(formatter)
-
-        # Set better colorbar label with proper positioning
-        cbar.set_label(
-            'Observation Date',
-            rotation=270,
-            labelpad=20,
-            fontsize=12,
-            fontweight='bold',
-        )
-
-        # Calculate the extent of the data for better visualization
-        if longitudes and latitudes:
-            min_lon, max_lon = min(longitudes), max(longitudes)
-            min_lat, max_lat = min(latitudes), max(latitudes)
-
-            # Add some padding
-            lon_padding = (max_lon - min_lon) * 0.2 if max_lon != min_lon else 0.5
-            lat_padding = (max_lat - min_lat) * 0.2 if max_lat != min_lat else 0.5
-
-            # Set axis limits with padding
-            ax.set_xlim(min_lon - lon_padding, max_lon + lon_padding)
-            ax.set_ylim(min_lat - lat_padding, max_lat + lat_padding)
-
-        # Add the basemap tiles if contextily is available
-        if HAS_CONTEXTILY:
-            try:
-                # Add basemap
-                ctx.add_basemap(
-                    ax,
-                    source=ctx.providers.OpenStreetMap.Mapnik,
-                    zoom='auto',
-                    crs=self._crs.to_string(),
-                )
-            except Exception as e:
-                # Print warning if basemap fails (can happen due to network issues)
-                print(f'Warning: Could not add basemap. Error: {e}')
-        else:
-            pass
+        # Add a colorbar
+        cbar = fig.colorbar(scatter, ax=ax, pad=0.04)
+        cbar.set_label('Observed Timestamp', rotation=90, labelpad=-80, va='center')
 
         # Set labels
-        ax.set_xlabel('Longitude', fontsize=11, fontweight='bold')
-        ax.set_ylabel('Latitude', fontsize=11, fontweight='bold')
-
-        # Add titles if requested
-        if show_titles:
-            ax.set_title(
-                'EDDMapS Observation Locations by Date', fontsize=14, fontweight='bold'
-            )
-
-        if suptitle is not None:
-            fig.suptitle(suptitle, fontsize=16, fontweight='bold')
+        ax.set_xlabel('Longitude')
+        ax.set_ylabel('Latitude')
 
         fig.tight_layout()
         return fig
