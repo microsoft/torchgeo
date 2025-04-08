@@ -21,4 +21,3 @@ torch==2.6.0
 torchmetrics==1.7.0
 torchvision==0.21.0
 typing-extensions==4.13.1
-contextily>=1.3.0
