@@ -137,7 +137,7 @@ class TestCopernicusFMBase:
     def test_copernicusfm_spectral(self) -> None:
         model = copernicusfm_base()
         x = torch.rand(1, 4, 28, 28)
-        metadata = torch.rand(1, 4)
+        metadata = torch.rand(1, 4) + 1
         wavelengths = [664.6, 559.8, 492.4, 832.8]
         bandwidths = [31, 36, 66, 106]
         input_mode = 'spectral'
@@ -152,7 +152,7 @@ class TestCopernicusFMBase:
     def test_copernicusfm_variable(self) -> None:
         model = copernicusfm_base()
         x = torch.rand(1, 1, 96, 96)
-        metadata = torch.rand(1, 4)
+        metadata = torch.rand(1, 4) + 1
         language_embed = torch.rand(2048)
         input_mode = 'variable'
         model(x, metadata, language_embed=language_embed, input_mode=input_mode)
