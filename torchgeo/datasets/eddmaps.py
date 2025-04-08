@@ -8,7 +8,6 @@ import sys
 from datetime import datetime
 from typing import Any
 
-import contextily as ctx
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,6 +15,14 @@ import pandas as pd
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from rasterio.crs import CRS
+
+# Make contextily optional
+try:
+    import contextily as ctx
+
+    HAS_CONTEXTILY = True
+except ImportError:
+    HAS_CONTEXTILY = False
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
@@ -130,6 +137,7 @@ class EDDMapS(GeoDataset):
         """
         # Create figure and axis - using regular matplotlib axes
         fig, ax = plt.subplots(figsize=(10, 8))
+        ax.grid(ls='--')
 
         # Extract bounding boxes (coordinates) from the sample
         bboxes = sample['bounds']
@@ -201,20 +209,21 @@ class EDDMapS(GeoDataset):
             ax.set_xlim(min_lon - lon_padding, max_lon + lon_padding)
             ax.set_ylim(min_lat - lat_padding, max_lat + lat_padding)
 
-        # Add the basemap tiles
-        try:
-            # Add basemap
-            ctx.add_basemap(
-                ax,
-                source=ctx.providers.OpenStreetMap.Mapnik,
-                zoom='auto',
-                crs=self._crs.to_string(),
-            )
-        except Exception as e:
-            # Print warning if basemap fails (can happen due to network issues)
-            print(f'Warning: Could not add basemap. Error: {e}')
-            # Add a basic grid as fallback
-            ax.grid(True, linestyle='--', alpha=0.7)
+        # Add the basemap tiles if contextily is available
+        if HAS_CONTEXTILY:
+            try:
+                # Add basemap
+                ctx.add_basemap(
+                    ax,
+                    source=ctx.providers.OpenStreetMap.Mapnik,
+                    zoom='auto',
+                    crs=self._crs.to_string(),
+                )
+            except Exception as e:
+                # Print warning if basemap fails (can happen due to network issues)
+                print(f'Warning: Could not add basemap. Error: {e}')
+        else:
+            pass
 
         # Set labels
         ax.set_xlabel('Longitude', fontsize=12, fontweight='bold')
