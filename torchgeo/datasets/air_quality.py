@@ -4,6 +4,7 @@
 """Air Quality dataset."""
 
 import os
+from typing import Any
 
 import pandas as pd
 import torch
@@ -72,7 +73,7 @@ class AirQuality(NonGeoDataset):
         """
         return len(self.data) - (self.num_past_steps + self.num_future_steps)
 
-    def __getitem__(self, index: int) -> pd.Series:
+    def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an index within the dataset.
 
         Args:
@@ -95,7 +96,7 @@ class AirQuality(NonGeoDataset):
         past_steps_normalized = (past_steps - mean) / (std + 1e-12)
         future_steps_normalized = (future_steps - mean) / (std + 1e-12)
 
-        return past_steps_normalized, future_steps_normalized
+        return {'past': past_steps_normalized, 'future': future_steps_normalized}
 
     def _load_data(self) -> pd.DataFrame:
         """Load the dataset into a pandas dataframe.

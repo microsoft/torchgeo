@@ -134,7 +134,8 @@ class AutoregressionTask(BaseTask):
             The loss tensor.
         """
         target_indices = self.hparams['target_indices']
-        past_steps, future_steps = batch
+        past_steps = batch['past']
+        future_steps = batch['future']
         y_hat = self(past_steps, future_steps)
         if target_indices:
             future_steps = future_steps[:, :, target_indices]

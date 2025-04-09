@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
 from pathlib import Path
 
 import pytest
@@ -21,7 +22,9 @@ class TestAirQuality:
         return AirQuality(tmp_path, download=True)
 
     def test_getitem(self, dataset: AirQuality) -> None:
-        x, y = dataset[0]
+        item = dataset[0]
+        x = item['past']
+        y = item['future']
         assert isinstance(x, Tensor)
         assert x.shape[1] == 15
         assert x.shape[0] == dataset.num_past_steps
