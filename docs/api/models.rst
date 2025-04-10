@@ -89,6 +89,14 @@ Panopticon
 .. autofunction:: panopticon_vitb14
 .. autoclass:: Panopticon_Weights
 
+U-Net
+^^^^^^^^^^
+
+.. autoclass:: Unet
+.. autofunction:: unet
+.. autoclass:: Unet_Weights
+
+
 Vision Transformer
 ^^^^^^^^^^^^^^^^^^
 
