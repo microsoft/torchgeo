@@ -92,7 +92,6 @@ Panopticon
 U-Net
 ^^^^^^^^^^
 
-.. autoclass:: Unet
 .. autofunction:: unet
 .. autoclass:: Unet_Weights
 
