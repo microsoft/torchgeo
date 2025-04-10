@@ -30,7 +30,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
     """U-Net weights.
 
     For `smp <https://github.com/qubvel-org/segmentation_models.pytorch>`_
-    *unet* implementation.
+    *Unet* implementation.
 
     .. versionadded:: 0.7
     """
@@ -115,8 +115,8 @@ def unet(
         weights: Pre-trained model weights to use.
         classes: Number of output classes. If not specified, the number of
             classes will be inferred from the weights.
-        *args: Additional arguments to pass to :func:`smp.Unet`
-        **kwargs: Additional keyword arguments to pass to :func:`smp.Unet`
+        *args: Additional arguments to pass to :func:`segmentation_models_pytorch.Unet`
+        **kwargs: Additional keyword arguments to pass to :func:`segmentation_models_pytorch.Unet`
 
     Returns:
         A U-Net model.
