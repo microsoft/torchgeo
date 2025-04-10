@@ -23,6 +23,7 @@ class AutoregressionTask(BaseTask):
         model: str = 'lstm_seq2seq',
         input_size: int = 1,
         input_size_decoder: int = 1,
+        output_size: int = 1,
         loss: str = 'mse',
         lr: float = 1e-3,
         patience: int = 10,
@@ -36,6 +37,7 @@ class AutoregressionTask(BaseTask):
             input_size: The number of features in the input. Defaults to 1.
             input_size_decoder: The number of features in the decoder input.
                 Defaults to 1.
+            output_size: The number of features output by the model. Defaults to 1.
             loss: One of 'mse' or 'mae'. Defaults to 'mse'.
             lr: Learning rate for optimizer. Defaults to 1e-3.
             patience: Patience for learning rate scheduler. Defaults to 10.
@@ -112,6 +114,12 @@ class AutoregressionTask(BaseTask):
         loss: Tensor = self.criterion(y_hat, future_steps)
         self.log(f'{stage}_loss', loss)
 
+        # Denormalize the data before computing metrics
+        if all(key in batch for key in ['mean', 'std']):
+            mean = batch['mean'][:, :, target_indices]
+            std = batch['std'][:, :, target_indices]
+            y_hat = self._denormalize(y_hat, mean, std)
+            future_steps = self._denormalize(future_steps, mean, std)
         # Retrieve the correct metrics based on the stage
         metrics = getattr(self, f'{stage}_metrics', None)
         if metrics:
@@ -164,9 +172,14 @@ class AutoregressionTask(BaseTask):
         Returns:
             Output predicted values.
         """
-        past_steps, future_steps = batch
+        target_indices = self.hparams['target_indices']
+        past_steps = batch['past']
+        future_steps = batch['future']
         y_hat = self(past_steps, future_steps)
-        mean = past_steps.mean(dim=0, keepdim=True)
-        std = past_steps.std(dim=0, keepdim=True)
-        y_hat_denormalize: Tensor = y_hat * std + mean
+        mean = batch['mean'][:, :, target_indices]
+        std = batch['std'][:, :, target_indices]
+        y_hat_denormalize: Tensor = self._denormalize(y_hat, mean, std)
         return y_hat_denormalize
+
+    def _denormalize(self, data: Tensor, mean: Tensor, std: Tensor) -> Tensor:
+        return data * std + mean

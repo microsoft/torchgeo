@@ -96,7 +96,12 @@ class AirQuality(NonGeoDataset):
         past_steps_normalized = (past_steps - mean) / (std + 1e-12)
         future_steps_normalized = (future_steps - mean) / (std + 1e-12)
 
-        return {'past': past_steps_normalized, 'future': future_steps_normalized}
+        return {
+            'past': past_steps_normalized,
+            'future': future_steps_normalized,
+            'mean': mean,
+            'std': std,
+        }
 
     def _load_data(self) -> pd.DataFrame:
         """Load the dataset into a pandas dataframe.

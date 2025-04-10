@@ -4,6 +4,7 @@
 import os
 
 import pytest
+import torch
 
 from torchgeo.datamodules import MisconfigurationException
 from torchgeo.main import main
@@ -47,3 +48,12 @@ class TestAutoregressionTask:
         match = "Loss type 'invalid_loss' is not valid."
         with pytest.raises(ValueError, match=match):
             AutoregressionTask(loss='invalid_loss')
+
+    def test_denormalize(self) -> None:
+        data = torch.rand(1, 3, 1)
+        mean = data.mean(dim=1, keepdim=True)
+        std = data.std(dim=1, keepdim=True)
+        data_normalized = (data - mean) / std
+        trainer = AutoregressionTask()
+        denorm = trainer._denormalize(data_normalized, mean, std)
+        assert torch.equal(data, denorm)
