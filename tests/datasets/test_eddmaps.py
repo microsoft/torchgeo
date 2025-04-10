@@ -51,6 +51,6 @@ class TestEDDMapS:
 
     def test_plot(self, dataset: EDDMapS) -> None:
         sample = dataset[dataset.bounds]
-        fig = dataset.plot(sample)
+        fig = dataset.plot(sample, suptitle='test')
         assert isinstance(fig, Figure)
         plt.close()
