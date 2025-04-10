@@ -36,3 +36,7 @@ Swin_V2_B_Weights.SENTINEL2_MI_MS_SATLAS,9,`link <https://github.com/allenai/sat
 Swin_V2_B_Weights.SENTINEL2_MI_RGB_SATLAS,3,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY,,,,
 Swin_V2_B_Weights.SENTINEL2_SI_MS_SATLAS,9,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY,,,,
 Swin_V2_B_Weights.SENTINEL2_SI_RGB_SATLAS,3,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY,,,,
+UnetWeights.SENTINEL2_2CLASS_FTW,8,`https://github.com/fieldsoftheworld/ftw-baselines`__,`link <https://arxiv.org/abs/2409.16252>`__,"CC-BY-4.0",,,
+UnetWeights.SENTINEL2_2CLASS_NC_FTW,8,`https://github.com/fieldsoftheworld/ftw-baselines`__,`link <https://arxiv.org/abs/2409.16252>`__,"CC-BY-4.0",,,
+UnetWeights.SENTINEL2_3CLASS_FTW,8,`https://github.com/fieldsoftheworld/ftw-baselines`__,`link <https://arxiv.org/abs/2409.16252>`__,"CC-BY-4.0",,,
+UnetWeights.SENTINEL2_3CLASS_NC_FTW,8,`https://github.com/fieldsoftheworld/ftw-baselines`__,`link <https://arxiv.org/abs/2409.16252>`__,"CC-BY-4.0",,,
