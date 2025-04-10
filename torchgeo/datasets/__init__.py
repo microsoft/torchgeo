@@ -31,6 +31,26 @@ from .chesapeake import (
 )
 from .cloud_cover import CloudCoverDetection
 from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
+from .copernicus import (
+    CopernicusBench,
+    CopernicusBenchAQNO2S5P,
+    CopernicusBenchAQO3S5P,
+    CopernicusBenchBase,
+    CopernicusBenchBigEarthNetS1,
+    CopernicusBenchBigEarthNetS2,
+    CopernicusBenchBiomassS3,
+    CopernicusBenchCloudS2,
+    CopernicusBenchCloudS3,
+    CopernicusBenchDFC2020S1,
+    CopernicusBenchDFC2020S2,
+    CopernicusBenchEuroSATS1,
+    CopernicusBenchEuroSATS2,
+    CopernicusBenchFloodS1,
+    CopernicusBenchLC100ClsS3,
+    CopernicusBenchLC100SegS3,
+    CopernicusBenchLCZS2,
+    CopernicusPretrain,
+)
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cropharvest import CropHarvest
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
@@ -56,6 +76,7 @@ from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
+from .gbm import GlobalBuildingMap
 from .geo import (
     GeoDataset,
     IntersectionDataset,
@@ -216,6 +237,24 @@ __all__ = (
     'ChesapeakeVA',
     'ChesapeakeWV',
     'CloudCoverDetection',
+    'CopernicusBench',
+    'CopernicusBenchAQNO2S5P',
+    'CopernicusBenchAQO3S5P',
+    'CopernicusBenchBase',
+    'CopernicusBenchBigEarthNetS1',
+    'CopernicusBenchBigEarthNetS2',
+    'CopernicusBenchBiomassS3',
+    'CopernicusBenchCloudS2',
+    'CopernicusBenchCloudS3',
+    'CopernicusBenchDFC2020S1',
+    'CopernicusBenchDFC2020S2',
+    'CopernicusBenchEuroSATS1',
+    'CopernicusBenchEuroSATS2',
+    'CopernicusBenchFloodS1',
+    'CopernicusBenchLC100ClsS3',
+    'CopernicusBenchLC100SegS3',
+    'CopernicusBenchLCZS2',
+    'CopernicusPretrain',
     'CropHarvest',
     'DL4GAMAlps',
     'DatasetNotFoundError',
@@ -237,6 +276,7 @@ __all__ = (
     'GeoDataset',
     'GeoNRW',
     'GlobBiomass',
+    'GlobalBuildingMap',
     'HySpecNet11k',
     'IDTReeS',
     'INaturalist',

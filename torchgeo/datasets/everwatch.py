@@ -47,6 +47,7 @@ class EverWatch(NonGeoDataset):
     4. Wood Stork (Mycteria americana)
     5. Roseate Spoonbill (Platalea ajaja)
     6. Anhinga (Anhinga anhinga)
+    7. Unknown White (only present in test split)
 
     If you use this dataset in your research, please cite the following source:
 
@@ -73,6 +74,7 @@ class EverWatch(NonGeoDataset):
         'Wood Stork',
         'Roseate Spoonbill',
         'Anhinga',
+        'Unknown White',  # only present in test split
     )
 
     def __init__(

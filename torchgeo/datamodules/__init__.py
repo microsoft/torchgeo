@@ -36,6 +36,7 @@ from .nasa_marine_debris import NASAMarineDebrisDataModule
 from .oscd import OSCDDataModule
 from .potsdam import Potsdam2DDataModule
 from .quakeset import QuakeSetDataModule
+from .reforestree import ReforesTreeDataModule
 from .resisc45 import RESISC45DataModule
 from .seco import SeasonalContrastS2DataModule
 from .sen12ms import SEN12MSDataModule
@@ -100,6 +101,7 @@ __all__ = (
     'Potsdam2DDataModule',
     'QuakeSetDataModule',
     'RESISC45DataModule',
+    'ReforesTreeDataModule',
     'SEN12MSDataModule',
     'SKIPPDDataModule',
     'SSL4EOLBenchmarkDataModule',

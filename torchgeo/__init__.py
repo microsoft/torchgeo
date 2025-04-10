@@ -11,4 +11,4 @@ common image transformations for geospatial data.
 """
 
 __author__ = 'Adam J. Stewart'
-__version__ = '0.7.0.dev0'
+__version__ = '0.7.0'

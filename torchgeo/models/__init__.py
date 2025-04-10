@@ -5,6 +5,7 @@
 
 from .api import get_model, get_model_weights, get_weight, list_models
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
+from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
 from .dofa import (
     DOFA,
@@ -18,6 +19,7 @@ from .dofa import (
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
+from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .rcf import RCF
 from .resnet import (
     ResNet18_Weights,
@@ -30,7 +32,20 @@ from .resnet import (
 from .scale_mae import ScaleMAE, ScaleMAELarge16_Weights, scalemae_large_patch16
 from .seq2seq import LSTMSeq2Seq
 from .swin import Swin_V2_B_Weights, Swin_V2_T_Weights, swin_v2_b, swin_v2_t
-from .vit import ViTSmall16_Weights, vit_small_patch16_224
+from .vit import (
+    ViTBase14_DINOv2_Weights,
+    ViTBase16_Weights,
+    ViTHuge14_Weights,
+    ViTLarge16_Weights,
+    ViTSmall14_DINOv2_Weights,
+    ViTSmall16_Weights,
+    vit_base_patch14_dinov2,
+    vit_base_patch16_224,
+    vit_huge_patch14_224,
+    vit_large_patch16_224,
+    vit_small_patch14_dinov2,
+    vit_small_patch16_224,
+)
 
 __all__ = (
     'CROMA',
@@ -42,12 +57,16 @@ __all__ = (
     'ChangeMixin',
     'ChangeStar',
     'ChangeStarFarSeg',
+    'CopernicusFM',
+    'CopernicusFM_Base_Weights',
     'DOFABase16_Weights',
     'DOFALarge16_Weights',
     'FCSiamConc',
     'FCSiamDiff',
     'FarSeg',
     'LSTMSeq2Seq',
+    'Panopticon',
+    'Panopticon_Weights',
     'ResNet18_Weights',
     'ResNet50_Weights',
     'ResNet152_Weights',
@@ -55,7 +74,13 @@ __all__ = (
     'ScaleMAELarge16_Weights',
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
+    'ViTBase14_DINOv2_Weights',
+    'ViTBase16_Weights',
+    'ViTHuge14_Weights',
+    'ViTLarge16_Weights',
+    'ViTSmall14_DINOv2_Weights',
     'ViTSmall16_Weights',
+    'copernicusfm_base',
     'croma_base',
     'croma_large',
     'dofa_base_patch16_224',
@@ -66,11 +91,17 @@ __all__ = (
     'get_model_weights',
     'get_weight',
     'list_models',
+    'panopticon_vitb14',
     'resnet18',
     'resnet50',
     'resnet152',
     'scalemae_large_patch16',
     'swin_v2_b',
     'swin_v2_t',
+    'vit_base_patch14_dinov2',
+    'vit_base_patch16_224',
+    'vit_huge_patch14_224',
+    'vit_large_patch16_224',
+    'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
 )
