@@ -10,6 +10,8 @@ import torch
 from segmentation_models_pytorch import Unet
 from torchvision.models._api import Weights, WeightsEnum
 
+# Specified in https://github.com/fieldsoftheworld/ftw-baselines
+# First 4 S2 bands are for image t1 and last 4 bands are for image t2
 _ftw_sentinel2_bands = ['B4', 'B3', 'B2', 'B8A', 'B4', 'B3', 'B2', 'B8A']
 
 # https://github.com/fieldsoftheworld/ftw-baselines/blob/main/src/ftw/datamodules.py
@@ -45,7 +47,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2409.16252',
             'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
             'bands': _ftw_sentinel2_bands,
-            'license': 'CC BY',
+            'license': 'CC-BY-4.0',
         },
     )
     SENTINEL2_3CLASS_FTW = Weights(
@@ -60,7 +62,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2409.16252',
             'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
             'bands': _ftw_sentinel2_bands,
-            'license': 'CC BY',
+            'license': 'CC-BY-4.0',
         },
     )
     SENTINEL2_2CLASS_NC_FTW = Weights(
@@ -75,7 +77,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2409.16252',
             'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
             'bands': _ftw_sentinel2_bands,
-            'license': 'CC BY-NC',
+            'license': 'non-commercial',
         },
     )
     SENTINEL2_3CLASS_NC_FTW = Weights(
@@ -90,7 +92,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2409.16252',
             'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
             'bands': _ftw_sentinel2_bands,
-            'license': 'CC BY-NC',
+            'license': 'non-commercial',
         },
     )
 
