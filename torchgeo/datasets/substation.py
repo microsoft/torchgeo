@@ -49,11 +49,17 @@ class Substation(NonGeoDataset):
     """
 
     directory = 'Substation'
-    filename_images = 'image_stack.tar.gz'
+    filename_images = ['images.z01', 'images.z02', 'images.zip']
     filename_masks = 'mask.tar.gz'
-    url_for_images = 'https://storage.googleapis.com/tz-ml-public/substation-over-10km2-csv-main-444e360fd2b6444b9018d509d0e4f36e/image_stack.tar.gz'
+    url_for_images = [
+        'https://huggingface.co/datasets/neurograce/SubstationDataset/resolve/main/images.z01',
+        'https://huggingface.co/datasets/neurograce/SubstationDataset/resolve/main/images.z02',
+        'https://huggingface.co/datasets/neurograce/SubstationDataset/resolve/main/images.zip'
+    ]
+    url_for_masks = 'https://huggingface.co/datasets/neurograce/SubstationDataset/resolve/main/mask.tar.gz'
+    md5_images = None  # Update with correct MD5 checksums if available
+    md5_masks = None   # Update with correct MD5 checksum if available
     url_for_masks = 'https://storage.googleapis.com/tz-ml-public/substation-over-10km2-csv-main-444e360fd2b6444b9018d509d0e4f36e/mask.tar.gz'
-    md5_images = '948706609864d0283f74ee7015f9d032'
     md5_masks = 'baa369ececdc2ff80e6ba2b4c7fe147c'
 
     def __init__(
