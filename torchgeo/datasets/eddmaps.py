@@ -130,17 +130,7 @@ class EDDMapS(GeoDataset):
         timestamps = [bbox[2] for bbox in bboxes]  # mint (timestamp)
 
         # Plot the points with colors based on date
-        scatter = ax.scatter(
-            longitudes,
-            latitudes,
-            c=timestamps,
-            cmap='coolwarm',
-            s=30,
-            alpha=0.8,
-            edgecolors='black',
-            linewidths=0.5,
-            zorder=3,
-        )
+        scatter = ax.scatter(longitudes, latitudes, c=timestamps, edgecolors='black')
 
         # Add a colorbar
         cbar = fig.colorbar(scatter, ax=ax, pad=0.04)
