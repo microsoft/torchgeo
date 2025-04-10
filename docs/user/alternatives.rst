@@ -1,5 +1,5 @@
-Alternatives
-============
+Related Libraries
+=================
 
 TorchGeo is not the only **geospatial machine learning library** out there, there are a number of alternatives that you can consider using. The goal of this page is to provide an up-to-date listing of these libraries and the features they support in order to help you decide which library is right for you. Criteria for inclusion on this list include:
 
@@ -13,7 +13,7 @@ When deciding which library is most useful to you, it is worth considering the f
 
    Software is a living, breathing organism and is constantly undergoing change. If any of the above information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
 
-   *Last updated: 30 November 2024*
+   *Last updated: 31 March 2025*
 
 Features
 --------
@@ -109,9 +109,11 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _TorchGeo: https://github.com/microsoft/torchgeo
 .. _eo-learn: https://github.com/sentinel-hub/eo-learn
 .. _Raster Vision: https://github.com/azavea/raster-vision
-.. _PaddleRS: https://github.com/PaddlePaddle/PaddleRS
 .. _DeepForest: https://github.com/weecology/DeepForest
-.. _SITS: https://github.com/e-sensing/sits
-.. _segment-geospatial: https://github.com/opengeos/segment-geospatial
+.. _samgeo: https://github.com/opengeos/segment-geospatial
 .. _TerraTorch: https://github.com/IBM/terratorch
+.. _SITS: https://github.com/e-sensing/sits
 .. _scikit-eo: https://github.com/yotarazona/scikit-eo
+.. _geo-bench: https://github.com/ServiceNow/geo-bench
+.. _GeoAI: https://github.com/opengeos/geoai
+.. _OTBTF: https://github.com/remicres/otbtf

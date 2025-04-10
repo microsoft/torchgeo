@@ -9,7 +9,7 @@ from .agrifieldnet import AgriFieldNet
 from .airphen import Airphen
 from .astergdem import AsterGDEM
 from .benin_cashews import BeninSmallHolderCashews
-from .bigearthnet import BigEarthNet
+from .bigearthnet import BigEarthNet, BigEarthNetV2
 from .biomassters import BioMassters
 from .bright import BRIGHTDFC2025
 from .cabuar import CaBuAr
@@ -30,6 +30,26 @@ from .chesapeake import (
 )
 from .cloud_cover import CloudCoverDetection
 from .cms_mangrove_canopy import CMSGlobalMangroveCanopy
+from .copernicus import (
+    CopernicusBench,
+    CopernicusBenchAQNO2S5P,
+    CopernicusBenchAQO3S5P,
+    CopernicusBenchBase,
+    CopernicusBenchBigEarthNetS1,
+    CopernicusBenchBigEarthNetS2,
+    CopernicusBenchBiomassS3,
+    CopernicusBenchCloudS2,
+    CopernicusBenchCloudS3,
+    CopernicusBenchDFC2020S1,
+    CopernicusBenchDFC2020S2,
+    CopernicusBenchEuroSATS1,
+    CopernicusBenchEuroSATS2,
+    CopernicusBenchFloodS1,
+    CopernicusBenchLC100ClsS3,
+    CopernicusBenchLC100SegS3,
+    CopernicusBenchLCZS2,
+    CopernicusPretrain,
+)
 from .cowc import COWC, COWCCounting, COWCDetection
 from .cropharvest import CropHarvest
 from .cv4a_kenya_crop_type import CV4AKenyaCropType
@@ -37,6 +57,9 @@ from .cyclone import TropicalCyclone
 from .deepglobelandcover import DeepGlobeLandCover
 from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
+from .dior import DIOR
+from .dl4gam import DL4GAMAlps
+from .dota import DOTA
 from .eddmaps import EDDMapS
 from .enmap import EnMAP
 from .enviroatlas import EnviroAtlas
@@ -46,11 +69,13 @@ from .etci2021 import ETCI2021
 from .eudem import EUDEM
 from .eurocrops import EuroCrops
 from .eurosat import EuroSAT, EuroSAT100, EuroSATSpatial
+from .everwatch import EverWatch
 from .fair1m import FAIR1M
 from .fire_risk import FireRisk
 from .forestdamage import ForestDamage
 from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
+from .gbm import GlobalBuildingMap
 from .geo import (
     GeoDataset,
     IntersectionDataset,
@@ -113,6 +138,7 @@ from .sentinel import Sentinel, Sentinel1, Sentinel2
 from .skippd import SKIPPD
 from .skyscript import SkyScript
 from .so2sat import So2Sat
+from .soda import SODAA
 from .south_africa_crop_type import SouthAfricaCropType
 from .south_america_soybean import SouthAmericaSoybean
 from .spacenet import (
@@ -159,6 +185,8 @@ __all__ = (
     'CDL',
     'COWC',
     'DFC2022',
+    'DIOR',
+    'DOTA',
     'ETCI2021',
     'EUDEM',
     'FAIR1M',
@@ -175,6 +203,7 @@ __all__ = (
     'RESISC45',
     'SEN12MS',
     'SKIPPD',
+    'SODAA',
     'SSL4EO',
     'SSL4EOL',
     'SSL4EOS12',
@@ -185,6 +214,7 @@ __all__ = (
     'AsterGDEM',
     'BeninSmallHolderCashews',
     'BigEarthNet',
+    'BigEarthNetV2',
     'BioMassters',
     'BoundingBox',
     'CMSGlobalMangroveCanopy',
@@ -205,7 +235,26 @@ __all__ = (
     'ChesapeakeVA',
     'ChesapeakeWV',
     'CloudCoverDetection',
+    'CopernicusBench',
+    'CopernicusBenchAQNO2S5P',
+    'CopernicusBenchAQO3S5P',
+    'CopernicusBenchBase',
+    'CopernicusBenchBigEarthNetS1',
+    'CopernicusBenchBigEarthNetS2',
+    'CopernicusBenchBiomassS3',
+    'CopernicusBenchCloudS2',
+    'CopernicusBenchCloudS3',
+    'CopernicusBenchDFC2020S1',
+    'CopernicusBenchDFC2020S2',
+    'CopernicusBenchEuroSATS1',
+    'CopernicusBenchEuroSATS2',
+    'CopernicusBenchFloodS1',
+    'CopernicusBenchLC100ClsS3',
+    'CopernicusBenchLC100SegS3',
+    'CopernicusBenchLCZS2',
+    'CopernicusPretrain',
     'CropHarvest',
+    'DL4GAMAlps',
     'DatasetNotFoundError',
     'DeepGlobeLandCover',
     'DependencyNotFoundError',
@@ -218,12 +267,14 @@ __all__ = (
     'EuroSAT',
     'EuroSAT100',
     'EuroSATSpatial',
+    'EverWatch',
     'FieldsOfTheWorld',
     'FireRisk',
     'ForestDamage',
     'GeoDataset',
     'GeoNRW',
     'GlobBiomass',
+    'GlobalBuildingMap',
     'HySpecNet11k',
     'IDTReeS',
     'INaturalist',

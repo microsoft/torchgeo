@@ -31,7 +31,7 @@ class MMFloodComponent(RasterDataset):
         content: Literal['s1_raw', 'DEM', 'hydro', 'mask'],
         root: Path = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
+        res: float | tuple[float, float] | None = None,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         cache: bool = False,
     ) -> None:
@@ -43,7 +43,8 @@ class MMFloodComponent(RasterDataset):
             root: root directory where dataset can be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -145,7 +146,7 @@ class MMFlood(IntersectionDataset):
         self,
         root: Path = 'data',
         crs: CRS | None = None,
-        res: float | None = None,
+        res: float | tuple[float, float] | None = None,
         split: str = 'train',
         include_dem: bool = False,
         include_hydro: bool = False,
@@ -160,7 +161,8 @@ class MMFlood(IntersectionDataset):
             root: root directory where dataset can be found
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             split: train/val/test split to load
             include_dem: If True, DEM data is concatenated after Sentinel-1 bands.

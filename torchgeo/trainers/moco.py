@@ -23,6 +23,7 @@ from torch.optim import SGD, AdamW, Optimizer
 from torch.optim.lr_scheduler import (
     CosineAnnealingLR,
     LinearLR,
+    LRScheduler,
     MultiStepLR,
     SequentialLR,
 )
@@ -33,11 +34,6 @@ import torchgeo.transforms as T
 from ..models import get_weight
 from . import utils
 from .base import BaseTask
-
-try:
-    from torch.optim.lr_scheduler import LRScheduler
-except ImportError:
-    from torch.optim.lr_scheduler import _LRScheduler as LRScheduler
 
 
 def moco_augmentations(
@@ -238,10 +234,10 @@ class MoCoTask(BaseTask):
         output_dim: int = self.hparams['output_dim']
 
         # Create backbone
-        self.backbone = timm.create_model(  # type: ignore[attr-defined]
+        self.backbone = timm.create_model(
             model, in_chans=in_channels, num_classes=0, pretrained=weights is True
         )
-        self.backbone_momentum = timm.create_model(  # type: ignore[attr-defined]
+        self.backbone_momentum = timm.create_model(
             model, in_chans=in_channels, num_classes=0, pretrained=weights is True
         )
         deactivate_requires_grad(self.backbone_momentum)

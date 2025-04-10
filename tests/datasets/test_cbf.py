@@ -37,7 +37,7 @@ class TestCanadianBuildingFootprints:
         root = tmp_path
         transforms = nn.Identity()
         return CanadianBuildingFootprints(
-            root, res=0.1, transforms=transforms, download=True, checksum=True
+            root, res=(0.1, 0.1), transforms=transforms, download=True, checksum=True
         )
 
     def test_getitem(self, dataset: CanadianBuildingFootprints) -> None:

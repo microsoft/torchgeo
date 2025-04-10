@@ -14,7 +14,7 @@ from torchgeo.models import (
     DOFABase16_Weights,
     DOFALarge16_Weights,
     dofa_base_patch16_224,
-    dofa_huge_patch16_224,
+    dofa_huge_patch14_224,
     dofa_large_patch16_224,
     dofa_small_patch16_224,
 )
@@ -69,7 +69,10 @@ class TestDOFA:
 
 class TestDOFASmall16:
     def test_dofa(self) -> None:
-        dofa_small_patch16_224()
+        model = dofa_small_patch16_224()
+        x = torch.rand(1, 4, 224, 224)
+        wavelengths = [664.6, 559.8, 492.4, 832.8]
+        model(x, wavelengths)
 
 
 class TestDOFABase16:
@@ -79,33 +82,30 @@ class TestDOFABase16:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = DOFABase16_Weights.DOFA_MAE
         path = tmp_path / f'{weights}.pth'
         model = dofa_base_patch16_224()
         torch.save(model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_dofa(self) -> None:
-        dofa_base_patch16_224()
+        model = dofa_base_patch16_224()
+        x = torch.rand(1, 4, 224, 224)
+        wavelengths = [664.6, 559.8, 492.4, 832.8]
+        model(x, wavelengths)
 
     def test_dofa_weights(self, mocked_weights: WeightsEnum) -> None:
         dofa_base_patch16_224(weights=mocked_weights)
 
-    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
+    def test_transforms(self, weights: WeightsEnum) -> None:
         c = 4
         sample = {
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
-        mocked_weights.transforms(sample)
+        weights.transforms(sample)
 
     @pytest.mark.slow
     def test_dofa_download(self, weights: WeightsEnum) -> None:
@@ -119,39 +119,39 @@ class TestDOFALarge16:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = DOFALarge16_Weights.DOFA_MAE
         path = tmp_path / f'{weights}.pth'
         model = dofa_large_patch16_224()
         torch.save(model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_dofa(self) -> None:
-        dofa_large_patch16_224()
+        model = dofa_large_patch16_224()
+        x = torch.rand(1, 4, 224, 224)
+        wavelengths = [664.6, 559.8, 492.4, 832.8]
+        model(x, wavelengths)
 
     def test_dofa_weights(self, mocked_weights: WeightsEnum) -> None:
         dofa_large_patch16_224(weights=mocked_weights)
 
-    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
+    def test_transforms(self, weights: WeightsEnum) -> None:
         c = 4
         sample = {
             'image': torch.arange(c * 224 * 224, dtype=torch.float).view(c, 224, 224)
         }
-        mocked_weights.transforms(sample)
+        weights.transforms(sample)
 
     @pytest.mark.slow
     def test_dofa_download(self, weights: WeightsEnum) -> None:
         dofa_large_patch16_224(weights=weights)
 
 
-class TestDOFAHuge16:
+class TestDOFAHuge14:
     def test_dofa(self) -> None:
-        dofa_huge_patch16_224()
+        model = dofa_huge_patch14_224()
+        x = torch.rand(1, 4, 224, 224)
+        wavelengths = [664.6, 559.8, 492.4, 832.8]
+        model(x, wavelengths)

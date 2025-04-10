@@ -52,8 +52,6 @@ Now, you can install the latest stable release using:
 
    $ conda install torchgeo
 
-.. note:: The installation of TorchGeo in this manner is not supported on Windows since PyTorch from the conda-forge channel currently does not support Windows. Users are recommended to use pip instead.
-
 Conda does not support development versions or optional dependencies. If you install from conda-forge, only stable releases and required dependencies will be installed. Development versions or optional dependencies can be installed afterwards using pip.
 
 See the `conda-forge documentation <https://conda-forge.org/>`_ for more details.

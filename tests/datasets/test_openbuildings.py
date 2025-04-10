@@ -109,3 +109,6 @@ class TestOpenBuildings:
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
+
+    def test_float_res(self, dataset: OpenBuildings) -> None:
+        OpenBuildings(dataset.paths, res=0.0001)
