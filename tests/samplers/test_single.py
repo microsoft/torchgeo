@@ -185,6 +185,7 @@ class TestGridGeoSampler:
                 (2.5, 3),
                 ((8, 6), (1, 2)),
                 ((6, 4), (2, 3)),
+                (8, None),
             ],
             [Units.PIXELS, Units.CRS],
         ),
