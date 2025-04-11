@@ -40,6 +40,11 @@ class TestUnet:
     def test_unet_weights(self, mocked_weights: WeightsEnum) -> None:
         unet(weights=mocked_weights)
 
+    def test_unet_weights_different_num_classes(
+        self, mocked_weights: WeightsEnum
+    ) -> None:
+        unet(weights=mocked_weights, classes=20)
+
     def test_bands(self, weights: WeightsEnum) -> None:
         if 'bands' in weights.meta:
             assert len(weights.meta['bands']) == weights.meta['in_chans']
