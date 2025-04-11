@@ -6,6 +6,7 @@
 from typing import Any
 
 import kornia.augmentation as K
+import segmentation_models_pytorch as smp
 import torch
 from segmentation_models_pytorch import Unet
 from torchvision.models._api import Weights, WeightsEnum
@@ -115,12 +116,14 @@ def unet(
         weights: Pre-trained model weights to use.
         classes: Number of output classes. If not specified, the number of
             classes will be inferred from the weights.
-        *args: Additional arguments to pass to :func:`segmentation_models_pytorch.Unet`
-        **kwargs: Additional keyword arguments to pass to :func:`segmentation_models_pytorch.Unet`
+        *args: Additional arguments to pass to :func:`segmentation_models_pytorch.create_model`
+        **kwargs: Additional keyword arguments to pass to :func:`segmentation_models_pytorch.create_model`
 
     Returns:
         A U-Net model.
     """
+    kwargs['arch'] = 'Unet'
+
     if weights:
         kwargs['encoder_weights'] = None
         kwargs['in_channels'] = weights.meta['in_chans']
@@ -129,7 +132,7 @@ def unet(
     else:
         kwargs['classes'] = 1 if classes is None else classes
 
-    model: Unet = Unet(*args, **kwargs)
+    model: Unet = smp.create_model(*args, **kwargs)
 
     if weights:
         state_dict = weights.get_state_dict(progress=True)
