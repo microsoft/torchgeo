@@ -17,6 +17,7 @@ from torchgeo.models import (
     ScaleMAELarge16_Weights,
     Swin_V2_B_Weights,
     Swin_V2_T_Weights,
+    Unet_Weights,
     ViTSmall16_Weights,
     dofa_base_patch16_224,
     dofa_large_patch16_224,
@@ -30,6 +31,7 @@ from torchgeo.models import (
     scalemae_large_patch16,
     swin_v2_b,
     swin_v2_t,
+    unet,
     vit_small_patch16_224,
 )
 
@@ -42,6 +44,7 @@ builders = [
     scalemae_large_patch16,
     swin_v2_t,
     swin_v2_b,
+    unet,
     vit_small_patch16_224,
 ]
 enums = [
@@ -53,6 +56,7 @@ enums = [
     ScaleMAELarge16_Weights,
     Swin_V2_T_Weights,
     Swin_V2_B_Weights,
+    Unet_Weights,
     ViTSmall16_Weights,
 ]
 
