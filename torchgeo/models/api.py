@@ -32,6 +32,7 @@ from .resnet import (
 )
 from .scale_mae import ScaleMAELarge16_Weights, scalemae_large_patch16
 from .swin import Swin_V2_B_Weights, Swin_V2_T_Weights, swin_v2_b, swin_v2_t
+from .unet import Unet_Weights, unet
 from .vit import ViTSmall16_Weights, vit_small_patch16_224
 
 _model = {
@@ -43,6 +44,7 @@ _model = {
     'scalemae_large_patch16': scalemae_large_patch16,
     'swin_v2_t': swin_v2_t,
     'swin_v2_b': swin_v2_b,
+    'unet': unet,
     'vit_small_patch16_224': vit_small_patch16_224,
 }
 
@@ -55,6 +57,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     scalemae_large_patch16: ScaleMAELarge16_Weights,
     swin_v2_t: Swin_V2_T_Weights,
     swin_v2_b: Swin_V2_B_Weights,
+    unet: Unet_Weights,
     vit_small_patch16_224: ViTSmall16_Weights,
     'dofa_base_patch16_224': DOFABase16_Weights,
     'dofa_large_patch16_224': DOFALarge16_Weights,
@@ -64,6 +67,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     'scalemae_large_patch16': ScaleMAELarge16_Weights,
     'swin_v2_t': Swin_V2_T_Weights,
     'swin_v2_b': Swin_V2_B_Weights,
+    'unet': Unet_Weights,
     'vit_small_patch16_224': ViTSmall16_Weights,
 }
 

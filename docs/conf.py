@@ -69,6 +69,8 @@ nitpick_ignore = [
     ('py:class', 'torchvision.models._api.WeightsEnum'),
     ('py:class', 'torchvision.models.resnet.ResNet'),
     ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
+    # Undocumented functions
+    ('py:func', 'segmentation_models_pytorch.create_model'),
 ]
 
 
