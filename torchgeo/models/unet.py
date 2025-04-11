@@ -116,7 +116,7 @@ def unet(
         weights: Pre-trained model weights to use.
         classes: Number of output classes. If not specified, the number of
             classes will be inferred from the weights.
-        *args: Additional arguments to pass to :func:`segmentation_models_pytorch.create_model`
+        *args: Additional arguments to pass to smp.Unet :func:`segmentation_models_pytorch.create_model`
         **kwargs: Additional keyword arguments to pass to :func:`segmentation_models_pytorch.create_model`
 
     Returns:
