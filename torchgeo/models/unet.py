@@ -123,7 +123,7 @@ def unet(
     """
     if weights:
         kwargs['encoder_weights'] = None
-        kwargs['in_chans'] = weights.meta['in_chans']
+        kwargs['in_channels'] = weights.meta['in_chans']
         kwargs['encoder_name'] = weights.meta['encoder']
         kwargs['classes'] = weights.meta['num_classes'] if classes is None else classes
     else:
