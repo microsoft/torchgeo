@@ -35,7 +35,7 @@ from .swin import Swin_V2_B_Weights, Swin_V2_T_Weights, swin_v2_b, swin_v2_t
 from .unet import Unet_Weights, unet
 from .vit import ViTSmall16_Weights, vit_small_patch16_224
 
-_model = {
+_model: dict[str, Callable[..., nn.Module]] = {
     'dofa_base_patch16_224': dofa_base_patch16_224,
     'dofa_large_patch16_224': dofa_large_patch16_224,
     'resnet18': resnet18,
