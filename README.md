@@ -139,10 +139,10 @@ dataloader = DataLoader(
 
 # Training loop
 for batch in dataloader:
-    images = batch["image"]  # list of images
-    boxes = batch["boxes"]  # list of boxes
-    labels = batch["labels"]  # list of labels
-    masks = batch["masks"]  # list of masks
+    image = batch["image"]  # list of images
+    bbox_xyxy = batch["bbox_xyxy"]  # list of boxes
+    label = batch["label"]  # list of labels
+    mask = batch["mask"]  # list of masks
 
     # train a model, or make predictions using a pre-trained model
 ```
@@ -177,11 +177,8 @@ task = SemanticSegmentationTask(
     backbone="resnet50",
     weights=True,
     in_channels=3,
-    num_classes=2,
-    loss="ce",
-    ignore_index=None,
-    lr=0.1,
-    patience=6,
+    task="binary",
+    loss="bce",
 )
 trainer = Trainer(default_root_dir="...")
 
