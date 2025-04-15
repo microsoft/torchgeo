@@ -9,8 +9,12 @@ import torch.nn as nn
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
+    CopernicusFM_Base_Weights,
+    CROMABase_Weights,
+    CROMALarge_Weights,
     DOFABase16_Weights,
     DOFALarge16_Weights,
+    Panopticon_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
     ResNet152_Weights,
@@ -18,12 +22,16 @@ from torchgeo.models import (
     Swin_V2_B_Weights,
     Swin_V2_T_Weights,
     ViTSmall16_Weights,
+    copernicusfm_base,
+    croma_base,
+    croma_large,
     dofa_base_patch16_224,
     dofa_large_patch16_224,
     get_model,
     get_model_weights,
     get_weight,
     list_models,
+    panopticon_vitb14,
     resnet18,
     resnet50,
     resnet152,
@@ -34,8 +42,12 @@ from torchgeo.models import (
 )
 
 builders = [
+    copernicusfm_base,
+    croma_base,
+    croma_large,
     dofa_base_patch16_224,
     dofa_large_patch16_224,
+    panopticon_vitb14,
     resnet18,
     resnet50,
     resnet152,
@@ -45,8 +57,12 @@ builders = [
     vit_small_patch16_224,
 ]
 enums = [
+    CopernicusFM_Base_Weights,
+    CROMABase_Weights,
+    CROMALarge_Weights,
     DOFABase16_Weights,
     DOFALarge16_Weights,
+    Panopticon_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
     ResNet152_Weights,
