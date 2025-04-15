@@ -251,7 +251,7 @@ See the [Lightning documentation](https://lightning.ai/docs/pytorch/stable/cli/l
 
 ## Citation
 
-If you use this software in your work, please cite our [paper](https://dl.acm.org/doi/10.1145/3557915.3560953):
+If you use this software in your work, please cite our [paper](https://doi.org/10.1145/3707459):
 
 ```bibtex
 @inproceedings{Stewart_TorchGeo_Deep_Learning_2022,
