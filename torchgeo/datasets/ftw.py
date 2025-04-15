@@ -331,6 +331,13 @@ class FieldsOfTheWorld(NonGeoDataset):
         win_a = torch.clip(win_a / 3000, 0, 1)
         win_b = torch.clip(win_b / 3000, 0, 1)
 
+        ncols = 3
+        showing_predictions = 'prediction' in sample
+        if showing_predictions:
+            ncols += 1
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(15, 5))
+
         axs[0].imshow(win_a)
         axs[0].set_title('Window A')
         axs[1].imshow(win_b)
@@ -350,6 +357,11 @@ class FieldsOfTheWorld(NonGeoDataset):
         elif self.target == '3-class':
             axs[2].imshow(mask, vmin=0, vmax=2, cmap='gray', interpolation='none')
             axs[2].set_title('3-class mask')
+
+        if showing_predictions:
+            axs[3].imshow(sample['prediction'])
+            axs[3].set_title('Predictions')
+
         for ax in axs:
             ax.axis('off')
 
