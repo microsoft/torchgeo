@@ -282,11 +282,11 @@ class TestPreChippedGeoSampler:
     def sampler(self, dataset: CustomGeoDataset) -> PreChippedGeoSampler:
         return PreChippedGeoSampler(dataset, shuffle=True)
 
-    def test_iter(self, sampler: GridGeoSampler) -> None:
+    def test_iter(self, sampler: PreChippedGeoSampler) -> None:
         for _ in sampler:
             continue
 
-    def test_len(self, sampler: GridGeoSampler) -> None:
+    def test_len(self, sampler: PreChippedGeoSampler) -> None:
         assert len(sampler) == 2
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
