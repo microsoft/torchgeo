@@ -330,7 +330,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         win_b = torch.clip(win_b / 3000, 0, 1)
 
         ncols = 3
-        showing_predictions = 'predictions' in sample
+        showing_predictions = 'prediction' in sample
         if showing_predictions:
             ncols += 1
 
@@ -357,7 +357,7 @@ class FieldsOfTheWorld(NonGeoDataset):
             axs[2].set_title('3-class mask')
 
         if showing_predictions:
-            axs[3].imshow(sample['predictions'])
+            axs[3].imshow(sample['prediction'])
             axs[3].set_title('Predictions')
 
         for ax in axs:
