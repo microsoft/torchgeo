@@ -33,7 +33,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
     For `smp <https://github.com/qubvel-org/segmentation_models.pytorch>`_
     *Unet* implementation.
 
-    .. versionadded:: 0.7
+    .. versionadded:: 0.8
     """
 
     SENTINEL2_2CLASS_FTW = Weights(
@@ -110,7 +110,7 @@ def unet(
 
     * https://arxiv.org/abs/1505.04597
 
-    .. versionadded:: 0.7
+    .. versionadded:: 0.8
 
     Args:
         weights: Pre-trained model weights to use.
