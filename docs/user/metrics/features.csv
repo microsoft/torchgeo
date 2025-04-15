@@ -10,3 +10,4 @@ Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weight
 `geo-bench`_,PyTorch,"h5py, pandas",-,Kornia,12,0,❌,❌,❌,❌,❌
 `GeoAI`_,"PyTorch","GDAL, xarray","geopandas",Albumentations,0,6,❌,❌,✅,✅,❌
 `OTBTF`_,TensorFlow,"GDAL, OTB",-,-,0,0,✅,❌,✅,❌,❌
+`GeoDeep`_,ONNX,Rasterio,Rasterio,-,0,7,✅,❌,✅,❌,❌
