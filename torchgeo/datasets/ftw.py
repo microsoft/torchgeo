@@ -322,8 +322,6 @@ class FieldsOfTheWorld(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
-
         win_a = einops.rearrange(sample['image'][0:3], 'c h w -> h w c')
         win_b = einops.rearrange(sample['image'][4:7], 'c h w -> h w c')
         mask = sample['mask']
