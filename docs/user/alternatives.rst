@@ -117,3 +117,4 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _geo-bench: https://github.com/ServiceNow/geo-bench
 .. _GeoAI: https://github.com/opengeos/geoai
 .. _OTBTF: https://github.com/remicres/otbtf
+.. _GeoDeep: https://github.com/uav4geo/GeoDeep
