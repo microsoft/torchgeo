@@ -107,6 +107,10 @@ def test_get_model(builder: Callable[..., nn.Module]) -> None:
 
 @pytest.mark.parametrize('builder', builders)
 def test_get_model_weights(builder: Callable[..., nn.Module]) -> None:
+    models_without_weights = [dofa_huge_patch14_224, dofa_small_patch16_224]
+    if builder in models_without_weights:
+        return
+
     weights = get_model_weights(builder)
     assert isinstance(weights, enum.EnumMeta)
     weights = get_model_weights(builder.__name__)
