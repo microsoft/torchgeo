@@ -68,9 +68,7 @@ nitpick_ignore = [
     ('py:class', 'torch.optim.lr_scheduler.LRScheduler'),
     ('py:class', 'torchvision.models._api.WeightsEnum'),
     ('py:class', 'torchvision.models.resnet.ResNet'),
-    ('py:class', 'torchvision.models.swin_transformer.SwinTransformer'),
-    # Undocumented functions
-    ('py:func', 'segmentation_models_pytorch.create_model'),
+    ('py:class', 'torchvision.models.swin_transformer.SwinTransformer')
 ]
 
 
