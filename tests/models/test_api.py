@@ -53,8 +53,6 @@ from torchgeo.models import (
     vit_small_patch16_224,
 )
 
-models_without_weights = [dofa_huge_patch14_224]
-
 builders = [
     copernicusfm_base,
     croma_base,
