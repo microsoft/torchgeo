@@ -116,8 +116,8 @@ def unet(
         weights: Pre-trained model weights to use.
         classes: Number of output classes. If not specified, the number of
             classes will be inferred from the weights.
-        *args: Additional arguments to pass to :func:`segmentation_models_pytorch.create_model`
-        **kwargs: Additional keyword arguments to pass to :func:`segmentation_models_pytorch.create_model`
+        *args: Additional arguments to pass to ``segmentation_models_pytorch.create_model``
+        **kwargs: Additional keyword arguments to pass to ``segmentation_models_pytorch.create_model``
 
     Returns:
         A U-Net model.
@@ -144,10 +144,13 @@ def unet(
         else:
             del state_dict['segmentation_head.0.weight']
             del state_dict['segmentation_head.0.bias']
-            missing_keys, _ = model.load_state_dict(state_dict, strict=False)
+            missing_keys, unexpected_keys = model.load_state_dict(
+                state_dict, strict=False
+            )
         assert set(missing_keys) <= {
             'segmentation_head.0.weight',
             'segmentation_head.0.bias',
         }
+        assert not unexpected_keys
 
     return model
