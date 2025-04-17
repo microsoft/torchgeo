@@ -21,12 +21,19 @@ from torchgeo.models import (
     ScaleMAELarge16_Weights,
     Swin_V2_B_Weights,
     Swin_V2_T_Weights,
+    ViTBase14_DINOv2_Weights,
+    ViTBase16_Weights,
+    ViTHuge14_Weights,
+    ViTLarge16_Weights,
+    ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
     copernicusfm_base,
     croma_base,
     croma_large,
     dofa_base_patch16_224,
+    dofa_huge_patch14_224,
     dofa_large_patch16_224,
+    dofa_small_patch16_224,
     get_model,
     get_model_weights,
     get_weight,
@@ -38,15 +45,24 @@ from torchgeo.models import (
     scalemae_large_patch16,
     swin_v2_b,
     swin_v2_t,
+    vit_base_patch14_dinov2,
+    vit_base_patch16_224,
+    vit_huge_patch14_224,
+    vit_large_patch16_224,
+    vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
+
+models_without_weights = [dofa_huge_patch14_224]
 
 builders = [
     copernicusfm_base,
     croma_base,
     croma_large,
     dofa_base_patch16_224,
+    dofa_huge_patch14_224,
     dofa_large_patch16_224,
+    dofa_small_patch16_224,
     panopticon_vitb14,
     resnet18,
     resnet50,
@@ -54,6 +70,11 @@ builders = [
     scalemae_large_patch16,
     swin_v2_t,
     swin_v2_b,
+    vit_base_patch14_dinov2,
+    vit_base_patch16_224,
+    vit_huge_patch14_224,
+    vit_large_patch16_224,
+    vit_small_patch14_dinov2,
     vit_small_patch16_224,
 ]
 enums = [
@@ -69,6 +90,11 @@ enums = [
     ScaleMAELarge16_Weights,
     Swin_V2_T_Weights,
     Swin_V2_B_Weights,
+    ViTBase14_DINOv2_Weights,
+    ViTBase16_Weights,
+    ViTHuge14_Weights,
+    ViTLarge16_Weights,
+    ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
 ]
 
