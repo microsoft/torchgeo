@@ -139,7 +139,9 @@ def unet(
 
         # Load full pretrained model
         if kwargs['classes'] == weights.meta['num_classes']:
-            missing_keys, _ = model.load_state_dict(state_dict, strict=True)
+            missing_keys, unexpected_keys = model.load_state_dict(
+                state_dict, strict=True
+            )
         # Random initialize segmentation head for new task
         else:
             del state_dict['segmentation_head.0.weight']
