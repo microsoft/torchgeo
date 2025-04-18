@@ -108,6 +108,7 @@ class OSCDDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
+        self.dataset = OSCD(split='test', **self.kwargs)
         if stage in ['fit', 'validate']:
             self.dataset = OSCD(split='train', **self.kwargs)
             generator = torch.Generator().manual_seed(0)

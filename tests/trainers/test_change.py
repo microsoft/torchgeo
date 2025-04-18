@@ -167,3 +167,7 @@ class TestChangeDetectionTask:
                 for param in model.model.segmentation_head.parameters()
             ]
         )
+
+    @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal'])
+    def test_losses(self, loss_fn: str) -> None:
+        ChangeDetectionTask(loss=loss_fn)
