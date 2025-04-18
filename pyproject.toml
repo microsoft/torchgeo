@@ -1,7 +1,7 @@
 [build-system]
 requires = [
-    # setuptools 61+ required for pyproject.toml support
-    "setuptools>=61",
+    # setuptools 77.0.1+ required for PEP 639 support
+    "setuptools>=77.0.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -11,7 +11,7 @@ name = "torchgeo"
 description = "TorchGeo: datasets, samplers, transforms, and pre-trained models for geospatial data"
 readme = "README.md"
 requires-python = ">=3.11"
-license = {file = "LICENSE"}
+license = "MIT"
 authors = [
     {name = "Adam J. Stewart", email = "ajstewart426@gmail.com"},
 ]
@@ -26,7 +26,6 @@ keywords = ["pytorch", "deep learning", "machine learning", "remote sensing", "s
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",

@@ -251,21 +251,17 @@ See the [Lightning documentation](https://lightning.ai/docs/pytorch/stable/cli/l
 
 ## Citation
 
-If you use this software in your work, please cite our [paper](https://dl.acm.org/doi/10.1145/3557915.3560953):
+If you use this software in your work, please cite our [paper](https://doi.org/10.1145/3707459):
 
 ```bibtex
-@inproceedings{Stewart_TorchGeo_Deep_Learning_2022,
-    address = {Seattle, Washington},
+@article{Stewart_TorchGeo_Deep_Learning_2024,
     author = {Stewart, Adam J. and Robinson, Caleb and Corley, Isaac A. and Ortiz, Anthony and Lavista Ferres, Juan M. and Banerjee, Arindam},
-    booktitle = {Proceedings of the 30th International Conference on Advances in Geographic Information Systems},
-    doi = {10.1145/3557915.3560953},
-    month = nov,
-    pages = {1--12},
-    publisher = {Association for Computing Machinery},
-    series = {SIGSPATIAL '22},
+    doi = {10.1145/3707459},
+    journal = {ACM Transactions on Spatial Algorithms and Systems},
+    month = dec,
     title = {{TorchGeo}: Deep Learning With Geospatial Data},
-    url = {https://dl.acm.org/doi/10.1145/3557915.3560953},
-    year = {2022}
+    url = {https://doi.org/10.1145/3707459},
+    year = {2024}
 }
 ```
 

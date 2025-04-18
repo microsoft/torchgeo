@@ -29,22 +29,14 @@ preferred-citation:
       given-names: 'Juan M.'
     - family-names: 'Banerjee'
       given-names: 'Arindam'
-  collection-title: 'Proceedings of the 30th International Conference on Advances in Geographic Information Systems'
-  collection-type: 'proceedings'
-  conference:
-    city: 'Seattle'
-    name: "SIGSPATIAL '22"
-    region: 'Washington'
-  doi: '10.1145/3557915.3560953'
-  end: 12
-  isbn: '9781450395298'
-  month: 11
-  number: 19
+  doi: '10.1145/3707459'
+  issn: '2374-0353'
+  journal: 'ACM Transactions on Spatial Algorithms and Systems'
+  month: 12
   publisher:
     name: 'Association for Computing Machinery'
-  start: 1
   title: 'TorchGeo: Deep Learning With Geospatial Data'
-  type: 'conference-paper'
-  url: 'https://dl.acm.org/doi/10.1145/3557915.3560953'
-  year: 2022
+  type: 'article'
+  url: 'https://doi.org/10.1145/3707459'
+  year: 2024
 title: 'TorchGeo: Deep Learning With Geospatial Data'
