@@ -6,9 +6,13 @@
 import glob
 import os
 import sys
+from datetime import datetime
 from typing import Any
 
+import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.figure import Figure
+from matplotlib.ticker import FuncFormatter
 from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
@@ -110,3 +114,58 @@ class INaturalist(GeoDataset):
         sample = {'crs': self.crs, 'bounds': bboxes}
 
         return sample
+
+    def plot(
+        self,
+        sample: dict[str, Any],
+        show_titles: bool = True,
+        suptitle: str | None = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: a sample return by :meth:`__getitem__`
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for Figure
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.8
+        """
+        fig, ax = plt.subplots(figsize=(10, 8))
+        ax.grid(ls='--')
+
+        # Extract coordinates and timestamps
+        bboxes = sample['bounds']
+        longitudes = [bbox[0] for bbox in bboxes]  # minx
+        latitudes = [bbox[1] for bbox in bboxes]  # miny
+        timestamps = [bbox[2] for bbox in bboxes]  # mint
+
+        # Plot the points with colors based on date
+        scatter = ax.scatter(longitudes, latitudes, c=timestamps, edgecolors='black')
+
+        # Create a formatter function
+        def format_date(x: float, pos: int | None = None) -> str:
+            # Convert timestamp to datetime
+            return datetime.fromtimestamp(x).strftime('%Y-%m-%d')
+
+        # Add a colorbar
+        cbar = fig.colorbar(scatter, ax=ax, pad=0.04)
+        cbar.set_label('Observed Timestamp', rotation=90, labelpad=-100, va='center')
+
+        # Apply the formatter to the colorbar
+        cbar.ax.yaxis.set_major_formatter(FuncFormatter(format_date))
+
+        # Set labels
+        ax.set_xlabel('Longitude')
+        ax.set_ylabel('Latitude')
+
+        # Add titles if requested
+        if show_titles:
+            ax.set_title('GBIF Occurence Locations by Date')
+
+        if suptitle is not None:
+            fig.suptitle(suptitle)
+
+        fig.tight_layout()
+        return fig
