@@ -162,7 +162,7 @@ class INaturalist(GeoDataset):
 
         # Add titles if requested
         if show_titles:
-            ax.set_title('GBIF Occurence Locations by Date')
+            ax.set_title('iNaturalist Dataset Plot')
 
         if suptitle is not None:
             fig.suptitle(suptitle)
