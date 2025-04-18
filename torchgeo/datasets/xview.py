@@ -295,10 +295,11 @@ class XView2DistShift(XView2):
     on others.
     """
 
-    classes = ['background', 'building']
 
-    # List of disaster names
-    valid_disasters = [
+    classes: ClassVar[list[str]] = ['background', 'building']
+
+
+    valid_disasters: ClassVar[list[str]] = [
         'hurricane-harvey',
         'socal-fire',
         'hurricane-matthew',
@@ -319,7 +320,7 @@ class XView2DistShift(XView2):
             {'disaster_name': 'hurricane-matthew', 'pre-post': 'post'},
             {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'},
         ],
-        transforms: Callable[[dict[str, torch.Tensor]], dict[str, torch.Tensor]] = None,
+        transforms: Callable[[dict[str, torch.Tensor]], dict[str, torch.Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize the XView2DistShift dataset instance.
