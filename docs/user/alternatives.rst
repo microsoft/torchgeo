@@ -26,7 +26,7 @@ Features
    :header-rows: 1
    :widths: auto
 
-\*Support for TensorFlow was dropped in Raster Vision 0.12.
+\*Support was dropped in newer releases.
 
 **ML Backend**: The machine learning libraries used by the project. For example, if you are a scikit-learn user, eo-learn may be perfect for you, but if you need more advanced deep learning support, you may want to choose a different library.
 
