@@ -31,6 +31,7 @@ from .resnet import (
 )
 from .scale_mae import ScaleMAE, ScaleMAELarge16_Weights, scalemae_large_patch16
 from .swin import Swin_V2_B_Weights, Swin_V2_T_Weights, swin_v2_b, swin_v2_t
+from .unet import Unet_Weights, unet
 from .vit import (
     ViTBase14_DINOv2_Weights,
     ViTBase16_Weights,
@@ -72,6 +73,7 @@ __all__ = (
     'ScaleMAELarge16_Weights',
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
+    'Unet_Weights',
     'ViTBase14_DINOv2_Weights',
     'ViTBase16_Weights',
     'ViTHuge14_Weights',
@@ -96,6 +98,7 @@ __all__ = (
     'scalemae_large_patch16',
     'swin_v2_b',
     'swin_v2_t',
+    'unet',
     'vit_base_patch14_dinov2',
     'vit_base_patch16_224',
     'vit_huge_patch14_224',
