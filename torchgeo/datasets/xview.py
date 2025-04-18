@@ -295,9 +295,7 @@ class XView2DistShift(XView2):
     on others.
     """
 
-
-    classes: ClassVar[list[str]] = ['background', 'building']
-
+    binary_classes: ClassVar[tuple[str, str]] = ('background', 'building')
 
     valid_disasters: ClassVar[list[str]] = [
         'hurricane-harvey',
@@ -339,7 +337,6 @@ class XView2DistShift(XView2):
             DatasetNotFoundError: If dataset is not found.
         """
         assert split in ['train', 'test'], "Split must be either 'train' or 'test'."
-        # Validate that the disasters are valid
 
         if (
             id_ood_disaster[0]['disaster_name'] not in self.valid_disasters
@@ -360,30 +357,29 @@ class XView2DistShift(XView2):
         self.all_files = self._initialize_files(root)
 
         # Split logic by disaster and pre-post type
-        self.files = self._load_split_files_by_disaster_and_type(
+        self.split_files: dict[str, list[dict[str, str]]] = self._load_split_files_by_disaster_and_type(
             self.all_files, id_ood_disaster[0], id_ood_disaster[1]
         )
 
         train_size, test_size = self.get_id_ood_sizes()
         print(f"ID sample len: {train_size}, OOD sample len: {test_size}")
-            
+
     def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
         """Get an item from the dataset at the given index."""
         file_info = (
-            self.files['train'][index]
+            self.split_files['train'][index]
             if self.split == 'train'
-            else self.files['test'][index]
+            else self.split_files['test'][index]
         )
 
         image = self._load_image(file_info['image'])
         mask = self._load_target(file_info['mask']).long()
 
-        # Reformulate as building segmentation task 
-        mask[mask == 2] = 1 # Map damage class 2 to 1 
-        mask[(mask == 3) | (mask == 4)] = 0 # Map 3 and 4 damage classes to background
+        # Reformulate as building segmentation task
+        mask[mask == 2] = 1  # minor-damage → building
+        mask[(mask == 3) | (mask == 4)] = 0  # major/destroyed → background
 
         sample = {'image': image, 'mask': mask}
-
         if self.transforms:
             sample = self.transforms(sample)
 
@@ -392,16 +388,14 @@ class XView2DistShift(XView2):
     def __len__(self) -> int:
         """Return the total number of samples in the dataset."""
         return (
-            len(self.files['train'])
+            len(self.split_files['train'])
             if self.split == 'train'
-            else len(self.files['test'])
+            else len(self.split_files['test'])
         )
-
 
     def get_id_ood_sizes(self) -> tuple[int, int]:
         """Return the number of samples in the train and test splits."""
-        return (len(self.files['train']), len(self.files['test']))
-
+        return (len(self.split_files['train']), len(self.split_files['test']))
 
     def _initialize_files(self, root: str) -> list[dict[str, str]]:
         """Initialize the dataset by loading file paths and computing basenames with sample numbers."""
@@ -416,15 +410,11 @@ class XView2DistShift(XView2):
                 basename_parts = os.path.basename(img).split('_')
                 event_name = basename_parts[0]  # e.g., mexico-earthquake
                 sample_number = basename_parts[1]  # e.g., 00000001
-                basename = (
-                    f'{event_name}_{sample_number}'  # e.g., mexico-earthquake_00000001
-                )
+                basename = f'{event_name}_{sample_number}'
 
                 file_info = {
                     'image': img,
-                    'mask': os.path.join(
-                        mask_root, f'{basename}_pre_disaster_target.png'
-                    ),
+                    'mask': os.path.join(mask_root, f'{basename}_pre_disaster_target.png'),
                     'basename': basename,
                 }
                 all_files.append(file_info)
@@ -448,43 +438,20 @@ class XView2DistShift(XView2):
         """
         train_files = []
         test_files = []
-        disaster_list = []
 
         for file_info in files:
             basename = file_info['basename']
-            disaster_name = basename.split('_')[
-                0
-            ]  # Extract disaster name from basename
-            pre_post = (
-                'pre' if 'pre_disaster' in file_info['image'] else 'post'
-            )  # Identify pre/post type
+            disaster_name = basename.split('_')[0]
+            pre_post = 'pre' if 'pre_disaster' in file_info['image'] else 'post'
 
-            disaster_list.append(disaster_name)
-
-            # Filter for in-distribution (ID) training set
             if disaster_name == id_disaster['disaster_name']:
-                if (
-                    id_disaster.get('pre-post') == 'both'
-                    or id_disaster['pre-post'] == pre_post
-                ):
-                    image = (
-                        file_info['image'].replace('post_disaster', 'pre_disaster')
-                        if pre_post == 'pre'
-                        else file_info['image']
-                    )
-                    mask = (
-                        file_info['mask'].replace('post_disaster', 'pre_disaster')
-                        if pre_post == 'pre'
-                        else file_info['mask']
-                    )
+                if id_disaster.get('pre-post') == 'both' or id_disaster['pre-post'] == pre_post:
+                    image = file_info['image'].replace('post_disaster', 'pre_disaster') if pre_post == 'pre' else file_info['image']
+                    mask = file_info['mask'].replace('post_disaster', 'pre_disaster') if pre_post == 'pre' else file_info['mask']
                     train_files.append(dict(image=image, mask=mask))
 
-            # Filter for out-of-distribution (OOD) test set
             if disaster_name == ood_disaster['disaster_name']:
-                if (
-                    ood_disaster.get('pre-post') == 'both'
-                    or ood_disaster['pre-post'] == pre_post
-                ):
+                if ood_disaster.get('pre-post') == 'both' or ood_disaster['pre-post'] == pre_post:
                     test_files.append(file_info)
 
-        return {'train': train_files, 'test': test_files, 'disasters': disaster_list}
+        return {'train': train_files, 'test': test_files}
