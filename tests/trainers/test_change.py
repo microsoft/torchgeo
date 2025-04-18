@@ -135,7 +135,7 @@ class TestChangeDetectionTask:
         with pytest.raises(ValueError, match=match):
             ChangeDetectionTask(loss='invalid_loss')
 
-    @pytest.mark.parametrize('model_name', ['unet'])
+    @pytest.mark.parametrize('model_name', ['unet', 'fcsiamdiff', 'fcsiamconc'])
     @pytest.mark.parametrize(
         'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
     )
@@ -154,7 +154,7 @@ class TestChangeDetectionTask:
             ]
         )
 
-    @pytest.mark.parametrize('model_name', ['unet'])
+    @pytest.mark.parametrize('model_name', ['unet', 'fcsiamdiff', 'fcsiamconc'])
     def test_freeze_decoder(self, model_name: str) -> None:
         model = ChangeDetectionTask(model=model_name, freeze_decoder=True)
         assert all(

@@ -9,6 +9,7 @@ from typing import Any
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+from einops import rearrange
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.classification import (
@@ -38,6 +39,7 @@ class ChangeDetectionTask(BaseTask):
         patience: int = 10,
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
+        threshold: float = 0.5,
     ) -> None:
         """Inititalize a new ChangeDetectionTask instance.
 
@@ -61,6 +63,9 @@ class ChangeDetectionTask(BaseTask):
                 decoder and segmentation head.
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
+            threshold: Decision threshold used to convert predicted probabilities into binary
+                class labels. Predictions greater than or equal to the threshold are assigned
+                class 1, and those below are assigned class 0. Must be between 0 and 1.
 
         .. versionadded: 0.7
         """
@@ -120,12 +125,14 @@ class ChangeDetectionTask(BaseTask):
             )
         elif model == 'fcsiamdiff':
             self.model = FCSiamDiff(
+                encoder_name=backbone,
                 in_channels=in_channels,
                 classes=num_classes,
                 encoder_weights='imagenet' if weights is True else None,
             )
         elif model == 'fcsiamconc':
             self.model = FCSiamConc(
+                encoder_name=backbone,
                 in_channels=in_channels,
                 classes=num_classes,
                 encoder_weights='imagenet' if weights is True else None,
@@ -146,12 +153,20 @@ class ChangeDetectionTask(BaseTask):
             self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
-        if self.hparams['freeze_backbone'] and model in ['unet']:
+        if self.hparams['freeze_backbone'] and model in [
+            'unet',
+            'fcsiamdiff',
+            'fcsiamconc',
+        ]:
             for param in self.model.encoder.parameters():
                 param.requires_grad = False
 
         # Freeze decoder
-        if self.hparams['freeze_decoder'] and model in ['unet']:
+        if self.hparams['freeze_decoder'] and model in [
+            'unet',
+            'fcsiamdiff',
+            'fcsiamconc',
+        ]:
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
 
@@ -169,9 +184,10 @@ class ChangeDetectionTask(BaseTask):
         model: str = self.hparams['model']
         x = batch['image']
         y = batch['mask']
-        y = y.unsqueeze(dim=1)  # channel dim for binary loss functions/metrics
+        # channel dim for binary loss functions/metrics
+        y = rearrange(y, 'b h w -> b () h w')
         if model == 'unet':
-            x = x.flatten(start_dim=1, end_dim=2)
+            x = rearrange(x, 'b t c h w -> b (t c) h w')
         y_hat = self(x)
 
         loss: Tensor = self.criterion(y_hat, y.to(torch.float))
@@ -230,10 +246,10 @@ class ChangeDetectionTask(BaseTask):
             Output predicted class.
         """
         model: str = self.hparams['model']
-        threshold = 0.5
+        threshold: float = self.hparams['threshold']
         x = batch['image']
         if model == 'unet':
-            x = x.flatten(start_dim=1, end_dim=2)
+            x = rearrange(x, 'b t c h w -> b (t c) h w')
         y_hat: Tensor = self(x)
-        y_hat_hard = (nn.functional.sigmoid(y_hat) > threshold).int()
+        y_hat_hard = (nn.functional.sigmoid(y_hat) >= threshold).int()
         return y_hat_hard
