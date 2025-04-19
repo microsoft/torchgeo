@@ -29,7 +29,7 @@ def _to_tuple(value: tuple[float, float] | float) -> tuple[float, float]:
     Returns:
         value if value is a tuple, else (value, value)
     """
-    if isinstance(value, float | int):
+    if isinstance(value, int | float):
         return (value, value)
     else:
         return value
@@ -38,7 +38,7 @@ def _to_tuple(value: tuple[float, float] | float) -> tuple[float, float]:
 def get_random_bounding_box(
     bounds: BoundingBox,
     size: tuple[float, float] | float,
-    res: float,
+    res: tuple[float, float] | float,
     generator: Generator | None = None,
 ) -> BoundingBox:
     """Returns a random bounding box within a given bounding box.
@@ -63,17 +63,18 @@ def get_random_bounding_box(
         randomly sampled bounding box from the extent of the input
     """
     t_size = _to_tuple(size)
+    t_res = _to_tuple(res)
 
     # May be negative if bounding box is smaller than patch size
-    width = (bounds.maxx - bounds.minx - t_size[1]) / res
-    height = (bounds.maxy - bounds.miny - t_size[0]) / res
+    width = (bounds.maxx - bounds.minx - t_size[1]) / t_res[0]
+    height = (bounds.maxy - bounds.miny - t_size[0]) / t_res[1]
 
     minx = bounds.minx
     miny = bounds.miny
 
     # Use an integer multiple of res to avoid resampling
-    minx += int(torch.rand(1, generator=generator).item() * width) * res
-    miny += int(torch.rand(1, generator=generator).item() * height) * res
+    minx += int(torch.rand(1, generator=generator).item() * width) * t_res[0]
+    miny += int(torch.rand(1, generator=generator).item() * height) * t_res[1]
 
     maxx = minx + t_size[1]
     maxy = miny + t_size[0]

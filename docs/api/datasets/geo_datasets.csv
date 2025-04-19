@@ -5,9 +5,11 @@ Dataset,Type,Source,License,Size (px),Resolution (m)
 `Aster Global DEM`_,DEM,Aster,"public domain","3,601x3,601",30
 `Canadian Building Footprints`_,Geometries,Bing Imagery,"ODbL-1.0",-,-
 `Chesapeake Land Cover`_,"Imagery, Masks",NAIP,"CC0-1.0",-,1
+`GlobalBuildingMap`_,Masks,PlanetScope,CC-BY-4.0,180K,3
 `Global Mangrove Distribution`_,Masks,"Remote Sensing, In Situ Measurements","public domain",-,3
 `Cropland Data Layer`_,Masks,Landsat,"public domain",-,30
 `EDDMapS`_,Points,Citizen Scientists,-,-,-
+`EnMAP`_,Imagery,EnMAP,`EnMAP Data License <https://www.enmap.org/data/resources/EnMAP_Data_License.pdf>`_,"1,200x1,200",30
 `EnviroAtlas`_,"Imagery, Masks","NAIP, NLCD, OpenStreetMap","CC-BY-4.0",-,1
 `Esri2020`_,Masks,Sentinel-2,"CC-BY-4.0",-,10
 `EU-DEM`_,DEM,"Aster, SRTM, Russian Topomaps","CSCDA-ESA",-,25

@@ -9,6 +9,7 @@ import kornia.augmentation as K
 import timm
 import torch
 from timm.models import ResNet
+from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
 from .swin import (
@@ -76,7 +77,7 @@ _sentinel2_toa_bands = [
 _sentinel2_rgb_bands = ['B4', 'B3', 'B2']
 
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/main/src/download_data/convert_rgb.py
-_sentinel1_bands = ['VV', 'VH']
+_sentinel1_grd_bands = ['VV', 'VH']
 
 # https://github.com/zhu-xlab/DeCUR/blob/f190e9a3895ef645c005c8c2fce287ffa5a937e3/src/transfer_classification_BE/linear_BE_resnet.py#L286
 # Normalization by channel-wise band statistics
@@ -533,7 +534,8 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    SENTINEL1_ALL_DECUR = Weights(
+    # ALL is deprecated, use GRD instead
+    SENTINEL1_ALL_DECUR = SENTINEL1_GRD_DECUR = Weights(
         url='https://huggingface.co/torchgeo/decur/resolve/9328eeb90c686a88b30f8526ed757b4bc0f12027/rn50_ssl4eo-s12_sar_decur_ep100-f0e69ba2.pth',
         transforms=_ssl4eo_s12_transforms_s1,
         meta={
@@ -543,11 +545,12 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2309.05300',
             'repo': 'https://github.com/zhu-xlab/DeCUR',
             'ssl_method': 'decur',
-            'bands': _sentinel1_bands,
+            'bands': _sentinel1_grd_bands,
         },
     )
 
-    SENTINEL1_ALL_MOCO = Weights(
+    # ALL is deprecated, use GRD instead
+    SENTINEL1_ALL_MOCO = SENTINEL1_GRD_MOCO = Weights(
         url='https://hf.co/torchgeo/resnet50_sentinel1_all_moco/resolve/e79862c667853c10a709bdd77ea8ffbad0e0f1cf/resnet50_sentinel1_all_moco-906e4356.pth',
         transforms=_ssl4eo_s12_transforms_s1,
         meta={
@@ -557,7 +560,21 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
-            'bands': _sentinel1_bands,
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
+    SENTINEL1_GRD_SOFTCON = Weights(
+        url='https://huggingface.co/wangyi111/softcon/resolve/62ff465b2e7467dbfc70758ec1e9d08ab87fc46b/B2_rn50_softcon.pth',
+        transforms=_ssl4eo_s12_transforms_s1,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 2,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2405.20462',
+            'repo': 'https://github.com/zhu-xlab/softcon',
+            'ssl_method': 'softcon',
+            'bands': _sentinel1_grd_bands,
         },
     )
 
@@ -599,6 +616,20 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL2_ALL_SOFTCON = Weights(
+        url='https://huggingface.co/wangyi111/softcon/resolve/62ff465b2e7467dbfc70758ec1e9d08ab87fc46b/B13_rn50_softcon.pth',
+        transforms=_ssl4eo_s12_transforms_s2_stats,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 13,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2405.20462',
+            'repo': 'https://github.com/zhu-xlab/softcon',
+            'ssl_method': 'softcon',
             'bands': _sentinel2_toa_bands,
         },
     )
@@ -748,7 +779,7 @@ class ResNet152_Weights(WeightsEnum):  # type: ignore[misc]
 
 def resnet18(
     weights: ResNet18_Weights | None = None, *args: Any, **kwargs: Any
-) -> ResNet:
+) -> ResNet | nn.ModuleDict:
     """ResNet-18 model.
 
     If you use this model in your research, please cite the following paper:
@@ -768,21 +799,21 @@ def resnet18(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet = timm.create_model('resnet18', *args, **kwargs)  # type: ignore[attr-defined]
+    model: ResNet | nn.ModuleDict = timm.create_model('resnet18', *args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
-        assert not unexpected_keys
+        assert set(unexpected_keys) <= {'fc.weight', 'fc.bias'}
 
     return model
 
 
 def resnet50(
     weights: ResNet50_Weights | None = None, *args: Any, **kwargs: Any
-) -> ResNet:
+) -> ResNet | nn.ModuleDict:
     """ResNet-50 model.
 
     If you use this model in your research, please cite the following paper:
@@ -803,21 +834,22 @@ def resnet50(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet = timm.create_model('resnet50', *args, **kwargs)  # type: ignore[attr-defined]
+    model: ResNet | nn.ModuleDict = timm.create_model('resnet50', *args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
-        assert not unexpected_keys
+        # used when features_only = True
+        assert set(unexpected_keys) <= {'fc.weight', 'fc.bias'}
 
     return model
 
 
 def resnet152(
     weights: ResNet152_Weights | None = None, *args: Any, **kwargs: Any
-) -> ResNet:
+) -> ResNet | nn.ModuleDict:
     """ResNet-152 model.
 
     If you use this model in your research, please cite the following paper:
@@ -837,13 +869,15 @@ def resnet152(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet = timm.create_model('resnet152', *args, **kwargs)  # type: ignore[attr-defined]
+    # FeatureListNet (extends nn.ModuleDict) is returned when features_only=True
+    model: ResNet | nn.ModuleDict = timm.create_model('resnet152', *args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
             weights.get_state_dict(progress=True), strict=False
         )
         assert set(missing_keys) <= {'fc.weight', 'fc.bias'}
-        assert not unexpected_keys
+        # used when features_only = True
+        assert set(unexpected_keys) <= {'fc.weight', 'fc.bias'}
 
     return model

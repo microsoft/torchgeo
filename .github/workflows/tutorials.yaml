@@ -22,11 +22,11 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up python
         id: setup-python
-        uses: actions/setup-python@v5.3.0
+        uses: actions/setup-python@v5.5.0
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - name: Cache dependencies
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4.2.3
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -34,7 +34,7 @@ jobs:
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install -r requirements/required.txt -r requirements/docs.txt -r requirements/tests.txt planetary_computer pystac tensorboard .
+          pip install -r requirements/required.txt -r requirements/docs.txt -r requirements/tests.txt planetary_computer pystac tensorboard h5py scikit-learn .
           pip cache purge
       - name: List pip dependencies
         run: pip list
@@ -42,4 +42,4 @@ jobs:
         run: pytest --nbmake --durations=10 docs/tutorials
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
