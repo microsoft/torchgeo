@@ -318,7 +318,8 @@ class XView2DistShift(XView2):
             {'disaster_name': 'hurricane-matthew', 'pre-post': 'post'},
             {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'},
         ],
-        transforms: Callable[[dict[str, torch.Tensor]], dict[str, torch.Tensor]] | None = None,
+        transforms: Callable[[dict[str, torch.Tensor]], dict[str, torch.Tensor]]
+        | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize the XView2DistShift dataset instance.
@@ -343,7 +344,7 @@ class XView2DistShift(XView2):
             or id_ood_disaster[1]['disaster_name'] not in self.valid_disasters
         ):
             raise ValueError(
-                f"Invalid disaster names. Valid options are: {', '.join(self.valid_disasters)}"
+                f'Invalid disaster names. Valid options are: {", ".join(self.valid_disasters)}'
             )
 
         self.root = root
@@ -357,12 +358,14 @@ class XView2DistShift(XView2):
         self.all_files = self._initialize_files(root)
 
         # Split logic by disaster and pre-post type
-        self.split_files: dict[str, list[dict[str, str]]] = self._load_split_files_by_disaster_and_type(
-            self.all_files, id_ood_disaster[0], id_ood_disaster[1]
+        self.split_files: dict[str, list[dict[str, str]]] = (
+            self._load_split_files_by_disaster_and_type(
+                self.all_files, id_ood_disaster[0], id_ood_disaster[1]
+            )
         )
 
         train_size, test_size = self.get_id_ood_sizes()
-        print(f"ID sample len: {train_size}, OOD sample len: {test_size}")
+        print(f'ID sample len: {train_size}, OOD sample len: {test_size}')
 
     def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
         """Get an item from the dataset at the given index."""
@@ -414,7 +417,9 @@ class XView2DistShift(XView2):
 
                 file_info = {
                     'image': img,
-                    'mask': os.path.join(mask_root, f'{basename}_pre_disaster_target.png'),
+                    'mask': os.path.join(
+                        mask_root, f'{basename}_pre_disaster_target.png'
+                    ),
                     'basename': basename,
                 }
                 all_files.append(file_info)
@@ -445,13 +450,27 @@ class XView2DistShift(XView2):
             pre_post = 'pre' if 'pre_disaster' in file_info['image'] else 'post'
 
             if disaster_name == id_disaster['disaster_name']:
-                if id_disaster.get('pre-post') == 'both' or id_disaster['pre-post'] == pre_post:
-                    image = file_info['image'].replace('post_disaster', 'pre_disaster') if pre_post == 'pre' else file_info['image']
-                    mask = file_info['mask'].replace('post_disaster', 'pre_disaster') if pre_post == 'pre' else file_info['mask']
+                if (
+                    id_disaster.get('pre-post') == 'both'
+                    or id_disaster['pre-post'] == pre_post
+                ):
+                    image = (
+                        file_info['image'].replace('post_disaster', 'pre_disaster')
+                        if pre_post == 'pre'
+                        else file_info['image']
+                    )
+                    mask = (
+                        file_info['mask'].replace('post_disaster', 'pre_disaster')
+                        if pre_post == 'pre'
+                        else file_info['mask']
+                    )
                     train_files.append(dict(image=image, mask=mask))
 
             if disaster_name == ood_disaster['disaster_name']:
-                if ood_disaster.get('pre-post') == 'both' or ood_disaster['pre-post'] == pre_post:
+                if (
+                    ood_disaster.get('pre-post') == 'both'
+                    or ood_disaster['pre-post'] == pre_post
+                ):
                     test_files.append(file_info)
 
         return {'train': train_files, 'test': test_files}
