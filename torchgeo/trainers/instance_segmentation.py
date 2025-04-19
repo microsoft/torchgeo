@@ -5,6 +5,7 @@
 
 from typing import Any
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
@@ -182,6 +183,12 @@ class InstanceSegmentationTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
+            aug = K.AugmentationSequential(
+                K.Denormalize(datamodule.mean, datamodule.std),
+                data_keys=None,
+                keepdim=True,
+            )
+            batch = aug(batch)
 
             batch['prediction_bbox_xyxy'] = [pred['boxes'].cpu() for pred in y_hat]
             batch['prediction_mask'] = [pred['masks'].cpu() for pred in y_hat]
