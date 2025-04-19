@@ -121,8 +121,8 @@ class TestXView2DistShift:
             root=root,
             split=split,
             id_ood_disaster=[
-                {"disaster_name": "hurricane-matthew", "pre-post": "post"},
-                {"disaster_name": "mexico-earthquake", "pre-post": "post"},
+                {'disaster_name': 'hurricane-harvey', 'pre-post': 'post'},
+                {'disaster_name': 'hurricane-harvey', 'pre-post': 'post'},
             ],
             transforms=transforms,
             checksum=True,
@@ -144,7 +144,7 @@ class TestXView2DistShift:
                 root='tests/data/xview2',
                 id_ood_disaster=[
                     {'disaster_name': 'not-a-real-one', 'pre-post': 'post'},
-                    {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'},
+                    {'disaster_name': 'hurricane-harvey', 'pre-post': 'post'},
                 ],
             )
 
