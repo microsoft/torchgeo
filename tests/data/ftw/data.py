@@ -102,8 +102,6 @@ if __name__ == '__main__':
                 output_fn = os.path.join(root, file)
                 zipf.write(output_fn, os.path.relpath(output_fn, country))
 
-    shutil.rmtree(country)
-
     # Compute checksums
     with open(f'{country}.zip', 'rb') as f:
         md5 = hashlib.md5(f.read()).hexdigest()
