@@ -334,7 +334,7 @@ class XView2DistShift(XView2):
 
         Raises:
             AssertionError: If *split* is invalid.
-            ValueError: If a disaster name in `id_ood_disaster` is not one of the valid disasters.
+            ValueError: If a disaster name in *id_ood_disaster* is not one of the valid disasters.
             DatasetNotFoundError: If dataset is not found.
         """
         assert split in ['train', 'test'], "Split must be either 'train' or 'test'."
