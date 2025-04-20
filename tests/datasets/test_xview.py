@@ -16,7 +16,7 @@ from torchgeo.datasets import DatasetNotFoundError, XView2, XView2DistShift
 
 
 class TestXView2:
-    @pytest.fixture(params=['train', 'test'])
+    @pytest.fixture(params=['train', 'test'])  # type: ignore[misc]
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> XView2:
         monkeypatch.setattr(
             XView2,
@@ -95,7 +95,7 @@ class TestXView2:
 
 
 class TestXView2DistShift:
-    @pytest.fixture(params=['train', 'test'])
+    @pytest.fixture(params=['train', 'test'])  # type: ignore[misc]
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> XView2DistShift:
         monkeypatch.setattr(
             XView2DistShift,
@@ -152,7 +152,7 @@ class TestXView2DistShift:
         with pytest.raises(AssertionError):
             XView2DistShift(
                 root='tests/data/xview2',
-                split='bad',
+                split='bad',  # type: ignore[arg-type]
                 id_ood_disaster=[
                     {'disaster_name': 'hurricane-matthew', 'pre-post': 'post'},
                     {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'},
