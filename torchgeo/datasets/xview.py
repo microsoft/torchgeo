@@ -313,7 +313,7 @@ class XView2DistShift(XView2):
     def __init__(
         self,
         root: str = 'data',
-        split: str = 'train',
+        split: Literal['train', 'test'] = 'train',
         id_ood_disaster: list[dict[str, str]] = [
             {'disaster_name': 'hurricane-matthew', 'pre-post': 'post'},
             {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'},
