@@ -318,7 +318,7 @@ class XView2DistShift(XView2):
             {'disaster_name': 'hurricane-matthew', 'pre-post': 'post'},
             {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'},
         ],
-        transforms: Callable[[dict[str, torch.Tensor]], dict[str, torch.Tensor]]
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]]
         | None = None,
         checksum: bool = False,
     ) -> None:
