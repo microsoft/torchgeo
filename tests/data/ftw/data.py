@@ -5,7 +5,6 @@
 
 import hashlib
 import os
-import shutil
 import zipfile
 
 import numpy as np
