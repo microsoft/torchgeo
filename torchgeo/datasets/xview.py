@@ -320,7 +320,8 @@ class XView2DistShift(XView2):
             {'disaster_name': 'hurricane-matthew', 'pre-post': 'post'},
             {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'},
         ],
-        transforms: Callable[[dict[str, torch.Tensor]], dict[str, torch.Tensor]] | None = None,
+        transforms: Callable[[dict[str, torch.Tensor]], dict[str, torch.Tensor]]
+        | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize the XView2DistShift dataset instance.
