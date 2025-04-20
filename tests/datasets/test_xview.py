@@ -16,7 +16,7 @@ from torchgeo.datasets import DatasetNotFoundError, XView2, XView2DistShift
 
 
 class TestXView2:
-    @pytest.fixture(params=['train', 'test']) # type: ignore[misc]
+    @pytest.fixture(params=['train', 'test'])  # type: ignore[misc]
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> XView2:
         monkeypatch.setattr(
             XView2,
@@ -95,7 +95,7 @@ class TestXView2:
 
 
 class TestXView2DistShift:
-    @pytest.fixture(params=['train', 'test']) # type: ignore[misc]
+    @pytest.fixture(params=['train', 'test'])  # type: ignore[misc]
     def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> XView2DistShift:
         monkeypatch.setattr(
             XView2DistShift,
