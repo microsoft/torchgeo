@@ -6,7 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -293,6 +293,8 @@ class XView2DistShift(XView2):
     on one disaster type and evaluate on a different, out-of-domain disaster. The goal
     is to test the generalization ability of models trained on one disaster to perform
     on others.
+
+    .. versionadded:: 0.8
     """
 
     binary_classes: ClassVar[tuple[str, str]] = ('background', 'building')
@@ -318,8 +320,7 @@ class XView2DistShift(XView2):
             {'disaster_name': 'hurricane-matthew', 'pre-post': 'post'},
             {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'},
         ],
-        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]]
-        | None = None,
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize the XView2DistShift dataset instance.
@@ -368,7 +369,14 @@ class XView2DistShift(XView2):
         print(f'ID sample len: {train_size}, OOD sample len: {test_size}')
 
     def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
-        """Get an item from the dataset at the given index."""
+        """Return an index within the dataset.
+
+        Args:
+            index: index to return
+
+        Returns:
+            data and label at that index
+        """
         file_info = (
             self.split_files['train'][index]
             if self.split == 'train'
@@ -389,7 +397,11 @@ class XView2DistShift(XView2):
         return sample
 
     def __len__(self) -> int:
-        """Return the total number of samples in the dataset."""
+        """Return the number of data points in the dataset.
+
+        Returns:
+            length of the dataset
+        """
         return (
             len(self.split_files['train'])
             if self.split == 'train'
@@ -406,7 +418,7 @@ class XView2DistShift(XView2):
         for split in self.metadata.keys():
             image_root = os.path.join(root, split, 'images')
             mask_root = os.path.join(root, split, 'targets')
-            images = glob.glob(os.path.join(image_root, '*.png'))
+            images = sorted(glob.glob(os.path.join(image_root, '*.png')))
 
             # Extract basenames while preserving the disaster-name and sample number
             for img in images:
@@ -431,12 +443,14 @@ class XView2DistShift(XView2):
         id_disaster: dict[str, str],
         ood_disaster: dict[str, str],
     ) -> dict[str, list[dict[str, str]]]:
-        """Return the filepaths for the train (ID) and test (OOD) sets based on disaster name and pre-post disaster type.
+        """Return train and test filepaths based on disaster name and pre/post type.
 
         Args:
             files: List of file paths with their corresponding information.
-            id_disaster: Dictionary specifying in-domain (ID) disaster and type (e.g., {'disaster_name': 'guatemala-volcano', 'pre-post': 'pre'}).
-            ood_disaster: Dictionary specifying out-of-domain (OOD) disaster and type (e.g., {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'}).
+            id_disaster: Dictionary specifying in-domain (ID) disaster and type,
+                e.g., {'disaster_name': 'guatemala-volcano', 'pre-post': 'pre'}.
+            ood_disaster: Dictionary specifying out-of-domain (OOD) disaster and type,
+                e.g., {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'}.
 
         Returns:
             A dictionary containing 'train' (ID) and 'test' (OOD) file lists.
