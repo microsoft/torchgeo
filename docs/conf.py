@@ -116,7 +116,6 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
     'rasterio': ('https://rasterio.readthedocs.io/en/stable/', None),
-    'rtree': ('https://rtree.readthedocs.io/en/stable/', None),
     'segmentation_models_pytorch': ('https://smp.readthedocs.io/en/stable/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
     'timm': ('https://huggingface.co/docs/timm/main/en/', None),
