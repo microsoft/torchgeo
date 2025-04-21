@@ -9,24 +9,25 @@ import functools
 import glob
 import os
 import re
-import sys
 import warnings
 from collections.abc import Callable, Iterable, Sequence
+from datetime import datetime
 from typing import Any, ClassVar, cast
 
 import fiona
 import fiona.transform
 import numpy as np
-import pyproj
+import pandas as pd
 import rasterio
 import rasterio.merge
 import shapely
 import torch
+from geopandas import GeoDataFrame
+from pyproj import Transformer
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
-from rtree.index import Index, Property
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -86,8 +87,8 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
        dataset = landsat7 | landsat8
     """
 
+    index: GeoDataFrame
     paths: Path | Iterable[Path]
-    _crs = CRS.from_epsg(4326)
     _res = (0.0, 0.0)
 
     #: Glob expression used to search for files.
@@ -109,20 +110,6 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     #: :class:`GeoDataset` addition can be ambiguous and is no longer supported.
     #: Users should instead use the intersection or union operator.
     __add__ = None  # type: ignore[assignment]
-
-    def __init__(
-        self, transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None
-    ) -> None:
-        """Initialize a new GeoDataset instance.
-
-        Args:
-            transforms: a function/transform that takes an input sample
-                and returns a transformed version
-        """
-        self.transforms = transforms
-
-        # Create an R-tree to index the dataset
-        self.index = Index(interleaved=False, properties=Property(dimension=3))
 
     @abc.abstractmethod
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
@@ -190,36 +177,6 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     bbox: {self.bounds}
     size: {len(self)}"""
 
-    # NOTE: This hack should be removed once the following issue is fixed:
-    # https://github.com/Toblerity/rtree/issues/87
-
-    def __getstate__(self) -> tuple[dict[str, Any], list[tuple[Any, Any, Any | None]]]:
-        """Define how instances are pickled.
-
-        Returns:
-            the state necessary to unpickle the instance
-        """
-        objects = self.index.intersection(self.index.bounds, objects=True)
-        tuples = [(item.id, item.bounds, item.object) for item in objects]
-        return self.__dict__, tuples
-
-    def __setstate__(
-        self,
-        state: tuple[
-            dict[Any, Any],
-            list[tuple[int, tuple[float, float, float, float, float, float], Path]],
-        ],
-    ) -> None:
-        """Define how to unpickle an instance.
-
-        Args:
-            state: the state of the instance when it was pickled
-        """
-        attrs, tuples = state
-        self.__dict__.update(attrs)
-        for item in tuples:
-            self.index.insert(*item)
-
     @property
     def bounds(self) -> BoundingBox:
         """Bounds of the index.
@@ -236,7 +193,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         Returns:
             The :term:`coordinate reference system (CRS)`.
         """
-        return self._crs
+        return self.index.crs
 
     @crs.setter
     def crs(self, new_crs: CRS) -> None:
@@ -251,21 +208,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             return
 
         print(f'Converting {self.__class__.__name__} CRS from {self.crs} to {new_crs}')
-        new_index = Index(interleaved=False, properties=Property(dimension=3))
-
-        project = pyproj.Transformer.from_crs(
-            pyproj.CRS(str(self.crs)), pyproj.CRS(str(new_crs)), always_xy=True
-        ).transform
-        for hit in self.index.intersection(self.index.bounds, objects=True):
-            old_minx, old_maxx, old_miny, old_maxy, mint, maxt = hit.bounds
-            old_box = shapely.geometry.box(old_minx, old_miny, old_maxx, old_maxy)
-            new_box = shapely.ops.transform(project, old_box)
-            new_minx, new_miny, new_maxx, new_maxy = new_box.bounds
-            new_bounds = (new_minx, new_maxx, new_miny, new_maxy, mint, maxt)
-            new_index.insert(hit.id, new_bounds, hit.object)
-
-        self._crs = new_crs
-        self.index = new_index
+        self.index.to_crs(new_crs, inplace=True)
 
     @property
     def res(self) -> tuple[float, float]:
@@ -354,10 +297,10 @@ class RasterDataset(GeoDataset):
     date_format = '%Y%m%d'
 
     #: Minimum timestamp if not in filename
-    mint: float = 0
+    mint: datetime = datetime.min
 
     #: Maximum timestamp if not in filename
-    maxt: float = sys.maxsize
+    maxt: datetime = datetime.max
 
     #: True if the dataset only contains model inputs (such as images). False if the
     #: dataset only contains ground truth model outputs (such as segmentation masks).
@@ -445,18 +388,19 @@ class RasterDataset(GeoDataset):
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
         """
-        super().__init__(transforms)
-
         self.paths = paths
         self.bands = bands or self.all_bands
+        self.transforms = transforms
         self.cache = cache
 
         if self.all_bands:
             assert set(self.bands) <= set(self.all_bands)
 
-        # Populate the dataset index
-        i = 0
+        # Gather information about the dataset
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+        filepaths = []
+        datetimes = []
+        geometries = []
         for filepath in self.files:
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
@@ -473,13 +417,15 @@ class RasterDataset(GeoDataset):
                             crs = src.crs
 
                         with WarpedVRT(src, crs=crs) as vrt:
-                            minx, miny, maxx, maxy = vrt.bounds
+                            geometries.append(shapely.box(vrt.bounds))
                             if res is None:
                                 res = vrt.res
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
                     continue
                 else:
+                    filepaths.append(filepath)
+
                     mint = self.mint
                     maxt = self.maxt
                     if 'date' in match.groupdict():
@@ -491,11 +437,9 @@ class RasterDataset(GeoDataset):
                         mint, _ = disambiguate_timestamp(start, self.date_format)
                         _, maxt = disambiguate_timestamp(stop, self.date_format)
 
-                    coords = (minx, maxx, miny, maxy, mint, maxt)
-                    self.index.insert(i, coords, filepath)
-                    i += 1
+                    datetimes.append((mint, maxt))
 
-        if i == 0:
+        if len(filepaths) == 0:
             raise DatasetNotFoundError(self)
 
         if not self.separate_files:
@@ -518,7 +462,10 @@ class RasterDataset(GeoDataset):
 
             self._res = res
 
-        self._crs = crs
+        # Create the dataset index
+        data = {'filepath': filepaths}
+        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -693,14 +640,15 @@ class VectorDataset(GeoDataset):
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
         """
-        super().__init__(transforms)
-
         self.paths = paths
+        self.transforms = transforms
         self.label_name = label_name
 
-        # Populate the dataset index
-        i = 0
+        # Gather information about the dataset
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+        filepaths = []
+        datetimes = []
+        geometries = []
         for filepath in self.files:
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
@@ -709,31 +657,36 @@ class VectorDataset(GeoDataset):
                         if crs is None:
                             crs = CRS.from_dict(src.crs)
 
-                        minx, miny, maxx, maxy = src.bounds
-                        (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                            src.crs, crs.to_dict(), [minx, maxx], [miny, maxy]
-                        )
+                        geometry = shapely.box(src.bounds)
+                        transformer = Transformer.from_crs(src.crs, crs)
+                        geometry = shapely.transform(geometry, transformer.transform)
+                        geometries.append(geometry)
                 except fiona.errors.FionaValueError:
                     # Skip files that fiona is unable to read
                     continue
                 else:
-                    mint: float = 0
-                    maxt: float = sys.maxsize
+                    filepaths.append(filepath)
+
+                    mint = datetime.min
+                    maxt = datetime.max
                     if 'date' in match.groupdict():
                         date = match.group('date')
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
-                    coords = (minx, maxx, miny, maxy, mint, maxt)
-                    self.index.insert(i, coords, filepath)
-                    i += 1
 
-        if i == 0:
+                    datetimes.append((mint, maxt))
+
+        if len(filepaths) == 0:
             raise DatasetNotFoundError(self)
 
         if isinstance(res, int | float):
             res = (res, res)
 
-        self._crs = crs
         self._res = res
+
+        # Create the dataset index
+        data = {'filepath': filepaths}
+        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.

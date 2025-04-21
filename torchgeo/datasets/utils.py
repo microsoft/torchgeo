@@ -12,7 +12,6 @@ import importlib
 import os
 import shutil
 import subprocess
-import sys
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -290,7 +289,7 @@ class Executable:
         return subprocess.run((self.name, *args), **kwargs)
 
 
-def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
+def disambiguate_timestamp(date_str: str, format: str) -> tuple[datetime, datetime]:
     """Disambiguate partial timestamps.
 
     TorchGeo stores the timestamp of each file in a spatiotemporal R-tree. If the full
@@ -314,7 +313,7 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
 
     if not any([f'%{c}' in format for c in 'yYcxG']):
         # No temporal info
-        return 0, sys.maxsize
+        return datetime.min, datetime.max
     elif not any([f'%{c}' in format for c in 'bBmjUWcxV']):
         # Year resolution
         maxt = datetime(mint.year + 1, 1, 1)
@@ -342,7 +341,7 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
 
     maxt -= timedelta(microseconds=1)
 
-    return mint.timestamp(), maxt.timestamp()
+    return mint, maxt
 
 
 @contextlib.contextmanager
