@@ -28,7 +28,7 @@ class TestEDDMapS:
         assert isinstance(x, dict)
 
     def test_len(self, dataset: EDDMapS) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 3
 
     def test_and(self, dataset: EDDMapS) -> None:
         ds = dataset & dataset

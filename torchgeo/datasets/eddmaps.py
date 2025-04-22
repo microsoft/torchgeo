@@ -4,20 +4,20 @@
 """Dataset for EDDMapS."""
 
 import os
-import sys
 from datetime import datetime
 from typing import Any
 
+import geopandas as gpd
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
+from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
 from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, Path, disambiguate_timestamp
+from .utils import BoundingBox, Path
 
 
 class EDDMapS(GeoDataset):
@@ -64,25 +64,14 @@ class EDDMapS(GeoDataset):
             raise DatasetNotFoundError(self)
 
         # Read CSV file
-        data = pd.read_csv(
-            filepath, engine='c', usecols=['ObsDate', 'Latitude', 'Longitude']
+        usecols = ['ObsDate', 'Latitude', 'Longitude']
+        df = pd.read_csv(
+            filepath, usecols=usecols, parse_dates=['ObsDate'], date_format='%m-%d-%y'
         )
 
-        # Convert from pandas DataFrame to rtree Index
-        i = 0
-        for date, y, x in data.itertuples(index=False, name=None):
-            # Skip rows without lat/lon
-            if np.isnan(y) or np.isnan(x):
-                continue
-
-            if not pd.isna(date):
-                mint, maxt = disambiguate_timestamp(date, '%m-%d-%y')
-            else:
-                mint, maxt = 0, sys.maxsize
-
-            coords = (x, x, y, y, mint, maxt)
-            self.index.insert(i, coords)
-            i += 1
+        # Convert from pandas DataFrame to geopandas GeoDataFrame
+        geometry = gpd.points_from_xy(df.Longitude, df.Latitude)
+        self.index = GeoDataFrame(index=df.ObsDate, geometry=geometry, crs='EPSG:4326')
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve metadata indexed by query.
