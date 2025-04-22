@@ -6,6 +6,9 @@
 /results/
 *.aux.xml
 
+# Visual Studio Code stuff
+.vscode/
+
 # Node stuff:
 node_modules/
 
