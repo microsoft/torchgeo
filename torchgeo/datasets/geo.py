@@ -199,7 +199,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     def crs(self, new_crs: CRS) -> None:
         """Change the :term:`coordinate reference system (CRS)` of a GeoDataset.
 
-        If ``new_crs == self.crs``, does nothing, otherwise updates the R-tree index.
+        If ``new_crs == self.crs``, does nothing, otherwise updates the index.
 
         Args:
             new_crs: New :term:`coordinate reference system (CRS)`.
