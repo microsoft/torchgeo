@@ -28,7 +28,7 @@ class TestINaturalist:
         assert isinstance(x, dict)
 
     def test_len(self, dataset: INaturalist) -> None:
-        assert len(dataset) == 3
+        assert len(dataset) == 4
 
     def test_and(self, dataset: INaturalist) -> None:
         ds = dataset & dataset

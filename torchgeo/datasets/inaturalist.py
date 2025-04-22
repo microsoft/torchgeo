@@ -5,19 +5,19 @@
 
 import glob
 import os
-import sys
 from datetime import datetime
 from typing import Any
 
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
+from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
-from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, Path, disambiguate_timestamp
+from .utils import BoundingBox, Path
 
 
 class INaturalist(GeoDataset):
@@ -34,9 +34,6 @@ class INaturalist(GeoDataset):
 
     .. versionadded:: 0.3
     """
-
-    res = (0, 0)
-    _crs = CRS.from_epsg(4326)  # Lat/Lon
 
     def __init__(self, root: Path = 'data') -> None:
         """Initialize a new Dataset instance.
@@ -56,40 +53,17 @@ class INaturalist(GeoDataset):
             raise DatasetNotFoundError(self)
 
         # Read CSV file
-        data = pd.read_csv(
-            files[0],
-            engine='c',
-            usecols=['observed_on', 'time_observed_at', 'latitude', 'longitude'],
-        )
+        usecols = ['observed_on', 'time_observed_at', 'latitude', 'longitude']
+        df = pd.read_csv(files[0], header=0, usecols=usecols)
+        columns = {'observed_on': 'date', 'time_observed_at': 'time'}
+        df.rename(columns=columns, inplace=True)
+        df.date = pd.to_datetime(df.date, format='%Y-%m-%d', utc=True)
+        df.time = pd.to_datetime(df.time, format='%Y-%m-%d %H:%M:%S %z')
+        df.loc[df.time.isnull(), 'time'] = df.loc[df.time.isnull(), 'date']
 
-        # Dataset contains many possible timestamps:
-        #
-        # * observed_on_string: no consistent format (can't use)
-        # * observed_on: day precision (better)
-        # * time_observed_at: second precision (best)
-        # * created_at: when observation was submitted (shouldn't use)
-        # * updated_at: when submission was updated (shouldn't use)
-        #
-        # The created_at/updated_at timestamps can be years after the actual submission,
-        # so they shouldn't be used, even if observed_on/time_observed_at are missing.
-
-        # Convert from pandas DataFrame to rtree Index
-        i = 0
-        for date, time, y, x in data.itertuples(index=False, name=None):
-            # Skip rows without lat/lon
-            if pd.isna(y) or pd.isna(x):
-                continue
-
-            if not pd.isna(time):
-                mint, maxt = disambiguate_timestamp(time, '%Y-%m-%d %H:%M:%S %z')
-            elif not pd.isna(date):
-                mint, maxt = disambiguate_timestamp(date, '%Y-%m-%d')
-            else:
-                mint, maxt = 0, sys.maxsize
-
-            coords = (x, x, y, y, mint, maxt)
-            self.index.insert(i, coords)
-            i += 1
+        # Convert from pandas DataFrame to geopandas GeoDataFrame
+        geometry = gpd.points_from_xy(df.longitude, df.latitude)
+        self.index = GeoDataFrame(index=df.time, geometry=geometry, crs='EPSG:4326')
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve metadata indexed by query.

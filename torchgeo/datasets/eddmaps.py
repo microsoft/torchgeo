@@ -13,7 +13,6 @@ import pandas as pd
 from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
-from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
@@ -42,9 +41,6 @@ class EDDMapS(GeoDataset):
 
     .. versionadded:: 0.3
     """
-
-    res = (0, 0)
-    _crs = CRS.from_epsg(4326)  # Lat/Lon
 
     def __init__(self, root: Path = 'data') -> None:
         """Initialize a new Dataset instance.
