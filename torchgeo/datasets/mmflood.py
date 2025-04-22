@@ -76,13 +76,6 @@ class MMFloodIntersection(IntersectionDataset):
         # if hydro component is passed, it should always be passed as dataset2
         super().__init__(dataset1, dataset2)
 
-    def _merge_dataset_indices(self) -> None:
-        """Create a new R-tree out of the individual indices from Sentinel-1, DEM and hydrography datasets."""
-        _, ds2 = self.datasets
-        # Always use index of ds2, since it either coincides with ds1 index
-        # or refers to hydro, which represents only a subset of the dataset
-        self.index = ds2.index
-
 
 class MMFlood(IntersectionDataset):
     """MMFlood dataset.
@@ -247,12 +240,6 @@ class MMFlood(IntersectionDataset):
         data['image'][:, missing_data] = 0
         data['mask'][missing_data] = self._ignore_index
         return data
-
-    def _merge_dataset_indices(self) -> None:
-        """Create a new R-tree out of the individual indices from Sentinel-1, DEM and hydrography datasets."""
-        ds1, _ = self.datasets
-        # Use ds1 index
-        self.index = ds1.index
 
     def _download(self) -> None:
         """Download the dataset."""
