@@ -55,6 +55,8 @@ class INaturalist(GeoDataset):
         # Read CSV file
         usecols = ['observed_on', 'time_observed_at', 'latitude', 'longitude']
         df = pd.read_csv(files[0], header=0, usecols=usecols)
+        df = df[df.latitude.notna()]
+        df = df[df.longitude.notna()]
         columns = {'observed_on': 'date', 'time_observed_at': 'time'}
         df.rename(columns=columns, inplace=True)
         df.date = pd.to_datetime(df.date, format='%Y-%m-%d', utc=True)
