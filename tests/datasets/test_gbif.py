@@ -28,7 +28,7 @@ class TestGBIF:
         assert isinstance(x, dict)
 
     def test_len(self, dataset: GBIF) -> None:
-        assert len(dataset) == 5
+        assert len(dataset) == 6
 
     def test_and(self, dataset: GBIF) -> None:
         ds = dataset & dataset
