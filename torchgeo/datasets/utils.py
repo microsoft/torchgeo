@@ -292,7 +292,7 @@ class Executable:
 def disambiguate_timestamp(date_str: str, format: str) -> tuple[datetime, datetime]:
     """Disambiguate partial timestamps.
 
-    TorchGeo stores the timestamp of each file in a spatiotemporal R-tree. If the full
+    TorchGeo stores the timestamp of each file in a pandas IntervalIndex. If the full
     timestamp isn't known, a file could represent a range of time. For example, in the
     CDL dataset, each mask spans an entire year. This method returns the maximum
     possible range of timestamps that ``date_str`` could belong to. It does this by
