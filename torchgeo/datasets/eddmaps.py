@@ -64,6 +64,8 @@ class EDDMapS(GeoDataset):
         df = pd.read_csv(
             filepath, usecols=usecols, parse_dates=['ObsDate'], date_format='%m-%d-%y'
         )
+        df = df[df.Latitude.notna()]
+        df = df[df.Longitude.notna()]
 
         # Convert from pandas DataFrame to geopandas GeoDataFrame
         geometry = gpd.points_from_xy(df.Longitude, df.Latitude)
