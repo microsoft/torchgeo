@@ -185,7 +185,10 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         Returns:
             (minx, maxx, miny, maxy, mint, maxt) of the dataset
         """
-        return BoundingBox(*self.index.total_bounds)
+        minx, miny, maxx, maxy = self.index.total_bounds
+        mint = self.index.index.left.min()
+        maxt = self.index.index.right.max()
+        return BoundingBox(minx, maxx, miny, maxy, mint, maxt)
 
     @property
     def crs(self) -> CRS:
@@ -480,7 +483,7 @@ class RasterDataset(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        geometry = shapely.box(query[:4])
+        geometry = shapely.box(*query[:4])
         interval = pd.Interval(*query[4:])
         index = self.index[self.index.index.overlaps(interval)]
         index = index[index.squery(geometry, predicate='intersects')]
@@ -704,7 +707,7 @@ class VectorDataset(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        geometry = shapely.box(query[:4])
+        geometry = shapely.box(*query[:4])
         interval = pd.Interval(*query[4:])
         index = self.index[self.index.index.overlaps(interval)]
         index = index[index.squery(geometry, predicate='intersects')]
@@ -950,7 +953,6 @@ class IntersectionDataset(GeoDataset):
         .. versionadded:: 0.4
             The *transforms* parameter.
         """
-        super().__init__(transforms)
         self.datasets = [dataset1, dataset2]
         self.collate_fn = collate_fn
 
@@ -1090,7 +1092,6 @@ class UnionDataset(GeoDataset):
         .. versionadded:: 0.4
             The *transforms* parameter.
         """
-        super().__init__(transforms)
         self.datasets = [dataset1, dataset2]
         self.collate_fn = collate_fn
 
