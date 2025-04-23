@@ -378,11 +378,7 @@ class XView2DistShift(XView2):
         Returns:
             data and label at that index
         """
-        file_info = (
-            self.split_files['train'][index]
-            if self.split == 'train'
-            else self.split_files['test'][index]
-        )
+        file_info = self.split_files[self.split][index]
 
         image = self._load_image(file_info['image'])
         mask = self._load_target(file_info['mask']).long()
@@ -403,11 +399,7 @@ class XView2DistShift(XView2):
         Returns:
             length of the dataset
         """
-        return (
-            len(self.split_files['train'])
-            if self.split == 'train'
-            else len(self.split_files['test'])
-        )
+        return len(self.split_files[self.split])
 
     def get_id_ood_sizes(self) -> tuple[int, int]:
         """Return the number of samples in the train and test splits."""
