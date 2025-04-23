@@ -1067,7 +1067,7 @@ class IntersectionDataset(GeoDataset):
         Returns:
             The :term:`coordinate reference system (CRS)`.
         """
-        return self._crs
+        return self.datasets[0].crs
 
     @crs.setter
     def crs(self, new_crs: CRS) -> None:
@@ -1076,7 +1076,6 @@ class IntersectionDataset(GeoDataset):
         Args:
             new_crs: New :term:`coordinate reference system (CRS)`.
         """
-        self._crs = new_crs
         self.datasets[0].crs = new_crs
         self.datasets[1].crs = new_crs
 
@@ -1087,7 +1086,7 @@ class IntersectionDataset(GeoDataset):
         Returns:
             Resolution of both datasets.
         """
-        return self._res
+        return self.datasets[0].res
 
     @res.setter
     def res(self, new_res: float | tuple[float, float]) -> None:
@@ -1096,10 +1095,6 @@ class IntersectionDataset(GeoDataset):
         Args:
             new_res: New resolution.
         """
-        if isinstance(new_res, int | float):
-            new_res = (new_res, new_res)
-
-        self._res = new_res
         self.datasets[0].res = new_res
         self.datasets[1].res = new_res
 
@@ -1225,7 +1220,7 @@ class UnionDataset(GeoDataset):
         Returns:
             The :term:`coordinate reference system (CRS)`.
         """
-        return self._crs
+        return self.datasets[0].crs
 
     @crs.setter
     def crs(self, new_crs: CRS) -> None:
@@ -1234,7 +1229,6 @@ class UnionDataset(GeoDataset):
         Args:
             new_crs: New :term:`coordinate reference system (CRS)`.
         """
-        self._crs = new_crs
         self.datasets[0].crs = new_crs
         self.datasets[1].crs = new_crs
 
@@ -1245,7 +1239,7 @@ class UnionDataset(GeoDataset):
         Returns:
             The resolution of both datasets.
         """
-        return self._res
+        return self.datasets[0].res
 
     @res.setter
     def res(self, new_res: float | tuple[float, float]) -> None:
@@ -1254,9 +1248,5 @@ class UnionDataset(GeoDataset):
         Args:
             new_res: New resolution.
         """
-        if isinstance(new_res, int | float):
-            new_res = (new_res, new_res)
-
-        self._res = new_res
         self.datasets[0].res = new_res
         self.datasets[1].res = new_res
