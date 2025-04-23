@@ -12,11 +12,13 @@ from typing import Any, ClassVar, cast
 import numpy as np
 import torch
 from torch import Tensor
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from einops import rearrange
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, lazy_import
-
+from .utils import Path, lazy_import, percentile_normalization
 
 class MMEarth(NonGeoDataset):
     """MMEarth dataset.
@@ -618,3 +620,52 @@ class MMEarth(NonGeoDataset):
             length of the dataset
         """
         return len(self.indices)
+    
+    def plot(
+        self,
+        sample: dict[str, Tensor],
+        show_titles: bool = True,
+        suptitle: str | None = None,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: A sample returned by :meth:`__getitem__`.
+            show_titles: Flag indicating whether to show titles above each panel.
+            suptitle: Optional string to use as a suptitle.
+
+        Returns:
+            A matplotlib Figure with the rendered sample.
+        """
+
+        images = []
+        titles = []
+        for key, val in sample.items():
+            if key.startswith('image'):
+                if key.endswith('sentinel2'):
+                    norm_img = percentile_normalization(val[[3,2,1]])
+                    images.append(rearrange(norm_img, 'c h w -> h w c'))
+                    
+                    titles.append('Sentinel-2 RGB')
+                else:
+                    for band_idx, band_val in enumerate(sample[key]):
+                        norm_img = percentile_normalization(band_val)
+                        images.append(norm_img)
+                        
+                        modalities_name = key.split('_',1)[1]
+                        band_name = sample['avail_bands'][modalities_name][band_idx]
+                        titles.append((modalities_name.replace('_',' ').title())+' '+band_name)
+        
+        fig, ax = plt.subplots(ncols=len(images), figsize=(20,10), squeeze=False)
+        for i, (image, title) in enumerate(zip(images, titles)):
+            ax[0, i].imshow(image)
+            ax[0, i].axis('off')
+
+            if show_titles:
+                title_words = title.split(' ')
+                title_word_len = len(title_words)
+                if title_word_len > 2:
+                    title = str.join(' ', title_words[:2]) + '\n' + str.join(' ', title_words[2:])
+                ax[0, i].set_title(title)
+                
+        plt.tight_layout()
