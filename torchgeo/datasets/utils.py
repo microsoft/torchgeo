@@ -56,9 +56,9 @@ class BoundingBox:
     #: northern boundary
     maxy: float
     #: earliest boundary
-    mint: float
+    mint: datetime
     #: latest boundary
-    maxt: float
+    maxt: datetime
 
     def __post_init__(self) -> None:
         """Validate the arguments passed to :meth:`__init__`.
