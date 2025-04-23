@@ -184,7 +184,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         Returns:
             (minx, maxx, miny, maxy, mint, maxt) of the dataset
         """
-        return BoundingBox(*self.index.bounds)
+        return BoundingBox(*self.index.total_bounds)
 
     @property
     def crs(self) -> CRS:
@@ -953,26 +953,8 @@ class IntersectionDataset(GeoDataset):
 
         self.crs = dataset1.crs
         self.res = dataset1.res
-
-        # Merge dataset indices into a single index
-        self._merge_dataset_indices()
-
-    def _merge_dataset_indices(self) -> None:
-        """Create a new R-tree out of the individual indices from two datasets."""
-        i = 0
-        ds1, ds2 = self.datasets
-        for hit1 in ds1.index.intersection(ds1.index.bounds, objects=True):
-            for hit2 in ds2.index.intersection(hit1.bounds, objects=True):
-                box1 = BoundingBox(*hit1.bounds)
-                box2 = BoundingBox(*hit2.bounds)
-                box3 = box1 & box2
-                # Skip 0 area overlap (unless 0 area dataset)
-                if box3.area > 0 or box1.area == 0 or box2.area == 0:
-                    self.index.insert(i, tuple(box3))
-                    i += 1
-
-        if i == 0:
-            raise RuntimeError('Datasets have no spatiotemporal intersection')
+        self.index = gpd.sjoin(dataset1.index, dataset2.index, how='inner')
+        # TODO: temporal join
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image and metadata indexed by query.
@@ -1111,18 +1093,7 @@ class UnionDataset(GeoDataset):
 
         self.crs = dataset1.crs
         self.res = dataset1.res
-
-        # Merge dataset indices into a single index
-        self._merge_dataset_indices()
-
-    def _merge_dataset_indices(self) -> None:
-        """Create a new R-tree out of the individual indices from two datasets."""
-        i = 0
-        for ds in self.datasets:
-            hits = ds.index.intersection(ds.index.bounds, objects=True)
-            for hit in hits:
-                self.index.insert(i, hit.bounds)
-                i += 1
+        self.index = pd.concat([dataset1.index, dataset2.index])
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image and metadata indexed by query.
