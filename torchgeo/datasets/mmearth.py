@@ -655,17 +655,29 @@ class MMEarth(NonGeoDataset):
                         modalities_name = key.split('_',1)[1]
                         band_name = sample['avail_bands'][modalities_name][band_idx]
                         titles.append((modalities_name.replace('_',' ').title())+' '+band_name)
+            elif key.startswith('mask'):
+                for band_idx, band_val in enumerate(sample[key]):
+                    norm_img = percentile_normalization(band_val)
+                    images.append(norm_img)
+                    
+                    modalities_name = key.split('_',1)[1]
+                    band_name = sample['avail_bands'][modalities_name][band_idx]
+                    titles.append((modalities_name.replace('_',' ').title())+' '+band_name)
+            else:
+                pass
         
-        fig, ax = plt.subplots(ncols=len(images), figsize=(20,10), squeeze=False)
+        fig, ax = plt.subplots(3,6, figsize = (15, 9), squeeze=False)
+        axes = ax.flatten()
+
         for i, (image, title) in enumerate(zip(images, titles)):
-            ax[0, i].imshow(image)
-            ax[0, i].axis('off')
+            axes[i].imshow(image)
+            axes[i].axis('off')
 
             if show_titles:
                 title_words = title.split(' ')
                 title_word_len = len(title_words)
                 if title_word_len > 2:
                     title = str.join(' ', title_words[:2]) + '\n' + str.join(' ', title_words[2:])
-                ax[0, i].set_title(title)
+                axes[i].set_title(title)
                 
         plt.tight_layout()
