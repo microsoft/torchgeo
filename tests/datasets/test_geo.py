@@ -9,10 +9,13 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 import pytest
+import shapely
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
+from geopandas import GeoDataFrame
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from torch.utils.data import ConcatDataset
@@ -40,17 +43,14 @@ class CustomGeoDataset(GeoDataset):
         res: float | tuple[float, float] = (1, 1),
         paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
     ) -> None:
-        super().__init__()
-        self.index.insert(0, tuple(bounds))
-        self._crs = crs
+        geometry = shapely.box(*bounds[:4])
+        index = pd.IntervalIndex.from_tuples([tuple(bounds[4:])], closed='both')
+        self.index = GeoDataFrame(index=index, geometry=[geometry], crs=crs)
         self.res = res  # type: ignore[assignment]
         self.paths = paths or []
 
     def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
-        hits = self.index.intersection(tuple(query), objects=True)
-        hit = next(iter(hits))
-        bounds = BoundingBox(*hit.bounds)
-        return {'index': bounds}
+        return {'index': query}
 
 
 class CustomRasterDataset(RasterDataset):
