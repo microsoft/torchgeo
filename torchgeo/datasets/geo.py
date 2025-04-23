@@ -16,6 +16,7 @@ from typing import Any, ClassVar, cast
 
 import fiona
 import fiona.transform
+import geopandas as gpd
 import numpy as np
 import pandas as pd
 import rasterio
