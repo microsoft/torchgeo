@@ -5,6 +5,7 @@ import os
 from typing import Any
 
 import pytest
+import torch
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 
@@ -122,3 +123,14 @@ class TestObjectDetectionTask:
             model=model_name, backbone='resnet18', freeze_backbone=True
         )
         assert not all([param.requires_grad for param in model.model.parameters()])
+
+    @pytest.mark.parametrize('model_name', ['faster-rcnn', 'fcos', 'retinanet'])
+    def test_multispectral_support(self, model_name: str) -> None:
+        channels = 4
+        model = ObjectDetectionTask(
+            model=model_name, backbone='resnet18', num_classes=2, in_channels=channels
+        )
+        model.eval()
+        sample = [torch.randn(channels, 224, 224)]
+        with torch.inference_mode():
+            model(sample)
