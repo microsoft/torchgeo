@@ -12,7 +12,7 @@ import re
 import warnings
 from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import fiona
 import fiona.transform
@@ -480,8 +480,11 @@ class RasterDataset(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        geometry = shapely.box(query[:4])
+        interval = pd.Interval(*query[4:])
+        index = self.index[self.index.index.overlaps(interval)]
+        index = index[index.squery(geometry, predicate='intersects')]
+        filepaths = index.filepath
 
         if not filepaths:
             raise IndexError(
@@ -701,8 +704,11 @@ class VectorDataset(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
+        geometry = shapely.box(query[:4])
+        interval = pd.Interval(*query[4:])
+        index = self.index[self.index.index.overlaps(interval)]
+        index = index[index.squery(geometry, predicate='intersects')]
+        filepaths = index.filepath
 
         if not filepaths:
             raise IndexError(
@@ -1116,8 +1122,10 @@ class UnionDataset(GeoDataset):
         # Not all datasets are guaranteed to have a valid query
         samples = []
         for ds in self.datasets:
-            if list(ds.index.intersection(tuple(query))):
+            try:
                 samples.append(ds[query])
+            except IndexError:
+                pass
 
         sample = self.collate_fn(samples)
 
