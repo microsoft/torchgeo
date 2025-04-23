@@ -421,7 +421,7 @@ class RasterDataset(GeoDataset):
                             crs = src.crs
 
                         with WarpedVRT(src, crs=crs) as vrt:
-                            geometries.append(shapely.box(vrt.bounds))
+                            geometries.append(shapely.box(*vrt.bounds))
                             if res is None:
                                 res = vrt.res
                 except rasterio.errors.RasterioIOError:
@@ -664,7 +664,7 @@ class VectorDataset(GeoDataset):
                         if crs is None:
                             crs = CRS.from_dict(src.crs)
 
-                        geometry = shapely.box(src.bounds)
+                        geometry = shapely.box(*src.bounds)
                         transformer = Transformer.from_crs(src.crs, crs)
                         geometry = shapely.transform(geometry, transformer.transform)
                         geometries.append(geometry)
