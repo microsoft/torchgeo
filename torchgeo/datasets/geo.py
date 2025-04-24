@@ -24,7 +24,6 @@ import rasterio.merge
 import shapely
 import torch
 from geopandas import GeoDataFrame
-from pyproj import Transformer
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
@@ -487,9 +486,8 @@ class RasterDataset(GeoDataset):
         interval = pd.Interval(*query[4:])
         index = self.index.iloc[self.index.index.overlaps(interval)]
         index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
-        filepaths = index.filepath
 
-        if filepaths.empty:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
@@ -499,7 +497,7 @@ class RasterDataset(GeoDataset):
             filename_regex = re.compile(self.filename_regex, re.VERBOSE)
             for band in self.bands:
                 band_filepaths = []
-                for filepath in filepaths:
+                for filepath in index.filepath:
                     filename = os.path.basename(filepath)
                     directory = os.path.dirname(filepath)
                     match = re.match(filename_regex, filename)
@@ -513,7 +511,7 @@ class RasterDataset(GeoDataset):
                 data_list.append(self._merge_files(band_filepaths, query))
             data = torch.cat(data_list)
         else:
-            data = self._merge_files(filepaths, query, self.band_indexes)
+            data = self._merge_files(index.filepath, query, self.band_indexes)
 
         sample = {'crs': self.crs, 'bounds': query}
 
@@ -664,9 +662,11 @@ class VectorDataset(GeoDataset):
                         if crs is None:
                             crs = CRS.from_dict(src.crs)
 
-                        geometry = shapely.box(*src.bounds)
-                        transformer = Transformer.from_crs(src.crs, crs)
-                        geometry = shapely.transform(geometry, transformer.transform)
+                        minx, miny, maxx, maxy = src.bounds
+                        (minx, maxx), (miny, maxy) = fiona.transform.transform(
+                            src.crs, crs.to_dict(), [minx, maxx], [miny, maxy]
+                        )
+                        geometry = shapely.box(minx, miny, maxx, maxy)
                         geometries.append(geometry)
                 except fiona.errors.FionaValueError:
                     # Skip files that fiona is unable to read
@@ -709,17 +709,16 @@ class VectorDataset(GeoDataset):
         """
         geometry = shapely.box(*query[:4])
         interval = pd.Interval(*query[4:])
-        index = self.index[self.index.index.overlaps(interval)]
-        index = index[index.sindex.query(geometry, predicate='intersects')]
-        filepaths = index.filepath
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
 
-        if not filepaths:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
         shapes = []
-        for filepath in filepaths:
+        for filepath in index.filepath:
             with fiona.open(filepath) as src:
                 # We need to know the bounding box of the query in the source CRS
                 (minx, maxx), (miny, maxy) = fiona.transform.transform(
