@@ -17,7 +17,7 @@ import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from geopandas import GeoDataFrame
-from rasterio.crs import CRS
+from pyproj import CRS
 from rasterio.enums import Resampling
 from torch.utils.data import ConcatDataset
 
@@ -357,7 +357,7 @@ class TestRasterDataset:
         assert ds.resampling == Resampling.nearest
 
     def test_invalid_query(self, sentinel: Sentinel2) -> None:
-        query = BoundingBox(0, 0, 0, 0, datetime.min, datetime.min)
+        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds: .*'
         ):
@@ -432,12 +432,12 @@ class TestVectorDataset:
         )
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
-        query = BoundingBox(1.1, 1.9, 1.1, 1.9, datetime.min, datetime.max)
+        query = BoundingBox(1.1, 1.9, 1.1, 1.9, pd.Timestamp.min, pd.Timestamp.max)
         x = dataset[query]
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
     def test_invalid_query(self, dataset: CustomVectorDataset) -> None:
-        query = BoundingBox(3, 3, 3, 3, datetime.min, datetime.min)
+        query = BoundingBox(3, 3, 3, 3, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
