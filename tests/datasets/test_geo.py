@@ -4,7 +4,6 @@
 import math
 import os
 import pickle
-import sys
 from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
@@ -418,8 +417,8 @@ class TestVectorDataset:
         )
 
     def test_time_index(self, dataset: CustomVectorDataset) -> None:
-        assert dataset.index.bounds[4] > 0
-        assert dataset.index.bounds[5] < sys.maxsize
+        assert dataset.bounds[4] > pd.Timestamp.min
+        assert dataset.bounds[5] < pd.Timestamp.max
 
     def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
         x = multilabel[multilabel.bounds]
