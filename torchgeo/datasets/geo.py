@@ -486,7 +486,7 @@ class RasterDataset(GeoDataset):
         geometry = shapely.box(*query[:4])
         interval = pd.Interval(*query[4:])
         index = self.index[self.index.index.overlaps(interval)]
-        index = index[index.squery(geometry, predicate='intersects')]
+        index = index[index.sindex.query(geometry, predicate='intersects')]
         filepaths = index.filepath
 
         if not filepaths:
@@ -710,7 +710,7 @@ class VectorDataset(GeoDataset):
         geometry = shapely.box(*query[:4])
         interval = pd.Interval(*query[4:])
         index = self.index[self.index.index.overlaps(interval)]
-        index = index[index.squery(geometry, predicate='intersects')]
+        index = index[index.sindex.query(geometry, predicate='intersects')]
         filepaths = index.filepath
 
         if not filepaths:

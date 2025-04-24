@@ -6,6 +6,7 @@ import os
 import pickle
 import sys
 from collections.abc import Iterable
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -34,11 +35,14 @@ from torchgeo.datasets import (
     VectorDataset,
 )
 
+MINT = datetime(2025, 4, 24)
+MAXT = datetime(2025, 4, 25)
+
 
 class CustomGeoDataset(GeoDataset):
     def __init__(
         self,
-        bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
+        bounds: BoundingBox = BoundingBox(0, 1, 2, 3, MINT, MAXT),
         crs: CRS = CRS.from_epsg(4087),
         res: float | tuple[float, float] = (1, 1),
         paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
@@ -90,7 +94,7 @@ class TestGeoDataset:
         return CustomGeoDataset()
 
     def test_getitem(self, dataset: GeoDataset) -> None:
-        query = BoundingBox(0, 1, 2, 3, 4, 5)
+        query = BoundingBox(0, 1, 2, 3, MINT, MAXT)
         assert dataset[query] == {'index': query}
 
     def test_len(self, dataset: GeoDataset) -> None:
@@ -353,7 +357,7 @@ class TestRasterDataset:
         assert ds.resampling == Resampling.nearest
 
     def test_invalid_query(self, sentinel: Sentinel2) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(0, 0, 0, 0, datetime.min, datetime.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds: .*'
         ):
@@ -428,12 +432,12 @@ class TestVectorDataset:
         )
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
-        query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, sys.maxsize)
+        query = BoundingBox(1.1, 1.9, 1.1, 1.9, datetime.min, datetime.max)
         x = dataset[query]
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
     def test_invalid_query(self, dataset: CustomVectorDataset) -> None:
-        query = BoundingBox(3, 3, 3, 3, 0, 0)
+        query = BoundingBox(3, 3, 3, 3, datetime.min, datetime.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
@@ -713,23 +717,23 @@ class TestIntersectionDataset:
         assert ds1.res == ds2.res == ds.res == (10, 10)
 
     def test_point_dataset(self) -> None:
-        ds1 = CustomGeoDataset(BoundingBox(0, 2, 2, 4, 4, 6))
-        ds2 = CustomGeoDataset(BoundingBox(1, 1, 3, 3, 5, 5))
+        ds1 = CustomGeoDataset(BoundingBox(0, 2, 2, 4, MINT, MAXT))
+        ds2 = CustomGeoDataset(BoundingBox(1, 1, 3, 3, MINT, MINT))
         ds = IntersectionDataset(ds1, ds2)
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds.res == (1, 1)
         assert len(ds1) == len(ds2) == len(ds) == 1
 
     def test_no_overlap(self) -> None:
-        ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
-        ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
+        ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, MINT, MINT))
+        ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, MAXT, MAXT))
         msg = 'Datasets have no spatiotemporal intersection'
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
 
     def test_grid_overlap(self) -> None:
-        ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
-        ds2 = CustomGeoDataset(BoundingBox(1, 2, 3, 4, 5, 6))
+        ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, MINT, MAXT))
+        ds2 = CustomGeoDataset(BoundingBox(1, 2, 3, 4, MAXT, MAXT))
         msg = 'Datasets have no spatiotemporal intersection'
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
