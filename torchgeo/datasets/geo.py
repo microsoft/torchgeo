@@ -954,6 +954,7 @@ class IntersectionDataset(GeoDataset):
         """
         self.datasets = [dataset1, dataset2]
         self.collate_fn = collate_fn
+        self.transforms = transforms
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):
@@ -1093,6 +1094,7 @@ class UnionDataset(GeoDataset):
         """
         self.datasets = [dataset1, dataset2]
         self.collate_fn = collate_fn
+        self.transforms = transforms
 
         for ds in self.datasets:
             if not isinstance(ds, GeoDataset):

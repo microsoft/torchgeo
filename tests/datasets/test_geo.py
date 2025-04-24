@@ -738,7 +738,7 @@ class TestIntersectionDataset:
             IntersectionDataset(ds1, ds2)
 
     def test_invalid_query(self, dataset: IntersectionDataset) -> None:
-        query = BoundingBox(-1, -1, -1, -1, -1, -1)
+        query = BoundingBox(-1, -1, -1, -1, datetime.min, datetime.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
@@ -897,7 +897,7 @@ class TestUnionDataset:
             UnionDataset(ds3, ds1)  # type: ignore[arg-type]
 
     def test_invalid_query(self, dataset: UnionDataset) -> None:
-        query = BoundingBox(-1, -1, -1, -1, -1, -1)
+        query = BoundingBox(-1, -1, -1, -1, datetime.min, datetime.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
