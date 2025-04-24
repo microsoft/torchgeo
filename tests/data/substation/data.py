@@ -6,6 +6,7 @@
 import hashlib
 import os
 import shutil
+import zipfile
 from typing import Literal
 
 import numpy as np

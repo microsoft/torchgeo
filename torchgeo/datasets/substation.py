@@ -222,11 +222,18 @@ class Substation(NonGeoDataset):
 
     def _extract(self) -> None:
         """Extract the dataset."""
-        img_pathname = os.path.join(self.root, self.filename_images)
-        extract_archive(img_pathname)
+        # Handle filename_images as a list or single string
+        if isinstance(self.filename_images, list):
+            # For multi-part archives, we need to extract only the last file
+            # which typically contains the actual archive data
+            img_pathname = os.path.join(self.root, self.filename_images[-1])
+            extract_archive(img_pathname, self.root)
+        else:
+            img_pathname = os.path.join(self.root, self.filename_images)
+            extract_archive(img_pathname, self.root)
 
         mask_pathname = os.path.join(self.root, self.filename_masks)
-        extract_archive(mask_pathname)
+        extract_archive(mask_pathname, self.root)
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -236,9 +243,18 @@ class Substation(NonGeoDataset):
         if glob.glob(image_path) and glob.glob(mask_path):
             return
 
-        # Check if the tar.gz files for images and masks have already been downloaded
-        image_exists = os.path.exists(os.path.join(self.root, self.filename_images))
+        # Check if the files for images and masks have already been downloaded
+        if isinstance(self.filename_images, list):
+            # For multi-part archives, check if all parts exist
+            image_exists = all(
+                os.path.exists(os.path.join(self.root, f)) 
+                for f in self.filename_images
+            )
+        else:
+            image_exists = os.path.exists(os.path.join(self.root, self.filename_images))
+            
         mask_exists = os.path.exists(os.path.join(self.root, self.filename_masks))
+        
         if image_exists and mask_exists:
             self._extract()
             return
@@ -254,13 +270,24 @@ class Substation(NonGeoDataset):
     def _download(self) -> None:
         """Download the dataset and extract it."""
         # Download and verify images
-        download_url(
-            self.url_for_images,
-            self.root,
-            filename=self.filename_images,
-            md5=self.md5_images if self.checksum else None,
-        )
-        extract_archive(os.path.join(self.root, self.filename_images), self.root)
+        if isinstance(self.url_for_images, list) and isinstance(self.filename_images, list):
+            # Download each file individually when we have multiple parts
+            for url, filename in zip(self.url_for_images, self.filename_images):
+                download_url(
+                    url,
+                    self.root,
+                    filename=filename,
+                    md5=self.md5_images if self.checksum else None,
+                )
+            # We'll extract after all files are downloaded in _extract method
+        else:
+            # Standard single file download
+            download_url(
+                self.url_for_images,
+                self.root,
+                filename=self.filename_images,
+                md5=self.md5_images if self.checksum else None,
+            )
 
         # Download and verify masks
         download_url(
@@ -269,4 +296,3 @@ class Substation(NonGeoDataset):
             filename=self.filename_masks,
             md5=self.md5_masks if self.checksum else None,
         )
-        extract_archive(os.path.join(self.root, self.filename_masks), self.root)
