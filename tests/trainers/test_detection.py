@@ -125,12 +125,15 @@ class TestObjectDetectionTask:
         assert not all([param.requires_grad for param in model.model.parameters()])
 
     @pytest.mark.parametrize('model_name', ['faster-rcnn', 'fcos', 'retinanet'])
-    def test_multispectral_support(self, model_name: str) -> None:
-        channels = 4
+    @pytest.mark.parametrize('in_channels', [1, 4])
+    def test_multispectral_support(self, model_name: str, in_channels: int) -> None:
         model = ObjectDetectionTask(
-            model=model_name, backbone='resnet18', num_classes=2, in_channels=channels
+            model=model_name,
+            backbone='resnet18',
+            num_classes=2,
+            in_channels=in_channels,
         )
         model.eval()
-        sample = [torch.randn(channels, 224, 224)]
+        sample = [torch.randn(in_channels, 224, 224)]
         with torch.inference_mode():
             model(sample)
