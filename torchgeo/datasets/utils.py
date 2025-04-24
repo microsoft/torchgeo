@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from typing import Any, TypeAlias, cast, overload
 
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
 from torch import Tensor
@@ -313,7 +314,7 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[datetime, dateti
 
     if not any([f'%{c}' in format for c in 'yYcxG']):
         # No temporal info
-        return datetime.min, datetime.max
+        return pd.Timestamp.min, pd.Timestamp.max
     elif not any([f'%{c}' in format for c in 'bBmjUWcxV']):
         # Year resolution
         maxt = datetime(mint.year + 1, 1, 1)

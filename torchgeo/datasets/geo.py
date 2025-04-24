@@ -301,10 +301,10 @@ class RasterDataset(GeoDataset):
     date_format = '%Y%m%d'
 
     #: Minimum timestamp if not in filename
-    mint: datetime = datetime.min
+    mint: datetime = pd.Timestamp.min
 
     #: Maximum timestamp if not in filename
-    maxt: datetime = datetime.max
+    maxt: datetime = pd.Timestamp.max
 
     #: True if the dataset only contains model inputs (such as images). False if the
     #: dataset only contains ground truth model outputs (such as segmentation masks).
@@ -485,11 +485,11 @@ class RasterDataset(GeoDataset):
         """
         geometry = shapely.box(*query[:4])
         interval = pd.Interval(*query[4:])
-        index = self.index[self.index.index.overlaps(interval)]
-        index = index[index.sindex.query(geometry, predicate='intersects')]
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
         filepaths = index.filepath
 
-        if not filepaths:
+        if filepaths.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
@@ -674,8 +674,8 @@ class VectorDataset(GeoDataset):
                 else:
                     filepaths.append(filepath)
 
-                    mint = datetime.min
-                    maxt = datetime.max
+                    mint = pd.Timestamp.min
+                    maxt = pd.Timestamp.max
                     if 'date' in match.groupdict():
                         date = match.group('date')
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
