@@ -4,7 +4,9 @@
 import os
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pytest
+from matplotlib.figure import Figure
 
 from torchgeo.datasets import (
     BoundingBox,
@@ -46,3 +48,9 @@ class TestEDDMapS:
             IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]
+
+    def test_plot(self, dataset: EDDMapS) -> None:
+        sample = dataset[dataset.bounds]
+        fig = dataset.plot(sample, suptitle='test')
+        assert isinstance(fig, Figure)
+        plt.close()

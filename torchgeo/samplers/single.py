@@ -184,7 +184,7 @@ class GridGeoSampler(GeoSampler):
         self,
         dataset: GeoDataset,
         size: tuple[float, float] | float,
-        stride: tuple[float, float] | float,
+        stride: tuple[float, float] | float | None = None,
         roi: BoundingBox | None = None,
         units: Units = Units.PIXELS,
     ) -> None:
@@ -203,14 +203,17 @@ class GridGeoSampler(GeoSampler):
         Args:
             dataset: dataset to index from
             size: dimensions of each :term:`patch`
-            stride: distance to skip between each patch
+            stride: distance to skip between each patch (defaults to *size*)
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` and ``stride`` are in pixel or CRS units
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
-        self.stride = _to_tuple(stride)
+        if stride is not None:
+            self.stride = _to_tuple(stride)
+        else:
+            self.stride = self.size
 
         if units == Units.PIXELS:
             self.size = (self.size[0] * self.res[1], self.size[1] * self.res[0])
