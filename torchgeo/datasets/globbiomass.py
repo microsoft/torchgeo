@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable, Iterable
+from datetime import datetime
 from typing import Any, ClassVar, cast
 
 import matplotlib.pyplot as plt
@@ -68,6 +69,8 @@ class GlobBiomass(RasterDataset):
         ^(?P<tile>[NS][\d]{2}[EW][\d]{3})
         _(?P<measurement>(agb|gsv))
     """
+    mint: datetime
+    maxt: datetime
     mint, maxt = disambiguate_timestamp('2010', '%Y')
     is_image = False
     dtype = torch.float32  # pixelwise regression
