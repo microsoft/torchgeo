@@ -19,7 +19,7 @@ import shapely
 import shapely.wkt as wkt
 import torch
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 from rtree.index import Index, Property
 
 from .errors import DatasetNotFoundError

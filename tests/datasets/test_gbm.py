@@ -7,7 +7,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pytest
 import torch
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from torchgeo.datasets import (
     BoundingBox,

@@ -19,7 +19,7 @@ import shapely.ops
 import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset

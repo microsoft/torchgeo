@@ -8,7 +8,7 @@ from itertools import product
 import pytest
 import torch
 from _pytest.fixtures import SubRequest
-from rasterio.crs import CRS
+from pyproj import CRS
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples

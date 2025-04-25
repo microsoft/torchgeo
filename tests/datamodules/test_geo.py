@@ -9,7 +9,7 @@ import torch
 from _pytest.fixtures import SubRequest
 from lightning.pytorch import Trainer
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 from torch import Tensor
 
 from torchgeo.datamodules import (

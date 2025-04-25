@@ -12,7 +12,7 @@ from typing import Any, ClassVar, cast
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset

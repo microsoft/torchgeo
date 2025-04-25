@@ -6,7 +6,7 @@ from math import floor, isclose
 from typing import Any
 
 import pytest
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from torchgeo.datasets import (
     BoundingBox,
