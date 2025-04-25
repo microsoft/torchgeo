@@ -17,7 +17,7 @@ import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from PIL import Image
-from rasterio.crs import CRS
+from pyproj import CRS
 from torch import Tensor
 from torch.utils.data import Dataset
 

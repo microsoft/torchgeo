@@ -9,7 +9,7 @@ import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from torchgeo.datasets import (
     BoundingBox,

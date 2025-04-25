@@ -11,8 +11,8 @@ import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
+from pyproj import CRS
 from pytest import MonkeyPatch
-from rasterio.crs import CRS
 
 from torchgeo.datasets import (
     BoundingBox,

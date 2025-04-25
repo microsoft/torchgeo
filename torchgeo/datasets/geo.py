@@ -24,7 +24,7 @@ import rasterio.merge
 import shapely
 import torch
 from geopandas import GeoDataFrame
-from rasterio.crs import CRS
+from pyproj import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT

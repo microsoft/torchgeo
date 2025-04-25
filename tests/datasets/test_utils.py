@@ -13,7 +13,7 @@ from typing import Any
 import numpy as np
 import pytest
 import torch
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
