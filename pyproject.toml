@@ -261,6 +261,8 @@ filterwarnings = [
     "ignore:Failing to pass a value to the 'type_params' parameter of 'typing.*' is deprecated:DeprecationWarning:pydantic",
     # https://github.com/Lightning-AI/pytorch-lightning/pull/20802
     "ignore::jsonargparse._deprecated.JsonargparseDeprecationWarning:lightning.pytorch.cli",
+    # https://github.com/geopandas/geopandas/pull/3453
+    "ignore:The 'shapely.geos' module is deprecated:DeprecationWarning:geopandas._compat",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
