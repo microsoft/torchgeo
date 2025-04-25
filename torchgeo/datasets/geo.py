@@ -966,6 +966,9 @@ class IntersectionDataset(GeoDataset):
         self.index = gpd.sjoin(dataset1.index, dataset2.index, how='inner')
         # TODO: temporal join
 
+        if self.index.empty:
+            raise RuntimeError('Datasets have no spatiotemporal intersection')
+
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
