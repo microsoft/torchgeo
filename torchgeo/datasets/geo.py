@@ -960,8 +960,9 @@ class IntersectionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError('IntersectionDataset only supports GeoDatasets')
 
-        self.crs = dataset1.crs
-        self.res = dataset1.res
+        dataset2.crs = dataset1.crs
+        dataset2.res = dataset1.res
+
         self.index = gpd.sjoin(dataset1.index, dataset2.index, how='inner')
         # TODO: temporal join
 
@@ -1020,6 +1021,7 @@ class IntersectionDataset(GeoDataset):
         Args:
             new_crs: New :term:`coordinate reference system (CRS)`.
         """
+        self.index.to_crs(new_crs, inplace=True)
         self.datasets[0].crs = new_crs
         self.datasets[1].crs = new_crs
 
@@ -1100,8 +1102,9 @@ class UnionDataset(GeoDataset):
             if not isinstance(ds, GeoDataset):
                 raise ValueError('UnionDataset only supports GeoDatasets')
 
-        self.crs = dataset1.crs
-        self.res = dataset1.res
+        dataset2.crs = dataset1.crs
+        dataset2.res = dataset1.res
+
         self.index = pd.concat([dataset1.index, dataset2.index])
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
@@ -1164,6 +1167,7 @@ class UnionDataset(GeoDataset):
         Args:
             new_crs: New :term:`coordinate reference system (CRS)`.
         """
+        self.index.to_crs(new_crs, inplace=True)
         self.datasets[0].crs = new_crs
         self.datasets[1].crs = new_crs
 
