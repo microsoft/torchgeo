@@ -118,3 +118,4 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _GeoAI: https://github.com/opengeos/geoai
 .. _OTBTF: https://github.com/remicres/otbtf
 .. _GeoDeep: https://github.com/uav4geo/GeoDeep
+.. _srai: https://github.com/kraina-ai/srai
