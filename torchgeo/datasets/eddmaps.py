@@ -3,6 +3,7 @@
 
 """Dataset for EDDMapS."""
 
+import functools
 import os
 from datetime import datetime
 from typing import Any
@@ -10,13 +11,14 @@ from typing import Any
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
+import shapely
 from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, Path
+from .utils import BoundingBox, Path, disambiguate_timestamp
 
 
 class EDDMapS(GeoDataset):
@@ -60,16 +62,15 @@ class EDDMapS(GeoDataset):
             raise DatasetNotFoundError(self)
 
         # Read CSV file
-        usecols = ['ObsDate', 'Latitude', 'Longitude']
-        df = pd.read_csv(
-            filepath, usecols=usecols, parse_dates=['ObsDate'], date_format='%m-%d-%y'
-        )
+        df = pd.read_csv(filepath, usecols=['ObsDate', 'Latitude', 'Longitude'])
         df = df[df.Latitude.notna()]
         df = df[df.Longitude.notna()]
 
         # Convert from pandas DataFrame to geopandas GeoDataFrame
+        func = functools.partial(disambiguate_timestamp, format='%m-%d-%y')
+        index = pd.IntervalIndex.from_tuples(df['ObsDate'].apply(func))
         geometry = gpd.points_from_xy(df.Longitude, df.Latitude)
-        self.index = GeoDataFrame(index=df.ObsDate, geometry=geometry, crs='EPSG:4326')
+        self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve metadata indexed by query.
@@ -83,15 +84,17 @@ class EDDMapS(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        bboxes = [hit.bbox for hit in hits]
+        geometry = shapely.box(*query[:4])
+        interval = pd.Interval(*query[4:])
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
 
-        if not bboxes:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        sample = {'crs': self.crs, 'bounds': bboxes}
+        sample = {'crs': self.crs, 'bounds': index.geometry}
 
         return sample
 

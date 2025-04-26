@@ -306,6 +306,9 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[datetime, dateti
     Returns:
         (mint, maxt) tuple for indexing
     """
+    if not isinstance(date_str, str):
+        return pd.NaT, pd.NaT
+
     mint = datetime.strptime(date_str, format)
     format = format.replace('%%', '')
 
