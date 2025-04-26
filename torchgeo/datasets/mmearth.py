@@ -9,16 +9,17 @@ from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta
 from typing import Any, ClassVar, cast
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch import Tensor
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 from einops import rearrange
+from matplotlib.figure import Figure
+from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
 from .utils import Path, lazy_import, percentile_normalization
+
 
 class MMEarth(NonGeoDataset):
     """MMEarth dataset.
@@ -620,10 +621,10 @@ class MMEarth(NonGeoDataset):
             length of the dataset
         """
         return len(self.indices)
-    
+
     def plot(
         self,
-        sample: dict[str, Tensor],
+        sample: dict[str, Any],
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:
@@ -637,36 +638,46 @@ class MMEarth(NonGeoDataset):
         Returns:
             A matplotlib Figure with the rendered sample.
         """
-
         images = []
         titles = []
         for key, val in sample.items():
             if key.startswith('image'):
+                # val = val.numpy()
                 if key.endswith('sentinel2'):
-                    norm_img = percentile_normalization(val[[3,2,1]])
+                    norm_img = percentile_normalization(val[[3, 2, 1]].cpu().numpy())
                     images.append(rearrange(norm_img, 'c h w -> h w c'))
-                    
+
                     titles.append('Sentinel-2 RGB')
                 else:
                     for band_idx, band_val in enumerate(sample[key]):
+                        band_val = band_val.numpy()
                         norm_img = percentile_normalization(band_val)
                         images.append(norm_img)
-                        
-                        modalities_name = key.split('_',1)[1]
-                        band_name = sample['avail_bands'][modalities_name][band_idx]
-                        titles.append((modalities_name.replace('_',' ').title())+' '+band_name)
+
+                        modalities_name = key.split('_', 1)[1]
+                        avail_bands_dict = dict(sample['avail_bands'])
+                        band_name = str(avail_bands_dict[modalities_name][band_idx])
+                        titles.append(
+                            (modalities_name.replace('_', ' ').title())
+                            + ' '
+                            + band_name
+                        )
             elif key.startswith('mask'):
                 for band_idx, band_val in enumerate(sample[key]):
+                    band_val = band_val.numpy()
                     norm_img = percentile_normalization(band_val)
                     images.append(norm_img)
-                    
-                    modalities_name = key.split('_',1)[1]
-                    band_name = sample['avail_bands'][modalities_name][band_idx]
-                    titles.append((modalities_name.replace('_',' ').title())+' '+band_name)
+
+                    modalities_name = key.split('_', 1)[1]
+                    avail_bands_dict = dict(sample['avail_bands'])
+                    band_name = str(avail_bands_dict[modalities_name][band_idx])
+                    titles.append(
+                        (modalities_name.replace('_', ' ').title()) + ' ' + band_name
+                    )
             else:
                 pass
-        
-        fig, ax = plt.subplots(3,6, figsize = (15, 9), squeeze=False)
+
+        fig, ax = plt.subplots(3, 6, figsize=(15, 9), squeeze=False)
         axes = ax.flatten()
 
         for i, (image, title) in enumerate(zip(images, titles)):
@@ -677,7 +688,16 @@ class MMEarth(NonGeoDataset):
                 title_words = title.split(' ')
                 title_word_len = len(title_words)
                 if title_word_len > 2:
-                    title = str.join(' ', title_words[:2]) + '\n' + str.join(' ', title_words[2:])
+                    title = (
+                        str.join(' ', title_words[:2])
+                        + '\n'
+                        + str.join(' ', title_words[2:])
+                    )
                 axes[i].set_title(title)
-                
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
         plt.tight_layout()
+
+        return fig
