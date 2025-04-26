@@ -660,7 +660,8 @@ class VectorDataset(GeoDataset):
                 try:
                     with fiona.open(filepath) as src:
                         if crs is None:
-                            crs = CRS.from_dict(src.crs)
+                            # https://pyproj4.github.io/pyproj/stable/crs_compatibility.html#converting-from-fiona-crs-to-pyproj-crs-crs
+                            crs = CRS.from_wkt(src.crs_wkt)
 
                         minx, miny, maxx, maxy = src.bounds
                         (minx, maxx), (miny, maxy) = fiona.transform.transform(
