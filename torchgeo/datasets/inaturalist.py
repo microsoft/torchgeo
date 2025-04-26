@@ -3,6 +3,7 @@
 
 """Dataset for iNaturalist."""
 
+import functools
 import glob
 import os
 from datetime import datetime
@@ -11,13 +12,14 @@ from typing import Any
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
+import shapely
 from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, Path
+from .utils import BoundingBox, Path, disambiguate_timestamp
 
 
 class INaturalist(GeoDataset):
@@ -57,15 +59,16 @@ class INaturalist(GeoDataset):
         df = pd.read_csv(files[0], header=0, usecols=usecols)
         df = df[df.latitude.notna()]
         df = df[df.longitude.notna()]
-        columns = {'observed_on': 'date', 'time_observed_at': 'time'}
-        df.rename(columns=columns, inplace=True)
-        df.date = pd.to_datetime(df.date, format='%Y-%m-%d', utc=True)
-        df.time = pd.to_datetime(df.time, format='%Y-%m-%d %H:%M:%S %z')
-        df.loc[df.time.isnull(), 'time'] = df.loc[df.time.isnull(), 'date']
 
         # Convert from pandas DataFrame to geopandas GeoDataFrame
+        func = functools.partial(disambiguate_timestamp, format='%Y-%m-%d %H:%M:%S %z')
+        time = df.time_observed_at.apply(func)
+        func = functools.partial(disambiguate_timestamp, format='%Y-%m-%d')
+        date = df.observed_on.apply(func)
+        time[time.isnull()] = date[time.isnull()]
+        index = pd.IntervalIndex.from_tuples(time)
         geometry = gpd.points_from_xy(df.longitude, df.latitude)
-        self.index = GeoDataFrame(index=df.time, geometry=geometry, crs='EPSG:4326')
+        self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve metadata indexed by query.
@@ -79,15 +82,17 @@ class INaturalist(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        bboxes = [hit.bbox for hit in hits]
+        geometry = shapely.box(*query[:4])
+        interval = pd.Interval(*query[4:])
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
 
-        if not bboxes:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        sample = {'crs': self.crs, 'bounds': bboxes}
+        sample = {'crs': self.crs, 'bounds': index}
 
         return sample
 
@@ -112,10 +117,10 @@ class INaturalist(GeoDataset):
         ax.grid(ls='--')
 
         # Extract coordinates and timestamps
-        bboxes = sample['bounds']
-        longitudes = [bbox[0] for bbox in bboxes]  # minx
-        latitudes = [bbox[1] for bbox in bboxes]  # miny
-        timestamps = [bbox[2] for bbox in bboxes]  # mint
+        index = sample['bounds']
+        longitudes = [point.x for point in index.geometry]
+        latitudes = [point.y for point in index.geometry]
+        timestamps = [time.timestamp() for time in index.index.left]
 
         # Plot the points with colors based on date
         scatter = ax.scatter(longitudes, latitudes, c=timestamps, edgecolors='black')
