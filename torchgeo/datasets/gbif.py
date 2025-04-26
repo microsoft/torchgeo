@@ -3,6 +3,7 @@
 
 """Dataset for the Global Biodiversity Information Facility."""
 
+import functools
 import glob
 import os
 from datetime import datetime
@@ -11,13 +12,14 @@ from typing import Any
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
+import shapely
 from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, Path
+from .utils import BoundingBox, Path, disambiguate_timestamp
 
 
 class GBIF(GeoDataset):
@@ -66,11 +68,12 @@ class GBIF(GeoDataset):
         df.day = df.day.str.zfill(2)
         df.month = df.month.str.zfill(2)
         date = df.day + ' ' + df.month + ' ' + df.year
-        df['date'] = pd.to_datetime(date, format='%d %m %Y')
 
         # Convert from pandas DataFrame to geopandas GeoDataFrame
+        func = functools.partial(disambiguate_timestamp, format='%d %m %Y')
+        index = pd.IntervalIndex.from_tuples(date.apply(func))
         geometry = gpd.points_from_xy(df.decimalLongitude, df.decimalLatitude)
-        self.index = GeoDataFrame(index=df.date, geometry=geometry, crs='EPSG:4326')
+        self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve metadata indexed by query.
@@ -84,15 +87,17 @@ class GBIF(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        bboxes = [hit.bbox for hit in hits]
+        geometry = shapely.box(*query[:4])
+        interval = pd.Interval(*query[4:])
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
 
-        if not bboxes:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        sample = {'crs': self.crs, 'bounds': bboxes}
+        sample = {'crs': self.crs, 'bounds': index}
 
         return sample
 
@@ -118,12 +123,12 @@ class GBIF(GeoDataset):
         ax.grid(ls='--')
 
         # Extract bounding boxes (coordinates) from the sample
-        bboxes = sample['bounds']
+        index = sample['bounds']
 
         # Extract coordinates and timestamps
-        longitudes = [bbox[0] for bbox in bboxes]  # minx
-        latitudes = [bbox[1] for bbox in bboxes]  # miny
-        timestamps = [bbox[2] for bbox in bboxes]  # mint
+        longitudes = [point.x for point in index.geometry]
+        latitudes = [point.y for point in index.geometry]
+        timestamps = [time.timestamp() for time in index.index.left]
 
         # Plot the points with colors based on date
         scatter = ax.scatter(longitudes, latitudes, c=timestamps, edgecolors='black')

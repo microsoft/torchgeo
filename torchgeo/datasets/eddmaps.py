@@ -94,7 +94,7 @@ class EDDMapS(GeoDataset):
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        sample = {'crs': self.crs, 'bounds': index.geometry}
+        sample = {'crs': self.crs, 'bounds': index}
 
         return sample
 
@@ -120,12 +120,12 @@ class EDDMapS(GeoDataset):
         ax.grid(ls='--')
 
         # Extract bounding boxes (coordinates) from the sample
-        bboxes = sample['bounds']
+        index = sample['bounds']
 
         # Extract coordinates and timestamps
-        longitudes = [bbox[0] for bbox in bboxes]  # minx
-        latitudes = [bbox[1] for bbox in bboxes]  # miny
-        timestamps = [bbox[2] for bbox in bboxes]  # mint (timestamp)
+        longitudes = [point.x for point in index.geometry]
+        latitudes = [point.y for point in index.geometry]
+        timestamps = [time.timestamp() for time in index.index.left]
 
         # Plot the points with colors based on date
         scatter = ax.scatter(longitudes, latitudes, c=timestamps, edgecolors='black')
