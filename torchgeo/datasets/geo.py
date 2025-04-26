@@ -963,7 +963,7 @@ class IntersectionDataset(GeoDataset):
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
 
-        self.index = gpd.sjoin(dataset1.index, dataset2.index, how='inner')
+        self.index = gpd.overlay(dataset1.index, dataset2.index)
         # TODO: temporal join
 
         if self.index.empty:
