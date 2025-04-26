@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import cast
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
@@ -85,7 +86,7 @@ class TestL7Irish:
         plt.close()
 
     def test_invalid_query(self, dataset: L7Irish) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
