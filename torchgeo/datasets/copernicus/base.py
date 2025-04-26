@@ -159,14 +159,14 @@ class CopernicusBenchBase(NonGeoDataset, ABC):
                 if 'date' in match.groupdict():
                     date_str = match.group('date')
                     mint, maxt = disambiguate_timestamp(date_str, self.date_format)
-                    time = (mint + maxt) / 2
+                    time = (mint.timestamp() + maxt.timestamp()) / 2
                     sample['time'] = torch.tensor(time)
                 elif 'start' in match.groupdict() and 'stop' in match.groupdict():
                     start = match.group('start')
                     stop = match.group('stop')
                     mint, _ = disambiguate_timestamp(start, self.date_format)
                     _, maxt = disambiguate_timestamp(stop, self.date_format)
-                    time = (mint + maxt) / 2
+                    time = (mint.timestamp() + maxt.timestamp()) / 2
                     sample['time'] = torch.tensor(time)
 
         return sample
