@@ -72,9 +72,9 @@ class TestCDL:
 
     def test_full_year(self, dataset: CDL) -> None:
         bbox = dataset.bounds
-        time = datetime(2023, 6, 1)
+        time = pd.Timestamp(2023, 6, 1)
         query = BoundingBox(bbox.minx, bbox.maxx, bbox.miny, bbox.maxy, time, time)
-        next(dataset.index.intersection(tuple(query)))
+        dataset[query]
 
     def test_already_extracted(self, dataset: CDL) -> None:
         CDL(dataset.paths, years=[2023, 2022])
