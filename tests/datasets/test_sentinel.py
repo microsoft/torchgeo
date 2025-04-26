@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
@@ -94,7 +95,7 @@ class TestSentinel1:
             Sentinel1(bands=bands)
 
     def test_invalid_query(self, dataset: Sentinel1) -> None:
-        query = BoundingBox(-1, -1, -1, -1, -1, -1)
+        query = BoundingBox(-1, -1, -1, -1, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
@@ -149,7 +150,7 @@ class TestSentinel2:
             ds.plot(x)
 
     def test_invalid_query(self, dataset: Sentinel2) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):

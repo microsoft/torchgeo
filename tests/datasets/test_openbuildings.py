@@ -93,7 +93,7 @@ class TestOpenBuildings:
         assert isinstance(ds, UnionDataset)
 
     def test_invalid_query(self, dataset: OpenBuildings) -> None:
-        query = BoundingBox(100, 100, 100, 100, 0, 0)
+        query = BoundingBox(100, 100, 100, 100, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):

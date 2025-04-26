@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
@@ -71,7 +72,7 @@ class TestCDL:
 
     def test_full_year(self, dataset: CDL) -> None:
         bbox = dataset.bounds
-        time = datetime(2023, 6, 1).timestamp()
+        time = datetime(2023, 6, 1)
         query = BoundingBox(bbox.minx, bbox.maxx, bbox.miny, bbox.maxy, time, time)
         next(dataset.index.intersection(tuple(query)))
 
@@ -117,7 +118,7 @@ class TestCDL:
             CDL(tmp_path)
 
     def test_invalid_query(self, dataset: CDL) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):

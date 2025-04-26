@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
@@ -76,7 +77,7 @@ class TestCanadianBuildingFootprints:
             CanadianBuildingFootprints(tmp_path)
 
     def test_invalid_query(self, dataset: CanadianBuildingFootprints) -> None:
-        query = BoundingBox(2, 2, 2, 2, 2, 2)
+        query = BoundingBox(2, 2, 2, 2, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):

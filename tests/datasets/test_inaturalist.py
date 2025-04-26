@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 from matplotlib.figure import Figure
 
@@ -43,7 +44,7 @@ class TestINaturalist:
             INaturalist(tmp_path)
 
     def test_invalid_query(self, dataset: INaturalist) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
