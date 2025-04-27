@@ -642,9 +642,8 @@ class MMEarth(NonGeoDataset):
         titles = []
         for key, val in sample.items():
             if key.startswith('image'):
-                # val = val.numpy()
                 if key.endswith('sentinel2'):
-                    norm_img = percentile_normalization(val[[3, 2, 1]].cpu().numpy())
+                    norm_img = percentile_normalization(val[[3, 2, 1]].numpy())
                     images.append(rearrange(norm_img, 'c h w -> h w c'))
 
                     titles.append('Sentinel-2 RGB')
