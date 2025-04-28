@@ -84,8 +84,8 @@ class EDDMapS(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        geometry = shapely.box(*query[:4])
-        interval = pd.Interval(*query[4:])
+        geometry = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
+        interval = pd.Interval(query.mint, query.maxt)
         index = self.index.iloc[self.index.index.overlaps(interval)]
         index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
 
