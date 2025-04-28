@@ -735,7 +735,9 @@ class TestIntersectionDataset:
     def test_grid_overlap(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, MINT, MAXT))
         ds2 = CustomGeoDataset(BoundingBox(1, 2, 3, 4, MAXT, MAXT))
-        IntersectionDataset(ds1, ds2)
+        msg = 'Datasets have no spatiotemporal intersection'
+        with pytest.raises(RuntimeError, match=msg):
+            IntersectionDataset(ds1, ds2)
 
     def test_invalid_query(self, dataset: IntersectionDataset) -> None:
         query = BoundingBox(-1, -1, -1, -1, datetime.min, datetime.min)
