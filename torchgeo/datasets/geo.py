@@ -964,8 +964,20 @@ class IntersectionDataset(GeoDataset):
         dataset2.crs = dataset1.crs
         dataset2.res = dataset1.res
 
-        self.index = gpd.overlay(dataset1.index, dataset2.index)
-        # TODO: temporal join
+        # Spatial intersection
+        index1 = dataset1.index.reset_index()
+        index2 = dataset2.index.reset_index()
+        self.index = gpd.overlay(index1, index2, how='intersection')
+
+        # Temporal intersection
+        datetime_1 = pd.IntervalIndex(self.index.pop('datetime_1'))
+        datetime_2 = pd.IntervalIndex(self.index.pop('datetime_2'))
+        mint = np.maximum(datetime_1.left, datetime_2.left)
+        maxt = np.minimum(datetime_1.right, datetime_2.right)
+        self.index.index = pd.IntervalIndex.from_arrays(
+            mint, maxt, closed='both', name='datetime'
+        )
+        # self.index = self.index[maxt > mint]
 
         if self.index.empty:
             raise RuntimeError('Datasets have no spatiotemporal intersection')
