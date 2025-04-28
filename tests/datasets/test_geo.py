@@ -720,10 +720,9 @@ class TestIntersectionDataset:
     def test_point_dataset(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 2, 2, 4, MINT, MAXT))
         ds2 = CustomGeoDataset(BoundingBox(1, 1, 3, 3, MINT, MINT))
-        ds = IntersectionDataset(ds1, ds2)
-        assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds.res == (1, 1)
-        assert len(ds1) == len(ds2) == len(ds) == 1
+        msg = 'Datasets have no spatiotemporal intersection'
+        with pytest.raises(RuntimeError, match=msg):
+            IntersectionDataset(ds1, ds2)
 
     def test_no_overlap(self) -> None:
         ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, MINT, MINT))
