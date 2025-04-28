@@ -46,9 +46,9 @@ class CustomGeoDataset(GeoDataset):
         res: float | tuple[float, float] = (1, 1),
         paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
     ) -> None:
-        geometry = shapely.box(*bounds[:4])
+        geometry = shapely.box(bounds.minx, bounds.miny, bounds.maxx, bounds.maxy)
         index = pd.IntervalIndex.from_tuples(
-            [tuple(bounds[4:])], closed='both', name='datetime'
+            [(bounds.mint, bounds.maxt)], closed='both', name='datetime'
         )
         self.index = GeoDataFrame(index=index, geometry=[geometry], crs=crs)
         self.res = res  # type: ignore[assignment]
