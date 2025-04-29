@@ -113,6 +113,7 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _samgeo: https://github.com/opengeos/segment-geospatial
 .. _TerraTorch: https://github.com/IBM/terratorch
 .. _SITS: https://github.com/e-sensing/sits
+.. _srai: https://github.com/kraina-ai/srai
 .. _scikit-eo: https://github.com/yotarazona/scikit-eo
 .. _geo-bench: https://github.com/ServiceNow/geo-bench
 .. _GeoAI: https://github.com/opengeos/geoai
