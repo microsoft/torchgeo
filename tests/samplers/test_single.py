@@ -2,13 +2,18 @@
 # Licensed under the MIT License.
 
 import math
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
+from datetime import datetime
 from itertools import product
 
+import pandas as pd
 import pytest
+import shapely
 import torch
 from _pytest.fixtures import SubRequest
+from geopandas import GeoDataFrame
 from pyproj import CRS
+from shapely import Geometry
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
@@ -21,25 +26,22 @@ from torchgeo.samplers import (
     tile_to_chips,
 )
 
+MINT = datetime(2025, 4, 24)
+MAXT = datetime(2025, 4, 25)
+
 
 class CustomGeoSampler(GeoSampler):
-    def __init__(self) -> None:
-        pass
-
     def __iter__(self) -> Iterator[BoundingBox]:
-        for i in range(len(self)):
-            yield BoundingBox(i, i, i, i, i, i)
-
-    def __len__(self) -> int:
-        return 2
+        for i in range(2):
+            yield BoundingBox(i, i, i, i, MINT, MAXT)
 
 
 class CustomGeoDataset(GeoDataset):
-    def __init__(
-        self, crs: CRS = CRS.from_epsg(3005), res: tuple[float, float] = (10, 10)
-    ) -> None:
-        super().__init__()
-        self._crs = crs
+    def __init__(self, geometry: Sequence[Geometry], res: float = 10) -> None:
+        intervals = [(MINT, MAXT)] * len(geometry)
+        index = pd.IntervalIndex.from_tuples(intervals, closed='both', name='datetime')
+        crs = CRS.from_epsg(3005)
+        self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = res
 
     def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
@@ -49,19 +51,15 @@ class CustomGeoDataset(GeoDataset):
 class TestGeoSampler:
     @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 100, 200, 300, 400, 500))
-        return ds
+        geometry = [shapely.box(0, 0, 100, 100)]
+        return CustomGeoDataset(geometry)
 
     @pytest.fixture(scope='function')
-    def sampler(self) -> CustomGeoSampler:
-        return CustomGeoSampler()
+    def sampler(self, dataset: CustomGeoDataset) -> CustomGeoSampler:
+        return CustomGeoSampler(dataset)
 
     def test_iter(self, sampler: CustomGeoSampler) -> None:
-        assert next(iter(sampler)) == BoundingBox(0, 0, 0, 0, 0, 0)
-
-    def test_len(self, sampler: CustomGeoSampler) -> None:
-        assert len(sampler) == 2
+        assert next(iter(sampler)) == BoundingBox(0, 0, 0, 0, MINT, MAXT)
 
     def test_abstract(self, dataset: CustomGeoDataset) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
