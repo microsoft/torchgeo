@@ -1,16 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import math
 import os
 import pickle
 import re
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+import pandas as pd
 import pytest
 import torch
 from pyproj import CRS
@@ -320,66 +319,66 @@ class TestBoundingBox:
 @pytest.mark.parametrize(
     'date_string,format,min_datetime,max_datetime',
     [
-        ('', '', 0, sys.maxsize),
+        ('', '', pd.Timestamp.min, pd.Timestamp.max),
         (
             '2021',
             '%Y',
-            datetime(2021, 1, 1, 0, 0, 0, 0).timestamp(),
-            datetime(2021, 12, 31, 23, 59, 59, 999999).timestamp(),
+            datetime(2021, 1, 1, 0, 0, 0, 0),
+            datetime(2021, 12, 31, 23, 59, 59, 999999),
         ),
         (
             '2021-09',
             '%Y-%m',
-            datetime(2021, 9, 1, 0, 0, 0, 0).timestamp(),
-            datetime(2021, 9, 30, 23, 59, 59, 999999).timestamp(),
+            datetime(2021, 9, 1, 0, 0, 0, 0),
+            datetime(2021, 9, 30, 23, 59, 59, 999999),
         ),
         (
             'Dec 21',
             '%b %y',
-            datetime(2021, 12, 1, 0, 0, 0, 0).timestamp(),
-            datetime(2021, 12, 31, 23, 59, 59, 999999).timestamp(),
+            datetime(2021, 12, 1, 0, 0, 0, 0),
+            datetime(2021, 12, 31, 23, 59, 59, 999999),
         ),
         (
             '2021-09-13',
             '%Y-%m-%d',
-            datetime(2021, 9, 13, 0, 0, 0, 0).timestamp(),
-            datetime(2021, 9, 13, 23, 59, 59, 999999).timestamp(),
+            datetime(2021, 9, 13, 0, 0, 0, 0),
+            datetime(2021, 9, 13, 23, 59, 59, 999999),
         ),
         (
             '2021-09-13 17',
             '%Y-%m-%d %H',
-            datetime(2021, 9, 13, 17, 0, 0, 0).timestamp(),
-            datetime(2021, 9, 13, 17, 59, 59, 999999).timestamp(),
+            datetime(2021, 9, 13, 17, 0, 0, 0),
+            datetime(2021, 9, 13, 17, 59, 59, 999999),
         ),
         (
             '2021-09-13 17:21',
             '%Y-%m-%d %H:%M',
-            datetime(2021, 9, 13, 17, 21, 0, 0).timestamp(),
-            datetime(2021, 9, 13, 17, 21, 59, 999999).timestamp(),
+            datetime(2021, 9, 13, 17, 21, 0, 0),
+            datetime(2021, 9, 13, 17, 21, 59, 999999),
         ),
         (
             '2021-09-13 17:21:53',
             '%Y-%m-%d %H:%M:%S',
-            datetime(2021, 9, 13, 17, 21, 53, 0).timestamp(),
-            datetime(2021, 9, 13, 17, 21, 53, 999999).timestamp(),
+            datetime(2021, 9, 13, 17, 21, 53, 0),
+            datetime(2021, 9, 13, 17, 21, 53, 999999),
         ),
         (
             '2021-09-13 17:21:53:000123',
             '%Y-%m-%d %H:%M:%S:%f',
-            datetime(2021, 9, 13, 17, 21, 53, 123).timestamp(),
-            datetime(2021, 9, 13, 17, 21, 53, 123).timestamp(),
+            datetime(2021, 9, 13, 17, 21, 53, 123),
+            datetime(2021, 9, 13, 17, 21, 53, 123),
         ),
         (
             '2021-09-13%2017:21:53',
             '%Y-%m-%d%%20%H:%M:%S',
-            datetime(2021, 9, 13, 17, 21, 53, 0).timestamp(),
-            datetime(2021, 9, 13, 17, 21, 53, 999999).timestamp(),
+            datetime(2021, 9, 13, 17, 21, 53, 0),
+            datetime(2021, 9, 13, 17, 21, 53, 999999),
         ),
         (
             '2021%m',
             '%Y%%m',
-            datetime(2021, 1, 1, 0, 0, 0, 0).timestamp(),
-            datetime(2021, 12, 31, 23, 59, 59, 999999).timestamp(),
+            datetime(2021, 1, 1, 0, 0, 0, 0),
+            datetime(2021, 12, 31, 23, 59, 59, 999999),
         ),
     ],
 )
@@ -387,8 +386,8 @@ def test_disambiguate_timestamp(
     date_string: str, format: str, min_datetime: float, max_datetime: float
 ) -> None:
     mint, maxt = disambiguate_timestamp(date_string, format)
-    assert math.isclose(mint, min_datetime)
-    assert math.isclose(maxt, max_datetime)
+    assert mint == min_datetime
+    assert maxt == max_datetime
 
 
 class TestCollateFunctionsMatchingKeys:
