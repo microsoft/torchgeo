@@ -33,10 +33,10 @@ from .mmflood import MMFloodDataModule
 from .naip import NAIPChesapeakeDataModule
 from .nasa_marine_debris import NASAMarineDebrisDataModule
 from .oscd import OSCDDataModule
+from .patternnet import PatternNetDataModule
 from .potsdam import Potsdam2DDataModule
 from .quakeset import QuakeSetDataModule
 from .reforestree import ReforesTreeDataModule
-from .patternnet import PatternNetDataModule
 from .resisc45 import RESISC45DataModule
 from .seco import SeasonalContrastS2DataModule
 from .sen12ms import SEN12MSDataModule
@@ -97,6 +97,7 @@ __all__ = (
     'NASAMarineDebrisDataModule',
     'NonGeoDataModule',
     'OSCDDataModule',
+    'PatternNetDataModule',
     'Potsdam2DDataModule',
     'QuakeSetDataModule',
     'RESISC45DataModule',
