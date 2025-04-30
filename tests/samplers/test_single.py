@@ -96,8 +96,18 @@ class TestRandomGeoSampler:
 
     def test_iter(self, sampler: RandomGeoSampler) -> None:
         for query in sampler:
-            assert sampler.roi.minx - sampler.size[1] / 2 <= query.minx <= query.maxx <= sampler.roi.maxx + sampler.size[1] / 2
-            assert sampler.roi.miny - sampler.size[0] / 2 <= query.miny <= query.miny <= sampler.roi.maxy + sampler.size[0] / 2
+            assert (
+                sampler.roi.minx - sampler.size[1] / 2
+                <= query.minx
+                <= query.maxx
+                <= sampler.roi.maxx + sampler.size[1] / 2
+            )
+            assert (
+                sampler.roi.miny - sampler.size[0] / 2
+                <= query.miny
+                <= query.miny
+                <= sampler.roi.maxy + sampler.size[0] / 2
+            )
             assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
 
             assert math.isclose(query.maxx - query.minx, sampler.size[1])
@@ -111,8 +121,18 @@ class TestRandomGeoSampler:
         roi = BoundingBox(0, 50, 0, 50, MINT, MAXT)
         sampler = RandomGeoSampler(dataset, 2, 10, roi=roi)
         for query in sampler:
-            assert roi.minx - sampler.size[1] / 2 <= query.minx <= query.maxx <= roi.maxx + sampler.size[1] / 2
-            assert roi.miny - sampler.size[0] / 2 <= query.miny <= query.maxy <= roi.maxy + sampler.size[0] / 2
+            assert (
+                roi.minx - sampler.size[1] / 2
+                <= query.minx
+                <= query.maxx
+                <= roi.maxx + sampler.size[1] / 2
+            )
+            assert (
+                roi.miny - sampler.size[0] / 2
+                <= query.miny
+                <= query.maxy
+                <= roi.maxy + sampler.size[0] / 2
+            )
             assert roi.mint <= query.mint <= query.maxt <= roi.maxt
 
     def test_small_area(self) -> None:
