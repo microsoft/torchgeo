@@ -7,7 +7,6 @@ import abc
 from collections.abc import Callable, Iterable, Iterator
 from functools import partial
 
-import numpy as np
 import shapely
 import torch
 from numpy.random import Generator
