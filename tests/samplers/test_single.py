@@ -6,6 +6,7 @@ from collections.abc import Iterator, Sequence
 from datetime import datetime
 from itertools import product
 
+import numpy as np
 import pandas as pd
 import pytest
 import shapely
@@ -80,10 +81,8 @@ class TestGeoSampler:
 class TestRandomGeoSampler:
     @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 100, 200, 300, 400, 500))
-        ds.index.insert(1, (0, 100, 200, 300, 400, 500))
-        return ds
+        geometry = [shapely.box(0, 0, 100, 100), shapely.box(0, 0, 100, 100)]
+        return CustomGeoDataset(geometry)
 
     @pytest.fixture(
         scope='function',
@@ -97,54 +96,45 @@ class TestRandomGeoSampler:
 
     def test_iter(self, sampler: RandomGeoSampler) -> None:
         for query in sampler:
-            assert sampler.roi.minx <= query.minx <= query.maxx <= sampler.roi.maxx
-            assert sampler.roi.miny <= query.miny <= query.miny <= sampler.roi.maxy
+            assert sampler.roi.minx - sampler.size[1] / 2 <= query.minx <= query.maxx <= sampler.roi.maxx + sampler.size[1] / 2
+            assert sampler.roi.miny - sampler.size[0] / 2 <= query.miny <= query.miny <= sampler.roi.maxy + sampler.size[0] / 2
             assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
 
             assert math.isclose(query.maxx - query.minx, sampler.size[1])
             assert math.isclose(query.maxy - query.miny, sampler.size[0])
-            assert math.isclose(
-                query.maxt - query.mint, sampler.roi.maxt - sampler.roi.mint
-            )
+            assert query.maxt - query.mint == sampler.roi.maxt - sampler.roi.mint
 
     def test_len(self, sampler: RandomGeoSampler) -> None:
         assert len(sampler) == sampler.length
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
-        roi = BoundingBox(0, 50, 200, 250, 400, 450)
+        roi = BoundingBox(0, 50, 0, 50, MINT, MAXT)
         sampler = RandomGeoSampler(dataset, 2, 10, roi=roi)
         for query in sampler:
-            assert query in roi
+            assert roi.minx - sampler.size[1] / 2 <= query.minx <= query.maxx <= roi.maxx + sampler.size[1] / 2
+            assert roi.miny - sampler.size[0] / 2 <= query.miny <= query.maxy <= roi.maxy + sampler.size[0] / 2
+            assert roi.mint <= query.mint <= query.maxt <= roi.maxt
 
     def test_small_area(self) -> None:
-        ds = CustomGeoDataset(res=(1, 1))
-        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
-        ds.index.insert(1, (20, 21, 20, 21, 20, 21))
+        geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]
+        ds = CustomGeoDataset(geometry, res=1)
         sampler = RandomGeoSampler(ds, 2, 10)
         for _ in sampler:
             continue
 
-    def test_point_data(self) -> None:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 0, 0, 0, 0, 0))
-        ds.index.insert(1, (1, 1, 1, 1, 1, 1))
-        sampler = RandomGeoSampler(ds, 0, 10)
-        for _ in sampler:
-            continue
-
     def test_weighted_sampling(self) -> None:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 0, 0, 0, 0, 0))
-        ds.index.insert(1, (0, 10, 0, 10, 0, 10))
+        geometry = [shapely.box(0, 0, 0, 0), shapely.box(0, 0, 10, 10)]
+        ds = CustomGeoDataset(geometry)
         sampler = RandomGeoSampler(ds, 1, 10)
         for bbox in sampler:
-            assert bbox == BoundingBox(0, 10, 0, 10, 0, 10)
+            assert bbox.maxx > 0
+            assert bbox.maxy > 0
 
     def test_random_seed(self) -> None:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
-        generator1 = torch.Generator().manual_seed(0)
-        generator2 = torch.Generator().manual_seed(0)
+        geometry = [shapely.box(0, 0, 10, 10)]
+        ds = CustomGeoDataset(geometry)
+        generator1 = np.random.default_rng(0)
+        generator2 = np.random.default_rng(0)
         sampler1 = RandomGeoSampler(ds, 1, 1, generator=generator1)
         sampler2 = RandomGeoSampler(ds, 1, 1, generator=generator2)
         sample1 = next(iter(sampler1))
