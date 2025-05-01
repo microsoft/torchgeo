@@ -123,7 +123,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
                     self.length += rows * cols
                 else:
                     self.length += 1
-                self.hits.append(hit)
+                self.hits.append(bounds)
                 areas.append(bounds.area)
         if length is not None:
             self.length = length
@@ -142,10 +142,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         for _ in range(len(self)):
             # Choose a random tile, weighted by area
             idx = torch.multinomial(self.areas, 1)
-            hit = self.hits[idx]
-            minx, miny, maxx, maxy = self.index.geometry.iloc[hit].bounds
-            mint, maxt = self.index.index[hit].left, self.index.index[hit].right
-            bounds = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+            bounds = self.hits[idx]
 
             # Choose random indices within that tile
             batch = []
