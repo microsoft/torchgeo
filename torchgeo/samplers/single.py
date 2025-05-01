@@ -198,18 +198,13 @@ class GridGeoSampler(GeoSampler):
             self.size = (self.size[0] * self.res[1], self.size[1] * self.res[0])
             self.stride = (self.stride[0] * self.res[1], self.stride[1] * self.res[0])
 
-        self.hits = []
-        for hit in self.index.intersection(tuple(self.roi), objects=True):
-            bounds = BoundingBox(*hit.bounds)
-            if (
-                bounds.maxx - bounds.minx >= self.size[1]
-                and bounds.maxy - bounds.miny >= self.size[0]
-            ):
-                self.hits.append(hit)
-
         self.length = 0
-        for hit in self.hits:
-            bounds = BoundingBox(*hit.bounds)
+        for i in range(len(self.index)):
+            minx, miny, maxx, maxy = self.index.geometry[i].bounds
+            if maxx - minx < self.size[1] or maxy - miny < self.size[0]:
+                continue
+            mint, maxt = self.index.index[i].left, self.index.index[i].right
+            bounds = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
             rows, cols = tile_to_chips(bounds, self.size, self.stride)
             self.length += rows * cols
 
@@ -220,8 +215,12 @@ class GridGeoSampler(GeoSampler):
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
         # For each tile...
-        for hit in self.hits:
-            bounds = BoundingBox(*hit.bounds)
+        for i in range(len(self.index)):
+            minx, miny, maxx, maxy = self.index.geometry[i].bounds
+            if maxx - minx < self.size[1] or maxy - miny < self.size[0]:
+                continue
+            mint, maxt = self.index.index[i].left, self.index.index[i].right
+            bounds = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
             rows, cols = tile_to_chips(bounds, self.size, self.stride)
             mint = bounds.mint
             maxt = bounds.maxt

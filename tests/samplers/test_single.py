@@ -176,10 +176,8 @@ class TestRandomGeoSampler:
 class TestGridGeoSampler:
     @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 100, 200, 300, 400, 500))
-        ds.index.insert(1, (0, 100, 200, 300, 400, 500))
-        return ds
+        geometry = [shapely.box(0, 0, 100, 100), shapely.box(0, 0, 100, 100)]
+        return CustomGeoDataset(geometry)
 
     @pytest.fixture(
         scope='function',
@@ -220,9 +218,7 @@ class TestGridGeoSampler:
 
             assert math.isclose(query.maxx - query.minx, sampler.size[1])
             assert math.isclose(query.maxy - query.miny, sampler.size[0])
-            assert math.isclose(
-                query.maxt - query.mint, sampler.roi.maxt - sampler.roi.mint
-            )
+            assert query.maxt - query.mint == sampler.roi.maxt - sampler.roi.mint
 
     def test_len(self, sampler: GridGeoSampler) -> None:
         rows, cols = tile_to_chips(sampler.roi, sampler.size, sampler.stride)
@@ -230,41 +226,40 @@ class TestGridGeoSampler:
         assert len(sampler) == length
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
-        roi = BoundingBox(0, 50, 200, 250, 400, 450)
+        roi = BoundingBox(0, 50, 200, 250, MINT, MAXT)
         sampler = GridGeoSampler(dataset, 2, 1, roi=roi)
         for query in sampler:
             assert query in roi
 
     def test_small_area(self) -> None:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 1, 0, 1, 0, 1))
+        geometry = [shapely.box(0, 0, 1, 1)]
+        ds = CustomGeoDataset(geometry)
         sampler = GridGeoSampler(ds, 2, 10)
         assert len(sampler) == 0
 
     def test_tiles_side_by_side(self) -> None:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
-        ds.index.insert(0, (0, 10, 10, 20, 0, 10))
+        geometry = [shapely.box(0, 0, 10, 10), shapely.box(0, 10, 10, 20)]
+        ds = CustomGeoDataset(geometry)
         sampler = GridGeoSampler(ds, 2, 10)
         for bbox in sampler:
             assert bbox.area > 0
 
     def test_integer_multiple(self) -> None:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        geometry = [shapely.box(0, 0, 10, 10)]
+        ds = CustomGeoDataset(geometry)
         sampler = GridGeoSampler(ds, 10, 10, units=Units.CRS)
         iterator = iter(sampler)
         assert len(sampler) == 1
-        assert next(iterator) == BoundingBox(0, 10, 0, 10, 0, 10)
+        assert next(iterator) == BoundingBox(0, 10, 0, 10, MINT, MAXT)
 
     def test_float_multiple(self) -> None:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 6, 0, 5, 0, 10))
+        geometry = [shapely.box(0, 0, 6, 5)]
+        ds = CustomGeoDataset(geometry)
         sampler = GridGeoSampler(ds, 5, 5, units=Units.CRS)
         iterator = iter(sampler)
         assert len(sampler) == 2
-        assert next(iterator) == BoundingBox(0, 5, 0, 5, 0, 10)
-        assert next(iterator) == BoundingBox(5, 10, 0, 5, 0, 10)
+        assert next(iterator) == BoundingBox(0, 5, 0, 5, MINT, MAXT)
+        assert next(iterator) == BoundingBox(5, 10, 0, 5, MINT, MAXT)
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
