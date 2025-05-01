@@ -30,7 +30,9 @@ class CustomBatchGeoSampler(BatchGeoSampler):
 
 
 class CustomGeoDataset(GeoDataset):
-    def __init__(self, geometry: Sequence[Geometry], res: float = 10) -> None:
+    def __init__(
+        self, geometry: Sequence[Geometry], res: tuple[float, float] = (10, 10)
+    ) -> None:
         intervals = [(MINT, MAXT)] * len(geometry)
         index = pd.IntervalIndex.from_tuples(intervals, closed='both', name='datetime')
         crs = CRS.from_epsg(3005)
@@ -121,7 +123,7 @@ class TestRandomBatchGeoSampler:
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]
-        ds = CustomGeoDataset(geometry, res=1)
+        ds = CustomGeoDataset(geometry, res=(1, 1))
         sampler = RandomBatchGeoSampler(ds, 2, 2, 10)
         for _ in sampler:
             continue
