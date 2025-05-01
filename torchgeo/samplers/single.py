@@ -200,7 +200,7 @@ class GridGeoSampler(GeoSampler):
 
         self.length = 0
         for i in range(len(self.index)):
-            minx, miny, maxx, maxy = self.index.geometry[i].bounds
+            minx, miny, maxx, maxy = self.index.geometry.iloc[i].bounds
             if maxx - minx < self.size[1] or maxy - miny < self.size[0]:
                 continue
             mint, maxt = self.index.index[i].left, self.index.index[i].right
@@ -216,7 +216,7 @@ class GridGeoSampler(GeoSampler):
         """
         # For each tile...
         for i in range(len(self.index)):
-            minx, miny, maxx, maxy = self.index.geometry[i].bounds
+            minx, miny, maxx, maxy = self.index.geometry.iloc[i].bounds
             if maxx - minx < self.size[1] or maxy - miny < self.size[0]:
                 continue
             mint, maxt = self.index.index[i].left, self.index.index[i].right
@@ -279,16 +279,12 @@ class PreChippedGeoSampler(GeoSampler):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             shuffle: if True, reshuffle data at every epoch
-            generator: pseudo-random number generator (PRNG) used in combination with shuffle.
-
+            generator: pseudo-random number generator (PRNG) used in combination with
+                shuffle.
         """
         super().__init__(dataset, roi)
         self.shuffle = shuffle
         self.generator = generator
-
-        self.hits = []
-        for hit in self.index.intersection(tuple(self.roi), objects=True):
-            self.hits.append(hit)
 
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
@@ -301,7 +297,10 @@ class PreChippedGeoSampler(GeoSampler):
             generator = partial(torch.randperm, generator=self.generator)
 
         for idx in generator(len(self)):
-            yield BoundingBox(*self.hits[idx].bounds)
+            i = int(idx)
+            minx, miny, maxx, maxy = self.index.geometry.iloc[i].bounds
+            mint, maxt = self.index.index[i].left, self.index.index[i].right
+            yield BoundingBox(minx, maxx, miny, maxy, mint, maxt)
 
     def __len__(self) -> int:
         """Return the number of samples over the ROI.
@@ -309,4 +308,4 @@ class PreChippedGeoSampler(GeoSampler):
         Returns:
             number of patches that will be sampled
         """
-        return len(self.hits)
+        return len(self.index)
