@@ -6,7 +6,6 @@ from collections.abc import Iterator, Sequence
 from datetime import datetime
 from itertools import product
 
-import numpy as np
 import pandas as pd
 import pytest
 import shapely
@@ -96,18 +95,8 @@ class TestRandomGeoSampler:
 
     def test_iter(self, sampler: RandomGeoSampler) -> None:
         for query in sampler:
-            assert (
-                sampler.roi.minx - sampler.size[1] / 2
-                <= query.minx
-                <= query.maxx
-                <= sampler.roi.maxx + sampler.size[1] / 2
-            )
-            assert (
-                sampler.roi.miny - sampler.size[0] / 2
-                <= query.miny
-                <= query.miny
-                <= sampler.roi.maxy + sampler.size[0] / 2
-            )
+            assert sampler.roi.minx <= query.minx <= query.maxx <= sampler.roi.maxx
+            assert sampler.roi.miny <= query.miny <= query.miny <= sampler.roi.maxy
             assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
 
             assert math.isclose(query.maxx - query.minx, sampler.size[1])
@@ -121,19 +110,7 @@ class TestRandomGeoSampler:
         roi = BoundingBox(0, 50, 0, 50, MINT, MAXT)
         sampler = RandomGeoSampler(dataset, 2, 10, roi=roi)
         for query in sampler:
-            assert (
-                roi.minx - sampler.size[1] / 2
-                <= query.minx
-                <= query.maxx
-                <= roi.maxx + sampler.size[1] / 2
-            )
-            assert (
-                roi.miny - sampler.size[0] / 2
-                <= query.miny
-                <= query.maxy
-                <= roi.maxy + sampler.size[0] / 2
-            )
-            assert roi.mint <= query.mint <= query.maxt <= roi.maxt
+            query in roi
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]
@@ -147,14 +124,13 @@ class TestRandomGeoSampler:
         ds = CustomGeoDataset(geometry)
         sampler = RandomGeoSampler(ds, 1, 10)
         for bbox in sampler:
-            assert bbox.maxx > 0
-            assert bbox.maxy > 0
+            assert bbox == BoundingBox(0, 10, 0, 10, MINT, MAXT)
 
     def test_random_seed(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10)]
         ds = CustomGeoDataset(geometry)
-        generator1 = np.random.default_rng(0)
-        generator2 = np.random.default_rng(0)
+        generator1 = torch.Generator().manual_seed(0)
+        generator2 = torch.Generator().manual_seed(0)
         sampler1 = RandomGeoSampler(ds, 1, 1, generator=generator1)
         sampler2 = RandomGeoSampler(ds, 1, 1, generator=generator2)
         sample1 = next(iter(sampler1))
