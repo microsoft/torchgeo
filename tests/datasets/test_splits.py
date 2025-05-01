@@ -123,16 +123,16 @@ def test_random_bbox_splitting() -> None:
     ds_area = total_area(ds)
 
     train_ds, val_ds, test_ds = random_bbox_splitting(
-        ds, fractions=[1 / 2, 1 / 4, 1 / 4]
+        ds, fractions=[5 / 8, 2 / 8, 1 / 8]
     )
     train_ds_area = total_area(train_ds)
     val_ds_area = total_area(val_ds)
     test_ds_area = total_area(test_ds)
 
     # Check datasets areas
-    assert train_ds_area == ds_area / 2
-    assert val_ds_area == ds_area / 4
-    assert test_ds_area == ds_area / 4
+    assert isclose(train_ds_area, ds_area * 5 / 8)
+    assert isclose(val_ds_area, ds_area * 2 / 8)
+    assert isclose(test_ds_area, ds_area * 1 / 8)
 
     # No overlap
     assert no_overlap(train_ds, val_ds)

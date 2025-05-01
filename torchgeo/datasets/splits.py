@@ -10,7 +10,9 @@ from itertools import accumulate
 from math import floor, isclose
 from typing import cast
 
+import shapely
 from rtree.index import Index, Property
+from shapely import LineString
 from torch import Generator, default_generator, randint, randperm
 
 from ..datasets import GeoDataset
@@ -110,42 +112,62 @@ def random_bbox_splitting(
     if any(n <= 0 for n in fractions):
         raise ValueError('All items in input fractions must be greater than 0.')
 
-    new_indexes = [
-        Index(interleaved=False, properties=Property(dimension=3)) for _ in fractions
-    ]
+    new_datasets = [deepcopy(dataset) for _ in fractions]
 
-    for i, hit in enumerate(
-        dataset.index.intersection(dataset.index.bounds, objects=True)
-    ):
-        box = BoundingBox(*hit.bounds)
-        fraction_left = 1.0
+    for i in range(len(dataset)):
+        geometry_remaining = dataset.index.geometry.iloc[i]
+        fraction_remaining = 1.0
 
         # Randomly choose the split direction
         horizontal, flip = randint(0, 2, (2,), generator=generator)
         for j, fraction in enumerate(fractions):
-            if fraction_left == fraction:
+            if isclose(fraction_remaining, fraction):
                 # For the last fraction, no need to split again
-                new_box = box
-            elif flip:
-                # new_box corresponds to fraction, box is the remainder that we might
-                # split again in the next iteration. Each split is done according to
-                # fraction wrt what's left
-                box, new_box = box.split(
-                    (fraction_left - fraction) / fraction_left, horizontal
-                )
+                new_geometry = geometry_remaining
             else:
-                # Same as above, but without flipping
-                new_box, box = box.split(fraction / fraction_left, horizontal)
+                # Create a new_geometry from geometry_remaining
+                minx, miny, maxx, maxy = geometry_remaining.bounds
 
-            new_indexes[j].insert(i, tuple(new_box), hit.object)
-            fraction_left -= fraction
+                if flip:
+                    frac = fraction_remaining - fraction
+                else:
+                    frac = fraction
+
+                if horizontal:
+                    splity = miny + (maxy - miny) * frac / fraction_remaining
+                    line = LineString([(minx, splity), (maxx, splity)])
+                else:
+                    splitx = minx + (maxx - minx) * frac / fraction_remaining
+                    line = LineString([(splitx, miny), (splitx, maxy)])
+
+                geom1, geom2 = shapely.ops.split(geometry_remaining, line).geoms
+                if horizontal:
+                    if flip:
+                        if geom1.centroid.y < splity:
+                            geometry_remaining, new_geometry = geom1, geom2
+                        else:
+                            new_geometry, geometry_remaining = geom1, geom2
+                    else:
+                        if geom1.centroid.y < splity:
+                            new_geometry, geometry_remaining = geom1, geom2
+                        else:
+                            geometry_remaining, new_geometry = geom1, geom2
+                else:
+                    if flip:
+                        if geom1.centroid.x < splitx:
+                            geometry_remaining, new_geometry = geom1, geom2
+                        else:
+                            new_geometry, geometry_remaining = geom1, geom2
+                    else:
+                        if geom1.centroid.x < splitx:
+                            new_geometry, geometry_remaining = geom1, geom2
+                        else:
+                            geometry_remaining, new_geometry = geom1, geom2
+
+            new_datasets[j].index.iloc[i].geometry = new_geometry
+
+            fraction_remaining -= fraction
             horizontal = not horizontal
-
-    new_datasets = []
-    for index in new_indexes:
-        ds = deepcopy(dataset)
-        ds.index = index
-        new_datasets.append(ds)
 
     return new_datasets
 
