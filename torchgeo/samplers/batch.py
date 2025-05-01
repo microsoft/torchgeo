@@ -110,8 +110,10 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         self.length = 0
         self.hits = []
         areas = []
-        for hit in self.index.intersection(tuple(self.roi), objects=True):
-            bounds = BoundingBox(*hit.bounds)
+        for hit in range(len(self.index)):
+            minx, miny, maxx, maxy = self.index.geometry.iloc[hit].bounds
+            mint, maxt = self.index.index[hit].left, self.index.index[hit].right
+            bounds = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
             if (
                 bounds.maxx - bounds.minx >= self.size[1]
                 and bounds.maxy - bounds.miny >= self.size[0]
@@ -141,7 +143,9 @@ class RandomBatchGeoSampler(BatchGeoSampler):
             # Choose a random tile, weighted by area
             idx = torch.multinomial(self.areas, 1)
             hit = self.hits[idx]
-            bounds = BoundingBox(*hit.bounds)
+            minx, miny, maxx, maxy = self.index.geometry.iloc[hit].bounds
+            mint, maxt = self.index.index[hit].left, self.index.index[hit].right
+            bounds = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
 
             # Choose random indices within that tile
             batch = []

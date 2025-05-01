@@ -83,10 +83,8 @@ class TestBatchGeoSampler:
 class TestRandomBatchGeoSampler:
     @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 100, 200, 300, 400, 500))
-        ds.index.insert(1, (0, 100, 200, 300, 400, 500))
-        return ds
+        geometry = [shapely.box(0, 0, 100, 100), shapely.box(0, 0, 100, 100)]
+        return CustomGeoDataset(geometry)
 
     @pytest.fixture(
         scope='function',
@@ -109,48 +107,43 @@ class TestRandomBatchGeoSampler:
 
                 assert math.isclose(query.maxx - query.minx, sampler.size[1])
                 assert math.isclose(query.maxy - query.miny, sampler.size[0])
-                assert math.isclose(
-                    query.maxt - query.mint, sampler.roi.maxt - sampler.roi.mint
-                )
+                assert query.maxt - query.mint == sampler.roi.maxt - sampler.roi.mint
 
     def test_len(self, sampler: RandomBatchGeoSampler) -> None:
         assert len(sampler) == sampler.length // sampler.batch_size
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
-        roi = BoundingBox(0, 50, 200, 250, 400, 450)
+        roi = BoundingBox(0, 50, 0, 50, MINT, MAXT)
         sampler = RandomBatchGeoSampler(dataset, 2, 2, 10, roi=roi)
         for batch in sampler:
             for query in batch:
                 assert query in roi
 
     def test_small_area(self) -> None:
-        ds = CustomGeoDataset(res=(1, 1))
-        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
-        ds.index.insert(1, (20, 21, 20, 21, 20, 21))
+        geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]
+        ds = CustomGeoDataset(geometry, res=1)
         sampler = RandomBatchGeoSampler(ds, 2, 2, 10)
         for _ in sampler:
             continue
 
     def test_point_data(self) -> None:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 0, 0, 0, 0, 0))
-        ds.index.insert(1, (1, 1, 1, 1, 1, 1))
+        geometry = [shapely.Point(0, 0), shapely.Point(1, 1)]
+        ds = CustomGeoDataset(geometry)
         sampler = RandomBatchGeoSampler(ds, 0, 2, 10)
         for _ in sampler:
             continue
 
     def test_weighted_sampling(self) -> None:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 0, 0, 0, 0, 0))
-        ds.index.insert(1, (0, 10, 0, 10, 0, 10))
+        geometry = [shapely.Point(0, 0), shapely.box(0, 0, 10, 10)]
+        ds = CustomGeoDataset(geometry)
         sampler = RandomBatchGeoSampler(ds, 1, 2, 10)
         for batch in sampler:
             for bbox in batch:
-                assert bbox == BoundingBox(0, 10, 0, 10, 0, 10)
+                assert bbox == BoundingBox(0, 10, 0, 10, MINT, MAXT)
 
     def test_random_seed(self) -> None:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
+        geometry = [shapely.box(0, 0, 10, 10)]
+        ds = CustomGeoDataset(geometry)
         generator1 = torch.Generator().manual_seed(0)
         generator2 = torch.Generator().manual_seed(0)
         sampler1 = RandomBatchGeoSampler(ds, 1, 1, generator=generator1)
