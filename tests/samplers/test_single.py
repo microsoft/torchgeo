@@ -276,10 +276,8 @@ class TestGridGeoSampler:
 class TestPreChippedGeoSampler:
     @pytest.fixture(scope='class')
     def dataset(self) -> CustomGeoDataset:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 20, 0, 20, 0, 20))
-        ds.index.insert(1, (0, 30, 0, 30, 0, 30))
-        return ds
+        geometry = [shapely.box(0, 0, 20, 20), shapely.box(0, 0, 30, 30)]
+        return CustomGeoDataset(geometry)
 
     @pytest.fixture(scope='function')
     def sampler(self, dataset: CustomGeoDataset) -> PreChippedGeoSampler:
@@ -293,23 +291,21 @@ class TestPreChippedGeoSampler:
         assert len(sampler) == 2
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
-        roi = BoundingBox(5, 15, 5, 15, 5, 15)
+        roi = BoundingBox(5, 15, 5, 15, MINT, MAXT)
         sampler = PreChippedGeoSampler(dataset, roi=roi)
         for query in sampler:
             assert query == roi
 
     def test_point_data(self) -> None:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 0, 0, 0, 0, 0))
-        ds.index.insert(1, (1, 1, 1, 1, 1, 1))
+        geometry = [shapely.Point(0, 0), shapely.Point(1, 1)]
+        ds = CustomGeoDataset(geometry)
         sampler = PreChippedGeoSampler(ds)
         for _ in sampler:
             continue
 
     def test_shuffle_seed(self) -> None:
-        ds = CustomGeoDataset()
-        ds.index.insert(0, (0, 10, 0, 10, 0, 10))
-        ds.index.insert(1, (0, 11, 0, 11, 0, 11))
+        geometry = [shapely.box(0, 0, 10, 10), shapely.box(0, 0, 11, 11)]
+        ds = CustomGeoDataset(geometry)
         generator1 = torch.Generator().manual_seed(0)
         generator2 = torch.Generator().manual_seed(0)
         sampler1 = PreChippedGeoSampler(ds, shuffle=True, generator=generator1)
