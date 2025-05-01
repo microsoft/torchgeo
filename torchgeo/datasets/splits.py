@@ -3,6 +3,7 @@
 
 """Dataset splitting utilities."""
 
+import itertools
 from collections.abc import Sequence
 from copy import deepcopy
 from itertools import accumulate
@@ -71,23 +72,12 @@ def random_bbox_assignment(
         lengths = _fractions_to_lengths(lengths, len(dataset))
     lengths = cast(Sequence[int], lengths)
 
-    hits = list(dataset.index.intersection(dataset.index.bounds, objects=True))
-
-    hits = [hits[i] for i in randperm(sum(lengths), generator=generator)]
-
-    new_indexes = [
-        Index(interleaved=False, properties=Property(dimension=3)) for _ in lengths
-    ]
-
-    for i, length in enumerate(lengths):
-        for j in range(length):
-            hit = hits.pop()
-            new_indexes[i].insert(j, hit.bounds, hit.object)
+    indices = randperm(sum(lengths), generator=generator)
 
     new_datasets = []
-    for index in new_indexes:
+    for offset, length in zip(itertools.accumulate(lengths), lengths):
         ds = deepcopy(dataset)
-        ds.index = index
+        ds.index = dataset.index.iloc[indices[offset - length : offset]]
         new_datasets.append(ds)
 
     return new_datasets
