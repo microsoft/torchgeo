@@ -720,12 +720,11 @@ class MMEarth(NonGeoDataset):
                     titles.append(
                         (modalities_name.replace('_', ' ').title()) + ' ' + band_name
                     )
-        fig, ax = plt.subplots(1, 6, figsize=(12, 4), squeeze=False)
-        axes = ax.flatten()
+        fig, ax = plt.subplots(1, 6, figsize=(12, 4))
 
         for i, (image, title) in enumerate(zip(images, titles)):
-            axes[i].imshow(image)
-            axes[i].axis('off')
+            ax[i].imshow(image)
+            ax[i].axis('off')
 
             if show_titles:
                 title_words = title.split(' ')
@@ -736,7 +735,7 @@ class MMEarth(NonGeoDataset):
                         + '\n'
                         + str.join(' ', title_words[2:])
                     )
-                axes[i].set_title(title)
+                ax[i].set_title(title)
 
         if suptitle is not None:
             plt.suptitle(suptitle)
