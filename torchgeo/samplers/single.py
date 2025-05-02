@@ -51,7 +51,7 @@ class GeoSampler(Sampler[BoundingBox], abc.ABC):
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
 
-        Returns:
+        Yields:
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
 
@@ -140,7 +140,7 @@ class RandomGeoSampler(GeoSampler):
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
 
-        Returns:
+        Yields:
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
         for _ in range(len(self)):
@@ -237,7 +237,7 @@ class GridGeoSampler(GeoSampler):
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
 
-        Returns:
+        Yields:
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
         # For each tile...
@@ -315,7 +315,7 @@ class PreChippedGeoSampler(GeoSampler):
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
 
-        Returns:
+        Yields:
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
         generator: Callable[[int], Iterable[int]] = range
