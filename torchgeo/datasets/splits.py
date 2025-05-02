@@ -10,6 +10,7 @@ from itertools import accumulate
 from math import floor, isclose
 from typing import cast
 
+import geopandas
 import pandas as pd
 import shapely
 from geopandas import GeoDataFrame
@@ -232,7 +233,9 @@ def random_grid_cell_assignment(
                     rows.append(row)
                     geometry.append(geom)
 
-    indexes_sr = pd.IntervalIndex.from_arrays(left, right, closed='both', name='datetime')
+    indexes_sr = pd.IntervalIndex.from_arrays(
+        left, right, closed='both', name='datetime'
+    )
     rows_df = pd.DataFrame(rows)
     geometry_sr = pd.Series(geometry)
 
@@ -264,26 +267,14 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> list[GeoDatas
 
     .. versionadded:: 0.5
     """
-    new_indexes = [
-        Index(interleaved=False, properties=Property(dimension=3)) for _ in rois
-    ]
-
+    new_datasets = []
     for i, roi in enumerate(rois):
         if any(roi.intersects(x) and (roi & x).area > 0 for x in rois[i + 1 :]):
             raise ValueError("ROIs in input rois can't overlap.")
 
-        j = 0
-        for hit in dataset.index.intersection(tuple(roi), objects=True):
-            box = BoundingBox(*hit.bounds)
-            new_box = box & roi
-            if new_box.area > 0:
-                new_indexes[i].insert(j, tuple(new_box), hit.object)
-                j += 1
-
-    new_datasets = []
-    for index in new_indexes:
         ds = deepcopy(dataset)
-        ds.index = index
+        mask = shapely.box(roi.minx, roi.miny, roi.maxx, roi.maxy)
+        ds.index = geopandas.clip(dataset.index, mask)
         new_datasets.append(ds)
 
     return new_datasets
