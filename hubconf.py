@@ -20,6 +20,7 @@ from torchgeo.models import (
     scalemae_large_patch16,
     swin_v2_b,
     swin_v2_t,
+    unet,
     vit_base_patch14_dinov2,
     vit_base_patch16_224,
     vit_huge_patch14_224,
@@ -41,6 +42,7 @@ __all__ = (
     'scalemae_large_patch16',
     'swin_v2_b',
     'swin_v2_t',
+    'unet',
     'vit_base_patch14_dinov2',
     'vit_base_patch16_224',
     'vit_huge_patch14_224',
@@ -49,4 +51,4 @@ __all__ = (
     'vit_small_patch16_224',
 )
 
-dependencies = ['timm', 'torchvision']
+dependencies = ['timm', 'torchvision', 'segmentation_models_pytorch', 'kornia']

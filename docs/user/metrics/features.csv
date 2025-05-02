@@ -2,11 +2,13 @@ Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weight
 `TorchGeo`_,PyTorch,"GDAL, h5py, laspy, NetCDF4, OpenCV, pandas, pillow, scipy, xarray",R-tree,Kornia,125,93,✅,❌,✅,❌,🚧
 `eo-learn`_,scikit-learn,"GDAL, OpenCV, pandas, scipy, Zarr",geopandas,numpy,0,0,❌,❌,✅,❌,🚧
 `Raster Vision`_,"PyTorch, TensorFlow*","GDAL, OpenCV, pandas, pillow, scipy, xarray",STAC,Albumentations,0,6,✅,❌,✅,✅,🚧
-`DeepForest`_,PyTorch,"GDAL, OpenCV, pandas, pillow, scipy",R-tree,Albumentations,0,4,❌,❌,❌,❌,❌
+`DeepForest`_,"PyTorch, TensorFlow*","GDAL, OpenCV, pandas, pillow, scipy",R-tree,Albumentations,0,4,❌,❌,❌,❌,❌
 `samgeo`_,PyTorch,"GDAL, OpenCV, pandas, xarray",geopandas,numpy,0,0,❌,✅,✅,❌,❌
 `TerraTorch`_,PyTorch,"GDAL, h5py, pandas, xarray",R-tree,Albumentations,27,1,✅,❌,✅,❌,🚧
 `SITS`_,R Torch,GDAL,-,tidyverse,22,0,❌,❌,✅,✅,✅
+`srai`_,PyTorch,"pandas, polars, duckdb","geopandas, duckdb-spatial",-,0,0,❌,❌,❌,❌,❌
 `scikit-eo`_,"scikit-learn, TensorFlow","GDAL, pandas, scipy","geopandas",numpy,0,0,❌,❌,❌,❌,🚧
 `geo-bench`_,PyTorch,"h5py, pandas",-,Kornia,12,0,❌,❌,❌,❌,❌
 `GeoAI`_,"PyTorch","GDAL, xarray","geopandas",Albumentations,0,6,❌,❌,✅,✅,❌
 `OTBTF`_,TensorFlow,"GDAL, OTB",-,-,0,0,✅,❌,✅,❌,❌
+`GeoDeep`_,ONNX,GDAL,-,-,0,7,✅,❌,✅,❌,❌
