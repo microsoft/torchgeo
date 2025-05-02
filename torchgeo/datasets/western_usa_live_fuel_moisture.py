@@ -303,7 +303,7 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
     def plot(
         self,
         sample: dict[str, Any],
-        variables_to_plot: list[str] = ['vv', 'vh', 'ndvi', 'ndwi', 'nirv'],
+        variables_to_plot: list[str] | None = None,
         show_titles: bool = True,
         suptitle: str | None = None,
     ) -> Figure:
@@ -320,6 +320,44 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
 
         .. versionadded:: 0.8
         """
+        if not variables_to_plot:
+            variables_to_plot = [
+                'slope',
+                'elevation',
+                'canopy_height',
+                'forest_cover',
+                'silt',
+                'sand',
+                'clay',
+                'vv',
+                'vh',
+                'red',
+                'green',
+                'blue',
+                'swir',
+                'nir',
+                'ndvi',
+                'ndwi',
+                'nirv',
+                'vv_red',
+                'vv_green',
+                'vv_blue',
+                'vv_swir',
+                'vv_nir',
+                'vv_ndvi',
+                'vv_ndwi',
+                'vv_nirv',
+                'vh_red',
+                'vh_green',
+                'vh_blue',
+                'vh_swir',
+                'vh_nir',
+                'vh_ndvi',
+                'vh_ndwi',
+                'vh_nirv',
+                'vh_vv',
+            ]
+
         input_data = sample['input'].numpy()
 
         # Time points to display on x-axis
@@ -359,17 +397,18 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         lat = input_data[-1]
         lfmc_value = sample['label'].item()
 
-        fig.text(
+        axs[-1].text(
             x=0.5,
-            y=-0.05,
+            y=-0.7,
             s=f'Live Fuel Moisture Content\nat {lon:.4f}, {lat:.4f}: {lfmc_value:.2f}%',
             ha='center',
-            transform=fig.transFigure,
+            transform=axs[-1].transAxes,
         )
 
         if suptitle is not None:
-            fig.suptitle(t=suptitle, y=1, fontsize=12, transform=fig.transFigure)
+            fig.suptitle(t=suptitle, y=1.6, transform=axs[0].transAxes)
 
-        fig.tight_layout()
+        # fig.tight_layout()
+        plt.tight_layout()
 
         return fig
