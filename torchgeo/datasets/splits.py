@@ -10,7 +10,9 @@ from itertools import accumulate
 from math import floor, isclose
 from typing import cast
 
+import pandas as pd
 import shapely
+from geopandas import GeoDataFrame
 from rtree.index import Index, Property
 from shapely import LineString
 from torch import Generator, default_generator, randint, randperm
@@ -203,53 +205,48 @@ def random_grid_cell_assignment(
     if grid_size < 2:
         raise ValueError('Input grid_size must be greater than 1.')
 
-    new_indexes = [
-        Index(interleaved=False, properties=Property(dimension=3)) for _ in fractions
-    ]
-
     lengths = _fractions_to_lengths(fractions, len(dataset) * grid_size**2)
 
-    cells = []
-
     # Generate the grid's cells for each bbox in index
-    for i, hit in enumerate(
-        dataset.index.intersection(dataset.index.bounds, objects=True)
-    ):
-        minx, maxx, miny, maxy, mint, maxt = hit.bounds
+    left = []
+    right = []
+    rows = []
+    geometry = []
+    for index, row in dataset.index.iterrows():
+        minx, miny, maxx, maxy = row.geometry.bounds
 
         stridex = (maxx - minx) / grid_size
         stridey = (maxy - miny) / grid_size
 
-        cells.extend(
-            [
-                (
-                    (
-                        minx + x * stridex,
-                        minx + (x + 1) * stridex,
-                        miny + y * stridey,
-                        miny + (y + 1) * stridey,
-                        mint,
-                        maxt,
-                    ),
-                    hit.object,
+        for x in range(grid_size):
+            for y in range(grid_size):
+                geom = shapely.box(
+                    minx + x * stridex,
+                    miny + y * stridey,
+                    minx + (x + 1) * stridex,
+                    miny + (y + 1) * stridey,
                 )
-                for x in range(grid_size)
-                for y in range(grid_size)
-            ]
-        )
+                if geom := shapely.intersection(row.geometry, geom):
+                    left.append(index.left)
+                    right.append(index.right)
+                    rows.append(row)
+                    geometry.append(geom)
+
+    indexes_sr = pd.IntervalIndex.from_arrays(left, right, closed='both', name='datetime')
+    rows_df = pd.DataFrame(rows)
+    geometry_sr = pd.Series(geometry)
 
     # Randomly assign cells to each new index
-    cells = [cells[i] for i in randperm(len(cells), generator=generator)]
-
-    for i, length in enumerate(lengths):
-        for j in range(length):
-            cell = cells.pop()
-            new_indexes[i].insert(j, cell[0], cell[1])
+    indices = randperm(len(rows), generator=generator)
 
     new_datasets = []
-    for index in new_indexes:
+    for offset, length in zip(itertools.accumulate(lengths), lengths):
         ds = deepcopy(dataset)
-        ds.index = index
+        ds.index = GeoDataFrame(
+            data=rows_df.iloc[indices[offset - length : offset].tolist()].values,
+            index=indexes_sr[indices[offset - length : offset].tolist()],
+            geometry=geometry_sr[indices[offset - length : offset].tolist()].values,
+        )
         new_datasets.append(ds)
 
     return new_datasets
