@@ -9,8 +9,10 @@ import os
 from collections.abc import Callable, Iterable
 from typing import Any
 
+import matplotlib.pyplot as plt
 import pandas as pd
 import torch
+from matplotlib.figure import Figure
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
@@ -297,3 +299,77 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         os.makedirs(self.root, exist_ok=True)
         azcopy = which('azcopy')
         azcopy('sync', self.url, self.root, '--recursive=true')
+
+    def plot(
+        self,
+        sample: dict[str, Any],
+        variables_to_plot: list[str] = ['vv', 'vh', 'ndvi', 'ndwi', 'nirv'],
+        show_titles: bool = True,
+        suptitle: str | None = None,
+    ) -> Figure:
+        """Plot a time series visualization of the LFMC sample.
+
+        Args:
+            sample: a sample returned by :meth:`__getitem__`
+            variables_to_plot: a list of valid variable to be drawn in the plot
+            show_titles: flag indicating whether to show titles above each panel
+            suptitle: optional suptitle to use for the Figure
+
+        Returns:
+            a matplotlib Figure with the rendered sample
+
+        .. versionadded:: 0.8
+        """
+        input_data = sample['input'].numpy()
+
+        # Time points to display on x-axis
+        time_labels = ['t', 't-1', 't-2', 't-3']
+
+        fig, axs = plt.subplots(
+            len(variables_to_plot),
+            1,
+            figsize=(6, 1.5 * len(variables_to_plot)),
+            sharex=True,
+        )
+
+        # Handle single subplot case
+        if len(variables_to_plot) == 1:
+            axs = [axs]
+
+        for i, var_base_name in enumerate(variables_to_plot):
+            values = []
+
+            # Extract data for each time point (t, t-1, t-2, t-3)
+            for t_label in time_labels:
+                full_var_name = f'{var_base_name}({t_label})'
+                var_position = self.all_variable_names.index(full_var_name)
+                values.append(input_data[var_position])
+
+            axs[i].plot(range(len(time_labels)), values, 'o-')
+            axs[i].grid(True, alpha=0.3)
+
+            if show_titles:
+                axs[i].set_title(f'{var_base_name.upper()}')
+
+        axs[-1].set_xticks(range(len(time_labels)))
+        axs[-1].set_xticklabels(time_labels)
+
+        # add coordinate and label information below the plot
+        lon = input_data[-2]
+        lat = input_data[-1]
+        lfmc_value = sample['label'].item()
+
+        axs[-1].text(
+            x=0.5,
+            y=-0.6,
+            s=f'Live Fuel Moisture Content\nat {lon:.4f}, {lat:.4f}: {lfmc_value:.2f}%',
+            ha='center',
+            transform=axs[-1].transAxes,
+        )
+
+        if suptitle is not None:
+            fig.suptitle(t=suptitle, y=1.5, fontsize=12, transform=axs[0].transAxes)
+
+        fig.tight_layout()
+
+        return fig
