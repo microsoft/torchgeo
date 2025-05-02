@@ -212,8 +212,8 @@ def test_roi_split() -> None:
     )
 
     # Check datasets lengths
-    assert len(train_ds) == 2
-    assert len(val_ds) == 2
+    assert len(train_ds) == 3
+    assert len(val_ds) == 3
     assert len(test_ds) == 1
 
     # No overlap
