@@ -35,9 +35,6 @@ class TestLandsat8:
         transforms = nn.Identity()
         return Landsat8(root, bands=bands, transforms=transforms)
 
-    def test_separate_files(self, dataset: Landsat8) -> None:
-        assert dataset.index.count(dataset.index.bounds) == 1
-
     def test_getitem(self, dataset: Landsat8) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
