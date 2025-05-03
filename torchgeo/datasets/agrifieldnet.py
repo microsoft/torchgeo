@@ -6,9 +6,11 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
+import pandas as pd
+import shapely
 import torch
 from matplotlib.figure import Figure
 from pyproj import CRS
@@ -182,10 +184,12 @@ class AgriFieldNet(RasterDataset):
         """
         assert isinstance(self.paths, str | os.PathLike)
 
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        geometry = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
+        interval = pd.Interval(query.mint, query.maxt)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
 
-        if not filepaths:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
@@ -194,7 +198,7 @@ class AgriFieldNet(RasterDataset):
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         for band in self.bands:
             band_filepaths = []
-            for filepath in filepaths:
+            for filepath in index.filepath:
                 filename = os.path.basename(filepath)
                 directory = os.path.dirname(filepath)
                 match = re.match(filename_regex, filename)
