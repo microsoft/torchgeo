@@ -974,10 +974,13 @@ class IntersectionDataset(GeoDataset):
         datetime_2 = pd.IntervalIndex(self.index.pop('datetime_2'))
         mint = np.maximum(datetime_1.left, datetime_2.left)
         maxt = np.minimum(datetime_1.right, datetime_2.right)
+        valid = maxt >= mint
+        mint = mint[valid]
+        maxt = maxt[valid]
+        self.index = self.index[valid]
         self.index.index = pd.IntervalIndex.from_arrays(
             mint, maxt, closed='both', name='datetime'
         )
-        self.index = self.index[maxt >= mint]
 
         if self.index.empty:
             raise RuntimeError('Datasets have no spatiotemporal intersection')
