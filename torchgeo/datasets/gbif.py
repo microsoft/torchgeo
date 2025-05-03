@@ -71,7 +71,9 @@ class GBIF(GeoDataset):
 
         # Convert from pandas DataFrame to geopandas GeoDataFrame
         func = functools.partial(disambiguate_timestamp, format='%d %m %Y')
-        index = pd.IntervalIndex.from_tuples(date.apply(func))
+        index = pd.IntervalIndex.from_tuples(
+            date.apply(func), closed='both', name='datetime'
+        )
         geometry = gpd.points_from_xy(df.decimalLongitude, df.decimalLatitude)
         self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
