@@ -28,7 +28,8 @@ MAXT = datetime(2025, 4, 25)
 
 
 def total_area(dataset: GeoDataset) -> float:
-    return dataset.index.geometry.area.sum()
+    area: float = dataset.index.geometry.area.sum()
+    return area
 
 
 def no_overlap(ds1: GeoDataset, ds2: GeoDataset) -> bool:
@@ -232,7 +233,11 @@ def test_roi_split() -> None:
     # Test invalid input rois
     with pytest.raises(ValueError, match="ROIs in input rois can't overlap."):
         roi_split(
-            ds, rois=[BoundingBox(0, 2, 0, 1, 0, 0), BoundingBox(1, 3, 0, 1, 0, 0)]
+            ds,
+            rois=[
+                BoundingBox(0, 2, 0, 1, MINT, MAXT),
+                BoundingBox(1, 3, 0, 1, MINT, MAXT),
+            ],
         )
 
 
