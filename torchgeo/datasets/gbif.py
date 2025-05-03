@@ -194,7 +194,7 @@ class GBIF(GeoDataset):
 
         # Add titles if requested
         if show_titles:
-            ax.set_title('GBIF Occurence Locations by Date')
+            ax.set_title('GBIF Occurrence Locations by Date')
 
         if suptitle is not None:
             fig.suptitle(suptitle)
