@@ -167,6 +167,9 @@ class L7Irish(IntersectionDataset):
         self.image = L7IrishImage(paths, crs, res, bands, transforms, cache)
         self.mask = L7IrishMask(paths, crs, res, None, transforms, cache)
 
+        # Mask filename does not include the date, grab it from the image filename
+        self.mask.index.index = self.image.index.index
+
         super().__init__(self.image, self.mask)
 
     def _verify(self) -> None:
