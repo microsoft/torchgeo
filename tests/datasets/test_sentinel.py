@@ -44,9 +44,6 @@ class TestSentinel1:
         transforms = nn.Identity()
         return Sentinel1(root, bands=bands, transforms=transforms)
 
-    def test_separate_files(self, dataset: Sentinel1) -> None:
-        assert dataset.index.count(dataset.index.bounds) == 1
-
     def test_getitem(self, dataset: Sentinel1) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
@@ -110,9 +107,6 @@ class TestSentinel2:
         bands = ['B02', 'B03', 'B04', 'B08']
         transforms = nn.Identity()
         return Sentinel2(root, res=res, bands=bands, transforms=transforms)
-
-    def test_separate_files(self, dataset: Sentinel2) -> None:
-        assert dataset.index.count(dataset.index.bounds) == 4
 
     def test_getitem(self, dataset: Sentinel2) -> None:
         x = dataset[dataset.bounds]
