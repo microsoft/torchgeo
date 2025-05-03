@@ -113,7 +113,7 @@ intersphinx_mapping = {
     'kornia': ('https://kornia.readthedocs.io/en/stable/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
-    'pandas': ('https://pandas.pydata.org/docs/reference/', None),
+    'pandas': ('https://pandas.pydata.org/docs/', None),
     'pyproj': ('https://pyproj4.github.io/pyproj/stable/', None),
     'python': ('https://docs.python.org/3', None),
     'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
