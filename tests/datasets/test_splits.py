@@ -240,9 +240,23 @@ def test_roi_split() -> None:
     'lengths,expected_lengths',
     [
         # List of timestamps
-        ([(0, 20), (20, 35), (35, 40)], [2, 2, 1]),
+        (
+            [
+                pd.Interval(pd.Timestamp(2025, 4, 25), pd.Timestamp(2025, 4, 26, 6)),
+                pd.Interval(pd.Timestamp(2025, 4, 26, 6), pd.Timestamp(2025, 4, 28)),
+                pd.Interval(pd.Timestamp(2025, 4, 28), pd.Timestamp(2025, 4, 29)),
+            ],
+            [2, 2, 1],
+        ),
         # List of lengths
-        ([20, 15, 5], [2, 2, 1]),
+        (
+            [
+                pd.Timedelta(1.5, unit='days'),
+                pd.Timedelta(1.5, unit='days'),
+                pd.Timedelta(1, unit='day'),
+            ],
+            [2, 2, 1],
+        ),
         # List of fractions (with remainder)
         ([1 / 2, 3 / 8, 1 / 8], [2, 2, 1]),
     ],
@@ -263,7 +277,7 @@ def test_time_series_split(
             (datetime(2025, 4, 27), datetime(2025, 4, 28)),
             (datetime(2025, 4, 28), datetime(2025, 4, 29)),
         ],
-        closed='both',
+        closed='neither',
         name='datetime',
     )
     ds = CustomGeoDataset(index, geometry)
@@ -274,6 +288,9 @@ def test_time_series_split(
     assert len(train_ds) == expected_lengths[0]
     assert len(val_ds) == expected_lengths[1]
     assert len(test_ds) == expected_lengths[2]
+
+    print(train_ds.index)
+    print(val_ds.index)
 
     # No overlap
     assert no_overlap(train_ds, val_ds)
@@ -291,26 +308,42 @@ def test_time_series_split(
 def test_time_series_split_invalid_input() -> None:
     with pytest.raises(
         ValueError,
-        match='Pairs of timestamps in lengths must have end greater than start.',
-    ):
-        time_series_split(CustomGeoDataset(), lengths=[(0, 20), (35, 20), (35, 40)])
-
-    with pytest.raises(
-        ValueError,
         match="Pairs of timestamps in lengths must cover dataset's time bounds.",
     ):
-        time_series_split(CustomGeoDataset(), lengths=[(0, 20), (20, 35)])
+        time_series_split(
+            CustomGeoDataset(),
+            lengths=[
+                pd.Interval(pd.Timestamp(2025, 4, 24, 0), pd.Timestamp(2025, 4, 24, 6)),
+                pd.Interval(
+                    pd.Timestamp(2025, 4, 24, 6), pd.Timestamp(2025, 4, 24, 12)
+                ),
+            ],
+        )
 
     with pytest.raises(
         ValueError,
         match="Pairs of timestamps in lengths can't be out of dataset's time bounds.",
     ):
-        time_series_split(CustomGeoDataset(), lengths=[(0, 20), (20, 45)])
+        time_series_split(
+            CustomGeoDataset(),
+            lengths=[
+                pd.Interval(pd.Timestamp(2025, 4, 24), pd.Timestamp(2025, 4, 25)),
+                pd.Interval(pd.Timestamp(2025, 4, 25), pd.Timestamp(2025, 4, 26)),
+            ],
+        )
 
     with pytest.raises(
         ValueError, match="Pairs of timestamps in lengths can't overlap."
     ):
-        time_series_split(CustomGeoDataset(), lengths=[(0, 10), (10, 20), (15, 40)])
+        time_series_split(
+            CustomGeoDataset(),
+            lengths=[
+                pd.Interval(
+                    pd.Timestamp(2025, 4, 24, 0), pd.Timestamp(2025, 4, 24, 18)
+                ),
+                pd.Interval(pd.Timestamp(2025, 4, 24, 12), pd.Timestamp(2025, 4, 25)),
+            ],
+        )
 
     with pytest.raises(
         ValueError,

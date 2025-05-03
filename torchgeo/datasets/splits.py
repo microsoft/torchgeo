@@ -14,7 +14,6 @@ import geopandas
 import pandas as pd
 import shapely
 from geopandas import GeoDataFrame
-from rtree.index import Index, Property
 from shapely import LineString
 from torch import Generator, default_generator, randint, randperm
 
@@ -281,7 +280,7 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> list[GeoDatas
 
 
 def time_series_split(
-    dataset: GeoDataset, lengths: Sequence[float | tuple[float, float]]
+    dataset: GeoDataset, lengths: Sequence[float | pd.Timedelta | pd.Interval]
 ) -> list[GeoDataset]:
     """Split a GeoDataset on its time dimension to create non-overlapping GeoDatasets.
 
@@ -299,68 +298,63 @@ def time_series_split(
 
     totalt = maxt - mint
 
-    if not all(isinstance(x, tuple) for x in lengths):
-        lengths = cast(Sequence[float], lengths)
+    if all(isinstance(x, int | float) for x in lengths):
+        if any(n <= 0 for n in lengths):
+            raise ValueError('All items in input lengths must be greater than 0.')
 
-        if not (isclose(sum(lengths), 1) or isclose(sum(lengths), totalt)):
+        if not isclose(sum(lengths), 1):
             raise ValueError(
                 "Sum of input lengths must equal 1 or the dataset's time length."
             )
 
-        if any(n <= 0 for n in lengths):
-            raise ValueError('All items in input lengths must be greater than 0.')
+        lengths = [totalt * f for f in lengths]
 
-        if isclose(sum(lengths), 1):
-            lengths = [totalt * f for f in lengths]
-
+    if all(isinstance(x, pd.Timedelta) for x in lengths):
         lengths = [
-            (mint + offset - length, mint + offset)  # type: ignore[operator]
+            pd.Interval(mint + offset - length, mint + offset, closed='neither')
             for offset, length in zip(accumulate(lengths), lengths)
         ]
 
-    lengths = cast(Sequence[tuple[float, float]], lengths)
+    lengths = cast(Sequence[pd.Interval], lengths)
 
-    new_indexes = [
-        Index(interleaved=False, properties=Property(dimension=3)) for _ in lengths
-    ]
+    _totalt = pd.Timedelta(0)
+    new_datasets = []
+    for i, interval in enumerate(lengths):
+        start = interval.left
+        end = interval.right
 
-    _totalt = 0.0
-    for i, (start, end) in enumerate(lengths):
-        if start >= end:
-            raise ValueError(
-                'Pairs of timestamps in lengths must have end greater than start.'
-            )
+        # Remove one microsecond from each BoundingBox's maxt to avoid overlapping
+        offset = (
+            pd.Timedelta(0) if i == len(lengths) - 1 else pd.Timedelta(1, unit='us')
+        )
 
         if start < mint or end > maxt:
             raise ValueError(
                 "Pairs of timestamps in lengths can't be out of dataset's time bounds."
             )
 
-        if any(start < x < end or start < y < end for x, y in lengths[i + 1 :]):
-            raise ValueError("Pairs of timestamps in lengths can't overlap.")
+        for other in lengths:
+            x = other.left
+            y = other.right
+            if start < x < end or start < y < end:
+                raise ValueError("Pairs of timestamps in lengths can't overlap.")
 
-        # Remove one microsecond from each BoundingBox's maxt to avoid overlapping
-        offset = 0 if i == len(lengths) - 1 else 1e-6
-        roi = BoundingBox(minx, maxx, miny, maxy, start, end - offset)
-        j = 0
-        for hit in dataset.index.intersection(tuple(roi), objects=True):
-            box = BoundingBox(*hit.bounds)
-            new_box = box & roi
-            if new_box.volume > 0:
-                new_indexes[i].insert(j, tuple(new_box), hit.object)
-                j += 1
-
+        ds = deepcopy(dataset)
+        ds.index = dataset.index.iloc[dataset.index.index.overlaps(interval)]
+        new_index = []
+        for xy in ds.index.index:
+            x = xy.left
+            y = xy.right
+            x = max(start, x)
+            y = min(end - offset, y - offset)
+            new_index.append(pd.Interval(x, y, closed='neither'))
+        ds.index.index = pd.IntervalIndex(new_index, closed='neither', name='datetime')
+        new_datasets.append(ds)
         _totalt += end - start
 
-    if not isclose(_totalt, totalt):
+    if not _totalt == totalt:
         raise ValueError(
             "Pairs of timestamps in lengths must cover dataset's time bounds."
         )
-
-    new_datasets = []
-    for index in new_indexes:
-        ds = deepcopy(dataset)
-        ds.index = index
-        new_datasets.append(ds)
 
     return new_datasets
