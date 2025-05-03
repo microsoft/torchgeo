@@ -44,7 +44,8 @@ class TestINaturalist:
             INaturalist(tmp_path)
 
     def test_invalid_query(self, dataset: INaturalist) -> None:
-        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
+        mint = pd.Timestamp('2022-05-07 11:02:53+01:00')
+        query = BoundingBox(0, 0, 0, 0, mint, mint)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
