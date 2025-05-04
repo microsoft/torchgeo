@@ -84,14 +84,14 @@ class BoundingBox:
             )
 
     @overload
-    def __getitem__(self, key: int) -> float:
+    def __getitem__(self, key: int) -> Any:
         pass
 
     @overload
-    def __getitem__(self, key: slice) -> list[float]:
+    def __getitem__(self, key: slice) -> list[Any]:
         pass
 
-    def __getitem__(self, key: int | slice) -> float | list[float]:
+    def __getitem__(self, key: int | slice) -> Any | list[Any]:
         """Index the (minx, maxx, miny, maxy, mint, maxt) tuple.
 
         Args:
@@ -105,7 +105,7 @@ class BoundingBox:
         """
         return [self.minx, self.maxx, self.miny, self.maxy, self.mint, self.maxt][key]
 
-    def __iter__(self) -> Iterator[float]:
+    def __iter__(self) -> Iterator[Any]:
         """Container iterator.
 
         Returns:
@@ -193,7 +193,7 @@ class BoundingBox:
         return (self.maxx - self.minx) * (self.maxy - self.miny)
 
     @property
-    def volume(self) -> float:
+    def volume(self) -> timedelta:
         """Volume of bounding box.
 
         Volume is defined as spatial area times temporal range.
@@ -290,7 +290,9 @@ class Executable:
         return subprocess.run((self.name, *args), **kwargs)
 
 
-def disambiguate_timestamp(date_str: str, format: str) -> tuple[datetime, datetime]:
+def disambiguate_timestamp(
+    date_str: str | None, format: str
+) -> tuple[datetime, datetime]:
     """Disambiguate partial timestamps.
 
     TorchGeo stores the timestamp of each file in a pandas IntervalIndex. If the full

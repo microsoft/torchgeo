@@ -4,7 +4,7 @@
 import os
 import pickle
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -29,32 +29,35 @@ from torchgeo.datasets.utils import (
     working_dir,
 )
 
+MINT = datetime(2025, 4, 24)
+MAXT = datetime(2025, 4, 25)
+
 
 class TestBoundingBox:
     def test_repr_str(self) -> None:
-        bbox = BoundingBox(0, 1, 2.0, 3.0, -5, -4)
-        expected = 'BoundingBox(minx=0, maxx=1, miny=2.0, maxy=3.0, mint=-5, maxt=-4)'
+        bbox = BoundingBox(0, 1, 2.0, 3.0, MINT, MAXT)
+        expected = 'BoundingBox(minx=0, maxx=1, miny=2.0, maxy=3.0, mint=datetime.datetime(2025, 4, 24, 0, 0), maxt=datetime.datetime(2025, 4, 25, 0, 0))'
         assert repr(bbox) == expected
         assert str(bbox) == expected
 
     def test_getitem(self) -> None:
-        bbox = BoundingBox(0, 1, 2, 3, 4, 5)
+        bbox = BoundingBox(0, 1, 2, 3, MINT, MAXT)
 
         assert bbox.minx == 0
         assert bbox.maxx == 1
         assert bbox.miny == 2
         assert bbox.maxy == 3
-        assert bbox.mint == 4
-        assert bbox.maxt == 5
+        assert bbox.mint == MINT
+        assert bbox.maxt == MAXT
 
         assert bbox[0] == 0
-        assert bbox[-1] == 5
+        assert bbox[-1] == MAXT
         assert bbox[1:3] == [1, 2]
 
     def test_iter(self) -> None:
-        bbox = BoundingBox(0, 1, 2, 3, 4, 5)
+        bbox = BoundingBox(0, 1, 2, 3, MINT, MAXT)
 
-        assert tuple(bbox) == (0, 1, 2, 3, 4, 5)
+        assert tuple(bbox) == (0, 1, 2, 3, MINT, MAXT)
 
         i = 0
         for _ in bbox:
@@ -65,34 +68,34 @@ class TestBoundingBox:
         'test_input,expected',
         [
             # Same box
-            ((0, 1, 0, 1, 0, 1), True),
-            ((0.0, 1.0, 0.0, 1.0, 0.0, 1.0), True),
+            ((0, 1, 0, 1, MINT, MAXT), True),
+            ((0.0, 1.0, 0.0, 1.0, MINT, MAXT), True),
             # bbox1 strictly within bbox2
-            ((-1, 2, -1, 2, -1, 2), True),
+            ((-1, 2, -1, 2, MINT, MAXT), True),
             # bbox2 strictly within bbox1
-            ((0.25, 0.75, 0.25, 0.75, 0.25, 0.75), False),
+            ((0.25, 0.75, 0.25, 0.75, MINT, MAXT), False),
             # One corner of bbox1 within bbox2
-            ((0.5, 1.5, 0.5, 1.5, 0.5, 1.5), False),
-            ((0.5, 1.5, -0.5, 0.5, 0.5, 1.5), False),
-            ((0.5, 1.5, 0.5, 1.5, -0.5, 0.5), False),
-            ((0.5, 1.5, -0.5, 0.5, -0.5, 0.5), False),
-            ((-0.5, 0.5, 0.5, 1.5, 0.5, 1.5), False),
-            ((-0.5, 0.5, -0.5, 0.5, 0.5, 1.5), False),
-            ((-0.5, 0.5, 0.5, 1.5, -0.5, 0.5), False),
-            ((-0.5, 0.5, -0.5, 0.5, -0.5, 0.5), False),
+            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), False),
+            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), False),
+            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), False),
+            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), False),
+            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), False),
+            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), False),
+            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), False),
+            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), False),
             # No overlap
-            ((0.5, 1.5, 0.5, 1.5, 2, 3), False),
-            ((0.5, 1.5, 2, 3, 0.5, 1.5), False),
-            ((2, 3, 0.5, 1.5, 0.5, 1.5), False),
-            ((2, 3, 2, 3, 2, 3), False),
+            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), False),
+            ((0.5, 1.5, 2, 3, MINT, MAXT), False),
+            ((2, 3, 0.5, 1.5, MINT, MAXT), False),
+            ((2, 3, 2, 3, MINT, MAXT), False),
         ],
     )
     def test_contains(
         self,
-        test_input: tuple[float, float, float, float, float, float],
+        test_input: tuple[float, float, float, float, datetime, datetime],
         expected: bool,
     ) -> None:
-        bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
+        bbox1 = BoundingBox(0, 1, 0, 1, MINT, MAXT)
         bbox2 = BoundingBox(*test_input)
         assert (bbox1 in bbox2) == expected
 
@@ -100,34 +103,34 @@ class TestBoundingBox:
         'test_input,expected',
         [
             # Same box
-            ((0, 1, 0, 1, 0, 1), (0, 1, 0, 1, 0, 1)),
-            ((0.0, 1.0, 0.0, 1.0, 0.0, 1.0), (0, 1, 0, 1, 0, 1)),
+            ((0, 1, 0, 1, MINT, MAXT), (0, 1, 0, 1, MINT, MAXT)),
+            ((0.0, 1.0, 0.0, 1.0, MINT, MAXT), (0, 1, 0, 1, MINT, MAXT)),
             # bbox1 strictly within bbox2
-            ((-1, 2, -1, 2, -1, 2), (-1, 2, -1, 2, -1, 2)),
+            ((-1, 2, -1, 2, MINT, MAXT), (-1, 2, -1, 2, MINT, MAXT)),
             # bbox2 strictly within bbox1
-            ((0.25, 0.75, 0.25, 0.75, 0.25, 0.75), (0, 1, 0, 1, 0, 1)),
+            ((0.25, 0.75, 0.25, 0.75, MINT, MAXT), (0, 1, 0, 1, MINT, MAXT)),
             # One corner of bbox1 within bbox2
-            ((0.5, 1.5, 0.5, 1.5, 0.5, 1.5), (0, 1.5, 0, 1.5, 0, 1.5)),
-            ((0.5, 1.5, -0.5, 0.5, 0.5, 1.5), (0, 1.5, -0.5, 1, 0, 1.5)),
-            ((0.5, 1.5, 0.5, 1.5, -0.5, 0.5), (0, 1.5, 0, 1.5, -0.5, 1)),
-            ((0.5, 1.5, -0.5, 0.5, -0.5, 0.5), (0, 1.5, -0.5, 1, -0.5, 1)),
-            ((-0.5, 0.5, 0.5, 1.5, 0.5, 1.5), (-0.5, 1, 0, 1.5, 0, 1.5)),
-            ((-0.5, 0.5, -0.5, 0.5, 0.5, 1.5), (-0.5, 1, -0.5, 1, 0, 1.5)),
-            ((-0.5, 0.5, 0.5, 1.5, -0.5, 0.5), (-0.5, 1, 0, 1.5, -0.5, 1)),
-            ((-0.5, 0.5, -0.5, 0.5, -0.5, 0.5), (-0.5, 1, -0.5, 1, -0.5, 1)),
+            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0, 1.5, 0, 1.5, MINT, MAXT)),
+            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), (0, 1.5, -0.5, 1, MINT, MAXT)),
+            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0, 1.5, 0, 1.5, MINT, MAXT)),
+            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), (0, 1.5, -0.5, 1, MINT, MAXT)),
+            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), (-0.5, 1, 0, 1.5, MINT, MAXT)),
+            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), (-0.5, 1, -0.5, 1, MINT, MAXT)),
+            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), (-0.5, 1, 0, 1.5, MINT, MAXT)),
+            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), (-0.5, 1, -0.5, 1, MINT, MAXT)),
             # No overlap
-            ((0.5, 1.5, 0.5, 1.5, 2, 3), (0, 1.5, 0, 1.5, 0, 3)),
-            ((0.5, 1.5, 2, 3, 0.5, 1.5), (0, 1.5, 0, 3, 0, 1.5)),
-            ((2, 3, 0.5, 1.5, 0.5, 1.5), (0, 3, 0, 1.5, 0, 1.5)),
-            ((2, 3, 2, 3, 2, 3), (0, 3, 0, 3, 0, 3)),
+            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0, 1.5, 0, 1.5, MINT, MAXT)),
+            ((0.5, 1.5, 2, 3, MINT, MAXT), (0, 1.5, 0, 3, MINT, MAXT)),
+            ((2, 3, 0.5, 1.5, MINT, MAXT), (0, 3, 0, 1.5, MINT, MAXT)),
+            ((2, 3, 2, 3, MINT, MAXT), (0, 3, 0, 3, MINT, MAXT)),
         ],
     )
     def test_or(
         self,
-        test_input: tuple[float, float, float, float, float, float],
-        expected: tuple[float, float, float, float, float, float],
+        test_input: tuple[float, float, float, float, datetime, datetime],
+        expected: tuple[float, float, float, float, datetime, datetime],
     ) -> None:
-        bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
+        bbox1 = BoundingBox(0, 1, 0, 1, MINT, MAXT)
         bbox2 = BoundingBox(*test_input)
         bbox3 = BoundingBox(*expected)
         assert (bbox1 | bbox2) == bbox3
@@ -136,32 +139,32 @@ class TestBoundingBox:
         'test_input,expected',
         [
             # Same box
-            ((0, 1, 0, 1, 0, 1), (0, 1, 0, 1, 0, 1)),
-            ((0.0, 1.0, 0.0, 1.0, 0.0, 1.0), (0, 1, 0, 1, 0, 1)),
+            ((0, 1, 0, 1, MINT, MAXT), (0, 1, 0, 1, MINT, MAXT)),
+            ((0.0, 1.0, 0.0, 1.0, MINT, MAXT), (0, 1, 0, 1, MINT, MAXT)),
             # bbox1 strictly within bbox2
-            ((-1, 2, -1, 2, -1, 2), (0, 1, 0, 1, 0, 1)),
+            ((-1, 2, -1, 2, MINT, MAXT), (0, 1, 0, 1, MINT, MAXT)),
             # bbox2 strictly within bbox1
             (
-                (0.25, 0.75, 0.25, 0.75, 0.25, 0.75),
-                (0.25, 0.75, 0.25, 0.75, 0.25, 0.75),
+                (0.25, 0.75, 0.25, 0.75, MINT, MAXT),
+                (0.25, 0.75, 0.25, 0.75, MINT, MAXT),
             ),
             # One corner of bbox1 within bbox2
-            ((0.5, 1.5, 0.5, 1.5, 0.5, 1.5), (0.5, 1, 0.5, 1, 0.5, 1)),
-            ((0.5, 1.5, -0.5, 0.5, 0.5, 1.5), (0.5, 1, 0, 0.5, 0.5, 1)),
-            ((0.5, 1.5, 0.5, 1.5, -0.5, 0.5), (0.5, 1, 0.5, 1, 0, 0.5)),
-            ((0.5, 1.5, -0.5, 0.5, -0.5, 0.5), (0.5, 1, 0, 0.5, 0, 0.5)),
-            ((-0.5, 0.5, 0.5, 1.5, 0.5, 1.5), (0, 0.5, 0.5, 1, 0.5, 1)),
-            ((-0.5, 0.5, -0.5, 0.5, 0.5, 1.5), (0, 0.5, 0, 0.5, 0.5, 1)),
-            ((-0.5, 0.5, 0.5, 1.5, -0.5, 0.5), (0, 0.5, 0.5, 1, 0, 0.5)),
-            ((-0.5, 0.5, -0.5, 0.5, -0.5, 0.5), (0, 0.5, 0, 0.5, 0, 0.5)),
+            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0.5, 1, 0.5, 1, MINT, MAXT)),
+            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), (0.5, 1, 0, 0.5, MINT, MAXT)),
+            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), (0.5, 1, 0.5, 1, MINT, MAXT)),
+            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), (0.5, 1, 0, 0.5, MINT, MAXT)),
+            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), (0, 0.5, 0.5, 1, MINT, MAXT)),
+            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), (0, 0.5, 0, 0.5, MINT, MAXT)),
+            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), (0, 0.5, 0.5, 1, MINT, MAXT)),
+            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), (0, 0.5, 0, 0.5, MINT, MAXT)),
         ],
     )
     def test_and_intersection(
         self,
-        test_input: tuple[float, float, float, float, float, float],
-        expected: tuple[float, float, float, float, float, float],
+        test_input: tuple[float, float, float, float, datetime, datetime],
+        expected: tuple[float, float, float, float, datetime, datetime],
     ) -> None:
-        bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
+        bbox1 = BoundingBox(0, 1, 0, 1, MINT, MAXT)
         bbox2 = BoundingBox(*test_input)
         bbox3 = BoundingBox(*expected)
         assert (bbox1 & bbox2) == bbox3
@@ -170,16 +173,16 @@ class TestBoundingBox:
         'test_input',
         [
             # No overlap
-            (0.5, 1.5, 0.5, 1.5, 2, 3),
-            (0.5, 1.5, 2, 3, 0.5, 1.5),
-            (2, 3, 0.5, 1.5, 0.5, 1.5),
-            (2, 3, 2, 3, 2, 3),
+            (0.5, 1.5, 0.5, 1.5, datetime(2025, 4, 26), datetime(2025, 4, 27)),
+            (0.5, 1.5, 2, 3, MINT, MAXT),
+            (2, 3, 0.5, 1.5, MINT, MAXT),
+            (2, 3, 2, 3, MINT, MAXT),
         ],
     )
     def test_and_no_intersection(
-        self, test_input: tuple[float, float, float, float, float, float]
+        self, test_input: tuple[float, float, float, float, datetime, datetime]
     ) -> None:
-        bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
+        bbox1 = BoundingBox(0, 1, 0, 1, MINT, MAXT)
         bbox2 = BoundingBox(*test_input)
         with pytest.raises(
             ValueError,
@@ -191,18 +194,20 @@ class TestBoundingBox:
         'test_input,expected',
         [
             # Rectangular prism
-            ((0, 1, 0, 1, 0, 1), 1),
-            ((0, 2, 0, 3, 0, 4), 6),
+            ((0, 1, 0, 1, MINT, MAXT), 1),
+            ((0, 2, 0, 3, MINT, MAXT), 6),
             # Plane
-            ((0, 0, 0, 1, 0, 1), 0),
+            ((0, 0, 0, 1, MINT, MAXT), 0),
             # Line
-            ((0, 0, 0, 0, 0, 1), 0),
+            ((0, 0, 0, 0, MINT, MAXT), 0),
             # Point
-            ((0, 0, 0, 0, 0, 0), 0),
+            ((0, 0, 0, 0, MINT, MAXT), 0),
         ],
     )
     def test_area(
-        self, test_input: tuple[float, float, float, float, float, float], expected: int
+        self,
+        test_input: tuple[float, float, float, float, datetime, datetime],
+        expected: int,
     ) -> None:
         bbox = BoundingBox(*test_input)
         assert bbox.area == expected
@@ -211,18 +216,20 @@ class TestBoundingBox:
         'test_input,expected',
         [
             # Rectangular prism
-            ((0, 1, 0, 1, 0, 1), 1),
-            ((0, 2, 0, 3, 0, 4), 24),
+            ((0, 1, 0, 1, MINT, MAXT), timedelta(days=1)),
+            ((0, 2, 0, 3, MINT, MAXT), timedelta(days=6)),
             # Plane
-            ((0, 0, 0, 1, 0, 1), 0),
+            ((0, 0, 0, 1, MINT, MAXT), timedelta(days=0)),
             # Line
-            ((0, 0, 0, 0, 0, 1), 0),
+            ((0, 0, 0, 0, MINT, MAXT), timedelta(days=0)),
             # Point
-            ((0, 0, 0, 0, 0, 0), 0),
+            ((0, 0, 0, 0, MINT, MAXT), timedelta(days=0)),
         ],
     )
     def test_volume(
-        self, test_input: tuple[float, float, float, float, float, float], expected: int
+        self,
+        test_input: tuple[float, float, float, float, datetime, datetime],
+        expected: int,
     ) -> None:
         bbox = BoundingBox(*test_input)
         assert bbox.volume == expected
@@ -231,42 +238,42 @@ class TestBoundingBox:
         'test_input,expected',
         [
             # Same box
-            ((0, 1, 0, 1, 0, 1), True),
-            ((0.0, 1.0, 0.0, 1.0, 0.0, 1.0), True),
+            ((0, 1, 0, 1, MINT, MAXT), True),
+            ((0.0, 1.0, 0.0, 1.0, MINT, MAXT), True),
             # bbox1 strictly within bbox2
-            ((-1, 2, -1, 2, -1, 2), True),
+            ((-1, 2, -1, 2, MINT, MAXT), True),
             # bbox2 strictly within bbox1
-            ((0.25, 0.75, 0.25, 0.75, 0.25, 0.75), True),
+            ((0.25, 0.75, 0.25, 0.75, MINT, MAXT), True),
             # One corner of bbox1 within bbox2
-            ((0.5, 1.5, 0.5, 1.5, 0.5, 1.5), True),
-            ((0.5, 1.5, -0.5, 0.5, 0.5, 1.5), True),
-            ((0.5, 1.5, 0.5, 1.5, -0.5, 0.5), True),
-            ((0.5, 1.5, -0.5, 0.5, -0.5, 0.5), True),
-            ((-0.5, 0.5, 0.5, 1.5, 0.5, 1.5), True),
-            ((-0.5, 0.5, -0.5, 0.5, 0.5, 1.5), True),
-            ((-0.5, 0.5, 0.5, 1.5, -0.5, 0.5), True),
-            ((-0.5, 0.5, -0.5, 0.5, -0.5, 0.5), True),
+            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), True),
+            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), True),
+            ((0.5, 1.5, 0.5, 1.5, MINT, MAXT), True),
+            ((0.5, 1.5, -0.5, 0.5, MINT, MAXT), True),
+            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), True),
+            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), True),
+            ((-0.5, 0.5, 0.5, 1.5, MINT, MAXT), True),
+            ((-0.5, 0.5, -0.5, 0.5, MINT, MAXT), True),
             # No overlap
-            ((0.5, 1.5, 0.5, 1.5, 2, 3), False),
-            ((0.5, 1.5, 2, 3, 0.5, 1.5), False),
-            ((2, 3, 0.5, 1.5, 0.5, 1.5), False),
-            ((2, 3, 2, 3, 2, 3), False),
+            ((0.5, 1.5, 0.5, 1.5, datetime(2025, 4, 26), datetime(2025, 4, 27)), False),
+            ((0.5, 1.5, 2, 3, MINT, MAXT), False),
+            ((2, 3, 0.5, 1.5, MINT, MAXT), False),
+            ((2, 3, 2, 3, MINT, MAXT), False),
         ],
     )
     def test_intersects(
         self,
-        test_input: tuple[float, float, float, float, float, float],
+        test_input: tuple[float, float, float, float, datetime, datetime],
         expected: bool,
     ) -> None:
-        bbox1 = BoundingBox(0, 1, 0, 1, 0, 1)
+        bbox1 = BoundingBox(0, 1, 0, 1, MINT, MAXT)
         bbox2 = BoundingBox(*test_input)
         assert bbox1.intersects(bbox2) == bbox2.intersects(bbox1) == expected
 
     @pytest.mark.parametrize(
         'proportion,horizontal,expected',
         [
-            (0.25, True, ((0, 0.25, 0, 1, 0, 1), (0.25, 1, 0, 1, 0, 1))),
-            (0.25, False, ((0, 1, 0, 0.25, 0, 1), (0, 1, 0.25, 1, 0, 1))),
+            (0.25, True, ((0, 0.25, 0, 1, MINT, MAXT), (0.25, 1, 0, 1, MINT, MAXT))),
+            (0.25, False, ((0, 1, 0, 0.25, MINT, MAXT), (0, 1, 0.25, 1, MINT, MAXT))),
         ],
     )
     def test_split(
@@ -274,25 +281,25 @@ class TestBoundingBox:
         proportion: float,
         horizontal: bool,
         expected: tuple[
-            tuple[float, float, float, float, float, float],
-            tuple[float, float, float, float, float, float],
+            tuple[float, float, float, float, datetime, datetime],
+            tuple[float, float, float, float, datetime, datetime],
         ],
     ) -> None:
-        bbox = BoundingBox(0, 1, 0, 1, 0, 1)
+        bbox = BoundingBox(0, 1, 0, 1, MINT, MAXT)
         bbox1, bbox2 = bbox.split(proportion, horizontal)
         assert bbox1 == BoundingBox(*expected[0])
         assert bbox2 == BoundingBox(*expected[1])
         assert bbox1 | bbox2 == bbox
 
     def test_split_error(self) -> None:
-        bbox = BoundingBox(0, 1, 0, 1, 0, 1)
+        bbox = BoundingBox(0, 1, 0, 1, MINT, MAXT)
         with pytest.raises(
             ValueError, match='Input proportion must be between 0 and 1.'
         ):
             bbox.split(1.5)
 
     def test_picklable(self) -> None:
-        bbox = BoundingBox(0, 1, 2, 3, 4, 5)
+        bbox = BoundingBox(0, 1, 2, 3, MINT, MAXT)
         x = pickle.dumps(bbox)
         y = pickle.loads(x)
         assert bbox == y
@@ -301,19 +308,20 @@ class TestBoundingBox:
         with pytest.raises(
             ValueError, match="Bounding box is invalid: 'minx=1' > 'maxx=0'"
         ):
-            BoundingBox(1, 0, 2, 3, 4, 5)
+            BoundingBox(1, 0, 2, 3, MINT, MAXT)
 
     def test_invalid_y(self) -> None:
         with pytest.raises(
             ValueError, match="Bounding box is invalid: 'miny=3' > 'maxy=2'"
         ):
-            BoundingBox(0, 1, 3, 2, 4, 5)
+            BoundingBox(0, 1, 3, 2, MINT, MAXT)
 
     def test_invalid_t(self) -> None:
         with pytest.raises(
-            ValueError, match="Bounding box is invalid: 'mint=5' > 'maxt=4'"
+            ValueError,
+            match="Bounding box is invalid: 'mint=2025-04-25 00:00:00' > 'maxt=2025-04-24 00:00:00'",
         ):
-            BoundingBox(0, 1, 2, 3, 5, 4)
+            BoundingBox(0, 1, 2, 3, MAXT, MINT)
 
 
 @pytest.mark.parametrize(
