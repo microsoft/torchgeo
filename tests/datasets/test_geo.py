@@ -327,7 +327,7 @@ class TestRasterDataset:
         assert len(sentinel.bands) == x['image'].shape[0]
 
     def test_reprojection(self, naip: NAIP) -> None:
-        naip2 = NAIP(naip.paths, crs='EPSG:4326')
+        naip2 = NAIP(naip.paths, crs=CRS.from_epsg(4326))
         assert naip.crs != naip2.crs
         assert not math.isclose(naip.res[0], naip2.res[0])
         assert not math.isclose(naip.res[1], naip2.res[1])
