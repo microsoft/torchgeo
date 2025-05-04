@@ -14,7 +14,7 @@ import geopandas
 import pandas as pd
 import shapely
 from geopandas import GeoDataFrame
-from shapely import LineString
+from shapely.geometry import LineString
 from torch import Generator, default_generator, randint, randperm
 
 from ..datasets import GeoDataset
