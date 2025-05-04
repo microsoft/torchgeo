@@ -13,7 +13,7 @@ import torch
 from _pytest.fixtures import SubRequest
 from geopandas import GeoDataFrame
 from pyproj import CRS
-from shapely.geometry import Geometry
+from shapely import Geometry
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
