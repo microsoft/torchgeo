@@ -11,7 +11,7 @@ import pytest
 import shapely
 from geopandas import GeoDataFrame
 from pyproj import CRS
-from shapely.geometry import Geometry
+from shapely import Geometry
 
 from torchgeo.datasets import (
     BoundingBox,
