@@ -18,11 +18,11 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up python
         id: setup-python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.13'
       - name: Cache dependencies
-        uses: actions/cache@v4.2.1
+        uses: actions/cache@v4.2.3
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -36,7 +36,8 @@ jobs:
         run: pip list
       - name: Run integration checks
         run: |
-          pytest -m slow --durations=10
+          pytest -m slow --durations=10 tests/samplers
+          pytest -m slow --durations=10 tests/trainers
           python -m torchgeo --help
           torchgeo --help
   notebooks:
@@ -47,11 +48,11 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up python
         id: setup-python
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.13'
       - name: Cache dependencies
-        uses: actions/cache@v4.2.1
+        uses: actions/cache@v4.2.3
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -59,7 +60,7 @@ jobs:
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install .[docs,tests] planetary_computer pystac tensorboard
+          pip install .[docs,tests] planetary_computer pystac tensorboard h5py scikit-learn
           pip cache purge
       - name: List pip dependencies
         run: pip list
@@ -67,4 +68,4 @@ jobs:
         run: pytest --nbmake --durations=10 docs/tutorials
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}

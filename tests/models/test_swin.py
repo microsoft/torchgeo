@@ -20,12 +20,9 @@ class TestSwin_V2_T:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = Swin_V2_T_Weights.SENTINEL2_SI_RGB_SATLAS
         path = tmp_path / f'{weights}.pth'
         model = torchvision.models.swin_v2_t()
         num_channels = weights.meta['in_chans']
@@ -34,10 +31,7 @@ class TestSwin_V2_T:
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         torch.save(model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_swin_v2_t(self) -> None:
@@ -46,16 +40,16 @@ class TestSwin_V2_T:
     def test_swin_v2_t_weights(self, mocked_weights: WeightsEnum) -> None:
         swin_v2_t(weights=mocked_weights)
 
-    def test_bands(self, mocked_weights: WeightsEnum) -> None:
-        if 'bands' in mocked_weights.meta:
-            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+    def test_bands(self, weights: WeightsEnum) -> None:
+        if 'bands' in weights.meta:
+            assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta['in_chans']
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
         }
-        mocked_weights.transforms(sample)
+        weights.transforms(sample)
 
     @pytest.mark.slow
     def test_swin_v2_t_download(self, weights: WeightsEnum) -> None:
@@ -69,12 +63,9 @@ class TestSwin_V2_B:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = Swin_V2_B_Weights.SENTINEL1_SI_SATLAS
         path = tmp_path / f'{weights}.pth'
         model = torchvision.models.swin_v2_b()
         num_channels = weights.meta['in_chans']
@@ -83,10 +74,7 @@ class TestSwin_V2_B:
             num_channels, out_channels, kernel_size=(4, 4), stride=(4, 4)
         )
         torch.save(model.state_dict(), path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_swin_v2_b(self) -> None:
@@ -95,16 +83,16 @@ class TestSwin_V2_B:
     def test_swin_v2_b_weights(self, mocked_weights: WeightsEnum) -> None:
         swin_v2_b(weights=mocked_weights)
 
-    def test_bands(self, mocked_weights: WeightsEnum) -> None:
-        if 'bands' in mocked_weights.meta:
-            assert len(mocked_weights.meta['bands']) == mocked_weights.meta['in_chans']
+    def test_bands(self, weights: WeightsEnum) -> None:
+        if 'bands' in weights.meta:
+            assert len(weights.meta['bands']) == weights.meta['in_chans']
 
-    def test_transforms(self, mocked_weights: WeightsEnum) -> None:
-        c = mocked_weights.meta['in_chans']
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta['in_chans']
         sample = {
             'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
         }
-        mocked_weights.transforms(sample)
+        weights.transforms(sample)
 
     @pytest.mark.slow
     def test_swin_v2_b_download(self, weights: WeightsEnum) -> None:

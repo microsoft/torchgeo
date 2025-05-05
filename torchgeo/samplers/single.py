@@ -51,7 +51,7 @@ class GeoSampler(Sampler[BoundingBox], abc.ABC):
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
 
-        Returns:
+        Yields:
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
 
@@ -110,7 +110,7 @@ class RandomGeoSampler(GeoSampler):
         self.size = _to_tuple(size)
 
         if units == Units.PIXELS:
-            self.size = (self.size[0] * self.res, self.size[1] * self.res)
+            self.size = (self.size[0] * self.res[1], self.size[1] * self.res[0])
 
         self.generator = generator
         self.length = 0
@@ -140,7 +140,7 @@ class RandomGeoSampler(GeoSampler):
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
 
-        Returns:
+        Yields:
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
         for _ in range(len(self)):
@@ -184,7 +184,7 @@ class GridGeoSampler(GeoSampler):
         self,
         dataset: GeoDataset,
         size: tuple[float, float] | float,
-        stride: tuple[float, float] | float,
+        stride: tuple[float, float] | float | None = None,
         roi: BoundingBox | None = None,
         units: Units = Units.PIXELS,
     ) -> None:
@@ -203,18 +203,21 @@ class GridGeoSampler(GeoSampler):
         Args:
             dataset: dataset to index from
             size: dimensions of each :term:`patch`
-            stride: distance to skip between each patch
+            stride: distance to skip between each patch (defaults to *size*)
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` and ``stride`` are in pixel or CRS units
         """
         super().__init__(dataset, roi)
         self.size = _to_tuple(size)
-        self.stride = _to_tuple(stride)
+        if stride is not None:
+            self.stride = _to_tuple(stride)
+        else:
+            self.stride = self.size
 
         if units == Units.PIXELS:
-            self.size = (self.size[0] * self.res, self.size[1] * self.res)
-            self.stride = (self.stride[0] * self.res, self.stride[1] * self.res)
+            self.size = (self.size[0] * self.res[1], self.size[1] * self.res[0])
+            self.stride = (self.stride[0] * self.res[1], self.stride[1] * self.res[0])
 
         self.hits = []
         for hit in self.index.intersection(tuple(self.roi), objects=True):
@@ -234,7 +237,7 @@ class GridGeoSampler(GeoSampler):
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
 
-        Returns:
+        Yields:
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
         # For each tile...
@@ -312,7 +315,7 @@ class PreChippedGeoSampler(GeoSampler):
     def __iter__(self) -> Iterator[BoundingBox]:
         """Return the index of a dataset.
 
-        Returns:
+        Yields:
             (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
         generator: Callable[[int], Iterable[int]] = range

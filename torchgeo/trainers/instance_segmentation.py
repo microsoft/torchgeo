@@ -5,6 +5,7 @@
 
 from typing import Any
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
@@ -96,6 +97,7 @@ class InstanceSegmentationTask(BaseTask):
 
         weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)
         self.model.backbone.body.conv1.weight = Parameter(weight)
+        self.model.backbone.body.conv1.in_channels = in_channels
 
         # Freeze backbone
         if self.hparams['freeze_backbone']:
@@ -117,7 +119,7 @@ class InstanceSegmentationTask(BaseTask):
            * 'Macro' averaging gives equal weight to each class, and is useful for
              balanced performance assessment across imbalanced classes.
         """
-        metrics = MetricCollection([MeanAveragePrecision(iou_type=('bbox', 'segm'))])  # type: ignore[arg-type]
+        metrics = MetricCollection([MeanAveragePrecision(iou_type=('bbox', 'segm'))])
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
 
@@ -181,6 +183,12 @@ class InstanceSegmentationTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
+            aug = K.AugmentationSequential(
+                K.Denormalize(datamodule.mean, datamodule.std),
+                data_keys=None,
+                keepdim=True,
+            )
+            batch = aug(batch)
 
             batch['prediction_bbox_xyxy'] = [pred['boxes'].cpu() for pred in y_hat]
             batch['prediction_mask'] = [pred['masks'].cpu() for pred in y_hat]

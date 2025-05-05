@@ -50,7 +50,7 @@ class BatchGeoSampler(Sampler[list[BoundingBox]], abc.ABC):
     def __iter__(self) -> Iterator[list[BoundingBox]]:
         """Return a batch of indices of a dataset.
 
-        Returns:
+        Yields:
             batch of (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
 
@@ -109,7 +109,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         self.generator = generator
 
         if units == Units.PIXELS:
-            self.size = (self.size[0] * self.res, self.size[1] * self.res)
+            self.size = (self.size[0] * self.res[1], self.size[1] * self.res[0])
 
         self.batch_size = batch_size
         self.length = 0
@@ -139,7 +139,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
     def __iter__(self) -> Iterator[list[BoundingBox]]:
         """Return the indices of a dataset.
 
-        Returns:
+        Yields:
             batch of (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
         """
         for _ in range(len(self)):

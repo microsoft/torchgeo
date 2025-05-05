@@ -1,0 +1,16 @@
+Level,Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
+L1,Cloud-S2,S,Sentinel-2,CC0-1.0,"2,817",4,512x512,10,MSI
+L1,Cloud-S3,S,Sentinel-3,CC-BY-4.0,"1,995",5,256x256,300,MSI
+L2,EuroSAT-S1,C,Sentinel-1,CC-BY-4.0,"27,000",10,64x64,10,SAR
+L2,EuroSAT-S2,C,Sentinel-2,MIT,"27,000",10,64x64,10,SAR
+L2,BigEarthNet-S1,C,Sentinel-1,CDLA-Permissive-1.0,"24,002",19,120x120,10,SAR
+L2,BigEarthNet-S2,C,Sentinel-2,CDLA-Permissive-1.0,"24,002",19,120x120,10,MSI
+L2,LC100Cls-S3,C,Sentinel-3,CC-BY-4.0,"8,635",23,96x96,300,MSI
+L2,LC100Seg-S3,S,Sentinel-3,CC-BY-4.0,"8,635",23,96x96,300,MSI
+L2,DFC2020-S1,S,Sentinel-1,CC-BY-4.0,"5,128",10,256x256,10,SAR
+L2,DFC2020-S2,S,Sentinel-2,CC-BY-4.0,"5,128",10,256x256,10,MSI
+L3,Flood-S1,CD,Sentinel-1,MIT,"5,000",3,224x224,10,SAR
+L3,LCZ-S2,C,Sentinel-2,CC-BY-4.0,"25,000",17,32x32,10,MSI
+L3,Biomass-S3,R,Sentinel-3,CC-BY-4.0,"5,000",-,96x96,300,MSI
+L3,AQ-NO2-S5P,R,Sentinel-5P,CC-BY-4.0,"2,467",-,56x56,"1,000",-
+L3,AQ-O3-S5P,R,Sentinel-5P,CC-BY-4.0,"2,467",-,56x56,"1,000",-

@@ -35,7 +35,9 @@ class CustomGeoSampler(GeoSampler):
 
 
 class CustomGeoDataset(GeoDataset):
-    def __init__(self, crs: CRS = CRS.from_epsg(3005), res: float = 10) -> None:
+    def __init__(
+        self, crs: CRS = CRS.from_epsg(3005), res: tuple[float, float] = (10, 10)
+    ) -> None:
         super().__init__()
         self._crs = crs
         self.res = res
@@ -117,7 +119,7 @@ class TestRandomGeoSampler:
             assert query in roi
 
     def test_small_area(self) -> None:
-        ds = CustomGeoDataset(res=1)
+        ds = CustomGeoDataset(res=(1, 1))
         ds.index.insert(0, (0, 10, 0, 10, 0, 10))
         ds.index.insert(1, (20, 21, 20, 21, 20, 21))
         sampler = RandomGeoSampler(ds, 2, 10)
@@ -183,6 +185,7 @@ class TestGridGeoSampler:
                 (2.5, 3),
                 ((8, 6), (1, 2)),
                 ((6, 4), (2, 3)),
+                (8, None),
             ],
             [Units.PIXELS, Units.CRS],
         ),
@@ -279,11 +282,11 @@ class TestPreChippedGeoSampler:
     def sampler(self, dataset: CustomGeoDataset) -> PreChippedGeoSampler:
         return PreChippedGeoSampler(dataset, shuffle=True)
 
-    def test_iter(self, sampler: GridGeoSampler) -> None:
+    def test_iter(self, sampler: PreChippedGeoSampler) -> None:
         for _ in sampler:
             continue
 
-    def test_len(self, sampler: GridGeoSampler) -> None:
+    def test_len(self, sampler: PreChippedGeoSampler) -> None:
         assert len(sampler) == 2
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:

@@ -41,7 +41,7 @@ class CustomGeoDataset(GeoDataset):
         self,
         items: list[tuple[BoundingBox, str]] = [(BoundingBox(0, 1, 0, 1, 0, 40), '')],
         crs: CRS = CRS.from_epsg(3005),
-        res: float = 1,
+        res: tuple[float, float] = (1, 1),
     ) -> None:
         super().__init__()
         for box, content in items:
