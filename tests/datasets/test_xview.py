@@ -139,7 +139,7 @@ class TestXView2DistShift:
         assert len(dataset) > 0
 
     def test_invalid_disaster(self) -> None:
-        with pytest.raises(ValueError, match='Invalid disaster names'):
+        with pytest.raises(ValueError, match='Invalid disaster name'):
             XView2DistShift(
                 root='tests/data/xview2',
                 id_ood_disaster=[
