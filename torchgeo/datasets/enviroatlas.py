@@ -107,7 +107,7 @@ class EnviroAtlas(GeoDataset):
     )
 
     p_src_crs = pyproj.CRS('epsg:3857')
-    p_transformers: ClassVar[dict[str, CRS]] = {
+    p_transformers: ClassVar[dict[str, Any]] = {
         'epsg:26917': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26917'), always_xy=True
         ).transform,
@@ -352,7 +352,12 @@ class EnviroAtlas(GeoDataset):
         index = self.index.iloc[self.index.index.overlaps(interval)]
         index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
 
-        sample = {'image': [], 'mask': [], 'crs': self.crs, 'bounds': query}
+        sample: dict[str, Any] = {
+            'image': [],
+            'mask': [],
+            'crs': self.crs,
+            'bounds': query,
+        }
 
         if index.empty:
             raise IndexError(

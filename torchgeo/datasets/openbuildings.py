@@ -293,7 +293,6 @@ class OpenBuildings(VectorDataset):
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
-        self._crs = crs
         self._source_crs = source_crs
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
@@ -357,7 +356,7 @@ class OpenBuildings(VectorDataset):
         """
         # We need to know the bounding box of the query in the source CRS
         (minx, maxx), (miny, maxy) = fiona.transform.transform(
-            self._crs.to_dict(),
+            self.crs.to_dict(),
             self._source_crs.to_dict(),
             [query.minx, query.maxx],
             [query.miny, query.maxy],
@@ -398,7 +397,7 @@ class OpenBuildings(VectorDataset):
         else:
             geom = x
         transformed: dict[str, Any] = fiona.transform.transform_geom(
-            self._source_crs.to_dict(), self._crs.to_dict(), geom
+            self._source_crs.to_dict(), self.crs.to_dict(), geom
         )
         return transformed
 
