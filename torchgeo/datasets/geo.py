@@ -196,7 +196,8 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         Returns:
             The :term:`coordinate reference system (CRS)`.
         """
-        return self.index.crs
+        _crs: CRS = self.index.crs
+        return _crs
 
     @crs.setter
     def crs(self, new_crs: CRS) -> None:
