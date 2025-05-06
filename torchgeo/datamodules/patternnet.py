@@ -17,6 +17,8 @@ class PatternNetDataModule(NonGeoDataModule):
     """LightningDataModule implementation for the PatternNet dataset.
 
     Uses random train/val/test splits.
+
+    .. versionadded:: 0.8
     """
 
     mean = torch.tensor([91.48, 91.78, 81.23])
@@ -27,7 +29,7 @@ class PatternNetDataModule(NonGeoDataModule):
         batch_size: int = 64,
         num_workers: int = 0,
         val_split_pct: float = 0.2,
-        test_split_pct: float = 0.1,
+        test_split_pct: float = 0.2,
         **kwargs: Any,
     ) -> None:
         """Initialize a new PatternNetDataModule instance.
@@ -37,7 +39,7 @@ class PatternNetDataModule(NonGeoDataModule):
             num_workers: Number of workers for parallel data loading.
             val_split_pct: Fraction of dataset to use for validation.
             test_split_pct: Fraction of dataset to use for testing.
-            **kwargs: Additional keyword arguments passed to PatternNet.
+            **kwargs: Additional keyword arguments passed to :class:`~torchgeo.datasets.PatternNet`.
         """
         super().__init__(PatternNet, batch_size, num_workers, **kwargs)
 
@@ -46,6 +48,8 @@ class PatternNetDataModule(NonGeoDataModule):
 
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
+            K.RandomHorizontalFlip(p=0.5),
+            K.RandomVerticalFlip(p=0.5),
             K.Resize(size=256),
             data_keys=None,
             keepdim=True,
@@ -57,21 +61,14 @@ class PatternNetDataModule(NonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ('fit', 'validate', 'test'):
-            full = PatternNet(**self.kwargs)
-            total_len = len(full)
-            test_len = round(total_len * self.test_split_pct)
-            val_len = round(total_len * self.val_split_pct)
-            train_len = total_len - val_len - test_len
+        dataset = PatternNet(**self.kwargs)
 
-            generator = torch.Generator().manual_seed(0)
-            train, val, test = random_split(
-                full, [train_len, val_len, test_len], generator=generator
-            )
+        generator = torch.Generator().manual_seed(0)
+        total_len = len(dataset)
+        val_len = int(total_len * self.val_split_pct)
+        test_len = int(total_len * self.test_split_pct)
+        train_len = total_len - val_len - test_len
 
-            if stage == 'fit':
-                self.train_dataset = train
-            if stage in ('fit', 'validate'):
-                self.val_dataset = val
-            if stage == 'test':
-                self.test_dataset = test
+        self.train_dataset, self.val_dataset, self.test_dataset = random_split(
+            dataset, [train_len, val_len, test_len], generator
+        )
