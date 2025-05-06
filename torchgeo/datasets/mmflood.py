@@ -59,24 +59,6 @@ class MMFloodComponent(RasterDataset):
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
 
-class MMFloodIntersection(IntersectionDataset):
-    """Intersection dataset used to merge two or more MMFloodComponents."""
-
-    def __init__(
-        self,
-        dataset1: MMFloodComponent | MMFloodIntersection,
-        dataset2: MMFloodComponent | MMFloodIntersection,
-    ) -> None:
-        """Initialize a new MMFloodIntersection instance.
-
-        Args:
-            dataset1: the first dataset to merge
-            dataset2: the second dataset to merge
-        """
-        # if hydro component is passed, it should always be passed as dataset2
-        super().__init__(dataset1, dataset2)
-
-
 class MMFlood(IntersectionDataset):
     """MMFlood dataset.
 
@@ -190,22 +172,25 @@ class MMFlood(IntersectionDataset):
         split_subfolders = self.metadata_df[
             self.metadata_df['subset'] == self.split
         ].index.tolist()
-        self.image: MMFloodComponent | MMFloodIntersection = MMFloodComponent(
+        self.image: MMFloodComponent | IntersectionDataset = MMFloodComponent(
             split_subfolders, 's1_raw', root, crs, res, cache=cache
         )
         if include_dem:
             dem = MMFloodComponent(split_subfolders, 'DEM', root, crs, res, cache=cache)
-            self.image = MMFloodIntersection(self.image, dem)
+            self.image = self.image & dem
+            self.image.index = dem.index
         if include_hydro:
             hydro = MMFloodComponent(
                 split_subfolders, 'hydro', root, crs, res, cache=cache
             )
-            self.image = MMFloodIntersection(self.image, hydro)
+            self.image = self.image & hydro
+            self.image.index = hydro.index
         self.mask = MMFloodComponent(
             split_subfolders, 'mask', root, crs, res, cache=cache
         )
 
         super().__init__(self.image, self.mask, transforms=transforms)
+        self.index = self.image.index
 
     def _merge_tar_files(self) -> None:
         """Merge part tar gz files."""
