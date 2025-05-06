@@ -4,7 +4,7 @@ setuptools==77.0.1
 # install
 einops==0.3.0
 fiona==1.8.22
-geopandas==0.12.0
+geopandas==0.12.1
 kornia==0.7.4
 lightly==1.4.5
 lightning[pytorch-extra]==2.0.0
