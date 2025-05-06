@@ -5,20 +5,21 @@
 
 import glob
 import os
-import sys
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import fiona
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pyproj
 import rasterio
 import rasterio.mask
 import shapely.geometry
 import shapely.ops
 import torch
+from geopandas import GeoDataFrame
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from pyproj import CRS
@@ -351,7 +352,6 @@ class ChesapeakeCVPR(GeoDataset):
         'prior_extension': '402f41d07823c8faf7ea6960d7c4e17a',
     }
 
-    crs = CRS.from_epsg(3857)
     res = (1, 1)
 
     lc_cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
@@ -467,13 +467,12 @@ class ChesapeakeCVPR(GeoDataset):
         assert all([layer in self.valid_layers for layer in layers])
         self.root = root
         self.layers = layers
+        self.transforms = transforms
         self.cache = cache
         self.download = download
         self.checksum = checksum
 
         self._verify()
-
-        super().__init__(transforms)
 
         lc_colors = np.zeros((max(self.lc_cmap.keys()) + 1, 4))
         lc_colors[list(self.lc_cmap.keys())] = list(self.lc_cmap.values())
@@ -484,23 +483,21 @@ class ChesapeakeCVPR(GeoDataset):
         self._nlcd_cmap = ListedColormap(nlcd_colors[:, :3] / 255)
 
         # Add all tiles into the index in epsg:3857 based on the included geojson
-        mint: float = 0
-        maxt: float = sys.maxsize
+        mint = pd.Timestamp.min
+        maxt = pd.Timestamp.max
+        data = []
+        datetimes = []
+        geometries = []
         with fiona.open(os.path.join(root, 'spatial_index.geojson'), 'r') as f:
-            for i, row in enumerate(f):
+            for row in f:
                 if row['properties']['split'] in splits:
-                    box = shapely.geometry.shape(row['geometry'])
-                    minx, miny, maxx, maxy = box.bounds
-                    coords = (minx, maxx, miny, maxy, mint, maxt)
-
                     prior_fn = row['properties']['lc'].replace(
                         'lc.tif',
                         'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif',
                     )
-
-                    self.index.insert(
-                        i,
-                        coords,
+                    geometries.append(shapely.geometry.shape(row['geometry']))
+                    datetimes.append((mint, maxt))
+                    data.append(
                         {
                             'naip-new': row['properties']['naip-new'],
                             'naip-old': row['properties']['naip-old'],
@@ -510,8 +507,12 @@ class ChesapeakeCVPR(GeoDataset):
                             'nlcd': row['properties']['nlcd'],
                             'buildings': row['properties']['buildings'],
                             'prior_from_cooccurrences_101_31_no_osm_no_buildings': prior_fn,
-                        },
+                        }
                     )
+
+        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        crs = CRS.from_epsg(3857)
+        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
@@ -525,17 +526,19 @@ class ChesapeakeCVPR(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[dict[str, str]], [hit.object for hit in hits])
+        geometry = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
+        interval = pd.Interval(query.mint, query.maxt)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
 
         sample = {'image': [], 'mask': [], 'crs': self.crs, 'bounds': query}
 
-        if len(filepaths) == 0:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
-        elif len(filepaths) == 1:
-            filenames = filepaths[0]
+        elif len(index) == 1:
+            filenames = index.iloc[0]
             query_geom_transformed = None  # is set by the first layer
 
             minx, maxx, miny, maxy, mint, maxt = query
