@@ -48,6 +48,12 @@ class PatternNetDataModule(NonGeoDataModule):
 
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
+            K.Resize(size=256),
+            data_keys=None,
+            keepdim=True,
+        )
+        self.train_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             K.Resize(size=256),
@@ -64,11 +70,8 @@ class PatternNetDataModule(NonGeoDataModule):
         dataset = PatternNet(**self.kwargs)
 
         generator = torch.Generator().manual_seed(0)
-        total_len = len(dataset)
-        val_len = int(total_len * self.val_split_pct)
-        test_len = int(total_len * self.test_split_pct)
-        train_len = total_len - val_len - test_len
-
+        train_spilt_pct = 1 - self.val_split_pct - self.test_split_pct
+        lengths = [train_spilt_pct, self.val_split_pct, self.test_split_pct]
         self.train_dataset, self.val_dataset, self.test_dataset = random_split(
-            dataset, [train_len, val_len, test_len], generator
+            dataset, lengths, generator
         )
