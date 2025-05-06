@@ -148,6 +148,31 @@ class TestXView2DistShift:
                 ],
             )
 
+    def test_missing_disaster_name_key(self) -> None:
+        with pytest.raises(
+            ValueError, match="Each disaster entry must contain a 'disaster_name' key."
+        ):
+            XView2DistShift(
+                root='tests/data/xview2',
+                id_ood_disaster=[
+                    {'pre-post': 'post'},  # missing 'disaster_name'
+                    {'disaster_name': 'hurricane-harvey', 'pre-post': 'post'},
+                ],
+            )
+
+    def test_missing_pre_post_key(self) -> None:
+        with pytest.raises(
+            ValueError,
+            match="Each disaster entry must contain 'disaster_name' and 'pre-post' keys.",
+        ):
+            XView2DistShift(
+                root='tests/data/xview2',
+                id_ood_disaster=[
+                    {'disaster_name': 'hurricane-harvey'},  # missing 'pre-post'
+                    {'disaster_name': 'hurricane-harvey', 'pre-post': 'post'},
+                ],
+            )
+
     def test_invalid_split(self) -> None:
         with pytest.raises(AssertionError):
             XView2DistShift(
