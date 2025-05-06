@@ -5,7 +5,7 @@
 
 import glob
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import ClassVar, Literal
 
 import matplotlib.pyplot as plt
@@ -297,9 +297,9 @@ class XView2DistShift(XView2):
     .. versionadded:: 0.8
     """
 
-    binary_classes: ClassVar[tuple[str, str]] = ('background', 'building')
+    binary_classes = ('background', 'building')
 
-    valid_disasters: ClassVar[list[str]] = [
+    valid_disasters = (
         'hurricane-harvey',
         'socal-fire',
         'hurricane-matthew',
@@ -310,18 +310,17 @@ class XView2DistShift(XView2):
         'hurricane-florence',
         'hurricane-michael',
         'midwest-flooding',
-    ]
+    )
 
     def __init__(
         self,
         root: str = 'data',
         split: Literal['train', 'test'] = 'train',
-        id_ood_disaster: list[dict[str, str]] = [
+        id_ood_disaster: Sequence[dict[str, str]] = (
             {'disaster_name': 'hurricane-matthew', 'pre-post': 'post'},
             {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'},
-        ],
-        transforms: Callable[[dict[str, torch.Tensor]], dict[str, torch.Tensor]]
-        | None = None,
+        ),
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
         """Initialize the XView2DistShift dataset instance.
@@ -340,14 +339,26 @@ class XView2DistShift(XView2):
             DatasetNotFoundError: If dataset is not found.
         """
         assert split in ['train', 'test'], "Split must be either 'train' or 'test'."
+        assert len(id_ood_disaster) == 2, (
+            'id_ood_disaster must contain exactly two items'
+        )
 
-        if (
-            id_ood_disaster[0]['disaster_name'] not in self.valid_disasters
-            or id_ood_disaster[1]['disaster_name'] not in self.valid_disasters
-        ):
-            raise ValueError(
-                f'Invalid disaster names. Valid options are: {", ".join(self.valid_disasters)}'
-            )
+        for disaster in id_ood_disaster:
+            if 'disaster_name' not in disaster:
+                raise ValueError(
+                    "Each disaster entry must contain a 'disaster_name' key."
+                )
+            if disaster['disaster_name'] not in self.valid_disasters:
+                raise ValueError(
+                    f'Invalid disaster name: {disaster["disaster_name"]}. '
+                    f'Valid options are: {", ".join(self.valid_disasters)}'
+                )
+
+        for disaster in id_ood_disaster:
+            if 'disaster_name' not in disaster or 'pre-post' not in disaster:
+                raise ValueError(
+                    "Each disaster entry must contain 'disaster_name' and 'pre-post' keys."
+                )
 
         self.root = root
         self.split = split
