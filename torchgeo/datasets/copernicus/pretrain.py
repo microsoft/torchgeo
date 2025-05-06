@@ -114,7 +114,7 @@ class CopernicusPretrain(IterableDataset[dict[str, Any]]):
     def __iter__(self) -> Iterator[dict[str, Any]]:
         """Iterate over images and metadata in the dataset.
 
-        Returns:
+        Yields:
             sample of images and metadata
         """
         return iter(self.dataset)
