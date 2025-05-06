@@ -39,8 +39,8 @@ dependencies = [
     "einops>=0.3",
     # fiona 1.8.22+ required for Python 3.11 wheels
     "fiona>=1.8.22",
-    # TODO: determine minimum required version
-    "geopandas",
+    # geopandas 0.12.1+ required for Shapely 2+ support
+    "geopandas>=0.12.1",
     # kornia 0.7.4+ required for AugmentationSequential support for unknown keys
     "kornia>=0.7.4",
     # lightly 1.4.5+ required for LARS optimizer
