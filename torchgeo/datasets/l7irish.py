@@ -172,6 +172,9 @@ class L7Irish(IntersectionDataset):
 
         super().__init__(self.image, self.mask)
 
+        # Ignore unintentional partial overlap
+        self.index = self.image.index
+
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
         # Check if the extracted files already exist
