@@ -11,7 +11,8 @@ import pytest
 import shapely
 from geopandas import GeoDataFrame
 from pyproj import CRS
-from shapely import Geometry
+from shapely import Geometry, Polygon
+from torch import Generator
 
 from torchgeo.datasets import (
     BoundingBox,
@@ -114,17 +115,17 @@ def test_random_bbox_assignment_invalid_inputs() -> None:
 
 def test_random_bbox_splitting() -> None:
     geometry = [
-        shapely.box(0, 0, 1, 1),
-        shapely.box(1, 0, 2, 1),
-        shapely.box(2, 0, 3, 1),
-        shapely.box(3, 0, 4, 1),
+        Polygon(((0, 0), (1, 0), (1, 1), (0, 1), (0, 0))),
+        Polygon(((2, 0), (1, 0), (1, 1), (2, 1), (2, 0))),
+        Polygon(((2, 2), (1, 2), (1, 1), (2, 1), (2, 2))),
+        Polygon(((0, 2), (1, 2), (1, 1), (0, 1), (0, 2))),
     ]
     ds = CustomGeoDataset(geometry=geometry)
 
     ds_area = total_area(ds)
 
     train_ds, val_ds, test_ds = random_bbox_splitting(
-        ds, fractions=[5 / 8, 2 / 8, 1 / 8]
+        ds, fractions=[5 / 8, 2 / 8, 1 / 8], generator=Generator().manual_seed(5)
     )
     train_ds_area = total_area(train_ds)
     val_ds_area = total_area(val_ds)
@@ -144,7 +145,7 @@ def test_random_bbox_splitting() -> None:
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
     assert isclose(total_area(train_ds | val_ds | test_ds), ds_area)
 
-    # Test __get_item__
+    # Test __getitem__
     x = train_ds[train_ds.bounds]
     assert isinstance(x, dict)
 
@@ -179,7 +180,7 @@ def test_random_grid_cell_assignment() -> None:
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
     assert isclose(total_area(train_ds | val_ds | test_ds), total_area(ds))
 
-    # Test __get_item__
+    # Test __getitem__
     x = train_ds[train_ds.bounds]
     assert isinstance(x, dict)
 
@@ -226,7 +227,7 @@ def test_roi_split() -> None:
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
     assert isclose(total_area(train_ds | val_ds | test_ds), total_area(ds))
 
-    # Test __get_item__
+    # Test __getitem__
     x = train_ds[train_ds.bounds]
     assert isinstance(x, dict)
 
@@ -305,7 +306,7 @@ def test_time_series_split(
     # Union equals original
     assert (train_ds | val_ds | test_ds).bounds == ds.bounds
 
-    # Test __get_item__
+    # Test __getitem__
     x = train_ds[train_ds.bounds]
     assert isinstance(x, dict)
 
