@@ -967,7 +967,7 @@ class IntersectionDataset(GeoDataset):
         # Spatial intersection
         index1 = dataset1.index.reset_index()
         index2 = dataset2.index.reset_index()
-        self.index = gpd.overlay(index1, index2, how='intersection')
+        self.index = gpd.overlay(index1, index2, how='intersection', keep_geom_type=True)
 
         # Temporal intersection
         datetime_1 = pd.IntervalIndex(self.index.pop('datetime_1'))
