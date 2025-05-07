@@ -13,7 +13,7 @@ import torch
 from _pytest.fixtures import SubRequest
 from geopandas import GeoDataFrame
 from pyproj import CRS
-from shapely import Geometry
+from shapely import Geometry, Point
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
@@ -118,6 +118,13 @@ class TestRandomGeoSampler:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]
         ds = CustomGeoDataset(geometry, res=(1, 1))
         sampler = RandomGeoSampler(ds, 2, 10)
+        for _ in sampler:
+            continue
+
+    def test_point_data(self) -> None:
+        geometry = [Point(0, 0), Point(1, 1)]
+        ds = CustomGeoDataset(geometry)
+        sampler = RandomGeoSampler(ds, 0, 10)
         for _ in sampler:
             continue
 
