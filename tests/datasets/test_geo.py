@@ -34,8 +34,8 @@ from torchgeo.datasets import (
     VectorDataset,
 )
 
-MINT = datetime(2025, 4, 24)
-MAXT = datetime(2025, 4, 25)
+MINT = pd.Timestamp(2025, 4, 24)
+MAXT = pd.Timestamp(2025, 4, 25)
 
 
 class CustomGeoDataset(GeoDataset):
@@ -55,6 +55,16 @@ class CustomGeoDataset(GeoDataset):
         self.paths = paths or []
 
     def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
+        geometry = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
+        interval = pd.Interval(query.mint, query.maxt)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
+
+        if index.empty:
+            raise IndexError(
+                f'query: {query} not found in index with bounds: {self.bounds}'
+            )
+
         return {'index': query}
 
 
@@ -931,6 +941,13 @@ class TestUnionDataset:
         assert len(ds1) == len(ds2) == len(ds3) == 1
         assert len(ds) == 3
         assert isinstance(sample['image'], torch.Tensor)
+
+    def test_no_overlap(self) -> None:
+        ds1 = CustomGeoDataset([BoundingBox(0, 1, 0, 1, MINT, MAXT)])
+        ds2 = CustomGeoDataset([BoundingBox(2, 3, 2, 3, MINT, MAXT)])
+        ds = UnionDataset(ds1, ds2)
+        ds[BoundingBox(0, 1, 0, 1, MINT, MAXT)]
+        ds[BoundingBox(2, 3, 2, 3, MINT, MAXT)]
 
     def test_single_res(self) -> None:
         ds1 = RasterDataset(
