@@ -1,0 +1,6 @@
+input_path,reference_path,date,ice_service,split,region_id
+train/20210101T000000_dmi_prep.nc,,2021-01-01,dmi,train,North_RIC
+train/20210102T000000_cis_prep.nc,,2021-01-02,cis,train,SGRDIFOXE
+train/20210103T000000_dmi_prep.nc,,2021-01-03,dmi,train,North_RIC
+test/20210104T000000_dmi_prep.nc,test/20210104T000000_dmi_prep_reference.nc,2021-01-04,dmi,test,North_RIC
+test/20210105T000000_cis_prep.nc,test/20210105T000000_cis_prep_reference.nc,2021-01-05,cis,test,SGRDIFOXE
