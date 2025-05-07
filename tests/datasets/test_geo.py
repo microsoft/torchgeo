@@ -4,7 +4,7 @@
 import math
 import os
 import pickle
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -41,16 +41,16 @@ MAXT = datetime(2025, 4, 25)
 class CustomGeoDataset(GeoDataset):
     def __init__(
         self,
-        bounds: BoundingBox = BoundingBox(0, 1, 2, 3, MINT, MAXT),
+        bounds: Sequence[BoundingBox] = [BoundingBox(0, 1, 2, 3, MINT, MAXT)],
         crs: CRS = CRS.from_epsg(4087),
         res: float | tuple[float, float] = (1, 1),
         paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
     ) -> None:
-        geometry = shapely.box(bounds.minx, bounds.miny, bounds.maxx, bounds.maxy)
+        geometry = [shapely.box(b.minx, b.miny, b.maxx, b.maxy) for b in bounds]
         index = pd.IntervalIndex.from_tuples(
-            [(bounds.mint, bounds.maxt)], closed='both', name='datetime'
+            [(b.mint, b.maxt) for b in bounds], closed='both', name='datetime'
         )
-        self.index = GeoDataFrame(index=index, geometry=[geometry], crs=crs)
+        self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = res  # type: ignore[assignment]
         self.paths = paths or []
 
@@ -717,23 +717,81 @@ class TestIntersectionDataset:
         ds.res = 10  # type: ignore[assignment]
         assert ds1.res == ds2.res == ds.res == (10, 10)
 
+    def test_spatial_intersection(self) -> None:
+        bounds1 = [
+            BoundingBox(0, 2, 0, 2, MINT, MAXT),
+            BoundingBox(1, 3, 1, 3, MINT, MAXT),
+            BoundingBox(2, 4, 2, 4, MINT, MAXT),
+            BoundingBox(4, 6, 4, 6, MINT, MAXT),
+        ]
+        bounds2 = [BoundingBox(1, 3, 1, 3, MINT, MAXT)]
+        ds1 = CustomGeoDataset(bounds1)
+        ds2 = CustomGeoDataset(bounds2)
+        ds = IntersectionDataset(ds1, ds2)
+        assert len(ds) == 3
+        assert shapely.box(1, 1, 2, 2) in ds.index.geometry
+        assert shapely.box(1, 1, 3, 3) in ds.index.geometry
+        assert shapely.box(2, 2, 3, 3) in ds.index.geometry
+
+    def test_temporal_intersection(self) -> None:
+        bounds1 = [
+            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 4, 1), pd.Timestamp(2025, 4, 3)),
+            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 4, 7), pd.Timestamp(2025, 4, 9)),
+            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 4, 4), pd.Timestamp(2025, 4, 6)),
+        ]
+        bounds2 = [
+            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 5, 1), pd.Timestamp(2025, 5, 9)),
+            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 4, 2), pd.Timestamp(2025, 4, 5)),
+        ]
+        ds1 = CustomGeoDataset(bounds1)
+        ds2 = CustomGeoDataset(bounds2)
+        ds = IntersectionDataset(ds1, ds2)
+        assert len(ds) == 2
+        assert ds.index.index[0].left == pd.Timestamp(2025, 4, 2)
+        assert ds.index.index[0].right == pd.Timestamp(2025, 4, 3)
+        assert ds.index.index[1].left == pd.Timestamp(2025, 4, 4)
+        assert ds.index.index[1].right == pd.Timestamp(2025, 4, 5)
+
+    def test_spatiotemporal_intersection(self) -> None:
+        bounds1 = [
+            BoundingBox(0, 2, 0, 2, pd.Timestamp(2025, 4, 1), pd.Timestamp(2025, 4, 3)),
+            BoundingBox(1, 3, 1, 3, pd.Timestamp(2025, 4, 7), pd.Timestamp(2025, 4, 9)),
+            BoundingBox(2, 4, 2, 4, pd.Timestamp(2025, 4, 4), pd.Timestamp(2025, 4, 6)),
+        ]
+        bounds2 = [
+            BoundingBox(1, 3, 1, 3, pd.Timestamp(2025, 4, 2), pd.Timestamp(2025, 4, 5)),
+            BoundingBox(1, 3, 1, 3, pd.Timestamp(2025, 5, 1), pd.Timestamp(2025, 5, 9)),
+            BoundingBox(5, 6, 5, 6, pd.Timestamp(2025, 4, 2), pd.Timestamp(2025, 4, 5)),
+            BoundingBox(5, 6, 5, 6, pd.Timestamp(2025, 5, 1), pd.Timestamp(2025, 5, 9)),
+        ]
+        ds1 = CustomGeoDataset(bounds1)
+        ds2 = CustomGeoDataset(bounds2)
+        ds = IntersectionDataset(ds1, ds2)
+        assert len(ds) == 2
+        assert shapely.box(1, 1, 2, 2) in ds.index.geometry
+        assert shapely.box(2, 2, 3, 3) in ds.index.geometry
+        assert ds.index.index[0].left == pd.Timestamp(2025, 4, 2)
+        assert ds.index.index[0].right == pd.Timestamp(2025, 4, 3)
+        assert ds.index.index[1].left == pd.Timestamp(2025, 4, 4)
+        assert ds.index.index[1].right == pd.Timestamp(2025, 4, 5)
+
     def test_point_dataset(self) -> None:
-        ds1 = CustomGeoDataset(BoundingBox(0, 2, 2, 4, MINT, MAXT))
-        ds2 = CustomGeoDataset(BoundingBox(1, 1, 3, 3, MINT, MINT))
+        ds1 = CustomGeoDataset([BoundingBox(0, 2, 2, 4, MINT, MAXT)])
+        ds2 = CustomGeoDataset([BoundingBox(1, 1, 3, 3, MINT, MINT)])
         msg = 'Datasets have no spatiotemporal intersection'
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
 
     def test_no_overlap(self) -> None:
-        ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, MINT, MINT))
-        ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, MAXT, MAXT))
+        ds1 = CustomGeoDataset([BoundingBox(0, 1, 2, 3, MINT, MINT)])
+        ds2 = CustomGeoDataset([BoundingBox(6, 7, 8, 9, MAXT, MAXT)])
         msg = 'Datasets have no spatiotemporal intersection'
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
 
     def test_grid_overlap(self) -> None:
-        ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, MINT, MAXT))
-        ds2 = CustomGeoDataset(BoundingBox(1, 2, 3, 4, MAXT, MAXT))
+        ds1 = CustomGeoDataset([BoundingBox(0, 1, 2, 3, MINT, MAXT)])
+        ds2 = CustomGeoDataset([BoundingBox(1, 2, 3, 4, MAXT, MAXT)])
         msg = 'Datasets have no spatiotemporal intersection'
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
