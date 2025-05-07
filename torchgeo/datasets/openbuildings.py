@@ -279,7 +279,7 @@ class OpenBuildings(VectorDataset):
             minx, miny, maxx, maxy = min(xs), min(ys), max(xs), max(ys)
 
             (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                source_crs.to_dict(), crs.to_dict(), [minx, maxx], [miny, maxy]
+                source_crs.to_wkt(), crs.to_wkt(), [minx, maxx], [miny, maxy]
             )
 
             filepaths.append(filepath)
@@ -356,8 +356,8 @@ class OpenBuildings(VectorDataset):
         """
         # We need to know the bounding box of the query in the source CRS
         (minx, maxx), (miny, maxy) = fiona.transform.transform(
-            self.crs.to_dict(),
-            self._source_crs.to_dict(),
+            self.crs.to_wkt(),
+            self._source_crs.to_wkt(),
             [query.minx, query.maxx],
             [query.miny, query.maxy],
         )
@@ -397,7 +397,7 @@ class OpenBuildings(VectorDataset):
         else:
             geom = x
         transformed: dict[str, Any] = fiona.transform.transform_geom(
-            self._source_crs.to_dict(), self.crs.to_dict(), geom
+            self._source_crs.to_wkt(), self.crs.to_wkt(), geom
         )
         return transformed
 

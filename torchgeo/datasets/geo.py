@@ -661,12 +661,11 @@ class VectorDataset(GeoDataset):
                 try:
                     with fiona.open(filepath) as src:
                         if crs is None:
-                            # https://pyproj4.github.io/pyproj/stable/crs_compatibility.html#converting-from-fiona-crs-to-pyproj-crs-crs
                             crs = CRS.from_wkt(src.crs_wkt)
 
                         minx, miny, maxx, maxy = src.bounds
                         (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                            src.crs, crs.to_dict(), [minx, maxx], [miny, maxy]
+                            src.crs, crs.to_wkt(), [minx, maxx], [miny, maxy]
                         )
                         geometry = shapely.box(minx, miny, maxx, maxy)
                         geometries.append(geometry)
@@ -724,7 +723,7 @@ class VectorDataset(GeoDataset):
             with fiona.open(filepath) as src:
                 # We need to know the bounding box of the query in the source CRS
                 (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                    self.crs.to_dict(),
+                    self.crs.to_wkt(),
                     src.crs,
                     [query.minx, query.maxx],
                     [query.miny, query.maxy],
@@ -734,7 +733,7 @@ class VectorDataset(GeoDataset):
                 for feature in src.filter(bbox=(minx, miny, maxx, maxy)):
                     # Warp geometries to requested CRS
                     shape = fiona.transform.transform_geom(
-                        src.crs, self.crs.to_dict(), feature['geometry']
+                        src.crs, self.crs.to_wkt(), feature['geometry']
                     )
                     label = self.get_label(feature)
                     shapes.append((shape, label))
