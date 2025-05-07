@@ -258,7 +258,7 @@ filterwarnings = [
     # https://github.com/pydantic/pydantic/pull/11377
     "ignore:Failing to pass a value to the 'type_params' parameter of 'typing.*' is deprecated:DeprecationWarning:pydantic",
     # https://github.com/Lightning-AI/pytorch-lightning/pull/20802
-    "ignore:set_config_read_mode was deprecated in v4.39.0 and will be removed in v5.0.0:jsonargparse.JsonargparseDeprecationWarning:lightning.pytorch.cli",
+    "ignore:set_config_read_mode was deprecated in v4.39.0 and will be removed in v5.0.0:DeprecationWarning",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
