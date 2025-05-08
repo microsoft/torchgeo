@@ -53,6 +53,9 @@ class TestChangeDetectionTask:
         config = os.path.join('tests', 'conf', name + '.yaml')
 
         monkeypatch.setattr(smp, 'Unet', create_model)
+        monkeypatch.setattr(
+            OSCDDataModule, 'predict_dataloader', OSCDDataModule.test_dataloader
+        )
 
         args = [
             '--config',
