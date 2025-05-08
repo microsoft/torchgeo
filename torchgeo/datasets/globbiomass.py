@@ -6,12 +6,15 @@
 import glob
 import os
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar, cast
+from datetime import datetime
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
+import pandas as pd
+import shapely
 import torch
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
@@ -68,6 +71,8 @@ class GlobBiomass(RasterDataset):
         ^(?P<tile>[NS][\d]{2}[EW][\d]{3})
         _(?P<measurement>(agb|gsv))
     """
+    mint: datetime
+    maxt: datetime
     mint, maxt = disambiguate_timestamp('2010', '%Y')
     is_image = False
     dtype = torch.float32  # pixelwise regression
@@ -192,17 +197,19 @@ class GlobBiomass(RasterDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        geometry = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
+        interval = pd.Interval(query.mint, query.maxt)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
 
-        if not filepaths:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        mask = self._merge_files(filepaths, query)
+        mask = self._merge_files(index.filepath, query)
 
-        std_error_paths = [str(f).replace('.tif', '_err.tif') for f in filepaths]
+        std_error_paths = index.filepath.apply(lambda x: x.replace('.tif', '_err.tif'))
         std_err_mask = self._merge_files(std_error_paths, query)
 
         mask = torch.cat((mask, std_err_mask), dim=0)

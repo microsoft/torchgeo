@@ -11,7 +11,8 @@ import random
 import fiona
 from rtree import index
 from sample_ssl4eo import create_bbox, km2deg
-from shapely.geometry import MultiPolygon, Point, shape
+from shapely import MultiPolygon, Point
+from shapely.geometry import shape
 from shapely.ops import unary_union
 from torchvision.datasets.utils import download_and_extract_archive
 from tqdm import tqdm

@@ -274,7 +274,7 @@ class SSL4EOL(SSL4EO):
                 images.append(torch.from_numpy(image.astype(np.float32)))
                 xs.append((minx + maxx) / 2)
                 ys.append((miny + maxy) / 2)
-                ts.append((mint + maxt) / 2)
+                ts.append((mint.timestamp() + maxt.timestamp()) / 2)
                 wavelengths.extend(self.wavelengths)
 
         sample = {
@@ -615,7 +615,7 @@ class SSL4EOS12(SSL4EO):
                         images.append(torch.from_numpy(image.astype(np.float32)))
                 xs.append((minx + maxx) / 2)
                 ys.append((miny + maxy) / 2)
-                ts.append((mint + maxt) / 2)
+                ts.append((mint.timestamp() + maxt.timestamp()) / 2)
 
         sample = {
             'image': torch.cat(images),
