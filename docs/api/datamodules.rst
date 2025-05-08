@@ -258,6 +258,11 @@ Vaihingen
 
 .. autoclass:: Vaihingen2DDataModule
 
+VHR10
+^^^^^^^^^
+
+.. autoclass:: VHR10DataModule
+
 xView2
 ^^^^^^
 
