@@ -57,7 +57,7 @@ class ChangeDetectionTask(BaseTask):
                 None for random weights, or the path to a saved model state dict. FCN
                 model does not support pretrained weights. Pretrained ViT weight enums
                 are not supported yet.
-            in_channels: Number of input channels to model.
+            in_channels: Number of channels per image.
             pos_weight: A weight of positive examples and used with 'bce' loss.
             loss: Name of the loss function, currently supports
                 'bce', 'jaccard', or 'focal' loss.
@@ -90,7 +90,8 @@ class ChangeDetectionTask(BaseTask):
             case 'jaccard':
                 self.criterion = smp.losses.JaccardLoss(mode='binary')
             case 'focal':
-                self.criterion = smp.losses.FocalLoss(mode='binary', normalized=True)
+                self.criterion = smp.losses.FocalLoss(
+                    mode='binary', normalized=True)
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
@@ -207,7 +208,8 @@ class ChangeDetectionTask(BaseTask):
             ):
                 datamodule = self.trainer.datamodule
                 aug = K.AugmentationSequential(
-                    K.VideoSequential(K.Denormalize(datamodule.mean, datamodule.std)),
+                    K.VideoSequential(K.Denormalize(
+                        datamodule.mean, datamodule.std)),
                     data_keys=None,
                     keepdim=True,
                 )
