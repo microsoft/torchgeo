@@ -3,18 +3,20 @@
 
 import os
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import pytest
 import segmentation_models_pytorch as smp
 import timm
 import torch
 import torch.nn as nn
+from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
-from torchgeo.datamodules import MisconfigurationException
+from torchgeo.datamodules import MisconfigurationException, OSCDDataModule
+from torchgeo.datasets import RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import ChangeDetectionTask
@@ -33,6 +35,14 @@ class ChangeDetectionTestModel(Module):
 
 def create_model(**kwargs: Any) -> Module:
     return ChangeDetectionTestModel(**kwargs)
+
+
+def plot(*args: Any, **kwargs: Any) -> None:
+    return None
+
+
+def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
+    raise RGBBandsMissingError()
 
 
 class TestChangeDetectionTask:
@@ -125,21 +135,13 @@ class TestChangeDetectionTask:
             in_channels=weights.meta['in_chans'],
         )
 
-    def test_invalid_model(self) -> None:
-        match = "Model type 'invalid_model' is not valid."
-        with pytest.raises(ValueError, match=match):
-            ChangeDetectionTask(model='invalid_model')
-
-    def test_invalid_loss(self) -> None:
-        match = "Loss type 'invalid_loss' is not valid."
-        with pytest.raises(ValueError, match=match):
-            ChangeDetectionTask(loss='invalid_loss')
-
     @pytest.mark.parametrize('model_name', ['unet', 'fcsiamdiff', 'fcsiamconc'])
     @pytest.mark.parametrize(
         'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
     )
-    def test_freeze_backbone(self, model_name: str, backbone: str) -> None:
+    def test_freeze_backbone(
+        self, model_name: Literal['unet', 'fcsiamdiff', 'fcsiamconc'], backbone: str
+    ) -> None:
         model = ChangeDetectionTask(
             model=model_name, backbone=backbone, freeze_backbone=True
         )
@@ -155,7 +157,9 @@ class TestChangeDetectionTask:
         )
 
     @pytest.mark.parametrize('model_name', ['unet', 'fcsiamdiff', 'fcsiamconc'])
-    def test_freeze_decoder(self, model_name: str) -> None:
+    def test_freeze_decoder(
+        self, model_name: Literal['unet', 'fcsiamdiff', 'fcsiamconc']
+    ) -> None:
         model = ChangeDetectionTask(model=model_name, freeze_decoder=True)
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]
@@ -169,5 +173,41 @@ class TestChangeDetectionTask:
         )
 
     @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal'])
-    def test_losses(self, loss_fn: str) -> None:
+    def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal']) -> None:
         ChangeDetectionTask(loss=loss_fn)
+
+    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(OSCDDataModule, 'plot', plot)
+        datamodule = OSCDDataModule(
+            root='tests/data/oscd',
+            batch_size=2,
+            patch_size=32,
+            val_split_pct=0.5,
+            num_workers=0,
+        )
+        model = ChangeDetectionTask(backbone='resnet18', in_channels=13, model='unet')
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.validate(model=model, datamodule=datamodule)
+
+    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
+        monkeypatch.setattr(OSCDDataModule, 'plot', plot_missing_bands)
+        datamodule = OSCDDataModule(
+            root='tests/data/oscd',
+            batch_size=2,
+            patch_size=32,
+            val_split_pct=0.5,
+            num_workers=0,
+        )
+        model = ChangeDetectionTask(backbone='resnet18', in_channels=13, model='unet')
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.validate(model=model, datamodule=datamodule)

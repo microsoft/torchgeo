@@ -4,12 +4,15 @@
 """Trainers for change detection."""
 
 import os
-from typing import Any
+from typing import Any, Literal
 
+import kornia.augmentation as K
+import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 from einops import rearrange
+from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.classification import (
@@ -19,6 +22,7 @@ from torchmetrics.classification import (
 )
 from torchvision.models._api import WeightsEnum
 
+from ..datasets import RGBBandsMissingError, unbind_samples
 from ..models import FCSiamConc, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
@@ -29,12 +33,12 @@ class ChangeDetectionTask(BaseTask):
 
     def __init__(
         self,
-        model: str = 'unet',
+        model: Literal['unet', 'fcsiamdiff', 'fcsiamconc'] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
         pos_weight: Tensor | None = None,
-        loss: str = 'bce',
+        loss: Literal['bce', 'jaccard', 'focal'] = 'bce',
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
@@ -67,7 +71,7 @@ class ChangeDetectionTask(BaseTask):
                 class labels. Predictions greater than or equal to the threshold are assigned
                 class 1, and those below are assigned class 0. Must be between 0 and 1.
 
-        .. versionadded: 0.7
+        .. versionadded: 0.8
         """
         self.weights = weights
         super().__init__()
@@ -78,18 +82,15 @@ class ChangeDetectionTask(BaseTask):
         Raises:
             ValueError: If *loss* is invalid.
         """
-        loss: str = self.hparams['loss']
-        if loss == 'bce':
-            self.criterion = nn.BCEWithLogitsLoss(pos_weight=self.hparams['pos_weight'])
-        elif loss == 'jaccard':
-            self.criterion = smp.losses.JaccardLoss(mode='binary')
-        elif loss == 'focal':
-            self.criterion = smp.losses.FocalLoss(mode='binary', normalized=True)
-        else:
-            raise ValueError(
-                f"Loss type '{loss}' is not valid. "
-                "Currently, supports 'bce', 'jaccard', or 'focal' loss."
-            )
+        match self.hparams['loss']:
+            case 'bce':
+                self.criterion = nn.BCEWithLogitsLoss(
+                    pos_weight=self.hparams['pos_weight']
+                )
+            case 'jaccard':
+                self.criterion = smp.losses.JaccardLoss(mode='binary')
+            case 'focal':
+                self.criterion = smp.losses.FocalLoss(mode='binary', normalized=True)
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
@@ -116,32 +117,28 @@ class ChangeDetectionTask(BaseTask):
         in_channels: int = self.hparams['in_channels']
         num_classes = 1
 
-        if model == 'unet':
-            self.model = smp.Unet(
-                encoder_name=backbone,
-                encoder_weights='imagenet' if weights is True else None,
-                in_channels=in_channels * 2,  # images are concatenated
-                classes=num_classes,
-            )
-        elif model == 'fcsiamdiff':
-            self.model = FCSiamDiff(
-                encoder_name=backbone,
-                in_channels=in_channels,
-                classes=num_classes,
-                encoder_weights='imagenet' if weights is True else None,
-            )
-        elif model == 'fcsiamconc':
-            self.model = FCSiamConc(
-                encoder_name=backbone,
-                in_channels=in_channels,
-                classes=num_classes,
-                encoder_weights='imagenet' if weights is True else None,
-            )
-        else:
-            raise ValueError(
-                f"Model type '{model}' is not valid. "
-                "Currently, only supports 'unet', 'fcsiamdiff, and 'fcsiamconc'."
-            )
+        match model:
+            case 'unet':
+                self.model = smp.Unet(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels * 2,  # images are concatenated
+                    classes=num_classes,
+                )
+            case 'fcsiamdiff':
+                self.model = FCSiamDiff(
+                    encoder_name=backbone,
+                    in_channels=in_channels,
+                    classes=num_classes,
+                    encoder_weights='imagenet' if weights is True else None,
+                )
+            case 'fcsiamconc':
+                self.model = FCSiamConc(
+                    encoder_name=backbone,
+                    in_channels=in_channels,
+                    classes=num_classes,
+                    encoder_weights='imagenet' if weights is True else None,
+                )
 
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
@@ -198,6 +195,40 @@ class ChangeDetectionTask(BaseTask):
         if metrics:
             metrics(y_hat, y)
             self.log_dict({f'{k}': v for k, v in metrics.compute().items()})
+
+        if stage in ['val']:
+            if (
+                batch_idx < 10
+                and hasattr(self.trainer, 'datamodule')
+                and hasattr(self.trainer.datamodule, 'plot')
+                and self.logger
+                and hasattr(self.logger, 'experiment')
+                and hasattr(self.logger.experiment, 'add_figure')
+            ):
+                datamodule = self.trainer.datamodule
+                aug = K.AugmentationSequential(
+                    K.VideoSequential(K.Denormalize(datamodule.mean, datamodule.std)),
+                    data_keys=None,
+                    keepdim=True,
+                )
+                batch = aug(batch)
+                batch['prediction'] = y_hat.argmax(dim=-1)
+                for key in ['image', 'mask', 'prediction']:
+                    batch[key] = batch[key].cpu()
+                sample = unbind_samples(batch)[0]
+
+                fig: Figure | None = None
+                try:
+                    fig = datamodule.plot(sample)
+                except RGBBandsMissingError:
+                    pass
+
+                if fig:
+                    summary_writer = self.logger.experiment
+                    summary_writer.add_figure(
+                        f'image/{batch_idx}', fig, global_step=self.global_step
+                    )
+                    plt.close()
 
         return loss
 
