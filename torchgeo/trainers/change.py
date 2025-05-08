@@ -90,8 +90,7 @@ class ChangeDetectionTask(BaseTask):
             case 'jaccard':
                 self.criterion = smp.losses.JaccardLoss(mode='binary')
             case 'focal':
-                self.criterion = smp.losses.FocalLoss(
-                    mode='binary', normalized=True)
+                self.criterion = smp.losses.FocalLoss(mode='binary', normalized=True)
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics."""
@@ -208,8 +207,7 @@ class ChangeDetectionTask(BaseTask):
             ):
                 datamodule = self.trainer.datamodule
                 aug = K.AugmentationSequential(
-                    K.VideoSequential(K.Denormalize(
-                        datamodule.mean, datamodule.std)),
+                    K.VideoSequential(K.Denormalize(datamodule.mean, datamodule.std)),
                     data_keys=None,
                     keepdim=True,
                 )
