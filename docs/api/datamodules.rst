@@ -258,8 +258,8 @@ Vaihingen
 
 .. autoclass:: Vaihingen2DDataModule
 
-VHR10
-^^^^^^^^^
+VHR-10
+^^^^^^
 
 .. autoclass:: VHR10DataModule
 
