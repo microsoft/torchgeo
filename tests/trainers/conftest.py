@@ -6,8 +6,8 @@ from collections import OrderedDict
 from pathlib import Path
 
 import pytest
+import timm
 import torch
-import torchvision
 from _pytest.fixtures import SubRequest
 from torch import Tensor
 from torch.nn.modules import Module
@@ -22,8 +22,9 @@ def fast_dev_run(request: SubRequest) -> bool:
 
 
 @pytest.fixture(scope='package')
-def model() -> Module:
-    model: Module = torchvision.models.resnet18(weights=None)
+def model(request: SubRequest) -> Module:
+    in_channels = getattr(request, 'param', 3)
+    model: Module = timm.create_model('resnet18', in_chans=in_channels)
     return model
 
 
