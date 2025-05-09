@@ -11,7 +11,6 @@ from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import pandas as pd
-import shapely
 import torch
 from matplotlib.figure import Figure
 from pyproj import CRS
@@ -197,10 +196,9 @@ class GlobBiomass(RasterDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        geometry = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
         interval = pd.Interval(query.mint, query.maxt)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
+        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
 
         if index.empty:
             raise IndexError(
