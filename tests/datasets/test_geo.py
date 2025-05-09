@@ -55,10 +55,9 @@ class CustomGeoDataset(GeoDataset):
         self.paths = paths or []
 
     def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
-        geometry = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
         interval = pd.Interval(query.mint, query.maxt)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[index.sindex.query(geometry, predicate='intersects')]
+        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
 
         if index.empty:
             raise IndexError(
