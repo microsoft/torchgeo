@@ -4,7 +4,7 @@ setuptools==80.3.1
 # install
 einops==0.8.1
 fiona==1.10.1
-kornia==0.8.0
+kornia==0.8.1
 lightly==1.5.20
 lightning[pytorch-extra]==2.5.0.post0
 matplotlib==3.10.1
