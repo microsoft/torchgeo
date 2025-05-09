@@ -151,6 +151,10 @@ class ObjectDetectionTask(BaseTask):
                 num_classes,
                 rpn_anchor_generator=anchor_generator,
                 box_roi_pool=roi_pooler,
+                min_size=1,
+                max_size=4096,
+                image_mean=[0],
+                image_std=[1],
             )
         elif model == 'fcos':
             kwargs['extra_blocks'] = feature_pyramid_network.LastLevelP6P7(256, 256)
@@ -169,7 +173,13 @@ class ObjectDetectionTask(BaseTask):
                     param.requires_grad = False
 
             self.model = torchvision.models.detection.FCOS(
-                model_backbone, num_classes, anchor_generator=anchor_generator
+                model_backbone,
+                num_classes,
+                anchor_generator=anchor_generator,
+                min_size=1,
+                max_size=4096,
+                image_mean=[0],
+                image_std=[1],
             )
         elif model == 'retinanet':
             kwargs['extra_blocks'] = feature_pyramid_network.LastLevelP6P7(
@@ -204,6 +214,10 @@ class ObjectDetectionTask(BaseTask):
                 num_classes,
                 anchor_generator=anchor_generator,
                 head=head,
+                min_size=1,
+                max_size=4096,
+                image_mean=[0],
+                image_std=[1],
             )
         else:
             raise ValueError(f"Model type '{model}' is not valid.")
