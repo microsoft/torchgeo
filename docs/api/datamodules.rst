@@ -170,6 +170,11 @@ OSCD
 
 .. autoclass:: OSCDDataModule
 
+PatternNet
+^^^^^^^^^^
+
+.. autoclass:: PatternNetDataModule
+
 Potsdam
 ^^^^^^^
 

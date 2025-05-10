@@ -81,6 +81,7 @@ class TestClassificationTask:
             'eurosatspatial',
             'fire_risk',
             'quakeset',
+            'patternnet',
             'resisc45',
             'so2sat_all',
             'so2sat_s1',
