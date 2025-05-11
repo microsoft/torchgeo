@@ -170,6 +170,11 @@ OSCD
 
 .. autoclass:: OSCDDataModule
 
+PatternNet
+^^^^^^^^^^
+
+.. autoclass:: PatternNetDataModule
+
 Potsdam
 ^^^^^^^
 
@@ -257,6 +262,11 @@ Vaihingen
 ^^^^^^^^^
 
 .. autoclass:: Vaihingen2DDataModule
+
+VHR-10
+^^^^^^
+
+.. autoclass:: VHR10DataModule
 
 xView2
 ^^^^^^
