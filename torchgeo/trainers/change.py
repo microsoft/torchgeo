@@ -29,7 +29,10 @@ from .base import BaseTask
 
 
 class ChangeDetectionTask(BaseTask):
-    """Change Detection. Currently supports binary change between two timesteps."""
+    """Change Detection. Currently supports binary change between two timesteps.
+
+    .. versionadded: 0.8
+    """
 
     def __init__(
         self,
@@ -43,7 +46,6 @@ class ChangeDetectionTask(BaseTask):
         patience: int = 10,
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
-        threshold: float = 0.5,
     ) -> None:
         """Inititalize a new ChangeDetectionTask instance.
 
@@ -67,21 +69,12 @@ class ChangeDetectionTask(BaseTask):
                 decoder and segmentation head.
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
-            threshold: Decision threshold used to convert predicted probabilities into binary
-                class labels. Predictions greater than or equal to the threshold are assigned
-                class 1, and those below are assigned class 0. Must be between 0 and 1.
-
-        .. versionadded: 0.8
         """
         self.weights = weights
         super().__init__()
 
     def configure_losses(self) -> None:
-        """Initialize the loss criterion.
-
-        Raises:
-            ValueError: If *loss* is invalid.
-        """
+        """Initialize the loss criterion."""
         match self.hparams['loss']:
             case 'bce':
                 self.criterion = nn.BCEWithLogitsLoss(
@@ -106,11 +99,7 @@ class ChangeDetectionTask(BaseTask):
         self.test_metrics = metrics.clone(prefix='test_')
 
     def configure_models(self) -> None:
-        """Initialize the model.
-
-        Raises:
-            ValueError: If *model* is invalid.
-        """
+        """Initialize the model."""
         model: str = self.hparams['model']
         backbone: str = self.hparams['backbone']
         weights = self.weights
@@ -266,7 +255,7 @@ class ChangeDetectionTask(BaseTask):
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
-        """Compute the predicted class.
+        """Compute the predicted class probabilities.
 
         Args:
             batch: The output of your DataLoader.
@@ -274,13 +263,12 @@ class ChangeDetectionTask(BaseTask):
             dataloader_idx: Index of the current dataloader.
 
         Returns:
-            Output predicted class.
+            Output predicted probabilities.
         """
         model: str = self.hparams['model']
-        threshold: float = self.hparams['threshold']
         x = batch['image']
         if model == 'unet':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
         y_hat: Tensor = self(x)
-        y_hat_hard = (nn.functional.sigmoid(y_hat) >= threshold).int()
-        return y_hat_hard
+        y_hat = y_hat.sigmoid()
+        return y_hat

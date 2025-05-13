@@ -16,7 +16,7 @@ from torch.nn.modules import Module
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.datamodules import MisconfigurationException, OSCDDataModule
-from torchgeo.datasets import RGBBandsMissingError
+from torchgeo.datasets import OSCD, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import ChangeDetectionTask
@@ -45,6 +45,11 @@ def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
     raise RGBBandsMissingError()
 
 
+class PredictChangeDetectionDataModule(OSCDDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = OSCD(**self.kwargs)
+
+
 class TestChangeDetectionTask:
     @pytest.mark.parametrize('name', ['oscd'])
     def test_trainer(
@@ -53,9 +58,6 @@ class TestChangeDetectionTask:
         config = os.path.join('tests', 'conf', name + '.yaml')
 
         monkeypatch.setattr(smp, 'Unet', create_model)
-        monkeypatch.setattr(
-            OSCDDataModule, 'predict_dataloader', OSCDDataModule.test_dataloader
-        )
 
         args = [
             '--config',
@@ -79,6 +81,23 @@ class TestChangeDetectionTask:
             main(['predict', *args])
         except MisconfigurationException:
             pass
+
+    def test_predict(self, fast_dev_run: bool) -> None:
+        datamodule = PredictChangeDetectionDataModule(
+            root='tests/data/oscd',
+            batch_size=2,
+            patch_size=32,
+            val_split_pct=0.5,
+            num_workers=0,
+        )
+        model = ChangeDetectionTask(backbone='resnet18', in_channels=13, model='unet')
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.predict(model=model, datamodule=datamodule)
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:
