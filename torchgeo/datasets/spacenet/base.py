@@ -18,7 +18,7 @@ import torch
 from fiona.errors import FionaError, FionaValueError
 from fiona.transform import transform_geom
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 from rasterio.enums import Resampling
 from rasterio.features import rasterize
 from rasterio.transform import Affine

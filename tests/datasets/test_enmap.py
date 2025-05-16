@@ -5,10 +5,11 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from torchgeo.datasets import (
     BoundingBox,
@@ -63,7 +64,7 @@ class TestEnMAP:
             EnMAP(tmp_path)
 
     def test_invalid_query(self, dataset: EnMAP) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):

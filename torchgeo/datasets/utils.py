@@ -12,13 +12,13 @@ import importlib
 import os
 import shutil
 import subprocess
-import sys
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, TypeAlias, cast, overload
 
 import numpy as np
+import pandas as pd
 import rasterio
 import torch
 from torch import Tensor
@@ -57,9 +57,9 @@ class BoundingBox:
     #: northern boundary
     maxy: float
     #: earliest boundary
-    mint: float
+    mint: datetime
     #: latest boundary
-    maxt: float
+    maxt: datetime
 
     def __post_init__(self) -> None:
         """Validate the arguments passed to :meth:`__init__`.
@@ -84,14 +84,14 @@ class BoundingBox:
             )
 
     @overload
-    def __getitem__(self, key: int) -> float:
+    def __getitem__(self, key: int) -> Any:
         pass
 
     @overload
-    def __getitem__(self, key: slice) -> list[float]:
+    def __getitem__(self, key: slice) -> list[Any]:
         pass
 
-    def __getitem__(self, key: int | slice) -> float | list[float]:
+    def __getitem__(self, key: int | slice) -> Any | list[Any]:
         """Index the (minx, maxx, miny, maxy, mint, maxt) tuple.
 
         Args:
@@ -105,7 +105,7 @@ class BoundingBox:
         """
         return [self.minx, self.maxx, self.miny, self.maxy, self.mint, self.maxt][key]
 
-    def __iter__(self) -> Iterator[float]:
+    def __iter__(self) -> Iterator[Any]:
         """Container iterator.
 
         Returns:
@@ -193,7 +193,7 @@ class BoundingBox:
         return (self.maxx - self.minx) * (self.maxy - self.miny)
 
     @property
-    def volume(self) -> float:
+    def volume(self) -> timedelta:
         """Volume of bounding box.
 
         Volume is defined as spatial area times temporal range.
@@ -290,10 +290,12 @@ class Executable:
         return subprocess.run((self.name, *args), **kwargs)
 
 
-def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
+def disambiguate_timestamp(
+    date_str: str | None, format: str
+) -> tuple[datetime, datetime]:
     """Disambiguate partial timestamps.
 
-    TorchGeo stores the timestamp of each file in a spatiotemporal R-tree. If the full
+    TorchGeo stores the timestamp of each file in a pandas IntervalIndex. If the full
     timestamp isn't known, a file could represent a range of time. For example, in the
     CDL dataset, each mask spans an entire year. This method returns the maximum
     possible range of timestamps that ``date_str`` could belong to. It does this by
@@ -306,6 +308,9 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
     Returns:
         (mint, maxt) tuple for indexing
     """
+    if not isinstance(date_str, str):
+        return pd.NaT, pd.NaT
+
     mint = datetime.strptime(date_str, format)
     format = format.replace('%%', '')
 
@@ -314,7 +319,7 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
 
     if not any([f'%{c}' in format for c in 'yYcxG']):
         # No temporal info
-        return 0, sys.maxsize
+        return pd.Timestamp.min, pd.Timestamp.max
     elif not any([f'%{c}' in format for c in 'bBmjUWcxV']):
         # Year resolution
         maxt = datetime(mint.year + 1, 1, 1)
@@ -342,7 +347,7 @@ def disambiguate_timestamp(date_str: str, format: str) -> tuple[float, float]:
 
     maxt -= timedelta(microseconds=1)
 
-    return mint.timestamp(), maxt.timestamp()
+    return mint, maxt
 
 
 @contextlib.contextmanager

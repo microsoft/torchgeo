@@ -4,16 +4,19 @@
 import math
 import os
 import pickle
-import sys
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 import pytest
+import shapely
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from rasterio.crs import CRS
+from geopandas import GeoDataFrame
+from pyproj import CRS
 from rasterio.enums import Resampling
 from torch.utils.data import ConcatDataset
 
@@ -31,26 +34,37 @@ from torchgeo.datasets import (
     VectorDataset,
 )
 
+MINT = pd.Timestamp(2025, 4, 24)
+MAXT = pd.Timestamp(2025, 4, 25)
+
 
 class CustomGeoDataset(GeoDataset):
     def __init__(
         self,
-        bounds: BoundingBox = BoundingBox(0, 1, 2, 3, 4, 5),
+        bounds: Sequence[BoundingBox] = [BoundingBox(0, 1, 2, 3, MINT, MAXT)],
         crs: CRS = CRS.from_epsg(4087),
         res: float | tuple[float, float] = (1, 1),
         paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
     ) -> None:
-        super().__init__()
-        self.index.insert(0, tuple(bounds))
-        self._crs = crs
+        geometry = [shapely.box(b.minx, b.miny, b.maxx, b.maxy) for b in bounds]
+        index = pd.IntervalIndex.from_tuples(
+            [(b.mint, b.maxt) for b in bounds], closed='both', name='datetime'
+        )
+        self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = res  # type: ignore[assignment]
         self.paths = paths or []
 
     def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
-        hits = self.index.intersection(tuple(query), objects=True)
-        hit = next(iter(hits))
-        bounds = BoundingBox(*hit.bounds)
-        return {'index': bounds}
+        interval = pd.Interval(query.mint, query.maxt)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
+
+        if index.empty:
+            raise IndexError(
+                f'query: {query} not found in index with bounds: {self.bounds}'
+            )
+
+        return {'index': query}
 
 
 class CustomRasterDataset(RasterDataset):
@@ -90,7 +104,7 @@ class TestGeoDataset:
         return CustomGeoDataset()
 
     def test_getitem(self, dataset: GeoDataset) -> None:
-        query = BoundingBox(0, 1, 2, 3, 4, 5)
+        query = BoundingBox(0, 1, 2, 3, MINT, MAXT)
         assert dataset[query] == {'index': query}
 
     def test_len(self, dataset: GeoDataset) -> None:
@@ -322,7 +336,7 @@ class TestRasterDataset:
         assert len(sentinel.bands) == x['image'].shape[0]
 
     def test_reprojection(self, naip: NAIP) -> None:
-        naip2 = NAIP(naip.paths, crs='EPSG:4326')
+        naip2 = NAIP(naip.paths, crs=CRS.from_epsg(4326))
         assert naip.crs != naip2.crs
         assert not math.isclose(naip.res[0], naip2.res[0])
         assert not math.isclose(naip.res[1], naip2.res[1])
@@ -353,7 +367,7 @@ class TestRasterDataset:
         assert ds.resampling == Resampling.nearest
 
     def test_invalid_query(self, sentinel: Sentinel2) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds: .*'
         ):
@@ -414,8 +428,8 @@ class TestVectorDataset:
         )
 
     def test_time_index(self, dataset: CustomVectorDataset) -> None:
-        assert dataset.index.bounds[4] > 0
-        assert dataset.index.bounds[5] < sys.maxsize
+        assert dataset.bounds[4] > pd.Timestamp.min
+        assert dataset.bounds[5] < pd.Timestamp.max
 
     def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
         x = multilabel[multilabel.bounds]
@@ -428,12 +442,12 @@ class TestVectorDataset:
         )
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
-        query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, sys.maxsize)
+        query = BoundingBox(1.1, 1.9, 1.1, 1.9, pd.Timestamp.min, pd.Timestamp.max)
         x = dataset[query]
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
     def test_invalid_query(self, dataset: CustomVectorDataset) -> None:
-        query = BoundingBox(3, 3, 3, 3, 0, 0)
+        query = BoundingBox(3, 3, 3, 3, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
@@ -712,30 +726,87 @@ class TestIntersectionDataset:
         ds.res = 10  # type: ignore[assignment]
         assert ds1.res == ds2.res == ds.res == (10, 10)
 
-    def test_point_dataset(self) -> None:
-        ds1 = CustomGeoDataset(BoundingBox(0, 2, 2, 4, 4, 6))
-        ds2 = CustomGeoDataset(BoundingBox(1, 1, 3, 3, 5, 5))
+    def test_spatial_intersection(self) -> None:
+        bounds1 = [
+            BoundingBox(0, 2, 0, 2, MINT, MAXT),
+            BoundingBox(1, 3, 1, 3, MINT, MAXT),
+            BoundingBox(2, 4, 2, 4, MINT, MAXT),
+            BoundingBox(4, 6, 4, 6, MINT, MAXT),
+        ]
+        bounds2 = [BoundingBox(1, 3, 1, 3, MINT, MAXT)]
+        ds1 = CustomGeoDataset(bounds1)
+        ds2 = CustomGeoDataset(bounds2)
         ds = IntersectionDataset(ds1, ds2)
-        assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
-        assert ds1.res == ds2.res == ds.res == (1, 1)
-        assert len(ds1) == len(ds2) == len(ds) == 1
+        assert len(ds) == 3
+        assert shapely.box(1, 1, 2, 2) in ds.index.geometry
+        assert shapely.box(1, 1, 3, 3) in ds.index.geometry
+        assert shapely.box(2, 2, 3, 3) in ds.index.geometry
+
+    def test_temporal_intersection(self) -> None:
+        bounds1 = [
+            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 4, 1), pd.Timestamp(2025, 4, 3)),
+            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 4, 7), pd.Timestamp(2025, 4, 9)),
+            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 4, 4), pd.Timestamp(2025, 4, 6)),
+        ]
+        bounds2 = [
+            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 5, 1), pd.Timestamp(2025, 5, 9)),
+            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 4, 2), pd.Timestamp(2025, 4, 5)),
+        ]
+        ds1 = CustomGeoDataset(bounds1)
+        ds2 = CustomGeoDataset(bounds2)
+        ds = IntersectionDataset(ds1, ds2)
+        assert len(ds) == 2
+        assert ds.index.index[0].left == pd.Timestamp(2025, 4, 2)
+        assert ds.index.index[0].right == pd.Timestamp(2025, 4, 3)
+        assert ds.index.index[1].left == pd.Timestamp(2025, 4, 4)
+        assert ds.index.index[1].right == pd.Timestamp(2025, 4, 5)
+
+    def test_spatiotemporal_intersection(self) -> None:
+        bounds1 = [
+            BoundingBox(0, 2, 0, 2, pd.Timestamp(2025, 4, 1), pd.Timestamp(2025, 4, 3)),
+            BoundingBox(1, 3, 1, 3, pd.Timestamp(2025, 4, 7), pd.Timestamp(2025, 4, 9)),
+            BoundingBox(2, 4, 2, 4, pd.Timestamp(2025, 4, 4), pd.Timestamp(2025, 4, 6)),
+        ]
+        bounds2 = [
+            BoundingBox(1, 3, 1, 3, pd.Timestamp(2025, 4, 2), pd.Timestamp(2025, 4, 5)),
+            BoundingBox(1, 3, 1, 3, pd.Timestamp(2025, 5, 1), pd.Timestamp(2025, 5, 9)),
+            BoundingBox(5, 6, 5, 6, pd.Timestamp(2025, 4, 2), pd.Timestamp(2025, 4, 5)),
+            BoundingBox(5, 6, 5, 6, pd.Timestamp(2025, 5, 1), pd.Timestamp(2025, 5, 9)),
+        ]
+        ds1 = CustomGeoDataset(bounds1)
+        ds2 = CustomGeoDataset(bounds2)
+        ds = IntersectionDataset(ds1, ds2)
+        assert len(ds) == 2
+        assert shapely.box(1, 1, 2, 2) in ds.index.geometry
+        assert shapely.box(2, 2, 3, 3) in ds.index.geometry
+        assert ds.index.index[0].left == pd.Timestamp(2025, 4, 2)
+        assert ds.index.index[0].right == pd.Timestamp(2025, 4, 3)
+        assert ds.index.index[1].left == pd.Timestamp(2025, 4, 4)
+        assert ds.index.index[1].right == pd.Timestamp(2025, 4, 5)
+
+    def test_point_dataset(self) -> None:
+        ds1 = CustomGeoDataset([BoundingBox(0, 2, 2, 4, MINT, MAXT)])
+        ds2 = CustomGeoDataset([BoundingBox(1, 1, 3, 3, MINT, MINT)])
+        msg = 'Datasets have no spatiotemporal intersection'
+        with pytest.raises(RuntimeError, match=msg):
+            IntersectionDataset(ds1, ds2)
 
     def test_no_overlap(self) -> None:
-        ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
-        ds2 = CustomGeoDataset(BoundingBox(6, 7, 8, 9, 10, 11))
+        ds1 = CustomGeoDataset([BoundingBox(0, 1, 2, 3, MINT, MINT)])
+        ds2 = CustomGeoDataset([BoundingBox(6, 7, 8, 9, MAXT, MAXT)])
         msg = 'Datasets have no spatiotemporal intersection'
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
 
     def test_grid_overlap(self) -> None:
-        ds1 = CustomGeoDataset(BoundingBox(0, 1, 2, 3, 4, 5))
-        ds2 = CustomGeoDataset(BoundingBox(1, 2, 3, 4, 5, 6))
+        ds1 = CustomGeoDataset([BoundingBox(0, 1, 2, 3, MINT, MAXT)])
+        ds2 = CustomGeoDataset([BoundingBox(1, 2, 3, 4, MAXT, MAXT)])
         msg = 'Datasets have no spatiotemporal intersection'
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
 
     def test_invalid_query(self, dataset: IntersectionDataset) -> None:
-        query = BoundingBox(-1, -1, -1, -1, -1, -1)
+        query = BoundingBox(-1, -1, -1, -1, datetime.min, datetime.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
@@ -870,6 +941,13 @@ class TestUnionDataset:
         assert len(ds) == 3
         assert isinstance(sample['image'], torch.Tensor)
 
+    def test_no_overlap(self) -> None:
+        ds1 = CustomGeoDataset([BoundingBox(0, 1, 0, 1, MINT, MAXT)])
+        ds2 = CustomGeoDataset([BoundingBox(2, 3, 2, 3, MINT, MAXT)])
+        ds = UnionDataset(ds1, ds2)
+        ds[BoundingBox(0, 1, 0, 1, MINT, MAXT)]
+        ds[BoundingBox(2, 3, 2, 3, MINT, MAXT)]
+
     def test_single_res(self) -> None:
         ds1 = RasterDataset(
             os.path.join('tests', 'data', 'raster', 'res_2-1_epsg_4087')
@@ -894,7 +972,7 @@ class TestUnionDataset:
             UnionDataset(ds3, ds1)  # type: ignore[arg-type]
 
     def test_invalid_query(self, dataset: UnionDataset) -> None:
-        query = BoundingBox(-1, -1, -1, -1, -1, -1)
+        query = BoundingBox(-1, -1, -1, -1, datetime.min, datetime.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):

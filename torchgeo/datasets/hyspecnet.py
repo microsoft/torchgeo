@@ -157,7 +157,7 @@ class HySpecNet11k(NonGeoDataset):
                 'image': torch.tensor(src.read(self.band_indices).astype('float32')),
                 'x': torch.tensor((minx + maxx) / 2),
                 'y': torch.tensor((miny + maxy) / 2),
-                't': torch.tensor((mint + maxt) / 2),
+                't': torch.tensor((mint.timestamp() + maxt.timestamp()) / 2),
                 'wavelength': self.wavelengths,
                 'res': torch.tensor(30),
             }
