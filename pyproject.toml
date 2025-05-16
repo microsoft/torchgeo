@@ -257,6 +257,8 @@ filterwarnings = [
     "ignore:__array_wrap__ must accept context and return_scalar arguments:DeprecationWarning",
     # https://github.com/pydantic/pydantic/pull/11377
     "ignore:Failing to pass a value to the 'type_params' parameter of 'typing.*' is deprecated:DeprecationWarning:pydantic",
+    # https://github.com/Lightning-AI/pytorch-lightning/pull/20802
+    "ignore::jsonargparse._deprecated.JsonargparseDeprecationWarning:lightning.pytorch.cli",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
