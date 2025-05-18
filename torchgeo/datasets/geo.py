@@ -651,26 +651,13 @@ class VectorDataset(GeoDataset):
     #: Not used if :attr:`filename_regex` does not contain a ``date`` group.
     date_format = '%Y%m%d'
 
-    @property
-    def dtype(self) -> torch.dtype:
-        """The dtype of the dataset (overrides the dtype of the data file via a cast).
-
-        Defaults to long.
-
-        Returns:
-            the dtype of the dataset
-
-        .. versionadded:: 0.6
-        """
-        return torch.long
-
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         label_name: str | None = None,
+        clip_geometries: bool = False,
     ) -> None:
         """Initialize a new VectorDataset instance.
 
@@ -678,11 +665,11 @@ class VectorDataset(GeoDataset):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             label_name: name of the dataset property that has the label to be
                 rasterized into the mask
+            clip_geometries: whether to clip geometries to the bounds of the query
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
@@ -696,6 +683,7 @@ class VectorDataset(GeoDataset):
         super().__init__(transforms)
 
         self.paths = paths
+        self.clip_geometries = clip_geometries
         self.label_name = label_name
 
         # Populate the dataset index
@@ -729,11 +717,8 @@ class VectorDataset(GeoDataset):
         if i == 0:
             raise DatasetNotFoundError(self)
 
-        if isinstance(res, int | float):
-            res = (res, res)
 
         self._crs = crs
-        self._res = res
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
