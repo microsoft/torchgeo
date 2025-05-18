@@ -36,7 +36,7 @@ Features
 
 **Transform Backend**: The transform library used to perform data augmentation. For example, Kornia performs all augmentations on PyTorch Tensors, allowing you to run your transforms on the GPU for an entire mini-batch at a time.
 
-**Datasets**: The number of geospatial datasets built into the library. Note that most projects have something similar to TorchGeo's ``RasterDataset`` and ``VectorDataset``, allowing you to work with generic raster and vector files. Collections of datasets are only counted a single time, so data loaders for Landsats 1--9 are a single dataset, and data loaders for SpaceNets 1--8 are also a single dataset.
+**Datasets**: The number of geospatial datasets built into the library. Note that most projects have something similar to TorchGeo's ``RasterDataset``, ``VectorDataset`` and ``RasterizedVectorDataset``, allowing you to work with generic raster and vector files. Collections of datasets are only counted a single time, so data loaders for Landsats 1--9 are a single dataset, and data loaders for SpaceNets 1--8 are also a single dataset.
 
 **Weights**: The number of model weights pre-trained on geospatial data that are offered by the library. Note that most projects support hundreds of model architectures via a library like PyTorch Image Models, and can use models pre-trained on ImageNet. There are far fewer libraries that provide foundation model weights pre-trained on multispectral satellite imagery.
 

@@ -637,6 +637,11 @@ VectorDataset
 
 .. autoclass:: VectorDataset
 
+RasterizedVectorDataset
+^^^^^^^^^^^^^
+
+.. autoclass:: RasterizedVectorDataset
+
 NonGeoDataset
 ^^^^^^^^^^^^^
 
