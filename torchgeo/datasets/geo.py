@@ -656,7 +656,6 @@ class VectorDataset(GeoDataset):
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-        label_name: str | None = None,
         clip_geometries: bool = False,
     ) -> None:
         """Initialize a new VectorDataset instance.
@@ -667,15 +666,10 @@ class VectorDataset(GeoDataset):
                 (defaults to the CRS of the first file found)
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
-            label_name: name of the dataset property that has the label to be
-                rasterized into the mask
             clip_geometries: whether to clip geometries to the bounds of the query
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
-
-        .. versionadded:: 0.4
-            The *label_name* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -684,7 +678,6 @@ class VectorDataset(GeoDataset):
 
         self.paths = paths
         self.clip_geometries = clip_geometries
-        self.label_name = label_name
 
         # Populate the dataset index
         i = 0
@@ -771,20 +764,6 @@ class VectorDataset(GeoDataset):
 
         return features
 
-    def get_label(self, feature: 'fiona.model.Feature') -> int:
-        """Get label value to use for rendering a feature.
-
-        Args:
-            feature: the :class:`fiona.model.Feature` from which to extract the label.
-
-        Returns:
-            the integer label, or 0 if the feature should not be rendered.
-
-        .. versionadded:: 0.6
-        """
-        if self.label_name:
-            return int(feature['properties'][self.label_name])
-        return 1
 
 class RasterizationStrategy(abc.ABC):
     """Abstract base class for rasterization strategies."""
@@ -851,6 +830,7 @@ class RasterizedVectorDataset(VectorDataset):
         *args: Any,
         rasterization_strategy: RasterizationStrategy = DefaultRasterizationStrategy(),
         res: float | tuple[float, float] = (0.0001, 0.0001),
+        label_name: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize a new RasterizedVectorDataset instance.
@@ -860,12 +840,19 @@ class RasterizedVectorDataset(VectorDataset):
             **kwargs: Keyword arguments passed to VectorDataset base class.
             rasterization_strategy: rasterization strategy instance.
             res: resolution of the dataset in units of CRS
+            label_name: name of the dataset property that has the label to be
+                rasterized into the mask
+
+        .. versionadded:: 0.4
+            The *label_name* parameter.
+
         """
         super().__init__(*args, **kwargs)
         self.rasterization_strategy = rasterization_strategy
         if isinstance(res, int | float):
             res = (res, res)
 
+        self.label_name = label_name
         self._res = res
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
@@ -896,6 +883,21 @@ class RasterizedVectorDataset(VectorDataset):
             sample = self.transforms(sample)
 
         return sample
+
+    def get_label(self, feature: 'fiona.model.Feature') -> int:
+        """Get label value to use for rendering a feature.
+
+        Args:
+            feature: the :class:`fiona.model.Feature` from which to extract the label.
+
+        Returns:
+            the integer label, or 0 if the feature should not be rendered.
+
+        .. versionadded:: 0.6
+        """
+        if self.label_name:
+            return int(feature['properties'][self.label_name])
+        return 1
 
 
 class NonGeoDataset(Dataset[dict[str, Any]], abc.ABC):
