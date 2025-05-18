@@ -721,13 +721,13 @@ class VectorDataset(GeoDataset):
         self._crs = crs
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+        """Retrieve spatial features indexed by query.
 
         Args:
             query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
 
         Returns:
-            sample of image/mask and metadata at that index
+            dictionary of spatial features at that query index with keys corresponding to the feature id
 
         Raises:
             IndexError: if query is not found in the index
@@ -740,7 +740,7 @@ class VectorDataset(GeoDataset):
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        shapes = []
+        features = {}
         for filepath in filepaths:
             with fiona.open(filepath) as src:
                 # We need to know the bounding box of the query in the source CRS
@@ -750,6 +750,7 @@ class VectorDataset(GeoDataset):
                     [query.minx, query.maxx],
                     [query.miny, query.maxy],
                 )
+                bbox = shapely.geometry.box(minx, miny, maxx, maxy)
 
                 # Filter geometries to those that intersect with the bounding box
                 for feature in src.filter(bbox=(minx, miny, maxx, maxy)):
@@ -757,34 +758,17 @@ class VectorDataset(GeoDataset):
                     shape = fiona.transform.transform_geom(
                         src.crs, self.crs.to_dict(), feature['geometry']
                     )
-                    label = self.get_label(feature)
-                    shapes.append((shape, label))
 
-        # Rasterize geometries
-        width = (query.maxx - query.minx) / self.res[0]
-        height = (query.maxy - query.miny) / self.res[1]
-        transform = rasterio.transform.from_bounds(
-            query.minx, query.miny, query.maxx, query.maxy, width, height
-        )
-        if shapes:
-            masks = rasterio.features.rasterize(
-                shapes, out_shape=(round(height), round(width)), transform=transform
-            )
-        else:
-            # If no features are found in this query, return an empty mask
-            # with the default fill value and dtype used by rasterize
-            masks = np.zeros((round(height), round(width)), dtype=np.uint8)
+                    # Clip geometries to the query bounds
+                    if self.clip_geometries:
+                        shape = shape.intersection(bbox)
 
-        # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
-        masks = array_to_tensor(masks)
+                    # Retrieve full feature dictionary
+                    feature_dict = {'geometry': shape}
+                    feature_dict['properties'] = feature['properties']
+                    features.update({str(feature['id']): feature_dict})
 
-        masks = masks.to(self.dtype)
-        sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
+        return features
 
     def get_label(self, feature: 'fiona.model.Feature') -> int:
         """Get label value to use for rendering a feature.
