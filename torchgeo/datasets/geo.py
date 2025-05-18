@@ -785,6 +785,49 @@ class VectorDataset(GeoDataset):
             return int(feature['properties'][self.label_name])
         return 1
 
+class RasterizationStrategy(abc.ABC):
+    """Abstract base class for rasterization strategies."""
+
+    @abc.abstractmethod
+    def rasterize(
+        self,
+        geometries: Iterable[tuple[shapely.Geometry, int]],
+        query: BoundingBox,
+        res: float | tuple[float, float],
+    ) -> torch.Tensor:
+        """Rasterize geometries into a mask."""
+
+
+class DefaultRasterizationStrategy(RasterizationStrategy):
+    """Rasterize geometries into a binary or multilabel mask."""
+
+    def rasterize(
+        self,
+        geometries: Iterable[tuple[shapely.Geometry, int]],
+        query: BoundingBox,
+        res: float | tuple[float, float],
+    ) -> torch.Tensor:
+        """Rasterize geometries into a binary mask."""
+        if isinstance(res, float | int):
+            res = (res, res)
+
+        width = (query.maxx - query.minx) / res[0]
+        height = (query.maxy - query.miny) / res[1]
+        transform = rasterio.transform.from_bounds(
+            query.minx, query.miny, query.maxx, query.maxy, width, height
+        )
+        if geometries:
+            masks = rasterio.features.rasterize(
+                geometries, out_shape=(round(height), round(width)), transform=transform
+            )
+        else:
+            # If no features are found in this query, return an empty mask
+            # with the default fill value and dtype used by rasterize
+            masks = np.zeros((round(height), round(width)), dtype=np.uint8)
+
+        # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
+        masks = array_to_tensor(masks)
+        return masks
 
 class NonGeoDataset(Dataset[dict[str, Any]], abc.ABC):
     """Abstract base class for datasets lacking geospatial information.
