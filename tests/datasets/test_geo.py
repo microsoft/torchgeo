@@ -9,14 +9,15 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+import fiona
 import pytest
+import shapely
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from torch.utils.data import ConcatDataset
-import shapely
 
 from torchgeo.datasets import (
     NAIP,
@@ -64,12 +65,14 @@ class CustomRasterDataset(RasterDataset):
     def dtype(self) -> torch.dtype:
         return self._dtype
 
+
 class CustomVectorDataset(VectorDataset):
     filename_glob = '*.geojson'
     date_format = '%Y'
     filename_regex = r"""
         ^vector_(?P<date>\d{4})\.geojson
     """
+
 
 class CustomRasterizedVectorDataset(RasterizedVectorDataset):
     filename_glob = '*.geojson'
@@ -395,8 +398,8 @@ class TestRasterDataset:
         assert ds.res == (10.0, 10.0)
         ds.res = 20.0  # type: ignore[assignment]
 
-class TestVectorDataset:
 
+class TestVectorDataset:
     @pytest.fixture(scope='class')
     def dataset(self) -> CustomVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
@@ -430,7 +433,11 @@ class TestVectorDataset:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             RasterizedVectorDataset(tmp_path)
 
-    def test_clip_geometries(self, dataset: CustomRasterizedVectorDataset, clipped_geoemtries_dataset: CustomRasterizedVectorDataset) -> None:
+    def test_clip_geometries(
+        self,
+        dataset: CustomRasterizedVectorDataset,
+        clipped_geoemtries_dataset: CustomRasterizedVectorDataset,
+    ) -> None:
         # split the query window in two
         query_window_1, query_window_2 = dataset.bounds.split(0.3, horizontal=False)
 
@@ -439,9 +446,16 @@ class TestVectorDataset:
         clipped_dataset_elements = clipped_geoemtries_dataset[query_window_1]
 
         # Compare clippied and non clipped geoemtries area in window 1
-        feature_area = lambda f: shapely.geometry.shape(f["geometry"]).area
-        dataset_elements_area = sum([feature_area(feature) for feature in dataset_elements.values()])
-        clipped_dataset_elements_area = sum([feature_area(feature) for feature in clipped_dataset_elements.values()])
+        def feature_area(f: 'fiona.Feature') -> float:
+            area = float(shapely.geometry.shape(f['geometry']).area)
+            return area
+
+        dataset_elements_area = sum(
+            [feature_area(feature) for feature in dataset_elements.values()]
+        )
+        clipped_dataset_elements_area = sum(
+            [feature_area(feature) for feature in clipped_dataset_elements.values()]
+        )
         assert clipped_dataset_elements_area < dataset_elements_area
 
         # Compare clipped geometries area in both windows with whole dataset window
@@ -449,12 +463,17 @@ class TestVectorDataset:
         w2_clipped_elements = clipped_geoemtries_dataset[query_window_2]
         unclipped_elements = dataset[dataset.bounds]
 
-        w1_clipped_area = sum([feature_area(feature) for feature in w1_clipped_elements.values()])
-        w2_clipped_area = sum([feature_area(feature) for feature in w2_clipped_elements.values()])
-        unclipped_area = sum([feature_area(feature) for feature in unclipped_elements.values()])
+        w1_clipped_area = sum(
+            [feature_area(feature) for feature in w1_clipped_elements.values()]
+        )
+        w2_clipped_area = sum(
+            [feature_area(feature) for feature in w2_clipped_elements.values()]
+        )
+        unclipped_area = sum(
+            [feature_area(feature) for feature in unclipped_elements.values()]
+        )
 
         assert (w1_clipped_area + w2_clipped_area) == unclipped_area
-
 
 
 class TestRasterizedVectorDataset:

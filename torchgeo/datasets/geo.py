@@ -710,7 +710,6 @@ class VectorDataset(GeoDataset):
         if i == 0:
             raise DatasetNotFoundError(self)
 
-
         self._crs = crs
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
@@ -808,6 +807,7 @@ class DefaultRasterizationStrategy(RasterizationStrategy):
         # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
         masks = array_to_tensor(masks)
         return masks
+
 
 class RasterizedVectorDataset(VectorDataset):
     """Abstract base class for datasets with rasterized vector data."""

@@ -638,9 +638,15 @@ VectorDataset
 .. autoclass:: VectorDataset
 
 RasterizedVectorDataset
-^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: RasterizedVectorDataset
+
+Vector datasets Rasterizers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: RasterizationStrategy
+.. autoclass:: DefaultRasterizationStrategy
 
 NonGeoDataset
 ^^^^^^^^^^^^^

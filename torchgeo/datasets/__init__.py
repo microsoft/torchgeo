@@ -77,11 +77,13 @@ from .ftw import FieldsOfTheWorld
 from .gbif import GBIF
 from .gbm import GlobalBuildingMap
 from .geo import (
+    DefaultRasterizationStrategy,
     GeoDataset,
     IntersectionDataset,
     NonGeoClassificationDataset,
     NonGeoDataset,
     RasterDataset,
+    RasterizationStrategy,
     RasterizedVectorDataset,
     UnionDataset,
     VectorDataset,
@@ -258,6 +260,7 @@ __all__ = (
     'DL4GAMAlps',
     'DatasetNotFoundError',
     'DeepGlobeLandCover',
+    'DefaultRasterizationStrategy',
     'DependencyNotFoundError',
     'DigitalTyphoon',
     'EDDMapS',
@@ -315,6 +318,7 @@ __all__ = (
     'QuakeSet',
     'RGBBandsMissingError',
     'RasterDataset',
+    'RasterizationStrategy',
     'RasterizedVectorDataset',
     'ReforesTree',
     'RwandaFieldBoundary',
