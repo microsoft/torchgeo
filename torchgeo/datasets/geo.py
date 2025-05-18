@@ -761,7 +761,8 @@ class VectorDataset(GeoDataset):
 
                     # Clip geometries to the query bounds
                     if self.clip_geometries:
-                        shape = shape.intersection(bbox)
+                        clipped = bbox.intersection(shapely.geometry.shape(shape))
+                        shape = fiona.Geometry(**shapely.geometry.mapping(clipped))
 
                     # Retrieve full feature dictionary
                     feature_dict = {'geometry': shape}
