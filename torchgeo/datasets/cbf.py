@@ -12,11 +12,11 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
-from .geo import VectorDataset
+from .geo import RasterizedVectorDataset
 from .utils import Path, check_integrity, download_and_extract_archive
 
 
-class CanadianBuildingFootprints(VectorDataset):
+class CanadianBuildingFootprints(RasterizedVectorDataset):
     """Canadian Building Footprints dataset.
 
     The `Canadian Building Footprints
@@ -134,7 +134,7 @@ class CanadianBuildingFootprints(VectorDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`VectorDataset.__getitem__`
+            sample: a sample returned by :meth:`RasterizedVectorDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 

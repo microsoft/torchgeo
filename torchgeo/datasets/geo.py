@@ -651,26 +651,12 @@ class VectorDataset(GeoDataset):
     #: Not used if :attr:`filename_regex` does not contain a ``date`` group.
     date_format = '%Y%m%d'
 
-    @property
-    def dtype(self) -> torch.dtype:
-        """The dtype of the dataset (overrides the dtype of the data file via a cast).
-
-        Defaults to long.
-
-        Returns:
-            the dtype of the dataset
-
-        .. versionadded:: 0.6
-        """
-        return torch.long
-
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-        label_name: str | None = None,
+        clip_geometries: bool = False,
     ) -> None:
         """Initialize a new VectorDataset instance.
 
@@ -678,17 +664,12 @@ class VectorDataset(GeoDataset):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
-            label_name: name of the dataset property that has the label to be
-                rasterized into the mask
+            clip_geometries: whether to clip geometries to the bounds of the query
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
-
-        .. versionadded:: 0.4
-            The *label_name* parameter.
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
@@ -696,7 +677,7 @@ class VectorDataset(GeoDataset):
         super().__init__(transforms)
 
         self.paths = paths
-        self.label_name = label_name
+        self.clip_geometries = clip_geometries
 
         # Populate the dataset index
         i = 0
@@ -729,10 +710,149 @@ class VectorDataset(GeoDataset):
         if i == 0:
             raise DatasetNotFoundError(self)
 
+        self._crs = crs
+
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+        """Retrieve spatial features indexed by query.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            dictionary of spatial features at that query index with keys corresponding to the feature id
+
+        Raises:
+            IndexError: if query is not found in the index
+        """
+        hits = self.index.intersection(tuple(query), objects=True)
+        filepaths = [hit.object for hit in hits]
+
+        if not filepaths:
+            raise IndexError(
+                f'query: {query} not found in index with bounds: {self.bounds}'
+            )
+
+        features = {}
+        for filepath in filepaths:
+            with fiona.open(filepath) as src:
+                # We need to know the bounding box of the query in the source CRS
+                (minx, maxx), (miny, maxy) = fiona.transform.transform(
+                    self.crs.to_dict(),
+                    src.crs,
+                    [query.minx, query.maxx],
+                    [query.miny, query.maxy],
+                )
+                bbox = shapely.geometry.box(minx, miny, maxx, maxy)
+
+                # Filter geometries to those that intersect with the bounding box
+                for feature in src.filter(bbox=(minx, miny, maxx, maxy)):
+                    # Warp geometries to requested CRS
+                    shape = fiona.transform.transform_geom(
+                        src.crs, self.crs.to_dict(), feature['geometry']
+                    )
+
+                    # Clip geometries to the query bounds
+                    if self.clip_geometries:
+                        clipped = bbox.intersection(shapely.geometry.shape(shape))
+                        shape = fiona.Geometry(**shapely.geometry.mapping(clipped))
+
+                    # Retrieve full feature dictionary
+                    feature_dict = {'geometry': shape}
+                    feature_dict['properties'] = feature['properties']
+                    features.update({str(feature['id']): feature_dict})
+
+        return features
+
+
+class RasterizationStrategy(abc.ABC):
+    """Abstract base class for rasterization strategies."""
+
+    @abc.abstractmethod
+    def rasterize(
+        self,
+        geometries: Iterable[tuple[shapely.Geometry, int]],
+        query: BoundingBox,
+        res: float | tuple[float, float],
+    ) -> torch.Tensor:
+        """Rasterize geometries into a mask."""
+
+
+class DefaultRasterizationStrategy(RasterizationStrategy):
+    """Rasterize geometries into a binary or multilabel mask."""
+
+    def rasterize(
+        self,
+        geometries: Iterable[tuple[shapely.Geometry, int]],
+        query: BoundingBox,
+        res: float | tuple[float, float],
+    ) -> torch.Tensor:
+        """Rasterize geometries into a binary mask."""
+        if isinstance(res, float | int):
+            res = (res, res)
+
+        width = (query.maxx - query.minx) / res[0]
+        height = (query.maxy - query.miny) / res[1]
+        transform = rasterio.transform.from_bounds(
+            query.minx, query.miny, query.maxx, query.maxy, width, height
+        )
+        if geometries:
+            masks = rasterio.features.rasterize(
+                geometries, out_shape=(round(height), round(width)), transform=transform
+            )
+        else:
+            # If no features are found in this query, return an empty mask
+            # with the default fill value and dtype used by rasterize
+            masks = np.zeros((round(height), round(width)), dtype=np.uint8)
+
+        # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
+        masks = array_to_tensor(masks)
+        return masks
+
+
+class RasterizedVectorDataset(VectorDataset):
+    """Abstract base class for datasets with rasterized vector data."""
+
+    @property
+    def dtype(self) -> torch.dtype:
+        """The dtype of the dataset (overrides the dtype of the data file via a cast).
+
+        Defaults to long.
+
+        Returns:
+            the dtype of the dataset
+
+        .. versionadded:: 0.6
+        """
+        return torch.long
+
+    def __init__(
+        self,
+        *args: Any,
+        rasterization_strategy: RasterizationStrategy = DefaultRasterizationStrategy(),
+        res: float | tuple[float, float] = (0.0001, 0.0001),
+        label_name: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a new RasterizedVectorDataset instance.
+
+        Args:
+            *args: Arguments passed to VectorDataset base class.
+            **kwargs: Keyword arguments passed to VectorDataset base class.
+            rasterization_strategy: rasterization strategy instance.
+            res: resolution of the dataset in units of CRS
+            label_name: name of the dataset property that has the label to be
+                rasterized into the mask
+
+        .. versionadded:: 0.4
+            The *label_name* parameter.
+
+        """
+        super().__init__(*args, **kwargs)
+        self.rasterization_strategy = rasterization_strategy
         if isinstance(res, int | float):
             res = (res, res)
 
-        self._crs = crs
+        self.label_name = label_name
         self._res = res
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
@@ -747,53 +867,16 @@ class VectorDataset(GeoDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = [hit.object for hit in hits]
-
-        if not filepaths:
-            raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
-            )
-
-        shapes = []
-        for filepath in filepaths:
-            with fiona.open(filepath) as src:
-                # We need to know the bounding box of the query in the source CRS
-                (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                    self.crs.to_dict(),
-                    src.crs,
-                    [query.minx, query.maxx],
-                    [query.miny, query.maxy],
-                )
-
-                # Filter geometries to those that intersect with the bounding box
-                for feature in src.filter(bbox=(minx, miny, maxx, maxy)):
-                    # Warp geometries to requested CRS
-                    shape = fiona.transform.transform_geom(
-                        src.crs, self.crs.to_dict(), feature['geometry']
-                    )
-                    label = self.get_label(feature)
-                    shapes.append((shape, label))
-
-        # Rasterize geometries
-        width = (query.maxx - query.minx) / self.res[0]
-        height = (query.maxy - query.miny) / self.res[1]
-        transform = rasterio.transform.from_bounds(
-            query.minx, query.miny, query.maxx, query.maxy, width, height
+        features_dict = super().__getitem__(query)
+        # If no label name is provided, label is set to 1 (binary mask)
+        feature_value_pairs = (
+            (feature['geometry'], self.get_label(feature))
+            for feature in features_dict.values()
         )
-        if shapes:
-            masks = rasterio.features.rasterize(
-                shapes, out_shape=(round(height), round(width)), transform=transform
-            )
-        else:
-            # If no features are found in this query, return an empty mask
-            # with the default fill value and dtype used by rasterize
-            masks = np.zeros((round(height), round(width)), dtype=np.uint8)
-
-        # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
-        masks = array_to_tensor(masks)
-
-        masks = masks.to(self.dtype)
+        rasterized_geometries = self.rasterization_strategy.rasterize(
+            feature_value_pairs, query, self.res
+        )
+        masks = rasterized_geometries.to(self.dtype)
         sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
 
         if self.transforms is not None:

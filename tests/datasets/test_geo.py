@@ -9,7 +9,9 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+import fiona
 import pytest
+import shapely
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
@@ -26,6 +28,7 @@ from torchgeo.datasets import (
     NonGeoClassificationDataset,
     NonGeoDataset,
     RasterDataset,
+    RasterizedVectorDataset,
     Sentinel2,
     UnionDataset,
     VectorDataset,
@@ -64,6 +67,14 @@ class CustomRasterDataset(RasterDataset):
 
 
 class CustomVectorDataset(VectorDataset):
+    filename_glob = '*.geojson'
+    date_format = '%Y'
+    filename_regex = r"""
+        ^vector_(?P<date>\d{4})\.geojson
+    """
+
+
+class CustomRasterizedVectorDataset(RasterizedVectorDataset):
     filename_glob = '*.geojson'
     date_format = '%Y'
     filename_regex = r"""
@@ -393,17 +404,96 @@ class TestVectorDataset:
     def dataset(self) -> CustomVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
-        return CustomVectorDataset(root, res=(0.1, 0.1), transforms=transforms)
+        return CustomVectorDataset(root, transforms=transforms)
 
     @pytest.fixture(scope='class')
-    def multilabel(self) -> CustomVectorDataset:
+    def clipped_geoemtries_dataset(self) -> CustomVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
-        return CustomVectorDataset(
+        return CustomVectorDataset(root, transforms=transforms, clip_geometries=True)
+
+    def test_getitem(self, dataset: CustomRasterizedVectorDataset) -> None:
+        x = dataset[dataset.bounds]
+        assert isinstance(x, dict)
+        assert len(x) == 3
+
+    def test_empty_query_window(self, dataset: CustomRasterizedVectorDataset) -> None:
+        query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, sys.maxsize)
+        x = dataset[query]
+        assert len(x) == 0
+
+    def test_invalid_query(self, dataset: CustomRasterizedVectorDataset) -> None:
+        query = BoundingBox(3, 3, 3, 3, 0, 0)
+        with pytest.raises(
+            IndexError, match='query: .* not found in index with bounds:'
+        ):
+            dataset[query]
+
+    def test_no_data(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            RasterizedVectorDataset(tmp_path)
+
+    def test_clip_geometries(
+        self,
+        dataset: CustomRasterizedVectorDataset,
+        clipped_geoemtries_dataset: CustomRasterizedVectorDataset,
+    ) -> None:
+        # split the query window in two
+        query_window_1, query_window_2 = dataset.bounds.split(0.3, horizontal=False)
+
+        # retrieve the datasets elements in window 1
+        dataset_elements = dataset[query_window_1]
+        clipped_dataset_elements = clipped_geoemtries_dataset[query_window_1]
+
+        # Compare clippied and non clipped geoemtries area in window 1
+        def feature_area(f: 'fiona.Feature') -> float:
+            area = float(shapely.geometry.shape(f['geometry']).area)
+            return area
+
+        dataset_elements_area = sum(
+            [feature_area(feature) for feature in dataset_elements.values()]
+        )
+        clipped_dataset_elements_area = sum(
+            [feature_area(feature) for feature in clipped_dataset_elements.values()]
+        )
+        assert clipped_dataset_elements_area < dataset_elements_area
+
+        # Compare clipped geometries area in both windows with whole dataset window
+        w1_clipped_elements = clipped_geoemtries_dataset[query_window_1]
+        w2_clipped_elements = clipped_geoemtries_dataset[query_window_2]
+        unclipped_elements = dataset[dataset.bounds]
+
+        w1_clipped_area = sum(
+            [feature_area(feature) for feature in w1_clipped_elements.values()]
+        )
+        w2_clipped_area = sum(
+            [feature_area(feature) for feature in w2_clipped_elements.values()]
+        )
+        unclipped_area = sum(
+            [feature_area(feature) for feature in unclipped_elements.values()]
+        )
+
+        assert (w1_clipped_area + w2_clipped_area) == unclipped_area
+
+
+class TestRasterizedVectorDataset:
+    @pytest.fixture(scope='class')
+    def dataset(self) -> CustomRasterizedVectorDataset:
+        root = os.path.join('tests', 'data', 'vector')
+        transforms = nn.Identity()
+        return CustomRasterizedVectorDataset(
+            root, res=(0.1, 0.1), transforms=transforms
+        )
+
+    @pytest.fixture(scope='class')
+    def multilabel(self) -> CustomRasterizedVectorDataset:
+        root = os.path.join('tests', 'data', 'vector')
+        transforms = nn.Identity()
+        return CustomRasterizedVectorDataset(
             root, res=(0.1, 0.1), transforms=transforms, label_name='label_id'
         )
 
-    def test_getitem(self, dataset: CustomVectorDataset) -> None:
+    def test_getitem(self, dataset: CustomRasterizedVectorDataset) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
@@ -413,11 +503,13 @@ class TestVectorDataset:
             torch.tensor([0, 1], dtype=torch.uint8),
         )
 
-    def test_time_index(self, dataset: CustomVectorDataset) -> None:
+    def test_time_index(self, dataset: CustomRasterizedVectorDataset) -> None:
         assert dataset.index.bounds[4] > 0
         assert dataset.index.bounds[5] < sys.maxsize
 
-    def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
+    def test_getitem_multilabel(
+        self, multilabel: CustomRasterizedVectorDataset
+    ) -> None:
         x = multilabel[multilabel.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
@@ -427,12 +519,12 @@ class TestVectorDataset:
             torch.tensor([0, 1, 2, 3], dtype=torch.uint8),
         )
 
-    def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
+    def test_empty_shapes(self, dataset: CustomRasterizedVectorDataset) -> None:
         query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, sys.maxsize)
         x = dataset[query]
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
-    def test_invalid_query(self, dataset: CustomVectorDataset) -> None:
+    def test_invalid_query(self, dataset: CustomRasterizedVectorDataset) -> None:
         query = BoundingBox(3, 3, 3, 3, 0, 0)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
@@ -441,11 +533,11 @@ class TestVectorDataset:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            VectorDataset(tmp_path)
+            RasterizedVectorDataset(tmp_path)
 
     def test_single_res(self) -> None:
         root = os.path.join('tests', 'data', 'vector')
-        ds = CustomVectorDataset(root, res=0.1)
+        ds = CustomRasterizedVectorDataset(root, res=0.1)
         assert ds.res == (0.1, 0.1)
 
 

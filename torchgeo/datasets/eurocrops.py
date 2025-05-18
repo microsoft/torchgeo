@@ -15,11 +15,11 @@ from matplotlib.figure import Figure
 from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
-from .geo import VectorDataset
+from .geo import RasterizedVectorDataset
 from .utils import Path, check_integrity, download_and_extract_archive, download_url
 
 
-class EuroCrops(VectorDataset):
+class EuroCrops(RasterizedVectorDataset):
     """EuroCrops Dataset (Version 9).
 
     The `EuroCrops <https://www.eurocrops.tum.de/index.html>`__ dataset combines "all
@@ -231,7 +231,7 @@ class EuroCrops(VectorDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`VectorDataset.__getitem__`
+            sample: a sample returned by :meth:`RasterizedVectorDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 
