@@ -16,6 +16,7 @@ from _pytest.fixtures import SubRequest
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from torch.utils.data import ConcatDataset
+import shapely
 
 from torchgeo.datasets import (
     NAIP,
@@ -29,6 +30,7 @@ from torchgeo.datasets import (
     RasterizedVectorDataset,
     Sentinel2,
     UnionDataset,
+    VectorDataset,
 )
 
 
@@ -62,6 +64,12 @@ class CustomRasterDataset(RasterDataset):
     def dtype(self) -> torch.dtype:
         return self._dtype
 
+class CustomVectorDataset(VectorDataset):
+    filename_glob = '*.geojson'
+    date_format = '%Y'
+    filename_regex = r"""
+        ^vector_(?P<date>\d{4})\.geojson
+    """
 
 class CustomRasterizedVectorDataset(RasterizedVectorDataset):
     filename_glob = '*.geojson'
@@ -386,6 +394,67 @@ class TestRasterDataset:
         ds = RasterDataset(root, res=10.0)
         assert ds.res == (10.0, 10.0)
         ds.res = 20.0  # type: ignore[assignment]
+
+class TestVectorDataset:
+
+    @pytest.fixture(scope='class')
+    def dataset(self) -> CustomVectorDataset:
+        root = os.path.join('tests', 'data', 'vector')
+        transforms = nn.Identity()
+        return CustomVectorDataset(root, transforms=transforms)
+
+    @pytest.fixture(scope='class')
+    def clipped_geoemtries_dataset(self) -> CustomVectorDataset:
+        root = os.path.join('tests', 'data', 'vector')
+        transforms = nn.Identity()
+        return CustomVectorDataset(root, transforms=transforms, clip_geometries=True)
+
+    def test_getitem(self, dataset: CustomRasterizedVectorDataset) -> None:
+        x = dataset[dataset.bounds]
+        assert isinstance(x, dict)
+        assert len(x) == 3
+
+    def test_empty_query_window(self, dataset: CustomRasterizedVectorDataset) -> None:
+        query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, sys.maxsize)
+        x = dataset[query]
+        assert len(x) == 0
+
+    def test_invalid_query(self, dataset: CustomRasterizedVectorDataset) -> None:
+        query = BoundingBox(3, 3, 3, 3, 0, 0)
+        with pytest.raises(
+            IndexError, match='query: .* not found in index with bounds:'
+        ):
+            dataset[query]
+
+    def test_no_data(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            RasterizedVectorDataset(tmp_path)
+
+    def test_clip_geometries(self, dataset: CustomRasterizedVectorDataset, clipped_geoemtries_dataset: CustomRasterizedVectorDataset) -> None:
+        # split the query window in two
+        query_window_1, query_window_2 = dataset.bounds.split(0.3, horizontal=False)
+
+        # retrieve the datasets elements in window 1
+        dataset_elements = dataset[query_window_1]
+        clipped_dataset_elements = clipped_geoemtries_dataset[query_window_1]
+
+        # Compare clippied and non clipped geoemtries area in window 1
+        feature_area = lambda f: shapely.geometry.shape(f["geometry"]).area
+        dataset_elements_area = sum([feature_area(feature) for feature in dataset_elements.values()])
+        clipped_dataset_elements_area = sum([feature_area(feature) for feature in clipped_dataset_elements.values()])
+        assert clipped_dataset_elements_area < dataset_elements_area
+
+        # Compare clipped geometries area in both windows with whole dataset window
+        w1_clipped_elements = clipped_geoemtries_dataset[query_window_1]
+        w2_clipped_elements = clipped_geoemtries_dataset[query_window_2]
+        unclipped_elements = dataset[dataset.bounds]
+
+        w1_clipped_area = sum([feature_area(feature) for feature in w1_clipped_elements.values()])
+        w2_clipped_area = sum([feature_area(feature) for feature in w2_clipped_elements.values()])
+        unclipped_area = sum([feature_area(feature) for feature in unclipped_elements.values()])
+
+        assert (w1_clipped_area + w2_clipped_area) == unclipped_area
+
 
 
 class TestRasterizedVectorDataset:
