@@ -23,11 +23,11 @@ from rasterio.crs import CRS
 from rtree.index import Index, Property
 
 from .errors import DatasetNotFoundError
-from .geo import VectorDataset
+from .geo import RasterizedVectorDataset
 from .utils import BoundingBox, Path, check_integrity
 
 
-class OpenBuildings(VectorDataset):
+class OpenBuildings(RasterizedVectorDataset):
     r"""Open Buildings dataset.
 
     The `Open Buildings

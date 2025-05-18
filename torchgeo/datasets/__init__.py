@@ -82,6 +82,7 @@ from .geo import (
     NonGeoClassificationDataset,
     NonGeoDataset,
     RasterDataset,
+    RasterizedVectorDataset,
     UnionDataset,
     VectorDataset,
 )
@@ -314,6 +315,7 @@ __all__ = (
     'QuakeSet',
     'RGBBandsMissingError',
     'RasterDataset',
+    'RasterizedVectorDataset',
     'ReforesTree',
     'RwandaFieldBoundary',
     'SSL4EOLBenchmark',
