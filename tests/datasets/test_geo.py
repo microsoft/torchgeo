@@ -26,9 +26,9 @@ from torchgeo.datasets import (
     NonGeoClassificationDataset,
     NonGeoDataset,
     RasterDataset,
+    RasterizedVectorDataset,
     Sentinel2,
     UnionDataset,
-    VectorDataset,
 )
 
 
@@ -63,7 +63,7 @@ class CustomRasterDataset(RasterDataset):
         return self._dtype
 
 
-class CustomVectorDataset(VectorDataset):
+class CustomRasterizedVectorDataset(RasterizedVectorDataset):
     filename_glob = '*.geojson'
     date_format = '%Y'
     filename_regex = r"""
@@ -388,22 +388,24 @@ class TestRasterDataset:
         ds.res = 20.0  # type: ignore[assignment]
 
 
-class TestVectorDataset:
+class TestRasterizedVectorDataset:
     @pytest.fixture(scope='class')
-    def dataset(self) -> CustomVectorDataset:
+    def dataset(self) -> CustomRasterizedVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
-        return CustomVectorDataset(root, res=(0.1, 0.1), transforms=transforms)
+        return CustomRasterizedVectorDataset(
+            root, res=(0.1, 0.1), transforms=transforms
+        )
 
     @pytest.fixture(scope='class')
-    def multilabel(self) -> CustomVectorDataset:
+    def multilabel(self) -> CustomRasterizedVectorDataset:
         root = os.path.join('tests', 'data', 'vector')
         transforms = nn.Identity()
-        return CustomVectorDataset(
+        return CustomRasterizedVectorDataset(
             root, res=(0.1, 0.1), transforms=transforms, label_name='label_id'
         )
 
-    def test_getitem(self, dataset: CustomVectorDataset) -> None:
+    def test_getitem(self, dataset: CustomRasterizedVectorDataset) -> None:
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
@@ -413,11 +415,13 @@ class TestVectorDataset:
             torch.tensor([0, 1], dtype=torch.uint8),
         )
 
-    def test_time_index(self, dataset: CustomVectorDataset) -> None:
+    def test_time_index(self, dataset: CustomRasterizedVectorDataset) -> None:
         assert dataset.index.bounds[4] > 0
         assert dataset.index.bounds[5] < sys.maxsize
 
-    def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
+    def test_getitem_multilabel(
+        self, multilabel: CustomRasterizedVectorDataset
+    ) -> None:
         x = multilabel[multilabel.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
@@ -427,12 +431,12 @@ class TestVectorDataset:
             torch.tensor([0, 1, 2, 3], dtype=torch.uint8),
         )
 
-    def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
+    def test_empty_shapes(self, dataset: CustomRasterizedVectorDataset) -> None:
         query = BoundingBox(1.1, 1.9, 1.1, 1.9, 0, sys.maxsize)
         x = dataset[query]
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
-    def test_invalid_query(self, dataset: CustomVectorDataset) -> None:
+    def test_invalid_query(self, dataset: CustomRasterizedVectorDataset) -> None:
         query = BoundingBox(3, 3, 3, 3, 0, 0)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
@@ -441,11 +445,11 @@ class TestVectorDataset:
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            VectorDataset(tmp_path)
+            RasterizedVectorDataset(tmp_path)
 
     def test_single_res(self) -> None:
         root = os.path.join('tests', 'data', 'vector')
-        ds = CustomVectorDataset(root, res=0.1)
+        ds = CustomRasterizedVectorDataset(root, res=0.1)
         assert ds.res == (0.1, 0.1)
 
 
