@@ -829,6 +829,74 @@ class DefaultRasterizationStrategy(RasterizationStrategy):
         masks = array_to_tensor(masks)
         return masks
 
+class RasterizedVectorDataset(VectorDataset):
+    """Abstract base class for datasets with rasterized vector data."""
+
+    @property
+    def dtype(self) -> torch.dtype:
+        """The dtype of the dataset (overrides the dtype of the data file via a cast).
+
+        Defaults to long.
+
+        Returns:
+            the dtype of the dataset
+
+        .. versionadded:: 0.6
+        """
+        return torch.long
+
+    def __init__(
+        self,
+        *args: Any,
+        rasterization_strategy: RasterizationStrategy = DefaultRasterizationStrategy(),
+        res: float | tuple[float, float] = (0.0001, 0.0001),
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a new RasterizedVectorDataset instance.
+
+        Args:
+            *args: Arguments passed to VectorDataset base class.
+            **kwargs: Keyword arguments passed to VectorDataset base class.
+            rasterization_strategy: rasterization strategy instance.
+            res: resolution of the dataset in units of CRS
+        """
+        super().__init__(*args, **kwargs)
+        self.rasterization_strategy = rasterization_strategy
+        if isinstance(res, int | float):
+            res = (res, res)
+
+        self._res = res
+
+    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+        """Retrieve image/mask and metadata indexed by query.
+
+        Args:
+            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+
+        Returns:
+            sample of image/mask and metadata at that index
+
+        Raises:
+            IndexError: if query is not found in the index
+        """
+        features_dict = super().__getitem__(query)
+        # If no label name is provided, label is set to 1 (binary mask)
+        feature_value_pairs = (
+            (feature['geometry'], self.get_label(feature))
+            for feature in features_dict.values()
+        )
+        rasterized_geometries = self.rasterization_strategy.rasterize(
+            feature_value_pairs, query, self.res
+        )
+        masks = rasterized_geometries.to(self.dtype)
+        sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+
 class NonGeoDataset(Dataset[dict[str, Any]], abc.ABC):
     """Abstract base class for datasets lacking geospatial information.
 
