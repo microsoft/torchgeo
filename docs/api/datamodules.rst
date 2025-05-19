@@ -205,6 +205,11 @@ SEN12MS
 
 .. autoclass:: SEN12MSDataModule
 
+SKIPP'D
+^^^^^^^
+
+.. autoclass:: SKIPPDDataModule
+
 So2Sat
 ^^^^^^
 
