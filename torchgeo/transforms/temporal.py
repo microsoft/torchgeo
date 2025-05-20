@@ -3,56 +3,59 @@
 
 """TorchGeo temporal transforms."""
 
+from typing import Any
+
 from einops import rearrange
+from kornia.augmentation._3d.geometric.base import GeometricAugmentationBase3D
 from torch import Tensor
 
 
-class TemporalToChannels:
-    """Reshape tensor from [B, T, C, H, W] to [B, T*C, H, W]."""
+class Rearrange(GeometricAugmentationBase3D):
+    """Rearrange tensor between [B, T, C, H, W] and [B, T*C, H, W]."""
 
-    def __call__(self, x: Tensor) -> Tensor:
-        """Apply the transform.
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize a Rearrange instance.
 
         Args:
-            x (Tensor): Input tensor of shape [B, T, C, H, W].
+            *args: Positional arguments for einops.rearrange
+            **kwargs: Keyword arguments for einops.rearrange
+        """
+        super().__init__(p=1)
+        self.flags = {'args': args, 'kwargs': kwargs}
+
+    def apply_transform(
+        self,
+        input: Tensor,
+        params: dict[str, Tensor],
+        flags: dict[str, Any],
+        transform: Tensor | None = None,
+    ) -> Tensor:
+        """Apply the rearrangement to the input tensor.
+
+        Args:
+            input: the input tensor
+            params: generated parameters
+            flags: static parameters
+            transform: the geometric transformation tensor
 
         Returns:
-            Tensor: Output tensor of shape [B, T*C, H, W], where the temporal (T)
-                and channel (C) dimensions are merged into a single channel dimension.
+            The rearranged tensor.
         """
-        if x.ndim != 5:
-            raise ValueError(f'Expected 5D tensor [B, T, C, H, W], got {x.shape}')
-        return rearrange(x, 'b t c h w -> b (t c) h w')
+        return rearrange(input, *flags['args'], **flags['kwargs'])
 
 
-class ChannelsToTemporal:
-    """Reshape tensor from [B, T*C, H, W] to [B, T, C, H, W]."""
-
-    def __init__(self, T: int, C: int) -> None:
-        """Initialize the ChannelsToTemporal transform.
+    def compute_transformation(
+        self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Any]
+    ) -> Tensor:
+        """Compute the transformation.
 
         Args:
-            T (int): Number of temporal steps (time dimension) in the output tensor.
-            C (int): Number of channels per temporal step in the output tensor.
-        """
-        self.T = T
-        self.C = C
-
-    def __call__(self, x: Tensor) -> Tensor:
-        """Apply the transform.
-
-        Args:
-            x (Tensor): Input tensor of shape [B, T*C, H, W].
+            input: the input tensor
+            params: generated parameters
+            flags: static parameters
 
         Returns:
-            Tensor: Output tensor of shape [B, T, C, H, W], where the channel dimension
-                is split into temporal (T) and channel (C) dimensions.
+            the transformation
         """
-        if x.ndim != 4:
-            raise ValueError(f'Expected 4D tensor [B, T*C, H, W], got {x.shape}')
-        B, TC, H, W = x.shape
-        if TC != self.T * self.C:
-            raise ValueError(
-                f'Channel dimension ({TC}) does not match T*C ({self.T}*{self.C}={self.T * self.C})'
-            )
-        return rearrange(x, 'b (t c) h w -> b t c h w', t=self.T, c=self.C)
+        out = self.identity_matrix(input)
+        return out
