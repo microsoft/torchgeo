@@ -43,7 +43,6 @@ class Rearrange(GeometricAugmentationBase3D):
         """
         return rearrange(input, *flags['args'], **flags['kwargs'])
 
-
     def compute_transformation(
         self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Any]
     ) -> Tensor:
