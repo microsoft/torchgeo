@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 import pytest
 import segmentation_models_pytorch as smp
@@ -30,7 +30,8 @@ class ChangeDetectionTestModel(Module):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return cast(torch.Tensor, self.conv1(x))
+        x = self.conv1(x)
+        return x
 
 
 def create_model(**kwargs: Any) -> Module:
@@ -84,7 +85,7 @@ class TestChangeDetectionTask:
 
     def test_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictChangeDetectionDataModule(
-            root='tests/data/oscd',
+            root=os.path.join('tests', 'data', 'oscd'),
             batch_size=2,
             patch_size=32,
             val_split_pct=0.5,
@@ -201,7 +202,7 @@ class TestChangeDetectionTask:
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(OSCDDataModule, 'plot', plot)
         datamodule = OSCDDataModule(
-            root='tests/data/oscd',
+            root=os.path.join('tests', 'data', 'oscd'),
             batch_size=2,
             patch_size=32,
             val_split_pct=0.5,
@@ -219,7 +220,7 @@ class TestChangeDetectionTask:
     def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(OSCDDataModule, 'plot', plot_missing_bands)
         datamodule = OSCDDataModule(
-            root='tests/data/oscd',
+            root=os.path.join('tests', 'data', 'oscd'),
             batch_size=2,
             patch_size=32,
             val_split_pct=0.5,

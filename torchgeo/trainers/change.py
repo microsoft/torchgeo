@@ -31,7 +31,7 @@ from .base import BaseTask
 class ChangeDetectionTask(BaseTask):
     """Change Detection. Currently supports binary change between two timesteps.
 
-    .. versionadded: 0.8
+    .. versionadded:: 0.8
     """
 
     def __init__(
@@ -201,7 +201,7 @@ class ChangeDetectionTask(BaseTask):
                     keepdim=True,
                 )
                 batch = aug(batch)
-                batch['prediction'] = y_hat.argmax(dim=-1)
+                batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
                 for key in ['image', 'mask', 'prediction']:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
