@@ -151,8 +151,8 @@ class ObjectDetectionTask(BaseTask):
                 num_classes,
                 rpn_anchor_generator=anchor_generator,
                 box_roi_pool=roi_pooler,
-                min_size=1,
-                max_size=4096,
+                min_size=800,
+                max_size=800,
                 image_mean=[0],
                 image_std=[1],
             )
@@ -176,8 +176,8 @@ class ObjectDetectionTask(BaseTask):
                 model_backbone,
                 num_classes,
                 anchor_generator=anchor_generator,
-                min_size=1,
-                max_size=4096,
+                min_size=800,
+                max_size=800,
                 image_mean=[0],
                 image_std=[1],
             )
@@ -214,8 +214,8 @@ class ObjectDetectionTask(BaseTask):
                 num_classes,
                 anchor_generator=anchor_generator,
                 head=head,
-                min_size=1,
-                max_size=4096,
+                min_size=800,
+                max_size=800,
                 image_mean=[0],
                 image_std=[1],
             )

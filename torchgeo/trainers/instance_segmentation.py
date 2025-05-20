@@ -87,8 +87,8 @@ class InstanceSegmentationTask(BaseTask):
                     weights=weights,
                     num_classes=num_classes,
                     weights_backbone=weights_backbone,
-                    min_size=1,
-                    max_size=4096,
+                    min_size=800,
+                    max_size=800,
                     image_mean=[0],
                     image_std=[1],
                 )
