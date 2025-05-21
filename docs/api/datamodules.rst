@@ -170,6 +170,11 @@ OSCD
 
 .. autoclass:: OSCDDataModule
 
+PatternNet
+^^^^^^^^^^
+
+.. autoclass:: PatternNetDataModule
+
 Potsdam
 ^^^^^^^
 
@@ -199,6 +204,11 @@ SEN12MS
 ^^^^^^^
 
 .. autoclass:: SEN12MSDataModule
+
+SKIPP'D
+^^^^^^^
+
+.. autoclass:: SKIPPDDataModule
 
 So2Sat
 ^^^^^^
@@ -257,6 +267,11 @@ Vaihingen
 ^^^^^^^^^
 
 .. autoclass:: Vaihingen2DDataModule
+
+VHR-10
+^^^^^^
+
+.. autoclass:: VHR10DataModule
 
 xView2
 ^^^^^^

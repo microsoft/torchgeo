@@ -39,6 +39,8 @@ dependencies = [
     "einops>=0.3",
     # fiona 1.8.22+ required for Python 3.11 wheels
     "fiona>=1.8.22",
+    # geopandas 0.12.1+ required for Shapely 2+ support
+    "geopandas>=0.12.1",
     # kornia 0.7.4+ required for AugmentationSequential support for unknown keys
     "kornia>=0.7.4",
     # lightly 1.4.5+ required for LARS optimizer
@@ -63,12 +65,10 @@ dependencies = [
     # rasterio 1.4.0-1.4.2 lack support for merging WarpedVRT objects
     # https://github.com/rasterio/rasterio/issues/3196
     "rasterio>=1.3.3,!=1.4.0,!=1.4.1,!=1.4.2",
-    # rtree 1.0.1+ required for Python 3.11 wheels
-    "rtree>=1.0.1",
-    # segmentation-models-pytorch 0.3.3+ required for timm 0.8+ support
-    "segmentation-models-pytorch>=0.3.3",
-    # shapely 1.8.5+ required for Python 3.11 wheels
-    "shapely>=1.8.5",
+    # segmentation-models-pytorch 0.5+ required for new UnetDecoder API
+    "segmentation-models-pytorch>=0.5",
+    # shapely 2+ required for shapely.Geometry
+    "shapely>=2",
     # timm 0.8+ required for timm.models.adapt_input_conv, 0.9.2 required by SMP
     "timm>=0.9.2",
     # torch 2+ required for Python 3.11 wheels
@@ -257,6 +257,10 @@ filterwarnings = [
     "ignore:__array_wrap__ must accept context and return_scalar arguments:DeprecationWarning",
     # https://github.com/pydantic/pydantic/pull/11377
     "ignore:Failing to pass a value to the 'type_params' parameter of 'typing.*' is deprecated:DeprecationWarning:pydantic",
+    # https://github.com/Lightning-AI/pytorch-lightning/pull/20802
+    "ignore::jsonargparse._deprecated.JsonargparseDeprecationWarning:lightning.pytorch.cli",
+    # https://github.com/geopandas/geopandas/pull/3453
+    "ignore:The 'shapely.geos' module is deprecated:DeprecationWarning:geopandas._compat",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS

@@ -53,8 +53,7 @@ class SemanticSegmentationTask(BaseTask):
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False or
                 None for random weights, or the path to a saved model state dict. FCN
-                model does not support pretrained weights. Pretrained ViT weight enums
-                are not supported yet.
+                model does not support pretrained weights.
             in_channels: Number of input channels to model.
             task: One of 'binary', 'multiclass', or 'multilabel'.
             num_classes: Number of prediction classes (only for ``task='multiclass'``).
@@ -277,7 +276,7 @@ class SemanticSegmentationTask(BaseTask):
             batch = aug(batch)
             match self.hparams['task']:
                 case 'binary' | 'multilabel':
-                    batch['prediction'] = (y_hat >= 0.5).long()
+                    batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
                 case 'multiclass':
                     batch['prediction'] = y_hat.argmax(dim=1)
 

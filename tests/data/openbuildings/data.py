@@ -10,7 +10,7 @@ import json
 import os
 import shutil
 
-from shapely.geometry import Polygon
+from shapely import Polygon
 
 SIZE = 0.05
 

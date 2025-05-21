@@ -66,19 +66,15 @@ class TestOSCD:
     def test_getitem(self, dataset: OSCD) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x['image1'], torch.Tensor)
-        assert x['image1'].ndim == 3
-        assert isinstance(x['image2'], torch.Tensor)
-        assert x['image2'].ndim == 3
+        assert isinstance(x['image'], torch.Tensor)
+        assert x['image'].ndim == 4
         assert isinstance(x['mask'], torch.Tensor)
         assert x['mask'].ndim == 2
 
         if dataset.bands == OSCD.rgb_bands:
-            assert x['image1'].shape[0] == 3
-            assert x['image2'].shape[0] == 3
+            assert x['image'].shape[1] == 3
         else:
-            assert x['image1'].shape[0] == 13
-            assert x['image2'].shape[0] == 13
+            assert x['image'].shape[1] == 13
 
     def test_len(self, dataset: OSCD) -> None:
         if dataset.split == 'train':

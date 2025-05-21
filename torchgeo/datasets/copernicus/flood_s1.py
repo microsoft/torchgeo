@@ -138,7 +138,7 @@ class CopernicusBenchFloodS1(CopernicusBenchBase):
                 if 'date' in match.groupdict():
                     date_str = match.group('date')
                     mint, maxt = disambiguate_timestamp(date_str, self.date_format)
-                    time = (mint + maxt) / 2
+                    time = (mint.timestamp() + maxt.timestamp()) / 2
                     times.append(time)
 
         # Location (only once)
