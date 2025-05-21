@@ -277,7 +277,7 @@ class SemanticSegmentationTask(BaseTask):
             batch = aug(batch)
             match self.hparams['task']:
                 case 'binary' | 'multilabel':
-                    batch['prediction'] = (y_hat >= 0.5).long()
+                    batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
                 case 'multiclass':
                     batch['prediction'] = y_hat.argmax(dim=1)
 
