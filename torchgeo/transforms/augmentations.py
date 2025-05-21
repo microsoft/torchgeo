@@ -3,7 +3,11 @@
 
 """TorchGeo augmentations."""
 
+from typing import Any
+
+import kornia.augmentation as K
 import torch
+from einops import rearrange
 from torch import Tensor
 
 
@@ -27,7 +31,6 @@ def sat_slidemix(input: Tensor, gamma: int, beta: float) -> Tensor:
 
     .. versionadded:: 0.8
     """
-    # Basic input validation
     if not isinstance(gamma, int) or gamma < 1:
         raise ValueError('gamma must be an integer >= 1')
     if not isinstance(beta, float) or not (0.0 <= beta <= 1.0):
@@ -111,3 +114,64 @@ def sat_slidemix(input: Tensor, gamma: int, beta: float) -> Tensor:
 
     # Step 9: Return the batch of rolled images
     return rolled_imgs
+
+
+class SatSlideMix(K.GeometricAugmentationBase2D):
+    """Extract patches from an image or mask."""
+
+    def __init__(
+        self, gamma: int = 1, beta: float = 0.3, keepdim: bool = True, p: float = 1.0
+    ) -> None:
+        """Initialize a new _ExtractPatches instance.
+
+        Args:
+            gamma: The number of augmented samples to create for each
+                        input image. The output batch size will be gamma * B.
+            beta: The maximum percentage (0.0 to 1.0) of the image
+                        dimension (height or width) to shift.
+            keepdim: Combine the patch dimension into the batch dimension
+            p: Probability to apply the augmentation on each sample
+        """
+        super().__init__(p=p)
+        self.flags = {'gamma': gamma, 'beta': beta, 'keepdim': keepdim}
+
+    def compute_transformation(
+        self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Any]
+    ) -> Tensor:
+        """Compute the transformation.
+
+        Args:
+            input: the input tensor
+            params: generated parameters
+            flags: static parameters
+
+        Returns:
+            the transformation
+        """
+        out: Tensor = self.identity_matrix(input)
+        return out
+
+    def apply_transform(
+        self,
+        input: Tensor,
+        params: dict[str, Tensor],
+        flags: dict[str, Any],
+        transform: Tensor | None = None,
+    ) -> Tensor:
+        """Apply the transform.
+
+        Args:
+            input: the input tensor
+            params: generated parameters
+            flags: static parameters
+            transform: the geometric transformation tensor
+
+        Returns:
+            the augmented input
+        """
+        out = sat_slidemix(input, beta=flags['beta'], gamma=flags['gamma'])
+
+        if flags['keepdim']:
+            out = rearrange(out, 'b t c h w -> (b t) c h w')
+
+        return out
