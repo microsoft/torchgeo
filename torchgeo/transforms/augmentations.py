@@ -52,14 +52,12 @@ class SatSlideMix(K.GeometricAugmentationBase2D):
 
     def generate_parameters(self, batch_shape: tuple[int, ...]) -> dict[str, Tensor]:
         """Generate parameters for the batch."""
-        if self._param_generator is not None:
-            B, C, H, W = batch_shape
-            batch_shape = torch.Size((B * self.flags['gamma'], C, H, W))
-            params: dict[str, Tensor] = self._param_generator(
-                batch_shape, self.same_on_batch
-            )
-            return params
-        return {}
+        B, C, H, W = batch_shape
+        batch_shape = torch.Size((B * self.flags['gamma'], C, H, W))
+        params: dict[str, Tensor] = self._param_generator(
+            batch_shape, self.same_on_batch
+        )
+        return params
 
     def compute_transformation(
         self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Any]
