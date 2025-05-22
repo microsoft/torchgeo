@@ -12,14 +12,14 @@ from torch import Tensor
 
 class Rearrange(GeometricAugmentationBase3D):
     """Rearrange tensor dimensions.
-        
+
     Examples:
         To insert a time dimension::
-        
+
             Rearrange('b (t c) h w -> b t c h w', c=1)
-           
+
         To collapse the time dimension::
-        
+
             Rearrange('b t c h w -> b (t c) h w')
     """
 
