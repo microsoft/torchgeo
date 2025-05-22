@@ -111,19 +111,19 @@ autodoc_typehints_description_target = 'documented'
 # sphinx.ext.intersphinx
 intersphinx_mapping = {
     'kornia': ('https://kornia.readthedocs.io/en/stable/', None),
+    'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
     'pyproj': ('https://pyproj4.github.io/pyproj/stable/', None),
     'python': ('https://docs.python.org/3', None),
-    'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
     'rasterio': ('https://rasterio.readthedocs.io/en/stable/', None),
     'segmentation_models_pytorch': ('https://smp.readthedocs.io/en/stable/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
     'timm': ('https://huggingface.co/docs/timm/main/en/', None),
-    'torch': ('https://pytorch.org/docs/stable', None),
+    'torch': ('https://docs.pytorch.org/docs/stable/', None),
     'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
-    'torchvision': ('https://pytorch.org/vision/stable', None),
+    'torchvision': ('https://docs.pytorch.org/vision/stable/', None),
 }
 
 # nbsphinx
