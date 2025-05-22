@@ -5,6 +5,7 @@ import os
 from typing import Any
 
 import pytest
+import torch
 from lightning.pytorch import Trainer
 from pytest import MonkeyPatch
 
@@ -123,3 +124,11 @@ class TestInstanceSegmentationTask:
         for head in ['rpn', 'roi_heads']:
             for param in getattr(task.model, head).parameters():
                 assert param.requires_grad is True
+
+    @pytest.mark.parametrize('in_channels', [1, 4])
+    def test_multispectral_support(self, in_channels: int) -> None:
+        model = InstanceSegmentationTask(in_channels=in_channels, num_classes=2)
+        model.eval()
+        sample = [torch.randn(in_channels, 224, 224)]
+        with torch.inference_mode():
+            model(sample)
