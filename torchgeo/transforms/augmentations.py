@@ -29,7 +29,7 @@ class SatSlideMix(K.GeometricAugmentationBase2D):
         beta: Tensor | float | tuple[float, float] | list[float] = (0.0, 1.0),
         p: float = 0.5,
     ) -> None:
-        """Initialize a new _ExtractPatches instance.
+        """Initialize a new SatSlideMix instance.
 
         Args:
             gamma: The number of augmented samples to create for each
