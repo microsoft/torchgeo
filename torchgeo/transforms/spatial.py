@@ -7,6 +7,7 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch
+from kornia.augmentation.random_generator import PlainUniformGenerator
 from torch import Tensor
 
 
@@ -43,7 +44,7 @@ class SatSlideMix(K.GeometricAugmentationBase2D):
         """
         super().__init__(p=p)
         assert isinstance(gamma, int) and gamma > 0, 'gamma must be a positive integer'
-        self._param_generator = K.random_generator.PlainUniformGenerator(
+        self._param_generator: PlainUniformGenerator = PlainUniformGenerator(
             (beta, 'beta', 0.5, (0.0, 1.0)),
             ((0.0, 1.0), 'dim', 0.5, (0.0, 1.0)),
             ((0.0, 1.0), 'direction', 0.5, (0.0, 1.0)),
