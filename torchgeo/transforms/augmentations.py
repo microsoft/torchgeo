@@ -37,6 +37,9 @@ class SatSlideMix(K.GeometricAugmentationBase2D):
             beta: The range of percentage (0.0 to 1.0) of the image
                 dimension (height or width) to shift.
             p: Probability to apply the augmentation on each sample
+
+        Raises:
+            AssertionError: If `gamma` is not a positive integer.
         """
         super().__init__(p=p)
         assert isinstance(gamma, int) and gamma > 0, 'gamma must be a positive integer'
@@ -81,10 +84,10 @@ class SatSlideMix(K.GeometricAugmentationBase2D):
         flags: dict[str, Any],
         transform: Tensor | None = None,
     ) -> Tensor:
-        """Apply the transform.
+        """Apply the transform to the input image or mask.
 
         Args:
-            input: the input tensor
+            input: the input tensor image or mask
             params: generated parameters
             flags: static parameters
             transform: the geometric transformation tensor
