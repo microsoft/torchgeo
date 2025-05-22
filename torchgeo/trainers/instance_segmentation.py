@@ -22,6 +22,7 @@ from torchvision.models.detection import (
 
 from ..datasets import RGBBandsMissingError, unbind_samples
 from .base import BaseTask
+from .utils import GeneralizedRCNNTransformNoOp
 
 
 class InstanceSegmentationTask(BaseTask):
@@ -46,6 +47,9 @@ class InstanceSegmentationTask(BaseTask):
         freeze_backbone: bool = False,
     ) -> None:
         """Initialize a new InstanceSegmentationTask instance.
+
+        Note that we disable the internal normalize+resize transform of the MaskRCNN model.
+        Please ensure your images are appropriately resized before passing them to the model.
 
         Args:
             model: Name of the model to use.
@@ -87,11 +91,10 @@ class InstanceSegmentationTask(BaseTask):
                     weights=weights,
                     num_classes=num_classes,
                     weights_backbone=weights_backbone,
-                    min_size=800,
-                    max_size=800,
                     image_mean=[0],
                     image_std=[1],
                 )
+                self.model.transform = GeneralizedRCNNTransformNoOp()
             else:
                 msg = f"Invalid backbone type '{backbone}'. Supported backbone: 'resnet50'"
                 raise ValueError(msg)
