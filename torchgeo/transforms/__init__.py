@@ -3,7 +3,6 @@
 
 """TorchGeo transforms."""
 
-from .augmentations import SatSlideMix
 from .color import RandomGrayscale
 from .indices import (
     AppendBNDVI,
@@ -21,6 +20,7 @@ from .indices import (
     AppendSWI,
     AppendTriBandNormalizedDifferenceIndex,
 )
+from .spatial import SatSlideMix
 from .transforms import AugmentationSequential
 
 __all__ = (
