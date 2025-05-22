@@ -11,7 +11,17 @@ from torch import Tensor
 
 
 class Rearrange(GeometricAugmentationBase3D):
-    """Rearrange tensor between [B, T, C, H, W] and [B, T*C, H, W]."""
+    """Rearrange tensor dimensions.
+        
+    Examples:
+        To insert a time dimension::
+        
+            Rearrange('b (t c) h w -> b t c h w', c=1)
+           
+        To collapse the time dimension::
+        
+            Rearrange('b t c h w -> b (t c) h w')
+    """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize a Rearrange instance.
