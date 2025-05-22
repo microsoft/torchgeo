@@ -14,7 +14,7 @@ from torch.nn.modules import Conv2d, Module
 from torchvision.models.detection.transform import GeneralizedRCNNTransform
 
 
-class GeneralizedRCNNTransformNoOp(GeneralizedRCNNTransform):
+class GeneralizedRCNNTransformNoOp(GeneralizedRCNNTransform):  # type: ignore[misc]
     """GeneralizedRCNNTransform without the normalize and resize ops.
 
     .. versionadded:: 0.8
