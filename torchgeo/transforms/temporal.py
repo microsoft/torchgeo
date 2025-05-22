@@ -27,8 +27,8 @@ class Rearrange(GeometricAugmentationBase3D):
         """Initialize a Rearrange instance.
 
         Args:
-            *args: Positional arguments for einops.rearrange
-            **kwargs: Keyword arguments for einops.rearrange
+            *args: Positional arguments for :func:`einops.rearrange`.
+            **kwargs: Keyword arguments for :func:`einops.rearrange`.
         """
         super().__init__(p=1)
         self.flags = {'args': args, 'kwargs': kwargs}
