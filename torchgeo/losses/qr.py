@@ -21,8 +21,7 @@ class QRLoss(Module):
         """Initialize a new QRLoss instance.
 
         Args:
-            eps: small constant for numerical stability to prevent division by zero
-            and log(0) when computing the loss. Must be greater than or equal to 0.
+            eps: small constant for numerical stability to prevent log(0) when computing the loss. Must be greater than or equal to 0.
 
         Raises:
             ValueError: If eps is less than 0.
@@ -45,7 +44,7 @@ class QRLoss(Module):
         """
         q = probs
         q_bar = q.mean(dim=(0, 2, 3))
-        qbar_log_S = (q_bar * torch.log(q_bar)).sum()
+        qbar_log_S = (q_bar * torch.log(q_bar + self.eps)).sum()
 
         q_log_p = torch.einsum('bcxy,bcxy->bxy', q, torch.log(target + self.eps)).mean()
 
