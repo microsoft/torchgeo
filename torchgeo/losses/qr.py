@@ -21,7 +21,8 @@ class QRLoss(Module):
         """Initialize a new QRLoss instance.
 
         Args:
-            eps: small constant for numerical stability to prevent log(0) when computing the loss. Must be greater than or equal to 0.
+            eps: small constant for numerical stability to prevent log(0) when computing the loss.
+                Must be greater than or equal to 0.
 
         Raises:
             ValueError: If eps is less than 0.
@@ -66,7 +67,7 @@ class RQLoss(Module):
 
         Args:
             eps: small constant for numerical stability to prevent division by zero
-            and log(0) when computing the loss. Must be greater than or equal to 0.
+                and log(0) when computing the loss. Must be greater than or equal to 0.
 
         Raises:
             ValueError: If eps is less than 0.
