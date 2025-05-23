@@ -17,6 +17,22 @@ class QRLoss(Module):
     .. versionadded:: 0.2
     """
 
+    def __init__(self, eps: float = 1e-8) -> None:
+        """Initialize a new QRLoss instance.
+
+        Args:
+            eps: small constant for numerical stability to prevent division by zero
+            and log(0) when computing the loss. Must be greater than or equal to 0.
+
+        Raises:
+            ValueError: If eps is less than 0.
+        """
+        if not 0.0 <= eps:
+            raise ValueError(f'Invalid epsilon value: {eps}')
+
+        super().__init__()
+        self.eps = eps
+
     def forward(self, probs: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Computes the QR (forwards) loss on prior.
 
@@ -27,12 +43,11 @@ class QRLoss(Module):
         Returns:
             qr loss
         """
-        eps = 1e-12
         q = probs
         q_bar = q.mean(dim=(0, 2, 3))
         qbar_log_S = (q_bar * torch.log(q_bar)).sum()
 
-        q_log_p = torch.einsum('bcxy,bcxy->bxy', q, torch.log(target + eps)).mean()
+        q_log_p = torch.einsum('bcxy,bcxy->bxy', q, torch.log(target + self.eps)).mean()
 
         loss = qbar_log_S - q_log_p
         return loss
@@ -47,6 +62,22 @@ class RQLoss(Module):
     .. versionadded:: 0.2
     """
 
+    def __init__(self, eps: float = 1e-8) -> None:
+        """Initialize a new RQLoss instance.
+
+        Args:
+            eps: small constant for numerical stability to prevent division by zero
+            and log(0) when computing the loss. Must be greater than or equal to 0.
+
+        Raises:
+            ValueError: If eps is less than 0.
+        """
+        if not 0.0 <= eps:
+            raise ValueError(f'Invalid epsilon value: {eps}')
+
+        super().__init__()
+        self.eps = eps
+
     def forward(self, probs: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Computes the RQ (backwards) loss on prior.
 
@@ -57,15 +88,16 @@ class RQLoss(Module):
         Returns:
             qr loss
         """
-        eps = 1e-12
         q = probs
 
         # manually normalize due to https://github.com/pytorch/pytorch/issues/70100
-        z = q / q.norm(p=1, dim=(0, 2, 3), keepdim=True).clamp_min(eps).expand_as(q)
+        z = q / q.norm(p=1, dim=(0, 2, 3), keepdim=True).clamp_min(self.eps).expand_as(
+            q
+        )
         r = F.normalize(z * target, p=1, dim=1)
 
         loss = torch.einsum(
-            'bcxy,bcxy->bxy', r, torch.log(r + eps) - torch.log(q + eps)
+            'bcxy,bcxy->bxy', r, torch.log(r + self.eps) - torch.log(q + self.eps)
         ).mean()
 
         return loss
