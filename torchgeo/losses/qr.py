@@ -26,6 +26,9 @@ class QRLoss(Module):
 
         Raises:
             ValueError: If eps is less than 0.
+
+        .. versionadded:: 0.8
+           The *eps* parameter.
         """
         if not 0.0 <= eps:
             raise ValueError(f'Invalid epsilon value: {eps}')
@@ -42,6 +45,9 @@ class QRLoss(Module):
 
         Returns:
             qr loss
+
+        .. versionadded:: 0.8
+           The *eps* parameter.
         """
         q = probs
         q_bar = q.mean(dim=(0, 2, 3))
