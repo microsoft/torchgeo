@@ -23,10 +23,10 @@ class TestQRLosses:
 
     def test_invalid_eps_value(self) -> None:
         """Test that the QR loss raises a ValueError when eps is less than 0."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='Invalid epsilon value'):
             QRLoss(eps=-1.0)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='Invalid epsilon value'):
             RQLoss(eps=-1.0)
 
     def test_eps_prevents_nan(self) -> None:
