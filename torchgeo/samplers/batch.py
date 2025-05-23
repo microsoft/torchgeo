@@ -6,8 +6,8 @@
 import abc
 from collections.abc import Iterator
 
+import shapely
 import torch
-from rtree.index import Index, Property
 from torch import Generator
 from torch.utils.data import Sampler
 
@@ -33,18 +33,13 @@ class BatchGeoSampler(Sampler[list[BoundingBox]], abc.ABC):
             roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
                 (defaults to the bounds of ``dataset.index``)
         """
-        if roi is None:
-            self.index = dataset.index
-            roi = BoundingBox(*self.index.bounds)
-        else:
-            self.index = Index(interleaved=False, properties=Property(dimension=3))
-            hits = dataset.index.intersection(tuple(roi), objects=True)
-            for hit in hits:
-                bbox = BoundingBox(*hit.bounds) & roi
-                self.index.insert(hit.id, tuple(bbox), hit.object)
-
+        self.index = dataset.index
         self.res = dataset.res
-        self.roi = roi
+        self.roi = roi or dataset.bounds
+
+        if roi:
+            mask = shapely.box(roi.minx, roi.miny, roi.maxx, roi.maxy)
+            self.index = self.index.clip(mask)
 
     @abc.abstractmethod
     def __iter__(self) -> Iterator[list[BoundingBox]]:
@@ -115,8 +110,10 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         self.length = 0
         self.hits = []
         areas = []
-        for hit in self.index.intersection(tuple(self.roi), objects=True):
-            bounds = BoundingBox(*hit.bounds)
+        for hit in range(len(self.index)):
+            minx, miny, maxx, maxy = self.index.geometry.iloc[hit].bounds
+            mint, maxt = self.index.index[hit].left, self.index.index[hit].right
+            bounds = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
             if (
                 bounds.maxx - bounds.minx >= self.size[1]
                 and bounds.maxy - bounds.miny >= self.size[0]
@@ -126,7 +123,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
                     self.length += rows * cols
                 else:
                     self.length += 1
-                self.hits.append(hit)
+                self.hits.append(bounds)
                 areas.append(bounds.area)
         if length is not None:
             self.length = length
@@ -145,8 +142,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         for _ in range(len(self)):
             # Choose a random tile, weighted by area
             idx = torch.multinomial(self.areas, 1)
-            hit = self.hits[idx]
-            bounds = BoundingBox(*hit.bounds)
+            bounds = self.hits[idx]
 
             # Choose random indices within that tile
             batch = []

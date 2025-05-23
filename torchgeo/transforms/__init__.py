@@ -20,6 +20,7 @@ from .indices import (
     AppendSWI,
     AppendTriBandNormalizedDifferenceIndex,
 )
+from .spatial import SatSlideMix
 from .temporal import Rearrange
 from .transforms import AugmentationSequential
 
@@ -41,4 +42,5 @@ __all__ = (
     'AugmentationSequential',
     'RandomGrayscale',
     'Rearrange',
+    'SatSlideMix',
 )

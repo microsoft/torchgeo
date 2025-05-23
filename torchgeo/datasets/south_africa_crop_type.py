@@ -6,12 +6,13 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import torch
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
@@ -163,10 +164,11 @@ class SouthAfricaCropType(RasterDataset):
         assert isinstance(self.paths, str | os.PathLike)
 
         # Get all files matching the given query
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        interval = pd.Interval(query.mint, query.maxt)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
 
-        if not filepaths:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
@@ -179,7 +181,7 @@ class SouthAfricaCropType(RasterDataset):
         # Store date in July for s1 and s2 we want to use for each sample
         imagery_dates: dict[str, dict[str, str]] = {}
 
-        for filepath in filepaths:
+        for filepath in index.filepath:
             filename = os.path.basename(filepath)
             match = re.match(filename_regex, filename)
             if match:
