@@ -9,6 +9,7 @@ from typing import Any, Literal
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
+import torch
 import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor
@@ -35,7 +36,7 @@ class SemanticSegmentationTask(BaseTask):
         num_labels: int | None = None,
         num_filters: int = 3,
         loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'ce',
-        class_weights: Tensor | None = None,
+        class_weights: Tensor | list[float] | None = None,
         ignore_index: int | None = None,
         lr: float = 1e-3,
         patience: int = 10,
@@ -152,11 +153,20 @@ class SemanticSegmentationTask(BaseTask):
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
         ignore_index: int | None = self.hparams['ignore_index']
+        cw = self.hparams['class_weights']
+        if cw is not None and isinstance(cw, torch.Tensor):
+            raise DeprecationWarning(
+                'Passing a Tensor for class_weights is deprecated. '
+                'Please pass a list of floats instead.'
+            )
+
+        class_weights = torch.Tensor(cw) if cw is not None else None
+
         match self.hparams['loss']:
             case 'ce':
                 ignore_value = -1000 if ignore_index is None else ignore_index
                 self.criterion: nn.Module = nn.CrossEntropyLoss(
-                    ignore_index=ignore_value, weight=self.hparams['class_weights']
+                    ignore_index=ignore_value, weight=class_weights
                 )
             case 'bce':
                 self.criterion = nn.BCEWithLogitsLoss()
