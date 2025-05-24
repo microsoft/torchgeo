@@ -492,6 +492,10 @@ So2Sat
 
 .. autoclass:: So2Sat
 
+SolarPlantsBrazil
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SolarPlantsBrazil
 
 SODA
 ^^^^
