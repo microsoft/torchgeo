@@ -34,12 +34,8 @@ class SolarPlantsBrazil(NonGeoDataset):
     * Spatial metadata included (CRS, bounding box), but not used directly for training
 
     Folder structure:
-        root/
-            train/
-                input/img(123).tif
-                labels/target(123).tif
-            val/
-            test/
+    root/train/input/img(123).tif
+    root/train/labels/target(123).tif
 
     Access:
     * Dataset is hosted on Hugging Face: https://huggingface.co/datasets/FederCO23/solar-plants-brazil
