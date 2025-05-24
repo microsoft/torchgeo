@@ -3,17 +3,17 @@
 
 """SolarPlantsBrazil dataset."""
 
-import os
 import glob
-from typing import Callable, Optional
+import os
+from collections.abc import Callable
 
-import numpy as np
 import matplotlib.pyplot as plt
-import torch
-from torch import Tensor
+import numpy as np
 import rasterio
-from matplotlib.figure import Figure
+import torch
 from huggingface_hub import snapshot_download
+from matplotlib.figure import Figure
+from torch import Tensor
 
 from torchgeo.datasets import NonGeoDataset
 from torchgeo.datasets.utils import Path
@@ -50,10 +50,9 @@ class SolarPlantsBrazil(NonGeoDataset):
     .. versionadded:: 0.6
     """
 
-    url = "https://huggingface.co/datasets/FederCO23/solar-plants-brazil"
-    bands = ("Red", "Green", "Blue", "NIR")
+    url = 'https://huggingface.co/datasets/FederCO23/solar-plants-brazil'
+    bands = ('Red', 'Green', 'Blue', 'NIR')
 
-    
     citation = """\
 @misc{solarplantsbrazil2024,
   author       = {Federico Bessi},
@@ -67,12 +66,20 @@ class SolarPlantsBrazil(NonGeoDataset):
 
     def __init__(
         self,
-        root: Path = "data",
-        split: str = "train",
-        transforms: Optional[Callable[[dict[str, Tensor]], dict[str, Tensor]]] = None,
+        root: Path = 'data',
+        split: str = 'train',
+        transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
     ) -> None:
-        assert split in ["train", "val", "test"]
+        """Initialize a SolarPlantsBrazil dataset split.
+
+        Args:
+            root: Root directory where dataset is stored.
+            split: Dataset split to use, one of "train", "val", or "test".
+            transforms: Optional transforms to apply.
+            download: If True, download the dataset if it doesn't exist.
+        """
+        assert split in ['train', 'val', 'test']
 
         self.root = root
         self.transforms = transforms
@@ -82,12 +89,20 @@ class SolarPlantsBrazil(NonGeoDataset):
 
         self._verify()
 
-        self.image_paths = sorted(glob.glob(os.path.join(self.dataset_path, "input", "img(*).tif")))
-        self.mask_paths = sorted(glob.glob(os.path.join(self.dataset_path, "labels", "target(*).tif")))
+        self.image_paths = sorted(
+            glob.glob(os.path.join(self.dataset_path, 'input', 'img(*).tif'))
+        )
+        self.mask_paths = sorted(
+            glob.glob(os.path.join(self.dataset_path, 'labels', 'target(*).tif'))
+        )
 
         if len(self.image_paths) == 0:
-            raise FileNotFoundError(f"No input images found in {self.dataset_path}/input/")
-        assert len(self.image_paths) == len(self.mask_paths), "Mismatch between image and mask files"
+            raise FileNotFoundError(
+                f'No input images found in {self.dataset_path}/input/'
+            )
+        assert len(self.image_paths) == len(self.mask_paths), (
+            'Mismatch between image and mask files'
+        )
 
     def _verify(self) -> None:
         """Verify the dataset exists or download it."""
@@ -96,53 +111,49 @@ class SolarPlantsBrazil(NonGeoDataset):
 
         if not self.download:
             raise RuntimeError(
-                f"Dataset not found at {self.dataset_path}. Use download=True to fetch it."
+                f'Dataset not found at {self.dataset_path}. Use download=True to fetch it.'
             )
 
         self._download()
 
-
     def _download(self) -> None:
         """Download the dataset from Hugging Face."""
         snapshot_download(
-            repo_id="FederCO23/solar-plants-brazil",
-            repo_type="dataset",
-            local_dir=self.root,
+            repo_id='FederCO23/solar-plants-brazil',
+            repo_type='dataset',
+            local_dir=str(self.root),
             token=False,
         )
 
-
     def __getitem__(self, index: int) -> dict[str, Tensor]:
+        """Retrieve an image-mask pair by index."""
         image = self._load_image(self.image_paths[index])
         mask = self._load_mask(self.mask_paths[index])
-        sample = {"image": image, "mask": mask}
+        sample = {'image': image, 'mask': mask}
         if self.transforms:
             sample = self.transforms(sample)
         return sample
 
-
     def __len__(self) -> int:
+        """Return the number of samples in the dataset."""
         return len(self.image_paths)
 
-
     def _load_image(self, path: str) -> Tensor:
+        """Load an image as a float32 torch tensor with shape (C, H, W)."""
         with rasterio.open(path) as src:
-            arr = src.read().astype(np.float32)  # Shape: (bands, height, width)
+            arr = src.read().astype(np.float32)
         return torch.from_numpy(arr)
 
-
     def _load_mask(self, path: str) -> Tensor:
+        """Load a binary mask as a torch tensor with shape (1, H, W)."""
         with rasterio.open(path) as src:
             arr = src.read(1).astype(np.uint8)
         bin_mask = (arr > 0).astype(np.uint8)
         return torch.from_numpy(bin_mask).unsqueeze(0).long()
 
-
     def plot(
-            self, 
-            sample: dict[str, torch.Tensor], 
-            suptitle: str | None = None
-        ) -> Figure:
+        self, sample: dict[str, torch.Tensor], suptitle: str | None = None
+    ) -> Figure:
         """Plot a sample from the SolarPlantsBrazil dataset.
 
         Args:
@@ -152,8 +163,8 @@ class SolarPlantsBrazil(NonGeoDataset):
         Returns:
             A matplotlib Figure with the rendered image and mask.
         """
-        image = sample["image"]
-        mask = sample["mask"]
+        image = sample['image']
+        mask = sample['mask']
 
         # Use RGB only
         if image.shape[0] == 4:
@@ -168,16 +179,15 @@ class SolarPlantsBrazil(NonGeoDataset):
 
         fig, axs = plt.subplots(1, 2, figsize=(10, 5))
         axs[0].imshow(image_np)
-        axs[0].set_title("RGB Image")
-        axs[0].axis("off")
+        axs[0].set_title('RGB Image')
+        axs[0].axis('off')
 
-        axs[1].imshow(mask_np, cmap="gray")
-        axs[1].set_title("Mask")
-        axs[1].axis("off")
+        axs[1].imshow(mask_np, cmap='gray')
+        axs[1].set_title('Mask')
+        axs[1].axis('off')
 
         if suptitle is not None:
             plt.suptitle(suptitle)
 
         plt.tight_layout()
         return fig
-
