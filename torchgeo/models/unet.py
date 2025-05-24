@@ -195,7 +195,8 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
         transforms=_ai4g_flood_transforms,
         meta={
             'dataset': 'AI4G Global Flood Extent',
-            'in_chans': 4,
+            'in_chans': 2,
+            'in_chans_transform': 4,
             'num_classes': 2,
             'model': 'U-Net',
             'encoder': 'mobilenet_v2',

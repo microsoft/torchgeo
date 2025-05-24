@@ -50,7 +50,11 @@ class TestUnet:
             assert len(weights.meta['bands']) == weights.meta['in_chans']
 
     def test_transforms(self, weights: WeightsEnum) -> None:
-        c = weights.meta['in_chans']
+        if 'in_chans_transforms' in weights.meta:
+            c = weights.meta['in_chans_transforms']
+        else:
+            c = weights.meta['in_chans']
+
         sample = {
             'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
         }
