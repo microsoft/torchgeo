@@ -51,7 +51,7 @@ class TestUnet:
 
     def test_transforms(self, weights: WeightsEnum) -> None:
         if 'in_chans_transform' in weights.meta:
-            c = weights.meta['in_chans_transforms']
+            c = weights.meta['in_chans_transform']
         else:
             c = weights.meta['in_chans']
 
