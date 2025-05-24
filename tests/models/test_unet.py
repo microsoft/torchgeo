@@ -50,7 +50,7 @@ class TestUnet:
             assert len(weights.meta['bands']) == weights.meta['in_chans']
 
     def test_transforms(self, weights: WeightsEnum) -> None:
-        if 'in_chans_transforms' in weights.meta:
+        if 'in_chans_transform' in weights.meta:
             c = weights.meta['in_chans_transforms']
         else:
             c = weights.meta['in_chans']
