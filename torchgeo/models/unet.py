@@ -28,7 +28,7 @@ _ftw_transforms = K.AugmentationSequential(
 
 # Specified in https://github.com/fieldsoftheworld/ftw-baselines
 # First 4 S2 bands are for image t1 and last 4 bands are for image t2
-_ai4g_flood_sentinel1_bands = ('VV', 'VH', 'VV', 'VH')
+_ai4g_flood_sentinel1_bands = ('VV', 'VH')
 
 
 # https://github.com/microsoft/ai4g-flood/blob/main/src/run_flood_detection_downloaded_images.py#L54
