@@ -1,73 +1,73 @@
-Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands,
-`ADVANCE`_,C,"Google Earth, Freesound",CC-BY-4.0,"5,075",13,512x512,0.5,RGB,
-`Benin Cashew Plantations`_,S,Airbus Pléiades,CC-BY-4.0,70,6,"1,122x1,186",10,MSI,
-`BigEarthNet`_,C,Sentinel-1/2,CDLA-Permissive-1.0,"590,326",19--43,120x120,10,"SAR, MSI",
-`BioMassters`_,R,Sentinel-1/2 and Lidar,CC-BY-4.0,,,256x256,10," ""SAR"," MSI"""
-`BRIGHT`_,CD,"MAXAR, NAIP, Capella, Umbra",CC-BY-4.0 AND CC-BY-NC-4.0,3239,4,1024x1024,0.1--1,"RGB, SAR",
-`CaBuAr`_,CD,Sentinel-2,OpenRAIL,424,2,512x512,20,MSI,
-`CaFFe`_,S,"Sentinel-1, TerraSAR-X, TanDEM-X, ENVISAT, ERS-1/2, ALOS PALSAR, and RADARSAT-1",CC-BY-4.0,19092,2 or 4,512x512,20-Jun,SAR,
-`ChaBuD`_,CD,Sentinel-2,OpenRAIL,356,2,512x512,10,MSI,
-`Cloud Cover Detection`_,S,Sentinel-2,CC-BY-4.0,"22,728",2,512x512,10,MSI,
-`Copernicus-Pretrain`_,T,"Sentinel-1/2/3/5P, DEM",CC-BY-4.0,18.7M,-,264x264 or 96x96 or 28x28 or 960x960,10--1000,"SAR, MSI, Air Pollutants, DEM",
-`COWC`_,"C, R","CSUAV AFRL, ISPRS, LINZ, AGRC",AGPL-3.0-only,"388,435",2,256x256,0.15,RGB,
-`CropHarvest`_,C,"Sentinel-1/2, SRTM, ERA5",CC-BY-SA-4.0,"70,213",351,1x1,10,"SAR, MSI, SRTM",
-`Kenya Crop Type`_,S,Sentinel-2,CC-BY-SA-4.0,"4,688",7,"3,035x2,016",10,MSI,
-`DeepGlobe Land Cover`_,S,DigitalGlobe +Vivid,-,803,7,"2,448x2,448",0.5,RGB,
-`DFC2022`_,S,Aerial,CC-BY-4.0,"3,981",15,"2,000x2,000",0.5,RGB,
-`DIOR`_,OD,Aerial,CC-BY-NC-4.0,"23,463",20,800x800,0.5,RGB,
-`Digital Typhoon`_,"C, R",Himawari,CC-BY-4.0,"189,364",8,512,5000,Infrared,
-`DL4GAM`_,S,Sentinel-2,CC-BY-4.0,"2,251 or 11,440",2,256x256,10,MSI,
-`DOTA`_,OD,"Google Earth, Gaofen-2, Jilin-1, CycloMedia B.V.",non-commercial,"5,229",15,800--4000,,RGB,
-`ETCI2021 Flood Detection`_,S,Sentinel-1,-,"66,810",2,256x256,5--20,SAR,
-`EuroSAT`_,C,Sentinel-2,MIT,"27,000",10,64x64,10,MSI,
-`EverWatch`_,OD,Aerial,CC0-1.0,"5,325",8,"1,500x1500p",0.01,RGB,
-`FAIR1M`_,OD,Gaofen/Google Earth,CC-BY-NC-SA-3.0,"15,000",37,"1,024x1,024",0.3--0.8,RGB,
-`Fields Of The World`_,"S,I",Sentinel-2,Various,70795,"2,3",256x256,10,MSI,
-`FireRisk`_,C,NAIP Aerial,CC-BY-NC-4.0,"91,872",7,320x320,1,RGB,
-`Forest Damage`_,OD,Drone imagery,CDLA-Permissive-1.0,"1,543",4,"1,500x1,500",,RGB,
-`GeoNRW`_,S,Aerial,CC-BY-4.0,"7,783",11,"1,000x1,000",1,"RGB, DEM",
-`GID-15`_,S,Gaofen-2,-,150,15,"6,800x7,200",3,RGB,
-`HySpecNet-11k`_,-,EnMAP,CC0-1.0,11k,-,128,30,HSI,
-`IDTReeS`_,"OD,C",Aerial,CC-BY-4.0,591,33,200x200,0.1--1,RGB,
-`Inria Aerial Image Labeling`_,S,Aerial,-,360,2,"5,000x5,000",0.3,RGB,
-`LandCover.ai`_,S,Aerial,CC-BY-NC-SA-4.0,"10,674",5,512x512,0.25--0.5,RGB,
-`LEVIR-CD`_,CD,Google Earth,-,637,2,"1,024x1,024",0.5,RGB,
-`LEVIR-CD+`_,CD,Google Earth,-,985,2,"1,024x1,024",0.5,RGB,
-`LoveDA`_,S,Google Earth,CC-BY-NC-SA-4.0,"5,987",7,"1,024x1,024",0.3,RGB,
-`MapInWild`_,S,"Sentinel-1/2, ESA WorldCover, NOAA VIIRS DNB",CC-BY-4.0,1018,1,1920x1920,10--463.83,"SAR, MSI, 2020_Map, avg_rad",
-`MDAS`_,S,"Sentinel-1/2,EnMAP,HySpex",CC-BY-SA-4.0,3,20,"100x120, 300x360, 1364x1636, 10000x12000, 15000x18000",0.3--30,HSI,
-`Million-AID`_,C,Google Earth,-,1M,51--73,,0.5--153,RGB,
-`MMEarth`_,"C, S","Aster, Sentinel, ERA5",CC-BY-4.0,100K--1M,,128x128 or 64x64,10,MSI,
-`NASA Marine Debris`_,OD,PlanetScope,Apache-2.0,707,1,256x256,3,RGB,
-`OSCD`_,CD,Sentinel-2,CC-BY-4.0,24,2,"40--1,180",60,MSI,
-`PASTIS`_,I,Sentinel-1/2,CC-BY-4.0,"2,433",19,128x128xT,10,MSI,
-`PatternNet`_,C,Google Earth,CC-BY-4.0,"30,400",38,256x256,0.06--5,RGB,
-`Potsdam`_,S,Aerial,-,38,6,"6,000x6,000",0.05,MSI,
-`QuakeSet`_,"C, R",Sentinel-1,OpenRAIL,"3,327",2,512x512,10,SAR,
-`ReforesTree`_,"OD, R",Aerial,CC-BY-4.0,100,6,"4,000x4,000",0.02,RGB,
-`RESISC45`_,C,Google Earth,CC-BY-NC-4.0,"31,500",45,256x256,0.2--30,RGB,
-`Rwanda Field Boundary`_,S,Planetscope,NICFI AND CC-BY-4.0,70,2,256x256,4.7,RGB + NIR,
-`SatlasPretrain`_,"C, R, S, I, OD","NAIP, Landsat, Sentinel",ESA AND CC0-1.0 AND ODbL-1.0 AND CC-BY-4.0,302M,137,512,0.6--30,"SAR, MSI",
-`Seasonal Contrast`_,T,Sentinel-2,CC-BY-4.0,100K--1M,-,264x264,10,MSI,
-`SeasoNet`_,S,Sentinel-2,CC-BY-4.0,"1,759,830",33,120x120,10,MSI,
-`SEN12MS`_,S,"Sentinel-1/2, MODIS",CC-BY-4.0,"180,662",33,256x256,10,"SAR, MSI",
-`SKIPP'D`_,R,Fish-eye,CC-BY-4.0,"363,375",-,64x64,-,RGB,
-`SkyScript`_,IC,"NAIP, orthophotos, Planet SkySat, Sentinel-2, Landsat 8--9",MIT,5.2M,-,100--1000,0.1--30,RGB,
-`So2Sat`_,C,Sentinel-1/2,CC-BY-4.0,"400,673",17,32x32,10,"SAR, MSI",
-`SODA`_,OD,Aerial,CC-BY-NC-4.0,2513,9,~2700x~4800,RGB,,
-`SolarPlantsBrazil`_,S,Aerial,CC-BY-4.0,272,2,256x256,10,RGB + NIR,
-`SSL4EO`_-L,T,Landsat,CC0-1.0,1M,-,264x264,30,MSI,
-`SSL4EO`_-S12,T,Sentinel-1/2,CC-BY-4.0,1M,-,264x264,10,"SAR, MSI",
-`SSL4EO-L Benchmark`_,S,Lansat & CDL,CC0-1.0,25K,134,264x264,30,MSI,
-`SSL4EO-L Benchmark`_,S,Lansat & NLCD,CC0-1.0,25K,17,264x264,30,MSI,
-`Substation`_,S,OpenStreetMap & Sentinel-2," ""CC-BY-4.0""", 27K,2, 228x228,10, MSI,
-`SustainBench Crop Yield`_,R,MODIS,CC-BY-SA-4.0,11k,-,32x32,-,MSI,
-`TreeSatAI`_,"C, R, S","Aerial, Sentinel-1/2",CC-BY-4.0,50K,"12, 15, 20","6, 20, 304","0.2, 10","CIR, MSI, SAR",
-`Tropical Cyclone`_,R,GOES 8--16,CC-BY-4.0,"108,110",-,256x256,4K--8K,MSI,
-`UC Merced`_,C,USGS National Map,public domain,"2,100",21,256x256,0.3,RGB,
-`USAVars`_,R,NAIP Aerial,CC-BY-4.0,100K,-,-,4,"RGB, NIR",
-`Vaihingen`_,S,Aerial,-,33,6,"1,281--3,816",0.09,RGB,
-`VHR-10`_,I,"Google Earth, Vaihingen",CC-BY-NC-4.0,800,10,"358--1,728",0.08--2,RGB,
-`Western USA Live Fuel Moisture`_,R,"Landsat8, Sentinel-1",CC-BY-NC-ND-4.0,2615,-,-,-,-,
-`xView2`_,CD,Maxar,CC-BY-NC-SA-4.0,"3,732",4,"1,024x1,024",0.8,RGB,
-`ZueriCrop`_,"I, T",Sentinel-2,CC-BY-NC-4.0,116K,48,24x24,10,MSI,
+Dataset,Task,Source,License,# Samples,# Classes,Size (px),Resolution (m),Bands
+`ADVANCE`_,C,"Google Earth, Freesound","CC-BY-4.0","5,075",13,512x512,0.5,RGB
+`Benin Cashew Plantations`_,S,Airbus Pléiades,"CC-BY-4.0",70,6,"1,122x1,186",10,MSI
+`BigEarthNet`_,C,Sentinel-1/2,"CDLA-Permissive-1.0","590,326",19--43,120x120,10,"SAR, MSI"
+`BioMassters`_,R,Sentinel-1/2 and Lidar,"CC-BY-4.0",,,256x256, 10, "SAR, MSI"
+`BRIGHT`_,CD,"MAXAR, NAIP, Capella, Umbra","CC-BY-4.0 AND CC-BY-NC-4.0",3239,4,1024x1024,"0.1--1","RGB, SAR"
+`CaBuAr`_,CD,Sentinel-2,"OpenRAIL",424,2,512x512,20,MSI
+`CaFFe`_,S,"Sentinel-1, TerraSAR-X, TanDEM-X, ENVISAT, ERS-1/2, ALOS PALSAR, and RADARSAT-1","CC-BY-4.0","19092","2 or 4","512x512",6-20,"SAR"
+`ChaBuD`_,CD,Sentinel-2,"OpenRAIL",356,2,512x512,10,MSI
+`Cloud Cover Detection`_,S,Sentinel-2,"CC-BY-4.0","22,728",2,512x512,10,MSI
+`Copernicus-Pretrain`_,T,"Sentinel-1/2/3/5P, DEM","CC-BY-4.0",18.7M,-,"264x264 or 96x96 or 28x28 or 960x960",10--1000,"SAR, MSI, Air Pollutants, DEM"
+`COWC`_,"C, R","CSUAV AFRL, ISPRS, LINZ, AGRC","AGPL-3.0-only","388,435",2,256x256,0.15,RGB
+`CropHarvest`_,"C","Sentinel-1/2, SRTM, ERA5","CC-BY-SA-4.0","70,213",351,1x1,10,"SAR, MSI, SRTM"
+`Kenya Crop Type`_,S,Sentinel-2,"CC-BY-SA-4.0","4,688",7,"3,035x2,016",10,MSI
+`DeepGlobe Land Cover`_,S,DigitalGlobe +Vivid,-,803,7,"2,448x2,448",0.5,RGB
+`DFC2022`_,S,Aerial,"CC-BY-4.0","3,981",15,"2,000x2,000",0.5,RGB
+`DIOR`_,OD,Aerial,"CC-BY-NC-4.0","23,463",20,"800x800",0.5,RGB
+`Digital Typhoon`_,"C, R",Himawari,"CC-BY-4.0","189,364",8,512,5000,Infrared
+`DL4GAM`_,S,"Sentinel-2","CC-BY-4.0","2,251 or 11,440","2","256x256","10","MSI"
+`DOTA`_,OD,"Google Earth, Gaofen-2, Jilin-1, CycloMedia B.V.","non-commercial","5,229",15,"800--4000",,RGB
+`ETCI2021 Flood Detection`_,S,Sentinel-1,-,"66,810",2,256x256,5--20,SAR
+`EuroSAT`_,C,Sentinel-2,"MIT","27,000",10,64x64,10,MSI
+`EverWatch`_,OD,Aerial,"CC0-1.0","5,325",8,"1,500x1500p",0.01,RGB
+`FAIR1M`_,OD,Gaofen/Google Earth,"CC-BY-NC-SA-3.0","15,000",37,"1,024x1,024",0.3--0.8,RGB
+`Fields Of The World`_,"S,I",Sentinel-2,"Various","70795","2,3",256x256,10,MSI
+`FireRisk`_,C,NAIP Aerial,"CC-BY-NC-4.0","91,872",7,"320x320",1,RGB
+`Forest Damage`_,OD,Drone imagery,"CDLA-Permissive-1.0","1,543",4,"1,500x1,500",,RGB
+`GeoNRW`_,S,Aerial,"CC-BY-4.0","7,783",11,"1,000x1,000",1,"RGB, DEM"
+`GID-15`_,S,Gaofen-2,-,150,15,"6,800x7,200",3,RGB
+`HySpecNet-11k`_,-,EnMAP,CC0-1.0,11k,-,128,30,HSI
+`IDTReeS`_,"OD,C",Aerial,"CC-BY-4.0",591,33,200x200,0.1--1,RGB
+`Inria Aerial Image Labeling`_,S,Aerial,-,360,2,"5,000x5,000",0.3,RGB
+`LandCover.ai`_,S,Aerial,"CC-BY-NC-SA-4.0","10,674",5,512x512,0.25--0.5,RGB
+`LEVIR-CD`_,CD,Google Earth,-,637,2,"1,024x1,024",0.5,RGB
+`LEVIR-CD+`_,CD,Google Earth,-,985,2,"1,024x1,024",0.5,RGB
+`LoveDA`_,S,Google Earth,"CC-BY-NC-SA-4.0","5,987",7,"1,024x1,024",0.3,RGB
+`MapInWild`_,S,"Sentinel-1/2, ESA WorldCover, NOAA VIIRS DNB","CC-BY-4.0",1018,1,1920x1920,10--463.83,"SAR, MSI, 2020_Map, avg_rad"
+`MDAS`_,S,"Sentinel-1/2,EnMAP,HySpex","CC-BY-SA-4.0",3,20,"100x120, 300x360, 1364x1636, 10000x12000, 15000x18000",0.3--30,HSI
+`Million-AID`_,C,Google Earth,-,1M,51--73,,0.5--153,RGB
+`MMEarth`_,"C, S","Aster, Sentinel, ERA5","CC-BY-4.0","100K--1M",,"128x128 or 64x64",10,MSI
+`NASA Marine Debris`_,OD,PlanetScope,"Apache-2.0",707,1,256x256,3,RGB
+`OSCD`_,CD,Sentinel-2,"CC-BY-4.0",24,2,"40--1,180",60,MSI
+`PASTIS`_,I,Sentinel-1/2,"CC-BY-4.0","2,433",19,128x128xT,10,MSI
+`PatternNet`_,C,Google Earth,"CC-BY-4.0","30,400",38,256x256,0.06--5,RGB
+`Potsdam`_,S,Aerial,-,38,6,"6,000x6,000",0.05,MSI
+`QuakeSet`_,"C, R",Sentinel-1,"OpenRAIL","3,327",2,512x512,10,SAR
+`ReforesTree`_,"OD, R",Aerial,"CC-BY-4.0",100,6,"4,000x4,000",0.02,RGB
+`RESISC45`_,C,Google Earth,"CC-BY-NC-4.0","31,500",45,256x256,0.2--30,RGB
+`Rwanda Field Boundary`_,S,Planetscope,"NICFI AND CC-BY-4.0",70,2,256x256,4.7,RGB + NIR
+`SatlasPretrain`_,"C, R, S, I, OD","NAIP, Landsat, Sentinel",ESA AND CC0-1.0 AND ODbL-1.0 AND CC-BY-4.0,302M,137,512,0.6--30,"SAR, MSI"
+`Seasonal Contrast`_,T,Sentinel-2,"CC-BY-4.0",100K--1M,-,264x264,10,MSI
+`SeasoNet`_,S,Sentinel-2,"CC-BY-4.0","1,759,830",33,120x120,10,MSI
+`SEN12MS`_,S,"Sentinel-1/2, MODIS","CC-BY-4.0","180,662",33,256x256,10,"SAR, MSI"
+`SKIPP'D`_,R,"Fish-eye","CC-BY-4.0","363,375",-,64x64,-,RGB
+`SkyScript`_,IC,"NAIP, orthophotos, Planet SkySat, Sentinel-2, Landsat 8--9",MIT,5.2M,-,100--1000,0.1--30,RGB
+`So2Sat`_,C,Sentinel-1/2,"CC-BY-4.0","400,673",17,32x32,10,"SAR, MSI"
+`SODA`_,OD,Aerial,"CC-BY-NC-4.0","2513",9,"~2700x~4800","RGB"
+`SolarPlantsBrazil`_,S,Aerial,"CC-BY-NC-4.0","272",2,256x256,10,"RGB + NIR"
+`SSL4EO`_-L,T,Landsat,"CC0-1.0",1M,-,264x264,30,MSI
+`SSL4EO`_-S12,T,Sentinel-1/2,"CC-BY-4.0",1M,-,264x264,10,"SAR, MSI"
+`SSL4EO-L Benchmark`_,S,Lansat & CDL,"CC0-1.0",25K,134,264x264,30,MSI
+`SSL4EO-L Benchmark`_,S,Lansat & NLCD,"CC0-1.0",25K,17,264x264,30,MSI
+`Substation`_,S,OpenStreetMap & Sentinel-2, "CC-BY-4.0", 27K, 2, 228x228, 10, MSI
+`SustainBench Crop Yield`_,R,MODIS,"CC-BY-SA-4.0",11k,-,32x32,-,MSI
+`TreeSatAI`_,"C, R, S","Aerial, Sentinel-1/2",CC-BY-4.0,50K,"12, 15, 20","6, 20, 304","0.2, 10","CIR, MSI, SAR"
+`Tropical Cyclone`_,R,GOES 8--16,"CC-BY-4.0","108,110",-,256x256,4K--8K,MSI
+`UC Merced`_,C,USGS National Map,"public domain","2,100",21,256x256,0.3,RGB
+`USAVars`_,R,NAIP Aerial,"CC-BY-4.0",100K,-,-,4,"RGB, NIR"
+`Vaihingen`_,S,Aerial,-,33,6,"1,281--3,816",0.09,RGB
+`VHR-10`_,I,"Google Earth, Vaihingen","CC-BY-NC-4.0",800,10,"358--1,728",0.08--2,RGB
+`Western USA Live Fuel Moisture`_,R,"Landsat8, Sentinel-1","CC-BY-NC-ND-4.0",2615,-,-,-,-
+`xView2`_,CD,Maxar,"CC-BY-NC-SA-4.0","3,732",4,"1,024x1,024",0.8,RGB
+`ZueriCrop`_,"I, T",Sentinel-2,CC-BY-NC-4.0,116K,48,24x24,10,MSI
