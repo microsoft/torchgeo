@@ -74,6 +74,11 @@ class Sentinel1ChangeMap(torch.nn.Module):
             A tensor of shape (N, 2, H, W) containing the change maps for VV and VH bands.
             The values are 1 for change detected and 0 for no change.
         """
+        has_batch_dim = x.dim() == 4
+
+        if not has_batch_dim:
+            x = x.unsqueeze(0)
+
         vv_pre, vh_pre, vv_post, vh_post = x[:, 0], x[:, 1], x[:, 2], x[:, 3]
         vv_change = (
             (vv_post < self.vv_threshold)
@@ -94,7 +99,12 @@ class Sentinel1ChangeMap(torch.nn.Module):
         )
         vv_change[zero_idx] = 0
         vh_change[zero_idx] = 0
-        return torch.stack([vv_change, vh_change], dim=1).to(torch.float)
+        change = torch.stack([vv_change, vh_change], dim=1).to(torch.float)
+
+        if not has_batch_dim:
+            change = change.squeeze(dim=0)
+
+        return change
 
 
 _ai4g_flood_transforms = K.AugmentationSequential(
