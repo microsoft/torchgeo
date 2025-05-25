@@ -4,7 +4,10 @@
 import os
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
+from matplotlib.figure import Figure
 
 from torchgeo.datasets import (
     BoundingBox,
@@ -41,8 +44,15 @@ class TestINaturalist:
             INaturalist(tmp_path)
 
     def test_invalid_query(self, dataset: INaturalist) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        mint = pd.Timestamp('2022-05-07 11:02:53+01:00')
+        query = BoundingBox(0, 0, 0, 0, mint, mint)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
             dataset[query]
+
+    def test_plot(self, dataset: INaturalist) -> None:
+        sample = dataset[dataset.bounds]
+        fig = dataset.plot(sample, suptitle='test')
+        assert isinstance(fig, Figure)
+        plt.close()

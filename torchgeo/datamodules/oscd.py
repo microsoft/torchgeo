@@ -12,7 +12,6 @@ from torch.utils.data import random_split
 
 from ..datasets import OSCD
 from ..samplers.utils import _to_tuple
-from ..transforms.transforms import _ExtractPatches
 from .geo import NonGeoDataModule
 
 MEAN = {
@@ -86,14 +85,18 @@ class OSCDDataModule(NonGeoDataModule):
         self.std = torch.tensor([STD[b] for b in self.bands])
 
         self.train_aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            K.RandomCrop(self.patch_size, pad_if_needed=True),
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                K.RandomCrop(self.patch_size, pad_if_needed=True),
+            ),
             data_keys=None,
             keepdim=True,
         )
         self.aug = K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            _ExtractPatches(window_size=self.patch_size),
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                K.CenterCrop(size=self.patch_size),
+            ),
             data_keys=None,
             keepdim=True,
             same_on_batch=True,

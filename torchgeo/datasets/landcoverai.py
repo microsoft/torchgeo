@@ -9,15 +9,16 @@ import hashlib
 import os
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from PIL import Image
-from rasterio.crs import CRS
+from pyproj import CRS
 from torch import Tensor
 from torch.utils.data import Dataset
 
@@ -253,13 +254,13 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        img_filepaths = cast(list[str], [hit.object for hit in hits])
-        mask_filepaths = [
-            str(path).replace('images', 'masks') for path in img_filepaths
-        ]
+        interval = pd.Interval(query.mint, query.maxt)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
+        img_filepaths = index.filepath
+        mask_filepaths = img_filepaths.apply(lambda x: x.replace('images', 'masks'))
 
-        if not img_filepaths:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )

@@ -6,12 +6,13 @@ import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
+from pyproj import CRS
 from pytest import MonkeyPatch
-from rasterio.crs import CRS
 
 from torchgeo.datasets import (
     BoundingBox,
@@ -83,7 +84,7 @@ class TestChesapeakeDC:
         plt.close()
 
     def test_invalid_query(self, dataset: ChesapeakeDC) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
@@ -191,7 +192,7 @@ class TestChesapeakeCVPR:
             ChesapeakeCVPR(tmp_path, checksum=True)
 
     def test_out_of_bounds_query(self, dataset: ChesapeakeCVPR) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):

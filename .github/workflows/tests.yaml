@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up python
         id: setup-python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Cache dependencies
@@ -46,7 +46,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.4.0
+        uses: codecov/codecov-action@v5.4.3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   minimum:
@@ -57,7 +57,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up python
         id: setup-python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.11'
       - name: Cache dependencies
@@ -78,7 +78,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.4.0
+        uses: codecov/codecov-action@v5.4.3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
   datasets:
@@ -89,7 +89,7 @@ jobs:
         uses: actions/checkout@v4.2.2
       - name: Set up python
         id: setup-python
-        uses: actions/setup-python@v5.5.0
+        uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.13'
       - name: Cache dependencies
@@ -110,7 +110,7 @@ jobs:
           pytest --cov=torchgeo --cov-report=xml
           python3 -m torchgeo --help
       - name: Report coverage
-        uses: codecov/codecov-action@v5.4.0
+        uses: codecov/codecov-action@v5.4.3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 concurrency:
