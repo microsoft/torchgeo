@@ -12,7 +12,7 @@ import fiona
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset

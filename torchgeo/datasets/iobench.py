@@ -10,7 +10,7 @@ from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .cdl import CDL
 from .errors import DatasetNotFoundError, RGBBandsMissingError

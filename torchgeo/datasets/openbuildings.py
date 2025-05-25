@@ -6,9 +6,8 @@
 import glob
 import json
 import os
-import sys
 from collections.abc import Callable, Iterable
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import fiona
 import fiona.transform
@@ -18,9 +17,9 @@ import rasterio
 import shapely
 import shapely.wkt as wkt
 import torch
+from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
-from rtree.index import Index, Property
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
@@ -240,9 +239,6 @@ class OpenBuildings(VectorDataset):
 
         self._verify()
 
-        # Create an R-tree to index the dataset using the polygon centroid as bounds
-        self.index = Index(interleaved=False, properties=Property(dimension=3))
-
         assert isinstance(self.paths, str | os.PathLike)
         with open(os.path.join(self.paths, 'tiles.geojson')) as f:
             data = json.load(f)
@@ -261,11 +257,20 @@ class OpenBuildings(VectorDataset):
             if filename in polygon_filenames
         ]
 
-        i = 0
-        source_crs = CRS.from_dict({'init': 'epsg:4326'})
+        filepaths = []
+        datetimes = []
+        geometries = []
+        source_crs = CRS.from_epsg(4326)
         for feature in matched_features:
             if crs is None:
-                crs = CRS.from_dict(source_crs)
+                crs = source_crs
+
+            filepath = os.path.join(
+                self.paths, feature['properties']['tile_url'].split('/')[-1]
+            )
+
+            mint = pd.Timestamp.min
+            maxt = pd.Timestamp.max
 
             c = feature['geometry']['coordinates'][0]
             xs = [x[0] for x in c]
@@ -274,22 +279,20 @@ class OpenBuildings(VectorDataset):
             minx, miny, maxx, maxy = min(xs), min(ys), max(xs), max(ys)
 
             (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                source_crs.to_dict(), crs.to_dict(), [minx, maxx], [miny, maxy]
+                source_crs.to_wkt(), crs.to_wkt(), [minx, maxx], [miny, maxy]
             )
-            mint = 0
-            maxt = sys.maxsize
-            coords = (minx, maxx, miny, maxy, mint, maxt)
 
-            filepath = os.path.join(
-                self.paths, feature['properties']['tile_url'].split('/')[-1]
-            )
-            self.index.insert(i, coords, filepath)
-            i += 1
+            filepaths.append(filepath)
+            datetimes.append((mint, maxt))
+            geometries.append(shapely.box(minx, miny, maxx, maxy))
 
-        if i == 0:
+        if not len(filepaths):
             raise DatasetNotFoundError(self)
 
-        self._crs = crs
+        data = {'filepath': filepaths}
+        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
+
         self._source_crs = source_crs
 
     def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
@@ -305,15 +308,16 @@ class OpenBuildings(VectorDataset):
         Raises:
             IndexError: if query is not found in the index
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
+        interval = pd.Interval(query.mint, query.maxt)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
 
-        if not filepaths:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        shapes = self._filter_geometries(query, filepaths)
+        shapes = self._filter_geometries(query, index.filepath)
 
         # Rasterize geometries
         width = (query.maxx - query.minx) / self.res[0]
@@ -351,8 +355,8 @@ class OpenBuildings(VectorDataset):
         """
         # We need to know the bounding box of the query in the source CRS
         (minx, maxx), (miny, maxy) = fiona.transform.transform(
-            self._crs.to_dict(),
-            self._source_crs.to_dict(),
+            self.crs.to_wkt(),
+            self._source_crs.to_wkt(),
             [query.minx, query.maxx],
             [query.miny, query.maxy],
         )
@@ -392,7 +396,7 @@ class OpenBuildings(VectorDataset):
         else:
             geom = x
         transformed: dict[str, Any] = fiona.transform.transform_geom(
-            self._source_crs.to_dict(), self._crs.to_dict(), geom
+            self._source_crs.to_wkt(), self.crs.to_wkt(), geom
         )
         return transformed
 

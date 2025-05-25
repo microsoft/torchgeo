@@ -26,7 +26,7 @@ Features
    :header-rows: 1
    :widths: auto
 
-\*Support for TensorFlow was dropped in Raster Vision 0.12.
+\*Support was dropped in newer releases.
 
 **ML Backend**: The machine learning libraries used by the project. For example, if you are a scikit-learn user, eo-learn may be perfect for you, but if you need more advanced deep learning support, you may want to choose a different library.
 
@@ -113,7 +113,9 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _samgeo: https://github.com/opengeos/segment-geospatial
 .. _TerraTorch: https://github.com/IBM/terratorch
 .. _SITS: https://github.com/e-sensing/sits
+.. _srai: https://github.com/kraina-ai/srai
 .. _scikit-eo: https://github.com/yotarazona/scikit-eo
 .. _geo-bench: https://github.com/ServiceNow/geo-bench
 .. _GeoAI: https://github.com/opengeos/geoai
 .. _OTBTF: https://github.com/remicres/otbtf
+.. _GeoDeep: https://github.com/uav4geo/GeoDeep

@@ -5,11 +5,12 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from torchgeo.datasets import (
     BoundingBox,
@@ -42,9 +43,6 @@ class TestSentinel1:
         bands = request.param
         transforms = nn.Identity()
         return Sentinel1(root, bands=bands, transforms=transforms)
-
-    def test_separate_files(self, dataset: Sentinel1) -> None:
-        assert dataset.index.count(dataset.index.bounds) == 1
 
     def test_getitem(self, dataset: Sentinel1) -> None:
         x = dataset[dataset.bounds]
@@ -94,7 +92,7 @@ class TestSentinel1:
             Sentinel1(bands=bands)
 
     def test_invalid_query(self, dataset: Sentinel1) -> None:
-        query = BoundingBox(-1, -1, -1, -1, -1, -1)
+        query = BoundingBox(-1, -1, -1, -1, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
@@ -109,9 +107,6 @@ class TestSentinel2:
         bands = ['B02', 'B03', 'B04', 'B08']
         transforms = nn.Identity()
         return Sentinel2(root, res=res, bands=bands, transforms=transforms)
-
-    def test_separate_files(self, dataset: Sentinel2) -> None:
-        assert dataset.index.count(dataset.index.bounds) == 4
 
     def test_getitem(self, dataset: Sentinel2) -> None:
         x = dataset[dataset.bounds]
@@ -149,7 +144,7 @@ class TestSentinel2:
             ds.plot(x)
 
     def test_invalid_query(self, dataset: Sentinel2) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
+        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
