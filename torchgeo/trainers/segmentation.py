@@ -158,6 +158,8 @@ class SemanticSegmentationTask(BaseTask):
         if class_weights is not None and not isinstance(class_weights, torch.Tensor):
             class_weights = torch.tensor(class_weights, dtype=torch.float32)
 
+        ignore_index = self.hparams['ignore_index']
+
         match self.hparams['loss']:
             case 'ce':
                 ignore_value = -1000 if ignore_index is None else ignore_index
