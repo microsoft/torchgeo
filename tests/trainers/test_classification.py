@@ -195,12 +195,12 @@ class TestClassificationTask:
         class_weights_list = [1.0, 2.0, 0.5]
         task = ClassificationTask(class_weights=class_weights_list, num_classes=3)
         assert task.hparams['class_weights'] == class_weights_list
-        
+
         # Test with tensor class weights
         class_weights_tensor = torch.tensor([1.0, 2.0, 0.5])
         task = ClassificationTask(class_weights=class_weights_tensor, num_classes=3)
         assert torch.equal(task.hparams['class_weights'], class_weights_tensor)
-        
+
         # Test with None (default)
         task = ClassificationTask(num_classes=3)
         assert task.hparams['class_weights'] is None
