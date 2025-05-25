@@ -152,12 +152,10 @@ class SemanticSegmentationTask(BaseTask):
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
-        # Handle class weights - convert to tensor if needed
+        ignore_index: int | None = self.hparams['ignore_index']
         class_weights = self.hparams['class_weights']
         if class_weights is not None and not isinstance(class_weights, torch.Tensor):
             class_weights = torch.tensor(class_weights, dtype=torch.float32)
-
-        ignore_index = self.hparams['ignore_index']
 
         match self.hparams['loss']:
             case 'ce':
