@@ -153,15 +153,10 @@ class SemanticSegmentationTask(BaseTask):
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
-        ignore_index: int | None = self.hparams['ignore_index']
-        cw = self.hparams['class_weights']
-        if cw is not None and isinstance(cw, torch.Tensor):
-            raise DeprecationWarning(
-                'Passing a Tensor for class_weights is deprecated. '
-                'Please pass a list of floats instead.'
-            )
-
-        class_weights = torch.Tensor(cw) if cw is not None else None
+        # Handle class weights - convert to tensor if needed
+        class_weights = self.hparams['class_weights']
+        if class_weights is not None and not isinstance(class_weights, torch.Tensor):
+            class_weights = torch.tensor(class_weights, dtype=torch.float32)
 
         match self.hparams['loss']:
             case 'ce':
