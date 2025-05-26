@@ -4,7 +4,7 @@
 """Trainers for semantic segmentation."""
 
 import os
-from typing import Any, Literal
+from typing import Any, Literal, Sequence
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -36,7 +36,7 @@ class SemanticSegmentationTask(BaseTask):
         num_labels: int | None = None,
         num_filters: int = 3,
         loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'ce',
-        class_weights: Tensor | list[float] | None = None,
+        class_weights: Tensor | Sequence[float] | None = None,
         ignore_index: int | None = None,
         lr: float = 1e-3,
         patience: int = 10,
@@ -154,7 +154,7 @@ class SemanticSegmentationTask(BaseTask):
         """Initialize the loss criterion."""
         ignore_index: int | None = self.hparams['ignore_index']
         class_weights = self.hparams['class_weights']
-        if class_weights is not None and not isinstance(class_weights, torch.Tensor):
+        if class_weights is not None and not isinstance(class_weights, Tensor):
             class_weights = torch.tensor(class_weights, dtype=torch.float32)
 
         match self.hparams['loss']:

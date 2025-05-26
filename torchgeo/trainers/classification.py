@@ -4,7 +4,7 @@
 """Trainers for image classification."""
 
 import os
-from typing import Any, Literal
+from typing import Any, Literal, Sequence
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -37,7 +37,7 @@ class ClassificationTask(BaseTask):
         num_classes: int | None = None,
         num_labels: int | None = None,
         loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'ce',
-        class_weights: Tensor | list[float] | None = None,
+        class_weights: Tensor | Sequence[float] | None = None,
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
