@@ -111,7 +111,7 @@ class ClassificationTask(BaseTask):
         """Initialize the loss criterion."""
         # Handle class weights - convert to tensor if needed
         class_weights = self.hparams['class_weights']
-        if class_weights is not None and not isinstance(class_weights, torch.Tensor):
+        if class_weights is not None and not isinstance(class_weights, Tensor):
             class_weights = torch.tensor(class_weights, dtype=torch.float32)
 
         match self.hparams['loss']:
