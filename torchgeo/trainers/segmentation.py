@@ -4,7 +4,9 @@
 """Trainers for semantic segmentation."""
 
 import os
-from typing import Any, Literal, Sequence
+from typing import Any, Literal
+from collections.abc import Sequence
+
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
