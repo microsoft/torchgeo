@@ -11,12 +11,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 import torch
-from huggingface_hub import snapshot_download
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from torchgeo.datasets import NonGeoDataset
-from torchgeo.datasets.utils import Path
+from .errors import DatasetNotFoundError
+from .geo import NonGeoDataset
+from .utils import Path, download_and_extract_archive
 
 
 class SolarPlantsBrazil(NonGeoDataset):
@@ -41,24 +41,14 @@ class SolarPlantsBrazil(NonGeoDataset):
     * Dataset is hosted on Hugging Face: https://huggingface.co/datasets/FederCO23/solar-plants-brazil
     * Code and preprocessing steps available at: https://github.com/FederCO23/UCSD_MLBootcamp_Capstone
 
-    If you use this dataset, please cite or reference the project repository.
+    .. versionadded:: 0.8
 
-    .. versionadded:: 0.6
+    Raises:
+        DatasetNotFoundError: If the dataset is not found and download=False.
     """
 
-    url = 'https://huggingface.co/datasets/FederCO23/solar-plants-brazil'
+    url = 'https://huggingface.co/datasets/FederCO23/solar-plants-brazil/resolve/main/solarplantsbrazil.zip'
     bands = ('Red', 'Green', 'Blue', 'NIR')
-
-    citation = """\
-@misc{solarplantsbrazil2024,
-  author       = {Federico Bessi},
-  title        = {Solar Plants Brazil: A Semantic Segmentation Dataset for Photovoltaic Panel Detection},
-  year         = {2024},
-  howpublished = {Hugging Face Datasets},
-  url          = {https://huggingface.co/datasets/FederCO23/solar-plants-brazil},
-  note         = {Preprocessing and training code available at https://github.com/FederCO23/UCSD_MLBootcamp_Capstone}
-}
-"""
 
     def __init__(
         self,
@@ -93,9 +83,8 @@ class SolarPlantsBrazil(NonGeoDataset):
         )
 
         if len(self.image_paths) == 0:
-            raise FileNotFoundError(
-                f'No input images found in {self.dataset_path}/input/'
-            )
+            raise DatasetNotFoundError(self)
+
         assert len(self.image_paths) == len(self.mask_paths), (
             'Mismatch between image and mask files'
         )
@@ -106,19 +95,14 @@ class SolarPlantsBrazil(NonGeoDataset):
             return
 
         if not self.download:
-            raise RuntimeError(
-                f'Dataset not found at {self.dataset_path}. Use download=True to fetch it.'
-            )
+            raise DatasetNotFoundError(self)
 
         self._download()
 
     def _download(self) -> None:
-        """Download the dataset from Hugging Face."""
-        snapshot_download(
-            repo_id='FederCO23/solar-plants-brazil',
-            repo_type='dataset',
-            local_dir=str(self.root),
-            token=False,
+        """Download the dataset archive from Hugging Face and extract it."""
+        download_and_extract_archive(
+            url=self.url, download_root=self.root, filename='solarplantsbrazil.zip'
         )
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:

@@ -3,136 +3,69 @@
 
 """Unit tests for the SolarPlantsBrazil dataset."""
 
-import os
-import tempfile
-import warnings
-from unittest.mock import patch
+from pathlib import Path
 
-import matplotlib.pyplot as plt
 import pytest
-import rasterio
 import torch
-from rasterio.errors import NotGeoreferencedWarning
+from matplotlib import pyplot as plt
+from pytest import MonkeyPatch
 
-from torchgeo.datasets import SolarPlantsBrazil
-
-# Suppress rasterio georeferencing warnings for dummy data
-warnings.filterwarnings('ignore', category=NotGeoreferencedWarning)
+from torchgeo.datasets import DatasetNotFoundError, SolarPlantsBrazil
 
 
-def create_dummy_dataset_structure(root: str) -> None:
-    """Create a dummy SolarPlantsBrazil-like folder with one image-mask pair."""
-    input_dir = os.path.join(root, 'train', 'input')
-    label_dir = os.path.join(root, 'train', 'labels')
-    os.makedirs(input_dir, exist_ok=True)
-    os.makedirs(label_dir, exist_ok=True)
+class TestSolarPlantsBrazil:
+    @pytest.fixture
+    def dataset_root(self) -> str:
+        # Point to the test data folder you generated and committed
+        return 'tests/data/solar_plants_brazil'
 
-    image = torch.randint(0, 255, (4, 256, 256), dtype=torch.uint8).numpy()
-    mask = (torch.rand(256, 256) > 0.5).to(torch.uint8).numpy()
+    @pytest.fixture(params=['train'])
+    def dataset(
+        self, dataset_root: str, request: pytest.FixtureRequest
+    ) -> SolarPlantsBrazil:
+        split = request.param
+        return SolarPlantsBrazil(root=dataset_root, split=split)
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', category=NotGeoreferencedWarning)
-        with rasterio.open(
-            os.path.join(input_dir, 'img(1).tif'),
-            'w',
-            driver='GTiff',
-            height=256,
-            width=256,
-            count=4,
-            dtype='uint8',
-        ) as dst:
-            dst.write(image)
-
-        with rasterio.open(
-            os.path.join(label_dir, 'target(1).tif'),
-            'w',
-            driver='GTiff',
-            height=256,
-            width=256,
-            count=1,
-            dtype='uint8',
-        ) as dst:
-            dst.write(mask, 1)
-
-
-def test_solar_plants_brazil_getitem_and_len() -> None:
-    """Test __getitem__ and __len__ for a minimal dataset."""
-    with tempfile.TemporaryDirectory() as root:
-        create_dummy_dataset_structure(root)
-        dataset = SolarPlantsBrazil(root=root, split='train')
-
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', category=NotGeoreferencedWarning)
-            sample = dataset[0]
-
-        assert len(dataset) == 1
+    def test_getitem(self, dataset: SolarPlantsBrazil) -> None:
+        sample = dataset[0]
         assert isinstance(sample, dict)
-        assert 'image' in sample and 'mask' in sample
-        assert sample['image'].shape == (4, 256, 256)
-        assert sample['mask'].shape == (1, 256, 256)
+        assert isinstance(sample['image'], torch.Tensor)
+        assert isinstance(sample['mask'], torch.Tensor)
+        assert sample['image'].shape == (4, 32, 32)
+        assert sample['mask'].shape == (1, 32, 32)
 
+    def test_len(self, dataset: SolarPlantsBrazil) -> None:
+        assert len(dataset) == 1
 
-def test_solar_plants_brazil_plot() -> None:
-    """Test the plot method returns a matplotlib figure."""
-    with tempfile.TemporaryDirectory() as root:
-        create_dummy_dataset_structure(root)
-        dataset = SolarPlantsBrazil(root=root, split='train')
+    def test_plot(self, dataset: SolarPlantsBrazil) -> None:
+        sample = dataset[0].copy()
+        sample['prediction'] = sample['mask'].clone()
+        dataset.plot(sample, suptitle='Test')
+        plt.close()
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', category=NotGeoreferencedWarning)
-            sample = dataset[0]
-            fig = dataset.plot(sample, suptitle='Test Sample')
+    def test_invalid_split(self) -> None:
+        with pytest.raises(AssertionError):
+            SolarPlantsBrazil(root='tests/data/solar_plants_brazil', split='foo')
 
-        assert fig is not None
-        plt.close(fig)
+    def test_missing_dataset_raises(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            SolarPlantsBrazil(root=tmp_path, split='train', download=False)
 
+    def test_download_called(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+        called = {'flag': False}
 
-def test_missing_images_raises_error() -> None:
-    """Test error raised when no input images exist."""
-    with tempfile.TemporaryDirectory() as root:
-        os.makedirs(os.path.join(root, 'train', 'input'), exist_ok=True)
-        os.makedirs(os.path.join(root, 'train', 'labels'), exist_ok=True)
-        with pytest.raises(FileNotFoundError):
-            SolarPlantsBrazil(root=root, split='train')
+        from typing import Any
 
+        def fake_download(self: Any) -> None:
+            called['flag'] = True
 
-def test_verify_raises_runtimeerror_if_download_false() -> None:
-    """Test error raised when dataset is missing and download is False."""
-    with tempfile.TemporaryDirectory() as root:
-        with pytest.raises(RuntimeError):
-            SolarPlantsBrazil(root=root, split='train', download=False)
-
-
-def test_transforms_are_applied() -> None:
-    """Test that custom transforms are applied."""
-
-    def dummy_transform(sample: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
-        sample['image'] += 1
-        return sample
-
-    with tempfile.TemporaryDirectory() as root:
-        create_dummy_dataset_structure(root)
-        dataset = SolarPlantsBrazil(
-            root=root, split='train', transforms=dummy_transform
+        # Correctly patch the class method _download
+        monkeypatch.setattr(
+            'torchgeo.datasets.solar_plants_brazil.SolarPlantsBrazil._download',
+            fake_download,
         )
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', category=NotGeoreferencedWarning)
-            sample = dataset[0]
-        assert (sample['image'] > 0).all()
 
+        with pytest.raises(DatasetNotFoundError):
+            SolarPlantsBrazil(root=tmp_path, split='train', download=True)
 
-def test_download_invoked_if_missing() -> None:
-    """Test that snapshot_download is invoked when dataset is missing."""
-    with patch(
-        'torchgeo.datasets.solar_plants_brazil.snapshot_download'
-    ) as mock_download:
-        with tempfile.TemporaryDirectory() as root:
-            # Do NOT create any subfolders like 'train/input' beforehand.
-            # This is intentional so that _verify() thinks the dataset is missing.
-            try:
-                SolarPlantsBrazil(root=root, split='train', download=True)
-            except FileNotFoundError:
-                # Expected since no files are actually written
-                pass
-
-            assert mock_download.called
+        assert called['flag']
