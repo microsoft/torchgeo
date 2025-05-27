@@ -5,6 +5,7 @@ import os
 
 import matplotlib.pyplot as plt
 import pytest
+import torch
 
 from torchgeo.datamodules import SolarPlantsBrazilDataModule
 
@@ -50,3 +51,11 @@ class TestSolarPlantsBrazilDataModule:
         sample = {'image': batch['image'][0], 'mask': batch['mask'][0]}
         datamodule.plot(sample)
         plt.close()
+
+    def test_on_after_batch_transfer_unsqueeze_case(self) -> None:
+        """Covers the ndim == 3 branch (when batch size = 1 and mask lacks batch dim)."""
+        dm = SolarPlantsBrazilDataModule(root='tests/data/solar_plants_brazil')
+        # Simulate a single sample before dataloader stacking (C, H, W)
+        batch = {'mask': torch.randint(0, 2, (1, 32, 32))}
+        out = dm.on_after_batch_transfer(batch, dataloader_idx=0)
+        assert out['mask'].ndim == 3
