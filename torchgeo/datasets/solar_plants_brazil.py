@@ -65,7 +65,10 @@ class SolarPlantsBrazil(NonGeoDataset):
             transforms: Optional transforms to apply.
             download: If True, download the dataset if it doesn't exist.
         """
-        assert split in ['train', 'val', 'test']
+        if split not in ['train', 'val', 'test']:
+            raise ValueError(
+                f"Invalid split '{split}', expected one of: 'train', 'val', or 'test'"
+            )
 
         self.root = root
         self.transforms = transforms
