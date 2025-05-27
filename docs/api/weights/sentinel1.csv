@@ -12,6 +12,6 @@ ViTHuge14_Weights.SENTINEL1_GRD_MAE,2,`link <https://github.com/zhu-xlab/SSL4EO-
 ViTHuge14_Weights.SENTINEL1_GRD_FGMAE,2,`link <https://github.com/zhu-xlab/FGMAE>`__,`link <https://arxiv.org/abs/2310.18653>`__,"CC-BY-4.0"
 ViTSmall14_DINOv2_Weights.SENTINEL1_GRD_SOFTCON, 2,`link <https://github.com/zhu-xlab/softcon>`__,`link <https://arxiv.org/abs/2405.20462>`__,"CC-BY-4.0"
 ViTBase14_DINOv2_Weights.SENTINEL1_GRD_SOFTCON, 2,`link <https://github.com/zhu-xlab/softcon>`__,`link <https://arxiv.org/abs/2405.20462>`__,"CC-BY-4.0"
-Swin_V2_B_Weights.SENTINEL1_MI_SATLAS,2,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__,"ODC-BY"
-Swin_V2_B_Weights.SENTINEL1_SI_SATLAS,2,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__,"ODC-BY"
-Unet_Weights.SENTINEL1_AI4G_FLOOD,2,`link <https://github.com/microsoft/ai4g-flood>`__,`link <https://arxiv.org/abs/2411.01411>`__,"MIT"
+Swin_V2_B_Weights.SENTINEL1_MI_SATLAS,2,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY
+Swin_V2_B_Weights.SENTINEL1_SI_SATLAS,2,`link <https://github.com/allenai/satlas>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY
+Unet_Weights.SENTINEL1_AI4G_FLOOD,2,`link <https://github.com/microsoft/ai4g-flood>`__,`link <https://arxiv.org/abs/2411.01411>`__,MIT
