@@ -75,6 +75,9 @@ class ObjectDetectionTask(BaseTask):
     ) -> None:
         """Initialize a new ObjectDetectionTask instance.
 
+        Note that we disable the internal normalize+resize transform of the detection models.
+        Please ensure your images are appropriately resized before passing them to the model.
+
         Args:
             model: Name of the `torchvision
                 <https://pytorch.org/vision/stable/models.html#object-detection>`__

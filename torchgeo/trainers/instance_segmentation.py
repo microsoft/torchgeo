@@ -91,8 +91,6 @@ class InstanceSegmentationTask(BaseTask):
                     weights=weights,
                     num_classes=num_classes,
                     weights_backbone=weights_backbone,
-                    image_mean=[0],
-                    image_std=[1],
                 )
                 self.model.transform = GeneralizedRCNNTransformNoOp()
             else:

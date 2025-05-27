@@ -17,7 +17,7 @@ from torchvision.models.detection.transform import GeneralizedRCNNTransform
 class GeneralizedRCNNTransformNoOp(GeneralizedRCNNTransform):  # type: ignore[misc]
     """GeneralizedRCNNTransform without the normalize and resize ops.
 
-    .. versionadded:: 0.7.1
+    .. versionadded:: 0.8
     """
 
     def __init__(self) -> None:
