@@ -4,6 +4,7 @@
 """Unit tests for the SolarPlantsBrazil dataset."""
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 import torch
@@ -51,15 +52,12 @@ class TestSolarPlantsBrazil:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             SolarPlantsBrazil(root=tmp_path, split='train', download=False)
 
-    def test_download_called(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+    def test_download_called(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
         called = {'flag': False}
 
-        from typing import Any
-
-        def fake_download(self: Any) -> None:
+        def fake_download(self: SolarPlantsBrazil) -> None:
             called['flag'] = True
 
-        # Correctly patch the class method _download
         monkeypatch.setattr(
             'torchgeo.datasets.solar_plants_brazil.SolarPlantsBrazil._download',
             fake_download,
@@ -69,3 +67,14 @@ class TestSolarPlantsBrazil:
             SolarPlantsBrazil(root=tmp_path, split='train', download=True)
 
         assert called['flag']
+
+    def test_getitem_with_transform(self, dataset_root: str) -> None:
+        def dummy_transform(sample: dict[str, Any]) -> dict[str, Any]:
+            sample['image'] += 1
+            return sample
+
+        dataset = SolarPlantsBrazil(
+            root=dataset_root, split='train', transforms=dummy_transform
+        )
+        sample = dataset[0]
+        assert torch.all(sample['image'] > 0)
