@@ -14,7 +14,7 @@ from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import VHR10, DatasetNotFoundError
 
-pytest.importorskip('pycocotools')
+pytest.importorskip('faster_coco_eval')
 
 
 class TestVHR10:

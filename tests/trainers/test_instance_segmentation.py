@@ -13,8 +13,8 @@ from torchgeo.datasets import VHR10, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.trainers import InstanceSegmentationTask
 
-# mAP metric requires pycocotools to be installed
-pytest.importorskip('pycocotools')
+# mAP metric requires faster-coco-eval to be installed
+pytest.importorskip('faster_coco_eval')
 
 
 class PredictInstanceSegmentationDataModule(VHR10DataModule):

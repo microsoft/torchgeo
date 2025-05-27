@@ -41,13 +41,13 @@ def convert_coco_poly_to_mask(
         Tensor: Mask tensor
 
     Raises:
-        DependencyNotFoundError: If pycocotools is not installed.
+        DependencyNotFoundError: If faster-coco-eval is not installed.
     """
-    pycocotools = lazy_import('pycocotools')
+    faster_coco_eval = lazy_import('faster_coco_eval')
     masks = []
     for polygons in segmentations:
-        rles = pycocotools.mask.frPyObjects(polygons, height, width)
-        mask = pycocotools.mask.decode(rles)
+        rles = faster_coco_eval.mask.frPyObjects(polygons, height, width)
+        mask = faster_coco_eval.mask.decode(rles)
         mask = torch.as_tensor(mask, dtype=torch.uint8)
         mask = mask.any(dim=2)
         masks.append(mask)
@@ -154,7 +154,7 @@ class VHR10(NonGeoDataset):
 
        This dataset requires the following additional library to be installed:
 
-       * `pycocotools <https://pypi.org/project/pycocotools/>`_ to load the
+       * `faster-coco-eval <https://pypi.org/project/faster-coco-eval/>`_ to load the
          ``annotations.json`` file for the "positive" image set
     """
 
@@ -204,7 +204,7 @@ class VHR10(NonGeoDataset):
         Raises:
             AssertionError: if ``split`` argument is invalid
             DatasetNotFoundError: If dataset is not found and *download* is False.
-            DependencyNotFoundError: if ``split="positive"`` and pycocotools is
+            DependencyNotFoundError: if ``split="positive"`` and faster-coco-eval is
                 not installed.
         """
         assert split in ['positive', 'negative']
@@ -221,7 +221,7 @@ class VHR10(NonGeoDataset):
             raise DatasetNotFoundError(self)
 
         if split == 'positive':
-            pc = lazy_import('pycocotools.coco')
+            pc = lazy_import('faster_coco_eval.coco')
             self.coco = pc.COCO(
                 os.path.join(
                     self.root, 'NWPU VHR-10 dataset', self.target_meta['filename']

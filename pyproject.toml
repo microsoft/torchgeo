@@ -85,6 +85,8 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 datasets = [
+    # faster-coco-eval 1.6.4+ required for numpy>=2 support
+    "faster-coco-eval>=1.6.4",
     # h5py 3.8+ required for Python 3.11 wheels
     "h5py>=3.8",
     # laspy 2+ required for laspy.read
@@ -95,8 +97,6 @@ datasets = [
     "opencv-python>=4.5.5",
     # pandas 2+ required for parquet extra
     "pandas[parquet]>=2",
-    # pycocotools 2.0.7+ required for Python 3.11 wheels
-    "pycocotools>=2.0.7",
     # scikit-image 0.20+ required for Python 3.11 wheels
     "scikit-image>=0.20",
     # scipy 1.9.2+ required for Python 3.11 wheels
