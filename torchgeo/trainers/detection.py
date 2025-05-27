@@ -227,7 +227,9 @@ class ObjectDetectionTask(BaseTask):
            * 'Macro' averaging gives equal weight to each class, and is useful for
              balanced performance assessment across imbalanced classes.
         """
-        metrics = MetricCollection([MeanAveragePrecision(average='macro')])
+        metrics = MetricCollection(
+            [MeanAveragePrecision(average='macro', backend='faster_coco_eval')]
+        )
         self.val_metrics = metrics.clone(prefix='val_')
         self.test_metrics = metrics.clone(prefix='test_')
 
