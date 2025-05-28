@@ -166,7 +166,7 @@ class InstanceSegmentationTask(BaseTask):
         x = batch['image']
         y = {
             'boxes': batch['bbox_xyxy'],
-            'labels': batch['label'].to(torch.long),
+            'labels': batch['label'],
             'masks': batch['mask'],
         }
         y_hat = self(x.unbind())
@@ -228,7 +228,7 @@ class InstanceSegmentationTask(BaseTask):
         x = batch['image']
         y = {
             'boxes': batch['bbox_xyxy'],
-            'labels': batch['label'].to(torch.long),
+            'labels': batch['label'],
             'masks': batch['mask'],
         }
         y_hat = self(x.unbind())
