@@ -221,8 +221,8 @@ class VHR10(NonGeoDataset):
             raise DatasetNotFoundError(self)
 
         if split == 'positive':
-            pc = lazy_import('faster_coco_eval.coco')
-            self.coco = pc.COCO(
+            faster_coco_eval = lazy_import('faster_coco_eval')
+            self.coco = faster_coco_eval.coco.COCO(
                 os.path.join(
                     self.root, 'NWPU VHR-10 dataset', self.target_meta['filename']
                 )
