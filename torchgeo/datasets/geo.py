@@ -36,6 +36,7 @@ from torchvision.datasets.folder import default_loader as pil_loader
 from .errors import DatasetNotFoundError
 from .utils import (
     BoundingBox,
+    GeoSlice,
     Path,
     array_to_tensor,
     concat_samples,
@@ -111,18 +112,49 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     #: Users should instead use the intersection or union operator.
     __add__ = None  # type: ignore[assignment]
 
-    @abc.abstractmethod
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+    def _disambiguate_slice(
+        self, key: GeoSlice
+    ) -> tuple[
+        float, float, float, float, float, float, pd.Timestamp, pd.Timestamp, int
+    ]:
+        """Disambiguate a partial spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            key: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image/mask and metadata at that index
+            A tuple of xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, and tres.
+        """
+        xmin, xmax, ymin, ymax, tmin, tmax = self.bounds
+        xres, yres = self.res
+        tres = 1
+        out = [xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres]
+
+        if isinstance(key, slice):
+            key = (key,)
+
+        for i in range(len(key)):
+            if key[i].start is not None:
+                out[i * 3 + 0] = key[i].start
+            if key[i].stop is not None:
+                out[i * 3 + 1] = key[i].stop
+            if key[i].step is not None:
+                out[i * 3 + 2] = key[i].step
+
+        return tuple(out)
+
+    @abc.abstractmethod
+    def __getitem__(self, key: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
+
+        Args:
+            key: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *key* is not found in the index.
         """
 
     def __and__(self, other: 'GeoDataset') -> 'IntersectionDataset':
@@ -471,7 +503,7 @@ class RasterDataset(GeoDataset):
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, key: GeoSlice) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -529,14 +561,14 @@ class RasterDataset(GeoDataset):
     def _merge_files(
         self,
         filepaths: Sequence[str],
-        query: BoundingBox,
+        key: GeoSlice,
         band_indexes: Sequence[int] | None = None,
     ) -> Tensor:
         """Load and merge one or more files.
 
         Args:
             filepaths: one or more files to load and merge
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            key: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
             band_indexes: indexes of bands to be used
 
         Returns:
@@ -695,7 +727,7 @@ class VectorDataset(GeoDataset):
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, key: GeoSlice) -> dict[str, Any]:
         """Retrieve image/mask and metadata indexed by query.
 
         Args:
@@ -985,7 +1017,7 @@ class IntersectionDataset(GeoDataset):
         if self.index.empty:
             raise RuntimeError('Datasets have no spatiotemporal intersection')
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
         Args:
@@ -1126,7 +1158,7 @@ class UnionDataset(GeoDataset):
 
         self.index = pd.concat([dataset1.index, dataset2.index])
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve image and metadata indexed by query.
 
         Args:
