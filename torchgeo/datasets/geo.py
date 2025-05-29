@@ -1060,8 +1060,8 @@ class IntersectionDataset(GeoDataset):
         Args:
             new_res: New resolution.
         """
-        self.datasets[0].res = new_res  # type: ignore[assignment]
-        self.datasets[1].res = new_res  # type: ignore[assignment]
+        self.datasets[0].res = new_res
+        self.datasets[1].res = new_res
 
 
 class UnionDataset(GeoDataset):
@@ -1206,5 +1206,5 @@ class UnionDataset(GeoDataset):
         Args:
             new_res: New resolution.
         """
-        self.datasets[0].res = new_res  # type: ignore[assignment]
-        self.datasets[1].res = new_res  # type: ignore[assignment]
+        self.datasets[0].res = new_res
+        self.datasets[1].res = new_res
