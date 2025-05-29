@@ -30,7 +30,7 @@ jobs:
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install .[datasets,tests]
+          PIP_CONSTRAINT=requirements/constraint.old pip install .[datasets,tests]
           pip cache purge
       - name: List pip dependencies
         run: pip list
