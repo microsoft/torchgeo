@@ -37,6 +37,12 @@ DOFA
 .. autoclass:: DOFABase16_Weights
 .. autoclass:: DOFALarge16_Weights
 
+EarthLoc
+^^^^^^^^
+
+.. autofunction:: earthloc
+.. autoclass:: EarthLoc_Weights
+
 FarSeg
 ^^^^^^
 
