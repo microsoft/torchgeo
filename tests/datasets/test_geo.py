@@ -51,7 +51,7 @@ class CustomGeoDataset(GeoDataset):
             [(b.mint, b.maxt) for b in bounds], closed='both', name='datetime'
         )
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
-        self.res = res  # type: ignore[assignment]
+        self.res = res
         self.paths = paths or []
 
     def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
@@ -399,7 +399,7 @@ class TestRasterDataset:
         root = os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_32631')
         ds = RasterDataset(root, res=10.0)
         assert ds.res == (10.0, 10.0)
-        ds.res = 20.0  # type: ignore[assignment]
+        ds.res = 20.0
 
 
 class TestVectorDataset:
@@ -723,7 +723,7 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
         )
         ds = IntersectionDataset(ds1, ds2)
-        ds.res = 10  # type: ignore[assignment]
+        ds.res = 10
         assert ds1.res == ds2.res == ds.res == (10, 10)
 
     def test_spatial_intersection(self) -> None:
@@ -956,7 +956,7 @@ class TestUnionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
         )
         ds = UnionDataset(ds1, ds2)
-        ds.res = 10  # type: ignore[assignment]
+        ds.res = 10
         assert ds1.res == ds2.res == ds.res == (10, 10)
 
     def test_nongeo_dataset(self) -> None:

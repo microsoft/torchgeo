@@ -263,10 +263,10 @@ class Attention(nn.Module):
         attn = attention_scores.softmax(dim=-1)
         attn = self.dropout(attn)
 
-        out = einsum('b h i j, b h j d -> b h i d', attn, v)
-        out = rearrange(out, 'b h n d -> b n (h d)')
-        out = self.to_out(out)
-        return out
+        x = einsum('b h i j, b h j d -> b h i d', attn, v)
+        x = rearrange(x, 'b h n d -> b n (h d)')
+        x = self.to_out(x)
+        return x
 
 
 class CrossAttention(nn.Module):
@@ -327,10 +327,10 @@ class CrossAttention(nn.Module):
         attn = attention_scores.softmax(dim=-1)
         attn = self.dropout(attn)
 
-        out = einsum('b h i j, b h j d -> b h i d', attn, v)
-        out = rearrange(out, 'b h n d -> b n (h d)')
-        out = self.to_out(out)
-        return out
+        x = einsum('b h i j, b h j d -> b h i d', attn, v)
+        x = rearrange(x, 'b h n d -> b n (h d)')
+        x = self.to_out(x)
+        return x
 
 
 class BaseTransformer(nn.Module):
@@ -483,17 +483,17 @@ class ViT(nn.Module):
         Returns:
             Output tensor.
         """
-        x = rearrange(
+        imgs = rearrange(
             imgs,
             'b c (h i) (w j) -> b (h w) (c i j)',
             i=self.patch_size,
             j=self.patch_size,
         )
-        # x is shape -> (bsz, num_patches, self.channels*self.patch_size*self.patch_size)
+        # imgs is shape -> (bsz, num_patches, self.channels*self.patch_size*self.patch_size)
 
-        x = self.linear_input(x)
-        x = self.transformer(x, relative_position_bias=attn_bias)
-        return x
+        imgs = self.linear_input(imgs)
+        imgs = self.transformer(imgs, relative_position_bias=attn_bias)
+        return imgs
 
 
 class CROMABase_Weights(WeightsEnum):  # type: ignore[misc]
