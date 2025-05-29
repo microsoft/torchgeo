@@ -125,7 +125,7 @@ class MixVPR(nn.Module):
         self.row_proj = nn.Linear(hw, out_rows)
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward pass of the FeatureMixerLayer.
+        """Forward pass of the MixVPR encoder.
 
         Args:
             x: Input 2D image embeddings of shape (b, c, h, w).
