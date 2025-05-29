@@ -33,6 +33,7 @@ from torchgeo.datasets import (
     UnionDataset,
     VectorDataset,
 )
+from torchgeo.datasets.utils import GeoSlice
 
 MINT = pd.Timestamp(2025, 4, 24)
 MAXT = pd.Timestamp(2025, 4, 25)
@@ -186,6 +187,69 @@ class TestGeoDataset:
             ValueError, match='IntersectionDataset only supports GeoDatasets'
         ):
             dataset & ds2  # type: ignore[operator]
+
+    @pytest.mark.parametrize(
+        'key,expected_output',
+        [
+            # ds[xmin:xmax:xres]
+            (slice(None), (0, 1, 1, 2, 3, 1, MINT, MAXT, 1)),
+            (slice(1, None), (1, 1, 1, 2, 3, 1, MINT, MAXT, 1)),
+            (slice(None, 0), (0, 0, 1, 2, 3, 1, MINT, MAXT, 1)),
+            (slice(None, None, -1), (0, 1, -1, 2, 3, 1, MINT, MAXT, 1)),
+            (slice(1, 0, -1), (1, 0, -1, 2, 3, 1, MINT, MAXT, 1)),
+            # ds[:, ymin:ymax:yres]
+            ((slice(None), slice(None)), (0, 1, 1, 2, 3, 1, MINT, MAXT, 1)),
+            ((slice(None), slice(1, None)), (0, 1, 1, 1, 3, 1, MINT, MAXT, 1)),
+            ((slice(None), slice(None, 0)), (0, 1, 1, 2, 0, 1, MINT, MAXT, 1)),
+            ((slice(None), slice(None, None, -1)), (0, 1, 1, 2, 3, -1, MINT, MAXT, 1)),
+            ((slice(None), slice(1, 0, -1)), (0, 1, 1, 1, 0, -1, MINT, MAXT, 1)),
+            # ds[:, :, tmin:tmax:tres]
+            (
+                (slice(None), slice(None), slice(None)),
+                (0, 1, 1, 2, 3, 1, MINT, MAXT, 1),
+            ),
+            (
+                (slice(None), slice(None), slice(MAXT, None)),
+                (0, 1, 1, 2, 3, 1, MAXT, MAXT, 1),
+            ),
+            (
+                (slice(None), slice(None), slice(None, MINT)),
+                (0, 1, 1, 2, 3, 1, MINT, MINT, 1),
+            ),
+            (
+                (slice(None), slice(None), slice(None, None, -1)),
+                (0, 1, 1, 2, 3, 1, MINT, MAXT, -1),
+            ),
+            (
+                (slice(None), slice(None), slice(MAXT, MINT, -1)),
+                (0, 1, 1, 2, 3, 1, MAXT, MINT, -1),
+            ),
+            # ds[xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres]
+            (
+                (slice(1, None), slice(1, None), slice(MAXT, None)),
+                (1, 1, 1, 1, 3, 1, MAXT, MAXT, 1),
+            ),
+            (
+                (slice(None, 0), slice(None, 0), slice(None, MINT)),
+                (0, 0, 1, 2, 0, 1, MINT, MINT, 1),
+            ),
+            (
+                (slice(None, None, -1), slice(None, None, -1), slice(None, None, -1)),
+                (0, 1, -1, 2, 3, -1, MINT, MAXT, -1),
+            ),
+            (
+                (slice(1, 0, -1), slice(1, 0, -1), slice(MAXT, MINT, -1)),
+                (1, 0, -1, 1, 0, -1, MAXT, MINT, -1),
+            ),
+        ],
+    )
+    def test_disambiguate_slice(
+        self,
+        dataset: GeoDataset,
+        key: GeoSlice,
+        expected_output: tuple[float, float, float, float, float, float, str, str, int],
+    ) -> None:
+        assert dataset._disambiguate_slice(key) == expected_output
 
     def test_files_property_for_non_existing_file_or_dir(self, tmp_path: Path) -> None:
         paths = [tmp_path, tmp_path / 'non_existing_file.tif']

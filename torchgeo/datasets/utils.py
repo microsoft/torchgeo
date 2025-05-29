@@ -41,6 +41,8 @@ __all__ = (
 )
 
 
+GeoSlice: TypeAlias = slice | tuple[slice, slice] | tuple[slice, slice, slice]
+
 Path: TypeAlias = str | os.PathLike[str]
 
 
