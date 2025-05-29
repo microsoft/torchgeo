@@ -8,12 +8,30 @@
 import math
 from typing import Any
 
+import kornia.augmentation as K
 import timm
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
+
+# Note the images used are Sentinel-2 Cloudless RGB Mosaics from https://s2maps.eu/
+_earthloc_sentinel2_bands = ['B4', 'B3', 'B2']
+
+# https://github.com/gmberton/EarthLoc/blob/2da231ae7ec9764fac6cde2aa88a17db23c1bb6a/datasets/train_dataset.py#L43
+# https://github.com/gmberton/EarthLoc/blob/2da231ae7ec9764fac6cde2aa88a17db23c1bb6a/augmentations.py#L40
+# Divide by 255 and normalize with ImageNet mean and std
+_earthloc_transforms = K.AugmentationSequential(
+    K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(255.0)),
+    K.Normalize(
+        mean=torch.tensor([0.485, 0.456, 0.406]),
+        std=torch.tensor([0.229, 0.224, 0.225]),
+    ),
+    K.Resize((320, 320)),
+    data_keys=None,
+)
 
 
 class FeatureMixerLayer(nn.Module):
@@ -138,6 +156,7 @@ class EarthLoc(nn.Module):
 
     def __init__(
         self,
+        in_channels: int = 3,
         image_size: int = 320,
         desc_dim: int = 4096,
         backbone: str = 'resnet50',
@@ -146,6 +165,7 @@ class EarthLoc(nn.Module):
         """Initialize the EarthLoc model.
 
         Args:
+            in_channels: Number of input channels in the images (default: 3 for RGB).
             image_size: Size of the input images (assumed square).
             desc_dim: Dimension of the final output feature descriptor.
             backbone: Backbone model to use for feature extraction (default: "resnet50").
@@ -154,7 +174,11 @@ class EarthLoc(nn.Module):
         super().__init__()
         self.image_size = image_size
         self.backbone = timm.create_model(
-            backbone, pretrained=pretrained, num_classes=0, global_pool=''
+            backbone,
+            pretrained=pretrained,
+            in_chans=in_channels,
+            num_classes=0,
+            global_pool='',
         )
         self.backbone.layer4 = nn.Identity()
         out_channels = desc_dim // 4
@@ -190,13 +214,15 @@ class EarthLoc_Weights(WeightsEnum):  # type: ignore[misc]
     """EarthLoc weights."""
 
     SENTINEL2_RESNET50 = Weights(
-        url='https://huggingface.co/torchgeo/earthloc/resolve/53a4bb90a7754b12f44986521ac7a711b4795959/earthloc.pth',
-        transforms=None,
+        url='https://huggingface.co/torchgeo/earthloc/resolve/53a4bb90a7754b12f44986521ac7a711b4795959/earthloc-8b632e30.pth',
+        transforms=_earthloc_transforms,
         meta={
             'dataset': 'EarthLoc',
+            'in_chans': 3,
             'image_size': 320,
             'desc_dim': 4096,
-            'backbone': 'resnet50',
+            'encoder': 'resnet50',
+            'bands': _earthloc_sentinel2_bands,
             'publication': 'https://arxiv.org/abs/2403.06758',
             'repo': 'https://github.com/gmberton/EarthLoc',
         },
@@ -224,9 +250,10 @@ def earthloc(
     """
     if weights:
         kwargs |= {
+            'in_channels': weights.meta['in_chans'],
             'image_size': weights.meta['image_size'],
             'desc_dim': weights.meta['desc_dim'],
-            'backbone': weights.meta['backbone'],
+            'backbone': weights.meta['encoder'],
             'pretrained': False,
         }
         model = EarthLoc(*args, **kwargs)
