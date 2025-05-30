@@ -13,6 +13,14 @@ import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import Accuracy, JaccardIndex, MetricCollection
+from torchmetrics.classification import (
+    Accuracy,
+    FBetaScore,
+    JaccardIndex,
+    Precision,
+    Recall,
+)
+from torchmetrics.wrappers import ClasswiseWrapper
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
@@ -33,6 +41,7 @@ class SemanticSegmentationTask(BaseTask):
         task: Literal['binary', 'multiclass', 'multilabel'] = 'multiclass',
         num_classes: int | None = None,
         num_labels: int | None = None,
+        labels: list[str] | None = None,
         num_filters: int = 3,
         loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'ce',
         class_weights: Tensor | None = None,
@@ -58,6 +67,10 @@ class SemanticSegmentationTask(BaseTask):
             task: One of 'binary', 'multiclass', or 'multilabel'.
             num_classes: Number of prediction classes (only for ``task='multiclass'``).
             num_labels: Number of prediction labels (only for ``task='multilabel'``).
+            labels: Optional list of class label names. Must have length equal to
+                ``num_classes`` when provided. If None, classwise metrics will use
+                default integer names (e.g., "0", "1", "2"). Only used for
+                ``task='multiclass'``.
             num_filters: Number of filters. Only applicable when model='fcn'.
             loss: Name of the loss function, currently supports
                 'ce', 'bce', 'jaccard', and 'focal' loss.
@@ -71,6 +84,9 @@ class SemanticSegmentationTask(BaseTask):
                 decoder and segmentation head.
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
+
+        .. versionadded:: 0.8
+            The *labels* parameter.
 
         .. versionadded:: 0.7
            The *task* and *num_labels* parameters.
@@ -180,33 +196,159 @@ class SemanticSegmentationTask(BaseTask):
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
 
-        * :class:`~torchmetrics.Accuracy`: Overall accuracy
-          (OA) using 'micro' averaging. The number of true positives divided by the
-          dataset size. Higher values are better.
-        * :class:`~torchmetrics.JaccardIndex`: Intersection
-          over union (IoU). Uses 'micro' averaging. Higher valuers are better.
+        * :class:`~torchmetrics.classification.MulticlassAccuracy`: Overall accuracy
+        (OA) using 'micro' averaging. The number of true positives divided by the
+        dataset size. Higher values are better.
+        * :class:`~torchmetrics.classification.MulticlassJaccardIndex`: Intersection
+        over union (IoU). Uses 'micro' averaging. Higher valuers are better.
 
         .. note::
-           * 'Micro' averaging suits overall performance evaluation but may not reflect
-             minority class accuracy.
-           * 'Macro' averaging, not used here, gives equal weight to each class, useful
-             for balanced performance assessment across imbalanced classes.
+        * 'Micro' averaging suits overall performance evaluation but may not reflect
+            minority class accuracy.
+        * 'Macro' averaging gives equal weight to each class, useful
+            for balanced performance assessment across imbalanced classes.
+        * When providing class labels, ensure ``len(labels) == num_classes``. If
+            labels are not provided, classwise metrics will use default integer names.
         """
+        task: str = self.hparams['task']
+        num_classes: int | None = self.hparams['num_classes']
+        num_labels: int | None = self.hparams['num_labels']
+        ignore_index: int | None = self.hparams['ignore_index']
+        labels: list[str] | None = self.hparams.get('labels', None)
+        
+        # Validate labels length if provided
+        if labels is not None and task in ['binary', 'multiclass']:
+            expected_classes = 2 if task == 'binary' else num_classes
+            if len(labels) != expected_classes:
+                raise ValueError(
+                    f"Length of labels ({len(labels)}) must equal number of classes "
+                    f"({expected_classes}). Either provide {expected_classes} labels or "
+                    f"set labels=None to use default integer names."
+                )
+
+        metrics_dict = {}
+
+        # Common parameters for all metrics
         kwargs = {
-            'task': self.hparams['task'],
-            'num_classes': self.hparams['num_classes'],
-            'num_labels': self.hparams['num_labels'],
-            'ignore_index': self.hparams['ignore_index'],
+            'task': task,
+            'num_classes': num_classes,
+            'num_labels': num_labels,
+            'ignore_index': ignore_index,
         }
-        metrics = MetricCollection(
-            [
-                Accuracy(multidim_average='global', average='micro', **kwargs),
-                JaccardIndex(average='micro', **kwargs),
-            ]
-        )
-        self.train_metrics = metrics.clone(prefix='train_')
-        self.val_metrics = metrics.clone(prefix='val_')
-        self.test_metrics = metrics.clone(prefix='test_')
+
+        # For binary and multilabel tasks, we only need micro averaging
+        if task in ['binary', 'multilabel']:
+            metrics_dict['OverallAccuracy'] = Accuracy(
+                multidim_average='global',
+                average='micro',
+                **kwargs
+            )
+            metrics_dict['OverallF1Score'] = FBetaScore(
+                multidim_average='global',
+                average='micro',
+                beta=1.0,
+                **kwargs
+            )
+            metrics_dict['OverallJaccardIndex'] = JaccardIndex(
+                average='micro',
+                **kwargs
+            )
+            metrics_dict['OverallPrecision'] = Precision(
+                multidim_average='global',
+                average='micro',
+                **kwargs
+            )
+            metrics_dict['OverallRecall'] = Recall(
+                multidim_average='global',
+                average='micro',
+                **kwargs
+            )
+        else:  # multiclass task
+            # Loop through averaging types for multiclass
+            for average in ['micro', 'macro']:
+                prefix = 'Overall' if average == 'micro' else 'Average'
+                
+                metrics_dict[f'{prefix}Accuracy'] = Accuracy(
+                    multidim_average='global',
+                    average=average,
+                    **kwargs
+                )
+                
+                metrics_dict[f'{prefix}F1Score'] = FBetaScore(
+                    multidim_average='global',
+                    average=average,
+                    beta=1.0,
+                    **kwargs
+                )
+                
+                metrics_dict[f'{prefix}JaccardIndex'] = JaccardIndex(
+                    average=average,
+                    **kwargs
+                )
+                
+                metrics_dict[f'{prefix}Precision'] = Precision(
+                    multidim_average='global',
+                    average=average,
+                    **kwargs
+                )
+                
+                metrics_dict[f'{prefix}Recall'] = Recall(
+                    multidim_average='global',
+                    average=average,
+                    **kwargs
+                )
+
+        # Add classwise metrics for binary and multiclass (not multilabel)
+        if task in ['binary', 'multiclass'] and labels is not None:
+            metrics_dict['Accuracy'] = ClasswiseWrapper(
+                Accuracy(
+                    multidim_average='global',
+                    average='none',
+                    **kwargs
+                ),
+                labels=labels,
+            )
+            
+            metrics_dict['F1Score'] = ClasswiseWrapper(
+                FBetaScore(
+                    multidim_average='global',
+                    average='none',
+                    beta=1.0,
+                    **kwargs
+                ),
+                labels=labels,
+            )
+            
+            metrics_dict['JaccardIndex'] = ClasswiseWrapper(
+                JaccardIndex(
+                    average='none',
+                    **kwargs
+                ),
+                labels=labels,
+            )
+            
+            metrics_dict['Precision'] = ClasswiseWrapper(
+                Precision(
+                    multidim_average='global',
+                    average='none',
+                    **kwargs
+                ),
+                labels=labels,
+            )
+            
+            metrics_dict['Recall'] = ClasswiseWrapper(
+                Recall(
+                    multidim_average='global',
+                    average='none',
+                    **kwargs
+                ),
+                labels=labels,
+            )
+
+        # Create metric collections
+        self.train_metrics = MetricCollection(metrics_dict, prefix='train_')
+        self.val_metrics = self.train_metrics.clone(prefix='val_')
+        self.test_metrics = self.train_metrics.clone(prefix='test_')
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
