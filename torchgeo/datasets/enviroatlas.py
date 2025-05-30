@@ -52,7 +52,7 @@ class EnviroAtlas(GeoDataset):
     filename = 'enviroatlas_lotp.zip'
     md5 = 'bfe601be21c7c001315fc6154be8ef14'
 
-    res = (1, 1)
+    _res = (1, 1)
 
     valid_prior_layers = ('prior', 'prior_no_osm_no_buildings')
 
