@@ -26,6 +26,7 @@ Dataset,Type,Source,License,Size (px),Resolution (m)
 `NAIP`_,Imagery,Aerial,"public domain","6,100x7,600",0.3--2
 `NCCM`_,Masks,Sentinel-2,"CC-BY-4.0",-,10
 `NLCD`_,Masks,Landsat,"public domain",-,30
+`ODIAC CO2 Emissions`_,Emissions,"ODIAC, NIES","CC BY 4.0","43200x21600","~1000"
 `Open Buildings`_,Geometries,"Maxar, CNES/Airbus","CC-BY-4.0 OR ODbL-1.0",-,-
 `PRISMA`_,Imagery,PRISMA,-,512x512,5--30
 `Sentinel`_,Imagery,Sentinel,"CC-BY-SA-3.0-IGO","10,000x10,000",10
