@@ -4,11 +4,13 @@
 """Trainers for image classification."""
 
 import os
+from collections.abc import Sequence
 from typing import Any, Literal
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import timm
+import torch
 import torch.nn as nn
 from matplotlib.figure import Figure
 from segmentation_models_pytorch.losses import FocalLoss, JaccardLoss
@@ -36,7 +38,7 @@ class ClassificationTask(BaseTask):
         num_classes: int | None = None,
         num_labels: int | None = None,
         loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'ce',
-        class_weights: Tensor | None = None,
+        class_weights: Tensor | Sequence[float] | None = None,
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
@@ -108,11 +110,14 @@ class ClassificationTask(BaseTask):
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
+        # Handle class weights - convert to tensor if needed
+        class_weights = self.hparams['class_weights']
+        if class_weights is not None and not isinstance(class_weights, Tensor):
+            class_weights = torch.tensor(class_weights, dtype=torch.float32)
+
         match self.hparams['loss']:
             case 'ce':
-                self.criterion: nn.Module = nn.CrossEntropyLoss(
-                    weight=self.hparams['class_weights']
-                )
+                self.criterion: nn.Module = nn.CrossEntropyLoss(weight=class_weights)
             case 'bce':
                 self.criterion = nn.BCEWithLogitsLoss()
             case 'jaccard':
