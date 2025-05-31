@@ -58,6 +58,7 @@ nitpick_ignore = [
     # Undocumented classes
     ('py:class', 'fiona.model.Feature'),
     ('py:class', 'kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D'),
+    ('py:class', 'kornia.augmentation._3d.geometric.base.GeometricAugmentationBase3D'),
     ('py:class', 'kornia.augmentation.base._AugmentationBase'),
     ('py:class', 'lightning.pytorch.utilities.types.LRSchedulerConfig'),
     ('py:class', 'lightning.pytorch.utilities.types.OptimizerConfig'),
@@ -110,6 +111,7 @@ autodoc_typehints_description_target = 'documented'
 
 # sphinx.ext.intersphinx
 intersphinx_mapping = {
+    'einops': ('https://einops.rocks/', None),
     'kornia': ('https://kornia.readthedocs.io/en/stable/', None),
     'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
