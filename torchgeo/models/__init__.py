@@ -16,7 +16,7 @@ from .dofa import (
     dofa_large_patch16_224,
     dofa_small_patch16_224,
 )
-from .earthloc import EarthLoc_Weights, earthloc
+from .earthloc import EarthLoc, EarthLoc_Weights, earthloc
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
@@ -62,6 +62,7 @@ __all__ = (
     'CopernicusFM_Base_Weights',
     'DOFABase16_Weights',
     'DOFALarge16_Weights',
+    'EarthLoc',
     'EarthLoc_Weights',
     'FCSiamConc',
     'FCSiamDiff',

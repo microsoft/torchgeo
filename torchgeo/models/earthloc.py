@@ -68,7 +68,7 @@ class FeatureMixerLayer(nn.Module):
             x: Input tensor of shape (batch_size, num_features, feature_dim).
 
         Returns:
-            x: Output tensor after applying the feature mixer.
+            Output tensor after applying the feature mixer.
         """
         x = x + self.mix(x)
         return x
@@ -131,7 +131,7 @@ class MixVPR(nn.Module):
             x: Input 2D image embeddings of shape (b, c, h, w).
 
         Returns:
-            x: Output feature descriptor tensor of shape (b, d).
+            Output feature descriptor tensor of shape (b, d).
         """
         x = rearrange(x, 'b c h w -> b c (h w)')
         x = self.mix(x)
@@ -201,7 +201,7 @@ class EarthLoc(nn.Module):
             x: Input tensor of shape (b, c, h, w).
 
         Returns:
-            x: Output feature descriptor tensor of shape (b, desc_dim).
+            Output feature descriptor tensor of shape (b, desc_dim).
         """
         x = self.backbone(x)
         x = self.aggregator(x)

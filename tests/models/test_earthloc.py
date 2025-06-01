@@ -35,11 +35,20 @@ class TestEarthLoc:
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
+    @torch.inference_mode()
     def test_earthloc(self) -> None:
         earthloc()
 
     def test_earthloc_weights(self, mocked_weights: WeightsEnum) -> None:
         earthloc(weights=mocked_weights)
+
+    def test_earthloc_forward(self, mocked_weights: WeightsEnum) -> None:
+        model = earthloc(weights=mocked_weights)
+        c = mocked_weights.meta['in_chans']
+        h = w = mocked_weights.meta['image_size']
+        x = torch.randn(1, c, h, w)
+        y = model(x)
+        assert y.shape == (1, mocked_weights.meta['desc_dim'])
 
     def test_bands(self, weights: WeightsEnum) -> None:
         if 'bands' in weights.meta:
