@@ -16,7 +16,7 @@ from pyproj import CRS
 from shapely import Geometry, Point
 from torch.utils.data import DataLoader
 
-from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
+from torchgeo.datasets import GeoDataset, stack_samples
 from torchgeo.datasets.utils import GeoSlice
 from torchgeo.samplers import (
     GeoSampler,
@@ -98,24 +98,21 @@ class TestRandomGeoSampler:
 
     def test_iter(self, sampler: RandomGeoSampler) -> None:
         for x, y, t in sampler:
-            assert sampler.roi[0].start <= x.start <= x.stop <= sampler.roi[0].stop
-            assert sampler.roi[1].start <= y.start <= y.stop <= sampler.roi[1].stop
-            assert sampler.roi[2].start <= t.start <= t.stop <= sampler.roi[2].stop
+            bbox = shapely.box(x.start, y.start, x.stop, y.stop)
+            assert sampler.roi.contains(bbox)
 
             assert math.isclose(x.stop - x.start, sampler.size[1])
             assert math.isclose(y.stop - y.start, sampler.size[0])
-            assert t.stop - t.start == sampler.roi[2].stop - sampler.roi[2].start
 
     def test_len(self, sampler: RandomGeoSampler) -> None:
         assert len(sampler) == sampler.length
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
-        roi = BoundingBox(0, 50, 0, 50, MINT, MAXT)
+        roi = shapely.box(0, 0, 50, 50)
         sampler = RandomGeoSampler(dataset, 2, 10, roi=roi)
         for x, y, t in sampler:
-            assert roi.minx <= x.start <= x.stop <= roi.maxx
-            assert roi.miny <= y.start <= y.stop <= roi.maxy
-            assert roi.mint <= t.start <= t.stop <= roi.maxt
+            bbox = shapely.box(x.start, y.start, x.stop, y.stop)
+            roi.contains(bbox)
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]
@@ -190,23 +187,11 @@ class TestGridGeoSampler:
 
     def test_iter(self, sampler: GridGeoSampler) -> None:
         for x, y, t in sampler:
-            assert (
-                sampler.roi[0].start
-                <= x.start
-                <= x.stop
-                < sampler.roi[0].stop + sampler.stride[1]
-            )
-            assert (
-                sampler.roi[1].start
-                <= y.start
-                <= y.stop
-                < sampler.roi[1].stop + sampler.stride[0]
-            )
-            assert sampler.roi[2].start <= t.start <= t.stop <= sampler.roi[2].stop
+            bbox = shapely.box(x.start, y.start, x.stop, y.stop)
+            assert sampler.roi.intersects(bbox)
 
             assert math.isclose(x.stop - x.start, sampler.size[1])
             assert math.isclose(y.stop - y.start, sampler.size[0])
-            assert t.stop - t.start == sampler.roi[2].stop - sampler.roi[2].start
 
     def test_len(self, sampler: GridGeoSampler) -> None:
         bounds = sampler.index.total_bounds
@@ -215,12 +200,11 @@ class TestGridGeoSampler:
         assert len(sampler) == length
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
-        roi = BoundingBox(0, 50, 200, 250, MINT, MAXT)
+        roi = shapely.box(0, 200, 50, 250)
         sampler = GridGeoSampler(dataset, 2, 1, roi=roi)
         for x, y, t in sampler:
-            assert roi.minx <= x.start <= x.stop < roi.maxx + sampler.stride[1]
-            assert roi.miny <= y.start <= y.stop < roi.maxy + sampler.stride[0]
-            assert roi.mint <= t.start <= t.stop <= roi.maxt
+            bbox = shapely.box(x.start, y.start, x.stop, y.stop)
+            assert roi.intersects(bbox)
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 1, 1)]
@@ -283,15 +267,11 @@ class TestPreChippedGeoSampler:
         assert len(sampler) == 2
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
-        roi = BoundingBox(5, 15, 5, 15, MINT, MAXT)
+        roi = shapely.box(5, 5, 15, 15)
         sampler = PreChippedGeoSampler(dataset, roi=roi)
         for x, y, t in sampler:
-            assert roi.minx == x.start
-            assert roi.maxx == x.stop
-            assert roi.miny == y.start
-            assert roi.maxy == y.stop
-            assert roi.mint == t.start
-            assert roi.maxt == t.stop
+            bbox = shapely.box(x.start, y.start, x.stop, y.stop)
+            assert roi.equals(bbox)
 
     def test_point_data(self) -> None:
         geometry = [shapely.Point(0, 0), shapely.Point(1, 1)]

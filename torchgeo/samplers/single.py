@@ -10,10 +10,11 @@ from functools import partial
 import pandas as pd
 import shapely
 import torch
+from shapely import Geometry
 from torch import Generator
 from torch.utils.data import Sampler
 
-from ..datasets import BoundingBox, GeoDataset
+from ..datasets import GeoDataset
 from ..datasets.utils import GeoSlice
 from .constants import Units
 from .utils import _to_tuple, get_random_bounding_box, tile_to_chips
@@ -28,23 +29,23 @@ class GeoSampler(Sampler[GeoSlice], abc.ABC):
     longitude, height, width, projection, coordinate system, and time.
     """
 
-    def __init__(self, dataset: GeoDataset, roi: BoundingBox | None = None) -> None:
+    def __init__(self, dataset: GeoDataset, roi: Geometry | None = None) -> None:
         """Initialize a new Sampler instance.
 
         Args:
             dataset: dataset to index from
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
         """
         self.index = dataset.index
         self.res = dataset.res
-        self.roi = dataset.bounds
 
         if roi:
-            xmin, xmax, ymin, ymax, tmin, tmax = roi
-            self.roi = slice(xmin, xmax), slice(ymin, ymax), slice(tmin, tmax)
-            mask = shapely.box(xmin, ymin, xmax, ymax)
-            self.index = self.index.clip(mask)
+            self.roi = roi
+            self.index = self.index.clip(roi)
+        else:
+            x, y, t = dataset.bounds
+            self.roi = shapely.box(x.start, y.start, x.stop, y.stop)
 
     @abc.abstractmethod
     def __iter__(self) -> Iterator[GeoSlice]:
@@ -71,7 +72,7 @@ class RandomGeoSampler(GeoSampler):
         dataset: GeoDataset,
         size: tuple[float, float] | float,
         length: int | None = None,
-        roi: BoundingBox | None = None,
+        roi: Geometry | None = None,
         units: Units = Units.PIXELS,
         generator: Generator | None = None,
     ) -> None:
@@ -100,7 +101,7 @@ class RandomGeoSampler(GeoSampler):
                 (defaults to approximately the maximal number of non-overlapping
                 :term:`chips <chip>` of size ``size`` that could be sampled from
                 the dataset)
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
             generator: pseudo-random number generator (PRNG).
@@ -186,7 +187,7 @@ class GridGeoSampler(GeoSampler):
         dataset: GeoDataset,
         size: tuple[float, float] | float,
         stride: tuple[float, float] | float | None = None,
-        roi: BoundingBox | None = None,
+        roi: Geometry | None = None,
         units: Units = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
@@ -205,7 +206,7 @@ class GridGeoSampler(GeoSampler):
             dataset: dataset to index from
             size: dimensions of each :term:`patch`
             stride: distance to skip between each patch (defaults to *size*)
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` and ``stride`` are in pixel or CRS units
         """
@@ -282,7 +283,7 @@ class PreChippedGeoSampler(GeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        roi: BoundingBox | None = None,
+        roi: Geometry | None = None,
         shuffle: bool = False,
         generator: Generator | None = None,
     ) -> None:
@@ -295,7 +296,7 @@ class PreChippedGeoSampler(GeoSampler):
 
         Args:
             dataset: dataset to index from
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
             shuffle: if True, reshuffle data at every epoch
             generator: pseudo-random number generator (PRNG) used in combination with

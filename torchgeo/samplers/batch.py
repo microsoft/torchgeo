@@ -9,10 +9,11 @@ from collections.abc import Iterator
 import pandas as pd
 import shapely
 import torch
+from shapely import Geometry
 from torch import Generator
 from torch.utils.data import Sampler
 
-from ..datasets import BoundingBox, GeoDataset
+from ..datasets import GeoDataset
 from ..datasets.utils import GeoSlice
 from .constants import Units
 from .utils import _to_tuple, get_random_bounding_box, tile_to_chips
@@ -27,21 +28,23 @@ class BatchGeoSampler(Sampler[list[GeoSlice]], abc.ABC):
     longitude, height, width, projection, coordinate system, and time.
     """
 
-    def __init__(self, dataset: GeoDataset, roi: BoundingBox | None = None) -> None:
+    def __init__(self, dataset: GeoDataset, roi: Geometry | None = None) -> None:
         """Initialize a new Sampler instance.
 
         Args:
             dataset: dataset to index from
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
         """
         self.index = dataset.index
         self.res = dataset.res
-        self.roi = roi or dataset.bounds
 
         if roi:
-            mask = shapely.box(roi.minx, roi.miny, roi.maxx, roi.maxy)
-            self.index = self.index.clip(mask)
+            self.roi = roi
+            self.index = self.index.clip(roi)
+        else:
+            bounds = dataset.bounds
+            self.roi = shapely.box(bounds.minx, bounds.miny, bounds.maxx, bounds.maxy)
 
     @abc.abstractmethod
     def __iter__(self) -> Iterator[list[GeoSlice]]:
@@ -66,7 +69,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         size: tuple[float, float] | float,
         batch_size: int,
         length: int | None = None,
-        roi: BoundingBox | None = None,
+        roi: Geometry | None = None,
         units: Units = Units.PIXELS,
         generator: Generator | None = None,
     ) -> None:
@@ -96,7 +99,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
                 (defaults to approximately the maximal number of non-overlapping
                 :term:`chips <chip>` of size ``size`` that could be sampled from
                 the dataset)
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
             generator: pseudo-random number generator (PRNG).
