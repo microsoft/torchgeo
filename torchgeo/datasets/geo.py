@@ -1177,6 +1177,11 @@ class UnionDataset(GeoDataset):
             except IndexError:
                 pass
 
+        if not samples:
+            raise IndexError(
+                f'key: {key} not found in index with bounds: {self.bounds}'
+            )
+
         sample = self.collate_fn(samples)
 
         if self.transforms is not None:
