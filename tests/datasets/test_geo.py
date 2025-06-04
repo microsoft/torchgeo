@@ -103,7 +103,7 @@ class CustomNonGeoDataset(NonGeoDataset):
 
 
 class TestGeoDataset:
-    @pytest.fixture(scope='class')
+    @pytest.fixture
     def dataset(self) -> GeoDataset:
         return CustomGeoDataset()
 
