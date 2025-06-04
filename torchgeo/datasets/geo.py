@@ -585,8 +585,9 @@ class RasterDataset(GeoDataset):
             key
         )
         bounds = (xmin, ymin, xmax, ymax)
+        res = (xres, yres)
         dest, _ = rasterio.merge.merge(
-            vrt_fhs, bounds, self.res, indexes=band_indexes, resampling=self.resampling
+            vrt_fhs, bounds, res, indexes=band_indexes, resampling=self.resampling
         )
         # Use array_to_tensor since merge may return uint16/uint32 arrays.
         tensor = array_to_tensor(dest)
@@ -774,8 +775,8 @@ class VectorDataset(GeoDataset):
                     shapes.append((shape, label))
 
         # Rasterize geometries
-        width = (xmax - xmin) / self.res[0]
-        height = (ymax - ymin) / self.res[1]
+        width = (xmax - xmin) / xres
+        height = (ymax - ymin) / yres
         transform = rasterio.transform.from_bounds(
             xmin, ymin, xmax, ymax, width, height
         )
