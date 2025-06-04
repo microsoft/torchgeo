@@ -492,7 +492,8 @@ class TestVectorDataset:
         )
 
     def test_getitem(self, dataset: CustomVectorDataset) -> None:
-        x = dataset[dataset.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = dataset.bounds
+        x = dataset[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
@@ -506,7 +507,8 @@ class TestVectorDataset:
         assert dataset.bounds[5] < pd.Timestamp.max
 
     def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
-        x = multilabel[multilabel.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = multilabel.bounds
+        x = multilabel[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
@@ -516,12 +518,12 @@ class TestVectorDataset:
         )
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
-        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min, pd.Timestamp.max]
+        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min:pd.Timestamp.max]
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
     def test_invalid_key(self, dataset: CustomVectorDataset) -> None:
         with pytest.raises(IndexError, match='key: .* not found in index with bounds:'):
-            dataset[3:3, 3:3, pd.Timestamp.min, pd.Timestamp.min]
+            dataset[3:3, 3:3, pd.Timestamp.min:pd.Timestamp.min]
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
