@@ -392,14 +392,16 @@ class TestRasterDataset:
         assert len(Sentinel2(paths, bands=Sentinel2.rgb_bands).files) == 2
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
-        x = naip[naip.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = naip.bounds
+        x = naip[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
         assert len(naip.bands) == x['image'].shape[0]
 
     def test_getitem_separate_files(self, sentinel: Sentinel2) -> None:
-        x = sentinel[sentinel.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = sentinel.bounds
+        x = sentinel[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
@@ -415,7 +417,8 @@ class TestRasterDataset:
     def test_getitem_uint_dtype(self, dtype: str) -> None:
         root = os.path.join('tests', 'data', 'raster', dtype)
         ds = RasterDataset(root)
-        x = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        x = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert x['image'].dtype == torch.float32
@@ -424,7 +427,8 @@ class TestRasterDataset:
     def test_resampling_float_dtype(self, dtype: torch.dtype) -> None:
         paths = os.path.join('tests', 'data', 'raster', 'uint16')
         ds = CustomRasterDataset(dtype, paths)
-        x = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        x = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert x['image'].dtype == dtype
         assert ds.resampling == Resampling.bilinear
 
@@ -432,7 +436,8 @@ class TestRasterDataset:
     def test_resampling_int_dtype(self, dtype: torch.dtype) -> None:
         paths = os.path.join('tests', 'data', 'raster', 'uint16')
         ds = CustomRasterDataset(dtype, paths)
-        x = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        x = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert x['image'].dtype == dtype
         assert ds.resampling == Resampling.nearest
 
