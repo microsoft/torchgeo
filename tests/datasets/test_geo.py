@@ -518,12 +518,12 @@ class TestVectorDataset:
         )
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
-        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min:pd.Timestamp.max]
+        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
     def test_invalid_key(self, dataset: CustomVectorDataset) -> None:
         with pytest.raises(IndexError, match='key: .* not found in index with bounds:'):
-            dataset[3:3, 3:3, pd.Timestamp.min:pd.Timestamp.min]
+            dataset[3:3, 3:3, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
@@ -642,8 +642,8 @@ class TestIntersectionDataset:
         return IntersectionDataset(ds1, ds2, transforms=transforms)
 
     def test_getitem(self, dataset: IntersectionDataset) -> None:
-        query = dataset.bounds
-        sample = dataset[query]
+        xmin, xmax, ymin, ymax, tmin, tmax = dataset.bounds
+        sample = dataset[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(sample['image'], torch.Tensor)
 
     def test_len(self, dataset: IntersectionDataset) -> None:
@@ -671,7 +671,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
         )
         ds = IntersectionDataset(ds1, ds2)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds.res == (2, 1)
         assert len(ds1) == len(ds2) == len(ds) == 1
@@ -685,7 +686,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
         )
         ds = IntersectionDataset(ds2, ds1)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds) == 1
@@ -699,7 +701,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4326')
         )
         ds = IntersectionDataset(ds1, ds2)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds) == 1
@@ -716,7 +719,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_32631')
         )
         ds = (ds1 & ds2) & ds3
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
@@ -733,7 +737,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_32631')
         )
         ds = ds1 & (ds2 & ds3)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
@@ -747,7 +752,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_4-4_epsg_4087')
         )
         ds = IntersectionDataset(ds1, ds2)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds) == 1
@@ -764,7 +770,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_8-8_epsg_4087')
         )
         ds = (ds1 & ds2) & ds3
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
@@ -781,7 +788,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_8-8_epsg_4087')
         )
         ds = ds1 & (ds2 & ds3)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
@@ -878,9 +886,8 @@ class TestIntersectionDataset:
             IntersectionDataset(ds1, ds2)
 
     def test_invalid_key(self, dataset: IntersectionDataset) -> None:
-        key = (-1, -1, -1, -1, datetime.min, datetime.min)
         with pytest.raises(IndexError, match='key: .* not found in index with bounds:'):
-            dataset[key]
+            dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
 
 
 class TestUnionDataset:
