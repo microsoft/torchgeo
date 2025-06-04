@@ -519,6 +519,7 @@ class RasterDataset(GeoDataset):
         )
         interval = pd.Interval(tmin, tmax)
         index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[::tres]
         index = index.cx[xmin:xmax, ymin:ymax]  # type: ignore[misc]
 
         if index.empty:
@@ -750,6 +751,7 @@ class VectorDataset(GeoDataset):
         )
         interval = pd.Interval(tmin, tmax)
         index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[::tres]
         index = index.cx[xmin:xmax, ymin:ymax]  # type: ignore[misc]
 
         if index.empty:
