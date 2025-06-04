@@ -97,22 +97,21 @@ class TestRandomGeoSampler:
 
     def test_iter(self, sampler: RandomGeoSampler) -> None:
         for query in sampler:
-            assert sampler.roi.minx <= query.minx <= query.maxx <= sampler.roi.maxx
-            assert sampler.roi.miny <= query.miny <= query.miny <= sampler.roi.maxy
-            assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
+            bbox = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
+            assert sampler.roi.contains(bbox)
 
             assert math.isclose(query.maxx - query.minx, sampler.size[1])
             assert math.isclose(query.maxy - query.miny, sampler.size[0])
-            assert query.maxt - query.mint == sampler.roi.maxt - sampler.roi.mint
 
     def test_len(self, sampler: RandomGeoSampler) -> None:
         assert len(sampler) == sampler.length
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
-        roi = BoundingBox(0, 50, 0, 50, MINT, MAXT)
+        roi = shapely.box(0, 0, 50, 50)
         sampler = RandomGeoSampler(dataset, 2, 10, roi=roi)
         for query in sampler:
-            query in roi
+            bbox = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
+            roi.contains(bbox)
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]
@@ -187,34 +186,27 @@ class TestGridGeoSampler:
 
     def test_iter(self, sampler: GridGeoSampler) -> None:
         for query in sampler:
-            assert (
-                sampler.roi.minx
-                <= query.minx
-                <= query.maxx
-                < sampler.roi.maxx + sampler.stride[1]
-            )
-            assert (
-                sampler.roi.miny
-                <= query.miny
-                <= query.miny
-                < sampler.roi.maxy + sampler.stride[0]
-            )
-            assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
+            bbox = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
+            assert sampler.roi.intersects(bbox)
 
             assert math.isclose(query.maxx - query.minx, sampler.size[1])
             assert math.isclose(query.maxy - query.miny, sampler.size[0])
-            assert query.maxt - query.mint == sampler.roi.maxt - sampler.roi.mint
 
     def test_len(self, sampler: GridGeoSampler) -> None:
-        rows, cols = tile_to_chips(sampler.roi, sampler.size, sampler.stride)
+        minx, miny, maxx, maxy = sampler.index.total_bounds
+        mint = sampler.index.index.left.min()
+        maxt = sampler.index.index.right.max()
+        bounds = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+        rows, cols = tile_to_chips(bounds, sampler.size, sampler.stride)
         length = rows * cols * 2  # two items in dataset
         assert len(sampler) == length
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
-        roi = BoundingBox(0, 50, 200, 250, MINT, MAXT)
+        roi = shapely.box(0, 200, 50, 250)
         sampler = GridGeoSampler(dataset, 2, 1, roi=roi)
         for query in sampler:
-            assert query in roi
+            bbox = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
+            assert roi.intersects(bbox)
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 1, 1)]
@@ -276,10 +268,11 @@ class TestPreChippedGeoSampler:
         assert len(sampler) == 2
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
-        roi = BoundingBox(5, 15, 5, 15, MINT, MAXT)
+        roi = shapely.box(5, 5, 15, 15)
         sampler = PreChippedGeoSampler(dataset, roi=roi)
         for query in sampler:
-            assert query == roi
+            bbox = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
+            assert roi.equals(bbox)
 
     def test_point_data(self) -> None:
         geometry = [shapely.Point(0, 0), shapely.Point(1, 1)]
