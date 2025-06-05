@@ -14,6 +14,7 @@ from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
 from typing import Any, ClassVar
 
+import affine
 import fiona
 import fiona.transform
 import geopandas as gpd
@@ -621,6 +622,36 @@ class RasterDataset(GeoDataset):
             return src
 
 
+def convert_poly_coords(
+    geom: shapely.geometry.shape, affine_obj: affine.Affine, inverse: bool = False
+) -> shapely.geometry.shape:
+    """Convert geocoordinates to pixel coordinates and vice versa, based on `affine_obj`.
+
+    Args:
+        geom: shapely.geometry.shape to convert
+        affine_obj: affine.Affine object to use for geoconversion
+        inverse: If true, convert geocoordinates to pixel coordinates
+
+    Returns:
+        shapely.geometry.shape: input shape converted to pixel coordinates
+    """
+    if inverse:
+        affine_obj = ~affine_obj
+
+    xformed_shape = shapely.affinity.affine_transform(
+        geom,
+        [
+            affine_obj.a,
+            affine_obj.b,
+            affine_obj.d,
+            affine_obj.e,
+            affine_obj.xoff,
+            affine_obj.yoff,
+        ],
+    )
+    return xformed_shape
+
+
 class VectorDataset(GeoDataset):
     """Abstract base class for :class:`GeoDataset` stored as vector files."""
 
@@ -657,6 +688,7 @@ class VectorDataset(GeoDataset):
         res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         label_name: str | None = None,
+        gpkg_layer: str | int | None = None,
     ) -> None:
         """Initialize a new VectorDataset instance.
 
@@ -669,6 +701,9 @@ class VectorDataset(GeoDataset):
                 entry and returns a transformed version
             label_name: name of the dataset property that has the label to be
                 rasterized into the mask
+            gpkg_layer: if the input is a multilayer geopackage, specify which layer
+                to use. Can be int to specify the index of the layer, str to select
+                the layer with that name or None which opens the first layer
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
@@ -682,7 +717,7 @@ class VectorDataset(GeoDataset):
         self.paths = paths
         self.transforms = transforms
         self.label_name = label_name
-
+        self.gpkg_layer = gpkg_layer
         # Gather information about the dataset
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         filepaths = []
@@ -692,7 +727,7 @@ class VectorDataset(GeoDataset):
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
                 try:
-                    with fiona.open(filepath) as src:
+                    with fiona.open(filepath, layer=gpkg_layer) as src:
                         if crs is None:
                             crs = CRS.from_wkt(src.crs_wkt)
 
@@ -754,7 +789,7 @@ class VectorDataset(GeoDataset):
 
         shapes = []
         for filepath in index.filepath:
-            with fiona.open(filepath) as src:
+            with fiona.open(filepath, layer=self.gpkg_layer) as src:
                 # We need to know the bounding box of the query in the source CRS
                 (minx, maxx), (miny, maxy) = fiona.transform.transform(
                     self.crs.to_wkt(), src.crs, [x.start, x.stop], [y.start, y.stop]
@@ -779,16 +814,53 @@ class VectorDataset(GeoDataset):
             masks = rasterio.features.rasterize(
                 shapes, out_shape=(round(height), round(width)), transform=transform
             )
+            # Get boxes for object detection
+            px_shapes = [
+                convert_poly_coords(
+                    shapely.geometry.shape(s[0]), transform, inverse=True
+                )
+                for s in shapes
+            ]
+            px_shapes = [(shapely.clip_by_rect(p, 0, 0, width, height)) for p in px_shapes]
+
+            # xmin, ymin, xmax, ymax format
+            boxes_xyxy = [
+                [p.bounds[0], p.bounds[1], p.bounds[2], p.bounds[3]] for p in px_shapes
+            ]
+
+            # Segmentation polygon is in COCO format, so [x0, y0, x1, y1, ...]
+            segmentations = [list(sum(p.exterior.coords[:-1], ())) for p in px_shapes]
+            
+            # Get labels
+            labels = [s[1] for s in shapes]
+
         else:
             # If no features are found in this key, return an empty mask
             # with the default fill value and dtype used by rasterize
             masks = np.zeros((round(height), round(width)), dtype=np.uint8)
+            boxes_xyxy = []
+            segmentations = []
+            labels = []
 
         # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
         masks = array_to_tensor(masks)
+        boxes_xyxy = array_to_tensor(np.array(boxes_xyxy))
+        segmentations = [array_to_tensor(np.array(s)) for s in segmentations]
+        labels = array_to_tensor(np.array(labels))
 
         masks = masks.to(self.dtype)
-        sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
+        boxes_xyxy = boxes_xyxy.to(self.dtype)
+        segmentations = [s.to(self.dtype) for s in segmentations]
+        labels = labels.to(self.dtype)
+
+        sample = {
+            'mask': masks,
+            'bbox_xyxy': boxes_xyxy,
+            'segmentation': segmentations,
+            'crs': self.crs,
+            'label': labels,
+            'bounds': query,
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
