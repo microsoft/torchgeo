@@ -23,14 +23,14 @@ def generate_solar_plants_brazil_dataset(root: str) -> None:
         os.makedirs(label_dir, exist_ok=True)
 
         # Create dummy image
-        image_data = torch.randint(0, 2000, (4, 32, 32)).numpy().astype(np.float32)
+        image_data = torch.randint(0, 2000, (4, 256, 256)).numpy().astype(np.float32)
         image_path = os.path.join(input_dir, 'img(1).tif')
         with rasterio.open(
             image_path,
             'w',
             driver='GTiff',
-            height=32,
-            width=32,
+            height=256,
+            width=256,
             count=4,
             dtype='float32',
             transform=transform,
@@ -39,14 +39,14 @@ def generate_solar_plants_brazil_dataset(root: str) -> None:
             dst.write(image_data)
 
         # Create dummy mask
-        mask_data = (torch.rand(32, 32) > 0.5).numpy().astype(np.uint8)
+        mask_data = (torch.rand(256, 256) > 0.5).numpy().astype(np.uint8)
         mask_path = os.path.join(label_dir, 'target(1).tif')
         with rasterio.open(
             mask_path,
             'w',
             driver='GTiff',
-            height=32,
-            width=32,
+            height=256,
+            width=256,
             count=1,
             dtype='uint8',
             transform=transform,
