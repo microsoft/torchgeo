@@ -215,8 +215,8 @@ So2Sat
 
 .. autoclass:: So2SatDataModule
 
-SolarPlantsBrazilDataModule
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Solar Plants Brazil
+^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SolarPlantsBrazilDataModule
 

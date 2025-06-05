@@ -492,8 +492,8 @@ So2Sat
 
 .. autoclass:: So2Sat
 
-SolarPlantsBrazil
-^^^^^^^^^^^^^^^^^
+Solar Plants Brazil
+^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SolarPlantsBrazil
 
