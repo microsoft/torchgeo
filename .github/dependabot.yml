@@ -16,8 +16,8 @@ updates:
     groups:
       pandas:
         patterns:
-         - 'pandas'
-         - 'pandas[parquet]'
+          - 'pandas'
+          - 'pandas[parquet]'
       # torchvision pins torch, must update in unison
       torch:
         patterns:
