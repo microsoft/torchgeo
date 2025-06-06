@@ -1,5 +1,5 @@
 # datasets
-h5py==3.13.0
+h5py==3.14.0
 laspy==2.5.4
 netcdf4==1.7.2
 opencv-python==4.11.0.86
