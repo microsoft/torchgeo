@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-# https://github.com/gmberton/EarthLoc
+# FeatureMixerlayer, MixVPR, and EarthLoc classes modified
+# from https://github.com/gmberton/EarthLoc
+# Copyright (c) 2024 Gabriele Berton
 
 """EarthLoc."""
 
