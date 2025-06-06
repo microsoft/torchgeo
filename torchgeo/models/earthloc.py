@@ -1,10 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-# FeatureMixerlayer, MixVPR, and EarthLoc classes modified
-# from https://github.com/gmberton/EarthLoc
-# Copyright (c) 2024 Gabriele Berton
-
 """EarthLoc."""
 
 import math
@@ -38,6 +34,8 @@ _earthloc_transforms = K.AugmentationSequential(
 
 class FeatureMixerLayer(nn.Module):
     """Feature Mixer Layer in the MixVPR architecture.
+
+    Adapted from https://github.com/gmberton/EarthLoc. Copyright (c) 2024 Gabriele Berton
 
     .. versionadded:: 0.8
     """
@@ -78,6 +76,8 @@ class FeatureMixerLayer(nn.Module):
 
 class MixVPR(nn.Module):
     """MixVPR model for generating feature descriptors.
+
+    Adapted from https://github.com/gmberton/EarthLoc. Copyright (c) 2024 Gabriele Berton
 
     If you use this model in your research, please cite the following paper:
 
@@ -148,6 +148,8 @@ class MixVPR(nn.Module):
 
 class EarthLoc(nn.Module):
     """EarthLoc model for generating feature descriptors from satellite imagery.
+
+    Adapted from https://github.com/gmberton/EarthLoc. Copyright (c) 2024 Gabriele Berton
 
     If you use this model in your research, please cite the following paper:
 
