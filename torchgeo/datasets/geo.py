@@ -132,7 +132,9 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         if isinstance(key, slice):
             key = (key,)
 
+        # For each slice (x, y, t)...
         for i in range(len(key)):
+            # For each component (start, stop, step)...
             if key[i].start is not None:
                 out[i * 3 + 0] = key[i].start
             if key[i].stop is not None:
