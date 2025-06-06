@@ -9,7 +9,7 @@ from torch import Tensor
 
 
 class ToDecibelScale(IntensityAugmentationBase2D):
-    """Convert input tensor to decibel scale.
+    """Convert input tensor of power values to decibel scale.
 
     Primarily used for converting SAR pixel values to decibel scale.
 
@@ -55,6 +55,10 @@ class ToDecibelScale(IntensityAugmentationBase2D):
 
 class Sentinel1ChangeMap(IntensityAugmentationBase2D):
     """Extracts a change map from Sentinel-1 SAR pre and post imagery.
+
+    This transform computes the difference between 2 Sentinel-1 SAR images
+    and return a pixelwise boolean change map indicating 'change' or 'no change'
+    based on difference values greater than delta_amplitude.
 
     Adapted from https://github.com/microsoft/ai4g-flood. Copyright (c) 2024 Microsoft
 
