@@ -5,7 +5,6 @@ import math
 import os
 import pickle
 from collections.abc import Iterable, Sequence
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +21,6 @@ from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
     NAIP,
-    BoundingBox,
     DatasetNotFoundError,
     GeoDataset,
     IntersectionDataset,
@@ -33,6 +31,7 @@ from torchgeo.datasets import (
     UnionDataset,
     VectorDataset,
 )
+from torchgeo.datasets.utils import GeoSlice
 
 MINT = pd.Timestamp(2025, 4, 24)
 MAXT = pd.Timestamp(2025, 4, 25)
@@ -41,30 +40,35 @@ MAXT = pd.Timestamp(2025, 4, 25)
 class CustomGeoDataset(GeoDataset):
     def __init__(
         self,
-        bounds: Sequence[BoundingBox] = [BoundingBox(0, 1, 2, 3, MINT, MAXT)],
+        bounds: Sequence[
+            tuple[float, float, float, float, pd.Timestamp, pd.Timestamp]
+        ] = [(0, 1, 2, 3, MINT, MAXT)],
         crs: CRS = CRS.from_epsg(4087),
         res: float | tuple[float, float] = (1, 1),
         paths: str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | None = None,
     ) -> None:
-        geometry = [shapely.box(b.minx, b.miny, b.maxx, b.maxy) for b in bounds]
+        geometry = [shapely.box(b[0], b[2], b[1], b[3]) for b in bounds]
         index = pd.IntervalIndex.from_tuples(
-            [(b.mint, b.maxt) for b in bounds], closed='both', name='datetime'
+            [(b[4], b[5]) for b in bounds], closed='both', name='datetime'
         )
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = res
         self.paths = paths or []
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
-        interval = pd.Interval(query.mint, query.maxt)
+    def __getitem__(self, key: GeoSlice) -> dict[str, GeoSlice]:
+        xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres = self._disambiguate_slice(
+            key
+        )
+        interval = pd.Interval(tmin, tmax)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
+        index = index.cx[xmin:xmax, ymin:ymax]  # type: ignore[misc]
 
         if index.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'key: {key} not found in index with bounds: {self.bounds}'
             )
 
-        return {'index': query}
+        return {'index': key}
 
 
 class CustomRasterDataset(RasterDataset):
@@ -99,13 +103,13 @@ class CustomNonGeoDataset(NonGeoDataset):
 
 
 class TestGeoDataset:
-    @pytest.fixture(scope='class')
+    @pytest.fixture
     def dataset(self) -> GeoDataset:
         return CustomGeoDataset()
 
     def test_getitem(self, dataset: GeoDataset) -> None:
-        query = BoundingBox(0, 1, 2, 3, MINT, MAXT)
-        assert dataset[query] == {'index': query}
+        key = (slice(0, 1), slice(2, 3), slice(MINT, MAXT))
+        assert dataset[key] == {'index': key}
 
     def test_len(self, dataset: GeoDataset) -> None:
         assert len(dataset) == 1
@@ -165,7 +169,7 @@ class TestGeoDataset:
     def test_str(self, dataset: GeoDataset) -> None:
         out = str(dataset)
         assert 'type: GeoDataset' in out
-        assert 'bbox: BoundingBox' in out
+        assert 'bbox: ' in out
         assert 'size: 1' in out
 
     def test_picklable(self, dataset: GeoDataset) -> None:
@@ -186,6 +190,71 @@ class TestGeoDataset:
             ValueError, match='IntersectionDataset only supports GeoDatasets'
         ):
             dataset & ds2  # type: ignore[operator]
+
+    @pytest.mark.parametrize(
+        'key,expected_output',
+        [
+            # ds[xmin:xmax:xres]
+            (slice(None), (0, 1, 1, 2, 3, 1, MINT, MAXT, 1)),
+            (slice(1, None), (1, 1, 1, 2, 3, 1, MINT, MAXT, 1)),
+            (slice(None, 0), (0, 0, 1, 2, 3, 1, MINT, MAXT, 1)),
+            (slice(None, None, -1), (0, 1, -1, 2, 3, 1, MINT, MAXT, 1)),
+            (slice(1, 0, -1), (1, 0, -1, 2, 3, 1, MINT, MAXT, 1)),
+            # ds[:, ymin:ymax:yres]
+            ((slice(None), slice(None)), (0, 1, 1, 2, 3, 1, MINT, MAXT, 1)),
+            ((slice(None), slice(1, None)), (0, 1, 1, 1, 3, 1, MINT, MAXT, 1)),
+            ((slice(None), slice(None, 0)), (0, 1, 1, 2, 0, 1, MINT, MAXT, 1)),
+            ((slice(None), slice(None, None, -1)), (0, 1, 1, 2, 3, -1, MINT, MAXT, 1)),
+            ((slice(None), slice(1, 0, -1)), (0, 1, 1, 1, 0, -1, MINT, MAXT, 1)),
+            # ds[:, :, tmin:tmax:tres]
+            (
+                (slice(None), slice(None), slice(None)),
+                (0, 1, 1, 2, 3, 1, MINT, MAXT, 1),
+            ),
+            (
+                (slice(None), slice(None), slice(MAXT, None)),
+                (0, 1, 1, 2, 3, 1, MAXT, MAXT, 1),
+            ),
+            (
+                (slice(None), slice(None), slice(None, MINT)),
+                (0, 1, 1, 2, 3, 1, MINT, MINT, 1),
+            ),
+            (
+                (slice(None), slice(None), slice(None, None, -1)),
+                (0, 1, 1, 2, 3, 1, MINT, MAXT, -1),
+            ),
+            (
+                (slice(None), slice(None), slice(MAXT, MINT, -1)),
+                (0, 1, 1, 2, 3, 1, MAXT, MINT, -1),
+            ),
+            # ds[xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres]
+            (
+                (slice(1, None), slice(1, None), slice(MAXT, None)),
+                (1, 1, 1, 1, 3, 1, MAXT, MAXT, 1),
+            ),
+            (
+                (slice(None, 0), slice(None, 0), slice(None, MINT)),
+                (0, 0, 1, 2, 0, 1, MINT, MINT, 1),
+            ),
+            (
+                (slice(None, None, -1), slice(None, None, -1), slice(None, None, -1)),
+                (0, 1, -1, 2, 3, -1, MINT, MAXT, -1),
+            ),
+            (
+                (slice(1, 0, -1), slice(1, 0, -1), slice(MAXT, MINT, -1)),
+                (1, 0, -1, 1, 0, -1, MAXT, MINT, -1),
+            ),
+        ],
+    )
+    def test_disambiguate_slice(
+        self,
+        dataset: GeoDataset,
+        key: GeoSlice,
+        expected_output: tuple[
+            float, float, float, float, float, float, pd.Timestamp, pd.Timestamp, int
+        ],
+    ) -> None:
+        assert dataset._disambiguate_slice(key) == expected_output
 
     def test_files_property_for_non_existing_file_or_dir(self, tmp_path: Path) -> None:
         paths = [tmp_path, tmp_path / 'non_existing_file.tif']
@@ -322,14 +391,16 @@ class TestRasterDataset:
         assert len(Sentinel2(paths, bands=Sentinel2.rgb_bands).files) == 2
 
     def test_getitem_single_file(self, naip: NAIP) -> None:
-        x = naip[naip.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = naip.bounds
+        x = naip[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
         assert len(naip.bands) == x['image'].shape[0]
 
     def test_getitem_separate_files(self, sentinel: Sentinel2) -> None:
-        x = sentinel[sentinel.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = sentinel.bounds
+        x = sentinel[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
@@ -345,7 +416,8 @@ class TestRasterDataset:
     def test_getitem_uint_dtype(self, dtype: str) -> None:
         root = os.path.join('tests', 'data', 'raster', dtype)
         ds = RasterDataset(root)
-        x = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        x = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(x, dict)
         assert isinstance(x['image'], torch.Tensor)
         assert x['image'].dtype == torch.float32
@@ -354,7 +426,8 @@ class TestRasterDataset:
     def test_resampling_float_dtype(self, dtype: torch.dtype) -> None:
         paths = os.path.join('tests', 'data', 'raster', 'uint16')
         ds = CustomRasterDataset(dtype, paths)
-        x = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        x = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert x['image'].dtype == dtype
         assert ds.resampling == Resampling.bilinear
 
@@ -362,16 +435,16 @@ class TestRasterDataset:
     def test_resampling_int_dtype(self, dtype: torch.dtype) -> None:
         paths = os.path.join('tests', 'data', 'raster', 'uint16')
         ds = CustomRasterDataset(dtype, paths)
-        x = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        x = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert x['image'].dtype == dtype
         assert ds.resampling == Resampling.nearest
 
-    def test_invalid_query(self, sentinel: Sentinel2) -> None:
-        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
+    def test_invalid_key(self, sentinel: Sentinel2) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds: .*'
+            IndexError, match='key: .* not found in index with bounds: .*'
         ):
-            sentinel[query]
+            sentinel[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
@@ -418,7 +491,8 @@ class TestVectorDataset:
         )
 
     def test_getitem(self, dataset: CustomVectorDataset) -> None:
-        x = dataset[dataset.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = dataset.bounds
+        x = dataset[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
@@ -432,7 +506,8 @@ class TestVectorDataset:
         assert dataset.bounds[5] < pd.Timestamp.max
 
     def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
-        x = multilabel[multilabel.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = multilabel.bounds
+        x = multilabel[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
@@ -442,16 +517,12 @@ class TestVectorDataset:
         )
 
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
-        query = BoundingBox(1.1, 1.9, 1.1, 1.9, pd.Timestamp.min, pd.Timestamp.max)
-        x = dataset[query]
+        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
-    def test_invalid_query(self, dataset: CustomVectorDataset) -> None:
-        query = BoundingBox(3, 3, 3, 3, pd.Timestamp.min, pd.Timestamp.min)
-        with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
-        ):
-            dataset[query]
+    def test_invalid_key(self, dataset: CustomVectorDataset) -> None:
+        with pytest.raises(IndexError, match='key: .* not found in index with bounds:'):
+            dataset[3:3, 3:3, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_no_data(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
@@ -570,8 +641,8 @@ class TestIntersectionDataset:
         return IntersectionDataset(ds1, ds2, transforms=transforms)
 
     def test_getitem(self, dataset: IntersectionDataset) -> None:
-        query = dataset.bounds
-        sample = dataset[query]
+        xmin, xmax, ymin, ymax, tmin, tmax = dataset.bounds
+        sample = dataset[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(sample['image'], torch.Tensor)
 
     def test_len(self, dataset: IntersectionDataset) -> None:
@@ -580,7 +651,7 @@ class TestIntersectionDataset:
     def test_str(self, dataset: IntersectionDataset) -> None:
         out = str(dataset)
         assert 'type: IntersectionDataset' in out
-        assert 'bbox: BoundingBox' in out
+        assert 'bbox: ' in out
         assert 'size: 1' in out
 
     def test_nongeo_dataset(self) -> None:
@@ -599,7 +670,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
         )
         ds = IntersectionDataset(ds1, ds2)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds.res == (2, 1)
         assert len(ds1) == len(ds2) == len(ds) == 1
@@ -613,7 +685,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4087')
         )
         ds = IntersectionDataset(ds2, ds1)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds) == 1
@@ -627,7 +700,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4326')
         )
         ds = IntersectionDataset(ds1, ds2)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds) == 1
@@ -644,7 +718,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_32631')
         )
         ds = (ds1 & ds2) & ds3
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
@@ -661,7 +736,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_32631')
         )
         ds = ds1 & (ds2 & ds3)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
@@ -675,7 +751,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_4-4_epsg_4087')
         )
         ds = IntersectionDataset(ds1, ds2)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds) == 1
@@ -692,7 +769,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_8-8_epsg_4087')
         )
         ds = (ds1 & ds2) & ds3
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
@@ -709,7 +787,8 @@ class TestIntersectionDataset:
             os.path.join('tests', 'data', 'raster', 'res_8-8_epsg_4087')
         )
         ds = ds1 & (ds2 & ds3)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == len(ds) == 1
@@ -728,12 +807,12 @@ class TestIntersectionDataset:
 
     def test_spatial_intersection(self) -> None:
         bounds1 = [
-            BoundingBox(0, 2, 0, 2, MINT, MAXT),
-            BoundingBox(1, 3, 1, 3, MINT, MAXT),
-            BoundingBox(2, 4, 2, 4, MINT, MAXT),
-            BoundingBox(4, 6, 4, 6, MINT, MAXT),
+            (0, 2, 0, 2, MINT, MAXT),
+            (1, 3, 1, 3, MINT, MAXT),
+            (2, 4, 2, 4, MINT, MAXT),
+            (4, 6, 4, 6, MINT, MAXT),
         ]
-        bounds2 = [BoundingBox(1, 3, 1, 3, MINT, MAXT)]
+        bounds2 = [(1, 3, 1, 3, MINT, MAXT)]
         ds1 = CustomGeoDataset(bounds1)
         ds2 = CustomGeoDataset(bounds2)
         ds = IntersectionDataset(ds1, ds2)
@@ -744,13 +823,13 @@ class TestIntersectionDataset:
 
     def test_temporal_intersection(self) -> None:
         bounds1 = [
-            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 4, 1), pd.Timestamp(2025, 4, 3)),
-            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 4, 7), pd.Timestamp(2025, 4, 9)),
-            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 4, 4), pd.Timestamp(2025, 4, 6)),
+            (0, 1, 0, 1, pd.Timestamp(2025, 4, 1), pd.Timestamp(2025, 4, 3)),
+            (0, 1, 0, 1, pd.Timestamp(2025, 4, 7), pd.Timestamp(2025, 4, 9)),
+            (0, 1, 0, 1, pd.Timestamp(2025, 4, 4), pd.Timestamp(2025, 4, 6)),
         ]
         bounds2 = [
-            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 5, 1), pd.Timestamp(2025, 5, 9)),
-            BoundingBox(0, 1, 0, 1, pd.Timestamp(2025, 4, 2), pd.Timestamp(2025, 4, 5)),
+            (0, 1, 0, 1, pd.Timestamp(2025, 5, 1), pd.Timestamp(2025, 5, 9)),
+            (0, 1, 0, 1, pd.Timestamp(2025, 4, 2), pd.Timestamp(2025, 4, 5)),
         ]
         ds1 = CustomGeoDataset(bounds1)
         ds2 = CustomGeoDataset(bounds2)
@@ -763,15 +842,15 @@ class TestIntersectionDataset:
 
     def test_spatiotemporal_intersection(self) -> None:
         bounds1 = [
-            BoundingBox(0, 2, 0, 2, pd.Timestamp(2025, 4, 1), pd.Timestamp(2025, 4, 3)),
-            BoundingBox(1, 3, 1, 3, pd.Timestamp(2025, 4, 7), pd.Timestamp(2025, 4, 9)),
-            BoundingBox(2, 4, 2, 4, pd.Timestamp(2025, 4, 4), pd.Timestamp(2025, 4, 6)),
+            (0, 2, 0, 2, pd.Timestamp(2025, 4, 1), pd.Timestamp(2025, 4, 3)),
+            (1, 3, 1, 3, pd.Timestamp(2025, 4, 7), pd.Timestamp(2025, 4, 9)),
+            (2, 4, 2, 4, pd.Timestamp(2025, 4, 4), pd.Timestamp(2025, 4, 6)),
         ]
         bounds2 = [
-            BoundingBox(1, 3, 1, 3, pd.Timestamp(2025, 4, 2), pd.Timestamp(2025, 4, 5)),
-            BoundingBox(1, 3, 1, 3, pd.Timestamp(2025, 5, 1), pd.Timestamp(2025, 5, 9)),
-            BoundingBox(5, 6, 5, 6, pd.Timestamp(2025, 4, 2), pd.Timestamp(2025, 4, 5)),
-            BoundingBox(5, 6, 5, 6, pd.Timestamp(2025, 5, 1), pd.Timestamp(2025, 5, 9)),
+            (1, 3, 1, 3, pd.Timestamp(2025, 4, 2), pd.Timestamp(2025, 4, 5)),
+            (1, 3, 1, 3, pd.Timestamp(2025, 5, 1), pd.Timestamp(2025, 5, 9)),
+            (5, 6, 5, 6, pd.Timestamp(2025, 4, 2), pd.Timestamp(2025, 4, 5)),
+            (5, 6, 5, 6, pd.Timestamp(2025, 5, 1), pd.Timestamp(2025, 5, 9)),
         ]
         ds1 = CustomGeoDataset(bounds1)
         ds2 = CustomGeoDataset(bounds2)
@@ -785,32 +864,29 @@ class TestIntersectionDataset:
         assert ds.index.index[1].right == pd.Timestamp(2025, 4, 5)
 
     def test_point_dataset(self) -> None:
-        ds1 = CustomGeoDataset([BoundingBox(0, 2, 2, 4, MINT, MAXT)])
-        ds2 = CustomGeoDataset([BoundingBox(1, 1, 3, 3, MINT, MINT)])
+        ds1 = CustomGeoDataset([(0, 2, 2, 4, MINT, MAXT)])
+        ds2 = CustomGeoDataset([(1, 1, 3, 3, MINT, MINT)])
         msg = 'Datasets have no spatiotemporal intersection'
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
 
     def test_no_overlap(self) -> None:
-        ds1 = CustomGeoDataset([BoundingBox(0, 1, 2, 3, MINT, MINT)])
-        ds2 = CustomGeoDataset([BoundingBox(6, 7, 8, 9, MAXT, MAXT)])
+        ds1 = CustomGeoDataset([(0, 1, 2, 3, MINT, MINT)])
+        ds2 = CustomGeoDataset([(6, 7, 8, 9, MAXT, MAXT)])
         msg = 'Datasets have no spatiotemporal intersection'
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
 
     def test_grid_overlap(self) -> None:
-        ds1 = CustomGeoDataset([BoundingBox(0, 1, 2, 3, MINT, MAXT)])
-        ds2 = CustomGeoDataset([BoundingBox(1, 2, 3, 4, MAXT, MAXT)])
+        ds1 = CustomGeoDataset([(0, 1, 2, 3, MINT, MAXT)])
+        ds2 = CustomGeoDataset([(1, 2, 3, 4, MAXT, MAXT)])
         msg = 'Datasets have no spatiotemporal intersection'
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
 
-    def test_invalid_query(self, dataset: IntersectionDataset) -> None:
-        query = BoundingBox(-1, -1, -1, -1, datetime.min, datetime.min)
-        with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
-        ):
-            dataset[query]
+    def test_invalid_key(self, dataset: IntersectionDataset) -> None:
+        with pytest.raises(IndexError, match='key: .* not found in index with bounds:'):
+            dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
 
 
 class TestUnionDataset:
@@ -826,8 +902,8 @@ class TestUnionDataset:
         return UnionDataset(ds1, ds2, transforms=transforms)
 
     def test_getitem(self, dataset: UnionDataset) -> None:
-        query = dataset.bounds
-        sample = dataset[query]
+        xmin, xmax, ymin, ymax, tmin, tmax = dataset.bounds
+        sample = dataset[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(sample['image'], torch.Tensor)
 
     def test_len(self, dataset: UnionDataset) -> None:
@@ -836,7 +912,7 @@ class TestUnionDataset:
     def test_str(self, dataset: UnionDataset) -> None:
         out = str(dataset)
         assert 'type: UnionDataset' in out
-        assert 'bbox: BoundingBox' in out
+        assert 'bbox: ' in out
         assert 'size: 2' in out
 
     def test_different_crs_12(self) -> None:
@@ -847,7 +923,8 @@ class TestUnionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_4326')
         )
         ds = UnionDataset(ds1, ds2)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == 1
@@ -865,7 +942,8 @@ class TestUnionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_32631')
         )
         ds = (ds1 | ds2) | ds3
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == 1
@@ -883,7 +961,8 @@ class TestUnionDataset:
             os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_32631')
         )
         ds = ds1 | (ds2 | ds3)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == 1
@@ -898,7 +977,8 @@ class TestUnionDataset:
             os.path.join('tests', 'data', 'raster', 'res_4-4_epsg_4087')
         )
         ds = UnionDataset(ds1, ds2)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == 1
@@ -916,7 +996,8 @@ class TestUnionDataset:
             os.path.join('tests', 'data', 'raster', 'res_8-8_epsg_4087')
         )
         ds = (ds1 | ds2) | ds3
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == 1
@@ -934,7 +1015,8 @@ class TestUnionDataset:
             os.path.join('tests', 'data', 'raster', 'res_8-8_epsg_4087')
         )
         ds = ds1 | (ds2 | ds3)
-        sample = ds[ds.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = ds.bounds
+        sample = ds[xmin:xmax, ymin:ymax, tmin:tmax]
         assert ds1.crs == ds2.crs == ds3.crs == ds.crs == CRS.from_epsg(4087)
         assert ds1.res == ds2.res == ds3.res == ds.res == (2, 2)
         assert len(ds1) == len(ds2) == len(ds3) == 1
@@ -942,11 +1024,11 @@ class TestUnionDataset:
         assert isinstance(sample['image'], torch.Tensor)
 
     def test_no_overlap(self) -> None:
-        ds1 = CustomGeoDataset([BoundingBox(0, 1, 0, 1, MINT, MAXT)])
-        ds2 = CustomGeoDataset([BoundingBox(2, 3, 2, 3, MINT, MAXT)])
+        ds1 = CustomGeoDataset([(0, 1, 0, 1, MINT, MAXT)])
+        ds2 = CustomGeoDataset([(2, 3, 2, 3, MINT, MAXT)])
         ds = UnionDataset(ds1, ds2)
-        ds[BoundingBox(0, 1, 0, 1, MINT, MAXT)]
-        ds[BoundingBox(2, 3, 2, 3, MINT, MAXT)]
+        ds[0:1, 0:1, MINT:MAXT]
+        ds[2:3, 2:3, MINT:MAXT]
 
     def test_single_res(self) -> None:
         ds1 = RasterDataset(
@@ -971,9 +1053,6 @@ class TestUnionDataset:
         with pytest.raises(ValueError, match=msg):
             UnionDataset(ds3, ds1)  # type: ignore[arg-type]
 
-    def test_invalid_query(self, dataset: UnionDataset) -> None:
-        query = BoundingBox(-1, -1, -1, -1, datetime.min, datetime.min)
-        with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
-        ):
-            dataset[query]
+    def test_invalid_key(self, dataset: UnionDataset) -> None:
+        with pytest.raises(IndexError, match='key: .* not found in index with bounds:'):
+            dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
