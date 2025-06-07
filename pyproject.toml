@@ -106,6 +106,9 @@ datasets = [
     # xarray 0.12.3+ required for pandas 1.3.3 support
     "xarray>=0.12.3",
 ]
+models = [
+    "microsoft-aurora"
+]
 docs = [
     # ipywidgets 7+ required by nbsphinx
     "ipywidgets>=7",
@@ -133,7 +136,7 @@ tests = [
     "pytest-cov>=4",
 ]
 all = [
-    "torchgeo[datasets,docs,style,tests]",
+    "torchgeo[datasets,models,docs,style,tests]",
 ]
 
 [project.scripts]
