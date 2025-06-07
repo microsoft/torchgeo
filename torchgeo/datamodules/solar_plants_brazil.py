@@ -13,11 +13,10 @@ from ..datasets import SolarPlantsBrazil
 from ..samplers.utils import _to_tuple
 from .geo import NonGeoDataModule
 
-# Per-channel statistics (mean and std) computed over the entire dataset.
+# Per-channel statistics (mean and std) computed only on the training split.
 # Order corresponds to: [Red, Green, Blue, NIR]
-MEAN = torch.tensor([1002.38684, 760.54535, 506.91257, 2422.154])
-STD = torch.tensor([546.4485, 307.97183, 242.15088, 626.66785])
-
+MEAN = torch.tensor([ 927.7570,  740.1440,  492.3968, 2441.6775])
+STD = torch.tensor([544.8361, 311.5538, 252.4914, 651.2599])
 
 class SolarPlantsBrazilDataModule(NonGeoDataModule):
     """LightningDataModule for SolarPlantsBrazil dataset.
