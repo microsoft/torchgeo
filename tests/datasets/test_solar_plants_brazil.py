@@ -59,45 +59,41 @@ class TestSolarPlantsBrazil:
         sample = dataset[0]
         assert torch.all(sample['image'] > 0)
 
+    def test_download_called(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        called = {'triggered': False}
 
-def test_download_called(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    called = {'triggered': False}
+        def fake_download_and_extract_archive(*args: Any, **kwargs: Any) -> None:
+            called['triggered'] = True
+            split = 'train'
+            input_dir = tmp_path / split / 'input'
+            label_dir = tmp_path / split / 'labels'
+            input_dir.mkdir(parents=True, exist_ok=True)
+            label_dir.mkdir(parents=True, exist_ok=True)
+            (input_dir / 'img(0).tif').touch()
+            (label_dir / 'target(0).tif').touch()
 
-    def fake_download_and_extract_archive(*args: Any, **kwargs: Any) -> None:
-        called['triggered'] = True
-        # Simulate minimal dataset structure
+        monkeypatch.setattr(
+            'torchgeo.datasets.solar_plants_brazil.download_and_extract_archive',
+            fake_download_and_extract_archive,
+        )
+
+        _ = SolarPlantsBrazil(root=tmp_path, split='train', download=True)
+
+        assert called['triggered']
+
+    def test_missing_dataset_triggers_error(self, tmp_path: Path) -> None:
+        dataset_root = tmp_path / 'non_existent_dataset'
+        with pytest.raises(DatasetNotFoundError):
+            SolarPlantsBrazil(root=dataset_root, split='train', download=False)
+
+    def test_empty_split_folder_triggers_error(self, tmp_path: Path) -> None:
         split = 'train'
         input_dir = tmp_path / split / 'input'
         label_dir = tmp_path / split / 'labels'
         input_dir.mkdir(parents=True, exist_ok=True)
         label_dir.mkdir(parents=True, exist_ok=True)
-        # Create dummy files
-        (input_dir / 'img(0).tif').touch()
-        (label_dir / 'target(0).tif').touch()
 
-    monkeypatch.setattr(
-        'torchgeo.datasets.solar_plants_brazil.download_and_extract_archive',
-        fake_download_and_extract_archive,
-    )
-
-    _ = SolarPlantsBrazil(root=tmp_path, split='train', download=True)
-
-    assert called['triggered']
-
-
-def test_missing_dataset_triggers_error(tmp_path: Path) -> None:
-    dataset_root = tmp_path / 'non_existent_dataset'
-
-    with pytest.raises(DatasetNotFoundError):
-        SolarPlantsBrazil(root=dataset_root, split='train', download=False)
-
-
-def test_empty_split_folder_triggers_error(tmp_path: Path) -> None:
-    split = 'train'
-    input_dir = tmp_path / split / 'input'
-    label_dir = tmp_path / split / 'labels'
-    input_dir.mkdir(parents=True, exist_ok=True)
-    label_dir.mkdir(parents=True, exist_ok=True)
-
-    with pytest.raises(DatasetNotFoundError):
-        SolarPlantsBrazil(root=tmp_path, split=split, download=False)
+        with pytest.raises(DatasetNotFoundError):
+            SolarPlantsBrazil(root=tmp_path, split=split, download=False)
