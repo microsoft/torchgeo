@@ -27,6 +27,7 @@ class SolarPlantsBrazil(NonGeoDataset):
     solar power stations.
 
     Dataset features:
+
     * 272 RGB+NIR GeoTIFF images (256x256 pixels)
     * Binary masks indicating presence of solar panels (1 = panel, 0 = background)
     * Organized into `train`, `val`, and `test` splits
@@ -34,10 +35,14 @@ class SolarPlantsBrazil(NonGeoDataset):
     * Spatial metadata included (CRS, bounding box), but not used directly for training
 
     Folder structure:
-    root/train/input/img(123).tif
-    root/train/labels/target(123).tif
+
+    .. code-block:: text
+
+        root/train/input/img(123).tif
+        root/train/labels/target(123).tif
 
     Access:
+
     * Dataset is hosted on Hugging Face: https://huggingface.co/datasets/FederCO23/solar-plants-brazil
     * Code and preprocessing steps available at: https://github.com/FederCO23/UCSD_MLBootcamp_Capstone
 
