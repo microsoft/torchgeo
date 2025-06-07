@@ -5,7 +5,7 @@
 
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import pytest
 import torch
@@ -42,7 +42,8 @@ class TestSolarPlantsBrazil:
 
     def test_invalid_split(self) -> None:
         with pytest.raises(ValueError):
-            SolarPlantsBrazil(root='tests/data/solar_plants_brazil', split='foo')
+            root = os.path.join('test', 'data', 'solar_plants_brazil')
+            SolarPlantsBrazil(root=root, split='train')
 
     def test_missing_dataset_raises(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError):
@@ -89,7 +90,7 @@ class TestSolarPlantsBrazil:
             SolarPlantsBrazil(root=dataset_root, split='train', download=False)
 
     def test_empty_split_folder_triggers_error(self, tmp_path: Path) -> None:
-        split = 'train'
+        split: Literal['train', 'val', 'test'] = 'train'
         input_dir = tmp_path / split / 'input'
         label_dir = tmp_path / split / 'labels'
         input_dir.mkdir(parents=True, exist_ok=True)
