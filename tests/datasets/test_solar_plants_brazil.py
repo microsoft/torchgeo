@@ -29,7 +29,7 @@ class TestSolarPlantsBrazil:
         assert isinstance(sample['image'], torch.Tensor)
         assert isinstance(sample['mask'], torch.Tensor)
         assert sample['image'].shape == (4, 256, 256)
-        assert sample['mask'].shape == (1, 256, 256)
+        assert sample['mask'].shape == (256, 256)
 
     def test_len(self, dataset: SolarPlantsBrazil) -> None:
         assert len(dataset) == 1
