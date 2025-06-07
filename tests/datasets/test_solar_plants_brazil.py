@@ -3,6 +3,7 @@
 
 """Unit tests for the SolarPlantsBrazil dataset."""
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -16,15 +17,11 @@ from torchgeo.datasets import DatasetNotFoundError, SolarPlantsBrazil
 class TestSolarPlantsBrazil:
     @pytest.fixture
     def dataset_root(self) -> str:
-        # Point to the test data folder you generated and committed
-        return 'tests/data/solar_plants_brazil'
+        return os.path.join('tests', 'data', 'solar_plants_brazil')
 
-    @pytest.fixture(params=['train'])
-    def dataset(
-        self, dataset_root: str, request: pytest.FixtureRequest
-    ) -> SolarPlantsBrazil:
-        split = request.param
-        return SolarPlantsBrazil(root=dataset_root, split=split)
+    @pytest.fixture
+    def dataset(self, dataset_root: str) -> SolarPlantsBrazil:
+        return SolarPlantsBrazil(root=dataset_root, split='train')
 
     def test_getitem(self, dataset: SolarPlantsBrazil) -> None:
         sample = dataset[0]
