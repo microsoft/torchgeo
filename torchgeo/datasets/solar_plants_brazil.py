@@ -132,7 +132,7 @@ class SolarPlantsBrazil(NonGeoDataset):
         with rasterio.open(path) as src:
             arr = src.read(1).astype(np.uint8)
         bin_mask = (arr > 0).astype(np.uint8)
-        return torch.from_numpy(bin_mask).unsqueeze(0).long()
+        return torch.from_numpy(bin_mask).long()
 
     def plot(
         self, sample: dict[str, torch.Tensor], suptitle: str | None = None
