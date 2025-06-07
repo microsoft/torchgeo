@@ -48,8 +48,6 @@ class SolarPlantsBrazil(NonGeoDataset):
 
     .. versionadded:: 0.8
 
-    Raises:
-        DatasetNotFoundError: If the dataset is not found and download=False.
     """
 
     url = 'https://huggingface.co/datasets/FederCO23/solar-plants-brazil/resolve/main/solarplantsbrazil.zip'
@@ -69,6 +67,11 @@ class SolarPlantsBrazil(NonGeoDataset):
             split: Dataset split to use, one of "train", "val", or "test".
             transforms: Optional transforms to apply.
             download: If True, download the dataset if it doesn't exist.
+
+        Raises:
+            DatasetNotFoundError: If the dataset is not found and 
+                ``download=False``.
+    
         """
         if split not in ['train', 'val', 'test']:
             raise ValueError(
