@@ -15,8 +15,9 @@ from .geo import NonGeoDataModule
 
 # Per-channel statistics (mean and std) computed only on the training split.
 # Order corresponds to: [Red, Green, Blue, NIR]
-MEAN = torch.tensor([ 927.7570,  740.1440,  492.3968, 2441.6775])
+MEAN = torch.tensor([927.7570, 740.1440, 492.3968, 2441.6775])
 STD = torch.tensor([544.8361, 311.5538, 252.4914, 651.2599])
+
 
 class SolarPlantsBrazilDataModule(NonGeoDataModule):
     """LightningDataModule for SolarPlantsBrazil dataset.
@@ -42,7 +43,10 @@ class SolarPlantsBrazilDataModule(NonGeoDataModule):
             **kwargs: Additional arguments passed to the dataset.
         """
         super().__init__(
-            SolarPlantsBrazil, batch_size=batch_size, num_workers=num_workers, **kwargs
+            dataset_class=SolarPlantsBrazil,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            **kwargs,
         )
 
         self.patch_size = _to_tuple(patch_size)
@@ -64,22 +68,6 @@ class SolarPlantsBrazilDataModule(NonGeoDataModule):
             data_keys=None,
             keepdim=True,
         )
-
-    def setup(self, stage: str) -> None:
-        """Set up the datasets for training, validation, or testing.
-
-        This method loads the pre-split datasets provided by SolarPlantsBrazil.
-        These splits are spatially disjoint and must not be reshuffled.
-
-        Args:
-            stage: One of "fit", "validate", or "test".
-        """
-        if stage in ['fit', 'validate']:
-            self.train_dataset = SolarPlantsBrazil(split='train', **self.kwargs)
-            self.val_dataset = SolarPlantsBrazil(split='val', **self.kwargs)
-
-        if stage == 'test':
-            self.test_dataset = SolarPlantsBrazil(split='test', **self.kwargs)
 
     def on_after_batch_transfer(
         self, batch: dict[str, Tensor], dataloader_idx: int
