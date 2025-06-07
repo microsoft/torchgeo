@@ -6,6 +6,7 @@
 import glob
 import os
 from collections.abc import Callable
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -56,7 +57,7 @@ class SolarPlantsBrazil(NonGeoDataset):
     def __init__(
         self,
         root: Path = 'data',
-        split: str = 'train',
+        split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
     ) -> None:
@@ -69,9 +70,9 @@ class SolarPlantsBrazil(NonGeoDataset):
             download: If True, download the dataset if it doesn't exist.
 
         Raises:
-            DatasetNotFoundError: If the dataset is not found and 
+            DatasetNotFoundError: If the dataset is not found and
                 ``download=False``.
-    
+
         """
         if split not in ['train', 'val', 'test']:
             raise ValueError(
