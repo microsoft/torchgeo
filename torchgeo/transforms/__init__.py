@@ -20,6 +20,7 @@ from .indices import (
     AppendSWI,
     AppendTriBandNormalizedDifferenceIndex,
 )
+from .intensity import Sentinel1ChangeMap, ToDecibelScale
 from .spatial import SatSlideMix
 from .temporal import Rearrange
 from .transforms import AugmentationSequential
@@ -43,4 +44,6 @@ __all__ = (
     'RandomGrayscale',
     'Rearrange',
     'SatSlideMix',
+    'Sentinel1ChangeMap',
+    'ToDecibelScale',
 )
