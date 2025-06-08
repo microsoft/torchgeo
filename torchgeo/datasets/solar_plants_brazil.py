@@ -132,13 +132,14 @@ class SolarPlantsBrazil(NonGeoDataset):
         """Retrieve an image-mask pair by index.
 
         Args:
-            index: Index of the sample to retrieve.
+            index (int): Index of the sample to retrieve.
 
         Returns:
-            A dictionary containing:
+            dict: A dictionary with the following keys:
                 - 'image': A float32 tensor of shape (C, H, W)
-                - 'mask': A long tensor of shape (H, W) with binary values
+                - 'mask': A long tensor of shape (1, H, W), containing binary labels
         """
+
         image = self._load_image(self.image_paths[index])
         mask = self._load_mask(self.mask_paths[index])
         sample = {'image': image, 'mask': mask}
