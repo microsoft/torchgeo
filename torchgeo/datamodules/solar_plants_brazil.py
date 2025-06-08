@@ -41,6 +41,10 @@ class SolarPlantsBrazilDataModule(NonGeoDataModule):
             patch_size: Spatial dimensions (H, W) to crop from images.
             num_workers: Number of subprocesses used to load the data.
             **kwargs: Additional arguments passed to the dataset.
+
+        Returns:
+            None
+
         """
         super().__init__(
             dataset_class=SolarPlantsBrazil,
