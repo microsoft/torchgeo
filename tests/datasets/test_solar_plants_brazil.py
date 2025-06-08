@@ -41,9 +41,9 @@ class TestSolarPlantsBrazil:
         plt.close()
 
     def test_invalid_split(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='Invalid split'):
             root = os.path.join('test', 'data', 'solar_plants_brazil')
-            SolarPlantsBrazil(root=root, split='train')
+            SolarPlantsBrazil(root=root, split='foo')  # type: ignore[arg-type]
 
     def test_missing_dataset_raises(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError):
