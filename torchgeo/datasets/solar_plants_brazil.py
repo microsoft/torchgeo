@@ -53,6 +53,7 @@ class SolarPlantsBrazil(NonGeoDataset):
 
     url = 'https://huggingface.co/datasets/FederCO23/solar-plants-brazil/resolve/main/solarplantsbrazil.zip'
     bands = ('Red', 'Green', 'Blue', 'NIR')
+    md5 = 'DFA0D3EFDEF4143A33B0E7BA834EAAFA'
 
     def __init__(
         self,
@@ -60,6 +61,7 @@ class SolarPlantsBrazil(NonGeoDataset):
         split: Literal['train', 'val', 'test'] = 'train',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
+        checksum: bool = False,
     ) -> None:
         """Initialize a SolarPlantsBrazil dataset split.
 
@@ -68,6 +70,7 @@ class SolarPlantsBrazil(NonGeoDataset):
             split: Dataset split to use, one of "train", "val", or "test".
             transforms: Optional transforms to apply.
             download: If True, download the dataset if it doesn't exist.
+            checksum: If True, verify MD5 checksum of the downloaded file.
 
         Raises:
             DatasetNotFoundError: If the dataset is not found and
@@ -87,6 +90,7 @@ class SolarPlantsBrazil(NonGeoDataset):
         self.dataset_path = os.path.join(self.root, split)
         self.split = split
         self.download = download
+        self.checksum = checksum
 
         self._verify()
 
@@ -125,7 +129,10 @@ class SolarPlantsBrazil(NonGeoDataset):
             None
         """
         download_and_extract_archive(
-            url=self.url, download_root=self.root, filename='solarplantsbrazil.zip'
+            url=self.url,
+            download_root=self.root,
+            filename='solarplantsbrazil.zip',
+            md5=self.md5 if self.checksum else None,
         )
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
