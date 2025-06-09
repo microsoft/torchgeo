@@ -111,23 +111,16 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     #: Users should instead use the intersection or union operator.
     __add__ = None  # type: ignore[assignment]
 
-    def _disambiguate_slice(
-        self, query: GeoSlice
-    ) -> tuple[
-        float, float, float, float, float, float, pd.Timestamp, pd.Timestamp, int
-    ]:
+    def _disambiguate_slice(self, query: GeoSlice) -> tuple[slice, slice, slice]:
         """Disambiguate a partial spatiotemporal slice.
 
         Args:
             query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            A tuple of xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, and tres.
+            A fully resolved spatiotemporal slice.
         """
-        xmin, xmax, ymin, ymax, tmin, tmax = self.bounds
-        xres, yres = self.res
-        tres = 1
-        out = [xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres]
+        out = list(self.bounds)
 
         if isinstance(query, slice):
             query = (query,)
@@ -136,11 +129,11 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         for i in range(len(query)):
             # For each component (start, stop, step)...
             if query[i].start is not None:
-                out[i * 3 + 0] = query[i].start
+                out[i] = slice(query[i].start, out[i].stop, out[i].step)
             if query[i].stop is not None:
-                out[i * 3 + 1] = query[i].stop
+                out[i] = slice(out[i].start, query[i].stop, out[i].step)
             if query[i].step is not None:
-                out[i * 3 + 2] = query[i].step
+                out[i] = slice(out[i].start, out[i].stop, query[i].step)
 
         return tuple(out)
 
@@ -211,16 +204,18 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     size: {len(self)}"""
 
     @property
-    def bounds(self) -> tuple[float, float, float, float, pd.Timestamp, pd.Timestamp]:
+    def bounds(self) -> tuple[slice, slice, slice]:
         """Bounds of the index.
 
         Returns:
-            (minx, maxx, miny, maxy, mint, maxt) of the dataset
+            Bounding x, y, and t slices.
         """
-        minx, miny, maxx, maxy = self.index.total_bounds
-        mint = self.index.index.left.min()
-        maxt = self.index.index.right.max()
-        return (minx, maxx, miny, maxy, mint, maxt)
+        xmin, ymin, xmax, ymax = self.index.total_bounds
+        xres, yres = self.res
+        tmin = self.index.index.left.min()
+        tmax = self.index.index.right.max()
+        tres = 1
+        return slice(xmin, xmax, xres), slice(ymin, ymax, yres), slice(tmin, tmax, tres)
 
     @property
     def crs(self) -> CRS:
@@ -516,13 +511,11 @@ class RasterDataset(GeoDataset):
         Raises:
             IndexError: If *query* is not found in the index.
         """
-        xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres = self._disambiguate_slice(
-            query
-        )
-        interval = pd.Interval(tmin, tmax)
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[::tres]
-        index = index.cx[xmin:xmax, ymin:ymax]  # type: ignore[misc]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]  # type: ignore[misc]
 
         if index.empty:
             raise IndexError(
@@ -584,11 +577,9 @@ class RasterDataset(GeoDataset):
         else:
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
-        xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres = self._disambiguate_slice(
-            query
-        )
-        bounds = (xmin, ymin, xmax, ymax)
-        res = (xres, yres)
+        x, y, t = self._disambiguate_slice(query)
+        bounds = (x.start, y.start, x.stop, y.stop)
+        res = (x.step, y.step)
         dest, _ = rasterio.merge.merge(
             vrt_fhs, bounds, res, indexes=band_indexes, resampling=self.resampling
         )
@@ -748,13 +739,11 @@ class VectorDataset(GeoDataset):
         Raises:
             IndexError: If *query* is not found in the index.
         """
-        xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres = self._disambiguate_slice(
-            query
-        )
-        interval = pd.Interval(tmin, tmax)
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[::tres]
-        index = index.cx[xmin:xmax, ymin:ymax]  # type: ignore[misc]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]  # type: ignore[misc]
 
         if index.empty:
             raise IndexError(
@@ -766,7 +755,7 @@ class VectorDataset(GeoDataset):
             with fiona.open(filepath) as src:
                 # We need to know the bounding box of the query in the source CRS
                 (minx, maxx), (miny, maxy) = fiona.transform.transform(
-                    self.crs.to_wkt(), src.crs, [xmin, xmax], [ymin, ymax]
+                    self.crs.to_wkt(), src.crs, [x.start, x.stop], [y.start, y.stop]
                 )
 
                 # Filter geometries to those that intersect with the bounding box
@@ -779,10 +768,10 @@ class VectorDataset(GeoDataset):
                     shapes.append((shape, label))
 
         # Rasterize geometries
-        width = (xmax - xmin) / xres
-        height = (ymax - ymin) / yres
+        width = (x.stop - x.start) / x.step
+        height = (y.stop - y.start) / y.step
         transform = rasterio.transform.from_bounds(
-            xmin, ymin, xmax, ymax, width, height
+            x.start, y.start, x.stop, y.stop, width, height
         )
         if shapes:
             masks = rasterio.features.rasterize(

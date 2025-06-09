@@ -186,13 +186,11 @@ class AgriFieldNet(RasterDataset):
         """
         assert isinstance(self.paths, str | os.PathLike)
 
-        xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres = self._disambiguate_slice(
-            query
-        )
-        interval = pd.Interval(tmin, tmax)
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.iloc[::tres]
-        index = index.cx[xmin:xmax, ymin:ymax]  # type: ignore[misc]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]  # type: ignore[misc]
 
         if index.empty:
             raise IndexError(
