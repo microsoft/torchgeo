@@ -172,22 +172,22 @@ class AgriFieldNet(RasterDataset):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-    def __getitem__(self, key: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            key: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *key* is not found in the index.
+            IndexError: If *query* is not found in the index.
         """
         assert isinstance(self.paths, str | os.PathLike)
 
         xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres = self._disambiguate_slice(
-            key
+            query
         )
         interval = pd.Interval(tmin, tmax)
         index = self.index.iloc[self.index.index.overlaps(interval)]
@@ -196,7 +196,7 @@ class AgriFieldNet(RasterDataset):
 
         if index.empty:
             raise IndexError(
-                f'key: {key} not found in index with bounds: {self.bounds}'
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
         data_list: list[Tensor] = []
@@ -214,7 +214,7 @@ class AgriFieldNet(RasterDataset):
                         filename = filename[:start] + band + filename[end:]
                 filepath = os.path.join(directory, filename)
                 band_filepaths.append(filepath)
-            data_list.append(self._merge_files(band_filepaths, key))
+            data_list.append(self._merge_files(band_filepaths, query))
         image = torch.cat(data_list)
 
         mask_filepaths = []
@@ -224,10 +224,15 @@ class AgriFieldNet(RasterDataset):
                     file_path = os.path.join(root, file)
                     mask_filepaths.append(file_path)
 
-        mask = self._merge_files(mask_filepaths, key)
+        mask = self._merge_files(mask_filepaths, query)
         mask = self.ordinal_map[mask.squeeze().long()]
 
-        sample = {'crs': self.crs, 'image': image.float(), 'mask': mask.long()}
+        sample = {
+            'crs': self.crs,
+            'bounds': query,
+            'image': image.float(),
+            'mask': mask.long(),
+        }
 
         if self.transforms is not None:
             sample = self.transforms(sample)
