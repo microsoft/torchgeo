@@ -167,7 +167,7 @@ class TestGeoDataset:
     def test_str(self, dataset: GeoDataset) -> None:
         out = str(dataset)
         assert 'type: GeoDataset' in out
-        assert 'bbox: ' in out
+        assert 'bbox: (slice' in out
         assert 'size: 1' in out
 
     def test_picklable(self, dataset: GeoDataset) -> None:
@@ -659,7 +659,7 @@ class TestIntersectionDataset:
     def test_str(self, dataset: IntersectionDataset) -> None:
         out = str(dataset)
         assert 'type: IntersectionDataset' in out
-        assert 'bbox: ' in out
+        assert 'bbox: (slice' in out
         assert 'size: 1' in out
 
     def test_nongeo_dataset(self) -> None:
@@ -913,7 +913,7 @@ class TestUnionDataset:
     def test_str(self, dataset: UnionDataset) -> None:
         out = str(dataset)
         assert 'type: UnionDataset' in out
-        assert 'bbox: ' in out
+        assert 'bbox: (slice' in out
         assert 'size: 2' in out
 
     def test_different_crs_12(self) -> None:
