@@ -33,8 +33,7 @@ class TestAgriFieldNet:
         return AgriFieldNet(tmp_path, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: AgriFieldNet) -> None:
-        xmin, xmax, ymin, ymax, tmin, tmax = dataset.bounds
-        x = dataset[xmin:xmax, ymin:ymax, tmin:tmax]
+        x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
@@ -59,14 +58,12 @@ class TestAgriFieldNet:
             AgriFieldNet(tmp_path)
 
     def test_plot(self, dataset: AgriFieldNet) -> None:
-        xmin, xmax, ymin, ymax, tmin, tmax = dataset.bounds
-        x = dataset[xmin:xmax, ymin:ymax, tmin:tmax]
+        x = dataset[dataset.bounds]
         dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: AgriFieldNet) -> None:
-        xmin, xmax, ymin, ymax, tmin, tmax = dataset.bounds
-        x = dataset[xmin:xmax, ymin:ymax, tmin:tmax]
+        x = dataset[dataset.bounds]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
@@ -82,7 +79,6 @@ class TestAgriFieldNet:
             RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):
             ds = AgriFieldNet(dataset.paths, bands=['B01', 'B02', 'B05'])
-            xmin, xmax, ymin, ymax, tmin, tmax = dataset.bounds
-            x = dataset[xmin:xmax, ymin:ymax, tmin:tmax]
+            x = ds[ds.bounds]
             ds.plot(x, suptitle='Test')
             plt.close()
