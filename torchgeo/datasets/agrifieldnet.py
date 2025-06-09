@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import BoundingBox, Path, which
+from .utils import GeoSlice, Path, which
 
 
 class AgriFieldNet(RasterDataset):
@@ -172,24 +172,31 @@ class AgriFieldNet(RasterDataset):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Return an index within the dataset.
+    def __getitem__(self, key: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            key: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            data, label, and field ids at that index
+            Sample of input, target, and/or metadata at that index.
+
+        Raises:
+            IndexError: If *key* is not found in the index.
         """
         assert isinstance(self.paths, str | os.PathLike)
 
-        interval = pd.Interval(query.mint, query.maxt)
+        xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres = self._disambiguate_slice(
+            key
+        )
+        interval = pd.Interval(tmin, tmax)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
+        index = index.iloc[::tres]
+        index = index.cx[xmin:xmax, ymin:ymax]  # type: ignore[misc]
 
         if index.empty:
             raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
+                f'key: {key} not found in index with bounds: {self.bounds}'
             )
 
         data_list: list[Tensor] = []
@@ -207,7 +214,7 @@ class AgriFieldNet(RasterDataset):
                         filename = filename[:start] + band + filename[end:]
                 filepath = os.path.join(directory, filename)
                 band_filepaths.append(filepath)
-            data_list.append(self._merge_files(band_filepaths, query))
+            data_list.append(self._merge_files(band_filepaths, key))
         image = torch.cat(data_list)
 
         mask_filepaths = []
@@ -217,15 +224,10 @@ class AgriFieldNet(RasterDataset):
                     file_path = os.path.join(root, file)
                     mask_filepaths.append(file_path)
 
-        mask = self._merge_files(mask_filepaths, query)
+        mask = self._merge_files(mask_filepaths, key)
         mask = self.ordinal_map[mask.squeeze().long()]
 
-        sample = {
-            'crs': self.crs,
-            'bounds': query,
-            'image': image.float(),
-            'mask': mask.long(),
-        }
+        sample = {'crs': self.crs, 'image': image.float(), 'mask': mask.long()}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
