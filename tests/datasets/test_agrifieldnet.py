@@ -14,7 +14,6 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     AgriFieldNet,
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     RGBBandsMissingError,
@@ -34,7 +33,8 @@ class TestAgriFieldNet:
         return AgriFieldNet(tmp_path, transforms=transforms, download=True)
 
     def test_getitem(self, dataset: AgriFieldNet) -> None:
-        x = dataset[dataset.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = dataset.bounds
+        x = dataset[xmin:xmax, ymin:ymax, tmin:tmax]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
@@ -59,28 +59,28 @@ class TestAgriFieldNet:
             AgriFieldNet(tmp_path)
 
     def test_plot(self, dataset: AgriFieldNet) -> None:
-        x = dataset[dataset.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = dataset.bounds
+        x = dataset[xmin:xmax, ymin:ymax, tmin:tmax]
         dataset.plot(x, suptitle='Test')
         plt.close()
 
     def test_plot_prediction(self, dataset: AgriFieldNet) -> None:
-        x = dataset[dataset.bounds]
+        xmin, xmax, ymin, ymax, tmin, tmax = dataset.bounds
+        x = dataset[xmin:xmax, ymin:ymax, tmin:tmax]
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
 
     def test_invalid_query(self, dataset: AgriFieldNet) -> None:
-        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
-        with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
-        ):
-            dataset[query]
+        with pytest.raises(IndexError, match='key: .* not found in index with bounds:'):
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_rgb_bands_absent_plot(self, dataset: AgriFieldNet) -> None:
         with pytest.raises(
             RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):
             ds = AgriFieldNet(dataset.paths, bands=['B01', 'B02', 'B05'])
-            x = ds[ds.bounds]
+            xmin, xmax, ymin, ymax, tmin, tmax = dataset.bounds
+            x = dataset[xmin:xmax, ymin:ymax, tmin:tmax]
             ds.plot(x, suptitle='Test')
             plt.close()
