@@ -112,14 +112,14 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     __add__ = None  # type: ignore[assignment]
 
     def _disambiguate_slice(
-        self, key: GeoSlice
+        self, query: GeoSlice
     ) -> tuple[
         float, float, float, float, float, float, pd.Timestamp, pd.Timestamp, int
     ]:
         """Disambiguate a partial spatiotemporal slice.
 
         Args:
-            key: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             A tuple of xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, and tres.
@@ -129,33 +129,33 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
         tres = 1
         out = [xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres]
 
-        if isinstance(key, slice):
-            key = (key,)
+        if isinstance(query, slice):
+            query = (query,)
 
         # For each slice (x, y, t)...
-        for i in range(len(key)):
+        for i in range(len(query)):
             # For each component (start, stop, step)...
-            if key[i].start is not None:
-                out[i * 3 + 0] = key[i].start
-            if key[i].stop is not None:
-                out[i * 3 + 1] = key[i].stop
-            if key[i].step is not None:
-                out[i * 3 + 2] = key[i].step
+            if query[i].start is not None:
+                out[i * 3 + 0] = query[i].start
+            if query[i].stop is not None:
+                out[i * 3 + 1] = query[i].stop
+            if query[i].step is not None:
+                out[i * 3 + 2] = query[i].step
 
         return tuple(out)
 
     @abc.abstractmethod
-    def __getitem__(self, key: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            key: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *key* is not found in the index.
+            IndexError: If *query* is not found in the index.
         """
 
     def __and__(self, other: 'GeoDataset') -> 'IntersectionDataset':
@@ -504,20 +504,20 @@ class RasterDataset(GeoDataset):
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
-    def __getitem__(self, key: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            key: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *key* is not found in the index.
+            IndexError: If *query* is not found in the index.
         """
         xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres = self._disambiguate_slice(
-            key
+            query
         )
         interval = pd.Interval(tmin, tmax)
         index = self.index.iloc[self.index.index.overlaps(interval)]
@@ -526,7 +526,7 @@ class RasterDataset(GeoDataset):
 
         if index.empty:
             raise IndexError(
-                f'key: {key} not found in index with bounds: {self.bounds}'
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
         if self.separate_files:
@@ -545,10 +545,10 @@ class RasterDataset(GeoDataset):
                             filename = filename[:start] + band + filename[end:]
                     filepath = os.path.join(directory, filename)
                     band_filepaths.append(filepath)
-                data_list.append(self._merge_files(band_filepaths, key))
+                data_list.append(self._merge_files(band_filepaths, query))
             data = torch.cat(data_list)
         else:
-            data = self._merge_files(index.filepath, key, self.band_indexes)
+            data = self._merge_files(index.filepath, query, self.band_indexes)
 
         sample = {'crs': self.crs}
 
@@ -566,14 +566,14 @@ class RasterDataset(GeoDataset):
     def _merge_files(
         self,
         filepaths: Sequence[str],
-        key: GeoSlice,
+        query: GeoSlice,
         band_indexes: Sequence[int] | None = None,
     ) -> Tensor:
         """Load and merge one or more files.
 
         Args:
             filepaths: one or more files to load and merge
-            key: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
             band_indexes: indexes of bands to be used
 
         Returns:
@@ -585,7 +585,7 @@ class RasterDataset(GeoDataset):
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
         xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres = self._disambiguate_slice(
-            key
+            query
         )
         bounds = (xmin, ymin, xmax, ymax)
         res = (xres, yres)
@@ -736,20 +736,20 @@ class VectorDataset(GeoDataset):
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
-    def __getitem__(self, key: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            key: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *key* is not found in the index.
+            IndexError: If *query* is not found in the index.
         """
         xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres = self._disambiguate_slice(
-            key
+            query
         )
         interval = pd.Interval(tmin, tmax)
         index = self.index.iloc[self.index.index.overlaps(interval)]
@@ -758,13 +758,13 @@ class VectorDataset(GeoDataset):
 
         if index.empty:
             raise IndexError(
-                f'key: {key} not found in index with bounds: {self.bounds}'
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
         shapes = []
         for filepath in index.filepath:
             with fiona.open(filepath) as src:
-                # We need to know the bounding box of the key in the source CRS
+                # We need to know the bounding box of the query in the source CRS
                 (minx, maxx), (miny, maxy) = fiona.transform.transform(
                     self.crs.to_wkt(), src.crs, [xmin, xmax], [ymin, ymax]
                 )
@@ -827,11 +827,11 @@ class NonGeoDataset(Dataset[dict[str, Any]], abc.ABC):
     """
 
     @abc.abstractmethod
-    def __getitem__(self, key: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an index within the dataset.
 
         Args:
-            key: index to return
+            index: index to return
 
         Returns:
             data and labels at that index
@@ -885,7 +885,7 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
             is_valid_file: A function that takes the path of an Image file and checks if
                 the file is a valid file
         """
-        # When transform & target_transform are None, ImageFolder.__getitem__(key)
+        # When transform & target_transform are None, ImageFolder.__getitem__(index)
         # returns a PIL.Image and int for image and label, respectively
         super().__init__(
             root=root,
@@ -898,16 +898,16 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         # Must be set after calling super().__init__()
         self.transforms = transforms
 
-    def __getitem__(self, key: int) -> dict[str, Tensor]:
+    def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
         Args:
-            key: index to return
+            index: index to return
 
         Returns:
             data and label at that index
         """
-        image, label = self._load_image(key)
+        image, label = self._load_image(index)
         sample = {'image': image, 'label': label}
 
         if self.transforms is not None:
@@ -923,16 +923,16 @@ class NonGeoClassificationDataset(NonGeoDataset, ImageFolder):  # type: ignore[m
         """
         return len(self.imgs)
 
-    def _load_image(self, key: int) -> tuple[Tensor, Tensor]:
+    def _load_image(self, index: int) -> tuple[Tensor, Tensor]:
         """Load a single image and its class label.
 
         Args:
-            key: index to return
+            index: index to return
 
         Returns:
             the image and class label
         """
-        img, label = ImageFolder.__getitem__(self, key)
+        img, label = ImageFolder.__getitem__(self, index)
         array: np.typing.NDArray[np.int_] = np.array(img)
         tensor = torch.from_numpy(array).float()
         # Convert from HxWxC to CxHxW
@@ -1027,19 +1027,19 @@ class IntersectionDataset(GeoDataset):
         if self.index.empty:
             raise RuntimeError('Datasets have no spatiotemporal intersection')
 
-    def __getitem__(self, key: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            key: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *key* is not found in the index.
+            IndexError: If *query* is not found in the index.
         """
-        samples = [ds[key] for ds in self.datasets]
+        samples = [ds[query] for ds in self.datasets]
 
         sample = self.collate_fn(samples)
 
@@ -1162,29 +1162,29 @@ class UnionDataset(GeoDataset):
 
         self.index = pd.concat([dataset1.index, dataset2.index])
 
-    def __getitem__(self, key: GeoSlice) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            key: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
             Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: If *key* is not found in the index.
+            IndexError: If *query* is not found in the index.
         """
-        # Not all datasets are guaranteed to have a valid key
+        # Not all datasets are guaranteed to have a valid query
         samples = []
         for ds in self.datasets:
             try:
-                samples.append(ds[key])
+                samples.append(ds[query])
             except IndexError:
                 pass
 
         if not samples:
             raise IndexError(
-                f'key: {key} not found in index with bounds: {self.bounds}'
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
         sample = self.collate_fn(samples)
