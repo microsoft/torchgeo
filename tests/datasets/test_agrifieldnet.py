@@ -72,7 +72,9 @@ class TestAgriFieldNet:
         plt.close()
 
     def test_invalid_query(self, dataset: AgriFieldNet) -> None:
-        with pytest.raises(IndexError, match='key: .* not found in index with bounds:'):
+        with pytest.raises(
+            IndexError, match='query: .* not found in index with bounds:'
+        ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_rgb_bands_absent_plot(self, dataset: AgriFieldNet) -> None:

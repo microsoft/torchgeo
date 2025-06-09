@@ -55,9 +55,9 @@ class CustomGeoDataset(GeoDataset):
         self.res = res
         self.paths = paths or []
 
-    def __getitem__(self, key: GeoSlice) -> dict[str, GeoSlice]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, GeoSlice]:
         xmin, xmax, xres, ymin, ymax, yres, tmin, tmax, tres = self._disambiguate_slice(
-            key
+            query
         )
         interval = pd.Interval(tmin, tmax)
         index = self.index.iloc[self.index.index.overlaps(interval)]
@@ -65,10 +65,10 @@ class CustomGeoDataset(GeoDataset):
 
         if index.empty:
             raise IndexError(
-                f'key: {key} not found in index with bounds: {self.bounds}'
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        return {'index': key}
+        return {'index': query}
 
 
 class CustomRasterDataset(RasterDataset):
@@ -108,8 +108,8 @@ class TestGeoDataset:
         return CustomGeoDataset()
 
     def test_getitem(self, dataset: GeoDataset) -> None:
-        key = (slice(0, 1), slice(2, 3), slice(MINT, MAXT))
-        assert dataset[key] == {'index': key}
+        query = (slice(0, 1), slice(2, 3), slice(MINT, MAXT))
+        assert dataset[query] == {'index': query}
 
     def test_len(self, dataset: GeoDataset) -> None:
         assert len(dataset) == 1
@@ -192,7 +192,7 @@ class TestGeoDataset:
             dataset & ds2  # type: ignore[operator]
 
     @pytest.mark.parametrize(
-        'key,expected_output',
+        'query,expected_output',
         [
             # ds[xmin:xmax:xres]
             (slice(None), (0, 1, 1, 2, 3, 1, MINT, MAXT, 1)),
@@ -249,12 +249,12 @@ class TestGeoDataset:
     def test_disambiguate_slice(
         self,
         dataset: GeoDataset,
-        key: GeoSlice,
+        query: GeoSlice,
         expected_output: tuple[
             float, float, float, float, float, float, pd.Timestamp, pd.Timestamp, int
         ],
     ) -> None:
-        assert dataset._disambiguate_slice(key) == expected_output
+        assert dataset._disambiguate_slice(query) == expected_output
 
     def test_files_property_for_non_existing_file_or_dir(self, tmp_path: Path) -> None:
         paths = [tmp_path, tmp_path / 'non_existing_file.tif']
@@ -440,9 +440,9 @@ class TestRasterDataset:
         assert x['image'].dtype == dtype
         assert ds.resampling == Resampling.nearest
 
-    def test_invalid_key(self, sentinel: Sentinel2) -> None:
+    def test_invalid_query(self, sentinel: Sentinel2) -> None:
         with pytest.raises(
-            IndexError, match='key: .* not found in index with bounds: .*'
+            IndexError, match='query: .* not found in index with bounds: .*'
         ):
             sentinel[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
@@ -520,8 +520,10 @@ class TestVectorDataset:
         x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
-    def test_invalid_key(self, dataset: CustomVectorDataset) -> None:
-        with pytest.raises(IndexError, match='key: .* not found in index with bounds:'):
+    def test_invalid_query(self, dataset: CustomVectorDataset) -> None:
+        with pytest.raises(
+            IndexError, match='query: .* not found in index with bounds:'
+        ):
             dataset[3:3, 3:3, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_no_data(self, tmp_path: Path) -> None:
@@ -884,8 +886,10 @@ class TestIntersectionDataset:
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
 
-    def test_invalid_key(self, dataset: IntersectionDataset) -> None:
-        with pytest.raises(IndexError, match='key: .* not found in index with bounds:'):
+    def test_invalid_query(self, dataset: IntersectionDataset) -> None:
+        with pytest.raises(
+            IndexError, match='query: .* not found in index with bounds:'
+        ):
             dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
 
 
@@ -1053,6 +1057,8 @@ class TestUnionDataset:
         with pytest.raises(ValueError, match=msg):
             UnionDataset(ds3, ds1)  # type: ignore[arg-type]
 
-    def test_invalid_key(self, dataset: UnionDataset) -> None:
-        with pytest.raises(IndexError, match='key: .* not found in index with bounds:'):
+    def test_invalid_query(self, dataset: UnionDataset) -> None:
+        with pytest.raises(
+            IndexError, match='query: .* not found in index with bounds:'
+        ):
             dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
