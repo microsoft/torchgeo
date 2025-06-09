@@ -543,7 +543,7 @@ class RasterDataset(GeoDataset):
         else:
             data = self._merge_files(index.filepath, query, self.band_indexes)
 
-        sample = {'crs': self.crs}
+        sample = {'crs': self.crs, 'bounds': query}
 
         data = data.to(self.dtype)
         if self.is_image:
@@ -786,7 +786,7 @@ class VectorDataset(GeoDataset):
         masks = array_to_tensor(masks)
 
         masks = masks.to(self.dtype)
-        sample = {'mask': masks, 'crs': self.crs}
+        sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -1028,6 +1028,7 @@ class IntersectionDataset(GeoDataset):
         Raises:
             IndexError: If *query* is not found in the index.
         """
+        # All datasets are guaranteed to have a valid query
         samples = [ds[query] for ds in self.datasets]
 
         sample = self.collate_fn(samples)
