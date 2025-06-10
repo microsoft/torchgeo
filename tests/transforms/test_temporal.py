@@ -4,7 +4,7 @@
 import kornia.augmentation as K
 import torch
 
-from torchgeo.transforms.temporal import Rearrange
+from torchgeo.transforms.temporal import Rearrange, TemporalEmbedding
 
 
 def test_rearrange_combine() -> None:
@@ -41,3 +41,22 @@ def test_rearrange_integration_in_augmentation_sequential() -> None:
     out_batch = train_transforms(batch)
     assert 'image' in out_batch
     assert out_batch['image'].shape == (b, t * c, h, w)
+
+
+def test_temporal_embedding_shape_and_values() -> None:
+    period = 365
+    model = TemporalEmbedding(period=period)
+    t = torch.tensor([0, 91, 182, 273, 364])
+    output = model(t)
+    norms = torch.norm(output, dim=-1)
+    assert output.shape == (5, 2), f'Expected shape (5, 2), got {output.shape}'
+    assert torch.allclose(norms, torch.ones_like(norms), atol=1e-4), (
+        'Embeddings not normalized to unit circle'
+    )
+
+
+def test_temporal_embedding_batch_dimension() -> None:
+    model = TemporalEmbedding(period=24)
+    t = torch.arange(0, 24).unsqueeze(1)
+    output = model(t)
+    assert output.shape == (24, 2)
