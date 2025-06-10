@@ -46,7 +46,7 @@ class TestGBIF:
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[0:0, 0:0, pd.Timestamp.min:pd.Timestamp.min]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_plot(self, dataset: GBIF) -> None:
         sample = dataset[dataset.bounds]
