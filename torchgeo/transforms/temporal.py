@@ -86,7 +86,9 @@ class TemporalEmbedding(nn.Module):
         self.period = period
 
     def forward(self, t: Tensor) -> Tensor:
-        """Args:
+        """Compute sinusoidal embeddings for periodic time values.
+
+        Args:
             t: Tensor of shape (B,) or (B, 1), representing time values.
 
         Returns:
