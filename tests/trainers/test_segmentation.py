@@ -103,6 +103,9 @@ class TestSemanticSegmentationTask:
 
         monkeypatch.setattr(smp, 'Unet', create_model)
         monkeypatch.setattr(smp, 'DeepLabV3Plus', create_model)
+        monkeypatch.setattr(smp, 'UPerNet', create_model)
+        monkeypatch.setattr(smp, 'Segformer', create_model)
+        monkeypatch.setattr(smp, 'DPT', create_model)
 
         args = [
             '--config',
@@ -236,13 +239,25 @@ class TestSemanticSegmentationTask:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
     @pytest.mark.parametrize(
-        'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
+        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet', 'dpt']
+    )
+    @pytest.mark.parametrize(
+        'backbone',
+        ['resnet18', 'mobilenet_v2', 'efficientnet-b0', 'tu-vit_base_patch16_224'],
     )
     def test_freeze_backbone(
-        self, model_name: Literal['unet', 'deeplabv3+'], backbone: str
+        self,
+        model_name: Literal['unet', 'deeplabv3+', 'segformer', 'upernet', 'dpt'],
+        backbone: str,
     ) -> None:
+        if backbone == 'tu-vit_base_patch16_224':
+            if model_name != 'dpt':
+                return
+        else:
+            if model_name == 'dpt':
+                return
+
         model = SemanticSegmentationTask(
             model=model_name, backbone=backbone, num_classes=10, freeze_backbone=True
         )
@@ -257,10 +272,15 @@ class TestSemanticSegmentationTask:
             ]
         )
 
-    @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
-    def test_freeze_decoder(self, model_name: Literal['unet', 'deeplabv3+']) -> None:
+    @pytest.mark.parametrize(
+        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet', 'dpt']
+    )
+    def test_freeze_decoder(
+        self, model_name: Literal['unet', 'deeplabv3+', 'segformer', 'upernet', 'dpt']
+    ) -> None:
+        backbone = 'resnet18' if model_name != 'dpt' else 'tu-vit_base_patch16_224'
         model = SemanticSegmentationTask(
-            model=model_name, num_classes=10, freeze_decoder=True
+            model=model_name, backbone=backbone, num_classes=10, freeze_decoder=True
         )
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]
