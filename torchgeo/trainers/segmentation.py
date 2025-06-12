@@ -28,7 +28,9 @@ class SemanticSegmentationTask(BaseTask):
 
     def __init__(
         self,
-        model: Literal['unet', 'deeplabv3+', 'fcn'] = 'unet',
+        model: Literal[
+            'unet', 'deeplabv3+', 'fcn', 'upernet', 'segformer', 'dpt'
+        ] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
@@ -130,7 +132,27 @@ class SemanticSegmentationTask(BaseTask):
                     classes=num_classes,
                     num_filters=num_filters,
                 )
-
+            case 'upernet':
+                self.model = smp.UPerNet(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=1,
+                )
+            case 'segformer':
+                self.model = smp.Segformer(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=1,
+                )
+            case 'dpt':
+                self.model = smp.DPT(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=1,
+                )
         if model != 'fcn':
             if weights and weights is not True:
                 if isinstance(weights, WeightsEnum):
@@ -142,12 +164,12 @@ class SemanticSegmentationTask(BaseTask):
                 self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
-        if self.hparams['freeze_backbone'] and model in ['unet', 'deeplabv3+']:
+        if self.hparams['freeze_backbone'] and model != 'fcn':
             for param in self.model.encoder.parameters():
                 param.requires_grad = False
 
         # Freeze decoder
-        if self.hparams['freeze_decoder'] and model in ['unet', 'deeplabv3+']:
+        if self.hparams['freeze_decoder'] and model != 'fcn':
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
 
