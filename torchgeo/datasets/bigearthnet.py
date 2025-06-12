@@ -684,6 +684,11 @@ class BigEarthNetV2(NonGeoDataset):
     }
 
     valid_splits = ('train', 'val', 'test')
+    split_map: ClassVar[dict[str, str]] = {
+        'train': 'train',
+        'val': 'validation',
+        'test': 'test',
+    }
 
     def __init__(
         self,
@@ -723,7 +728,7 @@ class BigEarthNetV2(NonGeoDataset):
 
         self.metadata_df = pd.read_parquet(os.path.join(self.root, 'metadata.parquet'))
         self.metadata_df = self.metadata_df[
-            self.metadata_df['split'] == self.split
+            self.metadata_df['split'] == self.split_map[self.split]
         ].reset_index(drop=True)
 
         # Map chosen classes to ordinal numbers, all others mapped to background class
