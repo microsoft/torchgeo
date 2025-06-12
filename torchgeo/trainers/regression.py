@@ -281,33 +281,58 @@ class PixelwiseRegressionTask(RegressionTask):
         """Initialize the model."""
         weights = self.weights
 
-        if self.hparams['model'] == 'unet':
+        model = self.hparams['model']
+        backbone = self.hparams['backbone']
+        in_channels = self.hparams['in_channels']
+
+        if model == 'unet':
             self.model = smp.Unet(
-                encoder_name=self.hparams['backbone'],
+                encoder_name=backbone,
                 encoder_weights='imagenet' if weights is True else None,
-                in_channels=self.hparams['in_channels'],
+                in_channels=in_channels,
                 classes=1,
             )
-        elif self.hparams['model'] == 'deeplabv3+':
+        elif model == 'deeplabv3+':
             self.model = smp.DeepLabV3Plus(
-                encoder_name=self.hparams['backbone'],
+                encoder_name=backbone,
                 encoder_weights='imagenet' if weights is True else None,
-                in_channels=self.hparams['in_channels'],
+                in_channels=in_channels,
                 classes=1,
             )
-        elif self.hparams['model'] == 'fcn':
+        elif model == 'fcn':
             self.model = FCN(
-                in_channels=self.hparams['in_channels'],
+                in_channels=in_channels,
                 classes=1,
                 num_filters=self.hparams['num_filters'],
             )
+        elif model == 'upernet':
+            self.model = smp.UPerNet(
+                encoder_name=backbone,
+                encoder_weights='imagenet' if weights is True else None,
+                in_channels=in_channels,
+                classes=1,
+            )
+        elif model == 'segformer':
+            self.model = smp.Segformer(
+                encoder_name=backbone,
+                encoder_weights='imagenet' if weights is True else None,
+                in_channels=in_channels,
+                classes=1,
+            )
+        elif model == 'dpt':
+            self.model = smp.DPT(
+                encoder_name=backbone,
+                encoder_weights='imagenet' if weights is True else None,
+                in_channels=in_channels,
+                classes=1,
+            )
         else:
             raise ValueError(
-                f"Model type '{self.hparams['model']}' is not valid. "
-                "Currently, only supports 'unet', 'deeplabv3+' and 'fcn'."
+                f"Model type '{model}' is not valid. "
+                "Currently, only supports 'unet', 'deeplabv3+', 'fcn', 'upernet', 'segformer', and 'dpt'."
             )
 
-        if self.hparams['model'] != 'fcn':
+        if model != 'fcn':
             if weights and weights is not True:
                 if isinstance(weights, WeightsEnum):
                     state_dict = weights.get_state_dict(progress=True)
@@ -318,17 +343,11 @@ class PixelwiseRegressionTask(RegressionTask):
                 self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
-        if self.hparams.get('freeze_backbone', False) and self.hparams['model'] in [
-            'unet',
-            'deeplabv3+',
-        ]:
+        if self.hparams.get('freeze_backbone', False) and model != 'fcn':
             for param in self.model.encoder.parameters():
                 param.requires_grad = False
 
         # Freeze decoder
-        if self.hparams.get('freeze_decoder', False) and self.hparams['model'] in [
-            'unet',
-            'deeplabv3+',
-        ]:
+        if self.hparams.get('freeze_decoder', False) and model != 'fcn':
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
