@@ -4,7 +4,7 @@
 import kornia.augmentation as K
 import torch
 
-from torchgeo.transforms.temporal import Rearrange, TemporalEmbedding
+from torchgeo.transforms.temporal import CyclicalEncoder, Rearrange
 
 
 def test_rearrange_combine() -> None:
@@ -45,7 +45,7 @@ def test_rearrange_integration_in_augmentation_sequential() -> None:
 
 def test_temporal_embedding_shape_and_values() -> None:
     period = 365
-    model = TemporalEmbedding(period=period)
+    model = CyclicalEncoder(period=period)
     t = torch.tensor([0, 91, 182, 273, 364])
     output = model(t)
     norms = torch.norm(output, dim=-1)
@@ -56,7 +56,7 @@ def test_temporal_embedding_shape_and_values() -> None:
 
 
 def test_temporal_embedding_batch_dimension() -> None:
-    model = TemporalEmbedding(period=24)
+    model = CyclicalEncoder(period=24)
     t = torch.arange(0, 24).unsqueeze(1)
     output = model(t)
     assert output.shape == (24, 2)

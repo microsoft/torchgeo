@@ -6,6 +6,7 @@
 import math
 from typing import Any
 
+import pandas as pd
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -73,27 +74,40 @@ class Rearrange(GeometricAugmentationBase3D):
         return out
 
 
-class TemporalEmbedding(nn.Module):
+class CyclicalEncoder(nn.Module):
     """Generic sinusoidal embedding for periodic temporal features."""
 
-    def __init__(self, period: int) -> None:
-        """Initialize a TemporalEmbedding instance.
+    def __init__(
+        self,
+        period: pd.Timedelta,
+        time_key: str = 'time',
+        out_key: str = 'time_embedding',
+    ) -> None:
+        """Initialize a CyclicalEncoder instance.
 
         Args:
             period: The period of the sinusoidal function.
+            time_key: The key in the input data containing time values.
+            out_key: The key for the output embeddings.
         """
         super().__init__()
         self.period = period
+        self.time_key = time_key
+        self.out_key = out_key
 
-    def forward(self, t: Tensor) -> Tensor:
-        """Compute sinusoidal embeddings for periodic time values.
+    def forward(self, sample: dict[str, Any]) -> dict[str, Any]:
+        """Add sinusoidal embeddings to the sample using the given time key."""
+        t = sample[self.time_key]
+        if isinstance(t, pd.Timestamp):
+            t = t.timestamp()
+        elif isinstance(t, int):
+            t = float(t)
+        else:
+            raise TypeError(f'Unsupported type for time key {self.time_key}: {type(t)}')
 
-        Args:
-            t: Tensor of shape (B,) or (B, 1), representing time values.
-
-        Returns:
-            Tensor of shape (B, 2), sin and cos embeddings.
-        """
-        t = t.view(-1, 1).float()
-        scaled = 2 * math.pi * t / self.period
-        return torch.cat([torch.sin(scaled), torch.cos(scaled)], dim=-1)
+        scaled = torch.tensor(
+            2 * math.pi * t / self.period.total_seconds(), dtype=torch.float32
+        ).unsqueeze(0)
+        enc = torch.cat([torch.sin(scaled), torch.cos(scaled)], dim=-1)
+        sample[self.out_key] = enc
+        return sample
