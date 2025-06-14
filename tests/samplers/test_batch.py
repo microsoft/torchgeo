@@ -17,6 +17,7 @@ from shapely import Geometry
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
+from torchgeo.datasets.utils import GeoSlice
 from torchgeo.samplers import BatchGeoSampler, RandomBatchGeoSampler, Units
 
 MINT = datetime(2025, 4, 24)
@@ -24,9 +25,9 @@ MAXT = datetime(2025, 4, 25)
 
 
 class CustomBatchGeoSampler(BatchGeoSampler):
-    def __iter__(self) -> Iterator[list[BoundingBox]]:
+    def __iter__(self) -> Iterator[list[GeoSlice]]:
         for i in range(2):
-            yield [BoundingBox(j, j, j, j, MINT, MAXT) for j in range(2)]
+            yield [(slice(j, j), slice(j, j), slice(MINT, MAXT)) for j in range(2)]
 
 
 class CustomGeoDataset(GeoDataset):
@@ -39,7 +40,7 @@ class CustomGeoDataset(GeoDataset):
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, GeoSlice]:
         return {'index': query}
 
 
@@ -55,8 +56,8 @@ class TestBatchGeoSampler:
 
     def test_iter(self, sampler: CustomBatchGeoSampler) -> None:
         expected = [
-            BoundingBox(0, 0, 0, 0, MINT, MAXT),
-            BoundingBox(1, 1, 1, 1, MINT, MAXT),
+            (slice(0, 0), slice(0, 0), slice(MINT, MAXT)),
+            (slice(1, 1), slice(1, 1), slice(MINT, MAXT)),
         ]
         assert next(iter(sampler)) == expected
 
