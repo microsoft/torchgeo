@@ -103,23 +103,22 @@ class TestRandomBatchGeoSampler:
     def test_iter(self, sampler: RandomBatchGeoSampler) -> None:
         for batch in sampler:
             for query in batch:
-                assert sampler.roi.minx <= query.minx <= query.maxx <= sampler.roi.maxx
-                assert sampler.roi.miny <= query.miny <= query.miny <= sampler.roi.maxy
-                assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
+                bbox = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
+                assert sampler.roi.contains(bbox)
 
                 assert math.isclose(query.maxx - query.minx, sampler.size[1])
                 assert math.isclose(query.maxy - query.miny, sampler.size[0])
-                assert query.maxt - query.mint == sampler.roi.maxt - sampler.roi.mint
 
     def test_len(self, sampler: RandomBatchGeoSampler) -> None:
         assert len(sampler) == sampler.length // sampler.batch_size
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
-        roi = BoundingBox(0, 50, 0, 50, MINT, MAXT)
+        roi = shapely.box(0, 0, 50, 50)
         sampler = RandomBatchGeoSampler(dataset, 2, 2, 10, roi=roi)
         for batch in sampler:
             for query in batch:
-                assert query in roi
+                bbox = shapely.box(query.minx, query.miny, query.maxx, query.maxy)
+                assert roi.contains(bbox)
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]
