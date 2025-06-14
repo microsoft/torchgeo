@@ -187,35 +187,38 @@ class TestGridGeoSampler:
         return GridGeoSampler(dataset, size, stride, units=units)
 
     def test_iter(self, sampler: GridGeoSampler) -> None:
-        for query in sampler:
+        for x, y, t in sampler:
             assert (
-                sampler.roi.minx
-                <= query.minx
-                <= query.maxx
-                < sampler.roi.maxx + sampler.stride[1]
+                sampler.roi[0].start
+                <= x.start
+                <= x.stop
+                < sampler.roi[0].stop + sampler.stride[1]
             )
             assert (
-                sampler.roi.miny
-                <= query.miny
-                <= query.miny
-                < sampler.roi.maxy + sampler.stride[0]
+                sampler.roi[1].start
+                <= y.start
+                <= y.stop
+                < sampler.roi[1].stop + sampler.stride[0]
             )
-            assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
+            assert sampler.roi[2].start <= t.start <= t.stop <= sampler.roi[2].stop
 
-            assert math.isclose(query.maxx - query.minx, sampler.size[1])
-            assert math.isclose(query.maxy - query.miny, sampler.size[0])
-            assert query.maxt - query.mint == sampler.roi.maxt - sampler.roi.mint
+            assert math.isclose(x.stop - x.start, sampler.size[1])
+            assert math.isclose(y.stop - y.start, sampler.size[0])
+            assert t.stop - t.start == sampler.roi[2].stop - sampler.roi[2].start
 
     def test_len(self, sampler: GridGeoSampler) -> None:
-        rows, cols = tile_to_chips(sampler.roi, sampler.size, sampler.stride)
+        bounds = sampler.index.total_bounds
+        rows, cols = tile_to_chips(bounds, sampler.size, sampler.stride)
         length = rows * cols * 2  # two items in dataset
         assert len(sampler) == length
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
         roi = BoundingBox(0, 50, 200, 250, MINT, MAXT)
         sampler = GridGeoSampler(dataset, 2, 1, roi=roi)
-        for query in sampler:
-            assert query in roi
+        for x, y, t in sampler:
+            assert roi.minx <= x.start <= x.stop < roi.maxx + sampler.stride[1]
+            assert roi.miny <= y.start <= y.stop < roi.maxy + sampler.stride[0]
+            assert roi.mint <= t.start <= t.stop <= roi.maxt
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 1, 1)]
@@ -227,8 +230,9 @@ class TestGridGeoSampler:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(0, 10, 10, 20)]
         ds = CustomGeoDataset(geometry)
         sampler = GridGeoSampler(ds, 2, 10)
-        for bbox in sampler:
-            assert bbox.area > 0
+        for x, y, t in sampler:
+            assert x.start < x.stop
+            assert y.start < y.stop
 
     def test_integer_multiple(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10)]
@@ -236,7 +240,7 @@ class TestGridGeoSampler:
         sampler = GridGeoSampler(ds, 10, 10, units=Units.CRS)
         iterator = iter(sampler)
         assert len(sampler) == 1
-        assert next(iterator) == BoundingBox(0, 10, 0, 10, MINT, MAXT)
+        assert next(iterator) == (slice(0, 10), slice(0, 10), slice(MINT, MAXT))
 
     def test_float_multiple(self) -> None:
         geometry = [shapely.box(0, 0, 6, 5)]
@@ -244,8 +248,8 @@ class TestGridGeoSampler:
         sampler = GridGeoSampler(ds, 5, 5, units=Units.CRS)
         iterator = iter(sampler)
         assert len(sampler) == 2
-        assert next(iterator) == BoundingBox(0, 5, 0, 5, MINT, MAXT)
-        assert next(iterator) == BoundingBox(5, 10, 0, 5, MINT, MAXT)
+        assert next(iterator) == (slice(0, 5), slice(0, 5), slice(MINT, MAXT))
+        assert next(iterator) == (slice(5, 10), slice(0, 5), slice(MINT, MAXT))
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
