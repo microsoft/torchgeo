@@ -20,7 +20,6 @@ from torchgeo.datasets import (
     IntersectionDataset,
     UnionDataset,
 )
-from torchgeo.samplers import RandomGeoSampler
 
 
 class TestEnviroAtlas:
@@ -57,9 +56,7 @@ class TestEnviroAtlas:
         )
 
     def test_getitem(self, dataset: EnviroAtlas) -> None:
-        sampler = RandomGeoSampler(dataset, size=16, length=32)
-        bb = next(iter(sampler))
-        x = dataset[bb]
+        x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
@@ -107,9 +104,7 @@ class TestEnviroAtlas:
             ds[dataset.bounds]
 
     def test_plot(self, dataset: EnviroAtlas) -> None:
-        sampler = RandomGeoSampler(dataset, size=16, length=1)
-        bb = next(iter(sampler))
-        x = dataset[bb]
+        x = dataset[dataset.bounds]
         if 'naip' not in dataset.layers or 'lc' not in dataset.layers:
             with pytest.raises(ValueError, match="The 'naip' and"):
                 dataset.plot(x)
