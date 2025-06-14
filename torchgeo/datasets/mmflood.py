@@ -19,7 +19,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import BoundingBox, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, download_url, extract_archive
 
 
 class MMFloodComponent(RasterDataset):
@@ -207,17 +207,17 @@ class MMFlood(IntersectionDataset):
                 with open(part_path, 'rb') as part_fp:
                     dst_fp.write(part_fp.read())
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Tensor]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Tensor]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image, mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
         data = super().__getitem__(query)
         missing_data = data['image'].isnan().any(dim=0)
