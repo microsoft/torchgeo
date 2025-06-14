@@ -13,7 +13,6 @@ from pyproj import CRS
 
 from torchgeo.datasets import (
     Airphen,
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     RGBBandsMissingError,
@@ -56,11 +55,10 @@ class TestAirphen:
             Airphen(tmp_path)
 
     def test_invalid_query(self, dataset: Airphen) -> None:
-        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_plot_wrong_bands(self, dataset: Airphen) -> None:
         bands = ('B1', 'B2', 'B3')

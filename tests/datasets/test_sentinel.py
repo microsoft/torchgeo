@@ -13,7 +13,6 @@ from _pytest.fixtures import SubRequest
 from pyproj import CRS
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     RGBBandsMissingError,
@@ -92,11 +91,10 @@ class TestSentinel1:
             Sentinel1(bands=bands)
 
     def test_invalid_query(self, dataset: Sentinel1) -> None:
-        query = BoundingBox(-1, -1, -1, -1, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
 
 
 class TestSentinel2:
@@ -144,11 +142,10 @@ class TestSentinel2:
             ds.plot(x)
 
     def test_invalid_query(self, dataset: Sentinel2) -> None:
-        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_float_res(self, dataset: Sentinel2) -> None:
         Sentinel2(dataset.paths, res=10.0, bands=dataset.bands)
