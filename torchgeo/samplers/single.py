@@ -37,10 +37,12 @@ class GeoSampler(Sampler[GeoSlice], abc.ABC):
         """
         self.index = dataset.index
         self.res = dataset.res
-        self.roi = roi or dataset.bounds
+        self.roi = dataset.bounds
 
         if roi:
-            mask = shapely.box(roi.minx, roi.miny, roi.maxx, roi.maxy)
+            xmin, xmax, ymin, ymax, tmin, tmax = roi
+            self.roi = slice(xmin, xmax), slice(ymin, ymax), slice(tmin, tmax)
+            mask = shapely.box(xmin, ymin, xmax, ymax)
             self.index = self.index.clip(mask)
 
     @abc.abstractmethod
@@ -221,7 +223,7 @@ class GridGeoSampler(GeoSampler):
         for i in range(len(self.index)):
             bounds = self.index.geometry.iloc[i].bounds
             xmin, ymin, xmax, ymax = bounds
-            if xmax - xmin < self.size[1] or ymin - ymax < self.size[0]:
+            if xmax - xmin < self.size[1] or ymax - ymin < self.size[0]:
                 continue
             rows, cols = tile_to_chips(bounds, self.size, self.stride)
             self.length += rows * cols
@@ -236,7 +238,7 @@ class GridGeoSampler(GeoSampler):
         for i in range(len(self.index)):
             bounds = self.index.geometry.iloc[i].bounds
             xmin, ymin, xmax, ymax = bounds
-            if xmax - xmin < self.size[1] or ymin - ymax < self.size[0]:
+            if xmax - xmin < self.size[1] or ymax - ymin < self.size[0]:
                 continue
             tmin, tmax = self.index.index[i].left, self.index.index[i].right
             rows, cols = tile_to_chips(bounds, self.size, self.stride)
