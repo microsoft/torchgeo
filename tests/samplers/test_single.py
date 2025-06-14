@@ -283,8 +283,13 @@ class TestPreChippedGeoSampler:
     def test_roi(self, dataset: CustomGeoDataset) -> None:
         roi = BoundingBox(5, 15, 5, 15, MINT, MAXT)
         sampler = PreChippedGeoSampler(dataset, roi=roi)
-        for query in sampler:
-            assert query == roi
+        for x, y, t in sampler:
+            assert roi.minx == x.start
+            assert roi.maxx == x.stop
+            assert roi.miny == y.start
+            assert roi.maxy == y.stop
+            assert roi.mint == t.start
+            assert roi.maxt == t.stop
 
     def test_point_data(self) -> None:
         geometry = [shapely.Point(0, 0), shapely.Point(1, 1)]
