@@ -347,7 +347,7 @@ class OpenBuildings(VectorDataset):
         """Filters a df read from the polygon csv file based on query and conf thresh.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
             filepaths: filepaths to files that were hits from rmtree index
 
         Returns:

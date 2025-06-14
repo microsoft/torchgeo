@@ -14,7 +14,6 @@ from pyproj import CRS
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     EuroCrops,
     IntersectionDataset,
@@ -77,11 +76,10 @@ class TestEuroCrops:
             EuroCrops(tmp_path)
 
     def test_invalid_query(self, dataset: EuroCrops) -> None:
-        query = BoundingBox(200, 200, 200, 200, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[200:200, 200:200, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_get_label_with_none_hcat_code(self, dataset: EuroCrops) -> None:
         mock_feature = {'properties': {dataset.label_name: None}}
