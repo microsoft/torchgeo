@@ -87,7 +87,7 @@ def get_random_bounding_box(
 
 
 def tile_to_chips(
-    bounds: BoundingBox,
+    bounds: tuple[float, float, float, float],
     size: tuple[float, float],
     stride: tuple[float, float] | None = None,
 ) -> tuple[int, int]:
@@ -122,7 +122,9 @@ def tile_to_chips(
     assert stride[0] > 0
     assert stride[1] > 0
 
-    rows = math.ceil((bounds.maxy - bounds.miny - size[0]) / stride[0]) + 1
-    cols = math.ceil((bounds.maxx - bounds.minx - size[1]) / stride[1]) + 1
+    xmin, ymin, xmax, ymax = bounds
+
+    rows = math.ceil((ymax - ymin - size[0]) / stride[0]) + 1
+    cols = math.ceil((xmax - xmin - size[1]) / stride[1]) + 1
 
     return rows, cols

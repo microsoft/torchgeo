@@ -17,6 +17,7 @@ from shapely import Geometry, Point
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
+from torchgeo.datasets.utils import GeoSlice
 from torchgeo.samplers import (
     GeoSampler,
     GridGeoSampler,
@@ -31,9 +32,9 @@ MAXT = datetime(2025, 4, 25)
 
 
 class CustomGeoSampler(GeoSampler):
-    def __iter__(self) -> Iterator[BoundingBox]:
+    def __iter__(self) -> Iterator[GeoSlice]:
         for i in range(2):
-            yield BoundingBox(i, i, i, i, MINT, MAXT)
+            yield slice(i, i), slice(i, i), slice(MINT, MAXT)
 
 
 class CustomGeoDataset(GeoDataset):
@@ -46,7 +47,7 @@ class CustomGeoDataset(GeoDataset):
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, GeoSlice]:
         return {'index': query}
 
 
@@ -61,7 +62,7 @@ class TestGeoSampler:
         return CustomGeoSampler(dataset)
 
     def test_iter(self, sampler: CustomGeoSampler) -> None:
-        assert next(iter(sampler)) == BoundingBox(0, 0, 0, 0, MINT, MAXT)
+        assert next(iter(sampler)) == (slice(0, 0), slice(0, 0), slice(MINT, MAXT))
 
     def test_abstract(self, dataset: CustomGeoDataset) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
