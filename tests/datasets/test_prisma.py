@@ -13,7 +13,6 @@ from pyproj import CRS
 
 from torchgeo.datasets import (
     PRISMA,
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     UnionDataset,
@@ -54,8 +53,7 @@ class TestPRISMA:
             PRISMA(tmp_path)
 
     def test_invalid_query(self, dataset: PRISMA) -> None:
-        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

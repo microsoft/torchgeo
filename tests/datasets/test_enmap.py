@@ -12,7 +12,6 @@ import torch.nn as nn
 from pyproj import CRS
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     EnMAP,
     IntersectionDataset,
@@ -64,8 +63,7 @@ class TestEnMAP:
             EnMAP(tmp_path)
 
     def test_invalid_query(self, dataset: EnMAP) -> None:
-        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import BoundingBox, Path, which
+from .utils import GeoSlice, Path, which
 
 
 class SouthAfricaCropType(RasterDataset):
@@ -152,21 +152,23 @@ class SouthAfricaCropType(RasterDataset):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Return an index within the dataset.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            data and labels at that index
-        """
-        assert isinstance(self.paths, str | os.PathLike)
+            Sample of input, target, and/or metadata at that index.
 
-        # Get all files matching the given query
-        interval = pd.Interval(query.mint, query.maxt)
+        Raises:
+            IndexError: If *query* is not found in the index.
+        """
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]  # type: ignore[misc]
 
         if index.empty:
             raise IndexError(
@@ -199,6 +201,7 @@ class SouthAfricaCropType(RasterDataset):
                     imagery_dates[field_id][band_type] = date
 
         # Create Tensors for each band using stored dates
+        assert isinstance(self.paths, str | os.PathLike)
         for band in self.bands:
             band_type = 's1' if band in self.s1_bands else 's2'
             band_filepaths = []
