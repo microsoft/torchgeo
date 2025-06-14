@@ -368,7 +368,6 @@ class EnviroAtlas(GeoDataset):
             filenames = index.iloc[0]
             query_geom_transformed = None  # is set by the first layer
 
-            minx, maxx, miny, maxy, mint, maxt = query
             query_box = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
 
             for layer in self.layers:
