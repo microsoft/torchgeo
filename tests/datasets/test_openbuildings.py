@@ -15,7 +15,6 @@ from pyproj import CRS
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     OpenBuildings,
@@ -93,11 +92,10 @@ class TestOpenBuildings:
         assert isinstance(ds, UnionDataset)
 
     def test_invalid_query(self, dataset: OpenBuildings) -> None:
-        query = BoundingBox(100, 100, 100, 100, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_plot(self, dataset: OpenBuildings) -> None:
         x = dataset[dataset.bounds]
