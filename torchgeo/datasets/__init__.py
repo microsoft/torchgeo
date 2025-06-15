@@ -139,6 +139,7 @@ from .skippd import SKIPPD
 from .skyscript import SkyScript
 from .so2sat import So2Sat
 from .soda import SODAA
+from .solar_plants_brazil import SolarPlantsBrazil
 from .south_africa_crop_type import SouthAfricaCropType
 from .south_america_soybean import SouthAmericaSoybean
 from .spacenet import (
@@ -325,6 +326,7 @@ __all__ = (
     'Sentinel2',
     'SkyScript',
     'So2Sat',
+    'SolarPlantsBrazil',
     'SouthAfricaCropType',
     'SouthAmericaSoybean',
     'SpaceNet',
