@@ -8,7 +8,7 @@ from collections.abc import Iterator
 
 import shapely
 import torch
-from shapely import Geometry
+from shapely import Polygon
 from torch import Generator
 from torch.utils.data import Sampler
 
@@ -26,7 +26,7 @@ class BatchGeoSampler(Sampler[list[BoundingBox]], abc.ABC):
     longitude, height, width, projection, coordinate system, and time.
     """
 
-    def __init__(self, dataset: GeoDataset, roi: Geometry | None = None) -> None:
+    def __init__(self, dataset: GeoDataset, roi: Polygon | None = None) -> None:
         """Initialize a new Sampler instance.
 
         Args:
@@ -67,7 +67,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         size: tuple[float, float] | float,
         batch_size: int,
         length: int | None = None,
-        roi: Geometry | None = None,
+        roi: Polygon | None = None,
         units: Units = Units.PIXELS,
         generator: Generator | None = None,
     ) -> None:
