@@ -138,7 +138,7 @@ class RandomGeoSampler(GeoSampler):
         if torch.sum(self.areas) == 0:
             self.areas += 1
 
-    def __iter__(self) -> Iterator[GeoSlice]:
+    def __iter__(self) -> Iterator[tuple[slice, slice, slice]]:
         """Return the index of a dataset.
 
         Yields:
@@ -229,7 +229,7 @@ class GridGeoSampler(GeoSampler):
             rows, cols = tile_to_chips(bounds, self.size, self.stride)
             self.length += rows * cols
 
-    def __iter__(self) -> Iterator[GeoSlice]:
+    def __iter__(self) -> Iterator[tuple[slice, slice, slice]]:
         """Return the index of a dataset.
 
         Yields:
@@ -305,7 +305,7 @@ class PreChippedGeoSampler(GeoSampler):
         self.shuffle = shuffle
         self.generator = generator
 
-    def __iter__(self) -> Iterator[GeoSlice]:
+    def __iter__(self) -> Iterator[tuple[slice, slice, slice]]:
         """Return the index of a dataset.
 
         Yields:

@@ -134,7 +134,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         if torch.sum(self.areas) == 0:
             self.areas += 1
 
-    def __iter__(self) -> Iterator[list[GeoSlice]]:
+    def __iter__(self) -> Iterator[list[tuple[slice, slice, slice]]]:  # type: ignore[override]
         """Return the indices of a dataset.
 
         Yields:
