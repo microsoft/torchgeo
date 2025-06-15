@@ -9,6 +9,7 @@ from functools import partial
 
 import shapely
 import torch
+from shapely import Polygon
 from torch import Generator
 from torch.utils.data import Sampler
 
@@ -26,21 +27,23 @@ class GeoSampler(Sampler[BoundingBox], abc.ABC):
     longitude, height, width, projection, coordinate system, and time.
     """
 
-    def __init__(self, dataset: GeoDataset, roi: BoundingBox | None = None) -> None:
+    def __init__(self, dataset: GeoDataset, roi: Polygon | None = None) -> None:
         """Initialize a new Sampler instance.
 
         Args:
             dataset: dataset to index from
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
         """
         self.index = dataset.index
         self.res = dataset.res
-        self.roi = roi or dataset.bounds
 
         if roi:
-            mask = shapely.box(roi.minx, roi.miny, roi.maxx, roi.maxy)
-            self.index = self.index.clip(mask)
+            self.roi = roi
+            self.index = self.index.clip(roi)
+        else:
+            bounds = dataset.bounds
+            self.roi = shapely.box(bounds.minx, bounds.miny, bounds.maxx, bounds.maxy)
 
     @abc.abstractmethod
     def __iter__(self) -> Iterator[BoundingBox]:
@@ -67,7 +70,7 @@ class RandomGeoSampler(GeoSampler):
         dataset: GeoDataset,
         size: tuple[float, float] | float,
         length: int | None = None,
-        roi: BoundingBox | None = None,
+        roi: Polygon | None = None,
         units: Units = Units.PIXELS,
         generator: Generator | None = None,
     ) -> None:
@@ -96,7 +99,7 @@ class RandomGeoSampler(GeoSampler):
                 (defaults to approximately the maximal number of non-overlapping
                 :term:`chips <chip>` of size ``size`` that could be sampled from
                 the dataset)
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
             generator: pseudo-random number generator (PRNG).
@@ -182,7 +185,7 @@ class GridGeoSampler(GeoSampler):
         dataset: GeoDataset,
         size: tuple[float, float] | float,
         stride: tuple[float, float] | float | None = None,
-        roi: BoundingBox | None = None,
+        roi: Polygon | None = None,
         units: Units = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
@@ -201,7 +204,7 @@ class GridGeoSampler(GeoSampler):
             dataset: dataset to index from
             size: dimensions of each :term:`patch`
             stride: distance to skip between each patch (defaults to *size*)
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` and ``stride`` are in pixel or CRS units
         """
@@ -281,7 +284,7 @@ class PreChippedGeoSampler(GeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        roi: BoundingBox | None = None,
+        roi: Polygon | None = None,
         shuffle: bool = False,
         generator: Generator | None = None,
     ) -> None:
@@ -294,7 +297,7 @@ class PreChippedGeoSampler(GeoSampler):
 
         Args:
             dataset: dataset to index from
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
             shuffle: if True, reshuffle data at every epoch
             generator: pseudo-random number generator (PRNG) used in combination with
