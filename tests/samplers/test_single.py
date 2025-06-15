@@ -97,14 +97,14 @@ class TestRandomGeoSampler:
         return RandomGeoSampler(dataset, size, length=10, units=units)
 
     def test_iter(self, sampler: RandomGeoSampler) -> None:
-        for query in sampler:
-            assert sampler.roi.minx <= query.minx <= query.maxx <= sampler.roi.maxx
-            assert sampler.roi.miny <= query.miny <= query.miny <= sampler.roi.maxy
-            assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
+        for x, y, t in sampler:
+            assert sampler.roi[0].start <= x.start <= x.stop <= sampler.roi[0].stop
+            assert sampler.roi[1].start <= y.start <= y.stop <= sampler.roi[1].stop
+            assert sampler.roi[2].start <= t.start <= t.stop <= sampler.roi[2].stop
 
-            assert math.isclose(query.maxx - query.minx, sampler.size[1])
-            assert math.isclose(query.maxy - query.miny, sampler.size[0])
-            assert query.maxt - query.mint == sampler.roi.maxt - sampler.roi.mint
+            assert math.isclose(x.stop - x.start, sampler.size[1])
+            assert math.isclose(y.stop - y.start, sampler.size[0])
+            assert t.stop - t.start == sampler.roi[2].stop - sampler.roi[2].start
 
     def test_len(self, sampler: RandomGeoSampler) -> None:
         assert len(sampler) == sampler.length
@@ -112,8 +112,10 @@ class TestRandomGeoSampler:
     def test_roi(self, dataset: CustomGeoDataset) -> None:
         roi = BoundingBox(0, 50, 0, 50, MINT, MAXT)
         sampler = RandomGeoSampler(dataset, 2, 10, roi=roi)
-        for query in sampler:
-            query in roi
+        for x, y, t in sampler:
+            assert roi.minx <= x.start <= x.stop <= roi.maxx
+            assert roi.miny <= y.start <= y.stop <= roi.maxy
+            assert roi.mint <= t.start <= t.stop <= roi.maxt
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]
@@ -134,7 +136,7 @@ class TestRandomGeoSampler:
         ds = CustomGeoDataset(geometry)
         sampler = RandomGeoSampler(ds, 1, 10)
         for bbox in sampler:
-            assert bbox == BoundingBox(0, 10, 0, 10, MINT, MAXT)
+            assert bbox == (slice(0, 10), slice(0, 10), slice(MINT, MAXT))
 
     def test_random_seed(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10)]

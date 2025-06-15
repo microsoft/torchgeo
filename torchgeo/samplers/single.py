@@ -7,6 +7,7 @@ import abc
 from collections.abc import Callable, Iterable, Iterator
 from functools import partial
 
+import pandas as pd
 import shapely
 import torch
 from torch import Generator
@@ -112,23 +113,22 @@ class RandomGeoSampler(GeoSampler):
 
         self.generator = generator
         self.length = 0
-        self.hits = []
+        self.bounds = []
+        self.intervals = []
         areas = []
         for hit in range(len(self.index)):
-            minx, miny, maxx, maxy = self.index.geometry.iloc[hit].bounds
-            mint, maxt = self.index.index[hit].left, self.index.index[hit].right
-            bounds = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
-            if (
-                bounds.maxx - bounds.minx >= self.size[1]
-                and bounds.maxy - bounds.miny >= self.size[0]
-            ):
-                if bounds.area > 0:
+            bounds = self.index.geometry.iloc[hit].bounds
+            xmin, ymin, xmax, ymax = bounds
+            tmin, tmax = self.index.index[hit].left, self.index.index[hit].right
+            if xmax - xmin >= self.size[1] and ymax - ymin >= self.size[0]:
+                if xmax > xmin and ymax > ymin:
                     rows, cols = tile_to_chips(bounds, self.size)
                     self.length += rows * cols
                 else:
                     self.length += 1
-                self.hits.append(bounds)
-                areas.append(bounds.area)
+                self.bounds.append(bounds)
+                self.intervals.append(pd.Interval(tmin, tmax))
+                areas.append((xmax - xmin) * (ymax - ymin))
 
         if length is not None:
             self.length = length
@@ -147,14 +147,15 @@ class RandomGeoSampler(GeoSampler):
         for _ in range(len(self)):
             # Choose a random tile, weighted by area
             idx = torch.multinomial(self.areas, 1)
-            bounds = self.hits[idx]
+            bounds = self.bounds[idx]
+            interval = self.intervals[idx]
 
             # Choose a random index within that tile
             bounding_box = get_random_bounding_box(
                 bounds, self.size, self.res, self.generator
             )
 
-            yield bounding_box
+            yield *bounding_box, slice(interval.left, interval.right)
 
     def __len__(self) -> int:
         """Return the number of samples in a single epoch.
