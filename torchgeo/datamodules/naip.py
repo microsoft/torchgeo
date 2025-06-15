@@ -99,9 +99,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
                 self.dataset, self.patch_size, self.patch_size, val_roi
             )
         if stage in ['test']:
-            test_roi = BoundingBox(
-                roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt
-            )
+            test_roi = BoundingBox(midx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt)
             self.test_sampler = GridGeoSampler(
                 self.dataset, self.patch_size, self.patch_size, test_roi
             )
