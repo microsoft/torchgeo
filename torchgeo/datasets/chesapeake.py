@@ -530,7 +530,7 @@ class ChesapeakeCVPR(GeoDataset):
         interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
         index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]  # type: ignore[misc]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
         sample: dict[str, Any] = {
             'image': [],

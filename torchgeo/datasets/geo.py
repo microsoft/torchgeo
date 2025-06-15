@@ -135,7 +135,9 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
             if query[i].step is not None:
                 out[i] = slice(out[i].start, out[i].stop, query[i].step)
 
-        return tuple(out)
+        geoslice = tuple(out)
+        assert len(geoslice) == 3
+        return geoslice
 
     @abc.abstractmethod
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
@@ -515,7 +517,7 @@ class RasterDataset(GeoDataset):
         interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
         index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]  # type: ignore[misc]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
         if index.empty:
             raise IndexError(
@@ -743,7 +745,7 @@ class VectorDataset(GeoDataset):
         interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
         index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]  # type: ignore[misc]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
         if index.empty:
             raise IndexError(
