@@ -10,7 +10,7 @@ from functools import partial
 import pandas as pd
 import shapely
 import torch
-from shapely import Geometry
+from shapely import Polygon
 from torch import Generator
 from torch.utils.data import Sampler
 
@@ -29,7 +29,7 @@ class GeoSampler(Sampler[GeoSlice], abc.ABC):
     longitude, height, width, projection, coordinate system, and time.
     """
 
-    def __init__(self, dataset: GeoDataset, roi: Geometry | None = None) -> None:
+    def __init__(self, dataset: GeoDataset, roi: Polygon | None = None) -> None:
         """Initialize a new Sampler instance.
 
         Args:
@@ -72,7 +72,7 @@ class RandomGeoSampler(GeoSampler):
         dataset: GeoDataset,
         size: tuple[float, float] | float,
         length: int | None = None,
-        roi: Geometry | None = None,
+        roi: Polygon | None = None,
         units: Units = Units.PIXELS,
         generator: Generator | None = None,
     ) -> None:
@@ -187,7 +187,7 @@ class GridGeoSampler(GeoSampler):
         dataset: GeoDataset,
         size: tuple[float, float] | float,
         stride: tuple[float, float] | float | None = None,
-        roi: Geometry | None = None,
+        roi: Polygon | None = None,
         units: Units = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
@@ -283,7 +283,7 @@ class PreChippedGeoSampler(GeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        roi: Geometry | None = None,
+        roi: Polygon | None = None,
         shuffle: bool = False,
         generator: Generator | None = None,
     ) -> None:
