@@ -660,6 +660,8 @@ UnionDataset
 Utilities
 ---------
 
+.. autoclass:: BoundingBox
+
 Collation Functions
 ^^^^^^^^^^^^^^^^^^^
 
