@@ -23,6 +23,7 @@ from torchgeo.datasets import (
     roi_split,
     time_series_split,
 )
+from torchgeo.datasets.utils import GeoSlice
 
 MINT = datetime(2025, 4, 24)
 MAXT = datetime(2025, 4, 25)
@@ -57,7 +58,7 @@ class CustomGeoDataset(GeoDataset):
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = (1, 1)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         return {'index': query}
 
 

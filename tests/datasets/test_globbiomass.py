@@ -14,7 +14,6 @@ from pyproj import CRS
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     GlobBiomass,
     IntersectionDataset,
@@ -86,8 +85,7 @@ class TestGlobBiomass:
         plt.close()
 
     def test_invalid_query(self, dataset: GlobBiomass) -> None:
-        query = BoundingBox(100, 100, 100, 100, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]
