@@ -983,8 +983,11 @@ class IntersectionDataset(GeoDataset):
             RuntimeError: if datasets have no spatiotemporal intersection
             ValueError: if either dataset is not a :class:`GeoDataset`
 
+        .. versionadded:: 0.8
+           The *spatial_only* parameter.
+
         .. versionadded:: 0.4
-            The *transforms* parameter.
+           The *transforms* parameter.
         """
         self.datasets = [dataset1, dataset2]
         self.collate_fn = collate_fn
