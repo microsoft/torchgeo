@@ -73,6 +73,38 @@ class TestEuroSAT:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             EuroSAT(tmp_path)
 
+    def test_missing_split_file(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+        """Test case where image folder exists but split file is missing."""
+        url = os.path.join('tests', 'data', 'eurosat') + os.sep
+        monkeypatch.setattr(EuroSAT, 'url', url)
+        dataset = EuroSAT(tmp_path, split='train', download=True)
+        os.remove(os.path.join(tmp_path, dataset.split_filenames['train']))
+        dataset = EuroSAT(tmp_path, split='train', download=True)
+        assert os.path.exists(os.path.join(tmp_path, dataset.split_filenames['train']))
+
+    def test_missing_split_file_no_download(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Test case where split file is missing and download=False."""
+        url = os.path.join('tests', 'data', 'eurosat') + os.sep
+        monkeypatch.setattr(EuroSAT, 'url', url)
+        dataset = EuroSAT(tmp_path, split='train', download=True)
+        os.remove(os.path.join(tmp_path, dataset.split_filenames['train']))
+        with pytest.raises(FileNotFoundError):
+            EuroSAT(tmp_path, split='train', download=False)
+
+    def test_different_datasets_same_root(
+        self, monkeypatch: MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Test downloading different dataset variants to same root directory."""
+        url = os.path.join('tests', 'data', 'eurosat') + os.sep
+        monkeypatch.setattr(EuroSAT, 'url', url)
+        monkeypatch.setattr(EuroSAT100, 'url', url)
+        dataset1 = EuroSAT(tmp_path, split='train', download=True)
+        dataset2 = EuroSAT100(tmp_path, split='train', download=True)
+        assert os.path.exists(os.path.join(tmp_path, dataset1.split_filenames['train']))
+        assert os.path.exists(os.path.join(tmp_path, dataset2.split_filenames['train']))
+
     def test_plot(self, dataset: EuroSAT) -> None:
         x = dataset[0].copy()
         dataset.plot(x, suptitle='Test')
