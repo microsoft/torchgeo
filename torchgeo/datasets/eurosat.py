@@ -190,30 +190,28 @@ class EuroSAT(NonGeoClassificationDataset):
         # Check if the files already exist
         filepath = os.path.join(self.root, self.base_dir)
         split_file = os.path.join(self.root, self.split_filenames[self.split])
-        if os.path.exists(filepath):
-            if os.path.exists(split_file):
-                return
-            # Download the split file if it does not exist
+
+        # Check split file
+        if not os.path.exists(split_file):
             if self.download:
                 download_url(
                     self.url + self.split_filenames[self.split],
                     self.root,
                     md5=self.split_md5s[self.split] if self.checksum else None,
                 )
-                return
+            else:
+                raise DatasetNotFoundError(self)
 
-        # Check if zip file already exists (if so then extract)
-        if self._check_integrity():
-            self._extract()
+        # Check image files
+        if os.path.exists(filepath):
             return
-
-        # Check if the user requested to download the dataset
-        if not self.download:
+        elif self._check_integrity():
+            self._extract()
+        elif self.download:
+            self._download()
+            self._extract()
+        else:
             raise DatasetNotFoundError(self)
-
-        # Download and extract the dataset
-        self._download()
-        self._extract()
 
     def _download(self) -> None:
         """Download the dataset."""
