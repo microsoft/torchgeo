@@ -11,6 +11,24 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 from torch.nn.modules import Conv2d, Module
+from torchvision.models.detection.transform import GeneralizedRCNNTransform
+
+
+class GeneralizedRCNNTransformNoOp(GeneralizedRCNNTransform):  # type: ignore[misc]
+    """GeneralizedRCNNTransform without the normalize and resize ops.
+
+    .. versionadded:: 0.8
+    """
+
+    def __init__(self) -> None:
+        """Initialize a new GeneralizedRCNNTransformNoOp instance."""
+        super().__init__(min_size=0, max_size=0, image_mean=[0], image_std=[1])
+
+    def resize(
+        self, image: Tensor, target: dict[str, Tensor] | None = None
+    ) -> tuple[Tensor, dict[str, Tensor] | None]:
+        """Skip resizing and return the image and target."""
+        return image, target
 
 
 def extract_backbone(path: str) -> tuple[str, 'OrderedDict[str, Tensor]']:

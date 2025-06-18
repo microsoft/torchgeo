@@ -352,7 +352,7 @@ class ChesapeakeCVPR(GeoDataset):
         'prior_extension': '402f41d07823c8faf7ea6960d7c4e17a',
     }
 
-    res = (1, 1)
+    _res = (1, 1)
 
     lc_cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {
         0: (0, 0, 0, 0),

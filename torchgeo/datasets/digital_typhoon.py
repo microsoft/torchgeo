@@ -9,6 +9,7 @@ import tarfile
 from collections.abc import Callable, Sequence
 from typing import Any, ClassVar, TypedDict
 
+import einops
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch
@@ -425,9 +426,10 @@ class DigitalTyphoon(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image, label = sample['image'], sample['label']
+        image, label = sample['image'].numpy(), sample['label'].numpy()
 
         image = percentile_normalization(image)
+        image = einops.rearrange(image, 'c h w -> h w c')
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
@@ -435,7 +437,7 @@ class DigitalTyphoon(NonGeoDataset):
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
-        ax.imshow(image.permute(1, 2, 0))
+        ax.imshow(image)
         ax.axis('off')
 
         if show_titles:

@@ -200,7 +200,7 @@ def get_patch(
         [coords0[:, 0].max(), coords0[:, 1].min()],
     ]
     old_size = (len(features['properties'][band]), len(features['properties'][band][0]))
-    new_size = raster[0].shape[:2]
+    new_size = (raster[0].shape[0], raster[0].shape[1])
     coords = adjust_coords(coords, old_size, new_size)
 
     return {'raster': raster, 'coords': coords, 'metadata': image.getInfo()}
