@@ -60,14 +60,14 @@ class TestEuroSAT:
         assert len(ds) == 4
 
     def test_already_downloaded(self, dataset: EuroSAT, tmp_path: Path) -> None:
-        type(dataset)(tmp_path)
+        type(dataset)(tmp_path, split=dataset.split)
 
     def test_already_downloaded_not_extracted(
         self, dataset: EuroSAT, tmp_path: Path
     ) -> None:
         shutil.rmtree(dataset.root)
         shutil.copy(dataset.url + dataset.filename, tmp_path)
-        type(dataset)(tmp_path)
+        type(dataset)(tmp_path, split=dataset.split)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
@@ -91,7 +91,7 @@ class TestEuroSAT:
         plt.close()
 
     def test_plot_rgb(self, dataset: EuroSAT, tmp_path: Path) -> None:
-        dataset = type(dataset)(tmp_path, bands=('B03',))
+        dataset = type(dataset)(tmp_path, split=dataset.split, bands=('B03',))
         with pytest.raises(
             RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):

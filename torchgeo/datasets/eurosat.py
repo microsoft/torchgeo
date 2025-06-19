@@ -184,7 +184,6 @@ class EuroSAT(NonGeoClassificationDataset):
         """Verify the integrity of the dataset."""
         # Check split file
         filename = os.path.join(self.root, self.split_filenames[self.split])
-        print(filename)
         if not os.path.isfile(filename):
             if self.download:
                 download_url(
@@ -193,7 +192,6 @@ class EuroSAT(NonGeoClassificationDataset):
                     md5=self.split_md5s[self.split] if self.checksum else None,
                 )
             else:
-                print('NO SPLIT')
                 raise DatasetNotFoundError(self)
 
         # Check image directory
