@@ -3,7 +3,6 @@
 
 import math
 from collections.abc import Iterator, Sequence
-from datetime import datetime
 from itertools import product
 
 import pandas as pd
@@ -20,8 +19,8 @@ from torchgeo.datasets import GeoDataset, stack_samples
 from torchgeo.datasets.utils import GeoSlice
 from torchgeo.samplers import BatchGeoSampler, RandomBatchGeoSampler, Units
 
-MINT = datetime(2025, 4, 24)
-MAXT = datetime(2025, 4, 25)
+MINT = pd.Timestamp(2025, 4, 24)
+MAXT = pd.Timestamp(2025, 4, 25)
 
 
 class CustomBatchGeoSampler(BatchGeoSampler):
@@ -120,6 +119,14 @@ class TestRandomBatchGeoSampler:
             for x, y, t in batch:
                 bbox = shapely.box(x.start, y.start, x.stop, y.stop)
                 assert roi.contains(bbox)
+
+    def test_toi(self, dataset: CustomGeoDataset) -> None:
+        toi = pd.Interval(pd.Timestamp(2025, 4, 24, 3), pd.Timestamp(2025, 4, 24, 9))
+        sampler = RandomBatchGeoSampler(dataset, 2, 2, 10, toi=toi)
+        for batch in sampler:
+            for x, y, t in batch:
+                bbox = pd.Interval(t.start, t.stop)
+                assert toi.overlaps(bbox)
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]

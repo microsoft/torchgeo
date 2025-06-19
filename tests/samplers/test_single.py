@@ -3,7 +3,6 @@
 
 import math
 from collections.abc import Iterator, Sequence
-from datetime import datetime
 from itertools import product
 
 import pandas as pd
@@ -27,8 +26,8 @@ from torchgeo.samplers import (
     tile_to_chips,
 )
 
-MINT = datetime(2025, 4, 24)
-MAXT = datetime(2025, 4, 25)
+MINT = pd.Timestamp(2025, 4, 24)
+MAXT = pd.Timestamp(2025, 4, 25)
 
 
 class CustomGeoSampler(GeoSampler):
@@ -112,7 +111,14 @@ class TestRandomGeoSampler:
         sampler = RandomGeoSampler(dataset, 2, 10, roi=roi)
         for x, y, t in sampler:
             bbox = shapely.box(x.start, y.start, x.stop, y.stop)
-            roi.contains(bbox)
+            assert roi.contains(bbox)
+
+    def test_toi(self, dataset: CustomGeoDataset) -> None:
+        toi = pd.Interval(pd.Timestamp(2025, 4, 24, 3), pd.Timestamp(2025, 4, 24, 9))
+        sampler = RandomGeoSampler(dataset, 2, 10, toi=toi)
+        for x, y, t in sampler:
+            bbox = pd.Interval(t.start, t.stop)
+            assert toi.overlaps(bbox)
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]
@@ -206,6 +212,13 @@ class TestGridGeoSampler:
             bbox = shapely.box(x.start, y.start, x.stop, y.stop)
             assert roi.intersects(bbox)
 
+    def test_toi(self, dataset: CustomGeoDataset) -> None:
+        toi = pd.Interval(pd.Timestamp(2025, 4, 24, 3), pd.Timestamp(2025, 4, 24, 9))
+        sampler = GridGeoSampler(dataset, 2, 1, toi=toi)
+        for x, y, t in sampler:
+            bbox = pd.Interval(t.start, t.stop)
+            assert toi.overlaps(bbox)
+
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 1, 1)]
         ds = CustomGeoDataset(geometry)
@@ -272,6 +285,13 @@ class TestPreChippedGeoSampler:
         for x, y, t in sampler:
             bbox = shapely.box(x.start, y.start, x.stop, y.stop)
             assert roi.equals(bbox)
+
+    def test_toi(self, dataset: CustomGeoDataset) -> None:
+        toi = pd.Interval(pd.Timestamp(2025, 4, 24, 3), pd.Timestamp(2025, 4, 24, 9))
+        sampler = PreChippedGeoSampler(dataset, toi=toi)
+        for x, y, t in sampler:
+            bbox = pd.Interval(t.start, t.stop)
+            assert toi.overlaps(bbox)
 
     def test_point_data(self) -> None:
         geometry = [shapely.Point(0, 0), shapely.Point(1, 1)]

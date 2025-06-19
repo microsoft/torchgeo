@@ -60,8 +60,8 @@ class BatchGeoSampler(Sampler[list[GeoSlice]], abc.ABC):
         if toi:
             self.toi = toi
             self.index = self.index.iloc[self.index.index.overlaps(toi)]
-            tmin = np.maximum(self.index.index.left, toi.left)
-            tmax = np.minimum(self.index.index.right, toi.right)
+            tmin = np.maximum(self.index.index.left, np.datetime64(toi.left))
+            tmax = np.minimum(self.index.index.right, np.datetime64(toi.right))
             self.index.index = pd.IntervalIndex.from_arrays(
                 tmin, tmax, closed='both', name='datetime'
             )
