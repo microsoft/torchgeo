@@ -15,7 +15,13 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoClassificationDataset
-from .utils import Path, check_integrity, download_url, extract_archive, rasterio_loader
+from .utils import (
+    Path,
+    download_and_extract_archive,
+    download_url,
+    extract_archive,
+    rasterio_loader,
+)
 
 
 class EuroSAT(NonGeoClassificationDataset):
@@ -126,11 +132,12 @@ class EuroSAT(NonGeoClassificationDataset):
            The *bands* parameter.
         """
         self.root = root
+        self.split = split
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
 
-        assert split in ['train', 'val', 'test']
+        assert self.split in {'train', 'val', 'test'}
 
         self._validate_bands(bands)
         self.bands = bands
@@ -173,53 +180,35 @@ class EuroSAT(NonGeoClassificationDataset):
 
         return sample
 
-    def _check_integrity(self) -> bool:
-        """Check integrity of dataset.
-
-        Returns:
-            True if dataset files are found and/or MD5s match, else False
-        """
-        integrity: bool = check_integrity(
-            os.path.join(self.root, self.filename), self.md5 if self.checksum else None
-        )
-        return integrity
-
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        # Check if the files already exist
-        filepath = os.path.join(self.root, self.base_dir)
-        if os.path.exists(filepath):
+        # Check split file
+        filename = os.path.join(self.root, self.split_filenames[self.split])
+        if not os.path.isfile(filename):
+            if self.download:
+                download_url(
+                    self.url + self.split_filenames[self.split],
+                    self.root,
+                    md5=self.split_md5s[self.split] if self.checksum else None,
+                )
+            else:
+                raise DatasetNotFoundError(self)
+
+        # Check image directory
+        directory = os.path.join(self.root, self.base_dir)
+        zipfile = os.path.join(self.root, self.filename)
+        if os.path.isdir(directory):
             return
-
-        # Check if zip file already exists (if so then extract)
-        if self._check_integrity():
-            self._extract()
-            return
-
-        # Check if the user requested to download the dataset
-        if not self.download:
-            raise DatasetNotFoundError(self)
-
-        # Download and extract the dataset
-        self._download()
-        self._extract()
-
-    def _download(self) -> None:
-        """Download the dataset."""
-        download_url(
-            self.url + self.filename, self.root, md5=self.md5 if self.checksum else None
-        )
-        for split in self.splits:
-            download_url(
-                self.url + self.split_filenames[split],
+        elif os.path.isfile(zipfile):
+            extract_archive(zipfile)
+        elif self.download:
+            download_and_extract_archive(
+                self.url + self.filename,
                 self.root,
-                md5=self.split_md5s[split] if self.checksum else None,
+                md5=self.md5 if self.checksum else None,
             )
-
-    def _extract(self) -> None:
-        """Extract the dataset."""
-        filepath = os.path.join(self.root, self.filename)
-        extract_archive(filepath)
+        else:
+            raise DatasetNotFoundError(self)
 
     def _validate_bands(self, bands: Sequence[str]) -> None:
         """Validate list of bands.

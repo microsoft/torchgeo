@@ -60,18 +60,42 @@ class TestEuroSAT:
         assert len(ds) == 4
 
     def test_already_downloaded(self, dataset: EuroSAT, tmp_path: Path) -> None:
-        type(dataset)(tmp_path)
+        type(dataset)(tmp_path, split=dataset.split)
 
     def test_already_downloaded_not_extracted(
         self, dataset: EuroSAT, tmp_path: Path
     ) -> None:
         shutil.rmtree(dataset.root)
         shutil.copy(dataset.url + dataset.filename, tmp_path)
-        type(dataset)(tmp_path)
+        type(dataset)(tmp_path, split=dataset.split)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             EuroSAT(tmp_path)
+
+    def test_missing_images_and_zip_no_download(self, tmp_path: Path) -> None:
+        """Ensure DatasetNotFoundError is raised if images and zip are missing and download=False."""
+        split_file = tmp_path / 'eurosat-train.txt'
+        split_file.write_text('dummy.tif\n')
+        with pytest.raises(DatasetNotFoundError):
+            EuroSAT(root=tmp_path, split='train', download=False)
+
+    def test_image_folder_present_split_file_missing(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        """Test that split file is downloaded if missing but image folder is present."""
+
+        image_dir = tmp_path / EuroSAT.base_dir
+        class_dir = image_dir / 'AnnualCrop'
+        class_dir.mkdir(parents=True, exist_ok=True)
+        (class_dir / 'AnnualCrop_1.tif').touch()
+        split_file = tmp_path / 'eurosat-train.txt'
+        assert not split_file.exists()
+        monkeypatch.setattr(
+            EuroSAT, 'url', os.path.join('tests', 'data', 'eurosat') + os.sep
+        )
+        EuroSAT(root=tmp_path, split='train', download=True)
+        assert split_file.exists()
 
     def test_plot(self, dataset: EuroSAT) -> None:
         x = dataset[0].copy()
@@ -84,7 +108,7 @@ class TestEuroSAT:
         plt.close()
 
     def test_plot_rgb(self, dataset: EuroSAT, tmp_path: Path) -> None:
-        dataset = type(dataset)(tmp_path, bands=('B03',))
+        dataset = type(dataset)(tmp_path, split=dataset.split, bands=('B03',))
         with pytest.raises(
             RGBBandsMissingError, match='Dataset does not contain some of the RGB bands'
         ):
