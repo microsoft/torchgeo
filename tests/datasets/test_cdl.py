@@ -16,7 +16,6 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     CDL,
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     UnionDataset,
@@ -70,9 +69,8 @@ class TestCDL:
         assert isinstance(ds, UnionDataset)
 
     def test_full_year(self, dataset: CDL) -> None:
-        bbox = dataset.bounds
         time = pd.Timestamp(2023, 6, 1)
-        query = BoundingBox(bbox.minx, bbox.maxx, bbox.miny, bbox.maxy, time, time)
+        query = (dataset.bounds[0], dataset.bounds[1], slice(time, time))
         dataset[query]
 
     def test_already_extracted(self, dataset: CDL) -> None:
@@ -117,8 +115,7 @@ class TestCDL:
             CDL(tmp_path)
 
     def test_invalid_query(self, dataset: CDL) -> None:
-        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

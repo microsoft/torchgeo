@@ -17,6 +17,7 @@ from shapely import Geometry, Point
 from torch.utils.data import DataLoader
 
 from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
+from torchgeo.datasets.utils import GeoSlice
 from torchgeo.samplers import (
     GeoSampler,
     GridGeoSampler,
@@ -31,9 +32,9 @@ MAXT = datetime(2025, 4, 25)
 
 
 class CustomGeoSampler(GeoSampler):
-    def __iter__(self) -> Iterator[BoundingBox]:
+    def __iter__(self) -> Iterator[GeoSlice]:
         for i in range(2):
-            yield BoundingBox(i, i, i, i, MINT, MAXT)
+            yield slice(i, i), slice(i, i), slice(MINT, MAXT)
 
 
 class CustomGeoDataset(GeoDataset):
@@ -46,7 +47,7 @@ class CustomGeoDataset(GeoDataset):
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, GeoSlice]:
         return {'index': query}
 
 
@@ -61,7 +62,7 @@ class TestGeoSampler:
         return CustomGeoSampler(dataset)
 
     def test_iter(self, sampler: CustomGeoSampler) -> None:
-        assert next(iter(sampler)) == BoundingBox(0, 0, 0, 0, MINT, MAXT)
+        assert next(iter(sampler)) == (slice(0, 0), slice(0, 0), slice(MINT, MAXT))
 
     def test_abstract(self, dataset: CustomGeoDataset) -> None:
         with pytest.raises(TypeError, match="Can't instantiate abstract class"):
@@ -96,14 +97,14 @@ class TestRandomGeoSampler:
         return RandomGeoSampler(dataset, size, length=10, units=units)
 
     def test_iter(self, sampler: RandomGeoSampler) -> None:
-        for query in sampler:
-            assert sampler.roi.minx <= query.minx <= query.maxx <= sampler.roi.maxx
-            assert sampler.roi.miny <= query.miny <= query.miny <= sampler.roi.maxy
-            assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
+        for x, y, t in sampler:
+            assert sampler.roi[0].start <= x.start <= x.stop <= sampler.roi[0].stop
+            assert sampler.roi[1].start <= y.start <= y.stop <= sampler.roi[1].stop
+            assert sampler.roi[2].start <= t.start <= t.stop <= sampler.roi[2].stop
 
-            assert math.isclose(query.maxx - query.minx, sampler.size[1])
-            assert math.isclose(query.maxy - query.miny, sampler.size[0])
-            assert query.maxt - query.mint == sampler.roi.maxt - sampler.roi.mint
+            assert math.isclose(x.stop - x.start, sampler.size[1])
+            assert math.isclose(y.stop - y.start, sampler.size[0])
+            assert t.stop - t.start == sampler.roi[2].stop - sampler.roi[2].start
 
     def test_len(self, sampler: RandomGeoSampler) -> None:
         assert len(sampler) == sampler.length
@@ -111,8 +112,10 @@ class TestRandomGeoSampler:
     def test_roi(self, dataset: CustomGeoDataset) -> None:
         roi = BoundingBox(0, 50, 0, 50, MINT, MAXT)
         sampler = RandomGeoSampler(dataset, 2, 10, roi=roi)
-        for query in sampler:
-            query in roi
+        for x, y, t in sampler:
+            assert roi.minx <= x.start <= x.stop <= roi.maxx
+            assert roi.miny <= y.start <= y.stop <= roi.maxy
+            assert roi.mint <= t.start <= t.stop <= roi.maxt
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]
@@ -133,7 +136,7 @@ class TestRandomGeoSampler:
         ds = CustomGeoDataset(geometry)
         sampler = RandomGeoSampler(ds, 1, 10)
         for bbox in sampler:
-            assert bbox == BoundingBox(0, 10, 0, 10, MINT, MAXT)
+            assert bbox == (slice(0, 10), slice(0, 10), slice(MINT, MAXT))
 
     def test_random_seed(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10)]
@@ -186,35 +189,38 @@ class TestGridGeoSampler:
         return GridGeoSampler(dataset, size, stride, units=units)
 
     def test_iter(self, sampler: GridGeoSampler) -> None:
-        for query in sampler:
+        for x, y, t in sampler:
             assert (
-                sampler.roi.minx
-                <= query.minx
-                <= query.maxx
-                < sampler.roi.maxx + sampler.stride[1]
+                sampler.roi[0].start
+                <= x.start
+                <= x.stop
+                < sampler.roi[0].stop + sampler.stride[1]
             )
             assert (
-                sampler.roi.miny
-                <= query.miny
-                <= query.miny
-                < sampler.roi.maxy + sampler.stride[0]
+                sampler.roi[1].start
+                <= y.start
+                <= y.stop
+                < sampler.roi[1].stop + sampler.stride[0]
             )
-            assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
+            assert sampler.roi[2].start <= t.start <= t.stop <= sampler.roi[2].stop
 
-            assert math.isclose(query.maxx - query.minx, sampler.size[1])
-            assert math.isclose(query.maxy - query.miny, sampler.size[0])
-            assert query.maxt - query.mint == sampler.roi.maxt - sampler.roi.mint
+            assert math.isclose(x.stop - x.start, sampler.size[1])
+            assert math.isclose(y.stop - y.start, sampler.size[0])
+            assert t.stop - t.start == sampler.roi[2].stop - sampler.roi[2].start
 
     def test_len(self, sampler: GridGeoSampler) -> None:
-        rows, cols = tile_to_chips(sampler.roi, sampler.size, sampler.stride)
+        bounds = sampler.index.total_bounds
+        rows, cols = tile_to_chips(bounds, sampler.size, sampler.stride)
         length = rows * cols * 2  # two items in dataset
         assert len(sampler) == length
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
         roi = BoundingBox(0, 50, 200, 250, MINT, MAXT)
         sampler = GridGeoSampler(dataset, 2, 1, roi=roi)
-        for query in sampler:
-            assert query in roi
+        for x, y, t in sampler:
+            assert roi.minx <= x.start <= x.stop < roi.maxx + sampler.stride[1]
+            assert roi.miny <= y.start <= y.stop < roi.maxy + sampler.stride[0]
+            assert roi.mint <= t.start <= t.stop <= roi.maxt
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 1, 1)]
@@ -226,8 +232,9 @@ class TestGridGeoSampler:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(0, 10, 10, 20)]
         ds = CustomGeoDataset(geometry)
         sampler = GridGeoSampler(ds, 2, 10)
-        for bbox in sampler:
-            assert bbox.area > 0
+        for x, y, t in sampler:
+            assert x.start < x.stop
+            assert y.start < y.stop
 
     def test_integer_multiple(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10)]
@@ -235,7 +242,7 @@ class TestGridGeoSampler:
         sampler = GridGeoSampler(ds, 10, 10, units=Units.CRS)
         iterator = iter(sampler)
         assert len(sampler) == 1
-        assert next(iterator) == BoundingBox(0, 10, 0, 10, MINT, MAXT)
+        assert next(iterator) == (slice(0, 10), slice(0, 10), slice(MINT, MAXT))
 
     def test_float_multiple(self) -> None:
         geometry = [shapely.box(0, 0, 6, 5)]
@@ -243,8 +250,8 @@ class TestGridGeoSampler:
         sampler = GridGeoSampler(ds, 5, 5, units=Units.CRS)
         iterator = iter(sampler)
         assert len(sampler) == 2
-        assert next(iterator) == BoundingBox(0, 5, 0, 5, MINT, MAXT)
-        assert next(iterator) == BoundingBox(5, 10, 0, 5, MINT, MAXT)
+        assert next(iterator) == (slice(0, 5), slice(0, 5), slice(MINT, MAXT))
+        assert next(iterator) == (slice(5, 10), slice(0, 5), slice(MINT, MAXT))
 
     @pytest.mark.slow
     @pytest.mark.parametrize('num_workers', [0, 1, 2])
@@ -278,8 +285,13 @@ class TestPreChippedGeoSampler:
     def test_roi(self, dataset: CustomGeoDataset) -> None:
         roi = BoundingBox(5, 15, 5, 15, MINT, MAXT)
         sampler = PreChippedGeoSampler(dataset, roi=roi)
-        for query in sampler:
-            assert query == roi
+        for x, y, t in sampler:
+            assert roi.minx == x.start
+            assert roi.maxx == x.stop
+            assert roi.miny == y.start
+            assert roi.maxy == y.stop
+            assert roi.mint == t.start
+            assert roi.maxt == t.stop
 
     def test_point_data(self) -> None:
         geometry = [shapely.Point(0, 0), shapely.Point(1, 1)]

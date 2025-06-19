@@ -6,17 +6,19 @@
 import abc
 from collections.abc import Iterator
 
+import pandas as pd
 import shapely
 import torch
 from torch import Generator
 from torch.utils.data import Sampler
 
 from ..datasets import BoundingBox, GeoDataset
+from ..datasets.utils import GeoSlice
 from .constants import Units
 from .utils import _to_tuple, get_random_bounding_box, tile_to_chips
 
 
-class BatchGeoSampler(Sampler[list[BoundingBox]], abc.ABC):
+class BatchGeoSampler(Sampler[list[GeoSlice]], abc.ABC):
     """Abstract base class for sampling from :class:`~torchgeo.datasets.GeoDataset`.
 
     Unlike PyTorch's :class:`~torch.utils.data.BatchSampler`, :class:`BatchGeoSampler`
@@ -42,11 +44,11 @@ class BatchGeoSampler(Sampler[list[BoundingBox]], abc.ABC):
             self.index = self.index.clip(mask)
 
     @abc.abstractmethod
-    def __iter__(self) -> Iterator[list[BoundingBox]]:
+    def __iter__(self) -> Iterator[list[GeoSlice]]:
         """Return a batch of indices of a dataset.
 
         Yields:
-            batch of (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+            Batch of [xmin:xmax, ymin:ymax, tmin:tmax] coordinates to index a dataset.
         """
 
 
@@ -108,23 +110,22 @@ class RandomBatchGeoSampler(BatchGeoSampler):
 
         self.batch_size = batch_size
         self.length = 0
-        self.hits = []
+        self.bounds = []
+        self.intervals = []
         areas = []
         for hit in range(len(self.index)):
-            minx, miny, maxx, maxy = self.index.geometry.iloc[hit].bounds
-            mint, maxt = self.index.index[hit].left, self.index.index[hit].right
-            bounds = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
-            if (
-                bounds.maxx - bounds.minx >= self.size[1]
-                and bounds.maxy - bounds.miny >= self.size[0]
-            ):
-                if bounds.area > 0:
+            bounds = self.index.geometry.iloc[hit].bounds
+            xmin, ymin, xmax, ymax = bounds
+            tmin, tmax = self.index.index[hit].left, self.index.index[hit].right
+            if xmax - xmin >= self.size[1] and ymax - ymin >= self.size[0]:
+                if xmax > xmin and ymax > ymin:
                     rows, cols = tile_to_chips(bounds, self.size)
                     self.length += rows * cols
                 else:
                     self.length += 1
-                self.hits.append(bounds)
-                areas.append(bounds.area)
+                self.bounds.append(bounds)
+                self.intervals.append(pd.Interval(tmin, tmax))
+                areas.append((xmax - xmin) * (ymax - ymin))
         if length is not None:
             self.length = length
 
@@ -133,16 +134,17 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         if torch.sum(self.areas) == 0:
             self.areas += 1
 
-    def __iter__(self) -> Iterator[list[BoundingBox]]:
+    def __iter__(self) -> Iterator[list[tuple[slice, slice, slice]]]:  # type: ignore[override]
         """Return the indices of a dataset.
 
         Yields:
-            batch of (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+            Batch of [xmin:xmax, ymin:ymax, tmin:tmax] coordinates to index a dataset.
         """
         for _ in range(len(self)):
             # Choose a random tile, weighted by area
             idx = torch.multinomial(self.areas, 1)
-            bounds = self.hits[idx]
+            bounds = self.bounds[idx]
+            interval = self.intervals[idx]
 
             # Choose random indices within that tile
             batch = []
@@ -150,7 +152,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
                 bounding_box = get_random_bounding_box(
                     bounds, self.size, self.res, self.generator
                 )
-                batch.append(bounding_box)
+                batch.append((*bounding_box, slice(interval.left, interval.right)))
 
             yield batch
 

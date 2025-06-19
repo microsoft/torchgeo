@@ -16,7 +16,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import BoundingBox, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, download_url, extract_archive
 
 
 class L8BiomeImage(RasterDataset):
@@ -63,15 +63,17 @@ class L8BiomeMask(RasterDataset):
     ordinal_map[192] = 3
     ordinal_map[255] = 4
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
         Returns:
-            sample of image, mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
+
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
         sample = super().__getitem__(query)
         sample['mask'] = self.ordinal_map[sample['mask']]

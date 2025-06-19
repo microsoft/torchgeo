@@ -14,7 +14,6 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     NCCM,
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     UnionDataset,
@@ -81,8 +80,7 @@ class TestNCCM:
             NCCM(tmp_path)
 
     def test_invalid_query(self, dataset: NCCM) -> None:
-        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

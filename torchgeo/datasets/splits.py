@@ -294,9 +294,9 @@ def time_series_split(
 
     .. versionadded:: 0.5
     """
-    minx, maxx, miny, maxy, mint, maxt = dataset.bounds
+    x, y, t = dataset.bounds
 
-    totalt = maxt - mint
+    totalt = t.stop - t.start
 
     if all(isinstance(x, int | float) for x in lengths):
         if any(n <= 0 for n in lengths):
@@ -311,7 +311,7 @@ def time_series_split(
 
     if all(isinstance(x, pd.Timedelta) for x in lengths):
         lengths = [
-            pd.Interval(mint + offset - length, mint + offset, closed='neither')
+            pd.Interval(t.start + offset - length, t.start + offset, closed='neither')
             for offset, length in zip(accumulate(lengths), lengths)
         ]
 
@@ -328,7 +328,7 @@ def time_series_split(
             pd.Timedelta(0) if i == len(lengths) - 1 else pd.Timedelta(1, unit='us')
         )
 
-        if start < mint or end > maxt:
+        if start < t.start or end > t.stop:
             raise ValueError(
                 "Pairs of timestamps in lengths can't be out of dataset's time bounds."
             )

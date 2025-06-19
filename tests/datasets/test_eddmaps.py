@@ -10,7 +10,6 @@ import pytest
 from matplotlib.figure import Figure
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     EDDMapS,
     IntersectionDataset,
@@ -44,11 +43,10 @@ class TestEDDMapS:
             EDDMapS(tmp_path)
 
     def test_invalid_query(self, dataset: EDDMapS) -> None:
-        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_plot(self, dataset: EDDMapS) -> None:
         sample = dataset[dataset.bounds]
