@@ -80,6 +80,38 @@ class TestEuroSAT:
         with pytest.raises(DatasetNotFoundError):
             EuroSAT(root=tmp_path, split='train', download=False)
 
+    def test_image_folder_present_split_file_missing(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        """Test that split file is downloaded if missing but image folder is present."""
+        image_dir = (
+            tmp_path
+            / 'ds'
+            / 'images'
+            / 'remote_sensing'
+            / 'otherDatasets'
+            / 'sentinel_2'
+            / 'tif'
+        )
+        class_dir = image_dir / 'AnnualCrop'
+        class_dir.mkdir(parents=True, exist_ok=True)
+        (class_dir / 'dummy.tif').touch()
+
+        split_file = tmp_path / 'eurosat-train.txt'
+        if split_file.exists():
+            split_file.unlink()
+
+        called = {}
+
+        def fake_download_url(url: str, root: str, md5: str) -> None:
+            called['url'] = url
+            split_file.write_text('dummy.tif\n')
+
+        monkeypatch.setattr('torchgeo.datasets.eurosat.download_url', fake_download_url)
+        EuroSAT(root=tmp_path, split='train', download=True)
+        assert split_file.exists()
+        assert called['url'].endswith('eurosat-train.txt')
+
     def test_plot(self, dataset: EuroSAT) -> None:
         x = dataset[0].copy()
         dataset.plot(x, suptitle='Test')
