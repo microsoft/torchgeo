@@ -6,6 +6,7 @@
 import abc
 from collections.abc import Iterator
 
+import numpy as np
 import pandas as pd
 import shapely
 import torch
@@ -28,12 +29,22 @@ class BatchGeoSampler(Sampler[list[GeoSlice]], abc.ABC):
     longitude, height, width, projection, coordinate system, and time.
     """
 
-    def __init__(self, dataset: GeoDataset, roi: Polygon | None = None) -> None:
+    def __init__(
+        self,
+        dataset: GeoDataset,
+        roi: Polygon | None = None,
+        toi: pd.Interval | None = None,
+    ) -> None:
         """Initialize a new Sampler instance.
+
+        .. versionadded:: 0.8
+           The *toi* parameter.
 
         Args:
             dataset: dataset to index from
             roi: region of interest to sample from
+                (defaults to the bounds of ``dataset.index``)
+            toi: time of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
         """
         self.index = dataset.index
@@ -45,6 +56,18 @@ class BatchGeoSampler(Sampler[list[GeoSlice]], abc.ABC):
         else:
             x, y, t = dataset.bounds
             self.roi = shapely.box(x.start, y.start, x.stop, y.stop)
+
+        if toi:
+            self.toi = toi
+            self.index = self.index.iloc[self.index.index.overlaps(toi)]
+            tmin = np.maximum(self.index.index.left, toi.left)
+            tmax = np.minimum(self.index.index.right, toi.right)
+            self.index.index = pd.IntervalIndex.from_arrays(
+                tmin, tmax, closed='both', name='datetime'
+            )
+        else:
+            x, y, t = dataset.bounds
+            self.toi = pd.Interval(t.start, t.stop)
 
     @abc.abstractmethod
     def __iter__(self) -> Iterator[list[GeoSlice]]:
@@ -70,6 +93,7 @@ class RandomBatchGeoSampler(BatchGeoSampler):
         batch_size: int,
         length: int | None = None,
         roi: Polygon | None = None,
+        toi: pd.Interval | None = None,
         units: Units = Units.PIXELS,
         generator: Generator | None = None,
     ) -> None:
@@ -89,7 +113,10 @@ class RandomBatchGeoSampler(BatchGeoSampler):
            ``length`` parameter is now optional, a reasonable default will be used
 
         .. versionadded:: 0.7
-            The *generator* parameter.
+           The *generator* parameter.
+
+        .. versionadded:: 0.8
+           The *toi* parameter.
 
         Args:
             dataset: dataset to index from
@@ -101,10 +128,12 @@ class RandomBatchGeoSampler(BatchGeoSampler):
                 the dataset)
             roi: region of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
+            toi: time of interest to sample from
+                (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
             generator: pseudo-random number generator (PRNG).
         """
-        super().__init__(dataset, roi)
+        super().__init__(dataset, roi, toi)
         self.size = _to_tuple(size)
         self.generator = generator
 
