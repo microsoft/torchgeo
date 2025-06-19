@@ -53,7 +53,7 @@ class SolarPlantsBrazil(NonGeoDataset):
 
     url = 'https://huggingface.co/datasets/FederCO23/solar-plants-brazil/resolve/main/solarplantsbrazil.zip'
     bands = ('Red', 'Green', 'Blue', 'NIR')
-    md5 = 'DFA0D3EFDEF4143A33B0E7BA834EAAFA'
+    md5 = 'dfa0d3efdef4143a33b0e7ba834eaafa'
 
     def __init__(
         self,
