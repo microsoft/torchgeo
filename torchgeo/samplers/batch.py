@@ -43,8 +43,8 @@ class BatchGeoSampler(Sampler[list[GeoSlice]], abc.ABC):
             self.roi = roi
             self.index = self.index.clip(roi)
         else:
-            bounds = dataset.bounds
-            self.roi = shapely.box(bounds.minx, bounds.miny, bounds.maxx, bounds.maxy)
+            x, y, t = dataset.bounds
+            self.roi = shapely.box(x.start, y.start, x.stop, y.stop)
 
     @abc.abstractmethod
     def __iter__(self) -> Iterator[list[GeoSlice]]:
