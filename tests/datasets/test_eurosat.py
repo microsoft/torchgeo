@@ -84,33 +84,18 @@ class TestEuroSAT:
         self, tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
         """Test that split file is downloaded if missing but image folder is present."""
-        image_dir = (
-            tmp_path
-            / 'ds'
-            / 'images'
-            / 'remote_sensing'
-            / 'otherDatasets'
-            / 'sentinel_2'
-            / 'tif'
-        )
+
+        image_dir = tmp_path / EuroSAT.base_dir
         class_dir = image_dir / 'AnnualCrop'
         class_dir.mkdir(parents=True, exist_ok=True)
-        (class_dir / 'dummy.tif').touch()
-
+        (class_dir / 'AnnualCrop_1.tif').touch()
         split_file = tmp_path / 'eurosat-train.txt'
-        if split_file.exists():
-            split_file.unlink()
-
-        called = {}
-
-        def fake_download_url(url: str, root: str, md5: str) -> None:
-            called['url'] = url
-            split_file.write_text('dummy.tif\n')
-
-        monkeypatch.setattr('torchgeo.datasets.eurosat.download_url', fake_download_url)
+        assert not split_file.exists()
+        monkeypatch.setattr(
+            EuroSAT, 'url', os.path.join('tests', 'data', 'eurosat') + os.sep
+        )
         EuroSAT(root=tmp_path, split='train', download=True)
         assert split_file.exists()
-        assert called['url'].endswith('eurosat-train.txt')
 
     def test_plot(self, dataset: EuroSAT) -> None:
         x = dataset[0].copy()
