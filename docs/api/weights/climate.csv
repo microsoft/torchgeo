@@ -1,8 +1,0 @@
-Weight,Sensor,Source,Citation,License
-Aurora_Weights.HRES_T0_PRETRAINED_AURORA,HRES-T0,`link <https://github.com/microsoft/aurora>`__,`link <https://arxiv.org/abs/2405.13063>`__,"MIT"
-Aurora_Weights.HRES_T0_PRETRAINED_12HR_AURORA,HRES-T0,`link <https://github.com/microsoft/aurora>`__,`link <https://arxiv.org/abs/2405.13063>`__,"MIT"
-Aurora_Weights.HRES_T0_PRETRAINED_SMALL_AURORA,HRES-T0,`link <https://github.com/microsoft/aurora>`__,`link <https://arxiv.org/abs/2405.13063>`__,"MIT"
-Aurora_Weights.HRES_T0_AURORA,HRES-T0,`link <https://github.com/microsoft/aurora>`__,`link <https://arxiv.org/abs/2405.13063>`__,"MIT"
-Aurora_Weights.HRES_T0_HIGH_RES_AURORA,HRES-T0,`link <https://github.com/microsoft/aurora>`__,`link <https://arxiv.org/abs/2405.13063>`__,"MIT"
-Aurora_Weights.HRES_CAMS_AIR_POLLUTION_AURORA,HRES-CAMS,`link <https://github.com/microsoft/aurora>`__,`link <https://arxiv.org/abs/2405.13063>`__,"MIT"
-Aurora_Weights.HRES_WAM0_WAVE_AURORA,HRES-WAM0,`link <https://github.com/microsoft/aurora>`__,`link <https://arxiv.org/abs/2405.13063>`__,"MIT"

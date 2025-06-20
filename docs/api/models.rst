@@ -191,11 +191,11 @@ Sentinel-2
    :file: weights/sentinel2.csv
 
 
-Climate
+Atmospheric
 -------
 
 .. csv-table::
-   :widths: 45 10 10 10 10
+   :widths: 45 10 10 10 10 10
    :header-rows: 1
    :align: center
-   :file: weights/climate.csv
+   :file: weights/atmospheric.csv
