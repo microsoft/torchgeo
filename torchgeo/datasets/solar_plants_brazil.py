@@ -51,7 +51,8 @@ class SolarPlantsBrazil(NonGeoDataset):
 
     """
 
-    url = 'https://huggingface.co/datasets/FederCO23/solar-plants-brazil/resolve/main/solarplantsbrazil.zip'
+    url = 'https://huggingface.co/datasets/FederCO23/solar-plants-brazil/resolve/1dc13a453ef6acabf08a1781c523fd1db3d9bcc5/solarplantsbrazil.zip'
+
     bands = ('Red', 'Green', 'Blue', 'NIR')
     md5 = 'dfa0d3efdef4143a33b0e7ba834eaafa'
 
@@ -66,19 +67,15 @@ class SolarPlantsBrazil(NonGeoDataset):
         """Initialize a SolarPlantsBrazil dataset split.
 
         Args:
-            root: Root directory where dataset is stored.
-            split: Dataset split to use, one of "train", "val", or "test".
-            transforms: Optional transforms to apply.
-            download: If True, download the dataset if it doesn't exist.
-            checksum: If True, verify MD5 checksum of the downloaded file.
+            root: root directory where dataset can be found
+            split: dataset split to use, one of "train", "val", or "test"
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If the dataset is not found and
-                ``download=False``.
-
-        Returns:
-            None
-
+            DatasetNotFoundError: If dataset is not found and *download* is False
         """
         if split not in ['train', 'val', 'test']:
             raise ValueError(
@@ -94,27 +91,27 @@ class SolarPlantsBrazil(NonGeoDataset):
 
         self._verify()
 
-        self.image_paths = sorted(
-            glob.glob(os.path.join(self.dataset_path, 'input', 'img(*).tif'))
-        )
-        self.mask_paths = sorted(
-            glob.glob(os.path.join(self.dataset_path, 'labels', 'target(*).tif'))
-        )
-
-        if len(self.image_paths) == 0:
-            raise DatasetNotFoundError(self)
-
-        assert len(self.image_paths) == len(self.mask_paths), (
-            'Mismatch between image and mask files'
-        )
-
     def _verify(self) -> None:
-        """Verify the dataset exists or download it.
+        """Verify the integrity of the dataset."""
+        expected_dirs = [
+            os.path.join(self.dataset_path, 'input'),
+            os.path.join(self.dataset_path, 'labels'),
+        ]
 
-        Returns:
-            None
-        """
-        if os.path.exists(self.dataset_path) and os.listdir(self.dataset_path):
+        if all(os.path.exists(d) and len(os.listdir(d)) > 0 for d in expected_dirs):
+            self.image_paths = sorted(
+                glob.glob(os.path.join(self.dataset_path, 'input', 'img(*).tif'))
+            )
+            self.mask_paths = sorted(
+                glob.glob(os.path.join(self.dataset_path, 'labels', 'target(*).tif'))
+            )
+
+            if len(self.image_paths) == 0:
+                raise DatasetNotFoundError(self)
+
+            assert len(self.image_paths) == len(self.mask_paths), (
+                'Mismatch between image and mask files'
+            )
             return
 
         if not self.download:
@@ -123,11 +120,7 @@ class SolarPlantsBrazil(NonGeoDataset):
         self._download()
 
     def _download(self) -> None:
-        """Download the dataset archive from Hugging Face and extract it.
-
-        Returns:
-            None
-        """
+        """Download the dataset."""
         download_and_extract_archive(
             url=self.url,
             download_root=self.root,
@@ -136,15 +129,13 @@ class SolarPlantsBrazil(NonGeoDataset):
         )
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
-        """Retrieve an image-mask pair by index.
+        """Return the image and mask at the given index.
 
         Args:
-            index (int): Index of the sample to retrieve.
+            index: index of the image and mask to return
 
         Returns:
-            dict: A dictionary with the following keys:
-                - 'image': A float32 tensor of shape (C, H, W)
-                - 'mask': A long tensor of shape (1, H, W), containing binary labels
+            image and mask at given index
         """
         image = self._load_image(self.image_paths[index])
         mask = self._load_mask(self.mask_paths[index])

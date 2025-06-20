@@ -24,6 +24,9 @@ class SolarPlantsBrazilDataModule(NonGeoDataModule):
     This datamodule wraps the SolarPlantsBrazil dataset, which contains
     predefined train/val/test splits. This design ensures spatial separation
     between samples by solar plant, preventing data leakage during training.
+
+    .. versionadded:: 0.8
+
     """
 
     def __init__(
