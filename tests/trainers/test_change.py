@@ -167,8 +167,21 @@ class TestChangeDetectionTask:
         'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
     )
     def test_freeze_backbone(
-        self, model_name: Literal['unet', 'fcsiamdiff', 'fcsiamconc'], backbone: str
+        self,
+        model_name: Literal[
+            'unet',
+            'deeplabv3+',
+            'segformer',
+            'upernet',
+            'dpt',
+            'fcsiamdiff',
+            'fcsiamconc',
+        ],
+        backbone: str,
     ) -> None:
+        if not (backbone == 'tu-vit_base_patch16_224' and model_name == 'dpt'):
+            pytest.skip('dpt model only supports vit backbones')
+
         model = ChangeDetectionTask(
             model=model_name, backbone=backbone, freeze_backbone=True
         )
@@ -183,11 +196,34 @@ class TestChangeDetectionTask:
             ]
         )
 
-    @pytest.mark.parametrize('model_name', ['unet', 'fcsiamdiff', 'fcsiamconc'])
+    @pytest.mark.parametrize(
+        'model_name',
+        [
+            'unet',
+            'deeplabv3+',
+            'segformer',
+            'upernet',
+            'dpt',
+            'fcsiamdiff',
+            'fcsiamconc',
+        ],
+    )
     def test_freeze_decoder(
-        self, model_name: Literal['unet', 'fcsiamdiff', 'fcsiamconc']
+        self,
+        model_name: Literal[
+            'unet',
+            'deeplabv3+',
+            'segformer',
+            'upernet',
+            'dpt',
+            'fcsiamdiff',
+            'fcsiamconc',
+        ],
     ) -> None:
-        model = ChangeDetectionTask(model=model_name, freeze_decoder=True)
+        backbone = 'resnet18' if model_name != 'dpt' else 'tu-vit_base_patch16_224'
+        model = ChangeDetectionTask(
+            model=model_name, backbone=backbone, freeze_decoder=True
+        )
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]
         )

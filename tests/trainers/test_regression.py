@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import pytest
 import segmentation_models_pytorch as smp
@@ -340,13 +340,13 @@ class TestPixelwiseRegressionTask:
         'backbone',
         ['resnet18', 'mobilenet_v2', 'efficientnet-b0', 'tu-vit_base_patch16_224'],
     )
-    def test_freeze_backbone(self, model_name: str, backbone: str) -> None:
-        if backbone == 'tu-vit_base_patch16_224':
-            if model_name != 'dpt':
-                return
-        else:
-            if model_name == 'dpt':
-                return
+    def test_freeze_backbone(
+        self,
+        model_name: Literal['unet', 'deeplabv3+', 'segformer', 'upernet', 'dpt'],
+        backbone: str,
+    ) -> None:
+        if not (backbone == 'tu-vit_base_patch16_224' and model_name == 'dpt'):
+            pytest.skip('dpt model only supports vit backbones')
 
         model = PixelwiseRegressionTask(
             model=model_name, backbone=backbone, freeze_backbone=True
@@ -365,7 +365,9 @@ class TestPixelwiseRegressionTask:
     @pytest.mark.parametrize(
         'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet', 'dpt']
     )
-    def test_freeze_decoder(self, model_name: str) -> None:
+    def test_freeze_decoder(
+        self, model_name: Literal['unet', 'deeplabv3+', 'segformer', 'upernet', 'dpt']
+    ) -> None:
         backbone = 'resnet18' if model_name != 'dpt' else 'tu-vit_base_patch16_224'
         model = PixelwiseRegressionTask(
             model=model_name, backbone=backbone, freeze_decoder=True
