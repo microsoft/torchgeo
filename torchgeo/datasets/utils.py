@@ -29,6 +29,7 @@ from torchvision.datasets.utils import (
     extract_archive,
 )
 from torchvision.utils import draw_segmentation_masks
+from typing_extensions import deprecated
 
 from .errors import DependencyNotFoundError
 
@@ -48,6 +49,7 @@ Path: TypeAlias = str | os.PathLike[str]
 
 
 @dataclass(frozen=True)
+@deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')
 class BoundingBox:
     """Data class for indexing spatiotemporal data."""
 
