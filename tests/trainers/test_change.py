@@ -179,7 +179,7 @@ class TestChangeDetectionTask:
         ],
         backbone: str,
     ) -> None:
-        if not (backbone == 'tu-vit_base_patch16_224' and model_name == 'dpt'):
+        if model_name == 'dpt' and not backbone.startswith('tu-vit'):
             pytest.skip('dpt model only supports vit backbones')
 
         model = ChangeDetectionTask(
