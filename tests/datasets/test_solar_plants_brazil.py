@@ -35,8 +35,8 @@ class TestSolarPlantsBrazil:
         assert len(dataset) == 1
 
     def test_plot(self, dataset: SolarPlantsBrazil) -> None:
-        sample = dataset[0].copy()
-        sample['prediction'] = sample['mask'].clone()
+        sample = dataset[0]
+        sample['prediction'] = sample['mask']
         dataset.plot(sample, suptitle='Test')
         plt.close()
 
