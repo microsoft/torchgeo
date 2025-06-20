@@ -6,11 +6,11 @@
 from typing import Any
 
 import kornia.augmentation as K
+import shapely
 from matplotlib.figure import Figure
 
 from ..datasets import (
     NAIP,
-    BoundingBox,
     ChesapeakeDC,
     ChesapeakeDE,
     ChesapeakeMD,
@@ -87,17 +87,17 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         midy = y.start + (y.stop - y.start) / 2
 
         if stage in ['fit']:
-            train_roi = BoundingBox(x.start, midx, y.start, y.stop, t.start, t.stop)
+            train_roi = shapely.box(x.start, y.start, midx, y.stop)
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.dataset, self.patch_size, self.batch_size, self.length, train_roi
             )
         if stage in ['fit', 'validate']:
-            val_roi = BoundingBox(midx, x.stop, y.start, midy, t.start, t.stop)
+            val_roi = shapely.box(midx, y.start, x.stop, midy)
             self.val_sampler = GridGeoSampler(
                 self.dataset, self.patch_size, self.patch_size, val_roi
             )
         if stage in ['test']:
-            test_roi = BoundingBox(midx, x.stop, midy, y.stop, t.start, t.stop)
+            test_roi = shapely.box(midx, midy, x.stop, y.stop)
             self.test_sampler = GridGeoSampler(
                 self.dataset, self.patch_size, self.patch_size, test_roi
             )

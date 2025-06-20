@@ -3,7 +3,6 @@
 
 import math
 from collections.abc import Iterator, Sequence
-from datetime import datetime
 from itertools import product
 
 import pandas as pd
@@ -16,12 +15,12 @@ from pyproj import CRS
 from shapely import Geometry
 from torch.utils.data import DataLoader
 
-from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
+from torchgeo.datasets import GeoDataset, stack_samples
 from torchgeo.datasets.utils import GeoSlice
 from torchgeo.samplers import BatchGeoSampler, RandomBatchGeoSampler, Units
 
-MINT = datetime(2025, 4, 24)
-MAXT = datetime(2025, 4, 25)
+MINT = pd.Timestamp(2025, 4, 24)
+MAXT = pd.Timestamp(2025, 4, 25)
 
 
 class CustomBatchGeoSampler(BatchGeoSampler):
@@ -104,25 +103,30 @@ class TestRandomBatchGeoSampler:
     def test_iter(self, sampler: RandomBatchGeoSampler) -> None:
         for batch in sampler:
             for x, y, t in batch:
-                assert sampler.roi[0].start <= x.start <= x.stop <= sampler.roi[0].stop
-                assert sampler.roi[1].start <= y.start <= y.stop <= sampler.roi[1].stop
-                assert sampler.roi[2].start <= t.start <= t.stop <= sampler.roi[2].stop
+                bbox = shapely.box(x.start, y.start, x.stop, y.stop)
+                assert sampler.roi.contains(bbox)
 
                 assert math.isclose(x.stop - x.start, sampler.size[1])
                 assert math.isclose(y.stop - y.start, sampler.size[0])
-                assert t.stop - t.start == sampler.roi[2].stop - sampler.roi[2].start
 
     def test_len(self, sampler: RandomBatchGeoSampler) -> None:
         assert len(sampler) == sampler.length // sampler.batch_size
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
-        roi = BoundingBox(0, 50, 0, 50, MINT, MAXT)
+        roi = shapely.box(0, 0, 50, 50)
         sampler = RandomBatchGeoSampler(dataset, 2, 2, 10, roi=roi)
         for batch in sampler:
             for x, y, t in batch:
-                assert roi.minx <= x.start <= x.stop <= roi.maxx
-                assert roi.miny <= y.start <= y.stop <= roi.maxy
-                assert roi.mint <= t.start <= t.stop <= roi.maxt
+                bbox = shapely.box(x.start, y.start, x.stop, y.stop)
+                assert roi.contains(bbox)
+
+    def test_toi(self, dataset: CustomGeoDataset) -> None:
+        toi = pd.Interval(pd.Timestamp(2025, 4, 24, 3), pd.Timestamp(2025, 4, 24, 9))
+        sampler = RandomBatchGeoSampler(dataset, 2, 2, 10, toi=toi)
+        for batch in sampler:
+            for x, y, t in batch:
+                bbox = pd.Interval(t.start, t.stop)
+                assert toi.overlaps(bbox)
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]
