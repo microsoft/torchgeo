@@ -208,9 +208,9 @@ def test_roi_split() -> None:
     train_ds, val_ds, test_ds = roi_split(
         ds,
         rois=[
-            BoundingBox(0, 2, 0, 1, MINT, MAXT),
-            BoundingBox(2, 3.5, 0, 1, MINT, MAXT),
-            BoundingBox(3.5, 4, 0, 1, MINT, MAXT),
+            shapely.box(0, 0, 2, 1),
+            shapely.box(2, 0, 3.5, 1),
+            shapely.box(3.5, 0, 4, 1),
         ],
     )
 
@@ -234,13 +234,7 @@ def test_roi_split() -> None:
 
     # Test invalid input rois
     with pytest.raises(ValueError, match="ROIs in input rois can't overlap."):
-        roi_split(
-            ds,
-            rois=[
-                BoundingBox(0, 2, 0, 1, MINT, MAXT),
-                BoundingBox(1, 3, 0, 1, MINT, MAXT),
-            ],
-        )
+        roi_split(ds, rois=[shapely.box(0, 0, 2, 1), shapely.box(1, 0, 3, 1)])
 
 
 @pytest.mark.parametrize(
