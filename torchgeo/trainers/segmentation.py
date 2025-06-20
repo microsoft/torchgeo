@@ -137,21 +137,21 @@ class SemanticSegmentationTask(BaseTask):
                     encoder_name=backbone,
                     encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels,
-                    classes=1,
+                    classes=num_classes,
                 )
             case 'segformer':
                 self.model = smp.Segformer(
                     encoder_name=backbone,
                     encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels,
-                    classes=1,
+                    classes=num_classes,
                 )
             case 'dpt':
                 self.model = smp.DPT(
                     encoder_name=backbone,
                     encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels,
-                    classes=1,
+                    classes=num_classes,
                 )
         if model != 'fcn':
             if weights and weights is not True:
