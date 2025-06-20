@@ -15,7 +15,6 @@ from shapely import Geometry, Polygon
 from torch import Generator
 
 from torchgeo.datasets import (
-    BoundingBox,
     GeoDataset,
     random_bbox_assignment,
     random_bbox_splitting,
