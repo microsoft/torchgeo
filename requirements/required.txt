@@ -7,7 +7,7 @@ fiona==1.10.1
 geopandas==1.0.1
 kornia==0.8.1
 lightly==1.5.21
-lightning[pytorch-extra]==2.5.1.post0
+lightning[pytorch-extra]==2.5.2
 matplotlib==3.10.1
 numpy==2.2.4
 pandas==2.3.0
