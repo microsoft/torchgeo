@@ -958,6 +958,7 @@ class IntersectionDataset(GeoDataset):
         self,
         dataset1: GeoDataset,
         dataset2: GeoDataset,
+        spatial_only: bool = False,
         collate_fn: Callable[
             [Sequence[dict[str, Any]]], dict[str, Any]
         ] = concat_samples,
@@ -973,6 +974,7 @@ class IntersectionDataset(GeoDataset):
         Args:
             dataset1: the first dataset
             dataset2: the second dataset
+            spatial_only: if True, ignore temporal dimension when computing intersection
             collate_fn: function used to collate samples
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
@@ -981,8 +983,11 @@ class IntersectionDataset(GeoDataset):
             RuntimeError: if datasets have no spatiotemporal intersection
             ValueError: if either dataset is not a :class:`GeoDataset`
 
+        .. versionadded:: 0.8
+           The *spatial_only* parameter.
+
         .. versionadded:: 0.4
-            The *transforms* parameter.
+           The *transforms* parameter.
         """
         self.datasets = [dataset1, dataset2]
         self.collate_fn = collate_fn
@@ -1002,21 +1007,27 @@ class IntersectionDataset(GeoDataset):
             index1, index2, how='intersection', keep_geom_type=True
         )
 
-        # Temporal intersection
-        datetime_1 = pd.IntervalIndex(self.index.pop('datetime_1'))
-        datetime_2 = pd.IntervalIndex(self.index.pop('datetime_2'))
-        mint = np.maximum(datetime_1.left, datetime_2.left)
-        maxt = np.minimum(datetime_1.right, datetime_2.right)
-        valid = maxt >= mint
-        mint = mint[valid]
-        maxt = maxt[valid]
-        self.index = self.index[valid]
-        self.index.index = pd.IntervalIndex.from_arrays(
-            mint, maxt, closed='both', name='datetime'
-        )
-
         if self.index.empty:
-            raise RuntimeError('Datasets have no spatiotemporal intersection')
+            raise RuntimeError('Datasets have no spatial intersection')
+
+        # Temporal intersection
+        if not spatial_only:
+            datetime_1 = pd.IntervalIndex(self.index.pop('datetime_1'))
+            datetime_2 = pd.IntervalIndex(self.index.pop('datetime_2'))
+            mint = np.maximum(datetime_1.left, datetime_2.left)
+            maxt = np.minimum(datetime_1.right, datetime_2.right)
+            valid = maxt >= mint
+            mint = mint[valid]
+            maxt = maxt[valid]
+            self.index = self.index[valid]
+            self.index.index = pd.IntervalIndex.from_arrays(
+                mint, maxt, closed='both', name='datetime'
+            )
+
+            if self.index.empty:
+                msg = 'Datasets have no temporal intersection. Use `spatial_only=True`'
+                msg += ' if you want to ignore temporal intersection'
+                raise RuntimeError(msg)
 
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.

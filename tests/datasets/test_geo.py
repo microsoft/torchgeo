@@ -821,6 +821,20 @@ class TestIntersectionDataset:
         assert shapely.box(1, 1, 3, 3) in ds.index.geometry
         assert shapely.box(2, 2, 3, 3) in ds.index.geometry
 
+        bounds1 = [(0, 2, 0, 2, pd.Timestamp(2025, 4, 1), pd.Timestamp(2025, 4, 2))]
+        bounds2 = [(1, 3, 1, 3, pd.Timestamp(2025, 4, 3), pd.Timestamp(2025, 4, 4))]
+        ds1 = CustomGeoDataset(bounds1)
+        ds2 = CustomGeoDataset(bounds2)
+        ds = IntersectionDataset(ds1, ds2, spatial_only=True)
+        assert len(ds) == 1
+        assert shapely.box(1, 1, 2, 2) in ds.index.geometry
+
+        ds1 = CustomGeoDataset([(0, 1, 0, 1, MINT, MAXT)])
+        ds2 = CustomGeoDataset([(2, 3, 2, 3, MINT, MAXT)])
+        msg = 'Datasets have no spatial intersection'
+        with pytest.raises(RuntimeError, match=msg):
+            IntersectionDataset(ds1, ds2)
+
     def test_temporal_intersection(self) -> None:
         bounds1 = [
             (0, 1, 0, 1, pd.Timestamp(2025, 4, 1), pd.Timestamp(2025, 4, 3)),
@@ -839,6 +853,14 @@ class TestIntersectionDataset:
         assert ds.index.index[0].right == pd.Timestamp(2025, 4, 3)
         assert ds.index.index[1].left == pd.Timestamp(2025, 4, 4)
         assert ds.index.index[1].right == pd.Timestamp(2025, 4, 5)
+
+        bounds1 = [(0, 1, 0, 1, pd.Timestamp(2025, 4, 1), pd.Timestamp(2025, 4, 2))]
+        bounds2 = [(0, 1, 0, 1, pd.Timestamp(2025, 4, 3), pd.Timestamp(2025, 4, 4))]
+        ds1 = CustomGeoDataset(bounds1)
+        ds2 = CustomGeoDataset(bounds2)
+        msg = 'Datasets have no temporal intersection'
+        with pytest.raises(RuntimeError, match=msg):
+            IntersectionDataset(ds1, ds2)
 
     def test_spatiotemporal_intersection(self) -> None:
         bounds1 = [
@@ -866,21 +888,21 @@ class TestIntersectionDataset:
     def test_point_dataset(self) -> None:
         ds1 = CustomGeoDataset([(0, 2, 2, 4, MINT, MAXT)])
         ds2 = CustomGeoDataset([(1, 1, 3, 3, MINT, MINT)])
-        msg = 'Datasets have no spatiotemporal intersection'
+        msg = 'Datasets have no spatial intersection'
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
 
     def test_no_overlap(self) -> None:
         ds1 = CustomGeoDataset([(0, 1, 2, 3, MINT, MINT)])
         ds2 = CustomGeoDataset([(6, 7, 8, 9, MAXT, MAXT)])
-        msg = 'Datasets have no spatiotemporal intersection'
+        msg = 'Datasets have no spatial intersection'
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
 
     def test_grid_overlap(self) -> None:
         ds1 = CustomGeoDataset([(0, 1, 2, 3, MINT, MAXT)])
         ds2 = CustomGeoDataset([(1, 2, 3, 4, MAXT, MAXT)])
-        msg = 'Datasets have no spatiotemporal intersection'
+        msg = 'Datasets have no spatial intersection'
         with pytest.raises(RuntimeError, match=msg):
             IntersectionDataset(ds1, ds2)
 
