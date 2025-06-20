@@ -3,12 +3,15 @@
 
 """TorchGeo intensity transforms."""
 
+from collections.abc import Sequence
+
 import torch
+from einops import rearrange
 from kornia.augmentation import IntensityAugmentationBase2D
 from torch import Tensor
 
 
-class ToDecibelScale(IntensityAugmentationBase2D):
+class PowerToDecibel(IntensityAugmentationBase2D):
     """Convert input tensor of power values to decibel scale.
 
     Primarily used for converting SAR pixel values to decibel scale.
@@ -19,7 +22,7 @@ class ToDecibelScale(IntensityAugmentationBase2D):
     def __init__(
         self, shift: float = 0.0, scale: float = 1.0, keepdim: bool = False
     ) -> None:
-        """Initialize a new ToDecibelScale instance.
+        """Initialize a new PowerToDecibel instance.
 
         Args:
             shift: The value to add to the decibel scale.
@@ -53,12 +56,12 @@ class ToDecibelScale(IntensityAugmentationBase2D):
         return out
 
 
-class Sentinel1ChangeMap(IntensityAugmentationBase2D):
-    """Extracts a change map from Sentinel-1 SAR pre and post imagery.
+class ToThresholdedChangeMask(IntensityAugmentationBase2D):
+    """Extracts a change mask from pre and post imagery.
 
-    This transform computes the difference between 2 Sentinel-1 SAR images
-    and return a pixelwise boolean change map indicating 'change' or 'no change'
-    based on difference values greater than delta_amplitude.
+    This transform computes the difference between 2 stacked images along the channel
+    dimension and return a pixelwise boolean change map indicating 'change'
+    or 'no change' based on difference values greater than a change threshold.
 
     Adapted from https://github.com/microsoft/ai4g-flood. Copyright (c) 2024 Microsoft
 
@@ -67,31 +70,25 @@ class Sentinel1ChangeMap(IntensityAugmentationBase2D):
 
     def __init__(
         self,
-        vv_threshold: int = 100,
-        vh_threshold: int = 90,
-        vv_min_threshold: int = 75,
-        vh_min_threshold: int = 70,
-        delta_amplitude: float = 10,
+        change_thresholds: Sequence[float],  # [10, 10]
+        thresholds: Sequence[float] | None = None,  # [100, 90]
+        min_thresholds: Sequence[float] | None = None,  # [75, 70]
         keepdim: bool = False,
     ) -> None:
-        """Initializes a new Sentinel1ChangeMap instance.
+        """Initializes a new ToChangeMask instance.
 
         Args:
-            vv_threshold: Threshold for VV band to detect change.
-            vh_threshold: Threshold for VH band to detect change.
-            vv_min_threshold: Minimum threshold for VV band to consider valid data.
-            vh_min_threshold: Minimum threshold for VH band to consider valid data.
-            delta_amplitude: Minimum change in amplitude to consider as a change.
+            change_thresholds: Thresholds determine pixelwise change.
+            thresholds: Thresholds for pre and post image channels.
+            min_thresholds: Minimum thresholds for pre and post image channels.
             keepdim: Whether to keep the output shape the same as input (True)
                 or broadcast it to the batch form (False).
         """
         super().__init__(p=1.0, p_batch=1.0, same_on_batch=True, keepdim=keepdim)
         self.flags = {
-            'vv_threshold': vv_threshold,
-            'vh_threshold': vh_threshold,
-            'vv_min_threshold': vv_min_threshold,
-            'vh_min_threshold': vh_min_threshold,
-            'delta_amplitude': delta_amplitude,
+            'change_thresholds': torch.tensor(change_thresholds),
+            'thresholds': torch.tensor(thresholds) if thresholds else None,
+            'min_thresholds': torch.tensor(min_thresholds) if min_thresholds else None,
         }
 
     def apply_transform(
@@ -104,42 +101,34 @@ class Sentinel1ChangeMap(IntensityAugmentationBase2D):
         """Apply the transform.
 
         Args:
-            input: Input tensor of shape (N, 4, H, W) where N is the batch size,
-                4 is the number of channels (VV pre, VH pre, VV post, VH post),
-                and H, W are the height and width of the images.
+            input: Input tensor of shape (N, 2*C, H, W) where N is the batch size,
+                2*C is the number of channels (pre and post images), and H, W are
+                the height and width of the images.
             params: Generated parameters.
             flags: Static parameters.
             transform: The geometric transformation tensor.
 
         Returns:
-            A tensor of shape (N, 2, H, W) containing the change maps for VV and VH bands.
+            A tensor of shape (N, C, H, W) containing the pixelwise binary change masks.
             The values are 1 for change detected and 0 for no change.
         """
-        vv_pre, vh_pre, vv_post, vh_post = (
-            input[:, 0],
-            input[:, 1],
-            input[:, 2],
-            input[:, 3],
-        )
-        vv_change = (
-            (vv_post < self.flags['vv_threshold'])
-            & (vv_pre > self.flags['vv_threshold'])
-            & ((vv_pre - vv_post) > self.flags['delta_amplitude'])
-        ).to(torch.int)
-        vh_change = (
-            (vh_post < self.flags['vh_threshold'])
-            & (vh_pre > self.flags['vh_threshold'])
-            & ((vh_pre - vh_post) > self.flags['delta_amplitude'])
-        ).to(torch.int)
+        b, c, h, w = input.shape
+        x = rearrange(input, 'b (t c) h w -> b t c h w', t=2, c=c // 2)
+        pre, post = x[:, 0], x[:, 1]
 
-        zero_idx = (
-            (vv_post < self.flags['vv_min_threshold'])
-            | (vv_pre < self.flags['vv_min_threshold'])
-            | (vh_post < self.flags['vh_min_threshold'])
-            | (vh_pre < self.flags['vh_min_threshold'])
-        )
-        vv_change[zero_idx] = 0
-        vh_change[zero_idx] = 0
-        change = torch.stack([vv_change, vh_change], dim=1).to(torch.float)
+        change_mask = torch.abs(post - pre) > self.flags['change_thresholds']
 
-        return change
+        if self.flags['thresholds'] is not None:
+            pre_mask = pre > self.flags['thresholds']
+            post_mask = post > self.flags['thresholds']
+            change_mask = change_mask & pre_mask & post_mask
+
+        change_mask = change_mask.to(torch.int)
+
+        if self.flags['min_thresholds'] is not None:
+            mask = (
+                pre < self.flags['min_thresholds'] | post < self.flags['min_thresholds']
+            )
+            change_mask[mask] = 0
+
+        return change_mask.to(torch.float)

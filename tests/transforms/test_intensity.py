@@ -6,7 +6,7 @@ import pytest
 import torch
 from torch import Tensor
 
-from torchgeo.transforms import Sentinel1ChangeMap, ToDecibelScale
+from torchgeo.transforms import PowerToDecibel, ToThresholdedChangeMask
 
 
 @pytest.fixture
@@ -25,30 +25,34 @@ def batch() -> dict[str, Tensor]:
     }
 
 
-def test_to_decibel_scale(sample: dict[str, Tensor]) -> None:
-    aug = K.AugmentationSequential(ToDecibelScale(), keepdim=True, data_keys=None)
+def test_power_to_decibel(sample: dict[str, Tensor]) -> None:
+    aug = K.AugmentationSequential(PowerToDecibel(), keepdim=True, data_keys=None)
     output = aug(sample)
     assert output['image'].shape == sample['image'].shape
     assert output['mask'].shape == sample['mask'].shape
 
 
-def test_to_decibel_scale_batch(batch: dict[str, Tensor]) -> None:
-    aug = K.AugmentationSequential(ToDecibelScale(), keepdim=True, data_keys=None)
+def test_power_to_decibel_batch(batch: dict[str, Tensor]) -> None:
+    aug = K.AugmentationSequential(PowerToDecibel(), keepdim=True, data_keys=None)
     output = aug(batch)
     assert output['image'].shape == batch['image'].shape
     assert output['mask'].shape == batch['mask'].shape
 
 
-def test_sentinel1_change_map(sample: dict[str, Tensor]) -> None:
-    aug = K.AugmentationSequential(Sentinel1ChangeMap(), keepdim=True, data_keys=None)
+def test_thresholded_change_mask(sample: dict[str, Tensor]) -> None:
+    aug = K.AugmentationSequential(
+        ToThresholdedChangeMask(), keepdim=True, data_keys=None
+    )
     output = aug(sample)
     c, h, w = sample['image'].shape
     assert output['image'].shape == (c // 2, h, w)
     assert output['mask'].shape == sample['mask'].shape
 
 
-def test_sentinel1_change_map_batch(batch: dict[str, Tensor]) -> None:
-    aug = K.AugmentationSequential(Sentinel1ChangeMap(), keepdim=True, data_keys=None)
+def test_thresholded_change_mask_batch(batch: dict[str, Tensor]) -> None:
+    aug = K.AugmentationSequential(
+        ToThresholdedChangeMask(), keepdim=True, data_keys=None
+    )
     output = aug(batch)
     b, c, h, w = batch['image'].shape
     assert output['image'].shape == (b, c // 2, h, w)

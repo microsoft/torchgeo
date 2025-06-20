@@ -33,15 +33,13 @@ _ai4g_flood_sentinel1_transform_bands = ('VV', 'VH', 'VV', 'VH')
 # https://github.com/microsoft/ai4g-flood/blob/main/src/run_flood_detection_downloaded_images.py#L54
 _ai4g_flood_transforms = K.AugmentationSequential(
     # Convert to decibel scale and shift to [0, 255] range
-    T.ToDecibelScale(shift=135.0, scale=2.0),
+    T.PowerToDecibel(shift=135.0, scale=2.0),
     _Clamp(p=1, min=0, max=255),
-    # Extract change map from pre and post images
-    T.Sentinel1ChangeMap(
-        vv_threshold=100,
-        vh_threshold=90,
-        vv_min_threshold=75,
-        vh_min_threshold=70,
-        delta_amplitude=10,
+    # Extract change mask from pre and post images
+    T.ToThresholdedChangeMask(
+        change_thresholds=[10.0, 10.0],
+        thresholds=[100.0, 90.0],
+        min_thresholds=[75.0, 70.0],
     ),
     K.Resize(size=(128, 128), resample=Resample.NEAREST),
     data_keys=None,
