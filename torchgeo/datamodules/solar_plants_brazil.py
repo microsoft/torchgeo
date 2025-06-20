@@ -7,7 +7,6 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch
-from torch import Tensor
 
 from ..datasets import SolarPlantsBrazil
 from ..samplers.utils import _to_tuple
@@ -40,10 +39,9 @@ class SolarPlantsBrazilDataModule(NonGeoDataModule):
             batch_size: Number of samples per batch.
             patch_size: Spatial dimensions (H, W) to crop from images.
             num_workers: Number of subprocesses used to load the data.
-            **kwargs: Additional arguments passed to the dataset.
+            **kwargs: Additional arguments passed to
+                :class:`~torchgeo.datasets.SolarPlantsBrazil`.
 
-        Returns:
-            None
 
         """
         super().__init__(
@@ -72,18 +70,3 @@ class SolarPlantsBrazilDataModule(NonGeoDataModule):
             data_keys=None,
             keepdim=True,
         )
-
-    def on_after_batch_transfer(
-        self, batch: dict[str, Tensor], dataloader_idx: int
-    ) -> dict[str, Tensor]:
-        """Apply batch augmentations to the batch after it is transferred to the device.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented.
-            dataloader_idx: The index of the dataloader to which the batch belongs.
-
-        Returns:
-            A batch of data.
-
-        """
-        return super().on_after_batch_transfer(batch, dataloader_idx)
