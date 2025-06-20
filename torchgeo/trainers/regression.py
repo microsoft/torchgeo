@@ -4,7 +4,7 @@
 """Trainers for regression."""
 
 import os
-from typing import Any
+from typing import Any, Literal
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -30,7 +30,16 @@ class RegressionTask(BaseTask):
 
     def __init__(
         self,
-        model: str = 'resnet50',
+        model: Literal[
+            'unet',
+            'deeplabv3+',
+            'fcn',
+            'upernet',
+            'segformer',
+            'dpt',
+            'fcsiamdiff',
+            'fcsiamconc',
+        ] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
@@ -285,52 +294,48 @@ class PixelwiseRegressionTask(RegressionTask):
         backbone = self.hparams['backbone']
         in_channels = self.hparams['in_channels']
 
-        if model == 'unet':
-            self.model = smp.Unet(
-                encoder_name=backbone,
-                encoder_weights='imagenet' if weights is True else None,
-                in_channels=in_channels,
-                classes=1,
-            )
-        elif model == 'deeplabv3+':
-            self.model = smp.DeepLabV3Plus(
-                encoder_name=backbone,
-                encoder_weights='imagenet' if weights is True else None,
-                in_channels=in_channels,
-                classes=1,
-            )
-        elif model == 'fcn':
-            self.model = FCN(
-                in_channels=in_channels,
-                classes=1,
-                num_filters=self.hparams['num_filters'],
-            )
-        elif model == 'upernet':
-            self.model = smp.UPerNet(
-                encoder_name=backbone,
-                encoder_weights='imagenet' if weights is True else None,
-                in_channels=in_channels,
-                classes=1,
-            )
-        elif model == 'segformer':
-            self.model = smp.Segformer(
-                encoder_name=backbone,
-                encoder_weights='imagenet' if weights is True else None,
-                in_channels=in_channels,
-                classes=1,
-            )
-        elif model == 'dpt':
-            self.model = smp.DPT(
-                encoder_name=backbone,
-                encoder_weights='imagenet' if weights is True else None,
-                in_channels=in_channels,
-                classes=1,
-            )
-        else:
-            raise ValueError(
-                f"Model type '{model}' is not valid. "
-                "Currently, only supports 'unet', 'deeplabv3+', 'fcn', 'upernet', 'segformer', and 'dpt'."
-            )
+        match model:
+            case 'unet':
+                self.model = smp.Unet(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=1,
+                )
+            case 'deeplabv3+':
+                self.model = smp.DeepLabV3Plus(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=1,
+                )
+            case 'fcn':
+                self.model = FCN(
+                    in_channels=in_channels,
+                    classes=1,
+                    num_filters=self.hparams['num_filters'],
+                )
+            case 'upernet':
+                self.model = smp.UPerNet(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=1,
+                )
+            case 'segformer':
+                self.model = smp.Segformer(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=1,
+                )
+            case 'dpt':
+                self.model = smp.DPT(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=1,
+                )
 
         if model != 'fcn':
             if weights and weights is not True:
