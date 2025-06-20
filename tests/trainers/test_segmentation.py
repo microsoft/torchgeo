@@ -76,6 +76,7 @@ class TestSemanticSegmentationTask:
             'sentinel2_eurocrops',
             'sentinel2_nccm',
             'sentinel2_south_america_soybean',
+            'solar_plants_brazil',
             'southafricacroptype',
             'spacenet1',
             'spacenet6',
