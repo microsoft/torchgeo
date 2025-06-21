@@ -4,6 +4,7 @@
 """TorchGeo models."""
 
 from .api import get_model, get_model_weights, get_weight, list_models
+from .aurora import Aurora_Weights, aurora_swin_unet
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
@@ -53,6 +54,7 @@ __all__ = (
     'DOFA',
     'FCN',
     'RCF',
+    'Aurora_Weights',
     'CROMABase_Weights',
     'CROMALarge_Weights',
     'ChangeMixin',
@@ -83,6 +85,7 @@ __all__ = (
     'ViTLarge16_Weights',
     'ViTSmall14_DINOv2_Weights',
     'ViTSmall16_Weights',
+    'aurora_swin_unet',
     'copernicusfm_base',
     'croma_base',
     'croma_large',
