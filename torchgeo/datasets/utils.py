@@ -48,8 +48,8 @@ GeoSlice: TypeAlias = (
 Path: TypeAlias = str | os.PathLike[str]
 
 
-@dataclass(frozen=True)
 @deprecated('Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead')
+@dataclass(frozen=True)
 class BoundingBox:
     """Data class for indexing spatiotemporal data."""
 
