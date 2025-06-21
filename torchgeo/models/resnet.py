@@ -633,6 +633,20 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    SENTINEL2_ALL_SECO_ECO = Weights(
+        url='https://hf.co/torchgeo/seco-eco/resolve/a3f7fea6619d000cf5dadbb8aab8f089234e480b/resnet50_sentinel2_all_seco_eco-62d9d740.pth',
+        transforms=_seco_transforms,
+        meta={
+            'dataset': 'SSL4Eco Dataset',
+            'in_chans': 9,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2504.18256',
+            'repo': 'https://github.com/PlekhanovaElena/ssl4eco',
+            'ssl_method': 'seco-eco',
+            'bands': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'NDVI'],
+        },
+    )
+
     SENTINEL2_MI_MS_SATLAS = Weights(
         url='https://hf.co/torchgeo/satlas/resolve/081d6607431bf36bdb59c223777cbb267131b8f2/sentinel2_resnet50_mi_ms-da5413d2.pth',
         transforms=_satlas_sentinel2_transforms,
