@@ -4,7 +4,7 @@
 """Trainers for regression."""
 
 import os
-from typing import Any, Literal
+from typing import Any
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
@@ -30,16 +30,7 @@ class RegressionTask(BaseTask):
 
     def __init__(
         self,
-        model: Literal[
-            'unet',
-            'deeplabv3+',
-            'fcn',
-            'upernet',
-            'segformer',
-            'dpt',
-            'fcsiamdiff',
-            'fcsiamconc',
-        ] = 'unet',
+        model: str = 'resnet50',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
