@@ -14,6 +14,7 @@ from torchgeo.models import (
     dofa_base_patch16_224,
     dofa_large_patch16_224,
     earthloc,
+    neuralgcm,
     panopticon_vitb14,
     resnet18,
     resnet50,
@@ -37,6 +38,7 @@ __all__ = (
     'dofa_base_patch16_224',
     'dofa_large_patch16_224',
     'earthloc',
+    'neuralgcm',
     'panopticon_vitb14',
     'resnet18',
     'resnet50',
@@ -53,4 +55,10 @@ __all__ = (
     'vit_small_patch16_224',
 )
 
-dependencies = ['timm', 'torchvision', 'segmentation_models_pytorch', 'kornia']
+dependencies = [
+    'timm',
+    'torchvision',
+    'segmentation_models_pytorch',
+    'kornia',
+    'neuralgcm',
+]
