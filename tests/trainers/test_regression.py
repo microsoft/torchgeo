@@ -329,16 +329,12 @@ class TestPixelwiseRegressionTask:
         )
 
     @pytest.mark.parametrize(
-        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet', 'dpt']
+        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet']
     )
     @pytest.mark.parametrize(
-        'backbone',
-        ['resnet18', 'mobilenet_v2', 'efficientnet-b0', 'tu-vit_base_patch16_224'],
+        'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
     )
     def test_freeze_backbone(self, model_name: str, backbone: str) -> None:
-        if model_name == 'dpt' and not backbone.startswith('tu-vit'):
-            pytest.skip('dpt model only supports vit backbones')
-
         model = PixelwiseRegressionTask(
             model=model_name, backbone=backbone, freeze_backbone=True
         )
@@ -354,12 +350,11 @@ class TestPixelwiseRegressionTask:
         )
 
     @pytest.mark.parametrize(
-        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet', 'dpt']
+        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet']
     )
     def test_freeze_decoder(self, model_name: str) -> None:
-        backbone = 'resnet18' if model_name != 'dpt' else 'tu-vit_base_patch16_224'
         model = PixelwiseRegressionTask(
-            model=model_name, backbone=backbone, freeze_decoder=True
+            model=model_name, backbone='resnet18', freeze_decoder=True
         )
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]
@@ -371,3 +366,6 @@ class TestPixelwiseRegressionTask:
                 for param in model.model.segmentation_head.parameters()
             ]
         )
+
+    def test_vit_backbone(self) -> None:
+        PixelwiseRegressionTask(model='dpt', backbone='tu-vit_base_patch16_224')

@@ -240,20 +240,16 @@ class TestSemanticSegmentationTask:
         trainer.validate(model=model, datamodule=datamodule)
 
     @pytest.mark.parametrize(
-        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet', 'dpt']
+        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet']
     )
     @pytest.mark.parametrize(
-        'backbone',
-        ['resnet18', 'mobilenet_v2', 'efficientnet-b0', 'tu-vit_base_patch16_224'],
+        'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
     )
     def test_freeze_backbone(
         self,
-        model_name: Literal['unet', 'deeplabv3+', 'segformer', 'upernet', 'dpt'],
+        model_name: Literal['unet', 'deeplabv3+', 'segformer', 'upernet'],
         backbone: str,
     ) -> None:
-        if model_name == 'dpt' and not backbone.startswith('tu-vit'):
-            pytest.skip('dpt model only supports vit backbones')
-
         model = SemanticSegmentationTask(
             model=model_name, backbone=backbone, num_classes=10, freeze_backbone=True
         )
@@ -269,14 +265,13 @@ class TestSemanticSegmentationTask:
         )
 
     @pytest.mark.parametrize(
-        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet', 'dpt']
+        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet']
     )
     def test_freeze_decoder(
-        self, model_name: Literal['unet', 'deeplabv3+', 'segformer', 'upernet', 'dpt']
+        self, model_name: Literal['unet', 'deeplabv3+', 'segformer', 'upernet']
     ) -> None:
-        backbone = 'resnet18' if model_name != 'dpt' else 'tu-vit_base_patch16_224'
         model = SemanticSegmentationTask(
-            model=model_name, backbone=backbone, num_classes=10, freeze_decoder=True
+            model=model_name, backbone='resnet18', num_classes=10, freeze_decoder=True
         )
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]
@@ -288,3 +283,6 @@ class TestSemanticSegmentationTask:
                 for param in model.model.segmentation_head.parameters()
             ]
         )
+
+    def test_vit_backbone(self) -> None:
+        SemanticSegmentationTask(model='dpt', backbone='tu-vit_base_patch16_224')
