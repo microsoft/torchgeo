@@ -8,7 +8,7 @@ This document lists the Maintainers of the Project. Maintainers may be added onc
 | Caleb Robinson  | @calebrob6    | Microsoft       |
 | Isaac Corley    | @isaaccorley  | Wherobots       |
 | Nils Lehmann    | @nilsleh      | TUM             |
-| Ashwin Nair     | @ashnair1     | Bayanat         |
+| Ashwin Nair     | @ashnair1     | Space42         |
 
 ---
 
