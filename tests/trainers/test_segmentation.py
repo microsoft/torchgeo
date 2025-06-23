@@ -285,4 +285,6 @@ class TestSemanticSegmentationTask:
         )
 
     def test_vit_backbone(self) -> None:
-        SemanticSegmentationTask(model='dpt', backbone='tu-vit_base_patch16_224')
+        SemanticSegmentationTask(
+            model='dpt', backbone='tu-vit_base_patch16_224', num_classes=2
+        )
