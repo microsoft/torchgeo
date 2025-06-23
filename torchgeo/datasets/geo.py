@@ -14,7 +14,6 @@ from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
 from typing import Any, ClassVar, Literal
 
-import affine
 import fiona
 import fiona.transform
 import geopandas as gpd
@@ -40,6 +39,7 @@ from .utils import (
     Path,
     array_to_tensor,
     concat_samples,
+    convert_poly_coords,
     disambiguate_timestamp,
     merge_samples,
     path_is_vsi,
@@ -622,36 +622,6 @@ class RasterDataset(GeoDataset):
             return src
 
 
-def convert_poly_coords(
-    geom: shapely.geometry.shape, affine_obj: affine.Affine, inverse: bool = False
-) -> shapely.geometry.shape:
-    """Convert geocoordinates to pixel coordinates and vice versa, based on `affine_obj`.
-
-    Args:
-        geom: shapely.geometry.shape to convert
-        affine_obj: affine.Affine object to use for geoconversion
-        inverse: If true, convert geocoordinates to pixel coordinates
-
-    Returns:
-        shapely.geometry.shape: input shape converted to pixel coordinates
-    """
-    if inverse:
-        affine_obj = ~affine_obj
-
-    xformed_shape = shapely.affinity.affine_transform(
-        geom,
-        [
-            affine_obj.a,
-            affine_obj.b,
-            affine_obj.d,
-            affine_obj.e,
-            affine_obj.xoff,
-            affine_obj.yoff,
-        ],
-    )
-    return xformed_shape
-
-
 class VectorDataset(GeoDataset):
     """Abstract base class for :class:`GeoDataset` stored as vector files."""
 
@@ -691,7 +661,7 @@ class VectorDataset(GeoDataset):
         task: Literal[
             'object_detection', 'semantic_segmentation', 'instance_segmentation'
         ] = 'semantic_segmentation',
-        gpkg_layer: str | int | None = None,
+        layer: str | int | None = None,
     ) -> None:
         """Initialize a new VectorDataset instance.
 
@@ -706,9 +676,9 @@ class VectorDataset(GeoDataset):
                 rasterized into the mask
             task: what is the tas the dataset is used for. Supported output types
                `object_detection`, `semantic_segmentation`, `instance_segmentation`
-            gpkg_layer: if the input is a multilayer geopackage, specify which layer
-                to use. Can be int to specify the index of the layer, str to select
-                the layer with that name or None which opens the first layer
+            layer: if the input is a multilayer vector dataset, such as a geopackage,
+                specify which layer to use. Can be int to specify the index of the layer,
+                str to select the layer with that name or None which opens the first layer
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
@@ -732,7 +702,7 @@ class VectorDataset(GeoDataset):
         if task not in allowed_tasks:
             raise ValueError(f'Invalid task: {task!r}. Must be one of {allowed_tasks}')
         self.task = task
-        self.gpkg_layer = gpkg_layer
+        self.layer = layer
         # Gather information about the dataset
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         filepaths = []
@@ -742,7 +712,7 @@ class VectorDataset(GeoDataset):
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
                 try:
-                    with fiona.open(filepath, layer=gpkg_layer) as src:
+                    with fiona.open(filepath, layer=layer) as src:
                         if crs is None:
                             crs = CRS.from_wkt(src.crs_wkt)
 
@@ -804,7 +774,7 @@ class VectorDataset(GeoDataset):
 
         shapes = []
         for filepath in index.filepath:
-            with fiona.open(filepath, layer=self.gpkg_layer) as src:
+            with fiona.open(filepath, layer=self.layer) as src:
                 # We need to know the bounding box of the query in the source CRS
                 (minx, maxx), (miny, maxy) = fiona.transform.transform(
                     self.crs.to_wkt(), src.crs, [x.start, x.stop], [y.start, y.stop]

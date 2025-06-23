@@ -17,9 +17,11 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, TypeAlias, cast, overload
 
+import affine
 import numpy as np
 import pandas as pd
 import rasterio
+import shapely
 import torch
 from torch import Tensor
 from torchvision.datasets.utils import (
@@ -724,3 +726,33 @@ def which(name: Path) -> Executable:
     else:
         msg = f'{name} is not installed and is required to use this dataset.'
         raise DependencyNotFoundError(msg) from None
+
+
+def convert_poly_coords(
+    geom: shapely.geometry.shape, affine_obj: affine.Affine, inverse: bool = False
+) -> shapely.geometry.shape:
+    """Convert geocoordinates to pixel coordinates and vice versa, based on `affine_obj`.
+
+    Args:
+        geom: shapely.geometry.shape to convert
+        affine_obj: affine.Affine object to use for geoconversion
+        inverse: If true, convert geocoordinates to pixel coordinates
+
+    Returns:
+        shapely.geometry.shape: input shape converted to pixel coordinates
+    """
+    if inverse:
+        affine_obj = ~affine_obj
+
+    xformed_shape = shapely.affinity.affine_transform(
+        geom,
+        [
+            affine_obj.a,
+            affine_obj.b,
+            affine_obj.d,
+            affine_obj.e,
+            affine_obj.xoff,
+            affine_obj.yoff,
+        ],
+    )
+    return xformed_shape
