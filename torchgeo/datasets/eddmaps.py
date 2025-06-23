@@ -17,7 +17,7 @@ from matplotlib.ticker import FuncFormatter
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, Path, disambiguate_timestamp
+from .utils import GeoSlice, Path, disambiguate_timestamp
 
 
 class EDDMapS(GeoDataset):
@@ -73,21 +73,23 @@ class EDDMapS(GeoDataset):
         geometry = gpd.points_from_xy(df.Longitude, df.Latitude)
         self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
-        interval = pd.Interval(query.mint, query.maxt)
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
         if index.empty:
             raise IndexError(

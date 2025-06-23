@@ -18,7 +18,7 @@ from pyproj import CRS
 from .errors import DatasetNotFoundError
 from .geo import RasterDataset
 from .utils import (
-    BoundingBox,
+    GeoSlice,
     Path,
     check_integrity,
     disambiguate_timestamp,
@@ -183,22 +183,23 @@ class GlobBiomass(RasterDataset):
 
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample at index consisting of measurement mask with 2 channels,
-            where the first is the measurement and the second the error map
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
-        interval = pd.Interval(query.mint, query.maxt)
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
         if index.empty:
             raise IndexError(

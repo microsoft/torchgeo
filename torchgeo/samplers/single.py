@@ -7,17 +7,21 @@ import abc
 from collections.abc import Callable, Iterable, Iterator
 from functools import partial
 
+import numpy as np
+import pandas as pd
 import shapely
 import torch
+from shapely import Polygon
 from torch import Generator
 from torch.utils.data import Sampler
 
-from ..datasets import BoundingBox, GeoDataset
+from ..datasets import GeoDataset
+from ..datasets.utils import GeoSlice
 from .constants import Units
 from .utils import _to_tuple, get_random_bounding_box, tile_to_chips
 
 
-class GeoSampler(Sampler[BoundingBox], abc.ABC):
+class GeoSampler(Sampler[GeoSlice], abc.ABC):
     """Abstract base class for sampling from :class:`~torchgeo.datasets.GeoDataset`.
 
     Unlike PyTorch's :class:`~torch.utils.data.Sampler`, :class:`GeoSampler`
@@ -26,28 +30,52 @@ class GeoSampler(Sampler[BoundingBox], abc.ABC):
     longitude, height, width, projection, coordinate system, and time.
     """
 
-    def __init__(self, dataset: GeoDataset, roi: BoundingBox | None = None) -> None:
+    def __init__(
+        self,
+        dataset: GeoDataset,
+        roi: Polygon | None = None,
+        toi: pd.Interval | None = None,
+    ) -> None:
         """Initialize a new Sampler instance.
+
+        .. versionadded:: 0.8
+           The *toi* parameter.
 
         Args:
             dataset: dataset to index from
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
+                (defaults to the bounds of ``dataset.index``)
+            toi: time of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
         """
         self.index = dataset.index
         self.res = dataset.res
-        self.roi = roi or dataset.bounds
 
         if roi:
-            mask = shapely.box(roi.minx, roi.miny, roi.maxx, roi.maxy)
-            self.index = self.index.clip(mask)
+            self.roi = roi
+            self.index = self.index.clip(roi)
+        else:
+            x, y, t = dataset.bounds
+            self.roi = shapely.box(x.start, y.start, x.stop, y.stop)
+
+        if toi:
+            self.toi = toi
+            self.index = self.index.iloc[self.index.index.overlaps(toi)]
+            tmin = np.maximum(self.index.index.left, np.datetime64(toi.left))
+            tmax = np.minimum(self.index.index.right, np.datetime64(toi.right))
+            self.index.index = pd.IntervalIndex.from_arrays(
+                tmin, tmax, closed='both', name='datetime'
+            )
+        else:
+            x, y, t = dataset.bounds
+            self.toi = pd.Interval(t.start, t.stop)
 
     @abc.abstractmethod
-    def __iter__(self) -> Iterator[BoundingBox]:
+    def __iter__(self) -> Iterator[GeoSlice]:
         """Return the index of a dataset.
 
         Yields:
-            (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+            [xmin:xmax, ymin:ymax, tmin:tmax] coordinates to index a dataset.
         """
 
 
@@ -67,7 +95,8 @@ class RandomGeoSampler(GeoSampler):
         dataset: GeoDataset,
         size: tuple[float, float] | float,
         length: int | None = None,
-        roi: BoundingBox | None = None,
+        roi: Polygon | None = None,
+        toi: pd.Interval | None = None,
         units: Units = Units.PIXELS,
         generator: Generator | None = None,
     ) -> None:
@@ -87,7 +116,10 @@ class RandomGeoSampler(GeoSampler):
            ``length`` parameter is now optional, a reasonable default will be used
 
         .. versionadded:: 0.7
-            The *generator* parameter.
+           The *generator* parameter.
+
+        .. versionadded:: 0.8
+           The *toi* parameter.
 
         Args:
             dataset: dataset to index from
@@ -96,12 +128,14 @@ class RandomGeoSampler(GeoSampler):
                 (defaults to approximately the maximal number of non-overlapping
                 :term:`chips <chip>` of size ``size`` that could be sampled from
                 the dataset)
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
+                (defaults to the bounds of ``dataset.index``)
+            toi: time of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` is in pixel or CRS units
             generator: pseudo-random number generator (PRNG).
         """
-        super().__init__(dataset, roi)
+        super().__init__(dataset, roi, toi)
         self.size = _to_tuple(size)
 
         if units == Units.PIXELS:
@@ -109,23 +143,22 @@ class RandomGeoSampler(GeoSampler):
 
         self.generator = generator
         self.length = 0
-        self.hits = []
+        self.bounds = []
+        self.intervals = []
         areas = []
         for hit in range(len(self.index)):
-            minx, miny, maxx, maxy = self.index.geometry.iloc[hit].bounds
-            mint, maxt = self.index.index[hit].left, self.index.index[hit].right
-            bounds = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
-            if (
-                bounds.maxx - bounds.minx >= self.size[1]
-                and bounds.maxy - bounds.miny >= self.size[0]
-            ):
-                if bounds.area > 0:
+            bounds = self.index.geometry.iloc[hit].bounds
+            xmin, ymin, xmax, ymax = bounds
+            tmin, tmax = self.index.index[hit].left, self.index.index[hit].right
+            if xmax - xmin >= self.size[1] and ymax - ymin >= self.size[0]:
+                if xmax > xmin and ymax > ymin:
                     rows, cols = tile_to_chips(bounds, self.size)
                     self.length += rows * cols
                 else:
                     self.length += 1
-                self.hits.append(bounds)
-                areas.append(bounds.area)
+                self.bounds.append(bounds)
+                self.intervals.append(pd.Interval(tmin, tmax))
+                areas.append((xmax - xmin) * (ymax - ymin))
 
         if length is not None:
             self.length = length
@@ -135,23 +168,24 @@ class RandomGeoSampler(GeoSampler):
         if torch.sum(self.areas) == 0:
             self.areas += 1
 
-    def __iter__(self) -> Iterator[BoundingBox]:
+    def __iter__(self) -> Iterator[tuple[slice, slice, slice]]:
         """Return the index of a dataset.
 
         Yields:
-            (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+            [xmin:xmax, ymin:ymax, tmin:tmax] coordinates to index a dataset.
         """
         for _ in range(len(self)):
             # Choose a random tile, weighted by area
             idx = torch.multinomial(self.areas, 1)
-            bounds = self.hits[idx]
+            bounds = self.bounds[idx]
+            interval = self.intervals[idx]
 
             # Choose a random index within that tile
             bounding_box = get_random_bounding_box(
                 bounds, self.size, self.res, self.generator
             )
 
-            yield bounding_box
+            yield *bounding_box, slice(interval.left, interval.right)
 
     def __len__(self) -> int:
         """Return the number of samples in a single epoch.
@@ -182,7 +216,8 @@ class GridGeoSampler(GeoSampler):
         dataset: GeoDataset,
         size: tuple[float, float] | float,
         stride: tuple[float, float] | float | None = None,
-        roi: BoundingBox | None = None,
+        roi: Polygon | None = None,
+        toi: pd.Interval | None = None,
         units: Units = Units.PIXELS,
     ) -> None:
         """Initialize a new Sampler instance.
@@ -197,15 +232,20 @@ class GridGeoSampler(GeoSampler):
         .. versionchanged:: 0.3
            Added ``units`` parameter, changed default to pixel units
 
+        .. versionadded:: 0.8
+           The *toi* parameter.
+
         Args:
             dataset: dataset to index from
             size: dimensions of each :term:`patch`
             stride: distance to skip between each patch (defaults to *size*)
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
+                (defaults to the bounds of ``dataset.index``)
+            toi: time of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
             units: defines if ``size`` and ``stride`` are in pixel or CRS units
         """
-        super().__init__(dataset, roi)
+        super().__init__(dataset, roi, toi)
         self.size = _to_tuple(size)
         if stride is not None:
             self.stride = _to_tuple(stride)
@@ -218,42 +258,39 @@ class GridGeoSampler(GeoSampler):
 
         self.length = 0
         for i in range(len(self.index)):
-            minx, miny, maxx, maxy = self.index.geometry.iloc[i].bounds
-            if maxx - minx < self.size[1] or maxy - miny < self.size[0]:
+            bounds = self.index.geometry.iloc[i].bounds
+            xmin, ymin, xmax, ymax = bounds
+            if xmax - xmin < self.size[1] or ymax - ymin < self.size[0]:
                 continue
-            mint, maxt = self.index.index[i].left, self.index.index[i].right
-            bounds = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
             rows, cols = tile_to_chips(bounds, self.size, self.stride)
             self.length += rows * cols
 
-    def __iter__(self) -> Iterator[BoundingBox]:
+    def __iter__(self) -> Iterator[tuple[slice, slice, slice]]:
         """Return the index of a dataset.
 
         Yields:
-            (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+            [xmin:xmax, ymin:ymax, tmin:tmax] coordinates to index a dataset.
         """
         # For each tile...
         for i in range(len(self.index)):
-            minx, miny, maxx, maxy = self.index.geometry.iloc[i].bounds
-            if maxx - minx < self.size[1] or maxy - miny < self.size[0]:
+            bounds = self.index.geometry.iloc[i].bounds
+            xmin, ymin, xmax, ymax = bounds
+            if xmax - xmin < self.size[1] or ymax - ymin < self.size[0]:
                 continue
-            mint, maxt = self.index.index[i].left, self.index.index[i].right
-            bounds = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+            tmin, tmax = self.index.index[i].left, self.index.index[i].right
             rows, cols = tile_to_chips(bounds, self.size, self.stride)
-            mint = bounds.mint
-            maxt = bounds.maxt
 
             # For each row...
             for i in range(rows):
-                miny = bounds.miny + i * self.stride[0]
-                maxy = miny + self.size[0]
+                ymin = bounds[1] + i * self.stride[0]
+                ymax = ymin + self.size[0]
 
                 # For each column...
                 for j in range(cols):
-                    minx = bounds.minx + j * self.stride[1]
-                    maxx = minx + self.size[1]
+                    xmin = bounds[0] + j * self.stride[1]
+                    xmax = xmin + self.size[1]
 
-                    yield BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+                    yield slice(xmin, xmax), slice(ymin, ymax), slice(tmin, tmax)
 
     def __len__(self) -> int:
         """Return the number of samples over the ROI.
@@ -281,7 +318,8 @@ class PreChippedGeoSampler(GeoSampler):
     def __init__(
         self,
         dataset: GeoDataset,
-        roi: BoundingBox | None = None,
+        roi: Polygon | None = None,
+        toi: pd.Interval | None = None,
         shuffle: bool = False,
         generator: Generator | None = None,
     ) -> None:
@@ -290,25 +328,30 @@ class PreChippedGeoSampler(GeoSampler):
         .. versionadded:: 0.3
 
         .. versionadded:: 0.7
-            The *generator* parameter.
+           The *generator* parameter.
+
+        .. versionadded:: 0.8
+           The *toi* parameter.
 
         Args:
             dataset: dataset to index from
-            roi: region of interest to sample from (minx, maxx, miny, maxy, mint, maxt)
+            roi: region of interest to sample from
+                (defaults to the bounds of ``dataset.index``)
+            toi: time of interest to sample from
                 (defaults to the bounds of ``dataset.index``)
             shuffle: if True, reshuffle data at every epoch
             generator: pseudo-random number generator (PRNG) used in combination with
                 shuffle.
         """
-        super().__init__(dataset, roi)
+        super().__init__(dataset, roi, toi)
         self.shuffle = shuffle
         self.generator = generator
 
-    def __iter__(self) -> Iterator[BoundingBox]:
+    def __iter__(self) -> Iterator[tuple[slice, slice, slice]]:
         """Return the index of a dataset.
 
         Yields:
-            (minx, maxx, miny, maxy, mint, maxt) coordinates to index a dataset
+            [xmin:xmax, ymin:ymax, tmin:tmax] coordinates to index a dataset.
         """
         generator: Callable[[int], Iterable[int]] = range
         if self.shuffle:
@@ -316,9 +359,9 @@ class PreChippedGeoSampler(GeoSampler):
 
         for idx in generator(len(self)):
             i = int(idx)
-            minx, miny, maxx, maxy = self.index.geometry.iloc[i].bounds
-            mint, maxt = self.index.index[i].left, self.index.index[i].right
-            yield BoundingBox(minx, maxx, miny, maxy, mint, maxt)
+            xmin, ymin, xmax, ymax = self.index.geometry.iloc[i].bounds
+            tmin, tmax = self.index.index[i].left, self.index.index[i].right
+            yield slice(xmin, xmax), slice(ymin, ymax), slice(tmin, tmax)
 
     def __len__(self) -> int:
         """Return the number of samples over the ROI.

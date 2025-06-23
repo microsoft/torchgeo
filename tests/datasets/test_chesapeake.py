@@ -15,7 +15,6 @@ from pyproj import CRS
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
-    BoundingBox,
     ChesapeakeCVPR,
     ChesapeakeDC,
     DatasetNotFoundError,
@@ -84,11 +83,10 @@ class TestChesapeakeDC:
         plt.close()
 
     def test_invalid_query(self, dataset: ChesapeakeDC) -> None:
-        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
 
 class TestChesapeakeCVPR:
@@ -192,11 +190,10 @@ class TestChesapeakeCVPR:
             ChesapeakeCVPR(tmp_path, checksum=True)
 
     def test_out_of_bounds_query(self, dataset: ChesapeakeCVPR) -> None:
-        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_multiple_hits_query(self, dataset: ChesapeakeCVPR) -> None:
         ds = ChesapeakeCVPR(

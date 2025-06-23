@@ -15,7 +15,6 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
     EUDEM,
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     UnionDataset,
@@ -82,8 +81,7 @@ class TestEUDEM:
         plt.close()
 
     def test_invalid_query(self, dataset: EUDEM) -> None:
-        query = BoundingBox(100, 100, 100, 100, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]

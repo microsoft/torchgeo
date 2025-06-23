@@ -23,7 +23,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import BoundingBox, Path, check_integrity
+from .utils import GeoSlice, Path, check_integrity
 
 
 class OpenBuildings(VectorDataset):
@@ -295,22 +295,23 @@ class OpenBuildings(VectorDataset):
 
         self._source_crs = source_crs
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image/mask and metadata for the given query. If there are
-            not matching shapes found within the query, an empty raster is returned
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
-        interval = pd.Interval(query.mint, query.maxt)
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
         if index.empty:
             raise IndexError(
@@ -320,10 +321,10 @@ class OpenBuildings(VectorDataset):
         shapes = self._filter_geometries(query, index.filepath)
 
         # Rasterize geometries
-        width = (query.maxx - query.minx) / self.res[0]
-        height = (query.maxy - query.miny) / self.res[1]
+        width = (x.stop - x.start) / x.step
+        height = (y.stop - y.start) / y.step
         transform = rasterio.transform.from_bounds(
-            query.minx, query.miny, query.maxx, query.maxy, width, height
+            x.start, y.start, x.stop, y.stop, width, height
         )
         if shapes:
             masks = rasterio.features.rasterize(
@@ -341,24 +342,26 @@ class OpenBuildings(VectorDataset):
         return sample
 
     def _filter_geometries(
-        self, query: BoundingBox, filepaths: list[str]
+        self, query: GeoSlice, filepaths: list[str]
     ) -> list[dict[str, Any]]:
         """Filters a df read from the polygon csv file based on query and conf thresh.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
             filepaths: filepaths to files that were hits from rmtree index
 
         Returns:
             List with all polygons from all hit filepaths
 
         """
+        x, y, t = self._disambiguate_slice(query)
+
         # We need to know the bounding box of the query in the source CRS
         (minx, maxx), (miny, maxy) = fiona.transform.transform(
             self.crs.to_wkt(),
             self._source_crs.to_wkt(),
-            [query.minx, query.maxx],
-            [query.miny, query.maxy],
+            [x.start, x.stop],
+            [y.start, y.stop],
         )
         df_query = (
             f'longitude >= {minx} & longitude <= {maxx} & '

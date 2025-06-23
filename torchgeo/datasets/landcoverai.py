@@ -24,7 +24,7 @@ from torch.utils.data import Dataset
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset, RasterDataset
-from .utils import BoundingBox, Path, download_url, extract_archive, working_dir
+from .utils import GeoSlice, Path, download_url, extract_archive, working_dir
 
 
 class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
@@ -242,21 +242,24 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         masks = glob.glob(mask_query)
         return len(images) > 0 and len(images) == len(masks)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image, mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
-        interval = pd.Interval(query.mint, query.maxt)
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
-        index = index.cx[query.minx : query.maxx, query.miny : query.maxy]  # type: ignore[misc]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
+
         img_filepaths = index.filepath
         mask_filepaths = img_filepaths.apply(lambda x: x.replace('images', 'masks'))
 
