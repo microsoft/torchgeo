@@ -370,6 +370,11 @@ Inria Aerial Image Labeling
 
 .. autoclass:: InriaAerialImageLabeling
 
+LacunaAfricanFieldBoundaries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: LacunaAfricanFieldBoundaries
+
 LandCover.ai
 ^^^^^^^^^^^^
 
