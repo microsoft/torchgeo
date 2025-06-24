@@ -35,7 +35,7 @@ webdataset==0.2.4
 xarray==0.12.3
 
 # models
-microsoft-aurora>=1.6
+microsoft-aurora==1.6.0
 
 # tests
 pytest==7.3.0
