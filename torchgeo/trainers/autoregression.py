@@ -24,6 +24,7 @@ class AutoregressionTask(BaseTask):
         input_size: int = 1,
         input_size_decoder: int = 1,
         output_size: int = 1,
+        target_indices: list[int] | None = None,
         loss: str = 'mse',
         lr: float = 1e-3,
         patience: int = 10,
@@ -38,6 +39,7 @@ class AutoregressionTask(BaseTask):
             input_size_decoder: The number of features in the decoder input.
                 Defaults to 1.
             output_size: The number of features output by the model. Defaults to 1.
+            target_indices: The indices of the target(s) in the dataset. If None, uses all features. Defaults to None.
             loss: One of 'mse' or 'mae'. Defaults to 'mse'.
             lr: Learning rate for optimizer. Defaults to 1e-3.
             patience: Patience for learning rate scheduler. Defaults to 10.

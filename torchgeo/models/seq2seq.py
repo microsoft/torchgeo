@@ -83,7 +83,9 @@ class LSTMDecoder(nn.Module):
             Output sequence of shape (b, output_sequence_len, output_size).
         """
         batch_size = inputs.shape[0]
-        outputs = torch.zeros(batch_size, self.output_sequence_len, self.output_size)
+        outputs = torch.zeros(
+            batch_size, self.output_sequence_len, self.output_size, device=inputs.device
+        )
 
         current_input = inputs[:, 0:1, :]
 
