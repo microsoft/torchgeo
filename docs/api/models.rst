@@ -60,6 +60,12 @@ FC Siamese Networks
 .. autoclass:: FCSiamConc
 .. autoclass:: FCSiamDiff
 
+NeuralGCM
+^^^^^^^^^
+
+.. autofunction:: neuralgcm
+.. autoclass:: NeuralGCM_Weights
+
 RCF Extractor
 ^^^^^^^^^^^^^
 
