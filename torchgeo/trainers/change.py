@@ -47,7 +47,7 @@ class ChangeDetectionTask(BaseTask):
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
     ) -> None:
-        """Inititalize a new ChangeDetectionTask instance.
+        """Initialize a new ChangeDetectionTask instance.
 
         Args:
             model: Name of the model to use.
