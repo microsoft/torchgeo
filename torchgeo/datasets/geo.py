@@ -674,7 +674,7 @@ class VectorDataset(GeoDataset):
                 entry and returns a transformed version
             label_name: name of the dataset property that has the label to be
                 rasterized into the mask
-            task: what is the tas the dataset is used for. Supported output types
+            task: computer vision task the dataset is used for. Supported output types
                `object_detection`, `semantic_segmentation`, `instance_segmentation`
             layer: if the input is a multilayer vector dataset, such as a geopackage,
                 specify which layer to use. Can be int to specify the index of the layer,
