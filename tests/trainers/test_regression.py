@@ -208,7 +208,7 @@ class TestRegressionTask:
             RegressionTask(model='resnet18', loss='invalid_loss')
 
     @pytest.mark.parametrize(
-        'model_name', ['resnet18', 'efficientnetv2_s', 'vit_base_patch16_384']
+        'model_name', ['resnet18', 'efficientnetv2_s', 'vit_base_patch16_224']
     )
     def test_freeze_backbone(self, model_name: str) -> None:
         model = RegressionTask(model=model_name, freeze_backbone=True)
@@ -223,7 +223,17 @@ class TestPixelwiseRegressionTask:
     def create_model(*args: Any, **kwargs: Any) -> Module:
         return PixelwiseRegressionTestModel(**kwargs)
 
-    @pytest.mark.parametrize('name', ['inria_unet', 'inria_deeplab', 'inria_fcn'])
+    @pytest.mark.parametrize(
+        'name',
+        [
+            'inria_unet',
+            'inria_deeplab',
+            'inria_fcn',
+            'inria_segformer',
+            'inria_upernet',
+            'inria_dpt',
+        ],
+    )
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
@@ -231,6 +241,9 @@ class TestPixelwiseRegressionTask:
 
         monkeypatch.setattr(smp, 'Unet', self.create_model)
         monkeypatch.setattr(smp, 'DeepLabV3Plus', self.create_model)
+        monkeypatch.setattr(smp, 'UPerNet', self.create_model)
+        monkeypatch.setattr(smp, 'Segformer', self.create_model)
+        monkeypatch.setattr(smp, 'DPT', self.create_model)
 
         args = [
             '--config',
@@ -254,11 +267,6 @@ class TestPixelwiseRegressionTask:
             main(['predict', *args])
         except MisconfigurationException:
             pass
-
-    def test_invalid_model(self) -> None:
-        match = "Model type 'invalid_model' is not valid."
-        with pytest.raises(ValueError, match=match):
-            PixelwiseRegressionTask(model='invalid_model')
 
     @pytest.fixture
     def weights(self) -> WeightsEnum:
@@ -320,7 +328,9 @@ class TestPixelwiseRegressionTask:
             in_channels=weights.meta['in_chans'],
         )
 
-    @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
+    @pytest.mark.parametrize(
+        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet']
+    )
     @pytest.mark.parametrize(
         'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
     )
@@ -339,7 +349,9 @@ class TestPixelwiseRegressionTask:
             ]
         )
 
-    @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
+    @pytest.mark.parametrize(
+        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet']
+    )
     def test_freeze_decoder(self, model_name: str) -> None:
         model = PixelwiseRegressionTask(
             model=model_name, backbone='resnet18', freeze_decoder=True
@@ -354,3 +366,6 @@ class TestPixelwiseRegressionTask:
                 for param in model.model.segmentation_head.parameters()
             ]
         )
+
+    def test_vit_backbone(self) -> None:
+        PixelwiseRegressionTask(model='dpt', backbone='tu-vit_base_patch16_224')
