@@ -3,6 +3,7 @@
 
 
 import os
+import zipfile
 
 import numpy as np
 import rasterio
@@ -53,3 +54,21 @@ def generate_solar_plants_brazil_dataset(root: str) -> None:
             crs=crs,
         ) as dst:
             dst.write(mask_data, 1)
+
+
+def create_zip_archive(root: str, zip_filename: str) -> None:
+    """Zip the dummy dataset into a file."""
+    zip_path = os.path.join(root, zip_filename)
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for split in ['train', 'val', 'test']:
+            for subdir in ['input', 'labels']:
+                folder = os.path.join(root, split, subdir)
+                for file in os.listdir(folder):
+                    file_path = os.path.join(folder, file)
+                    arcname = os.path.relpath(file_path, root)
+                    zipf.write(file_path, arcname)
+
+
+if __name__ == '__main__':
+    generate_solar_plants_brazil_dataset('.')
+    create_zip_archive('.', 'solarplantsbrazil.zip')
