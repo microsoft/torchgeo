@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive
+from .utils import Path, download_and_extract_archive, extract_archive
 
 
 class SolarPlantsBrazil(NonGeoDataset):
@@ -51,8 +51,8 @@ class SolarPlantsBrazil(NonGeoDataset):
 
     """
 
-    url = 'https://huggingface.co/datasets/FederCO23/solar-plants-brazil/resolve/1dc13a453ef6acabf08a1781c523fd1db3d9bcc5/solarplantsbrazil.zip'
-
+    url = 'https://huggingface.co/datasets/FederCO23/solar-plants-brazil/resolve/1dc13a453ef6acabf08a1781c523fd1db3d9bcc5/'
+    filename = 'solarplantsbrazil.zip'
     bands = ('Red', 'Green', 'Blue', 'NIR')
     md5 = 'dfa0d3efdef4143a33b0e7ba834eaafa'
 
@@ -75,7 +75,8 @@ class SolarPlantsBrazil(NonGeoDataset):
             checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
-            DatasetNotFoundError: If dataset is not found and *download* is False
+            DatasetNotFoundError: If dataset is not found and *download* is False.
+            ValueError: If *split* is invalid.
         """
         if split not in ['train', 'val', 'test']:
             raise ValueError(
@@ -91,40 +92,32 @@ class SolarPlantsBrazil(NonGeoDataset):
 
         self._verify()
 
+        input_dir = os.path.join(self.dataset_path, 'input')
+        labels_dir = os.path.join(self.dataset_path, 'labels')
+
+        self.image_paths = sorted(glob.glob(os.path.join(input_dir, 'img(*).tif')))
+        self.mask_paths = sorted(glob.glob(os.path.join(labels_dir, 'target(*).tif')))
+
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
-        expected_dirs = [
-            os.path.join(self.dataset_path, 'input'),
-            os.path.join(self.dataset_path, 'labels'),
-        ]
+        directory = os.path.join(self.root, self.split)
+        zip_path = os.path.join(self.root, self.filename)
 
-        if all(os.path.exists(d) and len(os.listdir(d)) > 0 for d in expected_dirs):
-            self.image_paths = sorted(
-                glob.glob(os.path.join(self.dataset_path, 'input', 'img(*).tif'))
-            )
-            self.mask_paths = sorted(
-                glob.glob(os.path.join(self.dataset_path, 'labels', 'target(*).tif'))
-            )
-
-            if len(self.image_paths) == 0:
-                raise DatasetNotFoundError(self)
-
-            assert len(self.image_paths) == len(self.mask_paths), (
-                'Mismatch between image and mask files'
-            )
+        if os.path.isdir(directory):
             return
-
-        if not self.download:
+        elif os.path.isfile(zip_path):
+            extract_archive(zip_path)
+        elif self.download:
+            self._download()
+        else:
             raise DatasetNotFoundError(self)
 
-        self._download()
-
     def _download(self) -> None:
-        """Download the dataset."""
+        """Download and extract the dataset archive."""
         download_and_extract_archive(
-            url=self.url,
+            url=self.url + self.filename,
             download_root=self.root,
-            filename='solarplantsbrazil.zip',
+            filename=self.filename,
             md5=self.md5 if self.checksum else None,
         )
 

@@ -4,14 +4,18 @@
 """Unit tests for the SolarPlantsBrazil dataset."""
 
 import os
+import shutil
 from pathlib import Path
 from typing import Any
 
 import pytest
 import torch
 from matplotlib import pyplot as plt
+from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, SolarPlantsBrazil
+
+root = os.path.join('tests', 'data', 'solar_plants_brazil')
 
 
 class TestSolarPlantsBrazil:
@@ -60,9 +64,15 @@ class TestSolarPlantsBrazil:
         sample = dataset[0]
         assert torch.all(sample['image'] > 0)
 
-    def test_already_downloaded(self, dataset_root: str) -> None:
-        SolarPlantsBrazil(root=dataset_root, split='train')
-
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError):
-            SolarPlantsBrazil(root=tmp_path, split='train', download=False)
+            SolarPlantsBrazil(root=tmp_path, split='train')
+
+    def test_download(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+        monkeypatch.setattr(SolarPlantsBrazil, 'url', root + os.sep)
+        SolarPlantsBrazil(tmp_path, split='train', download=True)
+
+    def test_extract(self, tmp_path: Path) -> None:
+        zip_path = os.path.join(root, SolarPlantsBrazil.filename)
+        shutil.copy(zip_path, tmp_path)
+        SolarPlantsBrazil(tmp_path, split='train')
