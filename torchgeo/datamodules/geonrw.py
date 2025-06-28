@@ -38,7 +38,7 @@ class GeoNRWDataModule(NonGeoDataModule):
         super().__init__(GeoNRW, batch_size, num_workers, **kwargs)
 
         self.train_aug = K.AugmentationSequential(
-            K.Resize(size),
+            K.Resize((size, size)),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             data_keys=None,
@@ -46,7 +46,7 @@ class GeoNRWDataModule(NonGeoDataModule):
         )
 
         self.aug = K.AugmentationSequential(
-            K.Resize(size), data_keys=None, keepdim=True
+            K.Resize((size, size)), data_keys=None, keepdim=True
         )
 
         self.size = size

@@ -83,7 +83,7 @@ _sentinel1_grd_bands = ['VV', 'VH']
 _mean_s1 = torch.tensor([-12.59, -20.26])
 _std_s1 = torch.tensor([5.26, 5.91])
 _ssl4eo_s12_transforms_s1 = K.AugmentationSequential(
-    K.Resize(256),
+    K.Resize((256, 256)),
     K.CenterCrop(224),
     K.Normalize(mean=_mean_s1, std=_std_s1),
     data_keys=None,
@@ -93,7 +93,7 @@ _ssl4eo_s12_transforms_s1 = K.AugmentationSequential(
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
 # Normalization either by 10K (for S2 uint16 input) or channel-wise with band statistics
 _ssl4eo_s12_transforms_s2_10k = K.AugmentationSequential(
-    K.Resize(256),
+    K.Resize((256, 256)),
     K.CenterCrop(224),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
     data_keys=None,
@@ -134,7 +134,7 @@ _std_s2 = torch.tensor(
     ]
 )
 _ssl4eo_s12_transforms_s2_stats = K.AugmentationSequential(
-    K.Resize(256),
+    K.Resize((256, 256)),
     K.CenterCrop(224),
     K.Normalize(mean=_mean_s2, std=_std_s2),
     data_keys=None,
@@ -147,7 +147,7 @@ _max = torch.tensor([88, 103, 129])
 _mean = torch.tensor([0.485, 0.456, 0.406])
 _std = torch.tensor([0.229, 0.224, 0.225])
 _seco_transforms = K.AugmentationSequential(
-    K.Resize(256),
+    K.Resize((256, 256)),
     K.CenterCrop(224),
     K.Normalize(mean=_min, std=_max - _min),
     K.Normalize(mean=torch.tensor(0), std=1 / torch.tensor(255)),
@@ -171,7 +171,7 @@ _seco_eco_transforms = K.AugmentationSequential(
 _mean = torch.tensor([0.485, 0.456, 0.406])
 _std = torch.tensor([0.229, 0.224, 0.225])
 _gassl_transforms = K.AugmentationSequential(
-    K.Resize(224),
+    K.Resize((224, 224)),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
     K.Normalize(mean=_mean, std=_std),
     data_keys=None,

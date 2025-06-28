@@ -48,7 +48,7 @@ class PatternNetDataModule(NonGeoDataModule):
 
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            K.Resize(size=256),
+            K.Resize(size=(256, 256)),
             data_keys=None,
             keepdim=True,
         )
@@ -56,7 +56,7 @@ class PatternNetDataModule(NonGeoDataModule):
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
-            K.Resize(size=256),
+            K.Resize(size=(256, 256)),
             data_keys=None,
             keepdim=True,
         )
