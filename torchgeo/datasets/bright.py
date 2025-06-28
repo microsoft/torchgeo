@@ -138,7 +138,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         # post image is stacked to also have 3 channels
         image_post = repeat(image_post, 'c h w -> (repeat c) h w', repeat=3)
 
-        sample = {'image_pre': image_pre, 'image_post': image_post}
+        sample = {'image': torch.stack([image_pre, image_post])}
 
         if 'target' in idx_paths and self.split != 'test':
             target = self._load_image(idx_paths['target']).long()
@@ -292,10 +292,10 @@ class BRIGHTDFC2025(NonGeoDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(15, 5))
 
-        axs[0].imshow(sample['image_pre'].permute(1, 2, 0) / 255.0)
+        axs[0].imshow(sample['image'][0].permute(1, 2, 0) / 255.0)
         axs[0].axis('off')
 
-        axs[1].imshow(sample['image_post'].permute(1, 2, 0) / 255.0)
+        axs[1].imshow(sample['image'][1].permute(1, 2, 0) / 255.0)
         axs[1].axis('off')
 
         cmap = colors.ListedColormap(self.colormap)

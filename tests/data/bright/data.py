@@ -73,8 +73,8 @@ def write_list_file(filename: str, ids: list[str]) -> None:
             f.write(f'{sid}\n')
 
 
-def write_tif(filepath: str, channels: int) -> None:
-    data = np.random.randint(0, 255, (channels, SIZE, SIZE), dtype=np.uint8)
+def write_tif(filepath: str, channels: int, classes: int) -> None:
+    data = np.random.randint(0, classes, (channels, SIZE, SIZE), dtype=np.uint8)
     with rasterio.open(
         filepath,
         'w',
@@ -95,16 +95,16 @@ def populate_data(ids: list[str], dir_name: str, with_target: bool = True) -> No
         pre_path = os.path.join(
             ROOT, DATA_DIR, dir_name, 'pre-event', f'{sid}_pre_disaster.tif'
         )
-        write_tif(pre_path, channels=3)
+        write_tif(pre_path, channels=3, classes=256)
         post_path = os.path.join(
             ROOT, DATA_DIR, dir_name, 'post-event', f'{sid}_post_disaster.tif'
         )
-        write_tif(post_path, channels=1)
+        write_tif(post_path, channels=1, classes=256)
         if with_target:
             target_path = os.path.join(
                 ROOT, DATA_DIR, dir_name, 'target', f'{sid}_building_damage.tif'
             )
-            write_tif(target_path, channels=1)
+            write_tif(target_path, channels=1, classes=2)
 
 
 def main() -> None:
