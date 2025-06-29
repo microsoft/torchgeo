@@ -1,0 +1,16 @@
+model:
+  class_path: AutoregressionTask
+  init_args:
+    loss: 'mse'
+    model: 'lstm_seq2seq'
+    input_size: 3
+    input_size_decoder: 1
+    target_indices: [2]
+    encoder_indices: [2, 12, 13]
+    decoder_indices: [2]
+data:
+  class_path: AirQualityDataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: 'tests/data/air_quality'
