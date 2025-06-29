@@ -12,7 +12,7 @@ import re
 import warnings
 from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 import fiona
 import fiona.transform
@@ -39,6 +39,7 @@ from .utils import (
     Path,
     array_to_tensor,
     concat_samples,
+    convert_poly_coords,
     disambiguate_timestamp,
     merge_samples,
     path_is_vsi,
@@ -657,6 +658,10 @@ class VectorDataset(GeoDataset):
         res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         label_name: str | None = None,
+        task: Literal[
+            'object_detection', 'semantic_segmentation', 'instance_segmentation'
+        ] = 'semantic_segmentation',
+        layer: str | int | None = None,
     ) -> None:
         """Initialize a new VectorDataset instance.
 
@@ -669,9 +674,15 @@ class VectorDataset(GeoDataset):
                 entry and returns a transformed version
             label_name: name of the dataset property that has the label to be
                 rasterized into the mask
+            task: computer vision task the dataset is used for. Supported output types
+               `object_detection`, `semantic_segmentation`, `instance_segmentation`
+            layer: if the input is a multilayer vector dataset, such as a geopackage,
+                specify which layer to use. Can be int to specify the index of the layer,
+                str to select the layer with that name or None which opens the first layer
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
+            ValueError: If task is not one of allowed tasks
 
         .. versionadded:: 0.4
             The *label_name* parameter.
@@ -682,7 +693,16 @@ class VectorDataset(GeoDataset):
         self.paths = paths
         self.transforms = transforms
         self.label_name = label_name
-
+        # List of allowed tasks
+        allowed_tasks = [
+            'semantic_segmentation',
+            'object_detection',
+            'instance_segmentation',
+        ]
+        if task not in allowed_tasks:
+            raise ValueError(f'Invalid task: {task!r}. Must be one of {allowed_tasks}')
+        self.task = task
+        self.layer = layer
         # Gather information about the dataset
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         filepaths = []
@@ -692,7 +712,7 @@ class VectorDataset(GeoDataset):
             match = re.match(filename_regex, os.path.basename(filepath))
             if match is not None:
                 try:
-                    with fiona.open(filepath) as src:
+                    with fiona.open(filepath, layer=layer) as src:
                         if crs is None:
                             crs = CRS.from_wkt(src.crs_wkt)
 
@@ -754,7 +774,7 @@ class VectorDataset(GeoDataset):
 
         shapes = []
         for filepath in index.filepath:
-            with fiona.open(filepath) as src:
+            with fiona.open(filepath, layer=self.layer) as src:
                 # We need to know the bounding box of the query in the source CRS
                 (minx, maxx), (miny, maxy) = fiona.transform.transform(
                     self.crs.to_wkt(), src.crs, [x.start, x.stop], [y.start, y.stop]
@@ -776,19 +796,104 @@ class VectorDataset(GeoDataset):
             x.start, y.start, x.stop, y.stop, width, height
         )
         if shapes:
-            masks = rasterio.features.rasterize(
-                shapes, out_shape=(round(height), round(width)), transform=transform
-            )
+            match self.task:
+                case 'semantic_segmentation':
+                    masks = rasterio.features.rasterize(
+                        shapes,
+                        out_shape=(round(height), round(width)),
+                        transform=transform,
+                    )
+
+                case 'object_detection':
+                    # Get boxes for object detection or instance segmentation
+                    px_shapes = [
+                        convert_poly_coords(
+                            shapely.geometry.shape(s[0]), transform, inverse=True
+                        )
+                        for s in shapes
+                    ]
+                    px_shapes = [
+                        (shapely.clip_by_rect(p, 0, 0, width, height))
+                        for p in px_shapes
+                    ]
+
+                    # Get labels
+                    labels = [s[1] for s in shapes]
+
+                    # xmin, ymin, xmax, ymax format
+                    boxes_xyxy = [
+                        [p.bounds[0], p.bounds[1], p.bounds[2], p.bounds[3]]
+                        for p in px_shapes
+                    ]
+
+                case 'instance_segmentation':
+                    # Get boxes for object detection or instance segmentation
+                    px_shapes = [
+                        convert_poly_coords(
+                            shapely.geometry.shape(s[0]), transform, inverse=True
+                        )
+                        for s in shapes
+                    ]
+                    px_shapes = [
+                        (shapely.clip_by_rect(p, 0, 0, width, height))
+                        for p in px_shapes
+                    ]
+
+                    # Get labels
+                    labels = [s[1] for s in shapes]
+
+                    # xmin, ymin, xmax, ymax format
+                    boxes_xyxy = [
+                        [p.bounds[0], p.bounds[1], p.bounds[2], p.bounds[3]]
+                        for p in px_shapes
+                    ]
+                    # HxW mask for each instance
+                    masks = np.array(
+                        [
+                            rasterio.features.rasterize(
+                                [s],
+                                out_shape=(round(height), round(width)),
+                                transform=transform,
+                            )
+                            for s in shapes
+                        ]
+                    )
+
         else:
             # If no features are found in this key, return an empty mask
             # with the default fill value and dtype used by rasterize
             masks = np.zeros((round(height), round(width)), dtype=np.uint8)
+            boxes_xyxy = []
+            labels = []
 
         # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
-        masks = array_to_tensor(masks)
 
-        masks = masks.to(self.dtype)
-        sample = {'mask': masks, 'crs': self.crs, 'bounds': query}
+        sample = {'crs': self.crs, 'bounds': query}
+
+        match self.task:
+            case 'semantic_segmentation':
+                masks = array_to_tensor(masks)
+                masks = masks.to(self.dtype)
+                sample['mask'] = masks
+
+            case 'object_detection':
+                boxes_xyxy = array_to_tensor(np.array(boxes_xyxy))
+                labels = array_to_tensor(np.array(labels))
+                boxes_xyxy = boxes_xyxy.to(self.dtype)
+                labels = labels.to(self.dtype)
+                sample['bbox_xyxy'] = boxes_xyxy
+                sample['label'] = labels
+
+            case 'instance_segmentation':
+                masks = array_to_tensor(masks)
+                masks = masks.to(self.dtype)
+                boxes_xyxy = array_to_tensor(np.array(boxes_xyxy))
+                labels = array_to_tensor(np.array(labels))
+                boxes_xyxy = boxes_xyxy.to(self.dtype)
+                labels = labels.to(self.dtype)
+                sample['mask'] = masks
+                sample['bbox_xyxy'] = boxes_xyxy
+                sample['label'] = labels
 
         if self.transforms is not None:
             sample = self.transforms(sample)
