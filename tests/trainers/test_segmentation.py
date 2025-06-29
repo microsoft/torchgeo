@@ -50,7 +50,6 @@ class TestSemanticSegmentationTask:
         'name',
         [
             'agrifieldnet',
-            'cabuar',
             'chabud',
             'chesapeake_cvpr_5',
             'chesapeake_cvpr_7',
@@ -90,7 +89,7 @@ class TestSemanticSegmentationTask:
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         match name:
-            case 'chabud' | 'cabuar':
+            case 'chabud':
                 pytest.importorskip('h5py', minversion='3.6')
             case 'ftw':
                 pytest.importorskip('pyarrow')
