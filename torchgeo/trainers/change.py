@@ -201,6 +201,10 @@ class ChangeDetectionTask(BaseTask):
                 )
                 batch = aug(batch)
                 batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
+                # Remove channel dim from mask
+                batch['prediction'] = rearrange(
+                    batch['prediction'], 'b () h w -> b h w'
+                )
                 for key in ['image', 'mask', 'prediction']:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
