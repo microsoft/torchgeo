@@ -63,7 +63,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         'red',  # destroyed
     )
 
-    md5 = '45fd96716e7f5673869b166859a6cb3c'
+    md5 = '2c435bb50345d425390eff59a92134ac'
 
     url = 'https://huggingface.co/datasets/torchgeo/bright/resolve/d19972f5e682ad684dcde35529a6afad4c719f1b/dfc25_track2_trainval_with_split.zip'
 
