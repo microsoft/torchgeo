@@ -104,7 +104,7 @@ def populate_data(ids: list[str], dir_name: str, with_target: bool = True) -> No
             target_path = os.path.join(
                 ROOT, DATA_DIR, dir_name, 'target', f'{sid}_building_damage.tif'
             )
-            write_tif(target_path, channels=1, classes=2)
+            write_tif(target_path, channels=1, classes=4)
 
 
 def main() -> None:
