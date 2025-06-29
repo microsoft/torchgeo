@@ -46,6 +46,7 @@ from .sentinel2_nccm import Sentinel2NCCMDataModule
 from .sentinel2_south_america_soybean import Sentinel2SouthAmericaSoybeanDataModule
 from .skippd import SKIPPDDataModule
 from .so2sat import So2SatDataModule
+from .solar_plants_brazil import SolarPlantsBrazilDataModule
 from .southafricacroptype import SouthAfricaCropTypeDataModule
 from .spacenet import SpaceNet1DataModule, SpaceNet6DataModule, SpaceNetBaseDataModule
 from .ssl4eo import SSL4EOLDataModule, SSL4EOS12DataModule
@@ -113,6 +114,7 @@ __all__ = (
     'Sentinel2NCCMDataModule',
     'Sentinel2SouthAmericaSoybeanDataModule',
     'So2SatDataModule',
+    'SolarPlantsBrazilDataModule',
     'SouthAfricaCropTypeDataModule',
     'SpaceNet1DataModule',
     'SpaceNet6DataModule',
