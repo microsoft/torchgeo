@@ -72,7 +72,7 @@ class TreeSatAIDataModule(NonGeoDataModule):
     def __init__(
         self,
         batch_size: int = 64,
-        patch_size: int | tuple[int, int] = (304, 304),
+        patch_size: int | tuple[int, int] = 304,
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
