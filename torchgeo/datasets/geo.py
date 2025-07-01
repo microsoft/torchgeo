@@ -689,6 +689,9 @@ class VectorDataset(GeoDataset):
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
+
+        .. versionadded:: 0.8
+           The *task* and *layer* parameters
         """
         self.paths = paths
         self.transforms = transforms
@@ -847,18 +850,20 @@ class VectorDataset(GeoDataset):
                         [p.bounds[0], p.bounds[1], p.bounds[2], p.bounds[3]]
                         for p in px_shapes
                     ]
-                    # HxW mask for each instance
-                    masks = np.array(
-                        [
-                            rasterio.features.rasterize(
-                                [s],
-                                out_shape=(round(height), round(width)),
-                                transform=transform,
-                            )
-                            for s in shapes
-                        ]
+
+                    masks = rasterio.features.rasterize(
+                        [(s[0], i + 1) for i, s in enumerate(shapes)],
+                        out_shape=(round(height), round(width)),
+                        transform=transform,
                     )
 
+                    obj_ids = np.unique(masks)
+
+                    # first id is the background, so remove it
+                    obj_ids = obj_ids[1:]
+
+                    # convert (H, W) mask a set of binary masks
+                    masks = (masks == obj_ids[:, None, None]).astype(np.uint8)
         else:
             # If no features are found in this key, return an empty mask
             # with the default fill value and dtype used by rasterize

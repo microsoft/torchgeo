@@ -739,7 +739,9 @@ def convert_poly_coords(
         inverse: If true, convert geocoordinates to pixel coordinates
 
     Returns:
-        shapely.geometry.shape: input shape converted to pixel coordinates
+        input shape converted to pixel coordinates
+
+    .. versionadded:: 0.8
     """
     if inverse:
         affine_obj = ~affine_obj
