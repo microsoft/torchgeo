@@ -1,0 +1,1 @@
+microsoft-aurora==1.7.0
