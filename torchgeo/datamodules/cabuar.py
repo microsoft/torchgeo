@@ -5,8 +5,8 @@
 
 from typing import Any
 
+import kornia.augmentation as K
 import torch
-from einops import repeat
 
 from ..datasets import CaBuAr
 from .geo import NonGeoDataModule
@@ -57,11 +57,13 @@ class CaBuArDataModule(NonGeoDataModule):
         mins = self.min[band_indices]
         maxs = self.max[band_indices]
 
-        # Change detection, 2 images from different times
-        mins = repeat(mins, 'c -> (t c)', t=2)
-        maxs = repeat(maxs, 'c -> (t c)', t=2)
-
         self.mean = mins
         self.std = maxs - mins
 
         super().__init__(CaBuAr, batch_size, num_workers, **kwargs)
+        self.aug = K.AugmentationSequential(
+            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
+            data_keys=None,
+            keepdim=True,
+            same_on_batch=True,
+        )
