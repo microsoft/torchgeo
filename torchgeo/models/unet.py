@@ -21,12 +21,9 @@ _ftw_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(3000.0)), data_keys=None
 )
 
-# Normalization from [0, 255] to [0, 1]
+# No normalization used see: https://github.com/Restor-Foundation/tcd/blob/main/src/tcd_pipeline/data/datamodule.py#L145
 _tcd_bands = ['R', 'G', 'B']
-_tcd_transforms = K.AugmentationSequential(
-    K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(255.0)),
-    data_keys=None,
-)
+_tcd_transforms = K.AugmentationSequential(K.Resize(size=(1024, 1024)), data_keys=None)
 # https://github.com/pytorch/vision/pull/6883
 # https://github.com/pytorch/vision/pull/7107
 # Can be removed once torchvision>=0.15 is required
