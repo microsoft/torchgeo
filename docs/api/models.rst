@@ -119,6 +119,12 @@ Vision Transformer
 .. autoclass:: ViTSmall14_DINOv2_Weights
 .. autoclass:: ViTBase14_DINOv2_Weights
 
+
+LTAE
+^^^^
+.. autoclass:: LTAE
+
+
 Utility Functions
 ^^^^^^^^^^^^^^^^^
 

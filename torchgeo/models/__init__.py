@@ -47,6 +47,7 @@ from .vit import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
+from .ltae import LTAE
 
 __all__ = (
     'CROMA',
@@ -109,4 +110,5 @@ __all__ = (
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
+    'LTAE',
 )
