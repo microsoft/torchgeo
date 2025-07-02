@@ -2,12 +2,14 @@
 # Licensed under the MIT License.
 
 from pathlib import Path
+from typing import cast
 
 import pytest
 import timm
 import torch
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
+from torch import nn
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
@@ -46,7 +48,7 @@ class TestViTSmall16:
             in_chans=weights.meta['in_chans'],
             features_only=features_only,
         )
-        model = model.model if features_only else model
+        model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -95,7 +97,7 @@ class TestViTBase16:
             in_chans=weights.meta['in_chans'],
             features_only=features_only,
         )
-        model = model.model if features_only else model
+        model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -144,7 +146,7 @@ class TestViTLarge16:
             in_chans=weights.meta['in_chans'],
             features_only=features_only,
         )
-        model = model.model if features_only else model
+        model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -193,7 +195,7 @@ class TestViTHuge14:
             in_chans=weights.meta['in_chans'],
             features_only=features_only,
         )
-        model = model.model if features_only else model
+        model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -243,7 +245,7 @@ class TestViTSmall14_DINOv2:
             img_size=weights.meta['img_size'],
             features_only=features_only,
         )
-        model = model.model if features_only else model
+        model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
@@ -298,7 +300,7 @@ class TestViTBase14_DINOv2:
             img_size=weights.meta['img_size'],
             features_only=features_only,
         )
-        model = model.model if features_only else model
+        model = cast(nn.Module, model.model) if features_only else model
         torch.save(model.state_dict(), path)
         monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
