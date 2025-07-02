@@ -21,15 +21,10 @@ _ftw_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(3000.0)), data_keys=None
 )
 
-# Normalization from [0, 255] to [0, 1] and then normalized using ImageNet statistics
-# Described here: https://huggingface.co/restor/tcd-unet-r34#training-hyperparameters
+# Normalization from [0, 255] to [0, 1]
 _tcd_bands = ['R', 'G', 'B']
 _tcd_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(255.0)),
-    K.Normalize(
-        mean=torch.tensor([0.485, 0.456, 0.406]),
-        std=torch.tensor([0.229, 0.224, 0.225]),
-    ),
     data_keys=None,
 )
 # https://github.com/pytorch/vision/pull/6883
