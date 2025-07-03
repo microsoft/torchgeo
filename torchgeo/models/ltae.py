@@ -61,17 +61,20 @@ class LTAE(nn.Module):
         self.inconv: nn.Sequential | None = None
 
         if positions is None:
-            positions = [len_max_seq + 1]
+            positions = list(range(len_max_seq))
 
         if d_model is not None:
             self.inconv = nn.Sequential(
-                nn.Conv1d(in_channels, d_model, 1), nn.LayerNorm([d_model, len_max_seq])
+                nn.Conv1d(in_channels, d_model, 1),
+                nn.LayerNorm(d_model)  # Apply LayerNorm over the channel dimension only
             )
 
         # Store the actual positions for reference
         self.position_values = positions
         # Create position encoding table using indices [0, 1, 2, ...]
-        sin_tab = get_sinusoid_encoding_table(len(positions), self.d_model // n_head, T=T)
+        sin_tab = get_sinusoid_encoding_table(
+            len(positions), self.d_model // n_head, T=T
+        )
         self.position_enc = nn.Embedding.from_pretrained(  # type: ignore[no-untyped-call]
             torch.cat([sin_tab for _ in range(n_head)], dim=1), freeze=True
         )
@@ -119,11 +122,16 @@ class LTAE(nn.Module):
         x = self.inlayernorm(x)
 
         if self.inconv is not None:
-            x = self.inconv(x.permute(0, 2, 1)).permute(0, 2, 1)
+            # Permute for Conv1d: (batch, seq_len, channels) -> (batch, channels, seq_len)
+            x = x.permute(0, 2, 1)
+            x = self.inconv(x)
+            # Permute back: (batch, channels, seq_len) -> (batch, seq_len, channels)
+            x = x.permute(0, 2, 1)
 
         if self.positions is None:
+            # Use zero-based indices for position encoding
             src_pos = (
-                torch.arange(1, seq_len + 1, dtype=torch.long)
+                torch.arange(0, seq_len, dtype=torch.long)
                 .expand(sz_b, seq_len)
                 .to(x.device)
             )
@@ -131,7 +139,8 @@ class LTAE(nn.Module):
             # For custom positions, use indices [0, 1, 2, ...] that map to our position encoding table
             src_pos = (
                 torch.tensor(
-                    [i % len(self.position_values) for i in range(seq_len)], dtype=torch.long
+                    [i % len(self.position_values) for i in range(seq_len)],
+                    dtype=torch.long,
                 )
                 .expand(sz_b, seq_len)
                 .to(x.device)
