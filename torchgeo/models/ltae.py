@@ -68,7 +68,10 @@ class LTAE(nn.Module):
                 nn.Conv1d(in_channels, d_model, 1), nn.LayerNorm([d_model, len_max_seq])
             )
 
-        sin_tab = get_sinusoid_encoding_table(positions[0], self.d_model // n_head, T=T)
+        # Store the actual positions for reference
+        self.position_values = positions
+        # Create position encoding table using indices [0, 1, 2, ...]
+        sin_tab = get_sinusoid_encoding_table(len(positions), self.d_model // n_head, T=T)
         self.position_enc = nn.Embedding.from_pretrained(  # type: ignore[no-untyped-call]
             torch.cat([sin_tab for _ in range(n_head)], dim=1), freeze=True
         )
@@ -125,10 +128,11 @@ class LTAE(nn.Module):
                 .to(x.device)
             )
         else:
-            # For custom positions, map each sequence position to the corresponding position in the list
-            # Use modulo to handle sequences longer than the position list
+            # For custom positions, use indices [0, 1, 2, ...] that map to our position encoding table
             src_pos = (
-                torch.tensor([i % len(self.positions) for i in range(seq_len)], dtype=torch.long)
+                torch.tensor(
+                    [i % len(self.position_values) for i in range(seq_len)], dtype=torch.long
+                )
                 .expand(sz_b, seq_len)
                 .to(x.device)
             )
@@ -292,8 +296,10 @@ def get_sinusoid_encoding_table(
         return [cal_angle(position, hid_j) for hid_j in range(d_hid)]
 
     if isinstance(positions, list):
+        # For list input, use the actual position values
         sinusoid_table = [get_posi_angle_vec(pos_i) for pos_i in positions]
     else:
+        # For integer input, use range(positions)
         sinusoid_table = [get_posi_angle_vec(pos_i) for pos_i in range(positions)]
 
     # Convert to numpy array for efficient array operations
