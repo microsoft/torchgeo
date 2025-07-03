@@ -47,4 +47,4 @@ class TestLTAE:
         with pytest.raises(AssertionError):
             model = LTAE(in_channels=in_channels)
             x = torch.randn(batch_size, seq_len, wrong_channels)
-            model(x) 
+            model(x)
