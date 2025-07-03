@@ -63,6 +63,12 @@ class TestLTAE:
         assert output.shape[0] == batch_size
         assert len(output.shape) == 2
 
+        # Test with sequence length equal to positions length
+        x_short = torch.randn(batch_size, len(positions), in_channels)
+        output_short = model(x_short)
+        assert output_short.shape[0] == batch_size
+        assert len(output_short.shape) == 2
+
     def test_sinusoid_encoding(self) -> None:
         """Test sinusoidal encoding with list positions."""
         from torchgeo.models.ltae import get_sinusoid_encoding_table

@@ -125,8 +125,10 @@ class LTAE(nn.Module):
                 .to(x.device)
             )
         else:
+            # For custom positions, map each sequence position to the corresponding position in the list
+            # Use modulo to handle sequences longer than the position list
             src_pos = (
-                torch.arange(0, seq_len, dtype=torch.long)
+                torch.tensor([i % len(self.positions) for i in range(seq_len)], dtype=torch.long)
                 .expand(sz_b, seq_len)
                 .to(x.device)
             )
