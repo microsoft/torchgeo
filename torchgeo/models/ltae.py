@@ -7,8 +7,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -60,6 +58,7 @@ class LTAE(nn.Module):
         self.positions = positions
         self.n_neurons = n_neurons
         self.d_model = d_model if d_model is not None else in_channels
+        self.inconv: nn.Sequential | None = None
 
         if positions is None:
             positions = [len_max_seq + 1]
@@ -68,8 +67,6 @@ class LTAE(nn.Module):
             self.inconv = nn.Sequential(
                 nn.Conv1d(in_channels, d_model, 1), nn.LayerNorm([d_model, len_max_seq])
             )
-        else:
-            self.inconv = None
 
         sin_tab = get_sinusoid_encoding_table(positions[0], self.d_model // n_head, T=T)
         self.position_enc = nn.Embedding.from_pretrained(  # type: ignore[no-untyped-call]
