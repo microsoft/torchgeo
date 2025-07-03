@@ -110,7 +110,7 @@ class LTAE(nn.Module):
         """
         sz_b, seq_len, d = x.shape
         assert d == self.in_channels, (
-            f"Input channels {d} does not match expected channels {self.in_channels}"
+            f'Input channels {d} does not match expected channels {self.in_channels}'
         )
 
         x = self.inlayernorm(x)
@@ -267,7 +267,7 @@ class ScaledDotProductAttention(nn.Module):
 
 
 def get_sinusoid_encoding_table(
-    positions: int | list[int], d_hid: int, T: int = 1000, device: str = "cpu"
+    positions: int | list[int], d_hid: int, T: int = 1000, device: str = 'cpu'
 ) -> torch.Tensor:
     """Generate sinusoidal position encoding table.
 
@@ -308,7 +308,7 @@ def get_sinusoid_encoding_table_var(
     clip: int = 4,
     offset: int = 3,
     T: int = 1000,
-    device: str = "cpu",
+    device: str = 'cpu',
 ) -> torch.Tensor:
     """Generate variable sinusoidal position encoding table.
 
@@ -346,7 +346,7 @@ def get_sinusoid_encoding_table_var(
     return torch.FloatTensor(sinusoid_table_np).to(device)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     model = LTAE(in_channels=128)
     x = torch.randn(4, 24, 128)
     output = model(x)
