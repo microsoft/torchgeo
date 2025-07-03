@@ -20,6 +20,7 @@ from .earthloc import EarthLoc, EarthLoc_Weights, earthloc
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
+from .ltae import LTAE
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .rcf import RCF
 from .resnet import (
@@ -47,12 +48,12 @@ from .vit import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
-from .ltae import LTAE
 
 __all__ = (
     'CROMA',
     'DOFA',
     'FCN',
+    'LTAE',
     'RCF',
     'CROMABase_Weights',
     'CROMALarge_Weights',
@@ -110,5 +111,4 @@ __all__ = (
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
-    'LTAE',
 )

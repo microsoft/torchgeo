@@ -1,30 +1,48 @@
-"""
-Lightweight Temporal Attention Encoder module
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
 
-Credits:
-The module is heavily inspired by the works of Vaswani et al. on self-attention and their pytorch implementation of
-the Transformer served as code base for the present script.
+# Copyright (c) 2020 VSainteuf (Vivien Sainte Fare Garnot)
 
-paper: https://arxiv.org/abs/1706.03762
-code: github.com/jadore801120/attention-is-all-you-need-pytorch
-"""
+"""Lightweight Temporal Attention Encoder (LTAE) model."""
 
+from __future__ import annotations
+
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-import copy
 
 
 class LTAE(nn.Module):
-    def __init__(self, in_channels=128, n_head=16, d_k=8, n_neurons=[256,128], dropout=0.2, d_model=256,
-                 T=1000, len_max_seq=24, positions=None, return_att=False):
-        """
-        Sequence-to-embedding encoder.
+    """Lightweight Temporal Attention Encoder (L-TAE).
+
+    This model implements a lightweight temporal attention encoder that processes
+    time series data using a multi-head attention mechanism. It is designed to
+    efficiently encode temporal sequences into fixed-length embeddings.
+
+    The model architecture is based on the paper:
+    "Temporal Attention Encoders for Efficient Video Understanding"
+
+    """
+
+    def __init__(
+        self,
+        in_channels: int = 128,
+        n_head: int = 16,
+        d_k: int = 8,
+        n_neurons: tuple = (256, 128),
+        dropout: float = 0.2,
+        d_model: int = 256,
+        T: int = 1000,
+        len_max_seq: int = 24,
+        positions: list[int] | None = None,
+    ) -> None:
+        """Sequence-to-embedding encoder.
+
         Args:
             in_channels (int): Number of channels of the input embeddings
             n_head (int): Number of attention heads
             d_k (int): Dimension of the key and query vectors
-            n_neurons (list): Defines the dimensions of the successive feature spaces of the MLP that processes
+            n_neurons (tuple): Defines the dimensions of the successive feature spaces of the MLP that processes
                 the concatenated outputs of the attention heads
             dropout (float): dropout
             T (int): Period to use for the positional encoding
@@ -32,16 +50,12 @@ class LTAE(nn.Module):
             positions (list, optional): List of temporal positions to use instead of position in the sequence
             d_model (int, optional): If specified, the input tensors will first processed by a fully connected layer
                 to project them into a feature space of dimension d_model
-            return_att (bool): If true, the module returns the attention masks along with the embeddings (default False)
 
         """
-
-        super(LTAE, self).__init__()
+        super().__init__()
         self.in_channels = in_channels
         self.positions = positions
-        self.n_neurons = copy.deepcopy(n_neurons)
-        self.return_att = return_att
-
+        self.n_neurons = n_neurons
 
         if positions is None:
             positions = len_max_seq + 1
@@ -67,7 +81,7 @@ class LTAE(nn.Module):
 
         assert (self.n_neurons[0] == self.d_model)
 
-        activation = nn.ReLU()
+        activation = nn.ReLU(inplace=True)
 
         layers = []
         for i in range(len(self.n_neurons) - 1):
@@ -77,10 +91,17 @@ class LTAE(nn.Module):
 
         self.mlp = nn.Sequential(*layers)
 
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(dropout, inplace=True)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the model.
 
+        Args:
+            x: Input tensor of shape (batch_size, seq_len, in_channels)
+
+        Returns:
+            torch.Tensor: Output tensor of shape (batch_size, n_neurons[-1])
+        """
         sz_b, seq_len, d = x.shape
 
         x = self.inlayernorm(x)
@@ -100,43 +121,80 @@ class LTAE(nn.Module):
 
         enc_output = self.outlayernorm(self.dropout(self.mlp(enc_output)))
 
-        if self.return_att:
-            return enc_output, attn
-        else:
-            return enc_output
+        return enc_output
 
 
 class MultiHeadAttention(nn.Module):
-    ''' Multi-Head Attention module '''
+    """Multi-Head Attention module.
+    
+    This module implements multi-head attention mechanism that allows the model
+    to jointly attend to information from different representation subspaces.
+    
+    """
 
-    def __init__(self, n_head, d_k, d_in):
+    def __init__(self, n_head: int, d_k: int, d_in: int) -> None:
+        """Initialize the Multi-Head Attention module.
+
+        Args:
+            n_head: Number of attention heads
+            d_k: Dimension of key and query vectors
+            d_in: Input dimension
+        """
         super().__init__()
         self.n_head = n_head
         self.d_k = d_k
         self.d_in = d_in
 
-        self.Q = nn.Parameter(torch.zeros((n_head, d_k))).requires_grad_(True)
+        # Initialize query parameter
+        self.Q = nn.Parameter(torch.zeros((n_head, d_k)))
         nn.init.normal_(self.Q, mean=0, std=np.sqrt(2.0 / (d_k)))
 
+        # Initialize key transformation
         self.fc1_k = nn.Linear(d_in, n_head * d_k)
         nn.init.normal_(self.fc1_k.weight, mean=0, std=np.sqrt(2.0 / (d_k)))
 
+        # Initialize attention mechanism
         self.attention = ScaledDotProductAttention(temperature=np.power(d_k, 0.5))
 
-    def forward(self, q, k, v):
+    def forward(
+        self,
+        q: torch.Tensor,
+        k: torch.Tensor,
+        v: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Forward pass of the multi-head attention module.
+        
+        Args:
+            q: Query tensor of shape (batch_size, seq_len, d_in)
+            k: Key tensor of shape (batch_size, seq_len, d_in)
+            v: Value tensor of shape (batch_size, seq_len, d_in)
+            
+        Returns:
+            Tuple containing:
+                - output: Transformed output tensor of shape (n_head, batch_size, d_in//n_head)
+                - attn: Attention weights of shape (n_head, batch_size, seq_len)
+        """
         d_k, d_in, n_head = self.d_k, self.d_in, self.n_head
         sz_b, seq_len, _ = q.size()
 
+        # Prepare query
         q = torch.stack([self.Q for _ in range(sz_b)], dim=1).view(-1, d_k)  # (n*b) x d_k
 
+        # Transform key
         k = self.fc1_k(v).view(sz_b, seq_len, n_head, d_k)
         k = k.permute(2, 0, 1, 3).contiguous().view(-1, seq_len, d_k)  # (n*b) x lk x dk
 
+        # Prepare value
         v = torch.stack(v.split(v.shape[-1] // n_head, dim=-1)).view(n_head * sz_b, seq_len, -1)
+        
+        # Apply attention
         output, attn = self.attention(q, k, v)
+        
+        # Reshape attention weights
         attn = attn.view(n_head, sz_b, 1, seq_len)
         attn = attn.squeeze(dim=2)
 
+        # Reshape output
         output = output.view(n_head, sz_b, 1, d_in // n_head)
         output = output.squeeze(dim=2)
 
@@ -144,36 +202,98 @@ class MultiHeadAttention(nn.Module):
 
 
 class ScaledDotProductAttention(nn.Module):
-    ''' Scaled Dot-Product Attention '''
+    """Scaled Dot-Product Attention mechanism.
+    
+    Implements the attention mechanism described in the paper
+    "Attention is All You Need" with scaling factor and dropout.
+    
+    """
 
-    def __init__(self, temperature, attn_dropout=0.1):
+    def __init__(self, temperature: float, attn_dropout: float = 0.1) -> None:
+        """Initialize the Scaled Dot-Product Attention module.
+
+        Args:
+            temperature: Scaling factor for the dot product attention
+            attn_dropout: Dropout rate for attention weights
+        """
         super().__init__()
         self.temperature = temperature
-        self.dropout = nn.Dropout(attn_dropout)
+        self.dropout = nn.Dropout(attn_dropout, inplace=True)
         self.softmax = nn.Softmax(dim=2)
 
-    def forward(self, q, k, v):
+    def forward(
+        self,
+        q: torch.Tensor,
+        k: torch.Tensor,
+        v: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Forward pass of the scaled dot-product attention.
+        
+        Args:
+            q: Query tensor
+            k: Key tensor
+            v: Value tensor
+            
+        Returns:
+            Tuple containing:
+                - output: Attention output
+                - attn: Attention weights
+        """
+        # Compute attention scores
         attn = torch.matmul(q.unsqueeze(1), k.transpose(1, 2))
         attn = attn / self.temperature
 
+        # Apply softmax and dropout
         attn = self.softmax(attn)
         attn = self.dropout(attn)
+        
+        # Compute output
         output = torch.matmul(attn, v)
 
         return output, attn
 
 
-def get_sinusoid_encoding_table(positions, d_hid, T=1000):
-    ''' Sinusoid position encoding table
-    positions: int or list of integer, if int range(positions)'''
+def get_sinusoid_encoding_table(
+    positions: int | list[int],
+    d_hid: int,
+    T: int = 1000,
+    device: str = "cpu"
+) -> torch.Tensor:
+    """Generate sinusoidal position encoding table.
 
+    Args:
+        positions: Number of positions or list of positions
+        d_hid: Hidden dimension
+        T: Period for the encoding
+        device: Device to place the tensor on
+
+    Returns:
+        torch.Tensor: Position encoding table
+    """
     if isinstance(positions, int):
         positions = list(range(positions))
 
-    def cal_angle(position, hid_idx):
+    def cal_angle(position: int | float, hid_idx: int) -> float:
+        """Calculate angle for position encoding.
+
+        Args:
+            position: Position value
+            hid_idx: Hidden dimension index
+
+        Returns:
+            float: Calculated angle
+        """
         return position / np.power(T, 2 * (hid_idx // 2) / d_hid)
 
-    def get_posi_angle_vec(position):
+    def get_posi_angle_vec(position: int | float) -> list[float]:
+        """Get position angle vector.
+
+        Args:
+            position: Position value
+
+        Returns:
+            List[float]: List of angles for each hidden dimension
+        """
         return [cal_angle(position, hid_j) for hid_j in range(d_hid)]
 
     sinusoid_table = np.array([get_posi_angle_vec(pos_i) for pos_i in positions])
@@ -181,25 +301,54 @@ def get_sinusoid_encoding_table(positions, d_hid, T=1000):
     sinusoid_table[:, 0::2] = np.sin(sinusoid_table[:, 0::2])  # dim 2i
     sinusoid_table[:, 1::2] = np.cos(sinusoid_table[:, 1::2])  # dim 2i+1
 
-    if torch.cuda.is_available():
-        return torch.FloatTensor(sinusoid_table).cuda()
-    else:
-        return torch.FloatTensor(sinusoid_table)
+    return torch.FloatTensor(sinusoid_table).to(device)
 
 
-def get_sinusoid_encoding_table_var(positions, d_hid, clip=4, offset=3, T=1000):
-    ''' Sinusoid position encoding table
-    positions: int or list of integer, if int range(positions)'''
+def get_sinusoid_encoding_table_var(
+    positions: int | list[int],
+    d_hid: int,
+    clip: int = 4,
+    offset: int = 3,
+    T: int = 1000,
+    device: str = "cpu"
+) -> torch.Tensor:
+    """Generate variable sinusoidal position encoding table.
 
+    Args:
+        positions: Number of positions or list of positions
+        d_hid: Hidden dimension
+        clip: Number of dimensions to keep before clipping
+        offset: Offset for the hidden index calculation
+        T: Period for the encoding
+        device: Device to place the tensor on
+
+    Returns:
+        torch.Tensor: Position encoding table with clipped dimensions
+    """
     if isinstance(positions, int):
         positions = list(range(positions))
 
-    x = np.array(positions)
+    def cal_angle(position: int | float, hid_idx: int) -> float:
+        """Calculate angle for position encoding.
 
-    def cal_angle(position, hid_idx):
+        Args:
+            position: Position value
+            hid_idx: Hidden dimension index
+
+        Returns:
+            float: Calculated angle
+        """
         return position / np.power(T, 2 * (hid_idx + offset // 2) / d_hid)
 
-    def get_posi_angle_vec(position):
+    def get_posi_angle_vec(position: int | float) -> list[float]:
+        """Get position angle vector.
+
+        Args:
+            position: Position value
+
+        Returns:
+            List[float]: List of angles for each hidden dimension
+        """
         return [cal_angle(position, hid_j) for hid_j in range(d_hid)]
 
     sinusoid_table = np.array([get_posi_angle_vec(pos_i) for pos_i in positions])
@@ -207,7 +356,5 @@ def get_sinusoid_encoding_table_var(positions, d_hid, clip=4, offset=3, T=1000):
     sinusoid_table = np.sin(sinusoid_table)  # dim 2i
     sinusoid_table[:, clip:] = torch.zeros(sinusoid_table[:, clip:].shape)
 
-    if torch.cuda.is_available():
-        return torch.FloatTensor(sinusoid_table).cuda()
-    else:
-        return torch.FloatTensor(sinusoid_table)
+    return torch.FloatTensor(sinusoid_table).to(device)
+

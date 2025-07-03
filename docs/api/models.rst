@@ -60,6 +60,11 @@ FC Siamese Networks
 .. autoclass:: FCSiamConc
 .. autoclass:: FCSiamDiff
 
+LTAE
+^^^^
+
+.. autoclass:: LTAE
+
 RCF Extractor
 ^^^^^^^^^^^^^
 
@@ -118,11 +123,6 @@ Vision Transformer
 .. autoclass:: ViTHuge14_Weights
 .. autoclass:: ViTSmall14_DINOv2_Weights
 .. autoclass:: ViTBase14_DINOv2_Weights
-
-
-LTAE
-^^^^
-.. autoclass:: LTAE
 
 
 Utility Functions
