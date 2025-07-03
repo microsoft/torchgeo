@@ -7,9 +7,12 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 import torch
 import torch.nn as nn
+from numpy.typing import NDArray
 
 
 class LTAE(nn.Module):
@@ -31,7 +34,7 @@ class LTAE(nn.Module):
         d_k: int = 8,
         n_neurons: tuple[int, ...] = (256, 128),
         dropout: float = 0.2,
-        d_model: int = 256,
+        d_model: int | None = 256,
         T: int = 1000,
         len_max_seq: int = 24,
         positions: list[int] | None = None,
@@ -56,24 +59,21 @@ class LTAE(nn.Module):
         self.in_channels = in_channels
         self.positions = positions
         self.n_neurons = n_neurons
+        self.d_model = d_model if d_model is not None else in_channels
 
         if positions is None:
             positions = [len_max_seq + 1]
 
         if d_model is not None:
-            self.d_model = d_model
             self.inconv = nn.Sequential(
-                nn.Conv1d(in_channels, d_model, 1),
-                nn.LayerNorm([d_model, len_max_seq])
+                nn.Conv1d(in_channels, d_model, 1), nn.LayerNorm([d_model, len_max_seq])
             )
         else:
-            self.d_model = in_channels
             self.inconv = None
 
         sin_tab = get_sinusoid_encoding_table(positions[0], self.d_model // n_head, T=T)
         self.position_enc = nn.Embedding.from_pretrained(  # type: ignore[no-untyped-call]
-            torch.cat([sin_tab for _ in range(n_head)], dim=1),
-            freeze=True
+            torch.cat([sin_tab for _ in range(n_head)], dim=1), freeze=True
         )
 
         self.inlayernorm = nn.LayerNorm(self.in_channels)
@@ -88,11 +88,13 @@ class LTAE(nn.Module):
 
         layers = []
         for i in range(len(self.n_neurons) - 1):
-            layers.extend([
-                nn.Linear(self.n_neurons[i], self.n_neurons[i + 1]),
-                nn.BatchNorm1d(self.n_neurons[i + 1]),
-                activation
-            ])
+            layers.extend(
+                [
+                    nn.Linear(self.n_neurons[i], self.n_neurons[i + 1]),
+                    nn.BatchNorm1d(self.n_neurons[i + 1]),
+                    activation,
+                ]
+            )
 
         self.mlp = nn.Sequential(*layers)
         self.dropout = nn.Dropout(dropout, inplace=True)
@@ -105,8 +107,14 @@ class LTAE(nn.Module):
 
         Returns:
             torch.Tensor: Output tensor of shape (batch_size, n_neurons[-1])
+
+        Raises:
+            AssertionError: If input tensor dimensions don't match expected shape
         """
         sz_b, seq_len, d = x.shape
+        assert d == self.in_channels, (
+            f"Input channels {d} does not match expected channels {self.in_channels}"
+        )
 
         x = self.inlayernorm(x)
 
@@ -169,10 +177,7 @@ class MultiHeadAttention(nn.Module):
         self.attention = ScaledDotProductAttention(temperature=np.power(d_k, 0.5))
 
     def forward(
-        self,
-        q: torch.Tensor,
-        k: torch.Tensor,
-        v: torch.Tensor
+        self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Forward pass of the multi-head attention module.
 
@@ -236,10 +241,7 @@ class ScaledDotProductAttention(nn.Module):
         self.softmax = nn.Softmax(dim=2)
 
     def forward(
-        self,
-        q: torch.Tensor,
-        k: torch.Tensor,
-        v: torch.Tensor
+        self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Forward pass of the scaled dot-product attention.
 
@@ -268,10 +270,7 @@ class ScaledDotProductAttention(nn.Module):
 
 
 def get_sinusoid_encoding_table(
-    positions: int | list[int],
-    d_hid: int,
-    T: int = 1000,
-    device: str = "cpu"
+    positions: int | list[int], d_hid: int, T: int = 1000, device: str = "cpu"
 ) -> torch.Tensor:
     """Generate sinusoidal position encoding table.
 
@@ -284,6 +283,7 @@ def get_sinusoid_encoding_table(
     Returns:
         torch.Tensor: Position encoding table
     """
+
     def cal_angle(position: int | float, hid_idx: int) -> float:
         """Calculate angle for positional encoding."""
         return position / np.power(T, 2 * (hid_idx // 2) / d_hid)  # type: ignore[no-any-return]
@@ -297,11 +297,12 @@ def get_sinusoid_encoding_table(
     else:
         sinusoid_table = [get_posi_angle_vec(pos_i) for pos_i in range(positions)]
 
-    sinusoid_table = np.array(sinusoid_table)
-    sinusoid_table[:, 0::2] = np.sin(sinusoid_table[:, 0::2])  # dim 2i
-    sinusoid_table[:, 1::2] = np.cos(sinusoid_table[:, 1::2])  # dim 2i+1
+    # Convert to numpy array for efficient array operations
+    sinusoid_table_np: NDArray[np.float64] = np.array(sinusoid_table)
+    sinusoid_table_np[:, 0::2] = np.sin(sinusoid_table_np[:, 0::2])  # dim 2i
+    sinusoid_table_np[:, 1::2] = np.cos(sinusoid_table_np[:, 1::2])  # dim 2i+1
 
-    return torch.FloatTensor(sinusoid_table).to(device)
+    return torch.FloatTensor(sinusoid_table_np).to(device)
 
 
 def get_sinusoid_encoding_table_var(
@@ -310,7 +311,7 @@ def get_sinusoid_encoding_table_var(
     clip: int = 4,
     offset: int = 3,
     T: int = 1000,
-    device: str = "cpu"
+    device: str = "cpu",
 ) -> torch.Tensor:
     """Generate variable sinusoidal position encoding table.
 
@@ -325,6 +326,7 @@ def get_sinusoid_encoding_table_var(
     Returns:
         torch.Tensor: Position encoding table
     """
+
     def cal_angle(position: int | float, hid_idx: int) -> float:
         """Calculate angle for positional encoding."""
         return position / np.power(T, 2 * (hid_idx + offset // 2) / d_hid)  # type: ignore[no-any-return]
@@ -338,13 +340,14 @@ def get_sinusoid_encoding_table_var(
     else:
         sinusoid_table = [get_posi_angle_vec(pos_i) for pos_i in range(positions)]
 
-    sinusoid_table = np.array(sinusoid_table)
-    sinusoid_table[:, 0::2] = np.sin(sinusoid_table[:, 0::2])  # dim 2i
-    sinusoid_table[:, 1::2] = np.cos(sinusoid_table[:, 1::2])  # dim 2i+1
+    # Convert to numpy array for efficient array operations
+    sinusoid_table_np: NDArray[np.float64] = np.array(sinusoid_table)
+    sinusoid_table_np[:, 0::2] = np.sin(sinusoid_table_np[:, 0::2])  # dim 2i
+    sinusoid_table_np[:, 1::2] = np.cos(sinusoid_table_np[:, 1::2])  # dim 2i+1
+    sinusoid_table_np[:, clip:] = 0  # Zero out values after clip
 
-    sinusoid_table[:, clip:] = torch.zeros(sinusoid_table[:, clip:].shape)
+    return torch.FloatTensor(sinusoid_table_np).to(device)
 
-    return torch.FloatTensor(sinusoid_table).to(device)
 
 if __name__ == "__main__":
     model = LTAE(in_channels=128)
