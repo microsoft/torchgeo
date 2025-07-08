@@ -10,7 +10,7 @@ lightly==1.5.21
 lightning[pytorch-extra]==2.5.2
 matplotlib==3.10.1
 numpy==2.2.4
-pandas==2.3.0
+pandas==2.3.1
 pillow==11.3.0
 pyproj==3.7.1
 rasterio==1.4.3
