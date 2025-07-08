@@ -82,6 +82,7 @@ builders = [
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
+    yolo,
 ]
 enums = [
     CopernicusFM_Base_Weights,
@@ -104,19 +105,24 @@ enums = [
     ViTLarge16_Weights,
     ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
+    YOLO_Weights,
 ]
 
 
 # check if ultralytics is installed otherwise skip the yolo model tests
 try:
     import ultralytics  # noqa: F401
+
+    ULTRALYTICS_INSTALLED = True
 except ImportError:
-    builders.append(yolo)
-    enums.append(YOLO_Weights)
+    ULTRALYTICS_INSTALLED = False
 
 
 @pytest.mark.parametrize('builder', builders)
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
+    if builder == yolo and not ULTRALYTICS_INSTALLED:
+        pytest.skip('Ultralytics is not installed, skipping YOLO model tests')
+
     model = get_model(builder.__name__)
     assert isinstance(model, nn.Module)
 
