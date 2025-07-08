@@ -29,6 +29,7 @@ from torchgeo.models import (
     ViTLarge16_Weights,
     ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
+    YOLO_Weights,
     copernicusfm_base,
     croma_base,
     croma_large,
@@ -55,6 +56,7 @@ from torchgeo.models import (
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
+    yolo,
 )
 
 builders = [
@@ -80,6 +82,7 @@ builders = [
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
+    yolo,
 ]
 enums = [
     CopernicusFM_Base_Weights,
@@ -102,6 +105,7 @@ enums = [
     ViTLarge16_Weights,
     ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
+    YOLO_Weights,
 ]
 
 

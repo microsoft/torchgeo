@@ -28,6 +28,7 @@ from torchgeo.models import (
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
+    yolo,
 )
 
 __all__ = (
@@ -51,6 +52,13 @@ __all__ = (
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
+    'yolo',
 )
 
-dependencies = ['timm', 'torchvision', 'segmentation_models_pytorch', 'kornia']
+dependencies = [
+    'timm',
+    'torchvision',
+    'segmentation_models_pytorch',
+    'kornia',
+    'ultralytics',
+]
