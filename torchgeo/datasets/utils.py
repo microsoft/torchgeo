@@ -699,9 +699,9 @@ $ pip install {name}
 
 to install just this dependency, or:
 
-$ pip install torchgeo[datasets]
+$ pip install torchgeo[datasets,models]
 
-to install all optional dataset dependencies."""
+to install all optional dependencies."""
         raise DependencyNotFoundError(msg) from None
 
 
