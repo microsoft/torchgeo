@@ -214,6 +214,10 @@ class TestChangeDetectionTask:
     def test_vit_backbone(self) -> None:
         ChangeDetectionTask(model='dpt', backbone='tu-vit_base_patch16_224')
 
+    def test_fcn_model(self) -> None:
+        """FCN has no backbone/decoder. Need separate test for full test coverage."""
+        ChangeDetectionTask(model='fcn')
+
     @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal'])
     def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal']) -> None:
         ChangeDetectionTask(loss=loss_fn)
