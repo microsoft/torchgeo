@@ -34,6 +34,9 @@ scipy==1.9.2
 webdataset==0.2.4
 xarray==0.12.3
 
+# models
+ultralytics==8.3.0
+
 # tests
 pytest==7.3.0
 pytest-cov==4.0.0
