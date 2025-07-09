@@ -17,7 +17,12 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, download_and_extract_archive, percentile_normalization
+from .utils import (
+    Path,
+    download_and_extract_archive,
+    extract_archive,
+    percentile_normalization,
+)
 
 
 class LacunaAfricanFieldBoundaries(NonGeoDataset):
@@ -56,6 +61,8 @@ class LacunaAfricanFieldBoundaries(NonGeoDataset):
     url = 'https://hf.co/datasets/airg/lacuna-field-boundaries/resolve/7fb638c45f22fab28d795ff7660d40ace0003b7a/lacuna-field-boundaries.tar.gz'
     filename = 'lacuna-field-boundaries.tar.gz'
     md5 = '3261a146a7a1452f95820f4e76717754'
+    image_dir = 'images'
+    mask_dir = 'labels'
 
     def __init__(
         self,
@@ -81,16 +88,25 @@ class LacunaAfricanFieldBoundaries(NonGeoDataset):
         self.root = root
         self.bands = bands
         self.transforms = transforms
+        self.download = download
         self.checksum = checksum
+        self._verify()
+        self.images, self.masks = self._load_files(self.root)
 
-        if download:
-            self._download()
+    def _load_files(self, root: Path) -> tuple[list[str], list[str]]:
+        """Load the image and mask files from the dataset.
 
-        self.images = sorted(glob.glob(os.path.join(root, 'images', '*.tif')))
-        self.masks = sorted(glob.glob(os.path.join(root, 'labels', '*.tif')))
+        Args:
+            root: root directory where dataset can be found
 
-        if not self._check_integrity():
-            raise DatasetNotFoundError(self)
+        Returns:
+            a tuple of lists containing the paths to the images and masks
+        """
+        images = sorted(glob.glob(os.path.join(root, self.image_dir, '*.tif')))
+        masks = sorted(glob.glob(os.path.join(root, self.mask_dir, '*.tif')))
+        assert len(images) == len(masks)
+        assert len(images) > 0
+        return images, masks
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
@@ -150,20 +166,30 @@ class LacunaAfricanFieldBoundaries(NonGeoDataset):
             tensor = torch.from_numpy(array).long()
         return tensor
 
-    def _check_integrity(self) -> bool:
-        """Checks the integrity of the dataset structure.
+    def _verify(self) -> None:
+        """Verify the integrity of the dataset."""
+        # Check if the files already exist
+        if os.path.exists(os.path.join(self.root, self.image_dir)) and os.path.exists(
+            os.path.join(self.root, self.mask_dir)
+        ):
+            return
 
-        Returns:
-            True if the dataset directories and split files are found, else False
-        """
-        return len(self.images) != 0 and len(self.images) == len(self.masks)
+        # Check if the zip file has already been downloaded
+        filepath = os.path.join(self.root, self.filename)
+        if os.path.exists(filepath):
+            extract_archive(filepath, self.root)
+            return
+
+        # Check if the user requested to download the dataset
+        if not self.download:
+            raise DatasetNotFoundError(self)
+
+        # Download the dataset
+        self._download()
+        return
 
     def _download(self) -> None:
         """Download the dataset and extract it."""
-        if self._check_integrity():
-            print('Files already downloaded and verified')
-            return
-
         download_and_extract_archive(
             self.url,
             self.root,
