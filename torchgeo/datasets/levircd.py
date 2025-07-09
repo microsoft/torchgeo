@@ -80,7 +80,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         image1 = self._load_image(files['image1'])
         image2 = self._load_image(files['image2'])
         mask = self._load_target(files['mask'])
-        sample = {'image1': image1, 'image2': image2, 'mask': mask}
+        sample = {'image': torch.stack([image1, image2]), 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -149,10 +149,10 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         """
         ncols = 3
 
-        image1 = sample['image1'].permute(1, 2, 0).numpy()
+        image1 = sample['image'][0].permute(1, 2, 0).numpy()
         image1 = percentile_normalization(image1, axis=(0, 1))
 
-        image2 = sample['image2'].permute(1, 2, 0).numpy()
+        image2 = sample['image'][1].permute(1, 2, 0).numpy()
         image2 = percentile_normalization(image2, axis=(0, 1))
 
         if 'prediction' in sample:

@@ -24,33 +24,25 @@ class TestLEVIRCD:
             'train': {
                 'url': os.path.join(directory, 'train.zip'),
                 'filename': 'train.zip',
-                'md5': '7c2e24b3072095519f1be7eb01fae4ff',
             },
-            'val': {
-                'url': os.path.join(directory, 'val.zip'),
-                'filename': 'val.zip',
-                'md5': '5c320223ba88b6fc8ff9d1feebc3b84e',
-            },
+            'val': {'url': os.path.join(directory, 'val.zip'), 'filename': 'val.zip'},
             'test': {
                 'url': os.path.join(directory, 'test.zip'),
                 'filename': 'test.zip',
-                'md5': '021db72d4486726d6a0702563a617b32',
             },
         }
         monkeypatch.setattr(LEVIRCD, 'splits', splits)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return LEVIRCD(root, split, transforms, download=True, checksum=True)
+        return LEVIRCD(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: LEVIRCD) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x['image1'], torch.Tensor)
-        assert isinstance(x['image2'], torch.Tensor)
+        assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
-        assert x['image1'].shape[0] == 3
-        assert x['image2'].shape[0] == 3
+        assert x['image'].shape[1] == 3
 
     def test_len(self, dataset: LEVIRCD) -> None:
         assert len(dataset) == 2
@@ -81,23 +73,19 @@ class TestLEVIRCDPlus:
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
     ) -> LEVIRCDPlus:
-        md5 = '0ccca34310bfe7096dadfbf05b0d180f'
-        monkeypatch.setattr(LEVIRCDPlus, 'md5', md5)
         url = os.path.join('tests', 'data', 'levircd', 'levircdplus', 'LEVIR-CD+.zip')
         monkeypatch.setattr(LEVIRCDPlus, 'url', url)
         root = tmp_path
         split = request.param
         transforms = nn.Identity()
-        return LEVIRCDPlus(root, split, transforms, download=True, checksum=True)
+        return LEVIRCDPlus(root, split, transforms, download=True)
 
     def test_getitem(self, dataset: LEVIRCDPlus) -> None:
         x = dataset[0]
         assert isinstance(x, dict)
-        assert isinstance(x['image1'], torch.Tensor)
-        assert isinstance(x['image2'], torch.Tensor)
+        assert isinstance(x['image'], torch.Tensor)
         assert isinstance(x['mask'], torch.Tensor)
-        assert x['image1'].shape[0] == 3
-        assert x['image2'].shape[0] == 3
+        assert x['image'].shape[1] == 3
 
     def test_len(self, dataset: LEVIRCDPlus) -> None:
         assert len(dataset) == 2

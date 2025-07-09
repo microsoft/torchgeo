@@ -52,7 +52,7 @@ class PredictChangeDetectionDataModule(OSCDDataModule):
 
 
 class TestChangeDetectionTask:
-    @pytest.mark.parametrize('name', ['cabuar', 'oscd'])
+    @pytest.mark.parametrize('name', ['cabuar', 'levirdcd', 'levircdplus', 'oscd'])
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
