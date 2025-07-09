@@ -45,12 +45,12 @@ class TestChaBuD:
         assert isinstance(x['mask'], torch.Tensor)
 
         # Image tests
-        assert x['image'].ndim == 3
+        assert x['image'].ndim == 4
 
         if dataset.bands == ChaBuD.rgb_bands:
-            assert x['image'].shape[0] == 2 * 3
+            assert x['image'].shape[:2] == (2, 3)
         elif dataset.bands == ChaBuD.all_bands:
-            assert x['image'].shape[0] == 2 * 12
+            assert x['image'].shape[:2] == (2, 12)
 
         # Mask tests:
         assert x['mask'].ndim == 2
