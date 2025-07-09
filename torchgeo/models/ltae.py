@@ -3,7 +3,7 @@
 
 # Copyright (c) 2020 VSainteuf (Vivien Sainte Fare Garnot)
 
-"""Lightweight Temporal Attention Encoder (LTAE) model."""
+"""Lightweight Temporal Attention Encoder (L-TAE) model."""
 
 from __future__ import annotations
 
@@ -20,8 +20,11 @@ class LTAE(nn.Module):
     time series data using a multi-head attention mechanism. It is designed to
     efficiently encode temporal sequences into fixed-length embeddings.
 
-    The model architecture is based on the paper:
-    "Lightweight Temporal Self-Attention for Classifying Satellite Images Time Series: https://arxiv.org/pdf/2007.00586"
+    If you use this model in your research, please cite the following paper:
+    
+    * https://arxiv.org/abs/2007.00586
+    
+    .. versionadded:: 0.8
 
     """
 
