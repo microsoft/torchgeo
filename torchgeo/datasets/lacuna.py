@@ -17,7 +17,7 @@ from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, percentile_normalization
+from .utils import Path, download_and_extract_archive, percentile_normalization
 
 
 class LacunaAfricanFieldBoundaries(NonGeoDataset):
@@ -49,24 +49,21 @@ class LacunaAfricanFieldBoundaries(NonGeoDataset):
 
     * https://arxiv.org/abs/2412.18483
 
-    .. note::
-
-       This dataset can be automatically downloaded using the following bash script:
-
-       .. code-block:: bash
-
-          aws s3 sync --no-sign-request s3://africa-field-boundary-labels/ .
-
     .. versionadded:: 0.8
     """
 
     classes = ('Background', 'Field', 'Field Boundary')
+    url = 'https://hf.co/datasets/airg/lacuna-field-boundaries/resolve/7fb638c45f22fab28d795ff7660d40ace0003b7a/lacuna-field-boundaries.tar.gz'
+    filename = 'lacuna-field-boundaries.tar.gz'
+    md5 = '3261a146a7a1452f95820f4e76717754'
 
     def __init__(
         self,
         root: Path = 'data',
         bands: Literal['rgb', 'all'] = 'all',
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
+        download: bool = False,
+        checksum: bool = False,
     ) -> None:
         """Initialize a new LacunaAfricanFieldBoundaries dataset instance.
 
@@ -75,6 +72,8 @@ class LacunaAfricanFieldBoundaries(NonGeoDataset):
             bands: load all RGBN bands or RGB only. One of 'rgb' or 'all'.
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
+            download: if True, download dataset and store it in the root directory
+            checksum: if True, check the MD5 of the downloaded files (may be slow)
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
@@ -82,10 +81,15 @@ class LacunaAfricanFieldBoundaries(NonGeoDataset):
         self.root = root
         self.bands = bands
         self.transforms = transforms
+        self.checksum = checksum
+
+        if download:
+            self._download()
+
         self.images = sorted(glob.glob(os.path.join(root, 'images', '*.tif')))
         self.masks = sorted(glob.glob(os.path.join(root, 'labels', '*.tif')))
 
-        if len(self.images) == 0 or (len(self.images) != len(self.masks)):
+        if not self._check_integrity():
             raise DatasetNotFoundError(self)
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -100,7 +104,7 @@ class LacunaAfricanFieldBoundaries(NonGeoDataset):
         image = self._load_image(self.images[index])
 
         if self.bands == 'rgb':
-            image = image[[3, 2, 1]]
+            image = image[[2, 1, 0]]
 
         mask = self._load_target(self.masks[index])
         sample = {'image': image, 'mask': mask}
@@ -145,6 +149,27 @@ class LacunaAfricanFieldBoundaries(NonGeoDataset):
             array = img.read().squeeze(axis=0)
             tensor = torch.from_numpy(array).long()
         return tensor
+
+    def _check_integrity(self) -> bool:
+        """Checks the integrity of the dataset structure.
+
+        Returns:
+            True if the dataset directories and split files are found, else False
+        """
+        return len(self.images) != 0 and len(self.images) == len(self.masks)
+
+    def _download(self) -> None:
+        """Download the dataset and extract it."""
+        if self._check_integrity():
+            print('Files already downloaded and verified')
+            return
+
+        download_and_extract_archive(
+            self.url,
+            self.root,
+            filename=self.filename,
+            md5=self.md5 if self.checksum else None,
+        )
 
     def plot(
         self,
