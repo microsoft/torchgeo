@@ -61,20 +61,14 @@ class LTAE(nn.Module):
         self.inconv: nn.Sequential | None = None
 
         if positions is None:
-            positions = list(range(len_max_seq))
+            positions = [len_max_seq + 1]
 
         if d_model is not None:
             self.inconv = nn.Sequential(
-                nn.Conv1d(in_channels, d_model, 1),
-                nn.LayerNorm(d_model)  # Apply LayerNorm over the channel dimension only
+                nn.Conv1d(in_channels, d_model, 1), nn.LayerNorm([d_model, len_max_seq])
             )
 
-        # Store the actual positions for reference
-        self.position_values = positions
-        # Create position encoding table using indices [0, 1, 2, ...]
-        sin_tab = get_sinusoid_encoding_table(
-            len(positions), self.d_model // n_head, T=T
-        )
+        sin_tab = get_sinusoid_encoding_table(positions[0], self.d_model // n_head, T=T)
         self.position_enc = nn.Embedding.from_pretrained(  # type: ignore[no-untyped-call]
             torch.cat([sin_tab for _ in range(n_head)], dim=1), freeze=True
         )
@@ -122,26 +116,17 @@ class LTAE(nn.Module):
         x = self.inlayernorm(x)
 
         if self.inconv is not None:
-            # Permute for Conv1d: (batch, seq_len, channels) -> (batch, channels, seq_len)
-            x = x.permute(0, 2, 1)
-            x = self.inconv(x)
-            # Permute back: (batch, channels, seq_len) -> (batch, seq_len, channels)
-            x = x.permute(0, 2, 1)
+            x = self.inconv(x.permute(0, 2, 1)).permute(0, 2, 1)
 
         if self.positions is None:
-            # Use zero-based indices for position encoding
             src_pos = (
-                torch.arange(0, seq_len, dtype=torch.long)
+                torch.arange(1, seq_len + 1, dtype=torch.long)
                 .expand(sz_b, seq_len)
                 .to(x.device)
             )
         else:
-            # For custom positions, use indices [0, 1, 2, ...] that map to our position encoding table
             src_pos = (
-                torch.tensor(
-                    [i % len(self.position_values) for i in range(seq_len)],
-                    dtype=torch.long,
-                )
+                torch.arange(0, seq_len, dtype=torch.long)
                 .expand(sz_b, seq_len)
                 .to(x.device)
             )
@@ -305,10 +290,8 @@ def get_sinusoid_encoding_table(
         return [cal_angle(position, hid_j) for hid_j in range(d_hid)]
 
     if isinstance(positions, list):
-        # For list input, use the actual position values
         sinusoid_table = [get_posi_angle_vec(pos_i) for pos_i in positions]
     else:
-        # For integer input, use range(positions)
         sinusoid_table = [get_posi_angle_vec(pos_i) for pos_i in range(positions)]
 
     # Convert to numpy array for efficient array operations
@@ -317,3 +300,10 @@ def get_sinusoid_encoding_table(
     sinusoid_table_np[:, 1::2] = np.cos(sinusoid_table_np[:, 1::2])  # dim 2i+1
 
     return torch.FloatTensor(sinusoid_table_np).to(device)
+
+
+if __name__ == '__main__':
+    model = LTAE(in_channels=128)
+    x = torch.randn(4, 24, 128)
+    output = model(x)
+    print(output.shape)
