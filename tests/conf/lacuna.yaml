@@ -3,7 +3,7 @@ model:
   init_args:
     model: 'unet'
     backbone: 'resnet18'
-    in_channels: 8
+    in_channels: 4
     task: 'multiclass'
     num_classes: 3
     num_filters: 1
