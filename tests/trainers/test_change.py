@@ -52,12 +52,12 @@ class PredictChangeDetectionDataModule(OSCDDataModule):
 
 
 class TestChangeDetectionTask:
-    @pytest.mark.parametrize('name', ['cabuar', 'oscd'])
+    @pytest.mark.parametrize('name', ['cabuar', 'chabud', 'oscd'])
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         match name:
-            case 'cabuar':
+            case 'cabuar' | 'chabud':
                 pytest.importorskip('h5py', minversion='3.6')
 
         config = os.path.join('tests', 'conf', name + '.yaml')
