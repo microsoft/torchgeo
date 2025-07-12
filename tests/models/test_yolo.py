@@ -24,7 +24,7 @@ class TestYOLO:
         import ultralytics
 
         weights = YOLO_Weights.DELINEATE_ANYTHING
-        path = tmp_path / f'{weights}.pth'
+        path = tmp_path / f'{weights}.pt'
         model = ultralytics.YOLO(
             model=f'{weights.meta["model"]}.yaml', task=weights.meta['task']
         )
@@ -38,6 +38,9 @@ class TestYOLO:
 
     def test_yolo_weights(self, mocked_weights: WeightsEnum) -> None:
         yolo(weights=mocked_weights)
+
+    def test_different_task(self, mocked_weights: WeightsEnum) -> None:
+        yolo(weights=mocked_weights, task='obb')
 
     def test_bands(self, weights: WeightsEnum) -> None:
         if 'bands' in weights.meta:
