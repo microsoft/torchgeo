@@ -61,6 +61,7 @@ class TestSemanticSegmentationTask:
             'inria',
             'l7irish',
             'l8biome',
+            'lacuna',
             'landcoverai',
             'landcoverai100',
             'loveda',
