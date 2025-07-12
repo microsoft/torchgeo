@@ -56,9 +56,9 @@ __all__ = (
 )
 
 dependencies = [
+    'kornia',
+    'segmentation_models_pytorch',
     'timm',
     'torchvision',
-    'segmentation_models_pytorch',
-    'kornia',
     'ultralytics',
 ]

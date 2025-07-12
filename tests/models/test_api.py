@@ -109,19 +109,10 @@ enums = [
 ]
 
 
-# check if ultralytics is installed otherwise skip the yolo model tests
-try:
-    import ultralytics  # noqa: F401
-
-    ULTRALYTICS_INSTALLED = True
-except ImportError:
-    ULTRALYTICS_INSTALLED = False
-
-
 @pytest.mark.parametrize('builder', builders)
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
-    if builder == yolo and not ULTRALYTICS_INSTALLED:
-        pytest.skip('Ultralytics is not installed, skipping YOLO model tests')
+    if builder == yolo:
+        pytest.importorskip('ultralytics', minversion='8.3')
 
     model = get_model(builder.__name__)
     assert isinstance(model, nn.Module)

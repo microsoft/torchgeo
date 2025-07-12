@@ -81,8 +81,8 @@ jobs:
         uses: codecov/codecov-action@v5.4.3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-  datasets:
-    name: datasets
+  optional:
+    name: optional
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo

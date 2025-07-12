@@ -31,6 +31,9 @@ updates:
       # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
       - dependency-name: 'sphinx'
         versions: '>=6'
+      # ultralytics releases new versions almost daily
+      - dependency-name: 'ultralytics'
+        update-types: ['version-update:semver-patch']
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:

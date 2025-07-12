@@ -75,8 +75,8 @@ def yolo(weights: YOLO_Weights | None = None, *args: Any, **kwargs: Any) -> nn.M
 
     Args:
         weights: Pre-trained model weights to use.
-        *args: Additional arguments to pass to ``ultralytics.YOLO``
-        **kwargs: Additional keyword arguments to pass to ``ultralytics.YOLO``
+        *args: Additional arguments to pass to :class:`ultralytics.YOLO`
+        **kwargs: Additional keyword arguments to pass to :class:`ultralytics.YOLO`
 
     Returns:
         An ultralytics.YOLO model.

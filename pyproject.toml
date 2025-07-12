@@ -91,8 +91,8 @@ datasets = [
     "laspy>=2",
     # netcdf4 1.6.1+ required for Python 3.11 wheels
     "netcdf4>=1.6.1",
-    # opencv-python 4.5.5+ required for Python 3.11 wheels
-    "opencv-python>=4.5.5",
+    # opencv-python 4.6.0.66+ required for ultralytics 8.3+ compatibility
+    "opencv-python>=4.6.0.66",
     # pandas 2+ required for parquet extra
     "pandas[parquet]>=2",
     # pycocotools 2.0.7+ required for Python 3.11 wheels
@@ -119,8 +119,8 @@ docs = [
     "sphinx>=4,<6",
 ]
 models = [
-    # ultralytics 8.3.0+ for loading with weights_only=False fixed
-    "ultralytics>=8.3.0",
+    # ultralytics 8.3+ fixes loading with weights_only=False
+    "ultralytics>=8.3",
 ]
 style = [
     # mypy 0.900+ required for pyproject.toml support

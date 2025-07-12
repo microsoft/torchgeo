@@ -11,7 +11,7 @@ from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import YOLO_Weights, yolo
 
-pytest.importorskip('ultralytics', minversion='8.3.0')
+pytest.importorskip('ultralytics', minversion='8.3')
 
 
 class TestYOLO:
