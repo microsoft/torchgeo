@@ -167,7 +167,11 @@ class TestChangeDetectionTask:
         'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
     )
     def test_freeze_backbone(
-        self, model_name: Literal['unet', 'fcsiamdiff', 'fcsiamconc'], backbone: str
+        self,
+        model_name: Literal[
+            'unet', 'deeplabv3+', 'segformer', 'upernet', 'fcsiamdiff', 'fcsiamconc'
+        ],
+        backbone: str,
     ) -> None:
         model = ChangeDetectionTask(
             model=model_name, backbone=backbone, freeze_backbone=True
@@ -183,11 +187,19 @@ class TestChangeDetectionTask:
             ]
         )
 
-    @pytest.mark.parametrize('model_name', ['unet', 'fcsiamdiff', 'fcsiamconc'])
+    @pytest.mark.parametrize(
+        'model_name',
+        ['unet', 'deeplabv3+', 'segformer', 'upernet', 'fcsiamdiff', 'fcsiamconc'],
+    )
     def test_freeze_decoder(
-        self, model_name: Literal['unet', 'fcsiamdiff', 'fcsiamconc']
+        self,
+        model_name: Literal[
+            'unet', 'deeplabv3+', 'segformer', 'upernet', 'fcsiamdiff', 'fcsiamconc'
+        ],
     ) -> None:
-        model = ChangeDetectionTask(model=model_name, freeze_decoder=True)
+        model = ChangeDetectionTask(
+            model=model_name, backbone='resnet18', freeze_decoder=True
+        )
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]
         )
@@ -198,6 +210,13 @@ class TestChangeDetectionTask:
                 for param in model.model.segmentation_head.parameters()
             ]
         )
+
+    def test_vit_backbone(self) -> None:
+        ChangeDetectionTask(model='dpt', backbone='tu-vit_base_patch16_224')
+
+    def test_fcn_model(self) -> None:
+        """FCN has no backbone/decoder. Need separate test for full test coverage."""
+        ChangeDetectionTask(model='fcn')
 
     @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal'])
     def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal']) -> None:

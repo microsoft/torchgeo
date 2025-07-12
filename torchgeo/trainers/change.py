@@ -23,7 +23,7 @@ from torchmetrics.classification import (
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
-from ..models import FCSiamConc, FCSiamDiff, get_weight
+from ..models import FCN, FCSiamConc, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
 
@@ -36,7 +36,16 @@ class ChangeDetectionTask(BaseTask):
 
     def __init__(
         self,
-        model: Literal['unet', 'fcsiamdiff', 'fcsiamconc'] = 'unet',
+        model: Literal[
+            'unet',
+            'deeplabv3+',
+            'fcn',
+            'upernet',
+            'segformer',
+            'dpt',
+            'fcsiamdiff',
+            'fcsiamconc',
+        ] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
@@ -46,6 +55,7 @@ class ChangeDetectionTask(BaseTask):
         patience: int = 10,
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
+        num_filters: int = 3,
     ) -> None:
         """Initialize a new ChangeDetectionTask instance.
 
@@ -68,6 +78,7 @@ class ChangeDetectionTask(BaseTask):
                 decoder and segmentation head.
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
+            num_filters: Number of filters. Only applicable when model='fcn'.
         """
         self.weights = weights
         super().__init__()
@@ -113,6 +124,40 @@ class ChangeDetectionTask(BaseTask):
                     in_channels=in_channels * 2,  # images are concatenated
                     classes=num_classes,
                 )
+            case 'deeplabv3+':
+                self.model = smp.DeepLabV3Plus(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels * 2,  # images are concatenated
+                    classes=1,
+                )
+            case 'fcn':
+                self.model = FCN(
+                    in_channels=in_channels * 2,  # images are concatenated
+                    classes=num_classes,
+                    num_filters=self.hparams['num_filters'],
+                )
+            case 'upernet':
+                self.model = smp.UPerNet(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels * 2,  # images are concatenated
+                    classes=num_classes,
+                )
+            case 'segformer':
+                self.model = smp.Segformer(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels * 2,  # images are concatenated
+                    classes=num_classes,
+                )
+            case 'dpt':
+                self.model = smp.DPT(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels * 2,  # images are concatenated
+                    classes=num_classes,
+                )
             case 'fcsiamdiff':
                 self.model = FCSiamDiff(
                     encoder_name=backbone,
@@ -138,20 +183,12 @@ class ChangeDetectionTask(BaseTask):
             self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
-        if self.hparams['freeze_backbone'] and model in [
-            'unet',
-            'fcsiamdiff',
-            'fcsiamconc',
-        ]:
+        if self.hparams['freeze_backbone'] and model != 'fcn':
             for param in self.model.encoder.parameters():
                 param.requires_grad = False
 
         # Freeze decoder
-        if self.hparams['freeze_decoder'] and model in [
-            'unet',
-            'fcsiamdiff',
-            'fcsiamconc',
-        ]:
+        if self.hparams['freeze_decoder'] and model != 'fcn':
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
 
