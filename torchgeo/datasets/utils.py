@@ -693,15 +693,15 @@ def lazy_import(name: str) -> Any:
         module_to_pypi |= {'cv2': 'opencv-python', 'skimage': 'scikit-image'}
         name = module_to_pypi[name]
         msg = f"""\
-{name} is not installed and is required to use this dataset. Either run:
+{name} is not installed and is required to use this feature. Either run:
 
 $ pip install {name}
 
 to install just this dependency, or:
 
-$ pip install torchgeo[datasets]
+$ pip install torchgeo[datasets,models]
 
-to install all optional dataset dependencies."""
+to install all optional dependencies."""
         raise DependencyNotFoundError(msg) from None
 
 

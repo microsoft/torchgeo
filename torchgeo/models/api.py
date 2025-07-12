@@ -53,6 +53,7 @@ from .vit import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
+from .yolo import YOLO_Weights, yolo
 
 _model: dict[str, Callable[..., nn.Module]] = {
     'copernicusfm_base': copernicusfm_base,
@@ -77,6 +78,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'vit_huge_patch14_224': vit_huge_patch14_224,
     'vit_large_patch16_224': vit_large_patch16_224,
     'vit_small_patch14_dinov2': vit_small_patch14_dinov2,
+    'yolo': yolo,
 }
 
 _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
@@ -100,6 +102,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     vit_huge_patch14_224: ViTHuge14_Weights,
     vit_large_patch16_224: ViTLarge16_Weights,
     vit_small_patch14_dinov2: ViTSmall14_DINOv2_Weights,
+    yolo: YOLO_Weights,
     'copernicusfm_base': CopernicusFM_Base_Weights,
     'croma_base': CROMABase_Weights,
     'croma_large': CROMALarge_Weights,
@@ -120,6 +123,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     'vit_huge_patch14_224': ViTHuge14_Weights,
     'vit_large_patch16_224': ViTLarge16_Weights,
     'vit_small_patch14_dinov2': ViTSmall14_DINOv2_Weights,
+    'yolo': YOLO_Weights,
 }
 
 

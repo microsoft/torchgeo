@@ -28,11 +28,11 @@ jobs:
         id: cache
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/style.txt', 'requirements/tests.txt') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/models.txt', 'requirements/style.txt', 'requirements/tests.txt') }}
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/style.txt -r requirements/tests.txt
+          pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/style.txt -r requirements/tests.txt
           pip cache purge
       - name: List pip dependencies
         run: pip list
