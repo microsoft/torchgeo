@@ -43,14 +43,14 @@ class SubstationDataModule(NonGeoDataModule):
         self.val_split_pct = val_split_pct
         self.test_split_pct = test_split_pct
         self.train_aug = K.AugmentationSequential(
-            K.Resize(size),
+            K.Resize((size, size)),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
             data_keys=None,
             keepdim=True,
         )
         self.aug = K.AugmentationSequential(
-            K.Resize(size), data_keys=None, keepdim=True
+            K.Resize((size, size)), data_keys=None, keepdim=True
         )
 
     def setup(self, stage: str) -> None:
