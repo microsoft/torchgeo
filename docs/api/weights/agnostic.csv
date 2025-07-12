@@ -9,3 +9,4 @@ ResNet50_Weights.FMOW_RGB_GASSL,`link <https://github.com/sustainlab-group/geogr
 ScaleMAE_ViTLarge16_Weights.FMOW_RGB_SCALEMAE,`link <https://github.com/bair-climate-initiative/scale-mae>`__,`link <https://arxiv.org/abs/2212.14532>`__,CC-BY-NC-4.0,explicit,-,-,,,,,,,,,,,
 YOLO_Weights.DELINEATE_ANYTHING,`link <https://github.com/Lavreniuk/Delineate-Anything>`__,`link <https://arxiv.org/abs/2409.16252>`__,AGPL-3.0,implicit,-,-,,,,,,,,,,,
 YOLO_Weights.DELINEATE_ANYTHING_SMALL,`link <https://github.com/Lavreniuk/Delineate-Anything>`__,`link <https://arxiv.org/abs/2409.16252>`__,AGPL-3.0,implicit,-,-,,,,,,,,,,,
+YOLO_Weights.CORE_DINO,`link <https://huggingface.co/gajeshladhar/core-dino>`__,,CC-BY-NC-3.0,implicit,-,-,,,,,,,,,,,
