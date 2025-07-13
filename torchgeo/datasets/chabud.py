@@ -7,6 +7,7 @@ import os
 from collections.abc import Callable, Sequence
 from typing import ClassVar
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -178,11 +179,9 @@ class ChaBuD(NonGeoDataset):
         # index specified bands and concatenate
         pre_array = pre_array[..., self.band_indices]
         post_array = post_array[..., self.band_indices]
-        array = np.concatenate([pre_array, post_array], axis=-1).astype(np.float32)
-
+        array = np.stack([pre_array, post_array]).astype(np.float32)
         tensor = torch.from_numpy(array)
-        # Convert from HxWxC to CxHxW
-        tensor = tensor.permute((2, 0, 1))
+        tensor = einops.rearrange(tensor, 't h w c -> t c h w')
         return tensor
 
     def _load_target(self, index: int) -> Tensor:
@@ -250,8 +249,8 @@ class ChaBuD(NonGeoDataset):
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
         mask = sample['mask'].numpy()
-        image_pre = sample['image'][: len(self.bands)][rgb_indices].numpy()
-        image_post = sample['image'][len(self.bands) :][rgb_indices].numpy()
+        image_pre = sample['image'][0][rgb_indices].numpy()
+        image_post = sample['image'][1][rgb_indices].numpy()
         image_pre = percentile_normalization(image_pre)
         image_post = percentile_normalization(image_post)
 
@@ -264,9 +263,9 @@ class ChaBuD(NonGeoDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
 
-        axs[0].imshow(np.transpose(image_pre, (1, 2, 0)))
+        axs[0].imshow(einops.rearrange(image_pre, 'c h w -> h w c'))
         axs[0].axis('off')
-        axs[1].imshow(np.transpose(image_post, (1, 2, 0)))
+        axs[1].imshow(einops.rearrange(image_post, 'c h w -> h w c'))
         axs[1].axis('off')
         axs[2].imshow(mask)
         axs[2].axis('off')
