@@ -6,7 +6,8 @@ ResNet50_Weights.SENTINEL2_ALL_DECUR,13,`link <https://github.com/zhu-xlab/DeCUR
 ResNet50_Weights.SENTINEL2_ALL_DINO,13,`link <https://github.com/zhu-xlab/SSL4EO-S12>`__,`link <https://arxiv.org/abs/2211.07044>`__,"CC-BY-4.0",90.7,99.1,63.6,
 ResNet50_Weights.SENTINEL2_ALL_MOCO,13,`link <https://github.com/zhu-xlab/SSL4EO-S12>`__,`link <https://arxiv.org/abs/2211.07044>`__,"CC-BY-4.0",91.8,99.1,60.9,
 ResNet50_Weights.SENTINEL2_ALL_SOFTCON, 13,`link <https://github.com/zhu-xlab/softcon>`__,`link <https://arxiv.org/abs/2405.20462>`__,"CC-BY-4.0"
-ResNet50_Weights.SENTINEL2_ALL_SECO_ECO, 9,`link <https://github.com/PlekhanovaElena/ssl4eco>`__,`link <https://arxiv.org/abs/2504.18256>`__,"MIT"
+ResNet50_Weights.SENTINEL2_ALL_SECO_ECO, 12,`link <https://github.com/PlekhanovaElena/ssl4eco>`__,`link <https://arxiv.org/abs/2504.18256>`__,"MIT"
+ResNet50_Weights.SENTINEL2_ALL_NDVI_SECO_ECO, 9,`link <https://github.com/PlekhanovaElena/ssl4eco>`__,`link <https://arxiv.org/abs/2504.18256>`__,"MIT"
 ResNet50_Weights.SENTINEL2_MI_MS_SATLAS,9,`link <https://github.com/allenai/satlaspretrain_models>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY,,,,
 ResNet50_Weights.SENTINEL2_MI_RGB_SATLAS,3,`link <https://github.com/allenai/satlaspretrain_models>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY,,,,
 ResNet50_Weights.SENTINEL2_SI_MS_SATLAS,9,`link <https://github.com/allenai/satlaspretrain_models>`__,`link <https://arxiv.org/abs/2211.15660>`__,ODC-BY,,,,
