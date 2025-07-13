@@ -19,8 +19,9 @@ _delineate_anything_transforms = K.AugmentationSequential(
     K.Resize(size=(512, 512)), data_keys=None
 )
 
-# Model is trained on 320x320 patches of Sentinel-2 L1C TCI uint8 images
-# then resized to 640x640.
+# Model is trained on 320x320 Sentinel-2 L1C TCI uint8 patches
+# then resized to 640x640
+# https://hf.co/mayrajeo/marine-vessel-yolo#direct-use
 _marine_vessel_detection_transforms = K.AugmentationSequential(
     K.CenterCrop(size=(320, 320)),
     K.Resize(size=(640, 640)),
