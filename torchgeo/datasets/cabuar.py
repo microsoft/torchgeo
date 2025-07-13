@@ -274,7 +274,7 @@ class CaBuAr(NonGeoDataset):
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = sample['prediction']
+            prediction = sample['prediction'][0]
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))

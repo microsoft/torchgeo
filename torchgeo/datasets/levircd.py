@@ -168,7 +168,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         axs[2].axis('off')
 
         if 'prediction' in sample:
-            axs[3].imshow(sample['prediction'], cmap='gray', interpolation='none')
+            axs[3].imshow(sample['prediction'][0], cmap='gray', interpolation='none')
             axs[3].axis('off')
             if show_titles:
                 axs[3].set_title('Prediction')
