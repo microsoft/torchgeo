@@ -155,6 +155,17 @@ _seco_transforms = K.AugmentationSequential(
     data_keys=None,
 )
 
+
+# Normalization only available for RGB dataset, defined here:
+# https://github.com/PlekhanovaElena/ssl4eco/blob/7445e048035f7ae31c0eb45e1ed8426c9989fe56/pretraining/pretrain_seco_3heads.py#L140
+# https://github.com/PlekhanovaElena/ssl4eco/blob/7445e048035f7ae31c0eb45e1ed8426c9989fe56/downstream_tasks/test_modules/secoeco_test_module.py#L28
+_seco_eco_transforms = K.AugmentationSequential(
+    K.Resize((224, 224)),
+    K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(10000.0)),
+    data_keys=None,
+)
+
+
 # Normalization only available for RGB dataset, defined here:
 # https://github.com/sustainlab-group/geography-aware-ssl/blob/main/moco_fmow/main_moco_geo%2Btp.py#L287
 _mean = torch.tensor([0.485, 0.456, 0.406])
@@ -630,6 +641,47 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/zhu-xlab/softcon',
             'ssl_method': 'softcon',
             'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL2_ALL_SECO_ECO = Weights(
+        url='https://hf.co/torchgeo/seco-eco/resolve/aea279ea46572cfca5876ac1f9d8d8595fcdeb3b/resnet50_sentinel2_all_seco_eco-90ec322f.pth',
+        transforms=_seco_eco_transforms,
+        meta={
+            'dataset': 'SSL4Eco Dataset',
+            'in_chans': 12,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2504.18256',
+            'repo': 'https://github.com/PlekhanovaElena/ssl4eco',
+            'ssl_method': 'seco-eco',
+            'bands': [
+                'B1',
+                'B2',
+                'B3',
+                'B4',
+                'B5',
+                'B6',
+                'B7',
+                'B8',
+                'B8A',
+                'B9',
+                'B11',
+                'B12',
+            ],
+        },
+    )
+
+    SENTINEL2_ALL_NDVI_SECO_ECO = Weights(
+        url='https://hf.co/torchgeo/seco-eco-ndvi/resolve/44fae184c63b73e15a32be816e023957dc4c56c1/resnet50_sentinel2_all_ndvi_seco_eco-65292b83.pth',
+        transforms=_seco_eco_transforms,
+        meta={
+            'dataset': 'SSL4Eco Dataset',
+            'in_chans': 9,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2504.18256',
+            'repo': 'https://github.com/PlekhanovaElena/ssl4eco',
+            'ssl_method': 'seco-eco',
+            'bands': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'NDVI'],
         },
     )
 
