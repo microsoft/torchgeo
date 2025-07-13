@@ -265,7 +265,7 @@ class ChaBuD(NonGeoDataset):
 
         axs[0].imshow(einops.rearrange(image_pre, 'c h w -> h w c'))
         axs[0].axis('off')
-        axs[1].imshow(einops.rearrange(image_pre, 'c h w -> h w c'))
+        axs[1].imshow(einops.rearrange(image_post, 'c h w -> h w c'))
         axs[1].axis('off')
         axs[2].imshow(mask)
         axs[2].axis('off')
