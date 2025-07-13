@@ -9,6 +9,7 @@ import os
 from collections.abc import Callable
 from typing import ClassVar
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -108,9 +109,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         with Image.open(filename) as img:
             array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array).float()
-            # Convert from HxWxC to CxHxW
-            tensor = tensor.permute((2, 0, 1))
-            return tensor
+            return einops.rearrange(tensor, 'h w c -> c h w')
 
     def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
@@ -127,7 +126,8 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)
-            return tensor
+            # VideoSequential requires time dimension
+            return einops.rearrange(tensor, 'h w -> () h w')
 
     def plot(
         self,
@@ -164,7 +164,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         axs[0].axis('off')
         axs[1].imshow(image2)
         axs[1].axis('off')
-        axs[2].imshow(sample['mask'], cmap='gray', interpolation='none')
+        axs[2].imshow(sample['mask'][0], cmap='gray', interpolation='none')
         axs[2].axis('off')
 
         if 'prediction' in sample:

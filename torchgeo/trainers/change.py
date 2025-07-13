@@ -206,8 +206,6 @@ class ChangeDetectionTask(BaseTask):
         model: str = self.hparams['model']
         x = batch['image']
         y = batch['mask']
-        # channel dim for binary loss functions/metrics
-        y = rearrange(y, 'b h w -> b () h w')
         if model == 'unet':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
         y_hat = self(x)
