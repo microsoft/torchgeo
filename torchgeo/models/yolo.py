@@ -6,6 +6,7 @@
 from typing import Any, cast
 
 import kornia.augmentation as K
+import torch
 import torch.nn as nn
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -16,6 +17,15 @@ from ..datasets.utils import lazy_import
 # normalization method for each source.
 _delineate_anything_transforms = K.AugmentationSequential(
     K.Resize(size=(512, 512)), data_keys=None
+)
+
+# Model is trained on 320x320 patches of Sentinel-2 L1C TCI uint8 images
+# then resized to 640x640.
+_marine_vessel_detection_transforms = K.AugmentationSequential(
+    K.CenterCrop(size=(320, 320)),
+    K.Resize(size=(640, 640)),
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
+    data_keys=None,
 )
 
 
@@ -83,6 +93,25 @@ class YOLO_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://huggingface.co/gajeshladhar/core-dino',
             'resolution': None,
             'license': 'CC-BY-NC-3.0',
+        },
+    )
+    SENTINEL2_RGB_MARINE_VESSEL_DETECTION = Weights(
+        url='https://hf.co/torchgeo/yolo11s_marine_vessel_detection/resolve/9fa738846fe39d20187931e10f3840e595e53c82/yolo11s_sentinel2_rgb_marine_vessel_detection-9c7b6317.pt',
+        transforms=_marine_vessel_detection_transforms,
+        meta={
+            'dataset': 'Finnish Coast Sentinel-2 Marine Vessel Detection',
+            'in_chans': 3,
+            'num_classes': 1,
+            'classes': ('boat',),
+            'model': 'yolo11s',
+            'task': 'detect',
+            'encoder': None,
+            'input_shape': (3, 320, 320),
+            'bands': ['R', 'G', 'B'],
+            'publication': 'https://doi.org/10.1016/j.rse.2025.114791',
+            'repo': 'https://hf.co/mayrajeo/marine-vessel-yolo',
+            'resolution': 10,
+            'license': 'AGPL-3.0',
         },
     )
 

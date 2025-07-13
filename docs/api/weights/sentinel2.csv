@@ -43,3 +43,4 @@ Unet_Weights.SENTINEL2_2CLASS_NC_FTW,8,`link <https://github.com/fieldsoftheworl
 Unet_Weights.SENTINEL2_3CLASS_FTW,8,`link <https://github.com/fieldsoftheworld/ftw-baselines>`__,`link <https://arxiv.org/abs/2409.16252>`__,"CC-BY-4.0",,,
 Unet_Weights.SENTINEL2_3CLASS_NC_FTW,8,`link <https://github.com/fieldsoftheworld/ftw-baselines>`__,`link <https://arxiv.org/abs/2409.16252>`__,"non-commercial",,,
 EarthLoc_Weights.SENTINEL2_RESNET50,3,`link <https://github.com/gmberton/EarthLoc>`__,`link <https://arxiv.org/abs/2403.06758>`__,"MIT",,,
+YOLO_Weights.SENTINEL2_RGB_MARINE_VESSEL_DETECTION,3,`link <https://hf.co/mayrajeo/marine-vessel-yolo>`__,`link <https://doi.org/10.1016/j.rse.2025.114791>`__,"AGPL-3.0",,,
