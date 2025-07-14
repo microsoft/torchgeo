@@ -202,11 +202,12 @@ Sentinel-2
    :file: weights/sentinel2.csv
 
 
-Climate
--------
+Atmospheric
+-----------
 
-.. csv-table::
-   :widths: 45 10 10 10 10
+.. csv-table:: N = Nowcasting, MWF = Medium-Range Weather Forecasting, S2S = Subseasonal to Seasonal, DS = Decadal Scale
+   :widths: 45 10 10 10 10 10
    :header-rows: 1
    :align: center
-   :file: weights/climate.csv
+   :file: weights/atmospheric.csv
+
