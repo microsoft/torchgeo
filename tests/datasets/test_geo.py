@@ -499,6 +499,10 @@ class TestVectorDataset:
             root, res=(0.1, 0.1), transforms=transforms, label_name='label_id'
         )
 
+    def test_invalid_task(self, dataset: CustomVectorDataset) -> None:
+        with pytest.raises(ValueError, match='Invalid task:'):
+            CustomVectorDataset(dataset.paths, task='invalid-task')
+
     def test_getitem(self, dataset: CustomVectorDataset) -> None:
         dataset.task = 'semantic_segmentation'
         x = dataset[dataset.bounds]
