@@ -553,10 +553,7 @@ class TestVectorDataset:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
-        assert torch.equal(
-            x['label'],  # type: ignore[no-untyped-call]
-            torch.tensor([1, 2, 3], dtype=torch.uint8),
-        )
+        assert torch.equal(x['label'], torch.tensor([1, 2, 3], dtype=torch.uint8))
         assert x['bbox_xyxy'].shape[-1] == 4
 
         multilabel.task = 'instance_segmentation'
@@ -565,10 +562,7 @@ class TestVectorDataset:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
-        assert torch.equal(
-            x['label'],  # type: ignore[no-untyped-call]
-            torch.tensor([1, 2, 3], dtype=torch.uint8),
-        )
+        assert torch.equal(x['label'], torch.tensor([1, 2, 3], dtype=torch.uint8))
         assert isinstance(x['mask'], torch.Tensor)
         assert torch.equal(
             x['mask'].unique(),  # type: ignore[no-untyped-call]

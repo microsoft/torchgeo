@@ -821,13 +821,15 @@ class VectorDataset(GeoDataset):
                     ]
 
                     # Get labels
-                    labels = [s[1] for s in shapes]
+                    labels = np.array([s[1] for s in shapes]).astype(np.int32)
 
                     # xmin, ymin, xmax, ymax format
-                    boxes_xyxy = [
-                        [p.bounds[0], p.bounds[1], p.bounds[2], p.bounds[3]]
-                        for p in px_shapes
-                    ]
+                    boxes_xyxy = np.array(
+                        [
+                            [p.bounds[0], p.bounds[1], p.bounds[2], p.bounds[3]]
+                            for p in px_shapes
+                        ]
+                    ).astype(np.float32)
 
                 case 'instance_segmentation':
                     # Get boxes for object detection or instance segmentation
@@ -843,13 +845,15 @@ class VectorDataset(GeoDataset):
                     ]
 
                     # Get labels
-                    labels = [s[1] for s in shapes]
+                    labels = np.array([s[1] for s in shapes]).astype(np.int32)
 
                     # xmin, ymin, xmax, ymax format
-                    boxes_xyxy = [
-                        [p.bounds[0], p.bounds[1], p.bounds[2], p.bounds[3]]
-                        for p in px_shapes
-                    ]
+                    boxes_xyxy = np.array(
+                        [
+                            [p.bounds[0], p.bounds[1], p.bounds[2], p.bounds[3]]
+                            for p in px_shapes
+                        ]
+                    ).astype(np.float32)
 
                     masks = rasterio.features.rasterize(
                         [(s[0], i + 1) for i, s in enumerate(shapes)],
@@ -868,37 +872,24 @@ class VectorDataset(GeoDataset):
             # If no features are found in this key, return an empty mask
             # with the default fill value and dtype used by rasterize
             masks = np.zeros((round(height), round(width)), dtype=np.uint8)
-            boxes_xyxy = []
-            labels = []
+            boxes_xyxy = np.empty((0, 4), dtype=np.float32)
+            labels = np.empty((0,), dtype=np.int32)
 
         # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
-
-        sample = {'crs': self.crs, 'bounds': query}
+        sample: dict[str, Tensor | CRS | GeoSlice] = {'crs': self.crs, 'bounds': query}
 
         match self.task:
             case 'semantic_segmentation':
-                masks = array_to_tensor(masks)
-                masks = masks.to(self.dtype)
-                sample['mask'] = masks
+                sample['mask'] = array_to_tensor(masks).to(self.dtype)
 
             case 'object_detection':
-                boxes_xyxy = array_to_tensor(np.array(boxes_xyxy))
-                labels = array_to_tensor(np.array(labels))
-                boxes_xyxy = boxes_xyxy.to(self.dtype)
-                labels = labels.to(self.dtype)
-                sample['bbox_xyxy'] = boxes_xyxy
-                sample['label'] = labels
+                sample['bbox_xyxy'] = torch.from_numpy(boxes_xyxy)
+                sample['label'] = torch.from_numpy(labels)
 
             case 'instance_segmentation':
-                masks = array_to_tensor(masks)
-                masks = masks.to(self.dtype)
-                boxes_xyxy = array_to_tensor(np.array(boxes_xyxy))
-                labels = array_to_tensor(np.array(labels))
-                boxes_xyxy = boxes_xyxy.to(self.dtype)
-                labels = labels.to(self.dtype)
-                sample['mask'] = masks
-                sample['bbox_xyxy'] = boxes_xyxy
-                sample['label'] = labels
+                sample['mask'] = array_to_tensor(masks)
+                sample['bbox_xyxy'] = torch.from_numpy(boxes_xyxy)
+                sample['label'] = torch.from_numpy(labels)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
