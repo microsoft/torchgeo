@@ -23,7 +23,6 @@ _delineate_anything_transforms = K.AugmentationSequential(
 # then resized to 640x640
 # https://hf.co/mayrajeo/marine-vessel-yolo#direct-use
 _marine_vessel_detection_transforms = K.AugmentationSequential(
-    K.CenterCrop(size=(320, 320)),
     K.Resize(size=(640, 640)),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
     data_keys=None,
