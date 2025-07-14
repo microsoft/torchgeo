@@ -39,7 +39,7 @@ class YOLO_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     DELINEATE_ANYTHING = Weights(
-        url='https://hf.co/torchgeo/delineate-anything-s/resolve/60bea7b2f81568d16d5c75e4b5b06289e1d7efaf/delineate_anything_rgb_yolo11x-88ede029.pt',
+        url='https://hf.co/torchgeo/delineate-anything/resolve/60bea7b2f81568d16d5c75e4b5b06289e1d7efaf/delineate_anything_rgb_yolo11x-88ede029.pt',
         transforms=_delineate_anything_transforms,
         meta={
             'dataset': 'FBIS-22M',
@@ -96,7 +96,7 @@ class YOLO_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
     SENTINEL2_RGB_MARINE_VESSEL_DETECTION = Weights(
-        url='https://hf.co/torchgeo/yolo11s_marine_vessel_detection/resolve/9fa738846fe39d20187931e10f3840e595e53c82/yolo11s_sentinel2_rgb_marine_vessel_detection-9c7b6317.pt',
+        url='https://hf.co/torchgeo/yolo11s_marine_vessel_detection/resolve/f57c8537eef80e8fb4b1ad85e02db1d6de3f3e40/yolo11s_sentinel2_rgb_marine_vessel_detection-952cb83c.pt',
         transforms=_marine_vessel_detection_transforms,
         meta={
             'dataset': 'Finnish Coast Sentinel-2 Marine Vessel Detection',
