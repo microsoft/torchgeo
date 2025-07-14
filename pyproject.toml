@@ -139,7 +139,7 @@ tests = [
     "pytest-cov>=4",
 ]
 all = [
-    "torchgeo[datasets,models,docs,style,tests]",
+    "torchgeo[datasets,docs,models,style,tests]",
 ]
 
 [project.scripts]
