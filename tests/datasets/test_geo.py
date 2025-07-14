@@ -553,7 +553,7 @@ class TestVectorDataset:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
-        assert torch.equal(x['label'], torch.tensor([1, 2, 3], dtype=torch.uint8))
+        assert torch.equal(x['label'], torch.tensor([1, 2, 3], dtype=torch.int32))
         assert x['bbox_xyxy'].shape[-1] == 4
 
         multilabel.task = 'instance_segmentation'
@@ -562,7 +562,7 @@ class TestVectorDataset:
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['bbox_xyxy'], torch.Tensor)
         assert isinstance(x['label'], torch.Tensor)
-        assert torch.equal(x['label'], torch.tensor([1, 2, 3], dtype=torch.uint8))
+        assert torch.equal(x['label'], torch.tensor([1, 2, 3], dtype=torch.int32))
         assert isinstance(x['mask'], torch.Tensor)
         assert torch.equal(
             x['mask'].unique(),  # type: ignore[no-untyped-call]
@@ -578,11 +578,11 @@ class TestVectorDataset:
 
         dataset.task = 'object_detection'
         x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]  # type: ignore[misc]
-        assert torch.equal(x['bbox_xyxy'], torch.empty(0, dtype=dataset.dtype))
+        assert torch.equal(x['bbox_xyxy'], torch.empty(0, 4, dtype=torch.float32))
 
         dataset.task = 'instance_segmentation'
         x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]  # type: ignore[misc]
-        assert torch.equal(x['bbox_xyxy'], torch.empty(0, dtype=dataset.dtype))
+        assert torch.equal(x['bbox_xyxy'], torch.empty(0, 4, dtype=torch.float32))
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
     def test_invalid_query(self, dataset: CustomVectorDataset) -> None:
