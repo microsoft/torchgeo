@@ -501,7 +501,7 @@ class TestVectorDataset:
 
     def test_invalid_task(self, dataset: CustomVectorDataset) -> None:
         with pytest.raises(ValueError, match='Invalid task:'):
-            CustomVectorDataset(dataset.paths, task='invalid-task')
+            CustomVectorDataset(dataset.paths, task='invalid-task')  # type: ignore[arg-type]
 
     def test_getitem(self, dataset: CustomVectorDataset) -> None:
         dataset.task = 'semantic_segmentation'
