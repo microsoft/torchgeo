@@ -82,6 +82,7 @@ from .geo import (
     NonGeoClassificationDataset,
     NonGeoDataset,
     RasterDataset,
+    RioXarrayDataset,
     UnionDataset,
     VectorDataset,
 )
@@ -316,6 +317,7 @@ __all__ = (
     'RGBBandsMissingError',
     'RasterDataset',
     'ReforesTree',
+    'RioXarrayDataset',
     'RwandaFieldBoundary',
     'SSL4EOLBenchmark',
     'SatlasPretrain',
