@@ -499,7 +499,12 @@ class TestVectorDataset:
             root, res=(0.1, 0.1), transforms=transforms, label_name='label_id'
         )
 
+    def test_invalid_task(self, dataset: CustomVectorDataset) -> None:
+        with pytest.raises(ValueError, match='Invalid task:'):
+            CustomVectorDataset(dataset.paths, task='invalid-task')  # type: ignore[arg-type]
+
     def test_getitem(self, dataset: CustomVectorDataset) -> None:
+        dataset.task = 'semantic_segmentation'
         x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
@@ -509,11 +514,34 @@ class TestVectorDataset:
             torch.tensor([0, 1], dtype=torch.uint8),
         )
 
+        dataset.task = 'object_detection'
+        x = dataset[dataset.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['bbox_xyxy'], torch.Tensor)
+        assert isinstance(x['label'], torch.Tensor)
+        assert x['bbox_xyxy'].shape[-1] == 4
+
+        dataset.task = 'instance_segmentation'
+        x = dataset[dataset.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['bbox_xyxy'], torch.Tensor)
+        assert isinstance(x['label'], torch.Tensor)
+        assert isinstance(x['mask'], torch.Tensor)
+        assert torch.equal(
+            x['mask'].unique(),  # type: ignore[no-untyped-call]
+            torch.tensor([0, 1], dtype=torch.uint8),
+        )
+        assert x['bbox_xyxy'].shape[-1] == 4
+        assert len(x['label']) == x['mask'].shape[0]
+
     def test_time_index(self, dataset: CustomVectorDataset) -> None:
         assert dataset.bounds[2].start > pd.Timestamp.min
         assert dataset.bounds[2].stop < pd.Timestamp.max
 
     def test_getitem_multilabel(self, multilabel: CustomVectorDataset) -> None:
+        multilabel.task = 'semantic_segmentation'
         x = multilabel[multilabel.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
@@ -523,8 +551,42 @@ class TestVectorDataset:
             torch.tensor([0, 1, 2, 3], dtype=torch.uint8),
         )
 
+        multilabel.task = 'object_detection'
+        x = multilabel[multilabel.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['bbox_xyxy'], torch.Tensor)
+        assert isinstance(x['label'], torch.Tensor)
+        assert torch.equal(x['label'], torch.tensor([1, 2, 3], dtype=torch.int32))
+        assert x['bbox_xyxy'].shape[-1] == 4
+
+        multilabel.task = 'instance_segmentation'
+        x = multilabel[multilabel.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['bbox_xyxy'], torch.Tensor)
+        assert isinstance(x['label'], torch.Tensor)
+        assert torch.equal(x['label'], torch.tensor([1, 2, 3], dtype=torch.int32))
+        assert isinstance(x['mask'], torch.Tensor)
+        assert torch.equal(
+            x['mask'].unique(),  # type: ignore[no-untyped-call]
+            torch.tensor([0, 1], dtype=torch.uint8),
+        )
+        assert x['bbox_xyxy'].shape[-1] == 4
+        assert len(x['label']) == x['mask'].shape[0]
+
     def test_empty_shapes(self, dataset: CustomVectorDataset) -> None:
+        dataset.task = 'semantic_segmentation'
         x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]  # type: ignore[misc]
+        assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
+
+        dataset.task = 'object_detection'
+        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]  # type: ignore[misc]
+        assert torch.equal(x['bbox_xyxy'], torch.empty(0, 4, dtype=torch.float32))
+
+        dataset.task = 'instance_segmentation'
+        x = dataset[1.1:1.9, 1.1:1.9, pd.Timestamp.min : pd.Timestamp.max]  # type: ignore[misc]
+        assert torch.equal(x['bbox_xyxy'], torch.empty(0, 4, dtype=torch.float32))
         assert torch.equal(x['mask'], torch.zeros(8, 8, dtype=torch.uint8))
 
     def test_invalid_query(self, dataset: CustomVectorDataset) -> None:
