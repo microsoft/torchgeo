@@ -7,7 +7,6 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch
-from torch import Tensor
 from torch.utils.data import random_split
 
 from ..datasets import OSCD
@@ -116,25 +115,3 @@ class OSCDDataModule(NonGeoDataModule):
             )
         if stage in ['test']:
             self.test_dataset = OSCD(split='test', **self.kwargs)
-
-    def on_after_batch_transfer(
-        self, batch: dict[str, Tensor], dataloader_idx: int
-    ) -> dict[str, Tensor]:
-        """Apply batch augmentations to the batch after it is transferred to the device.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented.
-            dataloader_idx: The index of the dataloader to which the batch belongs.
-
-        Returns:
-            A batch of data.
-
-        .. versionadded:: 0.7
-        """
-        # This solves a special case where if batch_size=1 the mask won't be stacked correctly
-        if batch['mask'].ndim == 3:
-            batch['mask'] = batch['mask'].unsqueeze(dim=0)
-
-        batch = super().on_after_batch_transfer(batch, dataloader_idx)
-        batch['mask'] = batch['mask'].squeeze(dim=1)
-        return batch

@@ -1,0 +1,14 @@
+model:
+  class_path: ChangeDetectionTask
+  init_args:
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 3
+    loss: 'bce'
+data:
+  class_path: LEVIRCDDataModule
+  init_args:
+    batch_size: 2
+    patch_size: 32
+  dict_kwargs:
+    root: 'tests/data/levircd/levircd'

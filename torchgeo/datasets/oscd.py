@@ -8,6 +8,7 @@ import os
 from collections.abc import Callable, Sequence
 from typing import ClassVar
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -242,7 +243,8 @@ class OSCD(NonGeoDataset):
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)
-            return tensor
+            # VideoSequential requires time dimension
+            return einops.rearrange(tensor, 'h w -> () h w')
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -319,7 +321,7 @@ class OSCD(NonGeoDataset):
             )
             array: np.typing.NDArray[np.uint8] = draw_semantic_segmentation_masks(
                 torch.from_numpy(rgb_img),
-                sample['mask'],
+                sample['mask'][0],
                 alpha=alpha,
                 colors=list(self.colormap),
             )

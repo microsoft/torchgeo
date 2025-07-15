@@ -206,8 +206,6 @@ class ChangeDetectionTask(BaseTask):
         model: str = self.hparams['model']
         x = batch['image']
         y = batch['mask']
-        # channel dim for binary loss functions/metrics
-        y = rearrange(y, 'b h w -> b () h w')
         if model == 'unet':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
         y_hat = self(x)
@@ -238,10 +236,6 @@ class ChangeDetectionTask(BaseTask):
                 )
                 batch = aug(batch)
                 batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
-                # Remove channel dim from mask
-                batch['prediction'] = rearrange(
-                    batch['prediction'], 'b () h w -> b h w'
-                )
                 for key in ['image', 'mask', 'prediction']:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]

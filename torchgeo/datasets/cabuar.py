@@ -208,7 +208,8 @@ class CaBuAr(NonGeoDataset):
 
         tensor = torch.from_numpy(array)
         tensor = tensor.to(torch.long)
-        return tensor
+        # VideoSequential requires time dimension
+        return einops.rearrange(tensor, 'h w -> () h w')
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -263,7 +264,7 @@ class CaBuAr(NonGeoDataset):
             else:
                 raise ValueError("Dataset doesn't contain some of the RGB bands")
 
-        mask = sample['mask'].numpy()
+        mask = sample['mask'].numpy()[0]
         image_pre = sample['image'][0][rgb_indices].numpy()
         image_post = sample['image'][1][rgb_indices].numpy()
         image_pre = percentile_normalization(image_pre)
@@ -273,7 +274,7 @@ class CaBuAr(NonGeoDataset):
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
-            prediction = sample['prediction']
+            prediction = sample['prediction'][0]
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
