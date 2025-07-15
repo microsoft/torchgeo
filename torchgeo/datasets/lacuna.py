@@ -5,8 +5,7 @@
 
 import glob
 import os
-from collections.abc import Callable
-from typing import Literal
+from collections.abc import Callable, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +14,7 @@ import torch
 from matplotlib.figure import Figure
 from torch import Tensor
 
-from .errors import DatasetNotFoundError
+from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import NonGeoDataset
 from .utils import (
     Path,
@@ -63,11 +62,13 @@ class LacunaAfricanFieldBoundaries(NonGeoDataset):
     md5 = '3261a146a7a1452f95820f4e76717754'
     image_dir = 'images'
     mask_dir = 'labels'
+    all_bands = ('B04', 'B03', 'B02', 'B05')
+    rgb_bands = ('B04', 'B03', 'B02')
 
     def __init__(
         self,
         root: Path = 'data',
-        bands: Literal['rgb', 'all'] = 'all',
+        bands: Sequence[str] = all_bands,
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -76,7 +77,7 @@ class LacunaAfricanFieldBoundaries(NonGeoDataset):
 
         Args:
             root: root directory where dataset can be found
-            bands: load all RGBN bands or RGB only. One of 'rgb' or 'all'.
+            bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes input sample and its target as
                 entry and returns a transformed version
             download: if True, download dataset and store it in the root directory
@@ -84,12 +85,15 @@ class LacunaAfricanFieldBoundaries(NonGeoDataset):
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
+            AssertionError: If number of images and masks do not match
         """
+        assert set(bands) <= set(self.all_bands)
         self.root = root
         self.bands = bands
         self.transforms = transforms
         self.download = download
         self.checksum = checksum
+        self.band_indices = [self.all_bands.index(b) for b in self.bands]
         self._verify()
         self.images, self.masks = self._load_files(self.root)
 
@@ -118,9 +122,7 @@ class LacunaAfricanFieldBoundaries(NonGeoDataset):
             data and label at that index
         """
         image = self._load_image(self.images[index])
-
-        if self.bands == 'rgb':
-            image = image[[2, 1, 0]]
+        image = image[self.band_indices]
 
         mask = self._load_target(self.masks[index])
         sample = {'image': image, 'mask': mask}
@@ -216,7 +218,12 @@ class LacunaAfricanFieldBoundaries(NonGeoDataset):
         Raises:
             RGBBandsMissingError: If *bands* does not include all RGB bands.
         """
-        image = sample['image'][:3].permute(1, 2, 0).float().numpy()
+        try:
+            rgb_indices = [self.bands.index(band) for band in self.rgb_bands]
+        except ValueError as e:
+            raise RGBBandsMissingError() from e
+
+        image = sample['image'][rgb_indices].permute(1, 2, 0).float().numpy()
         image = percentile_normalization(image, lower=1, upper=99, axis=(0, 1))
         mask = sample['mask'].numpy().astype('uint8').squeeze()
 
