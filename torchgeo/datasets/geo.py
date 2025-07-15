@@ -876,7 +876,7 @@ class VectorDataset(GeoDataset):
             labels = np.empty((0,), dtype=np.int32)
 
         # Use array_to_tensor since rasterize may return uint16/uint32 arrays.
-        sample: dict[str, Tensor | CRS | GeoSlice] = {'crs': self.crs, 'bounds': query}
+        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
 
         match self.task:
             case 'semantic_segmentation':
