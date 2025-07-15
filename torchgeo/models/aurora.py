@@ -104,8 +104,7 @@ def aurora_swin_unet(
     Returns:
         An Aurora model.
     """
-    lazy_import('aurora')
-    import aurora
+    aurora = lazy_import('aurora')
 
     if weights is None:
         model = aurora.Aurora(*args, **kwargs)
