@@ -44,7 +44,7 @@ class TestLTAE:
         in_channels = 128
         wrong_channels = 64  # Different from model's in_channels
 
-        with pytest.raises(AssertionError):
+        with pytest.raises(RuntimeError):
             model = LTAE(in_channels=in_channels)
             x = torch.randn(batch_size, seq_len, wrong_channels)
             model(x)
