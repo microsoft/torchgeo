@@ -5,7 +5,6 @@
 
 """Lightweight Temporal Attention Encoder (L-TAE) model."""
 
-from __future__ import annotations
 
 import math
 import torch
