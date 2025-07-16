@@ -74,10 +74,7 @@ class LTAE(nn.Module):
 
         # Use PyTorch's built-in MultiheadAttention
         self.attention = nn.MultiheadAttention(
-            embed_dim=self.d_model,
-            num_heads=n_head,
-            dropout=dropout,
-            batch_first=True
+            embed_dim=self.d_model, num_heads=n_head, dropout=dropout, batch_first=True
         )
 
         self.inlayernorm = nn.LayerNorm(self.in_channels)
@@ -162,6 +159,6 @@ class PositionalEncoding(nn.Module):
             torch.Tensor: Output tensor with positional encoding added
         """
         # Get positional encoding up to the sequence length
-        pe = self.pe[:, :x.size(1)]  # type: ignore[index]
+        pe = self.pe[:, : x.size(1)]  # type: ignore[index]
         output: torch.Tensor = self.dropout(x + pe)
         return output
