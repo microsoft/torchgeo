@@ -2,7 +2,8 @@ model:
   class_path: AutoregressionTask
   init_args:
     loss: 'mse'
-    model: 'lstm_seq2seq'
+    model: 'seq2seq'
+    rnn_type: 'gru'
     input_size: 3
     input_size_decoder: 1
     target_indices: [2]

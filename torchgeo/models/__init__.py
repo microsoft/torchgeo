@@ -30,7 +30,7 @@ from .resnet import (
     resnet152,
 )
 from .scale_mae import ScaleMAE, ScaleMAELarge16_Weights, scalemae_large_patch16
-from .seq2seq import LSTMSeq2Seq
+from .seq2seq import Seq2Seq
 from .swin import Swin_V2_B_Weights, Swin_V2_T_Weights, swin_v2_b, swin_v2_t
 from .vit import (
     ViTBase14_DINOv2_Weights,
@@ -64,7 +64,6 @@ __all__ = (
     'FCSiamConc',
     'FCSiamDiff',
     'FarSeg',
-    'LSTMSeq2Seq',
     'Panopticon',
     'Panopticon_Weights',
     'ResNet18_Weights',
@@ -72,6 +71,7 @@ __all__ = (
     'ResNet152_Weights',
     'ScaleMAE',
     'ScaleMAELarge16_Weights',
+    'Seq2Seq',
     'Swin_V2_B_Weights',
     'Swin_V2_T_Weights',
     'ViTBase14_DINOv2_Weights',

@@ -10,7 +10,7 @@ from torch import Tensor
 from torchmetrics import MetricCollection
 from torchmetrics.regression import MeanAbsoluteError, MeanSquaredError
 
-from torchgeo.models import LSTMSeq2Seq
+from torchgeo.models import Seq2Seq
 
 from .base import BaseTask
 
@@ -20,7 +20,7 @@ class AutoregressionTask(BaseTask):
 
     def __init__(
         self,
-        model: str = 'lstm_seq2seq',
+        model: str = 'seq2seq',
         input_size: int = 1,
         input_size_decoder: int = 1,
         output_size: int = 1,
@@ -33,8 +33,8 @@ class AutoregressionTask(BaseTask):
         """Initialize a new AutoregressionTask instance.
 
         Args:
-            model: Name of the model to use, currently supports 'lstm_seq2seq'.
-                Defaults to 'lstm_seq2seq'.
+            model: Name of the model to use, currently supports 'seq2seq'.
+                Defaults to 'seq2seq'.
             input_size: The number of features in the input. Defaults to 1.
             input_size_decoder: The number of features in the decoder input.
                 Defaults to 1.
@@ -54,8 +54,8 @@ class AutoregressionTask(BaseTask):
         input_size = self.hparams['input_size']
         input_size_decoder = self.hparams['input_size_decoder']
 
-        if model == 'lstm_seq2seq':
-            self.model = LSTMSeq2Seq(
+        if model == 'seq2seq':
+            self.model = Seq2Seq(
                 input_size_encoder=input_size,
                 input_size_decoder=input_size_decoder,
                 **self.kwargs,
@@ -63,7 +63,7 @@ class AutoregressionTask(BaseTask):
         else:
             raise ValueError(
                 f"Model type '{model}' is not valid. "
-                "Currently, only supports 'lstm_seq2seq'."
+                "Currently, only supports 'seq2seq'."
             )
 
     def configure_losses(self) -> None:
