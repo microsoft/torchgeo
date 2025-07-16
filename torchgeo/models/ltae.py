@@ -37,7 +37,7 @@ class LTAE(nn.Module):
         d_model: int | None = 256,
         T: int = 1000,
         len_max_seq: int = 24,
-        positions: list[int] | None = None,
+        positions: Sequence[int] | None = None,
     ) -> None:
         """Sequence-to-embedding encoder.
 
