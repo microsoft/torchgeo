@@ -3,11 +3,13 @@ model:
   init_args:
     model: 'unet'
     backbone: 'resnet18'
-    in_channels: 12
+    in_channels: 3
     loss: 'bce'
 data:
-  class_path: ChaBuDDataModule
+  class_path: LEVIRCDPlusDataModule
   init_args:
     batch_size: 2
+    patch_size: 32
+    val_split_pct: 0.5
   dict_kwargs:
-    root: 'tests/data/chabud'
+    root: 'tests/data/levircd/levircdplus'
