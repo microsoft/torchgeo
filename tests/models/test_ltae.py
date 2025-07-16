@@ -22,7 +22,7 @@ class TestLTAE:
         x = torch.randn(batch_size, seq_len, in_channels)
         output = model(x)
 
-        assert output.shape[0] == batch_size
+        assert output.shape[0] == (batch_size, model.n_neurons[-1])
         assert len(output.shape) == 2  # (batch_size, embedding_dim)
 
     @pytest.mark.parametrize('in_channels', [64, 128, 256])
