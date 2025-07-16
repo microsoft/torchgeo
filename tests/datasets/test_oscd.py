@@ -69,7 +69,7 @@ class TestOSCD:
         assert isinstance(x['image'], torch.Tensor)
         assert x['image'].ndim == 4
         assert isinstance(x['mask'], torch.Tensor)
-        assert x['mask'].ndim == 2
+        assert x['mask'].ndim == 3
 
         if dataset.bands == OSCD.rgb_bands:
             assert x['image'].shape[1] == 3

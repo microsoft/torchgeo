@@ -69,8 +69,8 @@ dependencies = [
     "segmentation-models-pytorch>=0.5",
     # shapely 2+ required for shapely.Geometry
     "shapely>=2",
-    # timm 0.8+ required for timm.models.adapt_input_conv, 0.9.2 required by SMP
-    "timm>=0.9.2",
+    # timm 1.0.3+ required for forward_intermediates support for ViT
+    "timm>=1.0.3",
     # torch 2+ required for Python 3.11 wheels
     "torch>=2",
     # torchmetrics 1.2+ required for average argument in mAP metric
@@ -91,8 +91,8 @@ datasets = [
     "laspy>=2",
     # netcdf4 1.6.1+ required for Python 3.11 wheels
     "netcdf4>=1.6.1",
-    # opencv-python 4.5.5+ required for Python 3.11 wheels
-    "opencv-python>=4.5.5",
+    # opencv-python 4.6.0.66+ required for ultralytics 8.3+ compatibility
+    "opencv-python>=4.6.0.66",
     # pandas 2+ required for parquet extra
     "pandas[parquet]>=2",
     # pycocotools 2.0.7+ required for Python 3.11 wheels
@@ -118,6 +118,10 @@ docs = [
     # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
     "sphinx>=4,<6",
 ]
+models = [
+    # ultralytics 8.3+ fixes loading with weights_only=False
+    "ultralytics>=8.3",
+]
 style = [
     # mypy 0.900+ required for pyproject.toml support
     "mypy>=0.900",
@@ -133,7 +137,7 @@ tests = [
     "pytest-cov>=4",
 ]
 all = [
-    "torchgeo[datasets,docs,style,tests]",
+    "torchgeo[datasets,docs,models,style,tests]",
 ]
 
 [project.scripts]

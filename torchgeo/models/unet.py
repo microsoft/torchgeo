@@ -21,6 +21,9 @@ _ftw_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(3000.0)), data_keys=None
 )
 
+# No normalization used see: https://github.com/Restor-Foundation/tcd/blob/main/src/tcd_pipeline/data/datamodule.py#L145
+_tcd_bands = ['R', 'G', 'B']
+_tcd_transforms = K.AugmentationSequential(K.Resize(size=(1024, 1024)), data_keys=None)
 # https://github.com/pytorch/vision/pull/6883
 # https://github.com/pytorch/vision/pull/7107
 # Can be removed once torchvision>=0.15 is required
@@ -94,6 +97,42 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
             'bands': _ftw_sentinel2_bands,
             'license': 'non-commercial',
+        },
+    )
+    OAM_RGB_RESNET50_TCD = Weights(
+        url='https://hf.co/torchgeo/unet_resnet50_oam_rgb_tcd/resolve/main/unet_resnet50_oam_rgb_tcd-72b9b753.pth',
+        transforms=_tcd_transforms,
+        meta={
+            'dataset': 'OAM-TCD',
+            'in_chans': 3,
+            'num_classes': 2,
+            'model': 'U-Net',
+            'encoder': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2407.11743',
+            'repo': 'https://github.com/restor-foundation/tcd',
+            'bands': _tcd_bands,
+            'classes': ('background', 'tree-canopy'),
+            'input_shape': (3, 1024, 1024),
+            'resolution': 0.1,
+            'license': 'CC-BY-NC-4.0',
+        },
+    )
+    OAM_RGB_RESNET34_TCD = Weights(
+        url='https://hf.co/torchgeo/unet_resnet34_oam_rgb_tcd/resolve/main/unet_resnet34_oam_rgb_tcd-72b9b753.pth',
+        transforms=_tcd_transforms,
+        meta={
+            'dataset': 'OAM-TCD',
+            'in_chans': 3,
+            'num_classes': 2,
+            'model': 'U-Net',
+            'encoder': 'resnet34',
+            'publication': 'https://arxiv.org/abs/2407.11743',
+            'repo': 'https://github.com/restor-foundation/tcd',
+            'bands': _tcd_bands,
+            'classes': ('background', 'tree-canopy'),
+            'input_shape': (3, 1024, 1024),
+            'resolution': 0.1,
+            'license': 'CC-BY-NC-4.0',
         },
     )
 
