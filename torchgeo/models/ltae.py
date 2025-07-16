@@ -5,6 +5,7 @@
 
 """Lightweight Temporal Attention Encoder (L-TAE) model."""
 
+from typing import Sequence
 
 import math
 import torch
