@@ -106,9 +106,6 @@ class LTAE(nn.Module):
 
         Returns:
             torch.Tensor: Output tensor of shape (batch_size, n_neurons[-1])
-
-        Raises:
-            AssertionError: If input tensor dimensions don't match expected shape
         """
         sz_b, seq_len, d = x.shape
         assert d == self.in_channels, (
