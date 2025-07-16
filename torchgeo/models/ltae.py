@@ -7,9 +7,9 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 
-import math
 import torch
 import torch.nn as nn
 
@@ -163,4 +163,5 @@ class PositionalEncoding(nn.Module):
         """
         # Get positional encoding up to the sequence length
         pe = self.pe[:, :x.size(1)]  # type: ignore[index]
-        return self.dropout(x + pe)
+        output: torch.Tensor = self.dropout(x + pe)
+        return output
