@@ -5,7 +5,9 @@
 
 """Lightweight Temporal Attention Encoder (L-TAE) model."""
 
-from typing import Sequence
+from __future__ import annotations
+
+from collections.abc import Sequence
 
 import math
 import torch
@@ -119,14 +121,14 @@ class LTAE(nn.Module):
 
         # Apply multi-head attention
         # PyTorch's MultiheadAttention expects query, key, value
-        enc_output, _ = self.attention(x, x, x)
+        attention_output, _ = self.attention(x, x, x)
 
         # Process through MLP
         # Take the mean over the sequence dimension to get a fixed-size representation
-        enc_output = enc_output.mean(dim=1)  # (batch_size, d_model)
-        enc_output: torch.Tensor = self.outlayernorm(self.dropout(self.mlp(enc_output)))
+        mlp_input = attention_output.mean(dim=1)  # (batch_size, d_model)
+        output: torch.Tensor = self.outlayernorm(self.dropout(self.mlp(mlp_input)))
 
-        return enc_output
+        return output
 
 
 class PositionalEncoding(nn.Module):
@@ -159,5 +161,6 @@ class PositionalEncoding(nn.Module):
         Returns:
             torch.Tensor: Output tensor with positional encoding added
         """
-        x = x + self.pe[:, :x.size(1)]
-        return self.dropout(x)
+        # Get positional encoding up to the sequence length
+        pe = self.pe[:, :x.size(1)]  # type: ignore[index]
+        return self.dropout(x + pe)
