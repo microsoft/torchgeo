@@ -108,9 +108,6 @@ class LTAE(nn.Module):
             torch.Tensor: Output tensor of shape (batch_size, n_neurons[-1])
         """
         sz_b, seq_len, d = x.shape
-        assert d == self.in_channels, (
-            f'Input channels {d} does not match expected channels {self.in_channels}'
-        )
 
         x = self.inlayernorm(x)
 
