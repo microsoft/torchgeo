@@ -12,4 +12,5 @@ This section provides an overview and links to the documentation for all models 
 
    models/changestar
    models/changestarfarseg
+   models/changemixin
 
