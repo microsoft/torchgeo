@@ -1,4 +1,4 @@
-TorchGeo Models
+torchgeo.models
 ===============
 
 .. module:: torchgeo.models

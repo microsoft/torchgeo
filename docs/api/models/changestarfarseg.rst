@@ -1,6 +1,3 @@
-ChangeStarFarSeg
-================
-
 .. autoclass:: torchgeo.models.ChangeStarFarSeg
    :members:
    :undoc-members:
