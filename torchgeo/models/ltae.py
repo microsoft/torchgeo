@@ -34,7 +34,7 @@ class LTAE(nn.Module):
         in_channels: int = 128,
         n_head: int = 16,
         d_k: int = 8,
-        n_neurons: tuple[int, ...] = (256, 128),
+        n_neurons: Sequence[int] = (256, 128),
         dropout: float = 0.2,
         d_model: int | None = 256,
         T: int = 1000,
