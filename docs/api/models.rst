@@ -60,6 +60,11 @@ FC Siamese Networks
 .. autoclass:: FCSiamConc
 .. autoclass:: FCSiamDiff
 
+L-TAE
+^^^^^
+
+.. autoclass:: LTAE
+
 RCF Extractor
 ^^^^^^^^^^^^^
 
