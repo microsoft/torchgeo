@@ -60,8 +60,8 @@ FC Siamese Networks
 .. autoclass:: FCSiamConc
 .. autoclass:: FCSiamDiff
 
-LTAE
-^^^^
+L-TAE
+^^^^^
 
 .. autoclass:: LTAE
 
