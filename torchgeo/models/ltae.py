@@ -5,13 +5,12 @@
 
 """Lightweight Temporal Attention Encoder (L-TAE) model."""
 
-from __future__ import annotations
-
 import math
 from collections.abc import Sequence
 
 import torch
 import torch.nn as nn
+from torch import Tensor
 
 
 class LTAE(nn.Module):
@@ -26,7 +25,6 @@ class LTAE(nn.Module):
     * https://arxiv.org/abs/2007.00586
 
     .. versionadded:: 0.8
-
     """
 
     def __init__(
@@ -47,15 +45,17 @@ class LTAE(nn.Module):
             in_channels: Number of channels of the input embeddings
             n_head: Number of attention heads
             d_k: Dimension of the key and query vectors
-            n_neurons: Defines the dimensions of the successive feature spaces of the MLP that processes
-                the concatenated outputs of the attention heads
+            n_neurons: Defines the dimensions of the successive feature spaces of the
+                MLP that processes the concatenated outputs of the attention heads
             dropout: dropout
             T: Period to use for the positional encoding
-            len_max_seq: Maximum sequence length, used to pre-compute the positional encoding table
-            positions: List of temporal positions to use instead of position in the sequence
-            d_model: If specified, the input tensors will first processed by a fully connected layer
-                to project them into a feature space of dimension d_model
-
+            len_max_seq: Maximum sequence length, used to pre-compute the positional
+                encoding table
+            positions: List of temporal positions to use instead of position in the
+                sequence
+            d_model: If specified, the input tensors will first processed by a fully
+                connected layer to project them into a feature space of dimension
+                d_model
         """
         super().__init__()
         self.in_channels = in_channels
@@ -97,14 +97,14 @@ class LTAE(nn.Module):
         self.mlp = nn.Sequential(*layers)
         self.dropout = nn.Dropout(dropout, inplace=True)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model.
 
         Args:
             x: Input tensor of shape (batch_size, seq_len, in_channels)
 
         Returns:
-            torch.Tensor: Output tensor of shape (batch_size, n_neurons[-1])
+            Output tensor of shape (batch_size, n_neurons[-1])
         """
         sz_b, seq_len, d = x.shape
 
@@ -123,7 +123,7 @@ class LTAE(nn.Module):
         # Process through MLP
         # Take the mean over the sequence dimension to get a fixed-size representation
         mlp_input = attention_output.mean(dim=1)  # (batch_size, d_model)
-        output: torch.Tensor = self.outlayernorm(self.dropout(self.mlp(mlp_input)))
+        output: Tensor = self.outlayernorm(self.dropout(self.mlp(mlp_input)))
 
         return output
 
@@ -149,16 +149,16 @@ class PositionalEncoding(nn.Module):
         pe[0, :, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass.
 
         Args:
             x: Input tensor of shape (batch_size, seq_len, d_model)
 
         Returns:
-            torch.Tensor: Output tensor with positional encoding added
+            Output tensor with positional encoding added
         """
         # Get positional encoding up to the sequence length
         pe = self.pe[:, : x.size(1)]  # type: ignore[index]
-        output: torch.Tensor = self.dropout(x + pe)
+        output: Tensor = self.dropout(x + pe)
         return output
