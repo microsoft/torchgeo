@@ -272,8 +272,12 @@ class ChangeDetectionTask(BaseTask):
         y = batch['mask']
         if model == 'unet':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
+        y_hat = self(x)
 
-        y_hat = self(x).squeeze(1)
+        # For binary tasks, squeeze channel dimension to match expected shape
+        if self.hparams['task'] == 'binary':
+            y_hat = y_hat.squeeze(1)
+            y = y.squeeze(1)
 
         # Keep original loss computation first
         if self.hparams['loss'] == 'bce':
@@ -285,7 +289,16 @@ class ChangeDetectionTask(BaseTask):
         # Retrieve the correct metrics based on the stage
         metrics = getattr(self, f'{stage}_metrics', None)
         if metrics:
-            metrics(y_hat, y)
+            # Transform predictions for metrics calculation
+            match self.hparams['task']:
+                case 'binary' | 'multilabel':
+                    y_hat_metrics = (y_hat.sigmoid() >= 0.5).long()
+                case 'multiclass':
+                    y_hat_metrics = y_hat.argmax(dim=1)
+
+            # Ensure target is in correct format for metrics
+            y_metrics = y.long()
+            metrics(y_hat_metrics, y_metrics)
             self.log_dict({f'{k}': v for k, v in metrics.compute().items()})
 
         if stage in ['val']:
@@ -305,10 +318,16 @@ class ChangeDetectionTask(BaseTask):
                 )
                 batch = aug(batch)
                 match self.hparams['task']:
-                    case 'binary' | 'multilabel':
+                    case 'binary':
+                        prediction = (y_hat.sigmoid() >= 0.5).long()
+                        # Restore channel dimension for plotting compatibility
+                        batch['prediction'] = prediction.unsqueeze(1)
+                    case 'multilabel':
                         batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
                     case 'multiclass':
-                        batch['prediction'] = y_hat.argmax(dim=1)
+                        prediction = y_hat.argmax(dim=1)
+                        # Restore channel dimension for plotting compatibility
+                        batch['prediction'] = prediction.unsqueeze(1)
 
                 for key in ['image', 'mask', 'prediction']:
                     batch[key] = batch[key].cpu()
