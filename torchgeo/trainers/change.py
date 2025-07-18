@@ -306,6 +306,7 @@ class ChangeDetectionTask(BaseTask):
 
         if not model.startswith('fcsiam') and not model.startswith('changevit'):
             x = rearrange(x, 'b t c h w -> b (t c) h w')
+        y_hat = self(x)
 
         if self.hparams['task'] == 'multiclass':
             y = y.squeeze(1)
@@ -355,7 +356,11 @@ class ChangeDetectionTask(BaseTask):
                 )
                 batch = aug(batch)
                 match self.hparams['task']:
-                    case 'binary' | 'multilabel':
+                    case 'binary':
+                        prediction = (y_hat.sigmoid() >= 0.5).long()
+                        # Restore channel dimension for plotting compatibility
+                        batch['prediction'] = prediction.unsqueeze(1)
+                    case 'multilabel':
                         batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
                     case 'multiclass':
                         batch['prediction'] = y_hat.argmax(dim=1, keepdim=True)
