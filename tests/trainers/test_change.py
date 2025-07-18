@@ -50,7 +50,6 @@ class MockMulticlassChangeDataModule:
         self.num_classes = 3  # no change, building change, vegetation change
 
     def train_dataloader(self) -> MockDataLoader:
-        # Return a simple iterator that yields one batch
         class DataLoader:
             def __init__(self, batch_fn: Callable[[], dict[str, torch.Tensor]]) -> None:
                 self.batch_fn = batch_fn
@@ -61,7 +60,6 @@ class MockMulticlassChangeDataModule:
         return DataLoader(self._mock_batch)
 
     def val_dataloader(self) -> MockDataLoader:
-        # Return a simple iterator that yields one batch
         class DataLoader:
             def __init__(self, batch_fn: Callable[[], dict[str, torch.Tensor]]) -> None:
                 self.batch_fn = batch_fn
@@ -91,7 +89,6 @@ class MockMultilabelChangeDataModule:
         self.num_labels = 3  # building, vegetation, water changes
 
     def train_dataloader(self) -> MockDataLoader:
-        # Return a simple iterator that yields one batch
         class DataLoader:
             def __init__(self, batch_fn: Callable[[], dict[str, torch.Tensor]]) -> None:
                 self.batch_fn = batch_fn
@@ -102,7 +99,6 @@ class MockMultilabelChangeDataModule:
         return DataLoader(self._mock_batch)
 
     def val_dataloader(self) -> MockDataLoader:
-        # Return a simple iterator that yields one batch
         class DataLoader:
             def __init__(self, batch_fn: Callable[[], dict[str, torch.Tensor]]) -> None:
                 self.batch_fn = batch_fn
@@ -352,7 +348,7 @@ class TestChangeDetectionTask:
         trainer.validate(model=model, datamodule=datamodule)
 
 
-class TestNewChangeDetectionTasks:
+class TestMulticlassMultilabelChangeDetectionTasks:
     """Tests for multiclass and multilabel change detection functionality."""
 
     def test_multiclass_change_detection(self, fast_dev_run: bool) -> None:
