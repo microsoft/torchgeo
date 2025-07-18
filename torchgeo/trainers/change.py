@@ -4,6 +4,7 @@
 """Trainers for change detection."""
 
 import os
+from collections.abc import Sequence
 from typing import Any, Literal
 
 import kornia.augmentation as K
@@ -14,12 +15,7 @@ import torch.nn as nn
 from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
-from torchmetrics import MetricCollection
-from torchmetrics.classification import (
-    BinaryAccuracy,
-    BinaryF1Score,
-    BinaryJaccardIndex,
-)
+from torchmetrics import Accuracy, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
@@ -29,7 +25,7 @@ from .base import BaseTask
 
 
 class ChangeDetectionTask(BaseTask):
-    """Change Detection. Currently supports binary change between two timesteps.
+    """Change Detection. Supports binary, multiclass, and multilabel change detection.
 
     .. versionadded:: 0.8
     """
@@ -49,13 +45,17 @@ class ChangeDetectionTask(BaseTask):
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
-        pos_weight: Tensor | None = None,
-        loss: Literal['bce', 'jaccard', 'focal'] = 'bce',
+        task: Literal['binary', 'multiclass', 'multilabel'] = 'binary',
+        num_classes: int | None = None,
+        num_labels: int | None = None,
+        num_filters: int | None = None,
+        loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'bce',
+        class_weights: Tensor | Sequence[float] | None = None,
+        ignore_index: int | None = None,
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
-        num_filters: int = 3,
     ) -> None:
         """Initialize a new ChangeDetectionTask instance.
 
@@ -69,40 +69,101 @@ class ChangeDetectionTask(BaseTask):
                 None for random weights, or the path to a saved model state dict. FCN
                 model does not support pretrained weights.
             in_channels: Number of channels per image.
-            pos_weight: A weight of positive examples and used with 'bce' loss.
+            task: One of 'binary', 'multiclass', or 'multilabel'.
+            num_classes: Number of prediction classes (only for ``task='multiclass'``).
+            num_labels: Number of prediction labels (only for ``task='multilabel'``).
+            num_filters: Number of filters. Only applicable when model='fcn'.
             loss: Name of the loss function, currently supports
-                'bce', 'jaccard', or 'focal' loss.
+                'ce', 'bce', 'jaccard', and 'focal' loss.
+            class_weights: Optional rescaling weight given to each
+                class and used with 'ce' loss.
+            ignore_index: Optional integer class index to ignore in the loss and
+                metrics.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             freeze_backbone: Freeze the backbone network to fine-tune the
                 decoder and segmentation head.
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
-            num_filters: Number of filters. Only applicable when model='fcn'.
+
+        .. versionadded:: 0.8
+           The *task*, *num_classes*, *num_labels*, *class_weights*, and
+           *ignore_index* parameters.
         """
+        # Set num_filters default based on task if not provided
+        if num_filters is None:
+            if task == 'binary':
+                num_filters = 3
+            elif task == 'multiclass':
+                num_filters = num_classes
+            elif task == 'multilabel':
+                num_filters = num_labels
+
         self.weights = weights
         super().__init__()
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
+        ignore_index: int | None = self.hparams['ignore_index']
+        class_weights = self.hparams['class_weights']
+        if class_weights is not None and not isinstance(class_weights, Tensor):
+            class_weights = torch.tensor(class_weights, dtype=torch.float32)
+
         match self.hparams['loss']:
-            case 'bce':
-                self.criterion = nn.BCEWithLogitsLoss(
-                    pos_weight=self.hparams['pos_weight']
+            case 'ce':
+                ignore_value = -1000 if ignore_index is None else ignore_index
+                self.criterion: nn.Module = nn.CrossEntropyLoss(
+                    ignore_index=ignore_value, weight=class_weights
                 )
+            case 'bce':
+                self.criterion = nn.BCEWithLogitsLoss()
             case 'jaccard':
-                self.criterion = smp.losses.JaccardLoss(mode='binary')
+                # JaccardLoss requires a list of classes to use instead of a class
+                # index to ignore.
+                if self.hparams['task'] == 'multiclass' and ignore_index is not None:
+                    classes = [
+                        i
+                        for i in range(self.hparams['num_classes'])
+                        if i != ignore_index
+                    ]
+                    self.criterion = smp.losses.JaccardLoss(
+                        mode=self.hparams['task'], classes=classes
+                    )
+                else:
+                    self.criterion = smp.losses.JaccardLoss(mode=self.hparams['task'])
             case 'focal':
-                self.criterion = smp.losses.FocalLoss(mode='binary', normalized=True)
+                self.criterion = smp.losses.FocalLoss(
+                    mode=self.hparams['task'],
+                    ignore_index=ignore_index,
+                    normalized=True,
+                )
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.Accuracy`: Overall accuracy
+          (OA) using 'micro' averaging. The number of true positives divided by the
+          dataset size. Higher values are better.
+        * :class:`~torchmetrics.JaccardIndex`: Intersection
+          over union (IoU). Uses 'micro' averaging. Higher valuers are better.
+
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not reflect
+             minority class accuracy.
+           * 'Macro' averaging, not used here, gives equal weight to each class, useful
+             for balanced performance assessment across imbalanced classes.
+        """
+        kwargs = {
+            'task': self.hparams['task'],
+            'num_classes': self.hparams['num_classes'],
+            'num_labels': self.hparams['num_labels'],
+            'ignore_index': self.hparams['ignore_index'],
+        }
         metrics = MetricCollection(
-            {
-                'accuracy': BinaryAccuracy(),
-                'jaccard': BinaryJaccardIndex(),
-                'f1': BinaryF1Score(),
-            }
+            [
+                Accuracy(multidim_average='global', average='micro', **kwargs),
+                JaccardIndex(average='micro', **kwargs),
+            ]
         )
         self.train_metrics = metrics.clone(prefix='train_')
         self.val_metrics = metrics.clone(prefix='val_')
@@ -114,7 +175,10 @@ class ChangeDetectionTask(BaseTask):
         backbone: str = self.hparams['backbone']
         weights = self.weights
         in_channels: int = self.hparams['in_channels']
-        num_classes = 1
+        num_classes: int = (
+            self.hparams['num_classes'] or self.hparams['num_labels'] or 1
+        )
+        num_filters: int = self.hparams['num_filters']
 
         match model:
             case 'unet':
@@ -129,13 +193,13 @@ class ChangeDetectionTask(BaseTask):
                     encoder_name=backbone,
                     encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels * 2,  # images are concatenated
-                    classes=1,
+                    classes=num_classes,
                 )
             case 'fcn':
                 self.model = FCN(
                     in_channels=in_channels * 2,  # images are concatenated
                     classes=num_classes,
-                    num_filters=self.hparams['num_filters'],
+                    num_filters=num_filters,
                 )
             case 'upernet':
                 self.model = smp.UPerNet(
@@ -208,9 +272,14 @@ class ChangeDetectionTask(BaseTask):
         y = batch['mask']
         if model == 'unet':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
-        y_hat = self(x)
 
-        loss: Tensor = self.criterion(y_hat, y.to(torch.float))
+        y_hat = self(x).squeeze(1)
+
+        # Keep original loss computation first
+        if self.hparams['loss'] == 'bce':
+            y = y.float()
+
+        loss: Tensor = self.criterion(y_hat, y)
         self.log(f'{stage}_loss', loss)
 
         # Retrieve the correct metrics based on the stage
@@ -235,7 +304,12 @@ class ChangeDetectionTask(BaseTask):
                     keepdim=True,
                 )
                 batch = aug(batch)
-                batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
+                match self.hparams['task']:
+                    case 'binary' | 'multilabel':
+                        batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
+                    case 'multiclass':
+                        batch['prediction'] = y_hat.argmax(dim=1)
+
                 for key in ['image', 'mask', 'prediction']:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
@@ -304,5 +378,11 @@ class ChangeDetectionTask(BaseTask):
         if model == 'unet':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
         y_hat: Tensor = self(x)
-        y_hat = y_hat.sigmoid()
+
+        match self.hparams['task']:
+            case 'binary' | 'multilabel':
+                y_hat = y_hat.sigmoid()
+            case 'multiclass':
+                y_hat = y_hat.softmax(dim=1)
+
         return y_hat
