@@ -35,7 +35,7 @@ jobs:
       - name: List pip dependencies
         run: pip list
       - name: Run notebook checks
-        run: pytest --nbmake --durations=10 docs/tutorials/pytorch.ipynb
+        run: pytest --nbmake --durations=10 docs/tutorials/trainers.ipynb docs/tutorials/pytorch.ipynb
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
