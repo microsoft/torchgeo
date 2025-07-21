@@ -6,8 +6,9 @@ torchgeo.models
 This section provides an overview and links to the documentation for all models available in ``torchgeo.models``.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Models
+   :titlesonly:
    :glob:
 
    models/changestar
