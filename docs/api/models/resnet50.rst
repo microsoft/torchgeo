@@ -1,9 +1,17 @@
 ResNet-50
 =========
 
-.. autofunction:: torchgeo.models.resnet50
+.. currentmodule:: torchgeo.models
 
-.. autoclass:: torchgeo.models.ResNet50_Weights
+Model function
+--------------
+
+.. autofunction:: resnet50
+
+Pretrained Weights
+------------------
+
+.. autoclass:: ResNet50_Weights
    :members:
    :undoc-members:
    :show-inheritance:
