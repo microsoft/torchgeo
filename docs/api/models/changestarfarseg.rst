@@ -1,3 +1,6 @@
+ChangeStarFarSeg
+================
+
 .. currentmodule:: torchgeo.models
 
 .. autoclass:: ChangeStarFarSeg
