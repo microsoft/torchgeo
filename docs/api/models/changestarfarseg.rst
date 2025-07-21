@@ -1,5 +1,5 @@
-ChangeStarFarSeg Model
-======================
+ChangeStarFarSeg
+================
 
 .. currentmodule:: torchgeo.models
 
