@@ -1,9 +1,7 @@
 ChangeStarFarSeg
 ================
 
-.. currentmodule:: torchgeo.models
-
-.. autoclass:: ChangeStarFarSeg
+.. autoclass:: torchgeo.models.ChangeStarFarSeg
    :members:
    :undoc-members:
    :show-inheritance:
