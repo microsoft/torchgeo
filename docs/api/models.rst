@@ -6,7 +6,7 @@ torchgeo.models
 This section provides an overview and links to the documentation for all models available in ``torchgeo.models``.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Models
    :glob:
 
