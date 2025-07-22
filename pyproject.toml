@@ -71,8 +71,8 @@ dependencies = [
     "shapely>=2",
     # timm 1.0.3+ required for forward_intermediates support for ViT
     "timm>=1.0.3",
-    # torch 2+ required for Python 3.11 wheels
-    "torch>=2",
+    # torch 2.1.0+ required for torch._dynamo export support
+    "torch>=2.1.0",
     # torchmetrics 1.2+ required for average argument in mAP metric
     "torchmetrics>=1.2",
     # torchvision 0.15.1+ required for Python 3.11 wheels
