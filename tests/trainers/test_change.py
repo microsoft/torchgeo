@@ -2,9 +2,8 @@
 # Licensed under the MIT License.
 
 import os
-from collections.abc import Callable, Generator
 from pathlib import Path
-from typing import Any, Literal, Protocol
+from typing import Any, Literal
 
 import pytest
 import segmentation_models_pytorch as smp
@@ -35,92 +34,6 @@ class ChangeDetectionTestModel(Module):
         return x
 
 
-class MockDataLoader(Protocol):
-    """Protocol for mock data loaders."""
-
-    def __iter__(self) -> Generator[dict[str, torch.Tensor], None, None]: ...
-
-
-class MockMulticlassChangeDataModule:
-    """Mock datamodule for multiclass change detection."""
-
-    def __init__(self, batch_size: int = 2, patch_size: int = 32) -> None:
-        self.batch_size = batch_size
-        self.patch_size = patch_size
-        self.num_classes = 3  # no change, building change, vegetation change
-
-    def train_dataloader(self) -> MockDataLoader:
-        class DataLoader:
-            def __init__(self, batch_fn: Callable[[], dict[str, torch.Tensor]]) -> None:
-                self.batch_fn = batch_fn
-
-            def __iter__(self) -> Generator[dict[str, torch.Tensor], None, None]:
-                yield self.batch_fn()
-
-        return DataLoader(self._mock_batch)
-
-    def val_dataloader(self) -> MockDataLoader:
-        class DataLoader:
-            def __init__(self, batch_fn: Callable[[], dict[str, torch.Tensor]]) -> None:
-                self.batch_fn = batch_fn
-
-            def __iter__(self) -> Generator[dict[str, torch.Tensor], None, None]:
-                yield self.batch_fn()
-
-        return DataLoader(self._mock_batch)
-
-    def _mock_batch(self) -> dict[str, torch.Tensor]:
-        return {
-            'image': torch.randn(
-                self.batch_size, 2, 3, self.patch_size, self.patch_size
-            ),
-            'mask': torch.randint(
-                0, self.num_classes, (self.batch_size, self.patch_size, self.patch_size)
-            ),
-        }
-
-
-class MockMultilabelChangeDataModule:
-    """Mock datamodule for multilabel change detection."""
-
-    def __init__(self, batch_size: int = 2, patch_size: int = 32) -> None:
-        self.batch_size = batch_size
-        self.patch_size = patch_size
-        self.num_labels = 3  # building, vegetation, water changes
-
-    def train_dataloader(self) -> MockDataLoader:
-        class DataLoader:
-            def __init__(self, batch_fn: Callable[[], dict[str, torch.Tensor]]) -> None:
-                self.batch_fn = batch_fn
-
-            def __iter__(self) -> Generator[dict[str, torch.Tensor], None, None]:
-                yield self.batch_fn()
-
-        return DataLoader(self._mock_batch)
-
-    def val_dataloader(self) -> MockDataLoader:
-        class DataLoader:
-            def __init__(self, batch_fn: Callable[[], dict[str, torch.Tensor]]) -> None:
-                self.batch_fn = batch_fn
-
-            def __iter__(self) -> Generator[dict[str, torch.Tensor], None, None]:
-                yield self.batch_fn()
-
-        return DataLoader(self._mock_batch)
-
-    def _mock_batch(self) -> dict[str, torch.Tensor]:
-        return {
-            'image': torch.randn(
-                self.batch_size, 2, 3, self.patch_size, self.patch_size
-            ),
-            'mask': torch.randint(
-                0,
-                2,
-                (self.batch_size, self.num_labels, self.patch_size, self.patch_size),
-            ).float(),
-        }
-
-
 def create_model(**kwargs: Any) -> Module:
     return ChangeDetectionTestModel(**kwargs)
 
@@ -140,7 +53,17 @@ class PredictChangeDetectionDataModule(OSCDDataModule):
 
 class TestChangeDetectionTask:
     @pytest.mark.parametrize(
-        'name', ['cabuar', 'chabud', 'levircd', 'levircdplus', 'oscd']
+        'name',
+        [
+            'cabuar',
+            'chabud',
+            'levircd',
+            'levircdplus',
+            'oscd',
+            'oscd_multiclass',
+            'oscd_multiclass_focal',
+            'oscd_multiclass_jaccard',
+        ],
     )
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
@@ -346,99 +269,3 @@ class TestChangeDetectionTask:
             max_epochs=1,
         )
         trainer.validate(model=model, datamodule=datamodule)
-
-
-class TestMulticlassMultilabelChangeDetectionTasks:
-    """Tests for multiclass and multilabel change detection functionality."""
-
-    def test_multiclass_change_detection(self, fast_dev_run: bool) -> None:
-        """Test multiclass change detection (3 classes: no change, building, vegetation)."""
-        datamodule = MockMulticlassChangeDataModule(batch_size=2, patch_size=32)
-        model = ChangeDetectionTask(
-            backbone='resnet18',
-            in_channels=3,
-            model='unet',
-            task='multiclass',
-            num_classes=3,
-            loss='ce',
-        )
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.fit(
-            model=model,
-            train_dataloaders=datamodule.train_dataloader(),
-            val_dataloaders=datamodule.val_dataloader(),
-        )
-
-    def test_multilabel_change_detection(self, fast_dev_run: bool) -> None:
-        """Test multilabel change detection (3 labels: building, vegetation, water)."""
-        datamodule = MockMultilabelChangeDataModule(batch_size=2, patch_size=32)
-        model = ChangeDetectionTask(
-            backbone='resnet18',
-            in_channels=3,
-            model='unet',
-            task='multilabel',
-            num_labels=3,
-            loss='bce',
-        )
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.fit(
-            model=model,
-            train_dataloaders=datamodule.train_dataloader(),
-            val_dataloaders=datamodule.val_dataloader(),
-        )
-
-    def test_multiclass_with_jaccard_loss(self, fast_dev_run: bool) -> None:
-        """Test multiclass change detection with Jaccard loss."""
-        datamodule = MockMulticlassChangeDataModule(batch_size=2, patch_size=32)
-        model = ChangeDetectionTask(
-            backbone='resnet18',
-            in_channels=3,
-            model='unet',
-            task='multiclass',
-            num_classes=3,
-            loss='jaccard',
-        )
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.fit(
-            model=model,
-            train_dataloaders=datamodule.train_dataloader(),
-            val_dataloaders=datamodule.val_dataloader(),
-        )
-
-    def test_multilabel_with_focal_loss(self, fast_dev_run: bool) -> None:
-        """Test multilabel change detection with Focal loss."""
-        datamodule = MockMultilabelChangeDataModule(batch_size=2, patch_size=32)
-        model = ChangeDetectionTask(
-            backbone='resnet18',
-            in_channels=3,
-            model='unet',
-            task='multilabel',
-            num_labels=3,
-            loss='focal',
-        )
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.fit(
-            model=model,
-            train_dataloaders=datamodule.train_dataloader(),
-            val_dataloaders=datamodule.val_dataloader(),
-        )

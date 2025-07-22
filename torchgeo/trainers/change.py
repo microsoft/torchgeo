@@ -270,6 +270,10 @@ class ChangeDetectionTask(BaseTask):
         if self.hparams['task'] == 'binary':
             y_hat = y_hat.squeeze(1)
             y = y.squeeze(1)
+        elif self.hparams['task'] == 'multiclass':
+            if y.dim() == 4:  # If [batch, 1, H, W], squeeze to [batch, H, W]
+                y = y.squeeze(1)
+            y = y.long()
 
         # Keep original loss computation first
         if self.hparams['loss'] == 'bce':
