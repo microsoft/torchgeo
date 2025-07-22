@@ -15,7 +15,7 @@ import torch.nn as nn
 from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
-from torchmetrics import Accuracy, JaccardIndex, MetricCollection
+from torchmetrics import Accuracy, F1Score, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
@@ -48,7 +48,8 @@ class ChangeDetectionTask(BaseTask):
         task: Literal['binary', 'multiclass', 'multilabel'] = 'binary',
         num_classes: int | None = None,
         num_labels: int | None = None,
-        num_filters: int | None = None,
+        num_filters: int = 3,
+        pos_weight: Tensor | None = None,
         loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'bce',
         class_weights: Tensor | Sequence[float] | None = None,
         ignore_index: int | None = None,
@@ -73,6 +74,7 @@ class ChangeDetectionTask(BaseTask):
             num_classes: Number of prediction classes (only for ``task='multiclass'``).
             num_labels: Number of prediction labels (only for ``task='multilabel'``).
             num_filters: Number of filters. Only applicable when model='fcn'.
+            pos_weight: A weight of positive examples and used with 'bce' loss.
             loss: Name of the loss function, currently supports
                 'ce', 'bce', 'jaccard', and 'focal' loss.
             class_weights: Optional rescaling weight given to each
@@ -85,20 +87,7 @@ class ChangeDetectionTask(BaseTask):
                 decoder and segmentation head.
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
-
-        .. versionadded:: 0.8
-           The *task*, *num_classes*, *num_labels*, *class_weights*, and
-           *ignore_index* parameters.
         """
-        # Set num_filters default based on task if not provided
-        if num_filters is None:
-            if task == 'binary':
-                num_filters = 3
-            elif task == 'multiclass':
-                num_filters = num_classes
-            elif task == 'multilabel':
-                num_filters = num_labels
-
         self.weights = weights
         super().__init__()
 
@@ -116,7 +105,9 @@ class ChangeDetectionTask(BaseTask):
                     ignore_index=ignore_value, weight=class_weights
                 )
             case 'bce':
-                self.criterion = nn.BCEWithLogitsLoss()
+                self.criterion = nn.BCEWithLogitsLoss(
+                    pos_weight=self.hparams['pos_weight']
+                )
             case 'jaccard':
                 # JaccardLoss requires a list of classes to use instead of a class
                 # index to ignore.
@@ -163,6 +154,7 @@ class ChangeDetectionTask(BaseTask):
             [
                 Accuracy(multidim_average='global', average='micro', **kwargs),
                 JaccardIndex(average='micro', **kwargs),
+                F1Score(average='micro', **kwargs),
             ]
         )
         self.train_metrics = metrics.clone(prefix='train_')
