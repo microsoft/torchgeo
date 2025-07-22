@@ -114,7 +114,9 @@ class ChangeDetectionTask(BaseTask):
                     ignore_index=ignore_value, weight=class_weights
                 )
             case 'bce':
-                self.criterion = nn.BCEWithLogitsLoss()
+                self.criterion = nn.BCEWithLogitsLoss(
+                    pos_weight=self.hparams['pos_weight']
+                )
             case 'jaccard':
                 # JaccardLoss requires a list of classes to use instead of a class
                 # index to ignore.
