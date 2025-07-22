@@ -61,6 +61,13 @@ class TestEarthLoc:
         }
         weights.transforms(sample)
 
+    def test_export_transforms(self, weights: WeightsEnum) -> None:
+        """Test that the transforms have no graph breaks."""
+        torch._dynamo.reset()
+        c = weights.meta['in_chans']
+        inputs = (torch.randn(1, c, 256, 256, dtype=torch.float),)
+        torch.export.export(weights.transforms, inputs)
+
     @pytest.mark.slow
     def test_earthloc_download(self, weights: WeightsEnum) -> None:
         earthloc(weights=weights)

@@ -5,9 +5,8 @@
 
 from typing import Any, cast
 
-import kornia.augmentation as K
-import torch
 import torch.nn as nn
+import torchvision.transforms.v2 as T
 from torchvision.models._api import Weights, WeightsEnum
 
 from ..datasets.utils import lazy_import
@@ -15,17 +14,13 @@ from ..datasets.utils import lazy_import
 # DelineateAnything's image size during training is 512x512 and uses
 # multiple image sources of varying resolution. They do not detail their
 # normalization method for each source.
-_delineate_anything_transforms = K.AugmentationSequential(
-    K.Resize(size=(512, 512)), data_keys=None
-)
+_delineate_anything_transforms = nn.Sequential(T.Resize(size=(512, 512)))
 
 # Model is trained on 320x320 Sentinel-2 L1C TCI uint8 patches
 # then resized to 640x640
 # https://hf.co/mayrajeo/marine-vessel-yolo#direct-use
-_marine_vessel_detection_transforms = K.AugmentationSequential(
-    K.Resize(size=(640, 640)),
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
-    data_keys=None,
+_marine_vessel_detection_transforms = nn.Sequential(
+    T.Resize(size=(640, 640)), T.Normalize(mean=[0], std=[255])
 )
 
 

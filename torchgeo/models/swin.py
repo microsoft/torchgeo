@@ -5,48 +5,46 @@
 
 from typing import Any
 
-import kornia.augmentation as K
 import torch
+import torch.nn as nn
 import torchvision
+import torchvision.transforms.v2 as T
 from torchvision.models import SwinTransformer
 from torchvision.models._api import Weights, WeightsEnum
-
-import torchgeo.transforms.transforms as T
 
 # All Satlas transforms include:
 # https://github.com/allenai/satlas/blob/main/satlas/cmd/model/train.py#L49
 #
 # Information about sensor-specific normalization can be found at:
 # https://github.com/allenai/satlas/blob/main/Normalization.md
-
 _satlas_bands = ('B04', 'B03', 'B02')
-_satlas_transforms = K.AugmentationSequential(
-    K.CenterCrop(256),
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
-    data_keys=None,
-)
+_satlas_transforms = nn.Sequential(T.CenterCrop(256), T.Normalize(mean=[0], std=[255]))
 
-_satlas_sentinel2_bands = (*_satlas_bands, 'B05', 'B06', 'B07', 'B08', 'B11', 'B12')
-_std = torch.tensor([255, 255, 255, 8160, 8160, 8160, 8160, 8160, 8160])
-_satlas_sentinel2_transforms = K.AugmentationSequential(
-    K.CenterCrop(256),
-    K.Normalize(mean=torch.tensor(0), std=_std),
-    T._Clamp(p=1, min=0, max=1),
-    data_keys=None,
+_satlas_sentinel2_bands = (
+    'B04',
+    'B03',
+    'B02',
+    'B05',
+    'B06',
+    'B07',
+    'B08',
+    'B11',
+    'B12',
+)
+_mean = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+_std = [255, 255, 255, 8160, 8160, 8160, 8160, 8160, 8160]
+_satlas_sentinel2_transforms = nn.Sequential(
+    T.CenterCrop(256),
+    T.Normalize(mean=_mean, std=_std),
+    T.Lambda(lambda x: x.clip(0, 1)),
 )
 
 _satlas_landsat_bands = tuple(f'B{i:02}' for i in range(1, 12))
-_satlas_landsat_transforms = K.AugmentationSequential(
-    K.CenterCrop(256),
-    K.Normalize(mean=torch.tensor(4000), std=torch.tensor(16320)),
-    T._Clamp(p=1, min=0, max=1),
-    data_keys=None,
+_satlas_landsat_transforms = nn.Sequential(
+    T.CenterCrop(256),
+    T.Normalize(mean=[4000], std=[16320]),
+    T.Lambda(lambda x: x.clip(0, 1)),
 )
-
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 
 class Swin_V2_T_Weights(WeightsEnum):  # type: ignore[misc]

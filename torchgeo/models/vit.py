@@ -5,9 +5,8 @@
 
 from typing import Any, cast
 
-import kornia.augmentation as K
 import timm
-import torch
+import torchvision.transforms.v2 as T
 from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -26,24 +25,14 @@ from .resnet import (
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
 # Normalization either by 10K or channel-wise with band statistics
-_zhu_xlab_transforms = K.AugmentationSequential(
-    K.Resize((256, 256)),
-    K.CenterCrop(224),
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
-    data_keys=None,
+_zhu_xlab_transforms = nn.Sequential(
+    T.Resize((256, 256)), T.CenterCrop(224), T.Normalize(mean=[0], std=[10000])
 )
 
 # https://github.com/microsoft/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43
-_ssl4eo_l_transforms = K.AugmentationSequential(
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
-    K.CenterCrop((224, 224)),
-    data_keys=None,
+_ssl4eo_l_transforms = nn.Sequential(
+    T.Normalize(mean=[0], std=[255]), T.CenterCrop((224, 224))
 )
-
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 KEYS = {'norm.weight', 'norm.bias', 'head.weight', 'head.bias'}
 

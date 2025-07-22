@@ -5,9 +5,9 @@
 
 from typing import Any
 
-import kornia.augmentation as K
+import numpy as np
 import timm
-import torch
+import torchvision.transforms.v2 as T
 from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -80,114 +80,91 @@ _sentinel1_grd_bands = ['VV', 'VH']
 
 # https://github.com/zhu-xlab/DeCUR/blob/f190e9a3895ef645c005c8c2fce287ffa5a937e3/src/transfer_classification_BE/linear_BE_resnet.py#L286
 # Normalization by channel-wise band statistics
-_mean_s1 = torch.tensor([-12.59, -20.26])
-_std_s1 = torch.tensor([5.26, 5.91])
-_ssl4eo_s12_transforms_s1 = K.AugmentationSequential(
-    K.Resize((256, 256)),
-    K.CenterCrop(224),
-    K.Normalize(mean=_mean_s1, std=_std_s1),
-    data_keys=None,
+_mean_s1 = [-12.59, -20.26]
+_std_s1 = [5.26, 5.91]
+_ssl4eo_s12_transforms_s1 = nn.Sequential(
+    T.Resize((256, 256)), T.CenterCrop(224), T.Normalize(mean=_mean_s1, std=_std_s1)
 )
 
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
 # Normalization either by 10K (for S2 uint16 input) or channel-wise with band statistics
-_ssl4eo_s12_transforms_s2_10k = K.AugmentationSequential(
-    K.Resize((256, 256)),
-    K.CenterCrop(224),
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
-    data_keys=None,
+_ssl4eo_s12_transforms_s2_10k = nn.Sequential(
+    T.Resize((256, 256)), T.CenterCrop(224), T.Normalize(mean=[0], std=[10000])
 )
 
-_mean_s2 = torch.tensor(
-    [
-        1612.9,
-        1397.6,
-        1322.3,
-        1373.1,
-        1561.0,
-        2108.4,
-        2390.7,
-        2318.7,
-        2581.0,
-        837.7,
-        22.0,
-        2195.2,
-        1537.4,
-    ]
-)
-_std_s2 = torch.tensor(
-    [
-        791.0,
-        854.3,
-        878.7,
-        1144.9,
-        1127.5,
-        1164.2,
-        1276.0,
-        1249.5,
-        1345.9,
-        577.5,
-        47.5,
-        1340.0,
-        1142.9,
-    ]
-)
-_ssl4eo_s12_transforms_s2_stats = K.AugmentationSequential(
-    K.Resize((256, 256)),
-    K.CenterCrop(224),
-    K.Normalize(mean=_mean_s2, std=_std_s2),
-    data_keys=None,
+_mean_s2 = [
+    1612.9,
+    1397.6,
+    1322.3,
+    1373.1,
+    1561.0,
+    2108.4,
+    2390.7,
+    2318.7,
+    2581.0,
+    837.7,
+    22.0,
+    2195.2,
+    1537.4,
+]
+_std_s2 = [
+    791.0,
+    854.3,
+    878.7,
+    1144.9,
+    1127.5,
+    1164.2,
+    1276.0,
+    1249.5,
+    1345.9,
+    577.5,
+    47.5,
+    1340.0,
+    1142.9,
+]
+_ssl4eo_s12_transforms_s2_stats = nn.Sequential(
+    T.Resize((256, 256)), T.CenterCrop(224), T.Normalize(mean=_mean_s2, std=_std_s2)
 )
 
 # Normalization only available for RGB dataset, defined here:
 # https://github.com/ServiceNow/seasonal-contrast/blob/8285173ec205b64bc3e53b880344dd6c3f79fa7a/datasets/seco_dataset.py
-_min = torch.tensor([3, 2, 0])
-_max = torch.tensor([88, 103, 129])
-_mean = torch.tensor([0.485, 0.456, 0.406])
-_std = torch.tensor([0.229, 0.224, 0.225])
-_seco_transforms = K.AugmentationSequential(
-    K.Resize((256, 256)),
-    K.CenterCrop(224),
-    K.Normalize(mean=_min, std=_max - _min),
-    K.Normalize(mean=torch.tensor(0), std=1 / torch.tensor(255)),
-    K.Normalize(mean=_mean, std=_std),
-    data_keys=None,
+_min = [3, 2, 0]
+_max = [88, 103, 129]
+_mean = [0.485, 0.456, 0.406]
+_std = [0.229, 0.224, 0.225]
+_denom = (np.array(_max) - np.array(_min)).tolist()
+_seco_transforms = nn.Sequential(
+    T.Resize((256, 256)),
+    T.CenterCrop(224),
+    T.Normalize(mean=_min, std=_denom),
+    T.Normalize(mean=[0], std=[1 / 255]),
+    T.Normalize(mean=_mean, std=_std),
 )
 
 
 # Normalization only available for RGB dataset, defined here:
 # https://github.com/PlekhanovaElena/ssl4eco/blob/7445e048035f7ae31c0eb45e1ed8426c9989fe56/pretraining/pretrain_seco_3heads.py#L140
 # https://github.com/PlekhanovaElena/ssl4eco/blob/7445e048035f7ae31c0eb45e1ed8426c9989fe56/downstream_tasks/test_modules/secoeco_test_module.py#L28
-_seco_eco_transforms = K.AugmentationSequential(
-    K.Resize((224, 224)),
-    K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(10000.0)),
-    data_keys=None,
+_seco_eco_transforms = nn.Sequential(
+    T.Resize((224, 224)), T.Normalize(mean=[0.0], std=[10000.0])
 )
 
 
 # Normalization only available for RGB dataset, defined here:
 # https://github.com/sustainlab-group/geography-aware-ssl/blob/main/moco_fmow/main_moco_geo%2Btp.py#L287
-_mean = torch.tensor([0.485, 0.456, 0.406])
-_std = torch.tensor([0.229, 0.224, 0.225])
-_gassl_transforms = K.AugmentationSequential(
-    K.Resize((224, 224)),
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
-    K.Normalize(mean=_mean, std=_std),
-    data_keys=None,
+_mean = [0.485, 0.456, 0.406]
+_std = [0.229, 0.224, 0.225]
+_gassl_transforms = nn.Sequential(
+    T.Resize((224, 224)),
+    T.Normalize(mean=[0], std=[255]),
+    T.Normalize(mean=_mean, std=_std),
 )
 
 # https://github.com/microsoft/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43
-_ssl4eo_l_transforms = K.AugmentationSequential(
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
-    K.CenterCrop((224, 224)),
-    data_keys=None,
+_ssl4eo_l_transforms = nn.Sequential(
+    T.CenterCrop((224, 224)), T.Normalize(mean=[0], std=[255])
 )
-
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 
 class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
