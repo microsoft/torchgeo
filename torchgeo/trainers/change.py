@@ -312,6 +312,10 @@ class ChangeDetectionTask(BaseTask):
 
         if self.hparams['task'] == 'multiclass':
             y = y.squeeze(1)
+        elif self.hparams['task'] == 'multiclass':
+            if y.dim() == 4:  # If [batch, 1, H, W], squeeze to [batch, H, W]
+                y = y.squeeze(1)
+            y = y.long()
 
         # Forward pass
         if model.startswith('changevit'):
