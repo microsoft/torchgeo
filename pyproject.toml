@@ -75,8 +75,8 @@ dependencies = [
     "torch>=2.1.0",
     # torchmetrics 1.2+ required for average argument in mAP metric
     "torchmetrics>=1.2",
-    # torchvision 0.15.1+ required for Python 3.11 wheels
-    "torchvision>=0.15.1",
+    # torchvision 0.16.0+ required for torch 2.1.0+
+    "torchvision>=0.16.0",
     # typing-extensions 4.5+ required for typing_extensions.deprecated
     # can be removed once Python 3.13 is minimum supported version
     "typing-extensions>=4.5",
