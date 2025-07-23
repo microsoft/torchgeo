@@ -107,9 +107,9 @@ class TestDOFABase16:
         }
         weights.transforms(sample)
 
-    @pytest.mark.importorskip('torch', minversion='2.6.0')
     def test_export_transforms(self, weights: WeightsEnum) -> None:
         """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
         torch._dynamo.reset()
         c = 4
         inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
@@ -152,9 +152,9 @@ class TestDOFALarge16:
         }
         weights.transforms(sample)
 
-    @pytest.mark.importorskip('torch', minversion='2.6.0')
     def test_export_transforms(self, weights: WeightsEnum) -> None:
         """Test that the transforms have no graph breaks."""
+        torch = pytest.importorskip('torch', minversion='2.6.0')
         torch._dynamo.reset()
         c = 4
         inputs = (torch.randn(1, c, 224, 224, dtype=torch.float),)
