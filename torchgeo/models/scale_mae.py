@@ -17,7 +17,8 @@ from torchvision.models._api import Weights, WeightsEnum
 _mean = [0.485, 0.456, 0.406]
 _std = [0.229, 0.224, 0.225]
 _scale_mae_transforms = nn.Sequential(
-    T.Normalize(mean=[0], std=[255]), T.Normalize(mean=_mean, std=_std)
+    T.Normalize(mean=[0], std=[255], inplace=True),
+    T.Normalize(mean=_mean, std=_std, inplace=True),
 )
 
 

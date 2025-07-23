@@ -17,7 +17,7 @@ _ftw_sentinel2_bands = ['B4', 'B3', 'B2', 'B8A', 'B4', 'B3', 'B2', 'B8A']
 
 # https://github.com/fieldsoftheworld/ftw-baselines/blob/main/src/ftw/datamodules.py
 # Normalization by 3k (for S2 uint16 input)
-_ftw_transforms = nn.Sequential(T.Normalize(mean=[0.0], std=[3000.0]))
+_ftw_transforms = nn.Sequential(T.Normalize(mean=[0.0], std=[3000.0], inplace=True))
 
 # No normalization used see: https://github.com/Restor-Foundation/tcd/blob/main/src/tcd_pipeline/data/datamodule.py#L145
 _tcd_bands = ['R', 'G', 'B']

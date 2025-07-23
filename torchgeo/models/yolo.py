@@ -20,7 +20,7 @@ _delineate_anything_transforms = nn.Sequential(T.Resize(size=(512, 512)))
 # then resized to 640x640
 # https://hf.co/mayrajeo/marine-vessel-yolo#direct-use
 _marine_vessel_detection_transforms = nn.Sequential(
-    T.Resize(size=(640, 640)), T.Normalize(mean=[0], std=[255])
+    T.Resize(size=(640, 640)), T.Normalize(mean=[0.0], std=[255.0], inplace=True)
 )
 
 

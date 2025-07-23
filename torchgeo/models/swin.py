@@ -18,7 +18,11 @@ from torchvision.models._api import Weights, WeightsEnum
 # Information about sensor-specific normalization can be found at:
 # https://github.com/allenai/satlas/blob/main/Normalization.md
 _satlas_bands = ('B04', 'B03', 'B02')
-_satlas_transforms = nn.Sequential(T.CenterCrop(256), T.Normalize(mean=[0], std=[255]))
+_satlas_transforms = nn.Sequential(
+    T.CenterCrop(256),
+    T.Normalize(mean=[0], std=[255], inplace=True),
+    T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=True),
+)
 
 _satlas_sentinel2_bands = (
     'B04',
@@ -35,14 +39,14 @@ _mean = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 _std = [255, 255, 255, 8160, 8160, 8160, 8160, 8160, 8160]
 _satlas_sentinel2_transforms = nn.Sequential(
     T.CenterCrop(256),
-    T.Normalize(mean=_mean, std=_std),
+    T.Normalize(mean=_mean, std=_std, inplace=True),
     T.Lambda(lambda x: x.clip(0, 1)),
 )
 
 _satlas_landsat_bands = tuple(f'B{i:02}' for i in range(1, 12))
 _satlas_landsat_transforms = nn.Sequential(
     T.CenterCrop(256),
-    T.Normalize(mean=[4000], std=[16320]),
+    T.Normalize(mean=[4000], std=[16320], inplace=True),
     T.Lambda(lambda x: x.clip(0, 1)),
 )
 

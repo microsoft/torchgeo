@@ -21,8 +21,8 @@ _earthloc_sentinel2_bands = ['B4', 'B3', 'B2']
 # https://github.com/gmberton/EarthLoc/blob/2da231ae7ec9764fac6cde2aa88a17db23c1bb6a/augmentations.py#L40
 # Divide by 255 and normalize with ImageNet mean and std
 _earthloc_transforms = nn.Sequential(
-    T.Normalize(mean=[0.0], std=[255.0]),
-    T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    T.Normalize(mean=[0.0], std=[255.0], inplace=True),
+    T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=True),
     T.Resize((320, 320)),
 )
 
