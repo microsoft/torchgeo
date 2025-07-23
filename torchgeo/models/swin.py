@@ -19,9 +19,7 @@ from torchvision.models._api import Weights, WeightsEnum
 # https://github.com/allenai/satlas/blob/main/Normalization.md
 _satlas_bands = ('B04', 'B03', 'B02')
 _satlas_transforms = nn.Sequential(
-    T.CenterCrop(256),
-    T.Normalize(mean=[0], std=[255], inplace=True),
-    T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=True),
+    T.CenterCrop(256), T.Normalize(mean=[0], std=[255], inplace=True)
 )
 
 _satlas_sentinel2_bands = (
