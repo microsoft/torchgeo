@@ -271,14 +271,13 @@ class ChangeDetectionTask(BaseTask):
             y_hat = y_hat.squeeze(1)
             y = y.squeeze(1)
         elif self.hparams['task'] == 'multiclass':
-            if y.dim() == 4:  # If [batch, 1, H, W], squeeze to [batch, H, W]
-                y = y.squeeze(1)
+            y = y.squeeze(1)
             y = y.long()
 
-        # Keep original loss computation first
         if self.hparams['loss'] == 'bce':
             y = y.float()
 
+        # Compute the loss
         loss: Tensor = self.criterion(y_hat, y)
         self.log(f'{stage}_loss', loss)
 
@@ -314,12 +313,10 @@ class ChangeDetectionTask(BaseTask):
                 )
                 batch = aug(batch)
                 match self.hparams['task']:
-                    case 'binary':
+                    case 'binary' | 'multilabel':
                         prediction = (y_hat.sigmoid() >= 0.5).long()
                         # Restore channel dimension for plotting compatibility
                         batch['prediction'] = prediction.unsqueeze(1)
-                    case 'multilabel':
-                        batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
                     case 'multiclass':
                         prediction = y_hat.argmax(dim=1)
                         # Restore channel dimension for plotting compatibility
