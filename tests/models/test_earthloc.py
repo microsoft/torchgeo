@@ -61,6 +61,7 @@ class TestEarthLoc:
         }
         weights.transforms(sample)
 
+    @pytest.mark.importorskip('torch', minversion='2.6.0')
     def test_export_transforms(self, weights: WeightsEnum) -> None:
         """Test that the transforms have no graph breaks."""
         torch._dynamo.reset()
