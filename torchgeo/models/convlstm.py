@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import cast
 
 import torch
 import torch.nn as nn
@@ -224,6 +225,6 @@ class ConvLSTM(nn.Module):
         """Initializes the hidden states for all layers."""
         init_states: list[tuple[torch.Tensor, torch.Tensor]] = []
         for i in range(self.num_layers):
-            cell: ConvLSTMCell = self.cell_list[i]
+            cell = cast(ConvLSTMCell, self.cell_list[i])
             init_states.append(cell.init_hidden(batch_size, image_size))
         return init_states
