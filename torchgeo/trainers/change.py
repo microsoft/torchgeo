@@ -262,17 +262,14 @@ class ChangeDetectionTask(BaseTask):
         model: str = self.hparams['model']
         x = batch['image']
         y = batch['mask']
+
         if model == 'unet':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
-        y_hat = self(x)
 
-        # For binary tasks, squeeze channel dimension to match expected shape
-        if self.hparams['task'] == 'binary':
-            y_hat = y_hat.squeeze(1)
+        if self.hparams['task'] == 'multiclass':
             y = y.squeeze(1)
-        elif self.hparams['task'] == 'multiclass':
-            y = y.squeeze(1)
-            y = y.long()
+
+        y_hat = self(x)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
@@ -287,16 +284,14 @@ class ChangeDetectionTask(BaseTask):
             # Transform predictions for metrics calculation
             match self.hparams['task']:
                 case 'binary' | 'multilabel':
-                    y_hat_metrics = (y_hat.sigmoid() >= 0.5).long()
+                    y_hat = (y_hat.sigmoid() >= 0.5).long()
                 case 'multiclass':
-                    y_hat_metrics = y_hat.argmax(dim=1)
+                    y_hat = y_hat.argmax(dim=1)
 
-            # Ensure target is in correct format for metrics
-            y_metrics = y.long()
-            metrics(y_hat_metrics, y_metrics)
+            metrics(y_hat, y)
             self.log_dict({f'{k}': v for k, v in metrics.compute().items()})
 
-        if stage in ['val']:
+        if stage == 'val':
             if (
                 batch_idx < 10
                 and hasattr(self.trainer, 'datamodule')
@@ -314,13 +309,9 @@ class ChangeDetectionTask(BaseTask):
                 batch = aug(batch)
                 match self.hparams['task']:
                     case 'binary' | 'multilabel':
-                        prediction = (y_hat.sigmoid() >= 0.5).long()
-                        # Restore channel dimension for plotting compatibility
-                        batch['prediction'] = prediction.unsqueeze(1)
+                        batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
                     case 'multiclass':
-                        prediction = y_hat.argmax(dim=1)
-                        # Restore channel dimension for plotting compatibility
-                        batch['prediction'] = prediction.unsqueeze(1)
+                        batch['prediction'] = y_hat.argmax(dim=1)
 
                 for key in ['image', 'mask', 'prediction']:
                     batch[key] = batch[key].cpu()
