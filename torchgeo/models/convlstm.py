@@ -224,5 +224,6 @@ class ConvLSTM(nn.Module):
         """Initializes the hidden states for all layers."""
         init_states: list[tuple[torch.Tensor, torch.Tensor]] = []
         for i in range(self.num_layers):
-            init_states.append(self.cell_list[i].init_hidden(batch_size, image_size))
+            cell: ConvLSTMCell = self.cell_list[i]
+            init_states.append(cell.init_hidden(batch_size, image_size))
         return init_states
