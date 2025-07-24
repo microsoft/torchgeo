@@ -136,18 +136,19 @@ class ConvLSTM(nn.Module):
             self.hidden_dim = list(hidden_dim)
 
         # Normalize kernel_size to a list of tuples
-        if isinstance(kernel_size, int):
-            kernel_size = (kernel_size, kernel_size)
-
         if isinstance(kernel_size, tuple):
             self.kernel_size: list[tuple[int, int]] = [kernel_size] * num_layers
-        else:
+        elif isinstance(kernel_size, list):
             self.kernel_size = [
                 ks if isinstance(ks, tuple) else (ks, ks) for ks in kernel_size
             ]
+        else:
+            raise ValueError(
+                "`kernel_size` must be an int, a tuple, or a list of ints/tuples."
+            )
 
         if not len(self.kernel_size) == len(self.hidden_dim) == num_layers:
-            raise ValueError("Inconsistent list length.")
+            raise ValueError('Inconsistent list length.')
 
         self.input_dim = input_dim
         self.num_layers = num_layers
@@ -193,8 +194,8 @@ class ConvLSTM(nn.Module):
         if hidden_state is None:
             hidden_state = self._init_hidden(batch_size=b, image_size=(h, w))
 
-        layer_output_list = []
-        last_state_list = []
+        layer_output_list: list[torch.Tensor] = []
+        last_state_list: list[tuple[torch.Tensor, torch.Tensor]] = []
         seq_len = input_tensor.size(1)
         cur_layer_input = input_tensor
 
@@ -203,7 +204,7 @@ class ConvLSTM(nn.Module):
             output_inner = []
             for t in range(seq_len):
                 h, c = self.cell_list[layer_idx](
-                    input_tensor=cur_layer_input[:, t, :, :, :], cur_state=[h, c]
+                    input_tensor=cur_layer_input[:, t, :, :, :], cur_state=(h, c)
                 )
                 output_inner.append(h)
 
@@ -227,10 +228,3 @@ class ConvLSTM(nn.Module):
         for i in range(self.num_layers):
             init_states.append(self.cell_list[i].init_hidden(batch_size, image_size))
         return init_states
-
-    @staticmethod
-    def _extend_for_multilayer(param: T, num_layers: int) -> list[T]:
-        """Extends a parameter to a list of length num_layers."""
-        if not isinstance(param, list):
-            return [param] * num_layers
-        return param
