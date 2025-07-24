@@ -67,6 +67,6 @@ class TestConvLSTM:
             ConvLSTM(
                 input_dim=3,
                 hidden_dim=16,
-                kernel_size="invalid",  # type: ignore[arg-type]
+                kernel_size='invalid',  # type: ignore[arg-type]
                 num_layers=1,
             )

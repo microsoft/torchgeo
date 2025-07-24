@@ -3,8 +3,6 @@
 
 """Convolutional Long Short-Term Memory (ConvLSTM) model."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 
 import torch
@@ -197,19 +195,20 @@ class ConvLSTM(nn.Module):
         cur_layer_input = input_tensor
 
         for layer_idx in range(self.num_layers):
-            h, c = hidden_state[layer_idx]
+            h_state, c_state = hidden_state[layer_idx]
             output_inner = []
             for t in range(seq_len):
-                h, c = self.cell_list[layer_idx](
-                    input_tensor=cur_layer_input[:, t, :, :, :], cur_state=(h, c)
+                h_state, c_state = self.cell_list[layer_idx](
+                    input_tensor=cur_layer_input[:, t, :, :, :],
+                    cur_state=(h_state, c_state),
                 )
-                output_inner.append(h)
+                output_inner.append(h_state)
 
             layer_output = torch.stack(output_inner, dim=1)
             cur_layer_input = layer_output
 
             layer_output_list.append(layer_output)
-            last_state_list.append((h, c))
+            last_state_list.append((h_state, c_state))
 
         if not self.return_all_layers:
             layer_output_list = layer_output_list[-1:]
