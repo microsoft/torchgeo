@@ -62,5 +62,11 @@ class TestConvLSTM:
     def test_convlstm_invalid_kernel_size(self) -> None:
         """Test that an invalid kernel size raises a ValueError."""
         with pytest.raises(ValueError):
-            # Pass a string, which is an invalid type for kernel_size
-            ConvLSTM(input_dim=3, hidden_dim=16, kernel_size="invalid", num_layers=1)
+            # This is a list of tuples, which is the correct type, but one of the
+            # tuples has an incorrect length, which should raise a ValueError.
+            ConvLSTM(
+                input_dim=3,
+                hidden_dim=16,
+                kernel_size=[(1, 2), (3,)],
+                num_layers=2,
+            )

@@ -6,12 +6,9 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TypeVar
 
 import torch
 import torch.nn as nn
-
-T = TypeVar('T')
 
 
 class ConvLSTMCell(nn.Module):
@@ -144,7 +141,7 @@ class ConvLSTM(nn.Module):
             ]
         else:
             raise ValueError(
-                "`kernel_size` must be an int, a tuple, or a list of ints/tuples."
+                '`kernel_size` must be an int, a tuple, or a list of ints/tuples.'
             )
 
         if not len(self.kernel_size) == len(self.hidden_dim) == num_layers:
@@ -224,7 +221,7 @@ class ConvLSTM(nn.Module):
         self, batch_size: int, image_size: tuple[int, int]
     ) -> list[tuple[torch.Tensor, torch.Tensor]]:
         """Initializes the hidden states for all layers."""
-        init_states = []
+        init_states: list[tuple[torch.Tensor, torch.Tensor]] = []
         for i in range(self.num_layers):
             init_states.append(self.cell_list[i].init_hidden(batch_size, image_size))
         return init_states
