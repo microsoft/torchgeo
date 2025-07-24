@@ -11,7 +11,7 @@ from typing import TypeVar
 import torch
 import torch.nn as nn
 
-T = TypeVar("T")
+T = TypeVar('T')
 
 
 class ConvLSTMCell(nn.Module):
@@ -63,9 +63,7 @@ class ConvLSTMCell(nn.Module):
         h_cur, c_cur = cur_state
         combined = torch.cat([input_tensor, h_cur], dim=1)
         combined_conv = self.conv(combined)
-        cc_i, cc_f, cc_o, cc_g = torch.split(
-            combined_conv, self.hidden_dim, dim=1
-        )
+        cc_i, cc_f, cc_o, cc_g = torch.split(combined_conv, self.hidden_dim, dim=1)
 
         i = torch.sigmoid(cc_i)
         f = torch.sigmoid(cc_f)
@@ -131,24 +129,27 @@ class ConvLSTM(nn.Module):
         """
         super().__init__()
 
-        self._check_kernel_size_consistency(kernel_size)
+        # Normalize hidden_dim to a list of ints
+        if isinstance(hidden_dim, int):
+            self.hidden_dim: list[int] = [hidden_dim] * num_layers
+        else:
+            self.hidden_dim = list(hidden_dim)
 
-        if isinstance(kernel_size, list):
-            kernel_size = [
-                ks if isinstance(ks, tuple) else (ks, ks) for ks in kernel_size
-            ]
-        elif isinstance(kernel_size, int):
+        # Normalize kernel_size to a list of tuples
+        if isinstance(kernel_size, int):
             kernel_size = (kernel_size, kernel_size)
 
-        hidden_dim_list = self._extend_for_multilayer(hidden_dim, num_layers)
-        kernel_size_list = self._extend_for_multilayer(kernel_size, num_layers)
+        if isinstance(kernel_size, tuple):
+            self.kernel_size: list[tuple[int, int]] = [kernel_size] * num_layers
+        else:
+            self.kernel_size = [
+                ks if isinstance(ks, tuple) else (ks, ks) for ks in kernel_size
+            ]
 
-        if not len(kernel_size_list) == len(hidden_dim_list) == num_layers:
+        if not len(self.kernel_size) == len(self.hidden_dim) == num_layers:
             raise ValueError("Inconsistent list length.")
 
         self.input_dim = input_dim
-        self.hidden_dim = hidden_dim_list
-        self.kernel_size = kernel_size_list
         self.num_layers = num_layers
         self.batch_first = batch_first
         self.bias = bias
@@ -228,23 +229,7 @@ class ConvLSTM(nn.Module):
         return init_states
 
     @staticmethod
-    def _check_kernel_size_consistency(
-        kernel_size: tuple[int, int] | Sequence[tuple[int, int]]
-    ) -> None:
-        """Checks if the kernel_size is correctly formatted."""
-        if not (
-            isinstance(kernel_size, tuple)
-            or (
-                isinstance(kernel_size, list)
-                and all(isinstance(elem, tuple) for elem in kernel_size)
-            )
-        ):
-            raise ValueError("`kernel_size` must be a tuple or a list of tuples.")
-
-    @staticmethod
-    def _extend_for_multilayer(
-        param: T, num_layers: int
-    ) -> list[T]:
+    def _extend_for_multilayer(param: T, num_layers: int) -> list[T]:
         """Extends a parameter to a list of length num_layers."""
         if not isinstance(param, list):
             return [param] * num_layers

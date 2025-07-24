@@ -29,7 +29,7 @@ class TestConvLSTM:
             batch_first=True,
         )
         layer_output_list, last_state_list = model(input_tensor)
-        
+
         assert len(layer_output_list) == 1
         assert len(last_state_list) == 1
         assert layer_output_list[0].shape == (b, t, 16, h, w)
@@ -62,4 +62,4 @@ class TestConvLSTM:
     def test_convlstm_invalid_kernel_size(self) -> None:
         """Test that an invalid kernel size raises a ValueError."""
         with pytest.raises(ValueError):
-            ConvLSTM(input_dim=3, hidden_dim=16, kernel_size=[3], num_layers=1)
+            ConvLSTM(input_dim=3, hidden_dim=16, kernel_size=[(3)], num_layers=1)
