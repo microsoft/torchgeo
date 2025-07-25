@@ -53,7 +53,17 @@ class PredictChangeDetectionDataModule(OSCDDataModule):
 
 class TestChangeDetectionTask:
     @pytest.mark.parametrize(
-        'name', ['cabuar', 'chabud', 'levircd', 'levircdplus', 'oscd']
+        'name',
+        [
+            'cabuar',
+            'chabud',
+            'levircd',
+            'levircdplus',
+            'oscd',
+            'oscd_multiclass',
+            'oscd_multiclass_focal',
+            'oscd_multiclass_jaccard',
+        ],
     )
     def test_trainer(
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
@@ -259,3 +269,73 @@ class TestChangeDetectionTask:
             max_epochs=1,
         )
         trainer.validate(model=model, datamodule=datamodule)
+
+    def test_class_weights(self) -> None:
+        class_weights_list = [1.0, 2.0, 0.5]
+        task = ChangeDetectionTask(
+            class_weights=class_weights_list, task='multiclass', num_classes=3
+        )
+        assert task.hparams['class_weights'] == class_weights_list
+
+        class_weights_tensor = torch.tensor([1.0, 2.0, 0.5])
+        task = ChangeDetectionTask(
+            class_weights=class_weights_tensor, task='multiclass', num_classes=3
+        )
+        assert torch.equal(task.hparams['class_weights'], class_weights_tensor)
+
+        task = ChangeDetectionTask(task='multiclass', num_classes=3)
+        assert task.hparams['class_weights'] is None
+
+    @pytest.mark.parametrize('loss_fn', ['jaccard'])
+    def test_jaccard_ignore_index(self, loss_fn: Literal['jaccard']) -> None:
+        ChangeDetectionTask(
+            task='multiclass', num_classes=5, loss=loss_fn, ignore_index=0
+        )
+
+    def test_multiclass_validation(self, fast_dev_run: bool) -> None:
+        datamodule = OSCDDataModule(
+            root=os.path.join('tests', 'data', 'oscd'),
+            batch_size=2,
+            patch_size=16,
+            val_split_pct=0.5,
+            num_workers=0,
+        )
+        model = ChangeDetectionTask(
+            backbone='resnet18',
+            in_channels=13,
+            model='unet',
+            task='multiclass',
+            num_classes=2,
+            loss='ce',
+        )
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.validate(model=model, datamodule=datamodule)
+
+    def test_multiclass_predict(self, fast_dev_run: bool) -> None:
+        datamodule = PredictChangeDetectionDataModule(
+            root=os.path.join('tests', 'data', 'oscd'),
+            batch_size=2,
+            patch_size=16,
+            val_split_pct=0.5,
+            num_workers=0,
+        )
+        model = ChangeDetectionTask(
+            backbone='resnet18',
+            in_channels=13,
+            model='unet',
+            task='multiclass',
+            num_classes=2,
+            loss='ce',
+        )
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.predict(model=model, datamodule=datamodule)
