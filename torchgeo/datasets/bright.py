@@ -301,7 +301,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         cmap = colors.ListedColormap(self.colormap)
 
         if showing_mask:
-            axs[2].imshow(sample['mask'].squeeze(0), cmap=cmap, interpolation='none')
+            axs[2].imshow(sample['mask'][0], cmap=cmap, interpolation='none')
             axs[2].axis('off')
             unique_classes = np.unique(sample['mask'].numpy())
             handles = [
@@ -316,14 +316,10 @@ class BRIGHTDFC2025(NonGeoDataset):
             ]
             axs[2].legend(handles=handles, loc='upper right', bbox_to_anchor=(1.4, 1))
             if showing_prediction:
-                axs[3].imshow(
-                    sample['prediction'].squeeze(0), cmap=cmap, interpolation='none'
-                )
+                axs[3].imshow(sample['prediction'][0], cmap=cmap, interpolation='none')
                 axs[3].axis('off')
         elif showing_prediction:
-            axs[2].imshow(
-                sample['prediction'].squeeze(0), cmap=cmap, interpolation='none'
-            )
+            axs[2].imshow(sample['prediction'][0], cmap=cmap, interpolation='none')
             axs[2].axis('off')
 
         if show_titles:

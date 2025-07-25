@@ -6,7 +6,6 @@
 from typing import Any
 
 import kornia.augmentation as K
-from torch import Tensor
 
 from ..datasets import BRIGHTDFC2025
 from .geo import NonGeoDataModule
@@ -51,24 +50,3 @@ class BRIGHTDFC2025DataModule(NonGeoDataModule):
         if stage in ['predict']:
             # Test set labels are not publicly available
             self.predict_dataset = BRIGHTDFC2025(split='test', **self.kwargs)
-
-    def on_after_batch_transfer(
-        self, batch: dict[str, Tensor], dataloader_idx: int
-    ) -> dict[str, Tensor]:
-        """Apply batch augmentations to the batch after it is transferred to the device.
-
-        Args:
-            batch: A batch of data that needs to be altered or augmented.
-            dataloader_idx: The index of the dataloader to which the batch belongs.
-
-        Returns:
-            A batch of data.
-        """
-        # This solves a special case where if batch_size=1 the mask won't be stacked correctly
-        if 'mask' in batch and batch['mask'].ndim == 3:
-            batch['mask'] = batch['mask'].unsqueeze(dim=0)
-
-        batch = super().on_after_batch_transfer(batch, dataloader_idx)
-        if 'mask' in batch:
-            batch['mask'] = batch['mask'].squeeze(dim=1)
-        return batch
