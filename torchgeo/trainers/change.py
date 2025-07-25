@@ -330,6 +330,13 @@ class ChangeDetectionTask(BaseTask):
         # Retrieve the correct metrics based on the stage
         metrics = getattr(self, f'{stage}_metrics', None)
         if metrics:
+            # Transform predictions for metrics calculation
+            match self.hparams['task']:
+                case 'binary' | 'multilabel':
+                    y_hat = (y_hat.sigmoid() >= 0.5).long()
+                case 'multiclass':
+                    y_hat = y_hat.argmax(dim=1)
+
             metrics(y_hat, y)
             self.log_dict(metrics, batch_size=x.shape[0])
 
