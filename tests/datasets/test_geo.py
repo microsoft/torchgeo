@@ -645,7 +645,7 @@ class TestRasterDataset:
         ds = CustomTimeSeriesDataset(bounds=bounds, time_series=True, is_image=True)
 
         # Modify the dataset to return 3 time steps
-        def custom_getitem(query):
+        def custom_getitem(query: GeoSlice) -> dict[str, Any]:
             sample = {'crs': ds.crs, 'bounds': query}
             dates = [
                 pd.Timestamp(2020, 1, 1),
