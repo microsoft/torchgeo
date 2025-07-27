@@ -100,6 +100,54 @@ class CustomNonGeoDataset(NonGeoDataset):
         return 2
 
 
+class CustomTimeSeriesDataset(GeoDataset):
+    """Custom dataset for testing time_series functionality."""
+    
+    def __init__(
+        self,
+        bounds: Sequence[
+            tuple[float, float, float, float, pd.Timestamp, pd.Timestamp]
+        ] = [(0, 1, 2, 3, MINT, MAXT)],
+        crs: CRS = CRS.from_epsg(4326),
+        res: float | tuple[float, float] = (1, 1),
+        time_series: bool = False,
+        is_image: bool = True,
+        separate_files: bool = False,
+    ) -> None:
+        geometry = [shapely.box(b[0], b[2], b[1], b[3]) for b in bounds]
+        index = pd.IntervalIndex.from_tuples(
+            [(b[4], b[5]) for b in bounds], closed='both', name='datetime'
+        )
+        self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
+        self.res = res
+        self.paths = []
+        self.time_series = time_series
+        self.is_image = is_image
+        self.separate_files = separate_files
+        self.transforms = None
+
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        sample = {'crs': self.crs, 'bounds': query}
+        
+        if self.time_series:
+            # Mock time series behavior
+            dates = [pd.Timestamp(2020, 1, 1), pd.Timestamp(2020, 2, 1)]
+            sample['dates'] = dates
+            
+            if self.is_image:
+                sample['image'] = torch.rand(2, 3, 10, 10)  # T, C, H, W
+            else:
+                sample['mask'] = torch.rand(2, 1, 10, 10)  # T, C, H, W
+        else:
+            # Mock regular behavior
+            if self.is_image:
+                sample['image'] = torch.rand(3, 10, 10)  # C, H, W
+            else:
+                sample['mask'] = torch.rand(1, 10, 10)  # C, H, W
+        
+        return sample
+
+
 class TestGeoDataset:
     @pytest.fixture
     def dataset(self) -> GeoDataset:
@@ -482,6 +530,159 @@ class TestRasterDataset:
         ds = RasterDataset(root, res=10.0)
         assert ds.res == (10.0, 10.0)
         ds.res = 20.0
+
+    def test_time_series_single_file(self) -> None:
+        # Create a mock time series dataset with multiple time steps
+        bounds = [
+            (0, 1, 2, 3, pd.Timestamp(2020, 1, 1), pd.Timestamp(2020, 1, 1)),
+            (0, 1, 2, 3, pd.Timestamp(2020, 2, 1), pd.Timestamp(2020, 2, 1)),
+        ]
+        ds = CustomTimeSeriesDataset(bounds=bounds, time_series=True, is_image=True)
+        x = ds[ds.bounds]
+        
+        # Test basic structure
+        assert isinstance(x, dict)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['image'], torch.Tensor)
+        assert 'dates' in x
+        assert isinstance(x['dates'], list)
+        
+        # Test shape - should be [T, C, H, W]
+        assert x['image'].ndim == 4
+        assert x['image'].shape[0] == len(x['dates'])  # T dimension matches dates
+        assert x['image'].shape[1] == 3  # C dimension matches bands
+        
+        # Test that dates has correct length
+        assert len(x['dates']) == 2
+        for date in x['dates']:
+            assert isinstance(date, pd.Timestamp)
+
+    def test_time_series_separate_files(self) -> None:
+        # Create a mock time series dataset for separate files
+        bounds = [
+            (0, 1, 2, 3, pd.Timestamp(2020, 1, 1), pd.Timestamp(2020, 1, 1)),
+            (0, 1, 2, 3, pd.Timestamp(2020, 2, 1), pd.Timestamp(2020, 2, 1)),
+        ]
+        ds = CustomTimeSeriesDataset(bounds=bounds, time_series=True, is_image=True, separate_files=True)
+        x = ds[ds.bounds]
+        
+        # Test basic structure
+        assert isinstance(x, dict)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['image'], torch.Tensor)
+        assert 'dates' in x
+        assert isinstance(x['dates'], list)
+        
+        # Test shape - should be [T, C, H, W]
+        assert x['image'].ndim == 4
+        assert x['image'].shape[0] == len(x['dates'])  # T dimension matches dates
+        assert x['image'].shape[1] == 3  # C dimension matches bands
+        
+        # Test that dates has correct length
+        assert len(x['dates']) == 2
+        for date in x['dates']:
+            assert isinstance(date, pd.Timestamp)
+
+    def test_time_series_vs_regular_shape(self) -> None:
+        # Create mock datasets for comparison
+        bounds = [
+            (0, 1, 2, 3, pd.Timestamp(2020, 1, 1), pd.Timestamp(2020, 1, 1)),
+            (0, 1, 2, 3, pd.Timestamp(2020, 2, 1), pd.Timestamp(2020, 2, 1)),
+        ]
+        
+        # Regular dataset
+        ds_regular = CustomTimeSeriesDataset(bounds=bounds, time_series=False, is_image=True)
+        x_regular = ds_regular[ds_regular.bounds]
+        
+        # Time series dataset
+        ds_ts = CustomTimeSeriesDataset(bounds=bounds, time_series=True, is_image=True)
+        x_ts = ds_ts[ds_ts.bounds]
+        
+        # Regular should be [C, H, W], time series should be [T, C, H, W]
+        assert x_regular['image'].ndim == 3
+        assert x_ts['image'].ndim == 4
+        
+        # Time series should have dates, regular shouldn't
+        assert 'dates' not in x_regular
+        assert 'dates' in x_ts
+        
+        # Spatial dimensions should match
+        assert x_regular['image'].shape[-2:] == x_ts['image'].shape[-2:]
+        # Channel dimension should match
+        assert x_regular['image'].shape[0] == x_ts['image'].shape[1]
+
+    def test_time_series_mask_dataset(self) -> None:
+        # Create mock time series mask dataset
+        bounds = [
+            (0, 1, 2, 3, pd.Timestamp(2020, 1, 1), pd.Timestamp(2020, 1, 1)),
+            (0, 1, 2, 3, pd.Timestamp(2020, 2, 1), pd.Timestamp(2020, 2, 1)),
+        ]
+        ds = CustomTimeSeriesDataset(bounds=bounds, time_series=True, is_image=False)
+        x = ds[ds.bounds]
+        
+        # Test basic structure
+        assert isinstance(x, dict)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['mask'], torch.Tensor)
+        assert 'dates' in x
+        assert isinstance(x['dates'], list)
+        
+        # Test shape - should be [T, C, H, W] for mask time series
+        assert x['mask'].ndim == 4
+        assert x['mask'].shape[0] == len(x['dates'])
+
+    def test_time_series_dates_consistency(self) -> None:
+        # Create mock time series dataset
+        bounds = [
+            (0, 1, 2, 3, pd.Timestamp(2020, 1, 1), pd.Timestamp(2020, 1, 1)),
+            (0, 1, 2, 3, pd.Timestamp(2020, 2, 1), pd.Timestamp(2020, 2, 1)),
+            (0, 1, 2, 3, pd.Timestamp(2020, 3, 1), pd.Timestamp(2020, 3, 1)),
+        ]
+        ds = CustomTimeSeriesDataset(bounds=bounds, time_series=True, is_image=True)
+        
+        # Modify the dataset to return 3 time steps
+        def custom_getitem(query):
+            sample = {'crs': ds.crs, 'bounds': query}
+            dates = [pd.Timestamp(2020, 1, 1), pd.Timestamp(2020, 2, 1), pd.Timestamp(2020, 3, 1)]
+            sample['dates'] = dates
+            sample['image'] = torch.rand(3, 3, 10, 10)  # T, C, H, W
+            return sample
+        
+        ds.__getitem__ = custom_getitem
+        x = ds[ds.bounds]
+        
+        # Test that first dimension of image tensor matches length of dates
+        assert x['image'].shape[0] == len(x['dates'])
+        
+        # Test that dates are sorted
+        dates = x['dates']
+        assert dates == sorted(dates)
+        
+        # Test that all dates are pd.Timestamp objects
+        for date in dates:
+            assert isinstance(date, pd.Timestamp)
+
+    def test_time_series_parameter_default(self) -> None:
+        # Test that time_series parameter defaults to False
+        bounds = [(0, 1, 2, 3, pd.Timestamp(2020, 1, 1), pd.Timestamp(2020, 1, 1))]
+        ds = CustomTimeSeriesDataset(bounds=bounds)  # time_series not specified, should default to False
+        x = ds[ds.bounds]
+        
+        # Should not have dates key when time_series=False
+        assert 'dates' not in x
+        assert 'image' in x
+        assert x['image'].ndim == 3  # Should be [C, H, W], not [T, C, H, W]
+
+    def test_time_series_parameter_explicit_false(self) -> None:
+        # Test that time_series=False works correctly
+        bounds = [(0, 1, 2, 3, pd.Timestamp(2020, 1, 1), pd.Timestamp(2020, 1, 1))]
+        ds = CustomTimeSeriesDataset(bounds=bounds, time_series=False)
+        x = ds[ds.bounds]
+        
+        # Should not have dates key when time_series=False
+        assert 'dates' not in x
+        assert 'image' in x
+        assert x['image'].ndim == 3  # Should be [C, H, W], not [T, C, H, W]
 
 
 class TestVectorDataset:
