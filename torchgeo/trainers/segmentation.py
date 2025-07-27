@@ -4,11 +4,13 @@
 """Trainers for semantic segmentation."""
 
 import os
+from collections.abc import Sequence
 from typing import Any, Literal
 
 import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
+import torch
 import torch.nn as nn
 from matplotlib.figure import Figure
 from torch import Tensor
@@ -26,7 +28,9 @@ class SemanticSegmentationTask(BaseTask):
 
     def __init__(
         self,
-        model: Literal['unet', 'deeplabv3+', 'fcn'] = 'unet',
+        model: Literal[
+            'unet', 'deeplabv3+', 'fcn', 'upernet', 'segformer', 'dpt'
+        ] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
@@ -35,7 +39,7 @@ class SemanticSegmentationTask(BaseTask):
         num_labels: int | None = None,
         num_filters: int = 3,
         loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'ce',
-        class_weights: Tensor | None = None,
+        class_weights: Tensor | Sequence[float] | None = None,
         ignore_index: int | None = None,
         lr: float = 1e-3,
         patience: int = 10,
@@ -53,8 +57,7 @@ class SemanticSegmentationTask(BaseTask):
             weights: Initial model weights. Either a weight enum, the string
                 representation of a weight enum, True for ImageNet weights, False or
                 None for random weights, or the path to a saved model state dict. FCN
-                model does not support pretrained weights. Pretrained ViT weight enums
-                are not supported yet.
+                model does not support pretrained weights.
             in_channels: Number of input channels to model.
             task: One of 'binary', 'multiclass', or 'multilabel'.
             num_classes: Number of prediction classes (only for ``task='multiclass'``).
@@ -129,7 +132,27 @@ class SemanticSegmentationTask(BaseTask):
                     classes=num_classes,
                     num_filters=num_filters,
                 )
-
+            case 'upernet':
+                self.model = smp.UPerNet(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=num_classes,
+                )
+            case 'segformer':
+                self.model = smp.Segformer(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=num_classes,
+                )
+            case 'dpt':
+                self.model = smp.DPT(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels,
+                    classes=num_classes,
+                )
         if model != 'fcn':
             if weights and weights is not True:
                 if isinstance(weights, WeightsEnum):
@@ -141,23 +164,27 @@ class SemanticSegmentationTask(BaseTask):
                 self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
-        if self.hparams['freeze_backbone'] and model in ['unet', 'deeplabv3+']:
+        if self.hparams['freeze_backbone'] and model != 'fcn':
             for param in self.model.encoder.parameters():
                 param.requires_grad = False
 
         # Freeze decoder
-        if self.hparams['freeze_decoder'] and model in ['unet', 'deeplabv3+']:
+        if self.hparams['freeze_decoder'] and model != 'fcn':
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
         ignore_index: int | None = self.hparams['ignore_index']
+        class_weights = self.hparams['class_weights']
+        if class_weights is not None and not isinstance(class_weights, Tensor):
+            class_weights = torch.tensor(class_weights, dtype=torch.float32)
+
         match self.hparams['loss']:
             case 'ce':
                 ignore_value = -1000 if ignore_index is None else ignore_index
                 self.criterion: nn.Module = nn.CrossEntropyLoss(
-                    ignore_index=ignore_value, weight=self.hparams['class_weights']
+                    ignore_index=ignore_value, weight=class_weights
                 )
             case 'bce':
                 self.criterion = nn.BCEWithLogitsLoss()
@@ -277,7 +304,7 @@ class SemanticSegmentationTask(BaseTask):
             batch = aug(batch)
             match self.hparams['task']:
                 case 'binary' | 'multilabel':
-                    batch['prediction'] = (y_hat >= 0.5).long()
+                    batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
                 case 'multiclass':
                     batch['prediction'] = y_hat.argmax(dim=1)
 

@@ -37,6 +37,13 @@ DOFA
 .. autoclass:: DOFABase16_Weights
 .. autoclass:: DOFALarge16_Weights
 
+EarthLoc
+^^^^^^^^
+
+.. autoclass:: EarthLoc
+.. autofunction:: earthloc
+.. autoclass:: EarthLoc_Weights
+
 FarSeg
 ^^^^^^
 
@@ -52,6 +59,11 @@ FC Siamese Networks
 
 .. autoclass:: FCSiamConc
 .. autoclass:: FCSiamDiff
+
+L-TAE
+^^^^^
+
+.. autoclass:: LTAE
 
 RCF Extractor
 ^^^^^^^^^^^^^
@@ -95,7 +107,6 @@ U-Net
 .. autofunction:: unet
 .. autoclass:: Unet_Weights
 
-
 Vision Transformer
 ^^^^^^^^^^^^^^^^^^
 
@@ -111,6 +122,12 @@ Vision Transformer
 .. autoclass:: ViTHuge14_Weights
 .. autoclass:: ViTSmall14_DINOv2_Weights
 .. autoclass:: ViTBase14_DINOv2_Weights
+
+YOLO
+^^^^
+
+.. autofunction:: yolo
+.. autoclass:: YOLO_Weights
 
 Utility Functions
 ^^^^^^^^^^^^^^^^^

@@ -3,61 +3,22 @@
 
 """Dataset for the Global Biodiversity Information Facility."""
 
+import functools
 import glob
 import os
-import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 
+import geopandas as gpd
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
+from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
-from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, Path
-
-
-def _disambiguate_timestamps(
-    year: float, month: float, day: float
-) -> tuple[float, float]:
-    """Disambiguate partial timestamps.
-
-    Based on :func:`torchgeo.datasets.utils.disambiguate_timestamps`.
-
-    Args:
-        year: year, possibly nan
-        month: month, possibly nan
-        day: day, possibly nan
-
-    Returns:
-        minimum and maximum possible time range
-    """
-    if np.isnan(year):
-        # No temporal info
-        return 0, sys.maxsize
-    elif np.isnan(month):
-        # Year resolution
-        mint = datetime(int(year), 1, 1)
-        maxt = datetime(int(year) + 1, 1, 1)
-    elif np.isnan(day):
-        # Month resolution
-        mint = datetime(int(year), int(month), 1)
-        if month == 12:
-            maxt = datetime(int(year) + 1, 1, 1)
-        else:
-            maxt = datetime(int(year), int(month) + 1, 1)
-    else:
-        # Day resolution
-        mint = datetime(int(year), int(month), int(day))
-        maxt = mint + timedelta(days=1)
-
-    maxt -= timedelta(microseconds=1)
-
-    return mint.timestamp(), maxt.timestamp()
+from .utils import GeoSlice, Path, disambiguate_timestamp
 
 
 class GBIF(GeoDataset):
@@ -80,9 +41,6 @@ class GBIF(GeoDataset):
     .. versionadded:: 0.3
     """
 
-    res = (0, 0)
-    _crs = CRS.from_epsg(4326)  # Lat/Lon
-
     def __init__(self, root: Path = 'data') -> None:
         """Initialize a new Dataset instance.
 
@@ -101,46 +59,47 @@ class GBIF(GeoDataset):
             raise DatasetNotFoundError(self)
 
         # Read tab-delimited CSV file
-        data = pd.read_table(
-            files[0],
-            engine='c',
-            usecols=['decimalLatitude', 'decimalLongitude', 'day', 'month', 'year'],
+        usecols = ['decimalLatitude', 'decimalLongitude', 'day', 'month', 'year']
+        dtype = {'day': str, 'month': str, 'year': str}
+        df = pd.read_table(files[0], usecols=usecols, dtype=dtype)
+        df = df[df.decimalLatitude.notna()]
+        df = df[df.decimalLongitude.notna()]
+        df.day = df.day.str.zfill(2)
+        df.month = df.month.str.zfill(2)
+        date = df.day + ' ' + df.month + ' ' + df.year
+
+        # Convert from pandas DataFrame to geopandas GeoDataFrame
+        func = functools.partial(disambiguate_timestamp, format='%d %m %Y')
+        index = pd.IntervalIndex.from_tuples(
+            date.apply(func), closed='both', name='datetime'
         )
+        geometry = gpd.points_from_xy(df.decimalLongitude, df.decimalLatitude)
+        self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
-        # Convert from pandas DataFrame to rtree Index
-        i = 0
-        for y, x, day, month, year in data.itertuples(index=False, name=None):
-            # Skip rows without lat/lon
-            if np.isnan(y) or np.isnan(x):
-                continue
-
-            mint, maxt = _disambiguate_timestamps(year, month, day)
-
-            coords = (x, x, y, y, mint, maxt)
-            self.index.insert(i, coords)
-            i += 1
-
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        bboxes = [hit.bbox for hit in hits]
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
-        if not bboxes:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        sample = {'crs': self.crs, 'bounds': bboxes}
+        sample = {'crs': self.crs, 'bounds': index}
 
         return sample
 
@@ -166,12 +125,12 @@ class GBIF(GeoDataset):
         ax.grid(ls='--')
 
         # Extract bounding boxes (coordinates) from the sample
-        bboxes = sample['bounds']
+        index = sample['bounds']
 
         # Extract coordinates and timestamps
-        longitudes = [bbox[0] for bbox in bboxes]  # minx
-        latitudes = [bbox[1] for bbox in bboxes]  # miny
-        timestamps = [bbox[2] for bbox in bboxes]  # mint
+        longitudes = [point.x for point in index.geometry]
+        latitudes = [point.y for point in index.geometry]
+        timestamps = [time.timestamp() for time in index.index.left]
 
         # Plot the points with colors based on date
         scatter = ax.scatter(longitudes, latitudes, c=timestamps, edgecolors='black')
@@ -194,7 +153,7 @@ class GBIF(GeoDataset):
 
         # Add titles if requested
         if show_titles:
-            ax.set_title('GBIF Occurence Locations by Date')
+            ax.set_title('GBIF Occurrence Locations by Date')
 
         if suptitle is not None:
             fig.suptitle(suptitle)

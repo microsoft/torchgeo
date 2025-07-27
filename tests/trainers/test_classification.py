@@ -81,6 +81,7 @@ class TestClassificationTask:
             'eurosatspatial',
             'fire_risk',
             'quakeset',
+            'patternnet',
             'resisc45',
             'so2sat_all',
             'so2sat_s1',
@@ -187,6 +188,22 @@ class TestClassificationTask:
             in_channels=weights.meta['in_chans'],
             num_classes=10,
         )
+
+    def test_class_weights(self) -> None:
+        """Test class_weights parameter functionality."""
+        # Test with list of class weights
+        class_weights_list = [1.0, 2.0, 0.5]
+        task = ClassificationTask(class_weights=class_weights_list, num_classes=3)
+        assert task.hparams['class_weights'] == class_weights_list
+
+        # Test with tensor class weights
+        class_weights_tensor = torch.tensor([1.0, 2.0, 0.5])
+        task = ClassificationTask(class_weights=class_weights_tensor, num_classes=3)
+        assert torch.equal(task.hparams['class_weights'], class_weights_tensor)
+
+        # Test with None (default)
+        task = ClassificationTask(num_classes=3)
+        assert task.hparams['class_weights'] is None
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(EuroSATDataModule, 'plot', plot)

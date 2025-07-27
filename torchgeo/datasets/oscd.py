@@ -8,6 +8,7 @@ import os
 from collections.abc import Callable, Sequence
 from typing import ClassVar
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -150,7 +151,8 @@ class OSCD(NonGeoDataset):
         image1 = self._load_image(files['images1'])
         image2 = self._load_image(files['images2'])
         mask = self._load_target(str(files['mask']))
-        sample = {'image1': image1, 'image2': image2, 'mask': mask}
+        image = torch.stack(tensors=[image1, image2], dim=0)
+        sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -241,7 +243,8 @@ class OSCD(NonGeoDataset):
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)
-            return tensor
+            # VideoSequential requires time dimension
+            return einops.rearrange(tensor, 'h w -> () h w')
 
     def _verify(self) -> None:
         """Verify the integrity of the dataset."""
@@ -318,14 +321,14 @@ class OSCD(NonGeoDataset):
             )
             array: np.typing.NDArray[np.uint8] = draw_semantic_segmentation_masks(
                 torch.from_numpy(rgb_img),
-                sample['mask'],
+                sample['mask'][0],
                 alpha=alpha,
                 colors=list(self.colormap),
             )
             return array
 
-        image1 = get_masked(sample['image1'])
-        image2 = get_masked(sample['image2'])
+        image1 = get_masked(sample['image'][0])
+        image2 = get_masked(sample['image'][1])
         fig, axs = plt.subplots(ncols=ncols, figsize=(ncols * 10, 10))
         axs[0].imshow(image1)
         axs[0].axis('off')

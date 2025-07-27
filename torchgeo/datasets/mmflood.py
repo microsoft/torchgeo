@@ -14,12 +14,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import IntersectionDataset, RasterDataset
-from .utils import BoundingBox, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, download_url, extract_archive
 
 
 class MMFloodComponent(RasterDataset):
@@ -57,31 +57,6 @@ class MMFloodComponent(RasterDataset):
             paths += glob(os.path.join(root, '**', f'{s}*-*', self.content, '*.tif'))
         paths = sorted(paths)
         super().__init__(paths, crs, res, transforms=transforms, cache=cache)
-
-
-class MMFloodIntersection(IntersectionDataset):
-    """Intersection dataset used to merge two or more MMFloodComponents."""
-
-    def __init__(
-        self,
-        dataset1: MMFloodComponent | MMFloodIntersection,
-        dataset2: MMFloodComponent | MMFloodIntersection,
-    ) -> None:
-        """Initialize a new MMFloodIntersection instance.
-
-        Args:
-            dataset1: the first dataset to merge
-            dataset2: the second dataset to merge
-        """
-        # if hydro component is passed, it should always be passed as dataset2
-        super().__init__(dataset1, dataset2)
-
-    def _merge_dataset_indices(self) -> None:
-        """Create a new R-tree out of the individual indices from Sentinel-1, DEM and hydrography datasets."""
-        _, ds2 = self.datasets
-        # Always use index of ds2, since it either coincides with ds1 index
-        # or refers to hydro, which represents only a subset of the dataset
-        self.index = ds2.index
 
 
 class MMFlood(IntersectionDataset):
@@ -197,22 +172,25 @@ class MMFlood(IntersectionDataset):
         split_subfolders = self.metadata_df[
             self.metadata_df['subset'] == self.split
         ].index.tolist()
-        self.image: MMFloodComponent | MMFloodIntersection = MMFloodComponent(
+        self.image: MMFloodComponent | IntersectionDataset = MMFloodComponent(
             split_subfolders, 's1_raw', root, crs, res, cache=cache
         )
         if include_dem:
             dem = MMFloodComponent(split_subfolders, 'DEM', root, crs, res, cache=cache)
-            self.image = MMFloodIntersection(self.image, dem)
+            self.image = self.image & dem
+            self.image.index = dem.index
         if include_hydro:
             hydro = MMFloodComponent(
                 split_subfolders, 'hydro', root, crs, res, cache=cache
             )
-            self.image = MMFloodIntersection(self.image, hydro)
+            self.image = self.image & hydro
+            self.image.index = hydro.index
         self.mask = MMFloodComponent(
             split_subfolders, 'mask', root, crs, res, cache=cache
         )
 
         super().__init__(self.image, self.mask, transforms=transforms)
+        self.index = self.image.index
 
     def _merge_tar_files(self) -> None:
         """Merge part tar gz files."""
@@ -229,17 +207,17 @@ class MMFlood(IntersectionDataset):
                 with open(part_path, 'rb') as part_fp:
                     dst_fp.write(part_fp.read())
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Tensor]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Tensor]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image, mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
         data = super().__getitem__(query)
         missing_data = data['image'].isnan().any(dim=0)
@@ -247,12 +225,6 @@ class MMFlood(IntersectionDataset):
         data['image'][:, missing_data] = 0
         data['mask'][missing_data] = self._ignore_index
         return data
-
-    def _merge_dataset_indices(self) -> None:
-        """Create a new R-tree out of the individual indices from Sentinel-1, DEM and hydrography datasets."""
-        ds1, _ = self.datasets
-        # Use ds1 index
-        self.index = ds1.index
 
     def _download(self) -> None:
         """Download the dataset."""

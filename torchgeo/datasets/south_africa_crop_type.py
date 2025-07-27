@@ -6,17 +6,18 @@
 import os
 import re
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import torch
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 from torch import Tensor
 
 from .errors import DatasetNotFoundError, RGBBandsMissingError
 from .geo import RasterDataset
-from .utils import BoundingBox, Path, which
+from .utils import GeoSlice, Path, which
 
 
 class SouthAfricaCropType(RasterDataset):
@@ -151,22 +152,25 @@ class SouthAfricaCropType(RasterDataset):
             self.ordinal_map[k] = v
             self.ordinal_cmap[v] = torch.tensor(self.cmap[k])
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Return an index within the dataset.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            data and labels at that index
+            Sample of input, target, and/or metadata at that index.
+
+        Raises:
+            IndexError: If *query* is not found in the index.
         """
-        assert isinstance(self.paths, str | os.PathLike)
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
-        # Get all files matching the given query
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[str], [hit.object for hit in hits])
-
-        if not filepaths:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
@@ -179,7 +183,7 @@ class SouthAfricaCropType(RasterDataset):
         # Store date in July for s1 and s2 we want to use for each sample
         imagery_dates: dict[str, dict[str, str]] = {}
 
-        for filepath in filepaths:
+        for filepath in index.filepath:
             filename = os.path.basename(filepath)
             match = re.match(filename_regex, filename)
             if match:
@@ -197,6 +201,7 @@ class SouthAfricaCropType(RasterDataset):
                     imagery_dates[field_id][band_type] = date
 
         # Create Tensors for each band using stored dates
+        assert isinstance(self.paths, str | os.PathLike)
         for band in self.bands:
             band_type = 's1' if band in self.s1_bands else 's2'
             band_filepaths = []

@@ -4,26 +4,27 @@
 """EnviroAtlas High-Resolution Land Cover datasets."""
 
 import os
-import sys
 from collections.abc import Callable, Sequence
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import fiona
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pyproj
 import rasterio
 import rasterio.mask
 import shapely.geometry
 import shapely.ops
 import torch
+from geopandas import GeoDataFrame
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, Path, download_url, extract_archive
+from .utils import GeoSlice, Path, download_url, extract_archive
 
 
 class EnviroAtlas(GeoDataset):
@@ -51,8 +52,7 @@ class EnviroAtlas(GeoDataset):
     filename = 'enviroatlas_lotp.zip'
     md5 = 'bfe601be21c7c001315fc6154be8ef14'
 
-    crs = CRS.from_epsg(3857)
-    res = (1, 1)
+    _res = (1, 1)
 
     valid_prior_layers = ('prior', 'prior_no_osm_no_buildings')
 
@@ -107,7 +107,7 @@ class EnviroAtlas(GeoDataset):
     )
 
     p_src_crs = pyproj.CRS('epsg:3857')
-    p_transformers: ClassVar[dict[str, CRS]] = {
+    p_transformers: ClassVar[dict[str, Any]] = {
         'epsg:26917': pyproj.Transformer.from_crs(
             p_src_crs, pyproj.CRS('epsg:26917'), always_xy=True
         ).transform,
@@ -288,6 +288,7 @@ class EnviroAtlas(GeoDataset):
         assert all([layer in self.valid_layers for layer in layers])
         self.root = root
         self.layers = layers
+        self.transforms = transforms
         self.cache = cache
         self.download = download
         self.checksum = checksum
@@ -295,23 +296,20 @@ class EnviroAtlas(GeoDataset):
 
         self._verify()
 
-        super().__init__(transforms)
-
         # Add all tiles into the index in epsg:3857 based on the included geojson
-        mint: float = 0
-        maxt: float = sys.maxsize
+        mint = pd.Timestamp.min
+        maxt = pd.Timestamp.max
+        data = []
+        datetimes = []
+        geometries = []
         with fiona.open(
             os.path.join(root, 'enviroatlas_lotp', 'spatial_index.geojson'), 'r'
         ) as f:
-            for i, row in enumerate(f):
+            for row in f:
                 if row['properties']['split'] in splits:
-                    box = shapely.geometry.shape(row['geometry'])
-                    minx, miny, maxx, maxy = box.bounds
-                    coords = (minx, maxx, miny, maxy, mint, maxt)
-
-                    self.index.insert(
-                        i,
-                        coords,
+                    geometries.append(shapely.geometry.shape(row['geometry']))
+                    datetimes.append((mint, maxt))
+                    data.append(
                         {
                             'naip': row['properties']['naip'],
                             'nlcd': row['properties']['nlcd'],
@@ -330,36 +328,47 @@ class EnviroAtlas(GeoDataset):
                             'prior': row['properties']['naip'].replace(
                                 'a_naip', 'prior_from_cooccurrences_101_31'
                             ),
-                        },
+                        }
                     )
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        crs = CRS.from_epsg(3857)
+        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
+
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image/mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        filepaths = cast(list[dict[str, str]], [hit.object for hit in hits])
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
-        sample = {'image': [], 'mask': [], 'crs': self.crs, 'bounds': query}
+        sample: dict[str, Any] = {
+            'image': [],
+            'mask': [],
+            'crs': self.crs,
+            'bounds': query,
+        }
 
-        if len(filepaths) == 0:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
-        elif len(filepaths) == 1:
-            filenames = filepaths[0]
+        elif len(index) == 1:
+            filenames = index.iloc[0]
             query_geom_transformed = None  # is set by the first layer
 
-            minx, maxx, miny, maxy, mint, maxt = query
-            query_box = shapely.geometry.box(minx, miny, maxx, maxy)
+            query_box = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
 
             for layer in self.layers:
                 fn = filenames[layer]

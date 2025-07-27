@@ -16,9 +16,11 @@ from .dofa import (
     dofa_large_patch16_224,
     dofa_small_patch16_224,
 )
+from .earthloc import EarthLoc, EarthLoc_Weights, earthloc
 from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
+from .ltae import LTAE
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .rcf import RCF
 from .resnet import (
@@ -46,11 +48,13 @@ from .vit import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
+from .yolo import YOLO_Weights, yolo
 
 __all__ = (
     'CROMA',
     'DOFA',
     'FCN',
+    'LTAE',
     'RCF',
     'CROMABase_Weights',
     'CROMALarge_Weights',
@@ -61,6 +65,8 @@ __all__ = (
     'CopernicusFM_Base_Weights',
     'DOFABase16_Weights',
     'DOFALarge16_Weights',
+    'EarthLoc',
+    'EarthLoc_Weights',
     'FCSiamConc',
     'FCSiamDiff',
     'FarSeg',
@@ -80,6 +86,7 @@ __all__ = (
     'ViTLarge16_Weights',
     'ViTSmall14_DINOv2_Weights',
     'ViTSmall16_Weights',
+    'YOLO_Weights',
     'copernicusfm_base',
     'croma_base',
     'croma_large',
@@ -87,6 +94,7 @@ __all__ = (
     'dofa_huge_patch14_224',
     'dofa_large_patch16_224',
     'dofa_small_patch16_224',
+    'earthloc',
     'get_model',
     'get_model_weights',
     'get_weight',
@@ -105,4 +113,5 @@ __all__ = (
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
+    'yolo',
 )

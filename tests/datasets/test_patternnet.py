@@ -33,7 +33,7 @@ class TestPatternNet:
         assert x['image'].shape[0] == 3
 
     def test_len(self, dataset: PatternNet) -> None:
-        assert len(dataset) == 2
+        assert len(dataset) == 6
 
     def test_already_downloaded(self, dataset: PatternNet, tmp_path: Path) -> None:
         PatternNet(root=tmp_path, download=True)

@@ -24,6 +24,7 @@ from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
 from ..datasets import RGBBandsMissingError, unbind_samples
 from .base import BaseTask
+from .utils import GeneralizedRCNNTransformNoOp
 
 BACKBONE_LAT_DIM_MAP = {
     'resnet18': 512,
@@ -73,6 +74,9 @@ class ObjectDetectionTask(BaseTask):
         freeze_backbone: bool = False,
     ) -> None:
         """Initialize a new ObjectDetectionTask instance.
+
+        Note that we disable the internal normalize+resize transform of the detection models.
+        Please ensure your images are appropriately resized before passing them to the model.
 
         Args:
             model: Name of the `torchvision
@@ -152,6 +156,7 @@ class ObjectDetectionTask(BaseTask):
                 rpn_anchor_generator=anchor_generator,
                 box_roi_pool=roi_pooler,
             )
+            self.model.transform = GeneralizedRCNNTransformNoOp()
         elif model == 'fcos':
             kwargs['extra_blocks'] = feature_pyramid_network.LastLevelP6P7(256, 256)
             kwargs['norm_layer'] = (
@@ -171,6 +176,7 @@ class ObjectDetectionTask(BaseTask):
             self.model = torchvision.models.detection.FCOS(
                 model_backbone, num_classes, anchor_generator=anchor_generator
             )
+            self.model.transform = GeneralizedRCNNTransformNoOp()
         elif model == 'retinanet':
             kwargs['extra_blocks'] = feature_pyramid_network.LastLevelP6P7(
                 latent_dim, 256
@@ -205,6 +211,7 @@ class ObjectDetectionTask(BaseTask):
                 anchor_generator=anchor_generator,
                 head=head,
             )
+            self.model.transform = GeneralizedRCNNTransformNoOp()
         else:
             raise ValueError(f"Model type '{model}' is not valid.")
 

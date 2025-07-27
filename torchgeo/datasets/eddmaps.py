@@ -3,21 +3,21 @@
 
 """Dataset for EDDMapS."""
 
+import functools
 import os
-import sys
 from datetime import datetime
 from typing import Any
 
+import geopandas as gpd
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
+from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
-from rasterio.crs import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import GeoDataset
-from .utils import BoundingBox, Path, disambiguate_timestamp
+from .utils import GeoSlice, Path, disambiguate_timestamp
 
 
 class EDDMapS(GeoDataset):
@@ -43,9 +43,6 @@ class EDDMapS(GeoDataset):
     .. versionadded:: 0.3
     """
 
-    res = (0, 0)
-    _crs = CRS.from_epsg(4326)  # Lat/Lon
-
     def __init__(self, root: Path = 'data') -> None:
         """Initialize a new Dataset instance.
 
@@ -64,47 +61,42 @@ class EDDMapS(GeoDataset):
             raise DatasetNotFoundError(self)
 
         # Read CSV file
-        data = pd.read_csv(
-            filepath, engine='c', usecols=['ObsDate', 'Latitude', 'Longitude']
+        df = pd.read_csv(filepath, usecols=['ObsDate', 'Latitude', 'Longitude'])
+        df = df[df.Latitude.notna()]
+        df = df[df.Longitude.notna()]
+
+        # Convert from pandas DataFrame to geopandas GeoDataFrame
+        func = functools.partial(disambiguate_timestamp, format='%m-%d-%y')
+        index = pd.IntervalIndex.from_tuples(
+            df['ObsDate'].apply(func), closed='both', name='datetime'
         )
+        geometry = gpd.points_from_xy(df.Longitude, df.Latitude)
+        self.index = GeoDataFrame(index=index, geometry=geometry, crs='EPSG:4326')
 
-        # Convert from pandas DataFrame to rtree Index
-        i = 0
-        for date, y, x in data.itertuples(index=False, name=None):
-            # Skip rows without lat/lon
-            if np.isnan(y) or np.isnan(x):
-                continue
-
-            if not pd.isna(date):
-                mint, maxt = disambiguate_timestamp(date, '%m-%d-%y')
-            else:
-                mint, maxt = 0, sys.maxsize
-
-            coords = (x, x, y, y, mint, maxt)
-            self.index.insert(i, coords)
-            i += 1
-
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        bboxes = [hit.bbox for hit in hits]
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
-        if not bboxes:
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        sample = {'crs': self.crs, 'bounds': bboxes}
+        sample = {'crs': self.crs, 'bounds': index}
 
         return sample
 
@@ -130,12 +122,12 @@ class EDDMapS(GeoDataset):
         ax.grid(ls='--')
 
         # Extract bounding boxes (coordinates) from the sample
-        bboxes = sample['bounds']
+        index = sample['bounds']
 
         # Extract coordinates and timestamps
-        longitudes = [bbox[0] for bbox in bboxes]  # minx
-        latitudes = [bbox[1] for bbox in bboxes]  # miny
-        timestamps = [bbox[2] for bbox in bboxes]  # mint (timestamp)
+        longitudes = [point.x for point in index.geometry]
+        latitudes = [point.y for point in index.geometry]
+        timestamps = [time.timestamp() for time in index.index.left]
 
         # Plot the points with colors based on date
         scatter = ax.scatter(longitudes, latitudes, c=timestamps, edgecolors='black')

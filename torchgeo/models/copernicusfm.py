@@ -375,13 +375,13 @@ class CopernicusFM(nn.Module):
         >>> bandwidths = [65, 35, 30, 115] # bandwidth (nm): B,G,R,NIR (Sentinel 2)
         >>> kernel_size = 16 # expected patch size
         >>> input_mode = 'spectral'
-        >>> logit = model(x, metadata, wavelengths=wavelengths, bandwidth=bandwidths, input_mode=input_mode, kernel_size=kernel_size)
+        >>> logit = model(x, metadata, wavelengths=wavelengths, bandwidths=bandwidths, input_mode=input_mode, kernel_size=kernel_size)
         >>> print(logit.shape)
 
         **2. Variable Mode (Using language embedding):**
 
         >>> model = CopernicusFM()
-        >>> varname = 'Sentinel 5P Nitrogen Dioxide' # variable name (as input to a LLM for langauge embed)
+        >>> varname = 'Sentinel 5P Nitrogen Dioxide' # variable name (as input to a LLM for language embed)
         >>> x = torch.randn(1, 1, 56, 56) # input image
         >>> metadata = torch.full((1, 4), float('nan')) # [lon (degree), lat (degree), delta_time (days since 1970/1/1), patch_token_area (km^2)], assume unknown
         >>> language_embed = torch.randn(2048) # language embedding: encode varname with a LLM (e.g. Llama)

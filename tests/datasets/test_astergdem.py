@@ -6,14 +6,14 @@ import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from torchgeo.datasets import (
     AsterGDEM,
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     UnionDataset,
@@ -66,8 +66,7 @@ class TestAsterGDEM:
         plt.close()
 
     def test_invalid_query(self, dataset: AsterGDEM) -> None:
-        query = BoundingBox(100, 100, 100, 100, 0, 0)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]

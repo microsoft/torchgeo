@@ -8,7 +8,6 @@ from typing import Any, cast
 import kornia.augmentation as K
 import timm
 import torch
-from timm.models.vision_transformer import VisionTransformer
 from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -28,7 +27,7 @@ from .resnet import (
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
 # Normalization either by 10K or channel-wise with band statistics
 _zhu_xlab_transforms = K.AugmentationSequential(
-    K.Resize(256),
+    K.Resize((256, 256)),
     K.CenterCrop(224),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
     data_keys=None,
@@ -563,7 +562,7 @@ class ViTBase14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
 
 def vit_small_patch16_224(
     weights: ViTSmall16_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer | nn.ModuleDict:
+) -> nn.Module:
     """Vision Transform (ViT) small patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -582,16 +581,12 @@ def vit_small_patch16_224(
     """
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
-    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
-    model: VisionTransformer | nn.ModuleDict = timm.create_model(
-        'vit_small_patch16_224', *args, **kwargs
-    )
+
+    model = timm.create_model('vit_small_patch16_224', *args, **kwargs)
 
     if kwargs.get('features_only', False):
-        model = cast(nn.ModuleDict, model)
-        target_model = cast(VisionTransformer, model.model)
+        target_model = cast(nn.Module, model.model)
     else:
-        model = cast(VisionTransformer, model)
         target_model = model
 
     if weights:
@@ -607,7 +602,7 @@ def vit_small_patch16_224(
 
 def vit_base_patch16_224(
     weights: ViTBase16_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer | nn.ModuleDict:
+) -> nn.Module:
     """Vision Transform (ViT) base patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -626,16 +621,12 @@ def vit_base_patch16_224(
     """
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
-    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
-    model: VisionTransformer | nn.ModuleDict = timm.create_model(
-        'vit_base_patch16_224', *args, **kwargs
-    )
+
+    model = timm.create_model('vit_base_patch16_224', *args, **kwargs)
 
     if kwargs.get('features_only', False):
-        model = cast(nn.ModuleDict, model)
-        target_model = cast(VisionTransformer, model.model)
+        target_model = cast(nn.Module, model.model)
     else:
-        model = cast(VisionTransformer, model)
         target_model = model
 
     if weights:
@@ -650,7 +641,7 @@ def vit_base_patch16_224(
 
 def vit_large_patch16_224(
     weights: ViTLarge16_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer | nn.ModuleDict:
+) -> nn.Module:
     """Vision Transform (ViT) large patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -669,16 +660,12 @@ def vit_large_patch16_224(
     """
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
-    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
-    model: VisionTransformer | nn.ModuleDict = timm.create_model(
-        'vit_large_patch16_224', *args, **kwargs
-    )
+
+    model = timm.create_model('vit_large_patch16_224', *args, **kwargs)
 
     if kwargs.get('features_only', False):
-        model = cast(nn.ModuleDict, model)
-        target_model = cast(VisionTransformer, model.model)
+        target_model = cast(nn.Module, model.model)
     else:
-        model = cast(VisionTransformer, model)
         target_model = model
 
     if weights:
@@ -693,7 +680,7 @@ def vit_large_patch16_224(
 
 def vit_huge_patch14_224(
     weights: ViTHuge14_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer | nn.ModuleDict:
+) -> nn.Module:
     """Vision Transform (ViT) huge patch size 14 model.
 
     If you use this model in your research, please cite the following paper:
@@ -712,16 +699,12 @@ def vit_huge_patch14_224(
     """
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
-    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
-    model: VisionTransformer | nn.ModuleDict = timm.create_model(
-        'vit_huge_patch14_224', *args, **kwargs
-    )
+
+    model = timm.create_model('vit_huge_patch14_224', *args, **kwargs)
 
     if kwargs.get('features_only', False):
-        model = cast(nn.ModuleDict, model)
-        target_model = cast(VisionTransformer, model.model)
+        target_model = cast(nn.Module, model.model)
     else:
-        model = cast(VisionTransformer, model)
         target_model = model
 
     if weights:
@@ -736,7 +719,7 @@ def vit_huge_patch14_224(
 
 def vit_small_patch14_dinov2(
     weights: ViTSmall14_DINOv2_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer | nn.ModuleDict:
+) -> nn.Module:
     """Vision Transform (ViT) small patch size 14 model for DINOv2.
 
     If you use this model in your research, please cite the following paper:
@@ -756,16 +739,12 @@ def vit_small_patch14_dinov2(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
         kwargs['img_size'] = weights.meta['img_size']
-    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
-    model: VisionTransformer | nn.ModuleDict = timm.create_model(
-        'vit_small_patch14_dinov2', *args, **kwargs
-    )
+
+    model = timm.create_model('vit_small_patch14_dinov2', *args, **kwargs)
 
     if kwargs.get('features_only', False):
-        model = cast(nn.ModuleDict, model)
-        target_model = cast(VisionTransformer, model.model)
+        target_model = cast(nn.Module, model.model)
     else:
-        model = cast(VisionTransformer, model)
         target_model = model
 
     if weights:
@@ -780,7 +759,7 @@ def vit_small_patch14_dinov2(
 
 def vit_base_patch14_dinov2(
     weights: ViTBase14_DINOv2_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer | nn.ModuleDict:
+) -> nn.Module:
     """Vision Transform (ViT) base patch size 14 model for DINOv2.
 
     If you use this model in your research, please cite the following paper:
@@ -800,16 +779,12 @@ def vit_base_patch14_dinov2(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
         kwargs['img_size'] = weights.meta['img_size']
-    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
-    model: VisionTransformer | nn.ModuleDict = timm.create_model(
-        'vit_base_patch14_dinov2', *args, **kwargs
-    )
+
+    model = timm.create_model('vit_base_patch14_dinov2', *args, **kwargs)
 
     if kwargs.get('features_only', False):
-        model = cast(nn.ModuleDict, model)
-        target_model = cast(VisionTransformer, model.model)
+        target_model = cast(nn.Module, model.model)
     else:
-        model = cast(VisionTransformer, model)
         target_model = model
 
     if weights:

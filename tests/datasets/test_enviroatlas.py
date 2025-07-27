@@ -6,21 +6,20 @@ import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
+from pyproj import CRS
 from pytest import MonkeyPatch
-from rasterio.crs import CRS
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     EnviroAtlas,
     IntersectionDataset,
     UnionDataset,
 )
-from torchgeo.samplers import RandomGeoSampler
 
 
 class TestEnviroAtlas:
@@ -57,9 +56,7 @@ class TestEnviroAtlas:
         )
 
     def test_getitem(self, dataset: EnviroAtlas) -> None:
-        sampler = RandomGeoSampler(dataset, size=16, length=32)
-        bb = next(iter(sampler))
-        x = dataset[bb]
+        x = dataset[dataset.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['mask'], torch.Tensor)
@@ -90,11 +87,10 @@ class TestEnviroAtlas:
             EnviroAtlas(tmp_path, checksum=True)
 
     def test_out_of_bounds_query(self, dataset: EnviroAtlas) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_multiple_hits_query(self, dataset: EnviroAtlas) -> None:
         ds = EnviroAtlas(
@@ -108,9 +104,7 @@ class TestEnviroAtlas:
             ds[dataset.bounds]
 
     def test_plot(self, dataset: EnviroAtlas) -> None:
-        sampler = RandomGeoSampler(dataset, size=16, length=1)
-        bb = next(iter(sampler))
-        x = dataset[bb]
+        x = dataset[dataset.bounds]
         if 'naip' not in dataset.layers or 'lc' not in dataset.layers:
             with pytest.raises(ValueError, match="The 'naip' and"):
                 dataset.plot(x)

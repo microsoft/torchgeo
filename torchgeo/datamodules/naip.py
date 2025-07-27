@@ -6,11 +6,11 @@
 from typing import Any
 
 import kornia.augmentation as K
+import shapely
 from matplotlib.figure import Figure
 
 from ..datasets import (
     NAIP,
-    BoundingBox,
     ChesapeakeDC,
     ChesapeakeDE,
     ChesapeakeMD,
@@ -82,26 +82,22 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         self.chesapeake = dc | de | md | ny | pa | va | wv
         self.dataset = self.naip & self.chesapeake
 
-        roi = self.dataset.bounds
-        midx = roi.minx + (roi.maxx - roi.minx) / 2
-        midy = roi.miny + (roi.maxy - roi.miny) / 2
+        x, y, t = self.dataset.bounds
+        midx = x.start + (x.stop - x.start) / 2
+        midy = y.start + (y.stop - y.start) / 2
 
         if stage in ['fit']:
-            train_roi = BoundingBox(
-                roi.minx, midx, roi.miny, roi.maxy, roi.mint, roi.maxt
-            )
+            train_roi = shapely.box(x.start, y.start, midx, y.stop)
             self.train_batch_sampler = RandomBatchGeoSampler(
                 self.dataset, self.patch_size, self.batch_size, self.length, train_roi
             )
         if stage in ['fit', 'validate']:
-            val_roi = BoundingBox(midx, roi.maxx, roi.miny, midy, roi.mint, roi.maxt)
+            val_roi = shapely.box(midx, y.start, x.stop, midy)
             self.val_sampler = GridGeoSampler(
                 self.dataset, self.patch_size, self.patch_size, val_roi
             )
         if stage in ['test']:
-            test_roi = BoundingBox(
-                roi.minx, roi.maxx, midy, roi.maxy, roi.mint, roi.maxt
-            )
+            test_roi = shapely.box(midx, midy, x.stop, y.stop)
             self.test_sampler = GridGeoSampler(
                 self.dataset, self.patch_size, self.patch_size, test_roi
             )

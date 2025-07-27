@@ -9,21 +9,22 @@ import hashlib
 import os
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import torch
 from matplotlib.colors import ListedColormap
 from matplotlib.figure import Figure
 from PIL import Image
-from rasterio.crs import CRS
+from pyproj import CRS
 from torch import Tensor
 from torch.utils.data import Dataset
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset, RasterDataset
-from .utils import BoundingBox, Path, download_url, extract_archive, working_dir
+from .utils import GeoSlice, Path, download_url, extract_archive, working_dir
 
 
 class LandCoverAIBase(Dataset[dict[str, Any]], abc.ABC):
@@ -241,25 +242,28 @@ class LandCoverAIGeo(LandCoverAIBase, RasterDataset):
         masks = glob.glob(mask_query)
         return len(images) > 0 and len(images) == len(masks)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
 
         Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            sample of image, mask and metadata at that index
+            Sample of input, target, and/or metadata at that index.
 
         Raises:
-            IndexError: if query is not found in the index
+            IndexError: If *query* is not found in the index.
         """
-        hits = self.index.intersection(tuple(query), objects=True)
-        img_filepaths = cast(list[str], [hit.object for hit in hits])
-        mask_filepaths = [
-            str(path).replace('images', 'masks') for path in img_filepaths
-        ]
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
 
-        if not img_filepaths:
+        img_filepaths = index.filepath
+        mask_filepaths = img_filepaths.apply(lambda x: x.replace('images', 'masks'))
+
+        if index.empty:
             raise IndexError(
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
