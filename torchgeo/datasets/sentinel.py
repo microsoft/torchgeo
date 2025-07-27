@@ -154,6 +154,7 @@ class Sentinel1(Sentinel):
         bands: Sequence[str] = ['VV', 'VH'],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -168,6 +169,8 @@ class Sentinel1(Sentinel):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, return imagery as time series with shape [T,C,H,W]
+                and include 'dates' key with datetime information
 
         Raises:
             AssertionError: if ``bands`` is invalid
@@ -196,7 +199,7 @@ To create a dataset containing both, use:
 
         self.filename_glob = self.filename_glob.format(bands[0])
 
-        super().__init__(paths, crs, res, bands, transforms, cache)
+        super().__init__(paths, crs, res, bands, transforms, cache, time_series)
 
     def plot(
         self,
@@ -338,6 +341,7 @@ class Sentinel2(Sentinel):
         bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new Dataset instance.
 
@@ -352,6 +356,8 @@ class Sentinel2(Sentinel):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, return imagery as time series with shape [T,C,H,W]
+                and include 'dates' key with datetime information
 
         Raises:
             DatasetNotFoundError: If dataset is not found.
@@ -366,7 +372,7 @@ class Sentinel2(Sentinel):
             res = (res, res)
 
         self.filename_regex = self.filename_regex.format(int(res[0]))
-        super().__init__(paths, crs, res, bands, transforms, cache)
+        super().__init__(paths, crs, res, bands, transforms, cache, time_series)
 
     def plot(
         self,

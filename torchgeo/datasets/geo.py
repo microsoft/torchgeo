@@ -402,6 +402,7 @@ class RasterDataset(GeoDataset):
         bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new RasterDataset instance.
 
@@ -415,6 +416,8 @@ class RasterDataset(GeoDataset):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, return imagery as time series with shape [T,C,H,W]
+                and include 'dates' key with datetime information
 
         Raises:
             AssertionError: If *bands* are invalid.
@@ -427,6 +430,7 @@ class RasterDataset(GeoDataset):
         self.bands = bands or self.all_bands
         self.transforms = transforms
         self.cache = cache
+        self.time_series = time_series
 
         if self.all_bands:
             assert set(self.bands) <= set(self.all_bands)
@@ -437,7 +441,7 @@ class RasterDataset(GeoDataset):
         datetimes = []
         geometries = []
         for filepath in self.files:
-            match = re.match(filename_regex, os.path.basename(filepath))
+            match = filename_regex.search(os.path.basename(filepath))
             if match is not None:
                 try:
                     with rasterio.open(filepath) as src:
@@ -525,34 +529,89 @@ class RasterDataset(GeoDataset):
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        if self.separate_files:
-            data_list: list[Tensor] = []
-            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-            for band in self.bands:
-                band_filepaths = []
-                for filepath in index.filepath:
-                    filename = os.path.basename(filepath)
-                    directory = os.path.dirname(filepath)
-                    match = re.match(filename_regex, filename)
-                    if match:
-                        if 'band' in match.groupdict():
-                            start = match.start('band')
-                            end = match.end('band')
-                            filename = filename[:start] + band + filename[end:]
-                    filepath = os.path.join(directory, filename)
-                    band_filepaths.append(filepath)
-                data_list.append(self._merge_files(band_filepaths, query))
-            data = torch.cat(data_list)
-        else:
-            data = self._merge_files(index.filepath, query, self.band_indexes)
+        if self.time_series:
+            # Group by unique datetime intervals to support timeseries
+            grouped_index = index.groupby(index.index)
+            time_steps = []
+            dates = []
 
-        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
+            for datetime_interval, group in grouped_index:
+                # Extract the center date of the interval
+                center_date = datetime_interval.mid
+                dates.append(center_date)
+
+                if self.separate_files:
+                    # For separate files, we need to collect files by band for this time step
+                    data_list: list[Tensor] = []
+                    filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+
+                    for band in self.bands:
+                        # For each band, find all files for this time interval
+                        band_filepaths = []
+                        for filepath in group.filepath:
+                            filename = os.path.basename(filepath)
+                            directory = os.path.dirname(filepath)
+                            match = re.match(filename_regex, filename)
+                            if match:
+                                if 'band' in match.groupdict():
+                                    start = match.start('band')
+                                    end = match.end('band')
+                                    filename = filename[:start] + band + filename[end:]
+                            filepath = os.path.join(directory, filename)
+                            band_filepaths.append(filepath)
+
+                        # Merge files for this band at this time step
+                        band_data = self._merge_files(band_filepaths, query)
+                        data_list.append(band_data)
+
+                    # Concatenate all bands for this time step
+                    time_step_data = torch.cat(data_list, dim=0)
+                else:
+                    # For non-separate files, merge all files for this time step
+                    time_step_data = self._merge_files(
+                        group.filepath, query, self.band_indexes
+                    )
+
+                time_steps.append(time_step_data)
+
+            # Stack along time dimension to create [T,C,H,W]
+            data = torch.stack(time_steps, dim=0)
+
+            sample: dict[str, Any] = {'crs': self.crs, 'bounds': query, 'dates': dates}
+        else:
+            # Original non-timeseries behavior
+            if self.separate_files:
+                data_list: list[Tensor] = []
+                filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+                for band in self.bands:
+                    band_filepaths = []
+                    for filepath in index.filepath:
+                        filename = os.path.basename(filepath)
+                        directory = os.path.dirname(filepath)
+                        match = re.match(filename_regex, filename)
+                        if match:
+                            if 'band' in match.groupdict():
+                                start = match.start('band')
+                                end = match.end('band')
+                                filename = filename[:start] + band + filename[end:]
+                        filepath = os.path.join(directory, filename)
+                        band_filepaths.append(filepath)
+                    data_list.append(self._merge_files(band_filepaths, query))
+                data = torch.cat(data_list)
+            else:
+                data = self._merge_files(index.filepath, query, self.band_indexes)
+
+            sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
 
         data = data.to(self.dtype)
         if self.is_image:
             sample['image'] = data
         else:
-            sample['mask'] = data.squeeze(0)
+            if self.time_series:
+                # For timeseries masks, keep the time dimension
+                sample['mask'] = data
+            else:
+                sample['mask'] = data.squeeze(0)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
