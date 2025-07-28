@@ -19,7 +19,14 @@ from torchmetrics import Accuracy, F1Score, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
-from ..models import FCN, FCSiamConc, FCSiamDiff, get_weight
+from ..models import (
+    FCN,
+    FCSiamConc,
+    FCSiamDiff,
+    changevit_base,
+    changevit_small,
+    get_weight,
+)
 from . import utils
 from .base import BaseTask
 
@@ -41,6 +48,8 @@ class ChangeDetectionTask(BaseTask):
             'dpt',
             'fcsiamdiff',
             'fcsiamconc',
+            'changevit_small',
+            'changevit_base',
         ] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
@@ -228,6 +237,14 @@ class ChangeDetectionTask(BaseTask):
                     classes=num_classes,
                     encoder_weights='imagenet' if weights is True else None,
                 )
+            case 'changevit_small':
+                self.model = changevit_small(
+                    weights=weights if isinstance(weights, WeightsEnum) else None
+                )
+            case 'changevit_base':
+                self.model = changevit_base(
+                    weights=weights if isinstance(weights, WeightsEnum) else None
+                )
 
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
@@ -236,17 +253,43 @@ class ChangeDetectionTask(BaseTask):
                 _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
-            self.model.encoder.load_state_dict(state_dict)
+
+            # For ChangeViT models, only load backbone weights
+            if model.startswith('changevit'):
+                # Load ViT backbone weights only
+                vit_state_dict = {
+                    k.replace('vit_backbone.', ''): v
+                    for k, v in state_dict.items()
+                    if k.startswith('vit_backbone.')
+                }
+                if vit_state_dict:
+                    self.model.vit_backbone.load_state_dict(
+                        vit_state_dict, strict=False
+                    )
+            else:
+                self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
         if self.hparams['freeze_backbone'] and model != 'fcn':
-            for param in self.model.encoder.parameters():
-                param.requires_grad = False
+            if model.startswith('changevit'):
+                # Freeze ViT backbone for ChangeViT models
+                for param in self.model.vit_backbone.parameters():
+                    param.requires_grad = False
+            else:
+                for param in self.model.encoder.parameters():
+                    param.requires_grad = False
 
         # Freeze decoder
         if self.hparams['freeze_decoder'] and model != 'fcn':
-            for param in self.model.decoder.parameters():
-                param.requires_grad = False
+            if model.startswith('changevit'):
+                # Freeze detail capture and feature injector for ChangeViT models
+                for param in self.model.detail_capture.parameters():
+                    param.requires_grad = False
+                for param in self.model.feature_injector.parameters():
+                    param.requires_grad = False
+            else:
+                for param in self.model.decoder.parameters():
+                    param.requires_grad = False
 
     def _shared_step(self, batch: Any, batch_idx: int, stage: str) -> Tensor:
         """Compute the loss and additional metrics for the given stage.
@@ -269,7 +312,13 @@ class ChangeDetectionTask(BaseTask):
         if self.hparams['task'] == 'multiclass':
             y = y.squeeze(1)
 
-        y_hat = self(x)
+        # Forward pass
+        if model.startswith('changevit'):
+            output = self(x)
+            # ChangeViT outputs probabilities in both training and inference modes
+            y_hat = output['change_prob']
+        else:
+            y_hat = self(x)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
@@ -380,11 +429,31 @@ class ChangeDetectionTask(BaseTask):
         x = batch['image']
         if model == 'unet':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
-        y_hat: Tensor = self(x)
+        elif model.startswith('changevit'):
+            # ChangeViT expects bitemporal format [B, T, C, H, W]
+            pass  # x is already in correct format
+        else:
+            # For other models that expect concatenated input
+            if len(x.shape) == 5:  # [B, T, C, H, W]
+                x = rearrange(x, 'b t c h w -> b (t c) h w')
+
+        # Forward pass
+        if model.startswith('changevit'):
+            output = self(x)
+            y_hat: Tensor = (
+                output['change_prob']
+                if 'change_prob' in output
+                else output['bi_change_logit'].sigmoid()
+            )
+        else:
+            y_hat = self(x)
 
         match self.hparams['task']:
             case 'binary' | 'multilabel':
-                y_hat = y_hat.sigmoid()
+                if not model.startswith(
+                    'changevit'
+                ):  # ChangeViT already applies sigmoid
+                    y_hat = y_hat.sigmoid()
             case 'multiclass':
                 y_hat = y_hat.softmax(dim=1)
 
