@@ -312,7 +312,13 @@ class ChangeDetectionTask(BaseTask):
         if self.hparams['task'] == 'multiclass':
             y = y.squeeze(1)
 
-        y_hat = self(x)
+        # Forward pass
+        if model.startswith('changevit'):
+            output = self(x)
+            # ChangeViT outputs probabilities in both training and inference modes
+            y_hat = output['change_prob']
+        else:
+            y_hat = self(x)
 
         if self.hparams['task'] == 'multiclass':
             y = y.squeeze(1)
