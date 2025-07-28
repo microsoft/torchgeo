@@ -40,26 +40,26 @@ class ChangeDetectionTask(BaseTask):
     def __init__(
         self,
         model: Literal[
-            "unet",
-            "deeplabv3+",
-            "fcn",
-            "upernet",
-            "segformer",
-            "dpt",
-            "fcsiamdiff",
-            "fcsiamconc",
-            "changevit_small",
-            "changevit_base",
-        ] = "unet",
-        backbone: str = "resnet50",
+            'unet',
+            'deeplabv3+',
+            'fcn',
+            'upernet',
+            'segformer',
+            'dpt',
+            'fcsiamdiff',
+            'fcsiamconc',
+            'changevit_small',
+            'changevit_base',
+        ] = 'unet',
+        backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
-        task: Literal["binary", "multiclass", "multilabel"] = "binary",
+        task: Literal['binary', 'multiclass', 'multilabel'] = 'binary',
         num_classes: int | None = None,
         num_labels: int | None = None,
         num_filters: int = 3,
         pos_weight: Tensor | None = None,
-        loss: Literal["ce", "bce", "jaccard", "focal"] = "bce",
+        loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'bce',
         class_weights: Tensor | Sequence[float] | None = None,
         ignore_index: int | None = None,
         lr: float = 1e-3,
@@ -102,38 +102,38 @@ class ChangeDetectionTask(BaseTask):
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
-        ignore_index: int | None = self.hparams["ignore_index"]
-        class_weights = self.hparams["class_weights"]
+        ignore_index: int | None = self.hparams['ignore_index']
+        class_weights = self.hparams['class_weights']
         if class_weights is not None and not isinstance(class_weights, Tensor):
             class_weights = torch.tensor(class_weights, dtype=torch.float32)
 
-        match self.hparams["loss"]:
-            case "ce":
+        match self.hparams['loss']:
+            case 'ce':
                 ignore_value = -1000 if ignore_index is None else ignore_index
                 self.criterion: nn.Module = nn.CrossEntropyLoss(
                     ignore_index=ignore_value, weight=class_weights
                 )
-            case "bce":
+            case 'bce':
                 self.criterion = nn.BCEWithLogitsLoss(
-                    pos_weight=self.hparams["pos_weight"]
+                    pos_weight=self.hparams['pos_weight']
                 )
-            case "jaccard":
+            case 'jaccard':
                 # JaccardLoss requires a list of classes to use instead of a class
                 # index to ignore.
-                if self.hparams["task"] == "multiclass" and ignore_index is not None:
+                if self.hparams['task'] == 'multiclass' and ignore_index is not None:
                     classes = [
                         i
-                        for i in range(self.hparams["num_classes"])
+                        for i in range(self.hparams['num_classes'])
                         if i != ignore_index
                     ]
                     self.criterion = smp.losses.JaccardLoss(
-                        mode=self.hparams["task"], classes=classes
+                        mode=self.hparams['task'], classes=classes
                     )
                 else:
-                    self.criterion = smp.losses.JaccardLoss(mode=self.hparams["task"])
-            case "focal":
+                    self.criterion = smp.losses.JaccardLoss(mode=self.hparams['task'])
+            case 'focal':
                 self.criterion = smp.losses.FocalLoss(
-                    mode=self.hparams["task"],
+                    mode=self.hparams['task'],
                     ignore_index=ignore_index,
                     normalized=True,
                 )
@@ -154,94 +154,94 @@ class ChangeDetectionTask(BaseTask):
              for balanced performance assessment across imbalanced classes.
         """
         kwargs = {
-            "task": self.hparams["task"],
-            "num_classes": self.hparams["num_classes"],
-            "num_labels": self.hparams["num_labels"],
-            "ignore_index": self.hparams["ignore_index"],
+            'task': self.hparams['task'],
+            'num_classes': self.hparams['num_classes'],
+            'num_labels': self.hparams['num_labels'],
+            'ignore_index': self.hparams['ignore_index'],
         }
         metrics = MetricCollection(
             [
-                Accuracy(multidim_average="global", average="micro", **kwargs),
-                JaccardIndex(average="micro", **kwargs),
-                F1Score(average="micro", **kwargs),
+                Accuracy(multidim_average='global', average='micro', **kwargs),
+                JaccardIndex(average='micro', **kwargs),
+                F1Score(average='micro', **kwargs),
             ]
         )
-        self.train_metrics = metrics.clone(prefix="train_")
-        self.val_metrics = metrics.clone(prefix="val_")
-        self.test_metrics = metrics.clone(prefix="test_")
+        self.train_metrics = metrics.clone(prefix='train_')
+        self.val_metrics = metrics.clone(prefix='val_')
+        self.test_metrics = metrics.clone(prefix='test_')
 
     def configure_models(self) -> None:
         """Initialize the model."""
-        model: str = self.hparams["model"]
-        backbone: str = self.hparams["backbone"]
+        model: str = self.hparams['model']
+        backbone: str = self.hparams['backbone']
         weights = self.weights
-        in_channels: int = self.hparams["in_channels"]
+        in_channels: int = self.hparams['in_channels']
         num_classes: int = (
-            self.hparams["num_classes"] or self.hparams["num_labels"] or 1
+            self.hparams['num_classes'] or self.hparams['num_labels'] or 1
         )
-        num_filters: int = self.hparams["num_filters"]
+        num_filters: int = self.hparams['num_filters']
 
         match model:
-            case "unet":
+            case 'unet':
                 self.model = smp.Unet(
                     encoder_name=backbone,
-                    encoder_weights="imagenet" if weights is True else None,
+                    encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels * 2,  # images are concatenated
                     classes=num_classes,
                 )
-            case "deeplabv3+":
+            case 'deeplabv3+':
                 self.model = smp.DeepLabV3Plus(
                     encoder_name=backbone,
-                    encoder_weights="imagenet" if weights is True else None,
+                    encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels * 2,  # images are concatenated
                     classes=num_classes,
                 )
-            case "fcn":
+            case 'fcn':
                 self.model = FCN(
                     in_channels=in_channels * 2,  # images are concatenated
                     classes=num_classes,
                     num_filters=num_filters,
                 )
-            case "upernet":
+            case 'upernet':
                 self.model = smp.UPerNet(
                     encoder_name=backbone,
-                    encoder_weights="imagenet" if weights is True else None,
+                    encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels * 2,  # images are concatenated
                     classes=num_classes,
                 )
-            case "segformer":
+            case 'segformer':
                 self.model = smp.Segformer(
                     encoder_name=backbone,
-                    encoder_weights="imagenet" if weights is True else None,
+                    encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels * 2,  # images are concatenated
                     classes=num_classes,
                 )
-            case "dpt":
+            case 'dpt':
                 self.model = smp.DPT(
                     encoder_name=backbone,
-                    encoder_weights="imagenet" if weights is True else None,
+                    encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels * 2,  # images are concatenated
                     classes=num_classes,
                 )
-            case "fcsiamdiff":
+            case 'fcsiamdiff':
                 self.model = FCSiamDiff(
                     encoder_name=backbone,
                     in_channels=in_channels,
                     classes=num_classes,
-                    encoder_weights="imagenet" if weights is True else None,
+                    encoder_weights='imagenet' if weights is True else None,
                 )
-            case "fcsiamconc":
+            case 'fcsiamconc':
                 self.model = FCSiamConc(
                     encoder_name=backbone,
                     in_channels=in_channels,
                     classes=num_classes,
-                    encoder_weights="imagenet" if weights is True else None,
+                    encoder_weights='imagenet' if weights is True else None,
                 )
-            case "changevit_small":
+            case 'changevit_small':
                 self.model = changevit_small(
                     weights=weights if isinstance(weights, WeightsEnum) else None
                 )
-            case "changevit_base":
+            case 'changevit_base':
                 self.model = changevit_base(
                     weights=weights if isinstance(weights, WeightsEnum) else None
                 )
@@ -255,12 +255,12 @@ class ChangeDetectionTask(BaseTask):
                 state_dict = get_weight(weights).get_state_dict(progress=True)
 
             # For ChangeViT models, only load backbone weights
-            if model.startswith("changevit"):
+            if model.startswith('changevit'):
                 # Load ViT backbone weights only
                 vit_state_dict = {
-                    k.replace("vit_backbone.", ""): v
+                    k.replace('vit_backbone.', ''): v
                     for k, v in state_dict.items()
-                    if k.startswith("vit_backbone.")
+                    if k.startswith('vit_backbone.')
                 }
                 if vit_state_dict:
                     self.model.vit_backbone.load_state_dict(
@@ -270,8 +270,8 @@ class ChangeDetectionTask(BaseTask):
                 self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
-        if self.hparams["freeze_backbone"] and model != "fcn":
-            if model.startswith("changevit"):
+        if self.hparams['freeze_backbone'] and model != 'fcn':
+            if model.startswith('changevit'):
                 # Freeze ViT backbone for ChangeViT models
                 for param in self.model.vit_backbone.parameters():
                     param.requires_grad = False
@@ -280,8 +280,8 @@ class ChangeDetectionTask(BaseTask):
                     param.requires_grad = False
 
         # Freeze decoder
-        if self.hparams["freeze_decoder"] and model != "fcn":
-            if model.startswith("changevit"):
+        if self.hparams['freeze_decoder'] and model != 'fcn':
+            if model.startswith('changevit'):
                 # Freeze detail capture and feature injector for ChangeViT models
                 for param in self.model.detail_capture.parameters():
                     param.requires_grad = False
@@ -302,45 +302,45 @@ class ChangeDetectionTask(BaseTask):
         Returns:
             The loss tensor.
         """
-        model: str = self.hparams["model"]
-        x = batch["image"]
-        y = batch["mask"]
+        model: str = self.hparams['model']
+        x = batch['image']
+        y = batch['mask']
 
         if not model.startswith('fcsiam'):
             x = rearrange(x, 'b t c h w -> b (t c) h w')
 
-        if self.hparams["task"] == "multiclass":
+        if self.hparams['task'] == 'multiclass':
             y = y.squeeze(1)
 
         # Forward pass
-        if model.startswith("changevit"):
+        if model.startswith('changevit'):
             output = self(x)
             # ChangeViT outputs probabilities in both training and inference modes
-            y_hat = output["change_prob"]
+            y_hat = output['change_prob']
         else:
             y_hat = self(x)
 
-        if self.hparams["loss"] == "bce":
+        if self.hparams['loss'] == 'bce':
             y = y.float()
 
         # Compute the loss
         loss: Tensor = self.criterion(y_hat, y)
-        self.log(f"{stage}_loss", loss)
+        self.log(f'{stage}_loss', loss)
 
         # Retrieve the correct metrics based on the stage
-        metrics = getattr(self, f"{stage}_metrics", None)
+        metrics = getattr(self, f'{stage}_metrics', None)
         if metrics:
             metrics(y_hat, y)
             self.log_dict(metrics, batch_size=x.shape[0])
 
-        if stage == "val":
+        if stage == 'val':
             if (
                 batch_idx < 10
-                and hasattr(self.trainer, "datamodule")
-                and hasattr(self.trainer.datamodule, "plot")
+                and hasattr(self.trainer, 'datamodule')
+                and hasattr(self.trainer.datamodule, 'plot')
                 and self.logger
-                and hasattr(self.logger, "experiment")
-                and hasattr(self.logger.experiment, "add_figure")
+                and hasattr(self.logger, 'experiment')
+                and hasattr(self.logger.experiment, 'add_figure')
             ):
                 datamodule = self.trainer.datamodule
                 aug = K.AugmentationSequential(
@@ -355,7 +355,7 @@ class ChangeDetectionTask(BaseTask):
                     case 'multiclass':
                         batch['prediction'] = y_hat.argmax(dim=1, keepdim=True)
 
-                for key in ["image", "mask", "prediction"]:
+                for key in ['image', 'mask', 'prediction']:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
 
@@ -368,7 +368,7 @@ class ChangeDetectionTask(BaseTask):
                 if fig:
                     summary_writer = self.logger.experiment
                     summary_writer.add_figure(
-                        f"image/{batch_idx}", fig, global_step=self.global_step
+                        f'image/{batch_idx}', fig, global_step=self.global_step
                     )
                     plt.close()
 
@@ -384,7 +384,7 @@ class ChangeDetectionTask(BaseTask):
         Returns:
             The loss tensor.
         """
-        loss = self._shared_step(batch, batch_idx, "train")
+        loss = self._shared_step(batch, batch_idx, 'train')
         return loss
 
     def validation_step(self, batch: Any, batch_idx: int) -> None:
@@ -394,7 +394,7 @@ class ChangeDetectionTask(BaseTask):
             batch: The output of your DataLoader.
             batch_idx: Integer displaying index of this batch.
         """
-        self._shared_step(batch, batch_idx, "val")
+        self._shared_step(batch, batch_idx, 'val')
 
     def test_step(self, batch: Any, batch_idx: int) -> None:
         """Compute the test loss and additional metrics.
@@ -403,7 +403,7 @@ class ChangeDetectionTask(BaseTask):
             batch: The output of your DataLoader.
             batch_idx: Integer displaying index of this batch.
         """
-        self._shared_step(batch, batch_idx, "test")
+        self._shared_step(batch, batch_idx, 'test')
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
@@ -418,36 +418,36 @@ class ChangeDetectionTask(BaseTask):
         Returns:
             Output predicted probabilities.
         """
-        model: str = self.hparams["model"]
-        x = batch["image"]
-        if model == "unet":
-            x = rearrange(x, "b t c h w -> b (t c) h w")
-        elif model.startswith("changevit"):
+        model: str = self.hparams['model']
+        x = batch['image']
+        if model == 'unet':
+            x = rearrange(x, 'b t c h w -> b (t c) h w')
+        elif model.startswith('changevit'):
             # ChangeViT expects bitemporal format [B, T, C, H, W]
             pass  # x is already in correct format
         else:
             # For other models that expect concatenated input
             if len(x.shape) == 5:  # [B, T, C, H, W]
-                x = rearrange(x, "b t c h w -> b (t c) h w")
+                x = rearrange(x, 'b t c h w -> b (t c) h w')
 
         # Forward pass
-        if model.startswith("changevit"):
+        if model.startswith('changevit'):
             output = self(x)
             y_hat: Tensor = (
-                output["change_prob"]
-                if "change_prob" in output
-                else output["bi_change_logit"].sigmoid()
+                output['change_prob']
+                if 'change_prob' in output
+                else output['bi_change_logit'].sigmoid()
             )
         else:
             y_hat = self(x)
 
-        match self.hparams["task"]:
-            case "binary" | "multilabel":
+        match self.hparams['task']:
+            case 'binary' | 'multilabel':
                 if not model.startswith(
-                    "changevit"
+                    'changevit'
                 ):  # ChangeViT already applies sigmoid
                     y_hat = y_hat.sigmoid()
-            case "multiclass":
+            case 'multiclass':
                 y_hat = y_hat.softmax(dim=1)
 
         return y_hat
