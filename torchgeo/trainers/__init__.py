@@ -3,6 +3,7 @@
 
 """TorchGeo trainers."""
 
+from .autoregression import AutoregressionTask
 from .base import BaseTask
 from .byol import BYOLTask
 from .change import ChangeDetectionTask
@@ -16,6 +17,7 @@ from .segmentation import SemanticSegmentationTask
 from .simclr import SimCLRTask
 
 __all__ = (
+    'AutoregressionTask',
     'BYOLTask',
     'BaseTask',
     'ChangeDetectionTask',

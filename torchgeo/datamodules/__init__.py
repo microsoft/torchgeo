@@ -4,6 +4,7 @@
 """TorchGeo datamodules."""
 
 from .agrifieldnet import AgriFieldNetDataModule
+from .air_quality import AirQualityDataModule
 from .bigearthnet import BigEarthNetDataModule
 from .cabuar import CaBuArDataModule
 from .caffe import CaFFeDataModule
@@ -63,6 +64,7 @@ from .xview import XView2DataModule
 
 __all__ = (
     'AgriFieldNetDataModule',
+    'AirQualityDataModule',
     'BaseDataModule',
     'BigEarthNetDataModule',
     'COWCCountingDataModule',
