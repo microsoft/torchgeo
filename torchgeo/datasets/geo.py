@@ -542,7 +542,7 @@ class RasterDataset(GeoDataset):
 
                 if self.separate_files:
                     # For separate files, we need to collect files by band for this time step
-                    data_list: list[Tensor] = []
+                    band_data: list[Tensor] = []
                     filename_regex = re.compile(self.filename_regex, re.VERBOSE)
 
                     for band in self.bands:
@@ -561,11 +561,10 @@ class RasterDataset(GeoDataset):
                             band_filepaths.append(filepath)
 
                         # Merge files for this band at this time step
-                        band_data = self._merge_files(band_filepaths, query)
-                        data_list.append(band_data)
+                        band_data.append(self._merge_files(band_filepaths, query))
 
                     # Concatenate all bands for this time step
-                    time_step_data = torch.cat(data_list, dim=0)
+                    time_step_data = torch.cat(band_data, dim=0)
                 else:
                     # For non-separate files, merge all files for this time step
                     time_step_data = self._merge_files(
@@ -577,7 +576,7 @@ class RasterDataset(GeoDataset):
             # Stack along time dimension to create [T,C,H,W]
             data = torch.stack(time_steps, dim=0)
 
-            sample: dict[str, Any] = {'crs': self.crs, 'bounds': query, 'dates': dates}
+            sample = {'crs': self.crs, 'bounds': query, 'dates': dates}
         else:
             # Original non-timeseries behavior
             if self.separate_files:
@@ -601,15 +600,15 @@ class RasterDataset(GeoDataset):
             else:
                 data = self._merge_files(index.filepath, query, self.band_indexes)
 
-            sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
+            sample = {'crs': self.crs, 'bounds': query}
 
         data = data.to(self.dtype)
         if self.is_image:
             sample['image'] = data
         else:
+            # Try to squeeze singleband mask
             if self.time_series:
-                # For timeseries masks, keep the time dimension
-                sample['mask'] = data
+                sample['mask'] = data.squeeze(1)
             else:
                 sample['mask'] = data.squeeze(0)
 
