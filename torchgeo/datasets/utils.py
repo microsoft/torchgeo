@@ -23,6 +23,8 @@ import rasterio
 import shapely
 import torch
 from rasterio import Affine
+from rasterio.features import shapes, sieve
+from shapely import MultiPolygon, Polygon
 from torch import Tensor
 from torchvision.datasets.utils import (
     check_integrity,
@@ -758,3 +760,52 @@ def convert_poly_coords(
         ],
     )
     return xformed_shape
+
+
+def calc_valid_data_footprint_from_datasource(
+    masks: np.typing.NDArray[np.uint8],
+    transform: Affine,
+    raster_width: int,
+    raster_resolution_x: float,
+) -> Polygon | MultiPolygon:
+    """Calculates valid data footprint from a raster's masks.
+
+    This means the parts of the raster that is not no-data pixels.
+
+    Args:
+        masks: raster mask, like rasterio.io.DatasetReader.read_masks()
+        transform: affine transform for the raster
+        raster_width: width of the raster
+        raster_resolution_x: resolution of the raster in the x direction (meters)
+
+    Returns:
+        Polygon representing the valid data footprint of the raster
+    """
+    # Read valid/nodata-mask. Could choose only the first bands mask for peed-up.
+    # Currently, supports spatial shifts between the bands, and include all of this
+    # as one combined mask.
+    mask = masks
+    if len(mask) > 1:
+        mask = np.logical_or.reduce(mask, axis=0).astype('uint8')
+    # Close eventual holes within the raster that have area smaller than 500 pixels.
+    # Yields two bands, one all-zero representing nodata pixels,
+    # the other representing valid data
+    # To ensure hole size is smaller than raster size cap them at 0.2%.
+    # This value was found empirically as per
+    # https://rasterio.readthedocs.io/en/stable/topics/masks.html#writing-masks
+    max_hole_size = min(int(mask.size * 0.002), 800) or 1  # failsafe for 0
+    sieved_mask = sieve(mask, max_hole_size)
+    # Extract polygon for valid data values. Only interested in the valid-band.
+    # To support complex footprints we allow multiple such polygons and merge them
+    # to one multipolygon later
+    geoms = [g for g, v in shapes(sieved_mask, transform=transform) if v > 0]
+    # Create a Shapely Polygon object(s)
+    vector_footprint = MultiPolygon(
+        [Polygon(feature['coordinates'][0]) for feature in geoms]
+    )
+    # The resulting polygon(s) is very staggered/pixelated,
+    # which could result in thousands of corners.
+    # The valid data footprints are usually very simple (3-5 corners)
+    # Simplifying each side to length 1/5 of the raster size (assumes crs is meters)
+    max_distance_of_polygon_length = raster_width // raster_resolution_x / 5
+    return vector_footprint.simplify(max_distance_of_polygon_length)

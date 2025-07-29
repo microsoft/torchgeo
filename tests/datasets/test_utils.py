@@ -13,11 +13,15 @@ import pandas as pd
 import pytest
 import torch
 from pyproj import CRS
+from rasterio import MemoryFile
+from rasterio.transform import from_origin
+from shapely import MultiPolygon, Polygon, box
 
 from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
     Executable,
     array_to_tensor,
+    calc_valid_data_footprint_from_datasource,
     concat_samples,
     disambiguate_timestamp,
     lazy_import,
@@ -537,3 +541,68 @@ def test_azcopy(tmp_path: Path, azcopy: Executable) -> None:
 def test_which() -> None:
     with pytest.raises(DependencyNotFoundError, match='foo is not installed'):
         which('foo')
+
+
+def create_test_raster_with_nodata(
+    width: int = 100, height: int = 100, nodata_value: int | float = 0
+) -> MemoryFile:
+    """Creates a synthetic raster where the upper-left triangle is no-data."""
+    data = np.ones((height, width), dtype=np.uint8)
+    for row in range(height):
+        for col in range(width):
+            if row + col < width:  # Upper-left triangle is no-data
+                data[row, col] = nodata_value
+
+    transform = from_origin(0, height, 1, 1)  # (west, north, xres, yres)
+
+    memfile = MemoryFile()
+    with memfile.open(
+        driver='GTiff',
+        height=height,
+        width=width,
+        count=1,
+        dtype=data.dtype,
+        transform=transform,
+        crs='EPSG:32633',  # Example CRS, no longer used in the function
+        nodata=nodata_value,
+    ) as dataset:
+        dataset.write(data, 1)
+
+    return memfile
+
+
+def test_calc_valid_data_footprint_half_area() -> None:
+    with create_test_raster_with_nodata() as memfile:
+        with memfile.open() as dataset:
+            masks = dataset.read_masks()
+            transform = dataset.transform
+            width = dataset.width
+            res_x = dataset.res[0]
+
+            footprint = calc_valid_data_footprint_from_datasource(
+                masks=masks,
+                transform=transform,
+                raster_width=width,
+                raster_resolution_x=res_x,
+            )
+
+            assert isinstance(footprint, Polygon | MultiPolygon), (
+                'Footprint is not a polygon or multipolygon'
+            )
+            assert footprint.is_valid, 'Footprint geometry is invalid'
+
+            # Expected footprint is half of raster bounds area
+            raster_extent = box(*dataset.bounds)
+            expected_area = raster_extent.area / 2
+
+            actual_area = footprint.area
+            relative_error = abs(actual_area - expected_area) / expected_area
+
+            assert relative_error < 0.03, (
+                f'Footprint area mismatch: expected ~{expected_area}, got {actual_area} '
+                f'(relative error: {relative_error:.2%})'
+            )
+
+            assert raster_extent.covers(footprint), (
+                'Footprint should be covered by raster extent'
+            )

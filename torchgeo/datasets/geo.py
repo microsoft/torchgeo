@@ -38,6 +38,7 @@ from .utils import (
     GeoSlice,
     Path,
     array_to_tensor,
+    calc_valid_data_footprint_from_datasource,
     concat_samples,
     convert_poly_coords,
     disambiguate_timestamp,
@@ -359,6 +360,12 @@ class RasterDataset(GeoDataset):
     #: Color map for the dataset, used for plotting
     cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {}
 
+    #: Whether to store the valid data footprint or the raster bounds
+    use_valid_footprint: bool = True
+
+    #: nodata value
+    nodata_value: int | float = 0
+
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
@@ -452,9 +459,22 @@ class RasterDataset(GeoDataset):
                             crs = src.crs
 
                         with WarpedVRT(src, crs=crs) as vrt:
-                            geometries.append(shapely.box(*vrt.bounds))
                             if res is None:
                                 res = vrt.res
+                            if self.use_valid_footprint:
+                                res_x = res[0] if isinstance(res, tuple) else res
+                                valid_footprint = (
+                                    calc_valid_data_footprint_from_datasource(
+                                        masks=vrt.read_masks(),
+                                        transform=src.transform,
+                                        raster_width=src.width,
+                                        raster_resolution_x=res_x,
+                                    )
+                                )
+                                geometries.append(valid_footprint)
+                            else:
+                                geometries.append(shapely.box(*vrt.bounds))
+
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
                     continue
