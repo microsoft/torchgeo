@@ -306,7 +306,7 @@ class ChangeDetectionTask(BaseTask):
         x = batch['image']
         y = batch['mask']
 
-        if model == 'unet':
+        if not model.startswith('fcsiam'):
             x = rearrange(x, 'b t c h w -> b (t c) h w')
 
         if self.hparams['task'] == 'multiclass':
@@ -330,15 +330,8 @@ class ChangeDetectionTask(BaseTask):
         # Retrieve the correct metrics based on the stage
         metrics = getattr(self, f'{stage}_metrics', None)
         if metrics:
-            # Transform predictions for metrics calculation
-            match self.hparams['task']:
-                case 'binary' | 'multilabel':
-                    y_hat = (y_hat.sigmoid() >= 0.5).long()
-                case 'multiclass':
-                    y_hat = y_hat.argmax(dim=1)
-
             metrics(y_hat, y)
-            self.log_dict({f'{k}': v for k, v in metrics.compute().items()})
+            self.log_dict(metrics, batch_size=x.shape[0])
 
         if stage == 'val':
             if (
@@ -360,7 +353,7 @@ class ChangeDetectionTask(BaseTask):
                     case 'binary' | 'multilabel':
                         batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
                     case 'multiclass':
-                        batch['prediction'] = y_hat.argmax(dim=1)
+                        batch['prediction'] = y_hat.argmax(dim=1, keepdim=True)
 
                 for key in ['image', 'mask', 'prediction']:
                     batch[key] = batch[key].cpu()
