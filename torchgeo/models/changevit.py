@@ -1,6 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+# TODO:
+# - [ ] Train model on benchmark datasets (Levir-CD, WHU-CD) and compare with paper results
+# - [ ] Tolerance paramter size ok? -> timm vit + standard resnet vs. custom VIT + custom resnet
+# - [ ] Go through code once more and make sure it aligns with paper
+# - [ ] Submit PR to torchgeo :)
+
 """ChangeViT model implementation.
 
 Based on the paper: https://arxiv.org/pdf/2406.12847
