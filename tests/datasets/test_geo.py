@@ -4,6 +4,7 @@
 import math
 import os
 import pickle
+import itertools
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Any
@@ -335,14 +336,27 @@ class TestRasterDataset:
         )
 
     @pytest.fixture(
-        params=zip(
-            [
-                ['B04', 'B03', 'B02'],
-                ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B11'],
-            ],
-            [True, False],  # cache
-            [False, True],  # time_series
-            [False, True],  # is_image
+        params=list(
+            itertools.product(
+                [
+                    ['B04', 'B03', 'B02'],
+                    [
+                        'B01',
+                        'B02',
+                        'B03',
+                        'B04',
+                        'B05',
+                        'B06',
+                        'B07',
+                        'B08',
+                        'B09',
+                        'B11',
+                    ],
+                ],
+                [True, False],  # cache
+                [False, True],  # time_series
+                [False, True],  # is_image
+            )
         )
     )
     def sentinel(self, request: SubRequest) -> Sentinel2:
