@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import itertools
 import math
 import os
 import pickle
-import itertools
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Any
