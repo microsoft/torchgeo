@@ -55,6 +55,7 @@ class TestChangeDetectionTask:
     @pytest.mark.parametrize(
         'name',
         [
+            'bright',
             'cabuar',
             'chabud',
             'levircd',
