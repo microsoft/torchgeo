@@ -98,7 +98,6 @@ class CustomNonGeoDataset(NonGeoDataset):
 
     def __len__(self) -> int:
         return 2
- 
 
 
 class TestGeoDataset:
@@ -341,7 +340,7 @@ class TestRasterDataset:
                 ['B04', 'B03', 'B02'],
                 ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B11'],
             ],
-            [True, False], # cache
+            [True, False],  # cache
             [False, True],  # time_series
             [False, True],  # is_image
         )
@@ -352,7 +351,13 @@ class TestRasterDataset:
         transforms = nn.Identity()
         cache = request.param[1]
         time_series = request.param[2]
-        dataset = Sentinel2(root, bands=bands, transforms=transforms, cache=cache, time_series=time_series)
+        dataset = Sentinel2(
+            root,
+            bands=bands,
+            transforms=transforms,
+            cache=cache,
+            time_series=time_series,
+        )
         dataset.is_image = request.param[3]
         return dataset
 
@@ -525,11 +530,12 @@ class TestRasterDataset:
 
         # Test for correct dates
         expected_dates = [
-            pd.Timestamp('2018-11-04T00:00:00')+((pd.Timedelta(days=1)-pd.Timedelta(microseconds=1))/2),
-            pd.Timestamp('2019-06-05T00:00:00')+((pd.Timedelta(days=1)-pd.Timedelta(microseconds=1))/2),
+            pd.Timestamp('2018-11-04T00:00:00')
+            + ((pd.Timedelta(days=1) - pd.Timedelta(microseconds=1)) / 2),
+            pd.Timestamp('2019-06-05T00:00:00')
+            + ((pd.Timedelta(days=1) - pd.Timedelta(microseconds=1)) / 2),
         ]
         assert x['dates'] == expected_dates
-
 
     def test_time_series_separate_files(self) -> None:
         paths = [
@@ -539,7 +545,7 @@ class TestRasterDataset:
             os.path.join(self.s2_dir, 'T26EMU_20220414T110751_B04_10m.jp2'),
             os.path.join(self.s2_dir, 'T26EMU_20220414T110751_B03_10m.jp2'),
             os.path.join(self.s2_dir, 'T26EMU_20220414T110751_B02_10m.jp2'),
-            ]
+        ]
         ds = Sentinel2(paths, time_series=True, bands=Sentinel2.rgb_bands)
         x = ds[ds.bounds]
 
@@ -557,10 +563,13 @@ class TestRasterDataset:
 
         # Test for correct dates
         expected_dates = [
-            pd.Timestamp('2019-04-14T11:07:51')+((pd.Timedelta(seconds=1)-pd.Timedelta(microseconds=1))/2),
-            pd.Timestamp('2022-04-14T11:07:51')+((pd.Timedelta(seconds=1)-pd.Timedelta(microseconds=1))/2),
+            pd.Timestamp('2019-04-14T11:07:51')
+            + ((pd.Timedelta(seconds=1) - pd.Timedelta(microseconds=1)) / 2),
+            pd.Timestamp('2022-04-14T11:07:51')
+            + ((pd.Timedelta(seconds=1) - pd.Timedelta(microseconds=1)) / 2),
         ]
         assert x['dates'] == expected_dates
+
 
 class TestVectorDataset:
     @pytest.fixture(scope='class')

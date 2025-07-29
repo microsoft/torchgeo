@@ -576,7 +576,6 @@ class RasterDataset(GeoDataset):
             # Stack along time dimension to create [T,C,H,W]
             data = torch.stack(time_steps, dim=0)
 
-            sample = {'crs': self.crs, 'bounds': query, 'dates': dates}
         else:
             # Original non-timeseries behavior
             if self.separate_files:
@@ -600,7 +599,9 @@ class RasterDataset(GeoDataset):
             else:
                 data = self._merge_files(index.filepath, query, self.band_indexes)
 
-            sample = {'crs': self.crs, 'bounds': query}
+        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
+        if self.time_series:
+            sample['dates'] = dates
 
         data = data.to(self.dtype)
         if self.is_image:
