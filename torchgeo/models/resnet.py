@@ -391,6 +391,62 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.4
     """
 
+    SENTINEL2_CLOSP = Weights(
+        url='https://hf.co/DarthReca/CLOSP-Visual/resolve/main/closp-rn_s2_encoder.pth',
+        transforms=K.AugmentationSequential(
+            K.Normalize(mean=0, std=10000), data_keys=None
+        ),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 13,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL1_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/main/closp-rn_s1_encoder.pth',
+        transforms=nn.Identity(),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 2,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
+    SENTINEL2_GEOCLOSP = Weights(
+        url='https://hf.co/DarthReca/CLOSP-Visual/resolve/main/geoclosp-rn_s2_encoder.pth',
+        transforms=K.AugmentationSequential(
+            K.Normalize(mean=0, std=10000), data_keys=None
+        ),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 13,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL1_GEOCLOSP = Weights(
+        url='https://hf.co/DarthReca/CLOSP-Visual/resolve/main/geoclosp-rn_s1_encoder.pth',
+        transforms=nn.Identity(),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 2,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
     FMOW_RGB_GASSL = Weights(
         url='https://hf.co/torchgeo/resnet50_fmow_rgb_gassl/resolve/fe8a91026cf9104f1e884316b8e8772d7af9052c/resnet50_fmow_rgb_gassl-da43d987.pth',
         transforms=_gassl_transforms,
