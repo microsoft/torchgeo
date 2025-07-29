@@ -425,6 +425,9 @@ class RasterDataset(GeoDataset):
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
+
+        .. versionadded:: 0.8
+            The *time_series* parameter.
         """
         self.paths = paths
         self.bands = bands or self.all_bands
