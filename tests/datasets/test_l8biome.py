@@ -16,7 +16,6 @@ from pyproj import CRS
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     L8Biome,
@@ -86,11 +85,10 @@ class TestL8Biome:
         plt.close()
 
     def test_invalid_query(self, dataset: L8Biome) -> None:
-        query = BoundingBox(0, 0, 0, 0, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_rgb_bands_absent_plot(self, dataset: L8Biome) -> None:
         with pytest.raises(

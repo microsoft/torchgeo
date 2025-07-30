@@ -2,18 +2,13 @@
 # Licensed under the MIT License.
 
 import math
-from datetime import datetime
 
 import pytest
 
-from torchgeo.datasets import BoundingBox
 from torchgeo.samplers import tile_to_chips
 from torchgeo.samplers.utils import _to_tuple
 
 MAYBE_TUPLE = float | tuple[float, float]
-
-MINT = datetime(2025, 4, 24)
-MAXT = datetime(2025, 4, 25)
 
 
 @pytest.mark.parametrize(
@@ -38,7 +33,7 @@ MAXT = datetime(2025, 4, 25)
 def test_tile_to_chips(
     size: MAYBE_TUPLE, stride: MAYBE_TUPLE | None, expected: MAYBE_TUPLE
 ) -> None:
-    bounds = BoundingBox(0, 10, 20, 30, MINT, MAXT)
+    bounds = (0, 20, 10, 30)
     size = _to_tuple(size)
     if stride is not None:
         stride = _to_tuple(stride)

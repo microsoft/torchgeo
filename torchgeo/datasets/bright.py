@@ -63,7 +63,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         'red',  # destroyed
     )
 
-    md5 = '2c435bb50345d425390eff59a92134ac'
+    md5 = '45fd96716e7f5673869b166859a6cb3c'
 
     url = 'https://huggingface.co/datasets/torchgeo/bright/resolve/d19972f5e682ad684dcde35529a6afad4c719f1b/dfc25_track2_trainval_with_split.zip'
 
@@ -138,7 +138,7 @@ class BRIGHTDFC2025(NonGeoDataset):
         # post image is stacked to also have 3 channels
         image_post = repeat(image_post, 'c h w -> (repeat c) h w', repeat=3)
 
-        sample = {'image_pre': image_pre, 'image_post': image_post}
+        sample = {'image': torch.stack([image_pre, image_post])}
 
         if 'target' in idx_paths and self.split != 'test':
             target = self._load_image(idx_paths['target']).long()
@@ -292,16 +292,16 @@ class BRIGHTDFC2025(NonGeoDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(15, 5))
 
-        axs[0].imshow(sample['image_pre'].permute(1, 2, 0) / 255.0)
+        axs[0].imshow(sample['image'][0].permute(1, 2, 0) / 255.0)
         axs[0].axis('off')
 
-        axs[1].imshow(sample['image_post'].permute(1, 2, 0) / 255.0)
+        axs[1].imshow(sample['image'][1].permute(1, 2, 0) / 255.0)
         axs[1].axis('off')
 
         cmap = colors.ListedColormap(self.colormap)
 
         if showing_mask:
-            axs[2].imshow(sample['mask'].squeeze(0), cmap=cmap, interpolation='none')
+            axs[2].imshow(sample['mask'][0], cmap=cmap, interpolation='none')
             axs[2].axis('off')
             unique_classes = np.unique(sample['mask'].numpy())
             handles = [
@@ -316,14 +316,10 @@ class BRIGHTDFC2025(NonGeoDataset):
             ]
             axs[2].legend(handles=handles, loc='upper right', bbox_to_anchor=(1.4, 1))
             if showing_prediction:
-                axs[3].imshow(
-                    sample['prediction'].squeeze(0), cmap=cmap, interpolation='none'
-                )
+                axs[3].imshow(sample['prediction'][0], cmap=cmap, interpolation='none')
                 axs[3].axis('off')
         elif showing_prediction:
-            axs[2].imshow(
-                sample['prediction'].squeeze(0), cmap=cmap, interpolation='none'
-            )
+            axs[2].imshow(sample['prediction'][0], cmap=cmap, interpolation='none')
             axs[2].axis('off')
 
         if show_titles:

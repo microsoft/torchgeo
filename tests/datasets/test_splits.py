@@ -15,7 +15,6 @@ from shapely import Geometry, Polygon
 from torch import Generator
 
 from torchgeo.datasets import (
-    BoundingBox,
     GeoDataset,
     random_bbox_assignment,
     random_bbox_splitting,
@@ -23,6 +22,7 @@ from torchgeo.datasets import (
     roi_split,
     time_series_split,
 )
+from torchgeo.datasets.utils import GeoSlice
 
 MINT = datetime(2025, 4, 24)
 MAXT = datetime(2025, 4, 25)
@@ -57,7 +57,7 @@ class CustomGeoDataset(GeoDataset):
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = (1, 1)
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         return {'index': query}
 
 
@@ -207,9 +207,9 @@ def test_roi_split() -> None:
     train_ds, val_ds, test_ds = roi_split(
         ds,
         rois=[
-            BoundingBox(0, 2, 0, 1, MINT, MAXT),
-            BoundingBox(2, 3.5, 0, 1, MINT, MAXT),
-            BoundingBox(3.5, 4, 0, 1, MINT, MAXT),
+            shapely.box(0, 0, 2, 1),
+            shapely.box(2, 0, 3.5, 1),
+            shapely.box(3.5, 0, 4, 1),
         ],
     )
 
@@ -233,13 +233,7 @@ def test_roi_split() -> None:
 
     # Test invalid input rois
     with pytest.raises(ValueError, match="ROIs in input rois can't overlap."):
-        roi_split(
-            ds,
-            rois=[
-                BoundingBox(0, 2, 0, 1, MINT, MAXT),
-                BoundingBox(1, 3, 0, 1, MINT, MAXT),
-            ],
-        )
+        roi_split(ds, rois=[shapely.box(0, 0, 2, 1), shapely.box(1, 0, 3, 1)])
 
 
 @pytest.mark.parametrize(

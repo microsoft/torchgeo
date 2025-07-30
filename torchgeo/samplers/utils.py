@@ -9,8 +9,6 @@ from typing import overload
 import torch
 from torch import Generator
 
-from ..datasets import BoundingBox
-
 
 @overload
 def _to_tuple(value: tuple[int, int] | int) -> tuple[int, int]: ...
@@ -36,11 +34,11 @@ def _to_tuple(value: tuple[float, float] | float) -> tuple[float, float]:
 
 
 def get_random_bounding_box(
-    bounds: BoundingBox,
+    bounds: tuple[float, float, float, float],
     size: tuple[float, float] | float,
     res: tuple[float, float] | float,
     generator: Generator | None = None,
-) -> BoundingBox:
+) -> tuple[slice, slice]:
     """Returns a random bounding box within a given bounding box.
 
     The ``size`` argument can either be:
@@ -62,32 +60,26 @@ def get_random_bounding_box(
     Returns:
         randomly sampled bounding box from the extent of the input
     """
+    xmin, ymin, xmax, ymax = bounds
     t_size = _to_tuple(size)
     t_res = _to_tuple(res)
 
     # May be negative if bounding box is smaller than patch size
-    width = (bounds.maxx - bounds.minx - t_size[1]) / t_res[0]
-    height = (bounds.maxy - bounds.miny - t_size[0]) / t_res[1]
-
-    minx = bounds.minx
-    miny = bounds.miny
+    width = (xmax - xmin - t_size[1]) / t_res[0]
+    height = (ymax - ymin - t_size[0]) / t_res[1]
 
     # Use an integer multiple of res to avoid resampling
-    minx += int(torch.rand(1, generator=generator).item() * width) * t_res[0]
-    miny += int(torch.rand(1, generator=generator).item() * height) * t_res[1]
+    xmin += int(torch.rand(1, generator=generator).item() * width) * t_res[0]
+    ymin += int(torch.rand(1, generator=generator).item() * height) * t_res[1]
 
-    maxx = minx + t_size[1]
-    maxy = miny + t_size[0]
+    xmax = xmin + t_size[1]
+    ymax = ymin + t_size[0]
 
-    mint = bounds.mint
-    maxt = bounds.maxt
-
-    query = BoundingBox(minx, maxx, miny, maxy, mint, maxt)
-    return query
+    return slice(xmin, xmax), slice(ymin, ymax)
 
 
 def tile_to_chips(
-    bounds: BoundingBox,
+    bounds: tuple[float, float, float, float],
     size: tuple[float, float],
     stride: tuple[float, float] | None = None,
 ) -> tuple[int, int]:
@@ -122,7 +114,9 @@ def tile_to_chips(
     assert stride[0] > 0
     assert stride[1] > 0
 
-    rows = math.ceil((bounds.maxy - bounds.miny - size[0]) / stride[0]) + 1
-    cols = math.ceil((bounds.maxx - bounds.minx - size[1]) / stride[1]) + 1
+    xmin, ymin, xmax, ymax = bounds
+
+    rows = math.ceil((ymax - ymin - size[0]) / stride[0]) + 1
+    cols = math.ceil((xmax - xmin - size[1]) / stride[1]) + 1
 
     return rows, cols

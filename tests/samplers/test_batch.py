@@ -3,7 +3,6 @@
 
 import math
 from collections.abc import Iterator, Sequence
-from datetime import datetime
 from itertools import product
 
 import pandas as pd
@@ -16,17 +15,18 @@ from pyproj import CRS
 from shapely import Geometry
 from torch.utils.data import DataLoader
 
-from torchgeo.datasets import BoundingBox, GeoDataset, stack_samples
+from torchgeo.datasets import GeoDataset, stack_samples
+from torchgeo.datasets.utils import GeoSlice
 from torchgeo.samplers import BatchGeoSampler, RandomBatchGeoSampler, Units
 
-MINT = datetime(2025, 4, 24)
-MAXT = datetime(2025, 4, 25)
+MINT = pd.Timestamp(2025, 4, 24)
+MAXT = pd.Timestamp(2025, 4, 25)
 
 
 class CustomBatchGeoSampler(BatchGeoSampler):
-    def __iter__(self) -> Iterator[list[BoundingBox]]:
+    def __iter__(self) -> Iterator[list[GeoSlice]]:
         for i in range(2):
-            yield [BoundingBox(j, j, j, j, MINT, MAXT) for j in range(2)]
+            yield [(slice(j, j), slice(j, j), slice(MINT, MAXT)) for j in range(2)]
 
 
 class CustomGeoDataset(GeoDataset):
@@ -39,7 +39,7 @@ class CustomGeoDataset(GeoDataset):
         self.index = GeoDataFrame(index=index, geometry=geometry, crs=crs)
         self.res = res
 
-    def __getitem__(self, query: BoundingBox) -> dict[str, BoundingBox]:
+    def __getitem__(self, query: GeoSlice) -> dict[str, GeoSlice]:
         return {'index': query}
 
 
@@ -55,8 +55,8 @@ class TestBatchGeoSampler:
 
     def test_iter(self, sampler: CustomBatchGeoSampler) -> None:
         expected = [
-            BoundingBox(0, 0, 0, 0, MINT, MAXT),
-            BoundingBox(1, 1, 1, 1, MINT, MAXT),
+            (slice(0, 0), slice(0, 0), slice(MINT, MAXT)),
+            (slice(1, 1), slice(1, 1), slice(MINT, MAXT)),
         ]
         assert next(iter(sampler)) == expected
 
@@ -102,24 +102,31 @@ class TestRandomBatchGeoSampler:
 
     def test_iter(self, sampler: RandomBatchGeoSampler) -> None:
         for batch in sampler:
-            for query in batch:
-                assert sampler.roi.minx <= query.minx <= query.maxx <= sampler.roi.maxx
-                assert sampler.roi.miny <= query.miny <= query.miny <= sampler.roi.maxy
-                assert sampler.roi.mint <= query.mint <= query.maxt <= sampler.roi.maxt
+            for x, y, t in batch:
+                bbox = shapely.box(x.start, y.start, x.stop, y.stop)
+                assert sampler.roi.contains(bbox)
 
-                assert math.isclose(query.maxx - query.minx, sampler.size[1])
-                assert math.isclose(query.maxy - query.miny, sampler.size[0])
-                assert query.maxt - query.mint == sampler.roi.maxt - sampler.roi.mint
+                assert math.isclose(x.stop - x.start, sampler.size[1])
+                assert math.isclose(y.stop - y.start, sampler.size[0])
 
     def test_len(self, sampler: RandomBatchGeoSampler) -> None:
         assert len(sampler) == sampler.length // sampler.batch_size
 
     def test_roi(self, dataset: CustomGeoDataset) -> None:
-        roi = BoundingBox(0, 50, 0, 50, MINT, MAXT)
+        roi = shapely.box(0, 0, 50, 50)
         sampler = RandomBatchGeoSampler(dataset, 2, 2, 10, roi=roi)
         for batch in sampler:
-            for query in batch:
-                assert query in roi
+            for x, y, t in batch:
+                bbox = shapely.box(x.start, y.start, x.stop, y.stop)
+                assert roi.contains(bbox)
+
+    def test_toi(self, dataset: CustomGeoDataset) -> None:
+        toi = pd.Interval(pd.Timestamp(2025, 4, 24, 3), pd.Timestamp(2025, 4, 24, 9))
+        sampler = RandomBatchGeoSampler(dataset, 2, 2, 10, toi=toi)
+        for batch in sampler:
+            for x, y, t in batch:
+                bbox = pd.Interval(t.start, t.stop)
+                assert toi.overlaps(bbox)
 
     def test_small_area(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10), shapely.box(20, 20, 21, 21)]
@@ -141,7 +148,7 @@ class TestRandomBatchGeoSampler:
         sampler = RandomBatchGeoSampler(ds, 1, 2, 10)
         for batch in sampler:
             for bbox in batch:
-                assert bbox == BoundingBox(0, 10, 0, 10, MINT, MAXT)
+                assert bbox == (slice(0, 10), slice(0, 10), slice(MINT, MAXT))
 
     def test_random_seed(self) -> None:
         geometry = [shapely.box(0, 0, 10, 10)]

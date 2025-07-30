@@ -14,11 +14,10 @@ import geopandas
 import pandas as pd
 import shapely
 from geopandas import GeoDataFrame
-from shapely import LineString
+from shapely import LineString, Polygon
 from torch import Generator, default_generator, randint, randperm
 
 from ..datasets import GeoDataset
-from .utils import BoundingBox
 
 
 def _fractions_to_lengths(fractions: Sequence[float], total: int) -> Sequence[int]:
@@ -49,9 +48,9 @@ def random_bbox_assignment(
     lengths: Sequence[float],
     generator: Generator | None = default_generator,
 ) -> list[GeoDataset]:
-    """Split a GeoDataset randomly assigning its index's BoundingBoxes.
+    """Split a GeoDataset randomly assigning its index's objects.
 
-    This function will go through each BoundingBox in the GeoDataset's index and
+    This function will go through each object in the GeoDataset's index and
     randomly assign it to new GeoDatasets.
 
     Args:
@@ -92,10 +91,10 @@ def random_bbox_splitting(
     fractions: Sequence[float],
     generator: Generator | None = default_generator,
 ) -> list[GeoDataset]:
-    """Split a GeoDataset randomly splitting its index's BoundingBoxes.
+    """Split a GeoDataset randomly splitting its index's objects.
 
-    This function will go through each BoundingBox in the GeoDataset's index,
-    split it in a random direction and assign the resulting BoundingBoxes to
+    This function will go through each object in the GeoDataset's index,
+    split it in a random direction and assign the resulting objects to
     new GeoDatasets.
 
     Args:
@@ -182,7 +181,7 @@ def random_grid_cell_assignment(
 ) -> list[GeoDataset]:
     """Overlays a grid over a GeoDataset and randomly assigns cells to new GeoDatasets.
 
-    This function will go through each BoundingBox in the GeoDataset's index, overlay
+    This function will go through each object in the GeoDataset's index, overlay
     a grid over it, and randomly assign each cell to new GeoDatasets.
 
     Args:
@@ -254,7 +253,7 @@ def random_grid_cell_assignment(
     return new_datasets
 
 
-def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> list[GeoDataset]:
+def roi_split(dataset: GeoDataset, rois: Sequence[Polygon]) -> list[GeoDataset]:
     """Split a GeoDataset intersecting it with a ROI for each desired new GeoDataset.
 
     Args:
@@ -268,12 +267,14 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> list[GeoDatas
     """
     new_datasets = []
     for i, roi in enumerate(rois):
-        if any(roi.intersects(x) and (roi & x).area > 0 for x in rois[i + 1 :]):
+        if any(
+            shapely.intersects(roi, x) and not shapely.touches(roi, x)
+            for x in rois[i + 1 :]
+        ):
             raise ValueError("ROIs in input rois can't overlap.")
 
         ds = deepcopy(dataset)
-        mask = shapely.box(roi.minx, roi.miny, roi.maxx, roi.maxy)
-        ds.index = geopandas.clip(dataset.index, mask)
+        ds.index = geopandas.clip(dataset.index, roi)
         new_datasets.append(ds)
 
     return new_datasets
@@ -294,9 +295,9 @@ def time_series_split(
 
     .. versionadded:: 0.5
     """
-    minx, maxx, miny, maxy, mint, maxt = dataset.bounds
+    x, y, t = dataset.bounds
 
-    totalt = maxt - mint
+    totalt = t.stop - t.start
 
     if all(isinstance(x, int | float) for x in lengths):
         if any(n <= 0 for n in lengths):
@@ -311,7 +312,7 @@ def time_series_split(
 
     if all(isinstance(x, pd.Timedelta) for x in lengths):
         lengths = [
-            pd.Interval(mint + offset - length, mint + offset, closed='neither')
+            pd.Interval(t.start + offset - length, t.start + offset, closed='neither')
             for offset, length in zip(accumulate(lengths), lengths)
         ]
 
@@ -323,12 +324,12 @@ def time_series_split(
         start = interval.left
         end = interval.right
 
-        # Remove one microsecond from each BoundingBox's maxt to avoid overlapping
+        # Remove one microsecond from each object's maxt to avoid overlapping
         offset = (
             pd.Timedelta(0) if i == len(lengths) - 1 else pd.Timedelta(1, unit='us')
         )
 
-        if start < mint or end > maxt:
+        if start < t.start or end > t.stop:
             raise ValueError(
                 "Pairs of timestamps in lengths can't be out of dataset's time bounds."
             )

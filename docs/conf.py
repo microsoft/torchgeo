@@ -121,11 +121,13 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'rasterio': ('https://rasterio.readthedocs.io/en/stable/', None),
     'segmentation_models_pytorch': ('https://smp.readthedocs.io/en/stable/', None),
+    'shapely': ('https://shapely.readthedocs.io/en/stable/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
     'timm': ('https://huggingface.co/docs/timm/main/en/', None),
     'torch': ('https://docs.pytorch.org/docs/stable/', None),
     'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
     'torchvision': ('https://docs.pytorch.org/vision/stable/', None),
+    'ultralytics': ('https://docs.ultralytics.com/', None),
 }
 
 # nbsphinx

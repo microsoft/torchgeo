@@ -8,7 +8,6 @@ from typing import Any
 import kornia.augmentation as K
 import timm
 import torch
-from timm.models import ResNet
 from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -84,7 +83,7 @@ _sentinel1_grd_bands = ['VV', 'VH']
 _mean_s1 = torch.tensor([-12.59, -20.26])
 _std_s1 = torch.tensor([5.26, 5.91])
 _ssl4eo_s12_transforms_s1 = K.AugmentationSequential(
-    K.Resize(256),
+    K.Resize((256, 256)),
     K.CenterCrop(224),
     K.Normalize(mean=_mean_s1, std=_std_s1),
     data_keys=None,
@@ -94,7 +93,7 @@ _ssl4eo_s12_transforms_s1 = K.AugmentationSequential(
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
 # Normalization either by 10K (for S2 uint16 input) or channel-wise with band statistics
 _ssl4eo_s12_transforms_s2_10k = K.AugmentationSequential(
-    K.Resize(256),
+    K.Resize((256, 256)),
     K.CenterCrop(224),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
     data_keys=None,
@@ -135,7 +134,7 @@ _std_s2 = torch.tensor(
     ]
 )
 _ssl4eo_s12_transforms_s2_stats = K.AugmentationSequential(
-    K.Resize(256),
+    K.Resize((256, 256)),
     K.CenterCrop(224),
     K.Normalize(mean=_mean_s2, std=_std_s2),
     data_keys=None,
@@ -148,7 +147,7 @@ _max = torch.tensor([88, 103, 129])
 _mean = torch.tensor([0.485, 0.456, 0.406])
 _std = torch.tensor([0.229, 0.224, 0.225])
 _seco_transforms = K.AugmentationSequential(
-    K.Resize(256),
+    K.Resize((256, 256)),
     K.CenterCrop(224),
     K.Normalize(mean=_min, std=_max - _min),
     K.Normalize(mean=torch.tensor(0), std=1 / torch.tensor(255)),
@@ -156,12 +155,23 @@ _seco_transforms = K.AugmentationSequential(
     data_keys=None,
 )
 
+
+# Normalization only available for RGB dataset, defined here:
+# https://github.com/PlekhanovaElena/ssl4eco/blob/7445e048035f7ae31c0eb45e1ed8426c9989fe56/pretraining/pretrain_seco_3heads.py#L140
+# https://github.com/PlekhanovaElena/ssl4eco/blob/7445e048035f7ae31c0eb45e1ed8426c9989fe56/downstream_tasks/test_modules/secoeco_test_module.py#L28
+_seco_eco_transforms = K.AugmentationSequential(
+    K.Resize((224, 224)),
+    K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(10000.0)),
+    data_keys=None,
+)
+
+
 # Normalization only available for RGB dataset, defined here:
 # https://github.com/sustainlab-group/geography-aware-ssl/blob/main/moco_fmow/main_moco_geo%2Btp.py#L287
 _mean = torch.tensor([0.485, 0.456, 0.406])
 _std = torch.tensor([0.229, 0.224, 0.225])
 _gassl_transforms = K.AugmentationSequential(
-    K.Resize(224),
+    K.Resize((224, 224)),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
     K.Normalize(mean=_mean, std=_std),
     data_keys=None,
@@ -634,6 +644,47 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    SENTINEL2_ALL_SECO_ECO = Weights(
+        url='https://hf.co/torchgeo/seco-eco/resolve/aea279ea46572cfca5876ac1f9d8d8595fcdeb3b/resnet50_sentinel2_all_seco_eco-90ec322f.pth',
+        transforms=_seco_eco_transforms,
+        meta={
+            'dataset': 'SSL4Eco Dataset',
+            'in_chans': 12,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2504.18256',
+            'repo': 'https://github.com/PlekhanovaElena/ssl4eco',
+            'ssl_method': 'seco-eco',
+            'bands': [
+                'B1',
+                'B2',
+                'B3',
+                'B4',
+                'B5',
+                'B6',
+                'B7',
+                'B8',
+                'B8A',
+                'B9',
+                'B11',
+                'B12',
+            ],
+        },
+    )
+
+    SENTINEL2_ALL_NDVI_SECO_ECO = Weights(
+        url='https://hf.co/torchgeo/seco-eco-ndvi/resolve/44fae184c63b73e15a32be816e023957dc4c56c1/resnet50_sentinel2_all_ndvi_seco_eco-65292b83.pth',
+        transforms=_seco_eco_transforms,
+        meta={
+            'dataset': 'SSL4Eco Dataset',
+            'in_chans': 9,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2504.18256',
+            'repo': 'https://github.com/PlekhanovaElena/ssl4eco',
+            'ssl_method': 'seco-eco',
+            'bands': ['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'NDVI'],
+        },
+    )
+
     SENTINEL2_MI_MS_SATLAS = Weights(
         url='https://hf.co/torchgeo/satlas/resolve/081d6607431bf36bdb59c223777cbb267131b8f2/sentinel2_resnet50_mi_ms-da5413d2.pth',
         transforms=_satlas_sentinel2_transforms,
@@ -779,7 +830,7 @@ class ResNet152_Weights(WeightsEnum):  # type: ignore[misc]
 
 def resnet18(
     weights: ResNet18_Weights | None = None, *args: Any, **kwargs: Any
-) -> ResNet | nn.ModuleDict:
+) -> nn.Module:
     """ResNet-18 model.
 
     If you use this model in your research, please cite the following paper:
@@ -799,7 +850,7 @@ def resnet18(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet | nn.ModuleDict = timm.create_model('resnet18', *args, **kwargs)
+    model = timm.create_model('resnet18', *args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -813,7 +864,7 @@ def resnet18(
 
 def resnet50(
     weights: ResNet50_Weights | None = None, *args: Any, **kwargs: Any
-) -> ResNet | nn.ModuleDict:
+) -> nn.Module:
     """ResNet-50 model.
 
     If you use this model in your research, please cite the following paper:
@@ -834,7 +885,7 @@ def resnet50(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    model: ResNet | nn.ModuleDict = timm.create_model('resnet50', *args, **kwargs)
+    model = timm.create_model('resnet50', *args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -849,7 +900,7 @@ def resnet50(
 
 def resnet152(
     weights: ResNet152_Weights | None = None, *args: Any, **kwargs: Any
-) -> ResNet | nn.ModuleDict:
+) -> nn.Module:
     """ResNet-152 model.
 
     If you use this model in your research, please cite the following paper:
@@ -869,8 +920,7 @@ def resnet152(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
 
-    # FeatureListNet (extends nn.ModuleDict) is returned when features_only=True
-    model: ResNet | nn.ModuleDict = timm.create_model('resnet152', *args, **kwargs)
+    model = timm.create_model('resnet152', *args, **kwargs)
 
     if weights:
         missing_keys, unexpected_keys = model.load_state_dict(

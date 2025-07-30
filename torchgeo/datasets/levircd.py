@@ -9,6 +9,7 @@ import os
 from collections.abc import Callable
 from typing import ClassVar
 
+import einops
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -80,7 +81,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         image1 = self._load_image(files['image1'])
         image2 = self._load_image(files['image2'])
         mask = self._load_target(files['mask'])
-        sample = {'image1': image1, 'image2': image2, 'mask': mask}
+        sample = {'image': torch.stack([image1, image2]), 'mask': mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -108,9 +109,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         with Image.open(filename) as img:
             array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array).float()
-            # Convert from HxWxC to CxHxW
-            tensor = tensor.permute((2, 0, 1))
-            return tensor
+            return einops.rearrange(tensor, 'h w c -> c h w')
 
     def _load_target(self, path: Path) -> Tensor:
         """Load the target mask for a single image.
@@ -127,7 +126,8 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)
-            return tensor
+            # VideoSequential requires time dimension
+            return einops.rearrange(tensor, 'h w -> () h w')
 
     def plot(
         self,
@@ -149,10 +149,10 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         """
         ncols = 3
 
-        image1 = sample['image1'].permute(1, 2, 0).numpy()
+        image1 = sample['image'][0].permute(1, 2, 0).numpy()
         image1 = percentile_normalization(image1, axis=(0, 1))
 
-        image2 = sample['image2'].permute(1, 2, 0).numpy()
+        image2 = sample['image'][1].permute(1, 2, 0).numpy()
         image2 = percentile_normalization(image2, axis=(0, 1))
 
         if 'prediction' in sample:
@@ -164,11 +164,11 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         axs[0].axis('off')
         axs[1].imshow(image2)
         axs[1].axis('off')
-        axs[2].imshow(sample['mask'], cmap='gray', interpolation='none')
+        axs[2].imshow(sample['mask'][0], cmap='gray', interpolation='none')
         axs[2].axis('off')
 
         if 'prediction' in sample:
-            axs[3].imshow(sample['prediction'], cmap='gray', interpolation='none')
+            axs[3].imshow(sample['prediction'][0], cmap='gray', interpolation='none')
             axs[3].axis('off')
             if show_titles:
                 axs[3].set_title('Prediction')

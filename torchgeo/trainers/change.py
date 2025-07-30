@@ -4,6 +4,7 @@
 """Trainers for change detection."""
 
 import os
+from collections.abc import Sequence
 from typing import Any, Literal
 
 import kornia.augmentation as K
@@ -14,40 +15,50 @@ import torch.nn as nn
 from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
-from torchmetrics import MetricCollection
-from torchmetrics.classification import (
-    BinaryAccuracy,
-    BinaryF1Score,
-    BinaryJaccardIndex,
-)
+from torchmetrics import Accuracy, F1Score, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
-from ..models import FCSiamConc, FCSiamDiff, get_weight
+from ..models import FCN, FCSiamConc, FCSiamDiff, get_weight
 from . import utils
 from .base import BaseTask
 
 
 class ChangeDetectionTask(BaseTask):
-    """Change Detection. Currently supports binary change between two timesteps.
+    """Change Detection. Supports binary, multiclass, and multilabel change detection.
 
     .. versionadded:: 0.8
     """
 
     def __init__(
         self,
-        model: Literal['unet', 'fcsiamdiff', 'fcsiamconc'] = 'unet',
+        model: Literal[
+            'unet',
+            'deeplabv3+',
+            'fcn',
+            'upernet',
+            'segformer',
+            'dpt',
+            'fcsiamdiff',
+            'fcsiamconc',
+        ] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
         in_channels: int = 3,
+        task: Literal['binary', 'multiclass', 'multilabel'] = 'binary',
+        num_classes: int | None = None,
+        num_labels: int | None = None,
+        num_filters: int = 3,
         pos_weight: Tensor | None = None,
-        loss: Literal['bce', 'jaccard', 'focal'] = 'bce',
+        loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'bce',
+        class_weights: Tensor | Sequence[float] | None = None,
+        ignore_index: int | None = None,
         lr: float = 1e-3,
         patience: int = 10,
         freeze_backbone: bool = False,
         freeze_decoder: bool = False,
     ) -> None:
-        """Inititalize a new ChangeDetectionTask instance.
+        """Initialize a new ChangeDetectionTask instance.
 
         Args:
             model: Name of the model to use.
@@ -59,9 +70,17 @@ class ChangeDetectionTask(BaseTask):
                 None for random weights, or the path to a saved model state dict. FCN
                 model does not support pretrained weights.
             in_channels: Number of channels per image.
+            task: One of 'binary', 'multiclass', or 'multilabel'.
+            num_classes: Number of prediction classes (only for ``task='multiclass'``).
+            num_labels: Number of prediction labels (only for ``task='multilabel'``).
+            num_filters: Number of filters. Only applicable when model='fcn'.
             pos_weight: A weight of positive examples and used with 'bce' loss.
             loss: Name of the loss function, currently supports
-                'bce', 'jaccard', or 'focal' loss.
+                'ce', 'bce', 'jaccard', and 'focal' loss.
+            class_weights: Optional rescaling weight given to each
+                class and used with 'ce' loss.
+            ignore_index: Optional integer class index to ignore in the loss and
+                metrics.
             lr: Learning rate for optimizer.
             patience: Patience for learning rate scheduler.
             freeze_backbone: Freeze the backbone network to fine-tune the
@@ -74,24 +93,69 @@ class ChangeDetectionTask(BaseTask):
 
     def configure_losses(self) -> None:
         """Initialize the loss criterion."""
+        ignore_index: int | None = self.hparams['ignore_index']
+        class_weights = self.hparams['class_weights']
+        if class_weights is not None and not isinstance(class_weights, Tensor):
+            class_weights = torch.tensor(class_weights, dtype=torch.float32)
+
         match self.hparams['loss']:
+            case 'ce':
+                ignore_value = -1000 if ignore_index is None else ignore_index
+                self.criterion: nn.Module = nn.CrossEntropyLoss(
+                    ignore_index=ignore_value, weight=class_weights
+                )
             case 'bce':
                 self.criterion = nn.BCEWithLogitsLoss(
                     pos_weight=self.hparams['pos_weight']
                 )
             case 'jaccard':
-                self.criterion = smp.losses.JaccardLoss(mode='binary')
+                # JaccardLoss requires a list of classes to use instead of a class
+                # index to ignore.
+                if self.hparams['task'] == 'multiclass' and ignore_index is not None:
+                    classes = [
+                        i
+                        for i in range(self.hparams['num_classes'])
+                        if i != ignore_index
+                    ]
+                    self.criterion = smp.losses.JaccardLoss(
+                        mode=self.hparams['task'], classes=classes
+                    )
+                else:
+                    self.criterion = smp.losses.JaccardLoss(mode=self.hparams['task'])
             case 'focal':
-                self.criterion = smp.losses.FocalLoss(mode='binary', normalized=True)
+                self.criterion = smp.losses.FocalLoss(
+                    mode=self.hparams['task'],
+                    ignore_index=ignore_index,
+                    normalized=True,
+                )
 
     def configure_metrics(self) -> None:
-        """Initialize the performance metrics."""
+        """Initialize the performance metrics.
+
+        * :class:`~torchmetrics.Accuracy`: Overall accuracy
+          (OA) using 'micro' averaging. The number of true positives divided by the
+          dataset size. Higher values are better.
+        * :class:`~torchmetrics.JaccardIndex`: Intersection
+          over union (IoU). Uses 'micro' averaging. Higher valuers are better.
+
+        .. note::
+           * 'Micro' averaging suits overall performance evaluation but may not reflect
+             minority class accuracy.
+           * 'Macro' averaging, not used here, gives equal weight to each class, useful
+             for balanced performance assessment across imbalanced classes.
+        """
+        kwargs = {
+            'task': self.hparams['task'],
+            'num_classes': self.hparams['num_classes'],
+            'num_labels': self.hparams['num_labels'],
+            'ignore_index': self.hparams['ignore_index'],
+        }
         metrics = MetricCollection(
-            {
-                'accuracy': BinaryAccuracy(),
-                'jaccard': BinaryJaccardIndex(),
-                'f1': BinaryF1Score(),
-            }
+            [
+                Accuracy(multidim_average='global', average='micro', **kwargs),
+                JaccardIndex(average='micro', **kwargs),
+                F1Score(average='micro', **kwargs),
+            ]
         )
         self.train_metrics = metrics.clone(prefix='train_')
         self.val_metrics = metrics.clone(prefix='val_')
@@ -103,11 +167,48 @@ class ChangeDetectionTask(BaseTask):
         backbone: str = self.hparams['backbone']
         weights = self.weights
         in_channels: int = self.hparams['in_channels']
-        num_classes = 1
+        num_classes: int = (
+            self.hparams['num_classes'] or self.hparams['num_labels'] or 1
+        )
+        num_filters: int = self.hparams['num_filters']
 
         match model:
             case 'unet':
                 self.model = smp.Unet(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels * 2,  # images are concatenated
+                    classes=num_classes,
+                )
+            case 'deeplabv3+':
+                self.model = smp.DeepLabV3Plus(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels * 2,  # images are concatenated
+                    classes=num_classes,
+                )
+            case 'fcn':
+                self.model = FCN(
+                    in_channels=in_channels * 2,  # images are concatenated
+                    classes=num_classes,
+                    num_filters=num_filters,
+                )
+            case 'upernet':
+                self.model = smp.UPerNet(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels * 2,  # images are concatenated
+                    classes=num_classes,
+                )
+            case 'segformer':
+                self.model = smp.Segformer(
+                    encoder_name=backbone,
+                    encoder_weights='imagenet' if weights is True else None,
+                    in_channels=in_channels * 2,  # images are concatenated
+                    classes=num_classes,
+                )
+            case 'dpt':
+                self.model = smp.DPT(
                     encoder_name=backbone,
                     encoder_weights='imagenet' if weights is True else None,
                     in_channels=in_channels * 2,  # images are concatenated
@@ -138,20 +239,12 @@ class ChangeDetectionTask(BaseTask):
             self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
-        if self.hparams['freeze_backbone'] and model in [
-            'unet',
-            'fcsiamdiff',
-            'fcsiamconc',
-        ]:
+        if self.hparams['freeze_backbone'] and model != 'fcn':
             for param in self.model.encoder.parameters():
                 param.requires_grad = False
 
         # Freeze decoder
-        if self.hparams['freeze_decoder'] and model in [
-            'unet',
-            'fcsiamdiff',
-            'fcsiamconc',
-        ]:
+        if self.hparams['freeze_decoder'] and model != 'fcn':
             for param in self.model.decoder.parameters():
                 param.requires_grad = False
 
@@ -169,22 +262,29 @@ class ChangeDetectionTask(BaseTask):
         model: str = self.hparams['model']
         x = batch['image']
         y = batch['mask']
-        # channel dim for binary loss functions/metrics
-        y = rearrange(y, 'b h w -> b () h w')
-        if model == 'unet':
+
+        if not model.startswith('fcsiam'):
             x = rearrange(x, 'b t c h w -> b (t c) h w')
+
+        if self.hparams['task'] == 'multiclass':
+            y = y.squeeze(1)
+
         y_hat = self(x)
 
-        loss: Tensor = self.criterion(y_hat, y.to(torch.float))
+        if self.hparams['loss'] == 'bce':
+            y = y.float()
+
+        # Compute the loss
+        loss: Tensor = self.criterion(y_hat, y)
         self.log(f'{stage}_loss', loss)
 
         # Retrieve the correct metrics based on the stage
         metrics = getattr(self, f'{stage}_metrics', None)
         if metrics:
             metrics(y_hat, y)
-            self.log_dict({f'{k}': v for k, v in metrics.compute().items()})
+            self.log_dict(metrics, batch_size=x.shape[0])
 
-        if stage in ['val']:
+        if stage == 'val':
             if (
                 batch_idx < 10
                 and hasattr(self.trainer, 'datamodule')
@@ -200,7 +300,12 @@ class ChangeDetectionTask(BaseTask):
                     keepdim=True,
                 )
                 batch = aug(batch)
-                batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
+                match self.hparams['task']:
+                    case 'binary' | 'multilabel':
+                        batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()
+                    case 'multiclass':
+                        batch['prediction'] = y_hat.argmax(dim=1, keepdim=True)
+
                 for key in ['image', 'mask', 'prediction']:
                     batch[key] = batch[key].cpu()
                 sample = unbind_samples(batch)[0]
@@ -269,5 +374,11 @@ class ChangeDetectionTask(BaseTask):
         if model == 'unet':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
         y_hat: Tensor = self(x)
-        y_hat = y_hat.sigmoid()
+
+        match self.hparams['task']:
+            case 'binary' | 'multilabel':
+                y_hat = y_hat.sigmoid()
+            case 'multiclass':
+                y_hat = y_hat.softmax(dim=1)
+
         return y_hat
