@@ -27,20 +27,37 @@ jobs:
         uses: actions/setup-python@v5.6.0
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Cache dependencies
+
+      # Install uv - this needs to happen before any uv commands are used
+      # Use a conditional step for Windows where cache path might differ
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+
+      # Cache dependencies - uv has its own cache. We'll cache uv's specific cache directory.
+      # The key needs to be updated to reflect uv's cache path and be specific per job/matrix.
+      - name: Cache uv dependencies
         uses: actions/cache@v4.2.3
-        id: cache
+        id: cache-uv
         with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/models.txt', 'requirements/tests.txt') }}
-        if: ${{ runner.os != 'macOS' }}
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
+          # uv's default cache path (on Linux/macOS) or Windows equivalent
+          path: ${{ runner.os == 'Windows' && '~\AppData\Local\uv\cache' || '~/.cache/uv' }}
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-latest-uv-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/models.txt', 'requirements/tests.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-latest-uv-
+        # This cache is always enabled for uv, as uv's internal caching is beneficial on all OS
+        # The 'if: ${{ runner.os != 'macOS' }}' condition from pip is removed.
+
+      - name: Install uv dependencies
+        # The cache-hit condition from pip is removed as uv handles internal caching
+        # and is designed for speed even without an action-level cache hit.
         run: |
-          pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/tests.txt
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+          uv pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/tests.txt
+          # Removed pip cache purge - not needed for uv's internal caching
+
+      # Replace pip list with uv pip list
+      - name: List uv dependencies
+        run: uv pip list
+
       - name: Run pytest checks
         run: |
           pytest --cov=torchgeo --cov-report=xml
@@ -49,6 +66,7 @@ jobs:
         uses: codecov/codecov-action@v5.4.3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
   minimum:
     name: minimum
     runs-on: ubuntu-latest
@@ -60,19 +78,31 @@ jobs:
         uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.11'
-      - name: Cache dependencies
+
+      # Install uv
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+
+      # Cache dependencies - for minimum job, adjust path and key for uv
+      - name: Cache uv dependencies (minimum)
         uses: actions/cache@v4.2.3
-        id: cache
+        id: cache-uv-minimum
         with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/min-reqs.old') }}
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
+          path: ~/.cache/uv # uv's default cache path
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-minimum-uv-${{ hashFiles('requirements/min-reqs.old') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-minimum-uv-
+
+      - name: Install uv dependencies (minimum)
+        # As with the latest job, uv handles its internal caching.
         run: |
-          pip install -r requirements/min-reqs.old
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+          uv pip install -r requirements/min-reqs.old
+          # Removed pip cache purge
+
+      # Replace pip list with uv pip list
+      - name: List uv dependencies
+        run: uv pip list
+
       - name: Run pytest checks
         run: |
           pytest --cov=torchgeo --cov-report=xml
@@ -81,6 +111,7 @@ jobs:
         uses: codecov/codecov-action@v5.4.3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
   optional:
     name: optional
     runs-on: ubuntu-latest
@@ -92,19 +123,31 @@ jobs:
         uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.13'
-      - name: Cache dependencies
+
+      # Install uv
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+
+      # Cache dependencies - for optional job, adjust path and key for uv
+      - name: Cache uv dependencies (optional)
         uses: actions/cache@v4.2.3
-        id: cache
+        id: cache-uv-optional
         with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/tests.txt') }}
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
+          path: ~/.cache/uv # uv's default cache path
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-optional-uv-${{ hashFiles('requirements/required.txt', 'requirements/tests.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-optional-uv-
+
+      - name: Install uv dependencies (optional)
+        # As with other jobs, uv handles its internal caching.
         run: |
-          pip install -r requirements/required.txt -r requirements/tests.txt
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+          uv pip install -r requirements/required.txt -r requirements/tests.txt
+          # Removed pip cache purge
+
+      # Replace pip list with uv pip list
+      - name: List uv dependencies
+        run: uv pip list
+
       - name: Run pytest checks
         run: |
           pytest --cov=torchgeo --cov-report=xml

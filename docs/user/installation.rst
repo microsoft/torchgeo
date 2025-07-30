@@ -1,12 +1,47 @@
 Installation
 ============
 
-TorchGeo is simple and easy to install. We support installation using the `pip <https://pip.pypa.io/en/stable/>`_, `conda <https://docs.conda.io/en/latest/>`_, and `spack <https://spack.io/>`_ package managers.
+TorchGeo is simple and easy to install. We support installation using `uv <https://docs.astral.sh/uv/>`_, `pip <https://pip.pypa.io/en/stable/>`_, `conda <https://docs.conda.io/en/latest/>`_, and `spack <https://spack.io/>`_ package managers.
+
+uv
+--
+
+`uv` is a fast Python package installer and resolver. It's built by the same team behind `ruff` and is often significantly quicker than `pip`.
+
+To install TorchGeo using `uv`, ensure `uv` is installed on your system first (e.g., via `pip install uv` or following `uv`'s official installation guide):
+
+.. code-block:: console
+
+   $ uv pip install torchgeo
+
+If you want to install a development version, you can use a VCS project URL:
+
+.. code-block:: console
+
+   $ uv pip install git+https://github.com/microsoft/torchgeo.git
+
+or a local git checkout:
+
+.. code-block:: console
+
+   $ git clone https://github.com/microsoft/torchgeo.git
+   $ cd torchgeo
+   $ uv pip install .
+
+By default, only required dependencies are installed. TorchGeo has a number of optional dependencies for specific datasets, models, or development. These can be installed with a comma-separated list:
+
+.. code-block:: console
+
+   $ uv pip install torchgeo[datasets,models]
+   $ uv pip install torchgeo[style,tests]
+   $ uv pip install torchgeo[all]
+
+See the ``pyproject.toml`` for a complete list of options. See the `uv documentation <https://docs.astral.sh/uv/>`_ for more details.
 
 pip
 ---
 
-Since TorchGeo is written in pure-Python, the easiest way to install it is using pip:
+Alternatively, you can install TorchGeo using `pip`, the standard Python package installer:
 
 .. code-block:: console
 
@@ -52,7 +87,7 @@ Now, you can install the latest stable release using:
 
    $ conda install torchgeo
 
-Conda does not support development versions or optional dependencies. If you install from conda-forge, only stable releases and required dependencies will be installed. Development versions or optional dependencies can be installed afterwards using pip.
+Conda does not support development versions or optional dependencies directly through ``conda install`` for this package. If you install from conda-forge, only stable releases and required dependencies will be installed. Development versions or optional dependencies can be installed afterwards using `uv` or `pip`.
 
 See the `conda-forge documentation <https://conda-forge.org/>`_ for more details.
 

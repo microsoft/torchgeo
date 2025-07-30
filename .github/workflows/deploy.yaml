@@ -10,16 +10,28 @@ jobs:
     steps:
       - name: Clone repo
         uses: actions/checkout@v4.2.2
+
       - name: Set up python
         uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.13'
-      - name: Install pip dependencies
-        run: pip install build
-      - name: List pip dependencies
-        run: pip list
+
+      # Install uv - the recommended way is to use astral-sh/setup-uv action
+      # This action handles downloading, caching, and adding uv to PATH.
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1 # Use the latest stable version of setup-uv action
+
+      # Replace pip install with uv pip install
+      - name: Install build dependencies with uv
+        run: uv pip install build
+
+      # Replace pip list with uv pip list
+      - name: List uv dependencies
+        run: uv pip list
+
       - name: Build project
         run: python3 -m build
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4.6.2
         with:

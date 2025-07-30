@@ -21,25 +21,49 @@ jobs:
         uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.13'
-      - name: Cache dependencies
+
+      # Install uv - this needs to happen before any uv commands are used
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1 # Use the latest stable version of setup-uv action
+
+      # Cache dependencies - uv has its own cache. We'll cache uv's specific cache directory.
+      # The key needs to be updated to reflect uv's cache path.
+      - name: Cache uv dependencies
         uses: actions/cache@v4.2.3
-        id: cache
+        id: cache-uv
         with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('pyproject.toml') }}
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
+          path: ~/.cache/uv # uv's default cache path on Linux/macOS
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-uv-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-uv-
+
+      - name: Install uv dependencies
+        # The cache-hit condition for uv might be slightly different.
+        # uv is designed to be fast even without an action-level cache hit.
+        # It has internal caching. We run install always, and uv leverages its cache.
         run: |
-          pip install .[datasets,tests]
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+          uv pip install .[datasets,tests]
+          # uv does not have a direct 'cache purge' equivalent in the same way pip does for post-install.
+          # uv's caching is more granular and typically managed by 'uv cache prune' for cleanup.
+          # For a fresh install on cache miss, uv re-downloads.
+          # If you want to explicitly clear the cache like pip cache purge,
+          # the uv equivalent would be 'uv cache clean' but this is usually
+          # done as a separate cleanup step, not immediately after install.
+          # For this specific context (if: steps.cache.outputs.cache-hit != 'true'),
+          # simply installing with uv should be sufficient.
+          # Removing the 'pip cache purge' line is correct.
+
+      # Replace pip list with uv pip list
+      - name: List uv dependencies
+        run: uv pip list
+
       - name: Run integration checks
         run: |
           pytest -m slow --durations=10 tests/samplers
           pytest -m slow --durations=10 tests/trainers
           python -m torchgeo --help
-          torchgeo --help
+          torchgeo --help # This assumes torchgeo is installed as a console script
+
   notebooks:
     name: notebooks
     runs-on: ubuntu-latest
@@ -51,21 +75,34 @@ jobs:
         uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.13'
-      - name: Cache dependencies
+
+      # Install uv for this job as well
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+
+      # Cache dependencies - for notebooks, adjust path and key for uv
+      - name: Cache uv dependencies (tutorials)
         uses: actions/cache@v4.2.3
-        id: cache
+        id: cache-uv-tutorials
         with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('pyproject.toml') }}-tutorials
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
+          path: ~/.cache/uv # uv's default cache path
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-uv-tutorials-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-uv-tutorials-
+
+      - name: Install uv dependencies (notebooks)
+        # As with the integration job, uv handles its internal caching.
         run: |
-          pip install .[docs,tests] planetary_computer pystac tensorboard h5py scikit-learn
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+          uv pip install .[docs,tests] planetary_computer pystac tensorboard h5py scikit-learn
+          # Removed pip cache purge - not directly needed/equivalent in uv's typical CI usage here.
+
+      # Replace pip list with uv pip list
+      - name: List uv dependencies
+        run: uv pip list
+
       - name: Run notebook checks
         run: pytest --nbmake --durations=10 docs/tutorials
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.label || github.head_ref || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
