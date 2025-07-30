@@ -117,7 +117,12 @@ class XView2(NonGeoDataset):
         mask2 = self._load_target(files['mask2'])
 
         image = torch.stack(tensors=[image1, image2], dim=0)
-        mask = torch.stack(tensors=[mask1, mask2], dim=0)
+
+        # Dataset consists of semantic segmentation masks before and after event
+        # Convert to change detection by subtracting damage before from damage after
+        # Clamp to avoid potential negative numbers
+        mask = torch.clamp(mask2 - mask1, 0, 4)
+
         sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
@@ -171,6 +176,7 @@ class XView2(NonGeoDataset):
         with Image.open(filename) as img:
             array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
             tensor = torch.from_numpy(array)
+            tensor = tensor.to(torch.float)
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
             return tensor
@@ -243,18 +249,12 @@ class XView2(NonGeoDataset):
         """
         ncols = 2
         image1 = draw_semantic_segmentation_masks(
-            sample['image'][0],
-            sample['mask'][0],
-            alpha=alpha,
-            colors=list(self.colormap),
+            sample['image'][0], sample['mask'], alpha=alpha, colors=list(self.colormap)
         )
         image2 = draw_semantic_segmentation_masks(
-            sample['image'][1],
-            sample['mask'][1],
-            alpha=alpha,
-            colors=list(self.colormap),
+            sample['image'][1], sample['mask'], alpha=alpha, colors=list(self.colormap)
         )
-        if 'prediction' in sample:  # NOTE: this assumes predictions are made for post
+        if 'prediction' in sample:
             ncols += 1
             image3 = draw_semantic_segmentation_masks(
                 sample['image'][1],
