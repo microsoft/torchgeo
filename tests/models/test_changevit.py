@@ -332,11 +332,11 @@ class TestChangeViTScalability:
 
     def test_different_model_sizes(self) -> None:
         """Should support different ViT backbone sizes."""
-        from torchgeo.models import changevit_base, changevit_small
+        from torchgeo.models import changevit_small, changevit_tiny
 
         models = {
             'small': changevit_small(weights=None),
-            'base': changevit_base(weights=None),
+            'tiny': changevit_tiny(weights=None),
         }
 
         x = torch.randn(1, 2, 3, 224, 224)
@@ -348,14 +348,14 @@ class TestChangeViTScalability:
 
             assert 'change_prob' in output, f'{name} model should produce change_prob'
 
-            # Base model should have more parameters than small
-            if name == 'small':
+            # Small model should have more parameters than tiny
+            if name == 'tiny':
+                tiny_params = sum(p.numel() for p in model.parameters())
+            elif name == 'small':
                 small_params = sum(p.numel() for p in model.parameters())
-            elif name == 'base':
-                base_params = sum(p.numel() for p in model.parameters())
 
-        assert base_params > small_params, (
-            'Base model should have more parameters than small'
+        assert small_params > tiny_params, (
+            'Small model should have more parameters than tiny'
         )
 
     def test_batch_size_flexibility(self) -> None:

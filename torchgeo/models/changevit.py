@@ -20,7 +20,7 @@ import torch.nn as nn
 from einops import rearrange
 from torch import Tensor
 from torch.nn.modules import Module
-from torchvision.models._api import WeightsEnum
+from torchvision.models._api import Weights, WeightsEnum
 
 
 class DetailCaptureModule(Module):
@@ -355,16 +355,18 @@ class ChangeViT(Module):
             enhanced_spatial
         )  # Returns tuple of [B, 1, H, W] tensors
 
-        # Apply sigmoid to get probabilities
-        # Squeeze channel dimension for compatibility: [B, 1, H, W] -> [B, H, W]
-        change_prob = torch.sigmoid(c12).squeeze(1)
+        # Squeeze channel dimension to match LEVIR-CD target format: [B, 1, H, W] -> [B, H, W]
+        change_logits = c12.squeeze(1)  # Match target format [B, H, W]
 
         # Handle training vs inference mode
         if self.training:
-            # Training: return probabilities for loss computation
-            return {'change_prob': change_prob}
+            # Training: return logits for BCE loss computation
+            return {
+                'change_prob': change_logits
+            }  # Actually logits, but keeping key name for compatibility
         else:
             # Inference: return probabilities and binary map
+            change_prob = torch.sigmoid(change_logits)
             change_binary = (change_prob > 0.5).float()  # Threshold at 0.5
             return {'change_prob': change_prob, 'change_binary': change_binary}
 
@@ -375,7 +377,42 @@ class ChangeViT_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.9
     """
 
-    pass  # Will be populated when weights become available
+    # DeiT pre-trained weights (as used in paper)
+    DEIT_TINY = Weights(
+        url=None,
+        transforms=None,
+        meta={
+            'model': 'changevit_tiny',
+            'backbone': 'deit_tiny_patch16_224',
+            'pretrained': True,
+            'paper': 'ChangeViT: Unleashing Plain Vision Transformers for Change Detection',
+        },
+    )
+
+    DEIT_SMALL = Weights(
+        url=None,
+        transforms=None,
+        meta={
+            'model': 'changevit_small',
+            'backbone': 'deit_small_patch16_224',
+            'pretrained': True,
+            'paper': 'ChangeViT: Unleashing Plain Vision Transformers for Change Detection',
+        },
+    )
+
+    # Todo: Should we add DINO-S weihgts as well?
+
+    # DINOv2 pre-trained weights (alternative initialization)
+    DINOV2_SMALL = Weights(
+        url=None,
+        transforms=None,
+        meta={
+            'model': 'changevit_small',
+            'backbone': 'vit_small_patch14_dinov2',
+            'pretrained': True,
+            'paper': 'ChangeViT: Unleashing Plain Vision Transformers for Change Detection',
+        },
+    )
 
 
 def changevit_small(
@@ -400,9 +437,10 @@ def changevit_small(
             'Please install it with `pip install timm`.'
         ) from e
 
+    # Todo: Which one should be use as standard?
     # Create ViT backbone from timm
     vit_backbone = timm.create_model(
-        'vit_small_patch16_224',
+        'vit_small_patch16_224' if weights is None else 'deit_small_patch16_224',
         pretrained=weights is not None,
         num_classes=0,  # Remove classification head
         **kwargs,
@@ -438,12 +476,13 @@ def changevit_small(
     return model
 
 
-def changevit_base(
+def changevit_tiny(
     weights: ChangeViT_Weights | None = None, **kwargs: Any
 ) -> ChangeViT:
-    """ChangeViT Base model.
+    """ChangeViT Tiny model.
 
-    Uses ViT-Base as backbone with detail capture module.
+    Uses ViT-Tiny as backbone with detail capture module.
+    Paper implementation: ChangeViT-T
 
     Args:
         weights: Pre-trained model weights to use.
@@ -460,9 +499,9 @@ def changevit_base(
             'Please install it with `pip install timm`.'
         ) from e
 
-    # Create ViT backbone from timm
+    # Create ViT backbone from timm - use DeiT tiny for paper reproduction
     vit_backbone = timm.create_model(
-        'vit_base_patch16_224',
+        'deit_tiny_patch16_224' if weights is None else 'vit_tiny_patch16_224',
         pretrained=weights is not None,
         num_classes=0,  # Remove classification head
         **kwargs,

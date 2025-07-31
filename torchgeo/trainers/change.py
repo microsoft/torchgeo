@@ -23,8 +23,8 @@ from ..models import (
     FCN,
     FCSiamConc,
     FCSiamDiff,
-    changevit_base,
     changevit_small,
+    changevit_tiny,
     get_weight,
 )
 from . import utils
@@ -49,7 +49,7 @@ class ChangeDetectionTask(BaseTask):
             'fcsiamdiff',
             'fcsiamconc',
             'changevit_small',
-            'changevit_base',
+            'changevit_tiny',
         ] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
@@ -241,8 +241,8 @@ class ChangeDetectionTask(BaseTask):
                 self.model = changevit_small(
                     weights=weights if isinstance(weights, WeightsEnum) else None
                 )
-            case 'changevit_base':
-                self.model = changevit_base(
+            case 'changevit_tiny':
+                self.model = changevit_tiny(
                     weights=weights if isinstance(weights, WeightsEnum) else None
                 )
 
@@ -306,11 +306,14 @@ class ChangeDetectionTask(BaseTask):
         x = batch['image']
         y = batch['mask']
 
-        if not model.startswith('fcsiam'):
+        if not model.startswith('fcsiam') and not model.startswith('changevit'):
             x = rearrange(x, 'b t c h w -> b (t c) h w')
 
         if self.hparams['task'] == 'multiclass':
             y = y.squeeze(1)
+        # elif self.hparams['task'] == 'binary' and y.dim() == 4 and y.size(1) == 1:
+        #     # For binary tasks, squeeze channel dimension if present
+        #     y = y.squeeze(1)
 
         # Forward pass
         if model.startswith('changevit'):
