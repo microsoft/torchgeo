@@ -4,8 +4,8 @@
 # TODO:
 # - [ ] Train model on benchmark datasets (Levir-CD, WHU-CD) and compare with paper results
 # - [ ] Tolerance paramter size ok? -> timm vit + standard resnet vs. custom VIT + custom resnet
+# - [ ] Which weights should be used as standard? Should we add DINO-S weights as well?
 # - [ ] Go through code once more and make sure it aligns with paper
-# - [ ] Submit PR to torchgeo :)
 
 """ChangeViT model implementation.
 
@@ -399,8 +399,6 @@ class ChangeViT_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    # Todo: Should we add DINO-S weihgts as well?
-
     # DINOv2 pre-trained weights (alternative initialization)
     DINOV2_SMALL = Weights(
         url=None,
@@ -436,7 +434,6 @@ def changevit_small(
             'Please install it with `pip install timm`.'
         ) from e
 
-    # Todo: Which one should be use as standard?
     # Create ViT backbone from timm
     vit_backbone = timm.create_model(
         'vit_small_patch16_224' if weights is None else 'deit_small_patch16_224',
