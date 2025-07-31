@@ -39,8 +39,8 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.8
     """
 
-    SENTINEL1_OPENEARTHMAP_SAR = Weights(
-        url='https://hf.co/torchgeo/sentinel1_unet_effb4_openearthmap_sar/resolve/35837c7be033d485f294ca8878cab265fa5f51ca/sentinel1_unet_effb4_openearthmap_sar-c4871e29.pth',
+    UMBRA_GEC_OPENEARTHMAP_SAR = Weights(
+        url='https://hf.co/torchgeo/umbra_gec_unet_effb4_openearthmap_sar/resolve/738e0216fa5d41d14f535cc28430052683704142/umbra_gec_unet_effb4_openearthmap_sar-f21df2ee.pth',
         transforms=K.AugmentationSequential(
             K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)), data_keys=None
         ),
@@ -61,9 +61,20 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
                 'agriculture land',
                 'building',
             ),
+            'colormap': (
+                '#000000',
+                '#800000',
+                '#00FF24',
+                '#949494',
+                '#FFFFFF',
+                '#226126',
+                '#0045FF',
+                '#4BB549',
+                '#DE1F07',
+            ),
             'publication': 'https://arxiv.org/abs/2501.10891',
             'repo': 'https://github.com/cliffbb/DFC2025-OEM-SAR-Baseline/tree/master',
-            'bands': ['VV'],
+            'bands': ['B1'],
             'model_kwargs': dict(decoder_attention_type='scse'),
             'license': 'CC-BY-4.0',
         },
