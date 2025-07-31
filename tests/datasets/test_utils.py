@@ -21,9 +21,10 @@ from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
     Executable,
     array_to_tensor,
-    calc_valid_data_footprint_from_datasource,
+    clean_binary_mask,
     concat_samples,
     disambiguate_timestamp,
+    extract_valid_footprint_polygon,
     lazy_import,
     merge_samples,
     percentile_normalization,
@@ -574,13 +575,13 @@ def create_test_raster_with_nodata(
 def test_calc_valid_data_footprint_half_area() -> None:
     with create_test_raster_with_nodata() as memfile:
         with memfile.open() as dataset:
-            masks = dataset.read_masks()
+            masks = dataset.dataset_mask()
             transform = dataset.transform
             width = dataset.width
             res_x = dataset.res[0]
-
-            footprint = calc_valid_data_footprint_from_datasource(
-                masks=masks,
+            valid_data_mask = clean_binary_mask(masks)
+            footprint = extract_valid_footprint_polygon(
+                mask=valid_data_mask,
                 transform=transform,
                 raster_width=width,
                 raster_resolution_x=res_x,

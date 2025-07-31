@@ -762,31 +762,53 @@ def convert_poly_coords(
     return xformed_shape
 
 
-def calc_valid_data_footprint_from_datasource(
-    masks: np.typing.NDArray[np.uint8],
+def clean_binary_mask(
+    mask: np.typing.NDArray[np.number], threshold: int = 1
+) -> np.typing.NDArray[np.uint8]:
+    """Convert any rasterio mask to a clean binary mask (uint8 0 or 255).
+
+    Args:
+        mask: input mask array from rasterio.dataset_mask() or read_masks().
+              Can be 2D or 3D with values between 0 and 255.
+        threshold: pixel values >= threshold are considered valid.
+            This is needed if the mask is based on alpha channel.
+            Defaults to 1 as we assume pixels outside the valid footprint will
+            also have 0 alpha.
+
+    Returns:
+        Binary mask of dtype uint8 with 255 = valid pixels, 0 = invalid.
+        If input is 3D, masks are combined (OR) before thresholding.
+    """
+    if mask.ndim == 3:
+        # Combine multi-band masks: pixel valid if valid in any band
+        combined = np.any(mask >= threshold, axis=0)
+    else:
+        combined = mask >= threshold
+
+    binary_mask: np.typing.NDArray[np.uint8] = (combined.astype(np.uint8)) * 255
+    return binary_mask
+
+
+def extract_valid_footprint_polygon(
+    mask: np.typing.NDArray[np.uint8],
     transform: Affine,
     raster_width: int,
     raster_resolution_x: float,
 ) -> Polygon | MultiPolygon:
     """Calculates valid data footprint from a raster's masks.
 
-    This means the parts of the raster that is not no-data pixels.
-
     Args:
-        masks: raster mask, like rasterio.io.DatasetReader.read_masks()
+        mask: binary mask where 255 representing valid pixels
+            and 0 representing nodata pixels
         transform: affine transform for the raster
         raster_width: width of the raster
         raster_resolution_x: resolution of the raster in the x direction (meters)
 
     Returns:
-        Polygon representing the valid data footprint of the raster
+        (Multi)Polygon representing the valid data footprint of the raster
+
+    .. versionadded:: 1.0
     """
-    # Read valid/nodata-mask. Could choose only the first bands mask for peed-up.
-    # Currently, supports spatial shifts between the bands, and include all of this
-    # as one combined mask.
-    mask = masks
-    if len(mask) > 1:
-        mask = np.logical_or.reduce(mask, axis=0).astype('uint8')
     # Close eventual holes within the raster that have area smaller than 500 pixels.
     # Yields two bands, one all-zero representing nodata pixels,
     # the other representing valid data
@@ -795,15 +817,17 @@ def calc_valid_data_footprint_from_datasource(
     # https://rasterio.readthedocs.io/en/stable/topics/masks.html#writing-masks
     max_hole_size = min(int(mask.size * 0.002), 800) or 1  # failsafe for 0
     sieved_mask = sieve(mask, max_hole_size)
+
     # Extract polygon for valid data values. Only interested in the valid-band.
     # To support complex footprints we allow multiple such polygons and merge them
     # to one multipolygon later
     geoms = [g for g, v in shapes(sieved_mask, transform=transform) if v > 0]
+
     # Create a Shapely Polygon object(s)
     vector_footprint = MultiPolygon(
         [Polygon(feature['coordinates'][0]) for feature in geoms]
     )
-    # The resulting polygon(s) is very staggered/pixelated,
+    # The resulting polygon is very staggered/pixelated,
     # which could result in thousands of corners.
     # The valid data footprints are usually very simple (3-5 corners)
     # Simplifying each side to length 1/5 of the raster size (assumes crs is meters)
