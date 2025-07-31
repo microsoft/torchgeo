@@ -311,9 +311,6 @@ class ChangeDetectionTask(BaseTask):
 
         if self.hparams['task'] == 'multiclass':
             y = y.squeeze(1)
-        # elif self.hparams['task'] == 'binary' and y.dim() == 4 and y.size(1) == 1:
-        #     # For binary tasks, squeeze channel dimension if present
-        #     y = y.squeeze(1)
 
         # Forward pass
         if model.startswith('changevit'):

@@ -102,16 +102,15 @@ class TestChangeViTInputOutputBehavior:
         model = changevit_small(weights=None)
         x = torch.randn(1, 2, 3, 224, 224)
 
-        # Training mode should output probabilities (for BCE + Dice loss)
+        # Training mode should output logits (for BCE loss computation)
         model.train()
         train_output = model(x)
-        assert 'change_prob' in train_output, 'Training should output probabilities'
+        assert 'change_prob' in train_output, 'Training should output logits'
 
-        # Training probabilities should be in [0, 1] range
-        train_probs = train_output['change_prob']
-        assert torch.all(train_probs >= 0) and torch.all(train_probs <= 1), (
-            'Training probabilities should be in [0, 1] range'
-        )
+        # Training outputs are logits (can be any real number)
+        train_logits = train_output['change_prob']
+        assert torch.is_tensor(train_logits), 'Training output should be tensor'
+        assert train_logits.dtype == torch.float32, 'Training output should be float32'
 
         # Inference mode should output probabilities + binary map
         model.eval()
@@ -297,8 +296,8 @@ class TestTorchGeoIntegration:
         batch = {
             'image': torch.randn(2, 2, 3, 224, 224),  # [B, T, C, H, W]
             'mask': torch.randint(
-                0, 2, (2, 224, 224)
-            ).float(),  # Binary mask (remove channel dim)
+                0, 2, (2, 1, 224, 224)
+            ).float(),  # Binary mask with channel dimension [B, 1, H, W]
         }
 
         # Should not raise an error

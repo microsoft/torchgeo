@@ -355,8 +355,7 @@ class ChangeViT(Module):
             enhanced_spatial
         )  # Returns tuple of [B, 1, H, W] tensors
 
-        # Squeeze channel dimension to match LEVIR-CD target format: [B, 1, H, W] -> [B, H, W]
-        change_logits = c12.squeeze(1)  # Match target format [B, H, W]
+        change_logits = c12  # Match target format [B, 1, H, W]
 
         # Handle training vs inference mode
         if self.training:

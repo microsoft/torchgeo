@@ -1,21 +1,17 @@
 #Todo: Can't start training in CLI with "torchgeo fit" because of parser key error "model"??
 model:
-  class_path: torchgeo.trainers.ChangeDetectionTask
+  class_path: ChangeDetectionTask
   init_args:
-    model: 'changevit_small'
-    weights: null # Will use DeiT pre-trained weights internally
+    model: 'changevit_tiny'
     task: 'binary'
     loss: 'bce'
     lr: 2e-4
-    patience: 15
-    freeze_backbone: false
-    freeze_decoder: false
-
+    num_classes: 2
 data:
   class_path: LEVIRCDDataModule
   init_args:
     batch_size: 16
-    patch_size: 256 # Standard patch size for LEVIR-CD
+    patch_size: 224
     num_workers: 4
   dict_kwargs:
     root: 'tests/data/levircd/levircd'
