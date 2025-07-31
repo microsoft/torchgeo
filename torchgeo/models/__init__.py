@@ -6,6 +6,7 @@
 from .api import get_model, get_model_weights, get_weight, list_models
 from .aurora import Aurora_Weights, aurora_swin_unet
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
+from .changevit import changevit_small, changevit_tiny
 from .convlstm import ConvLSTM
 from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
@@ -93,6 +94,8 @@ __all__ = (
     'ViTSmall16_Weights',
     'YOLO_Weights',
     'aurora_swin_unet',
+    'changevit_small',
+    'changevit_tiny',
     'copernicusfm_base',
     'croma_base',
     'croma_large',

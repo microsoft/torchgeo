@@ -17,6 +17,7 @@ import torch.nn as nn
 from torchvision.models._api import WeightsEnum
 
 from .aurora import Aurora_Weights, aurora_swin_unet
+from .changevit import ChangeViT_Weights, changevit_small, changevit_tiny
 from .copernicusfm import CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
 from .dofa import (
@@ -81,6 +82,8 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'vit_large_patch16_224': vit_large_patch16_224,
     'vit_small_patch14_dinov2': vit_small_patch14_dinov2,
     'yolo': yolo,
+    'changevit_tiny': changevit_tiny,
+    'changevit_small': changevit_small,
 }
 
 _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
@@ -106,6 +109,8 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     vit_large_patch16_224: ViTLarge16_Weights,
     vit_small_patch14_dinov2: ViTSmall14_DINOv2_Weights,
     yolo: YOLO_Weights,
+    changevit_tiny: ChangeViT_Weights,
+    changevit_small: ChangeViT_Weights,
     'aurora_swin_unet': Aurora_Weights,
     'copernicusfm_base': CopernicusFM_Base_Weights,
     'croma_base': CROMABase_Weights,
@@ -128,6 +133,8 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     'vit_large_patch16_224': ViTLarge16_Weights,
     'vit_small_patch14_dinov2': ViTSmall14_DINOv2_Weights,
     'yolo': YOLO_Weights,
+    'changevit_tiny': ChangeViT_Weights,
+    'changevit_small': ChangeViT_Weights,
 }
 
 

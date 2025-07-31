@@ -1,0 +1,47 @@
+#Todo: Can't start training in CLI with "torchgeo fit" because of parser key error "model"??
+model:
+  class_path: ChangeDetectionTask
+  init_args:
+    model: 'changevit_tiny'
+    task: 'binary'
+    loss: 'bce'
+    lr: 2e-4
+    num_classes: 2
+data:
+  class_path: LEVIRCDDataModule
+  init_args:
+    batch_size: 16
+    patch_size: 224
+    num_workers: 4
+  dict_kwargs:
+    root: 'tests/data/levircd/levircd'
+
+trainer:
+  max_steps: 80000 # 80K iterations as specified in paper
+  accelerator: auto
+  devices: 1 # Single GPU as in paper
+  val_check_interval: 2000 # Check validation every 2000 steps
+  log_every_n_steps: 100
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+      init_args:
+        monitor: 'val_F1Score'
+        mode: 'max'
+        save_top_k: 3
+        filename: 'changevit_s_levircd_{step}_{val_F1Score:.4f}'
+    - class_path: lightning.pytorch.callbacks.LearningRateMonitor
+      init_args:
+        logging_interval: 'step'
+
+optimizer:
+  class_path: torch.optim.Adam
+  init_args:
+    lr: 2e-4
+    betas: [0.9, 0.99]
+    weight_decay: 1e-4
+
+lr_scheduler:
+  class_path: torch.optim.lr_scheduler.PolynomialLR
+  init_args:
+    total_iters: 80000
+    power: 0.9
