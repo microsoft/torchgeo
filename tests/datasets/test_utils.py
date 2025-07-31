@@ -545,14 +545,36 @@ def test_which() -> None:
 
 
 def create_test_raster_with_nodata(
-    width: int = 100, height: int = 100, nodata_value: int | float = 0
+    width: int = 100,
+    height: int = 100,
+    nodata_value: float = 0,
+    crs: str = 'EPSG:32633',
+    num_bands: int = 1,
 ) -> MemoryFile:
-    """Creates a synthetic raster where the upper-left triangle is no-data."""
-    data = np.ones((height, width), dtype=np.uint8)
+    """
+    Creates a synthetic raster where the upper-left triangle is no-data.
+
+    Each band will have the same data pattern.
+
+    Args:
+        width: Width of the raster in pixels.
+        height: Height of the raster in pixels.
+        nodata_value: Value to be treated as no-data.
+        crs: Coordinate reference system string.
+        num_bands: Number of bands in the raster.
+
+    Returns:
+        A rasterio in-memory file (MemoryFile) containing the synthetic raster.
+    """
+    # Create a single-band 2D array
+    base_data = np.ones((height, width), dtype=np.uint8)
     for row in range(height):
         for col in range(width):
             if row + col < width:  # Upper-left triangle is no-data
-                data[row, col] = nodata_value
+                base_data[row, col] = nodata_value
+
+    # Stack it into a 3D array (bands, height, width)
+    data = np.stack([base_data] * num_bands, axis=0)
 
     transform = from_origin(0, height, 1, 1)  # (west, north, xres, yres)
 
@@ -561,19 +583,20 @@ def create_test_raster_with_nodata(
         driver='GTiff',
         height=height,
         width=width,
-        count=1,
+        count=num_bands,
         dtype=data.dtype,
         transform=transform,
-        crs='EPSG:32633',  # Example CRS, no longer used in the function
+        crs=crs,
         nodata=nodata_value,
     ) as dataset:
-        dataset.write(data, 1)
+        dataset.write(data)
 
     return memfile
 
 
-def test_calc_valid_data_footprint_half_area() -> None:
-    with create_test_raster_with_nodata() as memfile:
+@pytest.mark.parametrize('num_bands', [1, 2, 3])
+def test_calc_valid_data_footprint_half_area(num_bands: int) -> None:
+    with create_test_raster_with_nodata(num_bands=num_bands) as memfile:
         with memfile.open() as dataset:
             masks = dataset.dataset_mask()
             transform = dataset.transform
