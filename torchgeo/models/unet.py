@@ -73,7 +73,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
                 '#DE1F07',
             ),
             'publication': 'https://arxiv.org/abs/2501.10891',
-            'repo': 'https://github.com/cliffbb/DFC2025-OEM-SAR-Baseline/tree/master',
+            'repo': 'https://github.com/cliffbb/DFC2025-OEM-SAR-Baseline',
             'bands': ['B1'],
             'model_kwargs': dict(decoder_attention_type='scse'),
             'license': 'CC-BY-4.0',
