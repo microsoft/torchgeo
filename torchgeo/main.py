@@ -4,14 +4,35 @@
 """Command-line interface to TorchGeo."""
 
 import os
+from typing import Any
 
-from lightning.pytorch.cli import ArgsType, LightningCLI
+from lightning.pytorch.cli import ArgsType, LightningArgumentParser, LightningCLI
+
+import torchgeo
 
 # Allows classes to be referenced using only the class name
 import torchgeo.datamodules
-import torchgeo.trainers  # noqa: F401
+import torchgeo.trainers
 from torchgeo.datamodules import BaseDataModule
 from torchgeo.trainers import BaseTask
+
+
+class TorchGeoLightningCLI(LightningCLI):
+    """Custom extensions to LightningCLI used by TorchGeo.
+
+    .. versionadded:: 0.8
+    """
+
+    def init_parser(self, **kwargs: Any) -> LightningArgumentParser:
+        """Initialize the argument parser."""
+        parser = super().init_parser(**kwargs)
+        parser.add_argument(
+            '-v',
+            '--version',
+            action='version',
+            version=f'%(prog)s {torchgeo.__version__}',
+        )
+        return parser
 
 
 def main(args: ArgsType = None) -> None:
@@ -26,7 +47,7 @@ def main(args: ArgsType = None) -> None:
     }
     os.environ.update(rasterio_best_practices)
 
-    LightningCLI(
+    TorchGeoLightningCLI(
         model_class=BaseTask,
         datamodule_class=BaseDataModule,
         seed_everything_default=0,
