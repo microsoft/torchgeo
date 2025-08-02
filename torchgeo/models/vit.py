@@ -887,7 +887,7 @@ def vit_base_patch14_dinov2(
 def vit_base_patch32_clip(
     weights: ViTBase32_CLIP_Weights | None = None, *args: Any, **kwargs: Any
 ) -> nn.Module:
-    """Vision Transform (ViT) base patch size 32 model for CLIP.
+    """Vision Transformer (ViT) base patch size 32 model for CLIP.
 
     If you use this model in your research, please cite the following paper:
 
