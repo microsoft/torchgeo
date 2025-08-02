@@ -199,3 +199,6 @@ class RCF(Module):
             assert len(x1a.shape) == 2
             output = torch.cat((x1a, x1b), dim=1)
             return output
+
+
+MOSAIKS = RCF
