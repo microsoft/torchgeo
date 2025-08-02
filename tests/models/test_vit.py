@@ -15,13 +15,17 @@ from torchvision.models._api import WeightsEnum
 from torchgeo.models import (
     ViTBase14_DINOv2_Weights,
     ViTBase16_Weights,
+    ViTBase32_CLIP_Weights,
     ViTHuge14_Weights,
+    ViTLarge14_CLIP_Weights,
     ViTLarge16_Weights,
     ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
     vit_base_patch14_dinov2,
     vit_base_patch16_224,
+    vit_base_patch32_clip,
     vit_huge_patch14_224,
+    vit_large_patch14_clip,
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
@@ -330,3 +334,109 @@ class TestViTBase14_DINOv2:
     @pytest.mark.slow
     def test_vit_download(self, weights: WeightsEnum) -> None:
         vit_base_patch14_dinov2(weights=weights)
+
+
+class TestViTBase32_CLIP:
+    @pytest.fixture(params=[*ViTBase32_CLIP_Weights])
+    def weights(self, request: SubRequest) -> WeightsEnum:
+        return request.param
+
+    @pytest.fixture
+    def mocked_weights(
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        features_only: bool,
+        load_state_dict_from_url: None,
+    ) -> WeightsEnum:
+        weights = ViTBase32_CLIP_Weights.SKYCLIP_RGB_TOP50PCT
+        path = tmp_path / f'{weights}.pth'
+        model = timm.create_model(
+            weights.meta['model'],
+            in_chans=weights.meta['in_chans'],
+            img_size=weights.meta['img_size'],
+            features_only=features_only,
+        )
+        model = cast(nn.Module, model.model) if features_only else model
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights.value, 'url', str(path))
+        return weights
+
+    def test_vit(self) -> None:
+        vit_base_patch32_clip()
+
+    def test_vit_weights(
+        self, mocked_weights: WeightsEnum, features_only: bool
+    ) -> None:
+        vit_base_patch32_clip(weights=mocked_weights, features_only=not features_only)
+
+    def test_bands(self, weights: WeightsEnum) -> None:
+        if 'bands' in weights.meta:
+            assert len(weights.meta['bands']) == weights.meta['in_chans']
+
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta['in_chans']
+        img_size = weights.meta['img_size']
+        if isinstance(img_size, int):
+            h = w = img_size
+        else:
+            h, w = img_size
+        sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
+        weights.transforms(sample)
+
+    @pytest.mark.slow
+    def test_vit_download(self, weights: WeightsEnum) -> None:
+        vit_base_patch32_clip(weights=weights)
+
+
+class TestViTLarge14_CLIP:
+    @pytest.fixture(params=[*ViTLarge14_CLIP_Weights])
+    def weights(self, request: SubRequest) -> WeightsEnum:
+        return request.param
+
+    @pytest.fixture
+    def mocked_weights(
+        self,
+        tmp_path: Path,
+        monkeypatch: MonkeyPatch,
+        features_only: bool,
+        load_state_dict_from_url: None,
+    ) -> WeightsEnum:
+        weights = ViTLarge14_CLIP_Weights.SKYCLIP_RGB_TOP50PCT
+        path = tmp_path / f'{weights}.pth'
+        model = timm.create_model(
+            weights.meta['model'],
+            in_chans=weights.meta['in_chans'],
+            img_size=weights.meta['img_size'],
+            features_only=features_only,
+        )
+        model = cast(nn.Module, model.model) if features_only else model
+        torch.save(model.state_dict(), path)
+        monkeypatch.setattr(weights.value, 'url', str(path))
+        return weights
+
+    def test_vit(self) -> None:
+        vit_large_patch14_clip()
+
+    def test_vit_weights(
+        self, mocked_weights: WeightsEnum, features_only: bool
+    ) -> None:
+        vit_large_patch14_clip(weights=mocked_weights, features_only=not features_only)
+
+    def test_bands(self, weights: WeightsEnum) -> None:
+        if 'bands' in weights.meta:
+            assert len(weights.meta['bands']) == weights.meta['in_chans']
+
+    def test_transforms(self, weights: WeightsEnum) -> None:
+        c = weights.meta['in_chans']
+        img_size = weights.meta['img_size']
+        if isinstance(img_size, int):
+            h = w = img_size
+        else:
+            h, w = img_size
+        sample = {'image': torch.arange(c * h * w, dtype=torch.float).view(c, h, w)}
+        weights.transforms(sample)
+
+    @pytest.mark.slow
+    def test_vit_download(self, weights: WeightsEnum) -> None:
+        vit_large_patch14_clip(weights=weights)

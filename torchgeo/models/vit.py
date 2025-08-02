@@ -40,10 +40,17 @@ _ssl4eo_l_transforms = K.AugmentationSequential(
     data_keys=None,
 )
 
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
+# Transforms and train configs were not available in https://github.com/wangzhecheng/SkyScript
+# they are extracted from the models and stored in the Huggingface repository README
+_skyclip_mean = torch.tensor([0.48145466, 0.4578275, 0.40821073])
+_skyclip_std = torch.tensor([0.26862954, 0.26130258, 0.27577711])
+_skyclip_transforms = K.AugmentationSequential(
+    K.Resize((224, 224), resample='bicubic', antialias=True, align_corners=False),
+    K.CenterCrop((224, 224)),
+    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
+    K.Normalize(mean=_skyclip_mean, std=_skyclip_std),
+    data_keys=None,
+)
 
 KEYS = {'norm.weight', 'norm.bias', 'head.weight', 'head.bias'}
 
@@ -560,6 +567,86 @@ class ViTBase14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
+class ViTBase32_CLIP_Weights(WeightsEnum):  # type: ignore[misc]
+    """Vision Transformer Base Patch Size 32 (CLIP) weights.
+
+    For `timm <https://github.com/huggingface/pytorch-image-models>`_
+    *vit_base_patch32_clip_224* implementation.
+
+    .. versionadded:: 0.8
+    """
+
+    SKYCLIP_RGB_TOP50PCT = Weights(
+        url='https://hf.co/torchgeo/vit_base_patch32_224_skyclip_50pct/resolve/7531f96f2f9525a2bb6239c0113488795eba383a/vit_base_patch32_224_skyclip_50pct-5e3a3c68.pth',
+        transforms=_skyclip_transforms,
+        meta={
+            'dataset': 'SkyScript',
+            'in_chans': 3,
+            'img_size': 224,
+            'num_classes': 512,
+            'model': 'vit_base_patch32_clip_224',
+            'publication': 'https://arxiv.org/abs/2312.12856',
+            'repo': 'https://github.com/wangzhecheng/SkyScript',
+            'bands': ('R', 'G', 'B'),
+        },
+    )
+
+
+class ViTLarge14_CLIP_Weights(WeightsEnum):  # type: ignore[misc]
+    """Vision Transformer Large Patch Size 14 (CLIP) weights.
+
+    For `timm <https://github.com/huggingface/pytorch-image-models>`_
+    *vit_large_patch14_clip_224* implementation.
+
+    .. versionadded:: 0.8
+    """
+
+    LAIONRS_CLIP_RGB = Weights(
+        url='https://hf.co/torchgeo/vit_large_patch14_224_clip_laionrs/resolve/246ac6fc067f083e43dbd8ea77aa15aa27dc12f9/vit_large_patch14_224_clip_laionrs-b6153740.pth',
+        transforms=_skyclip_transforms,
+        meta={
+            'dataset': 'LAION-RS',
+            'in_chans': 3,
+            'img_size': 224,
+            'num_classes': 768,
+            'model': 'vit_large_patch14_clip_224',
+            'publication': 'https://arxiv.org/abs/2312.12856',
+            'repo': 'https://github.com/wangzhecheng/SkyScript',
+            'bands': ('R', 'G', 'B'),
+        },
+    )
+
+    SKYCLIP_RGB_TOP30PCT = Weights(
+        url='https://hf.co/torchgeo/vit_large_patch14_224_skyclip_30pct/resolve/18f7cdd4899ceaaca74d0403ebc7ca0a10833cbf/vit_large_patch14_224_skyclip_30pct-0a88c458.pth',
+        transforms=_skyclip_transforms,
+        meta={
+            'dataset': 'SkyScript',
+            'in_chans': 3,
+            'img_size': 224,
+            'num_classes': 768,
+            'model': 'vit_large_patch14_clip_224',
+            'publication': 'https://arxiv.org/abs/2312.12856',
+            'repo': 'https://github.com/wangzhecheng/SkyScript',
+            'bands': ('R', 'G', 'B'),
+        },
+    )
+
+    SKYCLIP_RGB_TOP50PCT = Weights(
+        url='https://hf.co/torchgeo/vit_large_patch14_224_skyclip_50pct/resolve/6533fae7603c827db90f146167969046b9c196e9/vit_large_patch14_224_skyclip_50pct-fc4be2dd.pth',
+        transforms=_skyclip_transforms,
+        meta={
+            'dataset': 'SkyScript',
+            'in_chans': 3,
+            'img_size': 224,
+            'num_classes': 768,
+            'model': 'vit_large_patch14_clip_224',
+            'publication': 'https://arxiv.org/abs/2312.12856',
+            'repo': 'https://github.com/wangzhecheng/SkyScript',
+            'bands': ('R', 'G', 'B'),
+        },
+    )
+
+
 def vit_small_patch16_224(
     weights: ViTSmall16_Weights | None = None, *args: Any, **kwargs: Any
 ) -> nn.Module:
@@ -781,6 +868,88 @@ def vit_base_patch14_dinov2(
         kwargs['img_size'] = weights.meta['img_size']
 
     model = timm.create_model('vit_base_patch14_dinov2', *args, **kwargs)
+
+    if kwargs.get('features_only', False):
+        target_model = cast(nn.Module, model.model)
+    else:
+        target_model = model
+
+    if weights:
+        missing_keys, unexpected_keys = target_model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        assert set(missing_keys) <= KEYS
+        assert set(unexpected_keys) <= KEYS
+
+    return model
+
+
+def vit_base_patch32_clip(
+    weights: ViTBase32_CLIP_Weights | None = None, *args: Any, **kwargs: Any
+) -> nn.Module:
+    """Vision Transform (ViT) base patch size 32 model for CLIP.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2103.00020
+
+    .. versionadded:: 0.8
+
+    Args:
+        weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keyword arguments to pass to :func:`timm.create_model`.
+
+    Returns:
+        A CLIP ViT base 32 model.
+    """
+    if weights:
+        kwargs['in_chans'] = weights.meta['in_chans']
+        kwargs['img_size'] = weights.meta['img_size']
+        kwargs['num_classes'] = weights.meta['num_classes']
+
+    model = timm.create_model('vit_base_patch32_clip_224', *args, **kwargs)
+
+    if kwargs.get('features_only', False):
+        target_model = cast(nn.Module, model.model)
+    else:
+        target_model = model
+
+    if weights:
+        missing_keys, unexpected_keys = target_model.load_state_dict(
+            weights.get_state_dict(progress=True), strict=False
+        )
+        assert set(missing_keys) <= KEYS
+        assert set(unexpected_keys) <= KEYS
+
+    return model
+
+
+def vit_large_patch14_clip(
+    weights: ViTLarge14_CLIP_Weights | None = None, *args: Any, **kwargs: Any
+) -> nn.Module:
+    """Vision Transform (ViT) large patch size 14 model for CLIP.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2103.00020
+
+    .. versionadded:: 0.8
+
+    Args:
+        weights: Pre-trained model weights to use.
+        *args: Additional arguments to pass to :func:`timm.create_model`.
+        **kwargs: Additional keyword arguments to pass to :func:`timm.create_model`.
+
+    Returns:
+        A CLIP ViT large 14 model.
+    """
+    if weights:
+        kwargs['in_chans'] = weights.meta['in_chans']
+        kwargs['img_size'] = weights.meta['img_size']
+        kwargs['num_classes'] = weights.meta['num_classes']
+
+    model = timm.create_model('vit_large_patch14_clip_224', *args, **kwargs)
 
     if kwargs.get('features_only', False):
         target_model = cast(nn.Module, model.model)

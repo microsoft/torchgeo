@@ -116,12 +116,16 @@ Vision Transformer
 .. autofunction:: vit_huge_patch14_224
 .. autofunction:: vit_small_patch14_dinov2
 .. autofunction:: vit_base_patch14_dinov2
+.. autofunction:: vit_base_patch32_clip
+.. autofunction:: vit_large_patch14_clip
 .. autoclass:: ViTSmall16_Weights
 .. autoclass:: ViTBase16_Weights
 .. autoclass:: ViTLarge16_Weights
 .. autoclass:: ViTHuge14_Weights
 .. autoclass:: ViTSmall14_DINOv2_Weights
 .. autoclass:: ViTBase14_DINOv2_Weights
+.. autoclass:: ViTBase32_CLIP_Weights
+.. autoclass:: ViTLarge14_CLIP_Weights
 
 YOLO
 ^^^^
