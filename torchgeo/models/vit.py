@@ -928,7 +928,7 @@ def vit_base_patch32_clip(
 def vit_large_patch14_clip(
     weights: ViTLarge14_CLIP_Weights | None = None, *args: Any, **kwargs: Any
 ) -> nn.Module:
-    """Vision Transform (ViT) large patch size 14 model for CLIP.
+    """Vision Transformer (ViT) large patch size 14 model for CLIP.
 
     If you use this model in your research, please cite the following paper:
 
