@@ -45,6 +45,10 @@ class TestUnet:
     ) -> None:
         unet(weights=mocked_weights, classes=20)
 
+    def test_unet_extra_model_kwargs(self, mocked_weights: WeightsEnum) -> None:
+        mocked_weights.meta['model_kwargs'] = {'encoder_weights': None}
+        unet(weights=mocked_weights)
+
     def test_bands(self, weights: WeightsEnum) -> None:
         if 'bands' in weights.meta:
             assert len(weights.meta['bands']) == weights.meta['in_chans']

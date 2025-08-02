@@ -39,6 +39,46 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.8
     """
 
+    UMBRA_GEC_OPENEARTHMAP_SAR = Weights(
+        url='https://hf.co/torchgeo/umbra_gec_unet_effb4_openearthmap_sar/resolve/738e0216fa5d41d14f535cc28430052683704142/umbra_gec_unet_effb4_openearthmap_sar-f21df2ee.pth',
+        transforms=K.AugmentationSequential(
+            K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)), data_keys=None
+        ),
+        meta={
+            'dataset': 'OpenEarthMap-SAR',
+            'in_chans': 1,
+            'num_classes': 9,
+            'model': 'U-Net',
+            'encoder': 'efficientnet-b4',
+            'classes': (
+                'background',
+                'bareland',
+                'rangeland',
+                'developed space',
+                'road',
+                'tree',
+                'water',
+                'agriculture land',
+                'building',
+            ),
+            'colormap': (
+                '#000000',
+                '#800000',
+                '#00FF24',
+                '#949494',
+                '#FFFFFF',
+                '#226126',
+                '#0045FF',
+                '#4BB549',
+                '#DE1F07',
+            ),
+            'publication': 'https://arxiv.org/abs/2501.10891',
+            'repo': 'https://github.com/cliffbb/DFC2025-OEM-SAR-Baseline',
+            'bands': ['B1'],
+            'model_kwargs': dict(decoder_attention_type='scse'),
+            'license': 'CC-BY-4.0',
+        },
+    )
     SENTINEL2_2CLASS_FTW = Weights(
         url='https://huggingface.co/torchgeo/ftw/resolve/d2fdab6ea9d9cd38b491292cc9a5c8642533cef5/commercial/2-class/sentinel2_unet_effb3-9c04b7c6.pth',
         transforms=_ftw_transforms,
@@ -168,6 +208,8 @@ def unet(
         kwargs['in_channels'] = weights.meta['in_chans']
         kwargs['encoder_name'] = weights.meta['encoder']
         kwargs['classes'] = weights.meta['num_classes'] if classes is None else classes
+        if 'model_kwargs' in weights.meta:
+            kwargs.update(weights.meta['model_kwargs'])
     else:
         kwargs['classes'] = 1 if classes is None else classes
 

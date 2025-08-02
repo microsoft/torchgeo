@@ -175,14 +175,14 @@ NAIP
    :file: weights/naip.csv
 
 
-Sentinel-1
-----------
+Synthetic Aperture Radar (SAR)
+------------------------------
 
 .. csv-table::
    :widths: 45 10 10 10 10
    :header-rows: 1
    :align: center
-   :file: weights/sentinel1.csv
+   :file: weights/sar.csv
 
 
 Sentinel-2
