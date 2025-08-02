@@ -391,62 +391,6 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.4
     """
 
-    SENTINEL2_CLOSP = Weights(
-        url='https://hf.co/DarthReca/CLOSP-Visual/resolve/main/closp-rn_s2_encoder.pth',
-        transforms=K.AugmentationSequential(
-            K.Normalize(mean=0, std=10000), data_keys=None
-        ),
-        meta={
-            'dataset': 'CrisisLandMark',
-            'in_chans': 13,
-            'model': 'resnet50',
-            'publication': 'https://arxiv.org/abs/2507.10403',
-            'repo': 'https://github.com/DarthReca/closp',
-            'bands': _sentinel2_toa_bands,
-        },
-    )
-
-    SENTINEL1_CLOSP = Weights(
-        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/main/closp-rn_s1_encoder.pth',
-        transforms=nn.Identity(),
-        meta={
-            'dataset': 'CrisisLandMark',
-            'in_chans': 2,
-            'model': 'resnet50',
-            'publication': 'https://arxiv.org/abs/2507.10403',
-            'repo': 'https://github.com/DarthReca/closp',
-            'bands': _sentinel1_grd_bands,
-        },
-    )
-
-    SENTINEL2_GEOCLOSP = Weights(
-        url='https://hf.co/DarthReca/CLOSP-Visual/resolve/main/geoclosp-rn_s2_encoder.pth',
-        transforms=K.AugmentationSequential(
-            K.Normalize(mean=0, std=10000), data_keys=None
-        ),
-        meta={
-            'dataset': 'CrisisLandMark',
-            'in_chans': 13,
-            'model': 'resnet50',
-            'publication': 'https://arxiv.org/abs/2507.10403',
-            'repo': 'https://github.com/DarthReca/closp',
-            'bands': _sentinel2_toa_bands,
-        },
-    )
-
-    SENTINEL1_GEOCLOSP = Weights(
-        url='https://hf.co/DarthReca/CLOSP-Visual/resolve/main/geoclosp-rn_s1_encoder.pth',
-        transforms=nn.Identity(),
-        meta={
-            'dataset': 'CrisisLandMark',
-            'in_chans': 2,
-            'model': 'resnet50',
-            'publication': 'https://arxiv.org/abs/2507.10403',
-            'repo': 'https://github.com/DarthReca/closp',
-            'bands': _sentinel1_grd_bands,
-        },
-    )
-
     FMOW_RGB_GASSL = Weights(
         url='https://hf.co/torchgeo/resnet50_fmow_rgb_gassl/resolve/fe8a91026cf9104f1e884316b8e8772d7af9052c/resnet50_fmow_rgb_gassl-da43d987.pth',
         transforms=_gassl_transforms,
@@ -600,6 +544,19 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    SENTINEL1_GRD_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-rn_s1_encoder-cacc90bc.pth',
+        transforms=nn.Identity(),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 2,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
     # ALL is deprecated, use GRD instead
     SENTINEL1_ALL_DECUR = SENTINEL1_GRD_DECUR = Weights(
         url='https://huggingface.co/torchgeo/decur/resolve/9328eeb90c686a88b30f8526ed757b4bc0f12027/rn50_ssl4eo-s12_sar_decur_ep100-f0e69ba2.pth',
@@ -611,6 +568,19 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2309.05300',
             'repo': 'https://github.com/zhu-xlab/DeCUR',
             'ssl_method': 'decur',
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
+    SENTINEL1_GRD_GEOCLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/geoclosp-rn_s1_encoder-e63ae1af.pth',
+        transforms=nn.Identity(),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 2,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
             'bands': _sentinel1_grd_bands,
         },
     )
@@ -644,6 +614,21 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
+    SENTINEL2_ALL_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-rn_s2_encoder-183922a5.pth',
+        transforms=K.AugmentationSequential(
+            K.Normalize(mean=0, std=10000), data_keys=None
+        ),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 13,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
     SENTINEL2_ALL_DECUR = Weights(
         url='https://huggingface.co/torchgeo/decur/resolve/eba7ae5945d482a4319be046d34b552db5dd9950/rn50_ssl4eo-s12_ms_decur_ep100-fc6b09ff.pth',
         transforms=_ssl4eo_s12_transforms_s2_10k,
@@ -668,6 +653,21 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'dino',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL2_ALL_GEOCLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/geoclosp-rn_s2_encoder-94c37f4a.pth',
+        transforms=K.AugmentationSequential(
+            K.Normalize(mean=0, std=10000), data_keys=None
+        ),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 13,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
             'bands': _sentinel2_toa_bands,
         },
     )
