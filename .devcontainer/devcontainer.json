@@ -6,11 +6,14 @@
 
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
-    "ghcr.io/devcontainers/features/git:1": { "version": "os-provided" }
+    "ghcr.io/devcontainers/features/git:1": { "version": "os-provided" },
+    // Add the uv dev container feature to automatically install uv
+    "ghcr.io/astral-sh/features/uv:1": {}
   },
 
   // "postCreateCommand": "",
-  "postStartCommand": "pip install -e .[all]",
+  // Replace pip install with uv pip install
+  "postStartCommand": "uv pip install -e .[all]",
 
   // Enable GPU support
   "hostRequirements": {

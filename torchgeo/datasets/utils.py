@@ -697,13 +697,22 @@ def lazy_import(name: str) -> Any:
         msg = f"""\
 {name} is not installed and is required to use this feature. Either run:
 
+$ uv pip install {name}
+
+or:
+
 $ pip install {name}
 
 to install just this dependency, or:
 
+$ uv pip install torchgeo[datasets,models]
+
+or:
+
 $ pip install torchgeo[datasets,models]
 
-to install all optional dependencies."""
+to install all optional dependencies.
+"""
         raise DependencyNotFoundError(msg) from None
 
 
