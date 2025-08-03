@@ -544,19 +544,6 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    SENTINEL1_GRD_CLOSP = Weights(
-        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-rn_s1_encoder-cacc90bc.pth',
-        transforms=nn.Identity(),
-        meta={
-            'dataset': 'CrisisLandMark',
-            'in_chans': 2,
-            'model': 'resnet50',
-            'publication': 'https://arxiv.org/abs/2507.10403',
-            'repo': 'https://github.com/DarthReca/closp',
-            'bands': _sentinel1_grd_bands,
-        },
-    )
-
     # ALL is deprecated, use GRD instead
     SENTINEL1_ALL_DECUR = SENTINEL1_GRD_DECUR = Weights(
         url='https://huggingface.co/torchgeo/decur/resolve/9328eeb90c686a88b30f8526ed757b4bc0f12027/rn50_ssl4eo-s12_sar_decur_ep100-f0e69ba2.pth',
@@ -572,19 +559,6 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    SENTINEL1_GRD_GEOCLOSP = Weights(
-        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/geoclosp-rn_s1_encoder-e63ae1af.pth',
-        transforms=nn.Identity(),
-        meta={
-            'dataset': 'CrisisLandMark',
-            'in_chans': 2,
-            'model': 'resnet50',
-            'publication': 'https://arxiv.org/abs/2507.10403',
-            'repo': 'https://github.com/DarthReca/closp',
-            'bands': _sentinel1_grd_bands,
-        },
-    )
-
     # ALL is deprecated, use GRD instead
     SENTINEL1_ALL_MOCO = SENTINEL1_GRD_MOCO = Weights(
         url='https://hf.co/torchgeo/resnet50_sentinel1_all_moco/resolve/e79862c667853c10a709bdd77ea8ffbad0e0f1cf/resnet50_sentinel1_all_moco-906e4356.pth',
@@ -596,6 +570,32 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'moco',
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
+    SENTINEL1_GRD_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-rn_s1_encoder-cacc90bc.pth',
+        transforms=nn.Identity(),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 2,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
+    SENTINEL1_GRD_GEOCLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/geoclosp-rn_s1_encoder-e63ae1af.pth',
+        transforms=nn.Identity(),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 2,
+            'model': 'resnet50',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
             'bands': _sentinel1_grd_bands,
         },
     )

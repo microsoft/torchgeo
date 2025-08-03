@@ -197,47 +197,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    SENTINEL1_GRD_CLOSP = Weights(
-        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vs_s1_encoder-180f1e6e.pth',
-        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
-        meta={
-            'dataset': 'CrisisLandMark',
-            'in_chans': 2,
-            'model': 'vit_small_patch16_224',
-            'publication': 'https://arxiv.org/abs/2507.10403',
-            'repo': 'https://github.com/DarthReca/closp',
-            'bands': _sentinel1_grd_bands,
-        },
-    )
-
-    SENTINEL1_GRD_FGMAE = Weights(
-        url='https://huggingface.co/wangyi111/FGMAE/resolve/24dd3077d7a99ecd454eaec7adb83d045d7fa122/B2_vits16_fgmae_ep99_enc.pth',
-        transforms=_ssl4eo_s12_transforms_s1,
-        meta={
-            'dataset': 'SSL4EO-S12',
-            'in_chans': 2,
-            'model': 'vit_small_patch16_224',
-            'publication': 'https://arxiv.org/abs/2310.18653',
-            'repo': 'https://github.com/zhu-xlab/FGMAE',
-            'ssl_method': 'fg-mae',
-            'bands': _sentinel1_grd_bands,
-        },
-    )
-
-    SENTINEL1_GRD_MAE = Weights(
-        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B2_vits16_mae_ep99_enc.pth',
-        transforms=_ssl4eo_s12_transforms_s1,
-        meta={
-            'dataset': 'SSL4EO-S12',
-            'in_chans': 2,
-            'model': 'vit_small_patch16_224',
-            'publication': 'https://arxiv.org/abs/2211.07044',
-            'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
-            'ssl_method': 'mae',
-            'bands': _sentinel1_grd_bands,
-        },
-    )
-
     SENTINEL2_ALL_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vs_s2_encoder-1a3ee5a5.pth',
         transforms=K.AugmentationSequential(
@@ -267,20 +226,6 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    SENTINEL2_ALL_FGMAE = Weights(
-        url='https://huggingface.co/wangyi111/FGMAE/resolve/24dd3077d7a99ecd454eaec7adb83d045d7fa122/B13_vits16_fgmae_ep99_enc.pth',
-        transforms=_zhu_xlab_transforms,
-        meta={
-            'dataset': 'SSL4EO-S12',
-            'in_chans': 13,
-            'model': 'vit_small_patch16_224',
-            'publication': 'https://arxiv.org/abs/2310.18653',
-            'repo': 'https://github.com/zhu-xlab/FGMAE',
-            'ssl_method': 'fg-mae',
-            'bands': _sentinel2_toa_bands,
-        },
-    )
-
     SENTINEL2_ALL_MOCO = Weights(
         url='https://hf.co/torchgeo/vit_small_patch16_224_sentinel2_all_moco/resolve/1cb683f6c14739634cdfaaceb076529adf898c74/vit_small_patch16_224_sentinel2_all_moco-67c9032d.pth',
         transforms=_zhu_xlab_transforms,
@@ -306,6 +251,61 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'mae',
             'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL2_ALL_FGMAE = Weights(
+        url='https://huggingface.co/wangyi111/FGMAE/resolve/24dd3077d7a99ecd454eaec7adb83d045d7fa122/B13_vits16_fgmae_ep99_enc.pth',
+        transforms=_zhu_xlab_transforms,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 13,
+            'model': 'vit_small_patch16_224',
+            'publication': 'https://arxiv.org/abs/2310.18653',
+            'repo': 'https://github.com/zhu-xlab/FGMAE',
+            'ssl_method': 'fg-mae',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL1_GRD_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vs_s1_encoder-180f1e6e.pth',
+        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 2,
+            'model': 'vit_small_patch16_224',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
+    SENTINEL1_GRD_MAE = Weights(
+        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B2_vits16_mae_ep99_enc.pth',
+        transforms=_ssl4eo_s12_transforms_s1,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 2,
+            'model': 'vit_small_patch16_224',
+            'publication': 'https://arxiv.org/abs/2211.07044',
+            'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
+            'ssl_method': 'mae',
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
+    SENTINEL1_GRD_FGMAE = Weights(
+        url='https://huggingface.co/wangyi111/FGMAE/resolve/24dd3077d7a99ecd454eaec7adb83d045d7fa122/B2_vits16_fgmae_ep99_enc.pth',
+        transforms=_ssl4eo_s12_transforms_s1,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 2,
+            'model': 'vit_small_patch16_224',
+            'publication': 'https://arxiv.org/abs/2310.18653',
+            'repo': 'https://github.com/zhu-xlab/FGMAE',
+            'ssl_method': 'fg-mae',
+            'bands': _sentinel1_grd_bands,
         },
     )
 
@@ -385,47 +385,6 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.7
     """
 
-    SENTINEL1_GRD_CLOSP = Weights(
-        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vl_s1_encoder-6f88d037.pth',
-        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
-        meta={
-            'dataset': 'CrisisLandMark',
-            'in_chans': 2,
-            'model': 'vit_large_patch16_224',
-            'publication': 'https://arxiv.org/abs/2507.10403',
-            'repo': 'https://github.com/DarthReca/closp',
-            'bands': _sentinel1_grd_bands,
-        },
-    )
-
-    SENTINEL1_GRD_FGMAE = Weights(
-        url='https://huggingface.co/wangyi111/FGMAE/resolve/24dd3077d7a99ecd454eaec7adb83d045d7fa122/B2_vitl16_fgmae_ep99_enc.pth',
-        transforms=_ssl4eo_s12_transforms_s1,
-        meta={
-            'dataset': 'SSL4EO-S12',
-            'in_chans': 2,
-            'model': 'vit_large_patch16_224',
-            'publication': 'https://arxiv.org/abs/2310.18653',
-            'repo': 'https://github.com/zhu-xlab/FGMAE',
-            'ssl_method': 'fg-mae',
-            'bands': _sentinel1_grd_bands,
-        },
-    )
-
-    SENTINEL1_GRD_MAE = Weights(
-        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B2_vitl16_mae_ep99_enc.pth',
-        transforms=_ssl4eo_s12_transforms_s1,
-        meta={
-            'dataset': 'SSL4EO-S12',
-            'in_chans': 2,
-            'model': 'vit_large_patch16_224',
-            'publication': 'https://arxiv.org/abs/2211.07044',
-            'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
-            'ssl_method': 'mae',
-            'bands': _sentinel1_grd_bands,
-        },
-    )
-
     SENTINEL2_ALL_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vl_s2_encoder-4a4f026a.pth',
         transforms=K.AugmentationSequential(
@@ -437,6 +396,20 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
             'model': 'vit_large_patch16_224',
             'publication': 'https://arxiv.org/abs/2507.10403',
             'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL2_ALL_MAE = Weights(
+        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B13_vitl16_mae_ep99_enc.pth',
+        transforms=_zhu_xlab_transforms,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 13,
+            'model': 'vit_large_patch16_224',
+            'publication': 'https://arxiv.org/abs/2211.07044',
+            'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
+            'ssl_method': 'mae',
             'bands': _sentinel2_toa_bands,
         },
     )
@@ -455,17 +428,44 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
 
-    SENTINEL2_ALL_MAE = Weights(
-        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B13_vitl16_mae_ep99_enc.pth',
-        transforms=_zhu_xlab_transforms,
+    SENTINEL1_GRD_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vl_s1_encoder-6f88d037.pth',
+        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 2,
+            'model': 'vit_large_patch16_224',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
+    SENTINEL1_GRD_MAE = Weights(
+        url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B2_vitl16_mae_ep99_enc.pth',
+        transforms=_ssl4eo_s12_transforms_s1,
         meta={
             'dataset': 'SSL4EO-S12',
-            'in_chans': 13,
+            'in_chans': 2,
             'model': 'vit_large_patch16_224',
             'publication': 'https://arxiv.org/abs/2211.07044',
             'repo': 'https://github.com/zhu-xlab/SSL4EO-S12',
             'ssl_method': 'mae',
-            'bands': _sentinel2_toa_bands,
+            'bands': _sentinel1_grd_bands,
+        },
+    )
+
+    SENTINEL1_GRD_FGMAE = Weights(
+        url='https://huggingface.co/wangyi111/FGMAE/resolve/24dd3077d7a99ecd454eaec7adb83d045d7fa122/B2_vitl16_fgmae_ep99_enc.pth',
+        transforms=_ssl4eo_s12_transforms_s1,
+        meta={
+            'dataset': 'SSL4EO-S12',
+            'in_chans': 2,
+            'model': 'vit_large_patch16_224',
+            'publication': 'https://arxiv.org/abs/2310.18653',
+            'repo': 'https://github.com/zhu-xlab/FGMAE',
+            'ssl_method': 'fg-mae',
+            'bands': _sentinel1_grd_bands,
         },
     )
 
