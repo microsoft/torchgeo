@@ -5,14 +5,14 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     RGBBandsMissingError,
@@ -42,9 +42,6 @@ class TestSentinel1:
         bands = request.param
         transforms = nn.Identity()
         return Sentinel1(root, bands=bands, transforms=transforms)
-
-    def test_separate_files(self, dataset: Sentinel1) -> None:
-        assert dataset.index.count(dataset.index.bounds) == 1
 
     def test_getitem(self, dataset: Sentinel1) -> None:
         x = dataset[dataset.bounds]
@@ -94,24 +91,20 @@ class TestSentinel1:
             Sentinel1(bands=bands)
 
     def test_invalid_query(self, dataset: Sentinel1) -> None:
-        query = BoundingBox(-1, -1, -1, -1, -1, -1)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
 
 
 class TestSentinel2:
     @pytest.fixture
     def dataset(self) -> Sentinel2:
         root = os.path.join('tests', 'data', 'sentinel2')
-        res = 10
+        res = (10.0, 10.0)
         bands = ['B02', 'B03', 'B04', 'B08']
         transforms = nn.Identity()
         return Sentinel2(root, res=res, bands=bands, transforms=transforms)
-
-    def test_separate_files(self, dataset: Sentinel2) -> None:
-        assert dataset.index.count(dataset.index.bounds) == 4
 
     def test_getitem(self, dataset: Sentinel2) -> None:
         x = dataset[dataset.bounds]
@@ -149,8 +142,10 @@ class TestSentinel2:
             ds.plot(x)
 
     def test_invalid_query(self, dataset: Sentinel2) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
+
+    def test_float_res(self, dataset: Sentinel2) -> None:
+        Sentinel2(dataset.paths, res=10.0, bands=dataset.bands)

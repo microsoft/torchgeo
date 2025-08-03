@@ -5,14 +5,14 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
+from pyproj import CRS
 from pytest import MonkeyPatch
-from rasterio.crs import CRS
 
 from torchgeo.datasets import (
-    BoundingBox,
     CanadianBuildingFootprints,
     DatasetNotFoundError,
     IntersectionDataset,
@@ -37,7 +37,7 @@ class TestCanadianBuildingFootprints:
         root = tmp_path
         transforms = nn.Identity()
         return CanadianBuildingFootprints(
-            root, res=0.1, transforms=transforms, download=True, checksum=True
+            root, res=(0.1, 0.1), transforms=transforms, download=True, checksum=True
         )
 
     def test_getitem(self, dataset: CanadianBuildingFootprints) -> None:
@@ -76,8 +76,7 @@ class TestCanadianBuildingFootprints:
             CanadianBuildingFootprints(tmp_path)
 
     def test_invalid_query(self, dataset: CanadianBuildingFootprints) -> None:
-        query = BoundingBox(2, 2, 2, 2, 2, 2)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[2:2, 2:2, pd.Timestamp.min : pd.Timestamp.min]

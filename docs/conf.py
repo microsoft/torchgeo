@@ -58,6 +58,7 @@ nitpick_ignore = [
     # Undocumented classes
     ('py:class', 'fiona.model.Feature'),
     ('py:class', 'kornia.augmentation._2d.intensity.base.IntensityAugmentationBase2D'),
+    ('py:class', 'kornia.augmentation._3d.geometric.base.GeometricAugmentationBase3D'),
     ('py:class', 'kornia.augmentation.base._AugmentationBase'),
     ('py:class', 'lightning.pytorch.utilities.types.LRSchedulerConfig'),
     ('py:class', 'lightning.pytorch.utilities.types.OptimizerConfig'),
@@ -110,20 +111,23 @@ autodoc_typehints_description_target = 'documented'
 
 # sphinx.ext.intersphinx
 intersphinx_mapping = {
+    'einops': ('https://einops.rocks/', None),
     'kornia': ('https://kornia.readthedocs.io/en/stable/', None),
+    'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
+    'pandas': ('https://pandas.pydata.org/docs/', None),
+    'pyproj': ('https://pyproj4.github.io/pyproj/stable/', None),
     'python': ('https://docs.python.org/3', None),
-    'lightning': ('https://lightning.ai/docs/pytorch/stable/', None),
-    'pyvista': ('https://docs.pyvista.org/version/stable/', None),
     'rasterio': ('https://rasterio.readthedocs.io/en/stable/', None),
-    'rtree': ('https://rtree.readthedocs.io/en/stable/', None),
     'segmentation_models_pytorch': ('https://smp.readthedocs.io/en/stable/', None),
+    'shapely': ('https://shapely.readthedocs.io/en/stable/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
     'timm': ('https://huggingface.co/docs/timm/main/en/', None),
-    'torch': ('https://pytorch.org/docs/stable', None),
+    'torch': ('https://docs.pytorch.org/docs/stable/', None),
     'torchmetrics': ('https://lightning.ai/docs/torchmetrics/stable/', None),
-    'torchvision': ('https://pytorch.org/vision/stable', None),
+    'torchvision': ('https://docs.pytorch.org/vision/stable/', None),
+    'ultralytics': ('https://docs.ultralytics.com/', None),
 }
 
 # nbsphinx

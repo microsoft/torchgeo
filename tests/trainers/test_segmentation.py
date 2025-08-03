@@ -3,7 +3,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import pytest
 import segmentation_models_pytorch as smp
@@ -50,8 +50,6 @@ class TestSemanticSegmentationTask:
         'name',
         [
             'agrifieldnet',
-            'cabuar',
-            'chabud',
             'chesapeake_cvpr_5',
             'chesapeake_cvpr_7',
             'deepglobelandcover',
@@ -65,6 +63,7 @@ class TestSemanticSegmentationTask:
             'landcoverai',
             'landcoverai100',
             'loveda',
+            'mmflood',
             'naipchesapeake',
             'potsdam2d',
             'sen12ms_all',
@@ -75,11 +74,13 @@ class TestSemanticSegmentationTask:
             'sentinel2_eurocrops',
             'sentinel2_nccm',
             'sentinel2_south_america_soybean',
+            'solar_plants_brazil',
             'southafricacroptype',
             'spacenet1',
             'spacenet6',
             'ssl4eo_l_benchmark_cdl',
             'ssl4eo_l_benchmark_nlcd',
+            'substation',
             'vaihingen2d',
         ],
     )
@@ -87,8 +88,6 @@ class TestSemanticSegmentationTask:
         self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
     ) -> None:
         match name:
-            case 'chabud' | 'cabuar':
-                pytest.importorskip('h5py', minversion='3.6')
             case 'ftw':
                 pytest.importorskip('pyarrow')
             case 'landcoverai':
@@ -101,6 +100,9 @@ class TestSemanticSegmentationTask:
 
         monkeypatch.setattr(smp, 'Unet', create_model)
         monkeypatch.setattr(smp, 'DeepLabV3Plus', create_model)
+        monkeypatch.setattr(smp, 'UPerNet', create_model)
+        monkeypatch.setattr(smp, 'Segformer', create_model)
+        monkeypatch.setattr(smp, 'DPT', create_model)
 
         args = [
             '--config',
@@ -139,7 +141,7 @@ class TestSemanticSegmentationTask:
     ) -> WeightsEnum:
         path = tmp_path / f'{weights}.pth'
         model = timm.create_model(
-            weights.meta['model'], in_chans=weights.meta['in_chans']
+            weights.meta['model'], in_chans=weights.meta['in_chans'], num_classes=10
         )
         torch.save(model.state_dict(), path)
         try:
@@ -156,6 +158,7 @@ class TestSemanticSegmentationTask:
             backbone=mocked_weights.meta['model'],
             weights=mocked_weights,
             in_channels=mocked_weights.meta['in_chans'],
+            num_classes=10,
         )
 
     def test_weight_str(self, mocked_weights: WeightsEnum) -> None:
@@ -163,6 +166,7 @@ class TestSemanticSegmentationTask:
             backbone=mocked_weights.meta['model'],
             weights=str(mocked_weights),
             in_channels=mocked_weights.meta['in_chans'],
+            num_classes=10,
         )
 
     @pytest.mark.slow
@@ -171,6 +175,7 @@ class TestSemanticSegmentationTask:
             backbone=weights.meta['model'],
             weights=weights,
             in_channels=weights.meta['in_chans'],
+            num_classes=10,
         )
 
     @pytest.mark.slow
@@ -179,17 +184,25 @@ class TestSemanticSegmentationTask:
             backbone=weights.meta['model'],
             weights=str(weights),
             in_channels=weights.meta['in_chans'],
+            num_classes=10,
         )
 
-    def test_invalid_model(self) -> None:
-        match = "Model type 'invalid_model' is not valid."
-        with pytest.raises(ValueError, match=match):
-            SemanticSegmentationTask(model='invalid_model')
+    def test_class_weights(self) -> None:
+        # Test with list of class weights
+        class_weights_list = [1.0, 2.0, 0.5]
+        task = SemanticSegmentationTask(class_weights=class_weights_list, num_classes=3)
+        assert task.hparams['class_weights'] == class_weights_list
 
-    def test_invalid_loss(self) -> None:
-        match = "Loss type 'invalid_loss' is not valid."
-        with pytest.raises(ValueError, match=match):
-            SemanticSegmentationTask(loss='invalid_loss')
+        # Test with tensor class weights
+        class_weights_tensor = torch.tensor([1.0, 2.0, 0.5])
+        task = SemanticSegmentationTask(
+            class_weights=class_weights_tensor, num_classes=3
+        )
+        assert torch.equal(task.hparams['class_weights'], class_weights_tensor)
+
+        # Test with None (default)
+        task = SemanticSegmentationTask(num_classes=3)
+        assert task.hparams['class_weights'] is None
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(SEN12MSDataModule, 'plot', plot)
@@ -223,13 +236,19 @@ class TestSemanticSegmentationTask:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
+    @pytest.mark.parametrize(
+        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet']
+    )
     @pytest.mark.parametrize(
         'backbone', ['resnet18', 'mobilenet_v2', 'efficientnet-b0']
     )
-    def test_freeze_backbone(self, model_name: str, backbone: str) -> None:
+    def test_freeze_backbone(
+        self,
+        model_name: Literal['unet', 'deeplabv3+', 'segformer', 'upernet'],
+        backbone: str,
+    ) -> None:
         model = SemanticSegmentationTask(
-            model=model_name, backbone=backbone, freeze_backbone=True
+            model=model_name, backbone=backbone, num_classes=10, freeze_backbone=True
         )
         assert all(
             [param.requires_grad is False for param in model.model.encoder.parameters()]
@@ -242,9 +261,15 @@ class TestSemanticSegmentationTask:
             ]
         )
 
-    @pytest.mark.parametrize('model_name', ['unet', 'deeplabv3+'])
-    def test_freeze_decoder(self, model_name: str) -> None:
-        model = SemanticSegmentationTask(model=model_name, freeze_decoder=True)
+    @pytest.mark.parametrize(
+        'model_name', ['unet', 'deeplabv3+', 'segformer', 'upernet']
+    )
+    def test_freeze_decoder(
+        self, model_name: Literal['unet', 'deeplabv3+', 'segformer', 'upernet']
+    ) -> None:
+        model = SemanticSegmentationTask(
+            model=model_name, backbone='resnet18', num_classes=10, freeze_decoder=True
+        )
         assert all(
             [param.requires_grad is False for param in model.model.decoder.parameters()]
         )
@@ -254,4 +279,9 @@ class TestSemanticSegmentationTask:
                 param.requires_grad
                 for param in model.model.segmentation_head.parameters()
             ]
+        )
+
+    def test_vit_backbone(self) -> None:
+        SemanticSegmentationTask(
+            model='dpt', backbone='tu-vit_base_patch16_224', num_classes=2
         )

@@ -18,8 +18,9 @@ from torchgeo.datamodules import (
     BigEarthNetDataModule,
     EuroSATDataModule,
     MisconfigurationException,
+    QuakeSetDataModule,
 )
-from torchgeo.datasets import BigEarthNet, EuroSAT, RGBBandsMissingError
+from torchgeo.datasets import BigEarthNet, EuroSAT, QuakeSet, RGBBandsMissingError
 from torchgeo.main import main
 from torchgeo.models import ResNet18_Weights
 from torchgeo.trainers import ClassificationTask, MultiLabelClassificationTask
@@ -41,12 +42,17 @@ class ClassificationTestModel(Module):
         return x
 
 
-class PredictClassificationDataModule(EuroSATDataModule):
+class PredictBinaryDataModule(QuakeSetDataModule):
+    def setup(self, stage: str) -> None:
+        self.predict_dataset = QuakeSet(split='test', **self.kwargs)
+
+
+class PredictMulticlassDataModule(EuroSATDataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = EuroSAT(split='test', **self.kwargs)
 
 
-class PredictMultiLabelClassificationDataModule(BigEarthNetDataModule):
+class PredictMultilabelDataModule(BigEarthNetDataModule):
     def setup(self, stage: str) -> None:
         self.predict_dataset = BigEarthNet(split='test', **self.kwargs)
 
@@ -67,16 +73,21 @@ class TestClassificationTask:
     @pytest.mark.parametrize(
         'name',
         [
+            'bigearthnet_all',
+            'bigearthnet_s1',
+            'bigearthnet_s2',
             'eurosat',
             'eurosat100',
             'eurosatspatial',
             'fire_risk',
             'quakeset',
+            'patternnet',
             'resisc45',
             'so2sat_all',
             'so2sat_s1',
             'so2sat_s2',
             'so2sat_rgb',
+            'treesatai',
             'ucmerced',
         ],
     )
@@ -178,10 +189,21 @@ class TestClassificationTask:
             num_classes=10,
         )
 
-    def test_invalid_loss(self) -> None:
-        match = "Loss type 'invalid_loss' is not valid."
-        with pytest.raises(ValueError, match=match):
-            ClassificationTask(model='resnet18', loss='invalid_loss')
+    def test_class_weights(self) -> None:
+        """Test class_weights parameter functionality."""
+        # Test with list of class weights
+        class_weights_list = [1.0, 2.0, 0.5]
+        task = ClassificationTask(class_weights=class_weights_list, num_classes=3)
+        assert task.hparams['class_weights'] == class_weights_list
+
+        # Test with tensor class weights
+        class_weights_tensor = torch.tensor([1.0, 2.0, 0.5])
+        task = ClassificationTask(class_weights=class_weights_tensor, num_classes=3)
+        assert torch.equal(task.hparams['class_weights'], class_weights_tensor)
+
+        # Test with None (default)
+        task = ClassificationTask(num_classes=3)
+        assert task.hparams['class_weights'] is None
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
         monkeypatch.setattr(EuroSATDataModule, 'plot', plot)
@@ -211,11 +233,52 @@ class TestClassificationTask:
         )
         trainer.validate(model=model, datamodule=datamodule)
 
-    def test_predict(self, fast_dev_run: bool) -> None:
-        datamodule = PredictClassificationDataModule(
+    def test_binary_predict(self, fast_dev_run: bool) -> None:
+        pytest.importorskip('h5py', minversion='3.6')
+        datamodule = PredictBinaryDataModule(
+            root='tests/data/quakeset', batch_size=1, num_workers=0
+        )
+        model = ClassificationTask(
+            model='resnet18', in_channels=4, task='binary', loss='bce'
+        )
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.predict(model=model, datamodule=datamodule)
+
+    def test_multiclass_predict(self, fast_dev_run: bool) -> None:
+        datamodule = PredictMulticlassDataModule(
             root='tests/data/eurosat', batch_size=1, num_workers=0
         )
-        model = ClassificationTask(model='resnet18', in_channels=13, num_classes=10)
+        model = ClassificationTask(
+            model='resnet18',
+            in_channels=13,
+            task='multiclass',
+            num_classes=10,
+            loss='ce',
+        )
+        trainer = Trainer(
+            accelerator='cpu',
+            fast_dev_run=fast_dev_run,
+            log_every_n_steps=1,
+            max_epochs=1,
+        )
+        trainer.predict(model=model, datamodule=datamodule)
+
+    def test_multilabel_predict(self, fast_dev_run: bool) -> None:
+        datamodule = PredictMultilabelDataModule(
+            root='tests/data/bigearthnet/v1', batch_size=1, num_workers=0
+        )
+        model = ClassificationTask(
+            model='resnet18',
+            in_channels=14,
+            task='multilabel',
+            num_labels=19,
+            loss='bce',
+        )
         trainer = Trainer(
             accelerator='cpu',
             fast_dev_run=fast_dev_run,
@@ -228,7 +291,9 @@ class TestClassificationTask:
         'model_name', ['resnet18', 'efficientnetv2_s', 'vit_base_patch16_384']
     )
     def test_freeze_backbone(self, model_name: str) -> None:
-        model = ClassificationTask(model=model_name, freeze_backbone=True)
+        model = ClassificationTask(
+            model=model_name, num_classes=10, freeze_backbone=True
+        )
         assert not all([param.requires_grad for param in model.model.parameters()])
         assert all(
             [param.requires_grad for param in model.model.get_classifier().parameters()]
@@ -236,87 +301,20 @@ class TestClassificationTask:
 
 
 class TestMultiLabelClassificationTask:
-    @pytest.mark.parametrize(
-        'name', ['bigearthnet_all', 'bigearthnet_s1', 'bigearthnet_s2', 'treesatai']
-    )
-    def test_trainer(
-        self, monkeypatch: MonkeyPatch, name: str, fast_dev_run: bool
-    ) -> None:
-        config = os.path.join('tests', 'conf', name + '.yaml')
-
-        monkeypatch.setattr(timm, 'create_model', create_model)
-
-        args = [
-            '--config',
-            config,
-            '--trainer.accelerator',
-            'cpu',
-            '--trainer.fast_dev_run',
-            str(fast_dev_run),
-            '--trainer.max_epochs',
-            '1',
-            '--trainer.log_every_n_steps',
-            '1',
-        ]
-
-        main(['fit', *args])
-        try:
-            main(['test', *args])
-        except MisconfigurationException:
-            pass
-        try:
-            main(['predict', *args])
-        except MisconfigurationException:
-            pass
-
-    def test_invalid_loss(self) -> None:
-        match = "Loss type 'invalid_loss' is not valid."
-        with pytest.raises(ValueError, match=match):
-            MultiLabelClassificationTask(model='resnet18', loss='invalid_loss')
-
-    def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(BigEarthNetDataModule, 'plot', plot)
+    def test_trainer(self, fast_dev_run: bool) -> None:
         datamodule = BigEarthNetDataModule(
-            root='tests/data/bigearthnet', batch_size=1, num_workers=0
+            root='tests/data/bigearthnet/v1', batch_size=1, num_workers=0
         )
-        model = MultiLabelClassificationTask(
-            model='resnet18', in_channels=14, num_classes=19, loss='bce'
-        )
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.validate(model=model, datamodule=datamodule)
 
-    def test_no_rgb(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
-        monkeypatch.setattr(BigEarthNetDataModule, 'plot', plot_missing_bands)
-        datamodule = BigEarthNetDataModule(
-            root='tests/data/bigearthnet', batch_size=1, num_workers=0
-        )
-        model = MultiLabelClassificationTask(
-            model='resnet18', in_channels=14, num_classes=19, loss='bce'
-        )
+        with pytest.deprecated_call():
+            model = MultiLabelClassificationTask(
+                model='resnet18', in_channels=14, num_classes=19, loss='bce'
+            )
         trainer = Trainer(
             accelerator='cpu',
             fast_dev_run=fast_dev_run,
             log_every_n_steps=1,
             max_epochs=1,
         )
-        trainer.validate(model=model, datamodule=datamodule)
-
-    def test_predict(self, fast_dev_run: bool) -> None:
-        datamodule = PredictMultiLabelClassificationDataModule(
-            root='tests/data/bigearthnet', batch_size=1, num_workers=0
-        )
-        model = MultiLabelClassificationTask(
-            model='resnet18', in_channels=14, num_classes=19, loss='bce'
-        )
-        trainer = Trainer(
-            accelerator='cpu',
-            fast_dev_run=fast_dev_run,
-            log_every_n_steps=1,
-            max_epochs=1,
-        )
-        trainer.predict(model=model, datamodule=datamodule)
+        trainer.fit(model=model, datamodule=datamodule)
+        trainer.test(model=model, datamodule=datamodule)

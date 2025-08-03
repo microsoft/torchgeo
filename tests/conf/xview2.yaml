@@ -1,0 +1,16 @@
+model:
+  class_path: ChangeDetectionTask
+  init_args:
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 3
+    task: 'multiclass'
+    num_classes: 5
+    loss: 'ce'
+data:
+  class_path: XView2DataModule
+  init_args:
+    batch_size: 2
+    val_split_pct: 0.5
+  dict_kwargs:
+    root: 'tests/data/xview2'

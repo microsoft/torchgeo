@@ -10,7 +10,7 @@ from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .cdl import CDL
 from .errors import DatasetNotFoundError, RGBBandsMissingError
@@ -53,7 +53,7 @@ class IOBench(IntersectionDataset):
         root: Path = 'data',
         split: str = 'preprocessed',
         crs: CRS | None = None,
-        res: float | None = None,
+        res: float | tuple[float, float] | None = None,
         bands: Sequence[str] | None = [*Landsat9.default_bands, 'SR_QA_AEROSOL'],
         classes: list[int] = [0],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -68,8 +68,9 @@ class IOBench(IntersectionDataset):
             split: One of 'original', 'raw', or 'preprocessed'.
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: Resolution of the dataset in units of CRS
-                (defaults to the resolution of the first file found).
+            res: Resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
+                (defaults to the resolution of the first file found)
             bands: Bands to return (defaults to all bands).
             classes: List of classes to include, the rest will be mapped to 0.
             transforms: A function/transform that takes an input sample

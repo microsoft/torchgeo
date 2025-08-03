@@ -7,6 +7,7 @@ from itertools import product
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
@@ -15,7 +16,6 @@ from pytest import MonkeyPatch
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     LandCoverAI,
     LandCoverAI100,
@@ -54,11 +54,10 @@ class TestLandCoverAIGeo:
             LandCoverAIGeo(tmp_path)
 
     def test_out_of_bounds_query(self, dataset: LandCoverAIGeo) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_plot(self, dataset: LandCoverAIGeo) -> None:
         x = dataset[dataset.bounds].copy()
@@ -72,7 +71,7 @@ class TestLandCoverAIGeo:
 
 
 class TestLandCoverAI:
-    pytest.importorskip('cv2', minversion='4.5.4')
+    pytest.importorskip('cv2', minversion='4.5.5')
 
     @pytest.fixture(
         params=product([LandCoverAI100, LandCoverAI], ['train', 'val', 'test'])

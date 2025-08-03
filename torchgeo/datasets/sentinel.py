@@ -4,12 +4,12 @@
 """Sentinel datasets."""
 
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import torch
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
@@ -137,14 +137,20 @@ class Sentinel1(Sentinel):
         \.
     """
     date_format = '%Y%m%dT%H%M%S'
+
+    # https://sentiwiki.copernicus.eu/web/s1-mission
     all_bands = ('HH', 'HV', 'VV', 'VH')
+
     separate_files = True
+
+    # Central wavelength (μm)
+    wavelength = 55500
 
     def __init__(
         self,
         paths: Path | list[Path] = 'data',
         crs: CRS | None = None,
-        res: float = 10,
+        res: float | tuple[float, float] = (10, 10),
         bands: Sequence[str] = ['VV', 'VH'],
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
@@ -155,7 +161,8 @@ class Sentinel1(Sentinel):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             bands: bands to return (defaults to ["VV", "VH"])
             transforms: a function/transform that takes an input sample
@@ -276,7 +283,7 @@ class Sentinel2(Sentinel):
     """
     date_format = '%Y%m%dT%H%M%S'
 
-    # https://gisgeography.com/sentinel-2-bands-combinations/
+    # https://sentiwiki.copernicus.eu/web/s2-mission
     all_bands: tuple[str, ...] = (
         'B01',
         'B02',
@@ -296,11 +303,38 @@ class Sentinel2(Sentinel):
 
     separate_files = True
 
+    # Central wavelength (μm)
+    wavelengths: ClassVar[dict[str, float]] = {
+        'B01': 0.4427,
+        'B02': 0.4927,
+        'B03': 0.5598,
+        'B04': 0.6646,
+        'B05': 0.7041,
+        'B06': 0.7405,
+        'B07': 0.7828,
+        'B08': 0.8328,
+        'B8A': 0.8647,
+        'B09': 0.9451,
+        'B10': 1.3735,
+        'B11': 1.6137,
+        'B12': 2.2024,
+        # For compatibility with other dataset naming conventions
+        'B1': 0.4427,
+        'B2': 0.4927,
+        'B3': 0.5598,
+        'B4': 0.6646,
+        'B5': 0.7041,
+        'B6': 0.7405,
+        'B7': 0.7828,
+        'B8': 0.8328,
+        'B9': 0.9451,
+    }
+
     def __init__(
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float = 10,
+        res: float | tuple[float, float] = 10,
         bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
@@ -311,7 +345,8 @@ class Sentinel2(Sentinel):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
                 (defaults to the resolution of the first file found)
             bands: bands to return (defaults to all bands)
             transforms: a function/transform that takes an input sample
@@ -326,8 +361,11 @@ class Sentinel2(Sentinel):
         """
         bands = bands or self.all_bands
         self.filename_glob = self.filename_glob.format(bands[0])
-        self.filename_regex = self.filename_regex.format(res)
 
+        if isinstance(res, int | float):
+            res = (res, res)
+
+        self.filename_regex = self.filename_regex.format(int(res[0]))
         super().__init__(paths, crs, res, bands, transforms, cache)
 
     def plot(

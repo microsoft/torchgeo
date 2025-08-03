@@ -1,7 +1,7 @@
 [build-system]
 requires = [
-    # setuptools 61+ required for pyproject.toml support
-    "setuptools>=61",
+    # setuptools 77.0.1+ required for PEP 639 support
+    "setuptools>=77.0.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -10,8 +10,8 @@ build-backend = "setuptools.build_meta"
 name = "torchgeo"
 description = "TorchGeo: datasets, samplers, transforms, and pre-trained models for geospatial data"
 readme = "README.md"
-requires-python = ">=3.10"
-license = {file = "LICENSE"}
+requires-python = ">=3.11"
+license = "MIT"
 authors = [
     {name = "Adam J. Stewart", email = "ajstewart426@gmail.com"},
 ]
@@ -24,22 +24,23 @@ maintainers = [
 ]
 keywords = ["pytorch", "deep learning", "machine learning", "remote sensing", "satellite imagery", "earth observation", "geospatial"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: GIS",
 ]
 dependencies = [
     # einops 0.3+ required for einops.repeat
     "einops>=0.3",
-    # fiona 1.8.21+ required for Python 3.10 wheels
-    "fiona>=1.8.21",
+    # fiona 1.8.22+ required for Python 3.11 wheels
+    "fiona>=1.8.22",
+    # geopandas 0.12.1+ required for Shapely 2+ support
+    "geopandas>=0.12.1",
     # kornia 0.7.4+ required for AugmentationSequential support for unknown keys
     "kornia>=0.7.4",
     # lightly 1.4.5+ required for LARS optimizer
@@ -50,55 +51,60 @@ dependencies = [
     # lightning 2.3 contains known bugs related to YAML parsing
     # https://github.com/Lightning-AI/pytorch-lightning/issues/19977
     "lightning[pytorch-extra]>=2,!=2.3.*,!=2.5.0",
-    # matplotlib 3.5+ required for Python 3.10 wheels
-    "matplotlib>=3.5",
-    # numpy 1.21.2+ required by Python 3.10 wheels
-    "numpy>=1.21.2",
-    # pandas 1.3.3+ required for Python 3.10 wheels
-    "pandas>=1.3.3",
-    # pillow 8.4+ required for Python 3.10 wheels
-    "pillow>=8.4",
-    # pyproj 3.3+ required for Python 3.10 wheels
-    "pyproj>=3.3",
-    # rasterio 1.3+ required for Python 3.10 wheels
+    # matplotlib 3.6+ required for Python 3.11 wheels
+    "matplotlib>=3.6",
+    # numpy 1.23.2+ required by Python 3.11 wheels
+    "numpy>=1.23.2",
+    # pandas 1.5+ required for Python 3.11 wheels
+    "pandas>=1.5",
+    # pillow 9.2+ required for Python 3.11 wheels
+    "pillow>=9.2",
+    # pyproj 3.4+ required for Python 3.11 wheels
+    "pyproj>=3.4",
+    # rasterio 1.3.3+ required for Python 3.11 wheels
     # rasterio 1.4.0-1.4.2 lack support for merging WarpedVRT objects
     # https://github.com/rasterio/rasterio/issues/3196
-    "rasterio>=1.3,!=1.4.0,!=1.4.1,!=1.4.2",
-    # rtree 1+ required for Python 3.10 wheels
-    "rtree>=1",
-    # segmentation-models-pytorch 0.2+ required for smp.losses module
-    "segmentation-models-pytorch>=0.2",
-    # shapely 1.8+ required for Python 3.10 wheels
-    "shapely>=1.8",
-    # timm 0.4.12 required by segmentation-models-pytorch
-    "timm>=0.4.12",
-    # torch 1.13+ required by torchvision
-    "torch>=1.13",
-    # torchmetrics 0.10+ required for binary/multiclass/multilabel classification metrics
-    "torchmetrics>=0.10",
-    # torchvision 0.14+ required for torchvision.models.swin_v2_b
-    "torchvision>=0.14",
+    "rasterio>=1.3.3,!=1.4.0,!=1.4.1,!=1.4.2",
+    # segmentation-models-pytorch 0.5+ required for new UnetDecoder API
+    "segmentation-models-pytorch>=0.5",
+    # shapely 2+ required for shapely.Geometry
+    "shapely>=2",
+    # timm 1.0.3+ required for forward_intermediates support for ViT
+    "timm>=1.0.3",
+    # torch 2+ required for Python 3.11 wheels
+    "torch>=2",
+    # torchmetrics 1.2+ required for average argument in mAP metric
+    "torchmetrics>=1.2",
+    # torchvision 0.15.1+ required for Python 3.11 wheels
+    "torchvision>=0.15.1",
+    # typing-extensions 4.5+ required for typing_extensions.deprecated
+    # can be removed once Python 3.13 is minimum supported version
+    "typing-extensions>=4.5",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
 datasets = [
-    # h5py 3.6+ required for Python 3.10 wheels
-    "h5py>=3.6",
+    # h5py 3.8+ required for Python 3.11 wheels
+    "h5py>=3.8",
     # laspy 2+ required for laspy.read
     "laspy>=2",
-    # opencv-python 4.5.4+ required for Python 3.10 wheels
-    "opencv-python>=4.5.4",
+    # netcdf4 1.6.1+ required for Python 3.11 wheels
+    "netcdf4>=1.6.1",
+    # opencv-python 4.6.0.66+ required for ultralytics 8.3+ compatibility
+    "opencv-python>=4.6.0.66",
     # pandas 2+ required for parquet extra
     "pandas[parquet]>=2",
-    # pycocotools 2.0.7+ required for wheels
+    # pycocotools 2.0.7+ required for Python 3.11 wheels
     "pycocotools>=2.0.7",
-    # pyvista 0.34.2+ required to avoid ImportError in CI
-    "pyvista>=0.34.2",
-    # scikit-image 0.19+ required for Python 3.10 wheels
-    "scikit-image>=0.19",
-    # scipy 1.7.2+ required for Python 3.10 wheels
-    "scipy>=1.7.2",
+    # scikit-image 0.20+ required for Python 3.11 wheels
+    "scikit-image>=0.20",
+    # scipy 1.9.2+ required for Python 3.11 wheels
+    "scipy>=1.9.2",
+    # webdataset 0.2.4+ required for PyTorch tuple seed support
+    "webdataset>=0.2.4",
+    # xarray 0.12.3+ required for pandas 1.3.3 support
+    "xarray>=0.12.3",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx
@@ -111,6 +117,10 @@ docs = [
     # sphinx 6+ is incompatible with pytorch-sphinx-theme
     # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
     "sphinx>=4,<6",
+]
+models = [
+    # ultralytics 8.3+ fixes loading with weights_only=False
+    "ultralytics>=8.3",
 ]
 style = [
     # mypy 0.900+ required for pyproject.toml support
@@ -127,7 +137,7 @@ tests = [
     "pytest-cov>=4",
 ]
 all = [
-    "torchgeo[datasets,docs,style,tests]",
+    "torchgeo[datasets,docs,models,style,tests]",
 ]
 
 [project.scripts]
@@ -145,9 +155,6 @@ exclude_also = [
     "@overload",
 ]
 show_missing = true
-
-[tool.coverage.run]
-source_pkgs = ["torchgeo"]
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
@@ -254,6 +261,12 @@ filterwarnings = [
     # https://github.com/pytorch/pytorch/issues/136264
     "ignore:__array__ implementation doesn't accept a copy keyword:DeprecationWarning",
     "ignore:__array_wrap__ must accept context and return_scalar arguments:DeprecationWarning",
+    # https://github.com/pydantic/pydantic/pull/11377
+    "ignore:Failing to pass a value to the 'type_params' parameter of 'typing.*' is deprecated:DeprecationWarning:pydantic",
+    # https://github.com/Lightning-AI/pytorch-lightning/pull/20802
+    "ignore::jsonargparse._deprecated.JsonargparseDeprecationWarning:lightning.pytorch.cli",
+    # https://github.com/geopandas/geopandas/pull/3453
+    "ignore:The 'shapely.geos' module is deprecated:DeprecationWarning:geopandas._compat",
 
     # Expected warnings
     # Lightning warns us about using num_workers=0, but it's faster on macOS
@@ -287,6 +300,7 @@ testpaths = [
     "tests",
     "docs/tutorials",
 ]
+tmp_path_retention_count = 1
 tmp_path_retention_policy = "failed"
 
 # https://docs.astral.sh/ruff/settings/

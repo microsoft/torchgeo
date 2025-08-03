@@ -26,6 +26,11 @@ L8 Biome
 
 .. autoclass:: L8BiomeDataModule
 
+MMFlood
+^^^^^^^^
+
+.. autoclass:: MMFloodDataModule
+
 NAIP
 ^^^^
 
@@ -56,6 +61,11 @@ BigEarthNet
 ^^^^^^^^^^^
 
 .. autoclass:: BigEarthNetDataModule
+
+BRIGHT
+^^^^^^
+
+.. autoclass:: BRIGHTDFC2025DataModule
 
 CaBuAr
 ^^^^^^
@@ -165,6 +175,11 @@ OSCD
 
 .. autoclass:: OSCDDataModule
 
+PatternNet
+^^^^^^^^^^
+
+.. autoclass:: PatternNetDataModule
+
 Potsdam
 ^^^^^^^
 
@@ -174,6 +189,11 @@ QuakeSet
 ^^^^^^^^
 
 .. autoclass:: QuakeSetDataModule
+
+ReforesTree
+^^^^^^^^^^^
+
+.. autoclass:: ReforesTreeDataModule
 
 RESISC45
 ^^^^^^^^
@@ -190,10 +210,20 @@ SEN12MS
 
 .. autoclass:: SEN12MSDataModule
 
+SKIPP'D
+^^^^^^^
+
+.. autoclass:: SKIPPDDataModule
+
 So2Sat
 ^^^^^^
 
 .. autoclass:: So2SatDataModule
+
+Solar Plants Brazil
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: SolarPlantsBrazilDataModule
 
 SpaceNet
 ^^^^^^^^
@@ -212,6 +242,11 @@ SSL4EO-L Benchmark
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: SSL4EOLBenchmarkDataModule
+
+Substation
+^^^^^^^^^^
+
+.. autoclass:: SubstationDataModule
 
 SustainBench Crop Yield
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -242,6 +277,11 @@ Vaihingen
 ^^^^^^^^^
 
 .. autoclass:: Vaihingen2DDataModule
+
+VHR-10
+^^^^^^
+
+.. autoclass:: VHR10DataModule
 
 xView2
 ^^^^^^

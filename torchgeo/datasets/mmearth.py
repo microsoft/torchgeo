@@ -9,13 +9,16 @@ from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta
 from typing import Any, ClassVar, cast
 
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from einops import rearrange
+from matplotlib.figure import Figure
 from torch import Tensor
 
 from .errors import DatasetNotFoundError
 from .geo import NonGeoDataset
-from .utils import Path, lazy_import
+from .utils import Path, lazy_import, percentile_normalization
 
 
 class MMEarth(NonGeoDataset):
@@ -618,3 +621,125 @@ class MMEarth(NonGeoDataset):
             length of the dataset
         """
         return len(self.indices)
+
+    def plot(
+        self,
+        sample: dict[str, Any],
+        show_titles: bool = True,
+        suptitle: str | None = None,
+    ) -> Figure:
+        """Plot a sample from the dataset as shown in fig. 2 from https://arxiv.org/pdf/2405.02771.
+
+        Args:
+            sample: A sample returned by :meth:`__getitem__`.
+            show_titles: Flag indicating whether to show titles above each panel.
+            suptitle: Optional string to use as a suptitle.
+
+        Returns:
+            A matplotlib Figure with the rendered sample.
+        """
+        color_map = {
+            'esa_worldcover': {
+                0: [0, 100, 0],  # Tree cover
+                1: [255, 187, 34],  # Shrubland
+                2: [255, 255, 76],  # Grassland
+                3: [240, 150, 255],  # Cropland
+                4: [250, 0, 0],  # Built-up
+                5: [180, 180, 180],  # Bare/sparse vegetation
+                6: [240, 240, 240],  # Snow and Ice
+                7: [0, 100, 200],  # Permanent water bodies
+                8: [0, 150, 160],  # Herbaceous wetland
+                9: [0, 207, 117],  # Mangroves
+                10: [250, 230, 160],  # Moss and lichen
+                255: [0, 0, 0],  # No-data value
+            },
+            'dynamic_world': {
+                0: [65, 155, 223],  # #419BDF - Water
+                1: [57, 125, 73],  # #397D49 - Trees
+                2: [136, 176, 83],  # #88B053 - Grass
+                3: [122, 135, 198],  # #7A87C6 - Flooded vegetation
+                4: [228, 150, 53],  # #E49635 - Crops
+                5: [223, 195, 90],  # #DFC35A - Shrub & Scrub
+                6: [196, 40, 27],  # #C4281B - Built Area
+                7: [165, 155, 143],  # #A59B8F - Bare ground
+                8: [179, 159, 225],  # #B39FE1 - Snow & Ice
+            },
+        }
+
+        images = []
+        titles = []
+
+        keys_to_plot = [
+            'image_sentinel2',
+            'image_sentinel1_asc',
+            'image_aster',
+            'mask_esa_worldcover',
+            'mask_dynamic_world',
+            'image_canopy_height_eth',
+        ]
+
+        avail_bands_dict = dict(sample['avail_bands'])
+        for key in keys_to_plot:
+            val = sample[key]
+            modalities_name = key.split('_', 1)[1]
+            match modalities_name:
+                case 'sentinel2':
+                    norm_img = percentile_normalization(val[[3, 2, 1]].numpy())
+                    images.append(rearrange(norm_img, 'c h w -> h w c'))
+
+                    titles.append('Sentinel-2 RGB')
+                case 'esa_worldcover':
+                    tensor_np = val.squeeze().numpy()
+                    rgb_image = np.zeros(
+                        (tensor_np.shape[0], tensor_np.shape[1], 3), dtype=np.uint8
+                    )
+                    for value, color in color_map[modalities_name].items():
+                        mask = tensor_np == value
+                        rgb_image[mask] = color
+
+                    images.append(rgb_image)
+                    titles.append(modalities_name.replace('_', ' ').title())
+                case 'dynamic_world':
+                    tensor_np = val.squeeze().numpy()
+                    rgb_image = np.zeros(
+                        (tensor_np.shape[0], tensor_np.shape[1], 3), dtype=np.uint8
+                    )
+                    for value, color in color_map[modalities_name].items():
+                        mask = tensor_np == value
+                        rgb_image[mask] = color
+
+                    images.append(rgb_image)
+                    titles.append(modalities_name.replace('_', ' ').title())
+                case _:
+                    band_val = val[0].numpy()
+                    norm_img = percentile_normalization(band_val)
+                    images.append(norm_img)
+
+                    modalities_name = key.split('_', 1)[1]
+                    band_name = avail_bands_dict[modalities_name][0]
+                    titles.append(
+                        (modalities_name.replace('_', ' ').title()) + ' ' + band_name
+                    )
+        fig, ax = plt.subplots(1, 6, figsize=(12, 4))
+
+        for i, (image, title) in enumerate(zip(images, titles)):
+            ax[i].imshow(image)
+            ax[i].axis('off')
+
+            if show_titles:
+                title_words = title.split(' ')
+                title_word_len = len(title_words)
+                if title_word_len > 2:
+                    title = (
+                        str.join(' ', title_words[:2])
+                        + '\n'
+                        + str.join(' ', title_words[2:])
+                    )
+                ax[i].set_title(title)
+
+        if suptitle is not None:
+            plt.suptitle(suptitle)
+
+        plt.tight_layout()
+
+        return fig

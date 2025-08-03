@@ -9,62 +9,121 @@ import torch.nn as nn
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
+    CopernicusFM_Base_Weights,
+    CROMABase_Weights,
+    CROMALarge_Weights,
     DOFABase16_Weights,
     DOFALarge16_Weights,
+    EarthLoc_Weights,
+    Panopticon_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
     ResNet152_Weights,
     ScaleMAELarge16_Weights,
     Swin_V2_B_Weights,
     Swin_V2_T_Weights,
+    Unet_Weights,
+    ViTBase14_DINOv2_Weights,
+    ViTBase16_Weights,
+    ViTHuge14_Weights,
+    ViTLarge16_Weights,
+    ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
+    YOLO_Weights,
+    copernicusfm_base,
+    croma_base,
+    croma_large,
     dofa_base_patch16_224,
+    dofa_huge_patch14_224,
     dofa_large_patch16_224,
+    dofa_small_patch16_224,
+    earthloc,
     get_model,
     get_model_weights,
     get_weight,
     list_models,
+    panopticon_vitb14,
     resnet18,
     resnet50,
     resnet152,
     scalemae_large_patch16,
     swin_v2_b,
     swin_v2_t,
+    unet,
+    vit_base_patch14_dinov2,
+    vit_base_patch16_224,
+    vit_huge_patch14_224,
+    vit_large_patch16_224,
+    vit_small_patch14_dinov2,
     vit_small_patch16_224,
+    yolo,
 )
 
 builders = [
+    copernicusfm_base,
+    croma_base,
+    croma_large,
     dofa_base_patch16_224,
+    dofa_huge_patch14_224,
     dofa_large_patch16_224,
+    dofa_small_patch16_224,
+    earthloc,
+    panopticon_vitb14,
     resnet18,
     resnet50,
     resnet152,
     scalemae_large_patch16,
     swin_v2_t,
     swin_v2_b,
+    unet,
+    vit_base_patch14_dinov2,
+    vit_base_patch16_224,
+    vit_huge_patch14_224,
+    vit_large_patch16_224,
+    vit_small_patch14_dinov2,
     vit_small_patch16_224,
+    yolo,
 ]
 enums = [
+    CopernicusFM_Base_Weights,
+    CROMABase_Weights,
+    CROMALarge_Weights,
     DOFABase16_Weights,
     DOFALarge16_Weights,
+    EarthLoc_Weights,
+    Panopticon_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
     ResNet152_Weights,
     ScaleMAELarge16_Weights,
     Swin_V2_T_Weights,
     Swin_V2_B_Weights,
+    Unet_Weights,
+    ViTBase14_DINOv2_Weights,
+    ViTBase16_Weights,
+    ViTHuge14_Weights,
+    ViTLarge16_Weights,
+    ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
+    YOLO_Weights,
 ]
 
 
 @pytest.mark.parametrize('builder', builders)
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
+    if builder == yolo:
+        pytest.importorskip('ultralytics', minversion='8.3')
+
     model = get_model(builder.__name__)
     assert isinstance(model, nn.Module)
 
 
 @pytest.mark.parametrize('builder', builders)
 def test_get_model_weights(builder: Callable[..., nn.Module]) -> None:
+    models_without_weights = [dofa_huge_patch14_224, dofa_small_patch16_224]
+    if builder in models_without_weights:
+        return
+
     weights = get_model_weights(builder)
     assert isinstance(weights, enum.EnumMeta)
     weights = get_model_weights(builder.__name__)

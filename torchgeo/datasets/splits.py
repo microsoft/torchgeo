@@ -3,17 +3,21 @@
 
 """Dataset splitting utilities."""
 
+import itertools
 from collections.abc import Sequence
 from copy import deepcopy
 from itertools import accumulate
 from math import floor, isclose
 from typing import cast
 
-from rtree.index import Index, Property
+import geopandas
+import pandas as pd
+import shapely
+from geopandas import GeoDataFrame
+from shapely import LineString, Polygon
 from torch import Generator, default_generator, randint, randperm
 
 from ..datasets import GeoDataset
-from .utils import BoundingBox
 
 
 def _fractions_to_lengths(fractions: Sequence[float], total: int) -> Sequence[int]:
@@ -44,9 +48,9 @@ def random_bbox_assignment(
     lengths: Sequence[float],
     generator: Generator | None = default_generator,
 ) -> list[GeoDataset]:
-    """Split a GeoDataset randomly assigning its index's BoundingBoxes.
+    """Split a GeoDataset randomly assigning its index's objects.
 
-    This function will go through each BoundingBox in the GeoDataset's index and
+    This function will go through each object in the GeoDataset's index and
     randomly assign it to new GeoDatasets.
 
     Args:
@@ -71,23 +75,12 @@ def random_bbox_assignment(
         lengths = _fractions_to_lengths(lengths, len(dataset))
     lengths = cast(Sequence[int], lengths)
 
-    hits = list(dataset.index.intersection(dataset.index.bounds, objects=True))
-
-    hits = [hits[i] for i in randperm(sum(lengths), generator=generator)]
-
-    new_indexes = [
-        Index(interleaved=False, properties=Property(dimension=3)) for _ in lengths
-    ]
-
-    for i, length in enumerate(lengths):
-        for j in range(length):
-            hit = hits.pop()
-            new_indexes[i].insert(j, hit.bounds, hit.object)
+    indices = randperm(sum(lengths), generator=generator)
 
     new_datasets = []
-    for index in new_indexes:
+    for offset, length in zip(itertools.accumulate(lengths), lengths):
         ds = deepcopy(dataset)
-        ds.index = index
+        ds.index = dataset.index.iloc[indices[offset - length : offset]]
         new_datasets.append(ds)
 
     return new_datasets
@@ -98,10 +91,10 @@ def random_bbox_splitting(
     fractions: Sequence[float],
     generator: Generator | None = default_generator,
 ) -> list[GeoDataset]:
-    """Split a GeoDataset randomly splitting its index's BoundingBoxes.
+    """Split a GeoDataset randomly splitting its index's objects.
 
-    This function will go through each BoundingBox in the GeoDataset's index,
-    split it in a random direction and assign the resulting BoundingBoxes to
+    This function will go through each object in the GeoDataset's index,
+    split it in a random direction and assign the resulting objects to
     new GeoDatasets.
 
     Args:
@@ -120,42 +113,62 @@ def random_bbox_splitting(
     if any(n <= 0 for n in fractions):
         raise ValueError('All items in input fractions must be greater than 0.')
 
-    new_indexes = [
-        Index(interleaved=False, properties=Property(dimension=3)) for _ in fractions
-    ]
+    new_datasets = [deepcopy(dataset) for _ in fractions]
 
-    for i, hit in enumerate(
-        dataset.index.intersection(dataset.index.bounds, objects=True)
-    ):
-        box = BoundingBox(*hit.bounds)
-        fraction_left = 1.0
+    for i in range(len(dataset)):
+        geometry_remaining = dataset.index.geometry.iloc[i]
+        fraction_remaining = 1.0
 
         # Randomly choose the split direction
         horizontal, flip = randint(0, 2, (2,), generator=generator)
         for j, fraction in enumerate(fractions):
-            if fraction_left == fraction:
+            if isclose(fraction_remaining, fraction):
                 # For the last fraction, no need to split again
-                new_box = box
-            elif flip:
-                # new_box corresponds to fraction, box is the remainder that we might
-                # split again in the next iteration. Each split is done according to
-                # fraction wrt what's left
-                box, new_box = box.split(
-                    (fraction_left - fraction) / fraction_left, horizontal
-                )
+                new_geometry = geometry_remaining
             else:
-                # Same as above, but without flipping
-                new_box, box = box.split(fraction / fraction_left, horizontal)
+                # Create a new_geometry from geometry_remaining
+                minx, miny, maxx, maxy = geometry_remaining.bounds
 
-            new_indexes[j].insert(i, tuple(new_box), hit.object)
-            fraction_left -= fraction
+                if flip:
+                    frac = fraction_remaining - fraction
+                else:
+                    frac = fraction
+
+                if horizontal:
+                    splity = miny + (maxy - miny) * frac / fraction_remaining
+                    line = LineString([(minx, splity), (maxx, splity)])
+                else:
+                    splitx = minx + (maxx - minx) * frac / fraction_remaining
+                    line = LineString([(splitx, miny), (splitx, maxy)])
+
+                geom1, geom2 = shapely.ops.split(geometry_remaining, line).geoms
+                if horizontal:
+                    if flip:
+                        if geom1.centroid.y < splity:
+                            geometry_remaining, new_geometry = geom1, geom2
+                        else:
+                            new_geometry, geometry_remaining = geom1, geom2
+                    else:
+                        if geom1.centroid.y < splity:
+                            new_geometry, geometry_remaining = geom1, geom2
+                        else:
+                            geometry_remaining, new_geometry = geom1, geom2
+                else:
+                    if flip:
+                        if geom1.centroid.x < splitx:
+                            geometry_remaining, new_geometry = geom1, geom2
+                        else:
+                            new_geometry, geometry_remaining = geom1, geom2
+                    else:
+                        if geom1.centroid.x < splitx:
+                            new_geometry, geometry_remaining = geom1, geom2
+                        else:
+                            geometry_remaining, new_geometry = geom1, geom2
+
+            new_datasets[j].index.iloc[i].geometry = new_geometry
+
+            fraction_remaining -= fraction
             horizontal = not horizontal
-
-    new_datasets = []
-    for index in new_indexes:
-        ds = deepcopy(dataset)
-        ds.index = index
-        new_datasets.append(ds)
 
     return new_datasets
 
@@ -168,7 +181,7 @@ def random_grid_cell_assignment(
 ) -> list[GeoDataset]:
     """Overlays a grid over a GeoDataset and randomly assigns cells to new GeoDatasets.
 
-    This function will go through each BoundingBox in the GeoDataset's index, overlay
+    This function will go through each object in the GeoDataset's index, overlay
     a grid over it, and randomly assign each cell to new GeoDatasets.
 
     Args:
@@ -191,59 +204,56 @@ def random_grid_cell_assignment(
     if grid_size < 2:
         raise ValueError('Input grid_size must be greater than 1.')
 
-    new_indexes = [
-        Index(interleaved=False, properties=Property(dimension=3)) for _ in fractions
-    ]
-
     lengths = _fractions_to_lengths(fractions, len(dataset) * grid_size**2)
 
-    cells = []
-
     # Generate the grid's cells for each bbox in index
-    for i, hit in enumerate(
-        dataset.index.intersection(dataset.index.bounds, objects=True)
-    ):
-        minx, maxx, miny, maxy, mint, maxt = hit.bounds
+    left = []
+    right = []
+    rows = []
+    geometry = []
+    for index, row in dataset.index.iterrows():
+        minx, miny, maxx, maxy = row.geometry.bounds
 
         stridex = (maxx - minx) / grid_size
         stridey = (maxy - miny) / grid_size
 
-        cells.extend(
-            [
-                (
-                    (
-                        minx + x * stridex,
-                        minx + (x + 1) * stridex,
-                        miny + y * stridey,
-                        miny + (y + 1) * stridey,
-                        mint,
-                        maxt,
-                    ),
-                    hit.object,
+        for x in range(grid_size):
+            for y in range(grid_size):
+                geom = shapely.box(
+                    minx + x * stridex,
+                    miny + y * stridey,
+                    minx + (x + 1) * stridex,
+                    miny + (y + 1) * stridey,
                 )
-                for x in range(grid_size)
-                for y in range(grid_size)
-            ]
-        )
+                if geom := shapely.intersection(row.geometry, geom):
+                    left.append(index.left)
+                    right.append(index.right)
+                    rows.append(row)
+                    geometry.append(geom)
+
+    indexes_sr = pd.IntervalIndex.from_arrays(
+        left, right, closed='both', name='datetime'
+    )
+    rows_df = pd.DataFrame(rows)
+    geometry_sr = pd.Series(geometry)
 
     # Randomly assign cells to each new index
-    cells = [cells[i] for i in randperm(len(cells), generator=generator)]
-
-    for i, length in enumerate(lengths):
-        for j in range(length):
-            cell = cells.pop()
-            new_indexes[i].insert(j, cell[0], cell[1])
+    indices = randperm(len(rows), generator=generator)
 
     new_datasets = []
-    for index in new_indexes:
+    for offset, length in zip(itertools.accumulate(lengths), lengths):
         ds = deepcopy(dataset)
-        ds.index = index
+        ds.index = GeoDataFrame(
+            data=rows_df.iloc[indices[offset - length : offset].tolist()].values,
+            index=indexes_sr[indices[offset - length : offset].tolist()],
+            geometry=geometry_sr[indices[offset - length : offset].tolist()].values,
+        )
         new_datasets.append(ds)
 
     return new_datasets
 
 
-def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> list[GeoDataset]:
+def roi_split(dataset: GeoDataset, rois: Sequence[Polygon]) -> list[GeoDataset]:
     """Split a GeoDataset intersecting it with a ROI for each desired new GeoDataset.
 
     Args:
@@ -255,33 +265,23 @@ def roi_split(dataset: GeoDataset, rois: Sequence[BoundingBox]) -> list[GeoDatas
 
     .. versionadded:: 0.5
     """
-    new_indexes = [
-        Index(interleaved=False, properties=Property(dimension=3)) for _ in rois
-    ]
-
+    new_datasets = []
     for i, roi in enumerate(rois):
-        if any(roi.intersects(x) and (roi & x).area > 0 for x in rois[i + 1 :]):
+        if any(
+            shapely.intersects(roi, x) and not shapely.touches(roi, x)
+            for x in rois[i + 1 :]
+        ):
             raise ValueError("ROIs in input rois can't overlap.")
 
-        j = 0
-        for hit in dataset.index.intersection(tuple(roi), objects=True):
-            box = BoundingBox(*hit.bounds)
-            new_box = box & roi
-            if new_box.area > 0:
-                new_indexes[i].insert(j, tuple(new_box), hit.object)
-                j += 1
-
-    new_datasets = []
-    for index in new_indexes:
         ds = deepcopy(dataset)
-        ds.index = index
+        ds.index = geopandas.clip(dataset.index, roi)
         new_datasets.append(ds)
 
     return new_datasets
 
 
 def time_series_split(
-    dataset: GeoDataset, lengths: Sequence[float | tuple[float, float]]
+    dataset: GeoDataset, lengths: Sequence[float | pd.Timedelta | pd.Interval]
 ) -> list[GeoDataset]:
     """Split a GeoDataset on its time dimension to create non-overlapping GeoDatasets.
 
@@ -295,72 +295,67 @@ def time_series_split(
 
     .. versionadded:: 0.5
     """
-    minx, maxx, miny, maxy, mint, maxt = dataset.bounds
+    x, y, t = dataset.bounds
 
-    totalt = maxt - mint
+    totalt = t.stop - t.start
 
-    if not all(isinstance(x, tuple) for x in lengths):
-        lengths = cast(Sequence[float], lengths)
+    if all(isinstance(x, int | float) for x in lengths):
+        if any(n <= 0 for n in lengths):
+            raise ValueError('All items in input lengths must be greater than 0.')
 
-        if not (isclose(sum(lengths), 1) or isclose(sum(lengths), totalt)):
+        if not isclose(sum(lengths), 1):
             raise ValueError(
                 "Sum of input lengths must equal 1 or the dataset's time length."
             )
 
-        if any(n <= 0 for n in lengths):
-            raise ValueError('All items in input lengths must be greater than 0.')
+        lengths = [totalt * f for f in lengths]
 
-        if isclose(sum(lengths), 1):
-            lengths = [totalt * f for f in lengths]
-
+    if all(isinstance(x, pd.Timedelta) for x in lengths):
         lengths = [
-            (mint + offset - length, mint + offset)  # type: ignore[operator]
+            pd.Interval(t.start + offset - length, t.start + offset, closed='neither')
             for offset, length in zip(accumulate(lengths), lengths)
         ]
 
-    lengths = cast(Sequence[tuple[float, float]], lengths)
+    lengths = cast(Sequence[pd.Interval], lengths)
 
-    new_indexes = [
-        Index(interleaved=False, properties=Property(dimension=3)) for _ in lengths
-    ]
+    _totalt = pd.Timedelta(0)
+    new_datasets = []
+    for i, interval in enumerate(lengths):
+        start = interval.left
+        end = interval.right
 
-    _totalt = 0.0
-    for i, (start, end) in enumerate(lengths):
-        if start >= end:
-            raise ValueError(
-                'Pairs of timestamps in lengths must have end greater than start.'
-            )
+        # Remove one microsecond from each object's maxt to avoid overlapping
+        offset = (
+            pd.Timedelta(0) if i == len(lengths) - 1 else pd.Timedelta(1, unit='us')
+        )
 
-        if start < mint or end > maxt:
+        if start < t.start or end > t.stop:
             raise ValueError(
                 "Pairs of timestamps in lengths can't be out of dataset's time bounds."
             )
 
-        if any(start < x < end or start < y < end for x, y in lengths[i + 1 :]):
-            raise ValueError("Pairs of timestamps in lengths can't overlap.")
+        for other in lengths:
+            x = other.left
+            y = other.right
+            if start < x < end or start < y < end:
+                raise ValueError("Pairs of timestamps in lengths can't overlap.")
 
-        # Remove one microsecond from each BoundingBox's maxt to avoid overlapping
-        offset = 0 if i == len(lengths) - 1 else 1e-6
-        roi = BoundingBox(minx, maxx, miny, maxy, start, end - offset)
-        j = 0
-        for hit in dataset.index.intersection(tuple(roi), objects=True):
-            box = BoundingBox(*hit.bounds)
-            new_box = box & roi
-            if new_box.volume > 0:
-                new_indexes[i].insert(j, tuple(new_box), hit.object)
-                j += 1
-
+        ds = deepcopy(dataset)
+        ds.index = dataset.index.iloc[dataset.index.index.overlaps(interval)]
+        new_index = []
+        for xy in ds.index.index:
+            x = xy.left
+            y = xy.right
+            x = max(start, x)
+            y = min(end - offset, y - offset)
+            new_index.append(pd.Interval(x, y, closed='neither'))
+        ds.index.index = pd.IntervalIndex(new_index, closed='neither', name='datetime')
+        new_datasets.append(ds)
         _totalt += end - start
 
-    if not isclose(_totalt, totalt):
+    if not _totalt == totalt:
         raise ValueError(
             "Pairs of timestamps in lengths must cover dataset's time bounds."
         )
-
-    new_datasets = []
-    for index in new_indexes:
-        ds = deepcopy(dataset)
-        ds.index = index
-        new_datasets.append(ds)
 
     return new_datasets

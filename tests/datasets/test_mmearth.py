@@ -5,14 +5,16 @@ import os
 import shutil
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
+from matplotlib.figure import Figure
 
 from torchgeo.datasets import DatasetNotFoundError, MMEarth
 
-pytest.importorskip('h5py', minversion='3.6')
+pytest.importorskip('h5py', minversion='3.8')
 
 data_dir_dict = {
     'MMEarth': os.path.join('tests', 'data', 'mmearth', 'data_1M_v001'),
@@ -142,3 +144,9 @@ class TestMMEarth:
 
     def test_len(self, dataset: MMEarth) -> None:
         assert len(dataset) >= 2
+
+    def test_plot(self, dataset: MMEarth) -> None:
+        sample = dataset[0]
+        fig = dataset.plot(sample, suptitle='test')
+        assert isinstance(fig, Figure)
+        plt.close()

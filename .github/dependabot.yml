@@ -14,6 +14,10 @@ updates:
     schedule:
       interval: 'daily'
     groups:
+      pandas:
+        patterns:
+          - 'pandas'
+          - 'pandas[parquet]'
       # torchvision pins torch, must update in unison
       torch:
         patterns:
@@ -27,8 +31,9 @@ updates:
       # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
       - dependency-name: 'sphinx'
         versions: '>=6'
-      # segmentation-models-pytorch pins timm, must update in unison
-      - dependency-name: 'timm'
+      # ultralytics releases new versions almost daily
+      - dependency-name: 'ultralytics'
+        update-types: ['version-update:semver-patch']
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:

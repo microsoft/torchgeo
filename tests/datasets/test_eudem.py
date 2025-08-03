@@ -6,15 +6,15 @@ import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
+from pyproj import CRS
 from pytest import MonkeyPatch
-from rasterio.crs import CRS
 
 from torchgeo.datasets import (
     EUDEM,
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     UnionDataset,
@@ -81,8 +81,7 @@ class TestEUDEM:
         plt.close()
 
     def test_invalid_query(self, dataset: EUDEM) -> None:
-        query = BoundingBox(100, 100, 100, 100, 0, 0)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]

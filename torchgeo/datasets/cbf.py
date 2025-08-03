@@ -9,7 +9,7 @@ from typing import Any
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
@@ -64,7 +64,7 @@ class CanadianBuildingFootprints(VectorDataset):
         self,
         paths: Path | Iterable[Path] = 'data',
         crs: CRS | None = None,
-        res: float = 0.00001,
+        res: float | tuple[float, float] = (0.00001, 0.00001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -75,7 +75,8 @@ class CanadianBuildingFootprints(VectorDataset):
             paths: one or more root directories to search or files to load
             crs: :term:`coordinate reference system (CRS)` to warp to
                 (defaults to the CRS of the first file found)
-            res: resolution of the dataset in units of CRS
+            res: resolution of the dataset in units of CRS in (xres, yres) format. If a
+                single float is provided, it is used for both the x and y resolution.
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             download: if True, download dataset and store it in the root directory

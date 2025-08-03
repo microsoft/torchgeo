@@ -26,11 +26,11 @@ or a local git checkout:
    $ cd torchgeo
    $ pip install .
 
-By default, only required dependencies are installed. TorchGeo has a number of optional dependencies for specific datasets or development. These can be installed with a comma-separated list:
+By default, only required dependencies are installed. TorchGeo has a number of optional dependencies for specific datasets, models, or development. These can be installed with a comma-separated list:
 
 .. code-block:: console
 
-   $ pip install torchgeo[datasets]
+   $ pip install torchgeo[datasets,models]
    $ pip install torchgeo[style,tests]
    $ pip install torchgeo[all]
 
@@ -51,8 +51,6 @@ Now, you can install the latest stable release using:
 .. code-block:: console
 
    $ conda install torchgeo
-
-.. note:: The installation of TorchGeo in this manner is not supported on Windows since PyTorch from the conda-forge channel currently does not support Windows. Users are recommended to use pip instead.
 
 Conda does not support development versions or optional dependencies. If you install from conda-forge, only stable releases and required dependencies will be installed. Development versions or optional dependencies can be installed afterwards using pip.
 
@@ -79,7 +77,7 @@ Optional dependencies can be installed by enabling build variants:
 
 .. code-block:: console
 
-   $ spack install py-torchgeo+datasets
+   $ spack install py-torchgeo+datasets+models
    $ spack install py-torchgeo+style+tests
 
 Run ``spack info py-torchgeo`` for a complete list of variants. See the `spack documentation <https://spack.readthedocs.io/en/latest/>`_ for more details.

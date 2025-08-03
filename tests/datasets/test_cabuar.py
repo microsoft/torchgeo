@@ -14,7 +14,7 @@ from pytest import MonkeyPatch
 
 from torchgeo.datasets import CaBuAr, DatasetNotFoundError
 
-pytest.importorskip('h5py', minversion='3.6')
+pytest.importorskip('h5py', minversion='3.8')
 
 
 class TestCaBuAr:
@@ -49,15 +49,15 @@ class TestCaBuAr:
         assert isinstance(x['mask'], torch.Tensor)
 
         # Image tests
-        assert x['image'].ndim == 3
+        assert x['image'].ndim == 4
 
         if dataset.bands == CaBuAr.rgb_bands:
-            assert x['image'].shape[0] == 2 * 3
+            assert x['image'].shape[:2] == (2, 3)
         elif dataset.bands == CaBuAr.all_bands:
-            assert x['image'].shape[0] == 2 * 12
+            assert x['image'].shape[:2] == (2, 12)
 
         # Mask tests:
-        assert x['mask'].ndim == 2
+        assert x['mask'].ndim == 3
 
     def test_len(self, dataset: CaBuAr) -> None:
         assert len(dataset) == 4

@@ -57,11 +57,11 @@ class TestIDTReeS:
 
         if 'label' in x:
             assert isinstance(x['label'], torch.Tensor)
-        if 'boxes' in x:
-            assert isinstance(x['boxes'], torch.Tensor)
-            if x['boxes'].ndim != 1:
-                assert x['boxes'].ndim == 2
-                assert x['boxes'].shape[-1] == 4
+        if 'bbox_xyxy' in x:
+            assert isinstance(x['bbox_xyxy'], torch.Tensor)
+            if x['bbox_xyxy'].ndim != 1:
+                assert x['bbox_xyxy'].ndim == 2
+                assert x['bbox_xyxy'].shape[-1] == 4
 
     def test_len(self, dataset: IDTReeS) -> None:
         assert len(dataset) == 3
@@ -87,19 +87,11 @@ class TestIDTReeS:
         dataset.plot(x, show_titles=False)
         plt.close()
 
-        if 'boxes' in x:
-            x['prediction_boxes'] = x['boxes']
+        if 'bbox_xyxy' in x:
+            x['prediction_bbox_xyxy'] = x['bbox_xyxy']
             dataset.plot(x, show_titles=True)
             plt.close()
         if 'label' in x:
             x['prediction_label'] = x['label']
             dataset.plot(x, show_titles=False)
             plt.close()
-
-    def test_plot_las(self, dataset: IDTReeS) -> None:
-        pyvista = pytest.importorskip('pyvista', minversion='0.34.2')
-        pyvista.OFF_SCREEN = True
-
-        # Test point cloud without colors
-        point_cloud = dataset.plot_las(index=0)
-        pyvista.plot(point_cloud, scalars=point_cloud.points, cpos='yz', cmap='viridis')

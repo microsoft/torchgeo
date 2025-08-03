@@ -6,11 +6,14 @@
 from functools import partial
 from typing import Any
 
+import kornia.augmentation as K
 import matplotlib.pyplot as plt
 import torch
 import torchvision.models.detection
 from matplotlib.figure import Figure
+from timm.models import adapt_input_conv
 from torch import Tensor
+from torch.nn.parameter import Parameter
 from torchmetrics import MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchvision.models import resnet as R
@@ -21,6 +24,7 @@ from torchvision.ops import MultiScaleRoIAlign, feature_pyramid_network, misc
 
 from ..datasets import RGBBandsMissingError, unbind_samples
 from .base import BaseTask
+from .utils import GeneralizedRCNNTransformNoOp
 
 BACKBONE_LAT_DIM_MAP = {
     'resnet18': 512,
@@ -71,6 +75,9 @@ class ObjectDetectionTask(BaseTask):
     ) -> None:
         """Initialize a new ObjectDetectionTask instance.
 
+        Note that we disable the internal normalize+resize transform of the detection models.
+        Please ensure your images are appropriately resized before passing them to the model.
+
         Args:
             model: Name of the `torchvision
                 <https://pytorch.org/vision/stable/models.html#object-detection>`__
@@ -111,6 +118,7 @@ class ObjectDetectionTask(BaseTask):
         backbone: str = self.hparams['backbone']
         model: str = self.hparams['model']
         weights: bool | None = self.hparams['weights']
+        in_channels: int = self.hparams['in_channels']
         num_classes: int = self.hparams['num_classes']
         freeze_backbone: bool = self.hparams['freeze_backbone']
 
@@ -148,6 +156,7 @@ class ObjectDetectionTask(BaseTask):
                 rpn_anchor_generator=anchor_generator,
                 box_roi_pool=roi_pooler,
             )
+            self.model.transform = GeneralizedRCNNTransformNoOp()
         elif model == 'fcos':
             kwargs['extra_blocks'] = feature_pyramid_network.LastLevelP6P7(256, 256)
             kwargs['norm_layer'] = (
@@ -167,6 +176,7 @@ class ObjectDetectionTask(BaseTask):
             self.model = torchvision.models.detection.FCOS(
                 model_backbone, num_classes, anchor_generator=anchor_generator
             )
+            self.model.transform = GeneralizedRCNNTransformNoOp()
         elif model == 'retinanet':
             kwargs['extra_blocks'] = feature_pyramid_network.LastLevelP6P7(
                 latent_dim, 256
@@ -201,8 +211,13 @@ class ObjectDetectionTask(BaseTask):
                 anchor_generator=anchor_generator,
                 head=head,
             )
+            self.model.transform = GeneralizedRCNNTransformNoOp()
         else:
             raise ValueError(f"Model type '{model}' is not valid.")
+
+        weight = adapt_input_conv(in_channels, self.model.backbone.body.conv1.weight)
+        self.model.backbone.body.conv1.weight = Parameter(weight)
+        self.model.backbone.body.conv1.in_channels = in_channels
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
@@ -238,8 +253,9 @@ class ObjectDetectionTask(BaseTask):
         """
         x = batch['image']
         batch_size = x.shape[0]
+        assert 'bbox_xyxy' in batch, 'bbox_xyxy is required for object detection.'
         y = [
-            {'boxes': batch['boxes'][i], 'labels': batch['labels'][i]}
+            {'boxes': batch['bbox_xyxy'][i], 'labels': batch['label'][i]}
             for i in range(batch_size)
         ]
         loss_dict = self(x, y)
@@ -259,8 +275,9 @@ class ObjectDetectionTask(BaseTask):
         """
         x = batch['image']
         batch_size = x.shape[0]
+        assert 'bbox_xyxy' in batch, 'bbox_xyxy is required for object detection.'
         y = [
-            {'boxes': batch['boxes'][i], 'labels': batch['labels'][i]}
+            {'boxes': batch['bbox_xyxy'][i], 'labels': batch['label'][i]}
             for i in range(batch_size)
         ]
         y_hat = self(x)
@@ -280,9 +297,15 @@ class ObjectDetectionTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
-            batch['prediction_boxes'] = [b['boxes'].cpu() for b in y_hat]
-            batch['prediction_labels'] = [b['labels'].cpu() for b in y_hat]
-            batch['prediction_scores'] = [b['scores'].cpu() for b in y_hat]
+            aug = K.AugmentationSequential(
+                K.Denormalize(datamodule.mean, datamodule.std),
+                data_keys=None,
+                keepdim=True,
+            )
+            batch = aug(batch)
+            batch['prediction_bbox_xyxy'] = [b['boxes'].cpu() for b in y_hat]
+            batch['prediction_label'] = [b['labels'].cpu() for b in y_hat]
+            batch['prediction_score'] = [b['scores'].cpu() for b in y_hat]
             batch['image'] = batch['image'].cpu()
             sample = unbind_samples(batch)[0]
             # Convert image to uint8 for plotting
@@ -313,8 +336,9 @@ class ObjectDetectionTask(BaseTask):
         """
         x = batch['image']
         batch_size = x.shape[0]
+        assert 'bbox_xyxy' in batch, 'bbox_xyxy is required for object detection.'
         y = [
-            {'boxes': batch['boxes'][i], 'labels': batch['labels'][i]}
+            {'boxes': batch['bbox_xyxy'][i], 'labels': batch['label'][i]}
             for i in range(batch_size)
         ]
         y_hat = self(x)

@@ -43,9 +43,10 @@ class FieldsOfTheWorld(NonGeoDataset):
 
     Dataset classes:
 
-    1. background
-    2. field
-    3. field-boundary (three-class only)
+    0. background
+    1. field
+    2. field-boundary (three-class only)
+    3. unlabeled (kenya, rwanda, brazil and india have presence only labels)
 
     If you use this dataset in your research, please cite the following paper:
 
@@ -321,14 +322,19 @@ class FieldsOfTheWorld(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
-
         win_a = einops.rearrange(sample['image'][0:3], 'c h w -> h w c')
         win_b = einops.rearrange(sample['image'][4:7], 'c h w -> h w c')
         mask = sample['mask']
 
         win_a = torch.clip(win_a / 3000, 0, 1)
         win_b = torch.clip(win_b / 3000, 0, 1)
+
+        ncols = 3
+        showing_predictions = 'prediction' in sample
+        if showing_predictions:
+            ncols += 1
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(15, 5))
 
         axs[0].imshow(win_a)
         axs[0].set_title('Window A')
@@ -349,6 +355,11 @@ class FieldsOfTheWorld(NonGeoDataset):
         elif self.target == '3-class':
             axs[2].imshow(mask, vmin=0, vmax=2, cmap='gray', interpolation='none')
             axs[2].set_title('3-class mask')
+
+        if showing_predictions:
+            axs[3].imshow(sample['prediction'])
+            axs[3].set_title('Predictions')
+
         for ax in axs:
             ax.axis('off')
 

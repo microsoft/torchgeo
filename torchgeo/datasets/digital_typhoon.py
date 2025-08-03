@@ -9,6 +9,7 @@ import tarfile
 from collections.abc import Callable, Sequence
 from typing import Any, ClassVar, TypedDict
 
+import einops
 import matplotlib.pyplot as plt
 import pandas as pd
 import torch
@@ -87,8 +88,8 @@ class DigitalTyphoon(NonGeoDataset):
     url = 'https://hf.co/datasets/torchgeo/digital_typhoon/resolve/cf2f9ef89168d31cb09e42993d35b068688fe0df/WP.tar.gz{0}'
 
     md5sums: ClassVar[dict[str, str]] = {
-        'aa': '3af98052aed17e0ddb1e94caca2582e2',
-        'ab': '2c5d25455ac8aef1de33fe6456ab2c8d',
+        'aa': '9e77a5f74783f7909dee0fb936053b17',
+        'ab': '46aebdcba6e4e2df1619e4a3d7e556bb',
     }
 
     min_input_clamp = 170.0
@@ -425,9 +426,10 @@ class DigitalTyphoon(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        image, label = sample['image'], sample['label']
+        image, label = sample['image'].numpy(), sample['label'].numpy()
 
         image = percentile_normalization(image)
+        image = einops.rearrange(image, 'c h w -> h w c')
 
         showing_predictions = 'prediction' in sample
         if showing_predictions:
@@ -435,7 +437,7 @@ class DigitalTyphoon(NonGeoDataset):
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 10))
 
-        ax.imshow(image.permute(1, 2, 0))
+        ax.imshow(image)
         ax.axis('off')
 
         if show_titles:

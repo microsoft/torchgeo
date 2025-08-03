@@ -18,7 +18,7 @@ from torchgeo.models import (
 )
 
 
-def save_model(model: torch.nn.Module, path: Path) -> None:
+def save_model(model: CROMA, path: Path) -> None:
     state_dict = {
         's1_encoder': model.s1_encoder.state_dict(),
         's1_GAP_FFN': model.s1_GAP_FFN.state_dict(),
@@ -60,19 +60,13 @@ class TestCROMABase:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = CROMABase_Weights.CROMA_VIT
         path = tmp_path / f'{weights}.pth'
         model = croma_base()
         save_model(model, path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_croma(self) -> None:
@@ -93,19 +87,13 @@ class TestCROMALarge:
 
     @pytest.fixture
     def mocked_weights(
-        self,
-        tmp_path: Path,
-        monkeypatch: MonkeyPatch,
-        weights: WeightsEnum,
-        load_state_dict_from_url: None,
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
     ) -> WeightsEnum:
+        weights = CROMALarge_Weights.CROMA_VIT
         path = tmp_path / f'{weights}.pth'
         model = croma_large()
         save_model(model, path)
-        try:
-            monkeypatch.setattr(weights.value, 'url', str(path))
-        except AttributeError:
-            monkeypatch.setattr(weights, 'url', str(path))
+        monkeypatch.setattr(weights.value, 'url', str(path))
         return weights
 
     def test_croma(self) -> None:

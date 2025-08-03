@@ -11,11 +11,10 @@ import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
+from pyproj import CRS
 from pytest import MonkeyPatch
-from rasterio.crs import CRS
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     OpenBuildings,
@@ -93,11 +92,10 @@ class TestOpenBuildings:
         assert isinstance(ds, UnionDataset)
 
     def test_invalid_query(self, dataset: OpenBuildings) -> None:
-        query = BoundingBox(100, 100, 100, 100, 0, 0)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_plot(self, dataset: OpenBuildings) -> None:
         x = dataset[dataset.bounds]
@@ -109,3 +107,6 @@ class TestOpenBuildings:
         x['prediction'] = x['mask'].clone()
         dataset.plot(x, suptitle='Prediction')
         plt.close()
+
+    def test_float_res(self, dataset: OpenBuildings) -> None:
+        OpenBuildings(dataset.paths, res=0.0001)

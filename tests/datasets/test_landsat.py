@@ -5,14 +5,14 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from torchgeo.datasets import (
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     Landsat8,
@@ -33,9 +33,6 @@ class TestLandsat8:
         bands = request.param
         transforms = nn.Identity()
         return Landsat8(root, bands=bands, transforms=transforms)
-
-    def test_separate_files(self, dataset: Landsat8) -> None:
-        assert dataset.index.count(dataset.index.bounds) == 1
 
     def test_getitem(self, dataset: Landsat8) -> None:
         x = dataset[dataset.bounds]
@@ -73,8 +70,7 @@ class TestLandsat8:
             Landsat8(tmp_path)
 
     def test_invalid_query(self, dataset: Landsat8) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

@@ -1,12 +1,12 @@
 model:
   class_path: SemanticSegmentationTask
   init_args:
-    loss: 'ce'
     model: 'unet'
     backbone: 'resnet18'
     in_channels: 6
-    num_classes: 2
+    task: 'binary'
     ignore_index: 0
+    loss: 'bce'
 data:
   class_path: ETCI2021DataModule
   init_args:

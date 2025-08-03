@@ -5,14 +5,14 @@ import os
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pytest
 import torch
 import torch.nn as nn
-from rasterio.crs import CRS
+from pyproj import CRS
 
 from torchgeo.datasets import (
     NAIP,
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     UnionDataset,
@@ -54,8 +54,7 @@ class TestNAIP:
             NAIP(tmp_path)
 
     def test_invalid_query(self, dataset: NAIP) -> None:
-        query = BoundingBox(0, 0, 0, 0, 0, 0)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

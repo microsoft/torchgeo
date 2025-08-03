@@ -1,13 +1,10 @@
 model:
-  class_path: SemanticSegmentationTask
+  class_path: ChangeDetectionTask
   init_args:
-    loss: 'ce'
     model: 'unet'
     backbone: 'resnet18'
-    in_channels: 24
-    num_classes: 2
-    num_filters: 1
-    ignore_index: null
+    in_channels: 12
+    loss: 'bce'
 data:
   class_path: ChaBuDDataModule
   init_args:

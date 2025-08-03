@@ -7,7 +7,6 @@ import os
 from collections.abc import Callable
 from typing import Any, ClassVar
 
-import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio as rio
@@ -356,7 +355,7 @@ class MDAS(NonGeoDataset):
                     axs[idx].imshow(img)
                 case 'osm_landuse_mask':
                     img = data.numpy().squeeze(0)
-                    cmap = ListedColormap([cm.get_cmap('tab20')(i) for i in range(20)])
+                    cmap = ListedColormap([plt.get_cmap('tab20')(i) for i in range(20)])
                     im = axs[idx].imshow(img, cmap=cmap)
                     cbar = plt.colorbar(im, ax=axs[idx], ticks=range(19))
                     cbar.ax.set_yticklabels(
