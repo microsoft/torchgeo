@@ -25,19 +25,22 @@ jobs:
         uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.13'
-      - name: Cache dependencies
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+      - name: Cache uv dependencies
         uses: actions/cache@v4.2.3
         id: cache
         with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/docs.txt', 'requirements/tests.txt') }}-tutorials
-      - name: Install pip dependencies
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-tutorials-uv-${{ hashFiles('requirements/required.txt', 'requirements/docs.txt', 'requirements/tests.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-tutorials-uv-
+      - name: Install uv dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install -r requirements/required.txt -r requirements/docs.txt -r requirements/tests.txt planetary_computer pystac tensorboard h5py scikit-learn .
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+          uv pip install -r requirements/required.txt -r requirements/docs.txt -r requirements/tests.txt planetary_computer pystac tensorboard h5py scikit-learn .
+      - name: List uv dependencies
+        run: uv pip list
       - name: Run notebook checks
         run: pytest --nbmake --durations=10 docs/tutorials
 concurrency:

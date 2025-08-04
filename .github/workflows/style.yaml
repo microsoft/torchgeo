@@ -23,19 +23,22 @@ jobs:
         uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.13'
-      - name: Cache dependencies
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+      - name: Cache uv dependencies
         uses: actions/cache@v4.2.3
         id: cache
         with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/models.txt', 'requirements/style.txt', 'requirements/tests.txt') }}
-      - name: Install pip dependencies
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-mypy-uv-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/models.txt', 'requirements/style.txt', 'requirements/tests.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-mypy-uv-
+      - name: Install uv dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/style.txt -r requirements/tests.txt
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+          uv pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/style.txt -r requirements/tests.txt
+      - name: List uv dependencies
+        run: uv pip list
       - name: Run mypy checks
         run: mypy .
   ruff:
@@ -49,19 +52,22 @@ jobs:
         uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.13'
-      - name: Cache dependencies
+      - name: Install uv
+        uses: astral-sh/setup-uv@v1
+      - name: Cache uv dependencies
         uses: actions/cache@v4.2.3
         id: cache
         with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/style.txt') }}
-      - name: Install pip dependencies
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-ruff-uv-${{ hashFiles('requirements/style.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-ruff-uv-
+      - name: Install uv dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          pip install -r requirements/style.txt
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+          uv pip install -r requirements/style.txt
+      - name: List uv dependencies
+        run: uv pip list
       - name: Run ruff checks
         run: |
           ruff check --output-format=github --no-fix .
