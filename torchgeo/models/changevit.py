@@ -17,11 +17,75 @@ from torch.nn.modules import Module
 from torchvision.models._api import Weights, WeightsEnum
 
 
-class DetailCaptureModule(Module):
-    """Detail capture module for extracting fine-grained spatial features.
+class BasicBlock(Module):
+    """ResNet BasicBlock with residual connection.
 
-    This module implements a lightweight CNN branch inspired by ResNet's C2-C4
-    layers to extract multi-scale detailed features at 1/2, 1/4, and 1/8 scales.
+    Paper explicitly states: 'three residual convolutional blocks (C2-C4) adapted from ResNet18'
+    """
+
+    expansion = 1
+
+    def __init__(
+        self,
+        inplanes: int,
+        planes: int,
+        stride: int = 1,
+        downsample: Module | None = None,
+    ) -> None:
+        """Initialize BasicBlock.
+
+        Args:
+            inplanes: Number of input channels
+            planes: Number of output channels
+            stride: Convolution stride
+            downsample: Optional downsample module for residual connection
+        """
+        super().__init__()
+        self.conv1 = nn.Conv2d(
+            inplanes, planes, kernel_size=3, stride=stride, padding=1, bias=False
+        )
+        self.bn1 = nn.BatchNorm2d(planes)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(
+            planes, planes, kernel_size=3, stride=1, padding=1, bias=False
+        )
+        self.bn2 = nn.BatchNorm2d(planes)
+        self.downsample = downsample
+        self.stride = stride
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward pass through BasicBlock with residual connection.
+
+        Args:
+            x: Input tensor
+
+        Returns:
+            Output tensor after residual block processing
+        """
+        identity = x
+
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+
+        out = self.conv2(out)
+        out = self.bn2(out)
+
+        if self.downsample is not None:
+            identity = self.downsample(x)
+
+        out += identity
+        result: Tensor = self.relu(out)
+
+        return result
+
+
+class DetailCaptureModule(Module):
+    """Detail capture module implementing ResNet18 C2-C4 layers.
+
+    Paper states: 'three residual convolutional blocks (C2-C4) adapted from ResNet18'
+    that generate 'three-scale detailed features: 1/2, 1/4, and 1/8 resolutions'
+    with '2.7M parameters'.
     """
 
     def __init__(self, in_channels: int = 6) -> None:
@@ -31,34 +95,48 @@ class DetailCaptureModule(Module):
             in_channels: Number of input channels (typically 6 for bitemporal RGB).
         """
         super().__init__()
+        self.inplanes = 64
 
-        # Layer 1: 1/2 scale - similar to ResNet C2
-        self.layer1 = nn.Sequential(
-            nn.Conv2d(in_channels, 64, kernel_size=7, stride=2, padding=3, bias=False),
-            nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
+        # Initial convolution like ResNet conv1 + bn1 + relu
+        # Modified for 6-channel input (bitemporal RGB)
+        self.conv1 = nn.Conv2d(
+            in_channels, 64, kernel_size=7, stride=2, padding=3, bias=False
         )
+        self.bn1 = nn.BatchNorm2d(64)
+        self.relu = nn.ReLU(inplace=True)
 
-        # Layer 2: 1/4 scale - similar to ResNet C3
-        self.layer2 = nn.Sequential(
-            nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1, bias=False),
-            nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True),
-        )
+        # ResNet18 layers adapted for detail capture
+        # layer1: C2 - 1/2 scale (after conv1 stride=2)
+        self.layer1 = self._make_layer(64, 2, stride=1)  # No additional downsampling
 
-        # Layer 3: 1/8 scale - similar to ResNet C4
-        self.layer3 = nn.Sequential(
-            nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1, bias=False),
-            nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True),
-        )
+        # layer2: C3 - 1/4 scale
+        self.layer2 = self._make_layer(128, 2, stride=2)  # Downsample 2x
+
+        # layer3: C4 - 1/8 scale
+        self.layer3 = self._make_layer(256, 2, stride=2)  # Downsample 2x
+
+    def _make_layer(self, planes: int, blocks: int, stride: int = 1) -> nn.Sequential:
+        """Create a ResNet layer with residual blocks."""
+        downsample = None
+        if stride != 1 or self.inplanes != planes * BasicBlock.expansion:
+            downsample = nn.Sequential(
+                nn.Conv2d(
+                    self.inplanes,
+                    planes * BasicBlock.expansion,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False,
+                ),
+                nn.BatchNorm2d(planes * BasicBlock.expansion),
+            )
+
+        layers = []
+        layers.append(BasicBlock(self.inplanes, planes, stride, downsample))
+        self.inplanes = planes * BasicBlock.expansion
+        for _ in range(1, blocks):
+            layers.append(BasicBlock(self.inplanes, planes))
+
+        return nn.Sequential(*layers)
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor, Tensor]:
         """Forward pass returning multi-scale features.
@@ -69,9 +147,15 @@ class DetailCaptureModule(Module):
         Returns:
             Tuple of (C2, C3, C4) features at 1/2, 1/4, 1/8 scales
         """
-        c2 = self.layer1(x)  # 1/2 scale
-        c3 = self.layer2(c2)  # 1/4 scale
-        c4 = self.layer3(c3)  # 1/8 scale
+        # Initial processing
+        x = self.conv1(x)  # stride=2, so this gives us 1/2 scale
+        x = self.bn1(x)
+        x = self.relu(x)
+
+        # ResNet layers for multi-scale features
+        c2 = self.layer1(x)  # 1/2 scale (64 channels)
+        c3 = self.layer2(c2)  # 1/4 scale (128 channels)
+        c4 = self.layer3(c3)  # 1/8 scale (256 channels)
 
         return c2, c3, c4
 
@@ -132,19 +216,30 @@ class FeatureInjector(Module):
         Returns:
             Enhanced ViT features [B, N, D]
         """
+        import torch.nn.functional as F
+
         b, n, d = vit_feats.shape
         enhanced_feats = [vit_feats]
+
+        # Calculate target spatial dimensions from ViT patch count
+        # Assume square patch grid: N = H_patch * W_patch
+        patch_grid_size = int(n**0.5)  # sqrt(N) for square grid
+        target_spatial = (patch_grid_size, patch_grid_size)
 
         for i, (detail_feat, cross_attn, proj) in enumerate(
             zip(detail_feats, self.cross_attns, self.detail_projs)
         ):
-            # Flatten spatial dimensions: [B, C, H, W] -> [B, H*W, C]
-            detail_flat = detail_feat.flatten(2).transpose(1, 2)
+            # Spatially align detail features to match ViT patch resolution
+            # This reduces attention complexity from O(N*H*W) to O(N*N)
+            detail_aligned = F.adaptive_avg_pool2d(detail_feat, target_spatial)
+
+            # Flatten spatial dimensions: [B, C, H_patch, W_patch] -> [B, N, C]
+            detail_flat = detail_aligned.flatten(2).transpose(1, 2)
 
             # Project to ViT dimension
             detail_proj = proj(detail_flat)
 
-            # Cross-attention: ViT as query, detail as key/value
+            # Cross-attention: ViT as query, aligned detail as key/value
             enhanced_feat, _ = cross_attn(
                 query=vit_feats, key=detail_proj, value=detail_proj
             )
