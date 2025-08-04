@@ -65,10 +65,13 @@ L-TAE
 
 .. autoclass:: LTAE
 
-MOSAIKS / RCF Extractor
-^^^^^^^^^^^^^^^^^^^^^^^
+MOSAIKS
+^^^^^^^
 
 .. autoclass:: MOSAIKS
+
+RCF Extractor
+^^^^^^^^^^^^^
 .. autoclass:: RCF
 
 ResNet
