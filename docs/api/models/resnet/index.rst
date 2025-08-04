@@ -1,7 +1,7 @@
 ResNet
 ======
 
-The ResNet family of models available in ``torchgeo.models``.  
+The ResNet family of models available in ``torchgeo.models``.
 
 Available Versions
 ------------------

@@ -11,7 +11,6 @@ Models
 .. toctree::
    :maxdepth: 1
 
-
    models/changestar/index
    models/resnet/index
 
