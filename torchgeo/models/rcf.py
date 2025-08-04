@@ -202,7 +202,7 @@ class RCF(Module):
 
 
 class MOSAIKS(RCF):
-    """RCF model with the MOSAIKS recommended parameters used in the paper.
+    """MOSAIKS RCF model with the recommended parameters defined in the paper.
 
     If you use this model in your research, please cite the following paper:
 
@@ -225,7 +225,7 @@ class MOSAIKS(RCF):
         """Initializes the MOSAIKS model.
 
         Args:
-            dataset: a NonGeoDataset to sample from when mode is "empirical"
+            dataset: a NonGeoDataset to sample from
             in_channels: number of input channels
             features: number of features to compute, must be divisible by 2
             kernel_size: size of the kernel used to compute the RCFs
