@@ -9,11 +9,11 @@ Models
 ------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
 
-   models/changestar
-   models/resnet
+   models/changestar/index
+   models/resnet/index
 
 Pretrained Weights
 ------------------
