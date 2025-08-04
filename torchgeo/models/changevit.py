@@ -1,12 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-# TODO:
-# - [ ] Train model on benchmark datasets (Levir-CD, WHU-CD) and compare with paper results
-# - [ ] Tolerance paramter size ok? -> timm vit + standard resnet vs. custom VIT + custom resnet
-# - [ ] Which weights should be used as standard? Should we add DINO-S weights as well?
-# - [ ] Go through code once more and make sure it aligns with paper
-
 """ChangeViT model implementation.
 
 Based on the paper: https://arxiv.org/pdf/2406.12847
@@ -434,11 +428,12 @@ def changevit_small(
             'Please install it with `pip install timm`.'
         ) from e
 
-    # Create ViT backbone from timm
+    # Create ViT backbone from timm - use DINOv2 small for best performance per paper
     vit_backbone = timm.create_model(
-        'vit_small_patch16_224' if weights is None else 'deit_small_patch16_224',
+        'vit_small_patch14_dinov2',
         pretrained=weights is not None,
         num_classes=0,  # Remove classification head
+        img_size=224,  # Override default 518x518 to work with 224x224 inputs
         **kwargs,
     )
 
@@ -449,12 +444,23 @@ def changevit_small(
     if embed_dim is None:
         raise AttributeError('ViT backbone must have embed_dim attribute')
 
+    # Get actual patch size for proper upsampling
+    patch_embed = getattr(vit_backbone, 'patch_embed', None)
+    if patch_embed is not None and hasattr(patch_embed, 'patch_size'):
+        patch_size_attr = getattr(patch_embed, 'patch_size')
+        if isinstance(patch_size_attr, list | tuple):
+            patch_size = patch_size_attr[0]
+        else:
+            patch_size = patch_size_attr
+    else:
+        patch_size = 14  # Default for DINOv2
+
     # Create components
     detail_capture = DetailCaptureModule(in_channels=6)
     feature_injector = FeatureInjector(vit_dim=embed_dim, detail_dims=(64, 128, 256))
     decoder = ChangeViTDecoder(
         in_channels=embed_dim,
-        scale_factor=16.0,  # ViT patch size
+        scale_factor=float(patch_size),  # Use actual patch size (14 for DINOv2)
     )
 
     # Create model
@@ -497,7 +503,7 @@ def changevit_tiny(
 
     # Create ViT backbone from timm - use DeiT tiny for paper reproduction
     vit_backbone = timm.create_model(
-        'deit_tiny_patch16_224' if weights is None else 'vit_tiny_patch16_224',
+        'deit_tiny_patch16_224',
         pretrained=weights is not None,
         num_classes=0,  # Remove classification head
         **kwargs,
@@ -510,12 +516,23 @@ def changevit_tiny(
     if embed_dim is None:
         raise AttributeError('ViT backbone must have embed_dim attribute')
 
+    # Get actual patch size for proper upsampling
+    patch_embed = getattr(vit_backbone, 'patch_embed', None)
+    if patch_embed is not None and hasattr(patch_embed, 'patch_size'):
+        patch_size_attr = getattr(patch_embed, 'patch_size')
+        if isinstance(patch_size_attr, list | tuple):
+            patch_size = patch_size_attr[0]
+        else:
+            patch_size = patch_size_attr
+    else:
+        patch_size = 16  # Default for DeiT
+
     # Create components
     detail_capture = DetailCaptureModule(in_channels=6)
     feature_injector = FeatureInjector(vit_dim=embed_dim, detail_dims=(64, 128, 256))
     decoder = ChangeViTDecoder(
         in_channels=embed_dim,
-        scale_factor=16.0,  # ViT patch size
+        scale_factor=float(patch_size),  # Use actual patch size (16 for DeiT)
     )
 
     # Create model
