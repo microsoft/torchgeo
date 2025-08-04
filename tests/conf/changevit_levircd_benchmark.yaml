@@ -1,4 +1,4 @@
-#Todo: Can't start training in CLI with "torchgeo fit" because of parser key error "model"??
+# This config replicates the results of the ChangeVit paper on the LEVIR-CD dataset.
 model:
   class_path: ChangeDetectionTask
   init_args:
@@ -13,22 +13,23 @@ data:
     batch_size: 16
     patch_size: 224
     num_workers: 4
+    model: 'changevit_tiny'
   dict_kwargs:
-    root: 'tests/data/levircd/levircd'
+    root: 'data'
 
 trainer:
-  max_steps: 80000 # 80K iterations as specified in paper
+  max_steps: 80000
   accelerator: auto
-  devices: 1 # Single GPU as in paper
-  val_check_interval: 2000 # Check validation every 2000 steps
-  log_every_n_steps: 100
+  devices: 1
+  val_check_interval: 28
+  log_every_n_steps: 10
   callbacks:
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint
       init_args:
-        monitor: 'val_F1Score'
+        monitor: 'val_BinaryF1Score'
         mode: 'max'
         save_top_k: 3
-        filename: 'changevit_s_levircd_{step}_{val_F1Score:.4f}'
+        filename: 'changevit_s_levircd_{step}_{val_BinaryF1Score:.4f}'
     - class_path: lightning.pytorch.callbacks.LearningRateMonitor
       init_args:
         logging_interval: 'step'
