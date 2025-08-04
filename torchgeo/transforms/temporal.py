@@ -75,25 +75,25 @@ class Rearrange(GeometricAugmentationBase3D):
 
 
 class CyclicalEncoder(nn.Module):
-    """Generic sinusoidal embedding for periodic temporal features."""
+    """Generic sinusoidal embedding for periodic temporal features.
+
+    .. versionadded:: 0.8
+    """
 
     def __init__(
         self,
         period: pd.Timedelta,
         time_key: str = 'time',
-        out_key: str = 'time_embedding',
     ) -> None:
         """Initialize a CyclicalEncoder instance.
 
         Args:
             period: The period of the sinusoidal function.
             time_key: The key in the input data containing time values.
-            out_key: The key for the output embeddings.
         """
         super().__init__()
         self.period = period
         self.time_key = time_key
-        self.out_key = out_key
 
     def forward(self, sample: dict[str, Any]) -> dict[str, Any]:
         """Add sinusoidal embeddings to the sample using the given time key."""
@@ -108,6 +108,6 @@ class CyclicalEncoder(nn.Module):
         scaled = torch.tensor(
             2 * math.pi * t / self.period.total_seconds(), dtype=torch.float32
         ).unsqueeze(0)
-        enc = torch.cat([torch.sin(scaled), torch.cos(scaled)], dim=-1)
-        sample[self.out_key] = enc
+        sample[f"sin_{self.time_key}"] = torch.sin(scaled)
+        sample[f"cos_{self.time_key}"] = torch.cos(scaled)
         return sample

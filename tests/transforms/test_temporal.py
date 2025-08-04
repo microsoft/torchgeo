@@ -50,10 +50,8 @@ def test_temporal_embedding_shape_and_values() -> None:
     output = model(t)
     norms = torch.norm(output, dim=-1)
     assert output.shape == (5, 2), f'Expected shape (5, 2), got {output.shape}'
-    assert torch.allclose(norms, torch.ones_like(norms), atol=1e-4), (
-        'Embeddings not normalized to unit circle'
-    )
-
+    assert torch.allclose(norms, torch.ones_like(norms), atol=1e-4)
+    assert torch.allclose(output[0], torch.tensor([1.0, 0.0]), atol=1e-4)
 
 def test_temporal_embedding_batch_dimension() -> None:
     model = CyclicalEncoder(period=24)
