@@ -1,0 +1,10 @@
+ResNet Models
+=============
+
+The ResNet family of models available in ``torchgeo.models``.  
+
+Available Versions
+------------------
+
+- :doc:`resnet/resnet18`
+- :doc:`resnet/resnet50`

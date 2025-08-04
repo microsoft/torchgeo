@@ -1,8 +1,11 @@
 ChangeStar
 ==========
 
-.. autoclass:: torchgeo.models.ChangeStar
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :member-order: bysource
+The ChangeStar family of models for change detection.
+
+Available Versions
+------------------
+
+- :doc:`changestar/changestar`
+- :doc:`changestar/changemixin`
+- :doc:`changestar/changestarfarseg`
