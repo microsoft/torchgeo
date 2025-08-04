@@ -32,6 +32,8 @@ from torchgeo.models import (
     ViTSmall16_Weights,
     YOLO_Weights,
     aurora_swin_unet,
+    changevit_small,
+    changevit_tiny,
     copernicusfm_base,
     croma_base,
     croma_large,
@@ -63,6 +65,8 @@ from torchgeo.models import (
 
 builders = [
     aurora_swin_unet,
+    changevit_small,
+    changevit_tiny,
     copernicusfm_base,
     croma_base,
     croma_large,
@@ -126,7 +130,12 @@ def test_get_model(builder: Callable[..., nn.Module]) -> None:
 
 @pytest.mark.parametrize('builder', builders)
 def test_get_model_weights(builder: Callable[..., nn.Module]) -> None:
-    models_without_weights = [dofa_huge_patch14_224, dofa_small_patch16_224]
+    models_without_weights = [
+        changevit_small,
+        changevit_tiny,
+        dofa_huge_patch14_224,
+        dofa_small_patch16_224,
+    ]
     if builder in models_without_weights:
         return
 
