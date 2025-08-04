@@ -9,6 +9,6 @@ Available Versions
 .. toctree::
    :maxdepth: 1
 
-   changestar/changestar
-   changestar/changestarfarseg
-   changestar/changemixin
+   changestar
+   changestarfarseg
+   changemixin

@@ -9,5 +9,5 @@ Available Versions
 .. toctree::
    :maxdepth: 1
 
-   resnet/resnet18
-   resnet/resnet50
+   resnet18
+   resnet50
