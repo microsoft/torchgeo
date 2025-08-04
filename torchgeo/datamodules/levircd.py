@@ -26,6 +26,7 @@ class LEVIRCDDataModule(NonGeoDataModule):
         batch_size: int = 8,
         patch_size: tuple[int, int] | int = 256,
         num_workers: int = 0,
+        model: str = '',
         **kwargs: Any,
     ) -> None:
         """Initialize a new LEVIRCDDataModule instance.
@@ -35,6 +36,7 @@ class LEVIRCDDataModule(NonGeoDataModule):
             patch_size: Size of each patch, either ``size`` or ``(height, width)``.
                 Should be a multiple of 32 for most segmentation architectures.
             num_workers: Number of workers for parallel data loading.
+            model: Model name (used to adjust augmentations for specific models).
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.LEVIRCD`.
         """
@@ -43,6 +45,7 @@ class LEVIRCDDataModule(NonGeoDataModule):
         )
 
         self.patch_size = _to_tuple(patch_size)
+        self.model = model
 
         self.train_aug = K.AugmentationSequential(
             K.VideoSequential(
@@ -52,24 +55,44 @@ class LEVIRCDDataModule(NonGeoDataModule):
             data_keys=None,
             keepdim=True,
         )
-        self.val_aug = K.AugmentationSequential(
-            K.VideoSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(window_size=self.patch_size),
-            ),
-            data_keys=None,
-            keepdim=True,
-            same_on_batch=True,
-        )
-        self.test_aug = K.AugmentationSequential(
-            K.VideoSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(window_size=self.patch_size),
-            ),
-            data_keys=None,
-            keepdim=True,
-            same_on_batch=True,
-        )
+
+        # Use CenterCrop for ChangeViT models to avoid multiple patches
+        if model.startswith('changevit'):
+            self.val_aug = K.AugmentationSequential(
+                K.VideoSequential(
+                    K.Normalize(mean=self.mean, std=self.std),
+                    K.CenterCrop(self.patch_size),
+                ),
+                data_keys=None,
+                keepdim=True,
+            )
+            self.test_aug = K.AugmentationSequential(
+                K.VideoSequential(
+                    K.Normalize(mean=self.mean, std=self.std),
+                    K.CenterCrop(self.patch_size),
+                ),
+                data_keys=None,
+                keepdim=True,
+            )
+        else:
+            self.val_aug = K.AugmentationSequential(
+                K.VideoSequential(
+                    K.Normalize(mean=self.mean, std=self.std),
+                    _ExtractPatches(window_size=self.patch_size),
+                ),
+                data_keys=None,
+                keepdim=True,
+                same_on_batch=True,
+            )
+            self.test_aug = K.AugmentationSequential(
+                K.VideoSequential(
+                    K.Normalize(mean=self.mean, std=self.std),
+                    _ExtractPatches(window_size=self.patch_size),
+                ),
+                data_keys=None,
+                keepdim=True,
+                same_on_batch=True,
+            )
 
 
 class LEVIRCDPlusDataModule(NonGeoDataModule):
