@@ -166,14 +166,29 @@ class TestChangeViTParameterCounts:
         model = changevit_small(weights=None)
         total_params = sum(p.numel() for p in model.parameters())
 
-        # Allow 25% tolerance for implementation differences (layers, activations, etc.)
         expected_params = 32.13e6
-        tolerance = 0.25 * expected_params
+        tolerance_pct = 20.0  # 20% tolerance for different ViT variants
 
-        assert abs(total_params - expected_params) < tolerance, (
-            f'Expected ~{expected_params / 1e6:.1f}M params, got {total_params / 1e6:.1f}M '
-            f'(difference: {abs(total_params - expected_params) / 1e6:.1f}M, '
-            f'tolerance: ±{tolerance / 1e6:.1f}M)'
+        rel_error_pct = abs(total_params - expected_params) / expected_params * 100
+        assert rel_error_pct < tolerance_pct, (
+            f'Paper reports {expected_params / 1e6:.2f}M params, got {total_params / 1e6:.2f}M '
+            f'(relative error: {rel_error_pct:.1f}%, tolerance: {tolerance_pct}%)'
+        )
+
+    def test_changevit_tiny_parameter_count(self) -> None:
+        """Paper reports ChangeViT-T has 11.68M parameters."""
+        from torchgeo.models import changevit_tiny
+
+        model = changevit_tiny(weights=None)
+        total_params = sum(p.numel() for p in model.parameters())
+
+        expected_params = 11.68e6
+        tolerance_pct = 25.0  # 25% tolerance for different ViT variants
+
+        rel_error_pct = abs(total_params - expected_params) / expected_params * 100
+        assert rel_error_pct < tolerance_pct, (
+            f'Paper reports {expected_params / 1e6:.2f}M params, got {total_params / 1e6:.2f}M '
+            f'(relative error: {rel_error_pct:.1f}%, tolerance: {tolerance_pct}%)'
         )
 
     def test_detail_capture_lightweight(self) -> None:
@@ -183,14 +198,15 @@ class TestChangeViTParameterCounts:
         dcm = DetailCaptureModule(in_channels=6)
         dcm_params = sum(p.numel() for p in dcm.parameters())
 
-        # Allow larger tolerance for implementation differences (ResNet18 C2-C4 adaptation)
         expected_dcm_params = 2.7e6
-        tolerance = 1.6e6  # Allow 1.6M parameter tolerance (difference can be significant in backbone adaptation)
+        tolerance_pct = 10.0  # 10% tolerance for ResNet18 implementation variations
 
-        assert abs(dcm_params - expected_dcm_params) < tolerance, (
-            f'Detail capture should have ~{expected_dcm_params / 1e6:.1f}M params, got {dcm_params / 1e6:.1f}M '
-            f'(difference: {abs(dcm_params - expected_dcm_params) / 1e6:.1f}M, '
-            f'tolerance: ±{tolerance / 1e6:.1f}M)'
+        rel_error_pct = (
+            abs(dcm_params - expected_dcm_params) / expected_dcm_params * 100
+        )
+        assert rel_error_pct < tolerance_pct, (
+            f'Paper reports {expected_dcm_params / 1e6:.2f}M params, got {dcm_params / 1e6:.2f}M '
+            f'(relative error: {rel_error_pct:.1f}%, tolerance: {tolerance_pct}%)'
         )
 
 
