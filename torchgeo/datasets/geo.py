@@ -14,11 +14,6 @@ from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
 from typing import Any, ClassVar, Literal
 
-import xarray as xr
-from rasterio.crs import CRS
-from rioxarray.merge import merge_arrays
-from rtree.index import Index, Property
-
 import fiona
 import fiona.transform
 import geopandas as gpd
@@ -28,11 +23,14 @@ import rasterio
 import rasterio.merge
 import shapely
 import torch
+import xarray as xr
 from geopandas import GeoDataFrame
 from pyproj import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
+from rioxarray.merge import merge_arrays
+from rtree.index import Index, Property
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -1355,10 +1353,9 @@ class UnionDataset(GeoDataset):
         self.datasets[1].res = new_res
 
 
-
 class RioXarrayDataset(GeoDataset):
     """Wrapper for geographical datasets stored as Xarray Datasets.
-    
+
     In-memory geographical xarray.DataArray and xarray.Dataset.
 
     Relies on rioxarray.
@@ -1366,13 +1363,13 @@ class RioXarrayDataset(GeoDataset):
     .. versionadded:: 0.7.0
     """
 
-    filename_glob = "*"
-    filename_regex = ".*"
+    filename_glob = '*'
+    filename_regex = '.*'
 
     is_image = True
 
-    spatial_x_name = "x"
-    spatial_y_name = "y"
+    spatial_x_name = 'x'
+    spatial_y_name = 'y'
 
     transform = None
 
@@ -1465,11 +1462,11 @@ class RioXarrayDataset(GeoDataset):
                         # or take the shape of the data variable?
                         continue
 
-                if hasattr(ds, "time"):
+                if hasattr(ds, 'time'):
                     try:
-                        indices = ds.indexes["time"].to_datetimeindex()
+                        indices = ds.indexes['time'].to_datetimeindex()
                     except AttributeError:
-                        indices = ds.indexes["time"]
+                        indices = ds.indexes['time']
 
                     mint = indices.min().to_pydatetime().timestamp()
                     maxt = indices.max().to_pydatetime().timestamp()
@@ -1488,7 +1485,9 @@ class RioXarrayDataset(GeoDataset):
             import pdb
 
             pdb.set_trace()
-            msg = f"No {self.__class__.__name__} data was found in `paths='{self.paths}'`"
+            msg = (
+                f"No {self.__class__.__name__} data was found in `paths='{self.paths}'`"
+            )
             raise FileNotFoundError(msg)
 
         if not data_variables:
@@ -1512,21 +1511,21 @@ class RioXarrayDataset(GeoDataset):
         x_name = None
         y_name = None
         for coord_name, coord in ds.coords.items():
-            if hasattr(coord, "units"):
+            if hasattr(coord, 'units'):
                 if any(
                     [
                         x in coord.units.lower()
-                        for x in ["degrees_north", "degree_north"]
+                        for x in ['degrees_north', 'degree_north']
                     ]
                 ):
                     y_name = coord_name
                 elif any(
-                    [x in coord.units.lower() for x in ["degrees_east", "degree_east"]]
+                    [x in coord.units.lower() for x in ['degrees_east', 'degree_east']]
                 ):
                     x_name = coord_name
 
         if not x_name or not y_name:
-            raise ValueError("Spatial Coordinate Units not found in Dataset.")
+            raise ValueError('Spatial Coordinate Units not found in Dataset.')
 
         return x_name, y_name
 
@@ -1547,19 +1546,19 @@ class RioXarrayDataset(GeoDataset):
 
         if not items:
             raise IndexError(
-                f"query: {query} not found in index with bounds: {self.bounds}"
+                f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
-        data_arrays: list["np.typing.NDArray"] = []
+        data_arrays: list[np.typing.NDArray] = []
         for item in items:
             with xr.open_dataset(item, decode_cf=True) as ds:
                 ds = self.harmonize_format(ds)
                 # select time dimension
-                if hasattr(ds, "time"):
+                if hasattr(ds, 'time'):
                     try:
-                        ds["time"] = ds.indexes["time"].to_datetimeindex()
+                        ds['time'] = ds.indexes['time'].to_datetimeindex()
                     except AttributeError:
-                        ds["time"] = ds.indexes["time"]
+                        ds['time'] = ds.indexes['time']
                     ds = ds.sel(
                         time=slice(
                             datetime.fromtimestamp(query.mint),
@@ -1583,7 +1582,7 @@ class RioXarrayDataset(GeoDataset):
                         )
                         # rioxarray expects this order
                         clipped = clipped.transpose(
-                            "time", self.spatial_y_name, self.spatial_x_name, ...
+                            'time', self.spatial_y_name, self.spatial_x_name, ...
                         )
 
                         # set proper transform # TODO not working
@@ -1598,13 +1597,13 @@ class RioXarrayDataset(GeoDataset):
                 data_arrays, bounds=(query.minx, query.miny, query.maxx, query.maxy)
             ).data
         )
-        sample = {"bbox": query}
+        sample = {'bbox': query}
 
         merged_data = merged_data.to(self.dtype)
         if self.is_image:
-            sample["image"] = merged_data
+            sample['image'] = merged_data
         else:
-            sample["mask"] = merged_data
+            sample['mask'] = merged_data
 
         if self.transforms is not None:
             sample = self.transforms(sample)
