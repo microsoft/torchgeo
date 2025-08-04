@@ -18,7 +18,6 @@ Available Models
 
    models/changestar
    models/resnet
-   models/pretrained_weights
 
 Pretrained Weights
 ------------------
