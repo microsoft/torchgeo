@@ -5,12 +5,11 @@ torchgeo.models
 
 This section provides an overview of all models available in ``torchgeo.models``.
 
-Available Models
-----------------
+Models
+------
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Models
+   :maxdepth: 2
 
 
    models/changestar
