@@ -1,5 +1,5 @@
-ResNet Models
-=============
+ResNet
+======
 
 The ResNet family of models available in ``torchgeo.models``.  
 
