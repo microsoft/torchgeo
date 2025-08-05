@@ -69,9 +69,6 @@ MOSAIKS
 ^^^^^^^
 
 .. autoclass:: MOSAIKS
-
-RCF Extractor
-^^^^^^^^^^^^^
 .. autoclass:: RCF
 
 ResNet

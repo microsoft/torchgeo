@@ -211,6 +211,8 @@ class MOSAIKS(RCF):
     .. note::
 
        This Module is *not* trainable. It is only used as a feature extractor.
+
+    .. versionadded:: 0.8
     """
 
     def __init__(
