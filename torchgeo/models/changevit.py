@@ -11,6 +11,7 @@ from typing import Any
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from einops import rearrange
 from torch import Tensor
 from torch.nn.modules import Module
@@ -295,22 +296,22 @@ class ChangeViTDecoder(Module):
             ]
         )
 
-        # Classification layer and upsampling
+        # Classification layer (upsampling will be done dynamically)
         cls_layer = nn.Sequential(nn.Conv2d(inner_channels, 1, 3, 1, 1))
-        upsample_layer = nn.Sequential(
-            nn.UpsamplingBilinear2d(scale_factor=scale_factor)
-        )
 
         layers.append(cls_layer)
-        layers.append(upsample_layer)
 
         self.convs = nn.Sequential(*layers)
+        self.scale_factor = scale_factor
 
-    def forward(self, bi_feature: Tensor) -> tuple[Tensor, Tensor]:
+    def forward(
+        self, bi_feature: Tensor, target_size: tuple[int, int] | None = None
+    ) -> tuple[Tensor, Tensor]:
         """Forward pass for change detection.
 
         Args:
             bi_feature: Bitemporal features [B, T, C, H, W]
+            target_size: Optional target spatial size (H, W) for upsampling
 
         Returns:
             List of bidirectional change predictions
@@ -323,6 +324,21 @@ class ChangeViTDecoder(Module):
 
         # Process both orderings together
         c1221 = self.convs(torch.cat([t1t2, t2t1], dim=0))
+
+        # Apply upsampling to match target size
+        if target_size is not None:
+            c1221 = F.interpolate(
+                c1221, size=target_size, mode='bilinear', align_corners=False
+            )
+        else:
+            # Fallback to scale_factor upsampling
+            c1221 = F.interpolate(
+                c1221,
+                scale_factor=self.scale_factor,
+                mode='bilinear',
+                align_corners=False,
+            )
+
         c12, c21 = torch.split(c1221, batch_size, dim=0)
 
         return c12, c21
@@ -440,8 +456,10 @@ class ChangeViT(Module):
         )
 
         # Apply change detection with proper temporal features
+        # Pass original input size to ensure exact output dimensions
+        target_size = (x.shape[-2], x.shape[-1])  # (H, W) from original input
         c12, c21 = self.decoder(
-            enhanced_spatial
+            enhanced_spatial, target_size=target_size
         )  # Returns tuple of [B, 1, H, W] tensors
 
         change_logits = c12  # Match target format [B, 1, H, W]
@@ -502,7 +520,7 @@ class ChangeViT_Weights(WeightsEnum):  # type: ignore[misc]
 
 
 def changevit_small(
-    weights: ChangeViT_Weights | None = None, **kwargs: Any
+    weights: ChangeViT_Weights | None = None, img_size: int = 256, **kwargs: Any
 ) -> ChangeViT:
     """ChangeViT Small model.
 
@@ -510,6 +528,7 @@ def changevit_small(
 
     Args:
         weights: Pre-trained model weights to use.
+        img_size: Input image size (default: 256 to match paper methodology).
         **kwargs: Additional keyword arguments.
 
     Returns:
@@ -528,7 +547,7 @@ def changevit_small(
         'vit_small_patch14_dinov2',
         pretrained=weights is not None,
         num_classes=0,  # Remove classification head
-        img_size=224,  # Override default 518x518 to work with 224x224 inputs
+        img_size=img_size,  # Configurable input size, default 256 for paper methodology
         **kwargs,
     )
 
@@ -574,7 +593,7 @@ def changevit_small(
 
 
 def changevit_tiny(
-    weights: ChangeViT_Weights | None = None, **kwargs: Any
+    weights: ChangeViT_Weights | None = None, img_size: int = 256, **kwargs: Any
 ) -> ChangeViT:
     """ChangeViT Tiny model.
 
@@ -583,6 +602,7 @@ def changevit_tiny(
 
     Args:
         weights: Pre-trained model weights to use.
+        img_size: Input image size (default: 256 to match paper methodology).
         **kwargs: Additional keyword arguments.
 
     Returns:
@@ -601,12 +621,11 @@ def changevit_tiny(
         'deit_tiny_patch16_224',
         pretrained=weights is not None,
         num_classes=0,  # Remove classification head
+        img_size=img_size,  # Configurable input size, default 256 for paper methodology
         **kwargs,
     )
 
     # Use standard 3-channel patch embedding
-
-    # Get embed_dim safely
     embed_dim = getattr(vit_backbone, 'embed_dim', None)
     if embed_dim is None:
         raise AttributeError('ViT backbone must have embed_dim attribute')

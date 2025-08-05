@@ -31,7 +31,7 @@ class TestChangeViTArchitectureRequirements:
         from torchgeo.models.changevit import DetailCaptureModule
 
         dcm = DetailCaptureModule(in_channels=6)
-        x = torch.randn(2, 6, 224, 224)  # Bitemporal RGB input
+        x = torch.randn(2, 6, 256, 256)  # Bitemporal RGB input
 
         outputs = dcm(x)
 
@@ -57,14 +57,14 @@ class TestChangeViTArchitectureRequirements:
         injector = FeatureInjector(vit_dim=vit_dim)
 
         # Mock ViT features: [B, N_patches, D]
-        batch_size, num_patches = 2, 196  # 14x14 patches for 224x224 image
+        batch_size, num_patches = 2, 256  # 16x16 patches for 256x256 image
         vit_feats = torch.randn(batch_size, num_patches, vit_dim)
 
         # Mock detail features at 3 scales
         detail_feats = (
-            torch.randn(batch_size, 64, 112, 112),  # 1/2 scale
-            torch.randn(batch_size, 128, 56, 56),  # 1/4 scale
-            torch.randn(batch_size, 256, 28, 28),  # 1/8 scale
+            torch.randn(batch_size, 64, 128, 128),  # 1/2 scale
+            torch.randn(batch_size, 128, 64, 64),  # 1/4 scale
+            torch.randn(batch_size, 256, 32, 32),  # 1/8 scale
         )
 
         enhanced_feats = injector(vit_feats, detail_feats)
@@ -85,7 +85,7 @@ class TestChangeViTInputOutputBehavior:
         model = changevit_small(weights=None)
 
         # Input format: [Batch, Time, Channels, Height, Width]
-        batch_size, time_steps, channels, height, width = 2, 2, 3, 224, 224
+        batch_size, time_steps, channels, height, width = 2, 2, 3, 256, 256
         x = torch.randn(batch_size, time_steps, channels, height, width)
 
         # Should not raise an error
@@ -100,7 +100,7 @@ class TestChangeViTInputOutputBehavior:
         from torchgeo.models import changevit_small
 
         model = changevit_small(weights=None)
-        x = torch.randn(1, 2, 3, 224, 224)
+        x = torch.randn(1, 2, 3, 256, 256)
 
         # Training mode should output logits (for BCE loss computation)
         model.train()
@@ -138,8 +138,8 @@ class TestChangeViTInputOutputBehavior:
 
         model = changevit_small(weights=None)
 
-        # Test with standard ViT size (224x224)
-        test_sizes = [(224, 224)]
+        # Test with standard ViT size (256x256)
+        test_sizes = [(256, 256)]
 
         for h, w in test_sizes:
             x = torch.randn(1, 2, 3, h, w)
@@ -220,7 +220,7 @@ class TestChangeViTFunctionalBehavior:
         model = changevit_small(weights=None)
 
         # Create identical image pair
-        img = torch.randn(1, 3, 224, 224)
+        img = torch.randn(1, 3, 256, 256)
         identical_pair = torch.stack([img, img], dim=1)  # [1, 2, 3, 256, 256]
 
         model.eval()
@@ -241,8 +241,8 @@ class TestChangeViTFunctionalBehavior:
         model = changevit_small(weights=None)
 
         # Create very different image pair (opposite patterns)
-        img1 = torch.ones(1, 3, 224, 224)  # All white
-        img2 = torch.zeros(1, 3, 224, 224)  # All black
+        img1 = torch.ones(1, 3, 256, 256)  # All white
+        img2 = torch.zeros(1, 3, 256, 256)  # All black
         different_pair = torch.stack([img1, img2], dim=1)
 
         model.eval()
@@ -263,8 +263,8 @@ class TestChangeViTFunctionalBehavior:
         model = changevit_small(weights=None)
 
         # Create image pair
-        img1 = torch.randn(1, 3, 224, 224)
-        img2 = torch.randn(1, 3, 224, 224)
+        img1 = torch.randn(1, 3, 256, 256)
+        img2 = torch.randn(1, 3, 256, 256)
 
         pair_12 = torch.stack([img1, img2], dim=1)
         pair_21 = torch.stack([img2, img1], dim=1)
@@ -310,9 +310,9 @@ class TestTorchGeoIntegration:
 
         # TorchGeo batch format
         batch = {
-            'image': torch.randn(2, 2, 3, 224, 224),  # [B, T, C, H, W]
+            'image': torch.randn(2, 2, 3, 256, 256),  # [B, T, C, H, W]
             'mask': torch.randint(
-                0, 2, (2, 1, 224, 224)
+                0, 2, (2, 1, 256, 256)
             ).float(),  # Binary mask with channel dimension [B, 1, H, W]
         }
 
@@ -354,7 +354,7 @@ class TestChangeViTScalability:
             'tiny': changevit_tiny(weights=None),
         }
 
-        x = torch.randn(1, 2, 3, 224, 224)
+        x = torch.randn(1, 2, 3, 256, 256)
 
         for name, model in models.items():
             model.eval()
@@ -383,7 +383,7 @@ class TestChangeViTScalability:
         batch_sizes = [1, 2, 4, 8]
 
         for bs in batch_sizes:
-            x = torch.randn(bs, 2, 3, 224, 224)
+            x = torch.randn(bs, 2, 3, 256, 256)
 
             with torch.no_grad():
                 output = model(x)
@@ -403,7 +403,7 @@ class TestChangeViTErrorHandling:
 
         # Wrong number of temporal dimensions
         with pytest.raises((RuntimeError, ValueError)):
-            x = torch.randn(2, 3, 3, 224, 224)  # 3 temporal steps instead of 2
+            x = torch.randn(2, 3, 3, 256, 256)  # 3 temporal steps instead of 2
             model(x)
 
     def test_very_small_input_size(self) -> None:
@@ -413,7 +413,7 @@ class TestChangeViTErrorHandling:
         model = changevit_small(weights=None)
 
         # Test with standard ViT size
-        x = torch.randn(1, 2, 3, 224, 224)  # Standard size
+        x = torch.randn(1, 2, 3, 256, 256)  # Standard size
 
         model.eval()
         with torch.no_grad():
@@ -451,7 +451,7 @@ class TestImplementationConsistency:
         model = changevit_small(weights=None)
         model.train()
 
-        x = torch.randn(1, 2, 3, 224, 224)
+        x = torch.randn(1, 2, 3, 256, 256)
         output = model(x)
 
         # Create dummy loss

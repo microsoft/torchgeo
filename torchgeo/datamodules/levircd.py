@@ -7,6 +7,7 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch
+from torch import Tensor
 from torch.utils.data import random_split
 
 from ..datasets import LEVIRCD, LEVIRCDPlus
@@ -26,7 +27,6 @@ class LEVIRCDDataModule(NonGeoDataModule):
         batch_size: int = 8,
         patch_size: tuple[int, int] | int = 256,
         num_workers: int = 0,
-        model: str = '',
         **kwargs: Any,
     ) -> None:
         """Initialize a new LEVIRCDDataModule instance.
@@ -36,7 +36,6 @@ class LEVIRCDDataModule(NonGeoDataModule):
             patch_size: Size of each patch, either ``size`` or ``(height, width)``.
                 Should be a multiple of 32 for most segmentation architectures.
             num_workers: Number of workers for parallel data loading.
-            model: Model name (used to adjust augmentations for specific models).
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.LEVIRCD`.
         """
@@ -45,7 +44,6 @@ class LEVIRCDDataModule(NonGeoDataModule):
         )
 
         self.patch_size = _to_tuple(patch_size)
-        self.model = model
 
         self.train_aug = K.AugmentationSequential(
             K.VideoSequential(
@@ -55,44 +53,24 @@ class LEVIRCDDataModule(NonGeoDataModule):
             data_keys=None,
             keepdim=True,
         )
-
-        # Use CenterCrop for ChangeViT models to avoid multiple patches
-        if model.startswith('changevit'):
-            self.val_aug = K.AugmentationSequential(
-                K.VideoSequential(
-                    K.Normalize(mean=self.mean, std=self.std),
-                    K.CenterCrop(self.patch_size),
-                ),
-                data_keys=None,
-                keepdim=True,
-            )
-            self.test_aug = K.AugmentationSequential(
-                K.VideoSequential(
-                    K.Normalize(mean=self.mean, std=self.std),
-                    K.CenterCrop(self.patch_size),
-                ),
-                data_keys=None,
-                keepdim=True,
-            )
-        else:
-            self.val_aug = K.AugmentationSequential(
-                K.VideoSequential(
-                    K.Normalize(mean=self.mean, std=self.std),
-                    _ExtractPatches(window_size=self.patch_size),
-                ),
-                data_keys=None,
-                keepdim=True,
-                same_on_batch=True,
-            )
-            self.test_aug = K.AugmentationSequential(
-                K.VideoSequential(
-                    K.Normalize(mean=self.mean, std=self.std),
-                    _ExtractPatches(window_size=self.patch_size),
-                ),
-                data_keys=None,
-                keepdim=True,
-                same_on_batch=True,
-            )
+        self.val_aug = K.AugmentationSequential(
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                _ExtractPatches(window_size=self.patch_size),
+            ),
+            data_keys=None,
+            keepdim=True,
+            same_on_batch=True,
+        )
+        self.test_aug = K.AugmentationSequential(
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                _ExtractPatches(window_size=self.patch_size),
+            ),
+            data_keys=None,
+            keepdim=True,
+            same_on_batch=True,
+        )
 
 
 class LEVIRCDPlusDataModule(NonGeoDataModule):
@@ -171,3 +149,109 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
             )
         if stage in ['test']:
             self.test_dataset = LEVIRCDPlus(split='test', **self.kwargs)
+
+
+class LEVIRCDBenchmarkDataModule(NonGeoDataModule):
+    """LightningDataModule implementation for LEVIR-CD benchmarking of ChangeViT model.
+
+    This implements from the ChangeViT paper - Each 1024 x 1024 image is divided
+    into 16 non-overlapping 256 x 256 patches This results in 7120 pairs for
+    training, 1024 pairs for validation, and 2048 pairs for testing."
+    """
+
+    def __init__(
+        self,
+        batch_size: int = 8,
+        patch_size: tuple[int, int] | int = 256,
+        num_workers: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a new LEVIRCDDataModule instance.
+
+        Args:
+            batch_size: Size of each mini-batch.
+            patch_size: Size of each patch, either ``size`` or ``(height, width)``.
+                Should be a multiple of 32 for most segmentation architectures.
+            num_workers: Number of workers for parallel data loading.
+            **kwargs: Additional keyword arguments passed to
+                :class:`~torchgeo.datasets.LEVIRCD`.
+        """
+        stride = kwargs.pop('stride', None)
+
+        super().__init__(
+            LEVIRCD, batch_size=batch_size, num_workers=num_workers, **kwargs
+        )
+
+        self.patch_size = _to_tuple(patch_size)
+        self.stride = _to_tuple(stride) if stride is not None else None
+
+        # For all splits, extract all 16 patches as per paper methodology
+        self.train_aug = K.AugmentationSequential(
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                _ExtractPatches(
+                    window_size=self.patch_size, stride=self.stride, keepdim=False
+                ),
+            ),
+            data_keys=None,
+            keepdim=False,  # Allow dimension changes
+            same_on_batch=True,
+        )
+
+        # For val/test, use VideoSequential with _ExtractPatches
+        # but handle the dimension expansion properly
+        self.val_aug = K.AugmentationSequential(
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                _ExtractPatches(
+                    window_size=self.patch_size, stride=self.stride, keepdim=False
+                ),
+            ),
+            data_keys=None,
+            keepdim=False,  # Allow dimension changes
+            same_on_batch=True,
+        )
+        self.test_aug = K.AugmentationSequential(
+            K.VideoSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                _ExtractPatches(
+                    window_size=self.patch_size, stride=self.stride, keepdim=False
+                ),
+            ),
+            data_keys=None,
+            keepdim=False,  # Allow dimension changes
+            same_on_batch=True,
+        )
+
+        # Fallback general augmentation (same as val)
+        self.aug = self.val_aug
+
+    def on_after_batch_transfer(
+        self, batch: dict[str, Tensor], dataloader_idx: int
+    ) -> dict[str, Tensor]:
+        """Reshape batch to flatten patches into batch dimension for ChangeViT."""
+        # Apply standard augmentations first
+        batch = super().on_after_batch_transfer(batch, dataloader_idx)
+
+        # If patches were extracted, reshape for ChangeViT compatibility
+        if len(batch['image'].shape) == 6:  # [B, T, P, C, H, W]
+            batch_size, temporal_frames, patches_per_frame = batch['image'].shape[:3]
+
+            # Reshape image: [B, T, P, C, H, W] -> [B*P, T, C, H, W]
+            batch['image'] = batch['image'].view(
+                batch_size * patches_per_frame,
+                temporal_frames,
+                *batch['image'].shape[3:],
+            )
+
+            # Reshape mask: [B, T, P, C, H, W] -> [B*P, C, H, W]
+            if len(batch['mask'].shape) == 6:
+                # Permute to [B, P, T, C, H, W] then reshape to [B*P, T*C, H, W]
+                batch['mask'] = batch['mask'].permute(
+                    0, 2, 1, 3, 4, 5
+                )  # [B, P, T, C, H, W]
+                batch['mask'] = batch['mask'].reshape(
+                    batch_size * patches_per_frame, -1, *batch['mask'].shape[-2:]
+                )  # [B*P, T*C, H, W] where T*C = 1*1 = 1
+
+        return batch
