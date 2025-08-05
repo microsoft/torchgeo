@@ -8,12 +8,12 @@ model:
     lr: 2e-4
     num_classes: 2
 data:
-  class_path: LEVIRCDDataModule
+  class_path: LEVIRCDBenchmarkDataModule
   init_args:
-    batch_size: 16
-    patch_size: 224
+    batch_size: 4 #works with 24GB VRAM on RTX 4090
+    patch_size: 256
     num_workers: 4
-    model: 'changevit_tiny'
+    stride: 256
   dict_kwargs:
     root: 'data'
 
@@ -21,15 +21,20 @@ trainer:
   max_steps: 80000
   accelerator: auto
   devices: 1
-  val_check_interval: 28
+  check_val_every_n_epoch: 1
   log_every_n_steps: 10
+  enable_progress_bar: true
   callbacks:
+    - class_path: lightning.pytorch.callbacks.RichModelSummary
+      init_args:
+        max_depth: 2
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint
       init_args:
         monitor: 'val_BinaryF1Score'
         mode: 'max'
         save_top_k: 3
         filename: 'changevit_s_levircd_{step}_{val_BinaryF1Score:.4f}'
+        verbose: true
     - class_path: lightning.pytorch.callbacks.LearningRateMonitor
       init_args:
         logging_interval: 'step'
