@@ -186,39 +186,33 @@ class LEVIRCDBenchmarkDataModule(NonGeoDataModule):
         self.stride = _to_tuple(stride) if stride is not None else None
 
         # For all splits, extract all 16 patches as per paper methodology
+        # Apply normalize to image (handles temporal dimension correctly) then extract patches
         self.train_aug = K.AugmentationSequential(
-            K.VideoSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(
-                    window_size=self.patch_size, stride=self.stride, keepdim=False
-                ),
+            K.Normalize(mean=self.mean, std=self.std),
+            _ExtractPatches(
+                window_size=self.patch_size, stride=self.stride, keepdim=False
             ),
-            data_keys=None,
+            data_keys=None,  # Dictionary input requires data_keys=None
             keepdim=False,  # Allow dimension changes
             same_on_batch=True,
         )
 
-        # For val/test, use VideoSequential with _ExtractPatches
-        # but handle the dimension expansion properly
+        # For val/test, use same approach as training
         self.val_aug = K.AugmentationSequential(
-            K.VideoSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(
-                    window_size=self.patch_size, stride=self.stride, keepdim=False
-                ),
+            K.Normalize(mean=self.mean, std=self.std),
+            _ExtractPatches(
+                window_size=self.patch_size, stride=self.stride, keepdim=False
             ),
-            data_keys=None,
+            data_keys=None,  # Dictionary input requires data_keys=None
             keepdim=False,  # Allow dimension changes
             same_on_batch=True,
         )
         self.test_aug = K.AugmentationSequential(
-            K.VideoSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(
-                    window_size=self.patch_size, stride=self.stride, keepdim=False
-                ),
+            K.Normalize(mean=self.mean, std=self.std),
+            _ExtractPatches(
+                window_size=self.patch_size, stride=self.stride, keepdim=False
             ),
-            data_keys=None,
+            data_keys=None,  # Dictionary input requires data_keys=None
             keepdim=False,  # Allow dimension changes
             same_on_batch=True,
         )
@@ -226,12 +220,31 @@ class LEVIRCDBenchmarkDataModule(NonGeoDataModule):
         # Fallback general augmentation (same as val)
         self.aug = self.val_aug
 
+    def setup(self, stage: str) -> None:
+        """Set up datasets with transforms.
+
+        Args:
+            stage: Either 'fit', 'validate', 'test', or 'predict'.
+        """
+        if stage in ['fit']:
+            self.train_dataset = LEVIRCD(
+                split='train', transforms=self.train_aug, **self.kwargs
+            )
+        if stage in ['fit', 'validate']:
+            self.val_dataset = LEVIRCD(
+                split='val', transforms=self.val_aug, **self.kwargs
+            )
+        if stage in ['test']:
+            self.test_dataset = LEVIRCD(
+                split='test', transforms=self.test_aug, **self.kwargs
+            )
+
     def on_after_batch_transfer(
         self, batch: dict[str, Tensor], dataloader_idx: int
     ) -> dict[str, Tensor]:
         """Reshape batch to flatten patches into batch dimension for ChangeViT."""
-        # Apply standard augmentations first
-        batch = super().on_after_batch_transfer(batch, dataloader_idx)
+        # Skip base class transforms to avoid shape issues with patches
+        # batch = super().on_after_batch_transfer(batch, dataloader_idx)
 
         # If patches were extracted, reshape for ChangeViT compatibility
         if len(batch['image'].shape) == 6:  # [B, T, P, C, H, W]
