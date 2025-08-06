@@ -53,10 +53,12 @@ class LEVIRCDDataModule(NonGeoDataModule):
             data_keys=None,
             keepdim=True,
         )
+        # Fix Issue 1: Use CenterCrop instead of _ExtractPatches for compatibility with VideoSequential
+        # _ExtractPatches + VideoSequential are incompatible, so use standard Kornia transforms
         self.val_aug = K.AugmentationSequential(
             K.VideoSequential(
                 K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(window_size=self.patch_size),
+                K.CenterCrop(size=self.patch_size),
             ),
             data_keys=None,
             keepdim=True,
@@ -65,7 +67,7 @@ class LEVIRCDDataModule(NonGeoDataModule):
         self.test_aug = K.AugmentationSequential(
             K.VideoSequential(
                 K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(window_size=self.patch_size),
+                K.CenterCrop(size=self.patch_size),
             ),
             data_keys=None,
             keepdim=True,
@@ -116,10 +118,12 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
             data_keys=None,
             keepdim=True,
         )
+        # Fix Issue 1: Use CenterCrop instead of _ExtractPatches for compatibility with VideoSequential
+        # _ExtractPatches + VideoSequential are incompatible, so use standard Kornia transforms
         self.val_aug = K.AugmentationSequential(
             K.VideoSequential(
                 K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(window_size=self.patch_size),
+                K.CenterCrop(size=self.patch_size),
             ),
             data_keys=None,
             keepdim=True,
@@ -128,7 +132,7 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         self.test_aug = K.AugmentationSequential(
             K.VideoSequential(
                 K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(window_size=self.patch_size),
+                K.CenterCrop(size=self.patch_size),
             ),
             data_keys=None,
             keepdim=True,

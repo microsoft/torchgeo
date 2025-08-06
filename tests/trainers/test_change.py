@@ -340,3 +340,81 @@ class TestChangeDetectionTask:
             max_epochs=1,
         )
         trainer.predict(model=model, datamodule=datamodule)
+
+    def test_levircd_temporal_correspondence(self) -> None:
+        """Test LEVIR-CD temporal correspondence issues from GitHub issue #2920."""
+        pytest.importorskip(
+            'torchgeo.datamodules.levircd', reason='LEVIRCDDataModule required'
+        )
+
+        from torchgeo.datamodules.levircd import LEVIRCDBenchmarkDataModule
+
+        # Test Issue 2: LEVIRCDBenchmarkDataModule temporal correspondence
+        batch_size = 2
+        temporal_frames = 2  # t1, t2 for images
+        patches_per_frame = 16  # 16 patches per 1024x1024 image
+        channels = 3
+        height = width = 256
+
+        # Mock batch similar to what LEVIRCD would produce after _ExtractPatches
+        batch = {
+            'image': torch.randn(
+                batch_size, temporal_frames, patches_per_frame, channels, height, width
+            ),
+            'mask': torch.randn(
+                batch_size, 1, patches_per_frame, 1, height, width
+            ),  # Single change mask
+        }
+
+        # Test the on_after_batch_transfer method
+        datamodule = LEVIRCDBenchmarkDataModule(batch_size=8, patch_size=256)
+        result_batch = datamodule.on_after_batch_transfer(batch, 0)
+
+        # Check spatial correspondence: patch 0 from image should correspond to patch 0 from mask
+        expected_image_shape = (
+            batch_size * patches_per_frame,
+            temporal_frames,
+            channels,
+            height,
+            width,
+        )
+        expected_mask_shape = (batch_size * patches_per_frame, 1, height, width)
+
+        assert result_batch['image'].shape == expected_image_shape, (
+            f'Image shape mismatch: expected {expected_image_shape}, got {result_batch["image"].shape}'
+        )
+        assert result_batch['mask'].shape == expected_mask_shape, (
+            f'Mask shape mismatch: expected {expected_mask_shape}, got {result_batch["mask"].shape}'
+        )
+
+    def test_extract_patches_temporal_ordering(self) -> None:
+        """Test _ExtractPatches temporal ordering with VideoSequential from GitHub issue #2920."""
+        from torchgeo.transforms.transforms import _ExtractPatches
+
+        # Simulate VideoSequential input: [B, T, C, H, W]
+        batch_size = 2
+        temporal_frames = 2
+        channels = 3
+        height = width = 512  # Smaller for faster testing
+
+        input_tensor = torch.randn(batch_size, temporal_frames, channels, height, width)
+
+        # VideoSequential flattens B and T dimensions for processing: [B*T, C, H, W]
+        flattened_input = input_tensor.reshape(
+            batch_size * temporal_frames, channels, height, width
+        )
+
+        # Apply _ExtractPatches
+        extract_patches = _ExtractPatches(window_size=256, stride=256, keepdim=False)
+        patches = extract_patches(flattened_input)
+
+        # Verify we get expected number of patches
+        expected_patches_per_image = (height // 256) * (
+            width // 256
+        )  # 4 patches for 512x512 -> 256x256
+        expected_total_patches = (
+            batch_size * temporal_frames * expected_patches_per_image
+        )
+        assert patches.shape[0] == expected_total_patches, (
+            f'Expected {expected_total_patches} total patches, got {patches.shape[0]}'
+        )
