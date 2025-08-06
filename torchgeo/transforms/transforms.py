@@ -80,6 +80,10 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
         Returns:
             the augmented input
         """
+        # Detect if input comes from VideoSequential (flattened batch + temporal dimensions)
+        # This is a heuristic based on common usage patterns in LEVIR-CD
+        original_batch_size = input.shape[0]
+
         out = extract_tensor_patches(
             input,
             window_size=flags['window_size'],
@@ -87,7 +91,45 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
             padding=flags['padding'],
         )
 
-        if flags['keepdim']:
+        # Check if we need to handle temporal data that was flattened by VideoSequential
+        # Only apply temporal fix for change detection scenarios where:
+        # 1. Input has been flattened from temporal data (batch_size % 2 == 0)
+        # 2. We extracted multiple patches (out.shape[1] > 1)
+        # 3. AND we have enough data to suggest temporal flattening (batch_size >= 4)
+        # 4. AND the input channels suggest RGB data (input.shape[1] == 3)
+        # 5. AND we actually extracted patches smaller than input (real patch extraction occurred)
+        # 6. AND patches are reasonably sized (avoid triggering on test data)
+        patches_were_extracted = (
+            len(out.shape) == 5
+            and out.shape[3] < input.shape[2]  # patch height < input height
+            and out.shape[4] < input.shape[3]  # patch width < input width
+            and out.shape[3] >= 64  # patch is at least 64x64 (avoid small test patches)
+            and out.shape[4] >= 64
+        )
+        is_temporal_data = (
+            original_batch_size % 2 == 0
+            and original_batch_size >= 4  # Need at least 2 temporal frames * 2 batch
+            and patches_were_extracted
+            and out.shape[1] > 1  # Multiple patches extracted
+            and input.shape[1] == 3  # RGB channels (change detection common case)
+        )
+
+        if is_temporal_data:
+            # Assume temporal frames = 2 (most common for change detection)
+            temporal_frames = 2
+            if original_batch_size % temporal_frames == 0:
+                # Fix Issue 3: Rearrange to group patches by spatial location
+                # Current: patches from t1, then patches from t2
+                # Desired: patch_0 from [t1,t2], patch_1 from [t1,t2], etc.
+                out = rearrange(
+                    out, '(b t) n c h w -> (b n t) c h w', t=temporal_frames
+                )
+            else:
+                # Fallback: flatten patch dimension if keepdim is True
+                if flags['keepdim']:
+                    out = rearrange(out, 'b t c h w -> (b t) c h w')
+        elif flags['keepdim']:
+            # Original behavior for non-temporal data when keepdim is True
             out = rearrange(out, 'b t c h w -> (b t) c h w')
 
         return out

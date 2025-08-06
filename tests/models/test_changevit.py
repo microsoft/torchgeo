@@ -491,3 +491,124 @@ class TestImplementationConsistency:
             component = getattr(model, comp_name)
             has_grad = any(p.grad is not None for p in component.parameters())
             assert has_grad, f'Component {comp_name} should receive gradients'
+
+
+class TestChangeViTLEVIRCDIntegration:
+    """Tests for ChangeViT integration with LEVIR-CD dataset issues from GitHub #2920."""
+
+    def test_changevit_with_levircd_benchmark_datamodule(self) -> None:
+        """Test ChangeViT with LEVIRCDBenchmarkDataModule to ensure compatibility."""
+        pytest.importorskip(
+            'torchgeo.datamodules.levircd', reason='LEVIRCDBenchmarkDataModule required'
+        )
+
+        from torchgeo.models import changevit_small
+
+        # Create ChangeViT model
+        model = changevit_small(weights=None)
+        model.eval()
+
+        # Create mock batch from LEVIRCDBenchmarkDataModule after patch extraction
+        batch_size = 2
+        patches_per_frame = 16  # 16 patches per 1024x1024 image
+
+        # Simulate the output from LEVIRCDBenchmarkDataModule.on_after_batch_transfer
+        batch = {
+            'image': torch.randn(
+                batch_size * patches_per_frame, 2, 3, 256, 256
+            ),  # [B*P, T, C, H, W]
+            'mask': torch.randn(
+                batch_size * patches_per_frame, 1, 256, 256
+            ),  # [B*P, C, H, W]
+        }
+
+        # Test that ChangeViT can process the batch format from LEVIRCDBenchmarkDataModule
+        with torch.no_grad():
+            output = model(batch['image'])
+
+        # Verify output format
+        assert isinstance(output, dict), 'ChangeViT should return dict'
+        assert 'change_prob' in output, 'ChangeViT should return change_prob'
+        assert 'change_binary' in output, (
+            'ChangeViT should return change_binary in eval mode'
+        )
+
+        # Check spatial dimensions are preserved
+        assert output['change_prob'].shape[-2:] == (256, 256), (
+            'Spatial dimensions should be preserved'
+        )
+        assert output['change_prob'].shape[0] == batch_size * patches_per_frame, (
+            'Batch size should be preserved'
+        )
+
+    def test_changevit_temporal_consistency_with_patches(self) -> None:
+        """Test that ChangeViT maintains temporal consistency when processing patches."""
+        from torchgeo.models import changevit_small
+
+        model = changevit_small(weights=None)
+        model.eval()
+
+        # Create identical temporal pairs to test consistency
+        patch = torch.randn(1, 3, 256, 256)
+        identical_pair = torch.stack([patch, patch], dim=1)  # [1, 2, 3, 256, 256]
+
+        with torch.no_grad():
+            output = model(identical_pair)
+            change_prob = output['change_prob']
+
+        # Identical patches should have low change probability
+        mean_prob = change_prob.mean().item()
+        assert mean_prob < 0.7, (
+            f'Identical patches should have low change probability, got {mean_prob:.3f}'
+        )
+
+        # Test different patches
+        patch1 = torch.randn(1, 3, 256, 256)
+        patch2 = torch.randn(1, 3, 256, 256)
+        different_pair = torch.stack([patch1, patch2], dim=1)
+
+        with torch.no_grad():
+            output2 = model(different_pair)
+            change_prob2 = output2['change_prob']
+
+        # Different patches should have higher change probability (on average)
+        mean_prob2 = change_prob2.mean().item()
+        assert mean_prob2 > 0.1, (
+            f'Different patches should show some change, got {mean_prob2:.3f}'
+        )
+
+    def test_changevit_batch_processing_levircd_format(self) -> None:
+        """Test ChangeViT can process batches in LEVIR-CD format efficiently."""
+        from torchgeo.models import changevit_small
+
+        model = changevit_small(weights=None)
+        model.eval()
+
+        # Test multiple batch sizes that would come from different numbers of patches
+        batch_sizes = [
+            1,
+            16,
+            32,
+        ]  # 1 patch, 16 patches (full image), 32 patches (2 images)
+
+        for bs in batch_sizes:
+            x = torch.randn(bs, 2, 3, 256, 256)  # [B, T, C, H, W]
+
+            with torch.no_grad():
+                output = model(x)
+
+            # Verify output shapes
+            assert output['change_prob'].shape[0] == bs, (
+                f'Batch dimension mismatch for size {bs}'
+            )
+            assert output['change_binary'].shape[0] == bs, (
+                f'Binary batch dimension mismatch for size {bs}'
+            )
+
+            # Verify spatial dimensions
+            assert output['change_prob'].shape[-2:] == (256, 256), (
+                'Spatial dimensions should be 256x256'
+            )
+            assert output['change_binary'].shape[-2:] == (256, 256), (
+                'Binary spatial dimensions should be 256x256'
+            )
