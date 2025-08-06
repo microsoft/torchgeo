@@ -12,7 +12,7 @@ from torch.utils.data import random_split
 
 from ..datasets import LEVIRCD, LEVIRCDPlus
 from ..samplers.utils import _to_tuple
-from ..transforms.transforms import _ExtractPatches
+from ..transforms.transforms import _ExtractPatches, _RandomNCrop
 from .geo import NonGeoDataModule
 
 
@@ -45,16 +45,18 @@ class LEVIRCDDataModule(NonGeoDataModule):
 
         self.patch_size = _to_tuple(patch_size)
 
+        # Training: Random crops for maximum diversity
         self.train_aug = K.AugmentationSequential(
             K.VideoSequential(
                 K.Normalize(mean=self.mean, std=self.std),
-                K.RandomCrop(self.patch_size, pad_if_needed=True),
+                _RandomNCrop(size=self.patch_size, pad_if_needed=True),
             ),
             data_keys=None,
             keepdim=True,
+            same_on_batch=False,  # Allow different crops per batch item
         )
-        # Fix Issue 1: Use CenterCrop instead of _ExtractPatches for compatibility with VideoSequential
-        # _ExtractPatches + VideoSequential are incompatible, so use standard Kornia transforms
+        # Val/Test: Use CenterCrop for compatibility (VideoSequential + _ExtractPatches incompatible)
+        # Future improvement: implement proper deterministic patch extraction without VideoSequential
         self.val_aug = K.AugmentationSequential(
             K.VideoSequential(
                 K.Normalize(mean=self.mean, std=self.std),
@@ -110,16 +112,18 @@ class LEVIRCDPlusDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.val_split_pct = val_split_pct
 
+        # Training: Random crops for maximum diversity
         self.train_aug = K.AugmentationSequential(
             K.VideoSequential(
                 K.Normalize(mean=self.mean, std=self.std),
-                K.RandomCrop(self.patch_size, pad_if_needed=True),
+                _RandomNCrop(size=self.patch_size, pad_if_needed=True),
             ),
             data_keys=None,
             keepdim=True,
+            same_on_batch=False,  # Allow different crops per batch item
         )
-        # Fix Issue 1: Use CenterCrop instead of _ExtractPatches for compatibility with VideoSequential
-        # _ExtractPatches + VideoSequential are incompatible, so use standard Kornia transforms
+        # Val/Test: Use CenterCrop for compatibility (VideoSequential + _ExtractPatches incompatible)
+        # Future improvement: implement proper deterministic patch extraction without VideoSequential
         self.val_aug = K.AugmentationSequential(
             K.VideoSequential(
                 K.Normalize(mean=self.mean, std=self.std),
@@ -189,16 +193,13 @@ class LEVIRCDBenchmarkDataModule(NonGeoDataModule):
         self.patch_size = _to_tuple(patch_size)
         self.stride = _to_tuple(stride) if stride is not None else None
 
-        # For all splits, extract all 16 patches as per paper methodology
-        # Apply normalize to image (handles temporal dimension correctly) then extract patches
+        # Training: Random crops for maximum diversity
         self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _ExtractPatches(
-                window_size=self.patch_size, stride=self.stride, keepdim=False
-            ),
+            _RandomNCrop(size=self.patch_size, pad_if_needed=True),
             data_keys=None,  # Dictionary input requires data_keys=None
-            keepdim=False,  # Allow dimension changes
-            same_on_batch=True,
+            keepdim=True,  # Maintain batch structure for temporal data
+            same_on_batch=False,  # Allow different crops per batch item
         )
 
         # For val/test, use same approach as training
