@@ -199,3 +199,47 @@ class RCF(Module):
             assert len(x1a.shape) == 2
             output = torch.cat((x1a, x1b), dim=1)
             return output
+
+
+class MOSAIKS(RCF):
+    """MOSAIKS RCF model with the recommended parameters defined in the paper.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://www.nature.com/articles/s41467-021-24638-z
+
+    .. note::
+
+       This Module is *not* trainable. It is only used as a feature extractor.
+
+    .. versionadded:: 0.8
+    """
+
+    def __init__(
+        self,
+        dataset: NonGeoDataset,
+        in_channels: int = 3,
+        features: int = 4096,
+        kernel_size: int = 4,
+        bias: float = -1.0,
+        seed: int | None = None,
+    ) -> None:
+        """Initializes the MOSAIKS model.
+
+        Args:
+            dataset: a NonGeoDataset to sample from
+            in_channels: number of input channels
+            features: number of features to compute, must be divisible by 2
+            kernel_size: size of the kernel used to compute the RCFs
+            bias: bias of the convolutional layer
+            seed: random seed used to initialize the convolutional layer
+        """
+        super().__init__(
+            mode='empirical',
+            dataset=dataset,
+            in_channels=in_channels,
+            features=features,
+            kernel_size=kernel_size,
+            bias=bias,
+            seed=seed,
+        )
