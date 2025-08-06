@@ -260,20 +260,7 @@ class ChangeDetectionTask(BaseTask):
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
 
-            # For ChangeViT models, only load backbone weights
-            if model.startswith('changevit'):
-                # Load ViT backbone weights only
-                vit_state_dict = {
-                    k.replace('vit_backbone.', ''): v
-                    for k, v in state_dict.items()
-                    if k.startswith('vit_backbone.')
-                }
-                if vit_state_dict:
-                    self.model.vit_backbone.load_state_dict(
-                        vit_state_dict, strict=False
-                    )
-            else:
-                self.model.encoder.load_state_dict(state_dict)
+            self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
         if self.hparams['freeze_backbone'] and model != 'fcn':
@@ -312,25 +299,12 @@ class ChangeDetectionTask(BaseTask):
 
         if self.hparams['task'] == 'multiclass':
             y = y.squeeze(1)
-
-        # Forward pass
-        if model.startswith('changevit'):
-            output = self(x)
-            # ChangeViT outputs probabilities in both training and inference modes
-            y_hat = output['change_prob']
-        else:
-            y_hat = self(x)
-
-        if self.hparams['task'] == 'multiclass':
-            y = y.squeeze(1)
-        elif self.hparams['task'] == 'multiclass':
-            y = y.squeeze(1)
             y = y.long()
 
         # Forward pass
         if model.startswith('changevit'):
             output = self(x)
-            # ChangeViT outputs probabilities in both training and inference modes
+            # ChangeViT outputs probabilities/logits in 'change_prob' key
             y_hat = output['change_prob']
         else:
             y_hat = self(x)
@@ -345,16 +319,7 @@ class ChangeDetectionTask(BaseTask):
         # Retrieve the correct metrics based on the stage
         metrics = getattr(self, f'{stage}_metrics', None)
         if metrics:
-            # Transform logits to hard predictions for metrics calculation
-            match self.hparams['task']:
-                case 'binary' | 'multilabel':
-                    y_hat_for_metrics = (y_hat.sigmoid() >= 0.5).long()
-                case 'multiclass':
-                    y_hat_for_metrics = y_hat.argmax(dim=1)
-                case _:
-                    y_hat_for_metrics = y_hat
-
-            metrics(y_hat_for_metrics, y)
+            metrics(y_hat, y)
             self.log_dict(metrics, batch_size=x.shape[0])
 
         if stage == 'val':
@@ -447,22 +412,13 @@ class ChangeDetectionTask(BaseTask):
         x = batch['image']
         if model == 'unet':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
-        elif model.startswith('changevit'):
-            # ChangeViT expects bitemporal format [B, T, C, H, W]
-            pass  # x is already in correct format
-        else:
-            # For other models that expect concatenated input
-            if len(x.shape) == 5:  # [B, T, C, H, W]
-                x = rearrange(x, 'b t c h w -> b (t c) h w')
+        elif not model.startswith('fcsiam') and not model.startswith('changevit'):
+            x = rearrange(x, 'b t c h w -> b (t c) h w')
 
         # Forward pass
         if model.startswith('changevit'):
             output = self(x)
-            y_hat: Tensor = (
-                output['change_prob']
-                if 'change_prob' in output
-                else output['bi_change_logit'].sigmoid()
-            )
+            y_hat: Tensor = output['change_prob']
         else:
             y_hat = self(x)
 
@@ -470,7 +426,7 @@ class ChangeDetectionTask(BaseTask):
             case 'binary' | 'multilabel':
                 if not model.startswith(
                     'changevit'
-                ):  # ChangeViT already applies sigmoid
+                ):  # ChangeViT already outputs probabilities
                     y_hat = y_hat.sigmoid()
             case 'multiclass':
                 y_hat = y_hat.softmax(dim=1)
