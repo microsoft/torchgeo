@@ -418,3 +418,39 @@ class TestChangeDetectionTask:
         assert patches.shape[0] == expected_total_patches, (
             f'Expected {expected_total_patches} total patches, got {patches.shape[0]}'
         )
+
+    def test_random_vs_deterministic_cropping(self) -> None:
+        """Test that training uses random crops while val/test use deterministic patches."""
+        pytest.importorskip(
+            'torchgeo.datamodules.levircd', reason='LEVIRCDDataModule required'
+        )
+
+        from torchgeo.datamodules.levircd import LEVIRCDDataModule
+
+        # Create mock data
+        batch = {
+            'image': torch.randn(2, 2, 3, 1024, 1024),  # [B, T, C, H, W]
+            'mask': torch.randn(2, 1, 1024, 1024),  # [B, C, H, W]
+        }
+
+        datamodule = LEVIRCDDataModule(batch_size=2, patch_size=256)
+
+        # Test training transform setup (should be random)
+        if datamodule.train_aug is not None:
+            assert hasattr(datamodule.train_aug, 'same_on_batch')
+            assert not datamodule.train_aug.same_on_batch, (
+                'Training should allow different crops per batch'
+            )
+
+        # Test validation transform setup (should be deterministic)
+        if datamodule.val_aug is not None:
+            assert hasattr(datamodule.val_aug, 'same_on_batch')
+            assert datamodule.val_aug.same_on_batch, (
+                'Validation should use same crops per batch'
+            )
+
+            # Verify we can call the transforms without errors
+            val_result1 = datamodule.val_aug(batch)
+            assert val_result1['image'].shape[0] >= batch['image'].shape[0], (
+                'Validation should preserve or increase batch size'
+            )

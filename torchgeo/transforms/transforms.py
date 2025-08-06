@@ -19,6 +19,143 @@ class AugmentationSequential(K.AugmentationSequential):
 
 
 # TODO: contribute these to Kornia and delete this file
+class _RandomNCrop(K.GeometricAugmentationBase2D):
+    """Extract one random crop per image from many possible locations.
+
+    Provides maximum training diversity by sampling different spatial locations
+    across epochs while maintaining consistent batch sizes.
+    """
+
+    def __init__(self, size: int | tuple[int, int], pad_if_needed: bool = True) -> None:
+        """Initialize a new _RandomNCrop instance.
+
+        Args:
+            size: desired output size (out_h, out_w) of the crop
+            pad_if_needed: pad the image if crop size is larger than image size
+        """
+        super().__init__(p=1)
+        self.flags = {
+            'size': size if isinstance(size, tuple) else (size, size),
+            'pad_if_needed': pad_if_needed,
+        }
+
+    def compute_transformation(
+        self, input: Tensor, params: dict[str, Tensor], flags: dict[str, Any]
+    ) -> Tensor:
+        """Compute the transformation.
+
+        Args:
+            input: the input tensor
+            params: generated parameters
+            flags: static parameters
+
+        Returns:
+            the transformation
+        """
+        out: Tensor = self.identity_matrix(input)
+        return out
+
+    def apply_transform(
+        self,
+        input: Tensor,
+        params: dict[str, Tensor],
+        flags: dict[str, Any],
+        transform: Tensor | None = None,
+    ) -> Tensor:
+        """Apply the transform.
+
+        Args:
+            input: the input tensor
+            params: generated parameters
+            flags: static parameters
+            transform: the geometric transformation tensor
+
+        Returns:
+            the augmented input
+        """
+        crop_h, crop_w = flags['size']
+
+        # Handle different input shapes
+        # When used inside VideoSequential, input comes as [B*T, C, H, W] (flattened)
+        # When used directly on temporal data, input comes as [B, T, C, H, W]
+        if len(input.shape) == 5:
+            # Direct temporal data: [B, T, C, H, W]
+            batch_size, temporal_frames, channels, height, width = input.shape
+            # Flatten temporal dimension for processing: [B*T, C, H, W]
+            input_flat = input.view(
+                batch_size * temporal_frames, channels, height, width
+            )
+            is_temporal = True
+        else:
+            # Regular data or data from VideoSequential: [B, C, H, W] or [B*T, C, H, W]
+            batch_size_flat, channels, height, width = input.shape
+            input_flat = input
+            is_temporal = False
+            batch_size = batch_size_flat  # Could be B or B*T from VideoSequential
+
+        # Pad if needed
+        if flags['pad_if_needed']:
+            pad_h = max(0, crop_h - height)
+            pad_w = max(0, crop_w - width)
+            if pad_h > 0 or pad_w > 0:
+                input_flat = torch.nn.functional.pad(
+                    input_flat, (0, pad_w, 0, pad_h), mode='constant', value=0
+                )
+                height, width = input_flat.shape[2], input_flat.shape[3]
+
+        # Generate random crop positions
+        max_y = height - crop_h
+        max_x = width - crop_w
+
+        if max_y < 0 or max_x < 0:
+            raise ValueError(
+                f'Crop size {flags["size"]} is larger than image size ({height}, {width}) even after padding'
+            )
+
+        # Generate random crop positions
+        actual_batch_size = input_flat.shape[0]
+
+        if is_temporal:
+            # For direct temporal data, use the same crop position for all temporal frames of each sample
+            base_batch_size = batch_size
+            y_positions = torch.randint(
+                0, max_y + 1, (base_batch_size,), device=input_flat.device
+            )
+            x_positions = torch.randint(
+                0, max_x + 1, (base_batch_size,), device=input_flat.device
+            )
+            # Repeat positions for all temporal frames
+            y_positions = y_positions.repeat_interleave(temporal_frames)
+            x_positions = x_positions.repeat_interleave(temporal_frames)
+        else:
+            # For regular data or data from VideoSequential, each item gets its own crop
+            # VideoSequential case: if B=2, T=2, we get B*T=4 items, each gets own crop
+            y_positions = torch.randint(
+                0, max_y + 1, (actual_batch_size,), device=input_flat.device
+            )
+            x_positions = torch.randint(
+                0, max_x + 1, (actual_batch_size,), device=input_flat.device
+            )
+
+        # Extract crops
+        crops = []
+        for i in range(actual_batch_size):
+            y_start = int(y_positions[i].item())
+            x_start = int(x_positions[i].item())
+            crop = input_flat[
+                i : i + 1, :, y_start : y_start + crop_h, x_start : x_start + crop_w
+            ]
+            crops.append(crop)
+
+        out = torch.cat(crops, dim=0)
+
+        # Reshape back to temporal format if input was temporal
+        if is_temporal:
+            out = out.view(batch_size, temporal_frames, channels, crop_h, crop_w)
+
+        return out
+
+
 class _ExtractPatches(K.GeometricAugmentationBase2D):
     """Extract patches from an image or mask."""
 
@@ -80,10 +217,6 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
         Returns:
             the augmented input
         """
-        # Detect if input comes from VideoSequential (flattened batch + temporal dimensions)
-        # This is a heuristic based on common usage patterns in LEVIR-CD
-        original_batch_size = input.shape[0]
-
         out = extract_tensor_patches(
             input,
             window_size=flags['window_size'],
@@ -91,46 +224,18 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
             padding=flags['padding'],
         )
 
-        # Check if we need to handle temporal data that was flattened by VideoSequential
-        # Only apply temporal fix for change detection scenarios where:
-        # 1. Input has been flattened from temporal data (batch_size % 2 == 0)
-        # 2. We extracted multiple patches (out.shape[1] > 1)
-        # 3. AND we have enough data to suggest temporal flattening (batch_size >= 4)
-        # 4. AND the input channels suggest RGB data (input.shape[1] == 3)
-        # 5. AND we actually extracted patches smaller than input (real patch extraction occurred)
-        # 6. AND patches are reasonably sized (avoid triggering on test data)
-        patches_were_extracted = (
-            len(out.shape) == 5
-            and out.shape[3] < input.shape[2]  # patch height < input height
-            and out.shape[4] < input.shape[3]  # patch width < input width
-            and out.shape[3] >= 64  # patch is at least 64x64 (avoid small test patches)
-            and out.shape[4] >= 64
-        )
-        is_temporal_data = (
-            original_batch_size % 2 == 0
-            and original_batch_size >= 4  # Need at least 2 temporal frames * 2 batch
-            and patches_were_extracted
-            and out.shape[1] > 1  # Multiple patches extracted
-            and input.shape[1] == 3  # RGB channels (change detection common case)
-        )
-
-        if is_temporal_data:
-            # Assume temporal frames = 2 (most common for change detection)
+        # Handle temporal data from VideoSequential
+        # If we extracted multiple patches and batch size suggests temporal data (even number),
+        # rearrange to group patches by spatial location rather than temporal sequence
+        if len(out.shape) == 5 and out.shape[1] > 1 and input.shape[0] % 2 == 0:
+            # Fix Issue 3: Rearrange to group patches by spatial location
+            # Current: patches from t1, then patches from t2
+            # Desired: patch_0 from [t1,t2], patch_1 from [t1,t2], etc.
             temporal_frames = 2
-            if original_batch_size % temporal_frames == 0:
-                # Fix Issue 3: Rearrange to group patches by spatial location
-                # Current: patches from t1, then patches from t2
-                # Desired: patch_0 from [t1,t2], patch_1 from [t1,t2], etc.
-                out = rearrange(
-                    out, '(b t) n c h w -> (b n t) c h w', t=temporal_frames
-                )
-            else:
-                # Fallback: flatten patch dimension if keepdim is True
-                if flags['keepdim']:
-                    out = rearrange(out, 'b t c h w -> (b t) c h w')
+            out = rearrange(out, '(b t) n c h w -> (b n t) c h w', t=temporal_frames)
         elif flags['keepdim']:
-            # Original behavior for non-temporal data when keepdim is True
-            out = rearrange(out, 'b t c h w -> (b t) c h w')
+            # Original behavior - flatten patches into batch dimension
+            out = rearrange(out, 'b n c h w -> (b n) c h w')
 
         return out
 
