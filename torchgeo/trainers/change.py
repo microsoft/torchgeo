@@ -238,13 +238,19 @@ class ChangeDetectionTask(BaseTask):
                     encoder_weights='imagenet' if weights is True else None,
                 )
             case 'changevit_small':
-                self.model = changevit_small(
-                    weights=weights if isinstance(weights, WeightsEnum) else None
-                )
+                if weights is not None and not isinstance(weights, WeightsEnum):
+                    raise ValueError(
+                        f'Invalid weights for changevit_small: {weights}. '
+                        'Expected None or a ChangeViT_Weights enum.'
+                    )
+                self.model = changevit_small(weights=weights)
             case 'changevit_tiny':
-                self.model = changevit_tiny(
-                    weights=weights if isinstance(weights, WeightsEnum) else None
-                )
+                if weights is not None and not isinstance(weights, WeightsEnum):
+                    raise ValueError(
+                        f'Invalid weights for changevit_tiny: {weights}. '
+                        'Expected None or a ChangeViT_Weights enum.'
+                    )
+                self.model = changevit_tiny(weights=weights)
 
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
@@ -271,13 +277,8 @@ class ChangeDetectionTask(BaseTask):
 
         # Freeze backbone
         if self.hparams['freeze_backbone'] and model != 'fcn':
-            if model.startswith('changevit'):
-                # Freeze ViT backbone for ChangeViT models
-                for param in self.model.vit_backbone.parameters():
-                    param.requires_grad = False
-            else:
-                for param in self.model.encoder.parameters():
-                    param.requires_grad = False
+            for param in self.model.encoder.parameters():
+                param.requires_grad = False
 
         # Freeze decoder
         if self.hparams['freeze_decoder'] and model != 'fcn':
@@ -344,13 +345,14 @@ class ChangeDetectionTask(BaseTask):
         # Retrieve the correct metrics based on the stage
         metrics = getattr(self, f'{stage}_metrics', None)
         if metrics:
-            # Transform predictions for metrics calculation (don't modify original y_hat)
-            y_hat_for_metrics = y_hat
+            # Transform logits to hard predictions for metrics calculation
             match self.hparams['task']:
                 case 'binary' | 'multilabel':
                     y_hat_for_metrics = (y_hat.sigmoid() >= 0.5).long()
                 case 'multiclass':
                     y_hat_for_metrics = y_hat.argmax(dim=1)
+                case _:
+                    y_hat_for_metrics = y_hat
 
             metrics(y_hat_for_metrics, y)
             self.log_dict(metrics, batch_size=x.shape[0])

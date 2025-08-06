@@ -18,75 +18,14 @@ from torch.nn.modules import Module
 from torchvision.models._api import Weights, WeightsEnum
 
 
-class BasicBlock(Module):
-    """ResNet BasicBlock with residual connection.
-
-    Paper explicitly states: 'three residual convolutional blocks (C2-C4) adapted from ResNet18'
-    """
-
-    expansion = 1
-
-    def __init__(
-        self,
-        inplanes: int,
-        planes: int,
-        stride: int = 1,
-        downsample: Module | None = None,
-    ) -> None:
-        """Initialize BasicBlock.
-
-        Args:
-            inplanes: Number of input channels
-            planes: Number of output channels
-            stride: Convolution stride
-            downsample: Optional downsample module for residual connection
-        """
-        super().__init__()
-        self.conv1 = nn.Conv2d(
-            inplanes, planes, kernel_size=3, stride=stride, padding=1, bias=False
-        )
-        self.bn1 = nn.BatchNorm2d(planes)
-        self.relu = nn.ReLU(inplace=True)
-        self.conv2 = nn.Conv2d(
-            planes, planes, kernel_size=3, stride=1, padding=1, bias=False
-        )
-        self.bn2 = nn.BatchNorm2d(planes)
-        self.downsample = downsample
-        self.stride = stride
-
-    def forward(self, x: Tensor) -> Tensor:
-        """Forward pass through BasicBlock with residual connection.
-
-        Args:
-            x: Input tensor
-
-        Returns:
-            Output tensor after residual block processing
-        """
-        identity = x
-
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
-
-        out = self.conv2(out)
-        out = self.bn2(out)
-
-        if self.downsample is not None:
-            identity = self.downsample(x)
-
-        out += identity
-        result: Tensor = self.relu(out)
-
-        return result
-
-
 class DetailCaptureModule(Module):
-    """Detail capture module implementing ResNet18 C2-C4 layers.
+    """Detail capture module using timm's ResNet18 implementation.
 
     Paper states: 'three residual convolutional blocks (C2-C4) adapted from ResNet18'
     that generate 'three-scale detailed features: 1/2, 1/4, and 1/8 resolutions'
-    with '2.7M parameters'.
+    with 'channel dimensions of FCi are set to 64, 128, and 256, respectively.'
+
+    Uses timm's pretrained ResNet18 with projection layers to match paper specifications.
     """
 
     def __init__(self, in_channels: int = 6) -> None:
@@ -96,67 +35,46 @@ class DetailCaptureModule(Module):
             in_channels: Number of input channels (typically 6 for bitemporal RGB).
         """
         super().__init__()
-        self.inplanes = 64
 
-        # Initial convolution like ResNet conv1 + bn1 + relu
-        # Modified for 6-channel input (bitemporal RGB)
-        self.conv1 = nn.Conv2d(
-            in_channels, 64, kernel_size=7, stride=2, padding=3, bias=False
+        try:
+            import timm
+        except ImportError as e:
+            raise ImportError(
+                '`timm` is not installed and is required for this model. '
+                'Please install it with `pip install timm`.'
+            ) from e
+
+        # Create ResNet18 backbone with features_only=True to get intermediate features
+        self.backbone = timm.create_model(
+            'resnet18',
+            pretrained=True,  # Use pretrained weights for better initialization
+            features_only=True,
+            out_indices=[0, 1, 2],  # Get features at 1/2, 1/4, 1/8 scales
+            in_chans=in_channels,  # Support 6-channel input for bitemporal data
         )
-        self.bn1 = nn.BatchNorm2d(64)
-        self.relu = nn.ReLU(inplace=True)
 
-        # ResNet18 layers adapted for detail capture
-        # layer1: C2 - 1/2 scale (after conv1 stride=2)
-        self.layer1 = self._make_layer(64, 2, stride=1)  # No additional downsampling
-
-        # layer2: C3 - 1/4 scale
-        self.layer2 = self._make_layer(128, 2, stride=2)  # Downsample 2x
-
-        # layer3: C4 - 1/8 scale
-        self.layer3 = self._make_layer(256, 2, stride=2)  # Downsample 2x
-
-    def _make_layer(self, planes: int, blocks: int, stride: int = 1) -> nn.Sequential:
-        """Create a ResNet layer with residual blocks."""
-        downsample = None
-        if stride != 1 or self.inplanes != planes * BasicBlock.expansion:
-            downsample = nn.Sequential(
-                nn.Conv2d(
-                    self.inplanes,
-                    planes * BasicBlock.expansion,
-                    kernel_size=1,
-                    stride=stride,
-                    bias=False,
-                ),
-                nn.BatchNorm2d(planes * BasicBlock.expansion),
-            )
-
-        layers = []
-        layers.append(BasicBlock(self.inplanes, planes, stride, downsample))
-        self.inplanes = planes * BasicBlock.expansion
-        for _ in range(1, blocks):
-            layers.append(BasicBlock(self.inplanes, planes))
-
-        return nn.Sequential(*layers)
+        # Add projection layers to match paper's channel dimensions (64, 128, 256)
+        # timm ResNet18 gives us (64, 64, 128) channels, we need (64, 128, 256)
+        self.proj1 = nn.Identity()  # 64 -> 64 (already correct)
+        self.proj2 = nn.Conv2d(64, 128, kernel_size=1)  # 64 -> 128
+        self.proj3 = nn.Conv2d(128, 256, kernel_size=1)  # 128 -> 256
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor, Tensor]:
-        """Forward pass returning multi-scale features.
+        """Forward pass through detail capture module.
 
         Args:
-            x: Input tensor of shape [B, C, H, W]
+            x: Bitemporal input tensor [B, 2*C, H, W]
 
         Returns:
-            Tuple of (C2, C3, C4) features at 1/2, 1/4, 1/8 scales
+            Tuple of features at 1/2, 1/4, and 1/8 scales with 64, 128, 256 channels
         """
-        # Initial processing
-        x = self.conv1(x)  # stride=2, so this gives us 1/2 scale
-        x = self.bn1(x)
-        x = self.relu(x)
+        # Extract features at different scales using timm's ResNet18
+        features = self.backbone(x)
 
-        # ResNet layers for multi-scale features
-        c2 = self.layer1(x)  # 1/2 scale (64 channels)
-        c3 = self.layer2(c2)  # 1/4 scale (128 channels)
-        c4 = self.layer3(c3)  # 1/8 scale (256 channels)
+        # Apply projections to match paper's channel dimensions
+        c2 = self.proj1(features[0])  # 1/2 scale: 64 channels
+        c3 = self.proj2(features[1])  # 1/4 scale: 64 -> 128 channels
+        c4 = self.proj3(features[2])  # 1/8 scale: 128 -> 256 channels
 
         return c2, c3, c4
 
@@ -217,8 +135,6 @@ class FeatureInjector(Module):
         Returns:
             Enhanced ViT features [B, N, D]
         """
-        import torch.nn.functional as F
-
         b, n, d = vit_feats.shape
         enhanced_feats = [vit_feats]
 
@@ -264,7 +180,6 @@ class ChangeViTDecoder(Module):
         in_channels: int = 768,  # ViT embedding dimension
         inner_channels: int = 64,
         num_convs: int = 3,
-        scale_factor: float = 16.0,  # ViT patch size
     ) -> None:
         """Initialize the ChangeViTDecoder.
 
@@ -272,7 +187,6 @@ class ChangeViTDecoder(Module):
             in_channels: Input feature dimension (ViT embedding dim)
             inner_channels: Number of inner channels for processing
             num_convs: Number of convolutional layers
-            scale_factor: Upsampling factor (should match ViT patch size)
         """
         super().__init__()
 
@@ -296,13 +210,10 @@ class ChangeViTDecoder(Module):
             ]
         )
 
-        # Classification layer (upsampling will be done dynamically)
-        cls_layer = nn.Sequential(nn.Conv2d(inner_channels, 1, 3, 1, 1))
-
-        layers.append(cls_layer)
+        # Classification layer
+        layers.append(nn.Conv2d(inner_channels, 1, 3, 1, 1))
 
         self.convs = nn.Sequential(*layers)
-        self.scale_factor = scale_factor
 
     def forward(
         self, bi_feature: Tensor, target_size: tuple[int, int] | None = None
@@ -330,14 +241,6 @@ class ChangeViTDecoder(Module):
             c1221 = F.interpolate(
                 c1221, size=target_size, mode='bilinear', align_corners=False
             )
-        else:
-            # Fallback to scale_factor upsampling
-            c1221 = F.interpolate(
-                c1221,
-                scale_factor=self.scale_factor,
-                mode='bilinear',
-                align_corners=False,
-            )
 
         c12, c21 = torch.split(c1221, batch_size, dim=0)
 
@@ -361,7 +264,6 @@ class ChangeViT(Module):
         detail_capture: DetailCaptureModule,
         feature_injector: FeatureInjector,
         decoder: ChangeViTDecoder,
-        inference_mode: str = 't1t2',
     ) -> None:
         """Initialize ChangeViT model.
 
@@ -370,18 +272,13 @@ class ChangeViT(Module):
             detail_capture: Detail capture module for fine-grained features
             feature_injector: Feature injector for cross-attention fusion
             decoder: Change detection decoder for final prediction
-            inference_mode: Inference mode ('t1t2', 't2t1', or 'mean')
         """
         super().__init__()
 
-        self.vit_backbone = vit_backbone
+        self.encoder = vit_backbone
         self.detail_capture = detail_capture
         self.feature_injector = feature_injector
         self.decoder = decoder
-
-        if inference_mode not in ['t1t2', 't2t1', 'mean']:
-            raise ValueError(f'Unknown inference_mode: {inference_mode}')
-        self.inference_mode = inference_mode
 
     def forward(self, x: Tensor) -> dict[str, Tensor]:
         """Forward pass of ChangeViT.
@@ -402,13 +299,8 @@ class ChangeViT(Module):
         )  # [B, 2*C, H, W] for detail capture
 
         # Process each temporal frame separately through ViT backbone (parallel processing)
-        vit_features_t1 = self.vit_backbone.forward_features(x_t1)  # [B, N, D]
-        vit_features_t2 = self.vit_backbone.forward_features(x_t2)  # [B, N, D]
-
-        if not isinstance(vit_features_t1, Tensor) or not isinstance(
-            vit_features_t2, Tensor
-        ):
-            raise TypeError('ViT backbone forward_features must return a Tensor')
+        vit_features_t1 = self.encoder.forward_features(x_t1)  # [B, N, D]
+        vit_features_t2 = self.encoder.forward_features(x_t2)  # [B, N, D]
 
         # Extract detail features from concatenated input
         detail_features = self.detail_capture(x_concat)
@@ -435,7 +327,7 @@ class ChangeViT(Module):
         )  # [B, T=2, N-1, D]
 
         # Get patch size from backbone
-        patch_embed = getattr(self.vit_backbone, 'patch_embed', None)
+        patch_embed = getattr(self.encoder, 'patch_embed', None)
         if patch_embed is None:
             raise AttributeError('ViT backbone must have patch_embed attribute')
 
@@ -519,6 +411,62 @@ class ChangeViT_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
+def _create_changevit(
+    model_name: str, weights: ChangeViT_Weights | None, img_size: int, **kwargs: Any
+) -> ChangeViT:
+    """Common factory function for ChangeViT models.
+
+    Args:
+        model_name: Name of the timm model to use as backbone
+        weights: Pre-trained model weights to use
+        img_size: Input image size
+        **kwargs: Additional keyword arguments
+
+    Returns:
+        A ChangeViT model
+    """
+    try:
+        import timm
+    except ImportError as e:
+        raise ImportError(
+            '`timm` is not installed and is required for this model. '
+            'Please install it with `pip install timm`.'
+        ) from e
+
+    # Create ViT backbone from timm
+    vit_backbone = timm.create_model(
+        model_name,
+        pretrained=weights is not None,
+        num_classes=0,  # Remove classification head
+        img_size=img_size,
+        **kwargs,
+    )
+
+    # Get embed_dim
+    embed_dim = getattr(vit_backbone, 'embed_dim', None)
+    if embed_dim is None:
+        raise AttributeError('ViT backbone must have embed_dim attribute')
+
+    # Create components
+    detail_capture = DetailCaptureModule(in_channels=6)
+    feature_injector = FeatureInjector(vit_dim=embed_dim, detail_dims=(64, 128, 256))
+    decoder = ChangeViTDecoder(in_channels=embed_dim)
+
+    # Create model
+    model = ChangeViT(
+        vit_backbone=vit_backbone,  # Will be renamed to encoder inside ChangeViT.__init__
+        detail_capture=detail_capture,
+        feature_injector=feature_injector,
+        decoder=decoder,
+    )
+
+    # Load weights if provided
+    if weights is not None:
+        model.load_state_dict(weights.get_state_dict(progress=True))
+
+    return model
+
+
 def changevit_small(
     weights: ChangeViT_Weights | None = None, img_size: int = 256, **kwargs: Any
 ) -> ChangeViT:
@@ -534,62 +482,12 @@ def changevit_small(
     Returns:
         A ChangeViT model.
     """
-    try:
-        import timm
-    except ImportError as e:
-        raise ImportError(
-            '`timm` is not installed and is required for this model. '
-            'Please install it with `pip install timm`.'
-        ) from e
-
-    # Create ViT backbone from timm - use DINOv2 small for best performance per paper
-    vit_backbone = timm.create_model(
-        'vit_small_patch14_dinov2',
-        pretrained=weights is not None,
-        num_classes=0,  # Remove classification head
-        img_size=img_size,  # Configurable input size, default 256 for paper methodology
+    return _create_changevit(
+        model_name='vit_small_patch14_dinov2',
+        weights=weights,
+        img_size=img_size,
         **kwargs,
     )
-
-    # Use standard 3-channel patch embedding
-
-    # Get embed_dim safely
-    embed_dim = getattr(vit_backbone, 'embed_dim', None)
-    if embed_dim is None:
-        raise AttributeError('ViT backbone must have embed_dim attribute')
-
-    # Get actual patch size for proper upsampling
-    patch_embed = getattr(vit_backbone, 'patch_embed', None)
-    if patch_embed is not None and hasattr(patch_embed, 'patch_size'):
-        patch_size_attr = getattr(patch_embed, 'patch_size')
-        if isinstance(patch_size_attr, list | tuple):
-            patch_size = patch_size_attr[0]
-        else:
-            patch_size = patch_size_attr
-    else:
-        patch_size = 14  # Default for DINOv2
-
-    # Create components
-    detail_capture = DetailCaptureModule(in_channels=6)
-    feature_injector = FeatureInjector(vit_dim=embed_dim, detail_dims=(64, 128, 256))
-    decoder = ChangeViTDecoder(
-        in_channels=embed_dim,
-        scale_factor=float(patch_size),  # Use actual patch size (14 for DINOv2)
-    )
-
-    # Create model
-    model = ChangeViT(
-        vit_backbone=vit_backbone,
-        detail_capture=detail_capture,
-        feature_injector=feature_injector,
-        decoder=decoder,
-    )
-
-    # Load weights if provided
-    if weights is not None:
-        model.load_state_dict(weights.get_state_dict(progress=True))
-
-    return model
 
 
 def changevit_tiny(
@@ -608,57 +506,6 @@ def changevit_tiny(
     Returns:
         A ChangeViT model.
     """
-    try:
-        import timm
-    except ImportError as e:
-        raise ImportError(
-            '`timm` is not installed and is required for this model. '
-            'Please install it with `pip install timm`.'
-        ) from e
-
-    # Create ViT backbone from timm - use DeiT tiny for paper reproduction
-    vit_backbone = timm.create_model(
-        'deit_tiny_patch16_224',
-        pretrained=weights is not None,
-        num_classes=0,  # Remove classification head
-        img_size=img_size,  # Configurable input size, default 256 for paper methodology
-        **kwargs,
+    return _create_changevit(
+        model_name='deit_tiny_patch16_224', weights=weights, img_size=img_size, **kwargs
     )
-
-    # Use standard 3-channel patch embedding
-    embed_dim = getattr(vit_backbone, 'embed_dim', None)
-    if embed_dim is None:
-        raise AttributeError('ViT backbone must have embed_dim attribute')
-
-    # Get actual patch size for proper upsampling
-    patch_embed = getattr(vit_backbone, 'patch_embed', None)
-    if patch_embed is not None and hasattr(patch_embed, 'patch_size'):
-        patch_size_attr = getattr(patch_embed, 'patch_size')
-        if isinstance(patch_size_attr, list | tuple):
-            patch_size = patch_size_attr[0]
-        else:
-            patch_size = patch_size_attr
-    else:
-        patch_size = 16  # Default for DeiT
-
-    # Create components
-    detail_capture = DetailCaptureModule(in_channels=6)
-    feature_injector = FeatureInjector(vit_dim=embed_dim, detail_dims=(64, 128, 256))
-    decoder = ChangeViTDecoder(
-        in_channels=embed_dim,
-        scale_factor=float(patch_size),  # Use actual patch size (16 for DeiT)
-    )
-
-    # Create model
-    model = ChangeViT(
-        vit_backbone=vit_backbone,
-        detail_capture=detail_capture,
-        feature_injector=feature_injector,
-        decoder=decoder,
-    )
-
-    # Load weights if provided
-    if weights is not None:
-        model.load_state_dict(weights.get_state_dict(progress=True))
-
-    return model

@@ -10,7 +10,7 @@ model:
 data:
   class_path: LEVIRCDBenchmarkDataModule
   init_args:
-    batch_size: 4 #works with 24GB VRAM on RTX 4090
+    batch_size: 5 #with 24GB VRAM on RTX 4090 small: bs=2 / tiny: bs=3
     patch_size: 256
     num_workers: 4
     stride: 256
@@ -33,7 +33,7 @@ trainer:
         monitor: 'val_BinaryF1Score'
         mode: 'max'
         save_top_k: 3
-        filename: 'changevit_s_levircd_{step}_{val_BinaryF1Score:.4f}'
+        filename: 'changevit_t_levircd_{step}_{val_BinaryF1Score:.4f}'
         verbose: true
     - class_path: lightning.pytorch.callbacks.LearningRateMonitor
       init_args:
