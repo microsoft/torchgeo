@@ -2,7 +2,7 @@
 model:
   class_path: ChangeDetectionTask
   init_args:
-    model: 'changevit_tiny'
+    model: 'changevit_small'
     task: 'binary'
     loss: 'bce'
     lr: 2e-4
@@ -10,7 +10,7 @@ model:
 data:
   class_path: LEVIRCDBenchmarkDataModule
   init_args:
-    batch_size: 5 #with 24GB VRAM on RTX 4090 small: bs=2 / tiny: bs=3
+    batch_size: 4 #with 24GB VRAM on RTX 4090 small: bs=4 / tiny: bs=10
     patch_size: 256
     num_workers: 4
     stride: 256
@@ -24,6 +24,11 @@ trainer:
   check_val_every_n_epoch: 1
   log_every_n_steps: 10
   enable_progress_bar: true
+  logger:
+    class_path: lightning.pytorch.loggers.WandbLogger
+    init_args:
+      name: 'changevit_small_levircd_benchmark'
+      project: 'torchgeo-changevit'
   callbacks:
     - class_path: lightning.pytorch.callbacks.RichModelSummary
       init_args:
@@ -33,7 +38,7 @@ trainer:
         monitor: 'val_BinaryF1Score'
         mode: 'max'
         save_top_k: 3
-        filename: 'changevit_t_levircd_{step}_{val_BinaryF1Score:.4f}'
+        filename: 'changevit_s_levircd_{step}_{val_BinaryF1Score:.4f}'
         verbose: true
     - class_path: lightning.pytorch.callbacks.LearningRateMonitor
       init_args:
