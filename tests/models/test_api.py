@@ -116,7 +116,7 @@ enums = [
 @pytest.mark.parametrize('builder', builders)
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
     if builder == aurora_swin_unet:
-        pytest.importorskip('aurora', minversion='1.6')
+        pytest.importorskip('microsoft-aurora', minversion='1.6')
     elif builder == yolo:
         pytest.importorskip('ultralytics', minversion='8.3')
 

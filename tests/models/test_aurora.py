@@ -11,7 +11,7 @@ from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import Aurora_Weights, aurora_swin_unet
 
-pytest.importorskip('aurora', minversion='1.6')
+pytest.importorskip('microsoft-aurora', minversion='1.6')
 
 
 class TestAurora:
