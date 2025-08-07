@@ -75,85 +75,65 @@ class _RandomNCrop(K.GeometricAugmentationBase2D):
         """
         crop_h, crop_w = flags['size']
 
-        # Handle different input shapes
-        # When used inside VideoSequential, input comes as [B*T, C, H, W] (flattened)
-        # When used directly on temporal data, input comes as [B, T, C, H, W]
-        if len(input.shape) == 5:
-            # Direct temporal data: [B, T, C, H, W]
-            batch_size, temporal_frames, channels, height, width = input.shape
-            # Flatten temporal dimension for processing: [B*T, C, H, W]
-            input_flat = input.view(
-                batch_size * temporal_frames, channels, height, width
-            )
-            is_temporal = True
-        else:
-            # Regular data or data from VideoSequential: [B, C, H, W] or [B*T, C, H, W]
-            batch_size_flat, channels, height, width = input.shape
-            input_flat = input
-            is_temporal = False
-            batch_size = batch_size_flat  # Could be B or B*T from VideoSequential
+        # Simplified temporal handling: assume VideoSequential input [B*T, C, H, W]
+        # For temporal data (change detection), ensure same crop location per temporal pair
+        batch_size_flat, channels, height, width = input.shape
 
         # Pad if needed
         if flags['pad_if_needed']:
             pad_h = max(0, crop_h - height)
             pad_w = max(0, crop_w - width)
             if pad_h > 0 or pad_w > 0:
-                input_flat = torch.nn.functional.pad(
-                    input_flat, (0, pad_w, 0, pad_h), mode='constant', value=0
+                input = torch.nn.functional.pad(
+                    input, (0, pad_w, 0, pad_h), mode='constant', value=0
                 )
-                height, width = input_flat.shape[2], input_flat.shape[3]
+                height, width = input.shape[2], input.shape[3]
 
-        # Generate random crop positions
+        # Check crop size validity
         max_y = height - crop_h
         max_x = width - crop_w
-
         if max_y < 0 or max_x < 0:
             raise ValueError(
                 f'Crop size {flags["size"]} is larger than image size ({height}, {width}) even after padding'
             )
 
-        # Generate random crop positions
-        actual_batch_size = input_flat.shape[0]
+        # For temporal data: use same crop position for paired frames (t0, t1)
+        # Assume temporal pairs: [img0_t0, img0_t1, img1_t0, img1_t1, ...]
+        if batch_size_flat % 2 == 0:
+            # Temporal data - ensure same crops for temporal pairs
+            temporal_pairs = batch_size_flat // 2
 
-        if is_temporal:
-            # For direct temporal data, use the same crop position for all temporal frames of each sample
-            base_batch_size = batch_size
+            # Generate one crop position per temporal pair
             y_positions = torch.randint(
-                0, max_y + 1, (base_batch_size,), device=input_flat.device
+                0, max_y + 1, (temporal_pairs,), device=input.device
             )
             x_positions = torch.randint(
-                0, max_x + 1, (base_batch_size,), device=input_flat.device
+                0, max_x + 1, (temporal_pairs,), device=input.device
             )
-            # Repeat positions for all temporal frames
-            y_positions = y_positions.repeat_interleave(temporal_frames)
-            x_positions = x_positions.repeat_interleave(temporal_frames)
+
+            # Repeat each position twice for the temporal pair (t0, t1)
+            y_positions = y_positions.repeat_interleave(2)
+            x_positions = x_positions.repeat_interleave(2)
         else:
-            # For regular data or data from VideoSequential, each item gets its own crop
-            # VideoSequential case: if B=2, T=2, we get B*T=4 items, each gets own crop
+            # Non-temporal data - individual random crops
             y_positions = torch.randint(
-                0, max_y + 1, (actual_batch_size,), device=input_flat.device
+                0, max_y + 1, (batch_size_flat,), device=input.device
             )
             x_positions = torch.randint(
-                0, max_x + 1, (actual_batch_size,), device=input_flat.device
+                0, max_x + 1, (batch_size_flat,), device=input.device
             )
 
-        # Extract crops
+        # Extract crops efficiently
         crops = []
-        for i in range(actual_batch_size):
+        for i in range(batch_size_flat):
             y_start = int(y_positions[i].item())
             x_start = int(x_positions[i].item())
-            crop = input_flat[
+            crop = input[
                 i : i + 1, :, y_start : y_start + crop_h, x_start : x_start + crop_w
             ]
             crops.append(crop)
 
-        out = torch.cat(crops, dim=0)
-
-        # Reshape back to temporal format if input was temporal
-        if is_temporal:
-            out = out.view(batch_size, temporal_frames, channels, crop_h, crop_w)
-
-        return out
+        return torch.cat(crops, dim=0)
 
 
 class _ExtractPatches(K.GeometricAugmentationBase2D):

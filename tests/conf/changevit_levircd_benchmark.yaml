@@ -8,12 +8,13 @@ model:
     lr: 2e-4
     num_classes: 2
 data:
-  class_path: LEVIRCDBenchmarkDataModule
+  class_path: LEVIRCDDataModule
   init_args:
     batch_size: 4 #with 24GB VRAM on RTX 4090 small: bs=4 / tiny: bs=10
     patch_size: 256
     num_workers: 4
     stride: 256
+    dataset_variant: 'levircd'
   dict_kwargs:
     root: 'data'
 
