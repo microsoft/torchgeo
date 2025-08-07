@@ -408,15 +408,20 @@ class TestChangeDetectionTask:
         extract_patches = _ExtractPatches(window_size=256, stride=256, keepdim=False)
         patches = extract_patches(flattened_input)
 
-        # Verify we get expected number of patches
-        expected_patches_per_image = (height // 256) * (
-            width // 256
-        )  # 4 patches for 512x512 -> 256x256
-        expected_total_patches = (
-            batch_size * temporal_frames * expected_patches_per_image
-        )
-        assert patches.shape[0] == expected_total_patches, (
-            f'Expected {expected_total_patches} total patches, got {patches.shape[0]}'
+        # With keepdim=False, patches are returned as [B*T, N, C, H, W]
+        # where B*T = 4 (2 batch x 2 temporal), N = 4 patches per image
+        expected_batch_temporal = batch_size * temporal_frames  # 4
+        expected_patches_per_image = (height // 256) * (width // 256)  # 4
+
+        assert patches.shape == (
+            expected_batch_temporal,
+            expected_patches_per_image,
+            channels,
+            256,
+            256,
+        ), (
+            f'Expected shape ({expected_batch_temporal}, {expected_patches_per_image}, {channels}, 256, 256), '
+            f'got {patches.shape}'
         )
 
     def test_random_vs_deterministic_cropping(self) -> None:
