@@ -6,11 +6,11 @@
 from functools import partial
 from typing import Any
 
-import kornia.augmentation as K
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
+import torchvision.transforms.v2 as T
 from timm.models.vision_transformer import Block
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
@@ -387,12 +387,7 @@ class DOFA(nn.Module):
 
 # https://github.com/zhu-xlab/DOFA/blob/master/normalize_dataset.py
 # Normalization is sensor-dependent and is therefore left out
-_dofa_transforms = K.AugmentationSequential(K.CenterCrop((224, 224)), data_keys=None)
-
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
+_dofa_transforms = nn.Sequential(T.CenterCrop((224, 224)))
 
 
 class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]
