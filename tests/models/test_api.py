@@ -115,11 +115,10 @@ enums = [
 
 @pytest.mark.parametrize('builder', builders)
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
-    match builder:
-        case aurora_swin_unet:
-            pytest.importorskip('aurora', minversion='1.6')
-        case yolo:
-            pytest.importorskip('ultralytics', minversion='8.3')
+    if builder == aurora_swin_unet:
+        pytest.importorskip('aurora', minversion='1.6')
+    elif builder == yolo:
+        pytest.importorskip('ultralytics', minversion='8.3')
 
     model = get_model(builder.__name__)
     assert isinstance(model, nn.Module)
