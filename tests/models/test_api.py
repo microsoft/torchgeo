@@ -117,7 +117,7 @@ enums = [
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
     match builder:
         case aurora_swin_unet:
-            pytest.importorskip('aurora', minversion='1.7')
+            pytest.importorskip('aurora', minversion='1.6')
         case yolo:
             pytest.importorskip('ultralytics', minversion='8.3')
 
