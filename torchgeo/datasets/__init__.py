@@ -95,6 +95,7 @@ from .inria import InriaAerialImageLabeling
 from .iobench import IOBench
 from .l7irish import L7Irish
 from .l8biome import L8Biome
+from .lacuna import LacunaAfricanFieldBoundaries
 from .landcoverai import LandCoverAI, LandCoverAI100, LandCoverAIBase, LandCoverAIGeo
 from .landsat import (
     Landsat,
@@ -286,6 +287,7 @@ __all__ = (
     'L8Biome',
     'LEVIRCDBase',
     'LEVIRCDPlus',
+    'LacunaAfricanFieldBoundaries',
     'LandCoverAI',
     'LandCoverAI100',
     'LandCoverAIBase',
