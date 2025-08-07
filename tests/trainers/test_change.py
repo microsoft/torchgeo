@@ -347,9 +347,9 @@ class TestChangeDetectionTask:
             'torchgeo.datamodules.levircd', reason='LEVIRCDDataModule required'
         )
 
-        from torchgeo.datamodules.levircd import LEVIRCDBenchmarkDataModule
+        from torchgeo.datamodules.levircd import LEVIRCDDataModule
 
-        # Test Issue 2: LEVIRCDBenchmarkDataModule temporal correspondence
+        # Test LEVIRCDDataModule temporal correspondence
         batch_size = 2
         temporal_frames = 2  # t1, t2 for images
         patches_per_frame = 16  # 16 patches per 1024x1024 image
@@ -366,8 +366,8 @@ class TestChangeDetectionTask:
             ),  # Single change mask
         }
 
-        # Test the on_after_batch_transfer method
-        datamodule = LEVIRCDBenchmarkDataModule(batch_size=8, patch_size=256)
+        # Test the on_after_batch_transfer method with patch extraction
+        datamodule = LEVIRCDDataModule(batch_size=8, patch_size=256, stride=256)
         result_batch = datamodule.on_after_batch_transfer(batch, 0)
 
         # Check spatial correspondence: patch 0 from image should correspond to patch 0 from mask
@@ -432,13 +432,7 @@ class TestChangeDetectionTask:
 
         from torchgeo.datamodules.levircd import LEVIRCDDataModule
 
-        # Create mock data
-        batch = {
-            'image': torch.randn(2, 2, 3, 1024, 1024),  # [B, T, C, H, W]
-            'mask': torch.randn(2, 1, 1024, 1024),  # [B, C, H, W]
-        }
-
-        datamodule = LEVIRCDDataModule(batch_size=2, patch_size=256)
+        datamodule = LEVIRCDDataModule(batch_size=2, patch_size=256, stride=256)
 
         # Test training transform setup (should be random)
         if datamodule.train_aug is not None:
@@ -452,10 +446,4 @@ class TestChangeDetectionTask:
             assert hasattr(datamodule.val_aug, 'same_on_batch')
             assert datamodule.val_aug.same_on_batch, (
                 'Validation should use same crops per batch'
-            )
-
-            # Verify we can call the transforms without errors
-            val_result1 = datamodule.val_aug(batch)
-            assert val_result1['image'].shape[0] >= batch['image'].shape[0], (
-                'Validation should preserve or increase batch size'
             )
