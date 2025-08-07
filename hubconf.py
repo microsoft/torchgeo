@@ -8,6 +8,7 @@
 """
 
 from torchgeo.models import (
+    convlstm,
     copernicusfm_base,
     croma_base,
     croma_large,
@@ -33,6 +34,7 @@ from torchgeo.models import (
 )
 
 __all__ = (
+    'convlstm',
     'copernicusfm_base',
     'croma_base',
     'croma_large',

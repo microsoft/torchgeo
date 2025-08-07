@@ -5,6 +5,7 @@
 
 from .api import get_model, get_model_weights, get_weight, list_models
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
+from .convlstm import ConvLSTM
 from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
 from .dofa import (
@@ -62,6 +63,7 @@ __all__ = (
     'ChangeMixin',
     'ChangeStar',
     'ChangeStarFarSeg',
+    'ConvLSTM',
     'CopernicusFM',
     'CopernicusFM_Base_Weights',
     'DOFABase16_Weights',
