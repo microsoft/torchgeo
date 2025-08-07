@@ -425,7 +425,7 @@ class TestChangeDetectionTask:
         )
 
     def test_random_vs_deterministic_cropping(self) -> None:
-        """Test that training uses random crops while val/test use deterministic patches."""
+        """Test that training uses synchronized random crops while val/test use deterministic patches."""
         pytest.importorskip(
             'torchgeo.datamodules.levircd', reason='LEVIRCDDataModule required'
         )
@@ -434,11 +434,11 @@ class TestChangeDetectionTask:
 
         datamodule = LEVIRCDDataModule(batch_size=2, patch_size=256, stride=256)
 
-        # Test training transform setup (should be random)
+        # Test training transform setup (should use synchronized random crops for alignment)
         if datamodule.train_aug is not None:
             assert hasattr(datamodule.train_aug, 'same_on_batch')
-            assert not datamodule.train_aug.same_on_batch, (
-                'Training should allow different crops per batch'
+            assert datamodule.train_aug.same_on_batch, (
+                'Training should use same crops per batch for temporal-mask alignment'
             )
 
         # Test validation transform setup (should be deterministic)

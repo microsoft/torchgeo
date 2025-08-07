@@ -12,7 +12,7 @@ from torch.utils.data import random_split
 
 from ..datasets import LEVIRCD, LEVIRCDPlus
 from ..samplers.utils import _to_tuple
-from ..transforms.transforms import _ExtractPatches, _RandomNCrop
+from ..transforms.transforms import _ExtractPatches
 from .geo import NonGeoDataModule
 
 
@@ -86,13 +86,13 @@ class LEVIRCDDataModule(NonGeoDataModule):
         self.aug = self.val_aug  # Fallback general augmentation
 
     def _create_random_train_aug(self) -> K.AugmentationSequential:
-        """Create random training augmentation for maximum data diversity."""
+        """Create synchronized random training augmentation for proper image-mask alignment."""
         return K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _RandomNCrop(size=self.patch_size, pad_if_needed=True),
+            K.RandomCrop(self.patch_size, pad_if_needed=True),
             data_keys=None,
             keepdim=True,
-            same_on_batch=False,  # Different crops per batch item
+            same_on_batch=True,
         )
 
     def _create_deterministic_val_aug(self) -> K.AugmentationSequential:
@@ -163,12 +163,17 @@ class LEVIRCDDataModule(NonGeoDataModule):
 
             # Reshape mask: [B, T, P, C, H, W] -> [B*P, C, H, W]
             if len(batch['mask'].shape) == 6:
-                # Permute to [B, P, T, C, H, W] then reshape to [B*P, T*C, H, W]
+                # Permute to [B, P, T, C, H, W] then reshape to [B*P, C, H, W]
                 batch['mask'] = batch['mask'].permute(
                     0, 2, 1, 3, 4, 5
                 )  # [B, P, T, C, H, W]
                 batch['mask'] = batch['mask'].reshape(
-                    batch_size * patches_per_frame, -1, *batch['mask'].shape[-2:]
-                )  # [B*P, T*C, H, W] where T*C = 1*1 = 1
+                    batch_size * patches_per_frame, *batch['mask'].shape[-3:]
+                )  # [B*P, C, H, W] - flatten patches, keep channel and spatial dims
+
+        # Handle mask reshaping for cases where temporal dimension creates extra dimensions
+        if len(batch['mask'].shape) == 5 and batch['mask'].shape[2] == 1:
+            # Handle case where mask is [B, C, 1, H, W] -> [B, C, H, W] (remove temporal dim)
+            batch['mask'] = batch['mask'].squeeze(2)
 
         return batch
