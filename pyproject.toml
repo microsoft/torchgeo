@@ -119,8 +119,8 @@ docs = [
     "sphinx>=4,<6",
 ]
 models = [
-    # microsoft-aurora 1.7+ required for timm 1.0+ support
-    "microsoft-aurora>=1.7",
+    # microsoft-aurora 1.6+ required for timm 1.0+ support
+    "microsoft-aurora>=1.6",
     # ultralytics 8.3+ fixes loading with weights_only=False
     "ultralytics>=8.3",
 ]
