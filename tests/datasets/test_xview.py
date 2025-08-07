@@ -12,7 +12,7 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import DatasetNotFoundError, XView2
+from torchgeo.datasets import DatasetNotFoundError, XView2, XView2DistShift
 
 
 class TestXView2:
@@ -92,3 +92,94 @@ class TestXView2:
         x['prediction'] = x['mask']
         dataset.plot(x)
         plt.close()
+
+
+class TestXView2DistShift:
+    @pytest.fixture(params=['train', 'test'])
+    def dataset(self, monkeypatch: MonkeyPatch, request: SubRequest) -> XView2DistShift:
+        monkeypatch.setattr(
+            XView2DistShift,
+            'metadata',
+            {
+                'train': {
+                    'filename': 'train_images_labels_targets.tar.gz',
+                    'md5': '373e61d55c1b294aa76b94dbbd81332b',
+                    'directory': 'train',
+                },
+                'test': {
+                    'filename': 'test_images_labels_targets.tar.gz',
+                    'md5': 'bc6de81c956a3bada38b5b4e246266a1',
+                    'directory': 'test',
+                },
+            },
+        )
+        root = os.path.join('tests', 'data', 'xview2')
+        split = request.param
+        transforms = nn.Identity()
+
+        return XView2DistShift(
+            root=root,
+            split=split,
+            id_ood_disaster=[
+                {'disaster_name': 'hurricane-harvey', 'pre-post': 'post'},
+                {'disaster_name': 'hurricane-harvey', 'pre-post': 'post'},
+            ],
+            transforms=transforms,
+            checksum=True,
+        )
+
+    def test_getitem(self, dataset: XView2DistShift) -> None:
+        x = dataset[0]
+        assert isinstance(x, dict)
+        assert isinstance(x['image'], torch.Tensor)
+        assert isinstance(x['mask'], torch.Tensor)
+        assert set(torch.unique(x['mask']).tolist()).issubset({0, 1})  # binary mask
+
+    def test_len(self, dataset: XView2DistShift) -> None:
+        assert len(dataset) > 0
+
+    def test_invalid_disaster(self) -> None:
+        with pytest.raises(ValueError, match='Invalid disaster name'):
+            XView2DistShift(
+                root='tests/data/xview2',
+                id_ood_disaster=[
+                    {'disaster_name': 'not-a-real-one', 'pre-post': 'post'},
+                    {'disaster_name': 'hurricane-harvey', 'pre-post': 'post'},
+                ],
+            )
+
+    def test_missing_disaster_name_key(self) -> None:
+        with pytest.raises(
+            ValueError, match="Each disaster entry must contain a 'disaster_name' key."
+        ):
+            XView2DistShift(
+                root='tests/data/xview2',
+                id_ood_disaster=[
+                    {'pre-post': 'post'},  # missing 'disaster_name'
+                    {'disaster_name': 'hurricane-harvey', 'pre-post': 'post'},
+                ],
+            )
+
+    def test_missing_pre_post_key(self) -> None:
+        with pytest.raises(
+            ValueError,
+            match="Each disaster entry must contain 'disaster_name' and 'pre-post' keys.",
+        ):
+            XView2DistShift(
+                root='tests/data/xview2',
+                id_ood_disaster=[
+                    {'disaster_name': 'hurricane-harvey'},  # missing 'pre-post'
+                    {'disaster_name': 'hurricane-harvey', 'pre-post': 'post'},
+                ],
+            )
+
+    def test_invalid_split(self) -> None:
+        with pytest.raises(AssertionError):
+            XView2DistShift(
+                root='tests/data/xview2',
+                split='bad',  # type: ignore[arg-type]
+                id_ood_disaster=[
+                    {'disaster_name': 'hurricane-matthew', 'pre-post': 'post'},
+                    {'disaster_name': 'mexico-earthquake', 'pre-post': 'post'},
+                ],
+            )
