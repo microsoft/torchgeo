@@ -380,9 +380,9 @@ class BaseTransformer(nn.Module):
             x: Input tensor.
             relative_position_bias: whether to use relative position bias.
         """
-        for self_attn, ffn in self.layers:
-            x = self_attn(x, relative_position_bias) + x
-            x = ffn(x) + x
+        for self_attn, ffn in self.layers:  # type: ignore[misc]
+            x = self_attn(x, relative_position_bias) + x  # type: ignore[has-type]
+            x = ffn(x) + x  # type: ignore[has-type]
 
         x = self.norm_out(x) if self.final_norm else x
         return x
@@ -440,10 +440,10 @@ class BaseTransformerCrossAttn(nn.Module):
         Returns:
             Output tensor.
         """
-        for self_attn, cross_attn, ffn in self.layers:
-            x = self_attn(x, relative_position_bias) + x
-            x = cross_attn(x, context, relative_position_bias) + x
-            x = ffn(x) + x
+        for self_attn, cross_attn, ffn in self.layers:  # type: ignore[misc]
+            x = self_attn(x, relative_position_bias) + x  # type: ignore[has-type]
+            x = cross_attn(x, context, relative_position_bias) + x  # type: ignore[has-type]
+            x = ffn(x) + x  # type: ignore[has-type]
 
         x = self.norm_out(x)
         return x
