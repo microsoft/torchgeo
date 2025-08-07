@@ -3,13 +3,9 @@ on:
   push:
     branches:
       - main
-    paths:
-      - docs/tutorials/**
   pull_request:
     branches:
       - main
-    paths:
-      - docs/tutorials/**
 defaults:
   run:
     shell: bash
