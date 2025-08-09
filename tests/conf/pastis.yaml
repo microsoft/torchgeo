@@ -1,0 +1,11 @@
+model:
+  class_path: SemanticSegmentationTask
+  init_args:
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 24
+    task: 'binary'
+    in_channels: 12
+    loss: 'bce'
+data:
+  class_path: PastisDataModule
