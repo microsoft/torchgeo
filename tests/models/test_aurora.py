@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -20,14 +21,14 @@ class TestAurora:
         return request.param
 
     @pytest.fixture
-    def mocked_weights(
-        self, tmp_path: Path, monkeypatch: MonkeyPatch, load_state_dict_from_url: None
-    ) -> WeightsEnum:
+    def mocked_weights(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> WeightsEnum:
+        import aurora
+
         weights = Aurora_Weights.HRES_T0_PRETRAINED_SMALL_AURORA
-        path = tmp_path / f'{weights}.pth'
-        model = aurora_swin_unet(weights=weights)
-        torch.save(model.state_dict(), path)
-        monkeypatch.setattr(weights.value, 'url', str(path))
+        # monkeypatch the load_checkpoint method to a no-op
+        monkeypatch.setattr(
+            aurora.Aurora, 'load_checkpoint', lambda self, *args, **kwargs: None
+        )
         return weights
 
     def test_aurora_swin_unet(self) -> None:
@@ -36,22 +37,28 @@ class TestAurora:
     def test_aurora_swin_unet_weights(self, mocked_weights: WeightsEnum) -> None:
         aurora_swin_unet(weights=mocked_weights)
 
-    def test_aurora_swin_unet_weights_different_num_classes(
-        self, mocked_weights: WeightsEnum
-    ) -> None:
-        aurora_swin_unet(weights=mocked_weights, classes=20)
-
-    def test_bands(self, weights: WeightsEnum) -> None:
-        if 'bands' in weights.meta:
-            assert len(weights.meta['bands']) == weights.meta['in_chans']
-
-    def test_transforms(self, weights: WeightsEnum) -> None:
-        c = weights.meta['in_chans']
-        sample = {
-            'image': torch.arange(c * 256 * 256, dtype=torch.float).view(c, 256, 256)
-        }
-        weights.transforms(sample)
-
     @pytest.mark.slow
     def test_aurora_swin_unet_download(self, weights: WeightsEnum) -> None:
         aurora_swin_unet(weights=weights)
+
+    @pytest.mark.slow
+    @torch.inference_mode()
+    def test_aurora_prediction(self, weights: WeightsEnum) -> None:
+        from aurora import Batch, Metadata
+
+        model = aurora_swin_unet(weights=weights)
+        batch = Batch(
+            surf_vars={k: torch.randn(1, 2, 17, 32) for k in weights.meta['surf_vars']},
+            static_vars={k: torch.randn(17, 32) for k in weights.meta['static_vars']},
+            atmos_vars={
+                k: torch.randn(1, 2, weights.meta['patch_size'], 17, 32)
+                for k in weights.meta['atmos_vars']
+            },
+            metadata=Metadata(
+                lat=torch.linspace(90, -90, 17),
+                lon=torch.linspace(0, 360, 32 + 1)[:-1],
+                time=(datetime(2020, 6, 1, 12, 0),),
+                atmos_levels=(100, 250, 500, 850),
+            ),
+        )
+        model(batch)

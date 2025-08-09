@@ -17,8 +17,14 @@ _aurora_meta = {
     'dataset': 'Aurora',
     'model': None,
     'resolution': None,
+    'patch_size': None,
+    'surf_vars': None,
+    'atmos_vars': None,
+    'static_vars': None,
     'architecture': '3D Swin Transformer U-Net',
     'encoder': '3D Perceiver',
+    'hf_repo': 'microsoft/aurora',
+    'filename': None,
     'publication': 'https://arxiv.org/abs/2409.16252',
     'repo': 'https://github.com/microsoft/aurora',
     'license': 'MIT',
@@ -40,44 +46,180 @@ class Aurora_Weights(WeightsEnum):  # type: ignore[misc]
     HRES_T0_PRETRAINED_AURORA = Weights(
         url='https://huggingface.co/microsoft/aurora/resolve/74598e8c65d53a96077c08bb91acdfa5525340c9/aurora-0.25-pretrained.ckpt',
         transforms=_aurora_transforms,
-        meta=_aurora_meta | {'model': 'AuroraPretrained', 'resolution': 0.25},
+        meta=_aurora_meta
+        | {
+            'filename': 'aurora-0.25-pretrained.ckpt',
+            'model': 'AuroraPretrained',
+            'resolution': 0.25,
+            'patch_size': 4,
+            'surf_vars': ('2t', '10u', '10v', 'msl'),
+            'atmos_vars': ('z', 'u', 'v', 't', 'q'),
+            'static_vars': ('lsm', 'z', 'slt'),
+        },
     )
 
     HRES_T0_PRETRAINED_12HR_AURORA = Weights(
         url='https://huggingface.co/microsoft/aurora/resolve/74598e8c65d53a96077c08bb91acdfa5525340c9/aurora-0.25-12h-pretrained.ckpt',
         transforms=_aurora_transforms,
         meta=_aurora_meta
-        | {'model': 'Aurora12hPretrained', 'lead-time': '12 hours', 'resolution': 0.25},
+        | {
+            'filename': 'aurora-0.25-12h-pretrained.ckpt',
+            'model': 'Aurora12hPretrained',
+            'lead-time': '12 hours',
+            'resolution': 0.25,
+            'patch_size': 4,
+            'surf_vars': ('2t', '10u', '10v', 'msl'),
+            'atmos_vars': ('z', 'u', 'v', 't', 'q'),
+            'static_vars': ('lsm', 'z', 'slt'),
+        },
     )
 
     HRES_T0_PRETRAINED_SMALL_AURORA = Weights(
         url='https://huggingface.co/microsoft/aurora/resolve/74598e8c65d53a96077c08bb91acdfa5525340c9/aurora-0.25-small-pretrained.ckpt',
         transforms=_aurora_transforms,
-        meta=_aurora_meta | {'model': 'AuroraSmallPretrained', 'resolution': 0.25},
+        meta=_aurora_meta
+        | {
+            'filename': 'aurora-0.25-small-pretrained.ckpt',
+            'model': 'AuroraSmallPretrained',
+            'resolution': 0.25,
+            'patch_size': 4,
+            'surf_vars': ('2t', '10u', '10v', 'msl'),
+            'atmos_vars': ('z', 'u', 'v', 't', 'q'),
+            'static_vars': ('lsm', 'z', 'slt'),
+        },
     )
 
     HRES_T0_AURORA = Weights(
         url='https://huggingface.co/microsoft/aurora/resolve/74598e8c65d53a96077c08bb91acdfa5525340c9/aurora-0.25-finetuned.ckpt',
         transforms=_aurora_transforms,
-        meta=_aurora_meta | {'model': 'Aurora', 'resolution': 0.25},
+        meta=_aurora_meta
+        | {
+            'filename': 'aurora-0.25-finetuned.ckpt',
+            'model': 'Aurora',
+            'resolution': 0.25,
+            'patch_size': 4,
+            'surf_vars': ('2t', '10u', '10v', 'msl'),
+            'atmos_vars': ('z', 'u', 'v', 't', 'q'),
+            'static_vars': ('lsm', 'z', 'slt'),
+        },
     )
 
     HRES_T0_HIGH_RES_AURORA = Weights(
         url='https://huggingface.co/microsoft/aurora/resolve/74598e8c65d53a96077c08bb91acdfa5525340c9/aurora-0.1-finetuned.ckpt',
         transforms=_aurora_transforms,
-        meta=_aurora_meta | {'model': 'AuroraHighRes', 'resolution': 0.1},
+        meta=_aurora_meta
+        | {
+            'filename': 'aurora-0.1-finetuned.ckpt',
+            'model': 'AuroraHighRes',
+            'resolution': 0.1,
+            'patch_size': 10,
+            'surf_vars': ('2t', '10u', '10v', 'msl'),
+            'atmos_vars': ('z', 'u', 'v', 't', 'q'),
+            'static_vars': ('lsm', 'z', 'slt'),
+        },
     )
 
     HRES_CAMS_AIR_POLLUTION_AURORA = Weights(
         url='https://huggingface.co/microsoft/aurora/resolve/74598e8c65d53a96077c08bb91acdfa5525340c9/aurora-0.4-air-pollution.ckpt',
         transforms=_aurora_transforms,
-        meta=_aurora_meta | {'model': 'AuroraAirPollution', 'resolution': 0.4},
+        meta=_aurora_meta
+        | {
+            'filename': 'aurora-0.4-air-pollution.ckpt',
+            'model': 'AuroraAirPollution',
+            'resolution': 0.4,
+            'patch_size': 3,
+            'surf_vars': (
+                '2t',
+                '10u',
+                '10v',
+                'msl',
+                'pm1',
+                'pm2p5',
+                'pm10',
+                'tcco',
+                'tc_no',
+                'tcno2',
+                'gtco3',
+                'tcso2',
+            ),
+            'atmos_vars': ('z', 'u', 'v', 't', 'q', 'co', 'no', 'no2', 'go3', 'so2'),
+            'static_vars': (
+                'lsm',
+                'z',
+                'slt',
+                'static_ammonia',
+                'static_ammonia_log',
+                'static_co',
+                'static_co_log',
+                'static_nox',
+                'static_nox_log',
+                'static_so2',
+                'static_so2_log',
+            ),
+        },
     )
 
     HRES_WAM0_WAVE_AURORA = Weights(
         url='https://huggingface.co/microsoft/aurora/resolve/74598e8c65d53a96077c08bb91acdfa5525340c9/aurora-0.25-wave.ckpt',
         transforms=_aurora_transforms,
-        meta=_aurora_meta | {'model': 'AuroraWave', 'resolution': 0.25},
+        meta=_aurora_meta
+        | {
+            'filename': 'aurora-0.25-wave.ckpt',
+            'model': 'AuroraWave',
+            'resolution': 0.25,
+            'patch_size': 4,
+            'surf_vars': (
+                '2t',
+                '10u',
+                '10v',
+                'msl',
+                'swh',
+                'swh_density',
+                'mwd_sin',
+                'mwd_cos',
+                'mwd_density',
+                'mwp',
+                'mwp_density',
+                'pp1d',
+                'pp1d_density',
+                'shww',
+                'shww_density',
+                'mdww_sin',
+                'mdww_cos',
+                'mdww_density',
+                'mpww',
+                'mpww_density',
+                'shts',
+                'shts_density',
+                'mdts_sin',
+                'mdts_cos',
+                'mdts_density',
+                'mpts',
+                'mpts_density',
+                'swh1',
+                'swh1_density',
+                'mwd1_sin',
+                'mwd1_cos',
+                'mwd1_density',
+                'mwp1',
+                'mwp1_density',
+                'swh2',
+                'swh2_density',
+                'mwd2_sin',
+                'mwd2_cos',
+                'mwd2_density',
+                'mwp2',
+                'mwp2_density',
+                'wind',
+                'wind_density',
+                '10u_wave',
+                '10u_wave_density',
+                '10v_wave',
+                '10v_wave_density',
+            ),
+            'atmos_vars': ('z', 'u', 'v', 't', 'q'),
+            'static_vars': ('lsm', 'z', 'slt', 'wmb', 'lat_mask'),
+        },
     )
 
 
@@ -110,6 +252,8 @@ def aurora_swin_unet(
         model = aurora.Aurora(*args, **kwargs)
     else:
         model = getattr(aurora, weights.meta['model'])(*args, **kwargs)
-        model.load_checkpoint()
+        model.load_checkpoint(
+            repo=weights.meta['hf_repo'], name=weights.meta['filename']
+        )
 
     return cast(nn.Module, model)
