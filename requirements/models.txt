@@ -1,1 +1,2 @@
+microsoft-aurora==1.7.0
 ultralytics==8.3.162
