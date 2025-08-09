@@ -19,7 +19,14 @@ from torchmetrics import Accuracy, F1Score, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
-from ..models import FCN, FCSiamConc, FCSiamDiff, get_weight
+from ..models import (
+    FCN,
+    FCSiamConc,
+    FCSiamDiff,
+    changevit_small,
+    changevit_tiny,
+    get_weight,
+)
 from . import utils
 from .base import BaseTask
 
@@ -41,6 +48,8 @@ class ChangeDetectionTask(BaseTask):
             'dpt',
             'fcsiamdiff',
             'fcsiamconc',
+            'changevit_small',
+            'changevit_tiny',
         ] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
@@ -228,6 +237,20 @@ class ChangeDetectionTask(BaseTask):
                     classes=num_classes,
                     encoder_weights='imagenet' if weights is True else None,
                 )
+            case 'changevit_small':
+                if weights is not None and not isinstance(weights, WeightsEnum):
+                    raise ValueError(
+                        f'Invalid weights for changevit_small: {weights}. '
+                        'Expected None or a ChangeViT_Weights enum.'
+                    )
+                self.model = changevit_small(weights=weights)
+            case 'changevit_tiny':
+                if weights is not None and not isinstance(weights, WeightsEnum):
+                    raise ValueError(
+                        f'Invalid weights for changevit_tiny: {weights}. '
+                        'Expected None or a ChangeViT_Weights enum.'
+                    )
+                self.model = changevit_tiny(weights=weights)
 
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
@@ -236,6 +259,7 @@ class ChangeDetectionTask(BaseTask):
                 _, state_dict = utils.extract_backbone(weights)
             else:
                 state_dict = get_weight(weights).get_state_dict(progress=True)
+
             self.model.encoder.load_state_dict(state_dict)
 
         # Freeze backbone
@@ -245,8 +269,15 @@ class ChangeDetectionTask(BaseTask):
 
         # Freeze decoder
         if self.hparams['freeze_decoder'] and model != 'fcn':
-            for param in self.model.decoder.parameters():
-                param.requires_grad = False
+            if model.startswith('changevit'):
+                # Freeze detail capture and feature injector for ChangeViT models
+                for param in self.model.detail_capture.parameters():
+                    param.requires_grad = False
+                for param in self.model.feature_injector.parameters():
+                    param.requires_grad = False
+            else:
+                for param in self.model.decoder.parameters():
+                    param.requires_grad = False
 
     def _shared_step(self, batch: Any, batch_idx: int, stage: str) -> Tensor:
         """Compute the loss and additional metrics for the given stage.
@@ -263,13 +294,20 @@ class ChangeDetectionTask(BaseTask):
         x = batch['image']
         y = batch['mask']
 
-        if not model.startswith('fcsiam'):
+        if not model.startswith('fcsiam') and not model.startswith('changevit'):
             x = rearrange(x, 'b t c h w -> b (t c) h w')
 
         if self.hparams['task'] == 'multiclass':
             y = y.squeeze(1)
+            y = y.long()
 
-        y_hat = self(x)
+        # Forward pass
+        if model.startswith('changevit'):
+            output = self(x)
+            # ChangeViT outputs probabilities/logits in 'change_prob' key
+            y_hat = output['change_prob']
+        else:
+            y_hat = self(x)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
@@ -294,6 +332,7 @@ class ChangeDetectionTask(BaseTask):
                 and hasattr(self.logger.experiment, 'add_figure')
             ):
                 datamodule = self.trainer.datamodule
+
                 aug = K.AugmentationSequential(
                     K.VideoSequential(K.Denormalize(datamodule.mean, datamodule.std)),
                     data_keys=None,
@@ -373,11 +412,22 @@ class ChangeDetectionTask(BaseTask):
         x = batch['image']
         if model == 'unet':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
-        y_hat: Tensor = self(x)
+        elif not model.startswith('fcsiam') and not model.startswith('changevit'):
+            x = rearrange(x, 'b t c h w -> b (t c) h w')
+
+        # Forward pass
+        if model.startswith('changevit'):
+            output = self(x)
+            y_hat: Tensor = output['change_prob']
+        else:
+            y_hat = self(x)
 
         match self.hparams['task']:
             case 'binary' | 'multilabel':
-                y_hat = y_hat.sigmoid()
+                if not model.startswith(
+                    'changevit'
+                ):  # ChangeViT already outputs probabilities
+                    y_hat = y_hat.sigmoid()
             case 'multiclass':
                 y_hat = y_hat.softmax(dim=1)
 
