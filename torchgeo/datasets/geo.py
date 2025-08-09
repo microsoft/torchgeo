@@ -38,9 +38,11 @@ from .utils import (
     GeoSlice,
     Path,
     array_to_tensor,
+    clean_binary_mask,
     concat_samples,
     convert_poly_coords,
     disambiguate_timestamp,
+    extract_valid_footprint_polygon,
     merge_samples,
     path_is_vsi,
 )
@@ -359,6 +361,10 @@ class RasterDataset(GeoDataset):
     #: Color map for the dataset, used for plotting
     cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {}
 
+    #: The nodata value used int the raster for pixels outside the satellite acquisition
+    #: Only override this if you know that the raster lack nodata-mask and nodata value
+    nodata_value: float | None = None
+
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
@@ -451,10 +457,28 @@ class RasterDataset(GeoDataset):
                         if crs is None:
                             crs = src.crs
 
-                        with WarpedVRT(src, crs=crs) as vrt:
-                            geometries.append(shapely.box(*vrt.bounds))
+                        vrt_options = {'crs': crs}
+                        if self.nodata_value is not None:
+                            vrt_options['nodata'] = self.nodata_value
+                        with WarpedVRT(src, **vrt_options) as vrt:
                             if res is None:
                                 res = vrt.res
+
+                            valid_data_mask = clean_binary_mask(vrt.dataset_mask())
+                            all_valid = (valid_data_mask == 255).all()
+
+                            if all_valid:
+                                geometries.append(shapely.box(*vrt.bounds))
+                            else:
+                                res_x = res[0] if isinstance(res, tuple) else res
+                                valid_footprint = extract_valid_footprint_polygon(
+                                    mask=valid_data_mask,
+                                    transform=vrt.transform,
+                                    raster_width=vrt.width,
+                                    raster_resolution_x=res_x,
+                                )
+                                geometries.append(valid_footprint)
+
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
                     continue
