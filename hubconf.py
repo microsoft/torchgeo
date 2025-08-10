@@ -8,6 +8,7 @@
 """
 
 from torchgeo.models import (
+    aurora_swin_unet,
     copernicusfm_base,
     croma_base,
     croma_large,
@@ -33,6 +34,7 @@ from torchgeo.models import (
 )
 
 __all__ = (
+    'aurora_swin_unet',
     'copernicusfm_base',
     'croma_base',
     'croma_large',
@@ -59,6 +61,7 @@ __all__ = (
 
 dependencies = [
     'kornia',
+    'microsoft-aurora',
     'segmentation_models_pytorch',
     'timm',
     'torchvision',
