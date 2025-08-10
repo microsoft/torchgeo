@@ -4,7 +4,7 @@
 
 We provide security updates for `main` and for the most recent minor (`X.Y`) release series of TorchGeo. Security updates will be made available as patch (`X.Y.1`, `X.Y.2`, etc.) releases.
 
-For more on Spack's release structure, see our
+For more on TorchGeo's release structure, see our
 [Wiki](https://github.com/microsoft/torchgeo/wiki/Releasing-Instructions).
 
 ## Reporting a Vulnerability
