@@ -23,14 +23,11 @@ import rasterio
 import rasterio.merge
 import shapely
 import torch
-import xarray as xr
 from geopandas import GeoDataFrame
 from pyproj import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
-from rioxarray.merge import merge_arrays
-from rtree.index import Index, Property
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -44,6 +41,7 @@ from .utils import (
     concat_samples,
     convert_poly_coords,
     disambiguate_timestamp,
+    lazy_import,
     merge_samples,
     path_is_vsi,
 )
@@ -311,7 +309,10 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
 
 
 class RasterDataset(GeoDataset):
-    """Abstract base class for :class:`GeoDataset` stored as raster files."""
+    """Abstract base class for :class:`GeoDataset` stored as raster files.
+
+    Uses rasterio for file I/O.
+    """
 
     #: Regular expression used to extract date from filename.
     #:
@@ -625,8 +626,160 @@ class RasterDataset(GeoDataset):
             return src
 
 
+class XarrayDataset(GeoDataset):
+    """Abstract base class for :class:`GeoDataset` stored as raster files.
+
+    Uses rioxarray for file I/O.
+
+    .. versionadded:: 0.8
+    """
+
+    def __init__(
+        self,
+        paths: Path | Iterable[Path] = 'data',
+        crs: CRS | None = None,
+        res: float | tuple[float, float] | None = None,
+        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
+    ) -> None:
+        """Initialize a new XarrayDataset instance.
+
+        Args:
+            paths: one or more root directories to search or files to load
+            crs: :term:`coordinate reference system (CRS)` to warp to
+                (defaults to the CRS of the first file found)
+            res: resolution of the dataset in units of CRS
+                (defaults to the resolution of the first file found)
+            transforms: a function/transform that takes an input sample
+                and returns a transformed version
+
+        Raises:
+            DatasetNotFoundError: If dataset is not found.
+            DependencyNotFoundError: If rioxarray is not installed.
+        """
+        lazy_import('rioxarray')
+        xr = lazy_import('xarray')
+        self.paths = paths
+        self.transforms = transforms
+
+        # Gather information about the dataset
+        filepaths = []
+        datetimes = []
+        geometries = []
+        for filepath in self.files:
+            try:
+                with xr.open_dataset(
+                    filepath, decode_times=True, decode_coords='all'
+                ) as src:
+                    # TODO: ensure compatibility between pyproj and rasterio CRS objects
+                    crs = crs or src.rio.crs or CRS.from_epsg(4326)
+                    res = res or src.rio.resolution()
+
+                    if src.rio.crs is None:
+                        warnings.warn(
+                            f"Unable to decode coordinates of '{filepath}', "
+                            f'defaulting to {crs}. Set `crs` if this is incorrect.',
+                            UserWarning,
+                        )
+                        src.rio.write_crs(crs)
+
+                    if src.rio.crs != crs or res != src.rio.resolution():
+                        src = src.rio.reproject(crs, res)
+
+                    filepaths.append(filepath)
+                    datetimes.append((src.time.min(), src.time.max()))
+                    geometries.append(shapely.box(*src.bounds()))
+            except rasterio.errors.RasterioIOError:
+                # Skip files that xarray is unable to read
+                continue
+
+        if len(filepaths) == 0:
+            raise DatasetNotFoundError(self)
+
+        if res is not None:
+            if isinstance(res, int | float):
+                res = (res, res)
+
+            self._res = res
+
+        # Create the dataset index
+        data = {'filepath': filepaths}
+        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
+
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
+
+        Args:
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            Sample of input, target, and/or metadata at that index.
+
+        Raises:
+            DependencyNotFoundError: If rioxarray is not installed.
+            IndexError: If *query* is not found in the index.
+        """
+        x, y, t = self._disambiguate_slice(query)
+        interval = pd.Interval(t.start, t.stop)
+        index = self.index.iloc[self.index.index.overlaps(interval)]
+        index = index.iloc[:: t.step]
+        index = index.cx[x.start : x.stop, y.start : y.stop]
+
+        if index.empty:
+            raise IndexError(
+                f'query: {query} not found in index with bounds: {self.bounds}'
+            )
+
+        image = self._merge_files(index.filepath, query)
+        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query, 'image': image}
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def _merge_files(self, filepaths: Sequence[str], query: GeoSlice) -> Tensor:
+        """Load and merge one or more files.
+
+        Args:
+            filepaths: one or more files to load and merge
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            image at that index
+        """
+        xr = lazy_import('xarray')
+        rioxr = lazy_import('rioxarray')
+
+        x, y, t = self._disambiguate_slice(query)
+        bounds = (x.start, y.start, x.stop, y.stop)
+        res = (x.step, y.step)
+
+        datasets = []
+        for filepath in filepaths:
+            src = xr.open_dataset(filepath, decode_times=True, decode_coords='all')
+
+            if src.rio.crs is None:
+                src.rio.write_crs(self.crs)
+
+            if src.rio.crs != self.crs or res != src.rio.resolution():
+                src = src.rio.reproject(self.crs, res)
+
+            datasets.append(src)
+
+        dataset = rioxr.merge.merge_datasets(datasets, bounds, res)
+        dataset = dataset.sel(time=slice(t.start, t.stop))
+
+        # Use array_to_tensor since merge may return uint16/uint32 arrays.
+        tensor = array_to_tensor(dataset.data)
+        return tensor
+
+
 class VectorDataset(GeoDataset):
-    """Abstract base class for :class:`GeoDataset` stored as vector files."""
+    """Abstract base class for :class:`GeoDataset` stored as vector files.
+
+    Uses fiona for file I/O.
+    """
 
     #: Regular expression used to extract date from filename.
     #:
@@ -1351,261 +1504,3 @@ class UnionDataset(GeoDataset):
         """
         self.datasets[0].res = new_res
         self.datasets[1].res = new_res
-
-
-class RioXarrayDataset(GeoDataset):
-    """Wrapper for geographical datasets stored as Xarray Datasets.
-
-    In-memory geographical xarray.DataArray and xarray.Dataset.
-
-    Relies on rioxarray.
-
-    .. versionadded:: 0.7.0
-    """
-
-    filename_glob = '*'
-    filename_regex = '.*'
-
-    is_image = True
-
-    spatial_x_name = 'x'
-    spatial_y_name = 'y'
-
-    transform = None
-
-    @property
-    def dtype(self) -> torch.dtype:
-        """The dtype of the dataset (overrides the dtype of the data file via a cast).
-
-        Returns:
-            the dtype of the dataset
-        """
-        if self.is_image:
-            return torch.float32
-        else:
-            return torch.long
-
-    def harmonize_format(self, ds):
-        """Convert the dataset to the standard format.
-
-        Args:
-            ds: dataset or array to harmonize
-
-        Returns:
-            the harmonized dataset or array
-        """
-        # rioxarray expects spatial dimensions to be named x and y
-        ds.rio.set_spatial_dims(self.spatial_x_name, self.spatial_y_name, inplace=True)
-
-        # if x coords go from 0 to 360, convert to -180 to 180
-        if ds[self.spatial_x_name].min() > 180:
-            ds = ds.assign_coords(
-                {self.spatial_x_name: ds[self.spatial_x_name] % 360 - 180}
-            )
-
-        # if y coords go from 0 to 180, convert to -90 to 90
-        if ds[self.spatial_x_name].min() > 90:
-            ds = ds.assign_coords(
-                {self.spatial_y_name: ds[self.spatial_y_name] % 180 - 90}
-            )
-        # expect asceding coordinate values
-        ds = ds.sortby(self.spatial_x_name, ascending=True)
-        ds = ds.sortby(self.spatial_y_name, ascending=True)
-        return ds
-
-    def __init__(
-        self,
-        paths: Path | Iterable[Path] = 'data',
-        data_variables: list[str] | None = None,
-        # crs: Optional[CRS] = None,
-        transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-    ) -> None:
-        """Initialize a new Dataset instance.
-
-        Args:
-            paths: one or more root directories to search or files to load
-            data_variables: data variables that should be gathered from the collection
-                of xarray datasets
-            transforms: a function/transform that takes an input sample
-                and returns a transformed version
-
-        Raises:
-            FileNotFoundError: if files are not found in ``paths``
-        """
-        super().__init__(transforms)
-
-        self.paths = paths
-
-        if data_variables:
-            self.data_variables = data_variables
-        else:
-            data_variables_to_collect: list[str] = []
-
-        self.transforms = transforms
-
-        # Create an R-tree to index the dataset
-        self.index = Index(interleaved=False, properties=Property(dimension=3))
-
-        # Populate the dataset index
-        i = 0
-        pathname = os.path.join(root, self.filename_glob)
-        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-        for filepath in glob.iglob(pathname, recursive=True):
-            match = re.match(filename_regex, os.path.basename(filepath))
-            if match is not None:
-                with xr.open_dataset(filepath, decode_times=True) as ds:
-                    ds = self.harmonize_format(ds)
-
-                    try:
-                        (minx, miny, maxx, maxy) = ds.rio.bounds()
-                    except AttributeError:
-                        # or take the shape of the data variable?
-                        continue
-
-                if hasattr(ds, 'time'):
-                    try:
-                        indices = ds.indexes['time'].to_datetimeindex()
-                    except AttributeError:
-                        indices = ds.indexes['time']
-
-                    mint = indices.min().to_pydatetime().timestamp()
-                    maxt = indices.max().to_pydatetime().timestamp()
-                else:
-                    mint = 0
-                    maxt = sys.maxsize
-                coords = (minx, maxx, miny, maxy, mint, maxt)
-                self.index.insert(i, coords, filepath)
-                i += 1
-
-                # collect all possible data variables if self.data_variables is None
-                if not data_variables:
-                    data_variables_to_collect.extend(list(ds.data_vars))
-
-        if i == 0:
-            import pdb
-
-            pdb.set_trace()
-            msg = (
-                f"No {self.__class__.__name__} data was found in `paths='{self.paths}'`"
-            )
-            raise FileNotFoundError(msg)
-
-        if not data_variables:
-            self.data_variables = list(set(data_variables_to_collect))
-
-        # if not crs:
-        #     self._crs = "EPSG:4326"
-        # else:
-        #     self._crs = cast(CRS, crs)
-        self.res = 1.0
-
-    def _infer_spatial_coordinate_names(self, ds) -> tuple[str]:
-        """Infer the names of the spatial coordinates.
-
-        Args:
-            ds: Dataset or DataArray of which to infer the spatial coordinates
-
-        Returns:
-            x and y coordinate names
-        """
-        x_name = None
-        y_name = None
-        for coord_name, coord in ds.coords.items():
-            if hasattr(coord, 'units'):
-                if any(
-                    [
-                        x in coord.units.lower()
-                        for x in ['degrees_north', 'degree_north']
-                    ]
-                ):
-                    y_name = coord_name
-                elif any(
-                    [x in coord.units.lower() for x in ['degrees_east', 'degree_east']]
-                ):
-                    x_name = coord_name
-
-        if not x_name or not y_name:
-            raise ValueError('Spatial Coordinate Units not found in Dataset.')
-
-        return x_name, y_name
-
-    def __getitem__(self, query: BoundingBox) -> dict[str, Any]:
-        """Retrieve image/mask and metadata indexed by query.
-
-        Args:
-            query: (minx, maxx, miny, maxy, mint, maxt) coordinates to index
-
-        Returns:
-            sample of image/mask and metadata at that index
-
-        Raises:
-            IndexError: if query is not found in the index
-        """
-        hits = self.index.intersection(tuple(query), objects=True)
-        items = [hit.object for hit in hits]
-
-        if not items:
-            raise IndexError(
-                f'query: {query} not found in index with bounds: {self.bounds}'
-            )
-
-        data_arrays: list[np.typing.NDArray] = []
-        for item in items:
-            with xr.open_dataset(item, decode_cf=True) as ds:
-                ds = self.harmonize_format(ds)
-                # select time dimension
-                if hasattr(ds, 'time'):
-                    try:
-                        ds['time'] = ds.indexes['time'].to_datetimeindex()
-                    except AttributeError:
-                        ds['time'] = ds.indexes['time']
-                    ds = ds.sel(
-                        time=slice(
-                            datetime.fromtimestamp(query.mint),
-                            datetime.fromtimestamp(query.maxt),
-                        )
-                    )
-
-                for variable in self.data_variables:
-                    if hasattr(ds, variable):
-                        da = ds[variable]
-                        # if not da.rio.crs:
-                        #     da.rio.write_crs(self._crs, inplace=True)
-                        # elif da.rio.crs != self._crs:
-                        #     da = da.rio.reproject(self._crs)
-                        # clip box ignores time dimension
-                        clipped = da.rio.clip_box(
-                            minx=query.minx,
-                            miny=query.miny,
-                            maxx=query.maxx,
-                            maxy=query.maxy,
-                        )
-                        # rioxarray expects this order
-                        clipped = clipped.transpose(
-                            'time', self.spatial_y_name, self.spatial_x_name, ...
-                        )
-
-                        # set proper transform # TODO not working
-                        # clipped.rio.write_transform(self.transform)
-                        data_arrays.append(clipped.squeeze())
-
-        import pdb
-
-        pdb.set_trace()
-        merged_data = torch.from_numpy(
-            merge_arrays(
-                data_arrays, bounds=(query.minx, query.miny, query.maxx, query.maxy)
-            ).data
-        )
-        sample = {'bbox': query}
-
-        merged_data = merged_data.to(self.dtype)
-        if self.is_image:
-            sample['image'] = merged_data
-        else:
-            sample['mask'] = merged_data
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
