@@ -16,6 +16,14 @@ Change Star
 .. autoclass:: ChangeStarFarSeg
 .. autoclass:: ChangeMixin
 
+CNNLSTM
+^^^^^^^
+
+.. autoclass:: CNNLSTM
+.. autoclass:: CNN
+.. autoclass:: LSTM
+.. autoclass:: Task
+
 Copernicus-FM
 ^^^^^^^^^^^^^
 
