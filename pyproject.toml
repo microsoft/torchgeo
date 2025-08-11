@@ -146,8 +146,10 @@ all = [
 torchgeo = "torchgeo.main:main"
 
 [project.urls]
-Homepage = "https://github.com/microsoft/torchgeo"
+Codecov = "https://app.codecov.io/gh/microsoft/torchgeo"
 Documentation = "https://torchgeo.readthedocs.io"
+Homepage = "https://github.com/microsoft/torchgeo"
+Slack = "https://torchgeo.slack.com"
 
 # https://coverage.readthedocs.io/en/latest/config.html
 [tool.coverage.report]
