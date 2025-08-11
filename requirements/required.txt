@@ -1,7 +1,4 @@
-# setup
-setuptools==80.9.0
-
-# install
+# required
 einops==0.8.1
 fiona==1.10.1
 geopandas==1.0.1
