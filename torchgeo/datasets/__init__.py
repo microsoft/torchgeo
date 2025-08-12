@@ -82,9 +82,9 @@ from .geo import (
     NonGeoClassificationDataset,
     NonGeoDataset,
     RasterDataset,
-    XarrayDataset,
     UnionDataset,
     VectorDataset,
+    XarrayDataset,
 )
 from .geonrw import GeoNRW
 from .gid15 import GID15
@@ -317,7 +317,6 @@ __all__ = (
     'RGBBandsMissingError',
     'RasterDataset',
     'ReforesTree',
-    'XarrayDataset',
     'RwandaFieldBoundary',
     'SSL4EOLBenchmark',
     'SatlasPretrain',
@@ -351,6 +350,7 @@ __all__ = (
     'VectorDataset',
     'WesternUSALiveFuelMoisture',
     'XView2',
+    'XarrayDataset',
     'ZueriCrop',
     'concat_samples',
     'merge_samples',

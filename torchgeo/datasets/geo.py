@@ -688,7 +688,7 @@ class XarrayDataset(GeoDataset):
                     filepaths.append(filepath)
                     datetimes.append((src.time.min(), src.time.max()))
                     geometries.append(shapely.box(*src.bounds()))
-            except rasterio.errors.RasterioIOError:
+            except ValueError:
                 # Skip files that xarray is unable to read
                 continue
 
