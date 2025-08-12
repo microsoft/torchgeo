@@ -28,6 +28,7 @@ from pyproj import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
+from shapely import MultiPolygon, Polygon
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -38,11 +39,9 @@ from .utils import (
     GeoSlice,
     Path,
     array_to_tensor,
-    clean_binary_mask,
     concat_samples,
     convert_poly_coords,
     disambiguate_timestamp,
-    extract_valid_footprint_polygon,
     merge_samples,
     path_is_vsi,
 )
@@ -361,8 +360,9 @@ class RasterDataset(GeoDataset):
     #: Color map for the dataset, used for plotting
     cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {}
 
-    #: The nodata value used int the raster for pixels outside the satellite acquisition
-    #: Only override this if you know that the raster lack nodata-mask and nodata value
+    #: Nodata value used in the raster for pixels outside the satellite acquisition
+    #: Optionally set this if the raster lack nodata-mask and nodata value
+    #: and you want need it to override `RasterDataset._footprint_from_datasource()`
     nodata_value: float | None = None
 
     @property
@@ -463,21 +463,7 @@ class RasterDataset(GeoDataset):
                         with WarpedVRT(src, **vrt_options) as vrt:
                             if res is None:
                                 res = vrt.res
-
-                            valid_data_mask = clean_binary_mask(vrt.dataset_mask())
-                            all_valid = (valid_data_mask == 255).all()
-
-                            if all_valid:
-                                geometries.append(shapely.box(*vrt.bounds))
-                            else:
-                                res_x = res[0] if isinstance(res, tuple) else res
-                                valid_footprint = extract_valid_footprint_polygon(
-                                    mask=valid_data_mask,
-                                    transform=vrt.transform,
-                                    raster_width=vrt.width,
-                                    raster_resolution_x=res_x,
-                                )
-                                geometries.append(valid_footprint)
+                            geometries.append(self._footprint_from_datasource(vrt))
 
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
@@ -644,6 +630,11 @@ class RasterDataset(GeoDataset):
             return vrt
         else:
             return src
+
+    def _footprint_from_datasource(
+        self, src: DatasetReader | WarpedVRT
+    ) -> MultiPolygon | Polygon:
+        return shapely.box(*src.bounds)
 
 
 class VectorDataset(GeoDataset):
