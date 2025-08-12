@@ -97,6 +97,7 @@ datasets = [
     "pandas[parquet]>=2",
     # pycocotools 2.0.7+ required for Python 3.11 wheels
     "pycocotools>=2.0.7",
+    "rioxarray",
     # scikit-image 0.20+ required for Python 3.11 wheels
     "scikit-image>=0.20",
     # scipy 1.9.2+ required for Python 3.11 wheels
