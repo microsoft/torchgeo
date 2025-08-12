@@ -559,6 +559,7 @@ class TestIntegrationAndEdgeCases:
         # This assumes your model has dropout that affects outputs
         if hasattr(model.task_head, 'dropout') and model.task_head.dropout.p > 0:
             assert not torch.equal(output1_train['outputs'], output2_train['outputs'])
+
     @pytest.mark.skipif(not torch.cuda.is_available(), reason='CUDA not available')
     def test_model_cuda_compatibility(self) -> None:
         """Test model works on CUDA if available."""
