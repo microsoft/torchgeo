@@ -77,7 +77,7 @@ class YOLO_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
     CORE_DINO = Weights(
-        url='https://hf.co/torchgeo/core-dino/resolve/59427e13d114cbbf02f4745e1bea7570be3e2057/core_dino_rgb_yolo11x-80ca836f.pt',
+        url='https://hf.co/isaaccorley/core-dino/resolve/59427e13d114cbbf02f4745e1bea7570be3e2057/core_dino_rgb_yolo11x-80ca836f.pt',
         transforms=nn.Identity(),  # transform is handled within ultralytics.YOLO model
         meta={
             'dataset': 'core-five',

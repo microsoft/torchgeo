@@ -96,7 +96,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
     OAM_RGB_RESNET50_TCD = Weights(
-        url='https://hf.co/torchgeo/unet_resnet50_oam_rgb_tcd/resolve/main/unet_resnet50_oam_rgb_tcd-72b9b753.pth',
+        url='https://hf.co/isaaccorley/unet_resnet50_oam_rgb_tcd/resolve/main/unet_resnet50_oam_rgb_tcd-72b9b753.pth',
         transforms=_tcd_transforms,
         meta={
             'dataset': 'OAM-TCD',
@@ -114,7 +114,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
     OAM_RGB_RESNET34_TCD = Weights(
-        url='https://hf.co/torchgeo/unet_resnet34_oam_rgb_tcd/resolve/main/unet_resnet34_oam_rgb_tcd-72b9b753.pth',
+        url='https://hf.co/isaaccorley/unet_resnet34_oam_rgb_tcd/resolve/main/unet_resnet34_oam_rgb_tcd-72b9b753.pth',
         transforms=_tcd_transforms,
         meta={
             'dataset': 'OAM-TCD',
