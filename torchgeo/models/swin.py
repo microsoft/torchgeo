@@ -43,11 +43,6 @@ _satlas_landsat_transforms = K.AugmentationSequential(
     data_keys=None,
 )
 
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
-
 
 class Swin_V2_T_Weights(WeightsEnum):  # type: ignore[misc]
     """Swin Transformer v2 Tiny weights.
