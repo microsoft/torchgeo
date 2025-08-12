@@ -53,6 +53,7 @@ from .vit import (
 from .yolo import YOLO_Weights, yolo
 
 __all__ = (
+    'CNNLSTM',
     'CROMA',
     'DOFA',
     'FCN',
@@ -65,7 +66,6 @@ __all__ = (
     'ChangeMixin',
     'ChangeStar',
     'ChangeStarFarSeg',
-    'CNNLSTM',
     'CopernicusFM',
     'CopernicusFM_Base_Weights',
     'DOFABase16_Weights',
