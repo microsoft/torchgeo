@@ -51,7 +51,7 @@ class FireRisk(NonGeoClassificationDataset):
     .. versionadded:: 0.5
     """
 
-    url = 'https://hf.co/datasets/torchgeo/fire_risk/resolve/e6046a04350c6f1ab4ad791fb3a40bf8940be269/FireRisk.zip'
+    url = 'https://hf.co/datasets/isaaccorley/fire_risk/resolve/e6046a04350c6f1ab4ad791fb3a40bf8940be269/FireRisk.zip'
     md5 = 'a77b9a100d51167992ae8c51d26198a6'
     filename = 'FireRisk.zip'
     directory = 'FireRisk'
