@@ -673,6 +673,8 @@ class XarrayDataset(GeoDataset):
                     # TODO: ensure compatibility between pyproj and rasterio CRS objects
                     crs = crs or src.rio.crs or CRS.from_epsg(4326)
                     res = res or src.rio.resolution()
+                    tmin = pd.Timestamp(src.time.to_numpy().min())
+                    tmax = pd.Timestamp(src.time.to_numpy().max())
 
                     if src.rio.crs is None:
                         warnings.warn(
@@ -686,7 +688,7 @@ class XarrayDataset(GeoDataset):
                         src = src.rio.reproject(crs, res)
 
                     filepaths.append(filepath)
-                    datetimes.append((src.time.min(), src.time.max()))
+                    datetimes.append((tmin, tmax))
                     geometries.append(shapely.box(*src.rio.bounds()))
             except ValueError:
                 # Skip files that xarray is unable to read
