@@ -680,14 +680,14 @@ class XarrayDataset(GeoDataset):
                             f'defaulting to {crs}. Set `crs` if this is incorrect.',
                             UserWarning,
                         )
-                        src.rio.write_crs(crs)
+                        src = src.rio.write_crs(crs)
 
                     if src.rio.crs != crs or res != src.rio.resolution():
                         src = src.rio.reproject(crs, res)
 
                     filepaths.append(filepath)
                     datetimes.append((src.time.min(), src.time.max()))
-                    geometries.append(shapely.box(*src.bounds()))
+                    geometries.append(shapely.box(*src.rio.bounds()))
             except ValueError:
                 # Skip files that xarray is unable to read
                 continue
