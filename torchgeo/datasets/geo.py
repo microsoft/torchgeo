@@ -752,6 +752,7 @@ class XarrayDataset(GeoDataset):
         """
         xr = lazy_import('xarray')
         rioxr = lazy_import('rioxarray')
+        lazy_import('rioxarray.merge')
 
         x, y, t = self._disambiguate_slice(query)
         bounds = (x.start, y.start, x.stop, y.stop)
@@ -762,7 +763,7 @@ class XarrayDataset(GeoDataset):
             src = xr.open_dataset(filepath, decode_times=True, decode_coords='all')
 
             if src.rio.crs is None:
-                src.rio.write_crs(self.crs)
+                src = src.rio.write_crs(self.crs)
 
             if src.rio.crs != self.crs or res != src.rio.resolution():
                 src = src.rio.reproject(self.crs, res)
@@ -773,7 +774,7 @@ class XarrayDataset(GeoDataset):
         dataset = dataset.sel(time=slice(t.start, t.stop))
 
         # Use array_to_tensor since merge may return uint16/uint32 arrays.
-        tensor = array_to_tensor(dataset.data)
+        tensor = array_to_tensor(dataset.temperature.to_numpy())
         return tensor
 
 
