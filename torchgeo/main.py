@@ -7,9 +7,11 @@ import os
 
 from lightning.pytorch.cli import ArgsType, LightningCLI
 
+import torchgeo
+
 # Allows classes to be referenced using only the class name
 import torchgeo.datamodules
-import torchgeo.trainers  # noqa: F401
+import torchgeo.trainers
 from torchgeo.datamodules import BaseDataModule
 from torchgeo.trainers import BaseTask
 
@@ -30,6 +32,7 @@ def main(args: ArgsType = None) -> None:
         model_class=BaseTask,
         datamodule_class=BaseDataModule,
         seed_everything_default=0,
+        parser_kwargs={'version': torchgeo.__version__},
         subclass_mode_model=True,
         subclass_mode_data=True,
         save_config_kwargs={'overwrite': True},

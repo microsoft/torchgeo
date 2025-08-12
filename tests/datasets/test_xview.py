@@ -89,6 +89,6 @@ class TestXView2:
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        x['prediction'] = x['mask'][0].clone()
+        x['prediction'] = x['mask']
         dataset.plot(x)
         plt.close()

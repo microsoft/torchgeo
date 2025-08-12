@@ -5,6 +5,7 @@
 
 from typing import Any
 
+import kornia.augmentation as K
 import torch
 from torch.utils.data import random_split
 
@@ -37,7 +38,11 @@ class XView2DataModule(NonGeoDataModule):
                 :class:`~torchgeo.datasets.XView2`.
         """
         super().__init__(XView2, batch_size, num_workers, **kwargs)
-
+        self.aug = K.AugmentationSequential(
+            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
+            data_keys=None,
+            keepdim=True,
+        )
         self.val_split_pct = val_split_pct
 
     def setup(self, stage: str) -> None:

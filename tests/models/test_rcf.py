@@ -7,7 +7,7 @@ import pytest
 import torch
 
 from torchgeo.datasets import EuroSAT
-from torchgeo.models import RCF
+from torchgeo.models import MOSAIKS, RCF
 
 
 class TestRCF:
@@ -56,3 +56,12 @@ class TestRCF:
         match = "dataset must be provided when mode is 'empirical'"
         with pytest.raises(ValueError, match=match):
             RCF(mode='empirical', dataset=None)
+
+
+class TestMOSAIKS:
+    def test_model(self) -> None:
+        root = os.path.join('tests', 'data', 'eurosat')
+        ds = EuroSAT(root=root, bands=EuroSAT.rgb_bands, split='train')
+        model = MOSAIKS(in_channels=3, features=8, dataset=ds)
+        output = model(torch.randn(2, 3, 8, 8))
+        assert output.shape == (2, 8)
