@@ -43,7 +43,7 @@ If your pull request adds any new files containing code, including ``*.py`` and 
 
 .. code-block:: python
 
-   # Copyright (c) Microsoft Corporation. All rights reserved.
+   # Copyright (c) TorchGeo Contributors. All rights reserved.
    # Licensed under the MIT License.
 
 
