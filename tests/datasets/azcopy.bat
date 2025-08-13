@@ -3,4 +3,4 @@ REM Licensed under the MIT License.
 
 @ECHO OFF
 
-python3 tests\datasets\azcopy.py %*
+python tests\datasets\azcopy.py %*
