@@ -673,8 +673,8 @@ class XarrayDataset(GeoDataset):
                     # TODO: ensure compatibility between pyproj and rasterio CRS objects
                     crs = crs or src.rio.crs or CRS.from_epsg(4326)
                     res = res or src.rio.resolution()
-                    tmin = pd.Timestamp(src.time.to_numpy().min())
-                    tmax = pd.Timestamp(src.time.to_numpy().max())
+                    tmin = pd.Timestamp(src.time.values.min())
+                    tmax = pd.Timestamp(src.time.values.max())
 
                     if src.rio.crs is None:
                         warnings.warn(
@@ -774,7 +774,7 @@ class XarrayDataset(GeoDataset):
         dataset = dataset.sel(time=slice(t.start, t.stop))
 
         # Use array_to_tensor since merge may return uint16/uint32 arrays.
-        tensor = array_to_tensor(dataset.temperature.to_numpy())
+        tensor = array_to_tensor(dataset.temperature.values)
         return tensor
 
 
