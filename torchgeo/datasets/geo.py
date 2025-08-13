@@ -690,7 +690,7 @@ class XarrayDataset(GeoDataset):
                     filepaths.append(filepath)
                     datetimes.append((tmin, tmax))
                     geometries.append(shapely.box(*src.rio.bounds()))
-            except ValueError:
+            except (OSError, ValueError):
                 # Skip files that xarray is unable to read
                 continue
 
@@ -770,7 +770,7 @@ class XarrayDataset(GeoDataset):
 
             datasets.append(src)
 
-        dataset = rioxr.merge.merge_datasets(datasets, bounds, res)
+        dataset = rioxr.merge.merge_datasets(datasets, bounds=bounds, res=res)
         dataset = dataset.sel(time=slice(t.start, t.stop))
 
         # Use array_to_tensor since merge may return uint16/uint32 arrays.
