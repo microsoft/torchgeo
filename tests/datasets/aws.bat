@@ -3,7 +3,4 @@ REM Licensed under the MIT License.
 
 @ECHO OFF
 
-python3 tests\datasets\aws.py %*
-IF %ERRORLEVEL% NEQ 0 (
-    python tests\datasets\aws.py %*
-)
+python tests\datasets\aws.py %*
