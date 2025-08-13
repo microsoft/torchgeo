@@ -543,63 +543,15 @@ class RasterDataset(GeoDataset):
                 center_date = datetime_interval.mid
                 datetimes.append(center_date.timestamp())
 
-                if self.separate_files:
-                    # For separate files, we need to collect files by band for this time step
-                    band_data: list[Tensor] = []
-                    filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-
-                    for band in self.bands:
-                        # For each band, find all files for this time interval
-                        band_filepaths = []
-                        for filepath in group.filepath:
-                            filename = os.path.basename(filepath)
-                            directory = os.path.dirname(filepath)
-                            match = re.match(filename_regex, filename)
-                            if match:
-                                if 'band' in match.groupdict():
-                                    start = match.start('band')
-                                    end = match.end('band')
-                                    filename = filename[:start] + band + filename[end:]
-                            filepath = os.path.join(directory, filename)
-                            band_filepaths.append(filepath)
-
-                        # Merge files for this band at this time step
-                        band_data.append(self._merge_files(band_filepaths, query))
-
-                    # Concatenate all bands for this time step
-                    time_step_data = torch.cat(band_data, dim=0)
-                else:
-                    # For non-separate files, merge all files for this time step
-                    time_step_data = self._merge_files(
-                        group.filepath, query, self.band_indexes
-                    )
-
+                # Process files for this time step
+                time_step_data = self._process_files_for_group(group.filepath, query)
                 time_steps.append(time_step_data)
 
             # Stack along time dimension to create [T,C,H,W]
             data = torch.stack(time_steps, dim=0)
 
         else:
-            if self.separate_files:
-                data_list: list[Tensor] = []
-                filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-                for band in self.bands:
-                    band_filepaths = []
-                    for filepath in index.filepath:
-                        filename = os.path.basename(filepath)
-                        directory = os.path.dirname(filepath)
-                        match = re.match(filename_regex, filename)
-                        if match:
-                            if 'band' in match.groupdict():
-                                start = match.start('band')
-                                end = match.end('band')
-                                filename = filename[:start] + band + filename[end:]
-                        filepath = os.path.join(directory, filename)
-                        band_filepaths.append(filepath)
-                    data_list.append(self._merge_files(band_filepaths, query))
-                data = torch.cat(data_list)
-            else:
-                data = self._merge_files(index.filepath, query, self.band_indexes)
+            data = self._process_files_for_group(index.filepath, query)
 
         sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
         if self.time_series:
@@ -619,6 +571,47 @@ class RasterDataset(GeoDataset):
             sample = self.transforms(sample)
 
         return sample
+
+    def _process_files_for_group(
+        self, filepaths: Sequence[str], query: GeoSlice
+    ) -> Tensor:
+        """Process files for a group (either time step or entire index).
+
+        Args:
+            filepaths: List of file paths to process
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            Processed tensor data
+        """
+        if self.separate_files:
+            # If separate files for each band, merge files for each band separately
+            band_data: list[Tensor] = []
+            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+
+            for band in self.bands:
+                # For each band, find all files
+                band_filepaths = []
+                for filepath in filepaths:
+                    filename = os.path.basename(filepath)
+                    directory = os.path.dirname(filepath)
+                    match = re.match(filename_regex, filename)
+                    if match:
+                        if 'band' in match.groupdict():
+                            start = match.start('band')
+                            end = match.end('band')
+                            filename = filename[:start] + band + filename[end:]
+                    filepath = os.path.join(directory, filename)
+                    band_filepaths.append(filepath)
+
+                # Merge files for this band
+                band_data.append(self._merge_files(band_filepaths, query))
+
+            # Concatenate all bands
+            return torch.cat(band_data, dim=0)
+        else:
+            # For non-separate files, merge all files directly
+            return self._merge_files(filepaths, query, self.band_indexes)
 
     def _merge_files(
         self,
