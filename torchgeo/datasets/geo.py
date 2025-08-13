@@ -234,7 +234,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     def crs(self, new_crs: CRS) -> None:
         """Change the :term:`coordinate reference system (CRS)` of a GeoDataset.
 
-        If ``new_crs == self.crs``, does nothing, otherwise updates the index.
+        If ``new_crs == self.crs``, does nothing, otherwise updatetimes the index.
 
         Args:
             new_crs: New :term:`coordinate reference system (CRS)`.
@@ -416,8 +416,8 @@ class RasterDataset(GeoDataset):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
-            time_series: if True, return imagery as time series with shape [T,C,H,W]
-                and include 'dates' key with datetime information
+            time_series: if True, return data as time series with shape [T,C,H,W]
+                and include 'datetimes' key with datetime information
 
         Raises:
             AssertionError: If *bands* are invalid.
@@ -536,12 +536,12 @@ class RasterDataset(GeoDataset):
             # Group by unique datetime intervals to support timeseries
             grouped_index = index.groupby(index.index)
             time_steps = []
-            dates = []
+            datetimes = []
 
             for datetime_interval, group in grouped_index:
                 # Extract the center date of the interval
                 center_date = datetime_interval.mid
-                dates.append(center_date)
+                datetimes.append(center_date.timestamp())
 
                 if self.separate_files:
                     # For separate files, we need to collect files by band for this time step
@@ -580,7 +580,6 @@ class RasterDataset(GeoDataset):
             data = torch.stack(time_steps, dim=0)
 
         else:
-            # Original non-timeseries behavior
             if self.separate_files:
                 data_list: list[Tensor] = []
                 filename_regex = re.compile(self.filename_regex, re.VERBOSE)
@@ -604,7 +603,7 @@ class RasterDataset(GeoDataset):
 
         sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
         if self.time_series:
-            sample['dates'] = dates
+            sample['datetimes'] = torch.tensor(datetimes, dtype=torch.float)
 
         data = data.to(self.dtype)
         if self.is_image:
