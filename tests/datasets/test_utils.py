@@ -21,6 +21,7 @@ from torchgeo.datasets import BoundingBox, DependencyNotFoundError
 from torchgeo.datasets.utils import (
     Executable,
     array_to_tensor,
+    clean_binary_mask,
     concat_samples,
     disambiguate_timestamp,
     get_valid_footprint_from_datasource,
@@ -597,7 +598,7 @@ def create_test_raster_file(
 
 @pytest.mark.parametrize('num_bands', [1, 3])
 @pytest.mark.parametrize('with_half_nodata', [True, False])
-def test_calc_valid_data_footprint_half_coverage(
+def test_calc_valid_data_footprint_from_raster_mask(
     num_bands: int, with_half_nodata: bool
 ) -> None:
     with (
@@ -606,6 +607,14 @@ def test_calc_valid_data_footprint_half_coverage(
         ) as memfile,
         memfile.open() as dataset,
     ):
+        assert np.array_equal(
+            clean_binary_mask(dataset.dataset_mask()),
+            clean_binary_mask(dataset.read_masks()),
+        ), (
+            'Cleaned binary mask should be the same '
+            'between dataset_mask() and read_masks()'
+        )
+
         footprint = get_valid_footprint_from_datasource(dataset)
 
         assert isinstance(footprint, Polygon | MultiPolygon), (

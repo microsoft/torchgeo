@@ -14,6 +14,8 @@ import torch
 import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pyproj import CRS
+from rasterio import DatasetReader
+from rasterio.vrt import WarpedVRT
 from shapely import Polygon
 
 from torchgeo.datasets import (
@@ -154,13 +156,16 @@ class TestSentinel2:
     def test_float_res(self, dataset: Sentinel2) -> None:
         Sentinel2(dataset.paths, res=10.0, bands=dataset.bands)
 
-    def test_footprint_from_datasource_metadata_file(self, dataset: Sentinel2) -> None:
+    @pytest.mark.parametrize('dataset_spec', [DatasetReader, WarpedVRT])
+    def test_footprint_from_datasource_metadata_file(
+        self, dataset: Sentinel2, dataset_spec: type[DatasetReader] | type[WarpedVRT]
+    ) -> None:
         # WKT in EPSG:4326
         metadata_footprint_wkt = dataset.index.geometry.to_crs(4326).values[0].wkt
         footprint_wgs84 = shapely.wkt.loads(metadata_footprint_wkt)
 
-        # Fake dataset — only needs a name
-        fake_dataset = MagicMock()
+        # Fake dataset
+        fake_dataset = MagicMock(spec=dataset_spec)
         fake_dataset.name = '/fake/path/GRANULE/L1C_data'
         fake_dataset.crs = dataset.crs
 

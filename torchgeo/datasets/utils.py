@@ -769,7 +769,8 @@ def clean_binary_mask(
     """Convert any rasterio mask to a clean binary mask (uint8 0 or 255).
 
     Args:
-        mask: input mask array from rasterio.dataset_mask() or read_masks().
+        mask: input mask array from `DatasetReader.dataset_mask()`
+              or `DatasetReader.read_masks()`.
               Can be 2D or 3D with values between 0 and 255.
         threshold: pixel values >= threshold are considered valid.
             This is needed when/if the mask is based on alpha channel.
@@ -783,7 +784,8 @@ def clean_binary_mask(
     .. versionadded:: 0.8
     """
     if mask.ndim == 3:
-        # Combine multi-band masks: pixel valid if valid in any band
+        # Combine multi-band masks: pixel valid if valid in any band. This is reached
+        # when input mask comes from `read_masks()` of multi-band raster.
         combined = np.any(mask >= threshold, axis=0)
     else:
         combined = mask >= threshold
