@@ -13,7 +13,7 @@ TorchGeo is an open-source project built by contributors like you from around th
 
 please see our [Contributing Guide](https://torchgeo.readthedocs.io/en/stable/user/contributing.html).
 
-You can find a curated list of issues that we believe are easy for new contributors to tackle at https://github.com/microsoft/torchgeo/contribute.
+You can find a curated list of issues that we believe are easy for new contributors to tackle at https://github.com/torchgeo/torchgeo/contribute.
 
 The Project abides by the Organization's [code of conduct](https://github.com/torchgeo/governance/blob/main/CODE-OF-CONDUCT.md) and [trademark policy](https://github.com/torchgeo/governance/blob/main/TRADEMARKS.md).
 
