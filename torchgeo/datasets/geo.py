@@ -234,7 +234,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     def crs(self, new_crs: CRS) -> None:
         """Change the :term:`coordinate reference system (CRS)` of a GeoDataset.
 
-        If ``new_crs == self.crs``, does nothing, otherwise updatetimes the index.
+        If ``new_crs == self.crs``, does nothing, otherwise uptimestamps the index.
 
         Args:
             new_crs: New :term:`coordinate reference system (CRS)`.
@@ -417,7 +417,7 @@ class RasterDataset(GeoDataset):
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
             time_series: if True, return data as time series with shape [T,C,H,W]
-                and include 'datetimes' key with datetime information
+                and include 'timestamps' key with datetime information
 
         Raises:
             AssertionError: If *bands* are invalid.
@@ -441,7 +441,7 @@ class RasterDataset(GeoDataset):
         # Gather information about the dataset
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         filepaths = []
-        datetimes = []
+        timestamps = []
         geometries = []
         for filepath in self.files:
             match = filename_regex.search(os.path.basename(filepath))
@@ -479,7 +479,7 @@ class RasterDataset(GeoDataset):
                         mint, _ = disambiguate_timestamp(start, self.date_format)
                         _, maxt = disambiguate_timestamp(stop, self.date_format)
 
-                    datetimes.append((mint, maxt))
+                    timestamps.append((mint, maxt))
 
         if len(filepaths) == 0:
             raise DatasetNotFoundError(self)
@@ -506,7 +506,7 @@ class RasterDataset(GeoDataset):
 
         # Create the dataset index
         data = {'filepath': filepaths}
-        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        index = pd.IntervalIndex.from_tuples(timestamps, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
@@ -536,12 +536,12 @@ class RasterDataset(GeoDataset):
             # Group by unique datetime intervals to support timeseries
             grouped_index = index.groupby(index.index)
             time_steps = []
-            datetimes = []
+            timestamps = []
 
             for datetime_interval, group in grouped_index:
                 # Extract the center date of the interval
                 center_date = datetime_interval.mid
-                datetimes.append(center_date.timestamp())
+                timestamps.append(center_date.timestamp())
 
                 # Process files for this time step
                 time_step_data = self._process_files_for_group(group.filepath, query)
@@ -555,7 +555,7 @@ class RasterDataset(GeoDataset):
 
         sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
         if self.time_series:
-            sample['datetimes'] = torch.tensor(datetimes, dtype=torch.float)
+            sample['timestamps'] = torch.tensor(timestamps, dtype=torch.float)
 
         data = data.to(self.dtype)
         if self.is_image:
@@ -763,7 +763,7 @@ class VectorDataset(GeoDataset):
         # Gather information about the dataset
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         filepaths = []
-        datetimes = []
+        timestamps = []
         geometries = []
         for filepath in self.files:
             match = re.match(filename_regex, os.path.basename(filepath))
@@ -791,7 +791,7 @@ class VectorDataset(GeoDataset):
                         date = match.group('date')
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
 
-                    datetimes.append((mint, maxt))
+                    timestamps.append((mint, maxt))
 
         if len(filepaths) == 0:
             raise DatasetNotFoundError(self)
@@ -803,7 +803,7 @@ class VectorDataset(GeoDataset):
 
         # Create the dataset index
         data = {'filepath': filepaths}
-        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        index = pd.IntervalIndex.from_tuples(timestamps, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:

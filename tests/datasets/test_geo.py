@@ -535,15 +535,15 @@ class TestRasterDataset:
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
-        assert 'datetimes' in x
-        assert isinstance(x['datetimes'], torch.Tensor)
+        assert 'timestamps' in x
+        assert isinstance(x['timestamps'], torch.Tensor)
 
         # Test shape - should be [T, C, H, W]
         assert x['image'].ndim == 4
-        assert x['image'].shape[0] == len(x['datetimes'])
+        assert x['image'].shape[0] == len(x['timestamps'])
 
-        # Test for correct datetimes
-        expected_datetimes = torch.Tensor(
+        # Test for correct timestamps
+        expected_timestamps = torch.Tensor(
             [
                 (
                     pd.Timestamp('2018-11-04T00:00:00')
@@ -555,7 +555,7 @@ class TestRasterDataset:
                 ).timestamp(),
             ]
         )
-        assert torch.allclose(x['datetimes'], expected_datetimes)
+        assert torch.allclose(x['timestamps'], expected_timestamps)
 
     def test_time_series_separate_files(self) -> None:
         paths = [
@@ -573,18 +573,18 @@ class TestRasterDataset:
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
         assert isinstance(x['image'], torch.Tensor)
-        assert 'datetimes' in x
-        assert isinstance(x['datetimes'], torch.Tensor)
+        assert 'timestamps' in x
+        assert isinstance(x['timestamps'], torch.Tensor)
 
         # Test shape - should be [T, C, H, W]
         assert x['image'].ndim == 4
         assert x['image'].shape[0] == len(
-            x['datetimes']
-        )  # T dimension matches datetimes
+            x['timestamps']
+        )  # T dimension matches timestamps
         assert x['image'].shape[1] == 3  # C dimension matches bands
 
-        # Test for correct datetimes
-        expected_datetimes = torch.tensor(
+        # Test for correct timestamps
+        expected_timestamps = torch.tensor(
             [
                 (
                     pd.Timestamp('2019-04-14T11:07:51')
@@ -596,7 +596,7 @@ class TestRasterDataset:
                 ).timestamp(),
             ]
         )
-        assert torch.allclose(x['datetimes'], expected_datetimes)
+        assert torch.allclose(x['timestamps'], expected_timestamps)
 
 
 class TestVectorDataset:
