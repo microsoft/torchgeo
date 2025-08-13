@@ -106,7 +106,7 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _RoboSat: https://github.com/mapbox/robosat
 .. _Solaris: https://github.com/CosmiQ/solaris
 
-.. _TorchGeo: https://github.com/microsoft/torchgeo
+.. _TorchGeo: https://github.com/torchgeo/torchgeo
 .. _eo-learn: https://github.com/sentinel-hub/eo-learn
 .. _Raster Vision: https://github.com/azavea/raster-vision
 .. _DeepForest: https://github.com/weecology/DeepForest
