@@ -447,9 +447,10 @@ class Sentinel2(Sentinel):
         Raises:
             KeyError: If the existing metadata file does not contain a ``FOOTPRINT`` tag.
 
-        .. versionadded:: 1.0
+        .. versionadded:: 0.8
         """
-        if isinstance(dataset, WarpedVRT):
+        if hasattr(dataset, 'src_dataset'):
+            # When dataset is a WarpedVRT
             filepath = dataset.src_dataset.name
         else:
             filepath = dataset.name

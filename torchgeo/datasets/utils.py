@@ -780,7 +780,7 @@ def clean_binary_mask(
         Binary mask of dtype uint8 with 255 = valid pixels, 0 = invalid.
         If input is 3D, masks are combined (OR) before thresholding.
 
-    .. versionadded:: 1.0
+    .. versionadded:: 0.8
     """
     if mask.ndim == 3:
         # Combine multi-band masks: pixel valid if valid in any band
@@ -810,7 +810,7 @@ def calculate_valid_footprint_from_binary_mask(
     Returns:
         A `Polygon` or `MultiPolygon` representing the valid data footprint of the raster
 
-    .. versionadded:: 1.0
+    .. versionadded:: 0.8
     """
     # Close eventual holes within the raster that have area smaller than 500 pixels.
     # Yields two bands, one all-zero representing nodata pixels,
@@ -871,7 +871,7 @@ def get_valid_footprint_from_datasource(
         extract_valid_footprint_polygon: For the detailed mask-to-footprint
         polygon conversion process.
 
-    .. versionadded:: 1.0
+    .. versionadded:: 0.8
     """
     valid_data_mask = src.dataset_mask()
     binary_mask = clean_binary_mask(valid_data_mask)

@@ -7,6 +7,7 @@ import pickle
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
@@ -16,7 +17,10 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from geopandas import GeoDataFrame
 from pyproj import CRS
+from rasterio import DatasetReader
 from rasterio.enums import Resampling
+from rasterio.vrt import WarpedVRT
+from shapely import MultiPolygon, Polygon
 from torch.utils.data import ConcatDataset
 
 from torchgeo.datasets import (
@@ -31,7 +35,7 @@ from torchgeo.datasets import (
     UnionDataset,
     VectorDataset,
 )
-from torchgeo.datasets.utils import GeoSlice
+from torchgeo.datasets.utils import GeoSlice, get_valid_footprint_from_datasource
 
 MINT = pd.Timestamp(2025, 4, 24)
 MAXT = pd.Timestamp(2025, 4, 25)
@@ -90,6 +94,15 @@ class CustomVectorDataset(VectorDataset):
 class CustomSentinelDataset(Sentinel2):
     all_bands: tuple[str, ...] = ()
     separate_files = False
+
+
+class CustomSentinelDatasetComputeValidFootprint(Sentinel2):
+    nodata_value = 0.0
+
+    def _footprint_from_datasource(
+        self, dataset: DatasetReader | WarpedVRT
+    ) -> MultiPolygon | Polygon:
+        return get_valid_footprint_from_datasource(dataset)
 
 
 class CustomNonGeoDataset(NonGeoDataset):
@@ -482,6 +495,26 @@ class TestRasterDataset:
         ds = RasterDataset(root, res=10.0)
         assert ds.res == (10.0, 10.0)
         ds.res = 20.0
+
+    def test_nodata_value_is_passed_on(self) -> None:
+        root = os.path.join('tests', 'data', 'raster', 'res_2-2_epsg_32631')
+
+        RasterDatasetNodata = RasterDataset
+        RasterDatasetNodata.nodata_value = 0.0
+
+        # For RasterDataset, the bounds are forming the "valid footprint" even
+        # when setting nodata != None
+        mock_vrt = MagicMock(spec=WarpedVRT)
+        mock_vrt.__enter__.return_value.bounds = (0, 0, 10, 10)
+
+        with patch(
+            'torchgeo.datasets.geo.WarpedVRT', return_value=mock_vrt
+        ) as mock_wvrt:
+            _ = RasterDataset(root)
+
+            # Assert WarpedVRT was called with nodata in options
+            _, kwargs = mock_wvrt.call_args
+            assert kwargs['nodata'] == 0.0
 
 
 class TestVectorDataset:

@@ -543,17 +543,16 @@ def test_which() -> None:
         which('foo')
 
 
-def create_test_raster_with_nodata(
+def create_test_raster_file(
     width: int = 100,
     height: int = 100,
     nodata_value: float = 0,
     crs: str = 'EPSG:32633',
     num_bands: int = 1,
+    with_half_nodata: bool = False,
 ) -> MemoryFile:
     """
-    Creates a synthetic raster where the upper-left triangle is no-data.
-
-    Each band will have the same data pattern.
+    Creates a synthetic raster file.
 
     Args:
         width: Width of the raster in pixels.
@@ -561,16 +560,19 @@ def create_test_raster_with_nodata(
         nodata_value: Value to be treated as no-data.
         crs: Coordinate reference system string.
         num_bands: Number of bands in the raster.
+        with_half_nodata: When True will assign upper-left triangle to nodata.
 
     Returns:
         A rasterio in-memory file (MemoryFile) containing the synthetic raster.
     """
     # Create a single-band 2D array
     base_data = np.ones((height, width), dtype=np.uint8)
-    for row in range(height):
-        for col in range(width):
-            if row + col < width:  # Upper-left triangle is no-data
-                base_data[row, col] = nodata_value
+
+    if with_half_nodata:
+        for row in range(height):
+            for col in range(width):
+                if row + col < width:  # Upper-left triangle is no-data
+                    base_data[row, col] = nodata_value
 
     # Stack it into a 3D array (bands, height, width)
     data = np.stack([base_data] * num_bands, axis=0)
@@ -593,29 +595,39 @@ def create_test_raster_with_nodata(
     return memfile
 
 
-@pytest.mark.parametrize('num_bands', [1, 2, 3])
-def test_calc_valid_data_footprint_half_area(num_bands: int) -> None:
-    with create_test_raster_with_nodata(num_bands=num_bands) as memfile:
-        with memfile.open() as dataset:
-            footprint = get_valid_footprint_from_datasource(dataset)
+@pytest.mark.parametrize('num_bands', [1, 3])
+@pytest.mark.parametrize('with_half_nodata', [True, False])
+def test_calc_valid_data_footprint_half_coverage(
+    num_bands: int, with_half_nodata: bool
+) -> None:
+    with (
+        create_test_raster_file(
+            num_bands=num_bands, with_half_nodata=with_half_nodata
+        ) as memfile,
+        memfile.open() as dataset,
+    ):
+        footprint = get_valid_footprint_from_datasource(dataset)
 
-            assert isinstance(footprint, Polygon | MultiPolygon), (
-                'Footprint is not a polygon or multipolygon'
-            )
-            assert footprint.is_valid, 'Footprint geometry is invalid'
+        assert isinstance(footprint, Polygon | MultiPolygon), (
+            'Footprint is not a polygon or multipolygon'
+        )
+        assert footprint.is_valid, 'Footprint geometry is invalid'
 
-            # Expected footprint is half of raster bounds area
-            raster_extent = box(*dataset.bounds)
-            expected_area = raster_extent.area / 2
+        # Expected footprint is half of raster bounds area
+        raster_extent = box(*dataset.bounds)
 
-            actual_area = footprint.area
-            relative_error = abs(actual_area - expected_area) / expected_area
+        expected_area = raster_extent.area
+        if with_half_nodata:
+            expected_area /= 2
 
-            assert relative_error < 0.03, (
-                f'Footprint area mismatch: expected ~{expected_area}, got {actual_area} '
-                f'(relative error: {relative_error:.2%})'
-            )
+        actual_area = footprint.area
+        relative_error = abs(actual_area - expected_area) / expected_area
 
-            assert raster_extent.covers(footprint), (
-                'Footprint should be covered by raster extent'
-            )
+        assert relative_error < 0.03, (
+            f'Footprint area mismatch: expected ~{expected_area}, got {actual_area} '
+            f'(relative error: {relative_error:.2%})'
+        )
+
+        assert raster_extent.covers(footprint), (
+            'Footprint should be covered by raster extent'
+        )
