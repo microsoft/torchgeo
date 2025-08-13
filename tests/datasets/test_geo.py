@@ -491,7 +491,8 @@ class TestXarrayDataset:
     @pytest.fixture(scope='class')
     def dataset(self) -> XarrayDataset:
         root = os.path.join('tests', 'data', 'netcdf')
-        return XarrayDataset(root)
+        with pytest.warns(UserWarning, match='Unable to decode coordinates'):
+            return XarrayDataset(root)
 
     def test_getitem(self, dataset: XarrayDataset) -> None:
         x = dataset[dataset.bounds]
