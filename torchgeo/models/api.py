@@ -29,6 +29,7 @@ from .dofa import (
 )
 from .earthloc import EarthLoc_Weights, earthloc
 from .panopticon import Panopticon_Weights, panopticon_vitb14
+from .presto import Presto_Weights, presto
 from .resnet import (
     ResNet18_Weights,
     ResNet50_Weights,
@@ -67,6 +68,7 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'dofa_small_patch16_224': dofa_small_patch16_224,
     'earthloc': earthloc,
     'panopticon_vitb14': panopticon_vitb14,
+    'presto': presto,
     'resnet18': resnet18,
     'resnet50': resnet50,
     'resnet152': resnet152,
@@ -92,6 +94,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     dofa_large_patch16_224: DOFALarge16_Weights,
     earthloc: EarthLoc_Weights,
     panopticon_vitb14: Panopticon_Weights,
+    presto: Presto_Weights,
     resnet18: ResNet18_Weights,
     resnet50: ResNet50_Weights,
     resnet152: ResNet152_Weights,
@@ -114,6 +117,7 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     'dofa_large_patch16_224': DOFALarge16_Weights,
     'earthloc': EarthLoc_Weights,
     'panopticon_vitb14': Panopticon_Weights,
+    'presto': Presto_Weights,
     'resnet18': ResNet18_Weights,
     'resnet50': ResNet50_Weights,
     'resnet152': ResNet152_Weights,
