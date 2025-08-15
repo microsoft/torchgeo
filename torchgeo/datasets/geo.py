@@ -234,7 +234,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     def crs(self, new_crs: CRS) -> None:
         """Change the :term:`coordinate reference system (CRS)` of a GeoDataset.
 
-        If ``new_crs == self.crs``, does nothing, otherwise updates the index.
+        If ``new_crs == self.crs``, does nothing, otherwise uptimestamps the index.
 
         Args:
             new_crs: New :term:`coordinate reference system (CRS)`.
@@ -402,6 +402,7 @@ class RasterDataset(GeoDataset):
         bands: Sequence[str] | None = None,
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
         cache: bool = True,
+        time_series: bool = False,
     ) -> None:
         """Initialize a new RasterDataset instance.
 
@@ -415,6 +416,8 @@ class RasterDataset(GeoDataset):
             transforms: a function/transform that takes an input sample
                 and returns a transformed version
             cache: if True, cache file handle to speed up repeated sampling
+            time_series: if True, return data as time series with shape [T,C,H,W]
+                and include 'timestamps' key with datetime information
 
         Raises:
             AssertionError: If *bands* are invalid.
@@ -422,11 +425,15 @@ class RasterDataset(GeoDataset):
 
         .. versionchanged:: 0.5
            *root* was renamed to *paths*.
+
+        .. versionadded:: 0.8
+            The *time_series* parameter.
         """
         self.paths = paths
         self.bands = bands or self.all_bands
         self.transforms = transforms
         self.cache = cache
+        self.time_series = time_series
 
         if self.all_bands:
             assert set(self.bands) <= set(self.all_bands)
@@ -434,10 +441,10 @@ class RasterDataset(GeoDataset):
         # Gather information about the dataset
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         filepaths = []
-        datetimes = []
+        timestamps = []
         geometries = []
         for filepath in self.files:
-            match = re.match(filename_regex, os.path.basename(filepath))
+            match = filename_regex.search(os.path.basename(filepath))
             if match is not None:
                 try:
                     with rasterio.open(filepath) as src:
@@ -472,7 +479,7 @@ class RasterDataset(GeoDataset):
                         mint, _ = disambiguate_timestamp(start, self.date_format)
                         _, maxt = disambiguate_timestamp(stop, self.date_format)
 
-                    datetimes.append((mint, maxt))
+                    timestamps.append((mint, maxt))
 
         if len(filepaths) == 0:
             raise DatasetNotFoundError(self)
@@ -499,7 +506,7 @@ class RasterDataset(GeoDataset):
 
         # Create the dataset index
         data = {'filepath': filepaths}
-        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        index = pd.IntervalIndex.from_tuples(timestamps, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
@@ -525,12 +532,67 @@ class RasterDataset(GeoDataset):
                 f'query: {query} not found in index with bounds: {self.bounds}'
             )
 
+        if self.time_series:
+            # Group by unique datetime intervals to support timeseries
+            grouped_index = index.groupby(index.index)
+            time_steps = []
+            timestamps = []
+
+            for datetime_interval, group in grouped_index:
+                # Extract the center date of the interval
+                center_date = datetime_interval.mid
+                timestamps.append(center_date.timestamp())
+
+                # Process files for this time step
+                time_step_data = self._process_files_for_group(group.filepath, query)
+                time_steps.append(time_step_data)
+
+            # Stack along time dimension to create [T,C,H,W]
+            data = torch.stack(time_steps, dim=0)
+
+        else:
+            data = self._process_files_for_group(index.filepath, query)
+
+        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
+        if self.time_series:
+            sample['timestamps'] = torch.tensor(timestamps, dtype=torch.float)
+
+        data = data.to(self.dtype)
+        if self.is_image:
+            sample['image'] = data
+        else:
+            # Try to squeeze singleband mask
+            if self.time_series:
+                sample['mask'] = data.squeeze(1)
+            else:
+                sample['mask'] = data.squeeze(0)
+
+        if self.transforms is not None:
+            sample = self.transforms(sample)
+
+        return sample
+
+    def _process_files_for_group(
+        self, filepaths: Sequence[str], query: GeoSlice
+    ) -> Tensor:
+        """Process files for a group (either time step or entire index).
+
+        Args:
+            filepaths: List of file paths to process
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            Processed tensor data
+        """
         if self.separate_files:
-            data_list: list[Tensor] = []
+            # If separate files for each band, merge files for each band separately
+            band_data: list[Tensor] = []
             filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+
             for band in self.bands:
+                # For each band, find all files
                 band_filepaths = []
-                for filepath in index.filepath:
+                for filepath in filepaths:
                     filename = os.path.basename(filepath)
                     directory = os.path.dirname(filepath)
                     match = re.match(filename_regex, filename)
@@ -541,23 +603,15 @@ class RasterDataset(GeoDataset):
                             filename = filename[:start] + band + filename[end:]
                     filepath = os.path.join(directory, filename)
                     band_filepaths.append(filepath)
-                data_list.append(self._merge_files(band_filepaths, query))
-            data = torch.cat(data_list)
+
+                # Merge files for this band
+                band_data.append(self._merge_files(band_filepaths, query))
+
+            # Concatenate all bands
+            return torch.cat(band_data, dim=0)
         else:
-            data = self._merge_files(index.filepath, query, self.band_indexes)
-
-        sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
-
-        data = data.to(self.dtype)
-        if self.is_image:
-            sample['image'] = data
-        else:
-            sample['mask'] = data.squeeze(0)
-
-        if self.transforms is not None:
-            sample = self.transforms(sample)
-
-        return sample
+            # For non-separate files, merge all files directly
+            return self._merge_files(filepaths, query, self.band_indexes)
 
     def _merge_files(
         self,
@@ -709,7 +763,7 @@ class VectorDataset(GeoDataset):
         # Gather information about the dataset
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
         filepaths = []
-        datetimes = []
+        timestamps = []
         geometries = []
         for filepath in self.files:
             match = re.match(filename_regex, os.path.basename(filepath))
@@ -737,7 +791,7 @@ class VectorDataset(GeoDataset):
                         date = match.group('date')
                         mint, maxt = disambiguate_timestamp(date, self.date_format)
 
-                    datetimes.append((mint, maxt))
+                    timestamps.append((mint, maxt))
 
         if len(filepaths) == 0:
             raise DatasetNotFoundError(self)
@@ -749,7 +803,7 @@ class VectorDataset(GeoDataset):
 
         # Create the dataset index
         data = {'filepath': filepaths}
-        index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
+        index = pd.IntervalIndex.from_tuples(timestamps, closed='both', name='datetime')
         self.index = GeoDataFrame(data, index=index, geometry=geometries, crs=crs)
 
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:

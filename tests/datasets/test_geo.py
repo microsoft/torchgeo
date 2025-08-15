@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import itertools
 import math
 import os
 import pickle
@@ -335,12 +336,27 @@ class TestRasterDataset:
         )
 
     @pytest.fixture(
-        params=zip(
-            [
-                ['B04', 'B03', 'B02'],
-                ['B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B09', 'B11'],
-            ],
-            [True, False],
+        params=list(
+            itertools.product(
+                [
+                    ['B04', 'B03', 'B02'],
+                    [
+                        'B01',
+                        'B02',
+                        'B03',
+                        'B04',
+                        'B05',
+                        'B06',
+                        'B07',
+                        'B08',
+                        'B09',
+                        'B11',
+                    ],
+                ],
+                [True, False],  # cache
+                [False, True],  # time_series
+                [False, True],  # is_image
+            )
         )
     )
     def sentinel(self, request: SubRequest) -> Sentinel2:
@@ -348,7 +364,16 @@ class TestRasterDataset:
         bands = request.param[0]
         transforms = nn.Identity()
         cache = request.param[1]
-        return Sentinel2(root, bands=bands, transforms=transforms, cache=cache)
+        time_series = request.param[2]
+        dataset = Sentinel2(
+            root,
+            bands=bands,
+            transforms=transforms,
+            cache=cache,
+            time_series=time_series,
+        )
+        dataset.is_image = request.param[3]
+        return dataset
 
     @pytest.mark.parametrize(
         'paths',
@@ -415,8 +440,22 @@ class TestRasterDataset:
         x = sentinel[sentinel.bounds]
         assert isinstance(x, dict)
         assert isinstance(x['crs'], CRS)
-        assert isinstance(x['image'], torch.Tensor)
-        assert len(sentinel.bands) == x['image'].shape[0]
+        if sentinel.is_image and not sentinel.time_series:
+            assert 'mask' not in x
+            assert isinstance(x['image'], torch.Tensor)
+            assert len(sentinel.bands) == x['image'].shape[0]
+        elif sentinel.is_image and sentinel.time_series:
+            assert 'mask' not in x
+            assert isinstance(x['image'], torch.Tensor)
+            assert len(sentinel.bands) == x['image'].shape[1]
+        elif not sentinel.is_image and not sentinel.time_series:
+            assert 'image' not in x
+            assert isinstance(x['mask'], torch.Tensor)
+            assert len(sentinel.bands) == x['mask'].shape[0]
+        elif not sentinel.is_image and sentinel.time_series:
+            assert 'image' not in x
+            assert isinstance(x['mask'], torch.Tensor)
+            assert len(sentinel.bands) == x['mask'].shape[1]
 
     def test_reprojection(self, naip: NAIP) -> None:
         naip2 = NAIP(naip.paths, crs=CRS.from_epsg(4326))
@@ -482,6 +521,82 @@ class TestRasterDataset:
         ds = RasterDataset(root, res=10.0)
         assert ds.res == (10.0, 10.0)
         ds.res = 20.0
+
+    def test_time_series_single_file(self) -> None:
+        paths = (
+            os.path.join(self.naip_dir, 'm_3807511_ne_18_060_20181104.tif'),
+            os.path.join(self.naip_dir, 'm_3807511_ne_18_060_20190605.tif'),
+        )
+        ds = NAIP(paths, time_series=True)
+        print(ds.index)
+        x = ds[ds.bounds]
+
+        # Test basic structure
+        assert isinstance(x, dict)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['image'], torch.Tensor)
+        assert 'timestamps' in x
+        assert isinstance(x['timestamps'], torch.Tensor)
+
+        # Test shape - should be [T, C, H, W]
+        assert x['image'].ndim == 4
+        assert x['image'].shape[0] == len(x['timestamps'])
+
+        # Test for correct timestamps
+        expected_timestamps = torch.Tensor(
+            [
+                (
+                    pd.Timestamp('2018-11-04T00:00:00')
+                    + ((pd.Timedelta(days=1) - pd.Timedelta(microseconds=1)) / 2)
+                ).timestamp(),
+                (
+                    pd.Timestamp('2019-06-05T00:00:00')
+                    + ((pd.Timedelta(days=1) - pd.Timedelta(microseconds=1)) / 2)
+                ).timestamp(),
+            ]
+        )
+        assert torch.allclose(x['timestamps'], expected_timestamps)
+
+    def test_time_series_separate_files(self) -> None:
+        paths = [
+            os.path.join(self.s2_dir, 'T26EMU_20190414T110751_B04_10m.jp2'),
+            os.path.join(self.s2_dir, 'T26EMU_20190414T110751_B03_10m.jp2'),
+            os.path.join(self.s2_dir, 'T26EMU_20190414T110751_B02_10m.jp2'),
+            os.path.join(self.s2_dir, 'T26EMU_20220414T110751_B04_10m.jp2'),
+            os.path.join(self.s2_dir, 'T26EMU_20220414T110751_B03_10m.jp2'),
+            os.path.join(self.s2_dir, 'T26EMU_20220414T110751_B02_10m.jp2'),
+        ]
+        ds = Sentinel2(paths, time_series=True, bands=Sentinel2.rgb_bands)
+        x = ds[ds.bounds]
+
+        # Test basic structure
+        assert isinstance(x, dict)
+        assert isinstance(x['crs'], CRS)
+        assert isinstance(x['image'], torch.Tensor)
+        assert 'timestamps' in x
+        assert isinstance(x['timestamps'], torch.Tensor)
+
+        # Test shape - should be [T, C, H, W]
+        assert x['image'].ndim == 4
+        assert x['image'].shape[0] == len(
+            x['timestamps']
+        )  # T dimension matches timestamps
+        assert x['image'].shape[1] == 3  # C dimension matches bands
+
+        # Test for correct timestamps
+        expected_timestamps = torch.tensor(
+            [
+                (
+                    pd.Timestamp('2019-04-14T11:07:51')
+                    + ((pd.Timedelta(seconds=1) - pd.Timedelta(microseconds=1)) / 2)
+                ).timestamp(),
+                (
+                    pd.Timestamp('2022-04-14T11:07:51')
+                    + ((pd.Timedelta(seconds=1) - pd.Timedelta(microseconds=1)) / 2)
+                ).timestamp(),
+            ]
+        )
+        assert torch.allclose(x['timestamps'], expected_timestamps)
 
 
 class TestVectorDataset:
