@@ -60,6 +60,7 @@ from .digital_typhoon import DigitalTyphoon
 from .dior import DIOR
 from .dl4gam import DL4GAMAlps
 from .dota import DOTA
+from .dynamic_earthnet import DynamicEarthNet
 from .eddmaps import EDDMapS
 from .enmap import EnMAP
 from .enviroatlas import EnviroAtlas
@@ -260,6 +261,7 @@ __all__ = (
     'DeepGlobeLandCover',
     'DependencyNotFoundError',
     'DigitalTyphoon',
+    'DynamicEarthNet',
     'EDDMapS',
     'EnMAP',
     'EnviroAtlas',
