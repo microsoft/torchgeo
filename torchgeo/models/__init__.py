@@ -6,6 +6,7 @@
 from .api import get_model, get_model_weights, get_weight, list_models
 from .aurora import Aurora_Weights, aurora_swin_unet
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
+from .cnnlstm import CNNLSTM
 from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
 from .dofa import (
@@ -52,6 +53,7 @@ from .vit import (
 from .yolo import YOLO_Weights, yolo
 
 __all__ = (
+    'CNNLSTM',
     'CROMA',
     'DOFA',
     'FCN',
