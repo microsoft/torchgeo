@@ -1,0 +1,5 @@
+tile,split
+AOI001,train
+AOI002,train
+AOI003,val
+AOI004,test

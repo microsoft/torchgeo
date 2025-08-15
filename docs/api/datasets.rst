@@ -205,7 +205,7 @@ Non-geospatial Datasets
 
 :class:`NonGeoDataset` is designed for datasets that lack geospatial information. These datasets can still be combined using :class:`ConcatDataset <torch.utils.data.ConcatDataset>`.
 
-.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning
+.. csv-table:: C = classification,  R = regression, S = semantic segmentation, I = instance segmentation, T = time series, CD = change detection, OD = object detection, IC = image captioning, SR = super resolution
    :widths: 15 7 15 20 12 11 12 15 13
    :header-rows: 1
    :align: center
@@ -558,6 +558,10 @@ Western USA Live Fuel Moisture
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: WesternUSALiveFuelMoisture
+
+WorldStrat
+^^^^^^^^^^^
+.. autoclass:: WorldStrat
 
 xView2
 ^^^^^^
