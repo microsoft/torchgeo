@@ -93,6 +93,7 @@ from .idtrees import IDTReeS
 from .inaturalist import INaturalist
 from .inria import InriaAerialImageLabeling
 from .iobench import IOBench
+from .isaid import ISAID
 from .l7irish import L7Irish
 from .l8biome import L8Biome
 from .landcoverai import LandCoverAI, LandCoverAI100, LandCoverAIBase, LandCoverAIGeo
@@ -193,6 +194,7 @@ __all__ = (
     'FAIR1M',
     'GBIF',
     'GID15',
+    'ISAID',
     'LEVIRCD',
     'MDAS',
     'NAIP',
