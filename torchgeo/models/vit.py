@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Pre-trained Vision Transformer models."""
@@ -8,7 +8,6 @@ from typing import Any, cast
 import kornia.augmentation as K
 import timm
 import torch
-from timm.models.vision_transformer import VisionTransformer
 from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -28,23 +27,19 @@ from .resnet import (
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
 # Normalization either by 10K or channel-wise with band statistics
 _zhu_xlab_transforms = K.AugmentationSequential(
-    K.Resize(256),
+    K.Resize((256, 256)),
     K.CenterCrop(224),
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
     data_keys=None,
 )
 
-# https://github.com/microsoft/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43
+# https://github.com/torchgeo/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43
 _ssl4eo_l_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
     K.CenterCrop((224, 224)),
     data_keys=None,
 )
 
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 KEYS = {'norm.weight', 'norm.bias', 'head.weight', 'head.bias'}
 
@@ -66,7 +61,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_tm_toa_bands,
         },
@@ -80,7 +75,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_tm_toa_bands,
         },
@@ -94,7 +89,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 9,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_etm_toa_bands,
         },
@@ -108,7 +103,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 9,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_etm_toa_bands,
         },
@@ -122,7 +117,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 6,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_etm_sr_bands,
         },
@@ -136,7 +131,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 6,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_etm_sr_bands,
         },
@@ -150,7 +145,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 11,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_oli_tirs_toa_bands,
         },
@@ -164,7 +159,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 11,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_oli_tirs_toa_bands,
         },
@@ -178,7 +173,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_oli_sr_bands,
         },
@@ -192,9 +187,24 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_oli_sr_bands,
+        },
+    )
+
+    SENTINEL2_ALL_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vs_s2_encoder-1a3ee5a5.pth',
+        transforms=K.AugmentationSequential(
+            K.Normalize(mean=0, std=10000), K.Resize(224), data_keys=None
+        ),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 13,
+            'model': 'vit_small_patch16_224',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel2_toa_bands,
         },
     )
 
@@ -251,6 +261,19 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/zhu-xlab/FGMAE',
             'ssl_method': 'fg-mae',
             'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL1_GRD_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vs_s1_encoder-180f1e6e.pth',
+        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 2,
+            'model': 'vit_small_patch16_224',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel1_grd_bands,
         },
     )
 
@@ -358,6 +381,21 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.7
     """
 
+    SENTINEL2_ALL_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vl_s2_encoder-4a4f026a.pth',
+        transforms=K.AugmentationSequential(
+            K.Normalize(mean=0, std=10000), K.Resize(224), data_keys=None
+        ),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 13,
+            'model': 'vit_large_patch16_224',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
     SENTINEL2_ALL_MAE = Weights(
         url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B13_vitl16_mae_ep99_enc.pth',
         transforms=_zhu_xlab_transforms,
@@ -383,6 +421,19 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/zhu-xlab/FGMAE',
             'ssl_method': 'fg-mae',
             'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL1_GRD_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vl_s1_encoder-6f88d037.pth',
+        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 2,
+            'model': 'vit_large_patch16_224',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel1_grd_bands,
         },
     )
 
@@ -563,7 +614,7 @@ class ViTBase14_DINOv2_Weights(WeightsEnum):  # type: ignore[misc]
 
 def vit_small_patch16_224(
     weights: ViTSmall16_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer | nn.ModuleDict:
+) -> nn.Module:
     """Vision Transform (ViT) small patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -582,16 +633,12 @@ def vit_small_patch16_224(
     """
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
-    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
-    model: VisionTransformer | nn.ModuleDict = timm.create_model(
-        'vit_small_patch16_224', *args, **kwargs
-    )
+
+    model = timm.create_model('vit_small_patch16_224', *args, **kwargs)
 
     if kwargs.get('features_only', False):
-        model = cast(nn.ModuleDict, model)
-        target_model = cast(VisionTransformer, model.model)
+        target_model = cast(nn.Module, model.model)
     else:
-        model = cast(VisionTransformer, model)
         target_model = model
 
     if weights:
@@ -607,7 +654,7 @@ def vit_small_patch16_224(
 
 def vit_base_patch16_224(
     weights: ViTBase16_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer | nn.ModuleDict:
+) -> nn.Module:
     """Vision Transform (ViT) base patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -626,16 +673,12 @@ def vit_base_patch16_224(
     """
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
-    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
-    model: VisionTransformer | nn.ModuleDict = timm.create_model(
-        'vit_base_patch16_224', *args, **kwargs
-    )
+
+    model = timm.create_model('vit_base_patch16_224', *args, **kwargs)
 
     if kwargs.get('features_only', False):
-        model = cast(nn.ModuleDict, model)
-        target_model = cast(VisionTransformer, model.model)
+        target_model = cast(nn.Module, model.model)
     else:
-        model = cast(VisionTransformer, model)
         target_model = model
 
     if weights:
@@ -650,7 +693,7 @@ def vit_base_patch16_224(
 
 def vit_large_patch16_224(
     weights: ViTLarge16_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer | nn.ModuleDict:
+) -> nn.Module:
     """Vision Transform (ViT) large patch size 16 model.
 
     If you use this model in your research, please cite the following paper:
@@ -669,16 +712,12 @@ def vit_large_patch16_224(
     """
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
-    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
-    model: VisionTransformer | nn.ModuleDict = timm.create_model(
-        'vit_large_patch16_224', *args, **kwargs
-    )
+
+    model = timm.create_model('vit_large_patch16_224', *args, **kwargs)
 
     if kwargs.get('features_only', False):
-        model = cast(nn.ModuleDict, model)
-        target_model = cast(VisionTransformer, model.model)
+        target_model = cast(nn.Module, model.model)
     else:
-        model = cast(VisionTransformer, model)
         target_model = model
 
     if weights:
@@ -693,7 +732,7 @@ def vit_large_patch16_224(
 
 def vit_huge_patch14_224(
     weights: ViTHuge14_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer | nn.ModuleDict:
+) -> nn.Module:
     """Vision Transform (ViT) huge patch size 14 model.
 
     If you use this model in your research, please cite the following paper:
@@ -712,16 +751,12 @@ def vit_huge_patch14_224(
     """
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
-    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
-    model: VisionTransformer | nn.ModuleDict = timm.create_model(
-        'vit_huge_patch14_224', *args, **kwargs
-    )
+
+    model = timm.create_model('vit_huge_patch14_224', *args, **kwargs)
 
     if kwargs.get('features_only', False):
-        model = cast(nn.ModuleDict, model)
-        target_model = cast(VisionTransformer, model.model)
+        target_model = cast(nn.Module, model.model)
     else:
-        model = cast(VisionTransformer, model)
         target_model = model
 
     if weights:
@@ -736,7 +771,7 @@ def vit_huge_patch14_224(
 
 def vit_small_patch14_dinov2(
     weights: ViTSmall14_DINOv2_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer | nn.ModuleDict:
+) -> nn.Module:
     """Vision Transform (ViT) small patch size 14 model for DINOv2.
 
     If you use this model in your research, please cite the following paper:
@@ -756,16 +791,12 @@ def vit_small_patch14_dinov2(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
         kwargs['img_size'] = weights.meta['img_size']
-    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
-    model: VisionTransformer | nn.ModuleDict = timm.create_model(
-        'vit_small_patch14_dinov2', *args, **kwargs
-    )
+
+    model = timm.create_model('vit_small_patch14_dinov2', *args, **kwargs)
 
     if kwargs.get('features_only', False):
-        model = cast(nn.ModuleDict, model)
-        target_model = cast(VisionTransformer, model.model)
+        target_model = cast(nn.Module, model.model)
     else:
-        model = cast(VisionTransformer, model)
         target_model = model
 
     if weights:
@@ -780,7 +811,7 @@ def vit_small_patch14_dinov2(
 
 def vit_base_patch14_dinov2(
     weights: ViTBase14_DINOv2_Weights | None = None, *args: Any, **kwargs: Any
-) -> VisionTransformer | nn.ModuleDict:
+) -> nn.Module:
     """Vision Transform (ViT) base patch size 14 model for DINOv2.
 
     If you use this model in your research, please cite the following paper:
@@ -800,16 +831,12 @@ def vit_base_patch14_dinov2(
     if weights:
         kwargs['in_chans'] = weights.meta['in_chans']
         kwargs['img_size'] = weights.meta['img_size']
-    # FeatureGetterNet (extends nn.ModuleDict) is returned when features_only=True
-    model: VisionTransformer | nn.ModuleDict = timm.create_model(
-        'vit_base_patch14_dinov2', *args, **kwargs
-    )
+
+    model = timm.create_model('vit_base_patch14_dinov2', *args, **kwargs)
 
     if kwargs.get('features_only', False):
-        model = cast(nn.ModuleDict, model)
-        target_model = cast(VisionTransformer, model.model)
+        target_model = cast(nn.Module, model.model)
     else:
-        model = cast(VisionTransformer, model)
         target_model = model
 
     if weights:

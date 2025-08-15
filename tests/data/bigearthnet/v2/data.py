@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import hashlib
@@ -48,7 +48,7 @@ SAMPLE_PATCHES = [
         's2_base': 'S2B_MSIL2A_20170615T102019_N9999_R122_T32TNS',
         's1_name': 'S1A_IW_GRDH_1SDV_20170615T170156_32TNS_77_12',
         's1_base': 'S1A_IW_GRDH_1SDV_20170615T170156',
-        'split': 'val',
+        'split': 'validation',
         'labels': ['Arable land', 'Pastures', 'Inland waters'],
     },
     {

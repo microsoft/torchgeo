@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -33,6 +33,9 @@ MINT = datetime(2025, 4, 24)
 MAXT = datetime(2025, 4, 25)
 
 
+@pytest.mark.filterwarnings(
+    'ignore:Use torchgeo.datasets.utils.GeoSlice or shapely.Polygon instead:DeprecationWarning'
+)
 class TestBoundingBox:
     def test_repr_str(self) -> None:
         bbox = BoundingBox(0, 1, 2.0, 3.0, MINT, MAXT)

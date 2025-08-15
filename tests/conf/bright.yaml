@@ -1,0 +1,15 @@
+model:
+  class_path: ChangeDetectionTask
+  init_args:
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 3
+    task: 'multiclass'
+    num_classes: 4
+    loss: 'ce'
+data:
+  class_path: BRIGHTDFC2025DataModule
+  init_args:
+    batch_size: 2
+  dict_kwargs:
+    root: 'tests/data/bright'

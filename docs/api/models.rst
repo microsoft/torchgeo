@@ -3,6 +3,12 @@ torchgeo.models
 
 .. module:: torchgeo.models
 
+Aurora
+^^^^^^
+
+.. autofunction:: aurora_swin_unet
+.. autoclass:: Aurora_Weights
+
 Change Star
 ^^^^^^^^^^^
 
@@ -37,6 +43,13 @@ DOFA
 .. autoclass:: DOFABase16_Weights
 .. autoclass:: DOFALarge16_Weights
 
+EarthLoc
+^^^^^^^^
+
+.. autoclass:: EarthLoc
+.. autofunction:: earthloc
+.. autoclass:: EarthLoc_Weights
+
 FarSeg
 ^^^^^^
 
@@ -53,9 +66,15 @@ FC Siamese Networks
 .. autoclass:: FCSiamConc
 .. autoclass:: FCSiamDiff
 
-RCF Extractor
-^^^^^^^^^^^^^
+L-TAE
+^^^^^
 
+.. autoclass:: LTAE
+
+MOSAIKS
+^^^^^^^
+
+.. autoclass:: MOSAIKS
 .. autoclass:: RCF
 
 ResNet
@@ -95,7 +114,6 @@ U-Net
 .. autofunction:: unet
 .. autoclass:: Unet_Weights
 
-
 Vision Transformer
 ^^^^^^^^^^^^^^^^^^
 
@@ -111,6 +129,12 @@ Vision Transformer
 .. autoclass:: ViTHuge14_Weights
 .. autoclass:: ViTSmall14_DINOv2_Weights
 .. autoclass:: ViTBase14_DINOv2_Weights
+
+YOLO
+^^^^
+
+.. autofunction:: yolo
+.. autoclass:: YOLO_Weights
 
 Utility Functions
 ^^^^^^^^^^^^^^^^^
@@ -176,3 +200,14 @@ Sentinel-2
    :header-rows: 1
    :align: center
    :file: weights/sentinel2.csv
+
+
+Atmospheric
+-----------
+
+.. csv-table:: N = Nowcasting, MWF = Medium-Range Weather Forecasting, S2S = Subseasonal to Seasonal, DS = Decadal Scale
+   :widths: 45 10 10 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: weights/atmospheric.csv
+

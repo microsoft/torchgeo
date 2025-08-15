@@ -16,21 +16,21 @@ If you want to install a development version, you can use a VCS project URL:
 
 .. code-block:: console
 
-   $ pip install git+https://github.com/microsoft/torchgeo.git
+   $ pip install git+https://github.com/torchgeo/torchgeo.git
 
 or a local git checkout:
 
 .. code-block:: console
 
-   $ git clone https://github.com/microsoft/torchgeo.git
+   $ git clone https://github.com/torchgeo/torchgeo.git
    $ cd torchgeo
    $ pip install .
 
-By default, only required dependencies are installed. TorchGeo has a number of optional dependencies for specific datasets or development. These can be installed with a comma-separated list:
+By default, only required dependencies are installed. TorchGeo has a number of optional dependencies for specific datasets, models, or development. These can be installed with a comma-separated list:
 
 .. code-block:: console
 
-   $ pip install torchgeo[datasets]
+   $ pip install torchgeo[datasets,models]
    $ pip install torchgeo[style,tests]
    $ pip install torchgeo[all]
 
@@ -77,7 +77,7 @@ Optional dependencies can be installed by enabling build variants:
 
 .. code-block:: console
 
-   $ spack install py-torchgeo+datasets
+   $ spack install py-torchgeo+datasets+models
    $ spack install py-torchgeo+style+tests
 
 Run ``spack info py-torchgeo`` for a complete list of variants. See the `spack documentation <https://spack.readthedocs.io/en/latest/>`_ for more details.

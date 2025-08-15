@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -89,6 +89,6 @@ class TestXView2:
         plt.close()
         dataset.plot(x, show_titles=False)
         plt.close()
-        x['prediction'] = x['mask'][0].clone()
+        x['prediction'] = x['mask']
         dataset.plot(x)
         plt.close()

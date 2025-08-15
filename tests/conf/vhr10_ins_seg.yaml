@@ -9,6 +9,6 @@ data:
   init_args:
     batch_size: 1
     num_workers: 0
-    patch_size: 4
+    patch_size: 256
   dict_kwargs:
     root: 'tests/data/vhr10'

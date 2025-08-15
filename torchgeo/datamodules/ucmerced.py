@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """UC Merced datamodule."""
@@ -32,7 +32,7 @@ class UCMercedDataModule(NonGeoDataModule):
 
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            K.Resize(size=256),
+            K.Resize(size=(256, 256)),
             data_keys=None,
             keepdim=True,
         )

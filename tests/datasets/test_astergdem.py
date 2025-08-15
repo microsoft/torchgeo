@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -14,7 +14,6 @@ from pyproj import CRS
 
 from torchgeo.datasets import (
     AsterGDEM,
-    BoundingBox,
     DatasetNotFoundError,
     IntersectionDataset,
     UnionDataset,
@@ -67,8 +66,7 @@ class TestAsterGDEM:
         plt.close()
 
     def test_invalid_query(self, dataset: AsterGDEM) -> None:
-        query = BoundingBox(100, 100, 100, 100, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]

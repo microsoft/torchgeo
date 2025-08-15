@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -13,7 +13,6 @@ from pyproj import CRS
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import (
-    BoundingBox,
     CanadianBuildingFootprints,
     DatasetNotFoundError,
     IntersectionDataset,
@@ -77,8 +76,7 @@ class TestCanadianBuildingFootprints:
             CanadianBuildingFootprints(tmp_path)
 
     def test_invalid_query(self, dataset: CanadianBuildingFootprints) -> None:
-        query = BoundingBox(2, 2, 2, 2, pd.Timestamp.min, pd.Timestamp.min)
         with pytest.raises(
             IndexError, match='query: .* not found in index with bounds:'
         ):
-            dataset[query]
+            dataset[2:2, 2:2, pd.Timestamp.min : pd.Timestamp.min]

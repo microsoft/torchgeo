@@ -1,0 +1,3 @@
+Weight,Channels,Source,Citation,License
+Unet_Weights.OAM_RGB_RESNET34_TCD,3,`link <https://github.com/restor-foundation/tcd>`__,`link <https://arxiv.org/abs/2407.11743>`__,"CC-BY-NC-4.0"
+Unet_Weights.OAM_RGB_RESNET50_TCD,3,`link <https://github.com/restor-foundation/tcd>`__,`link <https://arxiv.org/abs/2407.11743>`__,"CC-BY-NC-4.0"

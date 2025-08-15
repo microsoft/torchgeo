@@ -1,0 +1,17 @@
+model:
+  class_path: ChangeDetectionTask
+  init_args:
+    loss: 'focal'
+    model: 'unet'
+    backbone: 'resnet18'
+    in_channels: 13
+    task: 'multiclass'
+    num_classes: 2
+data:
+  class_path: OSCDDataModule
+  init_args:
+    batch_size: 2
+    patch_size: 16
+    val_split_pct: 0.5
+  dict_kwargs:
+    root: 'tests/data/oscd'

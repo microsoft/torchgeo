@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import enum
@@ -9,11 +9,13 @@ import torch.nn as nn
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
+    Aurora_Weights,
     CopernicusFM_Base_Weights,
     CROMABase_Weights,
     CROMALarge_Weights,
     DOFABase16_Weights,
     DOFALarge16_Weights,
+    EarthLoc_Weights,
     Panopticon_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
@@ -28,6 +30,8 @@ from torchgeo.models import (
     ViTLarge16_Weights,
     ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
+    YOLO_Weights,
+    aurora_swin_unet,
     copernicusfm_base,
     croma_base,
     croma_large,
@@ -35,6 +39,7 @@ from torchgeo.models import (
     dofa_huge_patch14_224,
     dofa_large_patch16_224,
     dofa_small_patch16_224,
+    earthloc,
     get_model,
     get_model_weights,
     get_weight,
@@ -53,9 +58,11 @@ from torchgeo.models import (
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
+    yolo,
 )
 
 builders = [
+    aurora_swin_unet,
     copernicusfm_base,
     croma_base,
     croma_large,
@@ -63,6 +70,7 @@ builders = [
     dofa_huge_patch14_224,
     dofa_large_patch16_224,
     dofa_small_patch16_224,
+    earthloc,
     panopticon_vitb14,
     resnet18,
     resnet50,
@@ -77,13 +85,16 @@ builders = [
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
+    yolo,
 ]
 enums = [
+    Aurora_Weights,
     CopernicusFM_Base_Weights,
     CROMABase_Weights,
     CROMALarge_Weights,
     DOFABase16_Weights,
     DOFALarge16_Weights,
+    EarthLoc_Weights,
     Panopticon_Weights,
     ResNet18_Weights,
     ResNet50_Weights,
@@ -98,11 +109,17 @@ enums = [
     ViTLarge16_Weights,
     ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
+    YOLO_Weights,
 ]
 
 
 @pytest.mark.parametrize('builder', builders)
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
+    if builder == aurora_swin_unet:
+        pytest.importorskip('aurora')
+    elif builder == yolo:
+        pytest.importorskip('ultralytics', minversion='8.3')
+
     model = get_model(builder.__name__)
     assert isinstance(model, nn.Module)
 

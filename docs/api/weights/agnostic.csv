@@ -7,3 +7,6 @@ DOFALarge16_Weights.DOFA_MAE,`link <https://github.com/zhu-xlab/DOFA>`__,`link <
 Panopticon_Weights.VIT_BASE14,`link <https://github.com/Panopticon-FM/panopticon>`__,`link <https://www.arxiv.org/abs/2503.10845>`__,Apache-2.0,implicit,,explicit,-,56.3,96.7,96.4,61.7,96.4,95.2,92.6,79.6,59.3,52.6,78.1
 ResNet50_Weights.FMOW_RGB_GASSL,`link <https://github.com/sustainlab-group/geography-aware-ssl>`__,`link <https://arxiv.org/abs/2011.09980>`__,-,implicit,-,-,,,,,,,,,,,,
 ScaleMAE_ViTLarge16_Weights.FMOW_RGB_SCALEMAE,`link <https://github.com/bair-climate-initiative/scale-mae>`__,`link <https://arxiv.org/abs/2212.14532>`__,CC-BY-NC-4.0,explicit,-,-,,,,,,,,,,,
+YOLO_Weights.CORE_DINO,`link <https://huggingface.co/gajeshladhar/core-dino>`__,,CC-BY-NC-3.0,implicit,-,-,,,,,,,,,,,
+YOLO_Weights.DELINEATE_ANYTHING,`link <https://github.com/Lavreniuk/Delineate-Anything>`__,`link <https://arxiv.org/abs/2409.16252>`__,AGPL-3.0,implicit,-,-,,,,,,,,,,,
+YOLO_Weights.DELINEATE_ANYTHING_SMALL,`link <https://github.com/Lavreniuk/Delineate-Anything>`__,`link <https://arxiv.org/abs/2409.16252>`__,AGPL-3.0,implicit,-,-,,,,,,,,,,,

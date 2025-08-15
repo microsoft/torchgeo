@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Dynamic One-For-All (DOFA) models."""
@@ -388,11 +388,6 @@ class DOFA(nn.Module):
 # https://github.com/zhu-xlab/DOFA/blob/master/normalize_dataset.py
 # Normalization is sensor-dependent and is therefore left out
 _dofa_transforms = K.AugmentationSequential(K.CenterCrop((224, 224)), data_keys=None)
-
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 
 class DOFABase16_Weights(WeightsEnum):  # type: ignore[misc]

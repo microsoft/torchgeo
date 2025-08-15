@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """ Sample and download Satellite images with Google Earth Engine
@@ -200,7 +200,7 @@ def get_patch(
         [coords0[:, 0].max(), coords0[:, 1].min()],
     ]
     old_size = (len(features['properties'][band]), len(features['properties'][band][0]))
-    new_size = raster[0].shape[:2]
+    new_size = (raster[0].shape[0], raster[0].shape[1])
     coords = adjust_coords(coords, old_size, new_size)
 
     return {'raster': raster, 'coords': coords, 'metadata': image.getInfo()}

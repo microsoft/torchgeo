@@ -1,0 +1,14 @@
+model:
+  class_path: PixelwiseRegressionTask
+  init_args:
+    model: 'dpt'
+    backbone: 'vit_base_patch16_224'
+    in_channels: 3
+    loss: 'mae'
+data:
+  class_path: InriaAerialImageLabelingDataModule
+  init_args:
+    batch_size: 1
+    patch_size: 2
+  dict_kwargs:
+    root: 'tests/data/inria'

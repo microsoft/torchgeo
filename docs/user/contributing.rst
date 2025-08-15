@@ -3,7 +3,7 @@
 Contributing
 ============
 
-The TorchGeo project welcomes contributions and suggestions! If you think you've found a bug or would like to suggest a new feature, you can `open an issue on GitHub <https://github.com/microsoft/torchgeo/issues/new/choose>`_. TorchGeo is an open-source community-supported project, so we try to address issues in order of severity or impact. If you feel confident, the fastest way to make changes to TorchGeo is to submit a pull request. This guide explains everything you need to know about contributing to TorchGeo.
+The TorchGeo project welcomes contributions and suggestions! If you think you've found a bug or would like to suggest a new feature, you can `open an issue on GitHub <https://github.com/torchgeo/torchgeo/issues/new/choose>`_. TorchGeo is an open-source community-supported project, so we try to address issues in order of severity or impact. If you feel confident, the fastest way to make changes to TorchGeo is to submit a pull request. This guide explains everything you need to know about contributing to TorchGeo.
 
 .. note:: TorchGeo is a library for geospatial datasets, transforms, and models. If you would like to add a new transform or model that doesn't involve geospatial data or isn't specific to the remote sensing domain, you're better off adding it to a general purpose computer vision library like `torchvision <https://github.com/pytorch/vision>`_ or `Kornia <https://github.com/kornia/kornia>`_.
 
@@ -11,7 +11,7 @@ The TorchGeo project welcomes contributions and suggestions! If you think you've
 Git
 ---
 
-All development is done on GitHub. If you would like to submit a pull request, you'll first want to fork https://github.com/microsoft/torchgeo. Then, clone the repository using:
+All development is done on GitHub. If you would like to submit a pull request, you'll first want to fork https://github.com/torchgeo/torchgeo. Then, clone the repository using:
 
 .. code-block:: console
 
@@ -30,20 +30,16 @@ From there, you can make any changes you want. Once you are satisfied with your 
    $ git push
 
 
-For changes to Python code, you'll need to ensure that your code is :ref:`well-tested <tests>` and all :ref:`linters <linters>` pass. When you're ready, you can `open a pull request on GitHub <https://github.com/microsoft/torchgeo/compare>`_. All pull requests should be made against the ``main`` branch. If it's a bug fix, we will backport it to a release branch for you.
+For changes to Python code, you'll need to ensure that your code is :ref:`well-tested <tests>` and all :ref:`linters <linters>` pass. When you're ready, you can `open a pull request on GitHub <https://github.com/torchgeo/torchgeo/compare>`_. All pull requests should be made against the ``main`` branch. If it's a bug fix, we will backport it to a release branch for you.
 
 Licensing
 ---------
 
-TorchGeo is licensed under the MIT License. Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://opensource.microsoft.com/cla/.
-
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions provided by the bot. You will only need to do this once across all repos using our CLA.
-
-If your pull request adds any new files containing code, including ``*.py`` and ``*.ipynb`` files, you'll need to add the following comment to the top of the file:
+TorchGeo is licensed under the MIT License. If your pull request adds any new files containing code, including ``*.py`` and ``*.ipynb`` files, you'll need to add the following comment to the top of the file:
 
 .. code-block:: python
 
-   # Copyright (c) Microsoft Corporation. All rights reserved.
+   # Copyright (c) TorchGeo Contributors. All rights reserved.
    # Licensed under the MIT License.
 
 
@@ -81,7 +77,7 @@ From this output, you can see that all tests pass, but many lines of code in ``t
 
 These tests require `pytest <https://docs.pytest.org/en/stable/>`_ and `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_ to be installed.
 
-.. note:: If you add a new dataset, the tests will require some form of data to run. This data should be stored in ``tests/data/<dataset>``. Please don't include real data, as this may violate the license the data is distributed under, and can involve very large file sizes. Instead, create fake data examples using the instructions found `here <https://github.com/microsoft/torchgeo/blob/main/tests/data/README.md>`__.
+.. note:: If you add a new dataset, the tests will require some form of data to run. This data should be stored in ``tests/data/<dataset>``. Please don't include real data, as this may violate the license the data is distributed under, and can involve very large file sizes. Instead, create fake data examples using the instructions found `here <https://github.com/torchgeo/torchgeo/blob/main/tests/data/README.md>`__.
 
 .. _linters:
 

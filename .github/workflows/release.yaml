@@ -15,14 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.13'
       - name: Cache dependencies
-        uses: actions/cache@v4.2.3
+        uses: actions/cache@v4.2.4
         id: cache
         with:
           path: ${{ env.pythonLocation }}
@@ -30,7 +30,7 @@ jobs:
       - name: Install pip dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          PIP_CONSTRAINT=requirements/constraint.old pip install .[datasets,tests]
+          pip install .[datasets,tests]
           pip cache purge
       - name: List pip dependencies
         run: pip list
@@ -45,14 +45,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5.0.0
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.13'
       - name: Cache dependencies
-        uses: actions/cache@v4.2.3
+        uses: actions/cache@v4.2.4
         id: cache
         with:
           path: ${{ env.pythonLocation }}

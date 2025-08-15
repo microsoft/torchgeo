@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/microsoft/torchgeo/main/logo/logo-color.svg" width="400" alt="TorchGeo logo"/>
+<img src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/logo/logo-color.svg" width="400" alt="TorchGeo logo"/>
 
 TorchGeo is a [PyTorch](https://pytorch.org/) domain library, similar to [torchvision](https://pytorch.org/vision), providing datasets, samplers, transforms, and pre-trained models specific to geospatial data.
 
@@ -20,9 +20,9 @@ Packaging:
 
 Testing:
 [![docs](https://readthedocs.org/projects/torchgeo/badge/?version=latest)](https://torchgeo.readthedocs.io/en/stable/)
-[![style](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/style.yaml)
-[![tests](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml/badge.svg)](https://github.com/microsoft/torchgeo/actions/workflows/tests.yaml)
-[![codecov](https://codecov.io/gh/microsoft/torchgeo/branch/main/graph/badge.svg?token=oa3Z3PMVOg)](https://codecov.io/gh/microsoft/torchgeo)
+[![style](https://github.com/torchgeo/torchgeo/actions/workflows/style.yaml/badge.svg)](https://github.com/torchgeo/torchgeo/actions/workflows/style.yaml)
+[![tests](https://github.com/torchgeo/torchgeo/actions/workflows/tests.yaml/badge.svg)](https://github.com/torchgeo/torchgeo/actions/workflows/tests.yaml)
+[![codecov](https://codecov.io/gh/torchgeo/torchgeo/branch/main/graph/badge.svg?token=oa3Z3PMVOg)](https://codecov.io/gh/torchgeo/torchgeo)
 
 ## Installation
 
@@ -67,7 +67,7 @@ from torchgeo.trainers import SemanticSegmentationTask
 
 Many remote sensing applications involve working with [_geospatial datasets_](https://torchgeo.readthedocs.io/en/stable/api/datasets.html#geospatial-datasets)—datasets with geographic metadata. These datasets can be challenging to work with due to the sheer variety of data. Geospatial imagery is often multispectral with a different number of spectral bands and spatial resolution for every satellite. In addition, each file may be in a different coordinate reference system (CRS), requiring the data to be reprojected into a matching CRS.
 
-<img src="https://raw.githubusercontent.com/microsoft/torchgeo/main/images/geodataset.png" alt="Example application in which we combine Landsat and CDL and sample from both"/>
+<img src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/images/geodataset.png" alt="Example application in which we combine Landsat and CDL and sample from both"/>
 
 In this example, we show how easy it is to work with geospatial data and to sample small image patches from a combination of [Landsat](https://www.usgs.gov/landsat-missions) and [Cropland Data Layer (CDL)](https://data.nal.usda.gov/dataset/cropscape-cropland-data-layer) data using TorchGeo. First, we assume that the user has Landsat 7 and 8 imagery downloaded. Since Landsat 8 has more spectral bands than Landsat 7, we'll only use the bands that both satellites have in common. We'll create a single dataset including all images from both Landsat 7 and 8 data by taking the union between these two datasets.
 
@@ -147,7 +147,7 @@ for batch in dataloader:
     # train a model, or make predictions using a pre-trained model
 ```
 
-<img src="https://raw.githubusercontent.com/microsoft/torchgeo/main/images/vhr10.png" alt="Example predictions from a Mask R-CNN model trained on the VHR-10 dataset"/>
+<img src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/images/vhr10.png" alt="Example predictions from a Mask R-CNN model trained on the VHR-10 dataset"/>
 
 All TorchGeo datasets are compatible with PyTorch data loaders, making them easy to integrate into existing training workflows. The only difference between a benchmark dataset in TorchGeo and a similar dataset in torchvision is that each dataset returns a dictionary with keys for each PyTorch `Tensor`.
 
@@ -185,7 +185,7 @@ trainer = Trainer(default_root_dir="...")
 trainer.fit(model=task, datamodule=datamodule)
 ```
 
-<img src="https://raw.githubusercontent.com/microsoft/torchgeo/main/images/inria.png" alt="Building segmentations produced by a U-Net model trained on the Inria Aerial Image Labeling dataset"/>
+<img src="https://raw.githubusercontent.com/torchgeo/torchgeo/main/images/inria.png" alt="Building segmentations produced by a U-Net model trained on the Inria Aerial Image Labeling dataset"/>
 
 TorchGeo also supports command-line interface training using [LightningCLI](https://lightning.ai/docs/pytorch/stable/cli/lightning_cli.html). It can be invoked in two ways:
 
@@ -269,4 +269,4 @@ If you use this software in your work, please cite our [paper](https://doi.org/1
 
 This project welcomes contributions and suggestions. If you would like to submit a pull request, see our [Contribution Guide](https://torchgeo.readthedocs.io/en/stable/user/contributing.html) for more information.
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+This project has adopted the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/). For more information see the [Contributor Covenant Code of Conduct FAQ](https://www.contributor-covenant.org/faq/) or contact @adamjstewart on Slack with any additional questions or comments.
