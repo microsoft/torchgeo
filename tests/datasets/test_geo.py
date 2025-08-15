@@ -30,6 +30,7 @@ from torchgeo.datasets import (
     Sentinel2,
     UnionDataset,
     VectorDataset,
+    XarrayDataset,
 )
 from torchgeo.datasets.utils import GeoSlice
 
@@ -482,6 +483,35 @@ class TestRasterDataset:
         ds = RasterDataset(root, res=10.0)
         assert ds.res == (10.0, 10.0)
         ds.res = 20.0
+
+
+class TestXarrayDataset:
+    pytest.importorskip('rioxarray')
+
+    @pytest.fixture(scope='class')
+    def dataset(self) -> XarrayDataset:
+        root = os.path.join('tests', 'data', 'netcdf')
+        with pytest.warns(UserWarning, match='Unable to decode coordinates'):
+            return XarrayDataset(root)
+
+    def test_getitem(self, dataset: XarrayDataset) -> None:
+        x = dataset[dataset.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x['image'], torch.Tensor)
+
+    def test_and(self, dataset: XarrayDataset) -> None:
+        ds = dataset & dataset
+        assert isinstance(ds, IntersectionDataset)
+
+    def test_or(self, dataset: XarrayDataset) -> None:
+        ds = dataset | dataset
+        assert isinstance(ds, UnionDataset)
+
+    def test_invalid_query(self, dataset: XarrayDataset) -> None:
+        with pytest.raises(
+            IndexError, match='query: .* not found in index with bounds:'
+        ):
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
 
 class TestVectorDataset:
