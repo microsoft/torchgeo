@@ -4,9 +4,11 @@
 import os
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pytest
 import torch
 import torch.nn as nn
+from matplotlib.figure import Figure
 from pytest import MonkeyPatch
 
 from torchgeo.datasets import DatasetNotFoundError, WesternUSALiveFuelMoisture
@@ -40,3 +42,16 @@ class TestWesternUSALiveFuelMoisture:
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
             WesternUSALiveFuelMoisture(tmp_path)
+
+    def test_plot(self, dataset: WesternUSALiveFuelMoisture) -> None:
+        sample = dataset[0]
+
+        # Test with a single variable - likely one of the missing lines
+        fig = dataset.plot(sample, variables_to_plot=['vv'])
+        assert isinstance(fig, Figure)
+        plt.close()
+
+        # Test with both suptitle and show_titles=False
+        fig = dataset.plot(sample, show_titles=False, suptitle='Custom title')
+        assert isinstance(fig, Figure)
+        plt.close()
