@@ -7,19 +7,18 @@ from collections import OrderedDict
 from functools import partial
 from typing import Any
 
-import kornia.augmentation as K
 import torch
 import torch.nn as nn
+import torchvision.transforms.v2 as T
 from timm.models.vision_transformer import VisionTransformer
 from torch import Tensor
 from torchvision.models._api import Weights, WeightsEnum
 
-_mean = torch.tensor([0.485, 0.456, 0.406])
-_std = torch.tensor([0.229, 0.224, 0.225])
-_scale_mae_transforms = K.AugmentationSequential(
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
-    K.Normalize(mean=_mean, std=_std),
-    data_keys=None,
+_mean = [0.485, 0.456, 0.406]
+_std = [0.229, 0.224, 0.225]
+_scale_mae_transforms = nn.Sequential(
+    T.Normalize(mean=[0], std=[255], inplace=True),
+    T.Normalize(mean=_mean, std=_std, inplace=True),
 )
 
 

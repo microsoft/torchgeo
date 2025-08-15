@@ -6,7 +6,6 @@
 from typing import Any
 
 import kornia.augmentation as K
-import torch
 from einops import rearrange
 from kornia.contrib import extract_tensor_patches
 from torch import Tensor
@@ -91,54 +90,3 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
             out = rearrange(out, 'b t c h w -> (b t) c h w')
 
         return out
-
-
-class _Clamp(K.IntensityAugmentationBase2D):
-    """Clamp images to a specific range."""
-
-    def __init__(
-        self,
-        p: float = 0.5,
-        p_batch: float = 1,
-        min: float = 0,
-        max: float = 1,
-        same_on_batch: bool = False,
-        keepdim: bool = False,
-    ) -> None:
-        """Initialize a new _Clamp instance.
-
-        Args:
-            p: Probability for applying an augmentation. This param controls the
-                augmentation probabilities element-wise for a batch.
-            p_batch: Probability for applying an augmentation to a batch. This param
-                controls the augmentation probabilities batch-wise.
-            min: Minimum value to clamp to.
-            max: Maximum value to clamp to.
-            same_on_batch: Apply the same transformation across the batch.
-            keepdim: Whether to keep the output shape the same as input ``True``
-                or broadcast it to the batch form ``False``.
-        """
-        super().__init__(
-            p=p, p_batch=p_batch, same_on_batch=same_on_batch, keepdim=keepdim
-        )
-        self.flags = {'min': min, 'max': max}
-
-    def apply_transform(
-        self,
-        input: Tensor,
-        params: dict[str, Tensor],
-        flags: dict[str, Any],
-        transform: Tensor | None = None,
-    ) -> Tensor:
-        """Apply the transform.
-
-        Args:
-            input: the input tensor
-            params: generated parameters
-            flags: static parameters
-            transform: the geometric transformation tensor
-
-        Returns:
-            the augmented input
-        """
-        return torch.clamp(input, self.flags['min'], self.flags['max'])
