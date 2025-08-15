@@ -8,17 +8,41 @@ from typing import Any
 import kornia.augmentation as K
 import segmentation_models_pytorch as smp
 import torch
+from kornia.constants import Resample
 from segmentation_models_pytorch import Unet
 from torchvision.models._api import Weights, WeightsEnum
 
+import torchgeo.transforms as T
+from torchgeo.transforms.transforms import _Clamp
+
 # Specified in https://github.com/fieldsoftheworld/ftw-baselines
 # First 4 S2 bands are for image t1 and last 4 bands are for image t2
-_ftw_sentinel2_bands = ['B4', 'B3', 'B2', 'B8A', 'B4', 'B3', 'B2', 'B8A']
+_ftw_sentinel2_bands = ('B4', 'B3', 'B2', 'B8A', 'B4', 'B3', 'B2', 'B8A')
 
 # https://github.com/fieldsoftheworld/ftw-baselines/blob/main/src/ftw/datamodules.py
 # Normalization by 3k (for S2 uint16 input)
 _ftw_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(3000.0)), data_keys=None
+)
+
+# Specified in https://github.com/fieldsoftheworld/ftw-baselines
+# First 4 S2 bands are for image t1 and last 4 bands are for image t2
+_ai4g_flood_sentinel1_bands = ('VV', 'VH')
+_ai4g_flood_sentinel1_transform_bands = ('VV', 'VH', 'VV', 'VH')
+
+# https://github.com/microsoft/ai4g-flood/blob/main/src/run_flood_detection_downloaded_images.py#L54
+_ai4g_flood_transforms = K.AugmentationSequential(
+    # Convert to decibel scale and shift to [0, 255] range
+    T.PowerToDecibel(shift=135.0, scale=2.0),
+    _Clamp(p=1, min=0, max=255),
+    # Extract change mask from pre and post images
+    T.ToThresholdedChangeMask(
+        change_thresholds=[10.0, 10.0],
+        thresholds=[100.0, 90.0],
+        min_thresholds=[75.0, 70.0],
+    ),
+    K.Resize(size=(128, 128), resample=Resample.NEAREST),
+    data_keys=None,
 )
 
 # No normalization used see: https://github.com/Restor-Foundation/tcd/blob/main/src/tcd_pipeline/data/datamodule.py#L145
@@ -95,6 +119,21 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
             'license': 'non-commercial',
         },
     )
+    SENTINEL1_AI4G_FLOOD = Weights(
+        url='https://huggingface.co/torchgeo/ai4g_flood/resolve/672bfb53b61a91114941ac9e4338ebc96dff6ec7/unet_mobilenetv2_sentinel1_ai4g_flood-d95df7aa.pth',
+        transforms=_ai4g_flood_transforms,
+        meta={
+            'dataset': 'AI4G Global Flood Extent',
+            'in_chans': 2,
+            'in_chans_transform': 4,
+            'num_classes': 2,
+            'model': 'U-Net',
+            'encoder': 'mobilenet_v2',
+            'publication': 'https://arxiv.org/abs/2411.01411',
+            'repo': 'https://github.com/microsoft/ai4g-flood',
+            'bands': _ai4g_flood_sentinel1_bands,
+            'bands_transform': _ai4g_flood_sentinel1_transform_bands,
+            'license': 'MIT',
     OAM_RGB_RESNET50_TCD = Weights(
         url='https://hf.co/isaaccorley/unet_resnet50_oam_rgb_tcd/resolve/5df2fe5a0e80fd6e12939686b7370c53f73bf389/unet_resnet50_oam_rgb_tcd-72b9b753.pth',
         transforms=_tcd_transforms,
