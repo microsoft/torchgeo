@@ -22,6 +22,7 @@ from .farseg import FarSeg
 from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
 from .ltae import LTAE
+from .neuralgcm import NeuralGCM_Weights, neuralgcm
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
 from .rcf import MOSAIKS, RCF
 from .resnet import (
@@ -73,6 +74,7 @@ __all__ = (
     'FCSiamConc',
     'FCSiamDiff',
     'FarSeg',
+    'NeuralGCM_Weights',
     'Panopticon',
     'Panopticon_Weights',
     'ResNet18_Weights',
@@ -103,6 +105,7 @@ __all__ = (
     'get_model_weights',
     'get_weight',
     'list_models',
+    'neuralgcm',
     'panopticon_vitb14',
     'resnet18',
     'resnet50',

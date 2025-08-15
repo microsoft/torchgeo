@@ -66,6 +66,18 @@ FC Siamese Networks
 .. autoclass:: FCSiamConc
 .. autoclass:: FCSiamDiff
 
+NeuralGCM
+^^^^^^^^^
+
+.. autofunction:: neuralgcm
+.. autoclass:: NeuralGCM_Weights
+
+NeuralGCM
+^^^^^^^^^
+
+.. autofunction:: neuralgcm
+.. autoclass:: NeuralGCM_Weights
+
 L-TAE
 ^^^^^
 

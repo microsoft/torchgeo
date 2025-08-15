@@ -16,6 +16,7 @@ from torchgeo.models import (
     dofa_large_patch16_224,
     earthloc,
     ltae,
+    neuralgcm,
     panopticon_vitb14,
     resnet18,
     resnet50,
@@ -42,6 +43,7 @@ __all__ = (
     'dofa_large_patch16_224',
     'earthloc',
     'ltae',
+    'neuralgcm',
     'panopticon_vitb14',
     'resnet18',
     'resnet50',
@@ -66,4 +68,5 @@ dependencies = [
     'timm',
     'torchvision',
     'ultralytics',
+    'neuralgcm'
 ]
