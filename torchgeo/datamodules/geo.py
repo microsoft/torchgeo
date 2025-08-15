@@ -30,7 +30,7 @@ class BaseDataModule(LightningDataModule):
     """
 
     mean = torch.tensor(0)
-    std = torch.tensor(255)
+    std = torch.tensor(1)
 
     def __init__(
         self,
