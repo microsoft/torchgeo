@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 # Configuration file for the Sphinx documentation builder.
@@ -24,7 +24,7 @@ import torchgeo
 # -- Project information -----------------------------------------------------
 
 project = 'torchgeo'
-copyright = '2021, Microsoft Corporation'
+copyright = 'TorchGeo Contributors'
 author = torchgeo.__author__
 version = '.'.join(torchgeo.__version__.split('.')[:2])
 release = torchgeo.__version__

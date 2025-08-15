@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -55,6 +55,7 @@ class TestChangeDetectionTask:
     @pytest.mark.parametrize(
         'name',
         [
+            'bright',
             'cabuar',
             'chabud',
             'levircd',
@@ -63,6 +64,7 @@ class TestChangeDetectionTask:
             'oscd_multiclass',
             'oscd_multiclass_focal',
             'oscd_multiclass_jaccard',
+            'xview2',
         ],
     )
     def test_trainer(

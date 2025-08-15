@@ -1,13 +1,10 @@
-# setup
-setuptools==80.9.0
-
-# install
+# required
 einops==0.8.1
 fiona==1.10.1
 geopandas==1.0.1
 kornia==0.8.1
 lightly==1.5.22
-lightning[pytorch-extra]==2.5.2
+lightning[pytorch-extra]==2.5.3
 matplotlib==3.10.1
 numpy==2.2.4
 pandas==2.3.1
@@ -17,7 +14,7 @@ rasterio==1.4.3
 segmentation-models-pytorch==0.5.0
 shapely==2.0.7
 timm==1.0.19
-torch==2.7.1
-torchmetrics==1.8.0
-torchvision==0.22.1
+torch==2.8.0
+torchmetrics==1.8.1
+torchvision==0.23.0
 typing-extensions==4.14.1

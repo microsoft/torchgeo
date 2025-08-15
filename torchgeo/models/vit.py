@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Pre-trained Vision Transformer models."""
@@ -56,7 +56,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_tm_toa_bands,
         },
@@ -70,7 +70,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_tm_toa_bands,
         },
@@ -84,7 +84,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 9,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_etm_toa_bands,
         },
@@ -98,7 +98,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 9,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_etm_toa_bands,
         },
@@ -112,7 +112,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 6,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_etm_sr_bands,
         },
@@ -126,7 +126,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 6,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_etm_sr_bands,
         },
@@ -140,7 +140,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 11,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_oli_tirs_toa_bands,
         },
@@ -154,7 +154,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 11,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_oli_tirs_toa_bands,
         },
@@ -168,7 +168,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_oli_sr_bands,
         },
@@ -182,9 +182,24 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'vit_small_patch16_224',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_oli_sr_bands,
+        },
+    )
+
+    SENTINEL2_ALL_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vs_s2_encoder-1a3ee5a5.pth',
+        transforms=K.AugmentationSequential(
+            K.Normalize(mean=0, std=10000), K.Resize(224), data_keys=None
+        ),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 13,
+            'model': 'vit_small_patch16_224',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel2_toa_bands,
         },
     )
 
@@ -241,6 +256,19 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/zhu-xlab/FGMAE',
             'ssl_method': 'fg-mae',
             'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL1_GRD_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vs_s1_encoder-180f1e6e.pth',
+        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 2,
+            'model': 'vit_small_patch16_224',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel1_grd_bands,
         },
     )
 
@@ -348,6 +376,21 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
     .. versionadded:: 0.7
     """
 
+    SENTINEL2_ALL_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vl_s2_encoder-4a4f026a.pth',
+        transforms=K.AugmentationSequential(
+            K.Normalize(mean=0, std=10000), K.Resize(224), data_keys=None
+        ),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 13,
+            'model': 'vit_large_patch16_224',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel2_toa_bands,
+        },
+    )
+
     SENTINEL2_ALL_MAE = Weights(
         url='https://huggingface.co/wangyi111/SSL4EO-S12/resolve/75c72195d35201dc1fb210818993518c25da566b/B13_vitl16_mae_ep99_enc.pth',
         transforms=_zhu_xlab_transforms,
@@ -373,6 +416,19 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
             'repo': 'https://github.com/zhu-xlab/FGMAE',
             'ssl_method': 'fg-mae',
             'bands': _sentinel2_toa_bands,
+        },
+    )
+
+    SENTINEL1_GRD_CLOSP = Weights(
+        url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vl_s1_encoder-6f88d037.pth',
+        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
+        meta={
+            'dataset': 'CrisisLandMark',
+            'in_chans': 2,
+            'model': 'vit_large_patch16_224',
+            'publication': 'https://arxiv.org/abs/2507.10403',
+            'repo': 'https://github.com/DarthReca/closp',
+            'bands': _sentinel1_grd_bands,
         },
     )
 

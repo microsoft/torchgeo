@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Pre-trained U-Net models."""
@@ -94,7 +94,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
     OAM_RGB_RESNET50_TCD = Weights(
-        url='https://hf.co/torchgeo/unet_resnet50_oam_rgb_tcd/resolve/main/unet_resnet50_oam_rgb_tcd-72b9b753.pth',
+        url='https://hf.co/isaaccorley/unet_resnet50_oam_rgb_tcd/resolve/5df2fe5a0e80fd6e12939686b7370c53f73bf389/unet_resnet50_oam_rgb_tcd-72b9b753.pth',
         transforms=_tcd_transforms,
         meta={
             'dataset': 'OAM-TCD',
@@ -112,7 +112,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
     OAM_RGB_RESNET34_TCD = Weights(
-        url='https://hf.co/torchgeo/unet_resnet34_oam_rgb_tcd/resolve/main/unet_resnet34_oam_rgb_tcd-72b9b753.pth',
+        url='https://hf.co/isaaccorley/unet_resnet34_oam_rgb_tcd/resolve/40c914bbcbe43a6a87c81adb0a22ff2d4a53204d/unet_resnet34_oam_rgb_tcd-72b9b753.pth',
         transforms=_tcd_transforms,
         meta={
             'dataset': 'OAM-TCD',

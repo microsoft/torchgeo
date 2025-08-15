@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """CDL dataset."""
@@ -50,6 +50,7 @@ class CDL(RasterDataset):
 
     url = 'https://www.nass.usda.gov/Research_and_Science/Cropland/Release/datasets/{}_30m_cdls.zip'
     md5s: ClassVar[dict[int, str]] = {
+        2024: '841cd0cb8d4a9129cb1e4cfa0e40c286',
         2023: '8c7685d6278d50c554f934b16a6076b7',
         2022: '754cf50670cdfee511937554785de3e6',
         2021: '27606eab08fe975aa138baad3e5dfcd8',

@@ -1,7 +1,4 @@
-# setup
-setuptools==77.0.1
-
-# install
+# required
 einops==0.3.0
 fiona==1.8.22
 geopandas==0.12.1
@@ -35,6 +32,7 @@ webdataset==0.2.4
 xarray==0.12.3
 
 # models
+microsoft-aurora==1.6.0
 ultralytics==8.3.0
 
 # tests

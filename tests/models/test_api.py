@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import enum
@@ -9,6 +9,7 @@ import torch.nn as nn
 from torchvision.models._api import WeightsEnum
 
 from torchgeo.models import (
+    Aurora_Weights,
     CopernicusFM_Base_Weights,
     CROMABase_Weights,
     CROMALarge_Weights,
@@ -30,6 +31,7 @@ from torchgeo.models import (
     ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
     YOLO_Weights,
+    aurora_swin_unet,
     copernicusfm_base,
     croma_base,
     croma_large,
@@ -60,6 +62,7 @@ from torchgeo.models import (
 )
 
 builders = [
+    aurora_swin_unet,
     copernicusfm_base,
     croma_base,
     croma_large,
@@ -85,6 +88,7 @@ builders = [
     yolo,
 ]
 enums = [
+    Aurora_Weights,
     CopernicusFM_Base_Weights,
     CROMABase_Weights,
     CROMALarge_Weights,
@@ -111,7 +115,9 @@ enums = [
 
 @pytest.mark.parametrize('builder', builders)
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
-    if builder == yolo:
+    if builder == aurora_swin_unet:
+        pytest.importorskip('aurora')
+    elif builder == yolo:
         pytest.importorskip('ultralytics', minversion='8.3')
 
     model = get_model(builder.__name__)

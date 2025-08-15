@@ -45,7 +45,7 @@ dependencies = [
     "kornia>=0.7.4",
     # lightly 1.4.5+ required for LARS optimizer
     # lightly 1.4.26 is incompatible with the version of timm required by smp
-    # https://github.com/microsoft/torchgeo/issues/1824
+    # https://github.com/torchgeo/torchgeo/issues/1824
     "lightly>=1.4.5,!=1.4.26",
     # lightning 2+ required for LightningCLI args + sys.argv support
     # lightning 2.3 contains known bugs related to YAML parsing
@@ -119,6 +119,8 @@ docs = [
     "sphinx>=4,<6",
 ]
 models = [
+    # microsoft-aurora 1.6+ required for timm 1.0+ support
+    "microsoft-aurora>=1.6",
     # ultralytics 8.3+ fixes loading with weights_only=False
     "ultralytics>=8.3",
 ]
@@ -144,8 +146,10 @@ all = [
 torchgeo = "torchgeo.main:main"
 
 [project.urls]
-Homepage = "https://github.com/microsoft/torchgeo"
+Codecov = "https://app.codecov.io/gh/torchgeo/torchgeo"
 Documentation = "https://torchgeo.readthedocs.io"
+Homepage = "https://github.com/torchgeo/torchgeo"
+Slack = "https://torchgeo.slack.com"
 
 # https://coverage.readthedocs.io/en/latest/config.html
 [tool.coverage.report]

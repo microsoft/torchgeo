@@ -1,9 +1,10 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo models."""
 
 from .api import get_model, get_model_weights, get_weight, list_models
+from .aurora import Aurora_Weights, aurora_swin_unet
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
 from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
@@ -22,7 +23,7 @@ from .fcn import FCN
 from .fcsiam import FCSiamConc, FCSiamDiff
 from .ltae import LTAE
 from .panopticon import Panopticon, Panopticon_Weights, panopticon_vitb14
-from .rcf import RCF
+from .rcf import MOSAIKS, RCF
 from .resnet import (
     ResNet18_Weights,
     ResNet50_Weights,
@@ -55,7 +56,9 @@ __all__ = (
     'DOFA',
     'FCN',
     'LTAE',
+    'MOSAIKS',
     'RCF',
+    'Aurora_Weights',
     'CROMABase_Weights',
     'CROMALarge_Weights',
     'ChangeMixin',
@@ -87,6 +90,7 @@ __all__ = (
     'ViTSmall14_DINOv2_Weights',
     'ViTSmall16_Weights',
     'YOLO_Weights',
+    'aurora_swin_unet',
     'copernicusfm_base',
     'croma_base',
     'croma_large',
