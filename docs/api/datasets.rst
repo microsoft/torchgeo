@@ -171,6 +171,11 @@ NLCD
 
 .. autoclass:: NLCD
 
+ODIAC CO2 Emissions
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: ODIAC
+
 Open Buildings
 ^^^^^^^^^^^^^^
 
