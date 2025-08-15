@@ -354,17 +354,17 @@ def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor) -> Tens
         Tensor of embeddings of shape (M,D).
     """
     assert embed_dim % 2 == 0
-    omega = torch.arange(embed_dim // 2, dtype=torch.float32, device=pos.device)
-    omega /= embed_dim / 2.0
-    omega = 1.0 / 10000**omega  # (D/2,)
+    # Compute omega factor in one step and ensure float32 and device match pos
+    half_dim = embed_dim // 2
+    omega = torch.arange(half_dim, dtype=torch.float32, device=pos.device) / (half_dim)
+    omega = 1.0 / (10000**omega)  # (D/2,)
 
-    pos = pos.reshape(-1)  # (M,)
-    out = torch.einsum('m,d->md', pos, omega)  # (M, D/2), outer product
+    # pos is assumed 1D (M,). Use .view(-1) which is a cheap no-copy if already 1D.
+    pos = pos.view(-1)
+    out = torch.outer(pos, omega)  # (M, D/2); faster than einsum for this case
 
-    emb_sin = torch.sin(out)  # (M, D/2)
-    emb_cos = torch.cos(out)  # (M, D/2)
-
-    emb = torch.cat([emb_sin, emb_cos], dim=1)  # (M, D)
+    # Compute sin and cos in one call for better efficiency and memory behavior
+    emb = torch.cat((out.sin(), out.cos()), dim=1)  # (M, D)
     return emb
 
 
