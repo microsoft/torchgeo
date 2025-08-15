@@ -3,13 +3,22 @@
 
 """Sentinel datasets."""
 
+import os
+import warnings
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
+import pyproj
+import rasterio
+import shapely
 import torch
 from matplotlib.figure import Figure
 from pyproj import CRS
+from rasterio import DatasetReader
+from rasterio.vrt import WarpedVRT
+from shapely import MultiPolygon, Polygon
+from shapely.ops import transform
 
 from .errors import RGBBandsMissingError
 from .geo import RasterDataset
@@ -415,3 +424,47 @@ class Sentinel2(Sentinel):
             plt.suptitle(suptitle)
 
         return fig
+
+    def _footprint_from_datasource(
+        self, dataset: DatasetReader | WarpedVRT
+    ) -> MultiPolygon | Polygon:
+        """Extract the true geometric footprint from a Sentinel-2 datasource.
+
+        This method reads the original footprint geometry from the associated
+        Sentinel-2 metadata XML file (`MTD_MSIL1C.xml`) and transforms it from
+        geographic coordinates (EPSG:4326) into the CRS of the given dataset.
+
+        Args:
+            dataset: An open raster dataset, either a :class:`rasterio.io.DatasetReader`
+                or a :class:`rasterio.vrt.WarpedVRT`, from which the footprint will
+                be derived.
+
+        Returns:
+            A :class:`shapely.geometry.Polygon` or
+            :class:`shapely.geometry.MultiPolygon` representing the footprint in
+            the dataset's CRS.
+
+        Raises:
+            KeyError: If the existing metadata file does not contain a ``FOOTPRINT`` tag.
+
+        .. versionadded:: 0.8
+        """
+        if hasattr(dataset, 'src_dataset'):
+            # When dataset is a WarpedVRT
+            filepath = dataset.src_dataset.name
+        else:
+            filepath = dataset.name
+        metadata_path = filepath.split('GRANULE')[0] + 'MTD_MSIL1C.xml'
+        if not os.path.exists(metadata_path):
+            warnings.warn(
+                f'Metadata file not found in Sentinel-2 path: {metadata_path}. '
+                'This is required to extract true footprint for this dataset.'
+                'Defaulting to using raster bounds.'
+            )
+            return super()._footprint_from_datasource(dataset)
+        with rasterio.open(metadata_path) as metadata_src:
+            true_footprint = shapely.wkt.loads(metadata_src.tags()['FOOTPRINT'])
+        transformer = pyproj.Transformer.from_crs(
+            pyproj.CRS('EPSG:4326'), dataset.crs, always_xy=True
+        ).transform
+        return transform(transformer, true_footprint)

@@ -28,6 +28,7 @@ from pyproj import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader
 from rasterio.vrt import WarpedVRT
+from shapely import MultiPolygon, Polygon
 from torch import Tensor
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -359,6 +360,11 @@ class RasterDataset(GeoDataset):
     #: Color map for the dataset, used for plotting
     cmap: ClassVar[dict[int, tuple[int, int, int, int]]] = {}
 
+    #: Nodata value used in the raster for pixels outside the satellite acquisition
+    #: Optionally set this if the raster lack nodata-mask and nodata value
+    #: and you want need it to override `RasterDataset._footprint_from_datasource()`
+    nodata_value: float | None = None
+
     @property
     def dtype(self) -> torch.dtype:
         """The dtype of the dataset (overrides the dtype of the data file via a cast).
@@ -451,10 +457,14 @@ class RasterDataset(GeoDataset):
                         if crs is None:
                             crs = src.crs
 
-                        with WarpedVRT(src, crs=crs) as vrt:
-                            geometries.append(shapely.box(*vrt.bounds))
+                        vrt_options = {'crs': crs}
+                        if self.nodata_value is not None:
+                            vrt_options['nodata'] = self.nodata_value
+                        with WarpedVRT(src, **vrt_options) as vrt:
                             if res is None:
                                 res = vrt.res
+                            geometries.append(self._footprint_from_datasource(vrt))
+
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
                     continue
@@ -620,6 +630,11 @@ class RasterDataset(GeoDataset):
             return vrt
         else:
             return src
+
+    def _footprint_from_datasource(
+        self, src: DatasetReader | WarpedVRT
+    ) -> MultiPolygon | Polygon:
+        return shapely.box(*src.bounds)
 
 
 class VectorDataset(GeoDataset):
