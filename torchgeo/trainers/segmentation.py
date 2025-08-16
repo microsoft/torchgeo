@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import Accuracy, JaccardIndex, MetricCollection
@@ -76,6 +77,9 @@ class SemanticSegmentationTask(BaseTask):
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
 
+        .. versionadded:: 0.8
+           Time-series support.
+
         .. versionadded:: 0.7
            The *task* and *num_labels* parameters.
 
@@ -99,6 +103,20 @@ class SemanticSegmentationTask(BaseTask):
         """
         self.weights = weights
         super().__init__()
+
+    def forward(self, x:Tensor) -> Tensor:
+        """
+        Args:
+            x: Input tensor of shape (B, C, H, W) or (B, T, C, H, W).
+
+        Returns:
+            Output tensor of shape (B, T*C, H, W).
+        """
+        if x.ndim == 5:
+            x = rearrange(x, 'b t c h w -> b (t c) h w')
+        elif x.ndim == 4:
+            pass
+        return self.model(x)
 
     def configure_models(self) -> None:
         """Initialize the model."""

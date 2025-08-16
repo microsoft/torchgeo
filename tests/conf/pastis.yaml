@@ -9,3 +9,8 @@ model:
     loss: 'bce'
 data:
   class_path: PastisDataModule
+  init_args:
+    batch_size: 2
+    val_split_pct: 0.5
+  dict_kwargs:
+    root: 'tests/data/pastis'
