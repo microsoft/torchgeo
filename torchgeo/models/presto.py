@@ -1,7 +1,6 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License.
+# Copyright (c) 2024 Presto Authors
 
-# https://github.com/nasaharvest/presto
+# Modified from https://github.com/nasaharvest/presto
 
 """Pretrained Remote Sensing Transformer (Presto)."""
 
@@ -56,9 +55,9 @@ def get_sinusoid_encoding_table(
 
     sinusoid_table[:, 0::2] = np.sin(sinusoid_table[:, 0::2])  # dim 2i
     sinusoid_table[:, 1::2] = np.cos(sinusoid_table[:, 1::2])  # dim 2i+1
-    sinusoid_table = torch.from_numpy(sinusoid_table.astype(float))
-    sinusoid_table = sinusoid_table.to(torch.float).to(device)
-    return sinusoid_table
+    sinusoid_table_tensor = torch.from_numpy(sinusoid_table.astype(float))
+    sinusoid_table_tensor = sinusoid_table_tensor.to(torch.float).to(device)
+    return sinusoid_table_tensor
 
 
 def get_month_encoding_table(d_hid: int, device: torch.device) -> torch.Tensor:
@@ -79,8 +78,10 @@ def get_month_encoding_table(d_hid: int, device: torch.device) -> torch.Tensor:
     month_table = np.concatenate([sin_table[:-1], cos_table[:-1]], axis=-1).astype(
         float
     )
-    month_table: torch.Tensor = torch.from_numpy(month_table).to(torch.float).to(device)
-    return month_table
+    month_table_tensor: torch.Tensor = (
+        torch.from_numpy(month_table).to(torch.float).to(device)
+    )
+    return month_table_tensor
 
 
 def month_to_tensor(
@@ -196,7 +197,7 @@ class Encoder(nn.Module):
         month_tab = get_month_encoding_table(
             d_hid=month_embedding_size, device=self.pos_embed.device
         )
-        self.month_embed = nn.Embedding.from_pretrained(month_tab, freeze=True)
+        self.month_embed = nn.Embedding.from_pretrained(month_tab, freeze=True)  # type: ignore[no-untyped-call]
         self.channel_embed = nn.Embedding(
             num_embeddings=len(self.band_groups) + 1,
             embedding_dim=channel_embedding_size,
@@ -477,7 +478,7 @@ class Decoder(nn.Module):
         month_tab = get_month_encoding_table(
             d_hid=int(remaining_embeddings) // 2, device=self.pos_embed.device
         )
-        self.month_embed = nn.Embedding.from_pretrained(month_tab, freeze=True)
+        self.month_embed = nn.Embedding.from_pretrained(month_tab, freeze=True)  # type: ignore[no-untyped-call]
 
         self.initialize_weights()
 
@@ -604,7 +605,9 @@ class Decoder(nn.Module):
         x += positional_embedding
         return x
 
-    def reconstruct_inputs(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def reconstruct_inputs(
+        self, x: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Reconstruct the inputs from the decoder output.
 
         Args:
@@ -643,12 +646,11 @@ class Decoder(nn.Module):
                     idx -= 1
                 group_tokens = x[:, idx]
                 if group_name == 'dynamic_world':
-                    dw_output: torch.Tensor = self.dw_decoder_pred(group_tokens)
+                    dw_output = self.dw_decoder_pred(group_tokens)
                 else:
                     eo_output.append(self.eo_decoder_pred[group_name](group_tokens))
 
-        # we can just do this concatenation because the BANDS_GROUP_IDX
-        # is ordered
+        # we can just do this concatenation because the BANDS_GROUP_IDX # is ordered
         return torch.cat(eo_output, dim=-1), dw_output
 
     def forward(
@@ -657,7 +659,7 @@ class Decoder(nn.Module):
         kept_indices: torch.Tensor,
         removed_indices: torch.Tensor,
         month: torch.Tensor | int = 0,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Forward pass of the decoder.
 
         Args:
@@ -667,7 +669,7 @@ class Decoder(nn.Module):
             month: Month tensor or integer representing the month. Defaults to 0.
 
         Returns:
-            Tensor with the reconstructed inputs.
+            Tuple containing the reconstructed inputs for each channel group and the dynamic world output.
         """
         x = self.decoder_embed(x)
         x = self.add_masked_tokens(x, kept_indices, removed_indices)
@@ -677,7 +679,9 @@ class Decoder(nn.Module):
         for blk in self.decoder_blocks:
             x = blk(x)
         x = self.decoder_norm(x)
-        return self.reconstruct_inputs(x)
+
+        reconstructed_inputs, dw_output = self.reconstruct_inputs(x)
+        return reconstructed_inputs, dw_output
 
 
 class Presto(nn.Module):
@@ -740,7 +744,7 @@ class Presto(nn.Module):
         latlons: torch.Tensor,
         mask: torch.Tensor | None = None,
         month: torch.Tensor | int = 0,
-    ) -> torch.Tensor:
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Forward pass of the Presto model.
 
         Args:
@@ -751,12 +755,15 @@ class Presto(nn.Module):
             month: Month tensor or integer representing the month. Defaults to 0.
 
         Returns:
-            Tensor with the reconstructed inputs.
+            Tuple containing the reconstructed inputs for each channel group and the dynamic world output.
         """
         x, kept_indices, removed_indices = self.encoder(
             x=x, dynamic_world=dynamic_world, latlons=latlons, mask=mask, month=month
         )
-        return self.decoder(x, kept_indices, removed_indices, month)
+        reconstructed_inputs, dw_output = self.decoder(
+            x, kept_indices, removed_indices, month
+        )
+        return reconstructed_inputs, dw_output
 
 
 class Presto_Weights(WeightsEnum):  # type: ignore[misc]
