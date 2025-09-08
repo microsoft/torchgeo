@@ -476,3 +476,106 @@ class TestOpenStreetMap:
             
             fig = dataset.plot(sample)
             assert fig is not None
+    
+    #TODO: This test downloads data and adds it to test data dir
+    # @patch('torchgeo.datasets.openstreetmap.urlopen')
+    # def test_download_data_success(self, mock_urlopen) -> None:
+    #     """Test successful data download."""
+    #     import json
+    #     from unittest.mock import Mock
+        
+    #     # Create proper mock context manager like in old tests
+    #     mock_response_data = {
+    #         'elements': [
+    #             {
+    #                 'type': 'node',
+    #                 'id': 123,
+    #                 'lat': 48.8566,
+    #                 'lon': 2.3523,
+    #                 'tags': {'amenity': 'restaurant'}
+    #             }
+    #         ]
+    #     }
+        
+    #     mock_response = Mock()
+    #     mock_response.read.return_value = json.dumps(mock_response_data).encode('utf-8')
+    #     mock_context = Mock()
+    #     mock_context.__enter__ = Mock(return_value=mock_response)
+    #     mock_context.__exit__ = Mock(return_value=None)
+    #     mock_urlopen.return_value = mock_context
+        
+    #     # Use unique bbox to avoid cache conflicts
+    #     import time
+    #     unique_offset = time.time() % 1000 / 10000
+    #     bbox = (2.4 + unique_offset, 48.9 + unique_offset, 2.401 + unique_offset, 48.901 + unique_offset)
+    #     root = os.path.join('tests', 'data', 'openstreetmap')
+        
+    #     # Create dataset which should trigger download (covers lines 216-239)
+    #     dataset = OpenStreetMap(bbox=bbox, paths=root, download=True)
+        
+    #     # Should have called download
+    #     assert mock_urlopen.called
+        
+    #     # Check data file was created
+    #     data_file = dataset._get_data_filename()
+    #     assert data_file.exists()
+
+    # @patch('torchgeo.datasets.openstreetmap.urlopen')
+    # def test_download_data_empty_response(self, mock_urlopen) -> None:
+    #     """Test download with empty API response."""
+    #     import json
+    #     from unittest.mock import Mock
+        
+    #     # Mock empty response
+    #     mock_response = Mock()
+    #     mock_response.read.return_value = json.dumps({'elements': []}).encode('utf-8')
+    #     mock_context = Mock()
+    #     mock_context.__enter__ = Mock(return_value=mock_response)
+    #     mock_context.__exit__ = Mock(return_value=None)
+    #     mock_urlopen.return_value = mock_context
+        
+    #     # Use unique bbox
+    #     import time
+    #     unique_offset = time.time() % 1000 / 10000
+    #     bbox = (2.5 + unique_offset, 48.95 + unique_offset, 2.501 + unique_offset, 48.951 + unique_offset)
+    #     root = os.path.join('tests', 'data', 'openstreetmap')
+        
+    #     # Should save empty GeoDataFrame (covers lines 240-242)
+    #     dataset = OpenStreetMap(bbox=bbox, paths=root, download=True)
+        
+    #     data_file = dataset._get_data_filename()
+    #     assert data_file.exists()
+        
+    #     # Verify it's empty
+    #     import geopandas as gpd
+    #     gdf = gpd.read_file(data_file)
+    #     assert len(gdf) == 0
+
+    @patch('torchgeo.datasets.openstreetmap.urlopen')
+    def test_download_data_all_endpoints_fail(self, mock_urlopen) -> None:
+        """Test download failure when all endpoints fail."""
+        # Make all requests fail like in old tests
+        mock_urlopen.side_effect = Exception("Connection failed")
+        
+        # Use unique bbox that doesn't have cached data
+        import time
+        unique_offset = time.time() % 1000 / 10000
+        bbox = (2.6 + unique_offset, 48.96 + unique_offset, 2.601 + unique_offset, 48.961 + unique_offset)
+        root = os.path.join('tests', 'data', 'openstreetmap')
+        
+        # Should raise RuntimeError when all endpoints fail (covers line 251)
+        with patch('torchgeo.datasets.openstreetmap.OpenStreetMap._rate_limit'):
+            with pytest.raises(RuntimeError, match="All Overpass API endpoints failed"):
+                OpenStreetMap(bbox=bbox, paths=root, download=True)
+
+    def test_download_data_file_exists(self) -> None:
+        """Test _download_data when file already exists."""
+        root = os.path.join('tests', 'data', 'openstreetmap')
+        bbox = (2.3520, 48.8565, 2.3525, 48.8570)  # Use existing test data
+        
+        # Use existing dataset that has cached data (covers lines 212-213)
+        with patch('urllib.request.urlopen') as mock_urlopen:
+            dataset = OpenStreetMap(bbox=bbox, paths=root, download=False)
+            dataset._download_data()  # Should return early without network calls
+            mock_urlopen.assert_not_called()
+
