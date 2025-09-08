@@ -1,11 +1,17 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import json
 import os
 import pathlib
-from unittest.mock import patch
+import time
+from pathlib import Path
+from typing import Any
+from unittest.mock import Mock, patch
 
+import geopandas as gpd
 import pytest
+from shapely.geometry import Point
 
 from torchgeo.datasets import DatasetNotFoundError, OpenStreetMap
 
@@ -25,11 +31,11 @@ class TestOpenStreetMap:
             OpenStreetMap(bbox=bbox, paths=root, download=False)
 
     @patch('torchgeo.datasets.openstreetmap.OpenStreetMap._download_data')
-    def test_init_with_download(self, mock_download) -> None:
-        root = os.path.join('tests', 'data', 'openstreetmap') 
+    def test_init_with_download(self, mock_download: Mock) -> None:
+        root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
         mock_download.return_value = None
-        
+
         with patch.object(OpenStreetMap, '_check_integrity', return_value=True):
             dataset = OpenStreetMap(bbox=bbox, paths=root, download=True)
             mock_download.assert_called_once()
@@ -39,102 +45,111 @@ class TestOpenStreetMap:
     def test_feature_types(self) -> None:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             # Test different feature types
-            dataset_building = OpenStreetMap(bbox=bbox, paths=root, feature_type='building')
+            dataset_building = OpenStreetMap(
+                bbox=bbox, paths=root, feature_type='building'
+            )
             assert dataset_building.feature_type == 'building'
-            
-            dataset_highway = OpenStreetMap(bbox=bbox, paths=root, feature_type='highway')  
+
+            dataset_highway = OpenStreetMap(
+                bbox=bbox, paths=root, feature_type='highway'
+            )
             assert dataset_highway.feature_type == 'highway'
-            
-            dataset_amenity = OpenStreetMap(bbox=bbox, paths=root, feature_type='amenity')
+
+            dataset_amenity = OpenStreetMap(
+                bbox=bbox, paths=root, feature_type='amenity'
+            )
             assert dataset_amenity.feature_type == 'amenity'
 
     def test_custom_query(self) -> None:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
         custom_query = '[out:json]; way["building"]({{bbox}}); out geom;'
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             dataset = OpenStreetMap(bbox=bbox, paths=root, custom_query=custom_query)
             assert dataset.custom_query == custom_query
 
     def test_build_overpass_query(self) -> None:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             dataset = OpenStreetMap(bbox=bbox, paths=root, feature_type='building')
             query = dataset._build_overpass_query()
             assert 'building' in query
-            assert '48.8565,2.352,48.857,2.3525' in query  # bbox format: south,west,north,east
+            assert (
+                '48.8565,2.352,48.857,2.3525' in query
+            )  # bbox format: south,west,north,east
 
     def test_get_data_filename(self) -> None:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             dataset = OpenStreetMap(bbox=bbox, paths=root, feature_type='building')
             filename = dataset._get_data_filename()
             assert filename.suffix == '.geojson'
             assert 'osm_building' in filename.name
 
     @patch('geopandas.read_file')
-    def test_getitem(self, mock_read_file) -> None:
-        import geopandas as gpd
-        from shapely.geometry import Point
-        
+    def test_getitem(self, mock_read_file: Mock) -> None:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
+
         # Mock empty GeoDataFrame
         mock_gdf = gpd.GeoDataFrame({'geometry': [Point(2.3523, 48.8567)]})
         mock_read_file.return_value = mock_gdf
-        
+
         with patch.object(OpenStreetMap, '_check_integrity', return_value=True):
             dataset = OpenStreetMap(bbox=bbox, paths=root)
             # Use dataset bounds for querying
             sample = dataset[dataset.bounds]
-            
+
             assert 'vector' in sample
             mock_read_file.assert_called()
 
     def test_plot(self) -> None:
-        import geopandas as gpd
-        
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True), \
-             patch('geopandas.read_file') as mock_read_file:
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+            patch('geopandas.read_file') as mock_read_file,
+        ):
             # Test with empty data
             mock_gdf = gpd.GeoDataFrame({'geometry': []})
             mock_read_file.return_value = mock_gdf
-            
+
             dataset = OpenStreetMap(bbox=bbox, paths=root)
             sample = {'vector': mock_gdf}
             fig = dataset.plot(sample)
-            
+
             assert fig is not None
 
     def test_paths_as_iterable(self) -> None:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             # Test paths as iterable (covers line 108)
             dataset = OpenStreetMap(bbox=bbox, paths=[root], feature_type='building')
             assert dataset.root.name == 'openstreetmap'
@@ -142,10 +157,12 @@ class TestOpenStreetMap:
     def test_check_integrity(self) -> None:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
+
         with patch.object(OpenStreetMap, '_download_data'):
             # Test _check_integrity when file doesn't exist
-            dataset = OpenStreetMap.__new__(OpenStreetMap)  # Create instance without __init__
+            dataset = OpenStreetMap.__new__(
+                OpenStreetMap
+            )  # Create instance without __init__
             dataset.bbox = bbox
             dataset.feature_type = 'nonexistent'
             dataset.custom_query = None
@@ -155,10 +172,11 @@ class TestOpenStreetMap:
     def test_custom_query_bbox_replacement(self) -> None:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             # Test custom query with {{bbox}} replacement (covers lines 158-159)
             custom_query = '[out:json]; way["building"]({{bbox}}); out geom;'
             dataset = OpenStreetMap(bbox=bbox, paths=root, custom_query=custom_query)
@@ -169,10 +187,11 @@ class TestOpenStreetMap:
     def test_highway_query_generation(self) -> None:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             # Test highway query generation (covers lines 175-182)
             dataset = OpenStreetMap(bbox=bbox, paths=root, feature_type='highway')
             query = dataset._build_overpass_query()
@@ -182,10 +201,11 @@ class TestOpenStreetMap:
     def test_amenity_query_generation(self) -> None:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             # Test amenity query generation (covers lines 183-192)
             dataset = OpenStreetMap(bbox=bbox, paths=root, feature_type='amenity')
             query = dataset._build_overpass_query()
@@ -193,63 +213,77 @@ class TestOpenStreetMap:
             assert 'way["amenity"]' in query
             assert 'relation["amenity"]' in query
 
-    def test_plot_with_suptitle(self) -> None:
-        import geopandas as gpd
-        
+    def test_generic_feature_type_query(self) -> None:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True), \
-             patch('geopandas.read_file') as mock_read_file:
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
+            # Test generic feature type query generation (covers lines 194-204, specifically line 196)
+            dataset = OpenStreetMap(bbox=bbox, paths=root, feature_type='leisure')
+            query = dataset._build_overpass_query()
+            assert 'node["leisure"]' in query
+            assert 'way["leisure"]' in query
+            assert 'relation["leisure"]' in query
+            assert '48.8565,2.352,48.857,2.3525' in query
+
+    def test_plot_with_suptitle(self) -> None:
+        root = os.path.join('tests', 'data', 'openstreetmap')
+        bbox = (2.3520, 48.8565, 2.3525, 48.8570)
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+            patch('geopandas.read_file') as mock_read_file,
+        ):
             mock_gdf = gpd.GeoDataFrame({'geometry': []})
             mock_read_file.return_value = mock_gdf
-            
+
             dataset = OpenStreetMap(bbox=bbox, paths=root)
             sample = {'vector': mock_gdf}
             fig = dataset.plot(sample, suptitle='Test Title')
-            
+
             assert fig is not None
 
     def test_plot_without_titles(self) -> None:
-        import geopandas as gpd
-        
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True), \
-             patch('geopandas.read_file') as mock_read_file:
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+            patch('geopandas.read_file') as mock_read_file,
+        ):
             mock_gdf = gpd.GeoDataFrame({'geometry': []})
             mock_read_file.return_value = mock_gdf
-            
+
             dataset = OpenStreetMap(bbox=bbox, paths=root)
             sample = {'vector': mock_gdf}
             fig = dataset.plot(sample, show_titles=False)
-            
+
             assert fig is not None
 
     def test_rate_limiting(self) -> None:
         """Test rate limiting functionality."""
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             dataset = OpenStreetMap(bbox=bbox, paths=root, download=False)
-            
+
             # Reset class variable for test
             OpenStreetMap._last_request_time = 0.0
-            
-            import time
+
             start_time = time.time()
             dataset._rate_limit()
             dataset._rate_limit()
             end_time = time.time()
-            
+
             # Should take at least the minimum interval (with small tolerance for timing)
             assert end_time - start_time >= dataset._min_request_interval * 0.9
 
@@ -257,12 +291,13 @@ class TestOpenStreetMap:
         """Test parsing of Overpass API response."""
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             dataset = OpenStreetMap(bbox=bbox, paths=root, download=False)
-            
+
             # Mock OSM API response with different element types
             mock_osm_response = {
                 'elements': [
@@ -271,23 +306,23 @@ class TestOpenStreetMap:
                         'id': 123,
                         'lat': 48.8566,
                         'lon': 2.3523,
-                        'tags': {'amenity': 'restaurant', 'name': 'Test Restaurant'}
+                        'tags': {'amenity': 'restaurant', 'name': 'Test Restaurant'},
                     },
                     {
                         'type': 'way',
                         'id': 456,
                         'geometry': [
                             {'lat': 48.8565, 'lon': 2.3520},
-                            {'lat': 48.8570, 'lon': 2.3525}
+                            {'lat': 48.8570, 'lon': 2.3525},
                         ],
-                        'tags': {'highway': 'primary'}
-                    }
+                        'tags': {'highway': 'primary'},
+                    },
                 ]
             }
-            
+
             # Test parsing response (covers lines 262-278)
             gdf = dataset._parse_overpass_response(mock_osm_response)
-            
+
             assert len(gdf) == 2
             assert 'osm_id' in gdf.columns
             assert 'osm_type' in gdf.columns
@@ -296,19 +331,20 @@ class TestOpenStreetMap:
             assert gdf.iloc[0]['amenity'] == 'restaurant'
 
     def test_parse_overpass_response_empty(self) -> None:
-        """Test parsing empty Overpass API response.""" 
+        """Test parsing empty Overpass API response."""
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             dataset = OpenStreetMap(bbox=bbox, paths=root, download=False)
-            
+
             # Empty response
-            empty_response = {'elements': []}
+            empty_response: dict[str, Any] = {'elements': []}
             gdf = dataset._parse_overpass_response(empty_response)
-            
+
             assert len(gdf) == 0
             assert gdf.crs == 'EPSG:4326'
 
@@ -316,19 +352,16 @@ class TestOpenStreetMap:
         """Test converting OSM node to Point geometry."""
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             dataset = OpenStreetMap(bbox=bbox, paths=root, download=False)
-            
+
             # Test node element (covers lines 292-296)
-            node_element = {
-                'type': 'node',
-                'lat': 48.8566,
-                'lon': 2.3523
-            }
-            
+            node_element = {'type': 'node', 'lat': 48.8566, 'lon': 2.3523}
+
             geom = dataset._element_to_geometry(node_element)
             assert geom is not None
             assert geom.geom_type == 'Point'
@@ -339,21 +372,22 @@ class TestOpenStreetMap:
         """Test converting OSM way to LineString geometry."""
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             dataset = OpenStreetMap(bbox=bbox, paths=root, download=False)
-            
+
             # Test way element → LineString (covers lines 298-306)
             way_element = {
                 'type': 'way',
                 'geometry': [
                     {'lat': 48.8565, 'lon': 2.3520},
-                    {'lat': 48.8570, 'lon': 2.3525}
-                ]
+                    {'lat': 48.8570, 'lon': 2.3525},
+                ],
             }
-            
+
             geom = dataset._element_to_geometry(way_element)
             assert geom is not None
             assert geom.geom_type == 'LineString'
@@ -362,24 +396,25 @@ class TestOpenStreetMap:
         """Test converting OSM way to Polygon geometry."""
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             dataset = OpenStreetMap(bbox=bbox, paths=root, download=False)
-            
+
             # Test way element → Polygon (closed way, covers lines 302-305)
             way_element = {
-                'type': 'way', 
+                'type': 'way',
                 'geometry': [
                     {'lat': 48.8566, 'lon': 2.3522},
                     {'lat': 48.8566, 'lon': 2.3524},
                     {'lat': 48.8568, 'lon': 2.3524},
                     {'lat': 48.8568, 'lon': 2.3522},
-                    {'lat': 48.8566, 'lon': 2.3522}  # Closed polygon
-                ]
+                    {'lat': 48.8566, 'lon': 2.3522},  # Closed polygon
+                ],
             }
-            
+
             geom = dataset._element_to_geometry(way_element)
             assert geom is not None
             assert geom.geom_type == 'Polygon'
@@ -388,42 +423,46 @@ class TestOpenStreetMap:
         """Test handling invalid elements."""
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             dataset = OpenStreetMap(bbox=bbox, paths=root, download=False)
-            
+
             # Test invalid elements (covers line 308 - return None)
-            invalid_elements = [
+            invalid_elements: list[dict[str, Any]] = [
                 {'type': 'node'},  # Missing lat/lon
-                {'type': 'way'},   # Missing geometry
-                {'type': 'unknown'}, # Unknown type
-                {'type': 'way', 'geometry': [{'lat': 48.8565, 'lon': 2.3520}]}  # Single point way
+                {'type': 'way'},  # Missing geometry
+                {'type': 'unknown'},  # Unknown type
+                {
+                    'type': 'way',
+                    'geometry': [{'lat': 48.8565, 'lon': 2.3520}],
+                },  # Single point way
             ]
-            
+
             for element in invalid_elements:
                 geom = dataset._element_to_geometry(element)
                 assert geom is None
 
     def test_getitem_empty_data(self) -> None:
         """Test __getitem__ when no data is found in query area."""
-        import geopandas as gpd
-        
+
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True), \
-             patch('geopandas.read_file') as mock_read_file:
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+            patch('geopandas.read_file') as mock_read_file,
+        ):
             # Mock empty GeoDataFrame
             empty_gdf = gpd.GeoDataFrame({'geometry': []})
             mock_read_file.return_value = empty_gdf
-            
+
             dataset = OpenStreetMap(bbox=bbox, paths=root, download=False)
             sample = dataset[dataset.bounds]
-            
+
             # Should create empty GeoDataFrame (covers line 340)
             assert 'vector' in sample
             assert len(sample['vector']) == 0
@@ -431,151 +470,155 @@ class TestOpenStreetMap:
 
     def test_plot_without_vector_key(self) -> None:
         """Test plot method when sample doesn't have 'vector' key."""
-        import geopandas as gpd
-        from shapely.geometry import Point
-        
+
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True), \
-             patch('geopandas.read_file') as mock_read_file:
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+            patch('geopandas.read_file') as mock_read_file,
+        ):
             # Mock GeoDataFrame with actual data
             mock_gdf = gpd.GeoDataFrame({'geometry': [Point(2.3523, 48.8567)]})
             mock_read_file.return_value = mock_gdf
-            
+
             dataset = OpenStreetMap(bbox=bbox, paths=root)
-            
+
             # Sample without 'vector' key - should read original file (covers line 367)
             sample = {'some_other_key': 'value'}
             fig = dataset.plot(sample)
-            
+
             assert fig is not None
             mock_read_file.assert_called()
 
     def test_plot_with_actual_data(self) -> None:
         """Test plot method with actual geometry data."""
-        import geopandas as gpd
-        from shapely.geometry import Point
-        
+
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        
-        with patch.object(OpenStreetMap, '_download_data'), \
-             patch.object(OpenStreetMap, '_check_integrity', return_value=True):
-            
+
+        with (
+            patch.object(OpenStreetMap, '_download_data'),
+            patch.object(OpenStreetMap, '_check_integrity', return_value=True),
+        ):
             dataset = OpenStreetMap(bbox=bbox, paths=root)
-            
+
             # Sample with actual geometry data (covers line 373)
-            gdf_with_data = gpd.GeoDataFrame({
-                'geometry': [Point(2.3523, 48.8567)],
-                'amenity': ['restaurant']
-            })
+            gdf_with_data = gpd.GeoDataFrame(
+                {'geometry': [Point(2.3523, 48.8567)], 'amenity': ['restaurant']}
+            )
             sample = {'vector': gdf_with_data}
-            
+
             fig = dataset.plot(sample)
             assert fig is not None
-    
-    #TODO: This test downloads data and adds it to test data dir
-    # @patch('torchgeo.datasets.openstreetmap.urlopen')
-    # def test_download_data_success(self, mock_urlopen) -> None:
-    #     """Test successful data download."""
-    #     import json
-    #     from unittest.mock import Mock
-        
-    #     # Create proper mock context manager like in old tests
-    #     mock_response_data = {
-    #         'elements': [
-    #             {
-    #                 'type': 'node',
-    #                 'id': 123,
-    #                 'lat': 48.8566,
-    #                 'lon': 2.3523,
-    #                 'tags': {'amenity': 'restaurant'}
-    #             }
-    #         ]
-    #     }
-        
-    #     mock_response = Mock()
-    #     mock_response.read.return_value = json.dumps(mock_response_data).encode('utf-8')
-    #     mock_context = Mock()
-    #     mock_context.__enter__ = Mock(return_value=mock_response)
-    #     mock_context.__exit__ = Mock(return_value=None)
-    #     mock_urlopen.return_value = mock_context
-        
-    #     # Use unique bbox to avoid cache conflicts
-    #     import time
-    #     unique_offset = time.time() % 1000 / 10000
-    #     bbox = (2.4 + unique_offset, 48.9 + unique_offset, 2.401 + unique_offset, 48.901 + unique_offset)
-    #     root = os.path.join('tests', 'data', 'openstreetmap')
-        
-    #     # Create dataset which should trigger download (covers lines 216-239)
-    #     dataset = OpenStreetMap(bbox=bbox, paths=root, download=True)
-        
-    #     # Should have called download
-    #     assert mock_urlopen.called
-        
-    #     # Check data file was created
-    #     data_file = dataset._get_data_filename()
-    #     assert data_file.exists()
-
-    # @patch('torchgeo.datasets.openstreetmap.urlopen')
-    # def test_download_data_empty_response(self, mock_urlopen) -> None:
-    #     """Test download with empty API response."""
-    #     import json
-    #     from unittest.mock import Mock
-        
-    #     # Mock empty response
-    #     mock_response = Mock()
-    #     mock_response.read.return_value = json.dumps({'elements': []}).encode('utf-8')
-    #     mock_context = Mock()
-    #     mock_context.__enter__ = Mock(return_value=mock_response)
-    #     mock_context.__exit__ = Mock(return_value=None)
-    #     mock_urlopen.return_value = mock_context
-        
-    #     # Use unique bbox
-    #     import time
-    #     unique_offset = time.time() % 1000 / 10000
-    #     bbox = (2.5 + unique_offset, 48.95 + unique_offset, 2.501 + unique_offset, 48.951 + unique_offset)
-    #     root = os.path.join('tests', 'data', 'openstreetmap')
-        
-    #     # Should save empty GeoDataFrame (covers lines 240-242)
-    #     dataset = OpenStreetMap(bbox=bbox, paths=root, download=True)
-        
-    #     data_file = dataset._get_data_filename()
-    #     assert data_file.exists()
-        
-    #     # Verify it's empty
-    #     import geopandas as gpd
-    #     gdf = gpd.read_file(data_file)
-    #     assert len(gdf) == 0
 
     @patch('torchgeo.datasets.openstreetmap.urlopen')
-    def test_download_data_all_endpoints_fail(self, mock_urlopen) -> None:
+    def test_download_data_success(self, mock_urlopen: Mock) -> None:
+        """Test successful data download."""
+
+        # Create proper mock context manager like in old tests
+        mock_response_data = {
+            'elements': [
+                {
+                    'type': 'node',
+                    'id': 123,
+                    'lat': 48.8566,
+                    'lon': 2.3523,
+                    'tags': {'amenity': 'restaurant'},
+                }
+            ]
+        }
+
+        mock_response = Mock()
+        mock_response.read.return_value = json.dumps(mock_response_data).encode('utf-8')
+        mock_context = Mock()
+        mock_context.__enter__ = Mock(return_value=mock_response)
+        mock_context.__exit__ = Mock(return_value=None)
+        mock_urlopen.return_value = mock_context
+
+        # Use unique bbox to avoid cache conflicts
+        unique_offset = time.time() % 1000 / 10000
+        bbox = (
+            2.4 + unique_offset,
+            48.9 + unique_offset,
+            2.401 + unique_offset,
+            48.901 + unique_offset,
+        )
+        root = os.path.join('tests', 'data', 'openstreetmap')
+
+        # Create dataset which should trigger download (covers lines 216-239)
+        dataset = OpenStreetMap(bbox=bbox, paths=root, download=True)
+
+        # Should have called download
+        assert mock_urlopen.called
+
+        # Check data file was created
+        data_file = dataset._get_data_filename()
+        assert data_file.exists()
+        os.remove(data_file)
+
+    @patch('torchgeo.datasets.openstreetmap.urlopen')
+    def test_download_empty_response_creates_empty_file(
+        self, mock_urlopen: Mock, tmp_path: Path
+    ) -> None:
+        """Test download method creates empty file for empty API response (covers line 243)."""
+        # Mock empty API response
+        mock_response_data: dict[str, list[Any]] = {'elements': []}
+        mock_response = Mock()
+        mock_response.read.return_value = json.dumps(mock_response_data).encode('utf-8')
+        mock_context = Mock()
+        mock_context.__enter__ = Mock(return_value=mock_response)
+        mock_context.__exit__ = Mock(return_value=None)
+        mock_urlopen.return_value = mock_context
+
+        # Create dataset instance without triggering full initialization
+        dataset = OpenStreetMap.__new__(OpenStreetMap)
+        dataset.bbox = (2.3520, 48.8565, 2.3525, 48.8570)
+        dataset.feature_type = 'building'
+        dataset.custom_query = None
+        dataset.root = tmp_path
+
+        # Call _download_data directly to test line 243
+        dataset._download_data()
+
+        # Check that empty file was created
+        data_file = dataset._get_data_filename()
+        assert data_file.exists()
+
+        # Verify it's empty but properly formatted
+        gdf = gpd.read_file(data_file)
+        assert len(gdf) == 0
+        assert gdf.crs == 'EPSG:4326'
+
+    @patch('torchgeo.datasets.openstreetmap.urlopen')
+    def test_download_data_all_endpoints_fail(self, mock_urlopen: Mock) -> None:
         """Test download failure when all endpoints fail."""
         # Make all requests fail like in old tests
-        mock_urlopen.side_effect = Exception("Connection failed")
-        
+        mock_urlopen.side_effect = Exception('Connection failed')
+
         # Use unique bbox that doesn't have cached data
-        import time
         unique_offset = time.time() % 1000 / 10000
-        bbox = (2.6 + unique_offset, 48.96 + unique_offset, 2.601 + unique_offset, 48.961 + unique_offset)
+        bbox = (
+            2.6 + unique_offset,
+            48.96 + unique_offset,
+            2.601 + unique_offset,
+            48.961 + unique_offset,
+        )
         root = os.path.join('tests', 'data', 'openstreetmap')
-        
+
         # Should raise RuntimeError when all endpoints fail (covers line 251)
         with patch('torchgeo.datasets.openstreetmap.OpenStreetMap._rate_limit'):
-            with pytest.raises(RuntimeError, match="All Overpass API endpoints failed"):
+            with pytest.raises(RuntimeError, match='All Overpass API endpoints failed'):
                 OpenStreetMap(bbox=bbox, paths=root, download=True)
 
     def test_download_data_file_exists(self) -> None:
         """Test _download_data when file already exists."""
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)  # Use existing test data
-        
+
         # Use existing dataset that has cached data (covers lines 212-213)
         with patch('urllib.request.urlopen') as mock_urlopen:
             dataset = OpenStreetMap(bbox=bbox, paths=root, download=False)
             dataset._download_data()  # Should return early without network calls
             mock_urlopen.assert_not_called()
-
