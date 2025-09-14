@@ -63,7 +63,7 @@ class OpenStreetMap(VectorDataset):
         crs: CRS | None = None,
         res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
-        feature_type: str = 'building',
+        feature_type: str | None = 'building',
         custom_query: str | None = None,
         download: bool = False,
     ) -> None:
@@ -95,7 +95,12 @@ class OpenStreetMap(VectorDataset):
 
         Raises:
             DatasetNotFoundError: if dataset is not found and download is False
+            ValueError: if both feature_type and custom_query are provided
         """
+        # Validate mutual exclusion of feature_type and custom_query
+        if feature_type is not None and custom_query is not None:
+            raise ValueError('Cannot specify both feature_type and custom_query')
+
         self.bbox = bbox
         self.feature_type = feature_type
         self.custom_query = custom_query
@@ -134,7 +139,11 @@ class OpenStreetMap(VectorDataset):
         cache_str = json.dumps(cache_key, sort_keys=True)
         cache_hash = hashlib.md5(cache_str.encode()).hexdigest()[:16]
 
-        return self.root / f'osm_{self.feature_type}_{cache_hash}.geojson'
+        # Use 'custom' as prefix when feature_type is None (using custom_query)
+        filename_prefix = (
+            self.feature_type if self.feature_type is not None else 'custom'
+        )
+        return self.root / f'osm_{filename_prefix}_{cache_hash}.geojson'
 
     def _check_integrity(self) -> bool:
         """Check if the dataset file exists."""
@@ -333,7 +342,7 @@ class OpenStreetMap(VectorDataset):
 
         # If we have vector data, filter it to the query bounds
         if len(gdf) > 0:
-            x, y, t = self._disambiguate_slice(query)
+            x, y, _ = self._disambiguate_slice(query)
 
             # Create a bounding box for filtering
             from shapely.geometry import box

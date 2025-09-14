@@ -75,7 +75,9 @@ class TestOpenStreetMap:
             patch.object(OpenStreetMap, '_download_data'),
             patch.object(OpenStreetMap, '_check_integrity', return_value=True),
         ):
-            dataset = OpenStreetMap(bbox=bbox, paths=root, custom_query=custom_query)
+            dataset = OpenStreetMap(
+                bbox=bbox, paths=root, feature_type=None, custom_query=custom_query
+            )
             assert dataset.custom_query == custom_query
 
     def test_build_overpass_query(self) -> None:
@@ -179,7 +181,9 @@ class TestOpenStreetMap:
         ):
             # Test custom query with {{bbox}} replacement (covers lines 158-159)
             custom_query = '[out:json]; way["building"]({{bbox}}); out geom;'
-            dataset = OpenStreetMap(bbox=bbox, paths=root, custom_query=custom_query)
+            dataset = OpenStreetMap(
+                bbox=bbox, paths=root, feature_type=None, custom_query=custom_query
+            )
             query = dataset._build_overpass_query()
             assert '48.8565,2.352,48.857,2.3525' in query
             assert '{{bbox}}' not in query
@@ -622,3 +626,21 @@ class TestOpenStreetMap:
             dataset = OpenStreetMap(bbox=bbox, paths=root, download=False)
             dataset._download_data()  # Should return early without network calls
             mock_urlopen.assert_not_called()
+
+    def test_mutual_exclusion_feature_type_and_custom_query(self) -> None:
+        """Test that providing both feature_type and custom_query raises ValueError."""
+        root = os.path.join('tests', 'data', 'openstreetmap')
+        bbox = (2.3520, 48.8565, 2.3525, 48.8570)
+        custom_query = '[out:json]; way["building"]({{bbox}}); out geom;'
+
+        # Should raise ValueError when both are provided
+        with pytest.raises(
+            ValueError, match='Cannot specify both feature_type and custom_query'
+        ):
+            OpenStreetMap(
+                bbox=bbox,
+                paths=root,
+                feature_type='highway',
+                custom_query=custom_query,
+                download=False,
+            )

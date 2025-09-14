@@ -97,7 +97,7 @@ empty_geojson = {'type': 'FeatureCollection', 'features': []}
 
 
 def get_osm_filename(
-    feature_type: str,
+    feature_type: str | None,
     bbox: tuple[float, float, float, float] = (2.3520, 48.8565, 2.3525, 48.8570),
     custom_query: str | None = None,
 ) -> str:
@@ -108,7 +108,9 @@ def get_osm_filename(
     }
     cache_str = json.dumps(cache_key, sort_keys=True)
     cache_hash = hashlib.md5(cache_str.encode()).hexdigest()[:16]
-    return f'osm_{feature_type}_{cache_hash}.geojson'
+    # Use 'custom' as prefix when feature_type is None (using custom_query)
+    filename_prefix = feature_type if feature_type is not None else 'custom'
+    return f'osm_{filename_prefix}_{cache_hash}.geojson'
 
 
 # Create the test files with correct OpenStreetMap naming
@@ -124,9 +126,9 @@ with open(get_osm_filename('amenity'), 'w') as f:
 with open(get_osm_filename('leisure'), 'w') as f:
     json.dump(leisure_geojson, f)
 
-# Create file for custom query test
+# Create file for custom query test (feature_type=None)
 custom_query = '[out:json]; way["building"]({{bbox}}); out geom;'
-with open(get_osm_filename('building', custom_query=custom_query), 'w') as f:
+with open(get_osm_filename(None, custom_query=custom_query), 'w') as f:
     json.dump(building_geojson, f)
 
 # Also create old test files for backwards compatibility
