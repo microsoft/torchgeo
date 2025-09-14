@@ -55,7 +55,7 @@ class TestLandCoverAIGeo:
 
     def test_out_of_bounds_query(self, dataset: LandCoverAIGeo) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 

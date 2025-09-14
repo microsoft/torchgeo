@@ -108,7 +108,7 @@ class TestFAIR1M:
             os.makedirs(os.path.dirname(output), exist_ok=True)
             shutil.copy(url, output)
 
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             FAIR1M(root=tmp_path, split=dataset.split, checksum=True)
 
     def test_not_downloaded(self, tmp_path: Path, dataset: FAIR1M) -> None:

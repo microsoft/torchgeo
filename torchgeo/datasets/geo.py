@@ -581,7 +581,7 @@ class RasterDataset(GeoDataset):
         else:
             vrt_fhs = [self._load_warp_file(fp) for fp in filepaths]
 
-        x, y, t = self._disambiguate_slice(query)
+        x, y, _ = self._disambiguate_slice(query)
         bounds = (x.start, y.start, x.stop, y.stop)
         res = (x.step, y.step)
         dest, _ = rasterio.merge.merge(

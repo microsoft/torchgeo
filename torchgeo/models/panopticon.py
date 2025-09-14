@@ -59,7 +59,7 @@ class PanopticonPE(nn.Module):
         chn_ids = x_dict['chn_ids']
         mask = x_dict.get('spec_masks', None)
 
-        x, hp, wp = self.conv3d(x)
+        x, _, _ = self.conv3d(x)
 
         x = self.chnfus(x, chn_ids=chn_ids, mask=mask)  # B,L,D
         x = self.proj(x)
@@ -160,7 +160,7 @@ class ChnAttn(nn.Module):
             Output tensor of shape (B, L, D) independent of the input channel dimension
             C.
         """
-        B, C, L, D = x.shape
+        B, _, L, D = x.shape
 
         # add embeddings
         chn_embs = self.chnemb(chn_ids)  # B,C,D

@@ -106,8 +106,6 @@ class LTAE(nn.Module):
         Returns:
             Output tensor of shape (batch_size, n_neurons[-1])
         """
-        sz_b, seq_len, d = x.shape
-
         x = self.inlayernorm(x)
 
         if self.inconv is not None:

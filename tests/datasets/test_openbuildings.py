@@ -59,7 +59,7 @@ class TestOpenBuildings:
     def test_corrupted(self, dataset: OpenBuildings, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, '000_buildings.csv.gz'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             OpenBuildings(dataset.paths, checksum=True)
 
     def test_nothing_in_index(self, dataset: OpenBuildings, tmp_path: Path) -> None:
@@ -93,7 +93,7 @@ class TestOpenBuildings:
 
     def test_invalid_query(self, dataset: OpenBuildings) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]
 
