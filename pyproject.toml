@@ -114,7 +114,7 @@ datasets = [
     # webdataset 0.2.101+ required for security hardening
     "webdataset>=0.2.101",
     # xarray 0.17+ required by rioxarray
-    "xarray>=0.17",
+    "xarray[io]>=0.17",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx
