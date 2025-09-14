@@ -15,7 +15,6 @@ build:
 python:
   install:
     - requirements: requirements/required.txt
-    - requirements: requirements/models.txt
     - requirements: requirements/docs.txt
     - requirements: docs/requirements.txt
 
