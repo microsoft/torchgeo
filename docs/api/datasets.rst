@@ -176,6 +176,11 @@ Open Buildings
 
 .. autoclass:: OpenBuildings
 
+OpenStreetMap
+^^^^^^^^^^^^^
+
+.. autoclass:: OpenStreetMap
+
 PRISMA
 ^^^^^^
 
