@@ -1,0 +1,1 @@
+{"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"leisure": "park", "osm_id": 45678, "osm_type": "way"}, "geometry": {"type": "Polygon", "coordinates": [[[2.3521, 48.8566], [2.3523, 48.8566], [2.3523, 48.8567], [2.3521, 48.8567], [2.3521, 48.8566]]]}}]}

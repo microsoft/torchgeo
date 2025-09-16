@@ -1,0 +1,1 @@
+{"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"amenity": "restaurant", "osm_id": 34567, "osm_type": "node"}, "geometry": {"type": "Point", "coordinates": [2.3523, 48.8567]}}]}
