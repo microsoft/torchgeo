@@ -45,7 +45,7 @@ class TestINaturalist:
     def test_invalid_query(self, dataset: INaturalist) -> None:
         mint = pd.Timestamp('2022-05-07 11:02:53+01:00')
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[0:0, 0:0, mint:mint]
 

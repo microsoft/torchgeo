@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import itertools
 import math
 import os
 import pickle
@@ -30,6 +31,7 @@ from torchgeo.datasets import (
     Sentinel2,
     UnionDataset,
     VectorDataset,
+    XarrayDataset,
 )
 from torchgeo.datasets.utils import GeoSlice
 
@@ -451,7 +453,7 @@ class TestRasterDataset:
 
     def test_invalid_query(self, sentinel: Sentinel2) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds: .*'
+            IndexError, match=r'query: .* not found in index with bounds: .*'
         ):
             sentinel[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
@@ -482,6 +484,50 @@ class TestRasterDataset:
         ds = RasterDataset(root, res=10.0)
         assert ds.res == (10.0, 10.0)
         ds.res = 20.0
+
+
+class TestXarrayDataset:
+    pytest.importorskip('rioxarray', minversion='0.14.1')
+    pytest.importorskip('xarray', minversion='0.17')
+
+    @pytest.fixture(
+        scope='class',
+        params=itertools.product(['hdf5', 'netcdf'], [None, CRS.from_epsg(4979)]),
+    )
+    def dataset(self, request: SubRequest) -> XarrayDataset:
+        root = os.path.join('tests', 'data', request.param[0])
+        transforms = nn.Identity()
+        match request.param[0]:
+            case 'hdf5':
+                ds = XarrayDataset(root, crs=request.param[1], transforms=transforms)
+            case 'netcdf':
+                with pytest.warns(UserWarning, match='Unable to decode coordinates'):
+                    ds = XarrayDataset(root, crs=request.param[1], res=3)
+
+        return ds
+
+    def test_getitem(self, dataset: XarrayDataset) -> None:
+        x = dataset[dataset.bounds]
+        assert isinstance(x, dict)
+        assert isinstance(x['image'], torch.Tensor)
+
+    def test_and(self, dataset: XarrayDataset) -> None:
+        ds = dataset & dataset
+        assert isinstance(ds, IntersectionDataset)
+
+    def test_or(self, dataset: XarrayDataset) -> None:
+        ds = dataset | dataset
+        assert isinstance(ds, UnionDataset)
+
+    def test_invalid_query(self, dataset: XarrayDataset) -> None:
+        with pytest.raises(
+            IndexError, match=r'query: .* not found in index with bounds:'
+        ):
+            dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
+
+    def test_no_data(self, tmp_path: Path) -> None:
+        with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
+            XarrayDataset(tmp_path)
 
 
 class TestVectorDataset:
@@ -591,7 +637,7 @@ class TestVectorDataset:
 
     def test_invalid_query(self, dataset: CustomVectorDataset) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[3:3, 3:3, pd.Timestamp.min : pd.Timestamp.min]
 
@@ -970,7 +1016,7 @@ class TestIntersectionDataset:
 
     def test_invalid_query(self, dataset: IntersectionDataset) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
 
@@ -1134,6 +1180,6 @@ class TestUnionDataset:
 
     def test_invalid_query(self, dataset: UnionDataset) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]

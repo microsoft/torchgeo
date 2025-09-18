@@ -60,7 +60,7 @@ class TestGlobBiomass:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'N00E020_agb.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             GlobBiomass(tmp_path, checksum=True)
 
     def test_and(self, dataset: GlobBiomass) -> None:
@@ -86,6 +86,6 @@ class TestGlobBiomass:
 
     def test_invalid_query(self, dataset: GlobBiomass) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]

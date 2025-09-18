@@ -52,7 +52,7 @@ class TestEverWatch:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'everwatch-benchmark.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             EverWatch(root=tmp_path, checksum=True)
 
     def test_not_found(self, tmp_path: Path) -> None:

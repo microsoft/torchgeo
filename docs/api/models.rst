@@ -16,6 +16,11 @@ Change Star
 .. autoclass:: ChangeStarFarSeg
 .. autoclass:: ChangeMixin
 
+ConvLSTM
+^^^^^^^^
+
+.. autoclass:: ConvLSTM
+
 Copernicus-FM
 ^^^^^^^^^^^^^
 

@@ -79,7 +79,7 @@ class TestPASTIS:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'PASTIS-R.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             PASTIS(root=tmp_path, checksum=True)
 
     def test_invalid_fold(self) -> None:
