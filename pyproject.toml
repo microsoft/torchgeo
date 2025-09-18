@@ -88,8 +88,8 @@ dynamic = ["version"]
 datasets = [
     # h5py 3.8+ required for Python 3.11 wheels
     "h5py>=3.8",
-    # laspy 2+ required for laspy.read
-    "laspy>=2",
+    # laspy 2.5.3+ required for wheels
+    "laspy>=2.5.3",
     # netcdf4 1.6.1+ required for Python 3.11 wheels
     "netcdf4>=1.6.1",
     # opencv-python 4.6.0.66+ required for ultralytics 8.3+ compatibility

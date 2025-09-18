@@ -297,7 +297,7 @@ class TestBoundingBox:
     def test_split_error(self) -> None:
         bbox = BoundingBox(0, 1, 0, 1, MINT, MAXT)
         with pytest.raises(
-            ValueError, match='Input proportion must be between 0 and 1.'
+            ValueError, match='Input proportion must be between 0 and 1'
         ):
             bbox.split(1.5)
 

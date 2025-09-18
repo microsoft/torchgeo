@@ -92,7 +92,7 @@ class TestSentinel1:
 
     def test_invalid_query(self, dataset: Sentinel1) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[-1:-1, -1:-1, pd.Timestamp.min : pd.Timestamp.min]
 
@@ -143,7 +143,7 @@ class TestSentinel2:
 
     def test_invalid_query(self, dataset: Sentinel2) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 

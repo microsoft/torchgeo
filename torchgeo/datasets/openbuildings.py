@@ -354,7 +354,7 @@ class OpenBuildings(VectorDataset):
             List with all polygons from all hit filepaths
 
         """
-        x, y, t = self._disambiguate_slice(query)
+        x, y, _ = self._disambiguate_slice(query)
 
         # We need to know the bounding box of the query in the source CRS
         (minx, maxx), (miny, maxy) = fiona.transform.transform(

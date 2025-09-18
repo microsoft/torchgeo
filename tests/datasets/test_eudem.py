@@ -56,7 +56,7 @@ class TestEUDEM:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'eu_dem_v11_E30N10.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             EUDEM(tmp_path, checksum=True)
 
     def test_and(self, dataset: EUDEM) -> None:
@@ -82,6 +82,6 @@ class TestEUDEM:
 
     def test_invalid_query(self, dataset: EUDEM) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]

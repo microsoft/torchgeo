@@ -66,7 +66,7 @@ class TestBRIGHTDFC2025:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'dfc25_track2_trainval.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             BRIGHTDFC2025(root=tmp_path, checksum=True)
 
     def test_plot(self, dataset: BRIGHTDFC2025) -> None:

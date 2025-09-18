@@ -72,7 +72,7 @@ class TestXView2:
             os.path.join(tmp_path, 'test_images_labels_targets.tar.gz'), 'w'
         ) as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             XView2(root=tmp_path, checksum=True)
 
     def test_invalid_split(self) -> None:

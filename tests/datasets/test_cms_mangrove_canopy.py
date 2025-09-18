@@ -68,7 +68,7 @@ class TestCMSGlobalMangroveCanopy:
             os.path.join(tmp_path, 'CMS_Global_Map_Mangrove_Canopy_1665.zip'), 'w'
         ) as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             CMSGlobalMangroveCanopy(tmp_path, country='Angola', checksum=True)
 
     def test_invalid_country(self) -> None:

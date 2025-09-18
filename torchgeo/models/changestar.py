@@ -137,7 +137,7 @@ class ChangeStar(Module):
             a dictionary containing bitemporal semantic segmentation logit and binary
             change detection logit/probability
         """
-        b, t, c, h, w = x.shape
+        _, t, _, _, _ = x.shape
         x = rearrange(x, 'b t c h w -> (b t) c h w')
         # feature extraction
         bi_feature = self.dense_feature_extractor(x)
