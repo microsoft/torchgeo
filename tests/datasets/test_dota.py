@@ -13,10 +13,10 @@ import torch.nn as nn
 from _pytest.fixtures import SubRequest
 from pytest import MonkeyPatch
 
-from torchgeo.datasets import DOTA, DatasetNotFoundError
+from torchgeo.datasets import DATA, DatasetNotFoundError
 
 
-class TestDOTA:
+class TestDATA:
     @pytest.fixture(
         params=product(
             ['train', 'val'], ['1.0', '1.5', '2.0'], ['horizontal', 'oriented']
@@ -24,9 +24,9 @@ class TestDOTA:
     )
     def dataset(
         self, monkeypatch: MonkeyPatch, tmp_path: Path, request: SubRequest
-    ) -> DOTA:
+    ) -> DATA:
         url = os.path.join('tests', 'data', 'dota', '{}')
-        monkeypatch.setattr(DOTA, 'url', url)
+        monkeypatch.setattr(DATA, 'url', url)
 
         file_info = {
             'train': {
@@ -90,14 +90,14 @@ class TestDOTA:
                 },
             },
         }
-        monkeypatch.setattr(DOTA, 'file_info', file_info)
+        monkeypatch.setattr(DATA, 'file_info', file_info)
 
         root = tmp_path
         split, version, bbox_orientation = request.param
 
         transforms = nn.Identity()
 
-        return DOTA(
+        return DATA(
             root,
             split,
             version=version,
@@ -107,7 +107,7 @@ class TestDOTA:
             checksum=True,
         )
 
-    def test_getitem(self, dataset: DOTA) -> None:
+    def test_getitem(self, dataset: DATA) -> None:
         for i in range(len(dataset)):
             x = dataset[i]
             assert isinstance(x, dict)
@@ -126,14 +126,14 @@ class TestDOTA:
 
             assert x['labels'].shape[0] == x[bbox_key].shape[0]
 
-    def test_len(self, dataset: DOTA) -> None:
+    def test_len(self, dataset: DATA) -> None:
         if dataset.split == 'train':
             assert len(dataset) == 3
         else:
             assert len(dataset) == 2
 
-    def test_already_downloaded(self, dataset: DOTA) -> None:
-        DOTA(root=dataset.root, download=True)
+    def test_already_downloaded(self, dataset: DATA) -> None:
+        DATA(root=dataset.root, download=True)
 
     def test_not_yet_extracted(self, tmp_path: Path) -> None:
         files = [
@@ -155,19 +155,19 @@ class TestDOTA:
                 os.path.join(str(tmp_path), path),
             )
 
-        DOTA(root=tmp_path)
+        DATA(root=tmp_path)
 
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'dotav1.0_images_train.tar.gz'), 'w') as f:
             f.write('bad')
         with pytest.raises(RuntimeError, match='Archive'):
-            DOTA(root=tmp_path, checksum=True)
+            DATA(root=tmp_path, checksum=True)
 
     def test_not_downloaded(self, tmp_path: Path) -> None:
         with pytest.raises(DatasetNotFoundError, match='Dataset not found'):
-            DOTA(tmp_path)
+            DATA(tmp_path)
 
-    def test_plot(self, dataset: DOTA) -> None:
+    def test_plot(self, dataset: DATA) -> None:
         x = dataset[1]
         dataset.plot(x, suptitle='Test')
         plt.close()

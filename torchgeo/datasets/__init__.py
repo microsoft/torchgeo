@@ -59,7 +59,7 @@ from .dfc2022 import DFC2022
 from .digital_typhoon import DigitalTyphoon
 from .dior import DIOR
 from .dl4gam import DL4GAMAlps
-from .dota import DOTA
+from .dota import DATA
 from .eddmaps import EDDMapS
 from .enmap import EnMAP
 from .enviroatlas import EnviroAtlas
@@ -188,7 +188,7 @@ __all__ = (
     'COWC',
     'DFC2022',
     'DIOR',
-    'DOTA',
+    'DATA',
     'ETCI2021',
     'EUDEM',
     'FAIR1M',

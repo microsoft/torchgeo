@@ -304,9 +304,9 @@ DL4GAM
 ^^^^^^
 .. autoclass:: DL4GAMAlps
 
-DOTA
+DATA
 ^^^^
-.. autoclass:: DOTA
+.. autoclass:: DATA
 
 ETCI2021 Flood Detection
 ^^^^^^^^^^^^^^^^^^^^^^^^

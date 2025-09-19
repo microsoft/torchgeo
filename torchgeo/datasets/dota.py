@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""DOTA dataset."""
+"""DATA dataset."""
 
 import os
 from collections.abc import Callable
@@ -27,10 +27,10 @@ from .utils import (
 )
 
 
-class DOTA(NonGeoDataset):
-    """DOTA dataset.
+class DATA(NonGeoDataset):
+    """DATA dataset.
 
-    `DOTA <https://captain-whu.github.io/DOTA/index.html>`__ is a large-scale object
+    `DATA <https://captain-whu.github.io/DATA/index.html>`__ is a large-scale object
     detection dataset for aerial imagery containing RGB and gray-scale imagery
     from Google Earth, GF-2 and JL-1 satellites as well as additional aerial imagery
     from CycloMedia. There are three versions of the dataset: v1.0, v1.5, and v2.0, where,
@@ -180,7 +180,7 @@ class DOTA(NonGeoDataset):
         download: bool = False,
         checksum: bool = False,
     ) -> None:
-        """Initialize a new DOTA dataset instance.
+        """Initialize a new DATA dataset instance.
 
         Args:
             root: root directory where dataset can be found
@@ -272,7 +272,7 @@ class DOTA(NonGeoDataset):
         return torch.from_numpy(np.array(image).transpose(2, 0, 1)).float()
 
     def _load_annotations(self, path: str) -> tuple[Tensor, Tensor]:
-        """Load DOTA annotations from text file.
+        """Load DATA annotations from text file.
 
         Format:
             x1 y1 x2 y2 x3 y3 x4 y4 class difficult

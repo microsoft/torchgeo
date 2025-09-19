@@ -45,7 +45,7 @@ def create_annotation_file(
 
 
 def create_test_data(root: Path) -> None:
-    """Create DOTA test dataset."""
+    """Create DATA test dataset."""
     splits = ['train', 'val']
     versions = ['1.0', '1.5', '2.0']
 
