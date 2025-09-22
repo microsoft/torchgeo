@@ -52,6 +52,6 @@ def requirements() -> dict[str, Version]:
 
 
 def test_min_requirements(
-    pyproject: dict[str, str], requirements: dict[str, str]
+    pyproject: dict[str, Version], requirements: dict[str, Version]
 ) -> None:
     assert pyproject == requirements
