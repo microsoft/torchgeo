@@ -237,7 +237,7 @@ we can see the script in action:
 # Train and validate a model
 torchgeo fit --config config.yaml
 # Validate-only
-torchgeo validate --config config.yaml
+torchgeo validate --config config.yaml --ckpt_path=...
 # Calculate and report test accuracy
 torchgeo test --config config.yaml --ckpt_path=...
 ```
