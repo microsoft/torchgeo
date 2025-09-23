@@ -40,6 +40,7 @@ name_to_pypi = {
     'DeepForest': 'deepforest',
     'samgeo': 'segment-geospatial',
     'TerraTorch': 'terratorch',
+    'SITS': 'pysits',
     'srai': 'srai',
     'scikit-eo': 'scikeo',
     'geo-bench': 'geobench',
@@ -173,14 +174,14 @@ if __name__ == '__main__':
 
     df = pd.DataFrame(0.0, columns=columns, index=index)
     for name, package in name_to_pypi.items():
-        df.loc[name, 'PyPI/CRAN Last Week':'PyPI/CRAN Last Month'] = pypistats(package)
-        df.loc[name, 'PyPI/CRAN All Time'] = pepytech(package, api_key=args.api_key)
+        df.loc[name, 'PyPI/CRAN Last Week':'PyPI/CRAN Last Month'] += pypistats(package)
+        df.loc[name, 'PyPI/CRAN All Time'] += pepytech(package, api_key=args.api_key)
 
     for name, package in name_to_cran.items():
-        df.loc[name, 'PyPI/CRAN Last Week':'PyPI/CRAN All Time'] = cranlogs(package)
+        df.loc[name, 'PyPI/CRAN Last Week':'PyPI/CRAN All Time'] += cranlogs(package)
 
     for name, package in name_to_conda.items():
-        df.loc[name, 'Conda All Time'] = condaforge(package)
+        df.loc[name, 'Conda All Time'] += condaforge(package)
 
     df['Total All Time'] = df['PyPI/CRAN All Time'] + df['Conda All Time']
 
