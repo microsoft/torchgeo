@@ -41,8 +41,8 @@ dependencies = [
     "fiona>=1.8.22",
     # geopandas 0.12.1+ required for Shapely 2+ support
     "geopandas>=0.12.1",
-    # jsonargparse 4.17+ required for LightningCLI
-    "jsonargparse[signatures]>=4.17",
+    # jsonargparse 4.25+ required for proper LightningCLI YAML parsing
+    "jsonargparse[signatures]>=4.25",
     # kornia 0.7.4+ required for AugmentationSequential support for unknown keys
     "kornia>=0.7.4",
     # lightly 1.4.5+ required for LARS optimizer
