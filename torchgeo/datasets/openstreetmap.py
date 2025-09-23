@@ -131,11 +131,7 @@ class OpenStreetMap(VectorDataset):
     def _get_data_filename(self) -> pathlib.Path:
         """Get the filename for the cached data file."""
         # Create a hash of the query parameters for filename
-        cache_key = {
-            'bbox': self.bbox,
-            'feature_type': self.feature_type,
-            'custom_query': self.custom_query,
-        }
+        cache_key = {'bbox': self.bbox, 'query': self.feature_type or self.custom_query}
         cache_str = json.dumps(cache_key, sort_keys=True)
         cache_hash = hashlib.md5(cache_str.encode()).hexdigest()[:16]
 

@@ -101,11 +101,7 @@ def get_osm_filename(
     bbox: tuple[float, float, float, float] = (2.3520, 48.8565, 2.3525, 48.8570),
     custom_query: str | None = None,
 ) -> str:
-    cache_key = {
-        'bbox': bbox,
-        'feature_type': feature_type,
-        'custom_query': custom_query,
-    }
+    cache_key = {'bbox': bbox, 'query': feature_type or custom_query}
     cache_str = json.dumps(cache_key, sort_keys=True)
     cache_hash = hashlib.md5(cache_str.encode()).hexdigest()[:16]
     # Use 'custom' as prefix when feature_type is None (using custom_query)
