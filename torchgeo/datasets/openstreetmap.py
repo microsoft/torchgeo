@@ -304,7 +304,7 @@ class OpenStreetMap(VectorDataset):
         """
         element_type = element.get('type')
 
-        with contextlib.suppress(Exception):
+        with contextlib.suppress(KeyError, ValueError, TypeError):
             if element_type == 'node':
                 lat = element.get('lat')
                 lon = element.get('lon')
@@ -345,9 +345,7 @@ class OpenStreetMap(VectorDataset):
             x, y, _ = self._disambiguate_slice(query)
 
             # Create a bounding box for filtering
-            from shapely.geometry import box
-
-            query_bounds = box(x.start, y.start, x.stop, y.stop)
+            query_bounds = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
 
             # Filter geometries that intersect with the query bounds
             gdf_filtered = gdf[gdf.geometry.intersects(query_bounds)]
