@@ -9,22 +9,8 @@ import time
 
 import pandas as pd
 import requests
+from common import index, name_to_conda, name_to_cran, name_to_pypi
 
-index = [
-    'TorchGeo',
-    'eo-learn',
-    'Raster Vision',
-    'DeepForest',
-    'samgeo',
-    'TerraTorch',
-    'SITS',
-    'srai',
-    'scikit-eo',
-    'geo-bench',
-    'GeoAI',
-    'OTBTF',
-    'GeoDeep',
-]
 columns = [
     'PyPI/CRAN Last Week',
     'PyPI/CRAN Last Month',
@@ -32,31 +18,6 @@ columns = [
     'Conda All Time',
     'Total All Time',
 ]
-
-name_to_pypi = {
-    'TorchGeo': 'torchgeo',
-    'eo-learn': 'eo-learn',
-    'Raster Vision': 'rastervision',
-    'DeepForest': 'deepforest',
-    'samgeo': 'segment-geospatial',
-    'TerraTorch': 'terratorch',
-    'SITS': 'pysits',
-    'srai': 'srai',
-    'scikit-eo': 'scikeo',
-    'geo-bench': 'geobench',
-    'GeoAI': 'geoai-py',
-    'GeoDeep': 'geodeep',
-}
-name_to_cran = {'SITS': 'sits'}
-name_to_conda = {
-    'TorchGeo': 'torchgeo',
-    'eo-learn': 'eo-learn',
-    'Raster Vision': 'rastervision-core',
-    'DeepForest': 'deepforest',
-    'samgeo': 'segment-geospatial',
-    'SITS': 'r-sits',
-    'GeoAI': 'geoai',
-}
 
 
 def pypistats(package: str) -> tuple[int, int]:
@@ -143,30 +104,6 @@ def condaforge(package: str) -> int:
             return int(match.group(1))
 
 
-def link(package: str) -> str:
-    """Convert a package name into a Sphinx link.
-
-    Args:
-        package: Name of the PyPI library.
-
-    Returns:
-        A link to the documentation.
-    """
-    return f'`{package}`_'
-
-
-def thousands(count: float) -> str:
-    """Add thousands separators to a number.
-
-    Args:
-        count: Number of downloads.
-
-    Returns:
-        A string with thousands separators.
-    """
-    return f'{round(count):,}'
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--api-key', required=True, help='pepy.tech API key')
@@ -185,5 +122,5 @@ if __name__ == '__main__':
 
     df['Total All Time'] = df['PyPI/CRAN All Time'] + df['Conda All Time']
 
-    df.rename(link, inplace=True)
-    df.to_csv('downloads.csv', float_format=thousands, index_label='Library')
+    df.rename('`{}`_'.format, inplace=True)
+    df.to_csv('downloads.csv', float_format='{:,.0f}'.format, index_label='Library')
