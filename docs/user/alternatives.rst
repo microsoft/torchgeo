@@ -11,9 +11,9 @@ When deciding which library is most useful to you, it is worth considering the f
 
 .. note::
 
-   Software is a living, breathing organism and is constantly undergoing change. If any of the above information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
+   Software is a living, breathing organism and is constantly undergoing change. If any of the below information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
 
-   *Last updated: 31 March 2025*
+   *Last updated: 26 September 2025*
 
 Features
 --------
@@ -67,17 +67,13 @@ These are metrics that can be scraped from GitHub.
 
 **Stars**: The number of people who have starred the repository. This is not the best metric for number of users, and instead gives you a better idea about the amount of *hype* surrounding the project.
 
-**Issues**: The total number of open and closed issues. Although it may seem counterintuitive, the more issues, the better. Large projects like PyTorch have tens of thousands of open issues. This does not mean that PyTorch is broken, it means that it is popular and has enough issues to discover corner cases or open feature requests.
+**Issues**: The total number of open issues. Although it may seem counterintuitive, the more issues, the better. Large projects like PyTorch have tens of thousands of open issues. This does not mean that PyTorch is broken, it means that it is popular and has enough issues to discover corner cases or open feature requests.
 
 **PRs**: The total number of open and closed pull requests. This tells you how active development of the project has been. Note that this metric can be artificially inflated by bots like dependabot.
 
 **Releases**: The number of software releases. The frequency of releases varies from project to project. The important thing to look for is multiple releases.
 
 **Commits**: The number of commits on the main development branch. This is another metric for how active development has been. However, this can vary a lot depending on whether PRs are merged with or without squashing first.
-
-**Core SLOCs**: The number of source lines of code in the core library, excluding empty lines and comments. This tells you how large the library is, and how long it would take someone to write something like it themselves. We use `scc <https://github.com/boyter/scc>`_ to compute SLOCs and exclude markup languages from the count.
-
-**Test SLOCs**: The number of source lines of code in the testing suite, excluding empty lines and comments. This tells you how well tested the project is. A good goal to strive for is a similar amount of code for testing as there is in the core library itself.
 
 **Test Coverage**: The percentage of the core library that is hit by unit tests. This is especially important for interpreted languages like Python and R where there is no compiler type checking. 100% test coverage is ideal, but 80% is considered good.
 
@@ -96,7 +92,7 @@ These are download metrics for the project. Note that these numbers can be artif
 
 **PyPI Downloads**: The number of downloads from the Python Packaging Index. PyPI download metrics are computed by `PyPI Stats <https://pypistats.org/>`_ and `PePy <https://www.pepy.tech/>`_.
 
-**CRAN Downloads**: The number of downloads from the Comprehensive R Archive Network. CRAN download metrics are computed by `Meta CRAN <https://cranlogs.r-pkg.org/>`_ and `DataScienceMeta <https://www.datasciencemeta.com/rpackages>`_.
+**CRAN Downloads**: The number of downloads from the Comprehensive R Archive Network. CRAN download metrics are computed by `Meta CRAN <https://cranlogs.r-pkg.org/>`_.
 
 **Conda Downloads**: The number of downloads from Conda Forge. Conda download metrics are computed by `Conda Forge <https://anaconda.org/conda-forge/>`_.
 
