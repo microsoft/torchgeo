@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """LandCover.ai dataset."""
@@ -425,6 +425,6 @@ class LandCoverAI100(LandCoverAI):
     .. versionadded:: 0.7
     """
 
-    url = 'https://huggingface.co/datasets/torchgeo/landcoverai/resolve/5cdf9299bd6c1232506cf79373df01f6e6596b50/landcoverai100.zip'
+    url = 'https://hf.co/datasets/isaaccorley/landcoverai/resolve/5cdf9299bd6c1232506cf79373df01f6e6596b50/landcoverai100.zip'
     filename = 'landcoverai100.zip'
     md5 = '66eb33b5a0cabb631836ce0a4eafb7cd'

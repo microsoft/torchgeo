@@ -16,13 +16,13 @@ If you want to install a development version, you can use a VCS project URL:
 
 .. code-block:: console
 
-   $ pip install git+https://github.com/microsoft/torchgeo.git
+   $ pip install git+https://github.com/torchgeo/torchgeo.git
 
 or a local git checkout:
 
 .. code-block:: console
 
-   $ git clone https://github.com/microsoft/torchgeo.git
+   $ git clone https://github.com/torchgeo/torchgeo.git
    $ cd torchgeo
    $ pip install .
 

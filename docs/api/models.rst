@@ -3,12 +3,23 @@ torchgeo.models
 
 .. module:: torchgeo.models
 
+Aurora
+^^^^^^
+
+.. autofunction:: aurora_swin_unet
+.. autoclass:: Aurora_Weights
+
 Change Star
 ^^^^^^^^^^^
 
 .. autoclass:: ChangeStar
 .. autoclass:: ChangeStarFarSeg
 .. autoclass:: ChangeMixin
+
+ConvLSTM
+^^^^^^^^
+
+.. autoclass:: ConvLSTM
 
 Copernicus-FM
 ^^^^^^^^^^^^^
@@ -65,9 +76,10 @@ L-TAE
 
 .. autoclass:: LTAE
 
-RCF Extractor
-^^^^^^^^^^^^^
+MOSAIKS
+^^^^^^^
 
+.. autoclass:: MOSAIKS
 .. autoclass:: RCF
 
 ResNet
@@ -193,3 +205,14 @@ Sentinel-2
    :header-rows: 1
    :align: center
    :file: weights/sentinel2.csv
+
+
+Atmospheric
+-----------
+
+.. csv-table:: N = Nowcasting, MWF = Medium-Range Weather Forecasting, S2S = Subseasonal to Seasonal, DS = Decadal Scale
+   :widths: 45 10 10 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: weights/atmospheric.csv
+

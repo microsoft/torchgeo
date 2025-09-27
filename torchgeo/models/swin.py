@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Pre-trained Swin v2 Transformer models."""
@@ -42,11 +42,6 @@ _satlas_landsat_transforms = K.AugmentationSequential(
     T._Clamp(p=1, min=0, max=1),
     data_keys=None,
 )
-
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 
 class Swin_V2_T_Weights(WeightsEnum):  # type: ignore[misc]

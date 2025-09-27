@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -52,7 +52,7 @@ class TestPotsdam2D:
             f.write('bad')
         with open(os.path.join(tmp_path, '5_Labels_all.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             Potsdam2D(root=tmp_path, checksum=True)
 
     def test_invalid_split(self) -> None:

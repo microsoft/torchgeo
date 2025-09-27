@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """RESISC45 dataset."""
@@ -93,16 +93,16 @@ class RESISC45(NonGeoClassificationDataset):
     * https://doi.org/10.1109/jproc.2017.2675998
     """
 
-    url = 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/NWPU-RESISC45.zip'
+    url = 'https://hf.co/datasets/isaaccorley/resisc45/resolve/883edc0eee77b2c84225472f10f126e3ed83fa6e/NWPU-RESISC45.zip'
     md5 = '75206b2e16446591afa88e2628744886'
     filename = 'NWPU-RESISC45.zip'
     directory = 'NWPU-RESISC45'
 
     splits = ('train', 'val', 'test')
     split_urls: ClassVar[dict[str, str]] = {
-        'train': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-train.txt',
-        'val': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-val.txt',
-        'test': 'https://hf.co/datasets/torchgeo/resisc45/resolve/a826b44d938a883185f11ebe3d512d38b464312f/resisc45-test.txt',
+        'train': 'https://hf.co/datasets/isaaccorley/resisc45/resolve/883edc0eee77b2c84225472f10f126e3ed83fa6e/resisc45-train.txt',
+        'val': 'https://hf.co/datasets/isaaccorley/resisc45/resolve/883edc0eee77b2c84225472f10f126e3ed83fa6e/resisc45-val.txt',
+        'test': 'https://hf.co/datasets/isaaccorley/resisc45/resolve/883edc0eee77b2c84225472f10f126e3ed83fa6e/resisc45-test.txt',
     }
     split_md5s: ClassVar[dict[str, str]] = {
         'train': 'b5a4c05a37de15e4ca886696a85c403e',

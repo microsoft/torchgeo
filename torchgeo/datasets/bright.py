@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """BRIGHT dataset."""
@@ -65,7 +65,7 @@ class BRIGHTDFC2025(NonGeoDataset):
 
     md5 = '45fd96716e7f5673869b166859a6cb3c'
 
-    url = 'https://huggingface.co/datasets/torchgeo/bright/resolve/d19972f5e682ad684dcde35529a6afad4c719f1b/dfc25_track2_trainval_with_split.zip'
+    url = 'https://hf.co/datasets/isaaccorley/bright/resolve/d19972f5e682ad684dcde35529a6afad4c719f1b/dfc25_track2_trainval_with_split.zip'
 
     data_dir = 'dfc25_track2_trainval'
 

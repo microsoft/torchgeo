@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -297,7 +297,7 @@ class TestBoundingBox:
     def test_split_error(self) -> None:
         bbox = BoundingBox(0, 1, 0, 1, MINT, MAXT)
         with pytest.raises(
-            ValueError, match='Input proportion must be between 0 and 1.'
+            ValueError, match='Input proportion must be between 0 and 1'
         ):
             bbox.split(1.5)
 

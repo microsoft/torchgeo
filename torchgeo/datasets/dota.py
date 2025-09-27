@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """DOTA dataset."""
@@ -77,7 +77,7 @@ class DOTA(NonGeoDataset):
     .. versionadded:: 0.7
     """
 
-    url = 'https://huggingface.co/datasets/torchgeo/dota/resolve/672e63236622f7da6ee37fca44c50ac368b77cab/{}'
+    url = 'https://hf.co/datasets/isaaccorley/dota/resolve/672e63236622f7da6ee37fca44c50ac368b77cab/{}'
 
     file_info: ClassVar[dict[str, dict[str, dict[str, dict[str, str]]]]] = {
         'train': {

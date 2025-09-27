@@ -41,30 +41,37 @@ dependencies = [
     "fiona>=1.8.22",
     # geopandas 0.12.1+ required for Shapely 2+ support
     "geopandas>=0.12.1",
+    # jsonargparse 4.25+ required for proper LightningCLI YAML parsing
+    "jsonargparse[signatures]>=4.25",
     # kornia 0.7.4+ required for AugmentationSequential support for unknown keys
     "kornia>=0.7.4",
     # lightly 1.4.5+ required for LARS optimizer
     # lightly 1.4.26 is incompatible with the version of timm required by smp
-    # https://github.com/microsoft/torchgeo/issues/1824
+    # https://github.com/torchgeo/torchgeo/issues/1824
     "lightly>=1.4.5,!=1.4.26",
     # lightning 2+ required for LightningCLI args + sys.argv support
     # lightning 2.3 contains known bugs related to YAML parsing
     # https://github.com/Lightning-AI/pytorch-lightning/issues/19977
-    "lightning[pytorch-extra]>=2,!=2.3.*,!=2.5.0",
+    # lightning 2.5.0 contains backwards-incompatible import changes
+    # https://github.com/Lightning-AI/pytorch-lightning/issues/20511
+    # lightning 2.5.5 contains known bugs related to checkpoint loading
+    # https://github.com/torchgeo/torchgeo/issues/2995
+    "lightning>=2,!=2.3.*,!=2.5.0,<2.5.5",
     # matplotlib 3.6+ required for Python 3.11 wheels
     "matplotlib>=3.6",
-    # numpy 1.23.2+ required by Python 3.11 wheels
-    "numpy>=1.23.2",
+    # numpy 1.24+ required by rasterio
+    "numpy>=1.24",
     # pandas 1.5+ required for Python 3.11 wheels
     "pandas>=1.5",
     # pillow 9.2+ required for Python 3.11 wheels
     "pillow>=9.2",
     # pyproj 3.4+ required for Python 3.11 wheels
     "pyproj>=3.4",
-    # rasterio 1.3.3+ required for Python 3.11 wheels
+    # rasterio 1.4+ required for rasterio.merge.merge support for positive y-resolution
+    # https://github.com/rasterio/rasterio/issues/3094
     # rasterio 1.4.0-1.4.2 lack support for merging WarpedVRT objects
     # https://github.com/rasterio/rasterio/issues/3196
-    "rasterio>=1.3.3,!=1.4.0,!=1.4.1,!=1.4.2",
+    "rasterio>=1.4.3",
     # segmentation-models-pytorch 0.5+ required for new UnetDecoder API
     "segmentation-models-pytorch>=0.5",
     # shapely 2+ required for shapely.Geometry
@@ -87,8 +94,8 @@ dynamic = ["version"]
 datasets = [
     # h5py 3.8+ required for Python 3.11 wheels
     "h5py>=3.8",
-    # laspy 2+ required for laspy.read
-    "laspy>=2",
+    # laspy 2.5.3+ required for wheels
+    "laspy>=2.5.3",
     # netcdf4 1.6.1+ required for Python 3.11 wheels
     "netcdf4>=1.6.1",
     # opencv-python 4.6.0.66+ required for ultralytics 8.3+ compatibility
@@ -97,14 +104,16 @@ datasets = [
     "pandas[parquet]>=2",
     # pycocotools 2.0.7+ required for Python 3.11 wheels
     "pycocotools>=2.0.7",
+    # rioxarray 0.14.1+ required for rasterio 1.4+ compatibility
+    "rioxarray>=0.14.1",
     # scikit-image 0.20+ required for Python 3.11 wheels
     "scikit-image>=0.20",
     # scipy 1.9.2+ required for Python 3.11 wheels
     "scipy>=1.9.2",
     # webdataset 0.2.4+ required for PyTorch tuple seed support
     "webdataset>=0.2.4",
-    # xarray 0.12.3+ required for pandas 1.3.3 support
-    "xarray>=0.12.3",
+    # xarray 0.17+ required by rioxarray
+    "xarray>=0.17",
 ]
 docs = [
     # ipywidgets 7+ required by nbsphinx
@@ -119,6 +128,8 @@ docs = [
     "sphinx>=4,<6",
 ]
 models = [
+    # microsoft-aurora 1.6+ required for timm 1.0+ support
+    "microsoft-aurora>=1.6",
     # ultralytics 8.3+ fixes loading with weights_only=False
     "ultralytics>=8.3",
 ]
@@ -144,8 +155,10 @@ all = [
 torchgeo = "torchgeo.main:main"
 
 [project.urls]
-Homepage = "https://github.com/microsoft/torchgeo"
+Codecov = "https://app.codecov.io/gh/torchgeo/torchgeo"
 Documentation = "https://torchgeo.readthedocs.io"
+Homepage = "https://github.com/torchgeo/torchgeo"
+Slack = "https://torchgeo.slack.com"
 
 # https://coverage.readthedocs.io/en/latest/config.html
 [tool.coverage.report]
@@ -262,7 +275,7 @@ filterwarnings = [
     # https://github.com/pydantic/pydantic/pull/11377
     "ignore:Failing to pass a value to the 'type_params' parameter of 'typing.*' is deprecated:DeprecationWarning:pydantic",
     # https://github.com/Lightning-AI/pytorch-lightning/pull/20802
-    "ignore::jsonargparse._deprecated.JsonargparseDeprecationWarning:lightning.pytorch.cli",
+    "ignore::DeprecationWarning:jsonargparse.*",
     # https://github.com/geopandas/geopandas/pull/3453
     "ignore:The 'shapely.geos' module is deprecated:DeprecationWarning:geopandas._compat",
 
