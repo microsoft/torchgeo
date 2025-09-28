@@ -5,11 +5,9 @@
 
 import hashlib
 import json
+from typing import Any
 
-# Create minimal test data for OpenStreetMap dataset
-# Small bounding box in Paris with basic feature types
-
-# Building polygon
+# Building polygon with pre-computed label
 building_geojson = {
     'type': 'FeatureCollection',
     'features': [
@@ -19,6 +17,7 @@ building_geojson = {
                 'building': 'residential',
                 'osm_id': 12345,
                 'osm_type': 'way',
+                'label': 1,  # Pre-computed label
             },
             'geometry': {
                 'type': 'Polygon',
@@ -36,106 +35,107 @@ building_geojson = {
     ],
 }
 
-# Highway linestring
-highway_geojson = {
+multi_channel_fixture_geojson = {
     'type': 'FeatureCollection',
     'features': [
+        # Building feature - label 1 (first channel: building)
         {
             'type': 'Feature',
-            'properties': {'highway': 'primary', 'osm_id': 23456, 'osm_type': 'way'},
-            'geometry': {
-                'type': 'LineString',
-                'coordinates': [[2.3520, 48.8565], [2.3525, 48.8570]],
+            'properties': {
+                'building': 'yes',
+                'osm_id': 12345,
+                'osm_type': 'way',
+                'label': 1,
             },
-        }
-    ],
-}
-
-# Amenity point
-amenity_geojson = {
-    'type': 'FeatureCollection',
-    'features': [
+            'geometry': {
+                'type': 'Polygon',
+                'coordinates': [
+                    [
+                        [2.3522, 48.8566],
+                        [2.3524, 48.8566],
+                        [2.3524, 48.8568],
+                        [2.3522, 48.8568],
+                        [2.3522, 48.8566],
+                    ]
+                ],
+            },
+        },
+        # Amenity feature - label 2 (second channel: amenity)
         {
             'type': 'Feature',
             'properties': {
                 'amenity': 'restaurant',
                 'osm_id': 34567,
                 'osm_type': 'node',
+                'label': 2,
             },
             'geometry': {'type': 'Point', 'coordinates': [2.3523, 48.8567]},
-        }
-    ],
-}
-
-# Leisure point for testing generic feature types
-leisure_geojson = {
-    'type': 'FeatureCollection',
-    'features': [
+        },
+        # Highway feature - label 3 (third channel: highway)
         {
             'type': 'Feature',
-            'properties': {'leisure': 'park', 'osm_id': 45678, 'osm_type': 'way'},
-            'geometry': {
-                'type': 'Polygon',
-                'coordinates': [
-                    [
-                        [2.3521, 48.8566],
-                        [2.3523, 48.8566],
-                        [2.3523, 48.8567],
-                        [2.3521, 48.8567],
-                        [2.3521, 48.8566],
-                    ]
-                ],
+            'properties': {
+                'highway': 'primary',
+                'osm_id': 23456,
+                'osm_type': 'way',
+                'label': 3,
             },
-        }
+            'geometry': {
+                'type': 'LineString',
+                'coordinates': [[2.3520, 48.8565], [2.3525, 48.8570]],
+            },
+        },
     ],
 }
 
-# Empty geojson for testing no-data scenario
-empty_geojson = {'type': 'FeatureCollection', 'features': []}
 
-# Calculate expected filenames based on OpenStreetMap's naming scheme
-
-
-def get_osm_filename(
-    feature_type: str | None,
+def get_single_channel_filename(
+    channel_name: str,
     bbox: tuple[float, float, float, float] = (2.3520, 48.8565, 2.3525, 48.8570),
-    custom_query: str | None = None,
 ) -> str:
-    cache_key = {'bbox': bbox, 'query': feature_type or custom_query}
+    """Get filename for single channel (for backward compatibility testing)."""
+    channels = [{'name': channel_name, 'selector': [{channel_name: '*'}]}]
+    return get_channels_filename(channels, bbox)
+
+
+def get_channels_filename(
+    channels: list[dict[str, Any]],
+    bbox: tuple[float, float, float, float] = (2.3520, 48.8565, 2.3525, 48.8570),
+) -> str:
+    cache_key = {'bbox': bbox, 'channels': channels}
     cache_str = json.dumps(cache_key, sort_keys=True)
     cache_hash = hashlib.md5(cache_str.encode()).hexdigest()[:16]
-    # Use 'custom' as prefix when feature_type is None (using custom_query)
-    filename_prefix = feature_type if feature_type is not None else 'custom'
-    return f'osm_{filename_prefix}_{cache_hash}.geojson'
+    return f'osm_features_{cache_hash}.geojson'
 
 
-# Create the test files with correct OpenStreetMap naming
-with open(get_osm_filename('building'), 'w') as f:
+# --- STANDARDIZED FIXTURE DATA ---
+
+# 1. common_test_params fixture - single building channel
+common_test_params_channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
+with open(get_channels_filename(common_test_params_channels), 'w') as f:
     json.dump(building_geojson, f)
 
-with open(get_osm_filename('highway'), 'w') as f:
-    json.dump(highway_geojson, f)
+# 2. multi_channel_params fixture - building, amenity, highway channels
+multi_channel_params_channels = [
+    {'name': 'building', 'selector': [{'building': '*'}]},
+    {'name': 'amenity', 'selector': [{'amenity': '*'}]},
+    {'name': 'highway', 'selector': [{'highway': '*'}]},
+]
 
-with open(get_osm_filename('amenity'), 'w') as f:
-    json.dump(amenity_geojson, f)
 
-with open(get_osm_filename('leisure'), 'w') as f:
-    json.dump(leisure_geojson, f)
+with open(get_channels_filename(multi_channel_params_channels), 'w') as f:
+    json.dump(multi_channel_fixture_geojson, f)
 
-# Create file for custom query test (feature_type=None)
-custom_query = '[out:json]; way["building"]({{bbox}}); out geom;'
-with open(get_osm_filename(None, custom_query=custom_query), 'w') as f:
-    json.dump(building_geojson, f)
+# 4. Custom query test (mixed selectors in single channel)
+mixed_features_channel = [
+    {'name': 'mixed_features', 'selector': [{'building': '*'}, {'leisure': 'park'}]}
+]
+with open(get_channels_filename(mixed_features_channel), 'w') as f:
+    json.dump(multi_channel_fixture_geojson, f)  # Reuse same data
 
-# Also create old test files for backwards compatibility
-with open('osm_building_test.geojson', 'w') as f:
-    json.dump(building_geojson, f)
-
-with open('osm_highway_test.geojson', 'w') as f:
-    json.dump(highway_geojson, f)
-
-with open('osm_amenity_test.geojson', 'w') as f:
-    json.dump(amenity_geojson, f)
-
-with open('osm_empty_test.geojson', 'w') as f:
-    json.dump(empty_geojson, f)
+# 5. Multiple selectors test
+mixed_selector_channel = [
+    {'name': 'mixed', 'selector': [{'building': '*'}, {'leisure': 'park'}]}
+]
+with open(get_channels_filename(mixed_selector_channel), 'w') as f:
+    json.dump(multi_channel_fixture_geojson, f)  # Reuse same data
