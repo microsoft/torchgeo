@@ -58,6 +58,9 @@ if __name__ == '__main__':
         headers['Authorization'] = f'Bearer {args.api_key}'
 
     for name, (owner, repo) in name_to_github.items():
+        if name not in index:
+            continue
+
         url = f'https://api.github.com/repos/{owner}/{repo}'
         response = requests.get(url, headers=headers)
         data = response.json()
