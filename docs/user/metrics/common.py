@@ -1,25 +1,24 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+# Sorted by # contributors, then # forks, etc.
 index = [
     'TorchGeo',
-    'eo-learn',
+    'TerraTorch',
     'Raster Vision',
+    'SITS',
     'DeepForest',
     'samgeo',
-    'TerraTorch',
-    'SITS',
-    'srai',
-    'scikit-eo',
     'geo-bench',
-    'GeoAI',
+    'srai',
     'OTBTF',
+    'GeoAI',
+    'scikit-eo',
     'GeoDeep',
 ]
 
 name_to_pypi = {
     'TorchGeo': 'torchgeo',
-    'eo-learn': 'eo-learn',
     'Raster Vision': 'rastervision',
     'DeepForest': 'deepforest',
     'samgeo': 'segment-geospatial',
@@ -34,7 +33,6 @@ name_to_pypi = {
 name_to_cran = {'SITS': 'sits'}
 name_to_conda = {
     'TorchGeo': 'torchgeo',
-    'eo-learn': 'eo-learn',
     'Raster Vision': 'rastervision-core',
     'DeepForest': 'deepforest',
     'samgeo': 'segment-geospatial',
@@ -80,7 +78,6 @@ name_to_github = {
 }
 name_to_codecov = {
     'TorchGeo': ('gh', 'torchgeo', 'torchgeo'),
-    'eo-learn': ('gh', 'sentinel-hub', 'eo-learn'),
     'SITS': ('gh', 'e-sensing', 'sits'),
     'srai': ('gh', 'kraina-ai', 'srai'),
 }
