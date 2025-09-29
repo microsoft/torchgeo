@@ -1,44 +1,29 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-# Sorted by # contributors, then # forks, etc.
+# Sorted by # contributors, then # forks, etc. (update_github.py)
 index = [
     'TorchGeo',
+    'OTB',
     'TerraTorch',
     'Raster Vision',
     'SITS',
     'DeepForest',
     'samgeo',
+    'spopt',
+    'ML4Floods',
     'geo-bench',
+    'SPy',
     'srai',
     'OTBTF',
+    'Myria3D',
     'GeoAI',
     'scikit-eo',
+    'GeoTessera',
     'GeoDeep',
 ]
 
-name_to_pypi = {
-    'TorchGeo': 'torchgeo',
-    'Raster Vision': 'rastervision',
-    'DeepForest': 'deepforest',
-    'samgeo': 'segment-geospatial',
-    'TerraTorch': 'terratorch',
-    'SITS': 'pysits',
-    'srai': 'srai',
-    'scikit-eo': 'scikeo',
-    'geo-bench': 'geobench',
-    'GeoAI': 'geoai-py',
-    'GeoDeep': 'geodeep',
-}
-name_to_cran = {'SITS': 'sits'}
-name_to_conda = {
-    'TorchGeo': 'torchgeo',
-    'Raster Vision': 'rastervision-core',
-    'DeepForest': 'deepforest',
-    'samgeo': 'segment-geospatial',
-    'SITS': 'r-sits',
-    'GeoAI': 'geoai',
-}
+# Sort by date of first commit (update_timeline.py)
 name_to_github = {
     'SPy': ('spectralpython', 'spectral'),
     'OTB': ('orfeotoolbox', 'OTB'),
@@ -77,7 +62,37 @@ name_to_github = {
     'GeoTessera': ('ucam-eo', 'geotessera'),
 }
 name_to_codecov = {
-    'TorchGeo': ('gh', 'torchgeo', 'torchgeo'),
     'SITS': ('gh', 'e-sensing', 'sits'),
+    'spopt': ('gh', 'pysal', 'spopt'),
+    'TorchGeo': ('gh', 'torchgeo', 'torchgeo'),
     'srai': ('gh', 'kraina-ai', 'srai'),
+}
+name_to_pypi = {
+    'SPy': 'spectral',
+    'SITS': 'pysits',
+    'Raster Vision': 'rastervision',
+    'spopt': 'spopt',
+    'DeepForest': 'deepforest',
+    'ML4Floods': 'ml4floods',
+    'TorchGeo': 'torchgeo',
+    'geo-bench': 'geobench',
+    'Myria3D': 'myria3d',
+    'srai': 'srai',
+    'samgeo': 'segment-geospatial',
+    'GeoAI': 'geoai-py',
+    'scikit-eo': 'scikeo',
+    'TerraTorch': 'terratorch',
+    'GeoDeep': 'geodeep',
+    'GeoTessera': 'geotessera',
+}
+name_to_cran = {'SITS': 'sits'}
+name_to_conda = {
+    'SPy': 'spectral',
+    'SITS': 'r-sits',
+    'Raster Vision': 'rastervision-core',
+    'spopt': 'spopt',
+    'DeepForest': 'deepforest',
+    'TorchGeo': 'torchgeo',
+    'samgeo': 'segment-geospatial',
+    'GeoAI': 'geoai',
 }

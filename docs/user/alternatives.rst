@@ -13,7 +13,7 @@ When deciding which library is most useful to you, it is worth considering the f
 
    Software is a living, breathing organism and is constantly undergoing change. If any of the below information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
 
-   *Last updated: 26 September 2025*
+   *Last updated: 29 September 2025*
 
 Features
 --------
@@ -102,16 +102,21 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _RoboSat: https://github.com/mapbox/robosat
 .. _Solaris: https://github.com/CosmiQ/solaris
 
-.. _TorchGeo: https://github.com/torchgeo/torchgeo
-.. _eo-learn: https://github.com/sentinel-hub/eo-learn
-.. _Raster Vision: https://github.com/azavea/raster-vision
-.. _DeepForest: https://github.com/weecology/DeepForest
-.. _samgeo: https://github.com/opengeos/segment-geospatial
-.. _TerraTorch: https://github.com/IBM/terratorch
+.. _SPy: https://github.com/spectralpython/spectral
+.. _OTB: https://github.com/orfeotoolbox/OTB
 .. _SITS: https://github.com/e-sensing/sits
-.. _srai: https://github.com/kraina-ai/srai
-.. _scikit-eo: https://github.com/yotarazona/scikit-eo
-.. _geo-bench: https://github.com/ServiceNow/geo-bench
-.. _GeoAI: https://github.com/opengeos/geoai
+.. _Raster Vision: https://github.com/azavea/raster-vision
 .. _OTBTF: https://github.com/remicres/otbtf
+.. _spopt: https://github.com/pysal/spopt
+.. _DeepForest: https://github.com/weecology/DeepForest
+.. _ML4Floods: https://github.com/spaceml-org/ml4floods
+.. _TorchGeo: https://github.com/torchgeo/torchgeo
+.. _geo-bench: https://github.com/ServiceNow/geo-bench
+.. _Myria3D: https://github.com/IGNF/myria3d
+.. _srai: https://github.com/kraina-ai/srai
+.. _samgeo: https://github.com/opengeos/segment-geospatial
+.. _GeoAI: https://github.com/opengeos/geoai
+.. _scikit-eo: https://github.com/yotarazona/scikit-eo
+.. _TerraTorch: https://github.com/IBM/terratorch
+.. _GeoTessera: https://github.com/ucam-eo/geotessera
 .. _GeoDeep: https://github.com/uav4geo/GeoDeep
