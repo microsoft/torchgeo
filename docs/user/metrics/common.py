@@ -61,11 +61,31 @@ name_to_github = {
     'GeoDeep': ('uav4geo', 'GeoDeep'),
     'GeoTessera': ('ucam-eo', 'geotessera'),
 }
+# TODO: remove these as license detection is fixed
+hardcoded_licenses = {'scikit-eo': 'Apache-2.0'}
 name_to_codecov = {
     'SITS': ('gh', 'e-sensing', 'sits'),
     'spopt': ('gh', 'pysal', 'spopt'),
     'TorchGeo': ('gh', 'torchgeo', 'torchgeo'),
     'srai': ('gh', 'kraina-ai', 'srai'),
+}
+# TODO: remove these as coverage statistics are reported
+# Manually computed using `pytest --cov=<src>` or `coverage run`
+harcoded_coverage = {
+    'OTB': 56,
+    'TerraTorch': 55,
+    'Raster Vision': 90,
+    'DeepForest': 86,
+    'samgeo': 22,
+    'ML4Floods': 0,
+    'geo-bench': 51,
+    'SPy': 69,
+    'OTBTF': 55,
+    'Myria3D': 0,
+    'GeoAI': 0,
+    'scikit-eo': 37,
+    'GeoTessera': 0,
+    'GeoDeep': 0,
 }
 name_to_pypi = {
     'SPy': 'spectral',

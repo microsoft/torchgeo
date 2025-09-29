@@ -8,7 +8,13 @@ import re
 
 import pandas as pd
 import requests
-from common import index, name_to_codecov, name_to_github
+from common import (
+    harcoded_coverage,
+    hardcoded_licenses,
+    index,
+    name_to_codecov,
+    name_to_github,
+)
 from requests import Response
 
 columns = [
@@ -90,6 +96,9 @@ if __name__ == '__main__':
         response = requests.get(url, params=params, headers=headers)
         df.loc[name, 'Releases'] = page_count(response)
 
+    for name, license in hardcoded_licenses.items():
+        df.loc[name, 'License'] = license
+
     # Codecov
     headers = {'accept': 'application/json'}
     for name, (service, owner, repo) in name_to_codecov.items():
@@ -98,6 +107,9 @@ if __name__ == '__main__':
         )
         response = requests.get(url, headers=headers)
         df.loc[name, 'Test Coverage'] = response.json()[0]['coverage'] / 100
+
+    for name, coverage in harcoded_coverage.items():
+        df.loc[name, 'Test Coverage'] = coverage / 100
 
     df.sort_values(by=['Contributors', 'Forks'], ascending=False, inplace=True)
     df.rename('`{}`_'.format, inplace=True)
