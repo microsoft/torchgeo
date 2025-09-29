@@ -38,17 +38,18 @@ class OpenStreetMap(VectorDataset):
     to query and download OSM data for a specified geographic bounding box
     at initialization, then allows spatial querying of the cached data.
 
-    Dataset features:
+    Dataset features
+    ----------------
 
     * Vector data (points, lines, polygons) for various geographic features
     * Flexible querying by channel configuration (buildings, highways, amenities, etc.)
     * Data fetched once at initialization and cached locally
-    * Standard GeoDataset spatial indexing and CRS support
     * Channel-based labeling with priority-based assignment
 
-    **Channel Priority and Label Assignment:**
-
-    Features are assigned labels based on the order of channels in the channels list:
+    Channel priority and label assignment
+    -------------------------------------
+    `channels` is a list of dicts defining feature classes. Each has `name` (str) and `selector` (list of OSM tag filters).
+    Features are assigned labels based on the order of channels in this list:
 
     - First channel gets label=1, second gets label=2, etc.
     - If a feature matches multiple channels, it receives the label of the first matching channel
@@ -65,7 +66,7 @@ class OpenStreetMap(VectorDataset):
         # A feature with tags {'building': 'yes', 'landuse': 'commercial'}
         # would get label=1 (buildings) because buildings comes first
 
-    If you use this dataset in your research, please cite the following:
+    If you use this dataset in your research, please cite the following source:
 
     * https://www.openstreetmap.org/copyright
 
@@ -95,18 +96,8 @@ class OpenStreetMap(VectorDataset):
 
         Args:
             bbox: bounding box for initial data fetch as (minx, miny, maxx, maxy) in EPSG:4326
-            channels: list of channel configurations for multi-class feature extraction.
-                Each channel should have 'name' and 'selector' keys:
-                - name: string identifier for the channel (becomes class name)
-                - selector: list of tag conditions for feature selection
-
-                **Label Assignment**: Features are assigned labels based on channel order.
-                First channel gets label=1, second gets label=2, etc. If a feature
-                matches multiple channels, it gets the label of the first matching channel.
-
-                Example: [{'name': 'buildings', 'selector': [{'building': '*'}]},
-                         {'name': 'roads', 'selector': [{'highway': ['primary', 'secondary']}]}]
-                A feature with both 'building=yes' and 'highway=primary' would get label=1 (buildings).
+            channels: list of dicts defining feature classes. Each has `name` (str) and `selector` (list of OSM tag filters).
+                Features get labels 1-N based on channel order, with first match taking priority.
             paths: root directory where dataset will be stored
             res: resolution of the dataset in units of EPSG:4326 (degrees)
             transforms: a function/transform that takes input sample and returns
@@ -542,7 +533,7 @@ class OpenStreetMap(VectorDataset):
         """Plot a sample from the dataset.
 
         Args:
-            sample: a sample returned by :meth:`__getitem__`
+            sample: a sample returned by :meth:`VectorDataset.__getitem__`
             show_titles: flag indicating whether to show titles above each panel
             suptitle: optional string to use as a suptitle
 
