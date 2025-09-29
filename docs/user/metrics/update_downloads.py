@@ -31,9 +31,22 @@ def pypistats(package: str) -> tuple[int, int]:
     Returns:
         Tuple of total number of downloads in the last (week, month).
     """
-    response = requests.get(f'https://pypistats.org/api/packages/{package}/recent')
-    data = response.json()['data']
-    return data['last_week'], data['last_month']
+    url = f'https://pypistats.org/api/packages/{package}/recent'
+    while True:
+        response = requests.get(url)
+        match response.status_code:
+            case 200:
+                # Success
+                data = response.json()['data']
+                return data['last_week'], data['last_month']
+            case 429:
+                # Rate Limit Exceeded
+                time.sleep(10)
+            case _:
+                # Other
+                print(response.status_code)
+                print(response.text)
+                raise
 
 
 def pepytech(package: str, api_key: str) -> int:
@@ -48,15 +61,23 @@ def pepytech(package: str, api_key: str) -> int:
     Returns:
         Total number of downloads.
     """
-    # API limit is 10 requests per minute
-    time.sleep(6)
-
+    url = f'https://api.pepy.tech/api/v2/projects/{package}'
     headers = {'X-API-Key': api_key}
-    response = requests.get(
-        f'https://api.pepy.tech/api/v2/projects/{package}', headers=headers
-    )
-    data = response.json()
-    return data['total_downloads']
+    while True:
+        response = requests.get(url, headers=headers)
+        match response.status_code:
+            case 200:
+                # Success
+                data = response.json()
+                return data['total_downloads']
+            case 429:
+                # Rate Limit Exceeded
+                time.sleep(10)
+            case _:
+                # Other
+                print(response.status_code)
+                print(response.text)
+                raise
 
 
 def cranlogs(package: str) -> tuple[int, int, int]:
@@ -70,20 +91,20 @@ def cranlogs(package: str) -> tuple[int, int, int]:
     Returns:
         Tuple of total number of downloads in the (last-week, last-month, grand-total).
     """
-    response1 = requests.get(
-        f'https://cranlogs.r-pkg.org/downloads/total/last-week/{package}'
-    )
-    data1 = response1.json()[0]
-    response2 = requests.get(
-        f'https://cranlogs.r-pkg.org/downloads/total/last-month/{package}'
-    )
-    data2 = response2.json()[0]
+    url = f'https://cranlogs.r-pkg.org/downloads/total/last-week/{package}'
+    response = requests.get(url)
+    week = response.json()[0]['downloads']
+
+    url = f'https://cranlogs.r-pkg.org/downloads/total/last-month/{package}'
+    response = requests.get(url)
+    month = response.json()[0]['downloads']
+
     # https://github.com/r-hub/cranlogs.app/issues/49
-    response3 = requests.get(
-        f'https://cranlogs.r-pkg.org/downloads/total/1970-01-01:2100-01-01/{package}'
-    )
-    data3 = response3.json()[0]
-    return data1['downloads'], data2['downloads'], data3['downloads']
+    url = f'https://cranlogs.r-pkg.org/downloads/total/1970-01-01:2100-01-01/{package}'
+    response = requests.get(url)
+    total = response.json()[0]['downloads']
+
+    return week, month, total
 
 
 def condaforge(package: str) -> int:
@@ -98,10 +119,16 @@ def condaforge(package: str) -> int:
     # TODO: should really be using one of the following instead:
     # https://github.com/conda-incubator/condastats
     # https://github.com/anaconda/anaconda-package-data
-    response = requests.get(f'https://anaconda.org/conda-forge/{package}')
+    url = f'https://anaconda.org/conda-forge/{package}'
+    pattern = r'<span>(\d+)</span> total downloads'
+    response = requests.get(url)
     for line in response.iter_lines():
-        if match := re.search(r'<span>(\d+)</span> total downloads', str(line)):
+        if match := re.search(pattern, str(line)):
             return int(match.group(1))
+    else:
+        print(response.status_code)
+        print(response.text)
+        raise
 
 
 if __name__ == '__main__':
@@ -110,14 +137,21 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     df = pd.DataFrame(0.0, columns=columns, index=index)
+
+    print('\nPyPI')
     for name, package in name_to_pypi.items():
+        print(f'* {package}')
         df.loc[name, 'PyPI/CRAN Last Week':'PyPI/CRAN Last Month'] += pypistats(package)
         df.loc[name, 'PyPI/CRAN All Time'] += pepytech(package, api_key=args.api_key)
 
+    print('\nCRAN')
     for name, package in name_to_cran.items():
+        print(f'* {package}')
         df.loc[name, 'PyPI/CRAN Last Week':'PyPI/CRAN All Time'] += cranlogs(package)
 
+    print('\nConda')
     for name, package in name_to_conda.items():
+        print(f'* {package}')
         df.loc[name, 'Conda All Time'] += condaforge(package)
 
     df['Total All Time'] = df['PyPI/CRAN All Time'] + df['Conda All Time']
