@@ -62,8 +62,6 @@ name_to_github = {
     'GeoDeep': ('uav4geo', 'GeoDeep'),
     'GeoTessera': ('ucam-eo', 'geotessera'),
 }
-# TODO: remove these as license detection is fixed
-hardcoded_licenses = {'scikit-eo': 'Apache-2.0'}
 name_to_codecov = {
     'SITS': ('gh', 'e-sensing', 'sits'),
     'spopt': ('gh', 'pysal', 'spopt'),
@@ -72,7 +70,7 @@ name_to_codecov = {
 }
 # TODO: remove these as coverage statistics are reported
 # Manually computed using `pytest --cov=<src>` or `coverage run`
-harcoded_coverage = {
+hardcoded_coverage = {
     'OTB': 56,
     'TerraTorch': 55,
     'Raster Vision': 90,
