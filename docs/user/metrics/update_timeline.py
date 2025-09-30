@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
     # Legend
     handles = [Patch(facecolor='black'), Patch(facecolor='red')]
-    labels = ['Active', 'Abandoned']
+    labels = ['Active', 'Inactive']
     ax.legend(handles, labels)
 
     fig.tight_layout()
