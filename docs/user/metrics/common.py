@@ -28,6 +28,7 @@ name_to_github = {
     'SPy': ('spectralpython', 'spectral'),
     'OTB': ('orfeotoolbox', 'OTB'),
     'DeepOSM': ('trailbehind', 'DeepOSM'),
+    'Hyperspectral': ('KGPML', 'Hyperspectral'),
     'DeepNetsForEO': ('nshaud', 'DeepNetsForEO'),
     'SITS': ('e-sensing', 'sits'),
     'Raster Vision': ('azavea', 'raster-vision'),
