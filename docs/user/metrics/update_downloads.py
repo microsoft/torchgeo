@@ -156,5 +156,7 @@ if __name__ == '__main__':
 
     df['Total All Time'] = df['PyPI/CRAN All Time'] + df['Conda All Time']
 
+    print(df)
+
     df.rename('`{}`_'.format, inplace=True)
     df.to_csv('downloads.csv', float_format='{:,.0f}'.format, index_label='Library')

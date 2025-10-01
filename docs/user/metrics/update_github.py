@@ -103,6 +103,9 @@ if __name__ == '__main__':
         df.loc[name, 'Test Coverage'] = coverage / 100
 
     df.sort_values(by=['Contributors', 'Forks'], ascending=False, inplace=True)
+
+    print(df)
+
     df.rename('`{}`_'.format, inplace=True)
     df['Test Coverage'] = df['Test Coverage'].map('{:.0%}'.format)
     df.loc[df['Test Coverage'] == 'nan%', 'Test Coverage'] = ''
