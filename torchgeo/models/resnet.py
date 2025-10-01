@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Pre-trained ResNet models."""
@@ -177,17 +177,12 @@ _gassl_transforms = K.AugmentationSequential(
     data_keys=None,
 )
 
-# https://github.com/microsoft/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43
+# https://github.com/torchgeo/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43
 _ssl4eo_l_transforms = K.AugmentationSequential(
     K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
     K.CenterCrop((224, 224)),
     data_keys=None,
 )
-
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 
 class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
@@ -207,7 +202,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'resnet18',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_tm_toa_bands,
         },
@@ -221,7 +216,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'resnet18',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_tm_toa_bands,
         },
@@ -235,7 +230,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 9,
             'model': 'resnet18',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_etm_toa_bands,
         },
@@ -249,7 +244,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 9,
             'model': 'resnet18',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_etm_toa_bands,
         },
@@ -263,7 +258,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 6,
             'model': 'resnet18',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_etm_sr_bands,
         },
@@ -277,7 +272,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 6,
             'model': 'resnet18',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_etm_sr_bands,
         },
@@ -291,7 +286,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 11,
             'model': 'resnet18',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_oli_tirs_toa_bands,
         },
@@ -305,7 +300,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 11,
             'model': 'resnet18',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_oli_tirs_toa_bands,
         },
@@ -319,7 +314,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'resnet18',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_oli_sr_bands,
         },
@@ -333,7 +328,7 @@ class ResNet18_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'resnet18',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_oli_sr_bands,
         },
@@ -412,7 +407,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_tm_toa_bands,
         },
@@ -426,7 +421,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_tm_toa_bands,
         },
@@ -440,7 +435,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 9,
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_etm_toa_bands,
         },
@@ -454,7 +449,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 9,
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_etm_toa_bands,
         },
@@ -468,7 +463,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 6,
             'model': 'resnet18',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_etm_sr_bands,
         },
@@ -482,7 +477,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 6,
             'model': 'resnet18',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_etm_sr_bands,
         },
@@ -496,7 +491,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 11,
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_oli_tirs_toa_bands,
         },
@@ -510,7 +505,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 11,
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_oli_tirs_toa_bands,
         },
@@ -524,7 +519,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'moco',
             'bands': _landsat_oli_sr_bands,
         },
@@ -538,7 +533,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
             'in_chans': 7,
             'model': 'resnet50',
             'publication': 'https://arxiv.org/abs/2306.09424',
-            'repo': 'https://github.com/microsoft/torchgeo',
+            'repo': 'https://github.com/torchgeo/torchgeo',
             'ssl_method': 'simclr',
             'bands': _landsat_oli_sr_bands,
         },

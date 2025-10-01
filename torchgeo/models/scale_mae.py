@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Pre-trained Scale-MAE models."""
@@ -185,12 +185,6 @@ def interpolate_pos_embed(
     return state_dict
 
 
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
-
-
 class ScaleMAELarge16_Weights(WeightsEnum):  # type: ignore[misc]
     """Scale-MAE Large patch size 16 weights.
 
@@ -198,7 +192,7 @@ class ScaleMAELarge16_Weights(WeightsEnum):  # type: ignore[misc]
     """
 
     FMOW_RGB = Weights(
-        url='https://hf.co/torchgeo/vit_large_patch16_224_fmow_rgb_scalemae/resolve/9dc7f569424baeb780698352cf6e87638c882123/vit_large_patch16_224_fmow_rgb_scalemae-98ed9821.pth',
+        url='https://hf.co/isaaccorley/vit_large_patch16_224_fmow_rgb_scalemae/resolve/9dc7f569424baeb780698352cf6e87638c882123/vit_large_patch16_224_fmow_rgb_scalemae-98ed9821.pth',
         transforms=_scale_mae_transforms,
         meta={
             'dataset': 'fMoW',

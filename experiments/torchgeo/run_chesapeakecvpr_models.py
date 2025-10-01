@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """script for testing saved models on different ChesapeakeCVPR dataset splits."""
@@ -11,7 +11,7 @@ import os
 from lightning.pytorch import Trainer
 
 from torchgeo.datamodules import ChesapeakeCVPRDataModule
-from torchgeo.trainers.chesapeake import SemanticSegmentationTask
+from torchgeo.trainers import SemanticSegmentationTask
 
 ALL_TEST_SPLITS = [['de-val'], ['pa-test'], ['ny-test'], ['pa-test', 'ny-test']]
 

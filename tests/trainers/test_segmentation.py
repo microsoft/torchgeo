@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -65,6 +65,7 @@ class TestSemanticSegmentationTask:
             'loveda',
             'mmflood',
             'naipchesapeake',
+            'pastis',
             'potsdam2d',
             'sen12ms_all',
             'sen12ms_s1',

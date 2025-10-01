@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """PASTIS dataset."""
@@ -221,7 +221,7 @@ class PASTIS(NonGeoDataset):
         path = self.files[index][self.bands]
         array = np.load(path)
 
-        tensor = torch.from_numpy(array)
+        tensor = torch.from_numpy(array).float()
         return tensor
 
     def _load_semantic_targets(self, index: int) -> Tensor:

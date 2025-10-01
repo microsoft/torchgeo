@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 import os
@@ -22,6 +22,7 @@ from torchgeo.datasets.utils import (
     disambiguate_timestamp,
     lazy_import,
     merge_samples,
+    pad_across_batches,
     percentile_normalization,
     stack_samples,
     unbind_samples,
@@ -297,7 +298,7 @@ class TestBoundingBox:
     def test_split_error(self) -> None:
         bbox = BoundingBox(0, 1, 0, 1, MINT, MAXT)
         with pytest.raises(
-            ValueError, match='Input proportion must be between 0 and 1.'
+            ValueError, match='Input proportion must be between 0 and 1'
         ):
             bbox.split(1.5)
 
@@ -537,3 +538,35 @@ def test_azcopy(tmp_path: Path, azcopy: Executable) -> None:
 def test_which() -> None:
     with pytest.raises(DependencyNotFoundError, match='foo is not installed'):
         which('foo')
+
+
+def test_pad_across_batches() -> None:
+    batch = [
+        {'image': torch.ones(2, 10, 5, 5), 'mask': torch.zeros(5, 5)},
+        {'image': torch.ones(3, 10, 5, 5), 'mask': torch.zeros(5, 5)},
+    ]
+
+    out = pad_across_batches(batch, padding_value=0.0, padding_length=3)
+    assert out['image'].shape[1] == 3
+    assert out['mask'].shape[0] == len(batch)
+
+    out = pad_across_batches(batch, padding_value=0.0, padding_length=1)
+    assert out['image'].shape[1] == 1
+    assert out['mask'].shape[0] == len(batch)
+
+    batch = [
+        {
+            'image': torch.ones(3, 5, 5),
+            'bbox_xyxy': torch.ones(2, 4),
+            'label': torch.ones(2),
+        },
+        {
+            'image': torch.ones(2, 5, 5),
+            'bbox_xyxy': torch.ones(2, 4),
+            'label': torch.ones(2),
+        },
+    ]
+    out = pad_across_batches(batch, padding_value=0.0, padding_length=5)
+    assert out['image'].shape[1] == 5
+    assert out['bbox_xyxy'].shape[0] == len(batch)
+    assert out['label'].shape[0] == len(batch)

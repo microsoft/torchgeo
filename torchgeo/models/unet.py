@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """Pre-trained U-Net models."""
@@ -13,7 +13,7 @@ from torchvision.models._api import Weights, WeightsEnum
 
 # Specified in https://github.com/fieldsoftheworld/ftw-baselines
 # First 4 S2 bands are for image t1 and last 4 bands are for image t2
-_ftw_sentinel2_bands = ['B4', 'B3', 'B2', 'B8A', 'B4', 'B3', 'B2', 'B8A']
+_ftw_sentinel2_bands = ['B4', 'B3', 'B2', 'B8', 'B4', 'B3', 'B2', 'B8']
 
 # https://github.com/fieldsoftheworld/ftw-baselines/blob/main/src/ftw/datamodules.py
 # Normalization by 3k (for S2 uint16 input)
@@ -24,10 +24,6 @@ _ftw_transforms = K.AugmentationSequential(
 # No normalization used see: https://github.com/Restor-Foundation/tcd/blob/main/src/tcd_pipeline/data/datamodule.py#L145
 _tcd_bands = ['R', 'G', 'B']
 _tcd_transforms = K.AugmentationSequential(K.Resize(size=(1024, 1024)), data_keys=None)
-# https://github.com/pytorch/vision/pull/6883
-# https://github.com/pytorch/vision/pull/7107
-# Can be removed once torchvision>=0.15 is required
-Weights.__deepcopy__ = lambda *args, **kwargs: args[0]
 
 
 class Unet_Weights(WeightsEnum):  # type: ignore[misc]
@@ -100,7 +96,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
     OAM_RGB_RESNET50_TCD = Weights(
-        url='https://hf.co/torchgeo/unet_resnet50_oam_rgb_tcd/resolve/main/unet_resnet50_oam_rgb_tcd-72b9b753.pth',
+        url='https://hf.co/isaaccorley/unet_resnet50_oam_rgb_tcd/resolve/5df2fe5a0e80fd6e12939686b7370c53f73bf389/unet_resnet50_oam_rgb_tcd-72b9b753.pth',
         transforms=_tcd_transforms,
         meta={
             'dataset': 'OAM-TCD',
@@ -118,7 +114,7 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
     OAM_RGB_RESNET34_TCD = Weights(
-        url='https://hf.co/torchgeo/unet_resnet34_oam_rgb_tcd/resolve/main/unet_resnet34_oam_rgb_tcd-72b9b753.pth',
+        url='https://hf.co/isaaccorley/unet_resnet34_oam_rgb_tcd/resolve/40c914bbcbe43a6a87c81adb0a22ff2d4a53204d/unet_resnet34_oam_rgb_tcd-72b9b753.pth',
         transforms=_tcd_transforms,
         meta={
             'dataset': 'OAM-TCD',

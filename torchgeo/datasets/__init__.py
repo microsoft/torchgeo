@@ -1,4 +1,4 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
+# Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
 """TorchGeo datasets."""
@@ -84,6 +84,7 @@ from .geo import (
     RasterDataset,
     UnionDataset,
     VectorDataset,
+    XarrayDataset,
 )
 from .geonrw import GeoNRW
 from .gid15 import GID15
@@ -349,6 +350,7 @@ __all__ = (
     'VectorDataset',
     'WesternUSALiveFuelMoisture',
     'XView2',
+    'XarrayDataset',
     'ZueriCrop',
     'concat_samples',
     'merge_samples',
