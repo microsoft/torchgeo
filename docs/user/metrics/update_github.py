@@ -108,6 +108,4 @@ if __name__ == '__main__':
 
     df.rename('`{}`_'.format, inplace=True)
     df['Test Coverage'] = df['Test Coverage'].map('{:.0%}'.format)
-    df.loc[df['Test Coverage'] == 'nan%', 'Test Coverage'] = ''
-    df.loc[df['License'] == 'NOASSERTION', 'License'] = ''
     df.to_csv('github.csv', float_format='{:,.0f}'.format, index_label='Library')
