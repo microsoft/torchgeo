@@ -93,44 +93,30 @@ class TestChangeViTInputOutputBehavior:
         with torch.no_grad():
             output = model(x)
 
-        assert isinstance(output, dict), 'Output should be dictionary'
+        assert isinstance(output, torch.Tensor), 'Output should be Tensor (logits)'
 
     def test_training_vs_inference_output_format(self) -> None:
-        """Paper shows different outputs for training vs inference."""
+        """Model returns logits in both train and eval mode - loss/predict handles sigmoid."""
         from torchgeo.models import changevit_small
 
         model = changevit_small(weights=None)
         x = torch.randn(1, 2, 3, 256, 256)
 
-        # Training mode should output logits (for BCE loss computation)
+        # Training mode outputs logits
         model.train()
         train_output = model(x)
-        assert 'change_prob' in train_output, 'Training should output logits'
+        assert isinstance(train_output, torch.Tensor), 'Should return Tensor (logits)'
+        assert train_output.dtype == torch.float32, 'Output should be float32'
 
-        # Training outputs are logits (can be any real number)
-        train_logits = train_output['change_prob']
-        assert torch.is_tensor(train_logits), 'Training output should be tensor'
-        assert train_logits.dtype == torch.float32, 'Training output should be float32'
-
-        # Inference mode should output probabilities + binary map
+        # Inference mode also outputs logits (sigmoid applied in predict_step)
         model.eval()
         with torch.no_grad():
             infer_output = model(x)
 
-        assert 'change_prob' in infer_output, 'Inference should output probabilities'
-        assert 'change_binary' in infer_output, 'Inference should output binary map'
+        assert isinstance(infer_output, torch.Tensor), 'Should return Tensor (logits)'
 
-        # Probabilities should be in [0, 1] range
-        probs = infer_output['change_prob']
-        assert torch.all(probs >= 0) and torch.all(probs <= 1), (
-            'Change probabilities should be in [0, 1] range'
-        )
-
-        # Binary map should be 0 or 1 (thresholded at 0.5)
-        binary = infer_output['change_binary']
-        assert torch.all((binary == 0) | (binary == 1)), (
-            'Binary map should contain only 0s and 1s'
-        )
+        # Both train and eval return same format
+        assert train_output.shape == infer_output.shape
 
     def test_output_spatial_dimensions(self) -> None:
         """Output should match input spatial dimensions."""
@@ -148,11 +134,9 @@ class TestChangeViTInputOutputBehavior:
             with torch.no_grad():
                 output = model(x)
 
-            change_map = output['change_prob']
-
             # Output spatial dimensions should match input
-            assert change_map.shape[-2:] == (h, w), (
-                f'Output {change_map.shape[-2:]} should match input {(h, w)}'
+            assert output.shape[-2:] == (h, w), (
+                f'Output {output.shape[-2:]} should match input {(h, w)}'
             )
 
 
@@ -247,7 +231,8 @@ class TestChangeViTFunctionalBehavior:
         model.eval()
         with torch.no_grad():
             output = model(identical_pair)
-            change_prob = output['change_prob']
+            # Apply sigmoid to get probabilities from logits
+            change_prob = torch.sigmoid(output)
 
         # Mean change probability should be relatively low for identical images
         mean_prob = change_prob.mean().item()
@@ -269,7 +254,8 @@ class TestChangeViTFunctionalBehavior:
         model.eval()
         with torch.no_grad():
             output = model(different_pair)
-            change_prob = output['change_prob']
+            # Apply sigmoid to get probabilities from logits
+            change_prob = torch.sigmoid(output)
 
         # Should produce higher change probability than identical images
         mean_prob = change_prob.mean().item()
@@ -296,11 +282,11 @@ class TestChangeViTFunctionalBehavior:
             output_21 = model(pair_21)
 
         # Results should be similar (allowing for some asymmetry)
-        prob_12 = output_12['change_prob'].mean()
-        prob_21 = output_21['change_prob'].mean()
+        prob_12 = torch.sigmoid(output_12).mean()
+        prob_21 = torch.sigmoid(output_21).mean()
 
         # Should be reasonably close (within 20% relative difference)
-        rel_diff = abs(prob_12 - prob_21) / max(prob_12, prob_21)
+        rel_diff = abs(prob_12 - prob_21) / torch.max(prob_12, prob_21)
         assert rel_diff < 0.2, (
             f'Temporal order should give similar results, got {rel_diff:.3f}'
         )
@@ -382,7 +368,9 @@ class TestChangeViTScalability:
             with torch.no_grad():
                 output = model(x)
 
-            assert 'change_prob' in output, f'{name} model should produce change_prob'
+            assert isinstance(output, torch.Tensor), (
+                f'{name} model should produce Tensor output'
+            )
 
             # Small model should have more parameters than tiny
             if name == 'tiny':
@@ -409,8 +397,7 @@ class TestChangeViTScalability:
             with torch.no_grad():
                 output = model(x)
 
-            change_prob = output['change_prob']
-            assert change_prob.shape[0] == bs, f'Batch dimension should be {bs}'
+            assert output.shape[0] == bs, f'Batch dimension should be {bs}'
 
 
 class TestChangeViTErrorHandling:
@@ -440,7 +427,7 @@ class TestChangeViTErrorHandling:
         with torch.no_grad():
             # Should not crash, but may not be optimal
             output = model(x)
-            assert 'change_prob' in output
+            assert isinstance(output, torch.Tensor)
 
 
 # Additional utility tests for development
@@ -476,7 +463,7 @@ class TestImplementationConsistency:
         output = model(x)
 
         # Create dummy loss
-        loss = output['change_prob'].sum()
+        loss = output.sum()
         loss.backward()
 
         # Check that key components have gradients
@@ -527,17 +514,13 @@ class TestChangeViTLEVIRCDIntegration:
             output = model(batch['image'])
 
         # Verify output format
-        assert isinstance(output, dict), 'ChangeViT should return dict'
-        assert 'change_prob' in output, 'ChangeViT should return change_prob'
-        assert 'change_binary' in output, (
-            'ChangeViT should return change_binary in eval mode'
+        assert isinstance(output, torch.Tensor), (
+            'ChangeViT should return Tensor (logits)'
         )
 
         # Check spatial dimensions are preserved
-        assert output['change_prob'].shape[-2:] == (256, 256), (
-            'Spatial dimensions should be preserved'
-        )
-        assert output['change_prob'].shape[0] == batch_size * patches_per_frame, (
+        assert output.shape[-2:] == (256, 256), 'Spatial dimensions should be preserved'
+        assert output.shape[0] == batch_size * patches_per_frame, (
             'Batch size should be preserved'
         )
 
@@ -554,7 +537,7 @@ class TestChangeViTLEVIRCDIntegration:
 
         with torch.no_grad():
             output = model(identical_pair)
-            change_prob = output['change_prob']
+            change_prob = torch.sigmoid(output)
 
         # Identical patches should have low change probability
         mean_prob = change_prob.mean().item()
@@ -569,7 +552,7 @@ class TestChangeViTLEVIRCDIntegration:
 
         with torch.no_grad():
             output2 = model(different_pair)
-            change_prob2 = output2['change_prob']
+            change_prob2 = torch.sigmoid(output2)
 
         # Different patches should have higher change probability (on average)
         mean_prob2 = change_prob2.mean().item()
@@ -598,17 +581,9 @@ class TestChangeViTLEVIRCDIntegration:
                 output = model(x)
 
             # Verify output shapes
-            assert output['change_prob'].shape[0] == bs, (
-                f'Batch dimension mismatch for size {bs}'
-            )
-            assert output['change_binary'].shape[0] == bs, (
-                f'Binary batch dimension mismatch for size {bs}'
-            )
+            assert output.shape[0] == bs, f'Batch dimension mismatch for size {bs}'
 
             # Verify spatial dimensions
-            assert output['change_prob'].shape[-2:] == (256, 256), (
+            assert output.shape[-2:] == (256, 256), (
                 'Spatial dimensions should be 256x256'
-            )
-            assert output['change_binary'].shape[-2:] == (256, 256), (
-                'Binary spatial dimensions should be 256x256'
             )
