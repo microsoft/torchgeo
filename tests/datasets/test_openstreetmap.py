@@ -411,7 +411,7 @@ class TestOpenStreetMap:
         assert 'mask' in sample
 
     def test_plot_without_bounds_key(self, monkeypatch: MonkeyPatch) -> None:
-        """Test plot method when sample doesn't have 'bounds' key."""
+        """Test plot method with a proper sample from dataset."""
 
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
@@ -428,8 +428,9 @@ class TestOpenStreetMap:
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
         dataset = OpenStreetMap(bbox=bbox, paths=root, channels=channels)
 
-        # Sample without 'bounds' key - should use full dataset
-        sample = {'some_other_key': 'value'}
+        # Get proper sample from dataset
+        query = dataset.bounds
+        sample = dataset[query]
         fig = dataset.plot(sample)
 
         assert fig is not None
@@ -456,8 +457,9 @@ class TestOpenStreetMap:
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
         dataset = OpenStreetMap(bbox=bbox, paths=root, channels=channels)
 
-        # Sample uses dataset's internal gdf
-        sample = {'some_key': 'value'}
+        # Get proper sample from dataset
+        query = dataset.bounds
+        sample = dataset[query]
 
         fig = dataset.plot(sample)
         assert fig is not None
@@ -970,10 +972,9 @@ class TestOpenStreetMap:
             bbox=bbox, paths=root, channels=channels, download=False
         )
 
-        # Create a sample with bounds (using tuple format that _disambiguate_slice expects)
-        sample = {
-            'bounds': (slice(2.3522, 2.3524), slice(48.8566, 48.8568), slice(None))
-        }
+        # Get proper sample from dataset with bounds
+        bounds = (slice(2.3522, 2.3524), slice(48.8566, 48.8568), slice(None))
+        sample = dataset[bounds]
         dataset.plot(sample)
 
     def test_plot_with_legend(
@@ -994,6 +995,30 @@ class TestOpenStreetMap:
         )
         sample = {'mask': torch.zeros((10, 10))}
         dataset.plot(sample)
+
+    def test_plot_prediction(
+        self, mock_download_and_integrity: None, monkeypatch: MonkeyPatch
+    ) -> None:
+        """Test plot method with prediction."""
+        root = os.path.join('tests', 'data', 'openstreetmap')
+        bbox = (2.3520, 48.8565, 2.3525, 48.8570)
+
+        # Create mock GeoDataFrame with data
+        mock_gdf = gpd.GeoDataFrame(
+            {'building': ['yes'], 'label': [1], 'geometry': [Point(2.3523, 48.8567)]}
+        )
+        monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
+
+        channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        dataset = OpenStreetMap(
+            bbox=bbox, paths=root, channels=channels, download=False
+        )
+
+        # Get sample and add prediction
+        query = dataset.bounds
+        sample = dataset[query]
+        sample['prediction'] = sample['mask'].clone()
+        dataset.plot(sample, suptitle='Prediction')
 
     def test_plot_title_formatting(
         self, mock_download_and_integrity: None, monkeypatch: MonkeyPatch

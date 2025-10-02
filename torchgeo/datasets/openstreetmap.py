@@ -18,6 +18,7 @@ from urllib.request import Request, urlopen
 import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import shapely
 from geopandas import GeoDataFrame
@@ -471,59 +472,6 @@ class OpenStreetMap(VectorDataset):
                     stacklevel=2,
                 )
 
-    def _plot_multi_channel_types(self, gdf: GeoDataFrame, ax: Any) -> None:
-        """Plot GeoDataFrame with different colors for each channel.
-
-        Args:
-            gdf: GeoDataFrame with OSM features
-            ax: matplotlib axis to plot on
-        """
-        # Simple color palette
-        colors = [
-            '#FF6B6B',
-            '#4ECDC4',
-            '#45B7D1',
-            '#96CEB4',
-            '#FECA57',
-            '#FF9FF3',
-            '#54A0FF',
-            '#5F27CD',
-            '#00D2D3',
-            '#FF3838',
-            '#FF9500',
-            '#7bed9f',
-        ]
-
-        # Get unique labels and their corresponding channel names
-        unique_labels = sorted(gdf['label'].unique())
-        legend_handles = []
-
-        for label in unique_labels:
-            if label == 0:  # Skip background/no-label
-                continue
-
-            # Get channel name (labels are 1-based)
-            channel_idx = label - 1
-            if channel_idx < len(self.channels):
-                channel_name = self.channels[channel_idx]['name']
-                color = colors[channel_idx % len(colors)]
-
-                # Plot features with this label
-                features_subset = gdf[gdf['label'] == label]
-                if not features_subset.empty:
-                    features_subset.plot(
-                        ax=ax, alpha=0.7, edgecolor='black', linewidth=0.5, color=color
-                    )
-
-                    # Create legend handle
-                    legend_handles.append(
-                        mpatches.Patch(color=color, label=channel_name.title())
-                    )
-
-        # Add legend
-        if legend_handles:
-            ax.legend(handles=legend_handles, loc='upper right', bbox_to_anchor=(1, 1))
-
     def plot(
         self,
         sample: dict[str, Any],
@@ -540,41 +488,93 @@ class OpenStreetMap(VectorDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        fig, ax = plt.subplots(figsize=(12, 10))
+        mask = sample['mask'].squeeze()
+        ncols = 1
 
-        # VectorDataset returns rasterized masks, but for plotting we show the original vectors
-        gdf = self.gdf
+        showing_prediction = 'prediction' in sample
+        if showing_prediction:
+            pred = sample['prediction'].squeeze()
+            ncols = 2
 
-        # Filter to the query bounds if we have them
-        if 'bounds' in sample:
-            bounds = sample['bounds']
-            x, y, _ = self._disambiguate_slice(bounds)
-            query_bounds = shapely.geometry.box(x.start, y.start, x.stop, y.stop)
-            if len(gdf) > 0:
-                gdf = gdf[gdf.geometry.intersects(query_bounds)]
+        # Color palette for channels
+        colors = [
+            '#FF6B6B',
+            '#4ECDC4',
+            '#45B7D1',
+            '#96CEB4',
+            '#FECA57',
+            '#FF9FF3',
+            '#54A0FF',
+            '#5F27CD',
+            '#00D2D3',
+            '#FF3838',
+            '#FF9500',
+            '#7bed9f',
+        ]
 
-        if len(gdf) == 0:
-            ax.text(
-                0.5,
-                0.5,
-                'No data found for this area',
-                ha='center',
-                va='center',
-                transform=ax.transAxes,
-                fontsize=14,
-            )
+        def apply_cmap(
+            arr: 'np.typing.NDArray[Any]',
+        ) -> 'np.typing.NDArray[np.float64]':
+            """Apply colormap to label array."""
+            # Convert tensor to numpy if needed
+            if hasattr(arr, 'numpy'):
+                arr = arr.numpy()
+
+            # Create RGB image
+            h, w = arr.shape
+            rgb = np.zeros((h, w, 3), dtype=np.float64)
+
+            # Color 0 (background) as black
+            # Color each label with its corresponding channel color
+            for label in np.unique(arr):
+                if label == 0:
+                    continue
+                channel_idx = int(label - 1)
+                if channel_idx < len(colors):
+                    # Convert hex to RGB
+                    hex_color = colors[channel_idx % len(colors)]
+                    r = int(hex_color[1:3], 16) / 255.0
+                    g = int(hex_color[3:5], 16) / 255.0
+                    b = int(hex_color[5:7], 16) / 255.0
+                    rgb[arr == label] = [r, g, b]
+
+            return rgb
+
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 5))
+
+        # Create legend handles
+        legend_handles = []
+        unique_labels = np.unique(mask.numpy() if hasattr(mask, 'numpy') else mask)
+        for label in unique_labels:
+            if label == 0:
+                continue
+            channel_idx = int(label - 1)
+            if channel_idx < len(self.channels):
+                channel_name = self.channels[channel_idx]['name']
+                color = colors[channel_idx % len(colors)]
+                legend_handles.append(
+                    mpatches.Patch(color=color, label=channel_name.title())
+                )
+
+        if showing_prediction:
+            axs[0].imshow(apply_cmap(mask))
+            axs[0].axis('off')
+            axs[1].imshow(apply_cmap(pred))
+            axs[1].axis('off')
+            if show_titles:
+                axs[0].set_title('Mask')
+                axs[1].set_title('Prediction')
+            if legend_handles:
+                axs[0].legend(handles=legend_handles, loc='upper right')
         else:
-            # Multi-channel mode - color by channel
-            self._plot_multi_channel_types(gdf, ax)
+            axs.imshow(apply_cmap(mask))
+            axs.axis('off')
+            if show_titles:
+                axs.set_title('Mask')
+            if legend_handles:
+                axs.legend(handles=legend_handles, loc='upper right')
 
-        ax.set_aspect('equal')
-        ax.grid(True, alpha=0.3)
+        if suptitle is not None:
+            plt.suptitle(suptitle)
 
-        # Fix axis formatting to avoid scientific notation
-        ax.ticklabel_format(useOffset=False, style='plain')
-
-        if show_titles and suptitle:
-            fig.suptitle(suptitle)
-
-        plt.tight_layout()
         return fig
