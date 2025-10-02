@@ -29,28 +29,35 @@ class DetailCaptureModule(Module):
     Uses timm's pretrained ResNet18 with projection layers to match paper specifications.
     """
 
-    def __init__(self, in_channels: int = 6) -> None:
+    def __init__(
+        self, in_channels: int = 6, backbone: str = 'resnet18', pretrained: bool = True
+    ) -> None:
         """Initialize the detail capture module.
 
         Args:
             in_channels: Number of input channels (typically 6 for bitemporal RGB).
+            backbone: Name of the timm backbone model to use.
+            pretrained: Whether to load pretrained weights from timm.
         """
         super().__init__()
 
-        # Create ResNet18 backbone with features_only=True to get intermediate features
+        # Create backbone with features_only=True to get intermediate features
         self.backbone = timm.create_model(
-            'resnet18',
-            pretrained=True,  # Use pretrained weights for better initialization
+            backbone,
+            pretrained=pretrained,
             features_only=True,
             out_indices=[0, 1, 2],  # Get features at 1/2, 1/4, 1/8 scales
             in_chans=in_channels,  # Support 6-channel input for bitemporal data
         )
 
+        # Get output channels for each scale from backbone's feature_info
+        backbone_channels: list[int] = self.backbone.feature_info.channels()  # type: ignore[union-attr, operator]
+
         # Add projection layers to match paper's channel dimensions (64, 128, 256)
-        # timm ResNet18 gives us (64, 64, 128) channels, we need (64, 128, 256)
-        self.proj1 = nn.Identity()  # 64 -> 64 (already correct)
-        self.proj2 = nn.Conv2d(64, 128, kernel_size=1)  # 64 -> 128
-        self.proj3 = nn.Conv2d(128, 256, kernel_size=1)  # 128 -> 256
+        # Use 1x1 convs to learn features from backbone extracted feature maps
+        self.proj1 = nn.Conv2d(backbone_channels[0], 64, kernel_size=1)
+        self.proj2 = nn.Conv2d(backbone_channels[1], 128, kernel_size=1)
+        self.proj3 = nn.Conv2d(backbone_channels[2], 256, kernel_size=1)
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor, Tensor]:
         """Forward pass through detail capture module.
