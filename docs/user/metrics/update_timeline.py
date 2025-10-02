@@ -66,16 +66,19 @@ if __name__ == '__main__':
     left = pd.Timestamp(2015, 6, 1)
     right = today
     ax.set_xlim(left, right)
-    ax.set_xlabel('Date')
-    ax.set_yticks(range(len(df.index)), labels=df.index)
+    ax.tick_params(axis='x', labelsize=14)
+    ax.set_yticks(range(len(df.index)), labels=df.index, fontsize=12)
     ax.invert_yaxis()
     ax.yaxis.set_label_position('right')
     ax.yaxis.tick_right()
+    ax.set_ylim(len(df.index), -1)
+    ax.set_axisbelow(True)
+    ax.grid(axis='both', linestyle='dashed', alpha=0.2)
 
     # Legend
     handles = [Patch(facecolor='black'), Patch(facecolor='red')]
     labels = ['Active', 'Inactive']
-    ax.legend(handles, labels)
+    ax.legend(handles, labels, fontsize=15, loc='lower left', framealpha=1)
 
     fig.tight_layout()
     fig.savefig('timeline.pdf')
