@@ -135,7 +135,7 @@ class FeatureInjector(Module):
         Returns:
             Enhanced ViT features [B, N, D]
         """
-        b, n, d = vit_feats.shape
+        _b, n, _d = vit_feats.shape
         enhanced_feats = [vit_feats]
 
         # Calculate target spatial dimensions from ViT patch count
@@ -180,6 +180,7 @@ class ChangeViTDecoder(Module):
         in_channels: int = 768,  # ViT embedding dimension
         inner_channels: int = 64,
         num_convs: int = 3,
+        num_classes: int = 1,
     ) -> None:
         """Initialize the ChangeViTDecoder.
 
@@ -187,6 +188,7 @@ class ChangeViTDecoder(Module):
             in_channels: Input feature dimension (ViT embedding dim)
             inner_channels: Number of inner channels for processing
             num_convs: Number of convolutional layers
+            num_classes: Number of output classes
         """
         super().__init__()
 
@@ -210,22 +212,19 @@ class ChangeViTDecoder(Module):
             ]
         )
 
-        # Classification layer
-        layers.append(nn.Conv2d(inner_channels, 1, 3, 1, 1))
-
         self.convs = nn.Sequential(*layers)
 
-    def forward(
-        self, bi_feature: Tensor, target_size: tuple[int, int] | None = None
-    ) -> tuple[Tensor, Tensor]:
+        # Classification head
+        self.head = nn.Conv2d(inner_channels, num_classes, 3, 1, 1)
+
+    def forward(self, bi_feature: Tensor) -> tuple[Tensor, Tensor]:
         """Forward pass for change detection.
 
         Args:
             bi_feature: Bitemporal features [B, T, C, H, W]
-            target_size: Optional target spatial size (H, W) for upsampling
 
         Returns:
-            List of bidirectional change predictions
+            Tuple of bidirectional change predictions (logits)
         """
         batch_size = bi_feature.size(0)
 
@@ -234,15 +233,12 @@ class ChangeViTDecoder(Module):
         t2t1 = torch.cat([bi_feature[:, 1], bi_feature[:, 0]], dim=1)
 
         # Process both orderings together
-        c1221 = self.convs(torch.cat([t1t2, t2t1], dim=0))
+        features = self.convs(torch.cat([t1t2, t2t1], dim=0))
 
-        # Apply upsampling to match target size
-        if target_size is not None:
-            c1221 = F.interpolate(
-                c1221, size=target_size, mode='bilinear', align_corners=False
-            )
+        # Apply classification head
+        logits = self.head(features)
 
-        c12, c21 = torch.split(c1221, batch_size, dim=0)
+        c12, c21 = torch.split(logits, batch_size, dim=0)
 
         return c12, c21
 
@@ -289,7 +285,7 @@ class ChangeViT(Module):
         Returns:
             Dictionary containing change detection results
         """
-        b, t, c, h, w = x.shape
+        _b, _t, _c, h, w = x.shape
 
         # Separate temporal frames for parallel processing
         x_t1 = x[:, 0]  # [B, C, H, W] - first temporal frame
@@ -347,14 +343,14 @@ class ChangeViT(Module):
             enhanced_features_tensor, 'b t (h w) d -> b t d h w', h=h_patch, w=w_patch
         )
 
-        # Apply change detection with proper temporal features
-        # Pass original input size to ensure exact output dimensions
-        target_size = (x.shape[-2], x.shape[-1])  # (H, W) from original input
-        c12, c21 = self.decoder(
-            enhanced_spatial, target_size=target_size
-        )  # Returns tuple of [B, 1, H, W] tensors
+        # Apply change detection decoder
+        c12, _c21 = self.decoder(enhanced_spatial)  # Returns logits
 
-        change_logits = c12  # Match target format [B, 1, H, W]
+        # Upsample to match original input size
+        target_size = (x.shape[-2], x.shape[-1])  # (H, W) from original input
+        change_logits = F.interpolate(
+            c12, size=target_size, mode='bilinear', align_corners=False
+        )
 
         # Handle training vs inference mode
         if self.training:
