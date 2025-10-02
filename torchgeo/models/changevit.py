@@ -9,6 +9,7 @@ Based on the paper: https://arxiv.org/pdf/2406.12847
 from collections.abc import Sequence
 from typing import Any
 
+import timm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -35,14 +36,6 @@ class DetailCaptureModule(Module):
             in_channels: Number of input channels (typically 6 for bitemporal RGB).
         """
         super().__init__()
-
-        try:
-            import timm
-        except ImportError as e:
-            raise ImportError(
-                '`timm` is not installed and is required for this model. '
-                'Please install it with `pip install timm`.'
-            ) from e
 
         # Create ResNet18 backbone with features_only=True to get intermediate features
         self.backbone = timm.create_model(
@@ -276,14 +269,14 @@ class ChangeViT(Module):
         self.feature_injector = feature_injector
         self.decoder = decoder
 
-    def forward(self, x: Tensor) -> dict[str, Tensor]:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of ChangeViT.
 
         Args:
             x: Bitemporal input tensor [B, T, C, H, W]
 
         Returns:
-            Dictionary containing change detection results
+            Change detection logits [B, 1, H, W]
         """
         _b, _t, _c, h, w = x.shape
 
@@ -348,21 +341,12 @@ class ChangeViT(Module):
 
         # Upsample to match original input size
         target_size = (x.shape[-2], x.shape[-1])  # (H, W) from original input
-        change_logits = F.interpolate(
+        change_logits: Tensor = F.interpolate(
             c12, size=target_size, mode='bilinear', align_corners=False
         )
 
-        # Handle training vs inference mode
-        if self.training:
-            # Training: return logits for BCE loss computation
-            return {
-                'change_prob': change_logits
-            }  # Actually logits, but keeping key name for compatibility
-        else:
-            # Inference: return probabilities and binary map
-            change_prob = torch.sigmoid(change_logits)
-            change_binary = (change_prob > 0.5).float()  # Threshold at 0.5
-            return {'change_prob': change_prob, 'change_binary': change_binary}
+        # Return raw logits - sigmoid/softmax handled by loss function
+        return change_logits
 
 
 class ChangeViT_Weights(WeightsEnum):  # type: ignore[misc]
@@ -421,14 +405,6 @@ def _create_changevit(
     Returns:
         A ChangeViT model
     """
-    try:
-        import timm
-    except ImportError as e:
-        raise ImportError(
-            '`timm` is not installed and is required for this model. '
-            'Please install it with `pip install timm`.'
-        ) from e
-
     # Create ViT backbone from timm
     vit_backbone = timm.create_model(
         model_name,

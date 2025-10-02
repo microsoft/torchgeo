@@ -302,12 +302,7 @@ class ChangeDetectionTask(BaseTask):
             y = y.long()
 
         # Forward pass
-        if model.startswith('changevit'):
-            output = self(x)
-            # ChangeViT outputs probabilities/logits in 'change_prob' key
-            y_hat = output['change_prob']
-        else:
-            y_hat = self(x)
+        y_hat = self(x)
 
         if self.hparams['loss'] == 'bce':
             y = y.float()
@@ -416,18 +411,11 @@ class ChangeDetectionTask(BaseTask):
             x = rearrange(x, 'b t c h w -> b (t c) h w')
 
         # Forward pass
-        if model.startswith('changevit'):
-            output = self(x)
-            y_hat: Tensor = output['change_prob']
-        else:
-            y_hat = self(x)
+        y_hat: Tensor = self(x)
 
         match self.hparams['task']:
             case 'binary' | 'multilabel':
-                if not model.startswith(
-                    'changevit'
-                ):  # ChangeViT already outputs probabilities
-                    y_hat = y_hat.sigmoid()
+                y_hat = y_hat.sigmoid()
             case 'multiclass':
                 y_hat = y_hat.softmax(dim=1)
 
