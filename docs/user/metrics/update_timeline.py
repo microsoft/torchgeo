@@ -74,6 +74,8 @@ if __name__ == '__main__':
     ax.set_ylim(len(df.index), -1)
     ax.set_axisbelow(True)
     ax.grid(axis='both', linestyle='dashed', alpha=0.2)
+    ax.spines['top'].set_visible(False)
+    ax.spines['left'].set_visible(False)
 
     # Legend
     handles = [Patch(facecolor='black'), Patch(facecolor='red')]
