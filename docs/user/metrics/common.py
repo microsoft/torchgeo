@@ -9,6 +9,7 @@ index = [
     'Raster Vision',
     'SITS',
     'DeepForest',
+    'GDL',
     'samgeo',
     'spopt',
     'ML4Floods',
@@ -16,9 +17,9 @@ index = [
     'SPy',
     'srai',
     'OTBTF',
+    'scikit-eo',
     'Myria3D',
     'GeoAI',
-    'scikit-eo',
     'GeoTessera',
     'GeoDeep',
 ]
@@ -34,6 +35,7 @@ name_to_github = {
     'Raster Vision': ('azavea', 'raster-vision'),
     'DeepHyperX': ('nshaud', 'DeepHyperX'),
     'Pyinterpolate': ('DataverseLabs', 'pyinterpolate'),
+    'GDL': ('NRCan', 'geo-deep-learning'),
     'OTBTF': ('remicres', 'otbtf'),
     'eo-learn': ('sentinel-hub', 'eo-learn'),
     'RoboSat': ('mapbox', 'robosat'),
@@ -72,19 +74,21 @@ name_to_codecov = {
 # TODO: remove these as coverage statistics are reported
 # Manually computed using `pytest --cov=<src>` or `coverage run`
 hardcoded_coverage = {
+    'SPy': 69,
     'OTB': 56,
-    'TerraTorch': 55,
     'Raster Vision': 90,
-    'samgeo': 13,
+    'GDL': 7,
+    'OTBTF': 55,
+    'DeepForest': 86,
     'ML4Floods': 0,
     'geo-bench': 51,
-    'SPy': 69,
-    'OTBTF': 55,
     'Myria3D': 57,
+    'samgeo': 13,
     'GeoAI': 6,
     'scikit-eo': 32,
-    'GeoTessera': 15,
+    'TerraTorch': 55,
     'GeoDeep': 0,
+    'GeoTessera': 15,
 }
 name_to_pypi = {
     'SPy': 'spectral',
