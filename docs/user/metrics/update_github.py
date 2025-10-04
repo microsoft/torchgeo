@@ -76,7 +76,7 @@ if __name__ == '__main__':
         df.loc[name, 'Commits'] = page_count(response)
 
         url = f'https://api.github.com/repos/{owner}/{repo}/contributors'
-        params = {'anon': 'true', 'per_page': 1}
+        params = {'per_page': 1}
         response = requests.get(url, params=params, headers=headers)
         df.loc[name, 'Contributors'] = page_count(response)
 
