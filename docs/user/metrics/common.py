@@ -65,6 +65,7 @@ name_to_github = {
 name_to_codecov = {
     'SITS': ('gh', 'e-sensing', 'sits'),
     'spopt': ('gh', 'pysal', 'spopt'),
+    'DeepForest': ('gh', 'weecology', 'DeepForest'),
     'TorchGeo': ('gh', 'torchgeo', 'torchgeo'),
     'srai': ('gh', 'kraina-ai', 'srai'),
 }
@@ -74,7 +75,6 @@ hardcoded_coverage = {
     'OTB': 56,
     'TerraTorch': 55,
     'Raster Vision': 90,
-    'DeepForest': 86,
     'samgeo': 13,
     'ML4Floods': 0,
     'geo-bench': 51,
