@@ -192,3 +192,20 @@ before        17.223      10.974                 15.685               4.6075
 ======  ============  ==========  =====================  ===================
 
 In this example, we see a 60% speed-up for RandomGeoSampler on preprocessed data. All other numbers are more or less the same across multiple runs.
+
+Related Libraries
+-----------------
+
+TorchGeo maintains a list of :ref:`related-libraries`. New GeoML libraries can be added to this list using the following scripts in ``docs/user/metrics``:
+
+1. Add the library, GitHub repository, Codecov, PyPI/CRAN, and Conda information to ``common.py``.
+2. (Optional) Run ``python3 update_timeline.py --api-key GITHUB_TOKEN`` to determine the first and last commit.
+3. (Optional) Sort all dictionaries in ``common.py`` in order of first commit.
+4. Run ``python3 update_github.py --api-key GITHUB_TOKEN`` to update ``github.csv``.
+5. Sort ``index`` in ``common.py`` and ``features.csv`` in the same order as ``github.csv``.
+6. Run ``python3 update_downloads.py --api-key PEPY_TOKEN`` to update ``downloads.csv``.
+7. Document all library features in ``features.csv``.
+8. Add a GitHub link to the bottom of ``../alternatives.rst``.
+9. Open a pull request.
+
+Libraries must be primarily geospatial machine learning libraries. Furthermore, libraries should have stable releases, recent commit activity, and at least 100 stars on GitHub. If you have any questions about how to determine any features, do not hesitate to ask for assistance on your pull request.

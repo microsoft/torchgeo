@@ -41,6 +41,8 @@ dependencies = [
     "fiona>=1.8.22",
     # geopandas 0.12.1+ required for Shapely 2+ support
     "geopandas>=0.12.1",
+    # jsonargparse 4.25+ required for proper LightningCLI YAML parsing
+    "jsonargparse[signatures]>=4.25",
     # kornia 0.7.4+ required for AugmentationSequential support for unknown keys
     "kornia>=0.7.4",
     # lightly 1.4.5+ required for LARS optimizer
@@ -50,7 +52,11 @@ dependencies = [
     # lightning 2+ required for LightningCLI args + sys.argv support
     # lightning 2.3 contains known bugs related to YAML parsing
     # https://github.com/Lightning-AI/pytorch-lightning/issues/19977
-    "lightning[pytorch-extra]>=2,!=2.3.*,!=2.5.0",
+    # lightning 2.5.0 contains backwards-incompatible import changes
+    # https://github.com/Lightning-AI/pytorch-lightning/issues/20511
+    # lightning 2.5.5 contains known bugs related to checkpoint loading
+    # https://github.com/torchgeo/torchgeo/issues/2995
+    "lightning>=2,!=2.3.*,!=2.5.0,<2.5.5",
     # matplotlib 3.6+ required for Python 3.11 wheels
     "matplotlib>=3.6",
     # numpy 1.24+ required by rasterio
@@ -136,6 +142,8 @@ style = [
 tests = [
     # nbmake 1.3.3+ required for variable mocking
     "nbmake>=1.3.3",
+    # packaging 20.9+ required by huggingface-hub
+    "packaging>=20.9",
     # pytest 7.3+ required for tmp_path_retention_policy
     "pytest>=7.3",
     # pytest-cov 4+ required for pytest 7.2+ compatibility
@@ -269,7 +277,7 @@ filterwarnings = [
     # https://github.com/pydantic/pydantic/pull/11377
     "ignore:Failing to pass a value to the 'type_params' parameter of 'typing.*' is deprecated:DeprecationWarning:pydantic",
     # https://github.com/Lightning-AI/pytorch-lightning/pull/20802
-    "ignore::jsonargparse._deprecated.JsonargparseDeprecationWarning:lightning.pytorch.cli",
+    "ignore::DeprecationWarning:jsonargparse.*",
     # https://github.com/geopandas/geopandas/pull/3453
     "ignore:The 'shapely.geos' module is deprecated:DeprecationWarning:geopandas._compat",
 
