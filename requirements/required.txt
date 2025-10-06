@@ -10,7 +10,7 @@ matplotlib==3.10.1
 numpy==2.2.4
 pandas==2.3.3
 pillow==11.3.0
-pyproj==3.7.1
+pyproj==3.7.2
 rasterio==1.4.3
 segmentation-models-pytorch==0.5.0
 shapely==2.0.7
