@@ -599,9 +599,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_ALL_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-rn_s2_encoder-183922a5.pth',
-        transforms=K.AugmentationSequential(
-            K.Normalize(mean=0, std=10000), data_keys=None
-        ),
+        transforms=nn.Sequential(T.Normalize(mean=[0], std=[10000], inplace=True)),
         meta={
             'dataset': 'CrisisLandMark',
             'in_chans': 13,
@@ -642,9 +640,7 @@ class ResNet50_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_ALL_GEOCLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/geoclosp-rn_s2_encoder-94c37f4a.pth',
-        transforms=K.AugmentationSequential(
-            K.Normalize(mean=0, std=10000), data_keys=None
-        ),
+        transforms=nn.Sequential(T.Normalize(mean=[0], std=[10000], inplace=True)),
         meta={
             'dataset': 'CrisisLandMark',
             'in_chans': 13,

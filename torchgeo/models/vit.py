@@ -190,8 +190,8 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_ALL_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vs_s2_encoder-1a3ee5a5.pth',
-        transforms=K.AugmentationSequential(
-            K.Normalize(mean=0, std=10000), K.Resize(224), data_keys=None
+        transforms=nn.Sequential(
+            T.Normalize(mean=[0], std=[10000], inplace=True), T.Resize((224, 224))
         ),
         meta={
             'dataset': 'CrisisLandMark',
@@ -261,7 +261,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL1_GRD_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vs_s1_encoder-180f1e6e.pth',
-        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
+        transforms=nn.Sequential(T.Resize((224, 224))),
         meta={
             'dataset': 'CrisisLandMark',
             'in_chans': 2,
@@ -378,8 +378,8 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_ALL_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vl_s2_encoder-4a4f026a.pth',
-        transforms=K.AugmentationSequential(
-            K.Normalize(mean=0, std=10000), K.Resize(224), data_keys=None
+        transforms=nn.Sequential(
+            T.Normalize(mean=[0], std=[10000], inplace=True), T.Resize((224, 224))
         ),
         meta={
             'dataset': 'CrisisLandMark',
@@ -421,7 +421,7 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL1_GRD_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vl_s1_encoder-6f88d037.pth',
-        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
+        transforms=nn.Sequential(T.Resize((224, 224))),
         meta={
             'dataset': 'CrisisLandMark',
             'in_chans': 2,
