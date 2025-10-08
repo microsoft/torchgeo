@@ -35,6 +35,7 @@ class LEVIRCDDataModule(NonGeoDataModule):
         dataset_variant: Literal['levircd', 'levircd-plus'] = 'levircd',
         val_split_pct: float | None = None,
         num_workers: int = 0,
+        val_patch_sampling: Literal['grid', 'random'] = 'random',
         **kwargs: Any,
     ) -> None:
         """Initialize a new LEVIRCDDataModule instance.
@@ -48,10 +49,14 @@ class LEVIRCDDataModule(NonGeoDataModule):
                 Only used for 'levircd-plus' variant. Defaults to None for 'levircd'
                 (uses official splits) and 0.2 for 'levircd-plus'.
             num_workers: Number of workers for parallel data loading.
+            val_patch_sampling: Strategy for validation patch sampling:
+                'random' (default): Use RandomCrop, matches training distribution.
+                'grid': Use deterministic grid patches via ExtractPatches.
             **kwargs: Additional keyword arguments passed to the dataset.
         """
         # Handle stride parameter for patch extraction
         stride = kwargs.pop('stride', None)
+        self.val_patch_sampling = val_patch_sampling
 
         # Select dataset class based on variant
         dataset_class: type[LEVIRCD | LEVIRCDPlus]
@@ -86,9 +91,14 @@ class LEVIRCDDataModule(NonGeoDataModule):
         self.aug = self.val_aug  # Fallback general augmentation
 
     def _create_random_train_aug(self) -> K.AugmentationSequential:
-        """Create synchronized random training augmentation for proper image-mask alignment."""
+        """Create synchronized random training augmentation for proper image-mask alignment.
+
+        Follows ChangeViT paper: random flipping and cropping.
+        """
         return K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
+            K.RandomHorizontalFlip(p=0.5),
+            K.RandomVerticalFlip(p=0.5),
             K.RandomCrop(self.patch_size, pad_if_needed=True),
             data_keys=None,
             keepdim=True,
@@ -96,16 +106,27 @@ class LEVIRCDDataModule(NonGeoDataModule):
         )
 
     def _create_deterministic_val_aug(self) -> K.AugmentationSequential:
-        """Create deterministic validation/test augmentation for reproducible evaluation."""
-        return K.AugmentationSequential(
-            K.Normalize(mean=self.mean, std=self.std),
-            _ExtractPatches(
-                window_size=self.patch_size, stride=self.stride, keepdim=False
-            ),
-            data_keys=None,
-            keepdim=False,  # Allow dimension changes for patches
-            same_on_batch=True,
-        )
+        """Create validation/test augmentation based on val_patch_sampling strategy."""
+        if self.val_patch_sampling == 'random':
+            # Use RandomCrop to match training distribution
+            return K.AugmentationSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                K.RandomCrop(self.patch_size, pad_if_needed=True),
+                data_keys=None,
+                keepdim=True,
+                same_on_batch=True,
+            )
+        else:  # 'grid'
+            # Use deterministic grid patches for comprehensive evaluation
+            return K.AugmentationSequential(
+                K.Normalize(mean=self.mean, std=self.std),
+                _ExtractPatches(
+                    window_size=self.patch_size, stride=self.stride, keepdim=False
+                ),
+                data_keys=None,
+                keepdim=False,  # Allow dimension changes for patches
+                same_on_batch=True,
+            )
 
     def setup(self, stage: str) -> None:
         """Set up datasets with transforms.
@@ -150,7 +171,8 @@ class LEVIRCDDataModule(NonGeoDataModule):
         self, batch: dict[str, Tensor], dataloader_idx: int
     ) -> dict[str, Tensor]:
         """Reshape batch to flatten patches into batch dimension for ChangeViT compatibility."""
-        # If patches were extracted, reshape for ChangeViT compatibility
+        # If patches were extracted (grid mode), reshape for ChangeViT compatibility
+        # In random crop mode, batch is already [B, T, C, H, W] so no reshaping needed
         if len(batch['image'].shape) == 6:  # [B, T, P, C, H, W]
             batch_size, temporal_frames, patches_per_frame = batch['image'].shape[:3]
 

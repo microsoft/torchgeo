@@ -413,9 +413,11 @@ def _create_changevit(
         A ChangeViT model
     """
     # Create ViT backbone from timm
+    # Always use pretrained backbone unless explicitly disabled via kwargs
+    use_pretrained = kwargs.pop('pretrained', True) if weights is None else False
     vit_backbone = timm.create_model(
         model_name,
-        pretrained=weights is not None,
+        pretrained=use_pretrained,
         num_classes=0,  # Remove classification head
         img_size=img_size,
         **kwargs,
