@@ -234,7 +234,7 @@ class GeoDataset(Dataset[dict[str, Any]], abc.ABC):
     def crs(self, new_crs: CRS) -> None:
         """Change the :term:`coordinate reference system (CRS)` of a GeoDataset.
 
-        If ``new_crs == self.crs``, does nothing, otherwise uptimestamps the index.
+        If ``new_crs == self.crs``, does nothing, otherwise updates the index.
 
         Args:
             new_crs: New :term:`coordinate reference system (CRS)`.
@@ -544,14 +544,14 @@ class RasterDataset(GeoDataset):
                 timestamps.append(center_date.timestamp())
 
                 # Process files for this time step
-                time_step_data = self._process_files_for_group(group.filepath, query)
+                time_step_data = self._merge_file_collection(group.filepath, query)
                 time_steps.append(time_step_data)
 
             # Stack along time dimension to create [T,C,H,W]
             data = torch.stack(time_steps, dim=0)
 
         else:
-            data = self._process_files_for_group(index.filepath, query)
+            data = self._merge_file_collection(index.filepath, query)
 
         sample: dict[str, Any] = {'crs': self.crs, 'bounds': query}
         if self.time_series:
@@ -561,57 +561,80 @@ class RasterDataset(GeoDataset):
         if self.is_image:
             sample['image'] = data
         else:
-            # Try to squeeze singleband mask
-            if self.time_series:
-                sample['mask'] = data.squeeze(1)
-            else:
-                sample['mask'] = data.squeeze(0)
+            sample['mask'] = data.squeeze(-3)
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
 
-    def _process_files_for_group(
+    def _merge_file_collection(
         self, filepaths: Sequence[str], query: GeoSlice
     ) -> Tensor:
         """Process files for a group (either time step or entire index).
-
+        
         Args:
-            filepaths: List of file paths to process
+            filepaths: one or more files to load and merge
             query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
 
         Returns:
-            Processed tensor data
+            Merged tensor from the specified filepaths.
         """
-        if self.separate_files:
-            # If separate files for each band, merge files for each band separately
-            band_data: list[Tensor] = []
-            filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-
-            for band in self.bands:
-                # For each band, find all files
-                band_filepaths = []
-                for filepath in filepaths:
-                    filename = os.path.basename(filepath)
-                    directory = os.path.dirname(filepath)
-                    match = re.match(filename_regex, filename)
-                    if match:
-                        if 'band' in match.groupdict():
-                            start = match.start('band')
-                            end = match.end('band')
-                            filename = filename[:start] + band + filename[end:]
-                    filepath = os.path.join(directory, filename)
-                    band_filepaths.append(filepath)
-
-                # Merge files for this band
-                band_data.append(self._merge_files(band_filepaths, query))
-
-            # Concatenate all bands
-            return torch.cat(band_data, dim=0)
-        else:
-            # For non-separate files, merge all files directly
+        if not self.separate_files:
             return self._merge_files(filepaths, query, self.band_indexes)
+        
+        # Functional approach for separate files
+        filename_regex = re.compile(self.filename_regex, re.VERBOSE)
+        
+        def get_band_filepaths(band: str) -> list[str]:
+            """Get all filepaths for a specific band.
+            
+            Args:
+                band: band name to construct the filepath for
+
+            Returns:
+                List of filepaths for the specified band.
+            
+            """
+            return [
+                self._construct_band_filepath(fp, band, filename_regex) 
+                for fp in filepaths
+            ]
+        
+        # Process all bands in parallel conceptually
+        band_tensors = [
+            self._merge_files(get_band_filepaths(band), query)
+            for band in self.bands
+        ]
+        
+        return torch.cat(band_tensors, dim=0)
+
+    def _construct_band_filepath(
+        self, 
+        filepath: str, 
+        target_band: str, 
+        filename_regex: re.Pattern
+    ) -> str:
+        """Construct the full filepath for a specific band by replacing the band identifier.
+        
+        Args:
+            filepath: original filepath with band identifier
+            target_band: band identifier to replace with
+            filename_regex: regex pattern with 'band' named group
+            
+        Returns:
+            Filepath with replaced band identifier.
+        """
+        filename = os.path.basename(filepath)
+        directory = os.path.dirname(filepath)
+        match = filename_regex.match(filename)
+        
+        if match and 'band' in match.groupdict():
+            start = match.start('band')
+            end = match.end('band')
+            filename = filename[:start] + target_band + filename[end:]
+        
+        return os.path.join(directory, filename)
 
     def _merge_files(
         self,
