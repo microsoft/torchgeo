@@ -9,4 +9,4 @@ rioxarray==0.19.0
 scikit-image==0.25.2
 scipy==1.16.2
 webdataset==1.0.2
-xarray==2025.10.0
+xarray==2025.10.1
