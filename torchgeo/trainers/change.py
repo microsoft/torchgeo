@@ -59,7 +59,7 @@ class ChangeDetectionTask(BaseTask):
         num_labels: int | None = None,
         num_filters: int = 3,
         pos_weight: Tensor | None = None,
-        loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'bce',
+        loss: Literal['ce', 'bce', 'jaccard', 'focal', 'bce+dice'] = 'bce',
         class_weights: Tensor | Sequence[float] | None = None,
         ignore_index: int | None = None,
         lr: float = 1e-3,
@@ -85,7 +85,8 @@ class ChangeDetectionTask(BaseTask):
             num_filters: Number of filters. Only applicable when model='fcn'.
             pos_weight: A weight of positive examples and used with 'bce' loss.
             loss: Name of the loss function, currently supports
-                'ce', 'bce', 'jaccard', and 'focal' loss.
+                'ce', 'bce', 'jaccard', 'focal', and 'bce+dice' loss.
+                'bce+dice' combines BCE and Dice loss (used in ChangeViT paper).
             class_weights: Optional rescaling weight given to each
                 class and used with 'ce' loss.
             ignore_index: Optional integer class index to ignore in the loss and
@@ -137,6 +138,25 @@ class ChangeDetectionTask(BaseTask):
                     ignore_index=ignore_index,
                     normalized=True,
                 )
+            case 'bce+dice':
+                # Combined BCE and Dice loss as used in ChangeViT paper
+                bce_loss = nn.BCEWithLogitsLoss(pos_weight=self.hparams['pos_weight'])
+                dice_loss = smp.losses.DiceLoss(mode=self.hparams['task'])
+
+                # Create a combined loss module
+                class CombinedLoss(nn.Module):
+                    def __init__(self, bce: nn.Module, dice: nn.Module) -> None:
+                        super().__init__()
+                        self.bce = bce
+                        self.dice = dice
+
+                    def forward(self, pred: Tensor, target: Tensor) -> Tensor:
+                        # Ensure target is float for BCE
+                        target = target.float()
+                        loss: Tensor = self.bce(pred, target) + self.dice(pred, target)
+                        return loss
+
+                self.criterion = CombinedLoss(bce_loss, dice_loss)
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
