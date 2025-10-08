@@ -609,7 +609,7 @@ class RasterDataset(GeoDataset):
         return torch.cat(band_tensors, dim=0)
 
     def _construct_band_filepath(
-        self, filepath: str, target_band: str, filename_regex: re.Pattern
+        self, filepath: str, target_band: str, filename_regex: re.Pattern[str]
     ) -> str:
         """Construct the full filepath for a specific band by replacing the band identifier.
 
