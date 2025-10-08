@@ -232,8 +232,10 @@ class TestChangeDetectionTask:
         """FCN has no backbone/decoder. Need separate test for full test coverage."""
         ChangeDetectionTask(model='fcn')
 
-    @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal'])
-    def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal']) -> None:
+    @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal', 'bce+dice'])
+    def test_losses(
+        self, loss_fn: Literal['bce', 'jaccard', 'focal', 'bce+dice']
+    ) -> None:
         ChangeDetectionTask(loss=loss_fn)
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
@@ -448,3 +450,115 @@ class TestChangeDetectionTask:
             assert datamodule.val_aug.same_on_batch, (
                 'Validation should use same crops per batch'
             )
+
+    @pytest.mark.parametrize('model_name', ['changevit_small', 'changevit_tiny'])
+    def test_changevit_models(
+        self, model_name: Literal['changevit_small', 'changevit_tiny']
+    ) -> None:
+        """Test ChangeViT model initialization."""
+        model = ChangeDetectionTask(model=model_name, loss='bce')
+        assert model.hparams['model'] == model_name
+
+    @pytest.mark.parametrize('model_name', ['changevit_small', 'changevit_tiny'])
+    def test_changevit_invalid_weights(
+        self, model_name: Literal['changevit_small', 'changevit_tiny']
+    ) -> None:
+        """Test that invalid weights raise ValueError for ChangeViT models."""
+        with pytest.raises(ValueError, match='Invalid weights'):
+            ChangeDetectionTask(model=model_name, weights='invalid_string')
+
+    @pytest.mark.parametrize('model_name', ['changevit_small', 'changevit_tiny'])
+    def test_changevit_freeze_backbone(
+        self, model_name: Literal['changevit_small', 'changevit_tiny']
+    ) -> None:
+        """Test freeze_backbone for ChangeViT models."""
+        model = ChangeDetectionTask(model=model_name, freeze_backbone=True)
+        assert all(
+            [param.requires_grad is False for param in model.model.encoder.parameters()]
+        )
+
+    @pytest.mark.parametrize('model_name', ['changevit_small', 'changevit_tiny'])
+    def test_changevit_freeze_decoder(
+        self, model_name: Literal['changevit_small', 'changevit_tiny']
+    ) -> None:
+        """Test freeze_decoder for ChangeViT models."""
+        model = ChangeDetectionTask(model=model_name, freeze_decoder=True)
+        assert all(
+            [
+                param.requires_grad is False
+                for param in model.model.detail_capture.parameters()
+            ]
+        )
+        assert all(
+            [
+                param.requires_grad is False
+                for param in model.model.feature_injector.parameters()
+            ]
+        )
+
+    def test_pos_weight_parameter(self) -> None:
+        """Test pos_weight parameter for BCE loss."""
+        pos_weight = torch.tensor([2.0])
+        task = ChangeDetectionTask(loss='bce', pos_weight=pos_weight)
+        assert task.hparams['pos_weight'] is not None
+
+    def test_levircd_invalid_dataset_variant(self) -> None:
+        """Test that invalid dataset_variant raises ValueError."""
+        pytest.importorskip(
+            'torchgeo.datamodules.levircd', reason='LEVIRCDDataModule required'
+        )
+
+        from torchgeo.datamodules.levircd import LEVIRCDDataModule
+
+        with pytest.raises(
+            ValueError, match="dataset_variant must be 'levircd' or 'levircd-plus'"
+        ):
+            LEVIRCDDataModule(batch_size=2, patch_size=256, dataset_variant='invalid')  # type: ignore[arg-type]
+
+    def test_levircd_grid_sampling(self) -> None:
+        """Test LEVIRCDDataModule with grid sampling mode."""
+        pytest.importorskip(
+            'torchgeo.datamodules.levircd', reason='LEVIRCDDataModule required'
+        )
+
+        from torchgeo.datamodules.levircd import LEVIRCDDataModule
+
+        datamodule = LEVIRCDDataModule(
+            batch_size=2, patch_size=256, stride=256, val_patch_sampling='grid'
+        )
+
+        # Test that grid sampling mode uses ExtractPatches
+        assert datamodule.val_patch_sampling == 'grid'
+
+        # Create mock batch with 6D shape (includes patches dimension)
+        batch = {
+            'image': torch.randn(2, 2, 16, 3, 256, 256),  # [B, T, P, C, H, W]
+            'mask': torch.randn(2, 1, 16, 1, 256, 256),  # [B, T, P, C, H, W]
+        }
+
+        result = datamodule.on_after_batch_transfer(batch, 0)
+
+        # Should reshape to flatten patches into batch dimension
+        assert result['image'].shape == (32, 2, 3, 256, 256)  # [B*P, T, C, H, W]
+        assert result['mask'].shape == (32, 1, 256, 256)  # [B*P, C, H, W]
+
+    def test_levircd_mask_shape_handling(self) -> None:
+        """Test LEVIRCDDataModule handles mask shape with extra temporal dimension."""
+        pytest.importorskip(
+            'torchgeo.datamodules.levircd', reason='LEVIRCDDataModule required'
+        )
+
+        from torchgeo.datamodules.levircd import LEVIRCDDataModule
+
+        datamodule = LEVIRCDDataModule(batch_size=2, patch_size=256)
+
+        # Create mock batch with 5D mask shape [B, C, 1, H, W]
+        batch = {
+            'image': torch.randn(2, 2, 3, 256, 256),  # [B, T, C, H, W]
+            'mask': torch.randn(2, 1, 1, 256, 256),  # [B, C, 1, H, W]
+        }
+
+        result = datamodule.on_after_batch_transfer(batch, 0)
+
+        # Should squeeze temporal dimension from mask
+        assert result['mask'].shape == (2, 1, 256, 256)  # [B, C, H, W]

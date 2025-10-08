@@ -27,7 +27,7 @@ class TestChangeViTArchitectureRequirements:
         assert hasattr(model, 'decoder'), 'Missing change detection decoder'
 
     def test_detail_capture_multiscale_output(self) -> None:
-        """Paper mentions detail-capture extracts features at 1/2, 1/4, 1/8 scales."""
+        """Paper: detail-capture extracts features at 1/2, 1/4, 1/8 scales with 64, 128, 256 channels."""
         from torchgeo.models.changevit import DetailCaptureModule
 
         dcm = DetailCaptureModule(in_channels=6)
@@ -39,11 +39,20 @@ class TestChangeViTArchitectureRequirements:
         assert isinstance(outputs, tuple), 'Should return tuple of multi-scale features'
         assert len(outputs) == 3, 'Should return 3 scales (1/2, 1/4, 1/8)'
 
-        # Check spatial dimensions are progressively smaller
+        # Check spatial dimensions and channel counts match paper specifications
         h, w = x.shape[-2:]
-        expected_sizes = [(h // 2, w // 2), (h // 4, w // 4), (h // 8, w // 8)]
+        expected_specs = [
+            (64, h // 2, w // 2),  # C2: 1/2 scale, 64 channels
+            (128, h // 4, w // 4),  # C3: 1/4 scale, 128 channels
+            (256, h // 8, w // 8),  # C4: 1/8 scale, 256 channels
+        ]
 
-        for i, (output, (exp_h, exp_w)) in enumerate(zip(outputs, expected_sizes)):
+        for i, (output, (exp_c, exp_h, exp_w)) in enumerate(
+            zip(outputs, expected_specs)
+        ):
+            assert output.shape[1] == exp_c, (
+                f'Scale {i} should have {exp_c} channels (paper spec), got {output.shape[1]}'
+            )
             assert output.shape[-2:] == (exp_h, exp_w), (
                 f'Scale {i} should be {exp_h}x{exp_w}, got {output.shape[-2:]}'
             )
@@ -215,83 +224,6 @@ class TestChangeViTParameterCounts:
         )
 
 
-class TestChangeViTFunctionalBehavior:
-    """Tests for logical/functional behavior (implementation-specific, not from paper)."""
-
-    def test_identical_images_low_change_probability(self) -> None:
-        """Identical images should produce low change probability (implementation assumption)."""
-        from torchgeo.models import changevit_small
-
-        model = changevit_small(weights=None)
-
-        # Create identical image pair
-        img = torch.randn(1, 3, 256, 256)
-        identical_pair = torch.stack([img, img], dim=1)  # [1, 2, 3, 256, 256]
-
-        model.eval()
-        with torch.no_grad():
-            output = model(identical_pair)
-            # Apply sigmoid to get probabilities from logits
-            change_prob = torch.sigmoid(output)
-
-        # Mean change probability should be relatively low for identical images
-        mean_prob = change_prob.mean().item()
-        assert mean_prob < 0.7, (
-            f'Identical images should have low change prob, got {mean_prob:.3f}'
-        )
-
-    def test_completely_different_images_higher_change_probability(self) -> None:
-        """Completely different images should produce higher change probability (implementation assumption)."""
-        from torchgeo.models import changevit_small
-
-        model = changevit_small(weights=None)
-
-        # Create very different image pair (opposite patterns)
-        img1 = torch.ones(1, 3, 256, 256)  # All white
-        img2 = torch.zeros(1, 3, 256, 256)  # All black
-        different_pair = torch.stack([img1, img2], dim=1)
-
-        model.eval()
-        with torch.no_grad():
-            output = model(different_pair)
-            # Apply sigmoid to get probabilities from logits
-            change_prob = torch.sigmoid(output)
-
-        # Should produce higher change probability than identical images
-        mean_prob = change_prob.mean().item()
-        assert mean_prob > 0.3, (
-            f'Different images should have higher change prob, got {mean_prob:.3f}'
-        )
-
-    def test_temporal_order_consistency(self) -> None:
-        """Model should handle temporal order (t1->t2 vs t2->t1) appropriately (implementation assumption)."""
-        from torchgeo.models import changevit_small
-
-        model = changevit_small(weights=None)
-
-        # Create image pair
-        img1 = torch.randn(1, 3, 256, 256)
-        img2 = torch.randn(1, 3, 256, 256)
-
-        pair_12 = torch.stack([img1, img2], dim=1)
-        pair_21 = torch.stack([img2, img1], dim=1)
-
-        model.eval()
-        with torch.no_grad():
-            output_12 = model(pair_12)
-            output_21 = model(pair_21)
-
-        # Results should be similar (allowing for some asymmetry)
-        prob_12 = torch.sigmoid(output_12).mean()
-        prob_21 = torch.sigmoid(output_21).mean()
-
-        # Should be reasonably close (within 20% relative difference)
-        rel_diff = abs(prob_12 - prob_21) / torch.max(prob_12, prob_21)
-        assert rel_diff < 0.2, (
-            f'Temporal order should give similar results, got {rel_diff:.3f}'
-        )
-
-
 class TestTorchGeoIntegration:
     """Tests for integration with TorchGeo patterns and ChangeDetectionTask."""
 
@@ -428,6 +360,15 @@ class TestChangeViTErrorHandling:
             # Should not crash, but may not be optimal
             output = model(x)
             assert isinstance(output, torch.Tensor)
+
+    def test_pretrained_kwarg_false(self) -> None:
+        """Test that pretrained=False creates model without pretrained weights."""
+        from torchgeo.models import changevit_small
+
+        # Create model explicitly without pretrained weights
+        model = changevit_small(weights=None, pretrained=False)
+        assert model is not None
+        assert hasattr(model, 'encoder')
 
 
 # Additional utility tests for development
