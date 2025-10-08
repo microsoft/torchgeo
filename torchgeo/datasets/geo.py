@@ -572,7 +572,7 @@ class RasterDataset(GeoDataset):
         self, filepaths: Sequence[str], query: GeoSlice
     ) -> Tensor:
         """Process files for a group (either time step or entire index).
-        
+
         Args:
             filepaths: one or more files to load and merge
             query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
@@ -582,58 +582,54 @@ class RasterDataset(GeoDataset):
         """
         if not self.separate_files:
             return self._merge_files(filepaths, query, self.band_indexes)
-        
+
         # Functional approach for separate files
         filename_regex = re.compile(self.filename_regex, re.VERBOSE)
-        
+
         def get_band_filepaths(band: str) -> list[str]:
             """Get all filepaths for a specific band.
-            
+
             Args:
                 band: band name to construct the filepath for
 
             Returns:
                 List of filepaths for the specified band.
-            
+
             """
             return [
-                self._construct_band_filepath(fp, band, filename_regex) 
+                self._construct_band_filepath(fp, band, filename_regex)
                 for fp in filepaths
             ]
-        
+
         # Process all bands in parallel conceptually
         band_tensors = [
-            self._merge_files(get_band_filepaths(band), query)
-            for band in self.bands
+            self._merge_files(get_band_filepaths(band), query) for band in self.bands
         ]
-        
+
         return torch.cat(band_tensors, dim=0)
 
     def _construct_band_filepath(
-        self, 
-        filepath: str, 
-        target_band: str, 
-        filename_regex: re.Pattern
+        self, filepath: str, target_band: str, filename_regex: re.Pattern
     ) -> str:
         """Construct the full filepath for a specific band by replacing the band identifier.
-        
+
         Args:
             filepath: original filepath with band identifier
             target_band: band identifier to replace with
             filename_regex: regex pattern with 'band' named group
-            
+
         Returns:
             Filepath with replaced band identifier.
         """
         filename = os.path.basename(filepath)
         directory = os.path.dirname(filepath)
         match = filename_regex.match(filename)
-        
+
         if match and 'band' in match.groupdict():
             start = match.start('band')
             end = match.end('band')
             filename = filename[:start] + target_band + filename[end:]
-        
+
         return os.path.join(directory, filename)
 
     def _merge_files(
