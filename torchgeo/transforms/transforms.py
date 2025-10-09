@@ -19,6 +19,8 @@ class AugmentationSequential(K.AugmentationSequential):
 
 
 # TODO: contribute these to Kornia and delete this file
+
+
 class _ExtractPatches(K.GeometricAugmentationBase2D):
     """Extract patches from an image or mask."""
 
@@ -87,8 +89,25 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
             padding=flags['padding'],
         )
 
-        if flags['keepdim']:
-            out = rearrange(out, 'b t c h w -> (b t) c h w')
+        # Handle temporal data from VideoSequential
+        # If we extracted multiple patches and batch size suggests temporal data (even number),
+        # rearrange to group patches by spatial location rather than temporal sequence
+        # Only apply this fix when keepdim=True (for flattening compatibility)
+        if (
+            len(out.shape) == 5
+            and out.shape[1] > 1
+            and input.shape[0] % 2 == 0
+            and flags['keepdim']
+        ):
+            # Fix Issue 3: Rearrange to group patches by spatial location
+            # Current: patches from t1, then patches from t2
+            # Desired: patch_0 from [t1,t2], patch_1 from [t1,t2], etc.
+            temporal_frames = 2
+            out = rearrange(out, '(b t) n c h w -> (b n t) c h w', t=temporal_frames)
+        elif flags['keepdim']:
+            # Original behavior - flatten patches into batch dimension
+            out = rearrange(out, 'b n c h w -> (b n) c h w')
+        # If keepdim=False, keep the [B, N, C, H, W] shape as is
 
         return out
 

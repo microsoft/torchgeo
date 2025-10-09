@@ -6,10 +6,11 @@ model:
     in_channels: 3
     loss: 'bce'
 data:
-  class_path: LEVIRCDPlusDataModule
+  class_path: LEVIRCDDataModule
   init_args:
     batch_size: 2
     patch_size: 32
+    dataset_variant: 'levircd-plus'
     val_split_pct: 0.5
   dict_kwargs:
     root: 'tests/data/levircd/levircdplus'
