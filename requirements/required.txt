@@ -6,7 +6,7 @@ jsonargparse[signatures]==4.41.0
 kornia==0.8.1
 lightly==1.5.22
 lightning==2.5.4
-matplotlib==3.10.6
+matplotlib==3.10.7
 numpy==2.2.4
 pandas==2.3.3
 pillow==11.3.0
