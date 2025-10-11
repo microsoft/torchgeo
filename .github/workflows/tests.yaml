@@ -57,7 +57,7 @@ jobs:
       - name: Run pytest checks
         run: |
           uv run pytest --cov=torchgeo --cov-report=xml
-          uv run python3 -m torchgeo --help
+          uv run python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.1
         with:
