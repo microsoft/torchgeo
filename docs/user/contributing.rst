@@ -54,7 +54,7 @@ For example, if you add a new dataset in ``torchgeo/datasets/foo.py``, you'll ne
 
 .. code-block:: console
 
-   $ pytest --cov=torchgeo.datasets tests/datasets/test_foo.py
+   $ uv run pytest --cov=torchgeo.datasets tests/datasets/test_foo.py
    ========================= test session starts =========================
    platform darwin -- Python 3.10.11, pytest-6.2.4, py-1.9.0, pluggy-0.13.0
    rootdir: ~/torchgeo, configfile: pyproject.toml
@@ -75,7 +75,7 @@ For example, if you add a new dataset in ``torchgeo/datasets/foo.py``, you'll ne
 
 From this output, you can see that all tests pass, but many lines of code in ``torchgeo/datasets/foo.py`` are not being tested, including 376--403, 429--496, etc. In order for this pull request to be merged, additional tests will need to be added until there is 100% test coverage.
 
-These tests require `pytest <https://docs.pytest.org/en/stable/>`_ and `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_ to be installed.
+These tests require the test dependencies to be installed, which can be done with ``uv sync --extra tests``.
 
 .. note:: If you add a new dataset, the tests will require some form of data to run. This data should be stored in ``tests/data/<dataset>``. Please don't include real data, as this may violate the license the data is distributed under, and can involve very large file sizes. Instead, create fake data examples using the instructions found `here <https://github.com/torchgeo/torchgeo/blob/main/tests/data/README.md>`__.
 
@@ -118,9 +118,9 @@ You can also use `git pre-commit hooks <https://pre-commit.com/>`_ to automatica
 
 .. code-block:: console
 
-   $ pip install pre-commit
-   $ pre-commit install
-   $ pre-commit run --all-files
+   $ uv sync --dev
+   $ uv run pre-commit install
+   $ uv run pre-commit run --all-files
 
 
 Now, every time you run ``git commit``, pre-commit will run and let you know if any of the files that you changed fail the linters. If pre-commit passes then your code should be ready (style-wise) for a pull request. Note that you will need to run ``pre-commit run --all-files`` if any of the hooks in ``.pre-commit-config.yaml`` change, see `here <https://pre-commit.com/#4-optional-run-against-all-the-files>`__.
@@ -132,9 +132,9 @@ All of our documentation is hosted on `Read the Docs <https://about.readthedocs.
 
 .. code-block:: console
 
-   $ pip install .[docs]
+   $ uv sync --extra docs
    $ cd docs
-   $ pip install -r requirements.txt
+   $ uv pip install -r requirements.txt
 
 
 Then run the following commands:
@@ -150,11 +150,12 @@ The resulting HTML files can be found in ``_build/html``. Open ``index.html`` in
 Tutorials
 ---------
 
-TorchGeo has a number of tutorials included in the documentation that can be run in `Lightning Studios <https://lightning.ai/studios>`_ and `Google Colab <https://colab.research.google.com/>`_. These Jupyter notebooks are tested before each release to make sure that they still run properly. To test these locally, install `pytest <https://docs.pytest.org/en/stable/>`_ and `nbmake <https://github.com/treebeardtech/nbmake>`_ and run:
+TorchGeo has a number of tutorials included in the documentation that can be run in `Lightning Studios <https://lightning.ai/studios>`_ and `Google Colab <https://colab.research.google.com/>`_. These Jupyter notebooks are tested before each release to make sure that they still run properly. To test these locally, install the test dependencies and run:
 
 .. code-block:: console
 
-   $ pytest --nbmake docs/tutorials
+   $ uv sync --extra tests
+   $ uv run pytest --nbmake docs/tutorials
 
 
 Datasets

@@ -22,29 +22,19 @@ jobs:
     steps:
       - name: Clone repo
         uses: actions/checkout@v5.0.0
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v6.0.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Cache dependencies
-        uses: actions/cache@v4.3.0
-        id: cache
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/datasets.txt', 'requirements/models.txt', 'requirements/tests.txt') }}
-        if: ${{ runner.os != 'macOS' }}
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          pip install -r requirements/required.txt -r requirements/datasets.txt -r requirements/models.txt -r requirements/tests.txt
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+      - name: List dependencies
+        run: uv pip list
       - name: Run pytest checks
         run: |
-          pytest --cov=torchgeo --cov-report=xml
-          python3 -m torchgeo --help
+          uv run pytest --cov=torchgeo --cov-report=xml
+          uv run python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.1
         with:
@@ -55,28 +45,19 @@ jobs:
     steps:
       - name: Clone repo
         uses: actions/checkout@v5.0.0
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v6.0.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: '3.11'
-      - name: Cache dependencies
-        uses: actions/cache@v4.3.0
-        id: cache
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/min-reqs.old') }}
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
       - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          pip install -r requirements/min-reqs.old
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+        run: uv sync --all-extras --dev --resolution lowest-direct
+      - name: List dependencies
+        run: uv pip list
       - name: Run pytest checks
         run: |
-          pytest --cov=torchgeo --cov-report=xml
-          python3 -m torchgeo --help
+          uv run pytest --cov=torchgeo --cov-report=xml
+          uv run python3 -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.1
         with:
@@ -87,28 +68,19 @@ jobs:
     steps:
       - name: Clone repo
         uses: actions/checkout@v5.0.0
-      - name: Set up python
-        id: setup-python
-        uses: actions/setup-python@v6.0.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: '3.13'
-      - name: Cache dependencies
-        uses: actions/cache@v4.3.0
-        id: cache
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ runner.os }}-${{ runner.arch }}-Python-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements/required.txt', 'requirements/tests.txt') }}
-      - name: Install pip dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          pip install -r requirements/required.txt -r requirements/tests.txt
-          pip cache purge
-      - name: List pip dependencies
-        run: pip list
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --extra tests --dev
+      - name: List dependencies
+        run: uv pip list
       - name: Run pytest checks
         run: |
-          pytest --cov=torchgeo --cov-report=xml
-          python3 -m torchgeo --help
+          uv run pytest --cov=torchgeo --cov-report=xml
+          uv run python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.1
         with:

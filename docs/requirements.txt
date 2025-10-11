@@ -4,6 +4,6 @@
 # https://github.com/pytorch/pytorch_sphinx_theme/issues/143
 #
 # All other documentation dependencies can be found in
-# setup.cfg and requirements/docs.txt
+# pyproject.toml under [project.optional-dependencies.docs]
 
 -e git+https://github.com/pytorch/pytorch_sphinx_theme.git#egg=pytorch_sphinx_theme

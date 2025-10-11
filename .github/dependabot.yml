@@ -10,7 +10,7 @@ updates:
     schedule:
       interval: 'weekly'
   - package-ecosystem: 'pip'
-    directory: '/requirements'
+    directory: '/'
     schedule:
       interval: 'daily'
     groups:
