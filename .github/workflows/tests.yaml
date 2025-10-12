@@ -48,7 +48,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.11'
           enable-cache: true
       - name: Install pip dependencies
         run: uv sync --all-extras --dev --resolution lowest-direct
@@ -71,7 +71,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.13'
           enable-cache: true
       - name: Install dependencies
         run: uv sync --extra tests --dev
