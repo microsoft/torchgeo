@@ -25,7 +25,7 @@ class TestYOLO:
 
         weights = YOLO_Weights.DELINEATE_ANYTHING
         path = tmp_path / f'{weights}.pt'
-        model = ultralytics.YOLO(
+        model = ultralytics.YOLO(  # type: ignore[attr-defined]
             model=f'{weights.meta["model"]}.yaml', task=weights.meta['task']
         )
         model.ckpt = model.state_dict()

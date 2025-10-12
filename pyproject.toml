@@ -213,7 +213,6 @@ warn_unused_configs = true
 [tool.pytest.ini_options]
 # Skip slow tests by default
 addopts = "-m 'not slow'"
-# https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 filterwarnings = [
     # Warnings raised by dependencies of dependencies, out of our control
     # https://github.com/Cadene/pretrained-models.pytorch/issues/221
@@ -247,6 +246,8 @@ filterwarnings = [
     "ignore:Call to deprecated create function:DeprecationWarning:tensorboard.compat.proto",
     # https://github.com/treebeardtech/nbmake/issues/68
     'ignore:The \(fspath. py.path.local\) argument to NotebookFile is deprecated:pytest.PytestDeprecationWarning:nbmake.pytest_plugin',
+    # nbmake pydantic v2 compatibility issue with NotebookNode
+    "ignore:Unable to generate pydantic-core schema for <class `nbformat.notebooknode.NotebookNode`>:UserWarning",
     # https://github.com/pytorch/pytorch/pull/24929
     "ignore:Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0:UserWarning:torch.nn.functional",
     # https://github.com/scikit-image/scikit-image/issues/6663
@@ -302,7 +303,7 @@ filterwarnings = [
     # Unexpected warnings, worth investigating
     # https://github.com/pytest-dev/pytest/issues/11461
     "ignore::pytest.PytestUnraisableExceptionWarning",
-]
+]# https://docs.pytest.org/en/latest/how-to/capture-warnings.html
 markers = ["slow: marks tests as slow"]
 norecursedirs = [".ipynb_checkpoints", "data", "__pycache__"]
 testpaths = ["tests", "docs/tutorials"]
