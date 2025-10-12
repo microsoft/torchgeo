@@ -75,7 +75,7 @@ For example, if you add a new dataset in ``torchgeo/datasets/foo.py``, you'll ne
 
 From this output, you can see that all tests pass, but many lines of code in ``torchgeo/datasets/foo.py`` are not being tested, including 376--403, 429--496, etc. In order for this pull request to be merged, additional tests will need to be added until there is 100% test coverage.
 
-These tests require the test dependencies to be installed, which can be done with ``uv sync --extra tests``.
+These tests require `pytest <https://docs.pytest.org/en/stable/>`_ and `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/>`_ to be installed.
 
 .. note:: If you add a new dataset, the tests will require some form of data to run. This data should be stored in ``tests/data/<dataset>``. Please don't include real data, as this may violate the license the data is distributed under, and can involve very large file sizes. Instead, create fake data examples using the instructions found `here <https://github.com/torchgeo/torchgeo/blob/main/tests/data/README.md>`__.
 
@@ -118,7 +118,7 @@ You can also use `git pre-commit hooks <https://pre-commit.com/>`_ to automatica
 
 .. code-block:: console
 
-   $ uv sync --dev
+   $ uv add pre-commit
    $ uv run pre-commit install
    $ uv run pre-commit run --all-files
 
@@ -154,7 +154,6 @@ TorchGeo has a number of tutorials included in the documentation that can be run
 
 .. code-block:: console
 
-   $ uv sync --extra tests
    $ uv run pytest --nbmake docs/tutorials
 
 
