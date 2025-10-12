@@ -16,7 +16,7 @@ jobs:
           python-version: '3.13'
           enable-cache: true
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --torch-backend=auto
       - name: Install build tool
         run: uv pip install build
       - name: List dependencies

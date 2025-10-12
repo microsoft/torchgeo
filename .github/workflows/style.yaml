@@ -24,7 +24,7 @@ jobs:
           python-version: '3.13'
           enable-cache: true
       - name: Install dependencies
-        run: uv sync --all-extras
+        run: uv sync --all-extras --torch-backend=auto
       - name: List dependencies
         run: uv pip list
       - name: Run mypy checks
@@ -41,7 +41,7 @@ jobs:
           python-version: '3.13'
           enable-cache: true
       - name: Install dependencies
-        run: uv sync --extra style
+        run: uv sync --extra style --torch-backend=auto
       - name: List dependencies
         run: uv pip list
       - name: Run ruff checks

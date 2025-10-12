@@ -22,7 +22,7 @@ jobs:
           python-version: '3.13'
           enable-cache: true
       - name: Install dependencies
-        run: uv sync --extra datasets --extra tests
+        run: uv sync --extra datasets --extra tests --torch-backend=auto
       - name: List dependencies
         run: uv pip list
       - name: Run integration checks
@@ -44,7 +44,7 @@ jobs:
           enable-cache: true
       - name: Install dependencies
         run: |
-          uv sync --extra docs --extra tests
+          uv sync --extra docs --extra tests --torch-backend=auto
           uv add planetary_computer pystac tensorboard h5py scikit-learn
       - name: List dependencies
         run: uv pip list

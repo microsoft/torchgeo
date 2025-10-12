@@ -27,7 +27,7 @@ jobs:
           enable-cache: true
       - name: Install dependencies
         run: |
-          uv sync --extra docs --extra tests
+          uv sync --extra docs --extra tests --torch-backend=auto
           uv add planetary_computer pystac tensorboard h5py scikit-learn
       - name: List dependencies
         run: uv pip list

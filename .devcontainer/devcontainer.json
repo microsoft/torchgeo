@@ -10,7 +10,7 @@
   },
 
   // "postCreateCommand": "",
-  "postStartCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && $HOME/.cargo/bin/uv sync --all-extras",
+  "postStartCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && $HOME/.cargo/bin/uv sync --all-extras --torch-backend=auto",
 
   // Enable GPU support
   "hostRequirements": {
