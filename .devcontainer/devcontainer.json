@@ -3,20 +3,18 @@
   "name": "Torchgeo DevContainer",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "image": "mcr.microsoft.com/devcontainers/python:3.13",
-
   // Features to add to the dev container. More info: https://containers.dev/features.
   "features": {
-    "ghcr.io/devcontainers/features/git:1": { "version": "os-provided" }
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "os-provided"
+    }
   },
-
   // "postCreateCommand": "",
-  "postStartCommand": "pip install -e .[all]",
-
+  "postStartCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && $HOME/.cargo/bin/uv sync --all-extras",
   // Enable GPU support
   "hostRequirements": {
     "gpu": "optional"
   },
-
   "customizations": {
     "vscode": {
       "extensions": [
@@ -31,7 +29,7 @@
         "python.languageServer": "Pylance",
         "python.defaultInterpreterPath": "/usr/local/bin/python",
         "python.testing.pytestEnabled": true,
-        "python.testing.pytestPath": "/usr/local/py-utils/bin/pytest",
+        "python.testing.pytestPath": "uv run pytest",
         "python.editor.formatOnSave": true,
         "python.editor.formatOnSaveMode": "file",
         "python.editor.formatOnPaste": false,

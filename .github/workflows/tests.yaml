@@ -28,7 +28,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        run: uv sync --all-extras
       - name: List dependencies
         run: uv pip list
       - name: Run pytest checks
@@ -51,7 +51,7 @@ jobs:
           python-version: '3.11'
           enable-cache: true
       - name: Install pip dependencies
-        run: uv sync --all-extras --dev --resolution lowest-direct
+        run: uv sync --all-extras --resolution lowest-direct
       - name: List dependencies
         run: uv pip list
       - name: Run pytest checks
@@ -74,7 +74,7 @@ jobs:
           python-version: '3.13'
           enable-cache: true
       - name: Install dependencies
-        run: uv sync --extra tests --dev
+        run: uv sync --extra tests
       - name: List dependencies
         run: uv pip list
       - name: Run pytest checks

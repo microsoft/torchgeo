@@ -24,7 +24,7 @@ jobs:
           python-version: '3.13'
           enable-cache: true
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        run: uv sync --all-extras
       - name: List dependencies
         run: uv pip list
       - name: Run mypy checks
