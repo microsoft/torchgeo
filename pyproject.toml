@@ -247,7 +247,6 @@ filterwarnings = [
     "ignore:Call to deprecated create function:DeprecationWarning:tensorboard.compat.proto",
     # https://github.com/treebeardtech/nbmake/issues/68
     'ignore:The \(fspath. py.path.local\) argument to NotebookFile is deprecated:pytest.PytestDeprecationWarning:nbmake.pytest_plugin',
-
     # pkg_resources deprecation warning from nbmake
     "ignore:pkg_resources is deprecated as an API:UserWarning:nbmake.pytest_plugin",
     # https://github.com/pytorch/pytorch/pull/24929

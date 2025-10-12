@@ -51,13 +51,13 @@ jobs:
           python-version: '3.11'
           enable-cache: true
       - name: Install pip dependencies
-        run: uv sync --all-extras --resolution lowest-direct
+        run: uv sync --all-extras --resolution lowest
       - name: List dependencies
         run: uv pip list
       - name: Run pytest checks
         run: |
-          uv run --resolution lowest-direct pytest --cov=torchgeo --cov-report=xml -p no:nbmake
-          uv run --resolution lowest-direct python -m torchgeo --help
+          uv run --resolution lowest pytest --cov=torchgeo --cov-report=xml -p no:nbmake
+          uv run --resolution lowest python -m torchgeo --help
       - name: Report coverage
         uses: codecov/codecov-action@v5.5.1
         with:
