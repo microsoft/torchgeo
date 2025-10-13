@@ -107,10 +107,27 @@ class SpatialSampler(abc.ABC):
             x, y, t = dataset.bounds
             self.roi = shapely.box(x.start, y.start, x.stop, y.stop)
 
-    @abc.abstractmethod
     def __iter__(self) -> Iterator[tuple[slice, slice]]:
-        """Return spatial coordinates to index a dataset.
+        """Spatial samplers should not be used directly for iteration.
+        
+        Use the as_spatiotemporal() class method to create a SpatioTemporalGeoSampler
+        that ensures valid spatiotemporal sampling.
+        
+        Raises:
+            RuntimeError: Always, as direct iteration is not allowed.
+        """
+        raise RuntimeError(
+            f"Direct iteration over {self.__class__.__name__} is not allowed. "
+            f"Use {self.__class__.__name__}.as_spatiotemporal() to create a SpatioTemporalGeoSampler instead."
+        )
 
+    @abc.abstractmethod
+    def _iter_impl(self) -> Iterator[tuple[slice, slice]]:
+        """Internal implementation of spatial iteration.
+        
+        This method should be implemented by subclasses and is called internally
+        by SpatioTemporalGeoSampler.
+        
         Yields:
             [xmin:xmax, ymin:ymax] coordinates to index a dataset.
         """
@@ -122,6 +139,38 @@ class SpatialSampler(abc.ABC):
         Returns:
             number of spatial samples
         """
+
+    @classmethod
+    def as_spatiotemporal(
+        cls,
+        dataset: GeoDataset,
+        temporal_sampler: 'TemporalSampler | None' = None,
+        **kwargs
+    ) -> 'SpatioTemporalGeoSampler':
+        """Create a SpatioTemporalGeoSampler with this spatial sampler.
+        
+        This is the recommended way to use spatial samplers, as it ensures
+        that all generated samples have valid spatiotemporal data.
+        
+        Args:
+            dataset: dataset to index from
+            temporal_sampler: optional temporal sampler (defaults to FullTemporalSampler)
+            **kwargs: additional arguments passed to the spatial sampler constructor
+            and SpatioTemporalGeoSampler
+            
+        Returns:
+            SpatioTemporalGeoSampler instance with this spatial sampling strategy
+        """
+        # Split kwargs between spatial sampler and SpatioTemporalGeoSampler
+        import inspect
+        spatial_params = inspect.signature(cls.__init__).parameters.keys()
+        spatial_kwargs = {k: v for k, v in kwargs.items() if k in spatial_params}
+        geo_kwargs = {k: v for k, v in kwargs.items() if k not in spatial_params}
+        
+        spatial_sampler = cls(dataset, **spatial_kwargs)
+        if temporal_sampler is None:
+            temporal_sampler = FullTemporalSampler(dataset)
+        return SpatioTemporalGeoSampler(spatial_sampler, temporal_sampler, **geo_kwargs)
 
 
 class TemporalSampler(abc.ABC):
@@ -154,10 +203,27 @@ class TemporalSampler(abc.ABC):
             x, y, t = dataset.bounds
             self.toi = pd.Interval(t.start, t.stop)
 
-    @abc.abstractmethod
     def __iter__(self) -> Iterator[slice]:
-        """Return temporal coordinates to index a dataset.
+        """Temporal samplers should not be used directly for iteration.
+        
+        Use the as_spatiotemporal() class method to create a SpatioTemporalGeoSampler
+        that ensures valid spatiotemporal sampling.
+        
+        Raises:
+            RuntimeError: Always, as direct iteration is not allowed.
+        """
+        raise RuntimeError(
+            f"Direct iteration over {self.__class__.__name__} is not allowed. "
+            f"Use {self.__class__.__name__}.as_spatiotemporal() to create a SpatioTemporalGeoSampler instead."
+        )
 
+    @abc.abstractmethod
+    def _iter_impl(self) -> Iterator[slice]:
+        """Internal implementation of temporal iteration.
+        
+        This method should be implemented by subclasses and is called internally
+        by SpatioTemporalGeoSampler.
+        
         Yields:
             [tmin:tmax] coordinates to index a dataset.
         """
@@ -169,6 +235,38 @@ class TemporalSampler(abc.ABC):
         Returns:
             number of temporal samples
         """
+
+    @classmethod
+    def as_spatiotemporal(
+        cls,
+        dataset: GeoDataset,
+        spatial_sampler: 'SpatialSampler | None' = None,
+        **kwargs
+    ) -> 'SpatioTemporalGeoSampler':
+        """Create a SpatioTemporalGeoSampler with this temporal sampler.
+        
+        This is the recommended way to use temporal samplers, as it ensures
+        that all generated samples have valid spatiotemporal data.
+        
+        Args:
+            dataset: dataset to index from
+            spatial_sampler: optional spatial sampler (defaults to FullSpatialSampler)
+            **kwargs: additional arguments passed to the temporal sampler constructor
+            and SpatioTemporalGeoSampler
+            
+        Returns:
+            SpatioTemporalGeoSampler instance with this temporal sampling strategy
+        """
+        # Split kwargs between temporal sampler and SpatioTemporalGeoSampler
+        import inspect
+        temporal_params = inspect.signature(cls.__init__).parameters.keys()
+        temporal_kwargs = {k: v for k, v in kwargs.items() if k in temporal_params}
+        geo_kwargs = {k: v for k, v in kwargs.items() if k not in temporal_params}
+        
+        temporal_sampler = cls(dataset, **temporal_kwargs)
+        if spatial_sampler is None:
+            spatial_sampler = FullSpatialSampler(dataset)
+        return SpatioTemporalGeoSampler(spatial_sampler, temporal_sampler, **geo_kwargs)
 
 
 class RandomSpatialSampler(SpatialSampler):
@@ -239,7 +337,7 @@ class RandomSpatialSampler(SpatialSampler):
         if torch.sum(self.areas) == 0:
             self.areas += 1
 
-    def __iter__(self) -> Iterator[tuple[slice, slice]]:
+    def _iter_impl(self) -> Iterator[tuple[slice, slice]]:
         """Return spatial coordinates to index a dataset.
 
         Yields:
@@ -328,7 +426,7 @@ class GridSpatialSampler(SpatialSampler):
             self.length += rows * cols
             self.valid_tiles.append((i, bounds, rows, cols))
 
-    def __iter__(self) -> Iterator[tuple[slice, slice]]:
+    def _iter_impl(self) -> Iterator[tuple[slice, slice]]:
         """Return spatial coordinates to index a dataset.
 
         Yields:
@@ -386,7 +484,7 @@ class PreChippedSpatialSampler(SpatialSampler):
         self.shuffle = shuffle
         self.generator = generator
 
-    def __iter__(self) -> Iterator[tuple[slice, slice]]:
+    def _iter_impl(self) -> Iterator[tuple[slice, slice]]:
         """Return spatial coordinates to index a dataset.
 
         Yields:
@@ -460,7 +558,7 @@ class WindowTemporalSampler(TemporalSampler):
 
                 current_start += self.stride
 
-    def __iter__(self) -> Iterator[slice]:
+    def _iter_impl(self) -> Iterator[slice]:
         """Return temporal coordinates to index a dataset.
 
         Yields:
@@ -518,7 +616,6 @@ class FixedLengthTemporalSampler(TemporalSampler):
             # Collect all unique timestamp boundaries from the actual data
             all_timestamps = set()
             for interval in self.index.index:
-                all_timestamps.add(interval.left)
                 all_timestamps.add(interval.right)
             self.timestamps = sorted(all_timestamps)
         else:
@@ -532,7 +629,7 @@ class FixedLengthTemporalSampler(TemporalSampler):
                 len(self.timestamps) if len(self.timestamps) >= length else 0
             )
 
-    def __iter__(self) -> Iterator[slice]:
+    def _iter_impl(self) -> Iterator[slice]:
         """Return temporal coordinates to index a dataset.
 
         Yields:
@@ -586,7 +683,7 @@ class FullTemporalSampler(TemporalSampler):
         """
         super().__init__(dataset, toi)
 
-    def __iter__(self) -> Iterator[slice]:
+    def _iter_impl(self) -> Iterator[slice]:
         """Return temporal coordinates to index a dataset.
 
         Yields:
@@ -606,6 +703,43 @@ class FullTemporalSampler(TemporalSampler):
         return 1 if not self.index.empty else 0
 
 
+class FullSpatialSampler(SpatialSampler):
+    """Samples the full spatial extent of the dataset.
+
+    This sampler returns the entire spatial bounds of the dataset,
+    which is useful when you want to include all available area in a single sample.
+    """
+
+    def __init__(self, dataset: GeoDataset, roi: Polygon | None = None) -> None:
+        """Initialize a new FullSpatialSampler instance.
+
+        Args:
+            dataset: dataset to index from
+            roi: region of interest to sample from
+                (defaults to the bounds of ``dataset.index``)
+        """
+        super().__init__(dataset, roi)
+
+    def _iter_impl(self) -> Iterator[tuple[slice, slice]]:
+        """Return spatial coordinates to index a dataset.
+
+        Yields:
+            [xmin:xmax, ymin:ymax] coordinates to index a dataset.
+        """
+        if not self.index.empty:
+            # Get the overall spatial bounds from the dataset
+            xmin, ymin, xmax, ymax = self.roi.bounds
+            yield slice(xmin, xmax), slice(ymin, ymax)
+
+    def __len__(self) -> int:
+        """Return the number of spatial samples.
+
+        Returns:
+            number of spatial samples (always 1 for full spatial sampling)
+        """
+        return 1 if not self.index.empty else 0
+
+
 class SpatioTemporalGeoSampler(GeoSampler):
     """Combines spatial and temporal sampling strategies.
 
@@ -617,8 +751,9 @@ class SpatioTemporalGeoSampler(GeoSampler):
 
     def __init__(
         self,
-        spatial_sampler: SpatialSampler,
-        temporal_sampler: type[FullTemporalSampler] | TemporalSampler = FullTemporalSampler,
+        spatial_sampler: SpatialSampler | None = None,
+        temporal_sampler: TemporalSampler | None = None,
+        dataset: GeoDataset | None = None,
         mode: Literal['product', 'zip'] = 'product',
         max_retries: int = 100,
     ) -> None:
@@ -653,6 +788,16 @@ class SpatioTemporalGeoSampler(GeoSampler):
             sampler = SpatioTemporalGeoSampler(spatial, temporal, mode='product')
             ```
 
+        5. Full Dataset Analysis (Full Spatial + Full Temporal):
+            ```python
+            # Use entire spatial and temporal extent (default behavior)
+            sampler = SpatioTemporalGeoSampler(dataset=dataset)
+            # Equivalent to:
+            # spatial = FullSpatialSampler(dataset)
+            # temporal = FullTemporalSampler(dataset)
+            # sampler = SpatioTemporalGeoSampler(spatial, temporal)
+            ```
+
         4. Crop Monitoring (Grid + Monthly Windows):
             ```python
             # Regular grid of 1km x 1km patches
@@ -665,15 +810,30 @@ class SpatioTemporalGeoSampler(GeoSampler):
             ```
 
         Args:
-             spatial_sampler: spatial sampling strategy
+             spatial_sampler: spatial sampling strategy. Defaults to
+                  :class:`~torchgeo.samplers.FullSpatialSampler` which samples the full
+                  spatial extent of the dataset.
              temporal_sampler: temporal sampling strategy. Defaults to
                   :class:`~torchgeo.samplers.FullTemporalSampler` which samples the full
-                  temporal extent of the dataset (making it a spatial-only sampler).
+                  temporal extent of the dataset.
+             dataset: dataset to index from. Required if spatial_sampler or temporal_sampler
+                  are None to create default samplers.
              mode: combination mode - 'product' tries all combinations between spatial and temporal
                   samples to form the Cartesian product, 'zip' for pairing spatial and temporal samples
              max_retries: maximum number of retries to find valid samples when
                   generating random combinations
         """
+        # Handle default samplers
+        if spatial_sampler is None:
+            if dataset is None:
+                raise ValueError('dataset must be provided if spatial_sampler is None')
+            spatial_sampler = FullSpatialSampler(dataset)
+            
+        if temporal_sampler is None:
+            if dataset is None:
+                dataset = spatial_sampler.dataset
+            temporal_sampler = FullTemporalSampler(dataset)
+        
         self.spatial_sampler = spatial_sampler
         self.temporal_sampler = temporal_sampler
         self.mode = mode
@@ -702,7 +862,7 @@ class SpatioTemporalGeoSampler(GeoSampler):
         """
         self.valid_samples = []
 
-        for t_slice in self.temporal_sampler:
+        for t_slice in self.temporal_sampler._iter_impl():
             # Create temporal interval for filtering
             temporal_interval = pd.Interval(t_slice.start, t_slice.stop)
 
@@ -714,7 +874,7 @@ class SpatioTemporalGeoSampler(GeoSampler):
             if temporal_index.empty:
                 continue
 
-            for x_slice, y_slice in self.spatial_sampler:
+            for x_slice, y_slice in self.spatial_sampler._iter_impl():
                 # Filter by spatial constraint
                 spatiotemporal_index = temporal_index.cx[
                     x_slice.start : x_slice.stop, y_slice.start : y_slice.stop
@@ -781,8 +941,8 @@ class SpatioTemporalGeoSampler(GeoSampler):
                 yield sample
         else:  # zip mode
             # Pair spatial and temporal samples, validating each combination
-            spatial_iter = iter(self.spatial_sampler)
-            temporal_iter = iter(self.temporal_sampler)
+            spatial_iter = self.spatial_sampler._iter_impl()
+            temporal_iter = self.temporal_sampler._iter_impl()
 
             try:
                 while True:
