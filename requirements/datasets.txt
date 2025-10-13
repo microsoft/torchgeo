@@ -1,7 +1,7 @@
 # datasets
 h5py==3.14.0
 laspy==2.6.1
-netcdf4==1.7.2
+netcdf4==1.7.3
 opencv-python==4.12.0.88
 pandas[parquet]==2.3.3
 pycocotools==2.0.10
