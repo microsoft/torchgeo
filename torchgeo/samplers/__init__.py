@@ -8,6 +8,7 @@ from .constants import Units
 from .single import (
     SpatioTemporalGeoSampler,
     FixedLengthTemporalSampler,
+    FullSpatialSampler,
     FullTemporalSampler,
     GeoSampler,
     GridGeoSampler,
@@ -26,6 +27,7 @@ __all__ = (
     'BatchGeoSampler',
     'SpatioTemporalGeoSampler',
     'FixedLengthTemporalSampler',
+    'FullSpatialSampler',
     'FullTemporalSampler',
     'GeoSampler',
     'GridGeoSampler',
