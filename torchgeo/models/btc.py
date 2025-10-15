@@ -91,7 +91,7 @@ class SwinBackbone_Weights(WeightsEnum):  # type: ignore[misc]
     """SwinBackbone weights."""
 
     CITYSCAPES_SEMSEG_TINY = Weights(
-        url='https://huggingface.co/blaz-r/swin_tiny_cityscapes_semantic_torchvision/resolve/commit/b9bafabc0a113bdece8ba1b1b3658ba90645ca9e/swin_tiny_cityscapes_semantic.pth',
+        url='https://huggingface.co/blaz-r/swin_tiny_cityscapes_semantic_torchvision/resolve/0fc235be19c60ae5873ee0e569561c4e43f403ba/swin_tiny_cityscapes_semantic.pth',
         transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         meta={
             'dataset': 'Cityscapes - semantic segmentation',
@@ -103,7 +103,7 @@ class SwinBackbone_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
     CITYSCAPES_SEMSEG_SMALL = Weights(
-        url='https://huggingface.co/blaz-r/swin_small_cityscapes_semantic_torchvision/resolve/commit/b9bafabc0a113bdece8ba1b1b3658ba90645ca9e/swin_small_cityscapes_semantic.pth',
+        url='https://huggingface.co/blaz-r/swin_small_cityscapes_semantic_torchvision/resolve/97ea7dddaa2f62b3b5de85e16e2597f1635598d3/swin_small_cityscapes_semantic.pth',
         transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         meta={
             'dataset': 'Cityscapes - semantic segmentation',
@@ -115,7 +115,7 @@ class SwinBackbone_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
     CITYSCAPES_SEMSEG_BASE = Weights(
-        url='https://huggingface.co/blaz-r/swin_base_cityscapes_semantic_torchvision/resolve/commit/b9bafabc0a113bdece8ba1b1b3658ba90645ca9e/swin_base_cityscapes_semantic.pth',
+        url='https://huggingface.co/blaz-r/swin_base_cityscapes_semantic_torchvision/resolve/972003c5f18caaa5fc07f9db74ba2dc69eb6c051/swin_base_cityscapes_semantic.pth',
         transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         meta={
             'dataset': 'Cityscapes - semantic segmentation',
@@ -172,6 +172,7 @@ class SwinBackbone(Module):
             key not in ['norm.weight', 'norm.bias', 'head.weight', 'head.bias']
             for key in missing
         ):
+            # final norm and head can be missing
             msg = f'Missing keys in pretrained weights: {missing}'
             raise RuntimeError(msg)
 
