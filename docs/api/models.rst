@@ -9,6 +9,11 @@ Aurora
 .. autofunction:: aurora_swin_unet
 .. autoclass:: Aurora_Weights
 
+Be The Change (BTC)
+^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: BTC
+
 Change Star
 ^^^^^^^^^^^
 
