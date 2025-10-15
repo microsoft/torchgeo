@@ -133,7 +133,7 @@ class SwinBackbone(Module):
         """Initialise swin backbone for multi-resolution feature extraction.
 
         Args:
-            model_size: "tiny" or "base" swin size.
+            model_size: Swin size, one of 'swin_tiny', 'swin_small', or 'swin_base'.
         """
         super().__init__()
         match model_size:
