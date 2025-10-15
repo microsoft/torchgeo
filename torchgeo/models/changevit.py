@@ -295,15 +295,38 @@ class ChangeViT(Module):
         )  # [B, 2*C, H, W] for detail capture
 
         # Process each temporal frame separately through ViT backbone (parallel processing)
-        vit_features_t1 = self.encoder.forward_features(x_t1)  # [B, N, D]
-        vit_features_t2 = self.encoder.forward_features(x_t2)  # [B, N, D]
+        vit_features_t1 = self.encoder.forward_features(x_t1)  # [B, N_total, D]
+        vit_features_t2 = self.encoder.forward_features(x_t2)  # [B, N_total, D]
 
         # Extract detail features from concatenated input
         detail_features = self.detail_capture(x_concat)
 
-        # Remove CLS tokens (first token) from each temporal frame
-        patch_features_t1 = vit_features_t1[:, 1:]  # [B, N-1, D]
-        patch_features_t2 = vit_features_t2[:, 1:]  # [B, N-1, D]
+        # Get patch size to calculate expected number of patch tokens
+        patch_embed = getattr(self.encoder, 'patch_embed', None)
+        if patch_embed is None:
+            raise AttributeError('ViT backbone must have patch_embed attribute')
+
+        patch_size_attr = getattr(patch_embed, 'patch_size', None)
+        if patch_size_attr is None:
+            raise AttributeError('patch_embed must have patch_size attribute')
+
+        if isinstance(patch_size_attr, list | tuple):
+            patch_size = patch_size_attr[0]
+        else:
+            patch_size = patch_size_attr
+
+        # Calculate expected number of patch tokens based on input size
+        h_patch, w_patch = h // patch_size, w // patch_size
+        num_patch_tokens = h_patch * w_patch
+
+        # Extract only patch tokens, skipping CLS token and any register tokens
+        # CLS token is first (index 0), patch tokens follow, then register tokens (if any)
+        patch_features_t1 = vit_features_t1[
+            :, 1 : 1 + num_patch_tokens
+        ]  # [B, N_patches, D]
+        patch_features_t2 = vit_features_t2[
+            :, 1 : 1 + num_patch_tokens
+        ]  # [B, N_patches, D]
 
         # Stack temporal features for feature injection
         vit_features_stacked = torch.stack(
@@ -320,23 +343,7 @@ class ChangeViT(Module):
 
         enhanced_features_tensor = torch.stack(
             enhanced_features_list, dim=1
-        )  # [B, T=2, N-1, D]
-
-        # Get patch size from backbone
-        patch_embed = getattr(self.encoder, 'patch_embed', None)
-        if patch_embed is None:
-            raise AttributeError('ViT backbone must have patch_embed attribute')
-
-        patch_size_attr = getattr(patch_embed, 'patch_size', None)
-        if patch_size_attr is None:
-            raise AttributeError('patch_embed must have patch_size attribute')
-
-        if isinstance(patch_size_attr, list | tuple):
-            patch_size = patch_size_attr[0]
-        else:
-            patch_size = patch_size_attr
-
-        h_patch, w_patch = h // patch_size, w // patch_size
+        )  # [B, T=2, N_patches, D]
 
         # Reshape to spatial format for each temporal frame
         enhanced_spatial = rearrange(
@@ -449,7 +456,10 @@ def _create_changevit(
 
 
 def changevit_small(
-    weights: ChangeViT_Weights | None = None, img_size: int = 256, **kwargs: Any
+    weights: ChangeViT_Weights | None = None,
+    img_size: int = 256,
+    backbone: str = 'vit_small_patch14_dinov2',
+    **kwargs: Any,
 ) -> ChangeViT:
     """ChangeViT Small model.
 
@@ -458,16 +468,14 @@ def changevit_small(
     Args:
         weights: Pre-trained model weights to use.
         img_size: Input image size (default: 256 to match paper methodology).
+        backbone: Name of the timm ViT backbone to use (default: vit_small_patch14_dinov2).
         **kwargs: Additional keyword arguments.
 
     Returns:
         A ChangeViT model.
     """
     return _create_changevit(
-        model_name='vit_small_patch14_dinov2',
-        weights=weights,
-        img_size=img_size,
-        **kwargs,
+        model_name=backbone, weights=weights, img_size=img_size, **kwargs
     )
 
 
@@ -489,4 +497,76 @@ def changevit_tiny(
     """
     return _create_changevit(
         model_name='deit_tiny_patch16_224', weights=weights, img_size=img_size, **kwargs
+    )
+
+
+def changevit_small_dinov3(
+    weights: ChangeViT_Weights | None = None, img_size: int = 256, **kwargs: Any
+) -> ChangeViT:
+    """ChangeViT Small model with DINOv3 backbone.
+
+    Uses DINOv3-Small (patch16) pretrained on LVD-1.7B dataset.
+    This variant uses patch size 16x16 which matches the ChangeViT paper specification.
+
+    Args:
+        weights: Pre-trained model weights to use.
+        img_size: Input image size (default: 256 to match paper methodology).
+        **kwargs: Additional keyword arguments.
+
+    Returns:
+        A ChangeViT model.
+    """
+    return changevit_small(
+        weights=weights,
+        img_size=img_size,
+        backbone='vit_small_patch16_dinov3.lvd1689m',
+        **kwargs,
+    )
+
+
+def changevit_large(
+    weights: ChangeViT_Weights | None = None,
+    img_size: int = 256,
+    backbone: str = 'vit_large_patch16_dinov3.lvd1689m',
+    **kwargs: Any,
+) -> ChangeViT:
+    """ChangeViT Large model.
+
+    Uses ViT-Large as backbone with detail capture module.
+
+    Args:
+        weights: Pre-trained model weights to use.
+        img_size: Input image size (default: 256 to match paper methodology).
+        backbone: Name of the timm ViT backbone to use (default: vit_large_patch16_dinov3.lvd1689m).
+        **kwargs: Additional keyword arguments.
+
+    Returns:
+        A ChangeViT model.
+    """
+    return _create_changevit(
+        model_name=backbone, weights=weights, img_size=img_size, **kwargs
+    )
+
+
+def changevit_large_dinov3_sat(
+    weights: ChangeViT_Weights | None = None, img_size: int = 256, **kwargs: Any
+) -> ChangeViT:
+    """ChangeViT Large model with DINOv3 backbone pretrained on satellite imagery.
+
+    Uses DINOv3-Large (patch16) pretrained on SAT-493M dataset (Maxar satellite images).
+    This variant is specifically pretrained on satellite imagery at 0.6m resolution.
+
+    Args:
+        weights: Pre-trained model weights to use.
+        img_size: Input image size (default: 256 to match paper methodology).
+        **kwargs: Additional keyword arguments.
+
+    Returns:
+        A ChangeViT model.
+    """
+    return changevit_large(
+        weights=weights,
+        img_size=img_size,
+        backbone='vit_large_patch16_dinov3.sat493m',
+        **kwargs,
     )

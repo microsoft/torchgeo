@@ -23,7 +23,10 @@ from ..models import (
     FCN,
     FCSiamConc,
     FCSiamDiff,
+    changevit_large,
+    changevit_large_dinov3_sat,
     changevit_small,
+    changevit_small_dinov3,
     changevit_tiny,
     get_weight,
 )
@@ -50,6 +53,9 @@ class ChangeDetectionTask(BaseTask):
             'fcsiamconc',
             'changevit_small',
             'changevit_tiny',
+            'changevit_small_dinov3',
+            'changevit_large',
+            'changevit_large_dinov3_sat',
         ] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
@@ -271,6 +277,27 @@ class ChangeDetectionTask(BaseTask):
                         'Expected None or a ChangeViT_Weights enum.'
                     )
                 self.model = changevit_tiny(weights=weights)
+            case 'changevit_small_dinov3':
+                if weights is not None and not isinstance(weights, WeightsEnum):
+                    raise ValueError(
+                        f'Invalid weights for changevit_small_dinov3: {weights}. '
+                        'Expected None or a ChangeViT_Weights enum.'
+                    )
+                self.model = changevit_small_dinov3(weights=weights)
+            case 'changevit_large':
+                if weights is not None and not isinstance(weights, WeightsEnum):
+                    raise ValueError(
+                        f'Invalid weights for changevit_large: {weights}. '
+                        'Expected None or a ChangeViT_Weights enum.'
+                    )
+                self.model = changevit_large(weights=weights)
+            case 'changevit_large_dinov3_sat':
+                if weights is not None and not isinstance(weights, WeightsEnum):
+                    raise ValueError(
+                        f'Invalid weights for changevit_large_dinov3_sat: {weights}. '
+                        'Expected None or a ChangeViT_Weights enum.'
+                    )
+                self.model = changevit_large_dinov3_sat(weights=weights)
 
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
