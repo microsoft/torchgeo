@@ -59,6 +59,8 @@ class BTC(Module):
         )
         smp.base.model.init.initialize_decoder(self.decoder)
         smp.base.model.init.initialize_head(self.final_layer)
+        # padding tensors used for compatibility with UPerNet implementation
+        self.upernet_padding = [torch.tensor(0), torch.tensor(0)]
 
     def forward(self, x: Tensor) -> Tensor:
         """BTC forward call.
@@ -76,7 +78,7 @@ class BTC(Module):
         # feature difference by subtraction
         fused = self.difference(features)
         # UperNet impl. skips first 2 feats, we don't want that so we pad with 0
-        fused = [torch.tensor(0), torch.tensor(0), *fused]
+        fused = self.upernet_padding + fused
         # decode to change map
         x = self.decoder(fused)
         x = self.final_layer(x)
