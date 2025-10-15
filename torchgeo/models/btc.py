@@ -89,8 +89,8 @@ class SwinBackbone_Weights(WeightsEnum):  # type: ignore[misc]
     """SwinBackbone weights."""
 
     CITYSCAPES_SEMSEG_TINY = Weights(
-        url='https://huggingface.co/blaz-r/swin_tiny_cityscapes_semantic_torchvision/resolve/main/swin_tiny_cityscapes_semantic.pth',
-        transforms=lambda x: x,
+        url='https://huggingface.co/blaz-r/swin_tiny_cityscapes_semantic_torchvision/resolve/commit/b9bafabc0a113bdece8ba1b1b3658ba90645ca9e/swin_tiny_cityscapes_semantic.pth',
+        transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         meta={
             'dataset': 'Cityscapes - semantic segmentation',
             'in_chans': 3,
@@ -101,24 +101,24 @@ class SwinBackbone_Weights(WeightsEnum):  # type: ignore[misc]
         },
     )
     CITYSCAPES_SEMSEG_SMALL = Weights(
-        url='https://huggingface.co/blaz-r/swin_small_cityscapes_semantic_torchvision/resolve/main/swin_small_cityscapes_semantic.pth',
-        transforms=lambda x: x,
+        url='https://huggingface.co/blaz-r/swin_small_cityscapes_semantic_torchvision/resolve/commit/b9bafabc0a113bdece8ba1b1b3658ba90645ca9e/swin_small_cityscapes_semantic.pth',
+        transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         meta={
             'dataset': 'Cityscapes - semantic segmentation',
             'in_chans': 3,
-            'model': 'SwinTransformer Tiny',
+            'model': 'SwinTransformer Small',
             'publication': 'https://arxiv.org/abs/2112.01527',
             'repo': 'https://github.com/facebookresearch/Mask2Former/',
             'license': 'mit',
         },
     )
     CITYSCAPES_SEMSEG_BASE = Weights(
-        url='https://huggingface.co/blaz-r/swin_base_cityscapes_semantic_torchvision/resolve/main/swin_base_cityscapes_semantic.pth',
-        transforms=lambda x: x,
+        url='https://huggingface.co/blaz-r/swin_base_cityscapes_semantic_torchvision/resolve/commit/b9bafabc0a113bdece8ba1b1b3658ba90645ca9e/swin_base_cityscapes_semantic.pth',
+        transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         meta={
             'dataset': 'Cityscapes - semantic segmentation',
             'in_chans': 3,
-            'model': 'SwinTransformer Tiny',
+            'model': 'SwinTransformer Base',
             'publication': 'https://arxiv.org/abs/2112.01527',
             'repo': 'https://github.com/facebookresearch/Mask2Former/',
             'license': 'mit',
@@ -159,8 +159,10 @@ class SwinBackbone(Module):
                 )
 
         # load weights before passing to feature extractor
-        weights = weights.get_state_dict(progress=True)
-        missing, unexpected = model.load_state_dict(weights['state_dict'], strict=False)
+        state_dict = weights.get_state_dict(progress=True)
+        missing, unexpected = model.load_state_dict(
+            state_dict['state_dict'], strict=False
+        )
         if len(unexpected) > 0:
             msg = f'Failed to load pretrained weights for backbone: unexpected keys: {unexpected}'
             raise RuntimeError(msg)
@@ -177,16 +179,14 @@ class SwinBackbone(Module):
             model, return_nodes=return_layers
         )
         self.channels = self._get_feature_channels()
-        self.image_normalization = K.Normalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-        )
+        self.image_normalization = weights.transforms
 
         norms = []
         for ch in self.channels:
             norms.append(nn.LayerNorm(ch))
         self.norms = nn.ModuleList(norms)
         # load pretrained feature norm weights
-        self.norms.load_state_dict(weights['feat_norms_state_dict'])
+        self.norms.load_state_dict(state_dict['feat_norms_state_dict'])
 
     def forward(self, x: Tensor) -> list[Tensor]:
         """Get multi-resolution features and apply layernorm to each level.
@@ -201,7 +201,7 @@ class SwinBackbone(Module):
         features = self.feature_extractor(x)
         output = []
         for feat, norm in zip(features.values(), self.norms):
-            n, h, w, c = feat.shape
+            n, h, w, _c = feat.shape
             x = norm(feat)
             x = rearrange(x, 'n h w c -> n c h w', n=n, h=h, w=w)
             output.append(x)
