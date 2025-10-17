@@ -128,7 +128,7 @@ Now, every time you run ``git commit``, pre-commit will run and let you know if 
 Documentation
 -------------
 
-All of our documentation is hosted on `Read the Docs <https://about.readthedocs.com/>`_. If you make non-trivial changes to the documentation, it helps to build the documentation yourself locally. To do this, make sure the dependencies are installed:
+All of our documentation is hosted on `Read the Docs <https://about.readthedocs.com/>`_. If you make non-trivial changes to the documentation, it helps to build the documentation yourself locally. To do this, make sure you are using **Python < 3.13** and that the dependencies are installed:
 
 .. code-block:: console
 
@@ -136,6 +136,7 @@ All of our documentation is hosted on `Read the Docs <https://about.readthedocs.
    $ cd docs
    $ pip install -r requirements.txt
 
+Pandoc must also be installed. You can download it from the `official Pandoc website <https://pandoc.org/installing.html>`_ and ensure it is included in your system PATH.
 
 Then run the following commands:
 
