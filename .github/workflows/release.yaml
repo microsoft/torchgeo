@@ -20,7 +20,7 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v6.1.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - name: Cache dependencies
         uses: actions/cache@v4.3.0
         id: cache
@@ -50,7 +50,7 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v6.1.0
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - name: Cache dependencies
         uses: actions/cache@v4.3.0
         id: cache
