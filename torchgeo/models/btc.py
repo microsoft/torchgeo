@@ -211,10 +211,14 @@ class SwinBackbone(Module):
         return output
 
     def _get_feature_channels(self) -> list[int]:
+        """Get the number of channels in features."""
+        is_training = self.feature_extractor.training
         # dryrun
         self.feature_extractor.eval()
         with torch.no_grad():
             features = self.feature_extractor(torch.rand(1, 3, 256, 256))
+        # revert feature extractor training state
+        self.feature_extractor.train(is_training)
         # torchvision swin is channel last
         return [feature.shape[-1] for feature in features.values()]
 
