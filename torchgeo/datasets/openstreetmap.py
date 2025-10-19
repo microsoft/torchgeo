@@ -27,7 +27,7 @@ from pyproj import CRS
 
 from .errors import DatasetNotFoundError
 from .geo import VectorDataset
-from .utils import Path
+from .utils import GeoSlice, Path
 
 
 class OpenStreetMap(VectorDataset):
@@ -74,13 +74,11 @@ class OpenStreetMap(VectorDataset):
     .. versionadded:: 0.8
     """
 
-    # Overpass API endpoints (will try in order if one fails)
     _overpass_endpoints: ClassVar[list[str]] = [
         'https://overpass-api.de/api/interpreter',
         'https://overpass.kumi.systems/api/interpreter',
     ]
 
-    # Rate limiting (minimum seconds between requests)
     _min_request_interval = 1.0
     _last_request_time = 0.0
 
@@ -111,32 +109,25 @@ class OpenStreetMap(VectorDataset):
             DatasetNotFoundError: if dataset is not found and download is False
             ValueError: if invalid class configuration
         """
-        # Validate classes parameter
         self._validate_classes(classes)
 
         self.bbox = bbox
         self.classes = classes
 
-        # Handle paths parameter
         if isinstance(paths, str | pathlib.Path):
             self.root = pathlib.Path(paths)
         else:
-            # If it's an iterable, take the first one as root
             paths_iterable = cast(Iterable[Path], paths)
             self.root = pathlib.Path(next(iter(paths_iterable)))
 
-        # Create data directory
         self.root.mkdir(parents=True, exist_ok=True)
 
-        # Download data if requested
         if download:
             self._download_data()
 
-        # Check that we have the data file
         if not self._check_integrity():
             raise DatasetNotFoundError(self)
 
-        # Initialize parent VectorDataset with the downloaded file
         data_file = self._get_data_filename()
 
         super().__init__(
@@ -147,12 +138,8 @@ class OpenStreetMap(VectorDataset):
             label_name='label',
         )
 
-        # Load GeoDataFrame once and store as attribute for efficiency
-        self.gdf = gpd.read_file(data_file)
-
-        # Check for empty classes and warn user
-        if self.classes:
-            self._check_empty_classes()
+        # Defer empty class checking to first query (lazy initialization)
+        self._empty_classes_checked = False
 
     def _validate_classes(self, classes: list[dict[str, Any]]) -> None:
         """Validate classes configuration."""
@@ -172,7 +159,6 @@ class OpenStreetMap(VectorDataset):
 
     def _get_data_filename(self) -> pathlib.Path:
         """Get the filename for the cached data file."""
-        # Create a hash of the query parameters for filename
         cache_key = {'bbox': self.bbox, 'classes': self.classes}
         cache_str = json.dumps(cache_key, sort_keys=True)
         cache_hash = hashlib.md5(cache_str.encode()).hexdigest()[:16]
@@ -228,20 +214,16 @@ class OpenStreetMap(VectorDataset):
         """Download OSM data from Overpass API."""
         data_file = self._get_data_filename()
 
-        # Skip if already exists
         if data_file.exists():
             return
 
-        # Build query
         query = self._build_overpass_query()
 
-        # Try each endpoint until one works
         last_exception = None
         for endpoint in self._overpass_endpoints:
             try:
                 self._rate_limit()
 
-                # Make request
                 payload = urlencode({'data': query}).encode('utf-8')
                 req = Request(endpoint, data=payload)
                 req.add_header(
@@ -252,18 +234,13 @@ class OpenStreetMap(VectorDataset):
                 with urlopen(req, timeout=30) as response:
                     data = response.read()
 
-                # Parse JSON response
                 osm_data = json.loads(data.decode('utf-8'))
-
-                # Convert to GeoDataFrame
                 gdf = self._parse_overpass_response(osm_data)
 
-                # Save to file or raise error if no features found
                 if len(gdf) > 0:
                     gdf.to_file(data_file, driver='GeoJSON')
                     return
                 else:
-                    # No features found - provide clear error message
                     minx, miny, maxx, maxy = self.bbox
                     bbox_str = f'{minx:.6f}, {miny:.6f}, {maxx:.6f}, {maxy:.6f}'
 
@@ -275,13 +252,11 @@ class OpenStreetMap(VectorDataset):
                     raise ValueError(msg)
 
             except ValueError:
-                # Re-raise ValueError for empty results with clear message
                 raise
             except Exception as e:
                 last_exception = e
                 continue
 
-        # If we get here, all endpoints failed
         raise RuntimeError(
             f'All Overpass API endpoints failed. Last error: {last_exception}'
         )
@@ -302,7 +277,6 @@ class OpenStreetMap(VectorDataset):
             geom = self._element_to_geometry(element)
             if geom is not None:
                 geometries.append(geom)
-                # Extract properties, excluding geometry-related fields
                 props = element.get('tags', {}).copy()
                 props['osm_id'] = element.get('id')
                 props['osm_type'] = element.get('type')
@@ -313,10 +287,8 @@ class OpenStreetMap(VectorDataset):
                 columns=['geometry', 'label'], geometry='geometry', crs='EPSG:4326'
             )
 
-        # Add pre-computed labels directly from properties (avoid slow .iterrows())
         labels = [self._get_class_label({'properties': props}) for props in properties]
 
-        # Add labels to properties before creating GeoDataFrame
         for props, label in zip(properties, labels):
             props['label'] = label
 
@@ -359,6 +331,21 @@ class OpenStreetMap(VectorDataset):
 
         return None
 
+    def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
+        """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
+
+        Args:
+            query: [xmin:xmax:xres, ymin:ymax:yres, tmin:tmax:tres] coordinates to index.
+
+        Returns:
+            Sample of input, target, and/or metadata at that index.
+
+        Raises:
+            IndexError: If *query* is not found in the index.
+        """
+        self._ensure_empty_classes_checked()
+        return super().__getitem__(query)
+
     def get_label(self, feature: dict[str, Any]) -> int:
         """Get label value to use for rendering a feature.
 
@@ -368,11 +355,9 @@ class OpenStreetMap(VectorDataset):
         Returns:
             the integer label, or 0 if the feature should not be rendered.
         """
-        # Try to use pre-computed label first
         if 'properties' in feature and 'label' in feature['properties']:
             return int(feature['properties']['label'])
 
-        # Fallback to class computation (shouldn't normally be needed)
         return self._get_class_label(feature)
 
     def _get_class_label(self, feature: dict[str, Any]) -> int:
@@ -391,13 +376,12 @@ class OpenStreetMap(VectorDataset):
         """
         props = feature.get('properties', {})
 
-        # Check each class in order (priority-based)
         for class_idx, class_def in enumerate(self.classes):
             for selector in class_def['selector']:
                 if self._feature_matches_selector(props, selector):
-                    return class_idx + 1  # 1-based labeling
+                    return class_idx + 1
 
-        return 0  # No match
+        return 0
 
     def _feature_matches_selector(
         self, props: dict[str, Any], selector: dict[str, Any]
@@ -411,7 +395,6 @@ class OpenStreetMap(VectorDataset):
         Returns:
             True if feature matches selector
         """
-        # Handle case where properties might be stored as JSON string
         if 'properties' in props and isinstance(props['properties'], str):
             try:
                 actual_props = json.loads(props['properties'])
@@ -428,15 +411,12 @@ class OpenStreetMap(VectorDataset):
             if actual_value is None:
                 return False
 
-            # Also check for pandas NaN values
             if pd.isna(actual_value):
                 return False
 
             if expected_values == '*':
-                # Any value is acceptable
                 continue
             elif isinstance(expected_values, list):
-                # Must match one of the specified values
                 if actual_value not in expected_values:
                     return False
             elif actual_value != expected_values:
@@ -444,25 +424,35 @@ class OpenStreetMap(VectorDataset):
 
         return True
 
-    def _check_empty_classes(self) -> None:
-        """Check for classes with no geometries and warn the user."""
-        if not self.classes or len(self.gdf) == 0:
+    def _ensure_empty_classes_checked(self) -> None:
+        """Check for classes with no geometries and warn the user.
+
+        This method is called lazily on the first query to avoid loading
+        the entire GeoDataFrame into memory during initialization.
+        The GeoDataFrame is loaded temporarily for checking, then discarded.
+        """
+        if self._empty_classes_checked:
             return
 
-        # Use pre-computed labels to count class usage
-        label_counts = self.gdf['label'].value_counts()
+        if self.classes:
+            data_file = self._get_data_filename()
+            gdf = gpd.read_file(data_file)
 
-        # Warn about empty classes
-        for i, class_def in enumerate(self.classes):
-            class_label = i + 1  # 1-based labeling
-            if label_counts.get(class_label, 0) == 0:
-                warnings.warn(
-                    f"Class '{class_def['name']}' (label={class_label}) has no geometries in this AOI. "
-                    f'This may be due to no features of this type in the area or all features '
-                    f'being assigned to higher-priority classes.',
-                    UserWarning,
-                    stacklevel=2,
-                )
+            if len(gdf) > 0:
+                label_counts = gdf['label'].value_counts()
+
+                for i, class_def in enumerate(self.classes):
+                    class_label = i + 1
+                    if label_counts.get(class_label, 0) == 0:
+                        warnings.warn(
+                            f"Class '{class_def['name']}' (label={class_label}) has no geometries in this AOI. "
+                            f'This may be due to no features of this type in the area or all features '
+                            f'being assigned to higher-priority classes.',
+                            UserWarning,
+                            stacklevel=3,
+                        )
+
+        self._empty_classes_checked = True
 
     def plot(
         self,
@@ -488,7 +478,6 @@ class OpenStreetMap(VectorDataset):
             pred = sample['prediction'].squeeze()
             ncols = 2
 
-        # Color palette for classes
         colors = [
             '#FF6B6B',
             '#4ECDC4',
@@ -508,22 +497,17 @@ class OpenStreetMap(VectorDataset):
             arr: 'np.typing.NDArray[Any]',
         ) -> 'np.typing.NDArray[np.float64]':
             """Apply colormap to label array."""
-            # Convert tensor to numpy if needed
             if hasattr(arr, 'numpy'):
                 arr = arr.numpy()
 
-            # Create RGB image
             h, w = arr.shape
             rgb = np.zeros((h, w, 3), dtype=np.float64)
 
-            # Color 0 (background) as black
-            # Color each label with its corresponding class color
             for label in np.unique(arr):
                 if label == 0:
                     continue
                 class_idx = int(label - 1)
                 if class_idx < len(colors):
-                    # Convert hex to RGB
                     hex_color = colors[class_idx % len(colors)]
                     r = int(hex_color[1:3], 16) / 255.0
                     g = int(hex_color[3:5], 16) / 255.0
@@ -534,7 +518,6 @@ class OpenStreetMap(VectorDataset):
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 5))
 
-        # Create legend handles
         legend_handles = []
         unique_labels = np.unique(mask.numpy() if hasattr(mask, 'numpy') else mask)
         for label in unique_labels:

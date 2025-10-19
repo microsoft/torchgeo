@@ -5,6 +5,7 @@ import json
 import os
 import pathlib
 import time
+import warnings
 from typing import Any, NoReturn
 
 import geopandas as gpd
@@ -21,7 +22,7 @@ class TestOpenStreetMap:
     @pytest.fixture
     def dataset(self) -> OpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
-        bbox = (2.3520, 48.8565, 2.3525, 48.8570)  # Small Paris bbox
+        bbox = (2.3520, 48.8565, 2.3525, 48.8570)
         classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
         return OpenStreetMap(bbox=bbox, classes=classes, paths=root, download=False)
 
@@ -840,13 +841,21 @@ class TestOpenStreetMap:
 
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
+        dataset = OpenStreetMap(
+            bbox=multi_channel_params['bbox'],
+            paths=multi_channel_params['root'],
+            classes=multi_channel_params['classes'],
+            download=False,
+        )
+
+        # Warning should appear on first query (lazy initialization)
         with pytest.warns(UserWarning, match="Class 'amenity' .* has no geometries"):
-            OpenStreetMap(
-                bbox=multi_channel_params['bbox'],
-                paths=multi_channel_params['root'],
-                classes=multi_channel_params['classes'],
-                download=False,
-            )
+            dataset[dataset.bounds]
+
+        # Second query should not trigger warning
+        with warnings.catch_warnings():
+            warnings.simplefilter('error')  # Turn warnings into errors
+            dataset[dataset.bounds]  # Should not raise (no warning)
 
     def test_len(self, dataset: OpenStreetMap) -> None:
         """Test __len__ method."""
