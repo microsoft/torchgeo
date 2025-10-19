@@ -22,8 +22,8 @@ class TestOpenStreetMap:
     def dataset(self) -> OpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)  # Small Paris bbox
-        channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        return OpenStreetMap(bbox=bbox, channels=channels, paths=root, download=False)
+        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        return OpenStreetMap(bbox=bbox, classes=classes, paths=root, download=False)
 
     @pytest.fixture
     def mock_download_and_integrity(self, monkeypatch: MonkeyPatch) -> None:
@@ -37,16 +37,16 @@ class TestOpenStreetMap:
         return {
             'root': os.path.join('tests', 'data', 'openstreetmap'),
             'bbox': (2.3520, 48.8565, 2.3525, 48.8570),
-            'channels': [{'name': 'building', 'selector': [{'building': '*'}]}],
+            'classes': [{'name': 'building', 'selector': [{'building': '*'}]}],
         }
 
     @pytest.fixture
     def multi_channel_params(self) -> dict[str, Any]:
-        """Parameters for multi-channel tests to reduce file duplication."""
+        """Parameters for multi-class tests to reduce file duplication."""
         return {
             'root': os.path.join('tests', 'data', 'openstreetmap'),
             'bbox': (2.3520, 48.8565, 2.3525, 48.8570),
-            'channels': [
+            'classes': [
                 {'name': 'building', 'selector': [{'building': '*'}]},
                 {'name': 'amenity', 'selector': [{'amenity': '*'}]},
                 {'name': 'highway', 'selector': [{'highway': '*'}]},
@@ -57,42 +57,42 @@ class TestOpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
         # Use a different bbox that won't have test data
         bbox = (0.0, 0.0, 0.001, 0.001)
-        channels = [{'name': 'buildings', 'selector': [{'building': '*'}]}]
+        classes = [{'name': 'buildings', 'selector': [{'building': '*'}]}]
         with pytest.raises(DatasetNotFoundError):
-            OpenStreetMap(bbox=bbox, channels=channels, paths=root, download=False)
+            OpenStreetMap(bbox=bbox, classes=classes, paths=root, download=False)
 
     def test_init_with_download(
         self, mock_download_and_integrity: None, common_test_params: dict[str, Any]
     ) -> None:
         dataset = OpenStreetMap(
             bbox=common_test_params['bbox'],
-            channels=common_test_params['channels'],
+            classes=common_test_params['classes'],
             paths=common_test_params['root'],
             download=True,
         )
         assert dataset.bbox == common_test_params['bbox']
-        assert dataset.channels == common_test_params['channels']
+        assert dataset.classes == common_test_params['classes']
 
     def test_custom_query(self, mock_download_and_integrity: None) -> None:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
-        # Test custom selector combinations in channels
-        channels = [
+        # Test custom selector combinations in classes
+        classes = [
             {
                 'name': 'mixed_features',
                 'selector': [{'building': '*'}, {'leisure': 'park'}],
             }
         ]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, channels=channels)
-        assert dataset.channels == channels
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes)
+        assert dataset.classes == classes
 
     def test_build_overpass_query(self, mock_download_and_integrity: None) -> None:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
-        channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(bbox=bbox, channels=channels, paths=root)
+        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        dataset = OpenStreetMap(bbox=bbox, classes=classes, paths=root)
         query = dataset._build_overpass_query()
         assert 'wr["building"]' in query
         assert (
@@ -104,7 +104,7 @@ class TestOpenStreetMap:
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, channels=channels)
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels)
         filename = dataset._get_data_filename()
         assert filename.suffix == '.geojson'
         assert 'osm_features' in filename.name
@@ -123,7 +123,7 @@ class TestOpenStreetMap:
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, channels=channels)
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels)
         # Use dataset bounds for querying
         sample = dataset[dataset.bounds]
 
@@ -152,7 +152,7 @@ class TestOpenStreetMap:
         dataset = OpenStreetMap(
             bbox=common_test_params['bbox'],
             paths=common_test_params['root'],
-            channels=common_test_params['channels'],
+            classes=common_test_params['classes'],
         )
         sample = {'mask': torch.zeros((10, 10))}  # Typical sample format
         fig = dataset.plot(sample, **plot_kwargs)
@@ -178,7 +178,7 @@ class TestOpenStreetMap:
         dataset = OpenStreetMap(
             bbox=common_test_params['bbox'],
             paths=paths_input,
-            channels=common_test_params['channels'],
+            classes=common_test_params['classes'],
         )
         assert dataset.root.name == expected_root_name
         assert isinstance(dataset.root, pathlib.Path)
@@ -194,7 +194,7 @@ class TestOpenStreetMap:
             OpenStreetMap
         )  # Create instance without __init__
         dataset.bbox = bbox
-        dataset.channels = [{'name': 'nonexistent', 'selector': [{'nonexistent': '*'}]}]
+        dataset.classes = [{'name': 'nonexistent', 'selector': [{'nonexistent': '*'}]}]
         dataset.root = pathlib.Path(root)
         assert not dataset._check_integrity()
 
@@ -208,7 +208,7 @@ class TestOpenStreetMap:
         channels = [
             {'name': 'mixed', 'selector': [{'building': '*'}, {'leisure': 'park'}]}
         ]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, channels=channels)
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels)
         query = dataset._build_overpass_query()
         assert 'wr["building"]' in query
         assert 'wr["leisure"="park"]' in query
@@ -226,7 +226,7 @@ class TestOpenStreetMap:
         # Create a temporary instance to test the query generation
         dataset = OpenStreetMap.__new__(OpenStreetMap)
         dataset.bbox = common_test_params['bbox']
-        dataset.channels = channels
+        dataset.classes = channels
 
         query = dataset._build_overpass_query()
 
@@ -242,9 +242,7 @@ class TestOpenStreetMap:
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(
-            bbox=bbox, paths=root, channels=channels, download=False
-        )
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=False)
 
         # Reset class variable for test
         monkeypatch.setattr(OpenStreetMap, '_last_request_time', 0.0)
@@ -263,9 +261,7 @@ class TestOpenStreetMap:
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(
-            bbox=bbox, paths=root, channels=channels, download=False
-        )
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=False)
 
         # Mock OSM API response with different element types
         mock_osm_response = {
@@ -307,9 +303,7 @@ class TestOpenStreetMap:
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
 
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(
-            bbox=bbox, paths=root, channels=channels, download=False
-        )
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=False)
 
         # Empty response
         empty_response: dict[str, Any] = {'elements': []}
@@ -375,7 +369,7 @@ class TestOpenStreetMap:
         dataset = OpenStreetMap(
             bbox=common_test_params['bbox'],
             paths=common_test_params['root'],
-            channels=common_test_params['channels'],
+            classes=common_test_params['classes'],
             download=False,
         )
 
@@ -402,9 +396,7 @@ class TestOpenStreetMap:
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: empty_gdf)
 
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(
-            bbox=bbox, paths=root, channels=channels, download=False
-        )
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=False)
         sample = dataset[dataset.bounds]
 
         # Should create mask for semantic segmentation mode
@@ -426,7 +418,7 @@ class TestOpenStreetMap:
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, channels=channels)
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels)
 
         # Get proper sample from dataset
         query = dataset.bounds
@@ -455,7 +447,7 @@ class TestOpenStreetMap:
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, channels=channels)
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels)
 
         # Get proper sample from dataset
         query = dataset.bounds
@@ -507,7 +499,7 @@ class TestOpenStreetMap:
 
         # Create dataset which should trigger download (covers lines 216-239)
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, channels=channels, download=True)
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=True)
 
         # Check data file was created
         data_file = dataset._get_data_filename()
@@ -540,7 +532,7 @@ class TestOpenStreetMap:
         # Direct call to _download_data
         dataset = OpenStreetMap.__new__(OpenStreetMap)
         dataset.bbox = (2.3520, 48.8565, 2.3525, 48.8570)
-        dataset.channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
+        dataset.classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
         dataset.root = tmp_path
 
         with pytest.raises(ValueError, match='No features found in the specified area'):
@@ -558,7 +550,7 @@ class TestOpenStreetMap:
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
 
         with pytest.raises(ValueError, match='No features found in the specified area'):
-            OpenStreetMap(bbox=bbox, paths=root, channels=channels, download=True)
+            OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=True)
 
     def test_download_data_all_endpoints_fail(self, monkeypatch: MonkeyPatch) -> None:
         """Test download failure when all endpoints fail."""
@@ -586,7 +578,7 @@ class TestOpenStreetMap:
 
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
         with pytest.raises(RuntimeError, match='All Overpass API endpoints failed'):
-            OpenStreetMap(bbox=bbox, paths=root, channels=channels, download=True)
+            OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=True)
 
     def test_download_data_file_exists(self, monkeypatch: MonkeyPatch) -> None:
         """Test _download_data when file already exists."""
@@ -604,9 +596,7 @@ class TestOpenStreetMap:
         monkeypatch.setattr('urllib.request.urlopen', mock_urlopen)
 
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(
-            bbox=bbox, paths=root, channels=channels, download=False
-        )
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=False)
         dataset._download_data()  # Should return early without network calls
         assert not urlopen_called
 
@@ -618,27 +608,27 @@ class TestOpenStreetMap:
             # Valid case - should not raise
             ([{'name': 'building', 'selector': [{'building': '*'}]}], None, None),
             # Invalid cases
-            ([], ValueError, 'channels must be a non-empty list'),
-            ('invalid', ValueError, 'channels must be a non-empty list'),
-            (['invalid'], ValueError, 'Channel 0 must be a dictionary'),
+            ([], ValueError, 'classes must be a non-empty list'),
+            ('invalid', ValueError, 'classes must be a non-empty list'),
+            (['invalid'], ValueError, 'Class 0 must be a dictionary'),
             (
                 [{'name': 'test'}],
                 ValueError,
-                'Channel 0 must have "name" and "selector" keys',
+                'Class 0 must have "name" and "selector" keys',
             ),
             (
                 [{'name': 'test', 'selector': 'invalid'}],
                 ValueError,
-                'Channel 0 selector must be a list',
+                'Class 0 selector must be a list',
             ),
             (
                 [{'name': 'test', 'selector': ['invalid']}],
                 ValueError,
-                'Channel 0 selector 0 must be a dictionary',
+                'Class 0 selector 0 must be a dictionary',
             ),
         ],
     )
-    def test_validate_channels(
+    def test_validate_classes(
         self,
         common_test_params: dict[str, Any],
         channels: Any,
@@ -651,28 +641,28 @@ class TestOpenStreetMap:
             dataset = OpenStreetMap(
                 bbox=common_test_params['bbox'],
                 paths=common_test_params['root'],
-                channels=channels,
+                classes=channels,
                 download=False,
             )
-            assert dataset.channels == channels
+            assert dataset.classes == channels
         else:
             # Invalid case - should raise the expected error
             with pytest.raises(expected_error, match=error_pattern):
                 OpenStreetMap(
                     bbox=common_test_params['bbox'],
                     paths=common_test_params['root'],
-                    channels=channels,
+                    classes=channels,
                     download=False,
                 )
 
-    def test_build_overpass_query_channels(
+    def test_build_overpass_query_classes(
         self, multi_channel_params: dict[str, Any]
     ) -> None:
         """Test Overpass query building with channels."""
         dataset = OpenStreetMap(
             bbox=multi_channel_params['bbox'],
             paths=multi_channel_params['root'],
-            channels=multi_channel_params['channels'],
+            classes=multi_channel_params['classes'],
             download=False,
         )
         query = dataset._build_overpass_query()
@@ -682,14 +672,14 @@ class TestOpenStreetMap:
         assert 'wr["highway"]' in query
         assert '48.8565,2.352,48.857,2.3525' in query
 
-    def test_get_data_filename_channels(
+    def test_get_data_filename_classes(
         self, common_test_params: dict[str, Any]
     ) -> None:
         """Test filename generation for channels-based datasets."""
         dataset = OpenStreetMap(
             bbox=common_test_params['bbox'],
             paths=common_test_params['root'],
-            channels=common_test_params['channels'],
+            classes=common_test_params['classes'],
             download=False,
         )
         filename = dataset._get_data_filename()
@@ -697,39 +687,37 @@ class TestOpenStreetMap:
         assert filename.suffix == '.geojson'
         assert 'osm_features_' in filename.name
 
-    def test_get_channel_label(self, multi_channel_params: dict[str, Any]) -> None:
+    def test_get_class_label(self, multi_channel_params: dict[str, Any]) -> None:
         """Test label computation based on channels."""
         dataset = OpenStreetMap(
             bbox=multi_channel_params['bbox'],
             paths=multi_channel_params['root'],
-            channels=multi_channel_params['channels'],
+            classes=multi_channel_params['classes'],
             download=False,
         )
 
         # Test building feature -> label 1 (first channel)
         building_feature = {'properties': {'building': 'yes'}}
-        assert dataset._get_channel_label(building_feature) == 1
+        assert dataset._get_class_label(building_feature) == 1
 
         # Test amenity feature -> label 2 (second channel)
         amenity_feature = {'properties': {'amenity': 'restaurant'}}
-        assert dataset._get_channel_label(amenity_feature) == 2
+        assert dataset._get_class_label(amenity_feature) == 2
 
         # Test highway feature -> label 3 (third channel)
         highway_feature = {'properties': {'highway': 'primary'}}
-        assert dataset._get_channel_label(highway_feature) == 3
+        assert dataset._get_class_label(highway_feature) == 3
 
         # Test no match -> label 0
         other_feature = {'properties': {'shop': 'bakery'}}
-        assert dataset._get_channel_label(other_feature) == 0
+        assert dataset._get_class_label(other_feature) == 0
 
     def test_feature_matches_selector(self) -> None:
         """Test feature matching logic."""
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(
-            bbox=bbox, paths=root, channels=channels, download=False
-        )
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=False)
 
         # Test wildcard match
         assert dataset._feature_matches_selector({'building': 'yes'}, {'building': '*'})
@@ -771,9 +759,7 @@ class TestOpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(
-            bbox=bbox, paths=root, channels=channels, download=False
-        )
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=False)
 
         # Test with JSON string properties (as might come from GeoDataFrame)
         json_props = {'properties': '{"building": "yes", "floors": "3"}'}
@@ -784,9 +770,7 @@ class TestOpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(
-            bbox=bbox, paths=root, channels=channels, download=False
-        )
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=False)
 
         # Test with pre-computed label
         feature_with_label = {'properties': {'building': 'yes', 'label': 5}}
@@ -803,7 +787,7 @@ class TestOpenStreetMap:
         dataset = OpenStreetMap(
             bbox=multi_channel_params['bbox'],
             paths=multi_channel_params['root'],
-            channels=multi_channel_params['channels'],
+            classes=multi_channel_params['classes'],
             download=False,
         )
 
@@ -842,7 +826,7 @@ class TestOpenStreetMap:
         assert gdf.iloc[0]['label'] == 1  # Building -> channel 1
         assert gdf.iloc[1]['label'] == 2  # Amenity -> channel 2
 
-    def test_check_empty_channels(
+    def test_check_empty_classes(
         self,
         mock_download_and_integrity: None,
         multi_channel_params: dict[str, Any],
@@ -856,18 +840,18 @@ class TestOpenStreetMap:
 
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
-        with pytest.warns(UserWarning, match="Channel 'amenity' .* has no geometries"):
+        with pytest.warns(UserWarning, match="Class 'amenity' .* has no geometries"):
             OpenStreetMap(
                 bbox=multi_channel_params['bbox'],
                 paths=multi_channel_params['root'],
-                channels=multi_channel_params['channels'],
+                classes=multi_channel_params['classes'],
                 download=False,
             )
 
     def test_len(self, dataset: OpenStreetMap) -> None:
         """Test __len__ method."""
         # The fixture dataset should have test data
-        assert len(dataset) > 0
+        assert len(dataset) == 1
 
     def test_plot_multi_feature_types(
         self,
@@ -902,7 +886,7 @@ class TestOpenStreetMap:
         dataset = OpenStreetMap(
             bbox=multi_channel_params['bbox'],
             paths=multi_channel_params['root'],
-            channels=multi_channel_params['channels'],
+            classes=multi_channel_params['classes'],
             download=False,
         )
 
@@ -917,7 +901,7 @@ class TestOpenStreetMap:
         dataset = OpenStreetMap(
             bbox=multi_channel_params['bbox'],
             paths=multi_channel_params['root'],
-            channels=multi_channel_params['channels'],
+            classes=multi_channel_params['classes'],
             download=False,
         )
 
@@ -942,9 +926,7 @@ class TestOpenStreetMap:
         root = os.path.join('tests', 'data', 'openstreetmap')
         bbox = (2.3520, 48.8565, 2.3525, 48.8570)
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(
-            bbox=bbox, paths=root, channels=channels, download=False
-        )
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=False)
 
         # Test with invalid JSON string properties (should fallback to original props)
         invalid_json_props = {'properties': 'invalid_json{'}
@@ -968,9 +950,7 @@ class TestOpenStreetMap:
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(
-            bbox=bbox, paths=root, channels=channels, download=False
-        )
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=False)
 
         # Get proper sample from dataset with bounds
         bounds = (slice(2.3522, 2.3524), slice(48.8566, 48.8568), slice(None))
@@ -990,9 +970,7 @@ class TestOpenStreetMap:
         )
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(
-            bbox=bbox, paths=root, channels=channels, download=False
-        )
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=False)
         sample = {'mask': torch.zeros((10, 10))}
         dataset.plot(sample)
 
@@ -1010,9 +988,7 @@ class TestOpenStreetMap:
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(
-            bbox=bbox, paths=root, channels=channels, download=False
-        )
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=False)
 
         # Get sample and add prediction
         query = dataset.bounds
@@ -1032,8 +1008,6 @@ class TestOpenStreetMap:
         monkeypatch.setattr('geopandas.read_file', lambda *_, **__: mock_gdf)
 
         channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(
-            bbox=bbox, paths=root, channels=channels, download=False
-        )
+        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=channels, download=False)
         sample = {'mask': torch.zeros((10, 10))}
         dataset.plot(sample)

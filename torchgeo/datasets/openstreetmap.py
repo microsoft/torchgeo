@@ -43,22 +43,22 @@ class OpenStreetMap(VectorDataset):
     ----------------
 
     * Vector data (points, lines, polygons) for various geographic features
-    * Flexible querying by channel configuration (buildings, highways, amenities, etc.)
+    * Flexible querying by class configuration (buildings, highways, amenities, etc.)
     * Data fetched once at initialization and cached locally
-    * Channel-based labeling with priority-based assignment
+    * Class-based labeling with priority-based assignment
 
-    Channel priority and label assignment
-    -------------------------------------
-    `channels` is a list of dicts defining feature classes. Each has `name` (str) and `selector` (list of OSM tag filters).
-    Features are assigned labels based on the order of channels in this list:
+    Class priority and label assignment
+    ------------------------------------
+    `classes` is a list of dicts defining feature classes. Each has `name` (str) and `selector` (list of OSM tag filters).
+    Features are assigned labels based on the order of classes in this list:
 
-    - First channel gets label=1, second gets label=2, etc.
-    - If a feature matches multiple channels, it receives the label of the first matching channel
-    - Features that don't match any channel get label=0 (background)
+    - First class gets label=1, second gets label=2, etc.
+    - If a feature matches multiple classes, it receives the label of the first matching class
+    - Features that don't match any class get label=0 (background)
 
     Example::
 
-        channels = [
+        classes = [
             {'name': 'buildings', 'selector': [{'building': '*'}]},        # label=1
             {'name': 'roads', 'selector': [{'highway': '*'}]},             # label=2
             {'name': 'commercial', 'selector': [{'landuse': 'commercial'}]} # label=3
@@ -87,7 +87,7 @@ class OpenStreetMap(VectorDataset):
     def __init__(
         self,
         bbox: tuple[float, float, float, float],
-        channels: list[dict[str, Any]],
+        classes: list[dict[str, Any]],
         paths: Path | Iterable[Path] = 'data',
         res: float | tuple[float, float] = (0.0001, 0.0001),
         transforms: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -97,23 +97,25 @@ class OpenStreetMap(VectorDataset):
 
         Args:
             bbox: bounding box for initial data fetch as (minx, miny, maxx, maxy) in EPSG:4326
-            channels: list of dicts defining feature classes. Each has `name` (str) and `selector` (list of OSM tag filters).
-                Features get labels 1-N based on channel order, with first match taking priority.
+            classes: list of dicts defining feature classes. Each has `name` (str) and `selector` (list of OSM tag filters).
+                Features get labels 1-N based on class order, with first match taking priority.
             paths: root directory where dataset will be stored
-            res: resolution of the dataset in units of EPSG:4326 (degrees)
+            res: resolution of the dataset in units of EPSG:4326 (degrees). Default is 0.0001°.
+                For small AOIs, consider using a finer resolution to avoid pixelated plots.
+                A good rule of thumb: ``res = min(bbox_width, bbox_height) / 400`` for ~400 pixels.
             transforms: a function/transform that takes input sample and returns
                 a transformed version
             download: if True, download dataset and store it in the root directory
 
         Raises:
             DatasetNotFoundError: if dataset is not found and download is False
-            ValueError: if invalid channel configuration
+            ValueError: if invalid class configuration
         """
-        # Validate channels parameter
-        self._validate_channels(channels)
+        # Validate classes parameter
+        self._validate_classes(classes)
 
         self.bbox = bbox
-        self.channels = channels
+        self.classes = classes
 
         # Handle paths parameter
         if isinstance(paths, str | pathlib.Path):
@@ -148,38 +150,30 @@ class OpenStreetMap(VectorDataset):
         # Load GeoDataFrame once and store as attribute for efficiency
         self.gdf = gpd.read_file(data_file)
 
-        # Check for empty channels and warn user
-        if self.channels:
-            self._check_empty_channels()
+        # Check for empty classes and warn user
+        if self.classes:
+            self._check_empty_classes()
 
-    def __len__(self) -> int:
-        """Return the number of features in the dataset.
+    def _validate_classes(self, classes: list[dict[str, Any]]) -> None:
+        """Validate classes configuration."""
+        if not isinstance(classes, list) or not classes:
+            raise ValueError('classes must be a non-empty list')
 
-        Returns:
-            number of OSM features in the dataset
-        """
-        return len(self.gdf)
-
-    def _validate_channels(self, channels: list[dict[str, Any]]) -> None:
-        """Validate channels configuration."""
-        if not isinstance(channels, list) or not channels:
-            raise ValueError('channels must be a non-empty list')
-
-        for i, channel in enumerate(channels):
-            if not isinstance(channel, dict):
-                raise ValueError(f'Channel {i} must be a dictionary')
-            if 'name' not in channel or 'selector' not in channel:
-                raise ValueError(f'Channel {i} must have "name" and "selector" keys')
-            if not isinstance(channel['selector'], list):
-                raise ValueError(f'Channel {i} selector must be a list')
-            for j, selector in enumerate(channel['selector']):
+        for i, class_def in enumerate(classes):
+            if not isinstance(class_def, dict):
+                raise ValueError(f'Class {i} must be a dictionary')
+            if 'name' not in class_def or 'selector' not in class_def:
+                raise ValueError(f'Class {i} must have "name" and "selector" keys')
+            if not isinstance(class_def['selector'], list):
+                raise ValueError(f'Class {i} selector must be a list')
+            for j, selector in enumerate(class_def['selector']):
                 if not isinstance(selector, dict):
-                    raise ValueError(f'Channel {i} selector {j} must be a dictionary')
+                    raise ValueError(f'Class {i} selector {j} must be a dictionary')
 
     def _get_data_filename(self) -> pathlib.Path:
         """Get the filename for the cached data file."""
         # Create a hash of the query parameters for filename
-        cache_key = {'bbox': self.bbox, 'channels': self.channels}
+        cache_key = {'bbox': self.bbox, 'classes': self.classes}
         cache_str = json.dumps(cache_key, sort_keys=True)
         cache_hash = hashlib.md5(cache_str.encode()).hexdigest()[:16]
         return self.root / f'osm_features_{cache_hash}.geojson'
@@ -206,8 +200,8 @@ class OpenStreetMap(VectorDataset):
         overpass_bbox = f'{miny},{minx},{maxy},{maxx}'
 
         queries = []
-        for channel in self.channels:
-            for selector in channel['selector']:
+        for class_def in self.classes:
+            for selector in class_def['selector']:
                 for tag, values in selector.items():
                     if values == '*':
                         # Tag exists, any value
@@ -320,9 +314,7 @@ class OpenStreetMap(VectorDataset):
             )
 
         # Add pre-computed labels directly from properties (avoid slow .iterrows())
-        labels = [
-            self._get_channel_label({'properties': props}) for props in properties
-        ]
+        labels = [self._get_class_label({'properties': props}) for props in properties]
 
         # Add labels to properties before creating GeoDataFrame
         for props, label in zip(properties, labels):
@@ -380,16 +372,16 @@ class OpenStreetMap(VectorDataset):
         if 'properties' in feature and 'label' in feature['properties']:
             return int(feature['properties']['label'])
 
-        # Fallback to channels computation (shouldn't normally be needed)
-        return self._get_channel_label(feature)
+        # Fallback to class computation (shouldn't normally be needed)
+        return self._get_class_label(feature)
 
-    def _get_channel_label(self, feature: dict[str, Any]) -> int:
-        """Get label based on channels priority (first match wins).
+    def _get_class_label(self, feature: dict[str, Any]) -> int:
+        """Get label based on class priority (first match wins).
 
-        Channels are checked in the order they appear in self.channels list.
-        The first channel whose selector matches the feature determines the label.
-        This means if a feature has tags matching multiple channels, only the
-        first matching channel's label is assigned.
+        Classes are checked in the order they appear in self.classes list.
+        The first class whose selector matches the feature determines the label.
+        This means if a feature has tags matching multiple classes, only the
+        first matching class's label is assigned.
 
         Args:
             feature: the feature from which to extract the label.
@@ -399,11 +391,11 @@ class OpenStreetMap(VectorDataset):
         """
         props = feature.get('properties', {})
 
-        # Check each channel in order (priority-based)
-        for channel_idx, channel in enumerate(self.channels):
-            for selector in channel['selector']:
+        # Check each class in order (priority-based)
+        for class_idx, class_def in enumerate(self.classes):
+            for selector in class_def['selector']:
                 if self._feature_matches_selector(props, selector):
-                    return channel_idx + 1  # 1-based labeling
+                    return class_idx + 1  # 1-based labeling
 
         return 0  # No match
 
@@ -452,22 +444,22 @@ class OpenStreetMap(VectorDataset):
 
         return True
 
-    def _check_empty_channels(self) -> None:
-        """Check for channels with no geometries and warn the user."""
-        if not self.channels or len(self.gdf) == 0:
+    def _check_empty_classes(self) -> None:
+        """Check for classes with no geometries and warn the user."""
+        if not self.classes or len(self.gdf) == 0:
             return
 
-        # Use pre-computed labels to count channel usage
+        # Use pre-computed labels to count class usage
         label_counts = self.gdf['label'].value_counts()
 
-        # Warn about empty channels
-        for i, channel in enumerate(self.channels):
-            channel_label = i + 1  # 1-based labeling
-            if label_counts.get(channel_label, 0) == 0:
+        # Warn about empty classes
+        for i, class_def in enumerate(self.classes):
+            class_label = i + 1  # 1-based labeling
+            if label_counts.get(class_label, 0) == 0:
                 warnings.warn(
-                    f"Channel '{channel['name']}' (label={channel_label}) has no geometries in this AOI. "
+                    f"Class '{class_def['name']}' (label={class_label}) has no geometries in this AOI. "
                     f'This may be due to no features of this type in the area or all features '
-                    f'being assigned to higher-priority channels.',
+                    f'being assigned to higher-priority classes.',
                     UserWarning,
                     stacklevel=2,
                 )
@@ -496,7 +488,7 @@ class OpenStreetMap(VectorDataset):
             pred = sample['prediction'].squeeze()
             ncols = 2
 
-        # Color palette for channels
+        # Color palette for classes
         colors = [
             '#FF6B6B',
             '#4ECDC4',
@@ -525,14 +517,14 @@ class OpenStreetMap(VectorDataset):
             rgb = np.zeros((h, w, 3), dtype=np.float64)
 
             # Color 0 (background) as black
-            # Color each label with its corresponding channel color
+            # Color each label with its corresponding class color
             for label in np.unique(arr):
                 if label == 0:
                     continue
-                channel_idx = int(label - 1)
-                if channel_idx < len(colors):
+                class_idx = int(label - 1)
+                if class_idx < len(colors):
                     # Convert hex to RGB
-                    hex_color = colors[channel_idx % len(colors)]
+                    hex_color = colors[class_idx % len(colors)]
                     r = int(hex_color[1:3], 16) / 255.0
                     g = int(hex_color[3:5], 16) / 255.0
                     b = int(hex_color[5:7], 16) / 255.0
@@ -548,12 +540,12 @@ class OpenStreetMap(VectorDataset):
         for label in unique_labels:
             if label == 0:
                 continue
-            channel_idx = int(label - 1)
-            if channel_idx < len(self.channels):
-                channel_name = self.channels[channel_idx]['name']
-                color = colors[channel_idx % len(colors)]
+            class_idx = int(label - 1)
+            if class_idx < len(self.classes):
+                class_name = self.classes[class_idx]['name']
+                color = colors[class_idx % len(colors)]
                 legend_handles.append(
-                    mpatches.Patch(color=color, label=channel_name.title())
+                    mpatches.Patch(color=color, label=class_name.title())
                 )
 
         if showing_prediction:

@@ -89,20 +89,20 @@ multi_channel_fixture_geojson = {
 }
 
 
-def get_single_channel_filename(
-    channel_name: str,
+def get_single_class_filename(
+    class_name: str,
     bbox: tuple[float, float, float, float] = (2.3520, 48.8565, 2.3525, 48.8570),
 ) -> str:
-    """Get filename for single channel (for backward compatibility testing)."""
-    channels = [{'name': channel_name, 'selector': [{channel_name: '*'}]}]
-    return get_channels_filename(channels, bbox)
+    """Get filename for single class."""
+    classes = [{'name': class_name, 'selector': [{class_name: '*'}]}]
+    return get_classes_filename(classes, bbox)
 
 
-def get_channels_filename(
-    channels: list[dict[str, Any]],
+def get_classes_filename(
+    classes: list[dict[str, Any]],
     bbox: tuple[float, float, float, float] = (2.3520, 48.8565, 2.3525, 48.8570),
 ) -> str:
-    cache_key = {'bbox': bbox, 'channels': channels}
+    cache_key = {'bbox': bbox, 'classes': classes}
     cache_str = json.dumps(cache_key, sort_keys=True)
     cache_hash = hashlib.md5(cache_str.encode()).hexdigest()[:16]
     return f'osm_features_{cache_hash}.geojson'
@@ -110,32 +110,32 @@ def get_channels_filename(
 
 # --- STANDARDIZED FIXTURE DATA ---
 
-# 1. common_test_params fixture - single building channel
-common_test_params_channels = [{'name': 'building', 'selector': [{'building': '*'}]}]
-with open(get_channels_filename(common_test_params_channels), 'w') as f:
+# 1. common_test_params fixture - single building class
+common_test_params_classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
+with open(get_classes_filename(common_test_params_classes), 'w') as f:
     json.dump(building_geojson, f)
 
-# 2. multi_channel_params fixture - building, amenity, highway channels
-multi_channel_params_channels = [
+# 2. multi_channel_params fixture - building, amenity, highway classes
+multi_channel_params_classes = [
     {'name': 'building', 'selector': [{'building': '*'}]},
     {'name': 'amenity', 'selector': [{'amenity': '*'}]},
     {'name': 'highway', 'selector': [{'highway': '*'}]},
 ]
 
 
-with open(get_channels_filename(multi_channel_params_channels), 'w') as f:
+with open(get_classes_filename(multi_channel_params_classes), 'w') as f:
     json.dump(multi_channel_fixture_geojson, f)
 
-# 4. Custom query test (mixed selectors in single channel)
-mixed_features_channel = [
+# 4. Custom query test (mixed selectors in single class)
+mixed_features_class = [
     {'name': 'mixed_features', 'selector': [{'building': '*'}, {'leisure': 'park'}]}
 ]
-with open(get_channels_filename(mixed_features_channel), 'w') as f:
+with open(get_classes_filename(mixed_features_class), 'w') as f:
     json.dump(multi_channel_fixture_geojson, f)  # Reuse same data
 
 # 5. Multiple selectors test
-mixed_selector_channel = [
+mixed_selector_class = [
     {'name': 'mixed', 'selector': [{'building': '*'}, {'leisure': 'park'}]}
 ]
-with open(get_channels_filename(mixed_selector_channel), 'w') as f:
+with open(get_classes_filename(mixed_selector_class), 'w') as f:
     json.dump(multi_channel_fixture_geojson, f)  # Reuse same data
