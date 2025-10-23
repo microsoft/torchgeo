@@ -30,6 +30,13 @@ Models
    models/vision-transformer
    models/yolo
 
+Utility Functions
+-----------------
+
+.. autofunction:: get_model
+.. autofunction:: get_model_weights
+.. autofunction:: get_weight
+.. autofunction:: list_models
 
 Pretrained Weights
 ------------------
@@ -90,5 +97,15 @@ Sentinel-2
    :header-rows: 1
    :align: center
    :file: weights/sentinel2.csv
+
+
+Atmospheric
+^^^^^^^^^^^
+
+.. csv-table:: N = Nowcasting, MWF = Medium-Range Weather Forecasting, S2S = Subseasonal to Seasonal, DS = Decadal Scale
+   :widths: 45 10 10 10 10 10
+   :header-rows: 1
+   :align: center
+   :file: weights/atmospheric.csv
 
 
