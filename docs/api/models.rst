@@ -11,24 +11,24 @@ Models
 .. toctree::
    :maxdepth: 1
 
-   api/models/aurora
-   api/models/change-star
-   api/models/copernicus-fm
-   api/models/croma
-   api/models/dofa
-   api/models/earthloc
-   api/models/farseg
-   api/models/fcn
-   api/models/fc-siamese-networks
-   api/models/l-tae
-   api/models/mosaiks
-   api/models/panopticon
-   api/models/resnet
-   api/models/scale-mae
-   api/models/swin-transformer
-   api/models/u-net
-   api/models/vision-transformer
-   api/models/yolo
+   models/aurora
+   models/change-star
+   models/copernicus-fm
+   models/croma
+   models/dofa
+   models/earthloc
+   models/farseg
+   models/fcn
+   models/fc-siamese-networks
+   models/l-tae
+   models/mosaiks
+   models/panopticon
+   models/resnet
+   models/scale-mae
+   models/swin-transformer
+   models/u-net
+   models/vision-transformer
+   models/yolo
 
 Utility Functions
 -----------------
