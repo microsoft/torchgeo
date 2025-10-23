@@ -11,24 +11,24 @@ Models
 .. toctree::
    :maxdepth: 1
 
-   models/aurora/index
-   models/change-star/index
-   models/copernicus-fm/index
-   models/croma/index
-   models/dofa/index
-   models/earthloc/index
-   models/farseg/index
-   models/fcn/index
-   models/fc-siamese-networks/index
-   models/l-tae/index
-   models/mosaiks/index
-   models/resnet/index
-   models/scale-mae/index
-   models/swin-transformer/index
-   models/panopticon/index
-   models/u-net/index
-   models/vision-transformer/index
-   models/yolo/index
+   models/aurora
+   models/change-star
+   models/copernicus-fm
+   models/croma
+   models/dofa
+   models/earthloc
+   models/farseg
+   models/fcn
+   models/fc-siamese-networks
+   models/l-tae
+   models/mosaiks
+   models/panopticon
+   models/resnet
+   models/scale-mae
+   models/swin-transformer
+   models/u-net
+   models/vision-transformer
+   models/yolo
 
 
 Pretrained Weights
