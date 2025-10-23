@@ -254,7 +254,7 @@ class SimCLRTask(BaseTask):
             x2 = self.augmentations(x2)
 
         z1, h1 = self(x1)
-        z2, h2 = self(x2)
+        z2, _ = self(x2)
 
         loss: Tensor = self.criterion(z1, z2)
 

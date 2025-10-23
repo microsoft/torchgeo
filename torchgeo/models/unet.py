@@ -13,7 +13,7 @@ from torchvision.models._api import Weights, WeightsEnum
 
 # Specified in https://github.com/fieldsoftheworld/ftw-baselines
 # First 4 S2 bands are for image t1 and last 4 bands are for image t2
-_ftw_sentinel2_bands = ['B4', 'B3', 'B2', 'B8A', 'B4', 'B3', 'B2', 'B8A']
+_ftw_sentinel2_bands = ['B4', 'B3', 'B2', 'B8', 'B4', 'B3', 'B2', 'B8']
 
 # https://github.com/fieldsoftheworld/ftw-baselines/blob/main/src/ftw/datamodules.py
 # Normalization by 3k (for S2 uint16 input)

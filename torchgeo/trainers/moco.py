@@ -410,7 +410,7 @@ class MoCoTask(BaseTask):
         if self.hparams['version'] == 3:
             m = cosine_schedule(self.current_epoch, self.trainer.max_epochs, m, 1)
             q1, h1 = self.forward(x1)
-            q2, h2 = self.forward(x2)
+            q2, _ = self.forward(x2)
             with torch.no_grad():
                 update_momentum(self.backbone, self.backbone_momentum, m)
                 update_momentum(self.projection_head, self.projection_head_momentum, m)

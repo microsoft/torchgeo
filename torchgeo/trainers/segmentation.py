@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+from einops import rearrange
 from matplotlib.figure import Figure
 from torch import Tensor
 from torchmetrics import Accuracy, JaccardIndex, MetricCollection
@@ -76,6 +77,9 @@ class SemanticSegmentationTask(BaseTask):
             freeze_decoder: Freeze the decoder network to linear probe
                 the segmentation head.
 
+        .. versionadded:: 0.8
+           Time-series support.
+
         .. versionadded:: 0.7
            The *task* and *num_labels* parameters.
 
@@ -99,6 +103,20 @@ class SemanticSegmentationTask(BaseTask):
         """
         self.weights = weights
         super().__init__()
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward pass of the model.
+
+        Args:
+            x: Input tensor of shape (B, C, H, W) or (B, T, C, H, W).
+
+        Returns:
+            Output tensor of shape (B, num_classes, H, W).
+        """
+        if x.ndim == 5:
+            x = rearrange(x, 'b t c h w -> b (t c) h w')
+        x = self.model(x)
+        return x
 
     def configure_models(self) -> None:
         """Initialize the model."""
@@ -296,12 +314,26 @@ class SemanticSegmentationTask(BaseTask):
             and hasattr(self.logger.experiment, 'add_figure')
         ):
             datamodule = self.trainer.datamodule
-            aug = K.AugmentationSequential(
-                K.Denormalize(datamodule.mean, datamodule.std),
-                data_keys=None,
-                keepdim=True,
-            )
-            batch = aug(batch)
+            if batch['image'].ndim == 5:
+                _, T, C, _, _ = batch['image'].shape
+                batch['image'] = rearrange(batch['image'], 'b t c h w -> b (t c) h w')
+
+                aug = K.AugmentationSequential(
+                    K.Denormalize(datamodule.mean, datamodule.std),
+                    data_keys=None,
+                    keepdim=True,
+                )
+                batch = aug(batch)
+                batch['image'] = rearrange(
+                    batch['image'], 'b (t c) h w -> b t c h w', t=T, c=C
+                )
+            else:
+                aug = K.AugmentationSequential(
+                    K.Denormalize(datamodule.mean, datamodule.std),
+                    data_keys=None,
+                    keepdim=True,
+                )
+                batch = aug(batch)
             match self.hparams['task']:
                 case 'binary' | 'multilabel':
                     batch['prediction'] = (y_hat.sigmoid() >= 0.5).long()

@@ -53,7 +53,7 @@ class TestForestDamage:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'Data_Set_Larch_Casebearer.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             ForestDamage(root=tmp_path, checksum=True)
 
     def test_not_found(self, tmp_path: Path) -> None:

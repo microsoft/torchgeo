@@ -81,6 +81,6 @@ class TestNCCM:
 
     def test_invalid_query(self, dataset: NCCM) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]

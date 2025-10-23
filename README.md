@@ -36,14 +36,17 @@ For [conda](https://docs.conda.io/) and [spack](https://spack.io/) installation 
 
 ## Documentation
 
-You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://arxiv.org/abs/2111.08872), [podcast episode](https://www.youtube.com/watch?v=ET8Hb_HqNJQ), [tutorial](https://www.youtube.com/watch?v=R_FhY8aq708), and [blog post](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/).
+You can find the documentation for TorchGeo on [ReadTheDocs](https://torchgeo.readthedocs.io). This includes API documentation, contributing instructions, and several [tutorials](https://torchgeo.readthedocs.io/en/stable/tutorials/getting_started.html). For more details, check out our [paper](https://arxiv.org/abs/2111.08872), [blog post](https://pytorch.org/blog/geospatial-deep-learning-with-torchgeo/), and YouTube videos (below).
 
 <p float="left">
+    <a href="https://www.youtube.com/watch?v=0HfykJa-foE">
+        <img src="https://img.youtube.com/vi/0HfykJa-foE/0.jpg" style="width:32%;">
+    </a>
     <a href="https://www.youtube.com/watch?v=ET8Hb_HqNJQ">
-        <img src="https://img.youtube.com/vi/ET8Hb_HqNJQ/0.jpg" style="width:49%;">
+        <img src="https://img.youtube.com/vi/ET8Hb_HqNJQ/0.jpg" style="width:32%;">
     </a>
     <a href="https://www.youtube.com/watch?v=R_FhY8aq708">
-        <img src="https://img.youtube.com/vi/R_FhY8aq708/0.jpg" style="width:49%;">
+        <img src="https://img.youtube.com/vi/R_FhY8aq708/0.jpg" style="width:32%;">
     </a>
 </p>
 
@@ -234,7 +237,7 @@ we can see the script in action:
 # Train and validate a model
 torchgeo fit --config config.yaml
 # Validate-only
-torchgeo validate --config config.yaml
+torchgeo validate --config config.yaml --ckpt_path=...
 # Calculate and report test accuracy
 torchgeo test --config config.yaml --ckpt_path=...
 ```
@@ -269,4 +272,4 @@ If you use this software in your work, please cite our [paper](https://doi.org/1
 
 This project welcomes contributions and suggestions. If you would like to submit a pull request, see our [Contribution Guide](https://torchgeo.readthedocs.io/en/stable/user/contributing.html) for more information.
 
-This project has adopted the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/). For more information see the [Contributor Covenant Code of Conduct FAQ](https://www.contributor-covenant.org/faq/) or contact @adamjstewart on Slack with any additional questions or comments.
+This project has adopted the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/). For more information see the [Contributor Covenant Code of Conduct FAQ](https://www.contributor-covenant.org/faq/) or contact @adamjstewart on [Slack](https://join.slack.com/t/torchgeo/shared_invite/zt-22rse667m-eqtCeNW0yI000Tl4B~2PIw) with any additional questions or comments.
