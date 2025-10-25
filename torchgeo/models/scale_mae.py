@@ -78,7 +78,7 @@ def get_1d_sincos_pos_embed_from_grid_torch(embed_dim: int, pos: Tensor) -> Tens
         pos: Tensor of positions to be encoded (M,).
 
     Returns:
-        emb: 1D sin-cos positional embeddings (M, D).
+        torch.Tensor: 1D sin-cos positional embeddings (M, D).
     """
     assert embed_dim % 2 == 0
     omega = torch.arange(embed_dim // 2, dtype=pos.dtype, device=pos.device)
@@ -152,7 +152,7 @@ def interpolate_pos_embed(
         state_dict: Pretrained model state dict.
 
     Returns:
-        OrderedDict[str, Tensor]: State dict with interpolated positional embeddings.
+        OrderedDict[str, torch.Tensor]: State dict with interpolated positional embeddings.
     """
     pos_embed_checkpoint = state_dict['pos_embed']
     embedding_size = pos_embed_checkpoint.shape[-1]
