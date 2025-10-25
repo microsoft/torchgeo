@@ -112,7 +112,7 @@ class ChangeStar(Module):
                 semantic segmentation model without semantic segmentation head.
             seg_classifier: semantic segmentation head, typically a convolutional layer
                 followed by an upsampling layer.
-            changemixin: :class:`torchgeo.models.ChangeMixin` module
+            changemixin: :class:`torchgeo.models.changestar.ChangeMixin` module
             inference_mode: name of inference mode ``'t1t2'`` | ``'t2t1'`` | ``'mean'``.
                 ``'t1t2'``: concatenate bitemporal features in the order of t1->t2;
                 ``'t2t1'``: concatenate bitemporal features in the order of t2->t1;

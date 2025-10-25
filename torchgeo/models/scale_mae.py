@@ -35,7 +35,7 @@ def get_2d_sincos_pos_embed_with_resolution(
         cls_token: Increase positional embedding size by 1 for class token.
 
     Returns:
-        pos_embed: Spatial resolution aware positional embeddings (Ph * Pw, D).
+        torch.Tensor: Spatial resolution aware positional embeddings (Ph * Pw, D).
     """
     device, dtype = res.device, res.dtype
     grid_h = torch.arange(grid_size, dtype=dtype, device=device)
@@ -61,7 +61,7 @@ def get_2d_sincos_pos_embed_from_grid_torch(embed_dim: int, grid: Tensor) -> Ten
         grid: Tensor representing the image patch grid (C, N, Ph, Pw)
 
     Returns:
-        emb: 2D sin-cos positional embeddings (Ph * Pw, D).
+        torch.Tensor: 2D sin-cos positional embeddings (Ph * Pw, D).
     """
     assert embed_dim % 2 == 0
     emb_h = get_1d_sincos_pos_embed_from_grid_torch(embed_dim // 2, grid[0])
@@ -152,7 +152,7 @@ def interpolate_pos_embed(
         state_dict: Pretrained model state dict.
 
     Returns:
-        state_dict: State dict with interpolated positional embeddings.
+        OrderedDict[str, Tensor]: State dict with interpolated positional embeddings.
     """
     pos_embed_checkpoint = state_dict['pos_embed']
     embedding_size = pos_embed_checkpoint.shape[-1]
