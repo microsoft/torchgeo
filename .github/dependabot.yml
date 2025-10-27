@@ -24,10 +24,6 @@ updates:
           - 'torch'
           - 'torchvision'
     ignore:
-      # lightning 2.5.5 contains known bugs related to checkpoint loading
-      # https://github.com/torchgeo/torchgeo/issues/2995
-      - dependency-name: 'lightning'
-        versions: '>=2.5.5'
       # sphinx 6 is incompatible with pytorch-sphinx-theme
       # https://github.com/pytorch/pytorch_sphinx_theme/issues/175
       - dependency-name: 'sphinx'
