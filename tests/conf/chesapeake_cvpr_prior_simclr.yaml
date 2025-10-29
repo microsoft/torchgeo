@@ -15,7 +15,7 @@ data:
       - 'de-test'
     test_splits:
       - 'de-test'
-    batch_size: 1
+    batch_size: 2
     patch_size: 64
     class_set: 5
     use_prior_labels: True

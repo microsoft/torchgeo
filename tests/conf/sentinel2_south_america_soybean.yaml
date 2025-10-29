@@ -9,7 +9,7 @@ model:
 data:
   class_path: Sentinel2SouthAmericaSoybeanDataModule
   init_args:
-    batch_size: 1
+    batch_size: 2
     patch_size: 16
   dict_kwargs:
     south_america_soybean_paths: 'tests/data/south_america_soybean'
