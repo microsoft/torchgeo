@@ -10,7 +10,7 @@ model:
 data:
   class_path: Sentinel2EuroCropsDataModule
   init_args:
-    batch_size: 2
+    batch_size: 1
     patch_size: 16
   dict_kwargs:
     sentinel2_paths: 'tests/data/sentinel2'

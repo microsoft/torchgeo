@@ -11,7 +11,7 @@ model:
 data:
   class_path: Sentinel2NCCMDataModule
   init_args:
-    batch_size: 2
+    batch_size: 1
     patch_size: 16
   dict_kwargs:
     nccm_paths: 'tests/data/nccm'
