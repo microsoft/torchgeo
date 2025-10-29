@@ -371,6 +371,7 @@ class NonGeoDataModule(BaseDataModule):
         dataset_class: type[NonGeoDataset],
         batch_size: int = 1,
         num_workers: int = 0,
+        drop_last: bool = False,
         **kwargs: Any,
     ) -> None:
         """Initialize a new NonGeoDataModule instance.
@@ -379,9 +380,11 @@ class NonGeoDataModule(BaseDataModule):
             dataset_class: Class used to instantiate a new dataset.
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
+            drop_last: Flag to drop last batch in epoch (Default is false).
             **kwargs: Additional keyword arguments passed to ``dataset_class``
         """
         super().__init__(dataset_class, batch_size, num_workers, **kwargs)
+        self.drop_last = drop_last
 
         # Collation
         self.collate_fn = default_collate
@@ -431,6 +434,7 @@ class NonGeoDataModule(BaseDataModule):
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
             persistent_workers=self.num_workers > 0,
+            drop_last=split == 'train' and self.drop_last,
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
