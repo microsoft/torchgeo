@@ -287,7 +287,7 @@ class GeoDataModule(BaseDataModule):
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
             # drop_last is incompatible with batch sampler
-            drop_last=split == 'train' and batch_sampler is None,  
+            drop_last=split == 'train' and batch_sampler is None,
             persistent_workers=self.num_workers > 0,
         )
 
