@@ -86,8 +86,8 @@ class CustomNonGeoDataset(NonGeoDataset):
 
 
 class CustomNonGeoDataModule(NonGeoDataModule):
-    def __init__(self) -> None:
-        super().__init__(CustomNonGeoDataset, 1, 0, download=True)
+    def __init__(self, drop_last: bool = False) -> None:
+        super().__init__(CustomNonGeoDataset, 1, 0, download=True, drop_last=drop_last)
 
     def setup(self, stage: str) -> None:
         super().setup(stage)
@@ -273,3 +273,21 @@ class TestNonGeoDataModule:
             dm.test_dataloader()
         with pytest.raises(MisconfigurationException, match=msg):
             dm.predict_dataloader()
+
+    def test_drop_last_true(self) -> None:
+        dm = CustomNonGeoDataModule(drop_last=True)
+        dm.dataset = CustomNonGeoDataset(length=2)
+
+        assert dm.train_dataloader().drop_last
+        assert not dm.val_dataloader().drop_last
+        assert not dm.test_dataloader().drop_last
+        assert not dm.predict_dataloader().drop_last
+
+    def test_drop_last_false(self) -> None:
+        dm = CustomNonGeoDataModule(drop_last=False)
+        dm.dataset = CustomNonGeoDataset(length=2)
+
+        assert not dm.train_dataloader().drop_last
+        assert not dm.val_dataloader().drop_last
+        assert not dm.test_dataloader().drop_last
+        assert not dm.predict_dataloader().drop_last
