@@ -135,12 +135,6 @@ Vision Transformer
 .. autoclass:: ViTSmall14_DINOv2_Weights
 .. autoclass:: ViTBase14_DINOv2_Weights
 
-YOLO
-^^^^
-
-.. autofunction:: yolo
-.. autoclass:: YOLO_Weights
-
 Utility Functions
 ^^^^^^^^^^^^^^^^^
 

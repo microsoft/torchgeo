@@ -98,8 +98,6 @@ datasets = [
     "laspy>=2.5.3",
     # netcdf4 1.6.1+ required for Python 3.11 wheels
     "netcdf4>=1.6.1",
-    # opencv-python 4.6.0.66+ required for ultralytics 8.3+ compatibility
-    "opencv-python>=4.6.0.66",
     # pandas 2+ required for parquet extra
     "pandas[parquet]>=2",
     # pycocotools 2.0.7+ required for Python 3.11 wheels
@@ -130,8 +128,6 @@ docs = [
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
     "microsoft-aurora>=1.6",
-    # ultralytics 8.3+ fixes loading with weights_only=False
-    "ultralytics>=8.3",
 ]
 style = [
     # mypy 0.900+ required for pyproject.toml support
