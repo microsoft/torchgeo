@@ -5,8 +5,6 @@
 
 """Be The Change (BTC) change detection model implementation."""
 
-from typing import Literal
-
 import kornia.augmentation as K
 import segmentation_models_pytorch as smp
 import torch
@@ -29,11 +27,7 @@ class BTC(Module):
     * https://arxiv.org/abs/2507.03367
     """
 
-    def __init__(
-        self,
-        backbone: Literal['swin_tiny', 'swin_small', 'swin_base'],
-        classes: int = 1,
-    ) -> None:
+    def __init__(self, backbone: str, classes: int = 1) -> None:
         """Initialise BTC model.
 
         Args:
@@ -41,20 +35,20 @@ class BTC(Module):
             classes: number of classes (default is 1).
         """
         super().__init__()
-        self.backbone = SwinBackbone(backbone)
+        self.encoder = SwinBackbone(backbone)
         self.difference = subtraction_fusion
         self.decoder = smp.decoders.upernet.decoder.UPerNetDecoder(
             encoder_channels=[
                 0,
                 0,
-                *self.backbone.channels,
+                *self.encoder.channels,
             ],  # pad at the beginning since impl. cuts first two off
             encoder_depth=4,
             decoder_channels=512,
         )
         # we already have layernorms as part of backbone
         self.decoder.feature_norms = nn.ModuleList(
-            [nn.Identity() for _ in self.backbone.channels]
+            [nn.Identity() for _ in self.encoder.channels]
         )
         self.final_layer = smp.base.SegmentationHead(
             in_channels=512,
@@ -83,7 +77,7 @@ class BTC(Module):
         # change trainer stacks in channel, we want stacked in batch dim for backbone
         x = rearrange(x, 'b (t c) h w -> (b t) c h w', c=3)
         # extract multi-resolution features
-        features = self.backbone(x)
+        features = self.encoder(x)
         # feature difference by subtraction
         fused = self.difference(features)
         # UperNet impl. skips first 2 feats, we don't want that so we pad with 0
