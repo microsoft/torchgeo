@@ -1,7 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-from unittest.mock import MagicMock, patch
+from typing import Any, Literal
 
 import pytest
 import torch
@@ -14,7 +14,9 @@ BACKBONES = ['swin_tiny', 'swin_small', 'swin_base']
 
 class TestBTC:
     @pytest.mark.parametrize('backbone', BACKBONES)
-    def test_btc_sizes(self, backbone: str) -> None:
+    def test_btc_sizes(
+        self, backbone: Literal['swin_tiny', 'swin_small', 'swin_base']
+    ) -> None:
         model = BTC(backbone=backbone)
         model.eval()
         with torch.no_grad():
@@ -28,31 +30,32 @@ class TestBTC:
         ):
             SwinBackbone(model_size='fail_test')
 
-    def test_unexpected_keys_raises(self) -> None:
-        fake_weights = MagicMock()
-        fake_weights.get_state_dict.return_value = {
-            'state_dict': {'unexpected_keys': []}
-        }
+    def test_unexpected_keys_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        class FakeWeights:
+            @staticmethod
+            def get_state_dict(progress: bool) -> dict[str, Any]:
+                return {'state_dict': {'unexpected_keys': []}}
 
-        with patch(
-            'torchgeo.models.btc.SwinBackbone_Weights',  # patch the class, not the enum field
-            new=MagicMock(CITYSCAPES_SEMSEG_TINY=fake_weights),
+        class FakeSwinWeights:
+            CITYSCAPES_SEMSEG_TINY = FakeWeights()
+
+        monkeypatch.setattr('torchgeo.models.btc.SwinBackbone_Weights', FakeSwinWeights)
+
+        with pytest.raises(
+            RuntimeError,
+            match=r'Failed to load pretrained weights for backbone: unexpected keys: ',
         ):
-            with pytest.raises(
-                RuntimeError,
-                match=r'Failed to load pretrained weights for backbone: unexpected keys: ',
-            ):
-                SwinBackbone(model_size='swin_tiny')
+            SwinBackbone(model_size='swin_tiny')
 
-    def test_missing_keys_raises(self) -> None:
-        fake_weights = MagicMock()
-        fake_weights.get_state_dict.return_value = {'state_dict': {}}
+    def test_missing_keys_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        class FakeWeights:
+            @staticmethod
+            def get_state_dict(progress: bool) -> dict[str, Any]:
+                return {'state_dict': {}}
 
-        with patch(
-            'torchgeo.models.btc.SwinBackbone_Weights',  # patch the class, not the enum field
-            new=MagicMock(CITYSCAPES_SEMSEG_TINY=fake_weights),
-        ):
-            with pytest.raises(
-                RuntimeError, match=r'Missing keys in pretrained weights'
-            ):
-                SwinBackbone(model_size='swin_tiny')
+        class FakeSwinWeights:
+            CITYSCAPES_SEMSEG_TINY = FakeWeights()
+
+        monkeypatch.setattr('torchgeo.models.btc.SwinBackbone_Weights', FakeSwinWeights)
+        with pytest.raises(RuntimeError, match=r'Missing keys in pretrained weights'):
+            SwinBackbone(model_size='swin_tiny')
