@@ -37,24 +37,16 @@ dst.write_colormap(1, cmap)
 import os
 from collections import OrderedDict
 
-import geopandas as gpd
-from shapely.geometry import Polygon
+import fiona
 
 ROOT = "data/cbf"
 FILENAME = "Ontario.geojson"
 
-# Create a simple polygon geometry
-polygon = Polygon([(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)])
-
-# Create a GeoDataFrame with the geometry and empty properties
-gdf = gpd.GeoDataFrame(
-    {"id": ["0"]},
-    geometry=[polygon],
-    crs="EPSG:4326"
-)
-
-# Save to GeoJSON file
-gdf.to_file(FILENAME, driver="GeoJSON")
+rec = {"type": "Feature", "id": "0", "properties": OrderedDict(), "geometry": {"type": "Polygon", "coordinates": [[(0, 0), (0, 1), (1, 1), (1, 0), (0, 0)]]}}
+with fiona.open(os.path.join(ROOT, FILENAME), "r") as src:
+    src.meta["schema"]["properties"] = OrderedDict()
+    with fiona.open(FILENAME, "w", **src.meta) as dst:
+        dst.write(rec)
 ```
 
 ## NonGeoDataset

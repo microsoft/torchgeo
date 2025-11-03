@@ -7,7 +7,8 @@ import os
 import shutil
 from typing import Any
 
-import geopandas as gpd
+import fiona
+import fiona.transform
 import numpy as np
 import rasterio
 import shapely.geometry
@@ -247,65 +248,47 @@ def generate_test_data(root: str) -> str:
             )
 
     # build the spatial index
-    # Create a list to store all the features
-    features = []
+    schema = {
+        'geometry': 'Polygon',
+        'properties': {
+            'split': 'str',
+            'naip': 'str',
+            'nlcd': 'str',
+            'roads': 'str',
+            'water': 'str',
+            'waterways': 'str',
+            'waterbodies': 'str',
+            'buildings': 'str',
+            'lc': 'str',
+            'prior_no_osm_no_buildings': 'str',
+            'prior': 'str',
+        },
+    }
+    with fiona.open(
+        os.path.join(folder_path, 'spatial_index.geojson'),
+        'w',
+        driver='GeoJSON',
+        crs='EPSG:3857',
+        schema=schema,
+    ) as dst:
+        for prefix in tile_list:
+            img_path = os.path.join(folder_path, f'{prefix}_a_naip.tif')
+            with rasterio.open(img_path) as f:
+                geom = shapely.geometry.mapping(shapely.geometry.box(*f.bounds))
+                geom = fiona.transform.transform_geom(
+                    f.crs.to_string(), 'EPSG:3857', geom
+                )
 
-    for prefix in tile_list:
-        img_path = os.path.join(folder_path, f'{prefix}_a_naip.tif')
-        with rasterio.open(img_path) as f:
-            # Create a box geometry from the raster bounds
-            box_geom = shapely.geometry.box(*f.bounds)
-            # Transform the geometry to EPSG:3857 using GeoPandas
-            box_gdf = gpd.GeoDataFrame(geometry=[box_geom], crs=f.crs)
-            transformed_gdf = box_gdf.to_crs('EPSG:3857')
-            geom = transformed_gdf.geometry.iloc[0]
-
-        # Create properties dictionary with all required columns
-        properties = {
-            'split': prefix.split('/')[0].replace('_tiles-debuffered', ''),
-            'naip': '',
-            'nlcd': '',
-            'roads': '',
-            'water': '',
-            'waterways': '',
-            'waterbodies': '',
-            'buildings': '',
-            'lc': '',
-            'prior_no_osm_no_buildings': '',
-            'prior': '',
-        }
-
-        # Fill in the actual values
-        for suffix, data_profile in layer_data_profiles.items():
-            key = suffix_to_key_map[suffix]
-            properties[key] = f'{prefix}_{suffix}.tif'
-
-        # Create feature dictionary
-        feature = {'geometry': geom, 'properties': properties}
-        features.append(feature)
-
-    # Create GeoDataFrame from features with explicit column types
-    gdf = gpd.GeoDataFrame.from_features(features, crs='EPSG:3857')
-
-    # Ensure all string columns have the correct dtype
-    string_columns = [
-        'split',
-        'naip',
-        'nlcd',
-        'roads',
-        'water',
-        'waterways',
-        'waterbodies',
-        'buildings',
-        'lc',
-        'prior_no_osm_no_buildings',
-        'prior',
-    ]
-    for col in string_columns:
-        gdf[col] = gdf[col].astype('string')
-
-    # Save to GeoJSON file
-    gdf.to_file(os.path.join(folder_path, 'spatial_index.geojson'), driver='GeoJSON')
+            row = {
+                'geometry': geom,
+                'properties': {
+                    'split': prefix.split('/')[0].replace('_tiles-debuffered', '')
+                },
+            }
+            for suffix, data_profile in layer_data_profiles.items():
+                key = suffix_to_key_map[suffix]
+                row['properties'][key] = f'{prefix}_{suffix}.tif'
+            dst.write(row)
 
     # Create archive
     archive_path = os.path.join(root, 'enviroatlas_lotp')

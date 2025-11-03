@@ -7,10 +7,8 @@ import hashlib
 import os
 import shutil
 
-import geopandas as gpd
+import fiona
 import numpy as np
-from rasterio.crs import CRS
-from shapely.geometry import Polygon
 
 SIZE = 32
 NUM_SAMPLES = 5
@@ -63,18 +61,25 @@ def create_directory(directory: str, hierarchy: FILENAME_HIERARCHY) -> None:
 if __name__ == '__main__':
     create_directory('PASTIS-R', filenames)
 
-    crs = CRS.from_epsg(4326)
-    geometries = [Polygon([[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]])] * len(
-        range(NUM_SAMPLES)
-    )
-    ids = [str(i) for i in range(NUM_SAMPLES)]
-    folds = [(i % 5) + 1 for i in range(NUM_SAMPLES)]
-    patch_ids = [i for i in range(NUM_SAMPLES)]
-    data = {'geometry': geometries, 'ids': ids, 'folds': folds, 'patch_ids': patch_ids}
-    gdf = gpd.GeoDataFrame(data, crs=crs)
-
-    filename = os.path.join('PASTIS-R', 'metadata.geojson')
-    gdf.to_file(filename, driver='GeoJSON')
+    schema = {'geometry': 'Polygon', 'properties': {'Fold': 'int', 'ID_PATCH': 'int'}}
+    with fiona.open(
+        os.path.join('PASTIS-R', 'metadata.geojson'),
+        'w',
+        'GeoJSON',
+        crs='EPSG:4326',
+        schema=schema,
+    ) as f:
+        for i in range(NUM_SAMPLES):
+            f.write(
+                {
+                    'geometry': {
+                        'type': 'Polygon',
+                        'coordinates': [[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]],
+                    },
+                    'id': str(i),
+                    'properties': {'Fold': (i % 5) + 1, 'ID_PATCH': i},
+                }
+            )
 
     filename = 'PASTIS-R.zip'
     shutil.make_archive(filename.replace('.zip', ''), 'zip', '.', 'PASTIS-R')
