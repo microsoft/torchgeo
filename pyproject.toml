@@ -56,7 +56,7 @@ dependencies = [
     # https://github.com/Lightning-AI/pytorch-lightning/issues/20511
     # lightning 2.5.5 contains known bugs related to checkpoint loading
     # https://github.com/torchgeo/torchgeo/issues/2995
-    "lightning>=2,!=2.3.*,!=2.5.0,<2.5.5",
+    "lightning>=2,!=2.3.*,!=2.5.0,!=2.5.5",
     # matplotlib 3.6+ required for Python 3.11 wheels
     "matplotlib>=3.6",
     # numpy 1.24+ required by rasterio

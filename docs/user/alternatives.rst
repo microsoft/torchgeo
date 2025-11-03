@@ -15,7 +15,7 @@ When deciding which library is most useful to you, it is worth considering the f
 
    Software is a living, breathing organism and is constantly undergoing change. If any of the below information is incorrect or out of date, or if you want to add a new project to this list, please open a PR!
 
-   *Last updated: September 2025*
+   *Last updated: October 2025*
 
 Features
 --------
@@ -108,6 +108,7 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _OTB: https://github.com/orfeotoolbox/OTB
 .. _SITS: https://github.com/e-sensing/sits
 .. _Raster Vision: https://github.com/azavea/raster-vision
+.. _GDL: https://github.com/NRCan/geo-deep-learning
 .. _OTBTF: https://github.com/remicres/otbtf
 .. _spopt: https://github.com/pysal/spopt
 .. _DeepForest: https://github.com/weecology/DeepForest

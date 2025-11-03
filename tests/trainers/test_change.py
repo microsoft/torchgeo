@@ -104,7 +104,7 @@ class TestChangeDetectionTask:
     def test_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictChangeDetectionDataModule(
             root=os.path.join('tests', 'data', 'oscd'),
-            batch_size=2,
+            batch_size=1,
             patch_size=32,
             val_split_pct=0.5,
             num_workers=0,
@@ -240,7 +240,7 @@ class TestChangeDetectionTask:
         monkeypatch.setattr(OSCDDataModule, 'plot', plot)
         datamodule = OSCDDataModule(
             root=os.path.join('tests', 'data', 'oscd'),
-            batch_size=2,
+            batch_size=1,
             patch_size=32,
             val_split_pct=0.5,
             num_workers=0,
@@ -258,7 +258,7 @@ class TestChangeDetectionTask:
         monkeypatch.setattr(OSCDDataModule, 'plot', plot_missing_bands)
         datamodule = OSCDDataModule(
             root=os.path.join('tests', 'data', 'oscd'),
-            batch_size=2,
+            batch_size=1,
             patch_size=32,
             val_split_pct=0.5,
             num_workers=0,
@@ -297,7 +297,7 @@ class TestChangeDetectionTask:
     def test_multiclass_validation(self, fast_dev_run: bool) -> None:
         datamodule = OSCDDataModule(
             root=os.path.join('tests', 'data', 'oscd'),
-            batch_size=2,
+            batch_size=1,
             patch_size=16,
             val_split_pct=0.5,
             num_workers=0,
@@ -321,7 +321,7 @@ class TestChangeDetectionTask:
     def test_multiclass_predict(self, fast_dev_run: bool) -> None:
         datamodule = PredictChangeDetectionDataModule(
             root=os.path.join('tests', 'data', 'oscd'),
-            batch_size=2,
+            batch_size=1,
             patch_size=16,
             val_split_pct=0.5,
             num_workers=0,
