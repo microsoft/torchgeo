@@ -203,15 +203,7 @@ class TestChangeDetectionTask:
 
     @pytest.mark.parametrize(
         'model_name',
-        [
-            'unet',
-            'deeplabv3+',
-            'segformer',
-            'upernet',
-            'fcsiamdiff',
-            'fcsiamconc',
-            'btc',
-        ],
+        ['unet', 'deeplabv3+', 'segformer', 'upernet', 'fcsiamdiff', 'fcsiamconc'],
     )
     def test_freeze_decoder(
         self,
@@ -239,6 +231,10 @@ class TestChangeDetectionTask:
     def test_fcn_model(self) -> None:
         """FCN has no backbone/decoder. Need separate test for full test coverage."""
         ChangeDetectionTask(model='fcn')
+
+    def test_btc_model(self) -> None:
+        """BTC uses only swin backbones. Need separate test for full test coverage."""
+        ChangeDetectionTask(model='btc', backbone='swin_tiny')
 
     @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal', 'dice'])
     def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal']) -> None:
