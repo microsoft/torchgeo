@@ -5,6 +5,8 @@
 
 """Be The Change (BTC) change detection model implementation."""
 
+from typing import Literal
+
 import kornia.augmentation as K
 import segmentation_models_pytorch as smp
 import torch
@@ -27,7 +29,11 @@ class BTC(Module):
     * https://arxiv.org/abs/2507.03367
     """
 
-    def __init__(self, backbone: str, classes: int = 1) -> None:
+    def __init__(
+        self,
+        backbone: Literal['swin_tiny', 'swin_small', 'swin_base'],
+        classes: int = 1,
+    ) -> None:
         """Initialise BTC model.
 
         Args:
@@ -69,6 +75,9 @@ class BTC(Module):
 
         Args:
             x: input image tensor (b, t*c, h, w)
+
+        Returns:
+            binary change map prediction [b, n_cls, h, w].
         """
         h, w = x.shape[-2:]
         # change trainer stacks in channel, we want stacked in batch dim for backbone
@@ -211,7 +220,11 @@ class SwinBackbone(Module):
         return output
 
     def _get_feature_channels(self) -> list[int]:
-        """Get the number of channels in features."""
+        """Get the number of channels in features.
+
+        Returns:
+            list of channels for each feature map in hierarchy.
+        """
         is_training = self.feature_extractor.training
         # dryrun
         self.feature_extractor.eval()
