@@ -90,8 +90,7 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
         )
 
         # Handle temporal data from VideoSequential
-        # If we extracted multiple patches and batch size suggests temporal data (even number),
-        # rearrange to group patches by spatial location rather than temporal sequence
+        # Rearrange to group patches by spatial location rather than temporal sequence
         # Only apply this fix when keepdim=True (for flattening compatibility)
         if (
             len(out.shape) == 5
@@ -99,7 +98,7 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
             and input.shape[0] % 2 == 0
             and flags['keepdim']
         ):
-            # Fix Issue 3: Rearrange to group patches by spatial location
+            # Rearrange to group patches by spatial location
             # Current: patches from t1, then patches from t2
             # Desired: patch_0 from [t1,t2], patch_1 from [t1,t2], etc.
             temporal_frames = 2

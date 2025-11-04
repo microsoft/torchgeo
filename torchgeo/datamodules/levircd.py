@@ -7,6 +7,7 @@ from typing import Any, Literal, cast
 
 import kornia.augmentation as K
 import torch
+from einops import rearrange
 from torch import Tensor
 from torch.utils.data import random_split
 
@@ -174,24 +175,14 @@ class LEVIRCDDataModule(NonGeoDataModule):
         # If patches were extracted (grid mode), reshape for ChangeViT compatibility
         # In random crop mode, batch is already [B, T, C, H, W] so no reshaping needed
         if len(batch['image'].shape) == 6:  # [B, T, P, C, H, W]
-            batch_size, temporal_frames, patches_per_frame = batch['image'].shape[:3]
-
             # Reshape image: [B, T, P, C, H, W] -> [B*P, T, C, H, W]
-            batch['image'] = batch['image'].view(
-                batch_size * patches_per_frame,
-                temporal_frames,
-                *batch['image'].shape[3:],
-            )
+            batch['image'] = rearrange(batch['image'], 'b t p c h w -> (b p) t c h w')
 
             # Reshape mask: [B, T, P, C, H, W] -> [B*P, C, H, W]
             if len(batch['mask'].shape) == 6:
-                # Permute to [B, P, T, C, H, W] then reshape to [B*P, C, H, W]
-                batch['mask'] = batch['mask'].permute(
-                    0, 2, 1, 3, 4, 5
-                )  # [B, P, T, C, H, W]
-                batch['mask'] = batch['mask'].reshape(
-                    batch_size * patches_per_frame, *batch['mask'].shape[-3:]
-                )  # [B*P, C, H, W] - flatten patches, keep channel and spatial dims
+                # Squeeze temporal dimension (T=1) then rearrange patches into batch
+                batch['mask'] = batch['mask'].squeeze(1)  # [B, P, C, H, W]
+                batch['mask'] = rearrange(batch['mask'], 'b p c h w -> (b p) c h w')
 
         # Handle mask reshaping for cases where temporal dimension creates extra dimensions
         if len(batch['mask'].shape) == 5 and batch['mask'].shape[2] == 1:
