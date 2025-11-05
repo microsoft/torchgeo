@@ -179,7 +179,7 @@ show_missing = true
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
 # Import discovery
-#ignore_missing_imports = true
+ignore_missing_imports = true
 exclude = "(build|data|dist|docs/.*|images|logo|.*logs|output|requirements)/"
 
 # Disallow dynamic typing (TODO: work in progress)
