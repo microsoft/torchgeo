@@ -298,6 +298,9 @@ filterwarnings = [
     # Unexpected warnings, worth investigating
     # https://github.com/pytest-dev/pytest/issues/11461
     "ignore::pytest.PytestUnraisableExceptionWarning",
+    # https://github.com/shapely/shapely/issues/2215
+    "ignore:divide by zero encountered in oriented_envelope:RuntimeWarning:shapely",
+    "ignore:invalid value encountered in oriented_envelope:RuntimeWarning:shapely",
 ]
 markers = [
     "slow: marks tests as slow",
