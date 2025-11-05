@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
 from pathlib import Path
 from typing import cast
 
@@ -56,6 +57,9 @@ class TestViTSmall16:
     def test_vit(self) -> None:
         vit_small_patch16_224()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_vit_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
@@ -105,6 +109,9 @@ class TestViTBase16:
     def test_vit(self) -> None:
         vit_base_patch16_224()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_vit_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
@@ -154,6 +161,9 @@ class TestViTLarge16:
     def test_vit(self) -> None:
         vit_large_patch16_224()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_vit_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
@@ -203,6 +213,9 @@ class TestViTHuge14:
     def test_vit(self) -> None:
         vit_huge_patch14_224()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_vit_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
@@ -253,6 +266,9 @@ class TestViTSmall14_DINOv2:
     def test_vit(self) -> None:
         vit_small_patch14_dinov2()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_vit_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
@@ -308,6 +324,9 @@ class TestViTBase14_DINOv2:
     def test_vit(self) -> None:
         vit_base_patch14_dinov2()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_vit_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:

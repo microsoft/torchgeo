@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -72,6 +73,9 @@ class TestCROMABase:
     def test_croma(self) -> None:
         croma_base()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_croma_weights(self, mocked_weights: WeightsEnum) -> None:
         croma_base(weights=mocked_weights)
 
@@ -99,6 +103,9 @@ class TestCROMALarge:
     def test_croma(self) -> None:
         croma_large()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_croma_weights(self, mocked_weights: WeightsEnum) -> None:
         croma_large(weights=mocked_weights)
 

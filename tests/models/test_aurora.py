@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -34,6 +35,9 @@ class TestAurora:
     def test_aurora_swin_unet(self) -> None:
         aurora_swin_unet()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_aurora_swin_unet_weights(self, mocked_weights: WeightsEnum) -> None:
         aurora_swin_unet(weights=mocked_weights)
 

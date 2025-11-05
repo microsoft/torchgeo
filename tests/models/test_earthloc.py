@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -39,9 +40,15 @@ class TestEarthLoc:
     def test_earthloc(self) -> None:
         earthloc()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_earthloc_weights(self, mocked_weights: WeightsEnum) -> None:
         earthloc(weights=mocked_weights)
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_earthloc_forward(self, mocked_weights: WeightsEnum) -> None:
         model = earthloc(weights=mocked_weights)
         c = mocked_weights.meta['in_chans']

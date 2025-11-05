@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -37,6 +38,9 @@ class TestScaleMAE:
         y = model(x)
         assert y.shape == (1, 2)
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_scalemae_weights(self, mocked_weights: WeightsEnum) -> None:
         scalemae_large_patch16(weights=mocked_weights)
 
@@ -47,6 +51,9 @@ class TestScaleMAE:
         }
         weights.transforms(sample)
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_scalemae_weights_diff_image_size(
         self, mocked_weights: WeightsEnum
     ) -> None:

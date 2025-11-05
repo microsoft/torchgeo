@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -157,6 +158,9 @@ class TestCopernicusFMBase:
         input_mode = 'variable'
         model(x, metadata, language_embed=language_embed, input_mode=input_mode)
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_copernicusfm_weights(self, mocked_weights: WeightsEnum) -> None:
         copernicusfm_base(weights=mocked_weights)
 

@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -97,6 +98,9 @@ class TestDOFABase16:
         wavelengths = [664.6, 559.8, 492.4, 832.8]
         model(x, wavelengths)
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_dofa_weights(self, mocked_weights: WeightsEnum) -> None:
         dofa_base_patch16_224(weights=mocked_weights)
 
@@ -134,6 +138,9 @@ class TestDOFALarge16:
         wavelengths = [664.6, 559.8, 492.4, 832.8]
         model(x, wavelengths)
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_dofa_weights(self, mocked_weights: WeightsEnum) -> None:
         dofa_large_patch16_224(weights=mocked_weights)
 

@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -45,6 +46,9 @@ class TestResNet18:
     def test_resnet(self) -> None:
         resnet18()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_resnet_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
@@ -91,6 +95,9 @@ class TestResNet50:
     def test_resnet(self) -> None:
         resnet50()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_resnet_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:
@@ -137,6 +144,9 @@ class TestResNet152:
     def test_resnet(self) -> None:
         resnet152()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_resnet_weights(
         self, mocked_weights: WeightsEnum, features_only: bool
     ) -> None:

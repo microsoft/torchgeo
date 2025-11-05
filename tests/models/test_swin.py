@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -37,6 +38,9 @@ class TestSwin_V2_T:
     def test_swin_v2_t(self) -> None:
         swin_v2_t()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_swin_v2_t_weights(self, mocked_weights: WeightsEnum) -> None:
         swin_v2_t(weights=mocked_weights)
 
@@ -80,6 +84,9 @@ class TestSwin_V2_B:
     def test_swin_v2_b(self) -> None:
         swin_v2_b()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_swin_v2_b_weights(self, mocked_weights: WeightsEnum) -> None:
         swin_v2_b(weights=mocked_weights)
 

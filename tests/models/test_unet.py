@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -37,9 +38,15 @@ class TestUnet:
     def test_unet(self) -> None:
         unet()
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_unet_weights(self, mocked_weights: WeightsEnum) -> None:
         unet(weights=mocked_weights)
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_unet_weights_different_num_classes(
         self, mocked_weights: WeightsEnum
     ) -> None:

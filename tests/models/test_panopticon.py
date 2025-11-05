@@ -1,6 +1,7 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -82,6 +83,9 @@ class TestPanopticonBase:
         output = model(x_dict)
         assert output.shape == (2, 768)  # (B, embed_dim)
 
+    @pytest.mark.skipif(
+        sys.platform == 'darwin', reason='macOS CI runners have limited memory'
+    )
     def test_panopticon_weights(self, mocked_weights: WeightsEnum) -> None:
         model = panopticon_vitb14(weights=mocked_weights)
         x_dict = dict(
