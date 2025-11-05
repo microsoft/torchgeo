@@ -1,7 +1,7 @@
 # style
 h5py-stubs
 mypy==1.18.2
-pandas-stubs
+#pandas-stubs
 ruff==0.14.3
 scikit-learn-stubs
 types-geopandas
