@@ -3,7 +3,7 @@
 
 """LEVIR-CD datamodules."""
 
-from typing import Any, Literal
+from typing import Any
 
 import kornia.augmentation as K
 import torch
@@ -34,7 +34,6 @@ class LEVIRCDDataModule(NonGeoDataModule):
         batch_size: int = 8,
         patch_size: tuple[int, int] | int = 256,
         num_workers: int = 0,
-        val_patch_sampling: Literal['grid', 'random'] = 'random',
         **kwargs: Any,
     ) -> None:
         """Initialize a new LEVIRCDDataModule instance.
@@ -44,33 +43,17 @@ class LEVIRCDDataModule(NonGeoDataModule):
             patch_size: Size of each patch, either ``size`` or ``(height, width)``.
                 Should be a multiple of 32 for most segmentation architectures.
             num_workers: Number of workers for parallel data loading.
-            val_patch_sampling: Strategy for validation patch sampling:
-                'random' (default): Use RandomCrop, matches training distribution.
-                'grid': Use deterministic grid patches via ExtractPatches.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.LEVIRCD`.
         """
-        stride = kwargs.pop('stride', None)
-        self.val_patch_sampling = val_patch_sampling
-
         super().__init__(
             LEVIRCD, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
 
         self.patch_size = _to_tuple(patch_size)
-        self.stride = _to_tuple(stride) if stride is not None else None
 
-        self.train_aug = self._create_random_train_aug()
-        self.val_aug = self._create_deterministic_val_aug()
-        self.test_aug = self._create_deterministic_val_aug()
-        self.aug = self.val_aug
-
-    def _create_random_train_aug(self) -> K.AugmentationSequential:
-        """Create synchronized random training augmentation for proper image-mask alignment.
-
-        Follows ChangeViT paper: random flipping and cropping.
-        """
-        return K.AugmentationSequential(
+        # Training: random augmentation
+        self.train_aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
             K.RandomHorizontalFlip(p=0.5),
             K.RandomVerticalFlip(p=0.5),
@@ -80,26 +63,16 @@ class LEVIRCDDataModule(NonGeoDataModule):
             same_on_batch=True,
         )
 
-    def _create_deterministic_val_aug(self) -> K.AugmentationSequential:
-        """Create validation/test augmentation based on val_patch_sampling strategy."""
-        if self.val_patch_sampling == 'random':
-            return K.AugmentationSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                K.RandomCrop(self.patch_size, pad_if_needed=True),
-                data_keys=None,
-                keepdim=True,
-                same_on_batch=True,
-            )
-        else:
-            return K.AugmentationSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                _ExtractPatches(
-                    window_size=self.patch_size, stride=self.stride, keepdim=False
-                ),
-                data_keys=None,
-                keepdim=False,
-                same_on_batch=True,
-            )
+        # Validation and test: deterministic grid sampling
+        self.val_aug = self.test_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            _ExtractPatches(window_size=self.patch_size, keepdim=False),
+            data_keys=None,
+            keepdim=False,
+            same_on_batch=True,
+        )
+
+        self.aug = self.val_aug
 
     def on_after_batch_transfer(
         self, batch: dict[str, Tensor], dataloader_idx: int
@@ -136,7 +109,6 @@ class LEVIRCDPlusDataModule(LEVIRCDDataModule):
         patch_size: tuple[int, int] | int = 256,
         val_split_pct: float = 0.2,
         num_workers: int = 0,
-        val_patch_sampling: Literal['grid', 'random'] = 'random',
         **kwargs: Any,
     ) -> None:
         """Initialize a new LEVIRCDPlusDataModule instance.
@@ -147,27 +119,37 @@ class LEVIRCDPlusDataModule(LEVIRCDDataModule):
                 Should be a multiple of 32 for most segmentation architectures.
             val_split_pct: Percentage of the dataset to use as a validation set.
             num_workers: Number of workers for parallel data loading.
-            val_patch_sampling: Strategy for validation patch sampling:
-                'random' (default): Use RandomCrop, matches training distribution.
-                'grid': Use deterministic grid patches via ExtractPatches.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.LEVIRCDPlus`.
         """
         self.val_split_pct = val_split_pct
-
-        stride = kwargs.pop('stride', None)
-        self.val_patch_sampling = val_patch_sampling
 
         NonGeoDataModule.__init__(
             self, LEVIRCDPlus, batch_size=batch_size, num_workers=num_workers, **kwargs
         )
 
         self.patch_size = _to_tuple(patch_size)
-        self.stride = _to_tuple(stride) if stride is not None else None
 
-        self.train_aug = self._create_random_train_aug()
-        self.val_aug = self._create_deterministic_val_aug()
-        self.test_aug = self._create_deterministic_val_aug()
+        # Training: random augmentation
+        self.train_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            K.RandomHorizontalFlip(p=0.5),
+            K.RandomVerticalFlip(p=0.5),
+            K.RandomCrop(self.patch_size, pad_if_needed=True),
+            data_keys=None,
+            keepdim=True,
+            same_on_batch=True,
+        )
+
+        # Validation and test: deterministic grid sampling
+        self.val_aug = self.test_aug = K.AugmentationSequential(
+            K.Normalize(mean=self.mean, std=self.std),
+            _ExtractPatches(window_size=self.patch_size, keepdim=False),
+            data_keys=None,
+            keepdim=False,
+            same_on_batch=True,
+        )
+
         self.aug = self.val_aug
 
     def setup(self, stage: str) -> None:
