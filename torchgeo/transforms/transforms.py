@@ -89,24 +89,18 @@ class _ExtractPatches(K.GeometricAugmentationBase2D):
             padding=flags['padding'],
         )
 
-        # Handle temporal data from VideoSequential
-        # Rearrange to group patches by spatial location rather than temporal sequence
-        # Only apply this fix when keepdim=True (for flattening compatibility)
-        if (
-            len(out.shape) == 5
-            and out.shape[1] > 1
-            and input.shape[0] % 2 == 0
-            and flags['keepdim']
-        ):
-            # Rearrange to group patches by spatial location
-            # Current: patches from t1, then patches from t2
-            # Desired: patch_0 from [t1,t2], patch_1 from [t1,t2], etc.
-            temporal_frames = 2
-            out = rearrange(out, '(b t) n c h w -> (b n t) c h w', t=temporal_frames)
-        elif flags['keepdim']:
-            # Original behavior - flatten patches into batch dimension
-            out = rearrange(out, 'b n c h w -> (b n) c h w')
-        # If keepdim=False, keep the [B, N, C, H, W] shape as is
+        # If keepdim=True, flatten patches into batch dimension
+        # Preserve temporal dimension if input has time series
+        if flags['keepdim']:
+            if len(out.shape) == 6:
+                # Temporal input [B, T, C, H, W] -> patches [B, T, N, C, H, W]
+                # Flatten to [B*N, T, C, H, W] to preserve time series
+                out = rearrange(out, 'b t n c h w -> (b n) t c h w')
+            elif len(out.shape) == 5:
+                # Non-temporal input [B, C, H, W] -> patches [B, N, C, H, W]
+                # Flatten to [B*N, C, H, W]
+                out = rearrange(out, 'b n c h w -> (b n) c h w')
+        # If keepdim=False, keep the [B, N, C, H, W] or [B, T, N, C, H, W] shape as is
 
         return out
 
