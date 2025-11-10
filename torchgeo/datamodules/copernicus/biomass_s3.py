@@ -12,6 +12,32 @@ from ...datasets import CopernicusBenchBiomassS3
 from ..geo import NonGeoDataModule
 
 
+# STD values from https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S3_OLCI#bands
+STD = {
+    'Oa01_radiance': 0.0139465,
+    'Oa02_radiance': 0.0133873,
+    'Oa03_radiance': 0.0121481,
+    'Oa04_radiance': 0.0115198,
+    'Oa05_radiance': 0.0100953,
+    'Oa06_radiance': 0.0123538,
+    'Oa07_radiance': 0.00879161,
+    'Oa08_radiance': 0.00876539,
+    'Oa09_radiance': 0.0095103,
+    'Oa10_radiance': 0.00773378,
+    'Oa11_radiance': 0.00675523,
+    'Oa12_radiance': 0.0071996,
+    'Oa13_radiance': 0.00749684,
+    'Oa14_radiance': 0.0086512,
+    'Oa15_radiance': 0.00526779,
+    'Oa16_radiance': 0.00530267,
+    'Oa17_radiance': 0.00493004,
+    'Oa18_radiance': 0.00549962,
+    'Oa19_radiance': 0.00502847,
+    'Oa20_radiance': 0.00326378,
+    'Oa21_radiance': 0.00324118,
+}
+
+
 class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the Copernicus Biomass-S3 dataset.
 
@@ -34,8 +60,11 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
         bands = kwargs.get('bands', CopernicusBenchBiomassS3.all_bands)
         mode = kwargs.get('mode', 'static')
 
+        if bands is None:
+            bands = CopernicusBenchBiomassS3.all_bands
+
         self.mean = torch.zeros(len(bands), dtype=torch.float32)
-        self.std = torch.ones(len(bands), dtype=torch.float32)
+        self.std = torch.tensor([STD[band] for band in bands], dtype=torch.float32)
 
         super().__init__(CopernicusBenchBiomassS3, batch_size, num_workers, **kwargs)
 
