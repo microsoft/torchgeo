@@ -13,11 +13,11 @@ from ..geo import NonGeoDataModule
 
 
 class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
-    """LightningDataModule implementation for the Biomass-S3 dataset.
+    """LightningDataModule implementation for the Copernicus Biomass-S3 dataset.
 
     Uses the train/val/test splits provided with the benchmark.
 
-    .. versionadded:: 0.7
+    .. versionadded:: 0.81
     """
 
     def __init__(
