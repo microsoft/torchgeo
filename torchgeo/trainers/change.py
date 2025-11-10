@@ -50,7 +50,7 @@ class ChangeDetectionTask(BaseTask):
         num_labels: int | None = None,
         num_filters: int = 3,
         pos_weight: Tensor | None = None,
-        loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'bce',
+        loss: Literal['ce', 'bce', 'jaccard', 'focal', 'dice'] = 'bce',
         class_weights: Tensor | Sequence[float] | None = None,
         ignore_index: int | None = None,
         lr: float = 1e-3,
@@ -128,6 +128,8 @@ class ChangeDetectionTask(BaseTask):
                     ignore_index=ignore_index,
                     normalized=True,
                 )
+            case 'dice':
+                self.criterion = smp.losses.DiceLoss(mode=self.hparams['task'])
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.

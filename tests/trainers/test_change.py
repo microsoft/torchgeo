@@ -232,8 +232,8 @@ class TestChangeDetectionTask:
         """FCN has no backbone/decoder. Need separate test for full test coverage."""
         ChangeDetectionTask(model='fcn')
 
-    @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal'])
-    def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal']) -> None:
+    @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal', 'dice'])
+    def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal', 'dice']) -> None:
         ChangeDetectionTask(loss=loss_fn)
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:
