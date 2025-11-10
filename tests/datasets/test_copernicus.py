@@ -12,6 +12,7 @@ from _pytest.fixtures import SubRequest
 from matplotlib import pyplot as plt
 from pytest import MonkeyPatch
 from torch import nn
+from torch.utils.data import DataLoader
 
 from torchgeo.datasets import (
     CopernicusBench,
@@ -75,7 +76,10 @@ class TestCopernicusBench:
             assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: CopernicusBench) -> None:
-        assert len(dataset) == 1
+        expected_lengths = {
+            'biomass_s3': 2,
+        }
+        assert len(dataset) == expected_lengths.get(dataset.name, 1)
 
     def test_extract(self, dataset: CopernicusBench, tmp_path: Path) -> None:
         root = dataset.root
@@ -125,6 +129,14 @@ class TestCopernicusBench:
         match = 'Dataset does not contain some of the RGB bands'
         with pytest.raises(RGBBandsMissingError, match=match):
             dataset.plot(dataset[0])
+
+    def test_biomass_s3_static_collate_error(self) -> None:
+        root = os.path.join('tests', 'data', 'copernicus', 'l3_biomass_s3')
+        dataset = CopernicusBench('biomass_s3', root, mode='static')
+        loader = DataLoader(dataset, batch_size=len(dataset), num_workers=0)
+
+        with pytest.raises(RuntimeError):
+            next(iter(loader))
 
 
 class TestCopernicusPretrain:
