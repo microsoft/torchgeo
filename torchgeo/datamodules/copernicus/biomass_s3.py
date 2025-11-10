@@ -11,7 +11,6 @@ import torch
 from ...datasets import CopernicusBenchBiomassS3
 from ..geo import NonGeoDataModule
 
-
 # STD values from https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S3_OLCI#bands
 STD = {
     'Oa01_radiance': 0.0139465,
