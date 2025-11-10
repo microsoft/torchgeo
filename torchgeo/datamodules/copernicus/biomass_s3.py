@@ -11,8 +11,9 @@ import torch
 from ...datasets import CopernicusBenchBiomassS3
 from ..geo import NonGeoDataModule
 
-# STD values from https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S3_OLCI#bands
-STD = {
+# Multiplicative scale factors from
+# https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S3_OLCI#bands
+SCALE = {
     'Oa01_radiance': 0.0139465,
     'Oa02_radiance': 0.0133873,
     'Oa03_radiance': 0.0121481,
@@ -56,14 +57,13 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.CopernicusBenchBiomassS3`.
         """
-        bands = kwargs.get('bands', CopernicusBenchBiomassS3.all_bands)
+        bands = kwargs.get('bands', SCALE.keys())
         mode = kwargs.get('mode', 'static')
 
-        if bands is None:
-            bands = CopernicusBenchBiomassS3.all_bands
+        scale_factors = torch.tensor([SCALE[b] for b in bands], dtype=torch.float32)
 
         self.mean = torch.zeros(len(bands), dtype=torch.float32)
-        self.std = torch.tensor([STD[band] for band in bands], dtype=torch.float32)
+        self.std = torch.reciprocal(scale_factors)
 
         super().__init__(CopernicusBenchBiomassS3, batch_size, num_workers, **kwargs)
 
