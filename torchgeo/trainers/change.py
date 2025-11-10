@@ -129,7 +129,9 @@ class ChangeDetectionTask(BaseTask):
                     normalized=True,
                 )
             case 'dice':
-                self.criterion = smp.losses.DiceLoss(mode=self.hparams['task'])
+                self.criterion = smp.losses.DiceLoss(
+                    mode=self.hparams['task'], ignore_index=ignore_index
+                )
 
     def configure_metrics(self) -> None:
         """Initialize the performance metrics.
