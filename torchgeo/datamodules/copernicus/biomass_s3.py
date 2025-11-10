@@ -49,7 +49,5 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
             )
         else:
             self.aug = K.AugmentationSequential(
-                normalizer,
-                data_keys=None,
-                keepdim=True,
+                normalizer, data_keys=None, keepdim=True
             )
