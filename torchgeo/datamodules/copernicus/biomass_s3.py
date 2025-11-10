@@ -7,6 +7,7 @@ from typing import Any
 
 import kornia.augmentation as K
 import torch
+from kornia.constants import DataKey, Resample
 
 from ...datasets import CopernicusBenchBiomassS3
 from ..geo import NonGeoDataModule
@@ -37,6 +38,8 @@ SCALE = {
     'Oa21_radiance': 0.00324118,
 }
 
+TARGET_SIZE = (282, 282)
+
 
 class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
     """LightningDataModule implementation for the Copernicus Biomass-S3 dataset.
@@ -59,11 +62,32 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
         """
         bands = kwargs.get('bands', SCALE.keys())
         mode = kwargs.get('mode', 'static')
-
         scale_factors = torch.tensor([SCALE[b] for b in bands], dtype=torch.float32)
 
         self.mean = torch.zeros(len(bands), dtype=torch.float32)
         self.std = torch.reciprocal(scale_factors)
+
+        resize_transform = K.AugmentationSequential(
+            K.Resize(
+                size=TARGET_SIZE, resample=Resample.BILINEAR.name, align_corners=False
+            ),
+            data_keys=None,
+            keepdim=True,
+            extra_args={
+                DataKey.MASK: {'resample': Resample.NEAREST, 'align_corners': None}
+            },
+        )
+        existing_transform = kwargs.get('transforms')
+
+        if existing_transform is not None:
+
+            def composed(sample: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+                sample = resize_transform(sample)
+                return existing_transform(sample)
+
+            kwargs['transforms'] = composed
+        else:
+            kwargs['transforms'] = resize_transform
 
         super().__init__(CopernicusBenchBiomassS3, batch_size, num_workers, **kwargs)
 
