@@ -8,10 +8,14 @@ import os
 from collections.abc import Callable, Sequence
 from typing import Literal
 
+import numpy as np
 import pandas as pd
 import torch
+from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
 
-from ..utils import Path, Sample, stack_samples
+from ..errors import RGBBandsMissingError
+from ..utils import Path, Sample, percentile_normalization, stack_samples
 from .base import CopernicusBenchBase
 
 
@@ -123,3 +127,90 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
             sample = self.transforms(sample)
 
         return sample
+
+    def plot(
+        self,
+        sample: Sample,
+        show_titles: bool = True,
+        suptitle: str | None = None,
+        alpha: float = 0.5,
+    ) -> Figure:
+        """Plot a sample from the dataset.
+
+        Args:
+            sample: A sample returned by :meth:`__getitem__`.
+            show_titles: Flag indicating whether to show titles above each panel.
+            suptitle: Optional string to use as a suptitle.
+            alpha: Opacity to use when rendering the mask (0 is transparent, 1 opaque).
+
+        Returns:
+            A matplotlib Figure with the rendered sample.
+
+        Raises:
+            RGBBandsMissingError: If *bands* does not include all RGB bands.
+        """
+        try:
+            rgb_indices = [self.bands.index(band) for band in self.rgb_bands]
+        except ValueError as exc:
+            raise RGBBandsMissingError() from exc
+
+        image = sample['image'].detach().cpu()
+        if image.dim() == 3:
+            image = image.unsqueeze(0)
+
+        rgb = image[:, rgb_indices].numpy()
+        rgb = percentile_normalization(rgb)
+        rgb = np.transpose(rgb, (0, 2, 3, 1))
+
+        has_mask = 'mask' in sample
+        has_prediction = 'prediction' in sample
+
+        ncols = rgb.shape[0] + int(has_mask) + int(has_prediction)
+        fig, axes = plt.subplots(
+            nrows=1, ncols=ncols, figsize=(5 * ncols, 5), squeeze=False
+        )
+        axes_list = axes.flatten()
+
+        for idx, img in enumerate(rgb):
+            axes_list[idx].imshow(img)
+            axes_list[idx].axis('off')
+            if show_titles:
+                title = 'Image'
+                if rgb.shape[0] > 1:
+                    title = f'Image {idx + 1}'
+                axes_list[idx].set_title(title)
+
+        current_col = rgb.shape[0]
+        vmin = vmax = None
+        if has_mask:
+            mask = sample['mask'].detach().cpu().numpy().squeeze()
+            vmin = float(np.nanmin(mask))
+            vmax = float(np.nanmax(mask))
+            mask_im = axes_list[current_col].imshow(
+                mask, cmap=self.cmap, alpha=alpha, vmin=vmin, vmax=vmax
+            )
+            axes_list[current_col].axis('off')
+            if show_titles:
+                axes_list[current_col].set_title('Mask')
+            fig.colorbar(mask_im, ax=axes_list[current_col], fraction=0.046, pad=0.04)
+            current_col += 1
+
+        if has_prediction:
+            prediction = sample['prediction'].detach().cpu().numpy().squeeze()
+            pred_im = axes_list[current_col].imshow(
+                prediction,
+                cmap=self.cmap,
+                alpha=alpha,
+                vmin=vmin,
+                vmax=vmax,
+            )
+            axes_list[current_col].axis('off')
+            if show_titles:
+                axes_list[current_col].set_title('Prediction')
+            fig.colorbar(pred_im, ax=axes_list[current_col], fraction=0.046, pad=0.04)
+
+        if suptitle is not None:
+            fig.suptitle(suptitle)
+
+        fig.tight_layout()
+        return fig

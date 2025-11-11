@@ -60,7 +60,7 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.CopernicusBenchBiomassS3`.
         """
-        bands = kwargs.get('bands', SCALE.keys())
+        bands = kwargs.get('bands', CopernicusBenchBiomassS3.all_bands)
         mode = kwargs.get('mode', 'static')
         scale_factors = torch.tensor([SCALE[b] for b in bands], dtype=torch.float32)
 
