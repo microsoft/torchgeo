@@ -3,7 +3,7 @@ einops==0.3.0
 fiona==1.8.22
 geopandas==0.12.1
 jsonargparse[signatures]==4.25.0
-kornia==0.7.4
+kornia==0.8.2
 lightly==1.4.5
 lightning==2.0.0
 matplotlib==3.6.0

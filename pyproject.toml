@@ -43,8 +43,9 @@ dependencies = [
     "geopandas>=0.12.1",
     # jsonargparse 4.25+ required for proper LightningCLI YAML parsing
     "jsonargparse[signatures]>=4.25",
-    # kornia 0.7.4+ required for AugmentationSequential support for unknown keys
-    "kornia>=0.7.4",
+    # kornia 0.8.2+ required for fix to VideoSequential
+    # https://github.com/kornia/kornia/pull/3330
+    "kornia>=0.8.2",
     # lightly 1.4.5+ required for LARS optimizer
     # lightly 1.4.26 is incompatible with the version of timm required by smp
     # https://github.com/torchgeo/torchgeo/issues/1824
