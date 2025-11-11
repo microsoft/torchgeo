@@ -47,7 +47,7 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
 
     Uses the train/val/test splits provided with the benchmark.
 
-    .. versionadded:: 0.81
+    .. versionadded:: 0.8
     """
 
     def __init__(
