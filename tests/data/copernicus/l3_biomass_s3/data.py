@@ -34,10 +34,7 @@ LOCATIONS = [
                 'S3A_20210119T033546_20210119T033846.tif',
                 (IMAGE_SIZE - 1, IMAGE_SIZE + 1),
             ),
-            (
-                'S3B_20210314T034457_20210314T034757.tif',
-                (IMAGE_SIZE + 1, IMAGE_SIZE),
-            ),
+            ('S3B_20210314T034457_20210314T034757.tif', (IMAGE_SIZE + 1, IMAGE_SIZE)),
         ],
         'static_file': 'S3B_20210314T034457_20210314T034757.tif',
     },
