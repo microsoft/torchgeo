@@ -19,8 +19,6 @@ class AugmentationSequential(K.AugmentationSequential):
 
 
 # TODO: contribute these to Kornia and delete this file
-
-
 class _ExtractPatches(K.GeometricAugmentationBase2D):
     """Extract patches from an image or mask."""
 
