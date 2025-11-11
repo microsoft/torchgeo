@@ -15,7 +15,7 @@ from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 
 from ..errors import RGBBandsMissingError
-from ..utils import Path, Sample, percentile_normalization, stack_samples
+from ..utils import Path, Sample, stack_samples
 from .base import CopernicusBenchBase
 
 
@@ -69,6 +69,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
         'Oa21_radiance',
     )
     rgb_bands = ('Oa08_radiance', 'Oa06_radiance', 'Oa04_radiance')
+    rgb_scaling = (0.00876539, 0.0123538, 0.0115198)
     cmap = 'YlGn'
 
     def __init__(
@@ -159,7 +160,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
             image = image.unsqueeze(0)
 
         rgb = image[:, rgb_indices].numpy()
-        rgb = percentile_normalization(rgb)
+        rgb = rgb * np.array(self.rgb_scaling).reshape(1, 3, 1, 1)
         rgb = np.transpose(rgb, (0, 2, 3, 1))
 
         has_mask = 'mask' in sample
@@ -198,11 +199,7 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
         if has_prediction:
             prediction = sample['prediction'].detach().cpu().numpy().squeeze()
             pred_im = axes_list[current_col].imshow(
-                prediction,
-                cmap=self.cmap,
-                alpha=alpha,
-                vmin=vmin,
-                vmax=vmax,
+                prediction, cmap=self.cmap, alpha=alpha, vmin=vmin, vmax=vmax
             )
             axes_list[current_col].axis('off')
             if show_titles:
