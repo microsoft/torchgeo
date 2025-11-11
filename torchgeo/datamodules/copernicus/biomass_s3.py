@@ -3,7 +3,7 @@
 
 """Copernicus-Bench Biomass-S3 datamodule."""
 
-from typing import Any
+from typing import Any, Callable, cast
 
 import kornia.augmentation as K
 import torch
@@ -77,13 +77,17 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
                 DataKey.MASK: {'resample': Resample.NEAREST, 'align_corners': None}
             },
         )
-        existing_transform = kwargs.get('transforms')
+        existing_transform = cast(
+            Callable[[dict[str, torch.Tensor]], dict[str, torch.Tensor]] | None,
+            kwargs.get('transforms'),
+        )
 
         if existing_transform is not None:
+            transform = existing_transform
 
             def composed(sample: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
-                sample = resize_transform(sample)
-                return existing_transform(sample)
+                resized = resize_transform(sample)
+                return transform(resized)
 
             kwargs['transforms'] = composed
         else:

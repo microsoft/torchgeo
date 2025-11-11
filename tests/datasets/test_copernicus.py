@@ -76,9 +76,7 @@ class TestCopernicusBench:
             assert isinstance(x['mask'], torch.Tensor)
 
     def test_len(self, dataset: CopernicusBench) -> None:
-        expected_lengths = {
-            'biomass_s3': 2,
-        }
+        expected_lengths = {'biomass_s3': 2}
         assert len(dataset) == expected_lengths.get(dataset.name, 1)
 
     def test_extract(self, dataset: CopernicusBench, tmp_path: Path) -> None:
