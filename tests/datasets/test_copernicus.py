@@ -146,6 +146,25 @@ class TestCopernicusBench:
         sample = dataset[1]
         assert sample['image'].shape == (2, 21, 9, 9)
 
+    def test_biomass_s3_time_series_missing_samples(self, tmp_path: Path) -> None:
+        src_root = Path('tests/data/copernicus/l3_biomass_s3')
+        dst_root = tmp_path / 'l3_biomass_s3'
+        shutil.copytree(src_root, dst_root)
+
+        pid_dir = (
+            dst_root
+            / 'biomass_s3'
+            / 's3_olci'
+            / ('S30E140_ESACCI-BIOMASS-L4-AGB-MERGED-100m-2020-fv4.0_02_11')
+        )
+        shutil.rmtree(pid_dir)
+
+        dataset = CopernicusBench('biomass_s3', str(dst_root), mode='time-series')
+
+        match = 'No Sentinel-3 samples found'
+        with pytest.raises(FileNotFoundError, match=match):
+            dataset[0]
+
 
 class TestCopernicusPretrain:
     @pytest.fixture
