@@ -11,26 +11,33 @@ import rasterio as rio
 from rasterio import Affine
 from rasterio.crs import CRS
 
-SIZE = 32
+MASK_SIZE = 32
+IMAGE_SIZE = 8
 
 np.random.seed(0)
 
 LOCATIONS = [
     {
         'name': 'S30E140_ESACCI-BIOMASS-L4-AGB-MERGED-100m-2020-fv4.0_02_11',
-        'mask_hw': (SIZE, SIZE),
+        'mask_hw': (MASK_SIZE, MASK_SIZE),
         'files': [
-            ('S3A_20200319T233546_20200319T233846.tif', (SIZE // 3, SIZE // 3)),
-            ('S3B_20200514T234457_20200514T234757.tif', (SIZE // 3, SIZE // 3)),
+            ('S3A_20200319T233546_20200319T233846.tif', (IMAGE_SIZE, IMAGE_SIZE)),
+            ('S3B_20200514T234457_20200514T234757.tif', (IMAGE_SIZE, IMAGE_SIZE + 2)),
         ],
         'static_file': 'S3B_20200514T234457_20200514T234757.tif',
     },
     {
         'name': 'S32E141_ESACCI-BIOMASS-L4-AGB-MERGED-100m-2020-fv4.0_01_05',
-        'mask_hw': (SIZE - 6, SIZE),
+        'mask_hw': (MASK_SIZE - 4, MASK_SIZE),
         'files': [
-            ('S3A_20210119T033546_20210119T033846.tif', (SIZE // 3 - 2, SIZE // 3)),
-            ('S3B_20210314T034457_20210314T034757.tif', (SIZE // 3, SIZE // 3 - 1)),
+            (
+                'S3A_20210119T033546_20210119T033846.tif',
+                (IMAGE_SIZE - 1, IMAGE_SIZE + 1),
+            ),
+            (
+                'S3B_20210314T034457_20210314T034757.tif',
+                (IMAGE_SIZE + 1, IMAGE_SIZE),
+            ),
         ],
         'static_file': 'S3B_20210314T034457_20210314T034757.tif',
     },
