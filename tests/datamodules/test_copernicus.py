@@ -21,7 +21,10 @@ def test_existing_transform_is_composed() -> None:
     def existing_transform(sample: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         nonlocal count, shape
         count += 1
-        shape = tuple(int(dim) for dim in sample['image'].shape[-2:])
+        shape = (
+            int(sample['image'].shape[-2]),
+            int(sample['image'].shape[-1]),
+        )
         sample['transformed'] = torch.tensor(True)
         return sample
 
