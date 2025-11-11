@@ -136,6 +136,16 @@ class TestCopernicusBench:
         with pytest.raises(RuntimeError):
             next(iter(loader))
 
+    def test_biomass_s3_time_series_padding(self) -> None:
+        root = os.path.join('tests', 'data', 'copernicus', 'l3_biomass_s3')
+        dataset = CopernicusBench('biomass_s3', root, mode='time-series')
+
+        sample = dataset[0]
+        assert sample['image'].shape == (2, 21, 8, 10)
+
+        sample = dataset[1]
+        assert sample['image'].shape == (2, 21, 9, 9)
+
 
 class TestCopernicusPretrain:
     @pytest.fixture

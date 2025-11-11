@@ -10,6 +10,7 @@ from typing import Literal
 
 import pandas as pd
 import torch
+import torch.nn.functional as F
 
 from ..utils import Path, Sample, stack_samples
 from .base import CopernicusBenchBase
@@ -114,6 +115,29 @@ class CopernicusBenchBiomassS3(CopernicusBenchBase):
             case 'time-series':
                 paths = os.path.join(self.root, self.directory, 's3_olci', pid, '*.tif')
                 samples = [self._load_image(path) for path in sorted(glob.glob(paths))]
+                if not samples:
+                    msg = f'No Sentinel-3 samples found for {pid}.'
+                    raise FileNotFoundError(msg)
+
+                max_h = max(sample['image'].shape[-2] for sample in samples)
+                max_w = max(sample['image'].shape[-1] for sample in samples)
+                if any(
+                    sample['image'].shape[-2] != max_h
+                    or sample['image'].shape[-1] != max_w
+                    for sample in samples
+                ):
+                    padded_samples: list[Sample] = []
+                    for sample_dict in samples:
+                        image = sample_dict['image']
+                        h, w = image.shape[-2:]
+                        pad_h = max_h - h
+                        pad_w = max_w - w
+                        if pad_h or pad_w:
+                            padded_image = F.pad(image, (0, pad_w, 0, pad_h))
+                            sample_dict = sample_dict.copy()
+                            sample_dict['image'] = padded_image
+                        padded_samples.append(sample_dict)
+                    samples = padded_samples
                 sample = stack_samples(samples)
 
         path = os.path.join(self.root, self.directory, 'biomass', f'{pid}.tif')
