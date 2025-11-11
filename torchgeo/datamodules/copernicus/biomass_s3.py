@@ -3,7 +3,8 @@
 
 """Copernicus-Bench Biomass-S3 datamodule."""
 
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 import kornia.augmentation as K
 import torch
