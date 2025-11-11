@@ -84,10 +84,8 @@ for location in LOCATIONS:
 
     mask_h, mask_w = location['mask_hw']
     mask_args = mask_profile | {'height': mask_h, 'width': mask_w}
-    mask_data = np.random.randint(
-        100, size=(mask_h, mask_w), dtype=np.uint16
-    )
-    mask_path = os.path.join(biomass_dir, f"{location['name']}.tif")
+    mask_data = np.random.randint(100, size=(mask_h, mask_w), dtype=np.uint16)
+    mask_path = os.path.join(biomass_dir, f'{location["name"]}.tif')
     with rio.open(mask_path, 'w', **mask_args) as src:
         src.write(mask_data, 1)
 
