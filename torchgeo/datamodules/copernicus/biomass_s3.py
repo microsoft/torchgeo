@@ -75,7 +75,10 @@ class CopernicusBenchBiomassS3DataModule(NonGeoDataModule):
             data_keys=None,
             keepdim=True,
             extra_args={
-                DataKey.MASK: {'resample': Resample.BILINEAR.name, 'align_corners': None}
+                DataKey.MASK: {
+                    'resample': Resample.BILINEAR.name,
+                    'align_corners': None,
+                }
             },
         )
         existing_transform = cast(
