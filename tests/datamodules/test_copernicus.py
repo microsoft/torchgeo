@@ -1,5 +1,7 @@
 """Tests for Copernicus datamodules."""
 
+from typing import cast
+
 import kornia.augmentation as K
 import torch
 
@@ -13,11 +15,13 @@ BANDS = ('Oa08_radiance', 'Oa06_radiance', 'Oa04_radiance')
 
 
 def test_existing_transform_is_composed() -> None:
-    called = {'count': 0, 'shape': None}
+    count = 0
+    shape: tuple[int, int] | None = None
 
     def existing_transform(sample: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
-        called['count'] += 1
-        called['shape'] = sample['image'].shape[-2:]
+        nonlocal count, shape
+        count += 1
+        shape = tuple(int(dim) for dim in sample['image'].shape[-2:])
         sample['transformed'] = torch.tensor(True)
         return sample
 
@@ -40,8 +44,8 @@ def test_existing_transform_is_composed() -> None:
     )
     sample = dataset[0]
 
-    assert called['count'] == 1
-    assert called['shape'] == TARGET_SIZE
+    assert count == 1
+    assert shape == TARGET_SIZE
     assert sample['transformed']
     assert sample['image'].shape[-2:] == TARGET_SIZE
 
@@ -54,14 +58,15 @@ def test_time_series_uses_video_sequential() -> None:
         mode='time-series',
     )
 
-    children = list(datamodule.aug.children())
+    aug = cast(K.AugmentationSequential, datamodule.aug)
+    children = list(aug.children())
     assert len(children) == 1
 
-    video_seq = children[0]
+    video_seq = cast(K.VideoSequential, children[0])
     assert isinstance(video_seq, K.VideoSequential)
 
     normalize_layers = list(video_seq.children())
     assert normalize_layers
     assert isinstance(normalize_layers[0], K.Normalize)
 
-    assert datamodule.aug.same_on_batch is True
+    assert aug.same_on_batch is True
