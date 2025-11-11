@@ -98,8 +98,8 @@ datasets = [
     "laspy>=2.5.3",
     # netcdf4 1.6.1+ required for Python 3.11 wheels
     "netcdf4>=1.6.1",
-    # opencv-python 4.6.0.66+ required for ultralytics 8.3+ compatibility
-    "opencv-python>=4.6.0.66",
+    # opencv-python 4.5.5.64+ required for Python 3.11 wheels
+    "opencv-python>=4.5.5.64",
     # pandas 2+ required for parquet extra
     "pandas[parquet]>=2",
     # pycocotools 2.0.7+ required for Python 3.11 wheels
@@ -130,8 +130,6 @@ docs = [
 models = [
     # microsoft-aurora 1.6+ required for timm 1.0+ support
     "microsoft-aurora>=1.6",
-    # ultralytics 8.3+ fixes loading with weights_only=False
-    "ultralytics>=8.3",
 ]
 style = [
     # mypy 0.900+ required for pyproject.toml support
@@ -300,6 +298,9 @@ filterwarnings = [
     # Unexpected warnings, worth investigating
     # https://github.com/pytest-dev/pytest/issues/11461
     "ignore::pytest.PytestUnraisableExceptionWarning",
+    # https://github.com/shapely/shapely/issues/2215
+    "ignore:divide by zero encountered in oriented_envelope:RuntimeWarning:shapely",
+    "ignore:invalid value encountered in oriented_envelope:RuntimeWarning:shapely",
 ]
 markers = [
     "slow: marks tests as slow",

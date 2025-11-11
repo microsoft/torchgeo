@@ -22,6 +22,7 @@ index = [
     'GeoTessera',
     'OTBTF',
     'GeoDeep',
+    'torchange',
 ]
 
 # Sort by date of first commit (update_timeline.py)
@@ -63,6 +64,7 @@ name_to_github = {
     'TerraTorch': ('IBM', 'terratorch'),
     'GeoDeep': ('uav4geo', 'GeoDeep'),
     'GeoTessera': ('ucam-eo', 'geotessera'),
+    'torchange': ('Z-Zheng', 'pytorch-change-models'),
 }
 name_to_codecov = {
     'SITS': ('gh', 'e-sensing', 'sits'),
@@ -88,6 +90,7 @@ hardcoded_coverage = {
     'TerraTorch': 55,
     'GeoDeep': 0,
     'GeoTessera': 15,
+    'torchange': 0,
 }
 name_to_pypi = {
     'SPy': 'spectral',
@@ -106,6 +109,7 @@ name_to_pypi = {
     'TerraTorch': 'terratorch',
     'GeoDeep': 'geodeep',
     'GeoTessera': 'geotessera',
+    'torchange': 'torchange',
 }
 name_to_cran = {'SITS': 'sits'}
 name_to_conda = {
@@ -118,4 +122,5 @@ name_to_conda = {
     'samgeo': 'segment-geospatial',
     'GeoAI': 'geoai',
     'TerraTorch': 'terratorch',
+    'torchange': 'torchange',
 }

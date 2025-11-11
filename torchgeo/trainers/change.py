@@ -77,7 +77,7 @@ class ChangeDetectionTask(BaseTask):
             num_filters: Number of filters. Only applicable when model='fcn'.
             pos_weight: A weight of positive examples and used with 'bce' loss.
             loss: Name of the loss function, currently supports
-                'ce', 'bce', 'jaccard', and 'focal' loss.
+                'ce', 'bce', 'jaccard', 'focal', and 'dice' loss.
             class_weights: Optional rescaling weight given to each
                 class and used with 'ce' loss.
             ignore_index: Optional integer class index to ignore in the loss and
@@ -131,7 +131,7 @@ class ChangeDetectionTask(BaseTask):
                 )
             case 'dice':
                 self.criterion = smp.losses.DiceLoss(
-                    mode=self.hparams['task'], smooth=1
+                    mode=self.hparams['task'], ignore_index=ignore_index
                 )
 
     def configure_metrics(self) -> None:

@@ -123,3 +123,4 @@ These are download metrics for the project. Note that these numbers can be artif
 .. _TerraTorch: https://github.com/IBM/terratorch
 .. _GeoTessera: https://github.com/ucam-eo/geotessera
 .. _GeoDeep: https://github.com/uav4geo/GeoDeep
+.. _torchange: https://github.com/Z-Zheng/pytorch-change-models
