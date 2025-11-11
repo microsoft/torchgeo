@@ -158,7 +158,7 @@ class LEVIRCDBase(NonGeoDataset, abc.ABC):
         if 'prediction' in sample:
             ncols += 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
         axs[0].imshow(image1)
         axs[0].axis('off')
