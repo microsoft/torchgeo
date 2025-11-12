@@ -12,15 +12,17 @@ from PIL import Image
 
 np.random.seed(0)
 
+SIZE = 64
+
 
 def create_image(path: str) -> None:
-    Z = np.random.randint(255, size=(32, 32, 3), dtype=np.uint8)
+    Z = np.random.randint(255, size=(SIZE, SIZE, 3), dtype=np.uint8)
     img = Image.fromarray(Z).convert('RGB')
     img.save(path)
 
 
 def create_mask(path: str) -> None:
-    Z = np.random.randint(2, size=(32, 32, 3), dtype=np.uint8) * 255
+    Z = np.random.randint(2, size=(SIZE, SIZE, 3), dtype=np.uint8) * 255
     img = Image.fromarray(Z).convert('L')
     img.save(path)
 
@@ -37,7 +39,11 @@ if __name__ == '__main__':
         for directory in directories:
             os.makedirs(os.path.join(root, split, directory))
 
-        for i in range(2):
+        count = 2
+        if split == 'train':
+            count = 4
+
+        for i in range(count):
             folder = os.path.join(root, split, 'A')
             path = os.path.join(folder, f'0{i}.png')
             create_image(path)

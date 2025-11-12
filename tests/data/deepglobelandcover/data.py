@@ -11,7 +11,7 @@ from PIL import Image
 from torchvision.datasets.utils import calculate_md5
 
 
-def generate_test_data(root: str, n_samples: int = 3) -> str:
+def generate_test_data(root: str, n_samples: int = 6) -> str:
     """Create test data archive for DeepGlobeLandCover dataset.
 
     Args:
@@ -22,7 +22,7 @@ def generate_test_data(root: str, n_samples: int = 3) -> str:
         md5 hash of created archive
     """
     dtype = np.uint8
-    size = 2
+    size = 4
 
     folder_path = os.path.join(root, 'data')
 
@@ -36,8 +36,8 @@ def generate_test_data(root: str, n_samples: int = 3) -> str:
     os.makedirs(test_img_dir, exist_ok=True)
     os.makedirs(test_mask_dir, exist_ok=True)
 
-    train_ids = [1, 2, 3]
-    test_ids = [8, 9, 10]
+    train_ids = [1, 2, 3, 4, 5, 6]
+    test_ids = [7, 8, 9, 10, 11, 12]
 
     for i in range(n_samples):
         train_id = train_ids[i]
@@ -67,5 +67,5 @@ def generate_test_data(root: str, n_samples: int = 3) -> str:
 
 
 if __name__ == '__main__':
-    md5_hash = generate_test_data(os.getcwd(), 3)
+    md5_hash = generate_test_data(os.getcwd(), 6)
     print(md5_hash + '\n')

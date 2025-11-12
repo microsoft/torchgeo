@@ -12,15 +12,17 @@ from PIL import Image
 
 np.random.seed(0)
 
+SIZE = 64
+
 
 def create_image(path: str) -> None:
-    Z = np.random.randint(255, size=(32, 32, 3), dtype=np.uint8)
+    Z = np.random.randint(255, size=(SIZE, SIZE, 3), dtype=np.uint8)
     img = Image.fromarray(Z).convert('RGB')
     img.save(path)
 
 
 def create_mask(path: str) -> None:
-    Z = np.random.randint(2, size=(32, 32, 3), dtype=np.uint8) * 255
+    Z = np.random.randint(2, size=(SIZE, SIZE, 3), dtype=np.uint8) * 255
     img = Image.fromarray(Z).convert('L')
     img.save(path)
 
