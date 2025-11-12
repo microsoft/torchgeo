@@ -83,22 +83,10 @@ class OSCDDataModule(NonGeoDataModule):
         self.mean = torch.tensor([MEAN[b] for b in self.bands])
         self.std = torch.tensor([STD[b] for b in self.bands])
 
-        self.train_aug = K.AugmentationSequential(
-            K.VideoSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                K.RandomCrop(self.patch_size, pad_if_needed=True),
-            ),
-            data_keys=None,
-            keepdim=True,
-        )
         self.aug = K.AugmentationSequential(
-            K.VideoSequential(
-                K.Normalize(mean=self.mean, std=self.std),
-                K.CenterCrop(size=self.patch_size),
-            ),
+            K.VideoSequential(K.Normalize(mean=self.mean, std=self.std)),
             data_keys=None,
             keepdim=True,
-            same_on_batch=True,
         )
 
     def setup(self, stage: str) -> None:
@@ -108,10 +96,20 @@ class OSCDDataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
         if stage in ['fit', 'validate']:
-            self.dataset = OSCD(split='train', **self.kwargs)
+            transforms = K.AugmentationSequential(
+                K.VideoSequential(K.RandomCrop(self.patch_size)),
+                data_keys=None,
+                keepdim=True,
+            )
+            self.dataset = OSCD(split='train', transforms=transforms, **self.kwargs)
             generator = torch.Generator().manual_seed(0)
             self.train_dataset, self.val_dataset = random_split(
                 self.dataset, [1 - self.val_split_pct, self.val_split_pct], generator
             )
         if stage in ['test']:
-            self.test_dataset = OSCD(split='test', **self.kwargs)
+            transforms = K.AugmentationSequential(
+                K.VideoSequential(K.CenterCrop(self.patch_size)),
+                data_keys=None,
+                keepdim=True,
+            )
+            self.test_dataset = OSCD(split='test', transforms=transforms, **self.kwargs)
