@@ -8,7 +8,7 @@ model:
 data:
   class_path: LEVIRCDPlusDataModule
   init_args:
-    batch_size: 2
+    batch_size: 1
     patch_size: 32
     val_split_pct: 0.5
   dict_kwargs:

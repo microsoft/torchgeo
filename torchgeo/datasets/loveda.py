@@ -273,7 +273,7 @@ class LoveDA(NonGeoDataset):
             image = sample['image']
             ncols = 1
 
-        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 10))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 10, 10))
 
         if self.split != 'test':
             axs[0].imshow(image.permute(1, 2, 0))
