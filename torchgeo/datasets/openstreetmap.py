@@ -94,16 +94,18 @@ class OpenStreetMap(VectorDataset):
         """Initialize a new OpenStreetMap dataset instance.
 
         Args:
-            bbox: bounding box for initial data fetch as (minx, miny, maxx, maxy) in EPSG:4326
-            classes: list of dicts defining feature classes. Each has `name` (str) and `selector` (list of OSM tag filters).
+            bbox: bounding box for initial data fetch as (xmin, ymin, xmax, ymax) in EPSG:4326
+            classes: list of dicts defining feature classes. Each dict must have:
+                - 'name' (str): class name
+                - 'selector' (list[dict[str, Any]]): list of OSM tag filters
                 Features get labels 1-N based on class order, with first match taking priority.
-            paths: root directory where dataset will be stored
+            paths: paths directory where dataset will be stored
             res: resolution of the dataset in units of EPSG:4326 (degrees). Default is 0.0001°.
                 For small AOIs, consider using a finer resolution to avoid pixelated plots.
                 A good rule of thumb: ``res = min(bbox_width, bbox_height) / 400`` for ~400 pixels.
             transforms: a function/transform that takes input sample and returns
                 a transformed version
-            download: if True, download dataset and store it in the root directory
+            download: if True, download dataset and store it in the paths directory
 
         Raises:
             DatasetNotFoundError: if dataset is not found and download is False
@@ -142,7 +144,15 @@ class OpenStreetMap(VectorDataset):
         self._empty_classes_checked = False
 
     def _validate_classes(self, classes: list[dict[str, Any]]) -> None:
-        """Validate classes configuration."""
+        """Validate classes configuration.
+
+        Args:
+            classes: list of class definitions to validate. Each class should be a dict
+                with 'name' (str) and 'selector' (list[dict[str, Any]]) keys.
+
+        Raises:
+            ValueError: if classes configuration is invalid
+        """
         if not isinstance(classes, list) or not classes:
             raise ValueError('classes must be a non-empty list')
 
@@ -158,7 +168,11 @@ class OpenStreetMap(VectorDataset):
                     raise ValueError(f'Class {i} selector {j} must be a dictionary')
 
     def _get_data_filename(self) -> pathlib.Path:
-        """Get the filename for the cached data file."""
+        """Get the filename for the cached data file.
+
+        Returns:
+            Path to the cached GeoJSON file based on bbox and classes hash
+        """
         cache_key = {'bbox': self.bbox, 'classes': self.classes}
         cache_str = json.dumps(cache_key, sort_keys=True)
         cache_hash = hashlib.md5(cache_str.encode()).hexdigest()[:16]
@@ -177,13 +191,13 @@ class OpenStreetMap(VectorDataset):
         OpenStreetMap._last_request_time = time.time()
 
     def _build_overpass_query(self) -> str:
-        """Build Overpass query from channels configuration.
+        """Build Overpass query from classes configuration.
 
         Returns:
             Overpass QL query string
         """
-        minx, miny, maxx, maxy = self.bbox
-        overpass_bbox = f'{miny},{minx},{maxy},{maxx}'
+        xmin, ymin, xmax, ymax = self.bbox
+        overpass_bbox = f'{ymin},{xmin},{ymax},{xmax}'
 
         queries = []
         for class_def in self.classes:
@@ -241,8 +255,8 @@ class OpenStreetMap(VectorDataset):
                     gdf.to_file(data_file, driver='GeoJSON')
                     return
                 else:
-                    minx, miny, maxx, maxy = self.bbox
-                    bbox_str = f'{minx:.6f}, {miny:.6f}, {maxx:.6f}, {maxy:.6f}'
+                    xmin, ymin, xmax, ymax = self.bbox
+                    bbox_str = f'{xmin:.6f}, {ymin:.6f}, {xmax:.6f}, {ymax:.6f}'
 
                     msg = (
                         f'No features found in the specified area (bbox: {bbox_str}). '
