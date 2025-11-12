@@ -114,7 +114,8 @@ class TestCopernicusBench:
         if dataset.name.endswith('s1'):
             all_bands = ['VV']
         elif dataset.name.endswith('s5p'):
-            pytest.skip('single-band dataset')
+            # single-band dataset
+            return
 
         dataset = CopernicusBench(dataset.name, dataset.root, bands=all_bands)
         match = 'Dataset does not contain some of the RGB bands'
