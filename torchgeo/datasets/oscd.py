@@ -155,7 +155,12 @@ class OSCD(NonGeoDataset):
         sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:
+            # FIXME: VideoSequential only works with a batch dimension
+            sample['image'] = sample['image'].unsqueeze(0)
+            sample['mask'] = sample['mask'].unsqueeze(0)
             sample = self.transforms(sample)
+            sample['image'] = sample['image'].squeeze(0)
+            sample['mask'] = sample['mask'].squeeze(0)
 
         return sample
 

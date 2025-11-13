@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from typing import Any, Literal
 
+import kornia.augmentation as K
 import pytest
 import segmentation_models_pytorch as smp
 import timm
@@ -48,7 +49,12 @@ def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
 
 class PredictChangeDetectionDataModule(OSCDDataModule):
     def setup(self, stage: str) -> None:
-        self.predict_dataset = OSCD(**self.kwargs)
+        transforms = K.AugmentationSequential(
+            K.VideoSequential(K.RandomCrop(self.patch_size)),
+            data_keys=None,
+            keepdim=True,
+        )
+        self.predict_dataset = OSCD(transforms=transforms, **self.kwargs)
 
 
 class TestChangeDetectionTask:
