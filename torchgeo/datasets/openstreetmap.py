@@ -12,14 +12,13 @@ import time
 import warnings
 from collections.abc import Callable, Iterable
 from typing import Any, ClassVar, cast
-from urllib.parse import urlencode
-from urllib.request import Request, urlopen
 
 import geopandas as gpd
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import requests
 import shapely
 from geopandas import GeoDataFrame
 from matplotlib.figure import Figure
@@ -238,17 +237,18 @@ class OpenStreetMap(VectorDataset):
             try:
                 self._rate_limit()
 
-                payload = urlencode({'data': query}).encode('utf-8')
-                req = Request(endpoint, data=payload)
-                req.add_header(
-                    'Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8'
+                headers = {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'Accept': 'application/json',
+                }
+                payload = {'data': query}
+
+                response = requests.post(
+                    endpoint, data=payload, headers=headers, timeout=30
                 )
-                req.add_header('Accept', 'application/json')
+                response.raise_for_status()
 
-                with urlopen(req, timeout=30) as response:
-                    data = response.read()
-
-                osm_data = json.loads(data.decode('utf-8'))
+                osm_data = response.json()
                 gdf = self._parse_overpass_response(osm_data)
 
                 if len(gdf) > 0:

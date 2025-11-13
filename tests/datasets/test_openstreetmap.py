@@ -1,7 +1,6 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-import json
 import math
 import os
 import pathlib
@@ -461,7 +460,7 @@ class TestOpenStreetMap:
     def test_download_data_success(self, monkeypatch: MonkeyPatch) -> None:
         """Test successful data download."""
 
-        # Create proper mock context manager like in old tests
+        # Create proper mock response for requests
         mock_response_data = {
             'elements': [
                 {
@@ -475,19 +474,16 @@ class TestOpenStreetMap:
         }
 
         class MockResponse:
-            def read(self) -> bytes:
-                return json.dumps(mock_response_data).encode('utf-8')
+            def json(self) -> dict[str, Any]:
+                return mock_response_data
 
-        class MockUrlOpen:
-            def __enter__(self) -> MockResponse:
-                return MockResponse()
+            def raise_for_status(self) -> None:
+                pass
 
-            def __exit__(self, *args: Any) -> None:
-                return None
+        def mock_post(*args: Any, **kwargs: Any) -> MockResponse:
+            return MockResponse()
 
-        monkeypatch.setattr(
-            'torchgeo.datasets.openstreetmap.urlopen', lambda *_, **__: MockUrlOpen()
-        )
+        monkeypatch.setattr('torchgeo.datasets.openstreetmap.requests.post', mock_post)
 
         # Use unique bbox to avoid cache conflicts
         unique_offset = time.time() % 1000 / 10000
@@ -516,19 +512,16 @@ class TestOpenStreetMap:
         mock_response_data: dict[str, list[Any]] = {'elements': []}
 
         class MockResponse:
-            def read(self) -> bytes:
-                return json.dumps(mock_response_data).encode('utf-8')
+            def json(self) -> dict[str, list[Any]]:
+                return mock_response_data
 
-        class MockUrlOpen:
-            def __enter__(self) -> MockResponse:
-                return MockResponse()
+            def raise_for_status(self) -> None:
+                pass
 
-            def __exit__(self, *_: Any) -> None:
-                return None
+        def mock_post(*args: Any, **kwargs: Any) -> MockResponse:
+            return MockResponse()
 
-        monkeypatch.setattr(
-            'torchgeo.datasets.openstreetmap.urlopen', lambda *_, **__: MockUrlOpen()
-        )
+        monkeypatch.setattr('torchgeo.datasets.openstreetmap.requests.post', mock_post)
 
         # Test both direct call and through constructor
         # Direct call to _download_data
@@ -557,12 +550,12 @@ class TestOpenStreetMap:
     def test_download_data_all_endpoints_fail(self, monkeypatch: MonkeyPatch) -> None:
         """Test download failure when all endpoints fail."""
 
-        # Make all requests fail like in old tests
-        def mock_urlopen_fail(*_: Any) -> NoReturn:
+        # Make all requests fail
+        def mock_post_fail(*_: Any, **__: Any) -> NoReturn:
             raise Exception('Connection failed')
 
         monkeypatch.setattr(
-            'torchgeo.datasets.openstreetmap.urlopen', mock_urlopen_fail
+            'torchgeo.datasets.openstreetmap.requests.post', mock_post_fail
         )
 
         # Use unique bbox that doesn't have cached data
@@ -582,27 +575,16 @@ class TestOpenStreetMap:
         with pytest.raises(RuntimeError, match='All Overpass API endpoints failed'):
             OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=True)
 
-    def test_download_data_file_exists(self, monkeypatch: MonkeyPatch) -> None:
-        """Test _download_data when file already exists."""
-        root = os.path.join('tests', 'data', 'openstreetmap')
-        bbox = (2.3520, 48.8565, 2.3525, 48.8570)  # Use existing test data
+    def test_already_downloaded(self, dataset: OpenStreetMap) -> None:
+        """Test that dataset can be instantiated when data already exists."""
+        OpenStreetMap(
+            bbox=dataset.bbox,
+            classes=dataset.classes,
+            paths=dataset.root,
+            download=True,
+        )
 
-        urlopen_called = False
-
-        def mock_urlopen(*_: Any) -> NoReturn:
-            nonlocal urlopen_called
-            urlopen_called = True
-            raise Exception('Should not be called')
-
-        # Use existing dataset that has cached data (covers lines 212-213)
-        monkeypatch.setattr('urllib.request.urlopen', mock_urlopen)
-
-        classes = [{'name': 'building', 'selector': [{'building': '*'}]}]
-        dataset = OpenStreetMap(bbox=bbox, paths=root, classes=classes, download=False)
-        dataset._download_data()  # Should return early without network calls
-        assert not urlopen_called
-
-    # New tests for classes functionality and pre-computed labels
+    # Tests for classes functionality and pre-computed labels
 
     @pytest.mark.parametrize(
         'classes,expected_error,error_pattern',
@@ -673,21 +655,6 @@ class TestOpenStreetMap:
         assert 'wr["amenity"]' in query
         assert 'wr["highway"]' in query
         assert '48.8565,2.352,48.857,2.3525' in query
-
-    def test_get_data_filename_classes(
-        self, common_test_params: dict[str, Any]
-    ) -> None:
-        """Test filename generation for classes-based datasets."""
-        dataset = OpenStreetMap(
-            bbox=common_test_params['bbox'],
-            paths=common_test_params['root'],
-            classes=common_test_params['classes'],
-            download=False,
-        )
-        filename = dataset._get_data_filename()
-
-        assert filename.suffix == '.geojson'
-        assert 'osm_features_' in filename.name
 
     def test_get_class_label(self, multi_channel_params: dict[str, Any]) -> None:
         """Test label computation based on classes."""

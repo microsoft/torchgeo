@@ -137,6 +137,7 @@ style = [
     "mypy>=0.900",
     # ruff 0.9+ required for 2025 style guide
     "ruff>=0.9",
+    "types-requests>=2.25.0",
 ]
 tests = [
     # nbmake 1.3.3+ required for variable mocking

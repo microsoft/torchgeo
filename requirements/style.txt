@@ -1,3 +1,4 @@
 # style
 mypy==1.18.2
 ruff==0.14.5
+types-requests>=2.25.0
