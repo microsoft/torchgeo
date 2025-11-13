@@ -11,7 +11,6 @@ from torch.utils.data import random_split
 
 from ..datasets import DeepGlobeLandCover
 from ..samplers.utils import _to_tuple
-from ..transforms.transforms import _ExtractPatches
 from .geo import NonGeoDataModule
 
 
@@ -49,7 +48,7 @@ class DeepGlobeLandCoverDataModule(NonGeoDataModule):
 
         self.aug = K.AugmentationSequential(
             K.Normalize(mean=self.mean, std=self.std),
-            _ExtractPatches(window_size=self.patch_size),
+            K.CenterCrop(self.patch_size),
             data_keys=None,
             keepdim=True,
             same_on_batch=True,

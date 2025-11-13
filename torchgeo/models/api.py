@@ -55,10 +55,11 @@ from .vit import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
-from .yolo import YOLO_Weights, yolo
 
 _model: dict[str, Callable[..., nn.Module]] = {
     'aurora_swin_unet': aurora_swin_unet,
+    'changevit_tiny': changevit_tiny,
+    'changevit_small': changevit_small,
     'copernicusfm_base': copernicusfm_base,
     'croma_base': croma_base,
     'croma_large': croma_large,
@@ -81,13 +82,12 @@ _model: dict[str, Callable[..., nn.Module]] = {
     'vit_huge_patch14_224': vit_huge_patch14_224,
     'vit_large_patch16_224': vit_large_patch16_224,
     'vit_small_patch14_dinov2': vit_small_patch14_dinov2,
-    'yolo': yolo,
-    'changevit_tiny': changevit_tiny,
-    'changevit_small': changevit_small,
 }
 
 _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     aurora_swin_unet: Aurora_Weights,
+    changevit_tiny: ChangeViT_Weights,
+    changevit_small: ChangeViT_Weights,
     copernicusfm_base: CopernicusFM_Base_Weights,
     croma_base: CROMABase_Weights,
     croma_large: CROMALarge_Weights,
@@ -108,10 +108,9 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     vit_huge_patch14_224: ViTHuge14_Weights,
     vit_large_patch16_224: ViTLarge16_Weights,
     vit_small_patch14_dinov2: ViTSmall14_DINOv2_Weights,
-    yolo: YOLO_Weights,
-    changevit_tiny: ChangeViT_Weights,
-    changevit_small: ChangeViT_Weights,
     'aurora_swin_unet': Aurora_Weights,
+    'changevit_tiny': ChangeViT_Weights,
+    'changevit_small': ChangeViT_Weights,
     'copernicusfm_base': CopernicusFM_Base_Weights,
     'croma_base': CROMABase_Weights,
     'croma_large': CROMALarge_Weights,
@@ -132,9 +131,6 @@ _model_weights: dict[str | Callable[..., nn.Module], WeightsEnum] = {
     'vit_huge_patch14_224': ViTHuge14_Weights,
     'vit_large_patch16_224': ViTLarge16_Weights,
     'vit_small_patch14_dinov2': ViTSmall14_DINOv2_Weights,
-    'yolo': YOLO_Weights,
-    'changevit_tiny': ChangeViT_Weights,
-    'changevit_small': ChangeViT_Weights,
 }
 
 
