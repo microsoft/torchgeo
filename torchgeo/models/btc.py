@@ -23,7 +23,6 @@ class BTC(Module):
 
     If you use this model in your research, please cite the following paper:
 
-    * https://doi.org/10.1109/TGRS.2025.3585342
     * https://arxiv.org/abs/2507.03367
     """
 
@@ -37,12 +36,9 @@ class BTC(Module):
         super().__init__()
         self.encoder = SwinBackbone(backbone)
         self.difference = subtraction_fusion
+        # pad at the beginning since smp impl. cuts first two elements off
         self.decoder = smp.decoders.upernet.decoder.UPerNetDecoder(
-            encoder_channels=[
-                0,
-                0,
-                *self.encoder.channels,
-            ],  # pad at the beginning since impl. cuts first two off
+            encoder_channels=[0, 0, *self.encoder.channels],
             encoder_depth=4,
             decoder_channels=512,
         )
