@@ -240,6 +240,73 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
     )
 
 
+class SwinBackbone_Weights(WeightsEnum):  # type: ignore[misc]
+    """SwinBackbone weights.
+
+    This weights contain both the encoder weights and the backbone layernorm weights.
+    """
+
+    CITYSCAPES_SEMSEG_TINY = Weights(
+        url='https://huggingface.co/blaz-r/swin_tiny_cityscapes_semantic_torchvision/resolve/0fc235be19c60ae5873ee0e569561c4e43f403ba/swin_tiny_cityscapes_semantic.pth',
+        transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        meta={
+            'dataset': 'Cityscapes - semantic segmentation',
+            'in_chans': 3,
+            'model': 'SwinTransformer Tiny',
+            'publication': 'https://arxiv.org/abs/2112.01527',
+            'repo': 'https://github.com/facebookresearch/Mask2Former/',
+            'license': 'mit',
+            'window_size': 7,
+        },
+    )
+    CITYSCAPES_SEMSEG_SMALL = Weights(
+        url='https://huggingface.co/blaz-r/swin_small_cityscapes_semantic_torchvision/resolve/97ea7dddaa2f62b3b5de85e16e2597f1635598d3/swin_small_cityscapes_semantic.pth',
+        transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        meta={
+            'dataset': 'Cityscapes - semantic segmentation',
+            'in_chans': 3,
+            'model': 'SwinTransformer Small',
+            'publication': 'https://arxiv.org/abs/2112.01527',
+            'repo': 'https://github.com/facebookresearch/Mask2Former/',
+            'license': 'mit',
+            'window_size': 7,
+        },
+    )
+    CITYSCAPES_SEMSEG_BASE = Weights(
+        url='https://huggingface.co/blaz-r/swin_base_cityscapes_semantic_torchvision/resolve/972003c5f18caaa5fc07f9db74ba2dc69eb6c051/swin_base_cityscapes_semantic.pth',
+        transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        meta={
+            'dataset': 'Cityscapes - semantic segmentation',
+            'in_chans': 3,
+            'model': 'SwinTransformer Base',
+            'publication': 'https://arxiv.org/abs/2112.01527',
+            'repo': 'https://github.com/facebookresearch/Mask2Former/',
+            'license': 'mit',
+            'window_size': 12,
+        },
+    )
+
+    def get_state_dict(
+        self, include_norms: bool = False, *args: Any, **kwargs: Any
+    ) -> Any:
+        """Get the state dict for this model from provided url, optionally including backbone layernorm weights.
+
+        Args:
+            include_norms (bool): Whether to also return backbone layernorm weights.
+            *args (Any): anything passed to WeightsEnum get_state_dict.
+            **kwargs (Any): anything passed to WeightsEnum get_state_dict.
+
+        Returns:
+            dict with state dict only if include_norms is False,
+            dict with 'state_dict' and 'feat_norms_state_dict' if include_norms is True.
+        """
+        full_state_dict = WeightsEnum.get_state_dict(self, *args, **kwargs)
+        if include_norms:
+            return full_state_dict
+        else:
+            return full_state_dict['state_dict']
+
+
 def swin_v2_t(
     weights: Swin_V2_T_Weights | None = None, *args: Any, **kwargs: Any
 ) -> SwinTransformer:

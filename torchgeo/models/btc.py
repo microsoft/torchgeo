@@ -5,7 +5,6 @@
 
 """Be The Change (BTC) change detection model implementation."""
 
-import kornia.augmentation as K
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
@@ -13,9 +12,10 @@ import torch.nn.functional as F
 from einops import rearrange
 from torch import Tensor
 from torch.nn.modules import Module
-from torchvision.models import Weights, WeightsEnum
 from torchvision.models.feature_extraction import create_feature_extractor
 from torchvision.models.swin_transformer import SwinTransformer, swin_s, swin_t
+
+from torchgeo.models.swin import SwinBackbone_Weights
 
 
 class BTC(Module):
@@ -86,47 +86,6 @@ class BTC(Module):
         return x
 
 
-class SwinBackbone_Weights(WeightsEnum):  # type: ignore[misc]
-    """SwinBackbone weights."""
-
-    CITYSCAPES_SEMSEG_TINY = Weights(
-        url='https://huggingface.co/blaz-r/swin_tiny_cityscapes_semantic_torchvision/resolve/0fc235be19c60ae5873ee0e569561c4e43f403ba/swin_tiny_cityscapes_semantic.pth',
-        transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        meta={
-            'dataset': 'Cityscapes - semantic segmentation',
-            'in_chans': 3,
-            'model': 'SwinTransformer Tiny',
-            'publication': 'https://arxiv.org/abs/2112.01527',
-            'repo': 'https://github.com/facebookresearch/Mask2Former/',
-            'license': 'mit',
-        },
-    )
-    CITYSCAPES_SEMSEG_SMALL = Weights(
-        url='https://huggingface.co/blaz-r/swin_small_cityscapes_semantic_torchvision/resolve/97ea7dddaa2f62b3b5de85e16e2597f1635598d3/swin_small_cityscapes_semantic.pth',
-        transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        meta={
-            'dataset': 'Cityscapes - semantic segmentation',
-            'in_chans': 3,
-            'model': 'SwinTransformer Small',
-            'publication': 'https://arxiv.org/abs/2112.01527',
-            'repo': 'https://github.com/facebookresearch/Mask2Former/',
-            'license': 'mit',
-        },
-    )
-    CITYSCAPES_SEMSEG_BASE = Weights(
-        url='https://huggingface.co/blaz-r/swin_base_cityscapes_semantic_torchvision/resolve/972003c5f18caaa5fc07f9db74ba2dc69eb6c051/swin_base_cityscapes_semantic.pth',
-        transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        meta={
-            'dataset': 'Cityscapes - semantic segmentation',
-            'in_chans': 3,
-            'model': 'SwinTransformer Base',
-            'publication': 'https://arxiv.org/abs/2112.01527',
-            'repo': 'https://github.com/facebookresearch/Mask2Former/',
-            'license': 'mit',
-        },
-    )
-
-
 class SwinBackbone(Module):
     """Swin backbone for multi-resolution feature extraction."""
 
@@ -160,7 +119,7 @@ class SwinBackbone(Module):
                 )
 
         # load weights before passing to feature extractor
-        state_dict = weights.get_state_dict(progress=True)
+        state_dict = weights.get_state_dict(include_norms=True, progress=True)
         missing, unexpected = model.load_state_dict(
             state_dict['state_dict'], strict=False
         )
