@@ -36,14 +36,12 @@ _satlas_sentinel2_bands = (
 _mean = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 _std = [255, 255, 255, 8160, 8160, 8160, 8160, 8160, 8160]
 _satlas_sentinel2_transforms = nn.Sequential(
-    T.CenterCrop(256),
-    T.Normalize(mean=_mean, std=_std, inplace=True),
+    T.CenterCrop(256), T.Normalize(mean=_mean, std=_std, inplace=True)
 )
 
 _satlas_landsat_bands = tuple(f'B{i:02}' for i in range(1, 12))
 _satlas_landsat_transforms = nn.Sequential(
-    T.CenterCrop(256),
-    T.Normalize(mean=[4000], std=[16320], inplace=True),
+    T.CenterCrop(256), T.Normalize(mean=[4000], std=[16320], inplace=True)
 )
 
 
