@@ -10,6 +10,6 @@ model:
 data:
   class_path: BRIGHTDFC2025DataModule
   init_args:
-    batch_size: 2
+    batch_size: 1
   dict_kwargs:
     root: 'tests/data/bright'

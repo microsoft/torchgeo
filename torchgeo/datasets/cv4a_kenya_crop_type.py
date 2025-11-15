@@ -314,15 +314,15 @@ class CV4AKenyaCropType(NonGeoDataset):
 
         if 'prediction' in sample:
             prediction = sample['prediction']
-            n_cols = 3
+            ncols = 3
         else:
-            n_cols = 2
+            ncols = 2
 
         image, mask = sample['image'], sample['mask']
 
         image = image[time_step, rgb_indices]
 
-        fig, axs = plt.subplots(nrows=1, ncols=n_cols, figsize=(10, n_cols * 5))
+        fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(ncols * 5, 10))
 
         axs[0].imshow(image.permute(1, 2, 0))
         axs[0].axis('off')

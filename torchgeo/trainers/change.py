@@ -50,7 +50,7 @@ class ChangeDetectionTask(BaseTask):
         num_labels: int | None = None,
         num_filters: int = 3,
         pos_weight: Tensor | None = None,
-        loss: Literal['ce', 'bce', 'jaccard', 'focal'] = 'bce',
+        loss: Literal['ce', 'bce', 'jaccard', 'focal', 'dice'] = 'bce',
         class_weights: Tensor | Sequence[float] | None = None,
         ignore_index: int | None = None,
         lr: float = 1e-3,
@@ -76,7 +76,7 @@ class ChangeDetectionTask(BaseTask):
             num_filters: Number of filters. Only applicable when model='fcn'.
             pos_weight: A weight of positive examples and used with 'bce' loss.
             loss: Name of the loss function, currently supports
-                'ce', 'bce', 'jaccard', and 'focal' loss.
+                'ce', 'bce', 'jaccard', 'focal', and 'dice' loss.
             class_weights: Optional rescaling weight given to each
                 class and used with 'ce' loss.
             ignore_index: Optional integer class index to ignore in the loss and
@@ -127,6 +127,10 @@ class ChangeDetectionTask(BaseTask):
                     mode=self.hparams['task'],
                     ignore_index=ignore_index,
                     normalized=True,
+                )
+            case 'dice':
+                self.criterion = smp.losses.DiceLoss(
+                    mode=self.hparams['task'], ignore_index=ignore_index
                 )
 
     def configure_metrics(self) -> None:

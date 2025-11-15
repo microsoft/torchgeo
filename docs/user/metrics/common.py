@@ -7,20 +7,22 @@ index = [
     'OTB',
     'TerraTorch',
     'Raster Vision',
-    'SITS',
     'DeepForest',
     'samgeo',
     'spopt',
-    'ML4Floods',
-    'geo-bench',
+    'GDL',
+    'SITS',
     'SPy',
     'srai',
-    'OTBTF',
-    'Myria3D',
+    'geo-bench',
+    'ML4Floods',
     'GeoAI',
     'scikit-eo',
+    'Myria3D',
     'GeoTessera',
+    'OTBTF',
     'GeoDeep',
+    'torchange',
 ]
 
 # Sort by date of first commit (update_timeline.py)
@@ -34,6 +36,7 @@ name_to_github = {
     'Raster Vision': ('azavea', 'raster-vision'),
     'DeepHyperX': ('nshaud', 'DeepHyperX'),
     'Pyinterpolate': ('DataverseLabs', 'pyinterpolate'),
+    'GDL': ('NRCan', 'geo-deep-learning'),
     'OTBTF': ('remicres', 'otbtf'),
     'eo-learn': ('sentinel-hub', 'eo-learn'),
     'RoboSat': ('mapbox', 'robosat'),
@@ -61,30 +64,33 @@ name_to_github = {
     'TerraTorch': ('IBM', 'terratorch'),
     'GeoDeep': ('uav4geo', 'GeoDeep'),
     'GeoTessera': ('ucam-eo', 'geotessera'),
+    'torchange': ('Z-Zheng', 'pytorch-change-models'),
 }
 name_to_codecov = {
     'SITS': ('gh', 'e-sensing', 'sits'),
     'spopt': ('gh', 'pysal', 'spopt'),
+    'DeepForest': ('gh', 'weecology', 'DeepForest'),
     'TorchGeo': ('gh', 'torchgeo', 'torchgeo'),
     'srai': ('gh', 'kraina-ai', 'srai'),
 }
 # TODO: remove these as coverage statistics are reported
 # Manually computed using `pytest --cov=<src>` or `coverage run`
 hardcoded_coverage = {
+    'SPy': 69,
     'OTB': 56,
-    'TerraTorch': 55,
     'Raster Vision': 90,
-    'DeepForest': 86,
-    'samgeo': 13,
+    'GDL': 7,
+    'OTBTF': 55,
     'ML4Floods': 0,
     'geo-bench': 51,
-    'SPy': 69,
-    'OTBTF': 55,
     'Myria3D': 57,
+    'samgeo': 13,
     'GeoAI': 6,
     'scikit-eo': 32,
-    'GeoTessera': 15,
+    'TerraTorch': 55,
     'GeoDeep': 0,
+    'GeoTessera': 15,
+    'torchange': 0,
 }
 name_to_pypi = {
     'SPy': 'spectral',
@@ -103,6 +109,7 @@ name_to_pypi = {
     'TerraTorch': 'terratorch',
     'GeoDeep': 'geodeep',
     'GeoTessera': 'geotessera',
+    'torchange': 'torchange',
 }
 name_to_cran = {'SITS': 'sits'}
 name_to_conda = {
@@ -114,4 +121,6 @@ name_to_conda = {
     'TorchGeo': 'torchgeo',
     'samgeo': 'segment-geospatial',
     'GeoAI': 'geoai',
+    'TerraTorch': 'terratorch',
+    'torchange': 'torchange',
 }
