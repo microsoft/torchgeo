@@ -408,7 +408,6 @@ class WesternUSALiveFuelMoisture(NonGeoDataset):
         if suptitle is not None:
             fig.suptitle(t=suptitle, y=1.6, transform=axs[0].transAxes)
 
-        # fig.tight_layout()
         plt.tight_layout()
 
         return fig
