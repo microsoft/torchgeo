@@ -18,3 +18,4 @@ Library,ML Backend,I/O Backend,Spatial Backend,Transform Backend,Datasets,Weight
 `GeoTessera`_,scikit-learn,GDAL,-,geopandas,0,0,✅,❌,✅,❌,❌
 `OTBTF`_,TensorFlow,"GDAL, OTB",-,-,0,0,✅,❌,✅,❌,❌
 `GeoDeep`_,ONNX,GDAL,-,-,0,7,✅,❌,✅,❌,❌
+`torchange`_,PyTorch,"Apache Arrow, skimage",-,Albumentations,8,8,❌,❌,❌,❌,✅

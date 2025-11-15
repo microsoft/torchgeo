@@ -50,7 +50,6 @@ from .vit import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
-from .yolo import YOLO_Weights, yolo
 
 __all__ = (
     'CROMA',
@@ -91,7 +90,6 @@ __all__ = (
     'ViTLarge16_Weights',
     'ViTSmall14_DINOv2_Weights',
     'ViTSmall16_Weights',
-    'YOLO_Weights',
     'aurora_swin_unet',
     'copernicusfm_base',
     'croma_base',
@@ -119,5 +117,4 @@ __all__ = (
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
-    'yolo',
 )

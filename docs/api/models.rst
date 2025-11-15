@@ -28,7 +28,6 @@ Models
    models/swin-transformer
    models/u-net
    models/vision-transformer
-   models/yolo
 
 Utility Functions
 -----------------

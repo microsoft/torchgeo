@@ -8,7 +8,7 @@ model:
 data:
   class_path: LEVIRCDDataModule
   init_args:
-    batch_size: 2
+    batch_size: 1
     patch_size: 32
   dict_kwargs:
     root: 'tests/data/levircd/levircd'

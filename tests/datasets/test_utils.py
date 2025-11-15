@@ -550,7 +550,8 @@ def test_pad_across_batches() -> None:
     assert out['image'].shape[1] == 3
     assert out['mask'].shape[0] == len(batch)
 
-    out = pad_across_batches(batch, padding_value=0.0, padding_length=1)
+    with pytest.warns(UserWarning, match='Truncated 2 sequences to length 1'):
+        out = pad_across_batches(batch, padding_value=0.0, padding_length=1)
     assert out['image'].shape[1] == 1
     assert out['mask'].shape[0] == len(batch)
 
