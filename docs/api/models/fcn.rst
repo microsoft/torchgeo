@@ -1,9 +1,7 @@
 FCN
 ===
 
-The FCN family of models for geospatial computer vision tasks.
-
-.. automodule:: torchgeo.models.fcn
+.. automodule:: torchgeo.models
    :members: FCN
    :member-order: bysource
    :show-inheritance:

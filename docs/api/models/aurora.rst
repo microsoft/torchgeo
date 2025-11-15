@@ -1,9 +1,7 @@
 Aurora
 ======
 
-The Aurora family of models for geospatial computer vision tasks.
-
-.. automodule:: torchgeo.models.aurora
+.. automodule:: torchgeo.models
    :members: Aurora_Weights, aurora_swin_unet
    :member-order: bysource
    :show-inheritance:
