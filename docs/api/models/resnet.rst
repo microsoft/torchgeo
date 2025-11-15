@@ -1,7 +1,9 @@
 ResNet
 ======
 
-.. automodule:: torchgeo.models
-   :members: ResNet18_Weights, ResNet50_Weights, ResNet152_Weights, resnet18, resnet50, resnet152
-   :member-order: bysource
-   :show-inheritance:
+.. autofunction:: resnet18
+.. autofunction:: resnet50
+.. autofunction:: resnet152
+.. autoclass:: ResNet18_Weights
+.. autoclass:: ResNet50_Weights
+.. autoclass:: ResNet152_Weights

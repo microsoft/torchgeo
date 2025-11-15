@@ -1,7 +1,5 @@
 Aurora
 ======
 
-.. automodule:: torchgeo.models
-   :members: Aurora_Weights, aurora_swin_unet
-   :member-order: bysource
-   :show-inheritance:
+.. autofunction:: aurora_swin_unet
+.. autoclass:: Aurora_Weights

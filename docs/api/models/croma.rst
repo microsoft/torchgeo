@@ -1,7 +1,8 @@
 CROMA
 =====
 
-.. automodule:: torchgeo.models
-   :members: CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
-   :member-order: bysource
-   :show-inheritance:
+.. autoclass:: CROMA
+.. autofunction:: croma_base
+.. autofunction:: croma_large
+.. autoclass:: CROMABase_Weights
+.. autoclass:: CROMALarge_Weights

@@ -1,7 +1,6 @@
 Change-Star
 ===========
 
-.. automodule:: torchgeo.models
-   :members: ChangeMixin, ChangeStar, ChangeStarFarSeg
-   :member-order: bysource
-   :show-inheritance:
+.. autoclass:: ChangeStar
+.. autoclass:: ChangeStarFarSeg
+.. autoclass:: ChangeMixin

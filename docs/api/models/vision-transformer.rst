@@ -1,7 +1,15 @@
 Vision Transformer
 ==================
 
-.. automodule:: torchgeo.models
-   :members: ViTBase14_DINOv2_Weights, ViTBase16_Weights, ViTHuge14_Weights, ViTLarge16_Weights, ViTSmall14_DINOv2_Weights, ViTSmall16_Weights, vit_base_patch14_dinov2, vit_base_patch16_224, vit_huge_patch14_224, vit_large_patch16_224, vit_small_patch14_dinov2, vit_small_patch16_224
-   :member-order: bysource
-   :show-inheritance:
+.. autofunction:: vit_small_patch16_224
+.. autofunction:: vit_base_patch16_224
+.. autofunction:: vit_large_patch16_224
+.. autofunction:: vit_huge_patch14_224
+.. autofunction:: vit_small_patch14_dinov2
+.. autofunction:: vit_base_patch14_dinov2
+.. autoclass:: ViTSmall16_Weights
+.. autoclass:: ViTBase16_Weights
+.. autoclass:: ViTLarge16_Weights
+.. autoclass:: ViTHuge14_Weights
+.. autoclass:: ViTSmall14_DINOv2_Weights
+.. autoclass:: ViTBase14_DINOv2_Weights
