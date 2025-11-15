@@ -5,14 +5,15 @@ torchgeo.models
 
 This section provides an overview of all models available in ``torchgeo.models``.
 
-Models
-------
+Model Architectures
+-------------------
 
 .. toctree::
    :maxdepth: 1
 
    models/aurora
    models/change-star
+   models/conv-lstm
    models/copernicus-fm
    models/croma
    models/dofa
