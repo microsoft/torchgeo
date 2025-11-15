@@ -1,6 +1,7 @@
 DOFA
 ====
 
+.. currentmodule:: torchgeo.models
 .. autoclass:: DOFA
 .. autofunction:: dofa_small_patch16_224
 .. autofunction:: dofa_base_patch16_224

@@ -1,6 +1,7 @@
 ResNet
 ======
 
+.. currentmodule:: torchgeo.models
 .. autofunction:: resnet18
 .. autofunction:: resnet50
 .. autofunction:: resnet152

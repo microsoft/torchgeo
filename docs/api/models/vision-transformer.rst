@@ -1,6 +1,7 @@
 Vision Transformer
 ==================
 
+.. currentmodule:: torchgeo.models
 .. autofunction:: vit_small_patch16_224
 .. autofunction:: vit_base_patch16_224
 .. autofunction:: vit_large_patch16_224
