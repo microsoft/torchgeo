@@ -107,6 +107,7 @@ datasets = [
     "pycocotools>=2.0.7",
     # rioxarray 0.14.1+ required for rasterio 1.4+ compatibility
     "rioxarray>=0.14.1",
+    "requests>=2.25.0",
     # scikit-image 0.20+ required for Python 3.11 wheels
     "scikit-image>=0.20",
     # scipy 1.9.2+ required for Python 3.11 wheels
