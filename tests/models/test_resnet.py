@@ -64,7 +64,7 @@ class TestResNet18:
     def test_export_transforms(self, weights: WeightsEnum) -> None:
         """Test that the transforms have no graph breaks."""
         torch = pytest.importorskip('torch', minversion='2.6.0')
-        torch._dynamo.reset()
+        torch.compiler.reset()
         c = weights.meta['in_chans']
         inputs = (torch.randn(1, c, 256, 256, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
@@ -118,7 +118,7 @@ class TestResNet50:
     def test_export_transforms(self, weights: WeightsEnum) -> None:
         """Test that the transforms have no graph breaks."""
         torch = pytest.importorskip('torch', minversion='2.6.0')
-        torch._dynamo.reset()
+        torch.compiler.reset()
         c = weights.meta['in_chans']
         inputs = (torch.randn(1, c, 256, 256, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
@@ -172,7 +172,7 @@ class TestResNet152:
     def test_export_transforms(self, weights: WeightsEnum) -> None:
         """Test that the transforms have no graph breaks."""
         torch = pytest.importorskip('torch', minversion='2.6.0')
-        torch._dynamo.reset()
+        torch.compiler.reset()
         c = weights.meta['in_chans']
         inputs = (torch.randn(1, c, 256, 256, dtype=torch.float),)
         torch.export.export(weights.transforms, inputs)
