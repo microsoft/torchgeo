@@ -1,13 +1,14 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
 
-"""Pre-trained Swin v2 Transformer models."""
+"""Pre-trained Swin Transformer models."""
 
 from typing import Any
 
-import kornia.augmentation as K
 import torch
+import torch.nn as nn
 import torchvision
+import torchvision.transforms.v2 as T
 from torchvision.models import SwinTransformer
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -16,25 +17,31 @@ from torchvision.models._api import Weights, WeightsEnum
 #
 # Information about sensor-specific normalization can be found at:
 # https://github.com/allenai/satlas/blob/main/Normalization.md
-
 _satlas_bands = ('B04', 'B03', 'B02')
-_satlas_transforms = K.AugmentationSequential(
-    K.CenterCrop(256),
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
-    data_keys=None,
+_satlas_transforms = nn.Sequential(
+    T.CenterCrop(256), T.Normalize(mean=[0], std=[255], inplace=True)
 )
 
-_satlas_sentinel2_bands = (*_satlas_bands, 'B05', 'B06', 'B07', 'B08', 'B11', 'B12')
-_std = torch.tensor([255, 255, 255, 8160, 8160, 8160, 8160, 8160, 8160])
-_satlas_sentinel2_transforms = K.AugmentationSequential(
-    K.CenterCrop(256), K.Normalize(mean=torch.tensor(0), std=_std), data_keys=None
+_satlas_sentinel2_bands = (
+    'B04',
+    'B03',
+    'B02',
+    'B05',
+    'B06',
+    'B07',
+    'B08',
+    'B11',
+    'B12',
+)
+_mean = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+_std = [255, 255, 255, 8160, 8160, 8160, 8160, 8160, 8160]
+_satlas_sentinel2_transforms = nn.Sequential(
+    T.CenterCrop(256), T.Normalize(mean=_mean, std=_std, inplace=True)
 )
 
 _satlas_landsat_bands = tuple(f'B{i:02}' for i in range(1, 12))
-_satlas_landsat_transforms = K.AugmentationSequential(
-    K.CenterCrop(256),
-    K.Normalize(mean=torch.tensor(4000), std=torch.tensor(16320)),
-    data_keys=None,
+_satlas_landsat_transforms = nn.Sequential(
+    T.CenterCrop(256), T.Normalize(mean=[4000], std=[16320], inplace=True)
 )
 
 
@@ -248,7 +255,7 @@ class SwinBackbone_Weights(WeightsEnum):  # type: ignore[misc]
 
     CITYSCAPES_SEMSEG_TINY = Weights(
         url='https://huggingface.co/blaz-r/swin_tiny_cityscapes_semantic_torchvision/resolve/0fc235be19c60ae5873ee0e569561c4e43f403ba/swin_tiny_cityscapes_semantic.pth',
-        transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        transforms=T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         meta={
             'dataset': 'Cityscapes - semantic segmentation',
             'in_chans': 3,
@@ -261,7 +268,7 @@ class SwinBackbone_Weights(WeightsEnum):  # type: ignore[misc]
     )
     CITYSCAPES_SEMSEG_SMALL = Weights(
         url='https://huggingface.co/blaz-r/swin_small_cityscapes_semantic_torchvision/resolve/97ea7dddaa2f62b3b5de85e16e2597f1635598d3/swin_small_cityscapes_semantic.pth',
-        transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        transforms=T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         meta={
             'dataset': 'Cityscapes - semantic segmentation',
             'in_chans': 3,
@@ -274,7 +281,7 @@ class SwinBackbone_Weights(WeightsEnum):  # type: ignore[misc]
     )
     CITYSCAPES_SEMSEG_BASE = Weights(
         url='https://huggingface.co/blaz-r/swin_base_cityscapes_semantic_torchvision/resolve/972003c5f18caaa5fc07f9db74ba2dc69eb6c051/swin_base_cityscapes_semantic.pth',
-        transforms=K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        transforms=T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         meta={
             'dataset': 'Cityscapes - semantic segmentation',
             'in_chans': 3,
