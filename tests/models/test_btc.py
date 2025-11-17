@@ -1,13 +1,15 @@
 # Copyright (c) TorchGeo Contributors. All rights reserved.
 # Licensed under the MIT License.
-
-from typing import Any, Literal
+from pathlib import Path
+from typing import Literal
 
 import pytest
 import torch
+import torchvision
 
 from torchgeo.models import BTC
 from torchgeo.models.btc import SwinBackbone
+from torchgeo.models.swin import SwinBackbone_Weights
 
 BACKBONES = ['swin_tiny', 'swin_small', 'swin_base']
 
@@ -30,16 +32,29 @@ class TestBTC:
         ):
             SwinBackbone(model_size='fail_test')
 
-    def test_unexpected_keys_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        class FakeWeights:
-            @staticmethod
-            def get_state_dict(progress: bool) -> dict[str, Any]:
-                return {'state_dict': {'unexpected_keys': []}}
+    @pytest.fixture
+    def patched_url(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        load_state_dict_from_url: None,
+    ) -> Path:
+        """Patch the weight enum URL to point to a fake checkpoint file."""
+        ckpt_path = tmp_path / 'fake_swin_tiny.pth'
+        monkeypatch.setattr(
+            SwinBackbone_Weights.CITYSCAPES_SEMSEG_TINY.value, 'url', str(ckpt_path)
+        )
+        return ckpt_path
 
-        class FakeSwinWeights:
-            CITYSCAPES_SEMSEG_TINY = FakeWeights()
+    def test_unexpected_keys_raises(
+        self, patched_url: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        model = torchvision.models.swin_t(weights=None)
+        state = model.state_dict()
 
-        monkeypatch.setattr('torchgeo.models.btc.SwinBackbone_Weights', FakeSwinWeights)
+        state['unexpected_keys'] = torch.tensor([1, 2, 3])
+
+        torch.save({'state_dict': state}, patched_url)
 
         with pytest.raises(
             RuntimeError,
@@ -47,15 +62,15 @@ class TestBTC:
         ):
             SwinBackbone(model_size='swin_tiny')
 
-    def test_missing_keys_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        class FakeWeights:
-            @staticmethod
-            def get_state_dict(progress: bool) -> dict[str, Any]:
-                return {'state_dict': {}}
+    def test_missing_keys_raises(
+        self, patched_url: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        model = torchvision.models.swin_t(weights=None)
+        state = model.state_dict()
 
-        class FakeSwinWeights:
-            CITYSCAPES_SEMSEG_TINY = FakeWeights()
+        del state[next(iter(state))]
 
-        monkeypatch.setattr('torchgeo.models.btc.SwinBackbone_Weights', FakeSwinWeights)
+        torch.save({'state_dict': state}, patched_url)
+
         with pytest.raises(RuntimeError, match=r'Missing keys in pretrained weights'):
             SwinBackbone(model_size='swin_tiny')
