@@ -250,7 +250,8 @@ class Swin_V2_B_Weights(WeightsEnum):  # type: ignore[misc]
 class SwinBackbone_Weights(WeightsEnum):  # type: ignore[misc]
     """SwinBackbone weights.
 
-    This weights contain both the encoder weights and the backbone layernorm weights.
+    These weights contain both the encoder weights and the backbone layernorm weights.
+    To select whether layernorm weights are returned pass `include_norms` to get_state_dict.
     """
 
     CITYSCAPES_SEMSEG_TINY = Weights(
