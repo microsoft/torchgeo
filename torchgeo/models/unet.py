@@ -5,9 +5,9 @@
 
 from typing import Any
 
-import kornia.augmentation as K
 import segmentation_models_pytorch as smp
-import torch
+import torch.nn as nn
+import torchvision.transforms.v2 as T
 from segmentation_models_pytorch import Unet
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -17,13 +17,11 @@ _ftw_sentinel2_bands = ['B4', 'B3', 'B2', 'B8', 'B4', 'B3', 'B2', 'B8']
 
 # https://github.com/fieldsoftheworld/ftw-baselines/blob/main/src/ftw/datamodules.py
 # Normalization by 3k (for S2 uint16 input)
-_ftw_transforms = K.AugmentationSequential(
-    K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(3000.0)), data_keys=None
-)
+_ftw_transforms = nn.Sequential(T.Normalize(mean=[0.0], std=[3000.0], inplace=True))
 
 # No normalization used see: https://github.com/Restor-Foundation/tcd/blob/main/src/tcd_pipeline/data/datamodule.py#L145
 _tcd_bands = ['R', 'G', 'B']
-_tcd_transforms = K.AugmentationSequential(K.Resize(size=(1024, 1024)), data_keys=None)
+_tcd_transforms = nn.Sequential(T.Resize(size=(1024, 1024)))
 
 
 class Unet_Weights(WeightsEnum):  # type: ignore[misc]
