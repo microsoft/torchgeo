@@ -8,9 +8,9 @@ import os
 from collections.abc import Callable, Iterable
 from typing import Any
 
-import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from matplotlib.figure import Figure
 from pyproj import CRS
 
@@ -192,11 +192,11 @@ class EuroCrops(VectorDataset):
         for idx, hcat_code in enumerate(classes):
             self.class_map[hcat_code] = idx + 1
 
-    def get_label(self, feature: gpd.GeoDataFrame) -> int:
+    def get_label(self, feature: pd.Series) -> int:
         """Get label value to use for rendering a feature.
 
         Args:
-            feature: the :class:`gpd.GeoDataFrame` from which to extract the label.
+            feature: the row from the GeoDataFrame from which to extract the label.
 
         Returns:
             the integer label, or 0 if the feature should not be rendered.

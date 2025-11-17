@@ -201,6 +201,7 @@ class OpenBuildings(VectorDataset):
 
     meta_data_url = 'https://sites.research.google/open-buildings/tiles.geojson'
     meta_data_filename = 'tiles.geojson'
+    _source_crs = CRS.from_epsg(4326)
 
     def __init__(
         self,
@@ -244,17 +245,15 @@ class OpenBuildings(VectorDataset):
 
         filename = os.path.join(self.paths, 'tiles.geojson')
         gdf = gpd.read_file(filename)
-        gdf.to_crs('EPSG:4326', inplace=True)
+        gdf.to_crs(self._source_crs, inplace=True)
 
         # Filter to only include desired polygon files
         gdf['filepath'] = gdf['tile_url'].str.split('/').str[-1]
         gdf = gdf[gdf['filepath'].isin(polygon_filenames)]
 
-        # Convert geometries to bounds boxes
+        # Convert geometries to bounding boxes
         geometries = gdf.bounds.apply(
-            lambda row: shapely.geometry.box(
-                row['minx'], row['miny'], row['maxx'], row['maxy']
-            ),
+            lambda row: shapely.box(row['minx'], row['miny'], row['maxx'], row['maxy']),
             axis=1,
         )
         filepaths = [os.path.join(self.paths, filepath) for filepath in gdf['filepath']]
@@ -265,10 +264,13 @@ class OpenBuildings(VectorDataset):
 
         index = pd.IntervalIndex.from_tuples(datetimes, closed='both', name='datetime')
         self.index = GeoDataFrame(
-            dict(filepath=filepaths), index=index, geometry=geometries, crs=crs
+            dict(filepath=filepaths),
+            index=index,
+            geometry=list(geometries),
+            crs=self._source_crs,
         )
-
-        self._source_crs = CRS.from_epsg(4326)
+        if crs is not None:
+            self.index.to_crs(crs, inplace=True)
 
     def __getitem__(self, query: GeoSlice) -> dict[str, Any]:
         """Retrieve input, target, and/or metadata indexed by spatiotemporal slice.
@@ -286,7 +288,8 @@ class OpenBuildings(VectorDataset):
         interval = pd.Interval(t.start, t.stop)
         index = self.index.iloc[self.index.index.overlaps(interval)]
         index = index.iloc[:: t.step]
-        index = index.cx[x.start : x.stop, y.start : y.stop]
+        bbox = shapely.box(x.start, y.start, x.stop, y.stop)
+        index = index[index.geometry.intersects(bbox)]
 
         if index.empty:
             raise IndexError(
@@ -343,7 +346,7 @@ class OpenBuildings(VectorDataset):
             csv_chunks = pd.read_csv(f, chunksize=200000, compression='gzip')
             for chunk in csv_chunks:
                 gdf = gpd.GeoDataFrame(chunk, geometry='geometry', crs=self._source_crs)
-                gdf = gdf.filter(bbox=(minx, miny, maxx, maxy))
+                gdf = gdf.cx[minx:maxx, miny:maxy]
                 gdf.to_crs(self.crs, inplace=True)
                 shapes.extend(gdf.geometry.tolist())
 

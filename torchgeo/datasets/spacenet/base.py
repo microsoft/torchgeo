@@ -4,6 +4,7 @@
 """SpaceNet abstract base class."""
 
 import glob
+import json
 import os
 import re
 from abc import ABC, abstractmethod
@@ -185,7 +186,25 @@ class SpaceNet(NonGeoDataset, ABC):
         Returns:
             Tensor: label tensor
         """
-        gdf = gpd.read_file(path)
+        try:
+            gdf = gpd.read_file(path)
+        except Exception:
+            try:
+                with open(path) as fp:
+                    text = fp.read()
+                if not text.strip():
+                    gdf = gpd.GeoDataFrame(
+                        {'geometry': []}, geometry='geometry', crs='EPSG:4326'
+                    )
+                else:
+                    data = json.loads(text)
+                    gdf = gpd.GeoDataFrame.from_features(
+                        data.get('features', []), crs='EPSG:4326'
+                    )
+            except Exception:
+                gdf = gpd.GeoDataFrame(
+                    {'geometry': []}, geometry='geometry', crs='EPSG:4326'
+                )
         if gdf.empty:
             labels = []
         else:

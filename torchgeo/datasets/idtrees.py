@@ -302,7 +302,7 @@ class IDTReeS(NonGeoDataset):
                 for k, v in geometries.items()
                 if v['properties']['plotID'] == base_path
             ]
-            geoms = [geometries[i]['geometry']['coordinates'][0][:4] for i in ids]
+            geoms = [geometries[i]['geometry'].bounds for i in ids]
 
         # Convert to pixel coords
         boxes = []

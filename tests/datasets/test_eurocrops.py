@@ -82,7 +82,7 @@ class TestEuroCrops:
             dataset[200:200, 200:200, pd.Timestamp.min : pd.Timestamp.min]
 
     def test_get_label_with_none_hcat_code(self, dataset: EuroCrops) -> None:
-        mock_feature = {'properties': {dataset.label_name: None}}
+        mock_feature = pd.Series({dataset.label_name: None})
         label = dataset.get_label(mock_feature)
         assert label == 0, "Expected label to be 0 when 'EC_hcat_c' is None."
 

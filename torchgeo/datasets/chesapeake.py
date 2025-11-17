@@ -486,7 +486,9 @@ class ChesapeakeCVPR(GeoDataset):
         maxt = pd.Timestamp.max
         gdf = gpd.read_file(os.path.join(root, 'spatial_index.geojson'))
         gdf = gdf[gdf['split'].isin(splits)]
-        gdf['prior_from_cooccurrences_101_31_no_osm_no_buildings'] = gdf['lc'].replace(
+        gdf['prior_from_cooccurrences_101_31_no_osm_no_buildings'] = gdf[
+            'lc'
+        ].str.replace(
             'lc.tif', 'prior_from_cooccurrences_101_31_no_osm_no_buildings.tif'
         )
         datetimes = [(mint, maxt)] * len(gdf)
