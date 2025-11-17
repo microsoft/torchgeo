@@ -451,10 +451,15 @@ class RasterDataset(GeoDataset):
                         if crs is None:
                             crs = src.crs
 
-                        with WarpedVRT(src, crs=crs) as vrt:
-                            geometries.append(shapely.box(*vrt.bounds))
+                        if src.crs == crs:
+                            geometries.append(shapely.box(*src.bounds))
                             if res is None:
-                                res = vrt.res
+                                res = src.res
+                        else:
+                            with WarpedVRT(src, crs=crs) as vrt:
+                                geometries.append(shapely.box(*vrt.bounds))
+                                if res is None:
+                                    res = vrt.res
                 except rasterio.errors.RasterioIOError:
                     # Skip files that rasterio is unable to read
                     continue
@@ -945,7 +950,7 @@ class VectorDataset(GeoDataset):
 
             # Get label values to use for rendering each geometry
             if self.label_name:
-                labels = src[self.label_name].astype(int)
+                labels = [self.get_label(row) for _, row in src.iterrows()]
             else:
                 labels = [1] * len(src)
 

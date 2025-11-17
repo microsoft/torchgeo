@@ -345,6 +345,7 @@ class OpenBuildings(VectorDataset):
         for f in filepaths:
             csv_chunks = pd.read_csv(f, chunksize=200000, compression='gzip')
             for chunk in csv_chunks:
+                chunk['geometry'] = gpd.GeoSeries.from_wkt(chunk['geometry'])
                 gdf = gpd.GeoDataFrame(chunk, geometry='geometry', crs=self._source_crs)
                 gdf = gdf.cx[minx:maxx, miny:maxy]
                 gdf.to_crs(self.crs, inplace=True)

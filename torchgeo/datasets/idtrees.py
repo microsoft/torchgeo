@@ -292,7 +292,7 @@ class IDTReeS(NonGeoDataset):
         if self.split == 'train':
             indices = self.labels['rsFile'] == base_path
             ids = self.labels[indices]['id'].tolist()
-            geoms = [geometries[i]['geometry']['coordinates'][0][:4] for i in ids]
+            geoms = [geometries[i]['geometry'] for i in ids]
         # The test set has no mapping csv. The mapping is inside of the geometry
         # properties i.e. geom["property"]["plotID"] contains the RGB image filename
         # Return all geometries with the matching RGB image filename of the sample
@@ -302,17 +302,15 @@ class IDTReeS(NonGeoDataset):
                 for k, v in geometries.items()
                 if v['properties']['plotID'] == base_path
             ]
-            geoms = [geometries[i]['geometry'].bounds for i in ids]
+            geoms = [geometries[i]['geometry'] for i in ids]
 
         # Convert to pixel coords
         boxes = []
         with rasterio.open(path) as f:
             for geom in geoms:
-                coords = [f.index(x, y) for x, y in geom]
-                xmin = min(coord[1] for coord in coords)
-                xmax = max(coord[1] for coord in coords)
-                ymin = min(coord[0] for coord in coords)
-                ymax = max(coord[0] for coord in coords)
+                xmin, ymin, xmax, ymax = geom.bounds
+                xmin, ymin = f.index(xmin, ymin)
+                xmax, ymax = f.index(xmax, ymax)
                 boxes.append([xmin, ymin, xmax, ymax])
 
         tensor = torch.tensor(boxes)
