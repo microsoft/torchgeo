@@ -950,9 +950,11 @@ class VectorDataset(GeoDataset):
 
             # Get label values to use for rendering each geometry
             if self.label_name:
-                labels = [self.get_label(row) for _, row in src.iterrows()]
+                labels = np.array(
+                    [self.get_label(row) for _, row in src.iterrows()]
+                ).astype(np.int32)
             else:
-                labels = [1] * len(src)
+                labels = np.ones(len(src), dtype=np.int32)
 
             shapes.extend(list(zip(src.geometry, labels)))
 
