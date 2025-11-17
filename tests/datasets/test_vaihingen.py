@@ -61,7 +61,7 @@ class TestVaihingen2D:
         for filename in filenames:
             with open(os.path.join(tmp_path, filename), 'w') as f:
                 f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             Vaihingen2D(root=tmp_path, checksum=True)
 
     def test_invalid_split(self) -> None:

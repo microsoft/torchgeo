@@ -9,6 +9,7 @@
 
 from torchgeo.models import (
     aurora_swin_unet,
+    convlstm,
     copernicusfm_base,
     croma_base,
     croma_large,
@@ -30,11 +31,11 @@ from torchgeo.models import (
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
-    yolo,
 )
 
 __all__ = (
     'aurora_swin_unet',
+    'convlstm',
     'copernicusfm_base',
     'croma_base',
     'croma_large',
@@ -56,7 +57,6 @@ __all__ = (
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
-    'yolo',
 )
 
 dependencies = [
@@ -65,5 +65,4 @@ dependencies = [
     'segmentation_models_pytorch',
     'timm',
     'torchvision',
-    'ultralytics',
 ]

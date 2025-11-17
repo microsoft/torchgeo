@@ -221,7 +221,7 @@ class PASTIS(NonGeoDataset):
         path = self.files[index][self.bands]
         array = np.load(path)
 
-        tensor = torch.from_numpy(array)
+        tensor = torch.from_numpy(array).float()
         return tensor
 
     def _load_semantic_targets(self, index: int) -> Tensor:

@@ -30,7 +30,6 @@ from torchgeo.models import (
     ViTLarge16_Weights,
     ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
-    YOLO_Weights,
     aurora_swin_unet,
     copernicusfm_base,
     croma_base,
@@ -58,7 +57,6 @@ from torchgeo.models import (
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
-    yolo,
 )
 
 builders = [
@@ -85,7 +83,6 @@ builders = [
     vit_large_patch16_224,
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
-    yolo,
 ]
 enums = [
     Aurora_Weights,
@@ -109,7 +106,6 @@ enums = [
     ViTLarge16_Weights,
     ViTSmall14_DINOv2_Weights,
     ViTSmall16_Weights,
-    YOLO_Weights,
 ]
 
 
@@ -117,8 +113,6 @@ enums = [
 def test_get_model(builder: Callable[..., nn.Module]) -> None:
     if builder == aurora_swin_unet:
         pytest.importorskip('aurora')
-    elif builder == yolo:
-        pytest.importorskip('ultralytics', minversion='8.3')
 
     model = get_model(builder.__name__)
     assert isinstance(model, nn.Module)

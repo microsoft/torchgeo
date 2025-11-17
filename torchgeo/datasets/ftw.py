@@ -179,7 +179,7 @@ class FieldsOfTheWorld(NonGeoDataset):
         win_b = self._load_image(win_b_fn)
         mask = self._load_target(mask_fn)
 
-        image = torch.cat((win_a, win_b), dim=0)
+        image = torch.cat((win_b, win_a), dim=0)
         sample = {'image': image, 'mask': mask}
 
         if self.transforms is not None:

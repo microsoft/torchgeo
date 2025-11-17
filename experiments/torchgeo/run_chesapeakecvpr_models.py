@@ -11,7 +11,7 @@ import os
 from lightning.pytorch import Trainer
 
 from torchgeo.datamodules import ChesapeakeCVPRDataModule
-from torchgeo.trainers.chesapeake import SemanticSegmentationTask
+from torchgeo.trainers import SemanticSegmentationTask
 
 ALL_TEST_SPLITS = [['de-val'], ['pa-test'], ['ny-test'], ['pa-test', 'ny-test']]
 

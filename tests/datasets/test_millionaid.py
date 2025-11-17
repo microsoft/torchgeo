@@ -49,7 +49,7 @@ class TestMillionAID:
     def test_corrupted(self, tmp_path: Path) -> None:
         with open(os.path.join(tmp_path, 'train.zip'), 'w') as f:
             f.write('bad')
-        with pytest.raises(RuntimeError, match='Dataset found, but corrupted.'):
+        with pytest.raises(RuntimeError, match='Dataset found, but corrupted'):
             MillionAID(tmp_path, checksum=True)
 
     def test_plot(self, dataset: MillionAID) -> None:

@@ -12,6 +12,7 @@ import importlib
 import os
 import shutil
 import subprocess
+import warnings
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -419,6 +420,55 @@ def _dict_list_to_list_dict(
         for i, value in enumerate(values):
             uncollated[i][key] = value
     return uncollated
+
+
+def pad_across_batches(
+    batch: list[dict[str, Tensor]], padding_length: int, padding_value: float = 0.0
+) -> dict[str, Any]:
+    """Custom time-series collate fn to handle variable length sequences.
+
+    Args:
+        batch: list of sample dicts returned by dataset
+        padding_length: the length to pad the sequences to
+        padding_value: value for padded elements
+
+    Returns:
+        batch dict output
+
+    .. versionadded:: 0.8
+    """
+    output: dict[str, Any] = {}
+    images = [sample['image'] for sample in batch]
+    feature_shape = images[0].shape[1:]
+
+    padded_images = torch.full(
+        (len(batch), padding_length, *feature_shape),
+        padding_value,
+        dtype=images[0].dtype,
+        device=images[0].device,
+    )
+
+    truncated = 0
+    for i, img in enumerate(images):
+        seq_len = img.size(0)
+        if seq_len > padding_length:
+            padded_images[i, :padding_length] = img[:padding_length]
+            truncated += 1
+        else:
+            padded_images[i, :seq_len] = img
+
+    if truncated > 0:
+        warnings.warn(f'Truncated {truncated} sequences to length {padding_length}.')
+
+    output['image'] = padded_images
+    if 'mask' in batch[0]:
+        output['mask'] = torch.stack([sample['mask'] for sample in batch])
+    if 'bbox_xyxy' in batch[0]:
+        output['bbox_xyxy'] = torch.stack([sample['bbox_xyxy'] for sample in batch])
+    if 'label' in batch[0]:
+        output['label'] = torch.stack([sample['label'] for sample in batch])
+
+    return output
 
 
 def stack_samples(samples: Iterable[Mapping[Any, Any]]) -> dict[Any, Any]:

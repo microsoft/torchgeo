@@ -82,7 +82,7 @@ class NAIPChesapeakeDataModule(GeoDataModule):
         self.chesapeake = dc | de | md | ny | pa | va | wv
         self.dataset = self.naip & self.chesapeake
 
-        x, y, t = self.dataset.bounds
+        x, y, _ = self.dataset.bounds
         midx = x.start + (x.stop - x.start) / 2
         midy = y.start + (y.stop - y.start) / 2
 

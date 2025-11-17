@@ -3,7 +3,7 @@ model:
 data:
   class_path: IOBenchDataModule
   init_args:
-    batch_size: 2
+    batch_size: 1
     patch_size: 16
   dict_kwargs:
     root: 'tests/data/iobench'

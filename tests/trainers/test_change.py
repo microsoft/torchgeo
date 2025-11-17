@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from typing import Any, Literal
 
+import kornia.augmentation as K
 import pytest
 import segmentation_models_pytorch as smp
 import timm
@@ -48,7 +49,12 @@ def plot_missing_bands(*args: Any, **kwargs: Any) -> None:
 
 class PredictChangeDetectionDataModule(OSCDDataModule):
     def setup(self, stage: str) -> None:
-        self.predict_dataset = OSCD(**self.kwargs)
+        transforms = K.AugmentationSequential(
+            K.VideoSequential(K.RandomCrop(self.patch_size)),
+            data_keys=None,
+            keepdim=True,
+        )
+        self.predict_dataset = OSCD(transforms=transforms, **self.kwargs)
 
 
 class TestChangeDetectionTask:
@@ -232,8 +238,8 @@ class TestChangeDetectionTask:
         """FCN has no backbone/decoder. Need separate test for full test coverage."""
         ChangeDetectionTask(model='fcn')
 
-    @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal'])
-    def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal']) -> None:
+    @pytest.mark.parametrize('loss_fn', ['bce', 'jaccard', 'focal', 'dice'])
+    def test_losses(self, loss_fn: Literal['bce', 'jaccard', 'focal', 'dice']) -> None:
         ChangeDetectionTask(loss=loss_fn)
 
     def test_no_plot_method(self, monkeypatch: MonkeyPatch, fast_dev_run: bool) -> None:

@@ -88,7 +88,7 @@ class TestEnviroAtlas:
 
     def test_out_of_bounds_query(self, dataset: EnviroAtlas) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[0:0, 0:0, pd.Timestamp.min : pd.Timestamp.min]
 
@@ -99,7 +99,7 @@ class TestEnviroAtlas:
             layers=dataset.layers,
         )
         with pytest.raises(
-            IndexError, match='query: .* spans multiple tiles which is not valid'
+            IndexError, match=r'query: .* spans multiple tiles which is not valid'
         ):
             ds[dataset.bounds]
 

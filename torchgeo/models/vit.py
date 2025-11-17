@@ -5,9 +5,8 @@
 
 from typing import Any, cast
 
-import kornia.augmentation as K
 import timm
-import torch
+import torchvision.transforms.v2 as T
 from torch import nn
 from torchvision.models._api import Weights, WeightsEnum
 
@@ -26,20 +25,16 @@ from .resnet import (
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/linear_BE_moco.py#L167
 # https://github.com/zhu-xlab/SSL4EO-S12/blob/d2868adfada65e40910bfcedfc49bc3b20df2248/src/benchmark/transfer_classification/datasets/EuroSat/eurosat_dataset.py#L97
 # Normalization either by 10K or channel-wise with band statistics
-_zhu_xlab_transforms = K.AugmentationSequential(
-    K.Resize((256, 256)),
-    K.CenterCrop(224),
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(10000)),
-    data_keys=None,
+_zhu_xlab_transforms = nn.Sequential(
+    T.Resize((256, 256)),
+    T.CenterCrop(224),
+    T.Normalize(mean=[0], std=[10000], inplace=True),
 )
 
-# https://github.com/torchgeo/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43
-_ssl4eo_l_transforms = K.AugmentationSequential(
-    K.Normalize(mean=torch.tensor(0), std=torch.tensor(255)),
-    K.CenterCrop((224, 224)),
-    data_keys=None,
+# https://github.com/microsoft/torchgeo/blob/8b53304d42c269f9001cb4e861a126dc4b462606/torchgeo/datamodules/ssl4eo_benchmark.py#L43
+_ssl4eo_l_transforms = nn.Sequential(
+    T.Normalize(mean=[0], std=[255], inplace=True), T.CenterCrop((224, 224))
 )
-
 
 KEYS = {'norm.weight', 'norm.bias', 'head.weight', 'head.bias'}
 
@@ -195,8 +190,8 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_ALL_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vs_s2_encoder-1a3ee5a5.pth',
-        transforms=K.AugmentationSequential(
-            K.Normalize(mean=0, std=10000), K.Resize(224), data_keys=None
+        transforms=nn.Sequential(
+            T.Normalize(mean=[0], std=[10000], inplace=True), T.Resize((224, 224))
         ),
         meta={
             'dataset': 'CrisisLandMark',
@@ -266,7 +261,7 @@ class ViTSmall16_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL1_GRD_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vs_s1_encoder-180f1e6e.pth',
-        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
+        transforms=nn.Sequential(T.Resize((224, 224))),
         meta={
             'dataset': 'CrisisLandMark',
             'in_chans': 2,
@@ -383,8 +378,8 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL2_ALL_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vl_s2_encoder-4a4f026a.pth',
-        transforms=K.AugmentationSequential(
-            K.Normalize(mean=0, std=10000), K.Resize(224), data_keys=None
+        transforms=nn.Sequential(
+            T.Normalize(mean=[0], std=[10000], inplace=True), T.Resize((224, 224))
         ),
         meta={
             'dataset': 'CrisisLandMark',
@@ -426,7 +421,7 @@ class ViTLarge16_Weights(WeightsEnum):  # type: ignore[misc]
 
     SENTINEL1_GRD_CLOSP = Weights(
         url='https://huggingface.co/DarthReca/CLOSP-Visual/resolve/3bb8677c21dac56bea2dd7baa08d7871272db440/closp-vl_s1_encoder-6f88d037.pth',
-        transforms=K.AugmentationSequential(K.Resize(224), data_keys=None),
+        transforms=nn.Sequential(T.Resize((224, 224))),
         meta={
             'dataset': 'CrisisLandMark',
             'in_chans': 2,

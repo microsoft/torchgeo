@@ -67,6 +67,6 @@ class TestAsterGDEM:
 
     def test_invalid_query(self, dataset: AsterGDEM) -> None:
         with pytest.raises(
-            IndexError, match='query: .* not found in index with bounds:'
+            IndexError, match=r'query: .* not found in index with bounds:'
         ):
             dataset[100:100, 100:100, pd.Timestamp.min : pd.Timestamp.min]

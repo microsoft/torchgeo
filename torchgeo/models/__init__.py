@@ -6,6 +6,7 @@
 from .api import get_model, get_model_weights, get_weight, list_models
 from .aurora import Aurora_Weights, aurora_swin_unet
 from .changestar import ChangeMixin, ChangeStar, ChangeStarFarSeg
+from .convlstm import ConvLSTM
 from .copernicusfm import CopernicusFM, CopernicusFM_Base_Weights, copernicusfm_base
 from .croma import CROMA, CROMABase_Weights, CROMALarge_Weights, croma_base, croma_large
 from .dofa import (
@@ -49,7 +50,6 @@ from .vit import (
     vit_small_patch14_dinov2,
     vit_small_patch16_224,
 )
-from .yolo import YOLO_Weights, yolo
 
 __all__ = (
     'CROMA',
@@ -64,6 +64,7 @@ __all__ = (
     'ChangeMixin',
     'ChangeStar',
     'ChangeStarFarSeg',
+    'ConvLSTM',
     'CopernicusFM',
     'CopernicusFM_Base_Weights',
     'DOFABase16_Weights',
@@ -89,7 +90,6 @@ __all__ = (
     'ViTLarge16_Weights',
     'ViTSmall14_DINOv2_Weights',
     'ViTSmall16_Weights',
-    'YOLO_Weights',
     'aurora_swin_unet',
     'copernicusfm_base',
     'croma_base',
@@ -117,5 +117,4 @@ __all__ = (
     'vit_large_patch16_224',
     'vit_small_patch14_dinov2',
     'vit_small_patch16_224',
-    'yolo',
 )
