@@ -19,17 +19,7 @@ from torchmetrics import Accuracy, F1Score, JaccardIndex, MetricCollection
 from torchvision.models._api import WeightsEnum
 
 from ..datasets import RGBBandsMissingError, unbind_samples
-from ..models import (
-    FCN,
-    FCSiamConc,
-    FCSiamDiff,
-    changevit_large,
-    changevit_large_dinov3_sat,
-    changevit_small,
-    changevit_small_dinov3,
-    changevit_tiny,
-    get_weight,
-)
+from ..models import FCN, FCSiamConc, FCSiamDiff, changevit, get_weight
 from . import utils
 from .base import BaseTask
 
@@ -51,11 +41,7 @@ class ChangeDetectionTask(BaseTask):
             'dpt',
             'fcsiamdiff',
             'fcsiamconc',
-            'changevit_small',
-            'changevit_tiny',
-            'changevit_small_dinov3',
-            'changevit_large',
-            'changevit_large_dinov3_sat',
+            'changevit',
         ] = 'unet',
         backbone: str = 'resnet50',
         weights: WeightsEnum | str | bool | None = None,
@@ -247,41 +233,8 @@ class ChangeDetectionTask(BaseTask):
                     classes=num_classes,
                     encoder_weights='imagenet' if weights is True else None,
                 )
-            case 'changevit_small':
-                if weights is not None and not isinstance(weights, WeightsEnum):
-                    raise ValueError(
-                        f'Invalid weights for changevit_small: {weights}. '
-                        'Expected None or a ChangeViT_Weights enum.'
-                    )
-                self.model = changevit_small(weights=weights)
-            case 'changevit_tiny':
-                if weights is not None and not isinstance(weights, WeightsEnum):
-                    raise ValueError(
-                        f'Invalid weights for changevit_tiny: {weights}. '
-                        'Expected None or a ChangeViT_Weights enum.'
-                    )
-                self.model = changevit_tiny(weights=weights)
-            case 'changevit_small_dinov3':
-                if weights is not None and not isinstance(weights, WeightsEnum):
-                    raise ValueError(
-                        f'Invalid weights for changevit_small_dinov3: {weights}. '
-                        'Expected None or a ChangeViT_Weights enum.'
-                    )
-                self.model = changevit_small_dinov3(weights=weights)
-            case 'changevit_large':
-                if weights is not None and not isinstance(weights, WeightsEnum):
-                    raise ValueError(
-                        f'Invalid weights for changevit_large: {weights}. '
-                        'Expected None or a ChangeViT_Weights enum.'
-                    )
-                self.model = changevit_large(weights=weights)
-            case 'changevit_large_dinov3_sat':
-                if weights is not None and not isinstance(weights, WeightsEnum):
-                    raise ValueError(
-                        f'Invalid weights for changevit_large_dinov3_sat: {weights}. '
-                        'Expected None or a ChangeViT_Weights enum.'
-                    )
-                self.model = changevit_large_dinov3_sat(weights=weights)
+            case 'changevit':
+                self.model = changevit(backbone=backbone)  # type: ignore[arg-type]
 
         if weights and weights is not True:
             if isinstance(weights, WeightsEnum):
@@ -300,7 +253,7 @@ class ChangeDetectionTask(BaseTask):
 
         # Freeze decoder
         if self.hparams['freeze_decoder'] and model != 'fcn':
-            if model.startswith('changevit'):
+            if model == 'changevit':
                 # Freeze detail capture and feature injector for ChangeViT models
                 for param in self.model.detail_capture.parameters():
                     param.requires_grad = False
@@ -325,14 +278,13 @@ class ChangeDetectionTask(BaseTask):
         x = batch['image']
         y = batch['mask']
 
-        if not model.startswith('fcsiam') and not model.startswith('changevit'):
+        if not model.startswith('fcsiam') and model != 'changevit':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
 
         if self.hparams['task'] == 'multiclass':
             y = y.squeeze(1)
             y = y.long()
 
-        # Forward pass
         y_hat = self(x)
 
         if self.hparams['loss'] == 'bce':
@@ -358,7 +310,6 @@ class ChangeDetectionTask(BaseTask):
                 and hasattr(self.logger.experiment, 'add_figure')
             ):
                 datamodule = self.trainer.datamodule
-
                 aug = K.AugmentationSequential(
                     K.VideoSequential(K.Denormalize(datamodule.mean, datamodule.std)),
                     data_keys=None,
@@ -438,10 +389,9 @@ class ChangeDetectionTask(BaseTask):
         x = batch['image']
         if model == 'unet':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
-        elif not model.startswith('fcsiam') and not model.startswith('changevit'):
+        elif not model.startswith('fcsiam') and model != 'changevit':
             x = rearrange(x, 'b t c h w -> b (t c) h w')
 
-        # Forward pass
         y_hat: Tensor = self(x)
 
         match self.hparams['task']:

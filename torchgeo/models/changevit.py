@@ -7,7 +7,7 @@ Based on the paper: https://arxiv.org/pdf/2406.12847
 """
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Literal
 
 import timm
 import torch
@@ -16,7 +16,6 @@ import torch.nn.functional as F
 from einops import rearrange
 from torch import Tensor
 from torch.nn.modules import Module
-from torchvision.models._api import Weights, WeightsEnum
 
 
 class DetailCaptureModule(Module):
@@ -363,65 +362,20 @@ class ChangeViT(Module):
         return change_logits
 
 
-class ChangeViT_Weights(WeightsEnum):  # type: ignore[misc]
-    """ChangeViT model weights.
-
-    .. versionadded:: 0.9
-    """
-
-    # DeiT pre-trained weights (as used in paper)
-    DEIT_TINY = Weights(
-        url=None,
-        transforms=None,
-        meta={
-            'model': 'changevit_tiny',
-            'backbone': 'deit_tiny_patch16_224',
-            'pretrained': True,
-            'paper': 'ChangeViT: Unleashing Plain Vision Transformers for Change Detection',
-        },
-    )
-
-    DEIT_SMALL = Weights(
-        url=None,
-        transforms=None,
-        meta={
-            'model': 'changevit_small',
-            'backbone': 'deit_small_patch16_224',
-            'pretrained': True,
-            'paper': 'ChangeViT: Unleashing Plain Vision Transformers for Change Detection',
-        },
-    )
-
-    # DINOv2 pre-trained weights (alternative initialization)
-    DINOV2_SMALL = Weights(
-        url=None,
-        transforms=None,
-        meta={
-            'model': 'changevit_small',
-            'backbone': 'vit_small_patch14_dinov2',
-            'pretrained': True,
-            'paper': 'ChangeViT: Unleashing Plain Vision Transformers for Change Detection',
-        },
-    )
-
-
-def _create_changevit(
-    model_name: str, weights: ChangeViT_Weights | None, img_size: int, **kwargs: Any
-) -> ChangeViT:
+def _create_changevit(model_name: str, img_size: int, **kwargs: Any) -> ChangeViT:
     """Common factory function for ChangeViT models.
 
     Args:
         model_name: Name of the timm model to use as backbone
-        weights: Pre-trained model weights to use
         img_size: Input image size
-        **kwargs: Additional keyword arguments
+        **kwargs: Additional keyword arguments passed to timm backbone
 
     Returns:
         A ChangeViT model
     """
     # Create ViT backbone from timm
-    # Always use pretrained backbone unless explicitly disabled via kwargs
-    use_pretrained = kwargs.pop('pretrained', True) if weights is None else False
+    # Use pretrained backbone by default (can be overridden via kwargs)
+    use_pretrained = kwargs.pop('pretrained', True)
     vit_backbone = timm.create_model(
         model_name,
         pretrained=use_pretrained,
@@ -442,131 +396,59 @@ def _create_changevit(
 
     # Create model
     model = ChangeViT(
-        vit_backbone=vit_backbone,  # Will be renamed to encoder inside ChangeViT.__init__
+        vit_backbone=vit_backbone,
         detail_capture=detail_capture,
         feature_injector=feature_injector,
         decoder=decoder,
     )
 
-    # Load weights if provided
-    if weights is not None:
-        model.load_state_dict(weights.get_state_dict(progress=True))
-
     return model
 
 
-def changevit_small(
-    weights: ChangeViT_Weights | None = None,
+def changevit(
+    backbone: Literal[
+        'tiny', 'small', 'small_dinov3', 'large', 'large_dinov3_sat'
+    ] = 'small',
     img_size: int = 256,
-    backbone: str = 'vit_small_patch14_dinov2',
     **kwargs: Any,
 ) -> ChangeViT:
-    """ChangeViT Small model.
+    """ChangeViT model for change detection.
 
-    Uses ViT-Small as backbone with detail capture module.
+    Uses a Vision Transformer backbone with detail capture module and
+    feature injection mechanism for change detection tasks.
+
+    If you use this model in your research, please cite the following paper:
+
+    * https://arxiv.org/abs/2406.12847
+
+    .. versionadded:: 0.8
 
     Args:
-        weights: Pre-trained model weights to use.
+        backbone: ViT backbone variant to use. Options are:
+
+            * ``'tiny'``: DeiT-Tiny (deit_tiny_patch16_224)
+            * ``'small'``: DINOv2-Small (vit_small_patch14_dinov2)
+            * ``'small_dinov3'``: DINOv3-Small pretrained on LVD-1.7B
+            * ``'large'``: DINOv3-Large pretrained on LVD-1.7B
+            * ``'large_dinov3_sat'``: DINOv3-Large pretrained on SAT-493M satellite imagery
+
         img_size: Input image size (default: 256 to match paper methodology).
-        backbone: Name of the timm ViT backbone to use (default: vit_small_patch14_dinov2).
-        **kwargs: Additional keyword arguments.
+        **kwargs: Additional keyword arguments passed to the backbone model.
 
     Returns:
-        A ChangeViT model.
+        A ChangeViT model instance.
+
+    Raises:
+        KeyError: If an invalid backbone name is provided.
     """
+    backbone_map = {
+        'tiny': 'deit_tiny_patch16_224',
+        'small': 'vit_small_patch14_dinov2',
+        'small_dinov3': 'vit_small_patch16_dinov3.lvd1689m',
+        'large': 'vit_large_patch16_dinov3.lvd1689m',
+        'large_dinov3_sat': 'vit_large_patch16_dinov3.sat493m',
+    }
+
     return _create_changevit(
-        model_name=backbone, weights=weights, img_size=img_size, **kwargs
-    )
-
-
-def changevit_tiny(
-    weights: ChangeViT_Weights | None = None, img_size: int = 256, **kwargs: Any
-) -> ChangeViT:
-    """ChangeViT Tiny model.
-
-    Uses ViT-Tiny as backbone with detail capture module.
-    Paper implementation: ChangeViT-T
-
-    Args:
-        weights: Pre-trained model weights to use.
-        img_size: Input image size (default: 256 to match paper methodology).
-        **kwargs: Additional keyword arguments.
-
-    Returns:
-        A ChangeViT model.
-    """
-    return _create_changevit(
-        model_name='deit_tiny_patch16_224', weights=weights, img_size=img_size, **kwargs
-    )
-
-
-def changevit_small_dinov3(
-    weights: ChangeViT_Weights | None = None, img_size: int = 256, **kwargs: Any
-) -> ChangeViT:
-    """ChangeViT Small model with DINOv3 backbone.
-
-    Uses DINOv3-Small (patch16) pretrained on LVD-1.7B dataset.
-    This variant uses patch size 16x16 which matches the ChangeViT paper specification.
-
-    Args:
-        weights: Pre-trained model weights to use.
-        img_size: Input image size (default: 256 to match paper methodology).
-        **kwargs: Additional keyword arguments.
-
-    Returns:
-        A ChangeViT model.
-    """
-    return changevit_small(
-        weights=weights,
-        img_size=img_size,
-        backbone='vit_small_patch16_dinov3.lvd1689m',
-        **kwargs,
-    )
-
-
-def changevit_large(
-    weights: ChangeViT_Weights | None = None,
-    img_size: int = 256,
-    backbone: str = 'vit_large_patch16_dinov3.lvd1689m',
-    **kwargs: Any,
-) -> ChangeViT:
-    """ChangeViT Large model.
-
-    Uses ViT-Large as backbone with detail capture module.
-
-    Args:
-        weights: Pre-trained model weights to use.
-        img_size: Input image size (default: 256 to match paper methodology).
-        backbone: Name of the timm ViT backbone to use (default: vit_large_patch16_dinov3.lvd1689m).
-        **kwargs: Additional keyword arguments.
-
-    Returns:
-        A ChangeViT model.
-    """
-    return _create_changevit(
-        model_name=backbone, weights=weights, img_size=img_size, **kwargs
-    )
-
-
-def changevit_large_dinov3_sat(
-    weights: ChangeViT_Weights | None = None, img_size: int = 256, **kwargs: Any
-) -> ChangeViT:
-    """ChangeViT Large model with DINOv3 backbone pretrained on satellite imagery.
-
-    Uses DINOv3-Large (patch16) pretrained on SAT-493M dataset (Maxar satellite images).
-    This variant is specifically pretrained on satellite imagery at 0.6m resolution.
-
-    Args:
-        weights: Pre-trained model weights to use.
-        img_size: Input image size (default: 256 to match paper methodology).
-        **kwargs: Additional keyword arguments.
-
-    Returns:
-        A ChangeViT model.
-    """
-    return changevit_large(
-        weights=weights,
-        img_size=img_size,
-        backbone='vit_large_patch16_dinov3.sat493m',
-        **kwargs,
+        model_name=backbone_map[backbone], img_size=img_size, **kwargs
     )
