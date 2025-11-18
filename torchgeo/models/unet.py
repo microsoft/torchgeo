@@ -93,6 +93,51 @@ class Unet_Weights(WeightsEnum):  # type: ignore[misc]
             'license': 'non-commercial',
         },
     )
+    SENTINEL2_FTW_PRUE_EFNETB3 = Weights(
+        url='https://hf.co/isaaccorley/ftw-prue/resolve/c2d73d8478415db89b51e7635c1d2722e1056c29/prue_efnet3.pth',
+        transforms=_ftw_transforms,
+        meta={
+            'dataset': 'FTW',
+            'in_chans': 8,
+            'num_classes': 3,
+            'model': 'U-Net',
+            'encoder': 'efficientnet-b3',
+            'publication': None,
+            'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
+            'bands': _ftw_sentinel2_bands,
+            'license': 'non-commercial',
+        },
+    )
+    SENTINEL2_FTW_PRUE_EFNETB5 = Weights(
+        url='https://hf.co/isaaccorley/ftw-prue/resolve/c2d73d8478415db89b51e7635c1d2722e1056c29/prue_efnet5.pth',
+        transforms=_ftw_transforms,
+        meta={
+            'dataset': 'FTW',
+            'in_chans': 8,
+            'num_classes': 3,
+            'model': 'U-Net',
+            'encoder': 'efficientnet-b5',
+            'publication': None,
+            'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
+            'bands': _ftw_sentinel2_bands,
+            'license': 'non-commercial',
+        },
+    )
+    SENTINEL2_FTW_PRUE_EFNETB7 = Weights(
+        url='https://hf.co/isaaccorley/ftw-prue/resolve/c2d73d8478415db89b51e7635c1d2722e1056c29/prue_efnet7.pth',
+        transforms=_ftw_transforms,
+        meta={
+            'dataset': 'FTW',
+            'in_chans': 8,
+            'num_classes': 3,
+            'model': 'U-Net',
+            'encoder': 'efficientnet-b7',
+            'publication': None,
+            'repo': 'https://github.com/fieldsoftheworld/ftw-baselines',
+            'bands': _ftw_sentinel2_bands,
+            'license': 'non-commercial',
+        },
+    )
     OAM_RGB_RESNET50_TCD = Weights(
         url='https://hf.co/isaaccorley/unet_resnet50_oam_rgb_tcd/resolve/5df2fe5a0e80fd6e12939686b7370c53f73bf389/unet_resnet50_oam_rgb_tcd-72b9b753.pth',
         transforms=_tcd_transforms,
