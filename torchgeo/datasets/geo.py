@@ -886,7 +886,7 @@ class VectorDataset(GeoDataset):
                     minx, miny, maxx, maxy = src.total_bounds
                     geom = shapely.box(minx, miny, maxx, maxy)
                     geometries.append(geom)
-                except RuntimeError:
+                except (RuntimeError, ValueError):
                     # Skip files that geopandas is unable to read
                     continue
                 else:
