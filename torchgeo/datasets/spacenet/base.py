@@ -4,10 +4,12 @@
 """SpaceNet abstract base class."""
 
 import glob
+import json
 import os
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable
+from json.decoder import JSONDecodeError
 from typing import Any, ClassVar
 
 import geopandas as gpd
@@ -186,11 +188,17 @@ class SpaceNet(NonGeoDataset, ABC):
             Tensor: label tensor
         """
         try:
-            gdf = gpd.read_file(path)
-        except RuntimeError:
+            with open(path) as f:
+                json.load(f)
+
+            gdf = gpd.GeoDataFrame.from_file(path, driver='GeoJSON')
+
+        except JSONDecodeError:
+            # Handle empty files
             gdf = gpd.GeoDataFrame(
                 {'geometry': []}, geometry='geometry', crs='EPSG:4326'
             )
+
         if gdf.empty:
             labels = []
         else:
